@@ -1,0 +1,73 @@
+/* == ENGINE.RC ============================================================ */
+
+/* ========================================================================= */
+#ifdef RC_INVOKED
+/* ------------------------------------------------------------------------- */
+#  include <Windows.H>                 // Contains basic defines
+#  include <Engine.HPP>                // Our version defines
+/* ------------------------------------------------------------------------- */
+#  ifdef RELEASE
+#    define FFLAGS 0
+#    define STATE " (Release)"
+#  elif ALPHA
+#    define FFLAGS VS_FF_DEBUG
+#    define STATE " (Alpha)"
+#  elif BETA
+#    define FFLAGS VS_FF_PRERELEASE
+#    define STATE " (Beta)"
+#  else
+#    define FFLAGS 0
+#    define STATE " (Unknown)"
+#  endif
+#  ifdef X86
+#    define BITS  " 32-Bit"
+#    define EXE   "ENGINE32.EXE"
+#    define ICO   "WIN32\ENGINE32.ICO"
+#  elif X64
+#    define BITS  " 64-Bit"
+#    define EXE   "ENGINE64.EXE"
+#    define ICO   "WIN32\ENGINE64.ICO"
+#  else
+#    define BITS  " ??-Bit"
+#    define EXE   "ENGINE.EXE"
+#    define ICO   "WIN32\ENGINE32.ICO"
+#  endif
+/* ------------------------------------------------------------------------- */
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+/* ------------------------------------------------------------------------- */
+GLFW_ICON ICON ICO
+/* ------------------------------------------------------------------------- */
+1 VERSIONINFO
+PRODUCTVERSION     VER_STR_NQ
+FILEVERSION        VER_STR_NQ
+FILEOS             VOS_NT_WINDOWS32
+FILEFLAGSMASK      VS_FFI_FILEFLAGSMASK
+FILEFLAGS          FFLAGS
+FILETYPE           VFT_APP
+{
+  BLOCK "StringFileInfo"
+  {
+    BLOCK "08091252"
+    {
+      VALUE "CompanyName",      "Mhatxotic Design"
+      VALUE "FileDescription",  "Mhatxotic Engine"
+      VALUE "FileVersion",      VER_STR
+      VALUE "LegalCopyright",   "© Mhatxotic Design. All Rights Reserved."
+      VALUE "OriginalFilename", EXE
+      VALUE "InternalName",     EXE
+      VALUE "ProductName",      "Mhatxotic Engine"
+      VALUE "ProductVersion",   VER_STR STATE BITS
+      VALUE "LegalTrademarks",  "©, ® and ™ of MS-Design."
+      VALUE "Comments",         VER_DATE
+    }
+  }
+  BLOCK "VarFileInfo"
+  {
+    VALUE "Translation",        0x0809 0x04E4
+  }
+}
+/* ------------------------------------------------------------------------- */
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "WIN32\ENGINE.XML"
+/* ------------------------------------------------------------------------- */
+#endif                                 // RC_INVOKED
+/* == End-of-File ========================================================== */
