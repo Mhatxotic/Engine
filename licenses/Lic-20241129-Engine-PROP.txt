@@ -1,0 +1,13 @@
+Mhatxotic Engine. A cross platform multimedia engine written in C++ 20.
+Copyright (c) Mhatxotic Design, 2006-Present. All Rights Reserved.
+
+Disclaimer: This scripting ENGINE is designed ONLY for legitimate and lawful multimedia solutions and is provided AS IS with ZERO warranty. It also contains very strong cryptographic technologies which might not be allowed to be imported in your country. By using this software, whether you are the GUEST author or the END user, you accept that the ENGINE author and ALL the authors of ALL the components listed in the 'credits' command output disclaim ALL liability for how the GUEST author or the END user chooses to use this software.
+
+Official binaries available for...
++ Windows XP 5.1.SP3 (i386) or later.
++ Windows XP 5.2.SP2 (x86-64) or later.
++ Ubuntu Linux 24.04 (x86-64) or later.
++ MacOS Catalina 10.15 (x86-64) or later.
++ MacOS Big Sur 11.0 (arm64) or later
+
+This space will eventually give additional thanks to the following people for their contributions.
