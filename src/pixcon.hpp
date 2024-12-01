@@ -3,9 +3,9 @@
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
 ** ## This is a POSIX specific module that handles text only mode output  ## **
-** ## which is needed by the engines bot mode and uses ncurses. Since we  ## **
-** ## support MacOS and Linux, we can support both systems very simply    ## **
-** ## with POSIX compatible calls.                                        ## **
+** ## which is needed by the engines terminal mode and uses ncurses.      ## **
+** ## Since we support MacOS and Linux, we can support both systems very  ## **
+** ## simply with POSIX compatible calls.                                 ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
@@ -32,7 +32,6 @@ class SysCon :                         // All members initially private
   typedef Coordinates<int> CoordInt;   // Cordinates typedef
   typedef Dimensions<int> DimInt;      // Dimension typedef
   /* -- Console data ------------------------------------------------------- */
-  __sighandler_t   fpSignal;           // Old signal handler
   attr_t           aColour;            // Current colour
   attr_t           aColourSaved;       // Saved colour
   /* -- Co-ordinates and limits -------------------------------------------- */
@@ -48,9 +47,6 @@ class SysCon :                         // All members initially private
   typedef vector<ShortPair>          PairTable;
   ColourTable      ctPalette;          // Saved colour palette
   PairTable        ptPairs;            // Saved colour pairs
-  /* -- Signal handler ----------------------------------------------------- */
-  // Please do remember that this call could happen in any thread!
-  static void OnTerminalResized(int) { cEvtMain->Add(EMC_CON_RESIZE); }
   /* -- Do set a character at the current position ------------------------- */
   void DoSetChar(const unsigned int uiChar)
   { // Include curses namespace
@@ -98,12 +94,10 @@ class SysCon :                         // All members initially private
     // am just going to put this here just incase.
     if(isendwin()) return;
     // Get new size of terminal window and return if not changed
-#if defined(LINUX)
-    const int iNewW = getmaxx(stdscr)+1, // getmaxx(stdscr)
-              iNewH = getmaxy(stdscr)+1; // getmaxy(stdscr)
+#if defined(MACOS)
+    const int iNewW = getmaxx(stdscr), iNewH = getmaxy(stdscr);
 #else
-    const int iNewW = stdscr->_maxx+1, // getmaxx(stdscr)
-              iNewH = stdscr->_maxy+1; // getmaxy(stdscr)
+    const int iNewW = getmaxx(stdscr) + 1, iNewH = getmaxy(stdscr) + 1;
 #endif
     if(iNewW == DimGetWidth() && iNewH == DimGetHeight()) return;
     // Log the new size
@@ -111,8 +105,8 @@ class SysCon :                         // All members initially private
       iNewW, iNewH, DimGetWidth(), DimGetHeight());
     // Update size
     DimSet(iNewW, iNewH);
-    diSizeM1.DimSet(DimGetWidth()-1, DimGetHeight()-1);
-    diSizeM2.DimSet(DimGetWidth()-2, DimGetHeight()-2);
+    diSizeM1.DimSet(DimGetWidth() - 1, DimGetHeight() - 1);
+    diSizeM2.DimSet(DimGetWidth() - 2, DimGetHeight() - 2);
     // Update cursor position if invalid
     if(ciCursor.CoordGetX() >= DimGetWidth())
       ciCursor.CoordSetX(diSizeM1.DimGetWidth());
@@ -188,8 +182,8 @@ class SysCon :                         // All members initially private
           case KEY_LEFT      : iMods = 0; iKey = GLFW_KEY_LEFT; break;
           case KEY_RIGHT     : iMods = 0; iKey = GLFW_KEY_RIGHT; break;
           case KEY_DC        : iMods = 0; iKey = GLFW_KEY_DELETE; break;
-          // Resized terminal? Send event that the terminal resized.
-          case KEY_RESIZE    : OnTerminalResized(0); return KT_NONE;
+          // Resized terminal? Reinitialise the screen and no key was pressed
+          case KEY_RESIZE    : SysConReInit(); return KT_RESET;
           // Unknown key
           default:
             // Report it
@@ -645,20 +639,6 @@ class SysCon :                         // All members initially private
     } // Clear extra lines we didn't draw too
     while(CoordGetY() > 1) { CoordSetX(0); CoordDecY(); ClearLine(); }
   }
-  /* -- Update size (from event) ------------------------------------------- */
-  void OnResize(void)
-  { // Include curses namespace
-    using namespace ICurses;
-    CheckAndUpdateSize();
-    // De-initialise ncurses
-    switch(const int iResult = endwin())
-    { // Break if OK
-      case OK: break;
-      // Any other value
-      default: XC("Failed to de-initialise ncurses!", "Code", iResult);
-    } // Re-initialise ncurses
-    if(!initscr()) XC("Failed to re-initialise ncurses!");
-  }
   /* -- DeInitialise ------------------------------------------------------- */
   void SysConDeInit(void)
   { // Include curses namespace
@@ -666,8 +646,6 @@ class SysCon :                         // All members initially private
     if(IHNotDeInitialise()) return;
     // System console is de-initialising
     cLog->LogDebugSafe("SysCon de-initialising...");
-    // Install old signal handler
-    if(fpSignal) signal(SIGWINCH, fpSignal);
     // If we have a context?
     if(stdscr)
     { // If we can use colour?
@@ -688,6 +666,23 @@ class SysCon :                         // All members initially private
       endwin();
     } // System console is de-initialised
     cLog->LogDebugSafe("SysCon de-initialised!");
+  }
+  /* -- Re-initialise ------------------------------------------------------ */
+  void SysConReInit(void)
+  { // Ignore if not enabled
+    using namespace ICurses;
+    // Return if already de-initialised
+    if(isendwin()) return;
+    // Detect the new size
+    CheckAndUpdateSize();
+    // De-initialise ncurses
+    switch(const int iResult = endwin())
+    { // Break if OK
+      case OK: break;
+      // Any other value
+      default: XC("Failed to de-initialise ncurses!", "Code", iResult);
+    } // Re-initialise ncurses
+    if(!initscr()) XC("Failed to re-initialise ncurses!");
   }
   /* -- Initialise --------------------------------------------------------- */
   void SysConInit(const char*const, const size_t, const size_t, const bool)
@@ -796,10 +791,7 @@ class SysCon :                         // All members initially private
       } // No palette entries?
       else cLog->LogWarningExSafe("SysCon set no palette entries from $!",
         COLOUR_MAX);
-    } // Install window update signal
-    fpSignal = signal(SIGWINCH, OnTerminalResized);
-    if(!fpSignal) XCL("Failed to install window update handler!");
-    // Update size
+    } // Update size
     CheckAndUpdateSize();
     // System console is initialised
     cLog->LogDebugSafe("SysCon initialised.");
@@ -809,7 +801,6 @@ class SysCon :                         // All members initially private
     /* -- Initialisers ----------------------------------------------------- */
     SysBase{ StdMove(smmMap), stI },   // Initialise base with module info
     IHelper{ __FUNCTION__ },           // Initialise init helper
-    fpSignal(nullptr),                 // Signal handler on standby
     aColour(0),                        // Black colour
     aColourSaved(0),                   // Black saved colour
     stPalette(0),                      // No palette colours

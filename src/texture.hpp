@@ -14,12 +14,13 @@ namespace ITexture {                   // Start of private module namespace
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IFboDef::P;            using namespace IFbo::P;
 using namespace IFboItem::P;           using namespace IImage::P;
-using namespace IImageDef::P;          using namespace ILog::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IOgl::P;               using namespace IShader::P;
-using namespace IShaders::P;           using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IImageDef::P;          using namespace IJson::P;
+using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IOgl::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace ITexDef::P;            using namespace IUtil::P;
+using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Texture collector class for collector data and custom variables ------ */
@@ -70,9 +71,10 @@ class TextureBase :                    // All members initially private
       /* -- No code -------------------------------------------------------- */
       { }                              // Note that our shader handles Z co-ord
   };/* --------------------------------------------------------------------- */
-  typedef vector<CoordData> CoordList; // Tile coordinates data list
-  typedef vector<CoordList> CoordsList;// A list of tile coords per sub-tex
-  typedef Dimensions<GLuint> DimUInt;  // Dimension of GLuint's
+  typedef vector<CoordData>   CoordList;   // Tile coordinates data list
+  typedef CoordList::iterator CoordListIt; // Iterator to a CoordList
+  typedef vector<CoordList>   CoordsList;  // A list of tile coords per sub-tex
+  typedef Dimensions<GLuint>  DimUInt;     // Dimension of GLuint's
   /* ----------------------------------------------------------------------- */
   CoordsList       clTiles;            // Texture coordinates for tiles
   GLUIntVector     uivTexture;         // OpenGL texture handle list
@@ -82,8 +84,9 @@ class TextureBase :                    // All members initially private
                    dfImage,            // Texture image width and height (GL)
                    dfTile;             // Texture tile width and height (GL)
   /* -- Constructor -------------------------------------------------------- */
-  TextureBase(void) :                  // No parameters
+  explicit TextureBase(const ImageFlagsConst ifcPurpose) :
     /* -- Initialisers ----------------------------------------------------- */
+    Image{ ifcPurpose },               // Iniitalise purpose of texture
     iTexMinFilter(GL_NONE),            // No minification filter set yet
     iTexMagFilter(GL_NONE),            // No magnification filter set et
     iMipmaps(0),                       // No mipmaps yet
@@ -686,7 +689,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       GetSubCount(), IdentGet());
   }
   /* -- Init from a image class -------------------------------------------- */
-  void InitImage(Image &imgSrc, const GLuint uiTileWidth,
+  void InitTextureImage(Image &imgSrc, const GLuint uiTileWidth,
     const GLuint uiTileHeight, const GLuint uiPadX, const GLuint uiPadY,
     const OglFilterEnum ofeFilter, const bool bGenerateTileset = true)
   { // Show filename
@@ -700,9 +703,6 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       // and will still be registered, so lets put a note in the image to show
       // that this function has nicked by this image class.
       imgSrc.IdentSetEx("!TEX!$!", IdentGet());
-      // Image now being used in a Texture class
-      ClearPurposeImage();
-      SetPurposeTexture();
     } // We'll set float versions for faster calculations later on
     dfPad.DimSet(static_cast<GLfloat>(uiPadX), static_cast<GLfloat>(uiPadY));
     // Set filter
@@ -789,6 +789,119 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     // and theres no point taking up precious memory for it.
     if(IsNotDynamic()) ClearSlots();
   }
+  /* -- Init from a image class -------------------------------------------- */
+  void InitTextureImageTiles(Image &imgSrc, const OglFilterEnum ofeFilter,
+    const GLUIntVector gluvTiles)
+  { // Generate the texture as normal but we'll be generating the tileset
+    InitTextureImage(imgSrc, 0, 0, 0, 0, ofeFilter, false);
+    // Check that the tile count is divisble by 4 (X,Y,W,H)
+    const size_t stExcess = gluvTiles.size() % 4;
+    if(stExcess)
+      XC("Invalid count of tiles specified!",
+         "Identifier", IdentGet(), "Count", stExcess);
+    // Reserve memory for actual count
+    clTiles.resize(1);
+    CoordList &clFirst = clTiles.front();
+    clFirst.reserve(gluvTiles.size() / 4);
+    // Are image pixels reversed?
+    if(IsReversed())
+      // Until there are no more values to parse
+      for(GLUIntVector::const_iterator gluvciIt{ gluvTiles.cbegin() };
+                                       gluvciIt != gluvTiles.cend();
+                                     ++gluvciIt)
+      { // Add the user specified tile
+        const GLfloat fX      = static_cast<GLfloat>(*gluvciIt),
+                      fY      = static_cast<GLfloat>(*(++gluvciIt)),
+                      fWidth  = static_cast<GLfloat>(*(++gluvciIt)),
+                      fHeight = static_cast<GLfloat>(*(++gluvciIt));
+        AddTileRWH(0, fX, fY, fWidth, fHeight);
+      }
+    // Image pixels are not reversed?
+    else
+      // Until there are no more values to parse
+      for(GLUIntVector::const_iterator gluvciIt{ gluvTiles.cbegin() };
+                                       gluvciIt != gluvTiles.cend();
+                                     ++gluvciIt)
+      { // Add the user specified tile
+        const GLfloat fX      = static_cast<GLfloat>(*gluvciIt),
+                      fY      = static_cast<GLfloat>(*(++gluvciIt)),
+                      fWidth  = static_cast<GLfloat>(*(++gluvciIt)),
+                      fHeight = static_cast<GLfloat>(*(++gluvciIt));
+        AddTileWH(0, fX, fY, fWidth, fHeight);
+      }
+  }
+  /* -- Init from a manifest ----------------------------------------------- */
+  void InitTextureImageManifest(Image &imSrc, const Json &jsDoc)
+  { // Show filename and set it
+    cLog->LogDebugExSafe("Texture loading '$' from manifest '$'.",
+      imSrc.IdentGet(), jsDoc.IdentGet());
+    // Make sure correct version
+    const unsigned int uiVersionRequired = 1;
+    const unsigned int uiVersion = jsDoc.GetInteger("Version");
+    if(uiVersion != uiVersionRequired)
+      XC("Invalid version in manifest!",
+         "Identifier", imSrc.IdentGet(),  "Manfiest", jsDoc.IdentGet(),
+         "Required",   uiVersionRequired, "Actual",   uiVersion);
+    // Read filter
+    const OglFilterEnum ofeFilter =
+      static_cast<OglFilterEnum>(jsDoc.GetInteger("Filter"));
+    // Read automatic tile generation option and if it is set?
+    if(const bool bGenerateTileset = jsDoc.GetBoolean("GenerateTileset"))
+    { // Read required tile width and padding
+      const GLuint uiTileWidth = jsDoc.GetInteger("TileWidth"),
+                   uiTileHeight = jsDoc.GetInteger("TileHeight"),
+                   uiPadX = jsDoc.GetInteger("PaddingWidth"),
+                   uiPadY = jsDoc.GetInteger("PaddingHeight");
+      // Load the texture
+      InitTextureImage(imSrc, uiTileWidth, uiTileHeight, uiPadX, uiPadY,
+        ofeFilter, true);
+      // We're done
+      return;
+    } // Get the array for user specified tile values
+    using Lib::RapidJson::Value;
+    const Value &rjvTiles = jsDoc.GetValue("Tiles");
+    if(!rjvTiles.IsArray())
+      XC("Tiles array not valid in manifest!",
+         "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet());
+    // If we have items in the array
+    if(rjvTiles.Empty())
+      XC("Tiles array is empty in manifest!",
+         "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet());
+    // Allocate memory for tiles on first image
+    clTiles.resize(1);
+    CoordList &clFirst = clTiles.front();
+    clFirst.reserve(rjvTiles.Size());
+    // Load the texture now
+    InitTextureImage(imSrc, 0, 0, 0, 0, ofeFilter, false);
+    // Walk the array which is of an unknown size
+    StdForEach(seq, rjvTiles.Begin(), rjvTiles.End(),
+      [this, &imSrc, &jsDoc, &clFirst](const Value &rjvValue)
+      { // Must be a valid array
+        if(!rjvValue.IsArray())
+          XC("Tile array values not valid in manifest!",
+             "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
+             "Index",      clFirst.size());
+        // Must have at least 4 values
+        if(rjvValue.Size() < 4)
+          XC("Tile array must have at least four values in manifest!",
+             "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
+             "Index",      clFirst.size(),   "Count",    rjvValue.Size());
+        // Enumerate the values and set them in our array
+        array<GLfloat, 4> aValues;
+        for(unsigned int uiIndex = 0; uiIndex < aValues.size(); ++uiIndex)
+        { // Get and check that the value is unsigned integer
+          const Value &rjvCoord = rjvValue[uiIndex];
+          if(!rjvCoord.IsUint())
+            XC("Tile array value is not valid in manifest!",
+               "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
+               "Index",      clFirst.size(),   "Count",    rjvValue.Size(),
+               "SubIndex",   uiIndex);
+          // Convert and assign the value
+          aValues[uiIndex] = static_cast<GLfloat>(rjvCoord.GetUint());
+        } // Add the tile and then process the next tile
+        AddTileDORWH(0, aValues[0], aValues[1], aValues[2], aValues[3]);
+      });
+  }
   /* -- Deinitialise ------------------------------------------------------- */
   void DeInit(void)
   { // Texture not loaded? return
@@ -804,13 +917,15 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   /* -- Constructor (Initialisation then registration) --------------------- */
   Texture(void) :                      // No parameters
     /* -- Initialisers ----------------------------------------------------- */
-    ICHelperTexture{ cTextures, this } // Automatic (de)registration
+    ICHelperTexture{ cTextures, this },// Automatic (de)registration
+    TextureBase{ IP_TEXTURE }          // Purpose is to be a texture
     /* -- Code ------------------------------------------------------------- */
     { }                                // Do nothing else
   /* -- Constructor (No registration, base class of Font class) ------------ */
-  explicit Texture(const bool) :       // Parameter does nothing
+  explicit Texture(const ImageFlagsConst ifcPurpose) :
     /* -- Initialisers ----------------------------------------------------- */
-    ICHelperTexture{ cTextures }       // Initially unregistered
+    ICHelperTexture{ cTextures },      // Initially unregistered
+    TextureBase{ ifcPurpose }          // Purpose is specified by caller
     /* -- Code ------------------------------------------------------------- */
     { }                                // Do nothing else
   /* -- Destructor (Unregistration then deinitialisation) ------------------ */
@@ -840,6 +955,22 @@ static void TextureReInitTextures(void)
   for(Texture*const tCptr : *cTextures) tCptr->ReloadTexture();
   cLog->LogDebugExSafe("Textures re-initialised $ objects.",
     cTextures->size());
+}
+/* ------------------------------------------------------------------------- */
+static GLuint TextureGetMaxSizeFromBounds(const GLuint uiWidth,
+  const GLuint uiHeight, const GLuint uiXWidth, const GLuint uiXHeight,
+  const GLuint uiMultiplier)
+{ // Calculate the best possible texture size, by rounding up the
+  // requested tile size plus the current canvas size up to the
+  // nearest power of two, or double the current image size, whichever
+  // value is largest.
+  return UtilMaximum(
+           UtilMaximum(
+             UtilNearestPow2<GLuint>(uiWidth + uiXWidth),
+             uiWidth * uiMultiplier),
+           UtilMaximum(
+             UtilNearestPow2<GLuint>(uiHeight + uiXHeight),
+             uiHeight * uiMultiplier));
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

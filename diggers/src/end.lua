@@ -7,7 +7,7 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 local abs<const>, error<const>, floor<const>, tostring<const> =
@@ -17,35 +17,35 @@ local UtilIsBoolean<const>, UtilIsInteger<const>, UtilIsString<const>,
   UtilIsTable<const> = Util.IsBoolean, Util.IsInteger, Util.IsString,
   Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GetCapitalValue, GetGameTicks, InitPost, InitScore,
-  IsButtonReleased, LoadResources, PlayMusic, PlayStaticSound, RenderFade,
-  RenderObjects, RenderTerrain, SetCallbacks, SetCursor, SetKeys,
-  aGemsAvailable, aGlobalData, fontLarge;
+local Fade, GetGameTicks, InitPost, InitScore, LoadResources,
+  PlayMusic, PlayStaticSound, RenderFade, RenderObjects, RenderTerrain,
+  SetCallbacks, SetHotSpot, SetKeys, aGemsAvailable, aGlobalData, aObjects,
+  aShroudData, fontLarge;
 -- Locals ------------------------------------------------------------------ --
-local aCollections,                    -- All texts
+local aAssets,                         -- Assets required
+      aCollections,                    -- All texts
       aLinesBottom,                    -- Bottom lines of texts
       aLinesCentre,                    -- Centre lines of texts
       aLinesTop,                       -- Top lines of texts
+      aLoseAssets,                     -- Lose assets data
+      aWinAssets,                      -- Win assets data
       fcbOnFadeIn,                     -- Function to call when faded in
-      iCOK, iCExit, iCWait,            -- Cursor ids
       iDeadCost,                       -- Death duties total
+      iDeviceId,                       -- Object flag for device
       iEndTexId,                       -- End tile id chosen from texture
       iGameTicks,                      -- Total game ticks
       iGameTime,                       -- Total game time
       iKeyBankLoseId,                  -- Lose screen key bank id
       iKeyBankWinResultId,             -- Win screen result key bank id
       iKeyBankWinStatusId,             -- Win screen game status bank id
+      iHotSpotLoseId,                  -- Lose screen hot spot id
+      iHotSpotWinResultId,             -- Win screen result hot spot id
+      iHotSpotWinStatusId,             -- Win screen game status hot spot id
       iLevelId,                        -- Level that was completed
       iSSelect,                        -- Select sound effect
       iSalary,                         -- Salary paid total
       nFade, nScale,                   -- Fade amounts
       texEnd;                          -- End texture
--- Resources --------------------------------------------------------------- --
-local aEndAssets<const>  = { T = 2, F = "end", P = { 0 } };
-local aWinAssets<const>  = { true,  -- Select win routines
-             { aEndAssets, { T = 7, F = "select" } } };
-local aLoseAssets<const> = { false, -- Select lose routines
-             { aEndAssets, { T = 7, F = "lose",   P = { } } } };
 -- Mark positive colour or negative ---------------------------------------- --
 local function Green(sValue) return "\rcff7fff7f"..sValue.."\rr" end;
 local function Red(sValue) return "\rcffff7f7f"..sValue.."\rr" end;
@@ -121,13 +121,6 @@ local function GoPostMortem()
   -- Load music and when finished execute the win assets handler
   InitPost(iLevelId);
 end
--- Input win info screen --------------------------------------------------- --
-local function InputWinInfo()
-  -- Mouse button not clicked? Return!
-  if IsButtonReleased(0) then return end;
-  -- Goto post mortem
-  GoPostMortem();
-end
 -- Render win information screen ------------------------------------------- --
 local function RenderWinInfo()
   -- Render terrain and objects
@@ -144,12 +137,11 @@ local function ProcWinInfo()
   if nFade < 0.5 then nFade = nFade + 0.01;
   -- Fade complete?
   elseif nFade >= 0.5 then
-    -- Set OK (continue) cursor
-    SetCursor(iCOK);
-    -- Set game status creen keybinds
+    -- Set game status creen key binds and hot spot
     SetKeys(true, iKeyBankWinStatusId);
+    SetHotSpot(iHotSpotWinStatusId);
     -- Clear animation procedure and set wait to click
-    SetCallbacks(nil, RenderWinInfo, InputWinInfo);
+    SetCallbacks(nil, RenderWinInfo);
   end
   -- Draw centre lines
   ProcCollection(aLinesCentre);
@@ -158,8 +150,6 @@ end
 local function GoWinGameStatus()
   -- Play sound
   PlayStaticSound(iSSelect);
-  -- Wait cursor for bank text animation animation
-  SetCursor(iCWait);
   -- Build data for centre lines
   MakeLine(aLinesCentre,
     Colourise(aGlobalData.gBankBalance).." IN BANK");
@@ -175,17 +165,11 @@ local function GoWinGameStatus()
   nFade = 0;
   -- Dereference the ending texture
   texEnd = nil
-  -- Set no keys until animation finished
+  -- Set no keys and wait hot spot until animation finished
   SetKeys(true);
+  SetHotSpot();
   -- Show win information screen
-  SetCallbacks(ProcWinInfo, RenderWinInfo, nil);
-end
--- Render end win input function ------------------------------------------- --
-local function InputEndWin()
-  -- Mouse button not clicked? Return!
-  if IsButtonReleased(0) then return end;
-  -- Transition in the game status
-  GoWinGameStatus();
+  SetCallbacks(ProcWinInfo, RenderWinInfo);
 end
 -- Set game status page ---------------------------------------------------- --
 local function GoLoseScore()
@@ -200,13 +184,6 @@ local function GoLoseScore()
   end
   -- Failed? Restart the level!
   Fade(0, 1, 0.04, RenderEnd, OnFadeOut, true);
-end
--- Render end input function ----------------------------------------------- --
-local function InputEndLose()
-  -- Mouse button not clicked? Return!
-  if IsButtonReleased(0) then return end;
-  -- Goto score screen
-  GoLoseScore();
 end
 -- Proc end function ------------------------------------------------------- --
 local function ProcBankAnimateEnd()
@@ -229,33 +206,85 @@ local function ProcAnimateEnd()
     ProcCollection(aCollections[iCollectionId]);
   end
 end
+-- Calculate capital carried ----------------------------------------------- --
+local function GetCapitalCarried()
+  -- Capital value
+  local nCapitalValue = 0;
+  -- Check object and sell it if it's a device
+  local function SellDevice(aObj, nDivisor)
+    -- Failed if not a device
+    if aObj.F & iDeviceId == 0 then return end;
+    -- Add capital value (25% value minus current quality)
+    nCapitalValue = nCapitalValue +
+      (aObj.OD.VALUE / nDivisor) * (aObj.H / 100);
+  end
+  -- Enumerate all game objects
+  for iObjIndex = 1, #aObjects do
+    -- Get object and if it is owned by the active player?
+    local aObj<const> = aObjects[iObjIndex];
+    if aActivePlayer == aObj.P then
+      -- If object is a device? Add 25% of it's value minus quality because
+      -- it cost's money to recover the device. :-)
+      SellDevice(aObj, 4);
+      -- Get object's inventory and sell it all 50% of it's value since the
+      -- object or digger is already carrying the item.
+      local aObjInv<const> = aObj.I;
+      for iInvIndex = 1, #aObjInv do SellDevice(aObjInv[iInvIndex], 2) end;
+    end
+  end
+  -- Return value
+  return floor(nCapitalValue);
+end
+-- Calculate exploration count --------------------------------------------- --
+local function GetExploration()
+  -- Exploration amount to return
+  local iExploration = 0;
+  -- Enumerate shroud data and add one for every fully revealed tile
+  for iI = 1, #aShroudData do
+    if aShroudData[iI][2] == 0xF then iExploration = iExploration + 1 end;
+  end
+  -- Return amount
+  return iExploration;
+end
+-- On faded in win --------------------------------------------------------- --
+local function OnFadedInWin()
+  -- Set game status screen keybinds and hot spot
+  SetKeys(true, iKeyBankWinResultId);
+  SetHotSpot(iHotSpotWinResultId);
+  -- Clear animation procedure and set wait to click
+  SetCallbacks(nil, RenderEnd);
+end
+-- On faded in lose ------------------------------------------------------- --
+local function OnFadedInLose()
+  -- Set game status creen keybinds
+  SetKeys(true, iKeyBankLoseId);
+  SetHotSpot(iHotSpotLoseId);
+  -- Clear animation procedure and set wait to click
+  SetCallbacks(nil, RenderEnd);
+end
 -- On loaded event function ------------------------------------------------ --
-local function OnLoaded(aResources, aActivePlayer, aOpponentPlayer, sMsg)
+local function OnAssetsLoaded(aResources, aActivePlayer, aOpponentPlayer, sMsg)
   -- Keep waiting cursor for animation
-  SetCursor(iCWait);
+  SetHotSpot();
   -- Play End music
   PlayMusic(aResources[2]);
   -- Load texture
   texEnd = aResources[1];
-  texEnd:TileSTC(4);
-  texEnd:TileSD(0,   0,  0, 159, 95);
-  texEnd:TileSD(1, 159,  0, 159, 95);
-  texEnd:TileSD(2, 318,  0, 159, 95);
-  texEnd:TileSD(3,   0, 95, 159, 95);
-  -- Get cost of capital
-  aGlobalData.gCapitalCarried = GetCapitalValue();
+  -- Get capital carried
+  aGlobalData.gCapitalCarried = GetCapitalCarried();
   -- Get cost of digger deaths
-  iDeadCost, iSalary = 0, 0;
-  local aActivePlayerDiggers<const> = aActivePlayer.D;
-  for iI = 1, #aActivePlayerDiggers do
-    local aDigger<const> = aActivePlayerDiggers[iI];
-    if not aDigger then
-      aGlobalData.gTotalDeaths = aGlobalData.gTotalDeaths + 1;
-      iDeadCost = iDeadCost + 65;
-    else
-      iSalary = iSalary + 30;
-    end
-  end
+  local iPRemain<const> = aActivePlayer.DC;
+  local iPDeaths<const> = #aActivePlayer.D - iPRemain;
+  aGlobalData.gTotalDeaths = aGlobalData.gTotalDeaths + iPDeaths
+  iDeadCost, iSalary = iPDeaths * 65, iPRemain * 30;
+  -- Add enemy kills
+  local iPKills<const> = aActivePlayer.EK;
+  aGlobalData.gTotalEnemyKills = aGlobalData.gTotalEnemyKills + iPKills;
+  -- Add homicides of opponent playerss
+  aGlobalData.gTotalHomicides = aGlobalData.gTotalHomicides + aActivePlayer.LK;
+  -- Calculate exploration amount
+  aGlobalData.gTotalExploration =
+    aGlobalData.gTotalExploration + GetExploration();
   -- Get game ticks and time
   iGameTicks = GetGameTicks();
   iGameTime = iGameTicks // 3600;
@@ -266,10 +295,6 @@ local function OnLoaded(aResources, aActivePlayer, aOpponentPlayer, sMsg)
     aGlobalData.gTotalGemsSold + aActivePlayer.GS;
   aGlobalData.gTotalCapital =
     aGlobalData.gTotalCapital + aGlobalData.gCapitalCarried;
-  aGlobalData.gTotalDeathExp =
-    aGlobalData.gTotalDeathExp + iDeadCost;
-  aGlobalData.gTotalPurchExp =
-    aGlobalData.gTotalPurchExp + aActivePlayer.BP;
   aGlobalData.gTotalTimeTaken =
     aGlobalData.gTotalTimeTaken + iGameTicks // 60;
   aGlobalData.gTotalIncome =
@@ -278,8 +303,6 @@ local function OnLoaded(aResources, aActivePlayer, aOpponentPlayer, sMsg)
     aGlobalData.gTotalDug + aActivePlayer.DUG;
   aGlobalData.gTotalPurchases =
     aGlobalData.gTotalPurchases + aActivePlayer.PUR;
-  aGlobalData.gTotalSalaryPaid =
-    aGlobalData.gTotalSalaryPaid + iSalary;
   aGlobalData.gBankBalance =
     aGlobalData.gBankBalance + (aActivePlayer.M - iDeadCost - iSalary);
   aGlobalData.gPercentCompleted =
@@ -300,25 +323,7 @@ local function OnLoaded(aResources, aActivePlayer, aOpponentPlayer, sMsg)
   -- Fade amount
   nFade, nScale = 0, 0;
   -- Change render procedures
-  SetCallbacks(ProcAnimateEnd, RenderEnd, nil);
-end
--- On faded in win --------------------------------------------------------- --
-local function OnFadeInWin()
-  -- Set OK (continue) cursor
-  SetCursor(iCOK);
-  -- Set game status creen keybinds
-  SetKeys(true, iKeyBankWinResultId);
-  -- Clear animation procedure and set wait to click
-  SetCallbacks(nil, RenderEnd, InputEndWin);
-end
--- On faded in lose ------------------------------------------------------- --
-local function OnFadeInLose()
-  -- Set EXIT cursor
-  SetCursor(iCExit)
-  -- Set game status creen keybinds
-  SetKeys(true, iKeyBankLoseId);
-  -- Clear animation procedure and set wait to click
-  SetCallbacks(nil, RenderEnd, InputEndLose);
+  SetCallbacks(ProcAnimateEnd, RenderEnd);
 end
 -- Initialise the lose screen ---------------------------------------------- --
 local function InitEnd(iLId, aAP, aOP, aIR, iETId, sMsg)
@@ -341,9 +346,9 @@ local function InitEnd(iLId, aAP, aOP, aIR, iETId, sMsg)
   -- Set tile id to use
   iEndTexId = iETId;
   -- Set callback
-  if aIR[1] then fcbOnFadeIn = OnFadeInWin else fcbOnFadeIn = OnFadeInLose end;
+  if aIR[1] then fcbOnFadeIn = OnFadedInWin else fcbOnFadeIn = OnFadedInLose end;
   -- Load level ending resources
-  LoadResources("ZoneEnd", aIR[2], OnLoaded, aAP, aOP, sMsg);
+  LoadResources("ZoneEnd", aIR[2], OnAssetsLoaded, aAP, aOP, sMsg);
 end
 -- ------------------------------------------------------------------------- --
 local function InitLoseDead(iLId, aP, aOP)
@@ -355,40 +360,59 @@ local function InitWin(iLId, aP, aOP)
 local function InitLose(iLId, aP, aOP)
   InitEnd(iLId, aP, aOP, aLoseAssets, 3, "YOUR OPPONENT WON") end;
 -- Scripts have been loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData,
+    aObjectFlags, aSfxData;
   -- Grab imports
-  Fade, GetCapitalValue, GetGameTicks, InitPost, InitScore, IsButtonReleased,
-    LoadResources, PlayMusic, PlayStaticSound, RenderFade, RenderObjects,
-    RenderTerrain, SetCallbacks, SetCursor, SetKeys, aGemsAvailable,
-    aGlobalData, fontLarge =
-      GetAPI("Fade", "GetCapitalValue", "GetGameTicks", "InitPost",
-        "InitScore", "IsButtonReleased", "LoadResources", "PlayMusic",
-        "PlayStaticSound", "RenderFade", "RenderObjects", "RenderTerrain",
-        "SetCallbacks", "SetCursor", "SetKeys", "aGemsAvailable",
-        "aGlobalData", "fontLarge");
+  Fade, GetGameTicks, InitPost, InitScore, LoadResources, PlayMusic,
+    PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderFade, RenderObjects,
+    RenderTerrain, SetCallbacks, SetHotSpot, SetKeys, aAssetsData,
+    aCursorIdData, aGemsAvailable, aGlobalData, aObjectFlags, aObjects,
+    aSfxData, aShroudData, fontLarge =
+      GetAPI("Fade", "GetGameTicks", "InitPost", "InitScore", "LoadResources",
+        "PlayMusic", "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
+        "RenderFade", "RenderObjects", "RenderTerrain", "SetCallbacks",
+        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData",
+        "aGemsAvailable", "aGlobalData", "aObjectFlags", "aObjects",
+        "aSfxData", "aShroudData", "fontLarge");
+  -- Setup assets required
+  local aEndAssets<const> = aAssetsData.post;
+  aWinAssets = { true, { aEndAssets, aAssetsData.scenem } };
+  aLoseAssets = { false, { aEndAssets, aAssetsData.losem } };
   -- Register keybinds
   local aKeys<const>, aStates<const> = Input.KeyCodes, Input.States;
   local iPress<const> = aStates.PRESS;
-  iKeyBankLoseId = GetAPI("RegisterKeys")("IN-GAME LOSE", {
+  iKeyBankLoseId = RegisterKeys("IN-GAME LOSE", {
     [iPress] = { { aKeys.ESCAPE, GoLoseScore, "iglets", "EXIT TO SCORES" } }
   });
   local iEnter<const> = aKeys.ENTER;
-  iKeyBankWinResultId = GetAPI("RegisterKeys")("IN-GAME WIN", {
+  local sName<const> = "IN-GAME WIN";
+  iKeyBankWinResultId = RegisterKeys(sName, {
     [iPress] = { { iEnter, GoWinGameStatus, "igwc", "CONTINUE" } }
   });
-  iKeyBankWinStatusId = GetAPI("RegisterKeys")("IN-GAME WIN", {
+  iKeyBankWinStatusId = RegisterKeys(sName, {
     [iPress] = { { iEnter, GoPostMortem, "igwpm", "POST MORTEM" } }
   });
+  -- Get object flag device id for calculating capital carried
+  iDeviceId = aObjectFlags.DEVICE;
   -- Set sound effect ids
-  iSSelect = GetAPI("aSfxData").SELECT;
+  iSSelect = aSfxData.SELECT;
   -- Set cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
-  iCOK, iCExit, iCWait =
-    aCursorIdData.OK, aCursorIdData.EXIT, aCursorIdData.WAIT;
+  local iCOK<const>, iCExit<const> = aCursorIdData.OK, aCursorIdData.EXIT;
+  -- Register hot spots
+  iHotSpotLoseId = RegisterHotSpot({
+    { 0, 0, 0, 240, 3, iCExit, false, false, GoLoseScore }
+  });
+  iHotSpotWinResultId = RegisterHotSpot({
+    { 0, 0, 0, 240, 3, iCOK, false, false, GoWinGameStatus }
+  });
+  iHotSpotWinStatusId = RegisterHotSpot({
+    { 0, 0, 0, 240, 3, iCOK, false, false, GoPostMortem }
+  });
 end
 -- Exports and imports ----------------------------------------------------- --
-return { F = OnReady, A = { InitWin = InitWin,
-                            InitWinDead = InitWinDead,
-                            InitLose = InitLose,
-                            InitLoseDead = InitLoseDead } };
+return { F = OnScriptLoaded, A = { InitWin = InitWin,
+  InitWinDead = InitWinDead, InitLose = InitLose,
+  InitLoseDead = InitLoseDead } };
 -- End-of-File ============================================================= --

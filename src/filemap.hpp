@@ -20,7 +20,7 @@ namespace P {                          // Start of public module namespace
 /* == FileMap Class Definition ============================================= */
 class FileMap :
   /* -- Derivced classes --------------------------------------------------- */
-  public SysBase::SysMap,              // File mapping
+  public SysMap,                       // File mapping
   public MemConst                      // Read only memory block
 { /* -- Private variables ----------------------------------------- */ private:
   size_t           stPosition;         // Current position

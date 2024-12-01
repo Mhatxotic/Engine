@@ -18,8 +18,8 @@
 namespace LLInput {                    // Input namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IGlFW::P;              using namespace IGlFWUtil::P;
-using namespace IInput::P;             using namespace ILua::P;
-using namespace Common;
+using namespace IInput::P;             using namespace IJoystick::P;
+using namespace ILua::P;               using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Input common helper classes                                         ## **
@@ -27,16 +27,16 @@ using namespace Common;
 ** -- Get joystick index argument ------------------------------------------ */
 struct AgJoystickId : public AgSizeTLGE {
   explicit AgJoystickId(lua_State*const lS, const int iArg) :
-    AgSizeTLGE{ lS, iArg, 0, cInput->GetJoyCount() }{} };
+    AgSizeTLGE{ lS, iArg, 0, cInput->JoyGetCount() }{} };
 /* -- Get joystick data from joystick index -------------------------------- */
 struct AgJoystickData : public ArClass<JoyInfo> {
   explicit AgJoystickData(lua_State*const lS, const int iArg) :
-    ArClass{ cInput->GetJoyData(AgJoystickId{lS, iArg}()) }{} };
+    ArClass{ cInput->JoyGet(AgJoystickId{lS, iArg}()) }{} };
 /* -- Get axis data from joystick data ------------------------------------- */
 struct AgJoystickAxis : public AgSizeTLGE {
   explicit AgJoystickAxis(lua_State*const lS, const int iArg,
     const JoyInfo &jiData) :
-      AgSizeTLGE{ lS, iArg, 0, jiData.GetAxisCount() }{} };
+      AgSizeTLGE{ lS, iArg, 0, jiData.JoyAxisListCount() }{} };
 /* -- Get DeadZone argument ------------------------------------------------ */
 struct AgDeadZone : public AgNumberLGE<float> {
   explicit AgDeadZone(lua_State*const lS, const int iArg) :
@@ -56,7 +56,7 @@ LLFUNC(SetJoyAxisForwardDeadZone, 0,
   const AgJoystickData aData{lS, 1};
   const AgJoystickAxis aAxis{lS, 2, aData};
   const AgDeadZone aDeadZone{lS, 3};
-  aData().SetAxisForwardDeadZone(aAxis, aDeadZone))
+  aData().JoyAxisListSetForwardDeadZone(aAxis, aDeadZone))
 /* ========================================================================= */
 // $ Input.SetJoyAxisReverseDeadZone
 // > JId:integer=The joystick id.
@@ -69,7 +69,7 @@ LLFUNC(SetJoyAxisReverseDeadZone, 0,
   const AgJoystickData aData{lS, 1};
   const AgJoystickAxis aAxis{lS, 2, aData};
   const AgDeadZone aDeadZone{lS, 3};
-  aData().SetAxisReverseDeadZone(aAxis, aDeadZone))
+  aData().JoyAxisListSetReverseDeadZone(aAxis, aDeadZone))
 /* ========================================================================= */
 // $ Input.SetJoyAxisDeadZones
 // > JId:integer=The joystick id.
@@ -85,7 +85,7 @@ LLFUNC(SetJoyAxisDeadZones, 0,
   const AgJoystickAxis aAxis{lS, 2, aData};
   const AgDeadZone aDeadZoneForward{lS, 3},
                    aDeadZoneReverse{lS, 4};
-  aData().SetAxisDeadZones(aAxis, aDeadZoneForward, aDeadZoneReverse))
+  aData().JoyAxisListSetDeadZones(aAxis, aDeadZoneForward, aDeadZoneReverse))
 /* ========================================================================= */
 // $ Input.SetCursorPos
 // > X:integer=The X co-ordinate of the mouse cursor.
@@ -103,7 +103,7 @@ LLFUNC(SetCursorPos, 0,
 // ? Clears the keyboard, mouse and joystick states which wipes the current
 // ? state of all the control methods preventing input.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ClearStates, 0, cInput->ClearJoystickButtons())
+LLFUNC(ClearStates, 0, cInput->JoyClearStates())
 /* ========================================================================= */
 // $ Input.CursorCentre
 // ? Sets the mouse cursor in the centre of the window.
@@ -123,7 +123,7 @@ LLFUNC(SetCursor, 0, cInput->SetCursor(AgBoolean{lS, 1}))
 // ? Tests if the specified joystick exists.
 /* ------------------------------------------------------------------------- */
 LLFUNC(JoyExists, 1,
-  LuaUtilPushVar(lS, cInput->JoystickExists(AgJoystickId{lS, 1})))
+  LuaUtilPushVar(lS, cInput->JoyIsConnected(AgJoystickId{lS, 1})))
 /* ========================================================================= */
 // $ Input.GetJoyName
 // > Id:integer=The joystick id.
@@ -138,7 +138,7 @@ LLFUNC(GetJoyName, 1, LuaUtilPushVar(lS, AgJoystickData{lS, 1}().IdentGet()))
 // ? Returns the number of buttons this joystick supports.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetNumJoyButtons, 1,
-   LuaUtilPushVar(lS, AgJoystickData{lS, 1}().GetButtonCount()))
+   LuaUtilPushVar(lS, AgJoystickData{lS, 1}().JoyButtonListCount()))
 /* ========================================================================= */
 // $ Input.GetNumJoyAxises
 // > Id:integer=The joystick id.
@@ -146,7 +146,7 @@ LLFUNC(GetNumJoyButtons, 1,
 // ? Returns the number of axises this joystick supports.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetNumJoyAxises, 1,
-  LuaUtilPushVar(lS, AgJoystickData{lS, 1}().GetAxisCount()))
+  LuaUtilPushVar(lS, AgJoystickData{lS, 1}().JoyAxisListCount()))
 /* ========================================================================= */
 // $ Input.GetJoyButton
 // > Id:integer=The joystick id.
@@ -156,12 +156,14 @@ LLFUNC(GetNumJoyAxises, 1,
 // ?
 // ? Result can be:
 // ? =0: The button is not held down.
-// ? >0: The button was held down for this many game ticks.
+// ? =1: The button was pressed.
+// ? >1: The button is being held.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetJoyButton, 1,
   const AgJoystickData aData{lS, 1};
-  const AgSizeTLGE aJoystickButton{lS, 2, 0, aData().GetButtonCount()};
-  LuaUtilPushVar(lS, aData().GetButtonState(aJoystickButton)))
+  const AgSizeTLGE aJoystickButton{lS, 2, 0, aData().JoyButtonListCount()};
+  LuaUtilPushVar(lS,
+    aData().JoyButtonListGet(aJoystickButton()).ButtonGetState()))
 /* ========================================================================= */
 // $ Input.GetJoyAxis
 // > Id:integer=The joystick id.
@@ -172,7 +174,7 @@ LLFUNC(GetJoyButton, 1,
 LLFUNC(GetJoyAxis, 1,
   const AgJoystickData aData{lS, 1};
   const AgJoystickAxis aAxis{lS, 2, aData};
-  LuaUtilPushVar(lS, aData().GetAxisState(aAxis)))
+  LuaUtilPushVar(lS, aData().JoyAxisListGet(aAxis).AxisGetBufferedState()))
 /* ========================================================================= */
 // $ Input.GetJoyAxisUB
 // > Id:integer=The joystick id.
@@ -182,7 +184,7 @@ LLFUNC(GetJoyAxis, 1,
 LLFUNC(GetJoyAxisUB, 1,
   const AgJoystickData aData{lS, 1};
   const AgJoystickAxis aAxis{lS, 2, aData};
-  LuaUtilPushVar(lS, aData().GetUnbufferedAxisState(aAxis)))
+  LuaUtilPushVar(lS, aData().JoyAxisListGet(aAxis).AxisGetUnbufferedState()))
 /* ========================================================================= */
 // $ Input.OnMouseFocus
 // > Func:function=The callback function to use
@@ -242,8 +244,7 @@ LLFUNC(OnChar, 0, cLua->SetLuaRef(lS, cInput->lfOnChar))
 // ? (false).
 /* ------------------------------------------------------------------------- */
 LLFUNC(OnJoyState, 0,
-  if(cLua->SetLuaRef(lS, cInput->lfOnJoyState))
-    cInput->AutoDetectJoystick())
+  if(cLua->SetLuaRef(lS, cInput->JoyGetLuaEvent())) cInput->JoyDetect())
 /* ========================================================================= */
 // $ Input.OnKey
 // > Func:function=The callback function to use

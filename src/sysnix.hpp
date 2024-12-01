@@ -7,8 +7,6 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* ------------------------------------------------------------------------- */
-namespace SysBase {                    // Start of module namespace
 /* -- Classes -------------------------------------------------------------- */
 #include "pixbase.hpp"                 // Base system class
 #include "pixcon.hpp"                  // Console terminal window class
@@ -26,19 +24,20 @@ namespace SysBase {                    // Start of module namespace
 ** ------------------------------------------------------------------------- */
 class SysProcess                       // Need this before of System init order
 { /* -- Streams ------------------------------------------------- */ protected:
-  FStream          fsProcStat;         // Handle to proc/stat (cpu)
-  FStream          fsProcStatM;        // Handle to proc/statm (memory)
+  FStream          fsDevRandom,        // Handle to dev/random (rng)
+                   fsProcStat,         // Handle to proc/stat (cpu)
+                   fsProcStatM;        // Handle to proc/statm (memory)
   /* -- Processor ---------------------------------------------------------- */
-  clock_t          ctUser;             // Last user cpu time
-  clock_t          ctLow;              // Last low cpu time
-  clock_t          ctSystem;           // Last system cpu time
-  clock_t          ctIdle;             // Last clock idle time
-  clock_t          ctProc;             // Last process cpu time
-  clock_t          ctProcUser;         // Last process user cpu time
-  clock_t          ctProcSys;          // Last process system cpu time
+  clock_t          ctUser,             // Last user cpu time
+                   ctLow,              // Last low cpu time
+                   ctSystem,           // Last system cpu time
+                   ctIdle,             // Last clock idle time
+                   ctProc,             // Last process cpu time
+                   ctProcUser,         // Last process user cpu time
+                   ctProcSys;          // Last process system cpu time
   /* -- Process ------------------------------------------------------------ */
   const size_t     stPageSize;         // Memory page size
-  /* -- Process --------------------------------------------------- */ private:
+  /* -------------------------------------------------------------- */ private:
   const pid_t      ullProcessId;       // Process id
   const pthread_t  vpThreadId;         // Thread id
   /* -- Return process and thread id ---------------------------- */ protected:
@@ -49,6 +48,8 @@ class SysProcess                       // Need this before of System init order
   /* ----------------------------------------------------------------------- */
   SysProcess(void) :
     /* -- Initialisers ----------------------------------------------------- */
+    fsDevRandom{ "/dev/random",        // Open dev random garbage stream
+                 FM_R_B },             // - Read/Binary mode
     fsProcStat{ "/proc/stat",          // Open proc cpu stats stream
                 FM_R_B },              // - Read/Binary mode
     fsProcStatM{ "/proc/self/statm",   // Open proc memory stats stream
@@ -282,7 +283,7 @@ class SysCore :
             { // Read in 64-bit header
               Elf64_Ehdr ehData64;
               if(const size_t stRead2 =
-                   fExe.FStreamReadSafe(&ehData64, sizeof(ehData64)))
+                fExe.FStreamReadSafe(&ehData64, sizeof(ehData64)))
               { // We read enough bytes?
                 if(stRead2 == sizeof(ehData64))
                 { // Reverse bytes if not native
@@ -378,7 +379,7 @@ class SysCore :
       const string strFile{ fsCpuInfo.FStreamReadStringChunked() };
       if(!strFile.empty())
       { // Parse the variables and if we got some?
-        ParserConst<> pcParser{ strFile, StrGetReturnFormat(strFile), ':' };
+        ParserConst<> pcParser{ strFile, cCommon->Lf(), ':' };
         if(!pcParser.empty())
         { // Move stirngs from loaded variables
           string strCpuId{ StdMove(pcParser.ParserGet("model name")) },
@@ -443,17 +444,15 @@ class SysCore :
   int GetPriority(void)
   { // Get priority value and throw if failed
     const int iNice = getpriority(PRIO_PROCESS, GetPid());
-    if(iNice == -1)
-      XCS("Failed to acquire process priority!");
+    if(iNice == -1) XCS("Failed to acquire process priority!");
     // Return priority
     return iNice;
    }
   /* -- Return if running as root ------------------------------------------ */
   bool DetectElevation(void) { return getuid() == 0; }
   /* -- Return data from /dev/urandom -------------------------------------- */
-  Memory GetEntropy(void) const
-    { return FStream{ "/dev/random", FM_R_B }.
-        FStreamReadBlockSafe(1024); }
+  Memory GetEntropy(void)
+    { return fsDevRandom.FStreamReadBlockSafe(stPageSize); }
   /* ----------------------------------------------------------------------- */
   void *GetWindowHandle(void) const { return nullptr; }
   /* -- A window was created ----------------------------------------------- */
@@ -481,5 +480,4 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(SysCore)             // Suppress default functions for safety
 }; /* ---------------------------------------------------------------------- */
-}                                      // End of module namespace
 /* == EoF =========================================================== EoF == */

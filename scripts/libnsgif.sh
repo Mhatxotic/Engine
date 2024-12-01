@@ -61,7 +61,7 @@ if [ "$PLATFORM" == 'Linux' ]; then
   mv nsgif64-*.a "${LIB}/nsgif64.la"
 else
   ARCH="-arch "
-  EXTRA="-mmacosx-version-min=10.11"
+  EXTRA="-mmacosx-version-min=10.15"
   build arm64 apple-m1
   build x86_64 generic
   lipo nsgif64-*.a -create -output "${LIB}/nsgif64.ma"

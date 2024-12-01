@@ -863,6 +863,6 @@ class SysCon :                         // Members initially private
   }
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSCON_CALLBACKS() \
-  BOOL WINAPI SysBase::SysCon::CtrlHandlerStatic(DWORD dwCtrlType) \
+  BOOL WINAPI SysCon::CtrlHandlerStatic(DWORD dwCtrlType) \
     { return cSystem->CtrlHandler(dwCtrlType); }
 /* == EoF =========================================================== EoF == */

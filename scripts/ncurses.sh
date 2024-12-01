@@ -40,14 +40,10 @@ build()
 {
   make clean 2>/dev/null
 
-../configure --prefix=/usr/local/GNU-CROSS/ncurses-6.0/ \
-  CC="clang -fembed-bitcode -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk -Wno-error -Wno-implicit-function-declaration -mios-version-min=8.4 -no-integrated-as -arch armv7 -target armv7-apple-darwin" CPP="clang -E" CPPFLAGS="-fembed-bitcode -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk -Wno-error -Wno-implicit-function-declaration -mios-version-min=8.4 -no-integrated-as -arch armv7 -target armv7-apple-darwin" --host=armv7-apple-darwin --with-widec
-
   ./configure --prefix=/usr --without-cxx --without-cxx-binding \
-    --without-ada --without-progs --without-curses-h \
-    --with-static --without-debug \
-    --enable-widec --enable-const --enable-ext-colors --enable-sigwinch \
-    --enable-wgetch-events --target=${1}-apple-darwin
+    --without-ada --without-progs --without-curses-h --with-static \
+    --without-debug --enable-widec --enable-const --enable-ext-colors \
+    --enable-sigwinch --enable-wgetch-events --target=${1}-apple-darwin
   if [ ! $? -eq 0 ]; then
     exit 11
   fi
@@ -58,7 +54,7 @@ build()
       exit 12
     fi
     cat $FILE.patch | \
-      sed 's|-O2|-O3 -arch='${1}' -mtune='${2}' -mmacosx-version-min='${3}' -target '${1}'-apple-darwin -Wno-deprecated-declarations -Wno-c++11-extensions|g' > $FILE
+      sed 's|-O2|-O3 -arch '${1}' -mtune='${2}' -mmacosx-version-min='${3}' -target '${1}'-apple-darwin -Wno-deprecated-declarations -Wno-c++11-extensions|g' > $FILE
     if [ ! $? -eq 0 ]; then
       exit 13
     fi
@@ -75,22 +71,10 @@ build()
   fi
 }
 
-build x86_64 generic 10.11
+build x86_64 generic 10.15
 build arm64 apple-m1 11.0
 
 lipo nc64-*.a -create -output "${LIB}/nc64.ma"
 if [ ! $? -eq 0 ]; then
   exit 16
 fi
-
-find include -type f -name "*.h" | while read -r FILE; do
-  mv -fv $FILE $FILE.patch
-  if [ ! $? -eq 0 ]; then
-    exit 12
-  fi
-  cat $FILE.patch | \
-    sed 's|-O2|-O3 -arch='${1}' -mtune='${2}' -mmacosx-version-min='${3}' -target '${1}'-apple-darwin -Wno-deprecated-declarations -Wno-c++11-extensions|g' > $FILE
-  if [ ! $? -eq 0 ]; then
-    exit 13
-  fi
-done

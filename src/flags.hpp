@@ -173,6 +173,8 @@ struct Flags :
   /* -- Add and clear bits from specified enum ----------------------------- */
   void FlagSetAndClear(const ConstType &ctSet, const ConstType &ctClear)
     { FlagSet(ctSet); FlagClear(ctClear); }
+  void FlagClearAndSet(const ConstType &ctClear, const ConstType &ctSet)
+    { FlagClear(ctClear); FlagSet(ctSet); }
   /* -- Init constructors -------------------------------------------------- */
   explicit Flags(const IntType &itOther) : ConstType{ itOther } {}
   explicit Flags(const ConstType &ctOther) : ConstType{ ctOther } {}

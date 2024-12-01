@@ -48,7 +48,7 @@ build()
   cmake -D"CMAKE_BUILD_TYPE=Release" \
         -D"CMAKE_OSX_ARCHITECTURES=${1}" \
         -D"CMAKE_C_FLAGS=-mtune=${2}" \
-        -D"CMAKE_OSX_DEPLOYMENT_TARGET=10.11" \
+        -D"CMAKE_OSX_DEPLOYMENT_TARGET=10.15" \
         $2 \
         ..
   if [ ! $? -eq 0 ]; then

@@ -691,7 +691,7 @@ LLFUNC(ParseTimeEx, 1,
 // $ Util.ParseUrl
 // > String:string=The url to parse
 // < Result:integer=The result code of the parse
-// < Protocol:string=The protocol string 'http' or 'https'
+// < Scheme:string=The scheme string 'http' or 'https'
 // < Secure:boolean=The conneciton would need to use SSL?
 // < Host:string=The hostname to connect to
 // < Port:integer=The port number to connect to
@@ -705,10 +705,9 @@ LLFUNC(ParseUrl, 9,
   const Url uParsed{ AgString{lS, 1} };
   LuaUtilPushVar(lS, uParsed.GetResult());
   if(uParsed.GetResult() != Url::R_GOOD) return 1;
-  LuaUtilPushVar(lS, uParsed.GetProtocol(), uParsed.GetSecure(),
-            uParsed.GetHost(), uParsed.GetPort(),
-            uParsed.GetResource(), uParsed.GetBookmark(),
-            uParsed.GetUsername(), uParsed.GetPassword()))
+  LuaUtilPushVar(lS, uParsed.GetScheme(), uParsed.GetSecure(),
+    uParsed.GetHost(), uParsed.GetPort(), uParsed.GetResource(),
+    uParsed.GetBookmark(), uParsed.GetUsername(), uParsed.GetPassword()))
 /* ========================================================================= */
 // $ Util.Pluralise
 // > Count:integer=The number to check

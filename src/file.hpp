@@ -34,13 +34,16 @@ CTOR_BEGIN_DUO(Files, File, CLHelperUnsafe, ICHelperUnsafe),
 CTOR_END_NOINITS(Files, File, FILE)    // Finish global Files collector
 /* -- Read string to file in one go ---------------------------------------- */
 static void FileReadString(lua_State*const lS)
-{ // Open file in text mode with the specified mode and if successful?
+{ // Open file in read text mode
   if(FStream fFile{ LuaUtilGetCppFile(lS, 1), FM_R_T })
   { // Read file and store in string
     const string strData{ fFile.FStreamReadStringSafe() };
     // If no error occured then return the data read
-    if(!fFile.FStreamFError()) return LuaUtilPushStr(lS, strData);
-    // Error occured so return error message
+    if(!fFile.FStreamFError())
+    { // Add the string that was read and return a nil for no error
+      LuaUtilPushStr(lS, strData);
+      return LuaUtilPushNil(lS);
+    } // Error occured so return error message
     LuaUtilPushBool(lS, false);
     LuaUtilPushStr(lS, fFile.FStreamGetErrStr());
   } // Open failed?

@@ -7,7 +7,7 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 local random<const>, format<const>, error<const>, tostring<const> =
@@ -16,52 +16,50 @@ local random<const>, format<const>, error<const>, tostring<const> =
 local CoreTicks<const>, UtilIsInteger<const>, UtilIsTable<const> =
   Core.Ticks, Util.IsInteger, Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local BuyItem, Fade, GameProc, InitCon, InitLobby, IsButtonPressed,
-  IsButtonReleased, IsMouseInBounds, IsMouseNotInBounds, IsScrollingDown,
-  IsScrollingUp, LoadResources, LoopStaticSound, PlayMusic, PlayStaticSound,
-  RenderInterface, RenderShadow, SetBottomRightTip, SetCallbacks, SetCursor,
-  SetKeys, StopSound, aObjectActions, aObjectData, aObjectDirections,
-  aObjectJobs, aShopData, fontLittle, fontSpeech, fontTiny;
--- Assets required --------------------------------------------------------- --
-local aAssets<const> = { { T = 1, F = "shop", P = { 65, 65, 1, 1, 0 } },
-                         { T = 7, F = "shop" } };
+local BuyItem, Fade, GameProc, GetActiveObject, InitCon, InitLobby,
+  LoadResources, LoopStaticSound, PlayMusic, PlayStaticSound, RenderInterface,
+  RenderShadow, RenderTip, SetCallbacks, SetHotSpot, SetKeys, SetTip,
+  StopSound, aObjectActions, aObjectData, aObjectDirections, aObjectJobs,
+  aShopData, fontLittle, fontSpeech, fontTiny;
 -- Locals ------------------------------------------------------------------ --
-local aBuyObject,                      -- Currently selected object data
-      aDigger,                         -- Currently selected digger
+local aActiveObject,                   -- Currently selected digger
+      aAssets,                         -- Assets required
+      aBuyObject,                      -- Currently selected object data
       aDiggerInfo,                     -- Digger properties
       iAnimDoor,                       -- Current door animation id
-      iAnimDoorMod, iAnimDoorMax,      -- Door visibility and maximum
+      iAnimDoorMod,                    -- Door visibility
       iBuyHoloId,                      -- Current holo emitter id
       iBuyId,                          -- Currently selected object id
       iBuyObjTypeId,                   -- Currently selected object type id
-      iCArrow,                         -- Arrow cursor id
-      iCWait, iCSelect, iCExit,        -- Cursor ids
       iForkAnim,                       -- Current forklift truck animation id
-      iForkAnimMod, iForkAnimMax,      -- Forklift enabled id and maximum id
+      iForkAnimMod,                    -- Forklift enabled id
       iHoloAnimTileId,                 -- Current holo emitter animation id
       iHoloAnimTileIdMod,              -- Holo emitter is being shown
-      iKeyBankClosedId,                -- Closed shop key bank id
-      iKeyBankOpenId,                  -- Opened shop key bank id
+      iHotSpotId,                      -- Active hot spot id
+      iHotSpotClosedId,                -- Closed hot spot id
+      iHotSpotOpenId,                  -- Opened hot spot id
+      iKeyBankId,                      -- Active key bank id
+      iKeyBankClosedId,                -- Closed key bank id
+      iKeyBankOpenId,                  -- Opened key bank id
       iSHolo,                          -- Switch product sound effect id
       iSError, iSFind, iSHoloHum,      -- Sound effect ids
       iSOpen, iSSelect, iSTrade,       -- More sound effect ids
-      iSpeechTicks, bShopOpen,         -- Speech ticks left and shop open
-      iTileBG,                         -- Background tile id
-      iTileDoor,                       -- Door animation tile ids
-      iTileEmitter,                    -- Holo emitter tile ids
-      iTileFork,                       -- Forklift truck animation tile ids
-      iTileKeeper,                     -- Shop keeper chatting tile ids
-      iTileLights,                     -- Lights animation tile ids
-      iTileSpeech,                     -- Speech tile id
-      iTileStatus,                     -- Status tile id
-      sMsg, sTip, iCarryable,          -- Speech text, tip and number carrayble
+      iSpeechTicks,                    -- Speech ticks left and shop open
+      sLongName, sPrice, sDesc,        -- Long name and info of product
+      sMsg,                            -- Speech text
       texShop;                         -- shop texture
--- Test if current object can carry the specified object ------------------- --
+-- Tile ids (see data.lua/aAssetsData.shop.P) ------------------------------ --
+local iTileDoor<const> = 31;           local iTileFork<const> = 46;
+local iTileDoorMax     = iTileDoor + 14;   -- Maximum door tile id
+local iTileAnimMax     = iTileFork + 11;   -- Maximum forklift tile id
+-- Update price and carryable display -------------------------------------- --
 local function UpdateCarryable()
-  iCarryable = (aDiggerInfo.STRENGTH - aDigger.IW) // aBuyObject.WEIGHT;
+  sPrice = format("%03uz (%u)",
+    aBuyObject.VALUE,
+    (aDiggerInfo.STRENGTH - aActiveObject.IW) // aBuyObject.WEIGHT)
 end
 -- Set actual new object --------------------------------------------------- --
-local function SetObject(iId)
+local function SetProduct(iId)
   -- Check id is valid
   if not UtilIsInteger(iId) then error("No id specified to set!") end;
   -- Get object type from shelf and make sure it's valid
@@ -73,21 +71,22 @@ local function SetObject(iId)
     iId, iObjType, aObjectData[iObjType], iId - 1;
   if not UtilIsTable(aBuyObject) then
     error("No object data for object type '"..iObjType.."'!") end;
+  sLongName = aBuyObject.LONGNAME;
+  sDesc = aBuyObject.DESC;
   -- Animate the holographic emitter
   iHoloAnimTileId, iHoloAnimTileIdMod = 13, 1;
   -- Update Digger carrying weight
   UpdateCarryable();
 end
 -- Scroll through objects -------------------------------------------------- --
-local function AdjustObject(Id)
-  iBuyId = iBuyId + Id;
-  if iBuyId < 1 then SetObject(#aShopData);
-  elseif iBuyId > #aShopData then SetObject(1);
-  else SetObject(iBuyId) end;
+local function AdjustProduct(iAmount)
+  -- Play switching sound
   PlayStaticSound(iSHolo);
+  -- Adjust item and wrap around out of bounds values
+  SetProduct((iBuyId + iAmount - 1) % #aShopData + 1);
 end
 -- Shop logic function ----------------------------------------------------- --
-local function ShopLogic()
+local function ProcLogic()
   -- Perform game functions in the background
   GameProc();
   -- Time elapsed to animate the holographic emitter?
@@ -101,279 +100,225 @@ local function ShopLogic()
   if CoreTicks() % 8 == 0 then
     -- Animate the door
     iAnimDoor = iAnimDoor + iAnimDoorMod;
-    if iAnimDoor == iAnimDoorMax then iAnimDoorMod = -1;
+    if iAnimDoor == iTileDoorMax then iAnimDoorMod = -1;
     elseif iAnimDoor == iTileDoor then iAnimDoorMod = 0 end;
     -- Animate the forklift
     iForkAnim = iForkAnim + iForkAnimMod;
-    if iForkAnim == iForkAnimMax then
+    if iForkAnim == iTileAnimMax then
       iForkAnim, iForkAnimMod = iTileFork, 0 end;
   end
+  -- Speech ticks set?
+  if iSpeechTicks > 0 then
+    -- Reduce ticks count and if the ticks have run out?
+    iSpeechTicks = iSpeechTicks - 1;
+    if iSpeechTicks == 0 then
+      -- Restore keybank and hotspot id
+      SetHotSpot(iHotSpotId);
+      SetKeys(true, iKeyBankId);
+    end
+  end
 end
--- Render function --------------------------------------------------------- --
-local function ShopRender()
-  -- Render original interface
+-- Render main background scene--------------------------------------------- --
+local function RenderBackground()
+  -- Render original interface backdrop and shadow
   RenderInterface();
-  -- Draw backdrop
-  texShop:BlitSLT(iTileBG, 8, 8);
-  -- Render shadow
+  texShop:BlitSLT(20, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw animations
   if iAnimDoor ~= 0 then texShop:BlitSLT(iAnimDoor, 272, 79) end;
   if random() < 0.001 and iAnimDoorMod == 0 then iAnimDoorMod = 1 end;
-  texShop:BlitSLT(CoreTicks() // 10 % 3 + iTileLights, 9, 174);
+  texShop:BlitSLT(CoreTicks() // 10 % 3 + 28, 9, 174); -- Floor lights
   if iForkAnim ~= 0 then texShop:BlitSLT(iForkAnim, 112, 95) end;
   if random() < 0.001 and iForkAnimMod == 0 then iForkAnimMod = 1 end;
-  -- Shop is open
-  if bShopOpen then
-    texShop:BlitSLT(iTileStatus, 16, 16);
-    texShop:BlitSLT(iBuyHoloId, 197, 88);
-    texShop:BlitSLT(iHoloAnimTileId, 197, 88);
-    texShop:BlitSLT(iTileEmitter, 200, 168);
-    fontLittle:SetCRGB(0.5, 1, 0.5);
-    fontLittle:PrintC(80, 31, aBuyObject.LONGNAME);
-    fontTiny:SetCRGB(0.5, 0.75, 0);
-    fontTiny:PrintC(80, 43, aBuyObject.DESC);
-    fontLittle:SetCRGB(1, 1, 0);
-    fontLittle:PrintC(80, 63,
-      format("%03uz (%u)", aBuyObject.VALUE, iCarryable));
-  end
-  -- Speech ticks set
-  if iSpeechTicks > 0 then
-    texShop:BlitSLT(CoreTicks() // 10 % 4 + iTileKeeper, 112, 127);
-    texShop:BlitSLT(iTileSpeech, 0, 160);
-    fontSpeech:PrintC(57, 168, sMsg);
-    iSpeechTicks = iSpeechTicks-1;
-  end
-  SetBottomRightTip(sTip);
 end
--- Set tip and cursor ------------------------------------------------------ --
-local function SetTipAndCursor(sText, iId)
-  sTip = sText;
-  SetCursor(iId);
+-- Render speech bubble scene ---------------------------------------------- --
+local function RenderSpeech()
+  -- Speech ticks set?
+  if iSpeechTicks > 0 then
+    -- Render shopkeeper talking and speech bubble
+    texShop:BlitSLT(CoreTicks() // 10 % 4 + 22, 112, 127);
+    texShop:BlitSLT(21, 0, 160);
+    fontSpeech:PrintC(57, 168, sMsg);
+  end
+  -- Render tip
+  RenderTip();
+end
+-- Render open function ---------------------------------------------------- --
+local function RenderOpen()
+  -- Render background part
+  RenderBackground();
+  -- Render open parts
+  texShop:BlitSLT(iBuyHoloId, 197, 88);
+  texShop:BlitSLT(iHoloAnimTileId, 197, 88);
+  texShop:BlitSLT(27, 200, 168); -- Holo emitter light
+  texShop:BlitSLT(26, 16, 16); -- Product info background
+  fontLittle:SetCRGB(0.5, 1, 0.5);
+  fontLittle:PrintC(80, 31, sLongName);
+  fontLittle:SetCRGB(1, 1, 0);
+  fontLittle:PrintC(80, 63, sPrice);
+  fontTiny:SetCRGB(0.5, 0.75, 0);
+  fontTiny:PrintC(80, 43, sDesc);
+  -- Render speech and tip
+  RenderSpeech();
+end
+-- Render closed function -------------------------------------------------- --
+local function RenderClosed()
+  -- Render background part, speech and tip
+  RenderBackground();
+  RenderSpeech();
 end
 -- Make the guy talk ------------------------------------------------------- --
-local function SetSpeech(sM, iSfx)
-  sMsg, iSpeechTicks = sM, 120;
-  PlayStaticSound(iSfx);
+local function SetSpeech(sMessage)
+  -- Set message and wait time
+  sMsg, iSpeechTicks = sMessage, 120;
+  -- Disable keys and set wait hot spot
+  SetKeys(true);
+  SetHotSpot();
+  -- Set waiting tip
+  SetTip("WAIT...");
+end
+-- Make the guy talk with a sound effect ----------------------------------- --
+local function SetSpeechSound(sMessage, iSfxId)
+  -- Play sound and show speech text
+  PlayStaticSound(iSfxId);
+  SetSpeech(sMessage);
 end
 -- Open up the shop -------------------------------------------------------- --
-local function OpenShop()
+local function GoOpen()
   -- Play sound effects
   PlayStaticSound(iSSelect);
   PlayStaticSound(iSOpen);
   LoopStaticSound(iSHoloHum);
-  -- Set open shop keys
+  -- Set open shop keys and active ids
+  iKeyBankId = iKeyBankOpenId;
   SetKeys(true, iKeyBankOpenId);
-  bShopOpen = true;
+  iHotSpotId = iHotSpotOpenId;
+  SetHotSpot(iHotSpotOpenId);
+  -- Set open shop logic
+  SetCallbacks(ProcLogic, RenderOpen);
 end
 -- Shop exit requested ----------------------------------------------------- --
-local function ExitShop()
+local function GoExit()
   -- Play sound
   PlayStaticSound(iSSelect);
   -- Stop humming sound
   StopSound(iSHoloHum);
-  -- Shop no longer opened
-  bShopOpen = false;
   -- Dereference assets for garbage collector
-  texShop = false;
-  -- Set no keys
+  texShop = nil;
+  -- Set no keys and hot spots
   SetKeys(true);
+  SetHotSpot();
   -- Start the loading waiting procedure
-  SetCallbacks(GameProc, RenderInterface, nil);
+  SetCallbacks(GameProc, RenderInterface);
   -- Return to lobby
-  InitLobby(aDigger);
+  InitLobby();
 end
 -- Adjust product ---------------------------------------------------------- --
-local function PreviousProduct() AdjustObject(-1) end;
-local function NextProduct() AdjustObject(1) end;
-local function BuyProduct()
+local function GoLast() AdjustProduct(-1) end;
+local function GoNext() AdjustProduct(1) end;
+local function GoBuy()
   -- Check weight and if can't carry this?
-  if aDigger.IW + aBuyObject.WEIGHT > aDiggerInfo.STRENGTH then
-    SetSpeech("TOO HEAVY FOR YOU", iSError);
+  if aActiveObject.IW + aBuyObject.WEIGHT > aDiggerInfo.STRENGTH then
+    SetSpeechSound("TOO HEAVY FOR YOU", iSError);
   -- Try to buy it and if failed?
-  elseif BuyItem(aDigger, iBuyObjTypeId) then
-    SetSpeech("SOLD TO YOU NOW!", iSTrade);
+  elseif BuyItem(aActiveObject, iBuyObjTypeId) then
+    SetSpeechSound("SOLD TO YOU NOW!", iSTrade);
     PlayStaticSound(iSTrade);
     UpdateCarryable();
   -- Can't afford it
-  else SetSpeech("YOU CANNOT AFFORD IT", iSError) end;
+  else SetSpeechSound("YOU CAN'T AFFORD IT!", iSError) end;
 end
--- Shop input callback ----------------------------------------------------- --
-local function ShopInput()
-  -- Deny any input if speech bubble open
-  if iSpeechTicks > 0 then
-    sTip = "WAIT";
-    return SetCursor(iCWait);
-  end
-  -- Player clicked the F'Targ?
-  if not bShopOpen and IsMouseInBounds(94, 130, 153, 206) then
-    SetTipAndCursor("OPEN SHOP", iCSelect);
-    -- Mouse button clicked?
-    if IsButtonPressed(0) then OpenShop() end;
-  -- Mouse over exit?
-  elseif IsMouseNotInBounds(8, 8, 312, 208) then
-    -- Set help for player
-    SetTipAndCursor("GO TO LOBBY", iCExit);
-    -- Mouse button clicked?
-    if IsButtonPressed(0) then return ExitShop() end;
-  -- Shop is open?
-  elseif bShopOpen then
-    -- Left scroll button (previous item)
-    if IsMouseInBounds(31, 59, 47, 74) then
-      SetTipAndCursor("LAST ITEM", iCSelect);
-      -- Mouse button clicked?
-      if IsButtonPressed(0) then PreviousProduct() end
-    -- Right scroll button (next item)
-    elseif IsMouseInBounds(110, 59, 126, 74) then
-      SetTipAndCursor("NEXT ITEM", iCSelect);
-      -- Mouse button clicked?
-      if IsButtonPressed(0) then NextProduct() end
-    -- Mouse over purchase (projector)
-    elseif IsMouseInBounds(197, 88, 261, 152) then
-      SetTipAndCursor("BUY ITEM", iCSelect);
-      -- Mouse button clicked?
-      if IsButtonPressed(0) then BuyProduct() end;
-    else SetTipAndCursor("SHOP", iCArrow) end;
-    -- Mouse wheel moved down?
-    if IsScrollingDown() then AdjustObject(-1);
-    -- Mouse wheel moved up?
-    elseif IsScrollingUp() then AdjustObject(1) end;
-  -- Shop closed
-  else SetTipAndCursor("SHOP", iCArrow) end;
+-- Scroll wheel function --------------------------------------------------- --
+local function Scroll(nX, nY)
+  if nY > 0 then GoLast() elseif nY < 0 then GoNext() end;
 end
 -- When shop assets have loaded? ------------------------------------------- --
-local function OnLoaded(aResources)
+local function OnAssetsLoaded(aResources)
   -- Play shop music
   PlayMusic(aResources[2]);
-  -- Set texture. We only have 25 tiles sized 65x65, discard all the other
-  -- tiles as we're using the same bitmap for other sized textures.
+  -- Set texture handle
   texShop = aResources[1];
-  texShop:TileSTC(25);
-  -- Cache tile co-ordinates
-  iTileBG = texShop:TileA(208, 312, 512, 512);
-  iTileSpeech = texShop:TileA(  0, 417, 112, 441);
-  iTileKeeper =
-    texShop:TileA(  0, 264,  48, 312);
-    texShop:TileA( 49, 264,  97, 312);
-    texShop:TileA( 98, 264, 146, 312);
-    texShop:TileA(147, 264, 195, 312);
-  iTileStatus = texShop:TileA(  0, 442, 128, 512);
-  iTileEmitter = texShop:TileA(196, 264, 250, 303);
-  iTileLights =
-    texShop:TileA(345, 282, 400, 310);
-    texShop:TileA(401, 282, 456, 310);
-    texShop:TileA(457, 282, 512, 310);
-  iTileDoor =
-    texShop:TileA(313, 220, 352, 240);
-    texShop:TileA(353, 220, 392, 240);
-    texShop:TileA(393, 220, 432, 240);
-    texShop:TileA(433, 220, 472, 240);
-    texShop:TileA(473, 220, 512, 240);
-    texShop:TileA(313, 241, 352, 261);
-    texShop:TileA(353, 241, 392, 261);
-    texShop:TileA(393, 241, 432, 261);
-    texShop:TileA(433, 241, 472, 261);
-    texShop:TileA(473, 241, 512, 261);
-    texShop:TileA(313, 262, 352, 282);
-    texShop:TileA(353, 262, 392, 282);
-    texShop:TileA(393, 262, 432, 282);
-    texShop:TileA(433, 262, 472, 282);
-    texShop:TileA(473, 262, 512, 282);
-  iTileFork =
-    texShop:TileA(  0, 313,  64, 345);
-    texShop:TileA( 65, 313, 129, 345);
-    texShop:TileA(130, 313, 194, 345);
-    texShop:TileA(  0, 346,  64, 378);
-    texShop:TileA( 65, 346, 129, 378);
-    texShop:TileA(130, 346, 194, 378);
-    texShop:TileA(  0, 379,  64, 411);
-    texShop:TileA( 65, 379, 129, 411);
-    texShop:TileA(130, 379, 194, 411);
-    texShop:TileA(137, 412, 201, 444);
-    texShop:TileA(137, 445, 201, 477);
-  -- Reset variables we'll need
-  iBuyId, aBuyObject, iBuyObjTypeId, iBuyHoloId, iHoloAnimTileId,
-    iHoloAnimTileIdMod = nil, nil, nil, nil, nil, nil;
-  iAnimDoor, iAnimDoorMod, iAnimDoorMax = iTileDoor, 0, iTileDoor+14;
-  iForkAnim, iForkAnimMod, iForkAnimMax = iTileFork, 0, iTileFork+11;
-  iSpeechTicks, bShopOpen = 120, false;
-  sMsg, sTip, iCarryable = "SELECT ME TO OPEN SHOP", nil, nil;
+  -- Reset animations
+  iAnimDoor, iAnimDoorMod = iTileDoor, 0;
+  iForkAnim, iForkAnimMod = iTileFork, 0;
   -- Set colour of speech text
   fontSpeech:SetCRGB(0, 0, 0.25);
+  -- Set initial speech bubble
+  SetSpeech("SELECT ME TO OPEN SHOP");
   -- Select first object
-  SetObject(1);
-  -- Set closed shop keys
-  SetKeys(true, iKeyBankClosedId);
+  SetProduct(1);
+  -- Set closed shop keys and hotspots
+  iHotSpotId, iKeyBankId = iHotSpotClosedId, iKeyBankClosedId;
+  -- Set waiting for initial speech bubble
+  SetHotSpot();
   -- Set shop callbacks
-  SetCallbacks(ShopLogic, ShopRender, ShopInput);
+  SetCallbacks(ProcLogic, RenderClosed);
 end
 -- Initialise the shop screen ---------------------------------------------- --
-local function InitShop(aActiveObject)
+local function InitShop()
   -- Get selected digger
-  aDigger = aActiveObject;
-  if not UtilIsTable(aDigger) then
-    error("Invalid customer object specified! "..tostring(aDigger)) end;
+  aActiveObject = GetActiveObject();
+  if not UtilIsTable(aActiveObject) then
+    error("Invalid customer object specified! "..tostring(aActiveObject)) end;
   -- Get object data
-  aDiggerInfo = aDigger.OD;
+  aDiggerInfo = aActiveObject.OD;
   -- Load shop resources
-  LoadResources("Shop", aAssets, OnLoaded);
+  LoadResources("Shop", aAssets, OnAssetsLoaded);
 end
 -- Scripts have been loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  BuyItem, Fade, GameProc, InitCon, InitLobby, IsButtonPressed,
-    IsButtonReleased, IsMouseInBounds, IsMouseNotInBounds, IsScrollingDown,
-    IsScrollingUp, LoadResources, LoopStaticSound, PlayMusic, PlayStaticSound,
-    RenderInterface, RenderShadow, SetBottomRightTip, SetCallbacks, SetCursor,
-    SetKeys,
-    StopSound, aObjectActions, aObjectData, aObjectDirections,
-    aObjectJobs, aShopData, fontLittle, fontSpeech, fontTiny =
-      GetAPI("BuyItem", "Fade", "GameProc", "InitCon", "InitLobby",
-        "IsButtonPressed", "IsButtonReleased", "IsMouseInBounds",
-        "IsMouseNotInBounds", "IsScrollingDown", "IsScrollingUp",
-        "LoadResources", "LoopStaticSound", "PlayMusic", "PlayStaticSound",
-        "RenderInterface", "RenderShadow", "SetBottomRightTip", "SetCallbacks",
-        "SetCursor", "SetKeys", "StopSound", "aObjectActions",
-        "aObjectData", "aObjectDirections", "aObjectJobs",
-        "aShopData", "fontLittle", "fontSpeech", "fontTiny");
-  -- Shop key callbacks
-  local function GoExitShop() if iSpeechTicks <= 0 then ExitShop() end end;
-  local function GoOpenShop() if iSpeechTicks <= 0 then OpenShop() end end;
-  local function GoPreviousProduct()
-    if iSpeechTicks <= 0 then PreviousProduct() end end;
-  local function GoNextProduct()
-    if iSpeechTicks <= 0 then NextProduct() end end;
-  local function GoBuyProduct() if iSpeechTicks <= 0 then BuyProduct() end end;
+  BuyItem, Fade, GameProc, GetActiveObject, InitCon, InitLobby, LoadResources,
+    LoopStaticSound, PlayMusic, PlayStaticSound, RegisterHotSpot, RegisterKeys,
+    RenderInterface, RenderShadow, RenderTip, SetCallbacks, SetHotSpot,
+    SetKeys, SetTip, StopSound, aAssetsData, aCursorIdData, aObjectActions,
+    aObjectData, aObjectDirections, aObjectJobs, aSfxData, aShopData,
+    fontLittle, fontSpeech, fontTiny =
+      GetAPI("BuyItem", "Fade", "GameProc", "GetActiveObject", "InitCon",
+        "InitLobby", "LoadResources", "LoopStaticSound", "PlayMusic",
+        "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
+        "RenderInterface", "RenderShadow", "RenderTip", "SetCallbacks",
+        "SetHotSpot", "SetKeys", "SetTip", "StopSound", "aAssetsData",
+        "aCursorIdData", "aObjectActions", "aObjectData", "aObjectDirections",
+        "aObjectJobs", "aSfxData", "aShopData", "fontLittle", "fontSpeech",
+        "fontTiny");
+  -- Setup assets required
+  aAssets = { aAssetsData.shop, aAssetsData.shopm };
+  -- Register hotspots
+  local iCSelect<const>, iCExit<const> =
+    aCursorIdData.SELECT, aCursorIdData.EXIT;
+  iHotSpotClosedId = RegisterHotSpot({
+    {  94, 130,  59,  76, 0, iCSelect, "OPEN SHOP",   false, GoOpen },
+    {   8,   8, 304, 200, 0, 0,        "SHOP IDLE",   false, false  },
+    {   0,   0,   0, 240, 3, iCExit,   "GO TO LOBBY", false, GoExit }
+  });
+  iHotSpotOpenId = RegisterHotSpot({
+    {  31,  59,  16,  15, 0, iCSelect, "LAST ITEM",   Scroll, GoLast },
+    { 110,  59,  16,  15, 0, iCSelect, "NEXT ITEM",   Scroll, GoNext },
+    { 197,  88,  64,  64, 0, iCSelect, "PURCHASE",    Scroll, GoBuy  },
+    {   8,   8, 304, 200, 0, 0,        "SHOP",        Scroll, false  },
+    {   0,   0,   0, 240, 3, iCExit,   "GO TO LOBBY", Scroll, GoExit }
+  });
   -- Register keybinds
   local aKeys<const> = Input.KeyCodes;
   local iPress<const> = Input.States.PRESS;
-  local RegisterKeys<const> = GetAPI("RegisterKeys");
-  local aEscape<const> = { aKeys.ESCAPE, GoExitShop, "zmtcsl", "LEAVE" };
+  local aEscape<const> = { aKeys.ESCAPE, GoExit, "zmtcsl", "LEAVE" };
   local sName<const> = "ZMTC SHOP";
-  iKeyBankClosedId = RegisterKeys(sName, {
-    [iPress] = {
-      aEscape,
-      { aKeys.ENTER, GoOpenShop, "zmtcso", "OPEN" },
-    }
-  });
-  iKeyBankOpenId = RegisterKeys(sName, {
-    [iPress] = {
-      aEscape,
-      { aKeys.LEFT, GoPreviousProduct, "zmtcspp", "PREVIOUS PRODUCT" },
-      { aKeys.RIGHT, GoNextProduct, "zmtcsnp", "NEXT PRODUCT" },
-      { aKeys.SPACE, GoBuyProduct, "zmtcsbp", "PURCHASE PRODUCT" },
-    }
-  });
+  iKeyBankClosedId = RegisterKeys(sName, { [iPress] = { aEscape,
+    { aKeys.ENTER, GoOpen, "zmtcso", "OPEN" },
+  } });
+  iKeyBankOpenId = RegisterKeys(sName, { [iPress] = { aEscape,
+    { aKeys.LEFT,  GoLast, "zmtcspp", "PREVIOUS PRODUCT" },
+    { aKeys.RIGHT, GoNext, "zmtcsnp", "NEXT PRODUCT"     },
+    { aKeys.SPACE, GoBuy,  "zmtcsbp", "PURCHASE PRODUCT" },
+  } });
   -- Set sound effect ids
-  local aSfxData<const> = GetAPI("aSfxData");
   iSError, iSFind, iSHolo, iSHoloHum, iSOpen, iSSelect, iSTrade =
     aSfxData.ERROR, aSfxData.FIND, aSfxData.SSELECT, aSfxData.HOLOHUM,
     aSfxData.SOPEN, aSfxData.SELECT, aSfxData.TRADE;
-  -- Set cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
-  iCWait, iCSelect, iCExit, iCArrow = aCursorIdData.WAIT, aCursorIdData.SELECT,
-    aCursorIdData.EXIT, aCursorIdData.ARROW;
 end
 -- Exports and imports ----------------------------------------------------- --
-return { A = { InitShop = InitShop }, F = OnReady };
+return { A = { InitShop = InitShop }, F = OnScriptLoaded };
 -- End-of-File ============================================================= --

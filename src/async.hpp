@@ -126,7 +126,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       reinterpret_cast<void*>(&mtAsyncOwner), AR_LOADING,
       static_cast<uint64_t>(apcCmd), vaVars...); }
   /* -- Write to pipe assistant -------------------------------------------- */
-  void AsyncWriteToPipe(SysBase::SysPipe &spProcess, size_t &stPosition,
+  void AsyncWriteToPipe(SysPipe &spProcess, size_t &stPosition,
     const size_t stBuffer)
   { // Write a block of data and get how much we wrote. We hard fail if we did
     // not write the correct number of bytes
@@ -156,16 +156,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Also the member controls the 'Ident' class so it's up to them to manage
     // it.
   }
-  /* -- Init from file synchronously ---------------------------- */ protected:
-  void SyncInitFile(const string &strFilename)
-  { // Set filename
-    idName.IdentSet(strFilename);
-    // Load from specified file
-    FileMap fmData{ AssetLoadFromDisk(strFilename) };
-    // Send to derived class and register
-    SyncLoadDataAndRegister(fmData);
-  }
-  /* -- Get thread --------------------------------------------------------- */
+  /* -- Get thread ---------------------------------------------- */ protected:
   bool AsyncThreadIsCurrent(void) const
     { return tAsyncThread.ThreadIsCurrent(); }
   /* -- Prepend message to the full stack message -------------------------- */
@@ -178,7 +169,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   { // Duration of execution
     const ClockChrono<> ccExecute;
     // Open pipe to application
-    SysBase::SysPipe spProcess{ idName.IdentGet() };
+    SysPipe spProcess{ idName.IdentGet() };
     // Record pid. This is so the destructor can kill it on exit
     uiAsyncPid = spProcess.GetPid();
     // Send progress event
@@ -316,17 +307,17 @@ template<class MemberType, class ColType>class AsyncLoader :
     }
   }
   /* ----------------------------------------------------------------------- */
-  void AsyncInit(lua_State*const lsS, const string &strName,
+  void AsyncInit(lua_State*const lsS, const string &strIdentifier,
     const string &strL)
   { // Set the filename
-    idName.IdentSet(strName);
+    idName.IdentSet(strIdentifier);
     // Parse the class, error and success functions.
     lecAsync.LuaEvtInitEx(lsS);
     // Save the current stack because if an error occurs asynchronously, the
     // event subsystem executes the callback and will be empty.
     strAsyncError = StdMove(LuaUtilStack(lsS));
     // Begin async thread
-    tAsyncThread.ThreadInit(StrAppend(strL, ':', strName),
+    tAsyncThread.ThreadInit(StrAppend(strL, ':', strIdentifier),
       bind(&AsyncLoader<MemberType,ColType>::AsyncThreadMain,
         this, _1), this);
   }
@@ -404,12 +395,12 @@ template<class MemberType, class ColType>class AsyncLoader :
     lecAsync.LuaEvtDeInit();
   }
   /* -- The thread only calls LoadData() and thats it ---------------------- */
-  void AsyncInitNone(lua_State*const lsS, const string &strName,
+  void AsyncInitNone(lua_State*const lsS, const string &strIdentifier,
     const string &strLabel)
   { // Loading from memory
     asctAsyncType = BA_NONE;
     // Init rest of members
-    AsyncInit(lsS, strName, strLabel);
+    AsyncInit(lsS, strIdentifier, strLabel);
   }
   /* -- The thread loads from a filemap and calls LoadData() --------------- */
   void AsyncInitFile(lua_State*const lsS, const string &strFilename,
@@ -430,33 +421,51 @@ template<class MemberType, class ColType>class AsyncLoader :
     AsyncInit(lsS, strCmdLine, strLabel);
   }
   /* -- The thread loads from existing memory and calls LoadData() --------- */
-  void AsyncInitArray(lua_State*const lsS, const string &strName,
+  void AsyncInitArray(lua_State*const lsS, const string &strIdentifier,
     const string &strLabel, Memory &mData)
   { // Set data to load from
     MemSwap(mData);
     // Loading from memory
     asctAsyncType = BA_MEMORY;
     // Init rest of members
-    AsyncInit(lsS, strName, strLabel);
+    AsyncInit(lsS, strIdentifier, strLabel);
   }
   /* -- Send load data update and register in collector -------------------- */
-  void SyncLoadDataAndRegister(FileMap &fmData)
+  void SyncLoadDataAndRegister(FileMap &fmData) const
   { // Send file map to derived class
     mtAsyncOwner.AsyncReady(fmData);
     // Load succeeded so register the block.
     static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
   }
+  /* -- Init from file synchronously from disk only ------------------------ */
+  void SyncInitFileDisk(const string &strFilename) const
+  { // Set filename
+    idName.IdentSet(strFilename);
+    // Load from specified file
+    FileMap fmData{ AssetLoadFromDisk(strFilename) };
+    // Send to derived class and register
+    SyncLoadDataAndRegister(fmData);
+  }
+  /* -- Init from file synchronously --------------------------------------- */
+  void SyncInitFile(const string &strFilename) const
+  { // Set filename
+    idName.IdentSet(strFilename);
+    // Load from specified file
+    FileMap fmData{ AssetExtract(strFilename) };
+    // Send to derived class and register
+    SyncLoadDataAndRegister(fmData);
+  }
   /* -- Init from array synchronously -------------------------------------- */
-  void SyncInitArray(const string &strName, Memory &mData)
+  void SyncInitArray(const string &strIdentifier, Memory &mData) const
   { // Set identifier
-    idName.IdentSet(strName);
+    idName.IdentSet(strIdentifier);
     // Put the memory block into a file map and load the block
-    FileMap fmData{ strName, StdMove(mData), cmSys.GetTimeS() };
+    FileMap fmData{ strIdentifier, StdMove(mData), cmSys.GetTimeS() };
     // Send to derived class and register
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from file synchronously with filename checking ---------------- */
-  void SyncInitFileSafe(const string &strFilename)
+  void SyncInitFileSafe(const string &strFilename) const
   { // Set filename
     idName.IdentSet(strFilename);
     // Load from specified file from archives or disk

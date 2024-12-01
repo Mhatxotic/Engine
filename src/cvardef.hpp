@@ -148,15 +148,15 @@ using namespace ICVarDef::P;
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 enum CVarEnums : size_t
-{ /* -- Critical cvars ----------------------------------------------------- */
+{ /* -- Critical cvars (order is important!) ------------------------------- */
   APP_CMDLINE,      LOG_LEVEL,         AST_LZMABUFFER,      AST_PIPEBUFFER,
-  AST_FSOVERRIDE,   AST_EXEBUNDLE,     APP_BASEDIR,         AST_BUNDLES,
-  APP_CONFIG,       APP_AUTHOR,        APP_SHORTNAME,       APP_HOMEDIR,
-  SQL_DB,           SQL_RETRYCOUNT,    SQL_RETRYSUSPEND,    SQL_ERASEEMPTY,
-  SQL_TEMPSTORE,    SQL_SYNCHRONOUS,   SQL_JOURNALMODE,     SQL_AUTOVACUUM,
-  SQL_FOREIGNKEYS,  SQL_INCVACUUM,     SQL_DEFAULTS,        SQL_LOADCONFIG,
-  APP_CFLAGS,       LOG_LINES,         LOG_FILE,            APP_LONGNAME,
-  APP_CLEARMUTEX,   ERR_INSTANCE,
+  AST_FSOVERRIDE,   AST_EXEBUNDLE,     AST_BASEDIR,         AST_BUNDLES,
+  APP_CONFIG,       APP_AUTHOR,        APP_SHORTNAME,       AST_HOMEDIR,
+  AST_MODBUNDLE,    SQL_DB,            SQL_RETRYCOUNT,      SQL_RETRYSUSPEND,
+  SQL_ERASEEMPTY,   SQL_TEMPSTORE,     SQL_SYNCHRONOUS,     SQL_JOURNALMODE,
+  SQL_AUTOVACUUM,   SQL_FOREIGNKEYS,   SQL_INCVACUUM,       SQL_DEFAULTS,
+  SQL_LOADCONFIG,   APP_CFLAGS,        LOG_LINES,           LOG_FILE,
+  APP_LONGNAME,     APP_CLEARMUTEX,    ERR_INSTANCE,
   /* -- Object cvars ------------------------------------------------------- */
   OBJ_CLIPMAX,      OBJ_CMDMAX,        OBJ_CVARMAX,         OBJ_CVARIMAX,
   OBJ_ARCHIVEMAX,   OBJ_ASSETMAX,      OBJ_BINMAX,          OBJ_FBOMAX,
@@ -172,9 +172,9 @@ enum CVarEnums : size_t
   ERR_ADMIN,        ERR_CHECKSUM,      ERR_DEBUGGER,        ERR_LUAMODE,
   ERR_LMRESETLIMIT, ERR_MINVRAM,       ERR_MINRAM,
   /* -- Lua cvars ---------------------------------------------------------- */
-  LUA_TICKTIMEOUT,  LUA_TICKCHECK,     LUA_CACHE,           LUA_SIZESTACK,
-  LUA_GCPAUSE,      LUA_GCSTEPMUL,     LUA_LASTVER,         LUA_RANDOMSEED,
-  LUA_SCRIPT,
+  LUA_CACHE,        LUA_DEBUGLOCALS,   LUA_GCPAUSE,         LUA_GCSTEPMUL,
+  LUA_LASTVER,      LUA_RANDOMSEED,    LUA_SCRIPT,          LUA_SIZESTACK,
+  LUA_TICKCHECK,    LUA_TICKTIMEOUT,
   /* -- Audio cvars -------------------------------------------------------- */
   AUD_DELAY,        AUD_VOL,           AUD_INTERFACE,       AUD_CHECK,
   AUD_NUMSOURCES,   AUD_SAMVOL,        AUD_STRBUFCOUNT,     AUD_STRBUFFER,
@@ -221,7 +221,7 @@ enum CVarEnums : size_t
   LOG_CREDITS,      LOG_DYLIBS,
   /* -- Misc (do not (re)move) --------------------------------------------- */
   CVAR_MAX,                            // Maximum cvars
-  CVAR_FIRST = LOG_LEVEL,              // The first cvar item
+  CVAR_FIRST = APP_CMDLINE,            // The first cvar item
 };/* ----------------------------------------------------------------------- */
 struct CVarItemStatic                  // Start of CVar static struct
 { /* ----------------------------------------------------------------------- */

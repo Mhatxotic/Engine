@@ -7,88 +7,76 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 -- M-Engine function aliases ----------------------------------------------- --
 local InputSetCursorPos<const>, UtilTableSize<const>, UtilIsInteger<const> =
   Input.SetCursorPos, Util.TableSize, Util.IsInteger;
 -- Diggers function and data aliases --------------------------------------- --
-local AdjustViewPortX, AdjustViewPortY, Fade, GetAbsMousePos, InitEnding,
-  InitFail, InitLobby, IsButtonHeld, IsButtonPressed, IsButtonReleased,
-  IsMouseInBounds, IsMouseNotInBounds, IsMouseXGreaterEqualThan,
-  IsMouseXLessThan, IsMouseYGreaterEqualThan, IsMouseYLessThan, IsScrollingUp,
-  IsScrollingDown, IsSpriteCollide, LoadResources, PlayMusic, PlayStaticSound,
-  RenderFade, RenderObjects, RenderTerrain, SelectObject, SetCallbacks,
-  SetCursor, aGlobalData, aLevelsData, aObjectFlags, aObjects, fontSpeech,
-  SetKeys;
--- Resources --------------------------------------------------------------- --
-local aAssets<const> = { { T = 2, F = "end", P = { 0 } },
-                         { T = 7, F = "win" } };
+local AdjustViewPortX, AdjustViewPortY, DeInitLevel, Fade, GetAbsMousePos,
+  InitEnding, InitFail, InitLobby, IsMouseXGreaterEqualThan, IsMouseXLessThan,
+  IsMouseYGreaterEqualThan, IsMouseYLessThan, IsSpriteCollide, LoadResources,
+  PlayMusic, PlayStaticSound, RegisterFBUCallback, RenderFade, RenderObjects,
+  RenderTerrain, SelectObject, SetCallbacks, SetCursor, SetHotSpot, SetKeys,
+  aGlobalData, aLevelsData, aObjectFlags, aObjects, fontSpeech;
 -- Locals ------------------------------------------------------------------ --
-local iCLeft, iCRight, iCTop, iCExit,  -- Cursor ids
-      iCBottom, iCWait, iCArrow;       -- More cursor ids
-local iKeyBankId;                      -- Key bank to monitor keypresses
-local iObject;                         -- Current object
-local iSSelect, iSClick;               -- Sound effect ids
-local sObject;                         -- Object selected text
+local aAssets,                         -- Required assets
+      iCLeft, iCRight, iCTop, iCExit,  -- Cursor ids
+      iCBottom, iCWait, iCArrow,       -- More cursor ids
+      iHotSpotId,                      -- Hot spot id
+      iKeyBankId,                      -- Key bank to monitor keypresses
+      iObject,                         -- Current object
+      iStageLmove, iStageRmove,        -- Mouse scrolling positions
+      iSSelect, iSClick,               -- Sound effect ids
+      sObject;                         -- Object selected text
 local sObjectDefault<const> = "MAP POST MORTEM";
 local texEnd;                          -- Post mortem textures
--- Post mortem logic ------------------------------------------------------- --
-local function LogicPostMortem()
-  -- Get absolute mouse position on level
-  local iAMX<const>, iAMY<const> = GetAbsMousePos();
-  -- Walk through objects
-  for iIndex = 1, #aObjects do
-    -- Get object data and if cursor overlapping it ?
-    local aObject<const> = aObjects[iIndex];
-    if IsSpriteCollide(479, iAMX, iAMY, aObject.S,
-      aObject.X, aObject.Y) then
-      -- Set tip with name and health of object
-      sObject = (aObject.OD.LONGNAME or aObject.OD.NAME)..
-        " ("..aObject.H.."%)";
-      -- Done
-      return;
-    end
-  end
-  -- Set generic message
-  sObject = sObjectDefault;
-end
 -- Post mortem render ------------------------------------------------------ --
-local function RenderPostMortem()
+local function ProcRenderPostMortem()
   -- Render terrain and objects
   RenderTerrain();
   RenderObjects();
   -- Render post mortem banner and text
-  texEnd:BlitLT(8, 208);
+  texEnd:BlitSLT(4, 8, 208);
   fontSpeech:SetCRGB(0, 0, 0.25);
   fontSpeech:PrintC(160, 215, sObject);
 end
+-- On frame buffer updated ------------------------------------------------- --
+local function OnStageUpdated(...)
+  -- Update stage bounds
+  local _ _, _, iStageL, _, iStageR, _ = ...;
+  -- Update horizontal scrolling positions
+  iStageLmove, iStageRmove = iStageL + 16, iStageR - 16;
+end
+-- When fade has completed? ------------------------------------------------ --
+local function OnFadedOutToLobby()
+  -- Unregister from frame buffer update
+  RegisterFBUCallback("post");
+  -- De-initialise the level
+  DeInitLevel();
+  -- Dereference assets for garbage collection
+  texEnd = nil;
+  -- Current level completed and clear new game and selected level status
+  aGlobalData.gLevelsCompleted[aGlobalData.gSelectedLevel] = true;
+  aGlobalData.gSelectedLevel, aGlobalData.gNewGame = nil, nil;
+  -- Bank balance reached? Show good ending if bank balance reached
+  if aGlobalData.gBankBalance >= aGlobalData.gZogsToWinGame then
+    return InitEnding(aGlobalData.gSelectedRace) end;
+  -- Count number of levels completed and if all levels
+  -- completed? Show bad ending :(
+  local iNumCompleted<const> = UtilTableSize(aGlobalData.gLevelsCompleted);
+  if iNumCompleted >= #aLevelsData then return InitFail() end;
+  -- More levels to play so go back to the lobby.
+  aGlobalData.gGameSaved = false;
+  InitLobby();
+end
 -- Fade out to lobby ------------------------------------------------------- --
-local function Finish()
+local function GoFinish()
   -- Play button select sound
   PlayStaticSound(iSSelect);
-  -- When fade has completed?
-  local function OnFadeOut()
-    -- Dereference assets for garbage collection
-    texEnd = nil;
-    -- Current level completed and clear new game and selected level status
-    aGlobalData.gLevelsCompleted[aGlobalData.gSelectedLevel] = true;
-    aGlobalData.gSelectedLevel, aGlobalData.gNewGame = nil, nil;
-    -- Bank balance reached? Show good ending if bank balance reached
-    if aGlobalData.gBankBalance >= aGlobalData.gZogsToWinGame then
-      return InitEnding(aGlobalData.gSelectedRace) end;
-    -- Count number of levels completed and if all levels
-    -- completed? Show bad ending :( else back to the lobby.
-    local iNumCompleted<const> = UtilTableSize(aGlobalData.gLevelsCompleted);
-    if iNumCompleted >= #aLevelsData then InitFail();
-    else
-      aGlobalData.gGameSaved = false;
-      InitLobby();
-    end
-  end
   -- Start fading out
-  Fade(0, 1, 0.04, RenderPostMortem, OnFadeOut, true);
+  Fade(0, 1, 0.04, ProcRenderPostMortem, OnFadedOutToLobby, true);
 end
 -- Set specific object ----------------------------------------------------- --
 local function SetObject(iNewObj)
@@ -106,43 +94,71 @@ local function SetObject(iNewObj)
   SelectObject(aObject, true, true);
 end
 -- Cycle between objects --------------------------------------------------- --
-local function NextObject() SetObject(iObject + 1) end;
-local function PreviousObject() SetObject(iObject - 1) end;
+local function GoNextObject() SetObject(iObject + 1) end;
+local function GoPreviousObject() SetObject(iObject - 1) end;
 -- Scroll the map ---------------------------------------------------------- --
-local function ScrollUp() AdjustViewPortY(-16) end;
-local function ScrollDown() AdjustViewPortY(16) end;
-local function ScrollLeft() AdjustViewPortX(-16) end;
-local function ScrollRight() AdjustViewPortX(16) end;
--- Post mortem input ------------------------------------------------------- --
-local function InputPostMortem()
+local function GoScrollUp() AdjustViewPortY(-16) end;
+local function GoScrollDown() AdjustViewPortY(16) end;
+local function GoScrollLeft() AdjustViewPortX(-16) end;
+local function GoScrollRight() AdjustViewPortX(16) end;
+-- On hover ---------------------------------------------------------------- --
+local function OnHover()
+  -- Cursor at top edge of screen?
+  if IsMouseXLessThan(iStageLmove) then SetCursor(iCLeft);
+  -- Cursor at right edge of screen?
+  elseif IsMouseXGreaterEqualThan(iStageRmove) then SetCursor(iCRight);
+  -- Cursor at left edge of screen?
+  elseif IsMouseYLessThan(16) then SetCursor(iCTop);
+  -- Cursor over exit point?
+  elseif IsMouseYGreaterEqualThan(224) then SetCursor(iCExit);
+  -- Cursor over edge of bottom?
+  elseif IsMouseYGreaterEqualThan(192) then SetCursor(iCBottom);
+  -- Cursor in middle of screen
+  else
+    -- Get absolute mouse position on level
+    local iAMX<const>, iAMY<const> = GetAbsMousePos();
+    -- Walk through objects
+    for iIndex = 1, #aObjects do
+      -- Get object data and if cursor overlapping it ?
+      local aObject<const> = aObjects[iIndex];
+      if IsSpriteCollide(479, iAMX, iAMY, aObject.S, aObject.X, aObject.Y) then
+        -- Set tip with name and health of object
+        sObject = (aObject.OD.LONGNAME or aObject.OD.NAME)..
+          " ("..aObject.H.."%)";
+        -- Done
+        return;
+      end
+    end
+    -- Set generic message
+    sObject = sObjectDefault;
+  end
+end
+-- On scroll --------------------------------------------------------------- --
+local function OnScroll(nX, nY)
   -- Mouse wheel is scrolling up? Goto previous object
-  if IsScrollingUp() then PreviousObject();
+  if nY > 0 then GoPreviousObject();
   -- Mouse wheel is scrolling down? Goto next object
-  elseif IsScrollingDown() then NextObject();
-  -- Mouse at top edge of screen?
-  elseif IsMouseXLessThan(16) then
-    SetCursor(iCLeft);
-    if IsButtonHeld(0) then ScrollLeft() end;
-  -- Mouse at right edge of screen?
-  elseif IsMouseXGreaterEqualThan(304) then
-    SetCursor(iCRight);
-    if IsButtonHeld(0) then ScrollRight() end;
-  -- Mouse at left edge of screen?
+  elseif nY < 0 then GoNextObject() end;
+end
+-- On mouse released (remove logic function) ------------------------------- --
+local function OnRelease() SetCallbacks(nil, ProcRenderPostMortem) end;
+-- On mouse pressed -------------------------------------------------------- --
+local function OnPress()
+  -- Mouse pressed over  top edge of screen?
+  if IsMouseXLessThan(iStageLmove) then
+    SetCallbacks(GoScrollLeft, ProcRenderPostMortem);
+  -- Mouse pressed over right edge of screen?
+  elseif IsMouseXGreaterEqualThan(iStageRmove) then
+    SetCallbacks(GoScrollRight, ProcRenderPostMortem);
+  -- Mouse pressed over left edge of screen?
   elseif IsMouseYLessThan(16) then
-    SetCursor(iCTop);
-    if IsButtonHeld(0) then ScrollUp() end;
-  -- Mouse over exit point?
-  elseif IsMouseYGreaterEqualThan(224) then
-    -- Set exit cursor
-    SetCursor(iCExit);
-    -- Left mouse button pressed?
-    if IsButtonPressed(0) then Finish() end;
-  -- Mouse over edge of bottom?
+    SetCallbacks(GoScrollUp, ProcRenderPostMortem);
+  -- Mouse pressed over exit point?
+  elseif IsMouseYGreaterEqualThan(224) then GoFinish();
+  -- Mouse pressed over edge of bottom?
   elseif IsMouseYGreaterEqualThan(192) then
-    SetCursor(iCBottom);
-    if IsButtonHeld(0) then ScrollDown() end;
-  -- Mouse not anywhere interesting?
-  else SetCursor(iCArrow) end;
+    SetCallbacks(GoScrollDown, ProcRenderPostMortem);
+  end
 end
 -- Proc fade in ------------------------------------------------------------ --
 local function LogicAnimatedPostMortem()
@@ -150,14 +166,13 @@ local function LogicAnimatedPostMortem()
   if nFade > 0 then nFade = nFade - 0.01 return end;
   -- Clamp fade to fully transparent
   nFade = 0;
-  -- Enable post mortem keys
+  -- Enable post mortem keys and hotspots
   SetKeys(true, iKeyBankId);
+  SetHotSpot(iHotSpotId);
   -- Set no object id
   iObject = 0;
-  -- Set EXIT (continue) cursor
-  SetCursor(iCExit);
   -- Set post mortem procedure
-  SetCallbacks(LogicPostMortem, RenderPostMortem, InputPostMortem);
+  SetCallbacks(nil, ProcRenderPostMortem);
 end
 -- Render fade in ---------------------------------------------------------- --
 local function RenderAnimatedPostMortem()
@@ -168,77 +183,80 @@ local function RenderAnimatedPostMortem()
   RenderFade(nFade);
   -- Render post mortem banner and text
   local nAdj<const> = nFade * 128;
-  texEnd:BlitLT(8, 208 + nAdj);
+  texEnd:BlitSLT(4, 8, 208 + nAdj);
   fontSpeech:SetCRGB(0, 0, 0.25);
   fontSpeech:PrintC(160, 215 + nAdj, sObject);
 end
 -- When post mortem assets are loaded? ------------------------------------- --
-local function OnLoaded(aResources)
+local function OnAssetsLoaded(aResources)
+  -- Register frame buffer update
+  RegisterFBUCallback("post", OnStageUpdated);
   -- Get post mortem texture
   texEnd = aResources[1];
-  texEnd:TileSTC(1);
-  texEnd:TileSD(0, 208, 232, 304, 24);
   -- Loop End music
   PlayMusic(aResources[2], nil, nil, nil, 371767);
   -- Object hovered over by mouse
   sObject = sObjectDefault
   -- Fade in counter
   nFade = 0.5;
-  -- Set WAIT cursor for animation
-  SetCursor(iCWait);
   -- Set post mortem procedure
   SetCallbacks(LogicAnimatedPostMortem, RenderAnimatedPostMortem);
 end
 -- Initialise the lose screen ---------------------------------------------- --
 local function InitPost(iLId)
-  LoadResources("Post Mortem", aAssets, OnLoaded);
+  LoadResources("Post Mortem", aAssets, OnAssetsLoaded);
 end
 -- When the script has loaded ---------------------------------------------- --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Imports
-  AdjustViewPortX, AdjustViewPortY, aGlobalData, aLevelsData, aObjectFlags,
-    aObjects, Fade, fontSpeech, GetAbsMousePos, InitEnding, InitFail,
-    InitLobby, IsButtonHeld, IsButtonPressed, IsButtonReleased,
-    IsMouseInBounds, IsMouseNotInBounds, IsMouseXGreaterEqualThan,
+  AdjustViewPortX, AdjustViewPortY, DeInitLevel, Fade, GetAbsMousePos,
+    InitEnding, InitFail, InitLobby, IsMouseXGreaterEqualThan,
     IsMouseXLessThan, IsMouseYGreaterEqualThan, IsMouseYLessThan,
-    IsScrollingUp, IsScrollingDown, IsSpriteCollide, LoadResources,
-    PlayMusic, PlayStaticSound, RenderFade, RenderObjects, RenderTerrain,
-    SelectObject, SetCallbacks, SetCursor, SetKeys =
-      GetAPI("AdjustViewPortX", "AdjustViewPortY", "aGlobalData",
-        "aLevelsData", "aObjectFlags", "aObjects", "Fade", "fontSpeech",
+    IsSpriteCollide, LoadResources, PlayMusic, PlayStaticSound,
+    RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderFade,
+    RenderObjects, RenderTerrain, SelectObject, SetCallbacks, SetCursor,
+    SetHotSpot, SetKeys, aAssetsData, aCursorIdData, aGlobalData, aLevelsData,
+    aObjectFlags, aObjects, aSfxData, fontSpeech =
+      GetAPI("AdjustViewPortX", "AdjustViewPortY", "DeInitLevel", "Fade",
         "GetAbsMousePos", "InitEnding", "InitFail", "InitLobby",
-        "IsButtonHeld", "IsButtonPressed", "IsButtonReleased",
-        "IsMouseInBounds", "IsMouseNotInBounds", "IsMouseXGreaterEqualThan",
-        "IsMouseXLessThan", "IsMouseYGreaterEqualThan", "IsMouseYLessThan",
-        "IsScrollingUp", "IsScrollingDown", "IsSpriteCollide", "LoadResources",
-        "PlayMusic", "PlayStaticSound", "RenderFade", "RenderObjects",
+        "IsMouseXGreaterEqualThan", "IsMouseXLessThan",
+        "IsMouseYGreaterEqualThan", "IsMouseYLessThan", "IsSpriteCollide",
+        "LoadResources", "PlayMusic", "PlayStaticSound", "RegisterFBUCallback",
+        "RegisterHotSpot", "RegisterKeys", "RenderFade", "RenderObjects",
         "RenderTerrain", "SelectObject", "SetCallbacks", "SetCursor",
-        "SetKeys");
+        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData", "aGlobalData",
+        "aLevelsData", "aObjectFlags", "aObjects", "aSfxData", "fontSpeech");
+  -- Setup required assets
+  aAssets = { aAssetsData.post, aAssetsData.postm };
   -- Register keybinds
   local aKeys<const>, aStates<const> = Input.KeyCodes, Input.States;
   local aScrUp<const>, aScrDown<const>, aScrLeft<const>, aScrRight<const> =
-    { aKeys.UP, ScrollUp, "igpmsmu", "SCROLL MAP UP" },
-    { aKeys.DOWN, ScrollDown, "igpmsmd", "SCROLL MAP DOWN" },
-    { aKeys.LEFT, ScrollLeft, "igpmsml", "SCROLL MAP LEFT" },
-    { aKeys.RIGHT, ScrollRight, "igpmsmr", "SCROLL MAP RIGHT" };
-  iKeyBankId = GetAPI("RegisterKeys")("IN-GAME POST MORTEM", {
+    { aKeys.UP,    GoScrollUp,    "igpmsmu", "SCROLL MAP UP"    },
+    { aKeys.DOWN,  GoScrollDown,  "igpmsmd", "SCROLL MAP DOWN"  },
+    { aKeys.LEFT,  GoScrollLeft,  "igpmsml", "SCROLL MAP LEFT"  },
+    { aKeys.RIGHT, GoScrollRight, "igpmsmr", "SCROLL MAP RIGHT" };
+  iKeyBankId = RegisterKeys("IN-GAME POST MORTEM", {
     [aStates.PRESS] = {
-      { aKeys.ESCAPE, Finish, "igpmc", "CLOSE" },
-      { aKeys.MINUS, PreviousObject, "igpmop", "PREVIOUS" },
-      { aKeys.EQUAL, NextObject, "igpmon", "NEXT" },
+      { aKeys.ESCAPE, GoFinish,       "igpmc",  "CLOSE" },
+      { aKeys.MINUS,  GoPreviousObject, "igpmop", "PREVIOUS" },
+      { aKeys.EQUAL,  GoNextObject,     "igpmon", "NEXT" },
       aScrUp, aScrDown, aScrLeft, aScrRight
     }, [aStates.REPEAT] = { aScrUp, aScrDown, aScrLeft, aScrRight },
   });
+  -- Set hot spot
+  iHotSpotId = RegisterHotSpot({
+    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress } }
+  });
   -- Set cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
   iCLeft, iCRight, iCTop, iCBottom, iCWait, iCArrow, iCExit =
     aCursorIdData.LEFT, aCursorIdData.RIGHT, aCursorIdData.TOP,
       aCursorIdData.BOTTOM, aCursorIdData.WAIT, aCursorIdData.ARROW,
       aCursorIdData.EXIT;
   -- Set sound effect ids
-  local aSfxData<const> = GetAPI("aSfxData");
   iSSelect, iSClick = aSfxData.SELECT, aSfxData.CLICK;
 end
 -- Exports and imports ----------------------------------------------------- --
-return { A = { InitPost = InitPost }, F = OnReady };
+return { A = { InitPost = InitPost }, F = OnScriptLoaded };
 -- End-of-File ============================================================= --

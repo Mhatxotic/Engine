@@ -135,8 +135,9 @@ class PcmData :                        // Audio data structure
   }
   /* ----------------------------------------------------------------------- */
   void PcmDataSwap(PcmData &pcmRef)
-  { // Swap data members
-    FlagSwap(pcmRef);
+  { // Merge flags, don't swap
+    FlagSet(pcmRef.FlagGet());
+    // Swap data members
     swap(uiRate, pcmRef.uiRate);
     swap(pctChannels, pcmRef.pctChannels);
     swap(pbitBits, pcmRef.pbitBits);
@@ -149,9 +150,9 @@ class PcmData :                        // Audio data structure
       aPcm[stIndex].MemSwap(pcmRef.aPcm[stIndex]);
   }
   /* -- Default constructor ------------------------------------------------ */
-  PcmData(void) :
+  explicit PcmData(const PcmFlagsConst pfcPurpose = PL_NONE) :
     /* -- Initialisers ----------------------------------------------------- */
-    PcmFlags{ PL_NONE },               // Flags not initialised
+    PcmFlags{ pfcPurpose },            // Flags not initialised
     uiRate(0),                         // Rate not initialised
     pctChannels(PCT_NONE),             // Channels not initialised
     pbitBits(PBI_NONE),                // Bits per channel not initialised

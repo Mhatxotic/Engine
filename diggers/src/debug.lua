@@ -7,7 +7,7 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 local max<const>, min<const>, random<const>, format<const>, ceil<const>,
@@ -16,25 +16,25 @@ local max<const>, min<const>, random<const>, format<const>, ceil<const>,
 -- M-Engine function aliases ----------------------------------------------- --
 local UtilHex<const>, CoreCPUUsage<const>, CoreRAM<const>,
   DisplayGPUFPS<const>, CoreUptime<const>, CoreLUATime<const>,
-  CoreLUAUsage<const> =
+  CoreLUAUsage<const>, UtilDuration<const> =
     Util.Hex, Core.CPUUsage, Core.RAM, Display.GPUFPS, Core.Uptime,
-    Core.LUATime, Core.LUAUsage;
+    Core.LUATime, Core.LUAUsage, Util.Duration;
 -- Diggers function and data aliases --------------------------------------- --
 local Fade, GetGameTicks, GetMouseX, GetMouseY, aPlayers, aObjects,
   RenderTerrain, RenderObjects, RenderShroud, BCBlit, texSpr, fontLarge,
   fontLittle, fontTiny, SelectObject, GameProc, GetActiveObject,
   GetActivePlayer, SetCallbacks, LoadLevel, UpdateShroud, SetPlaySounds,
-  HaveZogsToWin, ProcInput, GetOpponentPlayer, RegisterFBUCallback,
+  HaveZogsToWin, GetOpponentPlayer, RegisterFBUCallback,
   aLevelsData, GetViewportData, GetLevelInfo;
 -- Load infinite play ------------------------------------------------------ --
 local function InitDebugPlay(iId)
   -- Frame buffer updated function
   local iStageL, iStageT, iStageR, iStageB;;
-  local function OnFrameBufferUpdated(...)
+  local function OnStageUpdatedd(...)
     local _ _, _, iStageL, iStageT, iStageR, iStageB = ...;
   end
   -- We want to know when the frame buffer is updated
-  RegisterFBUCallback("debug", OnFrameBufferUpdated);
+  RegisterFBUCallback("debug", OnStageUpdatedd);
   -- Player and digger ids for selection
   local iSelectedPlayerId, iSelectedDiggerId = 1, 1;
   -- Infinite play tick callback
@@ -180,7 +180,7 @@ local function InitDebugPlay(iId)
         -- Got an attachment? Draw it too!
         if aObject.STA then
           iXX, iYY = iXX + aObject.OFXA, iYY + aObject.OFYA;
-          BCBlit(texSpr, aObject.SA, iXX, iYY, iXX + 16, iYY + 16);
+          BCBlit(aObject.SA, iXX, iYY, iXX + 16, iYY + 16);
         end
       end
     end
@@ -260,28 +260,22 @@ local function InitDebugPlay(iId)
         iViewportW, iViewportH));
     -- Draw level and duration info
     fontTiny:PrintR(iStageR - 5, 187,
-      format(         "%s [%02u]\n\z
-                         %s TYPE\n\z
-                         %u TWIN\n\z
-                         %u OBJT\n\z
-                         %u FRAM\n\z
-          %02u:%02u:%06.03f GAME\n\z
-          %02u:%02u:%06.03f LUAT\n\z
-          %02u:%02u:%06.03f ENGT",
+      format("%s [%02u]\n\z
+              %s TYPE\n\z
+              %u TWIN\n\z
+              %u OBJT\n\z
+              %u FRAM\n\z
+            %12s GAMT\n\z
+            %12s LUAT\n\z
+            %12s ENGT",
         sLevelName, iLevelId,
         sLevelType,
         iWinLimit,
         #aObjects,
         GetGameTicks(),
-        GetGameTicks() // 216000 % 1000,
-        GetGameTicks() // 3600 % 60,
-        GetGameTicks() / 60 % 60,
-        CoreLUATime() // 3600 % 1000,
-        CoreLUATime() // 60 % 60,
-        CoreLUATime() % 60,
-        CoreUptime() // 3600 % 1000,
-        CoreUptime() // 60 % 60,
-        CoreUptime() % 60));
+        UtilDuration(GetGameTicks() / 60, 2),
+        UtilDuration(CoreLUATime(), 2),
+        UtilDuration(CoreUptime(), 2)));
     -- Flash debug mode
     fontTiny:PrintR(iStageR - 5, 5, "DEBUG MODE");
     -- Draw gems and dug count
@@ -371,7 +365,7 @@ local function InitDebugPlay(iId)
     Fade(0, 1, 0.04, OnRenderRandom, OnFadeOut);
   end
   -- Callbacks to use
-  local fcbTCallback, fcbRCallback, fcbICallback;
+  local fcbTCallback, fcbRCallback;
   -- Infinite play tick callback
   local function OnTickRandomInitialise()
     -- For each player...
@@ -424,37 +418,36 @@ local function InitDebugPlay(iId)
       end
     end
     -- Set real function
-    SetCallbacks(OnTickRandom, fcbRCallback, fcbICallback);
+    SetCallbacks(OnTickRandom, fcbRCallback);
   end
   if iId then
-    fcbTCallback, fcbRCallback, fcbICallback = OnTick, OnRender, nil;
+    fcbTCallback, fcbRCallback = OnTick, OnRender;
   else
-    iId, fcbTCallback, fcbRCallback, fcbICallback =
-      random(#aLevelsData), OnTickRandomInitialise, OnRenderRandom, ProcInput;
+    iId, fcbTCallback, fcbRCallback =
+      random(#aLevelsData), OnTickRandomInitialise, OnRenderRandom;
   end
   -- Load infinite play (AI vs AI)
-  LoadLevel(iId, "game", -1, nil, true, nil, true, fcbTCallback, fcbRCallback,
-    fcbICallback);
+  LoadLevel(iId, "game", -1, nil, true, nil, true, fcbTCallback, fcbRCallback);
   -- Play sound effects
   SetPlaySounds(true);
 end
 -- Scripts have been loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
   -- Grab imports
   BCBlit, Fade, GameProc, GetActiveObject, GetActivePlayer, GetGameTicks,
     GetLevelInfo, GetMouseX, GetMouseY, GetOpponentPlayer, GetViewportData,
-    HaveZogsToWin, LoadLevel, ProcInput, RegisterFBUCallback, RenderObjects,
+    HaveZogsToWin, LoadLevel, RegisterFBUCallback, RenderObjects,
     RenderShroud, RenderTerrain, SelectObject, SetCallbacks, SetPlaySounds,
     UpdateShroud, aLevelsData, aObjects, aPlayers, fontLarge, fontLittle,
     fontTiny, texSpr =
       GetAPI("BCBlit", "Fade", "GameProc", "GetActiveObject",
         "GetActivePlayer", "GetGameTicks", "GetLevelInfo", "GetMouseX",
         "GetMouseY", "GetOpponentPlayer", "GetViewportData", "HaveZogsToWin",
-        "LoadLevel", "ProcInput", "RegisterFBUCallback", "RenderObjects",
+        "LoadLevel", "RegisterFBUCallback", "RenderObjects",
         "RenderShroud", "RenderTerrain", "SelectObject", "SetCallbacks",
         "SetPlaySounds", "UpdateShroud", "aLevelsData", "aObjects", "aPlayers",
         "fontLarge", "fontLittle", "fontTiny", "texSpr");
 end
 -- Exports and imports ----------------------------------------------------- --
-return { F = OnReady, A = { InitDebugPlay = InitDebugPlay } };
+return { F = OnScriptLoaded, A = { InitDebugPlay = InitDebugPlay } };
 -- End-of-File ============================================================= --

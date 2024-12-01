@@ -42,8 +42,9 @@ static struct CmdLine final            // Members initially public
   bool IsNoHome(void) const { return strHD.empty(); }
   bool IsHome(void) const { return !IsNoHome(); }
   /* -- Return and move string into output string -------------------------- */
+  const string &GetHome(void) const { return strHD; }
   const string GetHome(const string &strSuf) const
-    { return StrAppend(strHD, strSuf); }
+    { return StrAppend(GetHome(), strSuf); }
   /* -- Get environment variable ------------------------------------------- */
   const string &GetEnv(const string &strEnv,
     const string &strO=cCommon->Blank()) const

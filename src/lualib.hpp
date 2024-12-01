@@ -5,10 +5,6 @@
 ** ## This file defines the complete LUA API that interfaces with the     ## **
 ** ## game engine. The guest will be able to use this functions when      ## **
 ** ## writing scripts for their software.                                 ## **
-** ##                                                                     ## **
-** ## To define a function, begin with use of the llfuncbegin/end macros  ## **
-** ## to use multiple lines of code and llfunc(ex) to define a function   ## **
-** ## in a single line. The 'ex' signifies returning number of params.    ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 #pragma once                           // Only one incursion allowed
@@ -22,12 +18,12 @@ namespace P {                          // Start of public module namespace
 #define LLFUNCBEGIN(n)         static int Cb ## n(lua_State*const lS) {
 #define LLFUNCBEGINTMPL(n)     template<typename IntType>LLFUNCBEGIN(n)
 #define LLFUNCEND              LLFUNCENDEX(0)
-#define LLFUNCENDEX(x)         (void)(lS); return x; }
+#define LLFUNCENDEX(x)         static_cast<void>(lS); return x; }
 #define LLFUNCTMPL(n,x,...)    LLFUNCBEGINTMPL(n) __VA_ARGS__; LLFUNCENDEX(x)
 #define LLFUNC(n,x,...)        LLFUNCBEGIN(n) __VA_ARGS__; LLFUNCENDEX(x)
 /* -- Macros to simplify definition of lualib reg func structures ---------- */
-#define LLRSBEGIN              static const luaL_Reg llrStatics[]{
-#define LLRSCONST(n)           { #n, lkiConsts ## n, ArrayLen(lkiConsts ## n) }
+#define LLRSBEGIN              static const luaL_Reg llrFunctions[]{
+#define LLRSCONST(n)           { #n, lkiConsts ## n, LLArrLen(lkiConsts ## n) }
 #define LLRSCONSTBEGIN         static const LuaTable ltConsts[]{
 #define LLRSCONSTEND           { nullptr, nullptr, 0 } };
 #define LLRSEND                { nullptr, nullptr } };
@@ -40,40 +36,41 @@ namespace P {                          // Start of public module namespace
 #define LLRSKTITEMEX2(k,v)     { k, static_cast<lua_Integer>(v) }
 #define LLRSMFBEGIN            static const luaL_Reg llrMethods[]{
 /* -- Get length of an array ignoring the final NULL entry ----------------- */
-template<typename IntType=int, typename AnyType, IntType itSize>
-  constexpr int ArrayLen(AnyType (&)[itSize]) { return itSize - 1; };
+template<typename AnyType, int itSize>
+  constexpr int LLArrLen(AnyType (&)[itSize]) { return itSize - 1; };
 /* -- Dependencies --------------------------------------------------------- */
 #include "llcommon.hpp"                // Common helper classes (always first)
 /* -- API includes --------------------------------------------------------- */
-#include "llarchive.hpp"               // Archive namespace and methods
-#include "llasset.hpp"                 // Asset namespace and methods
-#include "llaudio.hpp"                 // Audio namespace and methods
-#include "llbin.hpp"                   // Bin namespace and methods
-#include "llclip.hpp"                  // Clipboard namespace and methods
-#include "llcmd.hpp"                   // Command namespace and methods
-#include "llcore.hpp"                  // Core namespace and methods
-#include "lldisplay.hpp"               // Display namespace and methods
-#include "llfbo.hpp"                   // Fbo namespace and methods
-#include "llfile.hpp"                  // File namespace and methods
-#include "llfont.hpp"                  // Font namespace and methods
-#include "llftf.hpp"                   // Ftf namespace and methods
-#include "llimage.hpp"                 // Image namespace and methods
-#include "llinput.hpp"                 // Input namespace and methods
-#include "lljson.hpp"                  // Json namespace and methods
-#include "llmask.hpp"                  // Mask namespace and methods
-#include "llpcm.hpp"                   // Pcm namespace and methods
-#include "llsource.hpp"                // Source namespace and methods
-#include "llsample.hpp"                // Sample namespace and methods
-#include "llsocket.hpp"                // Socket namespace and methods
-#include "llsql.hpp"                   // Sql namespace and methods
-#include "llsshot.hpp"                 // SShot namespace and methods
-#include "llstat.hpp"                  // Stat namespace and methods
-#include "llstream.hpp"                // Stream namespace and methods
-#include "lltexture.hpp"               // Texture namespace and methods
-#include "llpalette.hpp"               // Palette namespace and methods
-#include "llutil.hpp"                  // Util namespace and methods
-#include "llvar.hpp"                   // Variable namespace and methods
-#include "llvideo.hpp"                 // Video namespace and methods
+#include "llarchive.hpp"               // Archive namespace functions
+#include "llasset.hpp"                 // Asset namespace functions
+#include "llatlas.hpp"                 // Atlas namespace functions
+#include "llaudio.hpp"                 // Audio namespace functions
+#include "llbin.hpp"                   // Bin namespace functions
+#include "llclip.hpp"                  // Clipboard namespace functions
+#include "llcmd.hpp"                   // Command namespace functions
+#include "llcore.hpp"                  // Core namespace functions
+#include "lldisplay.hpp"               // Display namespace functions
+#include "llfbo.hpp"                   // Fbo namespace functions
+#include "llfile.hpp"                  // File namespace functions
+#include "llfont.hpp"                  // Font namespace functions
+#include "llftf.hpp"                   // Ftf namespace functions
+#include "llimage.hpp"                 // Image namespace functions
+#include "llinput.hpp"                 // Input namespace functions
+#include "lljson.hpp"                  // Json namespace functions
+#include "llmask.hpp"                  // Mask namespace functions
+#include "llpcm.hpp"                   // Pcm namespace functions
+#include "llsource.hpp"                // Source namespace functions
+#include "llsample.hpp"                // Sample namespace functions
+#include "llsocket.hpp"                // Socket namespace functions
+#include "llsql.hpp"                   // Sql namespace functions
+#include "llsshot.hpp"                 // SShot namespace functions
+#include "llstat.hpp"                  // Stat namespace functions
+#include "llstream.hpp"                // Stream namespace functions
+#include "lltexture.hpp"               // Texture namespace functions
+#include "llpalette.hpp"               // Palette namespace functions
+#include "llutil.hpp"                  // Util namespace functions
+#include "llvar.hpp"                   // Variable namespace functions
+#include "llvideo.hpp"                 // Video namespace functions
 /* -- Done with these macros ----------------------------------------------- */
 #undef LLRSMFBEGIN
 #undef LLRSKTITEMEX2
@@ -96,64 +93,77 @@ template<typename IntType=int, typename AnyType, IntType itSize>
 #undef LLFUNC
 /* ========================================================================= **
 ** ######################################################################### **
-** ## LUA GLOBAL CLASS STRUCTURE                                          ## **
+** ## LUA GLOBAL API ARRAY STRUCTURE                                      ## **
 ** ######################################################################### **
-** -- Key ------------------------------------------------------------------ **
-** v (variable) = The fully qualified name of the array to use.              **
-** n (name)     = The name of the namespace.                                 **
-** t (type)     = The variable type (Statics, Methods or Consts).            **
-** l (level)    = The required core flags. See cvardef.hpp->CoreFlags.       **
-** m (methods)  = Method function list. LLMETHODS(name) or LLNOMETHODS.      **
-** c (consts)   = Const key/value list. LLCONSTS(name) or LLNOCONSTS.        **
-** -- Helps build the pointer to the list and the length of the list ------- */
-#define LLPTRLENEX(v)   v, ArrayLen(v)
-#define LLPTRLEN(n,t)   LLPTRLENEX(LL ## n::l ## t)
-/* -- Helps define the list of static, methods and consts ------------------ */
-#define LLSTATICS(n)    LLPTRLEN(n, lrStatics)
-#define LLMETHODS(n)    LLPTRLEN(n, lrMethods), \
-  static_cast<lua_CFunction>(LL ## n::CbDestroy)
-#define LLNOMETHODS()   nullptr, 0, nullptr
-#define LLCONSTS(n)     LLPTRLEN(n, tConsts)
-#define LLNOCONSTS()    nullptr, 0
-#define LLITEM(t,n,l,m,c) { LMT_ ## t, #n, CFL_ ## l, LLSTATICS(n), m, c }
-#define LLSXX(n,l)      LLITEM(CLASSES, n, l, LLNOMETHODS(), LLNOCONSTS())
-#define LLSMX(n,l,t)    LLITEM(t, n, l, LLMETHODS(n), LLNOCONSTS())
-#define LLSXC(n,l)      LLITEM(CLASSES, n, l, LLNOMETHODS(), LLCONSTS(n))
-#define LLSMC(n,l,t)    LLITEM(t, n, l, LLMETHODS(n), LLCONSTS(n))
+** -- Namespace name builder helper macro ---------------------------------- */
+#define LLNS(n,t)  LL ## n::l ## t
+/* -- Items in a table helper macro ---------------------------------------- */
+#define LLAL(n,t)  LLArrLen(LLNS(n, t))
+/* -- Destructor function builder helper macro ----------------------------- */
+#define LLDF(n)    static_cast<lua_CFunction>(LL ## n::CbDestroy)
+/* -- Macro to actually build an item in the main API array ---------------- */
+#define LLITEM(lmt,                    /* LMT_* identifier (luadef.hpp)     */\
+               ns,                     /* Name of namespace or class        */\
+               cfl,                    /* CFL_* mode flags (cvardef.hpp)    */\
+               sa,                     /* Class namespace functions array   */\
+               sc,                     /* " items of above array            */\
+               ma,                     /* Class method functions array      */\
+               mc,                     /* " items in above array            */\
+               mf,                     /* " garbage collector function      */\
+               ca,                     /* Class const variables array       */\
+               cc)                     /* " items in above array            */\
+  { LMT_ ## lmt, #ns, CFL_ ## cfl, sa, sc, ma, mc, mf, ca, cc, sc+mc+cc }
+/* -- Helper macros to use when actually defining the main API array ------- */
+#define LLFxx(n,f) \
+  LLITEM(CLASSES, n, f,                              /* Just a namespace    */\
+    LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
+    nullptr, 0, nullptr,                             /* No methods          */\
+    nullptr, 0)                                      /* No statics           */
+/* ------------------------------------------------------------------------- */
+#define LLFMx(n,f,t) \
+  LLITEM(t, n, f,                                    /* Is a class          */\
+    LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
+    LLNS(n, lrMethods), LLAL(n, lrMethods), LLDF(n), /* Have methods        */\
+    nullptr, 0)                                      /* No statics           */
+/* ------------------------------------------------------------------------- */
+#define LLFxC(n,f) \
+  LLITEM(CLASSES, n, f,                              /* Just a namespace    */\
+    LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
+    nullptr, 0, nullptr,                             /* No methods          */\
+    LLNS(n, tConsts), LLAL(n, tConsts))              /* Have statics         */
+/* ------------------------------------------------------------------------- */
+#define LLFMC(n,f,t) \
+  LLITEM(t, n, f,                                    /* Is a class          */\
+    LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
+    LLNS(n, lrMethods), LLAL(n, lrMethods), LLDF(n), /* Have methods        */\
+    LLNS(n, tConsts), LLAL(n, tConsts))              /* Have statics         */
 /* -- Define the engine api list loaded at startup ------------------------- */
-const LuaLibStaticArray llsaAPI{
-{ /* -- Use the above macros to define namespaces -------------------------- **
-  ** WARNING: Make sure to update 'LuaLibStaticArray' count in luadef.hpp if **
-  ** the total number of elements in this list changes.                      **
-  ** ----------------------------------------------------------------------- */
-  LLSMX(Archive, NONE, ARCHIVE),       LLSMC(Asset, NONE, ASSET),
-  LLSXX(Audio, AUDIO),                 LLSMX(Bin, NONE, BIN),
-  LLSMX(Clip, VIDEO, CLIP),            LLSXC(Core, NONE),
-  LLSMX(Command, NONE, COMMAND),       LLSXC(Display, VIDEO),
-  LLSMC(Fbo, VIDEO, FBO),              LLSMC(File, NONE, FILE),
-  LLSMC(Font, VIDEO, FONT),            LLSMX(Ftf, NONE, FTF),
-  LLSMC(Image, NONE, IMAGE),           LLSXC(Input, VIDEO),
-  LLSMX(Json, NONE, JSON),             LLSMX(Mask, NONE, MASK),
-  LLSMX(Palette, VIDEO, PALETTE),      LLSMC(Pcm, NONE, PCM),
-  LLSMX(Sample, AUDIO, SAMPLE),        LLSMX(SShot, VIDEO, SSHOT),
-  LLSMX(Stat, NONE, STAT),             LLSMC(Socket, NONE, SOCKET),
-  LLSMX(Source, AUDIO, SOURCE),        LLSXC(Sql, NONE),
-  LLSMC(Stream, AUDIO, STREAM),        LLSMX(Texture, VIDEO, TEXTURE),
-  LLSXX(Util, NONE),                   LLSMC(Variable, NONE, VARIABLE),
-  LLSMC(Video, AUDIOVIDEO, VIDEO),
+const LuaLibStaticArray llsaAPI{{
+  /* -- Make sure to follow the order of 'LuaClassId' from 'luadef.hpp' ---- */
+  LLFMx(Archive, NONE, ARCHIVE),       LLFMC(Asset, NONE, ASSET),
+  LLFxx(Atlas, VIDEO),                 LLFxx(Audio, AUDIO),
+  LLFMx(Bin, NONE, BIN),               LLFMx(Clip, VIDEO, CLIP),
+  LLFxC(Core, NONE),                   LLFMx(Command, NONE, COMMAND),
+  LLFxC(Display, VIDEO),               LLFMC(Fbo, VIDEO, FBO),
+  LLFMC(File, NONE, FILE),             LLFMC(Font, VIDEO, FONT),
+  LLFMx(Ftf, NONE, FTF),               LLFMC(Image, NONE, IMAGE),
+  LLFxC(Input, VIDEO),                 LLFMx(Json, NONE, JSON),
+  LLFMx(Mask, NONE, MASK),             LLFMx(Palette, VIDEO, PALETTE),
+  LLFMC(Pcm, NONE, PCM),               LLFMx(Sample, AUDIO, SAMPLE),
+  LLFMx(SShot, VIDEO, SSHOT),          LLFMx(Stat, NONE, STAT),
+  LLFMC(Socket, NONE, SOCKET),         LLFMx(Source, AUDIO, SOURCE),
+  LLFxC(Sql, NONE),                    LLFMC(Stream, AUDIO, STREAM),
+  LLFMx(Texture, VIDEO, TEXTURE),      LLFxx(Util, NONE),
+  LLFMC(Variable, NONE, VARIABLE),     LLFMC(Video, AUDIOVIDEO, VIDEO),
 }};/* -- Done with these macros -------------------------------------------- */
-#undef LLSMC
-#undef LLSXC
-#undef LLSMX
-#undef LLSXX
+#undef LLFMC
+#undef LLFxC
+#undef LLFMx
+#undef LLFxx
 #undef LLITEM
-#undef LLNOMETHODS
-#undef LLNOCONSTS
-#undef LLCONSTS
-#undef LLMETHODS
-#undef LLSTATICS
-#undef LLPTRLEN
-#undef LLPTRLENEX
+#undef LLDF
+#undef LLAL
+#undef LLNS
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

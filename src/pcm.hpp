@@ -87,7 +87,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   { // Is dynamic because it was not loaded from disk
     SetDynamic();
     // Set the loading flags
-    FlagReset(pfcFlags);
+    FlagSet(pfcFlags);
     // Load the array normally
     SyncInitArray(strName, mSrc);
   }
@@ -97,7 +97,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   { // Is dynamic because it was not loaded from disk
     SetDynamic();
     // Set user loading flags
-    FlagReset(pfcFlags);
+    FlagSet(pfcFlags);
     // Load sample from memory asynchronously
     AsyncInitArray(lS, strFile, "pcmarray", aCref);
   }
@@ -105,14 +105,14 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   void InitAsyncFile(lua_State*const lS, const string &strFile,
     const PcmFlagsConst &pfcFlags)
   { // Set user loading flags
-    FlagReset(pfcFlags);
+    FlagSet(pfcFlags);
     // Load sample from file asynchronously
     AsyncInitFile(lS, strFile, "pcmfile");
   }
   /* -- Init from file ----------------------------------------------------- */
   void InitFile(const string &strFile, const PcmFlagsConst &pfcFlags)
   { // Set the loading flags
-    FlagReset(pfcFlags);
+    FlagSet(pfcFlags);
     // Load the file normally
     SyncInitFileSafe(strFile);
   }

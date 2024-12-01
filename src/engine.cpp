@@ -17,7 +17,7 @@
 namespace E {                          // Start of engine namespace
 /* ------------------------------------------------------------------------- */
 #include "engine.hpp"                  // Engine version information header
-#include "stdtypes.hpp"                // Engine STL types used header
+#include "stdtypes.hpp"                // Engine STL type aliases header
 #include "flags.hpp"                   // Flags helper utility header
 #include "utf.hpp"                     // UTF strings utility header
 #include "std.hpp"                     // StdLib function helpers header
@@ -70,6 +70,7 @@ namespace E {                          // Start of engine namespace
 #include "cert.hpp"                    // X509 certificate store class header
 #include "cvar.hpp"                    // CVar item header
 #include "luacode.hpp"                 // Lua code subsystem header
+#include "json.hpp"                    // Json handling class header
 #include "cvars.hpp"                   // CVars management class header
 #include "lua.hpp"                     // Lua core subsystem header
 #include "socket.hpp"                  // Socket handling class header
@@ -94,6 +95,7 @@ namespace E {                          // Start of engine namespace
 #include "fbocore.hpp"                 // Core frame buffer object class header
 #include "sshot.hpp"                   // Screenshot handling class header
 #include "texture.hpp"                 // Texture handling class header
+#include "atlas.hpp"                   // Atlas handling class header
 #include "palette.hpp"                 // Palette handling class header
 #include "ft.hpp"                      // Freetype base class
 #include "ftf.hpp"                     // Freetype font handling class header
@@ -101,6 +103,7 @@ namespace E {                          // Start of engine namespace
 #include "file.hpp"                    // FStream+FileMap class header
 #include "clip.hpp"                    // Clipboard class header
 #include "congraph.hpp"                // Console rendering class header
+#include "joystick.hpp"                // Joystick structure class header
 #include "input.hpp"                   // Input handling class header
 #include "display.hpp"                 // Window handling class header
 #include "mask.hpp"                    // BitMask system header
@@ -109,7 +112,6 @@ namespace E {                          // Start of engine namespace
 #include "sample.hpp"                  // Audio sample class header
 #include "video.hpp"                   // Theora video playback class header
 #include "audio.hpp"                   // Audio base management class header
-#include "json.hpp"                    // Json handling class header
 #include "luavar.hpp"                  // Lua variable class
 #include "luacmd.hpp"                  // Lua console command class
 #include "core.hpp"                    // Core class header

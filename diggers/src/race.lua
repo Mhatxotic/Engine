@@ -7,46 +7,35 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 -- M-Engine function aliases ----------------------------------------------- --
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitCon, IsButtonPressed, IsMouseInBounds, IsMouseNotInBounds,
-  IsScrollingDown, IsScrollingUp, LoadResources, PlayStaticSound, RenderShadow,
-  SetBottomRightTipAndShadow, SetCallbacks, SetCursor, SetKeys, TypeIdToId,
-   aGlobalData, aRaceStatData, texSpr;
+local Fade, InitCon, LoadResources, PlayStaticSound, RenderShadow,
+  RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, TypeIdToId, aGlobalData,
+  aRaceStatData, texSpr;
 -- Locals ------------------------------------------------------------------ --
-local aRaceDataSelected;               -- Race id data
-local iCArrow, iCExit, iCOK, iCSelect; -- Cursor ids
-local iKeyBankId;                      -- Key bank id
-local iRaceId;                         -- Chosen race id
-local iRaceIdSelected;                 -- Currently displayed race id
-local iSClick, iSSelect;               -- Sound effects used
-local iTileBG;                         -- Race screen background
-local iTileName;                       -- First race texture
-local iTileSpecial;                    -- Special items tile
-local sTip;                            -- Tip text
-local texLobby;                        -- Lobby texture
-local texRace;                         -- Race texture
--- Assets required --------------------------------------------------------- --
-local aAssets<const> = { { T = 2, F = "lobbyc", P = { 0 } },
-                         { T = 1, F = "race",   P = { 64, 128, 1, 1, 0 } } };
+local aAssets,                         -- Assets Required
+      aRaceDataSelected,               -- Race id data
+      iHotSpotId,                      -- Hot spot id
+      iKeyBankId,                      -- Key bank id
+      iRaceId,                         -- Chosen race id
+      iRaceIdSelected,                 -- Currently displayed race id
+      iSClick, iSSelect,               -- Sound effect ids
+      texLobby,                        -- Lobby texture
+      texRace;                         -- Race texture
+-- Tile data (See data.lua/aAssetsData.race.P) ----------------------------- --
+local iTileBG<const>      =  9;        -- Race screen background
+local iTileName<const>    =  5;        -- First race texture
+local iTileSpecial<const> = 10;        -- Special items tile
 -- Set clamped race id and race data --------------------------------------- --
-local function SetRace(iId)
+local function SetRaceId(iId)
   iRaceId = iId % #aRaceStatData;
   aRaceDataSelected = aRaceStatData[iRaceId + 1];
 end
--- Adjust race function ---------------------------------------------------- --
-local function AdjustRace(iAmount)
-  PlayStaticSound(iSClick);
-  SetRace(iRaceId + iAmount);
-end
--- Cycle race function ----------------------------------------------------- --
-local function RacePrevious() AdjustRace(-1) end;
-local function RaceNext() AdjustRace(1) end;
 -- Render race ------------------------------------------------------------- --
-local function RenderRace()
+local function ProcRenderRace()
   -- Draw backdrop, race screen and it's shadow
   texLobby:BlitLT(-54, 0);
   texRace:BlitSLT(iTileBG, 8, 8);
@@ -55,23 +44,41 @@ local function RenderRace()
   texRace:BlitSLT(iRaceId, 172, 54);
   texRace:BlitSLT(iTileName+iRaceId, 80, 24);
   -- Draw stats
-  texSpr:BlitSLTRB(801, 115,  62, 115+aRaceDataSelected[2],  65);
-  texSpr:BlitSLTRB(801, 115,  82, 115+aRaceDataSelected[3],  85);
-  texSpr:BlitSLTRB(801, 115, 102, 115+aRaceDataSelected[4], 105);
-  texSpr:BlitSLTRB(801, 115, 122, 115+aRaceDataSelected[5], 125);
-  texSpr:BlitSLTRB(801, 115, 142, 115+aRaceDataSelected[6], 145);
-  texSpr:BlitSLTRB(801, 115, 162, 115+aRaceDataSelected[7], 165);
+  texSpr:SetCRGBA(1, 0, 0, 0.5);
+  texSpr:BlitSLTRB(1022, 115,  62, 115+aRaceDataSelected[2],  65);
+  texSpr:BlitSLTRB(1022, 115,  82, 115+aRaceDataSelected[3],  85);
+  texSpr:BlitSLTRB(1022, 115, 102, 115+aRaceDataSelected[4], 105);
+  texSpr:BlitSLTRB(1022, 115, 122, 115+aRaceDataSelected[5], 125);
+  texSpr:BlitSLTRB(1022, 115, 142, 115+aRaceDataSelected[6], 145);
+  texSpr:BlitSLTRB(1022, 115, 162, 115+aRaceDataSelected[7], 165);
+  texSpr:SetCRGBA(1, 1, 1, 1);
   -- Draw special
   if aRaceDataSelected[8] >= 0 then
     texRace:BlitSLT(iTileSpecial+aRaceDataSelected[8], 110, 175);
   end
   -- Draw selected symbol
   if iRaceId == iRaceIdSelected then texRace:BlitSLT(4, 132, 80, 192, 208) end;
-  -- Draw tip
-  SetBottomRightTipAndShadow(sTip);
+  -- Draw tip and shadow
+  RenderTipShadow();
 end
--- Finish so fade out ------------------------------------------------------ --
-local function Finish()
+-- Proc race function while fading ----------------------------------------- --
+local function ProcRaceInitial()
+  -- Enable keybank and hotspots
+  SetKeys(true, iKeyBankId);
+  SetHotSpot(iHotSpotId);
+  -- Set callbacks
+  SetCallbacks(nil, ProcRenderRace);
+end
+-- Race selection function ------------------------------------------------- --
+local function AdjustRace(iAmount)
+  PlayStaticSound(iSClick);
+  SetRaceId(iRaceId + iAmount);
+end
+-- Selext previous and next race functions --------------------------------- --
+local function GoPrevious() AdjustRace(-1) end;
+local function GoNext() AdjustRace(1) end;
+-- When returning to controler --------------------------------------------- --
+local function GoCntrl()
   -- Play select soud
   PlayStaticSound(iSSelect)
   -- When faded out?
@@ -82,108 +89,72 @@ local function Finish()
     InitCon();
   end
   -- Fade out to controller screen
-  Fade(0, 1, 0.04, RenderRace, OnFadeOut);
+  Fade(0, 1, 0.04, ProcRenderRace, OnFadeOut);
 end
--- Finish so fade out ------------------------------------------------------ --
-local function FinishAccept()
+-- When accepting the race selection --------------------------------------- --
+local function GoAccept()
   -- Apply new setting
-  aGlobalData.gSelectedRace, iRaceIdSelected =
-    aRaceDataSelected[1], iRaceId;
+  aGlobalData.gSelectedRace, iRaceIdSelected = aRaceDataSelected[1], iRaceId;
   -- Fade out to lobby
-  Finish();
+  GoCntrl();
 end
--- Set tip and cursor ------------------------------------------------------ --
-local function SetTipAndCursor(sNTip, iCId) sTip = sNTip SetCursor(iCId) end;
--- Proc race function ------------------------------------------------------ --
-local function InputRace()
-  -- Mouse wheel scrolled down? Previous race
-  if IsScrollingDown() then RacePrevious();
-  -- Mouse wheel scrolled up? Next race
-  elseif IsScrollingUp() then RaceNext();
-  -- Mouse over race pic
-  elseif IsMouseInBounds(172, 54, 236, 182) then
-    -- Set accept tip
-    SetTipAndCursor("ACCEPT", iCOK);
-    -- Mouse button clicked? Set race and fade out to controller
-    if IsButtonPressed(0) then FinishAccept() end;
-  -- Mouse over next race arrow?
-  elseif IsMouseInBounds(248, 192, 264, 208) then
-    -- Set tip
-    SetTipAndCursor("NEXT", iCSelect);
-    -- Mouse button clicked? Next race
-    if IsButtonPressed(0) then RaceNext() end;
-  -- Mouse over the exit area?
-  elseif IsMouseNotInBounds(8, 8, 312, 208) then
-    -- Set tip
-    SetTipAndCursor("CANCEL", iCExit);
-    -- Mouse button clicked? Go back to controller screen
-    if IsButtonPressed(0) then Finish() end;
-  -- Nothing selected
-  else SetTipAndCursor("SELECT RACE", iCArrow) end;
-end
--- Proc race function while fading ----------------------------------------- --
-local function ProcRaceInitial()
-  -- Enable keybank
-  SetKeys(true, iKeyBankId);
-  -- Set callbacks
-  SetCallbacks(nil, RenderRace, InputRace);
+-- When scroll wheel or trackpad is moved ---------------------------------- --
+local function OnScroll(nX, nY)
+  if nY > 0 then GoPrevious() elseif nY < 0 then GoNext() end;
 end
 -- Data loaded function ---------------------------------------------------- --
-local function OnLoaded(aResources)
+local function OnAssetsLoaded(aResources)
   -- Setup lobby texture
   texLobby = aResources[1];
-  texLobby:TileSTC(1);
-  texLobby:TileS(0, 0, 272, 428, 512);
   -- Get texture resource and trim texture coordinates list to 5
   texRace = aResources[2];
-  texRace:TileSTC(5);
-  -- Cache other tiles
-  iTileName = texRace:TileA(0, 496, 160, 512);
-              texRace:TileA(0, 479, 160, 495);
-              texRace:TileA(0, 462, 160, 478);
-              texRace:TileA(0, 445, 160, 461);
-  iTileBG = texRace:TileA(208, 312, 512, 512);
-  iTileSpecial = texRace:TileA(190, 496, 206, 512);
-                 texRace:TileA(171, 496, 187, 512);
   -- Set currently selected race
   iRaceIdSelected = aGlobalData.gSelectedRace;
   -- Set race already selected
-  SetRace(iRaceIdSelected or 0);
+  SetRaceId(iRaceIdSelected or 0);
   -- Fade in
-  Fade(1, 0, 0.04, RenderRace, ProcRaceInitial);
+  Fade(1, 0, 0.04, ProcRenderRace, ProcRaceInitial);
 end
 -- Init race screen function ----------------------------------------------- --
-local function InitRace() LoadResources("Race Select", aAssets, OnLoaded) end;
+local function InitRace() LoadResources("Race", aAssets, OnAssetsLoaded) end;
 -- Scripts have been loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitCon, IsButtonPressed, IsMouseInBounds, IsMouseNotInBounds,
-    IsScrollingDown, IsScrollingUp, LoadResources, PlayStaticSound,
-    RenderShadow, SetBottomRightTipAndShadow, SetCallbacks, SetCursor,
-    SetKeys, aGlobalData, aRaceStatData, texSpr =
-      GetAPI("Fade", "InitCon", "IsButtonPressed", "IsMouseInBounds",
-        "IsMouseNotInBounds", "IsScrollingDown", "IsScrollingUp",
-        "LoadResources", "PlayStaticSound", "RenderShadow",
-        "SetBottomRightTipAndShadow", "SetCallbacks", "SetCursor", "SetKeys",
-        "aGlobalData", "aRaceStatData", "texSpr");
+  Fade, InitCon, LoadResources, PlayStaticSound, RegisterHotSpot, RegisterKeys,
+    RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys,
+    aAssetsData, aCursorIdData, aGlobalData, aRaceStatData, aSfxData, texSpr =
+      GetAPI("Fade", "InitCon", "LoadResources", "PlayStaticSound",
+        "RegisterHotSpot", "RegisterKeys", "RenderShadow", "RenderTipShadow",
+        "SetCallbacks", "SetHotSpot", "SetKeys", "aAssetsData",
+        "aCursorIdData", "aGlobalData", "aRaceStatData", "aSfxData", "texSpr");
+  -- Set assets data
+  aAssets = { aAssetsData.lobbyc, aAssetsData.race };
+  -- Set sound effect ids
+  iSClick, iSSelect = aSfxData.CLICK, aSfxData.SELECT;
   -- Register keybinds
   local aKeys<const> = Input.KeyCodes;
-  iKeyBankId = GetAPI("RegisterKeys")("ZMTC RACE SELECT", {
+  iKeyBankId = RegisterKeys("ZMTC RACE SELECT", {
     [Input.States.PRESS] = {
-      { aKeys.ESCAPE, Finish, "zmtcrsc", "CANCEL" },
-      { aKeys.ENTER, FinishAccept, "zmtcrsa", "ACCEPT" },
-      { aKeys.LEFT, RacePrevious, "zmtcrsp", "PREVIOUS" },
-      { aKeys.RIGHT, RaceNext, "zmtcrsn", "NEXT" },
+      { aKeys.ESCAPE, GoCntrl,    "zmtcrsc", "CANCEL"   },
+      { aKeys.ENTER,  GoAccept,   "zmtcrsa", "ACCEPT"   },
+      { aKeys.LEFT,   GoPrevious, "zmtcrsp", "PREVIOUS" },
+      { aKeys.RIGHT,  GoNext,     "zmtcrsn", "NEXT"     },
     }
   });
-  -- Set sound effect ids
-  local aSfxData<const> = GetAPI("aSfxData");
-    iSClick, iSSelect = aSfxData.CLICK, aSfxData.SELECT;
-  -- Set cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
-  iCOK, iCSelect, iCExit, iCArrow = aCursorIdData.OK, aCursorIdData.SELECT,
-    aCursorIdData.EXIT, aCursorIdData.ARROW;
+  -- Register hotspots
+  iHotSpotId = RegisterHotSpot({
+    { 172,  54,  54, 128, 0, aCursorIdData.OK,
+      "ACCEPT",      OnScroll, GoAccept },
+    { 248, 192,  16,  16, 0, aCursorIdData.SELECT,
+      "NEXT RACE",   OnScroll, GoNext   },
+    {   8,   8, 304, 200, 0, 0,
+      "SELECT RACE", OnScroll, false    },
+    {   0,   0,   0, 240, 3, aCursorIdData.EXIT,
+      "CANCEL",      OnScroll, GoCntrl  }
+  });
 end
 -- Exports and imports ----------------------------------------------------- --
-return { A = { InitRace = InitRace }, F = OnReady };
+return { A = { InitRace = InitRace }, F = OnScriptLoaded };
 -- End-of-File ============================================================= --

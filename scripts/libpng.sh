@@ -61,7 +61,7 @@ build()
   make clean 2>/dev/null
 
   ./configure --with-zlib-prefix="${ZLIBDIR}" \
-              CC="gcc -O3 -arch ${1} -mtune=${2} -mmacosx-version-min=10.11"
+              CC="gcc -O3 -arch ${1} -mtune=${2} -mmacosx-version-min=10.15"
   if [ ! $? -eq 0 ]; then
     cat config.log
     exit 7

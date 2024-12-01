@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 24.11.27.1 -->
-<!-- Automatically built at Wed Nov 27 19:34:49 2024 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 24.11.27.1 -->
-<!-- Copyright (c) 2006-2024 Mhatxotic Design, All Rights Reserved Worldwide -->
+<!-- Reference for the Mhatxotic Engine API version 25.2.4.2 -->
+<!-- Automatically built at Tue Feb 04 13:05:31 2025 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.2.4.2 -->
+<!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
 	<META charset="UTF-8">
@@ -10,19 +10,19 @@
 	<META name="apple-mobile-web-app-status-bar-style" content="black">
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
-	<META name="copyright" content="Copyright © 2006-2024 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 24.11.27.1">
+	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.4.2">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 24.11.27.1">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.4.2">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 24.11.27.1">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.4.2">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 24.11.27.1 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.2.4.2 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 24.11.27.1 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.2.4.2 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 24.11.27.1 API reference</H1>
+	<H1>Mhatxotic Engine 25.2.4.2 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,18 +99,19 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 821 functions (386 members, 435 methods) and 27 consts in 29 namespaces with 83 commands and 206 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 826 functions (390 members, 436 methods) and 27 consts in 30 namespaces with 83 commands and 208 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
 					<DIV>
-						<A href="#idx.ns">Namespaces</A> <I>(29 namespaces)</I>
+						<A href="#idx.ns">Namespaces</A> <I>(30 namespaces)</I>
 						<OL>
 							<LI><P>Categorised functions that interact with the engine.</P></LI>
 							<LI>
 								<OL>
 									<LI><A href="#idx:Archive">Archive</A></LI>
 									<LI><A href="#idx:Asset">Asset</A></LI>
+									<LI><A href="#idx:Atlas">Atlas</A></LI>
 									<LI><A href="#idx:Audio">Audio</A></LI>
 									<LI><A href="#idx:Bin">Bin</A></LI>
 									<LI><A href="#idx:Clip">Clip</A></LI>
@@ -254,6 +255,17 @@
 								</OL>
 							</LI>
 							<LI><A href="#idx:Asset">&#x25B2; Return to summary</A> / <A href="#idx.top">top</A></LI>
+						</OL>
+					</DIV>
+				</DIV>
+			</LI>
+			<LI id="idx:Atlas">
+				<DIV>
+					<DIV>
+						<A href="#idx:Atlas">Atlas namespace</A>
+						<OL>
+							<LI><P>The atlas class allows dynamic building of an OpenGL texture by allowing the guest to combine multiple bitmaps into a single texture so there is less OpenGL texture id switching and fundamentally less CPU usage used.</P></LI>
+							<LI><A href="#idx:Atlas">&#x25B2; Return to summary</A> / <A href="#idx.top">top</A></LI>
 						</OL>
 					</DIV>
 				</DIV>
@@ -521,7 +533,7 @@
 						<OL>
 							<LI><P>The fbo class allows the programmer to create an OpenGL frame-buffer object which they can use to create seperate drawing canvases which they can apply special effects to without modifying other canvases.</P></LI>
 							<LI>
-								<B>Members</B> <I>(10 members)</I>
+								<B>Members</B> <I>(11 members)</I>
 								<OL>
 									<LI><A href="#Fbo.ConEnabled">ConEnabled</A></LI>
 									<LI><A href="#Fbo.ConHeight">ConHeight</A></LI>
@@ -532,6 +544,7 @@
 									<LI><A href="#Fbo.IsDrawing">IsDrawing</A></LI>
 									<LI><A href="#Fbo.Main">Main</A></LI>
 									<LI><A href="#Fbo.OnRedraw">OnRedraw</A></LI>
+									<LI><A href="#Fbo.Resize">Resize</A></LI>
 									<LI><A href="#Fbo.SetBlend">SetBlend</A></LI>
 								</OL>
 							</LI>
@@ -656,11 +669,12 @@
 						<OL>
 							<LI><P>The font class allows dynamic creation from font files using the FREETYPE library.</P></LI>
 							<LI>
-								<B>Members</B> <I>(3 members)</I>
+								<B>Members</B> <I>(4 members)</I>
 								<OL>
 									<LI><A href="#Font.Console">Console</A></LI>
-									<LI><A href="#Font.Create">Create</A></LI>
+									<LI><A href="#Font.Ftf">Ftf</A></LI>
 									<LI><A href="#Font.Image">Image</A></LI>
+									<LI><A href="#Font.Manifest">Manifest</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -869,11 +883,12 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(8 methods)</I>
+								<B>Methods</B> <I>(9 methods)</I>
 								<OL>
 									<LI><A href="#Json:Destroy">Destroy</A></LI>
 									<LI><A href="#Json:Id">Id</A></LI>
 									<LI><A href="#Json:Name">Name</A></LI>
+									<LI><A href="#Json:Sort">Sort</A></LI>
 									<LI><A href="#Json:ToFile">ToFile</A></LI>
 									<LI><A href="#Json:ToHRFile">ToHRFile</A></LI>
 									<LI><A href="#Json:ToHRString">ToHRString</A></LI>
@@ -1331,11 +1346,13 @@
 						<OL>
 							<LI><P>The texture class allows the programmer to draw textures on the screen which also includes font management.</P></LI>
 							<LI>
-								<B>Members</B> <I>(3 members)</I>
+								<B>Members</B> <I>(5 members)</I>
 								<OL>
 									<LI><A href="#Texture.Console">Console</A></LI>
 									<LI><A href="#Texture.Create">Create</A></LI>
 									<LI><A href="#Texture.CreateTS">CreateTS</A></LI>
+									<LI><A href="#Texture.ImageUT">ImageUT</A></LI>
+									<LI><A href="#Texture.Manifest">Manifest</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1745,13 +1762,12 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(206 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(208 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
 								<OL>
 									<LI><A href="#cv.app_author">app_author</A></LI>
-									<LI><A href="#cv.app_basedir">app_basedir</A></LI>
 									<LI><A href="#cv.app_cflags">app_cflags</A></LI>
 									<LI><A href="#cv.app_clearmutex">app_clearmutex</A></LI>
 									<LI><A href="#cv.app_cmdline">app_cmdline</A></LI>
@@ -1759,7 +1775,6 @@
 									<LI><A href="#cv.app_copyright">app_copyright</A></LI>
 									<LI><A href="#cv.app_delay">app_delay</A></LI>
 									<LI><A href="#cv.app_description">app_description</A></LI>
-									<LI><A href="#cv.app_homedir">app_homedir</A></LI>
 									<LI><A href="#cv.app_icon">app_icon</A></LI>
 									<LI><A href="#cv.app_longname">app_longname</A></LI>
 									<LI><A href="#cv.app_shortname">app_shortname</A></LI>
@@ -1767,10 +1782,13 @@
 									<LI><A href="#cv.app_title">app_title</A></LI>
 									<LI><A href="#cv.app_version">app_version</A></LI>
 									<LI><A href="#cv.app_website">app_website</A></LI>
+									<LI><A href="#cv.ast_basedir">ast_basedir</A></LI>
 									<LI><A href="#cv.ast_bundles">ast_bundles</A></LI>
 									<LI><A href="#cv.ast_exebundle">ast_exebundle</A></LI>
 									<LI><A href="#cv.ast_fsoverride">ast_fsoverride</A></LI>
+									<LI><A href="#cv.ast_homedir">ast_homedir</A></LI>
 									<LI><A href="#cv.ast_lzmabuffer">ast_lzmabuffer</A></LI>
+									<LI><A href="#cv.ast_modbundle">ast_modbundle</A></LI>
 									<LI><A href="#cv.ast_pipebuffer">ast_pipebuffer</A></LI>
 									<LI><A href="#cv.aud_check">aud_check</A></LI>
 									<LI><A href="#cv.aud_delay">aud_delay</A></LI>
@@ -1839,6 +1857,7 @@
 									<LI><A href="#cv.log_level">log_level</A></LI>
 									<LI><A href="#cv.log_lines">log_lines</A></LI>
 									<LI><A href="#cv.lua_cache">lua_cache</A></LI>
+									<LI><A href="#cv.lua_debuglocals">lua_debuglocals</A></LI>
 									<LI><A href="#cv.lua_gcpause">lua_gcpause</A></LI>
 									<LI><A href="#cv.lua_gcstepmul">lua_gcstepmul</A></LI>
 									<LI><A href="#cv.lua_lastver">lua_lastver</A></LI>
@@ -3408,7 +3427,7 @@
 		<H4>Function Parameters:-</H4>
 		<PRE><U>String</U> <I>(string)</I> = Console status text.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>In bot mode&#x2c; this function will set the text to appear when no text is input into the input bar&#x2e; Useful for customised stats&#x2e; It will update every second&#x2e;<BR></PRE>
+		<PRE>In terminal mode&#x2c; this function will set the text to appear when no text is input into the input bar&#x2e; Useful for customised stats&#x2e; It will update every second&#x2e;<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.StatusRight" style="display:none">
@@ -3418,7 +3437,7 @@
 		<H4>Function Parameters:-</H4>
 		<PRE><U>String</U> <I>(string)</I> = Console status text.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>In bot mode&#x2c; this function will set the text to appear when no text is input into the input bar&#x2e; Useful for customised stats&#x2e; It will update every second&#x2e;<BR></PRE>
+		<PRE>In terminal mode&#x2c; this function will set the text to appear when no text is input into the input bar&#x2e; Useful for customised stats&#x2e; It will update every second&#x2e;<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.Suspend" style="display:none">
@@ -4015,6 +4034,18 @@
 		<PRE><U>Func</U> <I>(function)</I> = The main redraw function to change to<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>When OpenGL needs to be reinitialised&#x2c; the specified callback will be called so the guest can redraw FBO&#x27;s and maybe do other stuff&#x2e; All texture and fbo data is already preserved so there is no need to reinitialise any of that&#x2c; you just need to redraw them&#x2e;<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo.Resize" style="display:none">
+		<H3>Fbo.Resize</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U>, <U>Height</U> = Fbo.Resize(<I><U>Success</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Success</U> <I>(boolean)</I> = Returns whether the frame buffer changed or not.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(number)</I> = The new width of the main frame buffer<BR><U>Height</U> <I>(number)</I> = The new height of the main frame buffer<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>This is a run&#x2d;time override for &#x27;vid_orwidth&#x27; and &#x27;vid_orheight&#x27; cvars in which the main frame buffer viewport is re&#x2d;calculated and re&#x2d;initialised to these dimensions&#x2e; Note that this modifies the console size as well&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo.SetBlend" style="display:none">
@@ -4817,10 +4848,10 @@
 		<PRE>Returns the handle to the console font&#x2e; Useful if you want to reuse the font in your application&#x2e; Careful not to mess around with it&#x27;s properties&#x21; </PRE>
 		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Font.Create" style="display:none">
-		<H3>Font.Create</H3>
+	<DIV id="Font.Ftf" style="display:none">
+		<H3>Font.Ftf</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Font.Create(<I><U>Font</U>, <U>Size</U>, <U>Padding</U>, <U>Filter</U>, <U>Flags</U></I>)</PRE>
+		<PRE><U>Handle</U> = Font.Ftf(<I><U>Font</U>, <U>Size</U>, <U>Padding</U>, <U>Filter</U>, <U>Flags</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
 		<PRE><U>Font</U> <I>(Ftf)</I> = An ftf object of a loaded freetype font.<BR><U>Size</U> <I>(integer)</I> = The initial canvas size of the texture.<BR><U>Padding</U> <I>(integer)</I> = Amount of padding to use to prevent texture spilling.<BR><U>Filter</U> <I>(integer)</I> = Font texture filtering mode to use.<BR><U>Flags</U> <I>(integer)</I> = Font flags.<BR></PRE>
 		<H4>Return Parameters:-</H4>
@@ -4832,13 +4863,25 @@
 	<DIV id="Font.Image" style="display:none">
 		<H3>Font.Image</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Font.Image(<I><U>Source</U></I>)</PRE>
+		<PRE><U>Handle</U> = Font.Image(<I><U>Source</U>, <U>TileWidth</U>, <U>TileHeight</U>, <U>PaddingWidth</U>, <U>PaddingHeight</U>, <U>FilterId</U>, <U>CharCount</U>, <U>CharStart</U>, <U>CharDefault</U>, <U>Widths</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Source</U> <I>(Image)</I> = The source image for use with the font.<BR></PRE>
+		<PRE><U>Source</U> <I>(Image)</I> = The source image for use with the font.<BR><U>TileWidth</U> <I>(integer)</I> = The maximum width of each font glyph.<BR><U>TileHeight</U> <I>(integer)</I> = The maximum height of each font glyph.<BR><U>PaddingWidth</U> <I>(integer)</I> = Pixels to ignore on the right of each glpyh.<BR><U>PaddingHeight</U> <I>(integer)</I> = Pixels to ignore on below each glpyh.<BR><U>FilterId</U> <I>(integer)</I> = The filter id to use.<BR><U>CharCount</U> <I>(integer)</I> = Number of characters available in the font.<BR><U>CharStart</U> <I>(integer)</I> = The starting UTF8 character id to begin with.<BR><U>CharDefault</U> <I>(integer)</I> = The default character for unsupported characters.<BR><U>Widths</U> <I>(table)</I> = Pixel widths of each glyph. Empty to set all to TileWidth.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Font)</I> = A handle to the newly created texture.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Creates a texture as a font tileset&#x2e; The function looks for a file with the same name as &#x27;filename&#x27; with the &#x2e;txt extension which explains the parameters for the font tileset&#x2e; These parameters are as follows&#x2e;&#x2e;&#x2e;<BR><BR>rangestart &#x3d; The ASCII character to represent the first tile&#x2e;<BR>range &#x3d; The number of ASCII characters in the tileset&#x2e;<BR>tilewidth &#x3d; The width of the tile&#x2e;<BR>tileheight &#x3d; The height of the tile&#x2e;<BR>tilespacingwidth &#x3d; The horizontal spacing between each tile&#x2e;<BR>tilespacingheight &#x3d; The vertical spacing between each tile&#x2e;<BR>filetype &#x3d; The source type of texture&#x2e;<BR>width &#x3d; The widths of each character separated by a whitespace&#x2e;<BR>default &#x3d; The default ASCII character to draw if char not available&#x2e;<BR>name &#x3d; A name to describe the font&#x2e;<BR>scale &#x3d; The starting scale of the characters &#x28;i&#x2e;e&#x2e; 1&#x3d;100&#x25;&#x2c; 0&#x2e;5&#x3d;50&#x25;&#x29;&#x2e;<BR></PRE>
+		<PRE>Creates a texture as a font tileset&#x2e;<BR></PRE>
+		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Font.Manifest" style="display:none">
+		<H3>Font.Manifest</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Handle</U> = Font.Manifest(<I><U>Source</U>, <U>Manifest</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Source</U> <I>(Image)</I> = The source image for use with the font.<BR><U>Manifest</U> <I>(JSon)</I> = The manifest of information to describe the font.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Handle</U> <I>(Font)</I> = A handle to the newly created texture.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Creates a texture as a font tileset using values from the specified manifest&#x2e; These parameters in the root object are as follows&#x2e;&#x2e;&#x2e;<BR><BR>Version&#x3a;UInt &#x3d; The current version of the manifest &#x28;1&#x29;&#x2e;<BR>Default&#x3a;UInt &#x3d; The default UTF8 character to draw if char not available&#x2e;<BR>CharCount&#x3a;UInt &#x3d; The number of UTF8 characters in the tileset&#x2e;<BR>CharBegin&#x3a;UInt &#x3d; The UTF8 character to represent the first tile&#x2e;<BR>InitialScale&#x3a;Number &#x3d; The starting scale of the chars &#x28;0&#x2e;0&#x3d;0&#x25;&#x3e;&#x3c;1&#x2e;0&#x3d;100&#x25;&#x29;&#x2e;<BR>TileWidth&#x3a;UInt &#x3d; The width of the tile&#x2e;<BR>TileHeight&#x3a;UInt &#x3d; The height of the tile&#x2e;<BR>TileSpacingHeight&#x3a;UInt &#x3d; The vertical spacing between each tile&#x2e;<BR>TileSpacingWidth&#x3a;UInt &#x3d; The horizontal spacing between each tile&#x2e;<BR>Widths&#x3a;Array &#x3d; The widths of each character from value &#x27;rangestart&#x27; </PRE>
 		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Font:Destroy" style="display:none">
@@ -5694,7 +5737,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Result</U> <I>(integer)</I> = Number of ticks the button has been held down.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the state of the specified joystick button&#x2e;<BR><BR>Result can be&#x3a; &#x3d;0&#x3a; The button is not held down&#x2e;<BR>&#x3e;0&#x3a; The button was held down for this many game ticks&#x2e;<BR></PRE>
+		<PRE>Returns the state of the specified joystick button&#x2e;<BR><BR>Result can be&#x3a; &#x3d;0&#x3a; The button is not held down&#x2e;<BR>&#x3d;1&#x3a; The button was pressed&#x2e;<BR>&#x3e;1&#x3a; The button is being held&#x2e;<BR></PRE>
 		<H4><A href="#idx:Input">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Input.GetJoyName" style="display:none">
@@ -6015,6 +6058,16 @@
 		<PRE><U>Name</U> <I>(string)</I> = Name of the json.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>If this json was loaded by a filename or it was set with a custom id&#x2e;<BR>This function returns that name which was assigned to it&#x2e;<BR></PRE>
+		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Json:Sort" style="display:none">
+		<H3>Json:Sort</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Json:Sort(<I><U>Descending</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Descending</U> <I>(bool)</I> = Descending (true) or ascending (false) flag.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Sorts the entire json array&#x2e;<BR></PRE>
 		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Json:ToFile" style="display:none">
@@ -8307,6 +8360,30 @@
 		<PRE>Loads a texture as a tileset from the specified image class&#x2e;<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Texture.ImageUT" style="display:none">
+		<H3>Texture.ImageUT</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Handle</U> = Texture.ImageUT(<I><U>Source</U>, <U>Filter</U>, <U>Tiles</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Source</U> <I>(image)</I> = The image class to load from.<BR><U>Filter</U> <I>(integer)</I> = The filtering setting to use on texture<BR><U>Tiles</U> <I>(table)</I> = The tileset to use (X, Y, Width, Height, [...]).<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Handle</U> <I>(Texture)</I> = A handle to the texture(s) created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Loads a texture and applies the specified tile set&#x2e;<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Texture.Manifest" style="display:none">
+		<H3>Texture.Manifest</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Handle</U> = Texture.Manifest(<I><U>Source</U>, <U>Manifest</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Source</U> <I>(image)</I> = The image class to load from.<BR><U>Manifest</U> <I>(Jsonr)</I> = The Json object containing the texture metadata.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Handle</U> <I>(Texture)</I> = A handle to the texture(s) created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Creates the specified texture from the specified image class with the specified json metadata&#x2e;<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Texture:Blit" style="display:none">
 		<H3>Texture:Blit</H3>
 		<H4>Syntax:-</H4>
@@ -9790,11 +9867,11 @@
 	<DIV id="Util.ParseUrl" style="display:none">
 		<H3>Util.ParseUrl</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Result</U>, <U>Protocol</U>, <U>Secure</U>, <U>Host</U>, <U>Port</U>, <U>Resource</U>, <U>Bookmark</U>, <U>Username</U>, <U>Password</U> = Util.ParseUrl(<I><U>String</U></I>)</PRE>
+		<PRE><U>Result</U>, <U>Scheme</U>, <U>Secure</U>, <U>Host</U>, <U>Port</U>, <U>Resource</U>, <U>Bookmark</U>, <U>Username</U>, <U>Password</U> = Util.ParseUrl(<I><U>String</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
 		<PRE><U>String</U> <I>(string)</I> = The url to parse<BR></PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(integer)</I> = The result code of the parse<BR><U>Protocol</U> <I>(string)</I> = The protocol string 'http' or 'https'<BR><U>Secure</U> <I>(boolean)</I> = The conneciton would need to use SSL?<BR><U>Host</U> <I>(string)</I> = The hostname to connect to<BR><U>Port</U> <I>(integer)</I> = The port number to connect to<BR><U>Resource</U> <I>(string)</I> = The resource to request<BR><U>Bookmark</U> <I>(string)</I> = The bookmark part of the request<BR><U>Username</U> <I>(string)</I> = The username part of the request<BR><U>Password</U> <I>(string)</I> = The password part of the request<BR></PRE>
+		<PRE><U>Result</U> <I>(integer)</I> = The result code of the parse<BR><U>Scheme</U> <I>(string)</I> = The scheme string 'http' or 'https'<BR><U>Secure</U> <I>(boolean)</I> = The conneciton would need to use SSL?<BR><U>Host</U> <I>(string)</I> = The hostname to connect to<BR><U>Port</U> <I>(integer)</I> = The port number to connect to<BR><U>Resource</U> <I>(string)</I> = The resource to request<BR><U>Bookmark</U> <I>(string)</I> = The bookmark part of the request<BR><U>Username</U> <I>(string)</I> = The username part of the request<BR><U>Password</U> <I>(string)</I> = The password part of the request<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Parses the specified url and returns all the information about it </PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
@@ -11199,11 +11276,6 @@
 		<PRE>Specifies the author of the guest application&#x2e; This is used for display purposes only and can be requested by the guest and only set in the app&#x2e;cfg file&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="cv.app_basedir" style="display:none">
-		<H3>app_basedir</H3>
-		<PRE>Specifies the base directory of where the executable was started from&#x2e; It is only readable by the end&#x2d;user and the host&#x2c; but not the guest&#x2e;<BR></PRE>
-		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="cv.app_cflags" style="display:none">
 		<H3>app_cflags</H3>
 		<PRE>Specifies how the host wants to be run with the following flags&#x2e;&#x2e;&#x2e;<BR>[0x1] CFL_TERMINAL &#x3d; Opens &#x28;Win32&#x29; or reuses &#x28;Unix&#x29; a console window&#x2e;<BR>[0x2] CFL_AUDIO    &#x3d; Initialises an OpenAL audio context and exposes API&#x2e;<BR>[0x4] CFL_VIDEO    &#x3d; Initialises an OpenGL context&#x2b;window and exposes API&#x2e;<BR></PRE>
@@ -11231,17 +11303,12 @@
 	</DIV>
 	<DIV id="cv.app_delay" style="display:none">
 		<H3>app_delay</H3>
-		<PRE>Specifies an artificial delay to force for bot mode in milliseconds&#x2e; This is ignored on interactive mode because a one millisecond delay is forced for every frame under the target rate&#x2e;<BR></PRE>
+		<PRE>Specifies an artificial delay to force for terminal mode in milliseconds&#x2e;<BR>This is ignored on interactive mode because a one millisecond delay is forced for every frame under the target rate&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.app_description" style="display:none">
 		<H3>app_description</H3>
 		<PRE>Specifies a description for the guest application&#x2e; It is purely for display purposes only to the end&#x2d;user&#x2e; It can be requested by the guest and only set in the app&#x2e;cfg file&#x2e;<BR></PRE>
-		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="cv.app_homedir" style="display:none">
-		<H3>app_homedir</H3>
-		<PRE>Species the users home directory where files are written to if they cannot be written to the working directory&#x2e; It is only readable by the end&#x2d;user and the host&#x2c; but not the guest&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.app_icon" style="display:none">
@@ -11279,6 +11346,11 @@
 		<PRE>Specifies a website for the guest application&#x2e; It is purely for display purposes only to the end&#x2d;user&#x2e; It can be requested by the guest and only set in the app&#x2e;cfg file&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.ast_basedir" style="display:none">
+		<H3>ast_basedir</H3>
+		<PRE>Specifies the base directory of where the executable was started from&#x2e; It is only readable by the end&#x2d;user and the host&#x2c; but not the guest&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.ast_bundles" style="display:none">
 		<H3>ast_bundles</H3>
 		<PRE>Specifies the [&#x2e;ext]ension to use as 7&#x2d;zip archives&#x2e; These filenames will be checked for at startup and automatically loaded by the engine&#x2e;<BR></PRE>
@@ -11291,12 +11363,22 @@
 	</DIV>
 	<DIV id="cv.ast_fsoverride" style="display:none">
 		<H3>ast_fsoverride</H3>
-		<PRE>Specifies whether the engine is allowed to override internal files from archives with files&#x2e; This is makes it easier to update and mod resource if true&#x2e; It is by default disabled on release builds and enabled on all other builds&#x2e;<BR></PRE>
+		<PRE>Specifies the order in which to load resources&#x2e; Specify &#x27;0&#x27; to only allow the files to be loaded from archives&#x2c; &#x27;1&#x27; to search the disk first and then archives&#x2c; &#x27;2&#x27; to load from archives first and then try the disk or &#x27;3&#x27; to load from disk only&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.ast_homedir" style="display:none">
+		<H3>ast_homedir</H3>
+		<PRE>Species the users home directory where files are written to if they cannot be written to the working directory&#x2e; It is only readable by the end&#x2d;user and the host&#x2c; but not the guest&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.ast_lzmabuffer" style="display:none">
 		<H3>ast_lzmabuffer</H3>
 		<PRE>Specifies the decompression buffer size &#x28;in bytes&#x29; for the lzma api&#x2e; The default value is 256 kilobytes&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.ast_modbundle" style="display:none">
+		<H3>ast_modbundle</H3>
+		<PRE>Scans the directory pointed at &#x27;ast_homedir&#x27; to be scanned for archives ending in the value specified by &#x27;ast_bundles&#x27; which can override any game asset &#x28;except app&#x2e;cfg&#x29;&#x2e; The default is true &#x28;yes&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.ast_pipebuffer" style="display:none">
@@ -11501,7 +11583,7 @@
 	</DIV>
 	<DIV id="cv.con_tmccols" style="display:none">
 		<H3>con_tmccols</H3>
-		<PRE>In bot mode&#x2c; this is the maximum number of columns to draw&#x2e; The larger this value is&#x2c; the more text that can be displayed at once but will increase CPU usage from the operating system&#x2e;<BR></PRE>
+		<PRE>In terminal mode&#x2c; this is the maximum number of columns to draw&#x2e; The larger this value is&#x2c; the more text that can be displayed at once but will increase CPU usage from the operating system&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.con_tmcnoclose" style="display:none">
@@ -11516,7 +11598,7 @@
 	</DIV>
 	<DIV id="cv.con_tmcrows" style="display:none">
 		<H3>con_tmcrows</H3>
-		<PRE>In bot mode&#x2c; this is the maximum number of rows to draw&#x2e; The larger this value is&#x2c; the more text that can be displayed at once but will increase CPU usage from the operating system&#x2e;<BR></PRE>
+		<PRE>In terminal mode&#x2c; this is the maximum number of rows to draw&#x2e; The larger this value is&#x2c; the more text that can be displayed at once but will increase CPU usage from the operating system&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.con_tmctformat" style="display:none">
@@ -11637,6 +11719,11 @@
 	<DIV id="cv.lua_cache" style="display:none">
 		<H3>lua_cache</H3>
 		<PRE>Specifies to compile any Lua code and store it in the user database for later retrieval&#x2e; When loading already compiled raw code&#x2c; this feature is ignored&#x2e;<BR>[0] LCC_OFF      &#x3d; Compile Lua code every time and not store&#x2e;<BR>[1] LCC_FULL     &#x3d; &#x22; with full debug information and store result &#x28;Best&#x29;&#x2e;<BR>[2] LCC_MINIMUM  &#x3d; &#x22; with minimum debug information and store result&#x2e;<BR>The default value is 3 for release executable and 2 for beta executable&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.lua_debuglocals" style="display:none">
+		<H3>lua_debuglocals</H3>
+		<PRE>Print locals when generating stack traces &#x28;default is true&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.lua_gcpause" style="display:none">
@@ -12224,7 +12311,7 @@
 		<PRE>Sets the minimum width of the window&#x2e; This is only changable at the application configuration file and is not saved to persistence database&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<ADDRESS>Copyright &copy; 2024 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Wed Nov 27 19:34:49 2024 +0000</ADDRESS>
+	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
+	This document was generated at Tue Feb 04 13:05:31 2025 +0000</ADDRESS>
 </BODY>
 </HTML>

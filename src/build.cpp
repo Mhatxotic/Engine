@@ -16,42 +16,53 @@
 using std::cout;                       // Using this to print text
 using std::endl;                       // " End of line for std::cout
 /* ------------------------------------------------------------------------- */
-namespace Engine {                     // Put everything in engine namespace
+namespace E {                          // Put everything in engine namespace
 /* ------------------------------------------------------------------------- */
-#include "engine.hpp"                  // Build version numbers
-#include "stdtypes.hpp"                // Global types
-#include "flags.hpp"                   // Flags class
-#include "utf.hpp"                     // Utf string utilities
-#include "std.hpp"                     // Stdlib utilities
-#include "string.hpp"                  // String utilities
-#include "token.hpp"                   // Tokeniser class
-#include "error.hpp"                   // Error handling class
-#include "psplit.hpp"                  // Path splitter class
-#include "ident.hpp"                   // Identifier class
-#include "dir.hpp"                     // Directory listing class
-#include "util.hpp"                    // Misc utilities
-#include "sysutil.hpp"                 // System level utilities
-#include "args.hpp"                    // Arguments class
-#include "cmdline.hpp"                 // Command line helper class
-#include "parser.hpp"                  // Parser class
-#include "memory.hpp"                  // Memory block class
-#include "fstream.hpp"                 // File stream class
-#include "cvardef.hpp"                 // Cvars definitions
-#include "clock.hpp"                   // Time helpers
-#include "log.hpp"                     // Logging class
-#include "luadef.hpp"                  // Lua definitions
-#include "collect.hpp"                 // Collector class
-#include "stat.hpp"                    // Statistic class
-#include "thread.hpp"                  // Thread class
-#include "evtcore.hpp"                 // Events core class
-#include "evtmain.hpp"                 // Events main class
-#include "condef.hpp"                  // Console definitions
-#include "dim.hpp"                     // Dimensions classes
-#include "syscore.hpp"                 // System class
-#include "crypt.hpp"                   // Crypt class
-#include "codec.hpp"                   // Codec class
-#include "uuid.hpp"                    // UUid class
-#include "timer.hpp"                   // Timer class
+#include "engine.hpp"                  // Engine version information header
+#include "stdtypes.hpp"                // Engine STL type aliases header
+#include "flags.hpp"                   // Flags helper utility header
+#include "utf.hpp"                     // UTF strings utility header
+#include "std.hpp"                     // StdLib function helpers header
+#include "string.hpp"                  // String utilities header
+#include "url.hpp"                     // Url parsing library
+#include "error.hpp"                   // Error handling utility header
+#include "token.hpp"                   // String tokenisation utility header
+#include "parser.hpp"                  // String parsing utility header
+#include "psplit.hpp"                  // Path handling utilities header
+#include "ident.hpp"                   // Identifier utility header
+#include "dir.hpp"                     // Directory handling utility header
+#include "util.hpp"                    // Miscellenious utilities header
+#include "sysutil.hpp"                 // System utilities header
+#include "cvardef.hpp"                 // CVar definitions header
+#include "clock.hpp"                   // Clock utilities header
+#include "args.hpp"                    // Arguments handling header
+#include "cmdline.hpp"                 // Command-line class header
+#include "memory.hpp"                  // Memory management utilities header
+#include "fstream.hpp"                 // File IO utility header
+#include "log.hpp"                     // Logging helper class header
+#include "luadef.hpp"                  // Lua definitions header
+#include "collect.hpp"                 // Class collector utility header
+#include "stat.hpp"                    // Statistic utility class header
+#include "thread.hpp"                  // Thread helper class header
+#include "evtcore.hpp"                 // Thread-safe event system core header
+#include "evtmain.hpp"                 // Main engine events system header
+#include "dim.hpp"                     // Data grouping classes header
+#include "condef.hpp"                  // Console definitions header
+#include "syscore.hpp"                 // Operating system interface header
+#include "filemap.hpp"                 // Virtual file IO interface
+#include "luautil.hpp"                 // Lua utility functions header
+#include "luaref.hpp"                  // Lua reference helper class header
+#include "luaevent.hpp"                // Lua event helper class header
+#include "luafunc.hpp"                 // Lua callback helper class header
+#include "async.hpp"                   // Async file loading class header
+#include "crypt.hpp"                   // Cryptography utilities header
+#include "uuid.hpp"                    // UuId parsing header
+#include "codec.hpp"                   // Codec classes header
+#include "archive.hpp"                 // Archive handling class header
+#include "asset.hpp"                   // Asset handling class header
+#include "json.hpp"                    // Json handling class header
+#include "file.hpp"                    // FStream+FileMap class header
+#include "timer.hpp"                   // Timer class header
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // If using Windows?
 # pragma warning(disable: 4505)        // Disable unreferenced function (lots!)
@@ -60,8 +71,8 @@ namespace Engine {                     // Put everything in engine namespace
 using namespace IClock::P;             using namespace ICmdLine::P;
 using namespace ICrypt::P;             using namespace ICodec::P;
 using namespace IDir::P;               using namespace IError::P;
-using namespace IFStream::P;           using namespace ILog::P;
-using namespace ILuaLib::P;
+using namespace IFStream::P;           using namespace IJson::P;
+using namespace ILog::P;               using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IPSplit::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
@@ -80,6 +91,7 @@ using namespace IUuId::P;              using namespace IParser::P;
 #define DRDDIR     DBGDIR              // "-rd" Debugging symbols ramdisk dir
 #define DISDIR     "distro"            // Distributable directory
 #define ETCDIR     "etc"               // Configuration directory
+#define CFGEXT     "cfg"               // Configuration file extension
 #define INCDIR     "include"           // Include files directory
 #define LIBDIR     "lib"               // Library files directory
 #define LICDIR     "licenses"          // License files directory
@@ -199,7 +211,7 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
                    "-Wno-gnu-zero-variadic-macro-arguments "
                    "-Wno-covered-switch-default -Wno-switch-enum "
                    "-Wno-poison-system-directories -Wno-global-constructors "
-                   "-Wno-padded",
+                   "-Wno-padded -Wno-cast-function-type-strict",
   /* CCAA       */ envWindowsMSVC.cpCCAA,
   /* CCAB       */ "-DBETA -MT -Z7 -O2 -GS- -Gw",
   /* CCAR       */ "-DRELEASE -MT -O2 -GS- -Gw",
@@ -338,7 +350,7 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* CCAB       */ "-DBETA -O2",
   /* CCAR       */ "-DRELEASE -O3",
   /* CCPP       */ envWindowsLLVM.cpCCPP,
-  /* CC4        */ "-mmacosx-version-min=10.11 -arch x86_64 -mtune=generic",
+  /* CC4        */ "-mmacosx-version-min=10.15 -arch x86_64 -mtune=generic",
   /* CC8        */ "-mmacosx-version-min=11.0 -arch arm64 -mtune=apple-m1",
   /* CCOBJ      */ "-o",
   /* CCRES      */ "",
@@ -362,7 +374,7 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* LDE8       */ "",
   /* LDB4       */ "",
   /* LDB8       */ "",
-  /* LD4        */ "-arch x86_64 -platform_version macos 10.11 10.11 "
+  /* LD4        */ "-arch x86_64 -platform_version macos 10.15 10.15 "
                    "-lcrt1.10.6.o",
   /* LD8        */ "-arch arm64 -platform_version macos 11.0 11.0",
   /* LDL        */ "-lc -lc++ -lSystem -framework AudioUnit "
@@ -551,6 +563,31 @@ array<unsigned int,4> uiVer{           // Version of engine (y.m.d.b)
   static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) };
 string strName, strArch, strVer, strTitle, strAuthor;
 const string strEName{ VER_NAME }, strEAuthor{ VER_AUTHOR };
+/* -- Get return character format of text string --------------------------- */
+static const string StrGetReturnFormat(const string &strIn)
+{ // String is not empty?
+  if(!strIn.empty())
+  { // Enumerate each character...
+    for(string::const_iterator ciC{ strIn.cbegin() };
+                               ciC != strIn.cend();
+                             ++ciC)
+    { // Test character
+      switch(*ciC)
+      { // Carriage-return found
+        case '\r':
+          return find(ciC, strIn.cend(), '\n') != strIn.cend() ?
+             cCommon->CrLf() : cCommon->Cr();
+        // Line-feed found
+        case '\n':
+          return find(ciC, strIn.cend(), '\r') != strIn.cend() ?
+             cCommon->LfCr() : cCommon->Lf();
+        // Anything else is ignored
+        default: break;
+      }
+    } // Nothing found
+  } // Return blank string
+  return {};
+}
 /* ------------------------------------------------------------------------- */
 int CheckSources(void)
 { // Number of warnings
@@ -1977,7 +2014,7 @@ int CertFunc(const string strOut)
   if(!strOut.empty())
   { // Read password to string and return if failed
     const string strPass{ FStream{
-      strCodePass, FM_R_B }.FStreamReadBlockSafe().MemToString() };
+      strCodePass, FM_R_B }.FStreamReadBlockSafe().MemToStringSafe() };
     if(strPass.empty()) XCL("Empty password!", "File", strCodePass);
     // Move to temp file because osslsigncode wont work
     const string strOutUnsigned{ StrAppend(strOut, ".unsigned") };
@@ -2290,7 +2327,7 @@ int BuildDistro(void)
       "\t\t<key>CFBundleVersion</key>\n"
       "\t\t<string>$</string>\n"
       "\t\t<key>LSMinimumSystemVersion</key>\n"
-      "\t\t<string>10.11</string>\n"
+      "\t\t<string>10.15</string>\n"
       "\t\t<key>LSApplicationCategoryType</key>\n"
       "\t\t<string>public.app-category.games</string>\n"
       "\t\t<key>NSHighResolutionCapable</key>\n"
@@ -2351,8 +2388,8 @@ int ChangeProject(const string &strProj)
   if(strProj == SRCDIR)
     XC("Invalid project!", "Project", strProj);
   // Get directory name. Bail if project doesnt exist
-  const string strProjDir{ StrFormat("$/$.$", strProj,
-    DEFAULT_CONFIGURATION, CFG_EXTENSION) };
+  const string strProjDir{ StrFormat("$/$.cfg", strProj,
+    DEFAULT_CONFIGURATION) };
   if(!DirLocalDirExists(strProjDir))
     XCL("No such project exists!", "Project", strProj, "VarsFile", strProjDir);
   // Rewrite version file
@@ -2522,14 +2559,15 @@ int RebuildAssets(const bool bClear)
   if(!DirFileUnlink(strADBTmp) && StdIsNotError(ENOENT))
     XCL("Failed to remove temporary archive!", "File", strADBTmp);
   // Start archiving and return if succeeded
-  SystemF("$ -t7z -mx9 -mmt4 -ms=off -r u \"$\" \"-x!$.$\" \"-x!$.exe\" "
-    "\"-x!$.$\" \"-x!*.md\" \"-x!$\" \"-x!$.crt\" \"-x!$.$\" \"-x!$.ico\" "
-    "\"-x!$.dbg\" \"-x!$32.exe\" \"-x!$32.crt\" \"-x!$32.dbg\" "
-    "\"-x!$32.$\" \"-x!$32\" \"-x!$32.$\" -x!.git* -x!prv -x!*.psd",
-      envActive.cp7z, strADB, strName, CFG_EXTENSION, strName, strName,
-      UDB_EXTENSION, strName, strName, strName, ARCHIVE_EXTENSION, strName,
-      strName, strName, strName, strName, strName, UDB_EXTENSION, strName,
-      strName, LOG_EXTENSION);
+  SystemF("$ -t7z -ms=off -mx9 -myx9 -m0=LZMA2:d64m:fb273 -mhe=on -mmt=8 -mqs "
+    "-slp -ssw -sse -r u \"$\" \"-x!$32.exe\" \"-x!$.exe\" \"-x!$32\" "
+    "\"-x!$\" \"-x!$32" UDB_EXTENSION "\" \"-x!$64" UDB_EXTENSION "\" "
+    "\"-x!readme.md\" \"-x!*.crt\" \"-x!*.ico\" \"-x!*.dbg\" "
+    "\"-x!.*\" \"-x!prv\" \"-x!*.psd\" \"-x!*." LOG_EXTENSION "\" "
+    "\"-x!*." ARCHIVE_EXTENSION "\" \"-x!*." UDB_EXTENSION "\" "
+    ".",
+      envActive.cp7z, strADB, strName, strName, strName, strName, strName,
+      strName, strName);
   // Success
   return 0;
 }
@@ -2757,8 +2795,7 @@ int NewProject(const string &strProj)
   SystemF("ln -s ../$/$64.exe $.exe ", BINDIR, ENGINENAME, pExe.strFile);
 #endif
   // Create a generic app file
-  FStream fApp{ StrFormat("$.$",
-    DEFAULT_CONFIGURATION, CFG_EXTENSION), FM_W_T };
+  FStream fApp{ StrFormat("$." CFGEXT, DEFAULT_CONFIGURATION), FM_W_T };
   if(!fApp.FStreamOpened()) throw runtime_error{ "app config file" };
   fApp.FStreamWriteString("; Write application parameters here\n"
                 "app_guimode = 0");
@@ -3013,6 +3050,53 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
                         { "LD=\"link\"", "LD=LLD-LINK" }
 #define STRREPCLANG64 { STRREPCLANG, { "/MT", "-m64 /MT" } }
 #define STRREPCLANG32 { STRREPCLANG, { "/MT", "-m32 /MT" } }
+    const string strInstallDataPm{
+      "package OpenSSL::safe::installdata;\n"
+      "\n"
+      "use strict;\n"
+      "use warnings;\n"
+      "use Exporter;\n"
+      "our @ISA = qw(Exporter);\n"
+      "our @EXPORT = qw(\n"
+      "    @PREFIX\n"
+      "    @libdir\n"
+      "    @BINDIR @BINDIR_REL_PREFIX\n"
+      "    @LIBDIR @LIBDIR_REL_PREFIX\n"
+      "    @INCLUDEDIR @INCLUDEDIR_REL_PREFIX\n"
+      "    @APPLINKDIR @APPLINKDIR_REL_PREFIX\n"
+      "    @ENGINESDIR @ENGINESDIR_REL_LIBDIR\n"
+      "    @MODULESDIR @MODULESDIR_REL_LIBDIR\n"
+      "    @PKGCONFIGDIR @PKGCONFIGDIR_REL_LIBDIR\n"
+      "    @CMAKECONFIGDIR @CMAKECONFIGDIR_REL_LIBDIR\n"
+      "    $VERSION @LDLIBS\n"
+      ");\n"
+      "\n"
+      "our @PREFIX                     = ( '' );\n"
+      "our @libdir                     = ( 'lib' );\n"
+      "our @BINDIR                     = ( 'bin' );\n"
+      "our @BINDIR_REL_PREFIX          = ( 'bin' );\n"
+      "our @LIBDIR                     = ( 'lib' );\n"
+      "our @LIBDIR_REL_PREFIX          = ( 'lib' );\n"
+      "our @INCLUDEDIR                 = ( 'include' );\n"
+      "our @INCLUDEDIR_REL_PREFIX      = ( 'include' );\n"
+      "our @APPLINKDIR                 = ( 'include\\openssl' );\n"
+      "our @APPLINKDIR_REL_PREFIX      = ( 'include/openssl' );\n"
+      "our @ENGINESDIR                 = ( 'lib\\engines-3' );\n"
+      "our @ENGINESDIR_REL_LIBDIR      = ( 'engines-3' );\n"
+      "our @MODULESDIR                 = ( 'lib\\ossl-modules' );\n"
+      "our @MODULESDIR_REL_LIBDIR      = ( 'ossl-modules' );\n"
+      "our @PKGCONFIGDIR               = ( 'lib' );\n"
+      "our @PKGCONFIGDIR_REL_LIBDIR    = ( '' );\n"
+      "our @CMAKECONFIGDIR             = ( 'lib\\cmake\\OpenSSL' );\n"
+      "our @CMAKECONFIGDIR_REL_LIBDIR  = ( 'cmake\\OpenSSL' );\n"
+      "our $VERSION                    = '3.4.0';\n"
+      "our @LDLIBS                     =\n"
+      "    # Unix and Windows use space separation, VMS uses comma separation\n"
+      "    $^O eq 'VMS'\n"
+      "    ? split(/ *, */, 'ws2_32.lib gdi32.lib advapi32.lib crypt32.lib user32.lib ')\n"
+      "    : split(/ +/, 'ws2_32.lib gdi32.lib advapi32.lib crypt32.lib user32.lib ');\n"
+      "\n"
+      "1;\n" };
     // Setup the repo
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Perl configure parameters
@@ -3032,6 +3116,7 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     if(uiFlags & PF_X64)
     { // Do compile 64-bit release version
       System(strPerl64Rel);
+      FStream{ "installdata.pm", FM_W_B }.FStreamWriteString(strInstallDataPm);
       ReplaceTextMulti("makefile", STRREPRELEASE64);
       if(envActive.cpCCX == envWindowsLLVMcompat.cpCCX)
         ReplaceTextMulti("makefile", STRREPCLANG64);
@@ -3046,8 +3131,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     } // Compile 32-bit release version
     if(uiFlags & PF_X86)
     { // Do compile 32-bit release version
-      System("swap");
       System(strPerl32Rel);
+      FStream{ "installdata.pm", FM_W_B }.FStreamWriteString(strInstallDataPm);
       ReplaceTextMulti("makefile", STRREPRELEASE32);
       if(envActive.cpCCX == envWindowsLLVMcompat.cpCCX)
         ReplaceTextMulti("makefile", STRREPCLANG32);
@@ -3217,7 +3302,7 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
         SystemF("$/$.asm -o $$",
           strCompRel64, strFile, strFile, envActive.cpOBJ);
       GenericExtLibBuild(StrFormat("$ $ $ $/jsimd.c", strRelFlags64,
-        strJPTSpecific, strJPT, strBase64), strL64, strTmp, "jpeg64");
+        strJPTSpecific, strJPT, strBase64), strL64, strTmp, "jpeg64", true);
     }
     // We need to activate cmake once to init jpegturbo config and other things
     System("rm -rf CMakeFiles *.cmake CMakeCache.txt jconfig.h");
@@ -3292,13 +3377,14 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
   } // = OPENALSOFT SCRIPT ====================================================
   else if(strLib.length() >= 12 && strLib.substr(0, 12) == "openal-soft-")
   { // Setup the repository
-    SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
+    SetupZipRepo(strLibPath, strTmp, PSLib.strFile);
     // We need to activate cmake once to build openal config and other things
     System("rm -rf CMakeFiles *.cmake CMakeCache.txt");
     // One time only build
     SystemF("$ -Wno-dev "
               "-DALSOFT_TESTS=OFF "
               "-DALSOFT_BACKEND_WAVE=FALSE "
+              "-DALSOFT_BACKEND_WASAPI=FALSE "
               "-DALSOFT_DLOPEN=FALSE "
               "-DALSOFT_EMBED_HRTF_DATA=FALSE "
               "-DALSOFT_EXAMPLES=FALSE "
@@ -3310,6 +3396,7 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
               "-DALSOFT_INSTALL=FALSE "
               "-DALSOFT_NO_CONFIG_UTIL=TRUE "
               "-DALSOFT_REQUIRE_SDL2=FALSE "
+              "-DALSOFT_REQUIRE_WASAPI=FALSE "
               "-DALSOFT_UPDATE_BUILD_VERSION=FALSE "
               "-DALSOFT_UTILS=FALSE "
               "-DSDL2_CORE_LIBRARY=FALSE "
@@ -3330,13 +3417,17 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     ReplaceText("core/mixer/mixer_c.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
     ReplaceText("core/mixer/mixer_sse.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
     ReplaceText("core/mixer/mixer_sse2.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
+    ReplaceText("alc/alconfig.cpp",
+      "#if !defined(_GAMING_XBOX)", "#if 0");
+    ReplaceText("core/helpers.cpp",
+      "#if !ALSOFT_UWP && !defined(_GAMING_XBOX)", "#if 0");
     // ReplaceText("core/mixer/mixer_sse3.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
     ReplaceText("core/mixer/mixer_sse41.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
     // Remove existing files
     System("if exist alc/alc_* rm -rfv alc/alc_*");
     System("if exist al/effects/al_effect_* rm -rfv al/effects/al_effect_*");
     System("if exist alc/effects/alc_effect_* "
-           "rm -rfv alc/effects/alc_effect_*");
+             "rm -rfv alc/effects/alc_effect_*");
     // We need to rename files to prevent .obj's overwriting each other
     { const Dir dALEffects("al/effects", ".cpp");
       for(const DirEntMapPair &dempPair : dALEffects.GetFiles())
@@ -3354,7 +3445,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     //  "const uint8_t hrtf_default", "hrtf_default.h");
     // Add openal specific flags
     const string strALSpecific{
-      "-std:c++17 -D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS "
+      "-std:c++20 -D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS "
+      "-D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS "
       "-D_LARGE_FILES -D_LARGEFILE_SOURCE -D_WIN32 -D_WINDOWS "
       "-DAL_ALEXT_PROTOTYPES -DAL_BUILD_LIBRARY -DAL_LIBTYPE_STATIC "
       "-DHAVE_STRUCT_TIMESPEC -DNOMINMAX -DRESTRICT=__restrict "
@@ -3369,7 +3461,7 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       "alc/backends/dsound.cpp "
       "alc/backends/loopback.cpp "
       "alc/backends/null.cpp "
-      "alc/backends/wasapi.cpp "
+      // "alc/backends/wasapi.cpp "
       "alc/backends/wave.cpp "
       "alc/backends/winmm.cpp "
       "alc/effects/*.cpp "
@@ -3377,8 +3469,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       "core/*.cpp "
       "core/filters/*.cpp "
       "core/mixer/*.cpp" };
-    strRelFlags64 += strALSpecific;
-    strRelFlags32 += strALSpecific;
+    strRelFlags64 += "-D_WIN32_WINNT=0x0502 " + strALSpecific;
+    strRelFlags32 += "-D_WIN32_WINNT=0x0501 " + strALSpecific;
     // Compile 64-bit version
     GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "al", 64);
     // Compile 32-bit release version
@@ -4350,23 +4442,26 @@ void ReadProject(void)
     XCL("Could not find project directory!",
         "Directory", strName, "Current", DirGetCWD());
   // Create filename
-  const string strFile{ StrFormat("$/$.$",
-    strName, DEFAULT_CONFIGURATION, CFG_EXTENSION) };
-  // Read variables from app manifest configuration
-  const string strBuffer{
-    FStream{ strFile, FM_R_B }.FStreamReadStringSafe() };
-  if(strBuffer.length() <= 2)
-    XCL("Could not read project variables!",
-        "File", strFile, "Length", strBuffer.length());
-  // Initialise it and return if no vars found
-  Parser<> varLoaded{ strBuffer, StrGetReturnFormat(strBuffer), '=' };
-  if(varLoaded.size() < 2) XC("Wrong number of variables found!",
-    "File", strFile, "Minimum", 2, "Count", varLoaded.size());
+  const string strFile{ StrFormat("$/" DEFAULT_CONFIGURATION, strName) };
+  // Create the json object and parse it
+  const Json jsManifest{ StrAppend(strFile, "." JSON_EXTENSION) };
+  // Check version is correct
+  const unsigned int uiVersionRequired = 1;
+  const unsigned int uiVersion = jsManifest.GetInteger("Version");
+  if(uiVersion != uiVersionRequired)
+    XC("Invalid application manifest version!",
+       "Manfiest", jsManifest.IdentGet(), "Required", uiVersionRequired,
+       "Actual",   uiVersion);
+  // Look for constants and throw if there are none then report them in log
+  using Lib::RapidJson::Value;
+  const Value &rjvConstants = jsManifest.GetValue("Constants");
+  if(!rjvConstants.IsObject())
+    XC("Constants array not valid!", "Manfiest", jsManifest.IdentGet());
   // Get version and long name of app and update the version
-  strArch = StdMove(varLoaded.ParserGetAndRemove("app_shortname"));
-  strVer = StdMove(varLoaded.ParserGetAndRemove("app_version"));
-  strTitle = StdMove(varLoaded.ParserGetAndRemove("app_longname"));
-  strAuthor = StdMove(varLoaded.ParserGetAndRemove("app_author"));
+  strArch = StdMove(rjvConstants["app_shortname"].GetString());
+  strVer = StdMove(rjvConstants["app_version"].GetString());
+  strTitle = StdMove(rjvConstants["app_longname"].GetString());
+  strAuthor = StdMove(rjvConstants["app_author"].GetString());
 }
 /* ------------------------------------------------------------------------- */
 void ReadVersion(void)
@@ -4411,17 +4506,41 @@ void SelectEnvironment(const Environment &envNew)
 }
 /* ------------------------------------------------------------------------- */
 int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
-{ // Set this thread's name for debugger
+{ // Set this thread's name for debugger and that it is high performance
   SysInitThread("main", STP_MAIN);
-
-  // Initialise the sub-systems we are using...
-  Common   engCommon;                          cCommon  = &engCommon;
-  DirBase  engDirBase;                         cDirBase = &engDirBase;
-  CmdLine  engCmdLine{ iArgC, saArgV, saEnv }; cCmdLine = &engCmdLine;
-  Timer    engTimer;                           cTimer   = &engTimer;
-  Log      engLog;                             cLog     = &engLog;
-  System   engSystem;                          cSystem  = &engSystem;
-  Crypt    engCrypt;                           cCrypt   = &engCrypt;
+  // Create static classes to engine components and set the pointer to that
+  // component (which should get optimised to static) so all the other
+  // components can access each other. Then nullptr them on destruction so
+  // any accidental access to them is easily identifiable by the debugger.
+#define INITSS(x, ...) DEINITHELPER(dih ## x, c ## x = nullptr); \
+    x eng ## x{ __VA_ARGS__ }; c ## x = &eng ## x
+  // Initialise critical command-line and logging systems. We cannot really
+  // do anything else special until we've enabled these subsystems.
+  INITSS(Common);                      // cppcheck-suppress danglingLifetime
+  INITSS(DirBase);                     // cppcheck-suppress danglingLifetime
+  INITSS(CmdLine,iArgC,saArgV,saEnv);  // cppcheck-suppress danglingLifetime
+  INITSS(Log);                         // cppcheck-suppress danglingLifetime
+  // Dependencies required only in this scope
+  using namespace IArchive::P;         using namespace IArgs;
+  using namespace IAsset::P;           using namespace ICmdLine::P;
+  using namespace IClock::P;           using namespace ICrypt::P;
+  using namespace IEvtMain::P;         using namespace IFile::P;
+  using namespace ILuaFunc::P;         using namespace IMemory::P;
+  using namespace IParser::P;          using namespace IStat::P;
+  using namespace IThread::P;          using namespace IUtil::P;
+  using namespace IUtf;
+  // Initialise other systems. The order is important!
+  INITSS(Stats);                   // cppcheck-suppress danglingLifetime
+  INITSS(Threads);                 // cppcheck-suppress danglingLifetime
+  INITSS(EvtMain);                 // cppcheck-suppress danglingLifetime
+  INITSS(System);                  // cppcheck-suppress danglingLifetime
+  INITSS(LuaFuncs);                // cppcheck-suppress danglingLifetime
+  INITSS(Archives);                // cppcheck-suppress danglingLifetime
+  INITSS(Assets);                  // cppcheck-suppress danglingLifetime
+  INITSS(Crypt);                   // cppcheck-suppress danglingLifetime
+  INITSS(Jsons);                   // cppcheck-suppress danglingLifetime
+  // Done with this macro
+#undef INITSS
   // Force current working directory to the base directory
   SetDirectory(
 #if defined(WINDOWS)
@@ -4480,5 +4599,5 @@ catch(const exception &e)
 };                                     // End of core interface namespace
 /* ========================================================================= */
 int CONENTRYFUNC(int iArgC, ArgType**saArgV, ArgType**saEnv)
-  { return Engine::Build(iArgC, saArgV, saEnv); }
+  { return E::Build(iArgC, saArgV, saEnv); }
 /* == End-of-File ========================================================== */

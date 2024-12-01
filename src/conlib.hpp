@@ -184,7 +184,7 @@ cConsole->AddLineA(sTable.Finish(),
 Statistic sTable;
 sTable.Header("WIDTH").Header("HEIGHT").Header("OCCUPANCY").Header("TOTL")
       .Header("USED").Header("FREE").Reserve(cBins->size());
-// Walk through textures classes
+// Walk through bin classes
 for(const Bin*const bPtr : *cBins)
 { // Get reference to class and write its data to the table
   const Bin &bRef = *bPtr;
@@ -483,14 +483,14 @@ for(const Archive*const aPtr : *cArchives)
   const Archive &aRef = *aPtr;
   // Goto next archive if directory specified and is not found
   const StrUIntMap &suimDirs = aRef.GetDirList();
-  if(!strDir.empty() && !suimDirs.contains(strDir)) continue;
   // Enumerate directories
   for(const StrUIntMapPair &suimpPair : suimDirs)
   { // Skip directory if start of directory does not match
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    string strName{ StrTrim(suimpPair.first.substr(strDir.length()), '/') };
-    if(strName.find('/') != string::npos) continue;
+    string strName{ StrTrim(
+      suimpPair.first.substr(strDir.length()), cCommon->CFSlash()) };
+    if(strName.find(cCommon->CFSlash()) != string::npos) continue;
     // Add to directory list and increment directory count
     silDirs.insert({ StdMove(strName),
       { StdMaxUInt64, suimpPair.second, aRef.IdentGet() } });
@@ -500,8 +500,9 @@ for(const Archive*const aPtr : *cArchives)
   { // Skip file if start of directory does not match
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    string strName{ StrTrim(suimpPair.first.substr(strDir.length()), '/') };
-    if(strName.find('/') != string::npos) continue;
+    string strName{ StrTrim(
+      suimpPair.first.substr(strDir.length()), cCommon->CFSlash()) };
+    if(strName.find(cCommon->CFSlash()) != string::npos) continue;
     // Add to file list and increment total bytes and file count
     const uint64_t uqSize = aRef.GetSize(suimpPair.second);
     silFiles.insert({ StdMove(strName),
@@ -615,6 +616,7 @@ const function ShowFboInfo{ [](const Fbo &fRef, Statistic &sTable,
   // Show FBO status
   sTable.DataN(fRef.CtrGet()).DataN(fRef.uiFBO).DataN(fRef.uiFBOtex)
        .Data(StrFromEvalTokens({
+          { fRef.LockIsSet(),                'L' },
           { fRef.FboIsTransparencyEnabled(), 'A' },
           { fRef.FboIsClearEnabled(),        'C' },
        }))
@@ -660,7 +662,7 @@ Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("FD").Header("ERRNO")
       .Header("POSITION").Header("LENGTH").Header("FILENAME", false)
       .Reserve(cFiles->size());
-// Walk through textures classes
+// Walk through file classes
 for(File*const fPtr : *cFiles)
 { // Get reference to class and write its data to the table
   File &fRef = *fPtr;
@@ -693,23 +695,26 @@ cConsole->FindText(StrImplode(aArgs, 1));
 /* ------------------------------------------------------------------------- */
 const function ShowFontInfo{ [](Statistic &sTable, const Font &fRef)
   { sTable.DataN(fRef.CtrGet())
-          .DataC(fRef.FlagIsSet(FF_FLOORADVANCE) ? 'F' :
-                (fRef.FlagIsSet(FF_CEILADVANCE)  ? 'C' :
-                (fRef.FlagIsSet(FF_ROUNDADVANCE) ? 'R' : '-')))
           .Data(StrFromEvalTokens({
+            { fRef.LockIsSet(),                'L' },
+            { fRef.IsFontBitmap(),             'B' },
+            { fRef.IsFontFreeType(),           'T' },
             { fRef.FlagIsSet(FF_USEGLYPHSIZE), 'S' },
-            { fRef.FlagIsSet(FF_STROKETYPE2),  'A' }
+            { fRef.FlagIsSet(FF_STROKETYPE2),  'A' },
+            { fRef.FlagIsSet(FF_FLOORADVANCE), 'F' },
+            { fRef.FlagIsSet(FF_CEILADVANCE),  'C' },
+            { fRef.FlagIsSet(FF_ROUNDADVANCE), 'R' }
           }))
-          .DataN(fRef.GetCharScale(), 6).DataN(fRef.GetTexOccupancy(), 6)
+          .DataN(fRef.GetCharScale(), 6)
+          .DataN(fRef.GetTexOccupancy(), 6)
           .DataN(fRef.GetCharCount()).Data(fRef.IdentGet()); }
 }; // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("ID").Header("R").Header("FLAG").Header("SCALE")
-      .Header("TEXOCPCY").Header("CC").Header("NAME", false)
-      .Reserve(1 + cFonts->size());
+sTable.Header("ID").Header("FLAG").Header("SCALE").Header("TEXOCPCY")
+      .Header("CC").Header("NAME", false).Reserve(1 + cFonts->size());
 // Include console font
 ShowFontInfo(sTable, cConGraphics->GetFontRef());
-// Walk through textures classes
+// Walk through font classes
 for(const Font*const fPtr : *cFonts) ShowFontInfo(sTable, *fPtr);
 // Log counts including the static console font class
 cConsole->AddLineA(sTable.Finish(),
@@ -729,7 +734,7 @@ Statistic sTable;
 sTable.Header("ID").Header("GLYPH").Header("FW").Header("FH").Header("DW")
       .Header("DH").Header("STYLE", false).Header("FAMILY", false)
       .Header("FILENAME", false).Reserve(cFtfs->size());
-// Walk through textures classes
+// Walk through ftf classes
 for(const Ftf*const fPtr : *cFtfs)
 { // Get reference to class and write its data to the table
   const Ftf &fRef = *fPtr;
@@ -823,17 +828,17 @@ if(aArgs.size() == 2)
   return;
 } // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("ID").Header("FLAGS", false).Header("SIZW").Header("SIZH")
+sTable.Header("ID").Header("FLAG", false).Header("SIZW").Header("SIZH")
       .Header("BI").Header("B").Header("S").Header("ALLOC")
       .Header("TYPE", false).Header("NAME", false).Reserve(cImages->size());
-// Walk through textures classes
+// Walk through image classes
 for(const Image*const iPtr : *cImages)
 { // Get reference to class and write its data to the table
   const Image &iRef = *iPtr;
   sTable.DataN(iRef.CtrGet()).Data(StrFromEvalTokens({
     { iRef.IsDynamic(),          'Y' }, { iRef.IsNotDynamic(),       'S' },
     { iRef.IsPurposeFont(),      'F' }, { iRef.IsPurposeImage(),     'I' },
-    { iRef.IsPurposeTexture(),   'X' }, { iRef.IsLoadAsDDS(),        'D' },
+    { iRef.IsPurposeTexture(),   'T' }, { iRef.IsLoadAsDDS(),        'D' },
     { iRef.IsLoadAsGIF(),        'G' }, { iRef.IsLoadAsJPG(),        'J' },
     { iRef.IsLoadAsPNG(),        'P' }, { iRef.IsConvertAtlas(),     'A' },
     { iRef.IsActiveAtlas(),      'a' }, { iRef.IsConvertReverse(),   'E' },
@@ -844,8 +849,8 @@ for(const Image*const iPtr : *cImages)
     { iRef.IsActiveBinary(),     'n' }, { iRef.IsConvertGPUCompat(), 'O' },
     { iRef.IsActiveGPUCompat(),  'o' }, { iRef.IsConvertRGBOrder(),  'B' },
     { iRef.IsActiveRGBOrder(),   'b' }, { iRef.IsCompressed(),       'C' },
-    { iRef.IsPalette(),          'L' }, { iRef.IsMipmaps(),          'M' },
-    { iRef.IsReversed(),         'R' }
+    { iRef.IsPalette(),          '8' }, { iRef.IsMipmaps(),          'M' },
+    { iRef.IsReversed(),         'R' }, { iRef.LockIsSet(),          'L' },
   })).DataN(iRef.DimGetWidth()).DataN(iRef.DimGetHeight())
      .DataN(iRef.GetBitsPerPixel()).DataN(iRef.GetBytesPerPixel())
      .DataN(iRef.GetSlotCount()).DataN(iRef.GetAlloc())
@@ -882,29 +887,79 @@ cConsole->AddLineA(sTable.Finish(),
 // ! input
 // ? No explanation yet.
 /* ========================================================================= */
-{ "input", 1, 1, CFL_VIDEO, [](const Args &){
+{ "input", 1, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-// Get joysticks data
-const JoyList &jlList = cInput->GetConstJoyList();
-// Joysticks connected
-size_t stCount = 0;
-// Make a table to automatically format our data neatly
+// Required joystick namespace
+using namespace IJoystick::P;
+// If argument specified
+if(aArgs.size() > 1)
+{ // Convert parmeter to number
+  const size_t stArg = StrToNum<size_t>(aArgs[1]);
+  if(stArg >= cInput->JoyGetCount())
+    return cConsole->AddLine("Joystick index argument invalid!");
+  // Get joystick information and return if not connected
+  const JoyInfo &jiRef = cInput->JoyGetConst(stArg);
+  if(jiRef.JoyIsDisconnected())
+    return cConsole->AddLine("Joystick is not being polled right now!");
+  // Build axis state data
+  Statistic sAxes;
+  // Buffered headers
+  StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
+    [&sAxes](const JoyAxisInfo &jaiRef) { sAxes.Header(StrFormat("BA$$$$",
+      setw(2), right, setfill('0'), jaiRef.AxisGetId()), true); });
+  // Unbuffered headers
+  StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
+    [&sAxes](const JoyAxisInfo &jaiRef) { sAxes.Header(StrFormat("UA$$$$",
+      setw(2), right, setfill('0'), jaiRef.AxisGetId()), true); });
+  // Reserve memory for data entries
+  sAxes.Reserve(jiRef.JoyAxisListCount() * 2);
+  // Buffered state
+  StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
+    [&sAxes](const JoyAxisInfo &jaiRef)
+      { sAxes.DataN(jaiRef.AxisGetBufferedState()); });
+  // Unbuffered state
+  StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
+    [&sAxes](const JoyAxisInfo &jaiRef)
+      { sAxes.DataN(jaiRef.AxisGetUnbufferedState(), 1); });
+  // Build button state data
+  Statistic sButtons;
+  // Buffered headers
+  StdForEach(seq, jiRef.JoyButtonListBegin(), jiRef.JoyButtonListEnd(),
+    [&sButtons](const JoyButtonInfo &jbiRef)
+      { sButtons.Header(StrFormat("B$$$$",
+          setw(2), right, setfill('0'), jbiRef.ButtonGetId()), true); });
+  // Reserve memory for data entries
+  sButtons.Reserve(jiRef.JoyButtonListCount());
+  // Buffered state
+  StdForEach(seq, jiRef.JoyButtonListBegin(), jiRef.JoyButtonListEnd(),
+    [&sButtons](const JoyButtonInfo &jbiRef)
+      { sButtons.DataN(jbiRef.ButtonGetState()); });
+  // Dump to console output and return
+  return cConsole->AddLineF("$$Data for $ '$' at index $.", sAxes.Finish(),
+    sButtons.Finish(), jiRef.JoyGetGamepadOrJoystickString(), jiRef.IdentGet(),
+    stArg);
+} // Make a table to automatically format our data neatly
 Statistic sTable;
 sTable.Header("ID").Header("FL").Header("AX").Header("BT")
-      .Header("NAME", false).Reserve(jlList.size());
+      .Header("GUID", false).Header("NAME", false)
+      .Header("IDENT", false).Reserve(cInput->JoyGetCount());
 // For each joystick
+const JoyList &jlList = cInput->JoyListGetConst();
 for(const JoyInfo &jiRef : jlList)
-{ // Ignore if not connected
-  if(jiRef.IsDisconnected()) continue;
-  // Store data
-  sTable.DataN(jiRef.GetId()).DataH(jiRef.FlagGet())
-        .DataN(jiRef.GetAxisCount()).DataN(jiRef.GetButtonCount())
-        .Data(jiRef.IdentGet());
-  // Connected
-  ++stCount;
+{ // If joystick is connected
+  if(jiRef.JoyIsDisconnected())
+  { // If joystick name was empty then ignore it. Still show disconnected ones
+    if(jiRef.IdentGet().empty()) continue;
+  } // Store data
+  sTable.DataN(jiRef.JoyGetId()).Data(StrFromEvalTokens({
+    { jiRef.JoyIsGamepad(), 'G' }, { jiRef.JoyIsConnected(), 'C' }
+  })).DataN(jiRef.JoyAxisListCount()).DataN(jiRef.JoyButtonListCount())
+     .Data(jiRef.JoyGUID()).Data(jiRef.JoyGamePadName())
+     .Data(jiRef.IdentGet());
 } // Print totals
-cConsole->AddLineF("$$ ($ supported).", sTable.Finish(),
-  StrCPluraliseNum(stCount, "input", "inputs"), jlList.size());
+cConsole->AddLineF("$$ connected ($ supported).", sTable.Finish(),
+  StrCPluraliseNum(cInput->JoyGetConnected(), "input", "inputs"),
+    jlList.size());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'input' function
 /* ========================================================================= */
@@ -978,7 +1033,7 @@ cConsole->AddLine(cLua->CompileStringAndReturnResult(StrImplode(aArgs, 1)));
 const LockGuard lgLuaRefsSync(cLuaFuncs->CollectorGetMutex());
 // Make a table to automatically format our data neatly
 Statistic sTable;
-sTable.Header("ID").Header("FLAGS").Header("DATA", false).Header("MID")
+sTable.Header("ID").Header("FLAG").Header("DATA", false).Header("MID")
       .Header("SID").Header("NAME", false).Reserve(cLuaFuncs->size());
 // Walk Lua function list
 for(const LuaFunc*const lfPtr : *cLuaFuncs)
@@ -1067,7 +1122,7 @@ for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
     { LuaUtilGetStackType(lS, -1), LuaUtilGetStackTokens(lS, -1) } });
 } // Build string to output
 Statistic sTable;
-sTable.Header("FLAGS").Header("NAME", false).Header("VALUE", false)
+sTable.Header("FLAG").Header("NAME", false).Header("VALUE", false)
       .Reserve(ssmpmMap.size());
 for(const StrStrPairMapPair &sspmpPair : ssmpmMap)
   sTable.Data(sspmpPair.second.second).Data(sspmpPair.first)
@@ -1174,7 +1229,7 @@ lua_State*const lS = cLua->GetState();
 const int iCount = LuaUtilStackSize(lS);
 // Setup output spreadsheet
 Statistic sTable;
-sTable.Header("ID").Header("FLAGS").Header("NAME", false).Header("VALUE")
+sTable.Header("ID").Header("FLAG").Header("NAME", false).Header("VALUE")
       .Reserve(static_cast<size_t>(iCount));
 // Enumerate each stack element (1 is the first item)
 for(int iIndex = 1; iIndex <= iCount; ++iIndex)
@@ -1335,21 +1390,22 @@ struct MemoryUsageItem{ const string_view &strName; size_t stCount, stBytes; }
   muiTotal{ cCommon->Blank(), 0, 0 };
 typedef list<MemoryUsageItem> MemoryUsageItems;
 // Helper macros so there is not as much spam
-#define MSS(x) { c ## x ## s->IdentGet(), \
-                 c ## x ## s->CollectorCount(), \
-                 c ## x ## s->CollectorCount() * sizeof(x) }
+#define MSSX(s,c) { c->IdentGet(), \
+                    c->CollectorCount(), \
+                    c->CollectorCount() * sizeof(s) }
+#define MSS(x) MSSX(x, c ## x ## s)
 // Build memory usage items database
 const MemoryUsageItems muiList{ {
-  MSS(Archive),  MSS(Asset),    MSS(Bin),     MSS(Clip),    MSS(Command),
-  MSS(Fbo),      MSS(File),     MSS(Font),    MSS(Ftf),     MSS(Image),
-  MSS(ImageLib), MSS(Json),     MSS(LuaFunc), MSS(Mask),    MSS(Palette),
-  MSS(Pcm),      MSS(PcmLib),   MSS(Sample),  MSS(Shader),  MSS(Socket),
-  MSS(Source),   MSS(SShot),    MSS(Stat),    MSS(Stream),  MSS(Texture),
-  MSS(Thread),   MSS(Variable), MSS(Video)
+  MSS(Archive),  MSS(Asset),    MSSX(Atlas, cAtlases),        MSS(Bin),
+  MSS(Clip),     MSS(Command),  MSS(Fbo),      MSS(File),     MSS(Font),
+  MSS(Ftf),      MSS(Image),    MSS(ImageLib), MSS(Json),     MSS(LuaFunc),
+  MSS(Mask),     MSS(Palette),  MSS(Pcm),      MSS(PcmLib),   MSS(Sample),
+  MSS(Shader),   MSS(Socket),   MSS(Source),   MSS(SShot),    MSS(Stat),
+  MSS(Stream),   MSS(Texture),  MSS(Thread),   MSS(Variable), MSS(Video)
 } };
 // Done with these macros
 #undef MSS
-#undef MSSEX
+#undef MSSX
 // Prepare statistics data
 Statistic stData;
 stData.Header("TYPE").Header("#").Header("STACK").Header().DupeHeader(2)
@@ -1440,10 +1496,10 @@ cConsole->AddLineA(sTable.Finish(),
 const LockGuard lgPcmsSync{ cPcms->CollectorGetMutex() };
 // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("ID").Header("FLAGS", false).Header("RATE")
+sTable.Header("ID").Header("FLAG").Header("RATE")
       .Header("C").Header("BT").Header("B").Header("PFMT").Header("ALLOC")
       .Header("NAME", false).Reserve(cPcms->size());
-// Walk through textures classes
+// Walk through pcm classes
 for(const Pcm*const pPtr : *cPcms)
 { // Get reference to class and write its data to the table
   const Pcm &pRef = *pPtr;
@@ -1631,7 +1687,7 @@ if(aArgs.size() == 2)
       StrShortFromDuration(dConnect), StrShortFromDuration(dInitial));
 } // Make neatly formatted table
 Statistic sTable;
-sTable.Header("ID").Header("FLAGS").Header("IP").Header("PORT")
+sTable.Header("ID").Header("FLAG").Header("IP").Header("PORT")
       .Header("ADDRESS", false).Reserve(cSockets->size());
 // Walk through sockets
 for(const Socket*const sPtr : *cSockets)
@@ -1852,7 +1908,7 @@ if(cSql->ExecuteAndSuccess(StrImplode(aArgs, 1)))
           case SQLITE_BLOB: sTable.Data("B").Data("<Blob>"); break;
           // Text?
           case SQLITE_TEXT: sTable.Data("T")
-                                  .Data(sdRef.MemToString()); break;
+                                  .Data(sdRef.MemToStringSafe()); break;
           // No data
           case SQLITE_NULL: sTable.Data("N").Data("<Null>"); break;
           // Unknown type (impossible)
@@ -1939,7 +1995,13 @@ cConsole->AddLineF("$-bit $ version $.$ build $ locale $.",
 /* ------------------------------------------------------------------------- */
 const function ShowTextureInfo{ [](Statistic &sTable, const Texture &tRef)
 { // Add data to table
-  sTable.DataN(tRef.CtrGet()).Data(StrFromBoolYN(tRef.FlagIsSet(TF_DELETE)))
+  sTable.DataN(tRef.CtrGet())
+        .Data(StrFromEvalTokens({
+          { tRef.LockIsSet(),           'L' },
+          { tRef.FlagIsSet(TF_DELETE),  'D' },
+          { tRef.FlagIsSet(IP_FONT),    'F' },
+          { tRef.FlagIsSet(IP_TEXTURE), 'T' }
+        }))
         .DataN(tRef.GetSubCount()).DataN(tRef.GetMipmaps())
         .DataN(tRef.GetTexFilter()).DataN(tRef.GetTileCount())
         .DataN(tRef.GetTileWidth()).DataN(tRef.GetTileHeight())
@@ -1948,7 +2010,7 @@ const function ShowTextureInfo{ [](Statistic &sTable, const Texture &tRef)
 } };
 // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("ID").Header("D").Header("SC").Header("MM").Header("TF")
+sTable.Header("ID").Header("FLAG").Header("SC").Header("MM").Header("TF")
       .Header("TLT").Header("TSSX").Header("TSSY").Header("TSPX")
       .Header("TSPY").Header("IDENTIFIER", false)
       .Reserve(2 + cFonts->size() + cTextures->size());
@@ -2037,7 +2099,7 @@ cConsole->PrintVersion();
 const LockGuard lgVideosSync{ cVideos->CollectorGetMutex() };
 // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("ID").Header("FLAGS").Header("PCMF").Header("P").Header("C")
+sTable.Header("ID").Header("FLAG").Header("PCMF").Header("P").Header("C")
       .Header("FRMW").Header("FRMH").Header("PICW").Header("PICH")
       .Header("OX").Header("OY").Header("FPS").Header("TIME").Header("FD")
       .Header("FR").Header("FL").Header("AVD").Header("LEN")

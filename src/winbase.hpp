@@ -848,6 +848,6 @@ class SysBase :                        // Members initially private
   DELETECOPYCTORS(SysBase)             // Suppress default functions for safety
 };/* ======================================================================= */
 #define ENGINE_SYSBASE_CALLBACKS() \
-  LONG WINAPI SysBase::SysBase::HandleExceptionStatic(LPEXCEPTION_POINTERS \
+  LONG WINAPI SysBase::HandleExceptionStatic(LPEXCEPTION_POINTERS \
     epData) { return cSystem->HandleException(*epData); }
 /* == EoF =========================================================== EoF == */

@@ -51,38 +51,37 @@ enum EvtMainCmd : size_t               // Engine thread event commands
   EMC_NOLOG,                           // 23: Events after this aren't logged
   /* -- Console events ----------------------------------------------------- */
   EMC_CON_UPDATE = EMC_NOLOG,          // 24: Force a syscon display update
-  EMC_CON_RESIZE,                      // 25: Syscon resized event
-  EMC_CON_KEYPRESS,                    // 26: Console key pressed
+  EMC_CON_KEYPRESS,                    // 25: Console key pressed
   /* -- Input events ------------------------------------------------------- */
-  EMC_INP_KEYPRESS,                    // 27: Unfiltered key pressed
-  EMC_INP_CHAR,                        // 28: Filtered key pressed
-  EMC_INP_DRAG_DROP,                   // 29: Files dragged and dropped
-  EMC_INP_MOUSE_FOCUS,                 // 30: Mouse moved outside/inside window
-  EMC_INP_MOUSE_MOVE,                  // 31: Mouse cursor moved
-  EMC_INP_MOUSE_CLICK,                 // 32: Mouse button clicked
-  EMC_INP_MOUSE_SCROLL,                // 33: Mouse wheel scrolled
-  EMC_INP_JOY_STATE,                   // 34: Joystick status changed
-  EMC_INP_SET_CUR_POS,                 // 35: Set cursor position
+  EMC_INP_KEYPRESS,                    // 26: Unfiltered key pressed
+  EMC_INP_CHAR,                        // 27: Filtered key pressed
+  EMC_INP_DRAG_DROP,                   // 28: Files dragged and dropped
+  EMC_INP_MOUSE_FOCUS,                 // 29: Mouse moved outside/inside window
+  EMC_INP_MOUSE_MOVE,                  // 30: Mouse cursor moved
+  EMC_INP_MOUSE_CLICK,                 // 31: Mouse button clicked
+  EMC_INP_MOUSE_SCROLL,                // 32: Mouse wheel scrolled
+  EMC_INP_JOY_STATE,                   // 33: Joystick status changed
+  EMC_INP_SET_CUR_POS,                 // 34: Set cursor position
   /* -- Async events ------------------------------------------------------- */
-  EMC_MP_ARCHIVE,                      // 36: Archive async event occured
-  EMC_MP_ASSET,                        // 37: Asset async event occured
-  EMC_MP_FONT,                         // 38: Char async event occured
-  EMC_MP_IMAGE,                        // 39: Image async event occured
-  EMC_MP_JSON,                         // 40: Json async event occured
-  EMC_MP_PCM,                          // 41: Pcm async event occured
-  EMC_MP_PROCESS,                      // 42: Process async event occured
-  EMC_MP_SOCKET,                       // 43: Socket async event occured
-  EMC_MP_STREAM,                       // 44: Stream async event occured
-  EMC_MP_VIDEO,                        // 45: Video async event occured
+  EMC_MP_ARCHIVE,                      // 35: Archive async event occured
+  EMC_MP_ASSET,                        // 36: Asset async event occured
+  EMC_MP_FONT,                         // 37: Char async event occured
+  EMC_MP_IMAGE,                        // 38: Image async event occured
+  EMC_MP_JSON,                         // 39: Json async event occured
+  EMC_MP_PCM,                          // 40: Pcm async event occured
+  EMC_MP_PROCESS,                      // 41: Process async event occured
+  EMC_MP_SOCKET,                       // 42: Socket async event occured
+  EMC_MP_STREAM,                       // 43: Stream async event occured
+  EMC_MP_VIDEO,                        // 44: Video async event occured
   /* -- Other async events ------------------------------------------------- */
-  EMC_STR_EVENT,                       // 46: Stream event occured
-  EMC_VID_EVENT,                       // 47: Video event occured
-  EMC_CB_EVENT,                        // 48: Clipboard event occured
-  EMC_CUR_EVENT,                       // 49: Cursor event occured
+  EMC_STR_EVENT,                       // 45: Stream event occured
+  EMC_VID_EVENT,                       // 46: Video event occured
+  EMC_CB_EVENT,                        // 47: Clipboard event occured
+  EMC_CUR_EVENT,                       // 48: Cursor event occured
   /* ----------------------------------------------------------------------- */
-  EMC_MAX,                             // 50: Below are just codes
+  EMC_MAX,                             // 49: Below are just codes
   /* ----------------------------------------------------------------------- */
-  EMC_LUA_ERROR,                       // 51: Error in LUA exec (not an event)
+  EMC_LUA_ERROR,                       // 50: Error in LUA exec (not an event)
   /* ----------------------------------------------------------------------- */
 };
 /* ------------------------------------------------------------------------- */

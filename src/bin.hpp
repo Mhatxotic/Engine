@@ -29,6 +29,7 @@ class Pack :
   /* --------------------------------------------------------------- */ public:
   typedef DimCoords<Int> Rect;         // Rectangle of signed ints
   typedef vector<Rect> RectList;       // list of rectangles
+  constexpr static double dIdle = -0.0;// Uninitialised value
   /* -------------------------------------------------------------- */ private:
   RectList         rlUsed, rlFree;     // Used and free data
   /* -- Remove a rect (not that this can cause a realloc) ------------------ */

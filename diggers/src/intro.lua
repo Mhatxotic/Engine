@@ -7,38 +7,38 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
-local error<const> = error;
+local error<const>, max<const>, maxinteger<const> =
+  error, math.max, math.maxinteger;
 -- M-Engine function aliases ----------------------------------------------- --
 local UtilBlank<const>, CoreTime<const>, UtilIsInteger<const> =
   Util.Blank, Core.Time, Util.IsInteger;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GetCallbacks, InitSetup, InitTitle, IsButtonPressed, LoadResources,
-  RegisterFBUCallback, RenderFade,  RenderShadow, SetCallbacks, VideoPlay,
-  VideoStop, aIntroSubTitles, fontLittle, texSpr, SetKeys;
--- Resources --------------------------------------------------------------- --
-local aAssets<const> = { { T = 1, F = "grass", P= { 16, 16, 0, 0, 0 } },
-                         { T = 2, F = "title", P= { 0 } },
-                         { T = 8, F = "intro", P= { } } };
+local Fade, GetCallbacks, InitSetup, InitTitle, LoadResources,
+  RegisterFBUCallback, RenderFade, RenderShadow, SetCallbacks, SetHotSpot,
+  VideoPlay, VideoStop, aIntroSubTitles, fontLittle, texSpr, SetKeys;
 -- Locals ------------------------------------------------------------------ --
-local iKeyBankId;                      -- Keybank id
-local iStageST = 0;                    -- Subtitle position
-local iStageW, iStageH, iStageL;       -- Stage width, height and left
-local iStageT, iStageR, iStageB;       -- Stage top, right and bottom
-local texTiles, texTitle;              -- Texture handles
-local vidVideo;                        -- Video handle
-local iSubTitle, iFrameEnd;            -- Subtitle and frame end
-local iFWidth, iFHeight, iPadding;     -- Font sizes and padding
-local aSubTitle;                       -- Active subtitle to wait for
-local iFadeX, iFadeY1, iFadeY2;        -- Fade values
-local sSubTitle1, sSubTitle2;          -- First and second line of subtitles
-local iSubTitle1, iSubTitle2;          -- First and second line subtitle id
-local fcbRender;                       -- Rendering function
-local fcbOnFadeIn;                     -- Callback to run on fade in
+local aAssets,                         -- Assets data to load
+      aSubTitle,                       -- Active subtitle to wait for
+      fcbOnFadeIn,                     -- Callback to run on fade in
+      fcbRender,                       -- Rendering function
+      iFWidth, iFHeight, iPadding,     -- Font sizes and padding
+      iFadeX, iFadeY1, iFadeY2,        -- Fade values
+      iHotSpotId,                      -- Hotspot id
+      iKeyBankId,                      -- Keybank id
+      iStageST,                        -- Subtitle position
+      iStageT, iStageR, iStageB,       -- Stage top, right and bottom
+      iStageW, iStageH, iStageL,       -- Stage width, height and left
+      iSubTitle, iFrameEnd,            -- Subtitle and frame end
+      iSubTitle1, iSubTitle2,          -- First and second line subtitle id
+      iTexScale,                       -- Current texture scale
+      sSubTitle1, sSubTitle2,          -- First and second line of subtitles
+      texTitle,                        -- Texture handle
+      vidVideo;                        -- Video handle
 -- Playing procedure() ----------------------------------------------------- --
-local function PlayingProc()
+local function ProcRenderPlaying()
   -- If we're not in widescreen?
   if iStageL == 0 then
     -- Draw video normally
@@ -48,6 +48,7 @@ local function PlayingProc()
   -- In widescreen?
   else
     -- Draw video effect for widescreen (left side)
+    vidVideo:SetCRGBA(0.5, 0.5, 0.5, 1);
     vidVideo:SetTCLTRB(0, 0, 0, 1);
     vidVideo:SetVLTRB(0, 0, iStageL, 240);
     vidVideo:Blit();
@@ -56,18 +57,28 @@ local function PlayingProc()
     vidVideo:SetVLTRB(iStageR, 0, 320, 240);
     vidVideo:Blit();
     -- Draw the actual video in the centre (4:3)
+    vidVideo:SetCRGBA(1, 1, 1, 1);
     vidVideo:SetTCLTRB(0, 0, 1, 1);
     vidVideo:SetVLTRB(0, 0, 320, 240);
     vidVideo:Blit();
     -- Draw transparent tiles over the top of the widescreen border
-    texTiles:SetCRGBA(1, 1, 1, 0.5);
+    texTitle:SetCA(0.5);
     for iY = 0, 240, 16 do
-      for iX = -16, iStageL-16, -16 do texTiles:BlitSLT(3, iX, iY) end;
-      for iX = 320, iStageR, 16 do texTiles:BlitSLT(3, iX, iY) end;
+      for iX = -16, iStageL-16, -16 do texTitle:BlitSLT(5, iX, iY) end;
+      for iX = 320, iStageR, 16 do texTitle:BlitSLT(5, iX, iY) end;
     end
+    texTitle:SetCA(1);
     -- Draw shadow
-    texSpr:BlitSLTRB(1017, -16, iStageT,   0, iStageB);
-    texSpr:BlitSLTRB(1018, 320, iStageT, 336, iStageB);
+    texSpr:SetCA(0.75);
+    texSpr:BlitSLTRB(1023,   0, 0,  -1, 240);
+    texSpr:BlitSLTRB(1023, 320, 0, 321, 240);
+    texSpr:SetCA(0.5);
+    texSpr:BlitSLTRB(1023,  -1, 0,  -2, 240);
+    texSpr:BlitSLTRB(1023, 321, 0, 322, 240);
+    texSpr:SetCA(0.25);
+    texSpr:BlitSLTRB(1023,  -2, 0,  -3, 240);
+    texSpr:BlitSLTRB(1023, 322, 0, 323, 240);
+    texSpr:SetCA(1);
   end
   -- Get frame number
   local iFrame<const> = vidVideo:GetFrame();
@@ -82,9 +93,7 @@ local function PlayingProc()
     -- Draw subtitle
     fontLittle:PrintC(iStageST, iSubTitle1, sSubTitle1);
     -- If we have subtitle two
-    if sSubTitle2 then
-      fontLittle:PrintC(iStageST, iSubTitle2, sSubTitle2);
-    end
+    if sSubTitle2 then fontLittle:PrintC(iStageST, iSubTitle2, sSubTitle2) end;
     -- Hide subtitle if timed out
     if iFrame >= iFrameEnd then sSubTitle1, sSubTitle2 = nil, nil end;
   end
@@ -99,11 +108,11 @@ local function PlayingProc()
       aSubTitle[3][1], aSubTitle[3][2], aSubTitle[2];
     -- Set next sub-title to monitor
     iSubTitle = iSubTitle + 1;
-    aSubTitle = aIntroSubTitles[iSubTitle] or { math.maxinteger };
+    aSubTitle = aIntroSubTitles[iSubTitle] or { maxinteger };
   end
 end
 -- Not playing procedure --------------------------------------------------- --
-local function NotPlayingProc()
+local function ProcRenderSetup()
   -- Draw background
   texTitle:SetCRGBA(1, 1, 1, 1);
   texTitle:BlitLT(-96, 0);
@@ -139,11 +148,11 @@ local function NotPlayingProc()
   texTitle:BlitSLTRB(1, iXRight, 480 + nHeightPiLY, 320, 480 + iLY);
 end
 -- Call render function ---------------------------------------------------- --
-local function Render() fcbRender() end;
+local function ProcRender() fcbRender() end;
 -- When video has faded out? ----------------------------------------------- --
-local function OnFadeOut()
+local function OnFadedOutToTitle()
   -- Dereference loaded assets for garbage collector
-  texTiles, texTitle, vidVideo = nil, nil, nil;
+  texTitle, vidVideo = nil, nil, nil;
   -- Remove frame buffer update callback
   RegisterFBUCallback("intro");
   -- Destroy video and texture handles
@@ -151,72 +160,82 @@ local function OnFadeOut()
   -- Load title screen
   InitTitle();
 end
--- Finish function --------------------------------------------------------- --
-local function Finish()
+-- GoTitle function --------------------------------------------------------- --
+local function GoTitle()
   -- Remove event function
   vidVideo:OnEvent(UtilBlank);
   -- Start fading out
-  Fade(0, 1, 0.032, Render, OnFadeOut, true);
+  Fade(0, 1, 0.032, ProcRender, OnFadedOutToTitle, true);
 end
--- Play video and setup event ---------------------------------------------- --
-local function PlayVideo()
+-- A video event occurred? ------------------------------------------------- --
+local function OnVideoEvent()
   -- Get video events list and id's
   local aEvents<const> = Video.Events;
   local iStop<const>, iPause<const>, iPlay<const>, iFinish<const> =
     aEvents.STOP, aEvents.PAUSE, aEvents.PLAY, aEvents.FINISH;
-  -- A video event occurred?
-  local function OnEvent(iEvent)
+  -- Actual function
+  local function OnVideoEvent(iEvent)
     -- Playing?
     if iEvent == iPlay then
       -- If we were in our render loop? Transition to title screen
-      if fcbRender == NotPlayingProc then fcbRender = PlayingProc end;
+      if fcbRender == ProcRenderSetup then
+         fcbRender = ProcRenderPlaying end;
     -- Paused, stopped or finished?
     elseif iEvent == iPause or iEvent == iStop or iEvent == iFinish then
       -- We someone took our render callback (i.e. setup) then we need to
       -- to switch render proc
       local _, CBRender = GetCallbacks();
-      if CBRender == Render then return Finish() end;
+      if CBRender == ProcRender then return GoTitle() end;
       -- If we were not in our render loop (i.e. setup?)
-      fcbRender = NotPlayingProc;
+      fcbRender = ProcRenderSetup;
     end
   end
+  -- Return actual function
+  return OnVideoEvent;
+end
+OnVideoEvent = OnVideoEvent();
+-- Play video and setup event ---------------------------------------------- --
+local function SetupVideo()
   -- Set video event callback
-  vidVideo:OnEvent(OnEvent);
+  vidVideo:OnEvent(OnVideoEvent);
   -- Play the video
   VideoPlay(vidVideo);
 end
 -- Register frame buffer update -------------------------------------------- --
-local function OnFrameBufferUpdate(...)
+local function OnStageUpdated(...)
   iStageW, iStageH, iStageL, iStageT, iStageR, iStageB = ...;
   iStageST = iStageL + (iStageW / 2);
 end
--- Intro input procedure to just check if a button is pressed -------------- --
-local function InputProc()
-  if IsButtonPressed(0) then Finish() end;
-end
 -- When video has faded in? ------------------------------------------------ --
 local function OnFadeIn()
-  -- Enable keybank
+  -- Enable keybank and set hotspot to detect clink
   SetKeys(true, iKeyBankId);
+  SetHotSpot(iHotSpotId);
   -- Set intro callbacks
-  SetCallbacks(nil, Render, InputProc);
+  SetCallbacks(nil, ProcRender);
   -- Load setup now
   if fcbOnFadeIn then fcbOnFadeIn() end;
 end
+-- On faded in go setup ---------------------------------------------------- --
+local function OnFadeInGoSetup()
+  -- Play the intro
+  SetupVideo()
+  -- Show the setup screen
+  InitSetup(1);
+end
 -- When intro resources have loaded? --------------------------------------- --
-local function OnLoaded(aResources, bAndSetup)
+local function OnAssetsLoaded(aResources, bAndSetup)
   -- Subtitle position
   iStageST = 0;
-  RegisterFBUCallback("intro", OnFrameBufferUpdate);
+  -- Register a callback so we know when the viewport has changed
+  RegisterFBUCallback("intro", OnStageUpdated);
   -- Get the texture handle that was loaded
-  texTiles, texTitle = aResources[1], aResources[2];
-  texTitle:TileS(0, 0, 0, 512, 240);
-  texTitle:TileA(227, 240, 285, 448);
-  -- Load and play intro video
-  vidVideo = aResources[3];
+  texTitle = aResources[1];
+  -- Set handle and filter for intro video
+  vidVideo = aResources[2];
   vidVideo:SetFilter(false);
   -- Subtitles list
-  iSubTitle, iFrameEnd = 1, math.maxinteger;
+  iSubTitle, iFrameEnd = 1, maxinteger;
   -- For each credit
   for iI = 1, #aIntroSubTitles do
     -- Get subtitle item and we must have at least 3 leans
@@ -240,7 +259,7 @@ local function OnLoaded(aResources, bAndSetup)
     local iWidth = #sSubTitle1 * iFWidth;
     if sSubTitle2 then
       -- Which subtitle is longest?
-      iWidth = math.max(iWidth, #sSubTitle2 * iFWidth);
+      iWidth = max(iWidth, #sSubTitle2 * iFWidth);
       -- Insert first and second subtitle Y position
       aSubTitle[1 + #aSubTitle] = 200; -- [4]
       aSubTitle[1 + #aSubTitle] = 210; -- [5]
@@ -258,27 +277,20 @@ local function OnLoaded(aResources, bAndSetup)
   end
   -- Set first active subtitle to wait for
   aSubTitle = aIntroSubTitles[iSubTitle];
-  -- Render proc
-  fcbRender = NotPlayingProc;
+  -- ProcRender proc
+  fcbRender = ProcRenderSetup;
   -- If not setup requested, we're done
   if bAndSetup then
-    -- On faded in
-    local function GoSetup()
-      -- Play the intro
-      PlayVideo()
-      -- Show the setup screen
-      InitSetup(1);
-    end
     -- Show setup on faded in
-    fcbOnFadeIn = GoSetup;
+    fcbOnFadeIn = OnFadeInGoSetup;
     -- Do the fade in
-    Fade(1, 0, 0.025, Render, OnFadeIn);
+    Fade(1, 0, 0.025, ProcRender, OnFadeIn);
   -- Setup not requested?
   else
     -- Just play video on fade in
-    fcbOnFadeIn = PlayVideo;
+    fcbOnFadeIn = SetupVideo;
     -- Prevent the graphic being shown for a couple of frames
-    fcbRender = PlayingProc;
+    fcbRender = ProcRenderPlaying;
     -- No transition because the intro already has a transition
     OnFadeIn();
   end
@@ -287,27 +299,37 @@ end
 local function InitIntro(bAndSetup)
   -- Load resources asynchronously. Note: use 'ffmpeg2theora' and not 'ffmpeg'
   -- to encode proper quality videos.
-  LoadResources("Intro", aAssets, OnLoaded, bAndSetup);
+  LoadResources("Intro", aAssets, OnAssetsLoaded, bAndSetup);
 end
 -- When script has loaded -------------------------------------------------- --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData;
   -- Get imports
-  Fade, GetCallbacks, InitSetup, InitTitle, IsButtonPressed, LoadResources,
-    RegisterFBUCallback, RenderFade, RenderShadow, SetCallbacks, SetKeys,
-    VideoPlay, VideoStop, aIntroSubTitles, fontLittle, texSpr =
-      GetAPI("Fade", "GetCallbacks", "InitSetup", "InitTitle",
-        "IsButtonPressed", "LoadResources", "RegisterFBUCallback",
-        "RenderFade", "RenderShadow", "SetCallbacks", "SetKeys", "VideoPlay",
-        "VideoStop", "aIntroSubTitles", "fontLittle", "texSpr");
+  Fade, GetCallbacks, InitSetup, InitTitle, LoadResources, RegisterFBUCallback,
+    RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow, SetCallbacks,
+    SetHotSpot, SetKeys, VideoPlay, VideoStop, aAssetsData, aIntroSubTitles,
+    fontLittle, texSpr, iTexScale =
+      GetAPI("Fade", "GetCallbacks", "InitSetup", "InitTitle", "LoadResources",
+        "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys", "RenderFade",
+        "RenderShadow", "SetCallbacks", "SetHotSpot", "SetKeys", "VideoPlay",
+        "VideoStop", "aAssetsData", "aIntroSubTitles", "fontLittle", "texSpr",
+        "iTexScale");
+  -- Build assets to load
+  aAssets = { aAssetsData.title, aAssetsData.intro };
   -- Get font size and padding
   iFWidth, iFHeight, iPadding =
     fontLittle:GetWidth(), fontLittle:GetHeight(), 5;
   -- Register keybinds
-  iKeyBankId = GetAPI("RegisterKeys")("TITLE INTRO", {
+  iKeyBankId = RegisterKeys("TITLE INTRO", {
     [Input.States.PRESS] =
-      { { Input.KeyCodes.ESCAPE, Finish, "tic", "CANCEL" } }
+      { { Input.KeyCodes.ESCAPE, GoTitle, "tic", "CANCEL" } }
+  });
+  -- Register full-screen hotspot
+  iHotSpotId = RegisterHotSpot({
+    { 0, 0, 0, 240, 3, 0, false, false, GoTitle }
   });
 end
 -- Exports and imports ----------------------------------------------------- --
-return { A = { InitIntro = InitIntro }, F = OnReady };
+return { A = { InitIntro = InitIntro }, F = OnScriptLoaded };
 -- End-of-File ============================================================= --

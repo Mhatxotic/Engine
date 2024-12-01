@@ -7,7 +7,7 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 local pairs<const>, random<const> = pairs, math.random;
@@ -19,150 +19,111 @@ local iCVAppTitle<const> = Variable.Internal.app_version;
 local strVersion<const> = VariableGetInt(iCVAppTitle).." ";
 -- Diggers function and data aliases --------------------------------------- --
 local DeInitLevel, Fade, GameProc, GetActivePlayer, GetGameTicks,
-  GetOpponentPlayer, InitLobby, InitNewGame, InitTitleCredits,
-  IsButtonReleased, IsMouseInBounds, LoadLevel, LoadResources, LoadSaveData,
-  PlayStaticSound, ProcessViewPort, RegisterFBUCallback, RenderObjects,
-  RenderTerrain, SelectObject, SetCursor, aKeyBankCats, aLevelsData,
-  aObjectTypes, aObjects, fontTiny;
+  GetOpponentPlayer, InitLobby, InitNewGame, InitTitleCredits, LoadLevel,
+  LoadResources, LoadSaveData, PlayStaticSound, ProcessViewPort,
+  RegisterFBUCallback, RenderObjects, RenderTerrain, SelectObject, SetHotSpot,
+  aKeyBankCats, aLevelsData, aObjectTypes, aObjects, fontTiny;
 -- Locals ------------------------------------------------------------------ --
-local fcbEnterAnimProc,                -- Enter animation procedure
+local aAssets,                         -- Assets to load
+      fcbEnterAnimProc,                -- Enter animation procedure
       fcbLeaveAnimProc,                -- Leave animation procedure
       fcbRC,                           -- System information update function
-      iCArrow, iCExit, iCOK,           -- Cursor ids
+      iHotSpotId,                      -- Button hotspot id
       iKeyBankId,                      -- Title key bank id
       iNextUpdate,                     -- Next system information update
-      iSSelect,                        -- Select sound id
-      iStageL, iStageR,                -- Stage bounds
-      texTitle,                        -- Texture tile
+      iSSelect,                        -- Select sound effect id
+      iStageB, iStageL, iStageR,       -- Stage bounds
+      iTexScale,                       -- Texture scale
       strCredits,                      -- Credits
-      strSubTitle;                     -- Version and system information text
--- Assets required --------------------------------------------------------- --
-local aAssets<const> = { { T = 2, F = "title", P = { 0 } } };
+      strSubTitle,                     -- Version and system information text
+      texTitle;                        -- Texture tile
 -- Get engine information -------------------------------------------------- --
 local sAppTitle, sAppVendor, iAppMajor<const>, iAppMinor<const>,
   iAppBuild<const>, iAppRevision<const>, _, _, sAppExeType = Core.Engine();
 sAppTitle, sAppVendor, sAppExeType =
   sAppTitle:upper(), sAppVendor:upper(), sAppExeType:upper();
+-- Static element positions ------------------------------------------------ --
+local iCentreX, iCreditsY, iLogoX, iLogoY, iPostSGX, iPostY, iSubY;
 -- Render in procedure ----------------------------------------------------- --
-local function RenderEnterAnimProc()
+local function RenderProcEnterAnim()
   -- Scroll in amount
   local n1, n2 = 160, 168;
   -- Initial animation procedure
-  local function RenderAnimProcInitial()
+  local function RenderProcInitialAnim()
     -- Render terrain and game objects
     RenderTerrain();
     RenderObjects();
     -- Render title objects
-    texTitle:BlitLT(79, 12 - n1);
-    texTitle:BlitSLT(1, iStageL - n1, 72);
-    texTitle:BlitSLT(2, (iStageR - 168) + n2, 72);
+    texTitle:BlitSLT(2, iLogoX, iTexScale * (12 - n1));
+    texTitle:BlitSLT(3, iStageL - (iTexScale * n1), iPostY);
+    texTitle:BlitSLT(4, iStageR - (iTexScale * (168 - n2)), iPostY);
     -- Render status text
     fontTiny:SetCRGB(1, 0.9, 0);
-    fontTiny:PrintC(160, 58 - n1, strSubTitle);
-    fontTiny:PrintC(160, 206 + n1, strCredits);
+    fontTiny:PrintC(iCentreX, iTexScale * (58 - n1), strSubTitle);
+    fontTiny:PrintC(iCentreX, iTexScale * (206 + n1), strCredits);
     -- Move components in
     n1 = n1 - (n1 * 0.1);
     n2 = n2 - (n2 * 0.1);
-    if n1 >= 1 and n2 >= 1 then return end;
+    if n1 > 1 and n2 > 1 then return end;
     -- Animation completed
-    local function RenderAnimProcFinished()
+    local function RenderProcFinishedAnim()
       -- Render terrain and game objects
       RenderTerrain();
       RenderObjects();
       -- Render title objects
-      texTitle:BlitLT(79, 12);
-      texTitle:BlitSLT(1, iStageL, 72);
-      texTitle:BlitSLT(2, iStageR - 168, 72);
+      texTitle:BlitSLT(2, iLogoX, iLogoY);
+      texTitle:BlitSLT(3, iStageL, iPostY);
+      texTitle:BlitSLT(4, iPostSGX, iPostY);
       -- Render status text
       fontTiny:SetCRGB(1, 0.9, 0);
-      fontTiny:PrintC(160, 58, strSubTitle);
-      fontTiny:PrintC(160, 206, strCredits);
+      fontTiny:PrintC(iCentreX, iSubY, strSubTitle);
+      fontTiny:PrintC(iCentreX, iCreditsY, strCredits);
     end
     -- Set finished callback and execute it
-    fcbEnterAnimProc = RenderAnimProcFinished;
+    fcbEnterAnimProc = RenderProcFinishedAnim;
     fcbEnterAnimProc();
   end
   -- Set initial animation procedure end execute it
-  fcbEnterAnimProc = RenderAnimProcInitial;
+  fcbEnterAnimProc = RenderProcInitialAnim;
   fcbEnterAnimProc();
 end
 -- Render fade out procedure ----------------------------------------------- --
-local function RenderLeaveAnimProc()
+local function RenderProcLeaveAnim()
   -- Scroll in amount
   local n1, n2 = 160, 168;
   -- Initial animation procedure
-  local function RenderAnimProcInitial()
+  local function RenderProcInitialAnim()
     -- Render terrain and game objects
     RenderTerrain();
     RenderObjects();
     -- Render title objects
-    texTitle:BlitLT(79, -148 + n1);
-    texTitle:BlitSLT(1, iStageL - 168 + n1, 72);
-    texTitle:BlitSLT(2, iStageR - n2, 72);
+    texTitle:BlitSLT(2, iLogoX, iTexScale * (-148 + n1));
+    texTitle:BlitSLT(3, iStageL - (iTexScale * 168) + (iTexScale * n1), iPostY);
+    texTitle:BlitSLT(4, iStageR - (iTexScale * n2), iPostY);
     -- Render status text
     fontTiny:SetCRGB(1, 0.9, 0);
-    fontTiny:PrintC(160, 58 - n1, strSubTitle);
-    fontTiny:PrintC(160, 370 - n1, strCredits);
+    fontTiny:PrintC(iCentreX, iTexScale * (58 - n1), strSubTitle);
+    fontTiny:PrintC(iCentreX, iTexScale * (370 - n1), strCredits);
     -- Move components in
     n1 = n1 - (n1 * 0.05);
     n2 = n2 - (n2 * 0.05);
     if n1 >= 1 and n2 >= 1 then return end;
     -- Animation completed
-    local function RenderAnimProcFinished()
+    local function RenderProcFinishedAnim()
       -- Render terrain and game objects
       RenderTerrain();
       RenderObjects();
     end
     -- Set finished callback and execute it
-    fcbLeaveAnimProc = RenderAnimProcFinished;
+    fcbLeaveAnimProc = RenderProcFinishedAnim;
     fcbLeaveAnimProc();
   end
   -- Set initial animation procedure end execute it
-  fcbLeaveAnimProc = RenderAnimProcInitial;
+  fcbLeaveAnimProc = RenderProcInitialAnim;
   fcbLeaveAnimProc();
 end
 -- Render fade out procedure ----------------------------------------------- --
-local function RenderLeaveProc() fcbLeaveAnimProc() end;
--- When faded out to start game -------------------------------------------- --
-local function OnFadeToLobby()
-  -- Remove frame buffer update callback
-  RegisterFBUCallback("title");
-  -- De-init level
-  DeInitLevel();
-  -- Dereference loaded assets for garbage collector
-  texTitle = nil;
-  -- Reset game parameters
-  InitNewGame();
-  -- Load closed lobby
-  InitLobby();
-end
--- Fade out to start game -------------------------------------------------- --
-local function GoFadeToLobby()
-  -- Play sound
-  PlayStaticSound(iSSelect);
-  -- Start fading out
-  Fade(0, 1, 0.04, RenderLeaveProc, OnFadeToLobby, true);
-end
--- Fade out to quit -------------------------------------------------------- --
-local function FinishQuit()
-  -- Play sound
-  PlayStaticSound(iSSelect);
-  -- When faded out to quit
-  local function OnFadeOutQuit() Core.Quit(0) end;
-  -- Fade to black then quit
-  return Fade(0, 1, 0.04, RenderLeaveProc, OnFadeOutQuit, true);
-end
--- When demo level faded out? ---------------------------------------------- --
-local function OnFadeToCredits()
-  -- Remove frame buffer update callback
-  RegisterFBUCallback("title");
-  -- De-init level
-  DeInitLevel();
-  -- Done with the texture here
-  texTitle = nil;
-  -- Init title screen credits without music
-  InitTitleCredits(true);
-end
+local function RenderProcLeave() fcbLeaveAnimProc() end;
 -- When demo level as loaded? ---------------------------------------------- --
 local function ProcLogic()
   -- Process game functions
@@ -187,36 +148,24 @@ local function ProcLogic()
   end
   -- Return if it is not time to show the credits
   if GetGameTicks() % 1500 < 1499 then return end;
+  -- When demo level faded out?
+  local function OnFadeToCredits()
+    -- Remove frame buffer update callback
+    RegisterFBUCallback("title");
+    -- De-init level
+    DeInitLevel();
+    -- Done with the texture here
+    texTitle = nil;
+    -- Init title screen credits without music
+    InitTitleCredits(true);
+  end
   -- Fade out to credits
-  Fade(0, 1, 0.04, RenderLeaveProc, OnFadeToCredits);
+  Fade(0, 1, 0.04, RenderProcLeave, OnFadeToCredits);
 end
 -- Render function --------------------------------------------------------- --
 local function ProcRender() fcbEnterAnimProc() end;
--- Input function ---------------------------------------------------------- --
-local function ProcInput()
-  -- Mouse over quit button?
-  if IsMouseInBounds(iStageL + 54, 152, iStageL + 122, 181) then
-    -- Show exit button
-    SetCursor(iCExit);
-    -- Ignore if not clicked
-    if IsButtonReleased(0) then return end;
-    -- Do quit
-    return FinishQuit();
-  end
-  -- Mouse over start button?
-  if IsMouseInBounds(iStageR - 123, 137, iStageR - 37, 183) then
-    -- Show ok button
-    SetCursor(iCOK);
-    -- Return if not clicked
-    if IsButtonReleased(0) then return end;
-    -- Start the game
-    return GoFadeToLobby();
-  end
-  -- Show arrow
-  SetCursor(iCArrow);
-end
 -- Detect VRAM and update subtitle ----------------------------------------- --
-local function DetectVRAM()
+local function DetectVideoMemory()
   -- Setup VRAM update function and no VRAM available?
   local _, _, nVFree<const> = DisplayVRAM();
   if nVFree == -1 then
@@ -252,19 +201,27 @@ local function DetectVRAM()
   fcbRC();
 end
 -- Framebuffer changed callback -------------------------------------------- --
-local function OnFrameBufferUpdated(...)
+local function OnStageUpdated(...)
   -- Update stage bounds
-  local _ _, _, iStageL, _, iStageR, _ = ...;
+  local _ _, _, iStageL, _, iStageR, iStageB = ...;
+  -- Recalculate static element positions
+  iCentreX = iTexScale * 160;
+  iCreditsY = iTexScale * 206;
+  iLogoX = iTexScale * 79;
+  iLogoY = iTexScale * 12;
+  iPostSGX = iStageR - (iTexScale * 168);
+  iPostY = iTexScale * 72;
+  iSubY = iTexScale * 58;
   -- Re-detect video RAM
-  DetectVRAM();
+  DetectVideoMemory();
 end
 -- Main demo level loader -------------------------------------------------- --
-local function LoadDemoLevel(strTitle)
+local function GoLoadLevel(strTitle)
   -- Setup frame buffer updated callback
-  RegisterFBUCallback("title", OnFrameBufferUpdated);
+  RegisterFBUCallback("title", OnStageUpdated);
   -- Set initial enter function
   fcbEnterAnimProc, fcbLeaveAnimProc =
-    RenderEnterAnimProc, RenderLeaveAnimProc;
+    RenderProcEnterAnim, RenderProcLeaveAnim;
   -- Next update time
   iNextUpdate = GetGameTicks();
   -- Levels completed
@@ -279,63 +236,93 @@ local function LoadDemoLevel(strTitle)
   -- Load AI vs AI and use random zone
   LoadLevel(aZones[random(#aZones)], strTitle, iKeyBankId,
     aObjectTypes.DIGRANDOM, true, aObjectTypes.DIGRANDOM, true,
-    ProcLogic, ProcRender, ProcInput);
+    ProcLogic, ProcRender, iHotSpotId);
+end
+-- When faded out to quit -------------------------------------------------- --
+local function OnFadeOutToQuit() Core.Quit(0) end;
+-- Fade out to quit -------------------------------------------------------- --
+local function GoQuit()
+  -- Play sound
+  PlayStaticSound(iSSelect);
+  -- Fade to black then quit
+  return Fade(0, 1, 0.04, RenderProcLeave, OnFadeOutToQuit, true);
+end
+-- When faded out to start game -------------------------------------------- --
+local function OnFadeOutToLobby()
+  -- Remove frame buffer update callback
+  RegisterFBUCallback("title");
+  -- De-init level
+  DeInitLevel();
+  -- Dereference loaded assets for garbage collector
+  texTitle = nil;
+  -- Reset game parameters
+  InitNewGame();
+  -- Load closed lobby
+  InitLobby();
+end
+-- Fade out to start game -------------------------------------------------- --
+local function GoLobby()
+  -- Play sound
+  PlayStaticSound(iSSelect);
+  -- Start fading out
+  Fade(0, 1, 0.04, RenderProcLeave, OnFadeOutToLobby, true);
 end
 -- Resources are ready? ---------------------------------------------------- --
-local function OnTitleLoaded(aResources, bNoMusic)
+local function OnAssetsLoaded(aResources, bNoMusic)
   -- Initialise title texture
   texTitle = aResources[1];
   texTitle:SetCRGBA(1, 1, 1, 1);
-  texTitle:TileSTC(1);
-  texTitle:TileS(0,   0, 240, 162, 281);
-  texTitle:TileA(     0, 344, 150, 512);
-  texTitle:TileA(   344, 344, 512, 512);
   -- Initialise credits
   strCredits = "ORIGINAL VERSIONS BY TOBY SIMPSON AND MIKE FROGGATT\n\z
-   (C) 1994 MILLENNIUM INTERACTIVE LTD. ALL RIGHTS RESERVED\n\rcffffff4f\z
-   POWERED BY "..sAppTitle.." (C) 2024 "..sAppVendor..". \z
-     ALL RIGHTS RESERVED\n\z
-   PRESS "..aKeyBankCats.gksc[9].." TO SETUP, "..
-     aKeyBankCats.gksb[9].." TO SET KEYS OR "..
-     aKeyBankCats.gksa[9].." TO SEE ACKNOWLEDGEMENTS AT ANY TIME";
+    (C) 1994 MILLENNIUM INTERACTIVE LTD. ALL RIGHTS RESERVED\n\rcffffff4f\z
+    POWERED BY "..sAppTitle.." (C) 2025 "..sAppVendor..". \z
+      ALL RIGHTS RESERVED\n\z
+    PRESS "..aKeyBankCats.gksc[9].." TO SETUP, "..
+      aKeyBankCats.gksb[9].." TO SET KEYS OR "..
+      aKeyBankCats.gksa[9].." TO SEE ACKNOWLEDGEMENTS AT ANY TIME";
   -- Load demonstration level without or with title music
-  if bNoMusic then LoadDemoLevel() else LoadDemoLevel("title") end;
+  if bNoMusic then GoLoadLevel() else GoLoadLevel("title") end;
 end
 -- Initialise the title screen function ------------------------------------ --
 local function InitTitle(bNoMusic)
-  LoadResources("Title Screen", aAssets, OnTitleLoaded, bNoMusic);
+  LoadResources("Title", aAssets, OnAssetsLoaded, bNoMusic);
 end
 -- Script ready function --------------------------------------------------- --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Get imports
   DeInitLevel, Fade, GameProc, GetActivePlayer, GetGameTicks,
     GetOpponentPlayer, InitLobby, InitNewGame, InitTitleCredits,
-    IsButtonReleased, IsMouseInBounds, LoadLevel, LoadResources, LoadSaveData,
-    PlayStaticSound, ProcessViewPort, RegisterFBUCallback, RenderObjects,
-    RenderTerrain, SelectObject, SetCursor, aKeyBankCats, aLevelsData,
-    aObjectTypes, aObjects, fontTiny =
+    LoadLevel, LoadResources, LoadSaveData, PlayStaticSound, ProcessViewPort,
+    RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderObjects,
+    RenderTerrain, SelectObject, SetHotSpot, aAssetsData, aCursorIdData,
+    aKeyBankCats, aLevelsData, aObjectTypes, aObjects, aSfxData, fontTiny,
+    iTexScale =
       GetAPI("DeInitLevel", "Fade", "GameProc", "GetActivePlayer",
         "GetGameTicks", "GetOpponentPlayer", "InitLobby", "InitNewGame",
-        "InitTitleCredits", "IsButtonReleased", "IsMouseInBounds", "LoadLevel",
-        "LoadResources", "LoadSaveData", "PlayStaticSound", "ProcessViewPort",
-        "RegisterFBUCallback", "RenderObjects", "RenderTerrain",
-        "SelectObject", "SetCursor", "aKeyBankCats", "aLevelsData",
-        "aObjectTypes", "aObjects", "fontTiny");
+        "InitTitleCredits", "LoadLevel", "LoadResources", "LoadSaveData",
+        "PlayStaticSound", "ProcessViewPort", "RegisterFBUCallback",
+        "RegisterHotSpot", "RegisterKeys", "RenderObjects", "RenderTerrain",
+        "SelectObject", "SetHotSpot", "aAssetsData", "aCursorIdData",
+        "aKeyBankCats", "aLevelsData", "aObjectTypes", "aObjects", "aSfxData",
+        "fontTiny", "iTexScale");
+  -- Build assets data
+  aAssets = { aAssetsData.title };
+  -- Get sound id
+  iSSelect = aSfxData.SELECT;
   -- Register keybinds
   local aKeys<const> = Input.KeyCodes;
-  iKeyBankId = GetAPI("RegisterKeys")("TITLE SCREEN", {
-    [Input.States.PRESS] = {
-      { aKeys.ENTER, GoFadeToLobby, "tsst", "START GAME" },
-      { aKeys.ESCAPE, FinishQuit, "tsqg", "QUIT GAME" }
-    }
+  iKeyBankId = RegisterKeys("TITLE SCREEN", { [Input.States.PRESS] = {
+    { aKeys.ENTER,  GoLobby, "tsst", "START GAME" },
+    { aKeys.ESCAPE, GoQuit,  "tsqg", "QUIT GAME" }
+  } });
+  -- Register hot spots
+  iHotSpotId = RegisterHotSpot({
+    {  54, 152,  69,  29, 1, aCursorIdData.EXIT, false, false, GoQuit  },
+    {  38, 137,  86,  46, 2, aCursorIdData.OK,   false, false, GoLobby }
   });
-  -- Get sound effect ids
-  iSSelect = GetAPI("aSfxData").SELECT;
-  -- Get cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
-  iCArrow, iCExit, iCOK =
-    aCursorIdData.ARROW, aCursorIdData.EXIT, aCursorIdData.OK;
 end
 -- Return imports and exports ---------------------------------------------- --
-return { A = { InitTitle = InitTitle }, F = OnReady };
+return { A = { InitTitle = InitTitle }, F = OnScriptLoaded };
 -- End-of-File ============================================================= --

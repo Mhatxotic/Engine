@@ -61,20 +61,13 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
   CB(AssetSetPipeBufferSize, size_t), TUINTEGER|CPOW2|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AST_FSOVERRIDE
-// ? Specifies whether the engine is allowed to override internal files from
-// ? archives with files. This is makes it easier to update and mod resource
-// ? if true. It is by default disabled on release builds and enabled on
-// ? all other builds.
+// ? Specifies the order in which to load resources. Specify '0' to only allow
+// ? the files to be loaded from archives, '1' to search the disk first and
+// ? then archives, '2' to load from archives first and then try the disk or
+// ? '3' to load from disk only.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_fsoverride",
-/* ------------------------------------------------------------------------- */
-#if defined(RELEASE)                   // Default disabled in release builds
-  cCommon->Zero(),
-#else                                  // Default enabled in other builds
-  cCommon->One(),
-#endif                                 // Build type check
-  /* ----------------------------------------------------------------------- */
-  CB(AssetSetFSOverride, bool), TBOOLEAN|PSYSTEM },
+{ CFL_NONE, "ast_fsoverride", "2",
+  CB(AssetSetFSOverride, FSOverrideType), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! AST_EXEBUNDLE
 // ? A boolean to specify if the executable file should be checked for a
@@ -84,11 +77,11 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_NONE, "ast_exebundle", cCommon->One(),
   CB(ArchiveInitExe, bool), TBOOLEAN|PBOOT },
 /* ------------------------------------------------------------------------- */
-// ! APP_BASEDIR
+// ! AST_BASEDIR
 // ? Specifies the base directory of where the executable was started from. It
 // ? is only readable by the end-user and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_basedir", cCommon->Blank(),
+{ CFL_NONE, "ast_basedir", cCommon->Blank(),
   CBSTR(cSystem->SetWorkDir), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PBOOT },
 /* ------------------------------------------------------------------------- */
 // ! AST_BUNDLES
@@ -123,13 +116,28 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_NONE, "app_shortname", "Untitled", CBSTR(cSystem->SetGuestShortTitle),
   TSTRING|CNOTEMPTY|MTRIM|PSYSTEM },
 /* ------------------------------------------------------------------------- */
-// ! APP_HOMEDIR
+// ! AST_HOMEDIR
 // ? Species the users home directory where files are written to if they cannot
 // ? be written to the working directory. It is only readable by the end-user
 // ? and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_homedir", cCommon->Blank(),
+{ CFL_NONE, "ast_homedir", cCommon->Blank(),
   CBSTR(cCore->CoreSetHomeDir), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PBOOT },
+/* ------------------------------------------------------------------------- */
+// ! AST_MODBUNDLE
+// ? Scans the directory pointed at 'ast_homedir' to be scanned for archives
+// ? ending in the value specified by 'ast_bundles' which can override any game
+// ? asset (except app.cfg). The default is true (yes).
+/* ------------------------------------------------------------------------- */
+{ CFL_NONE, "ast_modbundle",
+/* ------------------------------------------------------------------------- */
+#if defined(RELEASE)                   // Default disabled in release builds
+  cCommon->Zero(),
+#else                                  // Default enabled in other builds
+  cCommon->One(),
+#endif                                 // Build type check
+  /* ----------------------------------------------------------------------- */
+  CB(ArchiveInitPersist, bool), TBOOLEAN|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DB
 // ? Specifies the Sql database filename to use. This filename is subject
@@ -527,9 +535,9 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
   CB(cTimer->TimerTickRateModified, uint64_t), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! APP_DELAY
-// ? Specifies an artificial delay to force for bot mode in milliseconds. This
-// ? is ignored on interactive mode because a one millisecond delay is forced
-// ? for every frame under the target rate.
+// ? Specifies an artificial delay to force for terminal mode in milliseconds.
+// ? This is ignored on interactive mode because a one millisecond delay is
+// ? forced for every frame under the target rate.
 /* ------------------------------------------------------------------------- */
 { CFL_NONE, "app_delay", cCommon->One(),
   CB(cTimer->TimerSetDelay, unsigned int), TUINTEGERSAVE|PANY },
@@ -638,24 +646,6 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_NONE, "err_minram", cCommon->Zero(),
   CB(cSystem->SetMinRAM, uint64_t), TUINTEGER|PSYSTEM },
 /* == Lua cvars ============================================================ */
-// ! LUA_TICKTIMEOUT
-// ? Specifies the limit in seconds of how long a engine frame can be executed
-// ? for in Lua. Set to zero to disable this feature but it is not recommended
-// ? as resulting infinite loops in Lua cannot be recovered and will require
-// ? force termination of the entire process.
-/* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_ticktimeout", "1",
-  CB(cTimer->TimerSetTimeOut, unsigned int), TUINTEGER|PSYSTEM },
-/* ------------------------------------------------------------------------- */
-// ! LUA_TICKCHECK
-// ? Sets the internal Lua value of LUA_MASKCOUNT and executes a callback for
-// ? every such number of operations executed to check to see if the script
-// ? has been executing for too long. You can see the rate of the operations
-// ? by using the 'cpu' command in the engine console.
-/* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_tickcheck", "1000000",
-  CB(cLua->SetOpsInterval, int), TUINTEGER|PSYSTEM },
-/* ------------------------------------------------------------------------- */
 // ! LUA_CACHE
 // ? Specifies to compile any Lua code and store it in the user database for
 // ? later retrieval. When loading already compiled raw code, this feature
@@ -668,11 +658,11 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_NONE, "lua_cache", cCommon->One(),
   CB(LuaCodeSetCache, LuaCache), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
-// ! LUA_SIZESTACK
-// ? Makes sure theres room for this many values on the Lua stack.
+// ! LUA_DEBUGLOCALS
+// ? Print locals when generating stack traces (default is true).
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_sizestack", "1000",
-  CB(cLua->SetStack, int), TUINTEGER|PSYSTEM },
+{ CFL_NONE, "lua_debuglocals", cCommon->One(),
+  CB(cLua->SetDebugLocals, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCPAUSE
 // ? Overrides Lua's internal LUA_GCPAUSE value with this.
@@ -709,6 +699,30 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 /* ------------------------------------------------------------------------- */
 { CFL_NONE, "lua_script", "main.lua", NoOp,
   TSTRING|CFILENAME|CNOTEMPTY|MTRIM|PSYSTEM },
+/* ------------------------------------------------------------------------- */
+// ! LUA_SIZESTACK
+// ? Makes sure theres room for this many values on the Lua stack.
+/* ------------------------------------------------------------------------- */
+{ CFL_NONE, "lua_sizestack", "1000",
+  CB(cLua->SetStack, int), TUINTEGER|PSYSTEM },
+/* ------------------------------------------------------------------------- */
+// ! LUA_TICKCHECK
+// ? Sets the internal Lua value of LUA_MASKCOUNT and executes a callback for
+// ? every such number of operations executed to check to see if the script
+// ? has been executing for too long. You can see the rate of the operations
+// ? by using the 'cpu' command in the engine console.
+/* ------------------------------------------------------------------------- */
+{ CFL_NONE, "lua_tickcheck", "1000000",
+  CB(cLua->SetOpsInterval, int), TUINTEGER|PSYSTEM },
+/* ------------------------------------------------------------------------- */
+// ! LUA_TICKTIMEOUT
+// ? Specifies the limit in seconds of how long a engine frame can be executed
+// ? for in Lua. Set to zero to disable this feature but it is not recommended
+// ? as resulting infinite loops in Lua cannot be recovered and will require
+// ? force termination of the entire process.
+/* ------------------------------------------------------------------------- */
+{ CFL_NONE, "lua_ticktimeout", "1",
+  CB(cTimer->TimerSetTimeOut, unsigned int), TUINTEGER|PSYSTEM },
 /* == Audio cvars ========================================================== */
 // ! AUD_DELAY
 // ? Specifies an delay (in number of milliseconds) to suspend the audio
@@ -1013,15 +1027,15 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
   CB(cConsole->SetPageMoveCount, ssize_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCCOLS
-// ? In bot mode, this is the maximum number of columns to draw. The larger
-// ? this value is, the more text that can be displayed at once but will
-// ? increase CPU usage from the operating system.
+// ? In terminal mode, this is the maximum number of columns to draw. The
+// ? larger this value is, the more text that can be displayed at once but
+// ? will increase CPU usage from the operating system.
 /* ------------------------------------------------------------------------- */
 { CFL_TERMINAL, "con_tmccols", "80",
   CB(cSystem->ColsModified, unsigned int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCROWS
-// ? In bot mode, this is the maximum number of rows to draw. The larger
+// ? In terminal mode, this is the maximum number of rows to draw. The larger
 // ? this value is, the more text that can be displayed at once but will
 // ? increase CPU usage from the operating system.
 /* ------------------------------------------------------------------------- */

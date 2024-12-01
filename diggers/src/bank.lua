@@ -7,7 +7,7 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 local format<const>, unpack<const>, error<const> =
@@ -16,55 +16,44 @@ local format<const>, unpack<const>, error<const> =
 local CoreTicks<const>, UtilBlank<const>, UtilIsTable<const> =
   Core.Ticks, Util.Blank, Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GameProc, GetGameTicks, HaveZogsToWin, InitLobby, IsButtonPressed,
-  IsMouseInBounds, IsMouseNotInBounds, IsScrollingDown, IsScrollingUp,
+local Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin, InitLobby,
   LoadResources, PlayMusic, PlayStaticSound, RenderInterface, RenderShadow,
-  SellSpecifiedItems, SetBottomRightTip, SetCallbacks, SetCursor,
+  RenderTip, SellSpecifiedItems, SetCallbacks, SetHotSpot, SetKeys, SetTip,
   aGemsAvailable, aObjectActions, aObjectData, aObjectDirections, aObjectJobs,
   aObjectTypes, fontSpeech, texSpr;
--- Assets required --------------------------------------------------------- --
-local aAssets<const> = { { T = 1, F = "bank", P = { 80, 94, 0, 0, 0 } },
-                         { T = 7, F = "bank" } };
 -- Locals ------------------------------------------------------------------ --
-local aBankerData,                     -- Banker data
-      aDigger,                         -- Currently selected digger
+local aAssets,                         -- Required assets
+      aBankerData,                     -- Banker data
+      aActiveObject,                   -- Currently selected digger
       aPlayer,                         -- Owner of digger
       bGameWon,                        -- Game is won?
       fcbSpeechCallback,               -- Speech callback
       iBankerId,                       -- Banker id selected
       iBankerTexId,                    -- Banker texture id selected
       iBankerX, iBankerY,              -- Banker position
-      iCArrow,                         -- Arrow cursor ids
-      iCWait, iCSelect, iCExit,        -- Cursor ids
+      iHotSpotId,                      -- Bank hotspot id
       iKeyBankId,                      -- Bank key bank id
       iSError, iSFind, iSSelect,       -- Sound effect ids
       iSTrade,                         -- Trade sound effect id
       iSpeechBubbleX, iSpeechBubbleY,  -- Speech bubble position
       iSpeechTextX, iSpeechTextY,      -- Speech text position
-      iSpeechTimer, strTip,            -- Speech timer and trip
+      iSpeechTimer,                    -- Speech timer
       iTreasureValueModifier,          -- Modified treasure value
       strBankerSpeech,                 -- Speech bubble text
-      texBank,                         -- Bank texture
-      tileBG,                          -- Background tile
-      tileSpeech;                      -- Speech tile
--- Mouse over events ------------------------------------------------------- --
-local function MsOvFTarg()   return IsMouseInBounds(25,113,87,183) end;
-local function MsOvHabbish() return IsMouseInBounds(129,95,191,184) end;
-local function MsOvGrablin() return IsMouseInBounds(234,97,295,184) end;
-local function MsOvGem1()    return IsMouseInBounds(40,24,72,40) end;
-local function MsOvGem2()    return IsMouseInBounds(144,24,176,40) end;
-local function MsOvGem3()    return IsMouseInBounds(248,24,280,40) end;
-local function MsOvExit()    return IsMouseNotInBounds(8,8,312,208) end;
+      texBank;                         -- Bank texture
+-- Tile data (See data.hpp/aAssetsData.bank.P) ----------------------------- --
+local tileBG<const>     = 12;          -- Background tile
+local tileSpeech<const> = 13;          -- Speech tile
 -- Banker id to mouse function look up table ------------------------------- --
 local aBankerStaticData<const> = {
-  -- Sell func -- Chk func Gem XY  Tex<Bank>XY  Bub XY  Msg XY ----
-  { MsOvFTarg,   MsOvGem1,  50,21, { 0,  16,96,   0,62,  56,70 } },
-  { MsOvHabbish, MsOvGem2, 153,21, { 4, 112,96, 104,62, 160,70 } },
-  { MsOvGrablin, MsOvGem3, 257,21, { 8, 224,96, 208,62, 264,70 } }
-  -- Sell func -- Chk Func Gem XY  Tex<Bank>XY  Bub XY  Msg XY ----
+  -- Gem XY  Tex<Bank>XY  Bub XY  Msg XY ----
+  {  50,21, { 0,  16,96,   0,62,  56,70 } }, -- [01]
+  { 153,21, { 4, 112,96, 104,62, 160,70 } }, -- [02]
+  { 257,21, { 8, 224,96, 208,62, 264,70 } }  -- [03]
+  -- Gem XY  Tex<Bank>XY  Bub XY  Msg XY ----
 };
 -- Function to refresh banker data ----------------------------------------- --
-local function RefreshBankerData()
+local function RefreshData()
   -- Return if not enough data or data the same
   if #aBankerData == #aBankerStaticData and
     aGemsAvailable[1] == aBankerData[1][1] then return end;
@@ -83,11 +72,9 @@ local function RefreshBankerData()
       aGemObjData[aObjectActions.STOP]        -- [04] Gem sprite
                  [aObjectDirections.NONE][1],
       aGemObjData.LONGNAME,                   -- [05] Gem name
-      aFuncData[1],                           -- [06] Mouse over sell func
-      aFuncData[2],                           -- [07] Mouse over gem func
-      aFuncData[3],                           -- [08] Gem position X
-      aFuncData[4],                           -- [09] Gem position Y
-      aFuncData[5]                            -- [10] Speech data for banker
+      aFuncData[1],                           -- [06] Gem position X
+      aFuncData[2],                           -- [07] Gem position Y
+      aFuncData[3]                            -- [08] Speech data for banker
     };
   end
 end
@@ -98,13 +85,17 @@ local function SetSpeech(iId, iHoldTime, iSfxId, strMsg, fcbOnComplete)
   iBankerId = iId;
   -- Set render details from lookup table
   iBankerTexId, iBankerX, iBankerY, iSpeechBubbleX, iSpeechBubbleY,
-    iSpeechTextX, iSpeechTextY = unpack(aBankerData[iId][10]);
+    iSpeechTextX, iSpeechTextY = unpack(aBankerData[iId][8]);
   -- Finish callback
   local function OnComplete()
-    -- Call completion function
-    if fcbOnComplete then fcbOnComplete() end;
-    -- Enable keys again
-    SetKeys(true, iKeyBankId);
+    -- Call completion function if set
+    if fcbOnComplete then fcbOnComplete();
+    -- No completion function
+    else
+      -- Enable hotspots and keys again
+      SetHotSpot(iHotSpotId);
+      SetKeys(true, iKeyBankId);
+    end
   end
   -- Set event when speech completed
   fcbSpeechCallback = OnComplete;
@@ -112,9 +103,24 @@ local function SetSpeech(iId, iHoldTime, iSfxId, strMsg, fcbOnComplete)
   PlayStaticSound(iSfxId);
   -- Set speech timer
   iSpeechTimer = iHoldTime;
-  -- Disable keys
+  -- Disable keys and set waiting hot spot
   SetKeys(true);
+  SetHotSpot();
+  -- Set waiting tip
+  SetTip("WAIT...");
 end
+-- Check commands ---------------------------------------------------------- --
+local function CheckPrice(iBankerId)
+  -- Get data for slot
+  local aData<const> = aBankerData[iBankerId];
+  -- Set the price
+  SetSpeech(iBankerId, 60, iSSelect,
+    format("%s FETCHES $%03u", aData[5], aData[3]))
+end
+-- Check price callbaks ---------------------------------------------------- --
+local function GoPriceFTarg() CheckPrice(1) end;
+local function GoPriceHabbish() CheckPrice(2) end;
+local function GoPriceGrablin() CheckPrice(3) end;
 -- Function to check if player has won game -------------------------------- --
 local function HasBeatenGame()
   -- Ignore if win message already used or player hasn't beaten game
@@ -124,15 +130,17 @@ local function HasBeatenGame()
   -- Set that we've won the game so we don't have to say it again
   bGameWon = true;
 end
--- Sets a speech bubble but checks if the player won too ------------------- --
-local function SetSpeechSell(iBankerId, iGemId)
+-- Sell commands ----------------------------------------------------------- --
+local function Sell(iBankerId)
+  -- Get gem id
+  local iGemId<const> = aBankerData[iBankerId][2];
   -- Record money
   local iMoney<const>, strName = aPlayer.M, nil;
   -- Sell all Jennite first before trying to sell anything else
-  if SellSpecifiedItems(aDigger, aObjectTypes.JENNITE) > 0 then
+  if SellSpecifiedItems(aActiveObject, aObjectTypes.JENNITE) > 0 then
     strName = aObjectData[aObjectTypes.JENNITE].LONGNAME;
   -- No Jennite found so try what the banker is trading
-  elseif SellSpecifiedItems(aDigger, iGemId) > 0 then
+  elseif SellSpecifiedItems(aActiveObject, iGemId) > 0 then
     strName = aObjectData[iGemId].LONGNAME end;
   -- Money changed hands? Set succeeded message and check for win
   if strName then
@@ -141,8 +149,26 @@ local function SetSpeechSell(iBankerId, iGemId)
   -- Set failed speech bubble
   else SetSpeech(iBankerId, 60, iSError, "YOU HAVE NONE OF THESE!") end;
 end
+-- Sell callbacks ---------------------------------------------------------- --
+local function GoSellFTarg() Sell(1) end;
+local function GoSellHabbish() Sell(2) end;
+local function GoSellGrablin() Sell(3) end;
+-- Exit bank to lobby ------------------------------------------------------ --
+local function GoToLobby()
+  -- Play sound and exit to game
+  PlayStaticSound(iSSelect);
+  -- Dereference assets to garbage collector
+  texBank = nil;
+  -- Disable keys and hotspots
+  SetKeys(true);
+  SetHotSpot();
+  -- Start the loading waiting procedure
+  SetCallbacks(GameProc, RenderInterface);
+  -- Return to lobby
+  InitLobby();
+end
 -- Speech render procedure ------------------------------------------------- --
-local function BankRender()
+local function ProcRender()
   -- Render original interface
   RenderInterface();
   -- Draw backdrop with bankers and windows
@@ -153,7 +179,7 @@ local function BankRender()
   for iI = 1, #aBankerData do
     -- Get banker data and draw it
     local aData<const> = aBankerData[iI];
-    texSpr:BlitSLT(aData[4], aData[8], aData[9]);
+    texSpr:BlitSLT(aData[4], aData[6], aData[7]);
   end
   -- Speech bubble should show?
   if iSpeechTimer > 0 then
@@ -162,104 +188,42 @@ local function BankRender()
       iBankerX, iBankerY);
     texBank:BlitSLT(tileSpeech, iSpeechBubbleX, iSpeechBubbleY);
     fontSpeech:PrintC(iSpeechTextX, iSpeechTextY, strBankerSpeech);
-    -- Decrement speech bubble timer
-    iSpeechTimer = iSpeechTimer - 1;
-  -- Speech timer has ended so if there is a callback?
-  elseif fcbSpeechCallback then
-    -- Call it and clear
-    fcbSpeechCallback = fcbSpeechCallback();
   end
-  -- Draw tip
-  SetBottomRightTip(strTip);
-end
--- Exit bank to lobby ------------------------------------------------------ --
-local function GoExitBank()
-  -- Play sound and exit to game
-  PlayStaticSound(iSSelect);
-  -- Dereference assets to garbage collector
-  texBank = nil;
-  -- Disable keys
-  SetKeys(true);
-  -- Start the loading waiting procedure
-  SetCallbacks(GameProc, RenderInterface, nil);
-  -- Return to lobby
-  return InitLobby(aDigger);
-end
--- Check price of an item -------------------------------------------------- --
-local function SetCheckSell(iIndex, aData)
-  -- Disable keys
-  SetKeys(true);
-  -- Set the price
-  SetSpeech(iIndex, 60, iSSelect,
-    format("%s FETCHES $%03u", aData[5], aData[3]))
-end
--- Bank input callback ----------------------------------------------------- --
-local function BankInput()
-  -- Speech text playing?
-  if iSpeechTimer > 0 then
-    -- Set tip and cursor to wait
-    strTip = "WAIT";
-    SetCursor(iCWait);
-  -- Mouse over exit point?
-  elseif MsOvExit() then
-    -- Set tip and cursor to exit
-    strTip = "GO TO LOBBY";
-    SetCursor(iCExit);
-    -- Mouse clicked?
-    if IsButtonPressed(0) then GoExitBank() end;
-  -- Anything else? For each item in sell data
-  else for iIndex = 1, #aBankerData do
-    -- Get sell data and if mouse is over the sell point?
-    local aData<const> = aBankerData[iIndex];
-    if aData[6]() then
-      -- Set selling gem tip and cursor
-      strTip = "SELL GEMS?";
-      SetCursor(iCSelect);
-      -- Mouse clicked? Sell gems of that type
-      if IsButtonPressed(0) then SetSpeechSell(iIndex, aData[2]) end;
-      -- Done
-      return;
-    -- Mouse over gem?
-    elseif aData[7]() then
-      -- Set checking gem tip and cursor
-      strTip = "CHECK VALUE";
-      SetCursor(iCSelect);
-      -- Mouse clicked? Sell gems of that type
-      if IsButtonPressed(0) then SetCheckSell(iIndex, aData) end;
-      -- Done
-      return;
-    end
-    -- Nothing happening set idle text and cursor
-    strTip = "BANK";
-    SetCursor(iCArrow);
-  end end
+  -- Render tip
+  RenderTip();
 end
 -- Main bank procedure ----------------------------------------------------- --
-local function BankProc()
+local function ProcLogic()
   -- Process game procedures
   GameProc();
   -- Check for change
-  RefreshBankerData();
+  RefreshData();
+  -- Speech bubble should show?
+  if iSpeechTimer == 0 then return end;
+  -- Decrement speech bubble timer and if zero?
+  iSpeechTimer = iSpeechTimer - 1;
+  if iSpeechTimer > 0 then return end;
+  -- Restore bank keys and hot spots
+  SetKeys(true, iKeyBankId);
+  SetHotSpot(iHotSpotId);
+  -- Call ending callback
+  if fcbSpeechCallback then fcbSpeechCallback = fcbSpeechCallback() end;
 end
 -- Resources loaded event callback ----------------------------------------- --
-local function OnLoaded(aResources)
+local function OnAssetsLoaded(aResources)
   -- Play bank music
   PlayMusic(aResources[2]);
   -- Load texture. We only have 12 animations, discard all the other tiles
   -- as we're using the same bitmap for other sized textures.
   texBank = aResources[1];
-  texBank:TileSTC(12);
-  -- Cache background and speech bubble co-ordinates
-  tileBG = texBank:TileA(208, 312, 512, 512);
-  tileSpeech = texBank:TileA(0, 488, 112, 512);
   -- Get treasure value modifier
   iTreasureValueModifier = GetGameTicks() // 18000;
   -- Banker data
   aBankerData = { };
   -- Initialise banker data
-  RefreshBankerData();
+  RefreshData();
   -- No speech bubbles, reset win notification and set empty tip
-  iSpeechTimer, strTip = 0, "";
+  iSpeechTimer = 0;
   -- Set colour of speech text
   fontSpeech:SetCRGB(0, 0, 0.25);
   -- Speech render data and message
@@ -269,80 +233,80 @@ local function OnLoaded(aResources)
   -- Set a speech bubble above the specified characters head
   fcbSpeechCallback = nil;
   -- Get active object and objects owner
-  aPlayer = aDigger.P;
+  aPlayer = aActiveObject.P;
   -- Prevents duplicate win messages
   bGameWon = false;
-  -- Enable keys
+  -- Set keys and hot spots
   SetKeys(true, iKeyBankId);
+  SetHotSpot(iHotSpotId);
   -- Set the callbacks
-  SetCallbacks(BankProc, BankRender, BankInput);
+  SetCallbacks(ProcLogic, ProcRender);
 end
 -- Initialise the bank screen ---------------------------------------------- --
-local function InitBank(aActiveObject)
+local function InitBank()
   -- Set and check active object
+  aActiveObject = GetActiveObject();
   if not UtilIsTable(aActiveObject) then error("Object not selected!") end;
-  aDigger = aActiveObject;
   -- Sanity check gems available count
   if #aGemsAvailable < #aBankerStaticData then
     error("Gems available mismatch ("..#aGemsAvailable.."<"..
       #aBankerStaticData..")!")
   end
   -- Load bank texture
-  LoadResources("Bank", aAssets, OnLoaded);
+  LoadResources("Bank", aAssets, OnAssetsLoaded);
 end
 -- Scripts have been loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, GameProc, GetGameTicks, HaveZogsToWin, InitLobby, IsButtonPressed,
-    IsMouseInBounds, IsMouseNotInBounds, IsScrollingDown, IsScrollingUp,
-    LoadResources, PlayMusic, PlayStaticSound, RenderInterface, RenderShadow,
-    SellSpecifiedItems, SetBottomRightTip, SetCallbacks, SetCursor, SetKeys,
+  Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin, InitLobby,
+    LoadResources, PlayMusic, PlayStaticSound, RegisterHotSpot, RegisterKeys,
+    RenderInterface, RenderShadow, RenderTip, SellSpecifiedItems,
+    SetCallbacks, SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData,
     aGemsAvailable, aObjectActions, aObjectData, aObjectDirections,
-    aObjectJobs, aObjectTypes, fontSpeech, texSpr =
-      GetAPI("Fade", "GameProc", "GetGameTicks", "HaveZogsToWin", "InitLobby",
-        "IsButtonPressed", "IsMouseInBounds", "IsMouseNotInBounds",
-        "IsScrollingDown", "IsScrollingUp", "LoadResources", "PlayMusic",
-        "PlayStaticSound", "RenderInterface", "RenderShadow",
-        "SellSpecifiedItems", "SetBottomRightTip", "SetCallbacks", "SetCursor",
-        "SetKeys", "aGemsAvailable", "aObjectActions", "aObjectData",
-        "aObjectDirections", "aObjectJobs", "aObjectTypes", "fontSpeech",
-        "texSpr");
-  -- Check slot key event callbacks
-  local function GoCheckSlot(iSlot)
-    if iSpeechTimer <= 0 then SetCheckSell(iSlot, aBankerData[iSlot]) end;
-  end
-  local function GoCheckSlot1() GoCheckSlot(1) end;
-  local function GoCheckSlot2() GoCheckSlot(2) end;
-  local function GoCheckSlot3() GoCheckSlot(3) end;
-  -- Sell key event callbacks
-  local function GoSellSlot(iSlot)
-    if iSpeechTimer <= 0 then SetSpeechSell(iSlot, aBankerData[iSlot][2]) end;
-  end
-  local function GoSellSlot1() GoSellSlot(1) end;
-  local function GoSellSlot2() GoSellSlot(2) end;
-  local function GoSellSlot3() GoSellSlot(3) end;
-  -- Register keybinds
-  local aKeys<const> = Input.KeyCodes;
-  iKeyBankId = GetAPI("RegisterKeys")("ZMTC BANK", {
-    [Input.States.PRESS] = {
-      { aKeys.ESCAPE, GoExitBank, "zmtcbl", "LEAVE" },
-      { aKeys.N1, GoCheckSlot1, "zmtcbcsa", "CHECK SLOT 1" },
-      { aKeys.N2, GoCheckSlot2, "zmtcbcsb", "CHECK SLOT 2" },
-      { aKeys.N3, GoCheckSlot3, "zmtcbcsc", "CHECK SLOT 3" },
-      { aKeys.N8, GoSellSlot1, "zmtcbssa", "SELL SLOT 1" },
-      { aKeys.N9, GoSellSlot2, "zmtcbssb", "SELL SLOT 2" },
-      { aKeys.N0, GoSellSlot3, "zmtcbssc", "SELL SLOT 3" }
-    }
-  });
+    aObjectJobs, aObjectTypes, aSfxData, fontSpeech, texSpr =
+      GetAPI("Fade", "GameProc", "GetActiveObject", "GetGameTicks",
+        "HaveZogsToWin", "InitLobby", "LoadResources", "PlayMusic",
+        "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
+        "RenderInterface", "RenderShadow", "RenderTip", "SellSpecifiedItems",
+        "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip", "aAssetsData",
+        "aCursorIdData", "aGemsAvailable", "aObjectActions", "aObjectData",
+        "aObjectDirections", "aObjectJobs", "aObjectTypes", "aSfxData",
+        "fontSpeech", "texSpr");
+  -- Setup required assets
+  aAssets = { aAssetsData.bank, aAssetsData.bankm };
   -- Set sound effect ids
-  local aSfxData<const> = GetAPI("aSfxData");
   iSError, iSFind, iSSelect, iSTrade =
     aSfxData.ERROR, aSfxData.FIND, aSfxData.SELECT, aSfxData.TRADE;
-  -- Set cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
-  iCWait, iCSelect, iCExit, iCArrow = aCursorIdData.WAIT, aCursorIdData.SELECT,
-    aCursorIdData.EXIT, aCursorIdData.ARROW;
+  -- Get cursor ids
+  local iCSelect<const>, iCExit<const> =
+    aCursorIdData.SELECT, aCursorIdData.EXIT;
+  -- Register hotspots
+  iHotSpotId = RegisterHotSpot({
+    {  25, 113,  62,  70, 0, iCSelect, "SELL 1ST",    false, GoSellFTarg    },
+    { 129,  95,  62,  89, 0, iCSelect, "SELL 2ND",    false, GoSellHabbish  },
+    { 234,  97,  61,  87, 0, iCSelect, "SELL 3RD",    false, GoSellGrablin  },
+    {  40,  24,  33,  17, 0, iCSelect, "CHECK 1ST",   false, GoPriceFTarg   },
+    { 144,  24,  33,  17, 0, iCSelect, "CHECK 2ND",   false, GoPriceHabbish },
+    { 248,  24,  33,  17, 0, iCSelect, "CHECK 3RD",   false, GoPriceGrablin },
+    {   8,   8, 304, 200, 0, 0,        "BANK",        false, false          },
+    {   0,   0,   0, 240, 3, iCExit,   "GO TO LOBBY", false, GoToLobby      }
+  });
+  -- Register keybinds
+  local aKeys<const> = Input.KeyCodes;
+  iKeyBankId = RegisterKeys("ZMTC BANK", {
+    [Input.States.PRESS] = {
+      { aKeys.ESCAPE, GoToLobby,      "zmtcbl",   "LEAVE"        },
+      { aKeys.N1,     GoPriceFTarg,   "zmtcbcsa", "CHECK SLOT 1" },
+      { aKeys.N2,     GoPriceHabbish, "zmtcbcsb", "CHECK SLOT 2" },
+      { aKeys.N3,     GoPriceGrablin, "zmtcbcsc", "CHECK SLOT 3" },
+      { aKeys.N8,     GoSellFTarg,    "zmtcbssa", "SELL SLOT 1"  },
+      { aKeys.N9,     GoSellHabbish,  "zmtcbssb", "SELL SLOT 2"  },
+      { aKeys.N0,     GoSellGrablin,  "zmtcbssc", "SELL SLOT 3"  }
+    }
+  });
 end
 -- Exports and imports ----------------------------------------------------- --
-return { A = { InitBank = InitBank }, F = OnReady };
+return { A = { InitBank = InitBank }, F = OnScriptLoaded };
 -- End-of-File ============================================================= --

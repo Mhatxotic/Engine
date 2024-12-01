@@ -63,7 +63,7 @@ fi
 
 build()
 {
-  gcc -O3 -arch $1 -mtune=$2 -mmacosx-version-min=10.11 \
+  gcc -O3 -arch $1 -mtune=$2 -mmacosx-version-min=10.15 \
     -Iinclude \
     -I"../${FILE2}/include" \
     -I"../${FILE2}/lib" \

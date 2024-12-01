@@ -21,11 +21,7 @@ using namespace IJson::P;              using namespace Common;
 ** ######################################################################### **
 ** ## Json common helper classes                                          ## **
 ** ######################################################################### **
-** -- Read Json class argument --------------------------------------------- */
-struct AgJson : public ArClass<Json> {
-  explicit AgJson(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Json>(lS, iArg, *cJsons)}{} };
-/* -- Create Json class argument ------------------------------------------- */
+** -- Create Json class argument ------------------------------------------- */
 struct AcJson : public ArClass<Json> {
   explicit AcJson(lua_State*const lS) :
     ArClass{*LuaUtilClassCreate<Json>(lS, *cJsons)}{} };
@@ -46,14 +42,14 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroy<Json>(lS, 1, *cJsons))
 // ? Encodes the data inside the class to JSON string.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ToString, 1,
-  LuaUtilPushVar(lS, AgJson{lS, 1}().StrFromNum<Json::RJCompactWriter>()))
+  LuaUtilPushVar(lS, AgJson{lS, 1}().ToString<Json::RJCompactWriter>()))
 /* ========================================================================= */
 // $ Json:ToHRString
 // < Data:string=Encoded JSON data
 // ? Encodes the data inside the class to JSON string in human readable format.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ToHRString, 1,
-  LuaUtilPushVar(lS, AgJson{lS, 1}().StrFromNum<Json::RJPrettyWriter>()))
+  LuaUtilPushVar(lS, AgJson{lS, 1}().ToString<Json::RJPrettyWriter>()))
 /* ========================================================================= */
 // $ Json:ToFile
 // < Result:integer=Error number code returned (0 = success)
@@ -93,15 +89,21 @@ LLFUNC(Id, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().CtrGet()))
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Name, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().IdentGet()))
+/* ========================================================================= */
+// $ Json:Sort
+// > Descending:bool=Descending (true) or ascending (false) flag.
+// ? Sorts the entire json array.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Sort, 1, AgJson{lS, 1}().Sort(AgBoolean{lS, 2}))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Json:* member functions structure                                   ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 LLRSMFBEGIN                            // Json:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Id),       LLRSFUNC(Name),
-  LLRSFUNC(ToTable), LLRSFUNC(ToString), LLRSFUNC(ToHRString),
-  LLRSFUNC(ToFile),  LLRSFUNC(ToHRFile),
+  LLRSFUNC(Destroy),    LLRSFUNC(Id),      LLRSFUNC(Name),
+  LLRSFUNC(Sort),       LLRSFUNC(ToTable), LLRSFUNC(ToString),
+  LLRSFUNC(ToHRString), LLRSFUNC(ToFile),  LLRSFUNC(ToHRFile),
 LLRSEND                                // Json:* member functions end
 /* ========================================================================= */
 // $ Json.File

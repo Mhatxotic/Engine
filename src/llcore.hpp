@@ -439,16 +439,16 @@ LLFUNC(Stack, 1, const AgCStringChar aString{lS, 1};
 /* ========================================================================= */
 // $ Core.StatusLeft
 // > String:string=Console status text.
-// ? In bot mode, this function will set the text to appear when no text is
-// ? input into the input bar. Useful for customised stats. It will update
+// ? In terminal mode, this function will set the text to appear when no text
+// ? is input into the input bar. Useful for customised stats. It will update
 // ? every second.
 /* ------------------------------------------------------------------------- */
 LLFUNC(StatusLeft, 0, cConsole->SetStatusLeft(AgString{lS, 1}))
 /* ========================================================================= */
 // $ Core.StatusRight
 // > String:string=Console status text.
-// ? In bot mode, this function will set the text to appear when no text is
-// ? input into the input bar. Useful for customised stats. It will update
+// ? In terminal mode, this function will set the text to appear when no text
+// ? is input into the input bar. Useful for customised stats. It will update
 // ? every second.
 /* ------------------------------------------------------------------------- */
 LLFUNC(StatusRight, 0, cConsole->SetStatusRight(AgString{lS, 1}))

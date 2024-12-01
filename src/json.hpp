@@ -14,10 +14,10 @@ using namespace IAsset::P;             using namespace IASync::P;
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
 using namespace IFStream::P;           using namespace IIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::RapidJson;
+using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::RapidJson;
 /* ------------------------------------------------------------------------- */
 using Lib::RapidJson::Value;
 /* ------------------------------------------------------------------------- */
@@ -28,7 +28,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   public Ident,                        // Json code file name
   public AsyncLoaderJson,              // Asynchronous loading of Json object
   public Lockable,                     // Lua garbage collector instruction
-  private Document                     // RapidJson document class
+  public Document                      // RapidJson document class
 { /* -- Build a json string from lua string ----------------------- */ private:
   Value ToStr(lua_State*const lS, const int iId)
   { // Get string and length from LUA
@@ -75,11 +75,59 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
         break;
     }
   }
-  /* -- Convert LUA table to rapidjson::Value ---------------------- */ public:
+  /* -- Sort entire json array --------------------------------------------- */
+  template<class SortType>void SortArray(Value &rjvVal)
+  { // For each table item, search for and sort all sub-tables
+    for(auto &rjvRef : rjvVal.GetArray())
+      switch(rjvRef.GetType())
+      { // Indexed array
+        case kArrayType: SortArray<SortType>(rjvRef); break;
+        // Key/value object
+        case kObjectType: SortObject<SortType>(rjvRef); break;
+        // Don't care about other types
+        default: continue;
+      }
+  }
+  /* -- Sort entire json object -------------------------------------------- */
+  template<class SortType>void SortObject(Value &rjvVal)
+  { // For each table item, search for and sort all sub-tables
+    for(auto &rjvRef : rjvVal.GetObject())
+      switch(rjvRef.value.GetType())
+      { // Indexed array
+        case kArrayType: SortArray<SortType>(rjvRef.value); break;
+        // Key/value object
+        case kObjectType: SortObject<SortType>(rjvRef.value); break;
+        // Don't care about other types
+        default: continue;
+      }
+    // Do the sort
+    StdSort(par_unseq, rjvVal.MemberBegin(), rjvVal.MemberEnd(), SortType());
+  }
+  /* -- When file data has loaded ---------------------------------- */ public:
+  void AsyncReady(const FileMap &fmData)
+  { // The memory isn't null-terminated so we have to do that and also this
+    // could be a file map so we can't modify it so we'll load it all properly
+    // and null-terminate it and place it into a RapidJson StringStream object
+    // and then place that into a CSW object so we can track the source
+    // information when a parse error occurs.
+    const string strJson{ fmData.MemToString() };
+    StringStream ssStream{ strJson.c_str() };
+    CursorStreamWrapper<StringStream> cswStream{ ssStream };
+    // Parse the text and if there is a parse error? Break execution
+    if(ParseStream(cswStream).HasParseError())
+      XC(GetParseError_En(GetParseError()),
+        "Identifier", fmData.IdentGet(),
+        "Line",       cswStream.GetLine(),
+        "Column",     cswStream.GetColumn());
+    // Write that we parsed this stream
+    cLog->LogDebugExSafe("Json parsed $ bytes from '$' successfully.",
+      fmData.MemSize(), fmData.IdentGet());
+  }
+  /* -- Convert LUA table to rapidjson::Value ------------------------------ */
   Value ParseTable(lua_State*const lS, const int iId, const int iObjId)
   { // Check table
     LuaUtilCheckTable(lS, iId);
-    // Test: lexec Console.Write(Json.Table({ }):StrFromNum());
+    // Test: lexec Console.Write(Json.Table({ }):ToString());
     // Get size of table and if we have length then we need to create an array
     if(const lua_Integer liLen =
       UtilIntOrMax<lua_Integer>(LuaUtilGetSize(lS, iId)))
@@ -121,7 +169,6 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     const LuaStackSaver lSS{ lS };
     // We need two more free item on the stack, leave empty if not
     if(!LuaUtilIsStackAvail(lS, 2)) return rjvRoot;
-    // Push nil value
     // Walk through all the object members
     for(LuaUtilPushNil(lS); lua_next(lS, iObjId); LuaUtilRmStack(lS))
     { // Get keyname
@@ -186,25 +233,101 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   }
   /* -- Convert json value to lua table and put it on stack ---------------- */
   void ToLuaTable(lua_State*const lS)
-  { // Get value
+  { // Get root object
     const Value &rjvVal =
       reinterpret_cast<const Value&>(static_cast<const Document&>(*this));
-     // What type is the value?
+    // What type is the value?
     switch(rjvVal.GetType())
     { // Indexed array
       case kArrayType: ToTableArray(lS, rjvVal); break;
       // Key/value object
       case kObjectType: ToTableObject(lS, rjvVal); break;
       // Unacceptable
-      default: XC("Json value not array or object!",
-        "Type", rjvVal.GetType());
+      default: XC("Not array or object!",
+                  "Identifier", IdentGet(), "Type", rjvVal.GetType());
     }
+  }
+  /* -- Start sorting the entire array ------------------------------------- */
+  void Sort(const bool bDescending)
+  { // Get root object
+    Value &rjvVal = reinterpret_cast<Value&>(static_cast<Document&>(*this));
+    // Ascending sorting algorithm
+    struct SortAscending {
+      bool operator()(const Value::Member &vLhs,
+                      const Value::Member &vRhs) const {
+        return strcmp(vLhs.name.GetString(), vRhs.name.GetString()) < 0;
+      }
+    };
+    // Descending sorting algorithm
+    struct SortDescending {
+      bool operator()(const Value::Member &vLhs,
+                      const Value::Member &vRhs) const {
+        return strcmp(vLhs.name.GetString(), vRhs.name.GetString()) > 0;
+      }
+    };
+    // What type is the value?
+    switch(rjvVal.GetType())
+    { // Indexed array
+      case kArrayType: bDescending ? SortArray<SortDescending>(rjvVal) :
+                                     SortArray<SortAscending>(rjvVal); break;
+      // Key/value object
+      case kObjectType: bDescending ? SortObject<SortDescending>(rjvVal) :
+                                      SortObject<SortAscending>(rjvVal); break;
+      // Unacceptable
+      default: XC("Not an array or object!",
+                  "Identifier", IdentGet(), "Type", rjvVal.GetType());
+    }
+  }
+  /* ----------------------------------------------------------------------- */
+  const Value &GetValue(const char*const cpKey) const
+  { // Check to see if the member exists
+    const Value::ConstMemberIterator vcmiIt{ FindMember(cpKey) };
+    if(vcmiIt == MemberEnd())
+      XC("Member not found!", "Identifier", IdentGet(), "Key", cpKey);
+    // Return the value
+    return vcmiIt->value;
+  }
+  /* ----------------------------------------------------------------------- */
+  double GetNumber(const char*const cpKey) const
+  { // Get and check the value
+    const Value &rjvValue = GetValue(cpKey);
+    if(!rjvValue.IsNumber())
+      XC("Invalid integer type!", "Identifier", IdentGet(), "Key", cpKey);
+    // Return the integer
+    return rjvValue.GetDouble();
+  }
+  /* ----------------------------------------------------------------------- */
+  const string GetString(const char*const cpKey) const
+  { // Get and check the value
+    const Value &rjvValue = GetValue(cpKey);
+    if(!rjvValue.IsString())
+      XC("Invalid string type!", "Identifier", IdentGet(), "Key", cpKey);
+    // Return the integer
+    return rjvValue.GetString();
+  }
+  /* ----------------------------------------------------------------------- */
+  bool GetBoolean(const char*const cpKey) const
+  { // Get and check the value
+    const Value &rjvValue = GetValue(cpKey);
+    if(!rjvValue.IsBool())
+      XC("Invalid boolean type!", "Identifier", IdentGet(), "Key", cpKey);
+    // Return the integer
+    return rjvValue.GetBool();
+  }
+  /* ----------------------------------------------------------------------- */
+  unsigned int GetInteger(const char*const cpKey) const
+  { // Get and check the value
+    const Value &rjvValue = GetValue(cpKey);
+    if(!rjvValue.IsUint())
+      XC("Invalid number type!", "Identifier", IdentGet(), "Key", cpKey);
+    // Return the integer
+    return rjvValue.GetUint();
   }
   /* ----------------------------------------------------------------------- */
   typedef Writer<StringBuffer, UTF8<>, UTF8<>> RJCompactWriter;
   typedef PrettyWriter<StringBuffer, UTF8<>, UTF8<>> RJPrettyWriter;
   /* ----------------------------------------------------------------------- */
-  template<typename WriterType>const string StrFromNum(void) const
+  template<typename WriterType>const string ToString(void) const
   { // Output buffer
     StringBuffer rsbOut;
     WriterType rwWriter{ rsbOut };
@@ -214,16 +337,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   template<typename T>int ToFile(const string &strFile) const
     { return FStream{ strFile, FM_W_T }.
-        FStreamWriteStringSafe(StrFromNum<T>()) ? 0 : StdGetError(); }
-  /* ----------------------------------------------------------------------- */
-  void AsyncReady(FileMap &fmData)
-  { // Parse the string and return if succeeded
-    const ParseResult prData{
-      Parse<0>(fmData.MemPtr<char>(), fmData.MemSize()) };
-    if(!prData) XC(GetParseError_En(prData.Code()),
-      "Identifier", fmData.IdentGet(), "Size", fmData.MemSize(),
-      "JsonSize",   prData.Offset());
-  }
+        FStreamWriteStringSafe(ToString<T>()) ? 0 : StdGetError(); }
   /* -- Load json from file asynchronously --------------------------------- */
   void InitAsyncFile(lua_State*const lS)
   { // Must have 4 parameters (including the class pointer)
@@ -262,7 +376,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   void InitFromTable(lua_State*const lS) { ParseTable(lS, 1, 1).Swap(*this); }
   /* ----------------------------------------------------------------------- */
   ~Json(void) { AsyncCancel(); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Default constructor ------------------------------------------------ */
   Json(void) :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperJson{ cJsons },            // Initialise collector
@@ -271,6 +385,12 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
       EMC_MP_JSON }                    // ...and the event id
     /* -- No code ---------------------------------------------------------- */
     { }
+  /* -- Constructor from a filename ---------------------------------------- */
+  explicit Json(const string &strFile) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Json{}                             // Use default initialisers
+    /* -- Initialise from file --------------------------------------------- */
+    { SyncInitFileSafe(strFile); }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(Json)                // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */

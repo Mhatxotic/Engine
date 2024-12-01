@@ -147,8 +147,8 @@ class MemConst                         // Start of const MemBase Block Class
     // Return the tested bit
     return UtilBitTest(MemPtr<char>(), stPos);
   }
-  /* -- Stringview'ify the memory ------------------------------------------ */
-  const string_view MemToString(const size_t stBytes) const
+  /* -- Stringview'ify the memory and check for null-terminator ------------ */
+  const string_view MemToStringView(const size_t stBytes) const
   { // Return empty string if no size
     if(MemIsEmpty()) return { };
     // Check position
@@ -158,8 +158,11 @@ class MemConst                         // Start of const MemBase Block Class
     // There is no null character so we have to limit the size
     return { MemPtr<char>(), stBytes };
   }
-  /* -- Stringify the memory ----------------------------------------------- */
+  /* -- Stringview'ify the memory ------------------------------------------ */
   const string MemToString(void) const
+    { return { MemPtr<char>(), MemSize() }; }
+  /* -- Stringify the memory ----------------------------------------------- */
+  const string MemToStringSafe(void) const
   { // Return empty string if no size
     if(MemIsEmpty()) return { };
     // Find a null character and if we found it? We know what the size is!

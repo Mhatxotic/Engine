@@ -131,21 +131,23 @@ template<typename IntType>struct AgIntegerL : public AgIntegral<IntType> {
   explicit AgIntegerL(lua_State*const lS, const int iArg, const IntType itMin):
     AgIntegral<IntType>{LuaUtilGetIntL<IntType>(lS, iArg, itMin)}{} };
 /* -- Different types we can use ------------------------------------------- */
-using Lib::OS::GlFW::GLuint;
-typedef AgIntegerLGE<unsigned int> AgUIntLGE;
-typedef AgIntegerLGE<ssize_t> AgSSizeTLGE;
-typedef AgIntegerLGE<size_t> AgSizeTLGE;
-typedef AgIntegerLG<unsigned int> AgUIntLG;
-typedef AgIntegerLG<ssize_t> AgSSizeTLG;
-typedef AgIntegerLG<size_t> AgSizeTLG;
-typedef AgIntegerL<int> AgIntL;
-typedef AgInteger<unsigned int> AgUInt;
-typedef AgInteger<uint8_t> AgUInt8;
-typedef AgInteger<uint64_t> AgUInt64;
-typedef AgInteger<uint32_t> AgUInt32;
-typedef AgInteger<size_t> AgSizeT;
-typedef AgInteger<lua_Integer> AgLuaInteger;
 typedef AgInteger<int> AgInt;
+typedef AgInteger<lua_Integer> AgLuaInteger;
+typedef AgInteger<size_t> AgSizeT;
+typedef AgInteger<uint32_t> AgUInt32;
+typedef AgInteger<uint64_t> AgUInt64;
+typedef AgInteger<uint8_t> AgUInt8;
+typedef AgInteger<unsigned int> AgUInt;
+typedef AgIntegerL<int> AgIntL;
+typedef AgIntegerL<size_t> AgSizeTL;
+typedef AgIntegerLG<size_t> AgSizeTLG;
+typedef AgIntegerLG<ssize_t> AgSSizeTLG;
+typedef AgIntegerLG<unsigned int> AgUIntLG;
+typedef AgIntegerLGE<int> AgIntLGE;
+typedef AgIntegerLGE<size_t> AgSizeTLGE;
+typedef AgIntegerLGE<ssize_t> AgSSizeTLGE;
+typedef AgIntegerLGE<unsigned int> AgUIntLGE;
+using Lib::OS::GlFW::GLuint;
 typedef AgInteger<GLuint> AgGLuint;
 /* -- Get/Create Asset object ---------------------------------------------- */
 using IAsset::P::Asset;
@@ -186,6 +188,12 @@ using IImage::P::cImages;
 struct AgImage : public ArClass<Image>
   { explicit AgImage(lua_State*const lS, const int iArg) :
       ArClass{*LuaUtilGetPtr<Image>(lS, iArg, *cImages)}{} };
+/* -- Get Json object ------------------------------------------------------ */
+using IJson::P::Json;
+using IJson::P::cJsons;
+struct AgJson : public ArClass<Json> {
+  explicit AgJson(lua_State*const lS, const int iArg) :
+    ArClass{*LuaUtilGetPtr<Json>(lS, iArg, *cJsons)}{} };
 /* -- Read a valid triangle index ------------------------------------------ */
 struct AgTriangleId : public AgSizeTLGE {
   explicit AgTriangleId(lua_State*const lS, const int iArg) :

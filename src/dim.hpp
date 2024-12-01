@@ -32,9 +32,11 @@ template<typename Int = unsigned int>class IntPair
   /* -- Increment ---------------------------------------------------------- */
   void IPIncOne(const Int iV = iD1) { IPSetOne(IPGetOne() + iV); }
   void IPIncTwo(const Int iV = iD1) { IPSetTwo(IPGetTwo() + iV); }
+  void IPInc(const Int iV1 = iD1) { IPIncOne(iV1); IPIncTwo(iV1); }
   /* -- Decrement ---------------------------------------------------------- */
   void IPDecOne(const Int iV = iD1) { IPSetOne(IPGetOne() - iV); }
   void IPDecTwo(const Int iV = iD1) { IPSetTwo(IPGetTwo() - iV); }
+  void IPDec(const Int iV1 = iD1) { IPDecOne(iV1); IPDecTwo(iV1); }
   /* -- Test --------------------------------------------------------------- */
   bool IPIsOneSet(void) const { return IPGetOne() != IPDefGet(); }
   bool IPIsNotOneSet(void) const { return !IPIsOneSet(); }
@@ -90,6 +92,7 @@ struct Dimensions :                    // Members initially public
   /* -- Decrement ---------------------------------------------------------- */
   void DimDecWidth(const Int iV = Base::iD1) { this->IPDecOne(iV); }
   void DimDecHeight(const Int iV = Base::iD1) { this->IPDecTwo(iV); }
+  void DimDec(const Int iV = Base::iD1) { this->IPDec(iV); }
   /* -- Test --------------------------------------------------------------- */
   bool DimIsWidthSet(void) const { return this->IPIsOneSet(); }
   bool DimIsNotWidthSet(void) const { return this->IPIsNotOneSet(); }

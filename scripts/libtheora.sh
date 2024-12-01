@@ -81,7 +81,7 @@ build()
     --with-ogg-libraries="../${FILE2}" \
     --with-vorbis-includes="../${FILE3}/include/" \
     --with-vorbis-libraries="../${FILE3}" \
-    CC="gcc -O3 -arch ${1} -mtune=${2} -mmacosx-version-min=10.11"
+    CC="gcc -O3 -arch ${1} -mtune=${2} -mmacosx-version-min=10.15"
 
   make
   if [ ! $? -eq 0 ]; then

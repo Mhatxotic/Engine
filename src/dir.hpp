@@ -108,7 +108,7 @@ static ValidResult DirValidName(const string &strName,
   { // Full sandbox. Do not leave .exe directory
     case VT_UNTRUSTED:
       // Root directory not allowed
-      if(strChosen.front() == '/') return VR_NOROOT;
+      if(strChosen.front() == cCommon->CFSlash()) return VR_NOROOT;
       // Get parts from pathname and return if empty.
       if(const Token tParts{ strChosen, cCommon->FSlash() })
       { // Get first iterator and string.
@@ -321,7 +321,8 @@ class DirCore :                        // System specific implementation
   explicit DirCore(const string &strDir) :
     /* -- Initialisers ----------------------------------------------------- */
     iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ? "*" :
-      StrAppend(StrTrim(strDir, '/'), "/*")).c_str(), &wfData)),
+      StrAppend(StrTrimSuffix(strDir, cCommon->CFSlash()),
+        cCommon->CFSlash(), "*")).c_str(), &wfData)),
     bMore(iHandle != -1)
     /* -- Process file if there are more ----------------------------------- */
     { if(bMore) ProcessItem(); }
@@ -408,7 +409,8 @@ class DirCore :                        // System specific implementation
     strPrefix{ StrAppend(              // Initialise string prefix
       strDir.empty() ?                 // If requested directory is empty?
         cCommon->Period() :            // Set to scan current directory
-        StrTrim(strDir, '/'),          // Use specified but trim slashes
+        StrTrimSuffix(strDir,          // Trim forward-slash trailing...
+          cCommon->CFSlash()),         // ...characters from directory
       cCommon->FSlash()) },            // Add our own slash at the end
     dupHandle{                         // Initialise directory handle
       opendir(strPrefix.c_str()) }     // Open the directory and store handle
@@ -534,7 +536,7 @@ static bool DirSetCWD(const string &strDirectory)
   const unsigned char &ucD = strDirectory.front();
   // Set drive first if specified
   if(strDirectory.length() >= 3 && strDirectory[1] == ':' &&
-     (strDirectory[2] == '\\' || strDirectory[2] != '/') &&
+     (strDirectory[2] == '\\' || strDirectory[2] != cCommon->CFSlash()) &&
        _chdrive((toupper(ucD) - 'A') + 1) < 0) return false;
 #endif
   // Set current directory and return false if there is a problem
@@ -569,7 +571,7 @@ static bool DirMkDirEx(const string &strDir)
                            svI != tParts.cend();
                          ++svI)
       { // Append next directory
-        osS << '/' << StdMove(*svI);
+        osS << cCommon->CFSlash() << StdMove(*svI);
         // Make the directory and if failed and it doesn't exist return error
         if(!DirMkDir(osS.str()) && StdIsNotError(EEXIST)) return false;
       }
@@ -599,7 +601,7 @@ static bool DirRmDirEx(const string &strDir)
       for(StrVectorConstIt svI{ next(tParts.begin(), 1) };
                            svI != tParts.end();
                          ++svI)
-        osS << '/' << *svI;
+        osS << cCommon->CFSlash() << *svI;
     // Make the directory and if failed and it doesn't exist return error
     if(!DirRmDir(osS.str()) && StdIsNotError(EEXIST)) return false;
     // Remove the last item

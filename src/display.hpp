@@ -24,7 +24,8 @@ using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace ITexture::P;           using namespace IToken::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IUtf;                  using namespace IUtil::P;
+using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -369,7 +370,9 @@ static class Display final :
   /* -- Monitor changed ---------------------------------------------------- */
   static void OnMonitorStatic(GLFWmonitor*const, const int);
   void OnMonitor(GLFWmonitor*const mAffected, const int iAction)
-  { // Get monitor state
+  { // We're in the main window thread here so we cannot modify any of the
+    // monitor state as the engine thread could read from it at any time. All
+    // we can do for now is ask the engine thread to restart.
     switch(iAction)
     { // Device was connected?
       case GLFW_CONNECTED:
@@ -381,19 +384,20 @@ static class Display final :
         else if(const GlFWMonitor*const moAffected = mlData.Find(mAffected))
           cLog->LogWarningExSafe(
             "Display already connected monitor '$'...", moAffected->Name());
-        // We don't have this context in our list, get name and if valid?
-        else if(const char*const cpName = GlFWGetMonitorName(mAffected))
-        { // If monitor name is not blank?
-          if(*cpName)
+        // Anything else?
+        else
+        { // Try to get monitor name and if found? Log the name.
+          const char*const cpName = GlFWGetMonitorName(mAffected);
+          if(UtfIsCStringValid(cpName))
             cLog->LogInfoExSafe(
-              "Display connected monitor '$', refreshing device list...",
-              cpName);
-          // Monitor name not specified so OS could be messing around
-          else cLog->LogInfoSafe("Display hardware shuffle in progress, "
-            "refreshing device list...");
-          // Re-enumerate monitors and video modes
-          EnumerateMonitorsAndVideoModes();
-        } // Break to return
+              "Display detected new monitor '$', re-initialising...",
+                cpName);
+          // Could not get name of monitor
+          else cLog->LogInfoSafe(
+            "Display detected a new monitor, re-initialising...");
+          // We need to re-initialise the opengl context
+          cEvtMain->RequestQuitThread();
+        } // Done
         break;
       // Device was disconnected?
       case GLFW_DISCONNECTED:
@@ -417,12 +421,17 @@ static class Display final :
             cEvtMain->RequestQuitThread();
           } // This is not our monitor?
           else
-          { // We don't need to do anything but refresh the list
-            cLog->LogInfoExSafe(
-              "Display disconnected monitor '$', refreshing device list...",
-              moAffected->Name());
-            // Re-enumerate monitors and video modes
-            EnumerateMonitorsAndVideoModes();
+          { // Try to get monitor name and if found? Log the name.
+            const char*const cpName = GlFWGetMonitorName(mAffected);
+            if(UtfIsCStringValid(cpName))
+              cLog->LogInfoExSafe(
+                "Display disconnected monitor '$', re-initialising...",
+                  cpName);
+            // Monitor name not available
+            else cLog->LogInfoSafe(
+              "Display disconnected a monitor, re-initialising...");
+            // We need to re-initialise the opengl context
+            cEvtMain->RequestQuitThread();
           }
         } // We don't have it so ignore it
         else cLog->LogWarningExSafe(
@@ -698,13 +707,12 @@ static class Display final :
     cFboCore->DimSet(static_cast<GLsizei>(cInput->GetWindowWidth()),
                      static_cast<GLsizei>(cInput->GetWindowHeight()));
 #endif
-    // Show and focus the window
+    // Show the window
     cGlFW->WinShow();
-    cGlFW->WinFocus();
+    // Window has been focued if auto-focus is enabled
+    if(FlagIsSet(DF_AUTOFOCUS)) FlagSet(DF_FOCUSED);
     // Update cursor visibility as OS or glfw can mess it up
     cInput->CommitCursorNow();
-    // Focused and no longer restarting
-    FlagSet(DF_FOCUSED);
     // If we're in Linux?
 #if defined(LINUX)
     // Send a event to recalculate the matrix because it seems the fbo resize
@@ -777,7 +785,7 @@ static class Display final :
   /* -- Init info ---------------------------------------------------------- */
   const string &GetMonitorName(void) const { return moSelected->Name(); }
   /* -- Set default matrix ------------------------------------------------- */
-  void SetDefaultMatrix(const bool bForce) const
+  void SetDefaultMatrix(const bool bForce=true) const
   { // Set the default matrix from the configuration and if it was changed
     // also update the consoles FBO too.
     if(cFboCore->AutoMatrix(fMatrixWidth, fMatrixHeight, bForce))
@@ -785,12 +793,30 @@ static class Display final :
     // Else redraw the console if enabled
     else cConsole->SetRedrawIfEnabled();
   }
-  /* -- ReInit matrix ------------------------------------------------------ */
-  void ForceReInitMatrix(void) { SetDefaultMatrix(true); }
+  /* -- Alter default matrix ----------------------------------------------- */
+  bool AlterDefaultMatrix(const GLfloat fNewWidth, const GLfloat fNewHeight)
+  { // If width changed?
+    if(UtilIsFloatNotEqual(fNewWidth, fMatrixWidth))
+    { // Update width and if height changed? Update the height
+      fMatrixWidth = fNewWidth;
+      if(UtilIsFloatNotEqual(fNewHeight, fMatrixHeight))
+        fMatrixHeight = fNewHeight;
+    } // If height changed? Update the height and fall through to re-init
+    else if(UtilIsFloatNotEqual(fNewHeight, fMatrixHeight))
+      fMatrixHeight = fNewHeight;
+    // Not modified so don't change the fbo
+    else return false;
+    // Force re-initialise the matrix
+    SetDefaultMatrix();
+    // Send event to addons that the matrix changed
+    cEvtMain->Add(EMC_VID_MATRIX_REINIT);
+    // Success
+    return true;
+  }
   /* -- ReInit matrix ------------------------------------------------------ */
   void ReInitMatrix(void)
   { // Force-reinitialise matrix
-    ForceReInitMatrix();
+    SetDefaultMatrix();
     // Inform lua scripts that they should redraw the framebuffer
     cEvtMain->Add(EMC_LUA_REDRAW);
   }
@@ -1136,7 +1162,7 @@ static class Display final :
   CVarReturn RobustnessChanged(const size_t stIndex)
   { // Not supported on MacOS
 #if defined(MACOS)
-    (void)(stIndex); iRobustness = GLFW_NO_ROBUSTNESS;
+    static_cast<void>(stIndex); iRobustness = GLFW_NO_ROBUSTNESS;
 #else
     // Possible values
     static const array<const int,3> aValues{
@@ -1154,7 +1180,7 @@ static class Display final :
   CVarReturn ReleaseChanged(const size_t stIndex)
   { // Not supported on MacOS
 #if defined(MACOS)
-    (void)(stIndex); iRelease = GLFW_RELEASE_BEHAVIOR_NONE;
+    static_cast<void>(stIndex); iRelease = GLFW_RELEASE_BEHAVIOR_NONE;
 #else
     // Possible values
     static const array<const int,3> aValues{
@@ -1184,7 +1210,7 @@ static class Display final :
   CVarReturn ProfileChanged(const size_t stIndex)
   { // Only core profile supported on MacOS
 #if defined(MACOS)
-    (void)(stIndex); iProfile = GLFW_OPENGL_CORE_PROFILE;
+    static_cast<void>(stIndex); iProfile = GLFW_OPENGL_CORE_PROFILE;
 #else
     // Possible values
     static const array<const int,3> aValues{

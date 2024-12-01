@@ -38,7 +38,7 @@ fi
 
 build()
 {
-  gcc -O3 -arch $1 -mtune=$2 -Wno-all -mmacosx-version-min=10.11 -c minimp3.c
+  gcc -O3 -arch $1 -mtune=$2 -Wno-all -mmacosx-version-min=10.15 -c minimp3.c
   if [ ! $? -eq 0 ]; then
     exit 5;
   fi

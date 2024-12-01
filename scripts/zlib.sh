@@ -52,7 +52,7 @@ build()
     exit 12
   fi
   cat Makefile.patch | \
-    sed 's|-O3|-O3 -mtune='${2}' -mmacosx-version-min=10.11|g' > Makefile
+    sed 's|-O3|-O3 -mtune='${2}' -mmacosx-version-min=10.15|g' > Makefile
   if [ ! $? -eq 0 ]; then
     exit 13
   fi

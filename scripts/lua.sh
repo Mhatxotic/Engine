@@ -183,7 +183,7 @@ if [ "$PLATFORM" == 'Linux' ]; then
   ar rcs "${LIB}/lua64.la" lua64-*.a
 else
   ARCH="-arch "
-  EXTRA="-DLUA_USE_MACOSX -mmacosx-version-min=10.11 -stdlib=libc++"
+  EXTRA="-DLUA_USE_MACOSX -mmacosx-version-min=10.15 -stdlib=libc++"
   build arm64 apple-m1
   build x86_64 generic
   lipo lua64-*.a -create -output "${LIB}/lua64.ma"

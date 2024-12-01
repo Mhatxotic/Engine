@@ -26,7 +26,7 @@ if [ ! -e $ZIP ]; then
   exit 2;
 fi
 
-7z x -aos $ZIP -o$FILE
+7zz x -aos $ZIP -o$FILE
 if [ ! $? -eq 0 ]; then
   exit 3;
 fi
@@ -100,7 +100,7 @@ build()
 
 ISOSX=`uname`
 if [ $ISOSX = 'Darwin' ]; then
-  EXTRA="-mmacosx-version-min=10.11 -arch "
+  EXTRA="-mmacosx-version-min=10.15 -arch "
   build x86_64 generic 0
   build arm64 apple-m1 1 ../Asm/arm64/*.S
   lipo lzma64-*.a -create -output "${LIB}/lzma64.ma"

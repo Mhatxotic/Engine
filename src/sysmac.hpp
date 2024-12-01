@@ -7,8 +7,6 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* ------------------------------------------------------------------------- */
-namespace SysBase {                    // Start of module namespace
 /* -- Dependiencies -------------------------------------------------------- */
 #include "pixbase.hpp"                 // Base system class
 #include "pixcon.hpp"                  // Console emulation class
@@ -725,5 +723,4 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(SysCore)             // Suppress default functions for safety
 }; /* ---------------------------------------------------------------------- */
-}                                      // End of module namespace
 /* == EoF =========================================================== EoF == */

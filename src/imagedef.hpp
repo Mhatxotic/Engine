@@ -28,8 +28,8 @@ enum ImageFormat : size_t              // Available image codecs
 BUILD_FLAGS(Image,
   /* -- Note --------------------------------------------------------------- **
   ** The 'ImageData' class contains a 'Flags' class which is shared between  **
-  ** four different classes, 'Image', 'ImageData', 'Font' and 'Texture' so   **
-  ** it's important we don't duplicate values here.                          **
+  ** five different classes, 'Atlas', 'Image', 'ImageData', 'Font' and       **
+  ** 'Texture' so it's important we don't duplicate values here.             **
   ** -- Font loading flags (Only used in 'Font' class) --------------------- */
   // No flags?                         True stroke but more buggy?
   IL_NONE                   {Flag[0]}, FF_STROKETYPE2             {Flag[1]},
@@ -40,6 +40,9 @@ BUILD_FLAGS(Image,
   /* -- Font loader public mask bits --------------------------------------- */
   FF_MASK{ FF_USEGLYPHSIZE|FF_STROKETYPE2|FF_FLOORADVANCE|FF_CEILADVANCE|
            FF_ROUNDADVANCE },
+  /* -- Font types --------------------------------------------------------- */
+  // Font is a freetype font?          Font is a static bitmap font?
+  FT_FREETYPE               {Flag[6]}, FT_BITMAP                  {Flag[7]},
   /* -- Post processing (Only used in 'Image' class) ----------------------- */
   // Convert to atlas?                 Image will be loadable in OpenGL?
   IL_ATLAS                  {Flag[8]}, IL_TOGPU                   {Flag[9]},
@@ -58,16 +61,16 @@ BUILD_FLAGS(Image,
   IL_MASK{ IL_TOGPU|IL_TO24BPP|IL_TO32BPP|IL_TOBGR|IL_TORGB|IL_TOBINARY|
     IL_REVERSE|IL_ATLAS|IL_FCE_JPG|IL_FCE_PNG|IL_FCE_GIF|IL_FCE_DDS },
   /* -- Active flags (Only used in 'Image' class) ----------------------- */
-  // Image will be loadable in GL?     Convert loaded image to 24bpp?
+  // Image converted to load in GL?    Converted image to 24bpp?
   IA_TOGPU                 {Flag[32]}, IA_TO24BPP                {Flag[33]},
-  // Convert loaded image to 32bpp?    Convert loaded image to BGR(A)?
+  // Converted image to 32bpp?         Converted image to BGR(A)?
   IA_TO32BPP               {Flag[34]}, IA_TOBGR                  {Flag[35]},
-  // Convert loaded image to RGB(A)?   Convert loaded image to BINARY?
+  // Converted image to RGB(A)?        Converted image to BINARY?
   IA_TORGB                 {Flag[36]}, IA_TOBINARY               {Flag[37]},
-  // Force reverse the image?          Convert to atlas?
+  // Force reversed the image?         Converted to atlas?
   IA_REVERSE               {Flag[38]}, IA_ATLAS                  {Flag[39]},
   /* -- Image loaded flags (Only used in 'ImageData' class) ---------------- */
-  // Bitmap has mipmaps?               Bitmap has reversed pixels?
+  // Bitmap has mipmaps?               Bitmap FILE has reversed pixels?
   IF_MIPMAPS               {Flag[48]}, IF_REVERSED               {Flag[49]},
   // Bitmap is compressed?             Bitmap is dynamically created?
   IF_COMPRESSED            {Flag[50]}, IF_DYNAMIC                {Flag[51]},
@@ -75,12 +78,12 @@ BUILD_FLAGS(Image,
   IF_PALETTE               {Flag[52]},
   /* -- Texture loaded flags (Only used in 'Image' class) ------------------ */
   // Marked for deletion
-  TF_DELETE                {Flag[60]},
+  TF_DELETE                {Flag[55]},
   /* -- Image purpose (help with debugging) -------------------------------- */
   // Image is stand-alone              Image is part of a Texture class
-  IP_IMAGE                 {Flag[62]}, IP_TEXTURE                {Flag[63]},
-  // Image is part of a Font class
-  IP_FONT                  {Flag[64]}
+  IP_IMAGE                 {Flag[61]}, IP_TEXTURE                {Flag[62]},
+  // Image is part of a Font class     Image is part of an Atlas class
+  IP_FONT                  {Flag[63]}, IP_ATLAS                  {Flag[64]}
 );/* ----------------------------------------------------------------------- */
 struct ImageSlot :                     // Members initially public
   /* -- Initialisers ------------------------------------------------------- */
@@ -121,8 +124,9 @@ class ImageData :                      // Members initially private
   size_t           stTiles;            // Override number of tiles
   /* ----------------------------------------------------------------------- */
   void ImageDataSwap(ImageData &imdRef)
-  { // Swap image lib data
-    FlagSwap(imdRef);
+  { // Merge flags, don't swap
+    FlagSet(imdRef.FlagGet());
+    // Swap image lib data
     DimSwap(imdRef);
     slSlots.swap(imdRef.slSlots);
     // Swap values
@@ -166,6 +170,8 @@ class ImageData :                      // Members initially private
   void Set ## n(bool bState=true) { FlagSetOrClear(f, bState); } \
   void Clear ## n(void) { Set ## n(false); }
   /* ----------------------------------------------------------------------- */
+  FH(FontFreeType,     FT_FREETYPE)    // Is/IsNot/Set/ClearFontFreeType
+  FH(FontBitmap,       FT_BITMAP)      // Is/IsNot/Set/ClearFontBitmap
   FH(Mipmaps,          IF_MIPMAPS)     // Is/IsNot/Set/ClearMipmaps
   FH(Reversed,         IF_REVERSED)    // Is/IsNot/Set/ClearReversed
   FH(Compressed,       IF_COMPRESSED)  // Is/IsNot/Set/ClearCompressed
@@ -268,10 +274,10 @@ class ImageData :                      // Members initially private
     // Clear slots list and set allocation to zero
     Clear();
   }
-  /* -- Default constructor ------------------------------------------------ */
-  ImageData(void) :                    // No parameters
+  /* -- Constructor with default purpose ----------------------------------- */
+  explicit ImageData(const ImageFlagsConst ifcPurpose = IP_IMAGE) :
     /* -- Initialisers ----------------------------------------------------- */
-    ImageFlags{ IP_IMAGE },            // Set initial flags
+    ImageFlags{ ifcPurpose },          // Set initial flags
     bdDepth(BD_NONE),                  // Bit depth not initialised yet
     byDepth(BY_NONE),                  // Bytes per pixel not initialised yet
     ttType(TT_NONE),                   // Pixel type not initialised yet

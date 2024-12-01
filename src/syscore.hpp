@@ -23,8 +23,8 @@ using namespace IMemory::P;            using namespace IParser::P;
 using namespace IPSplit::P;            using namespace IStat::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf;                  using namespace IUtil::P;
-using namespace Lib::OS;
+using namespace IThread::P;            using namespace IUtf;
+using namespace IUtil::P;              using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == System module data =================================================== **
@@ -374,7 +374,7 @@ class SysConBase :
   /* -- Base classes ------------------------------------------------------- */
   protected SysConFlags                // Flags settings
 { /* -- Typedefs --------------------------------------------------- */ public:
-  enum KeyType { KT_NONE, KT_KEY, KT_CHAR }; // GetKey return types
+  enum KeyType { KT_NONE, KT_KEY, KT_CHAR, KT_RESET }; // GetKey return types
   /* -- For handling CTRL_CLOSE_EVENT --------------------------- */ protected:
   condition_variable cvExit;           // Exit condition variable
   mutex            mExit;              // Exit mutex
@@ -409,7 +409,7 @@ class SysConBase :
 ** ------------------------------------------------------------------------- */
 static class System final :            // The main system class
   /* -- Base classes ------------------------------------------------------- */
-  public SysBase::SysCore              // Defined in 'sys*.hpp' headers
+  public SysCore                       // Defined in 'sys*.hpp' headers
 { /* -- Private typedefs --------------------------------------------------- */
   typedef IdList<8> ModeList;          // List of possible combinations
   /* ----------------------------------------------------------------------- */

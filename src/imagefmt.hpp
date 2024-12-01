@@ -702,6 +702,7 @@ class CodecPNG final :                 // Members initially private
         { // Strip alpha if it is there
           if(bAlpha) png_set_strip_alpha(psData);
           // Transfomrations complete so update
+          png_set_interlace_handling(psData);;
           png_read_update_info(psData, piData);
           // Update the pixel type to zero. This means that this format only
           // works with our BitMask system.
@@ -821,7 +822,9 @@ class CodecPNG final :                 // Members initially private
         break;
       // Unsupported colour type
       default: XC("Unsupported colour type!", "Type", uiCT);
-    } // Transfomrations complete so update
+    } // Prevents warning (https://sourceforge.net/p/libpng/bugs/165/)
+    png_set_interlace_handling(psData);
+    // Transfomrations complete so update
     png_read_update_info(psData, piData);
     // All pixels should be 8bpc so set bytes and bits per pixel
     idData.SetBytesAndBitsPerPixelCast(png_get_channels(psData, piData));

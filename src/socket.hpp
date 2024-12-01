@@ -1224,9 +1224,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         Memory mbPacket;
         GetPacket(mbPacket, plTX, stTX);
         // If we haven't set the key name
-        if(strVar.empty()) { strVar = mbPacket.MemToString(); continue; }
+        if(strVar.empty()) { strVar = mbPacket.MemToStringSafe(); continue; }
         // Get value string from packet and store entry
-        const string strVal{ mbPacket.MemToString() };
+        const string strVal{ mbPacket.MemToStringSafe() };
         LuaUtilPushStr(lS, strVal);
         LuaUtilSetField(lS, -2, strVar.c_str());
         // Clear string
@@ -1361,7 +1361,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
                  strB{ LuaUtilGetCppStr(lS, 7) };
     LuaUtilCheckFunc(lS, 8);
     // Request must begin with a forward slash
-    if(strR.front() != '/') XC("Resource is invalid!", "Resource", strR);
+    if(strR.front() != cCommon->CFSlash())
+      XC("Resource is invalid!", "Resource", strR);
     // Set address and TLS cipher
     SetAddress(strA, uiP);
     SetupCipher(strC);

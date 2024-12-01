@@ -25,9 +25,9 @@ using ::std::make_unsigned;            using ::std::nothrow;
 using ::std::numeric_limits;           using ::std::remove_const;
 using ::std::remove_pointer;           using ::std::swap;
 /* -- Iteratations --------------------------------------------------------- */
-using ::std::accumulate;               using ::std::any_of;
-using ::std::back_inserter;            using ::std::next;
-using ::std::prev;
+using ::std::accumulate;               using ::std::advance;
+using ::std::any_of;                   using ::std::back_inserter;
+using ::std::next;                     using ::std::prev;
 /* -- String streams ------------------------------------------------------- */
 using ::std::dec;                      using ::std::fixed;
 using ::std::fpclassify;               using ::std::get_time;

@@ -18,10 +18,10 @@ using namespace ICVarLib::P;           using namespace IDir::P;
 using namespace IDisplay::P;           using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IFbo::P;               using namespace IFboCore::P;
-using namespace IFont::P;              using namespace IFreeType::P;
-using namespace IFtf::P;               using namespace IGlFW::P;
-using namespace IGlFWUtil::P;          using namespace IImage::P;
-using namespace IInput::P;             using namespace IJson::P;
+using namespace IJson::P;              using namespace IFont::P;
+using namespace IFreeType::P;          using namespace IFtf::P;
+using namespace IGlFW::P;              using namespace IGlFWUtil::P;
+using namespace IImage::P;             using namespace IInput::P;
 using namespace ILog::P;               using namespace ILua::P;
 using namespace ILuaCode::P;           using namespace ILuaUtil::P;
 using namespace ILuaVariable::P;       using namespace IOgl::P;
@@ -139,7 +139,7 @@ class Core final :                     // Members initially private
       { // Set main fbo by default on each frame
         cFboCore->ActivateMain();
         // Poll joysticks
-        cInput->PollJoysticks();
+        cInput->JoyPoll();
         // Execute a tick for each frame missed
         cLua->ExecuteMain();
         // Break if we've caught up
@@ -347,10 +347,10 @@ class Core final :                     // Members initially private
       // Done
       return;
     } // Initialising for the first time so reconfigure matrix
-    cDisplay->ForceReInitMatrix();
+    cDisplay->SetDefaultMatrix();
     // Reset window icon
     cDisplay->UpdateIcons();
-    // Reload cursor, fbo, console, fonts, textures and videos objects
+    // Reload textures
     FboReInit();
     cConGraphics->ReInitTextureAndFont();
     FontReInitTextures();
@@ -378,8 +378,7 @@ class Core final :                     // Members initially private
       } // Initialising for first time? Just update window icons
       else cDisplay->UpdateIcons();
     } // Init interactive console?
-    else if(cSystem->IsGraphicalMode())
-      CoreInitGraphicalSubsystems();
+    else if(cSystem->IsGraphicalMode()) CoreInitGraphicalSubsystems();
     // With audio mode enabled? Initialise audio class.
     if(cSystem->IsAudioMode() && cEvtMain->IsExitReason(EMC_NONE))
       cAudio->Init();
@@ -631,22 +630,23 @@ class Core final :                     // Members initially private
     // Capture exceptions so we can log any errors
     try
     { // Dependencies required only in this scope
-      using namespace IArgs;           using namespace IBin::P;
-      using namespace ICert::P;        using namespace IClipboard::P;
-      using namespace ICmdLine::P;     using namespace IClock::P;
-      using namespace IConLib::P;      using namespace ICredit::P;
-      using namespace ICrypt::P;       using namespace IFile::P;
-      using namespace IGlFWMonitor::P; using namespace IImageDef::P;
-      using namespace IImageFormat::P; using namespace IImageLib::P;
-      using namespace ILuaCommand::P;  using namespace ILuaFunc::P;
-      using namespace IMask::P;        using namespace IMemory::P;
-      using namespace IOal::P;         using namespace IParser::P;
-      using namespace IPcmFormat::P;   using namespace IPcmLib::P;
-      using namespace ISample::P;      using namespace IShader::P;
-      using namespace ISocket::P;      using namespace ISShot::P;
-      using namespace IStat::P;        using namespace IUtil::P;
-      using namespace IUtf;            using namespace Lib::OpenAL;
-      using namespace Lib::OS::GlFW;   using namespace Lib::Sqlite;
+      using namespace IArgs;           using namespace IAtlas::P;
+      using namespace IBin::P;         using namespace ICert::P;
+      using namespace IClipboard::P;   using namespace ICmdLine::P;
+      using namespace IClock::P;       using namespace IConLib::P;
+      using namespace ICredit::P;      using namespace ICrypt::P;
+      using namespace IFile::P;        using namespace IGlFWMonitor::P;
+      using namespace IImageDef::P;    using namespace IImageFormat::P;
+      using namespace IImageLib::P;    using namespace ILuaCommand::P;
+      using namespace ILuaFunc::P;     using namespace IMask::P;
+      using namespace IMemory::P;      using namespace IOal::P;
+      using namespace IParser::P;      using namespace IPcmFormat::P;
+      using namespace IPcmLib::P;      using namespace ISample::P;
+      using namespace IShader::P;      using namespace ISocket::P;
+      using namespace ISShot::P;       using namespace IStat::P;
+      using namespace IUtil::P;        using namespace IUtf;
+      using namespace Lib::OpenAL;     using namespace Lib::OS::GlFW;
+      using namespace Lib::Sqlite;
       // Initialise other systems. The order is important!
       INITSS(Stats);                   // cppcheck-suppress danglingLifetime
       INITSS(Threads);                 // cppcheck-suppress danglingLifetime
@@ -658,6 +658,7 @@ class Core final :                     // Members initially private
       INITSS(Crypt);                   // cppcheck-suppress danglingLifetime
       INITSS(Timer);                   // cppcheck-suppress danglingLifetime
       INITSS(Sql);                     // cppcheck-suppress danglingLifetime
+      INITSS(Jsons);                   // cppcheck-suppress danglingLifetime
 #include "cvarlib.hpp"                 // Defines 'cvislList' cvar list
       INITSS(CVars, cvislList);        // cppcheck-suppress danglingLifetime
       INITSS(Sockets);                 // cppcheck-suppress danglingLifetime
@@ -669,7 +670,6 @@ class Core final :                     // Members initially private
       INITSS(Ftfs);                    // cppcheck-suppress danglingLifetime
       INITSS(Files);                   // cppcheck-suppress danglingLifetime
       INITSS(Masks);                   // cppcheck-suppress danglingLifetime
-      INITSS(Jsons);                   // cppcheck-suppress danglingLifetime
       INITSS(Bins);                    // cppcheck-suppress danglingLifetime
       INITSS(Oal);                     // cppcheck-suppress danglingLifetime
       INITSS(PcmLibs);                 // cppcheck-suppress danglingLifetime
@@ -692,6 +692,7 @@ class Core final :                     // Members initially private
       INITSS(SShots);                  // cppcheck-suppress danglingLifetime
       INITSS(Textures);                // cppcheck-suppress danglingLifetime
       INITSS(Palettes);                // cppcheck-suppress danglingLifetime
+      INITSS(Atlases);                 // cppcheck-suppress danglingLifetime
       INITSS(Fonts);                   // cppcheck-suppress danglingLifetime
       INITSS(Videos);                  // cppcheck-suppress danglingLifetime
       INITSS(ConGraphics);             // cppcheck-suppress danglingLifetime

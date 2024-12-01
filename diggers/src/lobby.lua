@@ -7,7 +7,7 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 local error<const>, tostring<const>, unpack<const> =
@@ -17,60 +17,51 @@ local CoreTicks<const>, UtilBlank<const>, UtilIsTable<const>,
   UtilIsBoolean<const>, UtilIsInteger<const> =
     Core.Ticks, Util.Blank, Util.IsTable, Util.IsBoolean, Util.IsInteger;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GameProc, InitBank, InitCon, InitContinueGame,
-  InitScene, InitShop, InitTitle, IsButtonReleased, IsMouseInBounds,
-  IsMouseNotInBounds, LoadResources, PlayMusic, PlayStaticSound,
-  RegisterFBUCallback, RenderInterface, RenderShadow, SetBottomRightTip,
-  SetBottomRightTipAndShadow, SetCallbacks, SetCursor, SetKeys,
-  aGlobalData, fontSpeech;
+local Fade, GameProc, GetActiveObject, InitBank, InitCon, InitContinueGame,
+  InitScene, InitShop, InitTitle, LoadResources, PlayMusic, PlayStaticSound,
+  RegisterFBUCallback, RenderInterface, RenderShadow, RenderTip,
+  RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, SetTip, aGlobalData,
+  fontSpeech;
 -- Locals ------------------------------------------------------------------ --
-local aInputClickChecks,               -- Hotspot data for when mouse clicked
-      aMouseOverChecks,                -- Hotspot data for when mouse over
+local aActiveObject,                   -- Selected object when entering lobby
+      aClosedAssetsMusic,              -- Out of game lobby with music
+      aClosedAssetsNoMusic,            -- Out of game lobby with no music
+      aOpenAssetsMusic,                -- In-game lobby with music
+      aOpenAssetsNoMusic,              -- In-game lobby with no music
       fcbRenderExtra,                  -- Any extra rendering to be done
-      iCArrow, iCExit, iCOK, iCSelect, -- Cursor ids
+      iHotSpotClosedExitId,            -- Closed hotspot id (can exit)
+      iHotSpotClosedNoExitId,          -- Closed hotspot id (cannot exit)
+      iHotSpotClosedReadyId,           -- Closed hotspot id (can start)
+      iHotSpotClosedSelectedId,        -- Closed hotspot active id
+      iHotSpotOpenedId,                -- Opened hotspot id
       iKeyBankClosedExitId,            -- Closed key bank id (saved, can exit)
       iKeyBankClosedNoExitId,          -- Closed key bank id (no save, no exit)
       iKeyBankClosedReadyId,           -- Closed key bank id (can play zone)
       iKeyBankClosedSelectedId,        -- Closed key bank selected
       iKeyBankOpenedId,                -- Opened key bank id
-      iSSelect,                        -- Sound effects used
+      iSSelect,                        -- Select sound effect id
       iStageL, iStageR,                -- Stage bounds
-      sTip,                            -- Tip text
       texLobby;                        -- Lobby texture
--- Assets required --------------------------------------------------------- --
-local aMusicAsset<const>          = { T = 7, F = "lobby",  P = { } };
-local aClosedTexture<const>       = { T = 2, F = "lobbyc", P = { 0 } };
-local aClosedAssetsNoMusic<const> = { aClosedTexture };
-local aClosedAssetsMusic<const>   = { aClosedTexture, aMusicAsset };
-local aOpenTexture<const>         = { T = 2, F = "lobbyo", P = { 0 } };
-local aOpenAssetsNoMusic<const>   = { aOpenTexture };
-local aOpenAssetsMusic<const>     = { aOpenTexture, aMusicAsset };
 -- Register frame buffer update -------------------------------------------- --
-local function OnFrameBufferUpdate(...)
+local function OnStageUpdated(...)
   local _; _, _, iStageL, _, iStageR, _ = ...;
 end
--- Set cursor and tip ------------------------------------------------------ --
-local function SetTipAndCursor(sMsg, iCursor)
-  -- Set new tip
-  sTip = sMsg;
-  -- Set new cursor
-  SetCursor(iCursor);
-end
 -- Lobby open render proc -------------------------------------------------- --
-local function RenderLobbyOpen()
+local function RenderOpen()
   -- Render game interface, backdrop, shadow and tip
   RenderInterface();
   texLobby:BlitLT(8, 8);
   RenderShadow(8, 8, 312, 208);
-  SetBottomRightTip(sTip);
   -- Render fire
   local iFrame<const> = CoreTicks() % 9;
   if iFrame >= 6 then texLobby:BlitSLT(1, 113, 74);
   elseif iFrame >= 3 then texLobby:BlitSLT(2, 113, 74);
   else fcbRenderExtra() end;
+  -- Render tip
+  RenderTip();
 end
 -- Lobby closed render proc ------------------------------------------------ --
-local function RenderLobbyClosed()
+local function RenderClosed()
   -- Draw backdrop
   texLobby:BlitLT(-54, 0);
   -- Render lobby
@@ -87,153 +78,52 @@ local function RenderLobbyClosed()
   texLobby:BlitSLT(2, iStageR-238, 183);
   texLobby:BlitSLT(3, iStageL,      56);
   -- Render tip
-  SetBottomRightTipAndShadow(sTip);
+  RenderTipShadow();
 end
--- Lobby main check hotspots tick ------------------------------------------ --
-local function ProcLobbyClosed()
-  -- Check for mouse over events
-  for iI = 1, #aMouseOverChecks do
-    -- Get item to check and if specified condition is met?
-    local aMouseOverCheckItem<const> = aMouseOverChecks[iI];
-    if aMouseOverCheckItem[1]() then
-      -- Set the tip for that item
-      SetTipAndCursor(aMouseOverCheckItem[2], aMouseOverCheckItem[3]);
-      -- No need to check anymore
-      break;
-    end
-  end
-end
-
--- Lobby main open tick ---------------------------------------------------- --
-local function ProcLobbyOpen()
-  -- Continue game logic so the AI can still win if player wasting time
-  GameProc();
-  -- Check for mouse over events
-  ProcLobbyClosed();
-end
--- Lobby open click procedure activation ----------------------------------- --
-local function LobbyOpenActivate(aInputClickCheckItem)
-  -- Play sound and init the bank screen
-  PlayStaticSound(iSSelect);
-  -- Start the loading waiting procedure
-  SetCallbacks(GameProc, RenderInterface, nil);
-  -- Load requested screen
-  aInputClickCheckItem[2](unpack(aInputClickCheckItem[3]));
-  -- Dereference assets for the garbage collector
-  texLobby, aInputClickChecks, aMouseOverChecks = nil, nil, nil;
-end
--- Lobby open input tick --------------------------------------------------- --
-local function InputLobbyOpen()
-  -- Mouse button not clicked? Check what was clicked and proceed to
-  -- respective procedure
-  if IsButtonReleased(0) then return end;
-  -- Check for clicks
-  for iI = 1, #aInputClickChecks do
-    -- Get item to check and if specified condition is met?
-    local aInputClickCheckItem<const> = aInputClickChecks[iI];
-    if aInputClickCheckItem[1]() then
-      return LobbyOpenActivate(aInputClickCheckItem) end;
-  end
-end
--- Lobby closed click procedure activation --------------------------------- --
-local function LobbyClosedActivate(aInputClickCheckItem)
-  -- Play sound and init the bank screen
-  PlayStaticSound(iSSelect);
-  -- When faded out?
-  local function OnFadeOutClosed()
-    -- Call exit function with requested parameters
-    aInputClickCheckItem[2](unpack(aInputClickCheckItem[3]));
-    -- Dereference assets for the garbage collector
-    texLobby, aInputClickChecks, aMouseOverChecks = nil, nil, nil;
-  end
-  -- Fade out to title screen
-  return Fade(0, 1, 0.04,
-    RenderLobbyClosed, OnFadeOutClosed, aInputClickCheckItem[4]);
-end
--- Lobby closed input tick ------------------------------------------------- --
-local function InputLobbyClosed()
-  -- Mouse button not clicked? Check what was clicked and proceed to
-  -- respective procedure
-  if IsButtonReleased(0) then return end;
-  -- Check for clicks
-  for iI = 1, #aInputClickChecks do
-    -- Get item to check and if specified condition is met?
-    local aInputClickCheckItem<const> = aInputClickChecks[iI];
-    if aInputClickCheckItem[1]() then
-      return LobbyClosedActivate(aInputClickCheckItem) end;
-  end
-end
--- Always returns true ----------------------------------------------------- --
-local function AlwaysTrue() return true end;
 -- When closed lobby has faded in? Set lobby callbacks --------------------- --
-local function OnLobbyFadedIn()
+local function OnFadedIn()
+  -- Set requested closed hotspots
+  SetHotSpot(iHotSpotClosedSelectedId);
   -- Set requested closed key bank keys
   SetKeys(true, iKeyBankClosedSelectedId);
   -- Set callbacks
-  SetCallbacks(ProcLobbyClosed, RenderLobbyClosed, InputLobbyClosed);
+  SetCallbacks(ProcClosed, RenderClosed);
 end
 -- Lobby loaded in game ---------------------------------------------------- --
-local function OnOpenedLobbyLoaded()
-  -- Cache texture coordinates for background. We make sure we have one
-  -- tile incase the texture was already cached and therefore the values
-  -- will be overwritten
-  texLobby:TileSTC(3);
-  texLobby:TileS(0, 208, 312, 512, 512); -- Lobby open graphic
-  texLobby:TileS(1, 305, 185, 398, 258); -- Fire animation graphic B
-  texLobby:TileS(2, 400, 185, 493, 258); -- Fire animation graphic C
+local function OnLoadedOpened()
+  -- Set opened hotspots
+  SetHotSpot(iHotSpotOpenedId);
   -- Set opened key bank
   SetKeys(true, iKeyBankOpenedId);
   -- Change render procedures
-  SetCallbacks(ProcLobbyOpen, RenderLobbyOpen, InputLobbyOpen);
+  SetCallbacks(GameProc, RenderOpen);
 end
 -- Lobby loaded pre-game --------------------------------------------------- --
-local function OnClosedLobbyLoaded()
+local function OnLoadedClosed()
+  -- Register frame buffer update
+  RegisterFBUCallback("lobby", OnStageUpdated);
   -- Set speech colour to white
   fontSpeech:SetCRGBAI(0xFFFFFFFF);
-  -- Cache background (same rule as above)
-  texLobby:TileSTC(6);
-  texLobby:TileS(0,   0, 272, 512, 512); -- Background graphic
-  texLobby:TileS(1,   0,   0, 304, 200); -- Lobby graphic
-  texLobby:TileS(2,   0, 214, 238, 271); -- Foliage graphic left
-  texLobby:TileS(3, 305,   0, 512, 184); -- Foliage graphic right
-  texLobby:TileS(4, 305, 185, 398, 258); -- Fire animation graphic B
-  texLobby:TileS(5, 400, 185, 493, 258); -- Fire animation graphic C
   -- Fade In a closed lobby
-  Fade(1, 0, 0.04, RenderLobbyClosed, OnLobbyFadedIn);
+  Fade(1, 0, 0.04, RenderClosed, OnFadedIn);
 end
 -- When assets have loaded? ------------------------------------------------ --
-local function OnLoaded(aResources, fcbOnLoaded, iSaveMusicPos)
-  -- Register frame buffer update
-  RegisterFBUCallback("lobby", OnFrameBufferUpdate);
+local function OnAssetsLoaded(aResources, fcbOnLoaded, iSaveMusicPos)
   -- Play lobby music if requested
   if #aResources == 2 then PlayMusic(aResources[2], nil, iSaveMusicPos) end;
-  -- sTip and lobby texture
-  sTip, texLobby = "", aResources[1];
+  -- Set lobby texture
+  texLobby = aResources[1];
+  -- Clear tip
+  SetTip();
   -- From in game?
   fcbOnLoaded();
 end
 -- Not ready callback ------------------------------------------------------ --
 local function NotReadyCallback() fontSpeech:Print(157, 115, "!") end;
--- Mouse is over the controller? ------------------------------------------- --
-local function MouseOverController()
-  return IsMouseInBounds(151, 124, 164, 137) end;
--- If mouse over the bank door? -------------------------------------------- --
-local function MouseOverBank()
-  return IsMouseInBounds(74, 87, 103, 104) end;
--- If mouse over the shop door --------------------------------------------- --
-local function MouseOverShop()
-  return IsMouseInBounds(217, 87, 245, 104) end;
--- Mouse is over the exit hotspot? ----------------------------------------- --
-local function MouseOverExit() return IsMouseNotInBounds(8, 8, 312, 208) end;
--- Add an input click check ------------------------------------------------ --
-local function AddInputClickCheck(aData)
-  aInputClickChecks[1 + #aInputClickChecks] = aData end;
--- Add a hotpoint ---------------------------------------------------------- --
-local function AddMouseOverCheck(aData)
-  aMouseOverChecks[1 + #aMouseOverChecks] = aData end;
 -- Init lobby function ----------------------------------------------------- --
-local function InitLobby(aActiveObject, bNoSetMusic, iSaveMusicPos)
+local function InitLobby(bNoSetMusic, iSaveMusicPos)
   -- Active object must be specified or omitted
+  aActiveObject = GetActiveObject();
   if aActiveObject ~= nil and not UtilIsTable(aActiveObject) then
     error("Invalid object owner table! "..tostring(aActiveObject)) end;
   -- No set music flag can be nil set to false as a result
@@ -245,133 +135,166 @@ local function InitLobby(aActiveObject, bNoSetMusic, iSaveMusicPos)
   elseif aActiveObject and not bNoSetMusic and
     not UtilIsInteger(iSaveMusicPos) then
       error("Invalid save pos id! "..tostring(iSaveMusicPos)); end;
-  -- Clear check tables
-  aInputClickChecks, aMouseOverChecks = { }, { };
   -- Resources to load
   local aAssets, fcbOnLoaded;
   -- In a game?
   if aActiveObject then
     -- In-game onloaded event
-    fcbOnLoaded = OnOpenedLobbyLoaded;
+    fcbOnLoaded = OnLoadedOpened;
     -- Set resources depending on music requested
     if bNoSetMusic then aAssets = aOpenAssetsNoMusic;
                    else aAssets = aOpenAssetsMusic end;
-    -- Input click checks lookup table
-    AddInputClickCheck({ MouseOverBank, InitBank, { aActiveObject } });
-    AddInputClickCheck({ MouseOverShop, InitShop, { aActiveObject } });
-    AddInputClickCheck({ MouseOverExit, InitContinueGame,
-      { true, aActiveObject } });
-    -- Mouseover checks lookup table
-    AddMouseOverCheck({ MouseOverBank, "BANK", iCSelect });
-    AddMouseOverCheck({ MouseOverShop, "SHOP", iCSelect });
-    AddMouseOverCheck({ MouseOverExit, "CONTINUE", iCExit });
     -- No extra rendering
     fcbRenderExtra = UtilBlank;
   -- Not in a game?
   else
     -- In-game onloaded event
-    fcbOnLoaded = OnClosedLobbyLoaded;
+    fcbOnLoaded = OnLoadedClosed;
     -- Set resources depending on music requested
     if bNoSetMusic then aAssets = aClosedAssetsNoMusic;
                    else aAssets = aClosedAssetsMusic end;
-    -- Start configuring hotspots. Controller is available in all of them
-    AddInputClickCheck({ MouseOverController, InitCon, { }, false });
-    aMouseOverChecks =
-      { { MouseOverController, "CONTROLLER", iCSelect } };
     -- If game is ready to play?
     if aGlobalData.gSelectedLevel ~= nil and
        aGlobalData.gSelectedRace ~= nil then
+      -- Can exit to zone start hotspots
+      iHotSpotClosedSelectedId = iHotSpotClosedReadyId;
       -- Player is allowed to begin the zone
-      AddInputClickCheck({ MouseOverExit, InitScene,
-        { aGlobalData.gSelectedLevel }, true });
-      AddMouseOverCheck({ MouseOverExit, "BEGIN ZONE", iCOK });
       iKeyBankClosedSelectedId = iKeyBankClosedReadyId;
-      -- No extra rendering
+      -- Set exclamation mark callback
       fcbRenderExtra = UtilBlank;
     -- If game has been saved?
     elseif aGlobalData.gGameSaved then
+      -- Can't exit hotspots
+      iHotSpotClosedSelectedId = iHotSpotClosedExitId;
       -- Player is allowed to exit to the title screen
-      AddInputClickCheck({ MouseOverExit, InitTitle, { }, true });
-      AddMouseOverCheck({ MouseOverExit, "ABORT GAME", iCExit });
       iKeyBankClosedSelectedId = iKeyBankClosedExitId;
-      -- Set exclamation mark callback
+      -- No extra rendering
       fcbRenderExtra = NotReadyCallback;
     -- Player did not save the game?
     else
+      -- Can't exit hotspots
+      iHotSpotClosedSelectedId = iHotSpotClosedNoExitId;
       -- Can't exit key binds
       iKeyBankClosedSelectedId = iKeyBankClosedNoExitId;
       -- Set exclamation mark callback
       fcbRenderExtra = NotReadyCallback;
     end
   end
-  -- Always the last item to show where the player is and the arrow cursor
-  AddMouseOverCheck({ AlwaysTrue, "LOBBY", iCArrow });
   -- Load closed lobby texture
-  LoadResources("Lobby", aAssets, OnLoaded, fcbOnLoaded, iSaveMusicPos);
+  LoadResources("Lobby", aAssets, OnAssetsLoaded, fcbOnLoaded, iSaveMusicPos);
 end
+-- Click when lobby is closed ---------------------------------------------- --
+local function ExitClose(bFadeMusic, fcbCallback, ...)
+  -- Remove frame buffer update event
+  RegisterFBUCallback("lobby");
+  -- Play sound and init the bank screen
+  PlayStaticSound(iSSelect);
+  -- Store parameters
+  local aParams<const> = { ... };
+  -- When faded out?
+  local function OnFadeOutClosed()
+    -- Call exit function with requested parameters
+    fcbCallback(unpack(aParams));
+    -- Dereference assets for the garbage collector
+    texLobby = nil;
+  end
+  -- Fade out to title screen
+  return Fade(0, 1, 0.04, RenderClosed, OnFadeOutClosed, bFadeMusic);
+end
+-- Click when lobby is opened ---------------------------------------------- --
+local function ExitOpen(fcbCallback, ...)
+  -- Play sound and init the bank screen
+  PlayStaticSound(iSSelect);
+  -- Disable current hotspots and keys
+  SetHotSpot();
+  SetKeys(false);
+  -- Start the loading waiting procedure
+  SetCallbacks(GameProc, RenderInterface);
+  -- Load requested screen
+  fcbCallback(...);
+  -- Dereference assets for the garbage collector
+  texLobby = nil;
+end
+-- On activate and hover event callbacks ----------------------------------- --
+local function GoAbort() ExitClose(true, InitTitle) end;
+local function GoBank() ExitOpen(InitBank) end;
+local function GoClose() ExitOpen(InitContinueGame, true) end;
+local function GoCntrl() ExitClose(false, InitCon) end;
+local function GoShop() ExitOpen(InitShop) end;
+local function GoStart()
+  ExitClose(true, InitScene, aGlobalData.gSelectedLevel) end;
 -- Scripts have been loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, GameProc, InitBank, InitCon, InitContinueGame, InitScene, InitShop,
-    InitTitle, IsButtonReleased, IsMouseInBounds, IsMouseNotInBounds,
-    LoadResources, PlayMusic, PlayStaticSound, RegisterFBUCallback,
-    RenderInterface, RenderShadow, SetBottomRightTip,
-    SetBottomRightTipAndShadow, SetCallbacks, SetCursor, SetKeys, aGlobalData,
+  Fade, GameProc, GetActiveObject, InitBank, InitCon, InitContinueGame,
+    InitScene, InitShop, InitTitle, LoadResources, PlayMusic, PlayStaticSound,
+    RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderInterface,
+    RenderShadow, RenderTip, RenderTipShadow, SetCallbacks, SetHotSpot,
+    SetKeys, SetTip, aAssetsData, aCursorIdData, aGlobalData, aSfxData,
     fontSpeech =
-      GetAPI("Fade", "GameProc", "InitBank", "InitCon", "InitContinueGame",
-        "InitScene", "InitShop", "InitTitle", "IsButtonReleased",
-        "IsMouseInBounds", "IsMouseNotInBounds", "LoadResources", "PlayMusic",
-        "PlayStaticSound", "RegisterFBUCallback", "RenderInterface",
-        "RenderShadow", "SetBottomRightTip", "SetBottomRightTipAndShadow",
-        "SetCallbacks", "SetCursor", "SetKeys", "aGlobalData", "fontSpeech");
+      GetAPI("Fade", "GameProc", "GetActiveObject", "InitBank", "InitCon",
+        "InitContinueGame", "InitScene", "InitShop", "InitTitle",
+        "LoadResources", "PlayMusic", "PlayStaticSound", "RegisterFBUCallback",
+        "RegisterHotSpot", "RegisterKeys", "RenderInterface", "RenderShadow",
+        "RenderTip", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
+        "SetKeys", "SetTip", "aAssetsData", "aCursorIdData", "aGlobalData",
+        "aSfxData", "fontSpeech");
+  -- Prepare assets
+  local aMusicAsset<const> = aAssetsData.lobbym;
+  local aClosedTexture<const> = aAssetsData.lobbyc;
+  aClosedAssetsNoMusic = { aClosedTexture };
+  aClosedAssetsMusic = { aClosedTexture, aMusicAsset };
+  local aOpenTexture<const> = aAssetsData.lobbyo;
+  aOpenAssetsNoMusic = { aOpenTexture };
+  aOpenAssetsMusic = { aOpenTexture, aMusicAsset };
+  -- Set sound effect ids
+  iSSelect = aSfxData.SELECT;
+  -- Set cursor ids
+  local iCOK<const>, iCSelect<const>, iCExit<const>, iCArrow<const> =
+    aCursorIdData.OK, aCursorIdData.SELECT, aCursorIdData.EXIT,
+    aCursorIdData.ARROW;
+  -- Frequently used hotspots
+  local aControllerHotSpot<const>, aHotSpot<const> =
+    { 151, 124,  13,  13, 0, iCSelect, "CONTROLLER", false, GoCntrl },
+    {   8,   8, 304, 200, 0, iCArrow,  "LOBBY",      false, false   };
+  -- Register closed (can start) lobby hotspots
+  iHotSpotClosedReadyId = RegisterHotSpot({ aControllerHotSpot, aHotSpot,
+    { 0, 0, 0, 240, 3, iCExit, "START GAME", false, GoStart } });
+  -- Register closed (can exit) lobby hotspots
+  iHotSpotClosedExitId = RegisterHotSpot({ aControllerHotSpot, aHotSpot,
+    { 0, 0, 0, 240, 3, iCExit, "ABORT GAME", false, GoAbort } });
+  -- Register closed (cannot exit) lobby hotspots
+  iHotSpotClosedNoExitId =
+    RegisterHotSpot({ aControllerHotSpot, aHotSpot });
+  -- Register open lobby hotspots
+  iHotSpotOpenedId = RegisterHotSpot({
+    {  74,  87,  29,  17, 0, iCSelect, "BANK",     false, GoBank  },
+    { 217,  87,  29,  17, 0, iCSelect, "SHOP",     false, GoShop  },
+    aHotSpot,
+    {   0,   0,   0, 240, 3, iCExit,   "CONTINUE", false, GoClose }
+  });
   -- Prepare key bind registration
   local aKeys<const>, aStates<const> = Input.KeyCodes, Input.States;
+  local iEscape<const> = aKeys.ESCAPE;
   local iPress<const> = aStates.PRESS;
-  local RegisterKeys<const> = GetAPI("RegisterKeys");
   local sName<const> = "ZMTC LOBBY";
-  -- Force an open lobby input click
-  local function ForceOpenInputClick(iIndex)
-    LobbyOpenActivate(aInputClickChecks[iIndex]) end
-  -- Open lobby key events
-  local function OnOpenBankPressed() ForceOpenInputClick(1) end;
-  local function OnOpenShopPressed() ForceOpenInputClick(2) end;
-  local function OnOpenExitPressed() ForceOpenInputClick(3) end;
   -- Register open lobby keybanks
-  iKeyBankOpenedId = RegisterKeys(sName, {
-    [iPress] = {
-      { aKeys.B, OnOpenBankPressed, "zmtclb", "BANK" },
-      { aKeys.S, OnOpenShopPressed, "zmtcls", "SHOP" },
-      { aKeys.ESCAPE, OnOpenExitPressed, "zmtclbtg", "BACK TO GAME" };
-    }
-  });
-  -- Force a closed lobby input click
-  local function ForceClosedInputClick(iIndex)
-    LobbyClosedActivate(aInputClickChecks[iIndex]) end;
-  -- Closed lobby key events
-  local function OnClosedControllerPressed() ForceClosedInputClick(1) end;
-  local function OnClosedEscapePressed() ForceClosedInputClick(2) end;
+  iKeyBankOpenedId = RegisterKeys(sName, { [iPress] = {
+    { aKeys.B, GoBank,  "zmtclb",  "BANK"          },
+    { aKeys.S, GoShop,  "zmtcls",  "SHOP"          },
+    { iEscape, GoClose, "zmtclcg", "CONTINUE GAME" }
+  } } );
   -- Controller bind
-  local aController<const> =
-    { aKeys.ENTER, OnClosedControllerPressed, "zmtclc", "CONTROLLER" };
-  -- Controller and escape whole bind
-  local aEscapeController<const> = {
-    [iPress] = {
-      aController,
-      { aKeys.ESCAPE, OnClosedEscapePressed, "zmtclltc",
-          "LEAVE TRADE CENTRE" };
-    }
-  };
+  local aController<const> = { aKeys.ENTER, GoCntrl, "zmtclc", "CONTROLLER" };
   -- Register closed lobby keybanks
-  iKeyBankClosedExitId = RegisterKeys(sName, aEscapeController);
+  iKeyBankClosedExitId = RegisterKeys(sName, { [iPress] = { aController,
+    { iEscape, GoAbort, "zmtclatg", "ABORT THE GAME" } } });
   iKeyBankClosedNoExitId = RegisterKeys(sName, { [iPress] = { aController } });
-  iKeyBankClosedReadyId = RegisterKeys(sName, aEscapeController);
-  -- Set sound effect ids
-  iSSelect = GetAPI("aSfxData").SELECT;
-  -- Set cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
-  iCOK, iCSelect, iCExit, iCArrow = aCursorIdData.OK, aCursorIdData.SELECT,
-    aCursorIdData.EXIT, aCursorIdData.ARROW;
+  iKeyBankClosedReadyId = RegisterKeys(sName, { [iPress] = { aController,
+    { iEscape, GoStart, "zmtclstg", "START THE GAME" } } });
 end
 -- Exports and imports------------------------------------------------------ --
-return { A = { InitLobby = InitLobby }, F = OnReady };
+return { A = { InitLobby = InitLobby }, F = OnScriptLoaded };
 -- End-of-File ============================================================= --

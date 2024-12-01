@@ -7,121 +7,176 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
+local cos<const>, sin<const> = math.cos, math.sin;
 -- M-Engine function aliases ----------------------------------------------- --
 local CoreTime<const>, UtilFormatNTime<const> = Core.Time, Util.FormatNTime;
 -- Diggers function and data aliases --------------------------------------- --
-local DrawInfoFrameAndTitle, GetCallbacks, GetKeyBank, GetMusic, InitLose,
-  IsButtonPressed, PlayMusic, RenderInterface, RenderFade, SetBottomRightTip,
-  SetCallbacks, SetKeys, StopMusic, TriggerEnd, aKeyBankCats, fontLittle,
-  fontTiny;
+local GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
+  InitLose, PlayMusic, PlayStaticSound, RegisterFBUCallback, RenderInterface,
+  RenderFade, RenderTip, SetCallbacks, SetHotSpot, SetKeys, SetTip, StopMusic,
+  TriggerEnd, aKeyBankCats, fontLittle, fontTiny;
 -- Statics ------------------------------------------------------------------ --
 local iPauseX<const> = 160;            -- Pause text X position
 local iPauseY<const> = 72;             -- Pause text Y position
 local iInstructionY<const> = iPauseY + 24; -- Instruction text Y position
-local iSmallTipsY<const> = iInstructionY + 32; -- Small tips Y position
+local iSmallTipsY<const> = iInstructionY + 44; -- Small tips Y position
 -- Locals ------------------------------------------------------------------ --
+local iHotSpotId;                      -- Pause screen hot spot id
 local iKeyBankId;                      -- Pause screen key bank id
 local iLastKeyBankId;                  -- Saved key bank id
+local iLastHotSpotId;                  -- Saved hot spot id
+local iStageT, iStageB;                -- Stage vertical bounds
+local iStageL, iStageR;                -- Stage horizontal bounds
+local iSSelect;                        -- Sound error and select ids
 local sInstruction;                    -- Instruction text
 local sSmallTips;                      -- Small instructions text
 local muMusic;                         -- Current music played
-local fCBProc, fCBRender, fCBInput;    -- Last callbacks
+local nTime;                           -- Current time
+local fCBProc, fCBRender;              -- Last callbacks
 local nTimeNext;                       -- Next clock update
-local strPause;                        -- Pause text string
+local aSquares<const> = { };           -- Pause effect
+local texSpr;                          -- Sprite texture
 -- End game callback ------------------------------------------------------- --
-local function EndGame() TriggerEnd(InitLose) end;
+local function EndGame()
+  -- Play sound
+  PlayStaticSound(iSSelect);
+  -- Abort the game
+  TriggerEnd(InitLose);
+end
 -- Continue game callback -------------------------------------------------- --
 local function ContinueGame()
+  -- Play sound
+  PlayStaticSound(iSSelect);
   -- Resume music if we have it
   if muMusic then PlayMusic(muMusic, nil, 2) end;
-  -- Restore game keys
+  -- Remove stage bounds callback
+  RegisterFBUCallback("pause");
+  -- Restore game keys and hotspot
   SetKeys(true, iLastKeyBankId);
+  SetHotSpot(iLastHotSpotId);
   -- Unpause
-  SetCallbacks(fCBProc, fCBRender, fCBInput);
+  SetCallbacks(fCBProc, fCBRender);
 end
 -- Pause logic callback ---------------------------------------------------- --
 local function ProcPause()
+  -- Get current time
+  nTime = CoreTime();
   -- Ignore if next update not elapsed
-  if CoreTime() < nTimeNext then return end;
+  if nTime < nTimeNext then return end;
   -- Set new pause string
-  strPause = UtilFormatNTime("%a/%H:%M:%S");
+  SetTip(UtilFormatNTime("%a/%H:%M:%S"));
   -- Set next update time
-  nTimeNext = CoreTime() + 0.25;
+  nTimeNext = nTime + 0.25;
 end
 -- Pause render callback --------------------------------------------------- --
 local function RenderPause()
   -- Render terrain, game objects, and a subtle fade
   RenderInterface();
-  RenderFade(0.5);
+  RenderFade(0.75);
+  -- Draw background animations
+  local iStageLP6<const> = iStageL + 6;
+  local nTimeM2<const> = nTime * 2;
+  for iY = iStageT + 7, iStageB, 16 do
+    local nTimeM2SX<const> = nTimeM2;
+    for iX = iStageLP6, iStageR, 16 do
+      local iPos = (iY * iStageR) + iX;
+      local nAngle = nTimeM2SX + (iPos / 0.46);
+      nAngle = 0.5 + ((cos(nAngle) * sin(nAngle)));
+      texSpr:SetCRGBA(0, 0, 0, nAngle * 0.5);
+      local nDim<const> = nAngle * 16;
+      texSpr:BlitSLTWHA(444, iX, iY, nDim, nDim, nAngle);
+    end
+  end
+  texSpr:SetCRGBA(1, 1, 1, 1);
   -- Write text informations
-  DrawInfoFrameAndTitle("GAME PAUSED");
-  fontLittle:SetCRGBA(0, 1, 0, 1);
+  local nTime = CoreTime();
+  fontLittle:SetCRGBA(1, 1, 1, 0.1 + (0.5 + (sin(nTime) * cos(nTime) * 0.9)));
   fontLittle:PrintC(iPauseX, iInstructionY, sInstruction);
   fontTiny:SetCRGBA(0.5, 0.5, 0.5, 1);
   fontTiny:PrintC(iPauseX, iSmallTipsY, sSmallTips);
   fontLittle:SetCRGBA(1, 1, 1, 1);
   -- Get and print local time
-  SetBottomRightTip(strPause);
+  RenderTip();
 end
--- Pause input callback ---------------------------------------------------- --
-local function InputPause()
-  -- Return if right mouse button or joystick button 1 not pressed
-  if IsButtonPressed(1) then return ContinueGame() end;
-  -- If thumb buttons or joystick button 3 and 4 pressed? Allow the quit
-  if IsButtonPressed(3) and IsButtonPressed(4) then EndGame() end;
+local function OnStageUpdated(...)
+  -- Update stage bounds
+  local _ _, _, iStageL, iStageT, iStageR, iStageB = ...;
 end
 -- Init pause screen ------------------------------------------------------- --
 local function InitPause()
   -- Consts
-  sInstruction =
-    "Press "..aKeyBankCats.igpcg[9]..", RMB or JB1 to unpause.\n\z
-    \n\z
-    Press "..aKeyBankCats.igpatg[9].." or MB3/JB3+MB4/JB4 to give up.";
+  sInstruction = "PAUSED!"
   sSmallTips =
-    aKeyBankCats.gksc[9]..", SELECT OR MB6 BUTTON FOR SETUP\n"..
-    aKeyBankCats.gksb[9].." TO CHANGE KEY BINDINGS\n"..
-    aKeyBankCats.gksa[9].." FOR THE GAME AND ENGINE CREDITS\n"..
-    aKeyBankCats.gkcc[9].." TO RESET CURSOR POSITION\n"..
-    aKeyBankCats.gkwr[9].." TO RESET WINDOW SIZE AND POSITION\n"..
-    aKeyBankCats.gkss[9].." TO TAKE A SCREENSHOT";
+    "PRESS \rcffffff00"..aKeyBankCats.igpatg[9]..
+      "\rr OR SELECT AT EDGE TO ABORT GAME\n"..
+    "PRESS \rcffffff00"..aKeyBankCats.igpcg[9]..
+      "\rr OR SELECT IN MIDDLE TO RESUME GAME\n"..
+    "PRESS \rcffffff00"..aKeyBankCats.gksc[9]..
+      "\rr TO CHANGE ENGINE OPTIONS\n"..
+    "PRESS \rcffffff00"..aKeyBankCats.gksb[9]..
+      "\rr TO CHANGE KEY BINDINGS\n"..
+    "PRESS \rcffffff00"..aKeyBankCats.gksa[9]..
+      "\rr FOR THE GAME AND ENGINE CREDITS\n"..
+    "PRESS \rcffffff00"..aKeyBankCats.gkcc[9]..
+      "\rr TO RESET CURSOR POSITION\n"..
+    "PRESS \rcffffff00"..aKeyBankCats.gkwr[9]..
+      "\rr TO RESET WINDOW SIZE AND POSITION\n"..
+    "PRESS \rcffffff00"..aKeyBankCats.gkss[9]..
+      "\rr TO TAKE A SCREENSHOT";
   -- Save current music
   muMusic = GetMusic();
   -- Save callbacks
-  fCBProc, fCBRender, fCBInput = GetCallbacks();
+  fCBProc, fCBRender = GetCallbacks();
   -- Stop music
   StopMusic(1);
+  -- Get stage bounds
+  RegisterFBUCallback("pause", OnStageUpdated);
   -- Pause string
-  nTimeNext, strPause = 0, nil;
+  nTimeNext = 0;
   -- Save game keybank id to restore it on exit
   iLastKeyBankId = GetKeyBank();
-  -- Set pause screen keys
+  iLastHotSpotId = GetHotSpot();
+  -- Set pause screen keys and no hot spots
   SetKeys(true, iKeyBankId);
+  SetHotSpot(iHotSpotId);
   -- Set pause procedure
-  SetCallbacks(ProcPause, RenderPause, InputPause);
+  SetCallbacks(ProcPause, RenderPause);
 end
 -- When scripts have loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aCursorIdData, aSfxData;
   -- Get imports
-  DrawInfoFrameAndTitle, GetCallbacks, GetKeyBank, GetMusic, InitLose,
-    IsButtonPressed, PlayMusic, RenderInterface, RenderFade, SetBottomRightTip,
-    SetCallbacks, SetKeys, StopMusic, TriggerEnd, aKeyBankCats, fontLittle,
-    fontTiny =
-      GetAPI("DrawInfoFrameAndTitle", "GetCallbacks", "GetKeyBank", "GetMusic",
-        "InitLose", "IsButtonPressed", "PlayMusic", "RenderInterface",
-        "RenderFade", "SetBottomRightTip", "SetCallbacks", "SetKeys",
-        "StopMusic", "TriggerEnd", "aKeyBankCats", "fontLittle", "fontTiny");
+  GetCallbacks, GetHotSpot, GetKeyBank, GetMusic, InitLose, PlayMusic,
+    PlayStaticSound, RegisterFBUCallback, RegisterHotSpot, RegisterKeys,
+    RenderInterface, RenderFade, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
+    SetTip, StopMusic, TriggerEnd, aCursorIdData, aKeyBankCats, aSfxData,
+    fontLittle, fontTiny, texSpr =
+      GetAPI("GetCallbacks", "GetHotSpot", "GetKeyBank", "GetMusic",
+        "InitLose", "PlayMusic", "PlayStaticSound", "RegisterFBUCallback",
+        "RegisterHotSpot", "RegisterKeys", "RenderInterface", "RenderFade",
+        "RenderTip", "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip",
+        "StopMusic", "TriggerEnd", "aCursorIdData", "aKeyBankCats", "aSfxData",
+        "fontLarge", "fontTiny", "texSpr");
+  -- Setup hot spot
+  iHotSpotId = RegisterHotSpot({
+    { 8, 8, 8, 224, 3, aCursorIdData.OK,   false, false, ContinueGame },
+    { 0, 0, 0, 240, 3, aCursorIdData.EXIT, false, false, EndGame      }
+  });
   -- Setup keybank
   local aKeys<const>, aStates<const> = Input.KeyCodes, Input.States;
-  iKeyBankId = GetAPI("RegisterKeys")("IN-GAME PAUSE", {
+  iKeyBankId = RegisterKeys("IN-GAME PAUSE", {
     [aStates.PRESS] = {
-      { aKeys.Q, EndGame, "igpatg", "ABORT THE GAME" },
-      { aKeys.ESCAPE, ContinueGame, "igpcg", "CONTINUE GAME" }
+      { aKeys.Q,      EndGame,      "igpatg", "ABORT THE GAME" },
+      { aKeys.ESCAPE, ContinueGame, "igpcg",  "CONTINUE GAME" }
     }
   });
+  -- Get sound effects
+  iSSelect = aSfxData.SELECT;
 end
 -- Exports and imports ----------------------------------------------------- --
-return { F = OnReady, A = { InitPause = InitPause } };
+return { F = OnScriptLoaded, A = { InitPause = InitPause } };
 -- End-of-File ============================================================= --

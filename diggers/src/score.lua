@@ -7,87 +7,82 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 local unpack<const>, error<const>, pairs<const>, ipairs<const>, max<const>,
   min<const>, floor<const>, sin<const>, cos<const>, tostring<const>,
-  mininteger<const> =
+  maxinteger<const>, mininteger<const> =
     table.unpack, error, pairs, ipairs, math.max, math.min, math.floor,
-    math.sin, math.cos, tostring, math.mininteger;
+    math.sin, math.cos, tostring, math.maxinteger, math.mininteger;
 -- M-Engine function aliases ----------------------------------------------- --
 local CoreTime<const>, UtilIsInteger<const>, UtilIsString<const> =
   Core.Time, Util.IsInteger, Util.IsString;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitTitle, IsButtonReleased, LoadResources, PlayMusic,
-  PlayStaticSound, RegisterFBUCallback, aGlobalData, RenderFade, SetCallbacks,
-  SetCursor, SetKeys, fontLittle, fontTiny, texSpr;
+local Fade, InitTitle, LoadResources, PlayMusic, PlayStaticSound,
+  RegisterFBUCallback, aGlobalData, RenderFade, SetCallbacks, SetHotSpot,
+  SetKeys, fontLittle, fontTiny, texSpr;
 -- Locals ------------------------------------------------------------------ --
-local aTotals,                         -- Score categories
+local aAssets,                         -- Assets required
+      aTotals,                         -- Score categories
       iCExit, iCWait,                  -- Cursor ids
       iColourIndex,                    -- Current transparency
       iBarY,                           -- Bars position
+      iHotSpotId,                  -- Hot spot id on scores tallied
       iKeyBankId,                      -- Key bank id
       iSSelect,                        -- Select sound effect id
       iStageL,                         -- Stage left position
       iScoreItem,                      -- Score for current item
       iTotalId,                        -- Currently active line
       iTotalScore,                     -- Total score
+      nWidth, nAspect, nHeight,        -- Logo positioning
+      nWidthN, nHeightN, nLX1, nRX1,   -- Logo positioning
       strScoreC,                       -- Stringified category score
       strScore,                        -- Stringified grand score
       texTitle;                        -- Title textures
 -- Statics ----------------------------------------------------------------- --
 local sTitleText<const> = "GAME OVER -- HOW WELL DID YOU DO?";
 local aRanks<const> = {
-  { 600000, "Grand Master" }, {     550000, "Master"       },
-  { 500000, "Professional" }, {     450000, "Genius"       },
-  { 400000, "Expert"       }, {     350000, "Advanced"     },
-  { 300000, "Intermediate" }, {     250000, "Adept"        },
-  { 200000, "Amateur"      }, {     150000, "Apprentice"   },
-  { 100000, "Novice"       }, {      50000, "Beginner"     },
-  {      0, "Newbie"       }, { mininteger, "Slug"         }
+  {  maxinteger, "Hacker"       }, {  0x80000000, "Cheater"      },
+  {     1200000, "Grand Master" }, {     1100000, "Master"       },
+  {     1000000, "Professional" }, {      900000, "Genius"       },
+  {      800000, "Expert"       }, {      700000, "Advanced"     },
+  {      600000, "Intermediate" }, {      500000, "Adept"        },
+  {      400000, "Amateur"      }, {      300000, "Apprentice"   },
+  {      200000, "Novice"       }, {      100000, "Beginner"     },
+  {           0, "Newbie"       }, { -0x80000000, "Slug"         },
+  {  mininteger, "Cheater"      }
 };
--- Assets required --------------------------------------------------------- --
-local aAssets<const> = { { T = 2, F = "title", P = { 0 } },
-                         { T = 7, F = "score" } };
--- Update rank ------------------------------------------------------------- --
-local function GetRank()
-  for iI = 1, #aRanks do
-    local aRank<const> = aRanks[iI];
-    if iTotalScore >= aRank[1] then return aRank[2] end;
-  end
-end
 -- Draw animated logos ----------------------------------------------------- --
 local function DrawLogos()
   -- Don't draw anything if in 4:3 mode
   if iStageL >= 0 then return end;
-  -- Draw sidebar scrolling logo's
-  local Width = -iStageL-4;
-  local Aspect = 208/58;
-  local Height = Width*Aspect;
-  local LX = (CoreTime()*100)%240;
-  local LY = -LX;
-  local X = iStageL+4;
+  -- Draw right moving down and left moving up logogs
+  local nLX = (CoreTime() * 100) % 240;
+  local nLY = -nLX;
+  local nRH = nHeight + nLY;
   texTitle:SetCA(0.25);
-  texTitle:BlitSLTRB(1,         X, -240+LX,    X+Width,-240+Height+LX);
-  texTitle:BlitSLTRB(1,         X,      LX,    X+Width,     Height+LX);
-  texTitle:BlitSLTRB(1,         X,  240+LX,    X+Width, 240+Height+LX);
-  texTitle:BlitSLTRB(1, 320+Width,      Height+LY, 320,     LY);
-  texTitle:BlitSLTRB(1, 320+Width,  240+Height+LY, 320, 240+LY);
-  texTitle:BlitSLTRB(1, 320+Width,  480+Height+LY, 320, 480+LY);
-  LX = -LX;
-  LY = -LY - 240;
-  texTitle:BlitSLTRB(1,         X, -240+LX,    X+Width,-240+Height+LX);
-  texTitle:BlitSLTRB(1,         X,      LX,    X+Width,     Height+LX);
-  texTitle:BlitSLTRB(1,         X,  240+LX,    X+Width, 240+Height+LX);
-  texTitle:BlitSLTRB(1, 320+Width,      Height+LY, 320,     LY);
-  texTitle:BlitSLTRB(1, 320+Width,  240+Height+LY, 320, 240+LY);
-  texTitle:BlitSLTRB(1, 320+Width,  480+Height+LY, 320, 480+LY);
+  texTitle:BlitSLTWH(1, nLX1,-240+nLX, nWidth,  nHeight);
+  texTitle:BlitSLTWH(1, nLX1,     nLX, nWidth,  nHeight);
+  texTitle:BlitSLTWH(1, nLX1, 240+nLX, nWidth,  nHeight);
+  texTitle:BlitSLTWH(1, nRX1,     nRH, nWidthN, nHeightN);
+  texTitle:BlitSLTWH(1, nRX1, 240+nRH, nWidthN, nHeightN);
+  texTitle:BlitSLTWH(1, nRX1, 480+nRH, nWidthN, nHeightN);
+  -- Draw left moving down and right moving up logogs
+  nLX = -nLX;
+  nLY = -nLY - 240;
+  nRH = nHeight + nLY;
+  texTitle:BlitSLTWH(1, nLX1,-240+nLX, nWidth,  nHeight);
+  texTitle:BlitSLTWH(1, nLX1,     nLX, nWidth,  nHeight);
+  texTitle:BlitSLTWH(1, nLX1, 240+nLX, nWidth,  nHeight);
+  texTitle:BlitSLTWH(1, nRX1,     nRH, nWidthN, nHeightN);
+  texTitle:BlitSLTWH(1, nRX1, 240+nRH, nWidthN, nHeightN);
+  texTitle:BlitSLTWH(1, nRX1, 480+nRH, nWidthN, nHeightN);
   -- Reset lobby texture colour
   texTitle:SetCRGBA(1, 1, 1, 1);
 end
 -- Render score ------------------------------------------------------------ --
-local function RenderScore()
+local function ProcRenderScore()
   -- Draw background
   texTitle:SetCRGBA(1, 1, 1, 1);
   texTitle:BlitLT(-96, 0);
@@ -195,7 +190,7 @@ local function RenderScore()
   fontTiny:SetCRGBAI(0xFFFFFFFF);
 end
 -- When faded out? --------------------------------------------------------- --
-local function OnFadeOut()
+local function OnFadedOutToTitle()
   -- Remove callback
   RegisterFBUCallback("score");
   -- Done with the texture handle here
@@ -203,12 +198,12 @@ local function OnFadeOut()
   --- ...and return to title screen. It can reuse the texture!
   InitTitle();
 end
--- Finish procedure -------------------------------------------------------- --
-local function Finish()
+-- GoToTitle procedure -------------------------------------------------------- --
+local function GoToTitle()
   -- Play sound
   PlayStaticSound(iSSelect);
   -- Fade out...
-  Fade(0, 1, 0.01, RenderScore, OnFadeOut, true);
+  Fade(0, 1, 0.01, ProcRenderScore, OnFadedOutToTitle, true);
 end
 -- Tick procedure ---------------------------------------------------------- --
 local function ProcScore()
@@ -262,35 +257,21 @@ local function ProcScore()
       iScoreItem = 0;
     end
     -- Update rank
-    strScoreC = GetRank();
+    for iI = 1, #aRanks do
+      local aRank<const> = aRanks[iI];
+      if iTotalScore >= aRank[1] then strScoreC = aRank[2] break end;
+    end
   elseif aData[1] == 2 then
     -- Increment total categories proceeded and if we did all of them?
     iTotalId = iTotalId + 1;
     if iTotalId > #aTotals then
-      -- Set exit cursor
-      SetCursor(iCExit);
-      -- When faded out?
-      local function InputScore()
-        -- Mouse button not clicked? Return!
-        if IsButtonReleased(0) then return end;
-        -- Fade to title
-        Finish();
-      end
-      -- Enable keys
+      -- Enable keys and hot spot
       SetKeys(true, iKeyBankId);
+      SetHotSpot(iHotSpotId);
       -- Wait for input
-      SetCallbacks(nil, RenderScore, InputScore);
+      SetCallbacks(nil, ProcRenderScore);
     end
   end
-end
--- When score screen has faded in ------------------------------------------ --
-local function OnFadeIn()
-  -- Set loading cursor
-  SetCursor(iCWait);
-  -- Coloured score
-  strScoreC, strScore, iColourIndex = "", "0", 1;
-  -- Set callbacks
-  SetCallbacks(ProcScore, RenderScore, nil);
 end
 -- Render function --------------------------------------------------------- --
 local function RenderSimple()
@@ -351,20 +332,34 @@ local function AddTotal(sLabel, iValue, iScorePerTick)
   };
 end
 -- When the main fbo dimensions changed ------------------------------------ --
-local function OnFBOCallback(...)
+local function OnStageUpdated(...)
   local _ _, _, iStageL, _, _, _ = ...;
+  -- Update logo positions
+  nWidth = -iStageL - 4;
+  nAspect = 208 / 58;
+  nHeight = nWidth * nAspect;
+  nWidthN = -nWidth;
+  nHeightN = -nHeight
+  nLX1 = iStageL + 4;
+  nRX1 = 320 + nWidth;
+end
+-- When score screen has faded in ------------------------------------------ --
+local function OnFadedIn()
+  -- Set wait hot spot
+  SetHotSpot();
+  -- Coloured score
+  strScoreC, strScore, iColourIndex = "", "0", 1;
+  -- Set callbacks
+  SetCallbacks(ProcScore, ProcRenderScore);
 end
 -- When score assets have loaded? ------------------------------------------ --
-local function OnLoaded(aResources)
+local function OnAssetsLoaded(aResources)
   -- Register frame buffer update
-  RegisterFBUCallback("score", OnFBOCallback);
+  RegisterFBUCallback("score", OnStageUpdated);
   -- Play score music
   PlayMusic(aResources[2]);
   -- Setup lobby texture
   texTitle = aResources[1];
-  texTitle:TileSTC(1);
-  texTitle:TileS(0, 0, 0, 512, 240);
-  texTitle:TileA(227, 240, 285, 448);
   -- Reset values
   iBarY, iTotalId, iTotalScore, aTotals, iScoreItem = 0, 0, 0, { }, 0;
   -- Count levels completed
@@ -373,47 +368,56 @@ local function OnLoaded(aResources)
     iZonesComplete = iZonesComplete + 1 end;
   -- Add score categories
   for iI, aData in ipairs({
-    { "Zones completed",   iZonesComplete,             10000 },
-    { "Bank balance",      aGlobalData.gBankBalance,      10 },
-    { "Capital carried",   aGlobalData.gTotalCapital,    100 },
-    { "Items purchased",   aGlobalData.gTotalPurchases, 1000 },
-    { "Items value",       aGlobalData.gTotalPurchExp,    10 },
-    { "Terrain dug",       aGlobalData.gTotalDug,          1 },
-    { "Gems found",        aGlobalData.gTotalGemsFound,  100 },
-    { "Gems sold",         aGlobalData.gTotalGemsSold,   100 },
-    { "Gems value",        aGlobalData.gTotalIncome,      10 },
-    { "Salary paid",       aGlobalData.gTotalSalaryPaid,  10 },
-    { "Death duties",      aGlobalData.gTotalDeaths,    1000 },
-    { "Death duties paid", aGlobalData.gTotalDeathExp,    10 },
-    { "Time taken",       -aGlobalData.gTotalTimeTaken,    1 }
+    { "Bank balance",      aGlobalData.gBankBalance,        10 },
+    { "Zones completed",   iZonesComplete,               10000 },
+    { "Terrain dug",       aGlobalData.gTotalDug,            1 },
+    { "Exploration",       aGlobalData.gTotalExploration,    1 },
+    { "Gems found",        aGlobalData.gTotalGemsFound,    100 },
+    { "Gems sold",         aGlobalData.gTotalGemsSold,     100 },
+    { "Gems value",        aGlobalData.gTotalIncome,        10 },
+    { "Items purchased",   aGlobalData.gTotalPurchases,   1000 },
+    { "Capital carried",   aGlobalData.gTotalCapital,      100 },
+    { "Fiends eliminated", aGlobalData.gTotalEnemyKills, 10000 },
+    { "Homicide duties",  -aGlobalData.gTotalHomicides,   1000 },
+    { "Mortality duties", -aGlobalData.gTotalDeaths,      1000 },
+    { "Time taken",       -aGlobalData.gTotalTimeTaken,      1 },
   }) do AddTotal(unpack(aData)) end;
   -- Fade in
-  Fade(1, 0, 0.025, RenderSimple, OnFadeIn);
+  Fade(1, 0, 0.025, RenderSimple, OnFadedIn);
 end
 -- Init score screen function ---------------------------------------------- --
-local function InitScore() LoadResources("Game Over", aAssets, OnLoaded) end;
+local function InitScore()
+  LoadResources("Game Over", aAssets, OnAssetsLoaded);
+end
 -- Scripts have been loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitTitle, IsButtonReleased, LoadResources, PlayMusic, PlayStaticSound,
-  RegisterFBUCallback, RenderFade, SetCallbacks, SetCursor, SetKeys,
-  aGlobalData, fontLittle, fontTiny, texSpr =
-    GetAPI("Fade", "InitTitle", "IsButtonReleased", "LoadResources",
-      "PlayMusic", "PlayStaticSound", "RegisterFBUCallback", "RenderFade",
-      "SetCallbacks", "SetCursor", "SetKeys", "aGlobalData", "fontLittle",
-      "fontTiny", "texSpr");
-  -- Register key binds
-  iKeyBankId = GetAPI("RegisterKeys")("IN-GAME SCORES", {
-    [Input.States.PRESS] = {
-      { Input.KeyCodes.ESCAPE, Finish, "igsc", "CLOSE" }
-    }
-  });
+  Fade, InitTitle, LoadResources, PlayMusic, PlayStaticSound,
+    RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderFade,
+    SetCallbacks, SetHotSpot, SetKeys, aAssetsData, aCursorIdData, aGlobalData,
+    aSfxData, fontLittle, fontTiny, texSpr =
+      GetAPI("Fade", "InitTitle", "LoadResources", "PlayMusic",
+        "PlayStaticSound", "RegisterFBUCallback", "RegisterHotSpot",
+        "RegisterKeys", "RenderFade", "SetCallbacks", "SetHotSpot", "SetKeys",
+        "aAssetsData", "aCursorIdData", "aGlobalData", "aSfxData", "fontLittle",
+        "fontTiny", "texSpr");
+  -- Setup required assets
+  aAssets = { aAssetsData.title, aAssetsData.scorem };
   -- Get cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
-  iCExit, iCWait = aCursorIdData.EXIT, aCursorIdData.WAIT;
+  local iCExit<const>, iCWait<const> = aCursorIdData.EXIT, aCursorIdData.WAIT;
+  -- Register hot spot for when all scores tallied
+  iHotSpotId = RegisterHotSpot({
+    { 0, 0, 0, 240, 3, iCExit, false, false, GoToTitle },
+  });
+  -- Register key binds
+  iKeyBankId = RegisterKeys("IN-GAME SCORES", { [Input.States.PRESS] = {
+    { Input.KeyCodes.ESCAPE, GoToTitle, "igsc", "CLOSE" }
+  } });
   -- Get sound effect ids
-  iSSelect = GetAPI("aSfxData").SELECT;
+  iSSelect = aSfxData.SELECT;
 end
 -- Exports and imports ----------------------------------------------------- --
-return { A = { InitScore = InitScore }, F = OnReady };
+return { A = { InitScore = InitScore }, F = OnScriptLoaded };
 -- End-of-File ============================================================= --

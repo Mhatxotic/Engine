@@ -7,49 +7,63 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Lua aliases (optimisation) ---------------------------------------------- --
-local error<const>, floor<const>, pairs<const>, remove<const>,
-  tostring<const>, xpcall<const> =
-    error, math.floor, pairs, table.remove, tostring, xpcall;
+local error<const>, floor<const>, pairs<const>, remove<const>, tostring<const>,
+  xpcall<const> = error, math.floor, pairs, table.remove, tostring, xpcall;
 -- M-Engine aliases (optimisation) ----------------------------------------- --
 local CoreStack<const>, CoreTicks<const>, DisplayReset<const>,
   InputClearStates<const>, InputGetJoyAxis<const>, InputGetJoyButton<const>,
-  InputGetNumJoyAxises<const>, InputOnJoyState<const>, InputOnKey<const>,
-  InputOnMouseClick<const>, InputOnMouseMove<const>, InputOnMouseScroll<const>,
-  InputSetCursor<const>, InputSetCursorCentre<const>, InputSetCursorPos<const>,
-  SShotFbo<const>, UtilBlank<const>, UtilClamp<const>, UtilIsBoolean<const>,
+  InputGetNumJoyAxises<const>, InputGetNumJoyButtons<const>,
+  InputOnJoyState<const>, InputOnKey<const>, InputOnMouseClick<const>,
+  InputOnMouseMove<const>, InputOnMouseScroll<const>, InputSetCursor<const>,
+  InputSetCursorCentre<const>, InputSetCursorPos<const>, SShotFbo<const>,
+  UtilBlank<const>, UtilClamp<const>, UtilIsBoolean<const>,
   UtilIsFunction<const>, UtilIsInteger<const>, UtilIsString<const>,
   UtilIsTable<const>, fboMain<const> =
     Core.Stack, Core.Ticks, Display.Reset, Input.ClearStates, Input.GetJoyAxis,
-    Input.GetJoyButton, Input.GetNumJoyAxises, Input.OnJoyState, Input.OnKey,
-    Input.OnMouseClick, Input.OnMouseMove, Input.OnMouseScroll, Input.SetCursor,
-    Input.SetCursorCentre, Input.SetCursorPos, SShot.Fbo, Util.Blank,
-    Util.Clamp, Util.IsBoolean, Util.IsFunction, Util.IsInteger, Util.IsString,
-    Util.IsTable, Fbo.Main();
+    Input.GetJoyButton, Input.GetNumJoyAxises, Input.GetNumJoyButtons,
+    Input.OnJoyState, Input.OnKey, Input.OnMouseClick, Input.OnMouseMove,
+    Input.OnMouseScroll, Input.SetCursor, Input.SetCursorCentre,
+    Input.SetCursorPos, SShot.Fbo, Util.Blank, Util.Clamp, Util.IsBoolean,
+    Util.IsFunction, Util.IsInteger, Util.IsString, Util.IsTable, Fbo.Main();
 -- Diggers function and data aliases --------------------------------------- --
-local InitSetup, IsFading, SetErrorMessage, aCursorData, texSpr;
--- Globals ----------------------------------------------------------------- --
-local aKeys<const> = Input.KeyCodes;   -- Keyboard scan codes
-local iCursorMin, iCursorMax;          -- Cursor minimum and maximum
-local iCursorAdjX, iCursorAdjY;        -- Cursor origin co-ordinates
-local iCId;                            -- Current cursor id
-local iStageLeft, iStageRight;         -- Stage left and top
-local iStageTop, iStageBottom;         -- Stage right and bottom
--- Input handling variables ------------------------------------------------ --
-local aMouseState<const>  = { };       -- Formatted mouse state
-local iCursorX, iCursorY  = 160, 120;  -- Cursor position
-local nWheelX, nWheelY    = 0, 0;      -- Mouse wheel state
-local nJoyAX, nJoyAY      = 0, 0;      -- Joystick axis values
-local aJoy<const>         = { };       -- Joysticks connected data
-local iJoyActive;                      -- Currently active joystick
--- Current polled keybinds and all available key binds --------------------- --
+local aCursorIdData, InitSetup, SetErrorMessage, SetTip, aCursorData,
+  iTexScale, texSpr;
+-- Get input press states -------------------------------------------------- --
+local aStates<const> = Input.States;
+local iPress<const> = aStates.PRESS;
+local iRelease<const> = aStates.RELEASE;
+local iRepeat<const> = aStates.REPEAT;
+-- Keyboard ---------------------------------------------------------------- --
 local aGlobalKeyBinds;                 -- Global keybinds (defined later)
-local aKeyBinds;                       -- Key/state/func translation lookup
 local aKeyBank<const> = { };           -- All keys
 local aKeyBankCats<const> = { };       -- All keys categorised
+local aKeyBankActive;                  -- Key/state/func translation lookup
 local iKeyBank = 0;                    -- Currently active keybank
+-- Mouse ------------------------------------------------------------------- --
+local iCursorX, iCursorY = 0, 0;       -- Cursor position
+local iCursorRX, iCursorRY = 0, 0;     -- Cursor render position
+local iCursorMin, iCursorMax;          -- Cursor minimum and maximum
+local iCursorAdjX, iCursorAdjY;        -- Cursor origin co-ordinates
+local iCArrow, iCWait, iCId;           -- Arrow, wait and current cursor id
+local nWheelX, nWheelY = 0, 0;         -- Mouse wheel state
+-- Joystick ---------------------------------------------------------------- --
+local nJoyAX, nJoyAY = 0, 0;           -- Joystick axis values
+local aJoy<const> = { };               -- Joysticks connected data
+local aJoyState<const> = { };          -- Joystick button last value
+local iJoyActive;                      -- Currently active joystick
+local iJoyButtonMax;                   -- Maximum joystick buttons
+-- Stage ------------------------------------------------------------------- --
+local iStageLeft, iStageRight;         -- Stage left and top
+local iStageTop, iStageBottom;         -- Stage right and bottom
+local iStageLeftD2, iStageRightD2;     -- Stage left and top divided by two
+-- Hotspots ---------------------------------------------------------------- --
+local aHotSpotNone<const> = { };       -- No hotspot data
+local aHotSpotBank<const> = { };       -- Bank of hotspots
+local aHotSpotActive = { };            -- Currently active hotspot data
+local iHotSpot = 0;                    -- Currently active hotspot id
 -- Mouse is in specified bounds -------------------------------------------- --
 local function IsMouseInBounds(iX1, iY1, iX2, iY2)
   return iCursorX >= iX1 and iCursorY >= iY1 and
@@ -63,137 +77,228 @@ local function IsMouseYLessThan(iY) return iCursorY < iY end;
 local function IsMouseYGreaterEqualThan(iY) return iCursorY >= iY end;
 local function GetMouseX() return iCursorX end;
 local function GetMouseY() return iCursorY end;
--- Returns current mouse button state -------------------------------------- --
-local function GetMouseState(iButton) return aMouseState[iButton] or 0 end;
--- Clears the specified mouse button state --------------------------------- --
-local function ClearMouseState(iButton) aMouseState[iButton] = nil end;
--- Returns true if the specified mouse button is held down ----------------- --
-local function IsMouseHeld(iButton) return GetMouseState(iButton) > 0 end
--- Returns true if the specified mouse button was pressed ------------------ --
-local function IsMousePressed(iButton)
-  if GetMouseState(iButton) == 0 then return false end;
-  ClearMouseState(iButton);
-  return true;
-end
--- Returns true if the specified mouse button was pressed ------------------ --
-local function IsMousePressedNoRelease(iButton)
-  if GetMouseState(iButton) == 0 then return false end;
-  return true;
-end
--- Returns true if the specified mouse button was pressed ------------------ --
-local function IsMouseReleased(iButton) return not IsMousePressed(iButton) end;
--- Returns current joystick state ------------------------------------------ --
-local function GetJoyState(iButton)
-  if not iJoyActive then return 0 end;
-  return InputGetJoyButton(iJoyActive, iButton);
-end
--- Returns true if specified joystick button was pressed ------------------- --
-local function IsJoyPressed(iButton) return GetJoyState(iButton) == 1 end
--- Returns true if specified joystick button is held down ------------------ --
-local function IsJoyHeld(iButton) return GetJoyState(iButton) >= 1 end
--- Returns true if specified joystick button is released ------------------- --
-local function IsJoyReleased(iButton) return not IsJoyPressed(iButton) end
--- Returns true if specified mouse or joystick button is pressed ----------- --
-local function IsButtonPressed(iButton)
-  return IsMousePressed(iButton) or IsJoyPressed(iButton);
-end
--- Returns true if specified mouse or joystick button is pressed ----------- --
-local function IsButtonPressedNoRelease(iButton)
-  return IsMousePressedNoRelease(iButton) or IsJoyPressed(iButton);
-end
--- Returns true if specified mouse or joystick button is held -------------- --
-local function IsButtonHeld(iButton)
-  return IsMouseHeld(iButton) or IsJoyHeld(iButton);
-end
--- Returns true if specified mouse or joystick button is released ---------- --
-local function IsButtonReleased(iButton)
-  return IsMouseReleased(iButton) and IsJoyReleased(iButton);
-end
--- Get mouse scrolling state ----------------------------------------------- --
-local function IsScrollingLeft()
-  if not IsJoyPressed(6) and nWheelX <= 0 then return false end;
-  nWheelX = 0;
-  return true;
-end
--- Get mouse scrolling state ----------------------------------------------- --
-local function IsScrollingRight()
-  if not IsJoyPressed(7) and nWheelX >= 0 then return false end;
-  nWheelX = 0;
-  return true;
-end
--- Get mouse scrolling state ----------------------------------------------- --
-local function IsScrollingUp()
-  if not IsJoyPressed(4) and nWheelY <= 0 then return false end;
-  nWheelY = 0;
-  return true;
-end
--- Get mouse scrolling state ----------------------------------------------- --
-local function IsScrollingDown()
-  if not IsJoyPressed(5) and nWheelY >= 0 then return false end;
-  nWheelY = 0;
-  return true;
-end
 -- When a key is pressed --------------------------------------------------- --
 local function OnKey(iKey, iState)
   -- Get function for key and return if it is not assigned
-  local fcbCb<const> = aKeyBinds[iState][iKey];
+  local fcbCb<const> = aKeyBankActive[iState][iKey];
   if not fcbCb then return end;
   -- Protected call so we can handle errors
   local bResult<const>, sReason<const> = xpcall(fcbCb, CoreStack);
   if not bResult then SetErrorMessage(sReason) end;
 end
+-- Register a hotspot ------------------------------------------------------ --
+local function RegisterHotSpot(aHotSpots)
+  -- Must be a table
+  if not UtilIsTable(aHotSpots) then
+    error("Hotspot table is invalid! "..tostring(aHotSpots)) end;
+  -- Walk the hotspot data array
+  for iIndex = 1, #aHotSpots do
+    -- Get and check hotspot
+    local aHotSpot<const> = aHotSpots[iIndex];
+    if not UtilIsTable(aHotSpot) then
+      error("Hotspot item at index "..iIndex.." is invalid! "..
+        tostring(aHotSpot)) end;
+    -- Check that there is 9 parameters
+    if #aHotSpot < 9 then
+      error("Hotspot item at index "..iIndex.." requires 9 parameters, not "..
+        #aHotSpot.."!");
+    end
+    -- Get mouse over function and if set?
+    local fcbHover<const> = aHotSpot[7];
+    if fcbHover then
+      -- If it's a string?
+      if UtilIsString(fcbHover) then
+        -- Create a function to set the string as a tip
+        local function HoverSetTip() SetTip(fcbHover) end;
+        -- Overwrite the string
+        aHotSpot[7] = HoverSetTip;
+      -- Else if it is not a function? Throw an error
+      elseif not UtilIsFunction(fcbHover) then
+        error("Hotspot hover function at index "..iIndex.." is invalid! "..
+          tostring(fcbHover)) end;
+    end
+    -- Check scroll function
+    local fcbScroll<const> = aHotSpot[8];
+    if fcbScroll and not UtilIsFunction(fcbScroll) then
+      error("Hotspot scroll function at index "..iIndex.." is invalid! "..
+        tostring(fcbScroll)) end;
+    -- Get activate function and if it's set?
+    local fcbActivate<const> = aHotSpot[9];
+    if fcbActivate then
+      -- If it is just a function than format it in a release+press func table
+      if UtilIsFunction(fcbActivate) then aHotSpot[9] = { false, fcbActivate };
+      -- If it is a table?
+      elseif UtilIsTable(fcbActivate) then
+        -- Must only contain two items (press and release)
+        if #fcbActivate ~= 2 then
+          error("Hotspot activate table at index "..iIndex..
+            " must have two entries only! "..#fcbActivate) end;
+        -- Check that they're functions
+        for iAFIndex = 1, #fcbActivate do
+          -- Get function
+          local fcbActivateFunc<const> = fcbActivate[iAFIndex];
+          if fcbActivateFunc and not UtilIsFunction(fcbActivateFunc) then
+            error("Hotspot activate function "..iAFIndex.." at index "..
+              iIndex.." is invalid! "..tostring(fcbActivateFunc)) end;
+        end
+      else error("Hotspot activate table at index "..iIndex..
+        " is invalid! "..tostring(fcbActivate)) end;
+    -- Not specified so just convert to table with release/press funcs
+    else aHotSpot[9] = { false, false } end;
+    -- Invalid function or table
+    -- If we don't have 13 parameters?
+    if #aHotSpot < 13 then
+      -- Backup the dimensions because they will be destroyed
+      aHotSpot[10], aHotSpot[11] = aHotSpot[1], aHotSpot[2];
+      aHotSpot[12], aHotSpot[13] = aHotSpot[3], aHotSpot[4];
+    end
+    -- Set default arrow cursor if zero else anything out of range is an error
+    local iCursor<const> = aHotSpot[6];
+    if iCursor == 0 then aHotSpot[6] = iCArrow;
+    elseif not aCursorData[iCursor] then
+      error("Hotspot item at index "..iIndex.." has invalid cursor! "..
+        tostring(iCursor).." (max: "..#aCursorData..")") end;
+  end
+  -- Insert into the bank
+  aHotSpotBank[1 + #aHotSpotBank] = aHotSpots;
+  -- Return newest id
+  return #aHotSpotBank;
+end
+-- Get hotspot data -------------------------------------------------------- --
+local function GetHotSpot() return iHotSpot end;
 -- When the mouse is clicked ----------------------------------------------- --
-local function OnMouseClick(iButton, iState) aMouseState[iButton] = iState end
+local function OnMouseClick(iButton, iState)
+  -- if have hotspots?
+  if #aHotSpotActive >= 0 then
+    -- Check if mouse in hotspots
+    for iIndex = 1, #aHotSpotActive do
+      -- Get hotspot and if cursor is in bounds?
+      local aHotSpot<const> = aHotSpotActive[iIndex];
+      if IsMouseInBounds(aHotSpot[1], aHotSpot[2],
+                         aHotSpot[3], aHotSpot[4]) then
+        -- Get the callback and run it
+        local fcbCb<const> = aHotSpot[9][1 + iState];
+        if fcbCb then
+          -- Protected call so we can handle errors
+          local bResult<const>, sReason<const> =
+            xpcall(fcbCb, CoreStack, iButton, iCursorX, iCursorY);
+          if not bResult then SetErrorMessage(sReason) end;
+        end
+        -- Done
+        return;
+      end
+    end
+  end
+end
+-- When the mouse wheel is moved ------------------------------------------- --
+local function OnMouseScroll(nX, nY)
+  -- Update position
+  nWheelX, nWheelY = nX, nY;
+  -- Check if mouse in hotspots
+  for iIndex = 1, #aHotSpotActive do
+    -- Get hotspot and if cursor is in bounds?
+    local aHotSpot<const> = aHotSpotActive[iIndex];
+    if IsMouseInBounds(aHotSpot[1], aHotSpot[2], aHotSpot[3], aHotSpot[4]) then
+      -- Get the callback and run it
+      local fcbCb<const> = aHotSpot[8];
+      if fcbCb then
+        -- Protected call so we can handle errors
+        local bResult<const>, sReason<const> =
+          xpcall(fcbCb, CoreStack, nX, nY);
+        if not bResult then SetErrorMessage(sReason) end;
+      end
+      return;
+    end
+  end
+end
 -- Joystick procedure ------------------------------------------------------ --
 local function JoystickProc()
-  -- If joystick is available
-  if iJoyActive then
-    -- Axis going left?
-    local nAxisX<const> = InputGetJoyAxis(iJoyActive, 0);
-    if nAxisX < 0 then
-      -- Reset if positive
-      if nJoyAX > 0 then nJoyAX = 0 end;
-      -- Update X axis acceleration
-      nJoyAX = UtilClamp(nJoyAX - 0.5, -5, 0);
-    -- Axis going right?
-    elseif nAxisX > 0 then
-      -- Reset if negative
-      if nJoyAX < 0 then nJoyAX = 0 end;
-      -- Update X axis acceleration
-      nJoyAX = UtilClamp(nJoyAX + 0.5, 0, 5);
-    -- X Axis not going left or right? Reset X axis acceleration
-    else nJoyAX = 0 end;
-    -- Axis going up?
-    local nAxisY<const> = InputGetJoyAxis(iJoyActive, 1);
-    if nAxisY < 0 then
-      -- Reset if positive
-      if nJoyAY > 0 then nJoyAY = 0 end;
-      -- Update Y axis acceleration
-      nJoyAY = UtilClamp(nJoyAY - 0.5, -5, 0);
-    -- Axis going down?
-    elseif nAxisY > 0 then
-      -- Reset if negative
-      if nJoyAY < 0 then nJoyAY = 0 end;
-      -- Update Y axis acceleration
-      nJoyAY = UtilClamp(nJoyAY + 0.5, 0, 5);
-    -- Y Axis not going up or down? Reset Y axis acceleration
-    else nJoyAY = 0 end;
-    -- Axis moving?
-    if nJoyAX ~= 0 or nJoyAY ~= 0 then
-      -- Adjust mouse position
-      iCursorX, iCursorY =
-        UtilClamp(iCursorX + nJoyAX, iStageLeft, iStageRight - 1),
-        UtilClamp(iCursorY + nJoyAY, iStageTop, iStageBottom - 1);
-      -- Update mouse position
-      InputSetCursorPos(iCursorX, iCursorY);
-    -- No axis pressed
-    end
-    -- Check for setup buttons
-    if IsJoyPressed(8) and not IsFading() then return InitSetup(1) end;
-  -- Joystick polling not enabled
+  -- Return if no joystick is available
+  if not iJoyActive then return end;
+  -- Axis going left?
+  local nAxisX<const> = InputGetJoyAxis(iJoyActive, 0);
+  if nAxisX < 0 then
+    -- Reset if positive
+    if nJoyAX > 0 then nJoyAX = 0 end;
+    -- Update X axis acceleration
+    nJoyAX = UtilClamp(nJoyAX - 0.5, -5, 0);
+  -- Axis going right?
+  elseif nAxisX > 0 then
+    -- Reset if negative
+    if nJoyAX < 0 then nJoyAX = 0 end;
+    -- Update X axis acceleration
+    nJoyAX = UtilClamp(nJoyAX + 0.5, 0, 5);
+  -- X Axis not going left or right? Reset X axis acceleration
+  else nJoyAX = 0 end;
+  -- Axis going up?
+  local nAxisY<const> = InputGetJoyAxis(iJoyActive, 1);
+  if nAxisY < 0 then
+    -- Reset if positive
+    if nJoyAY > 0 then nJoyAY = 0 end;
+    -- Update Y axis acceleration
+    nJoyAY = UtilClamp(nJoyAY - 0.5, -5, 0);
+  -- Axis going down?
+  elseif nAxisY > 0 then
+    -- Reset if negative
+    if nJoyAY < 0 then nJoyAY = 0 end;
+    -- Update Y axis acceleration
+    nJoyAY = UtilClamp(nJoyAY + 0.5, 0, 5);
+  -- Y Axis not going up or down? Reset Y axis acceleration
+  else nJoyAY = 0 end;
+  -- Axis moving?
+  if nJoyAX ~= 0 or nJoyAY ~= 0 then
+    -- Update mouse position
+    InputSetCursorPos(
+      UtilClamp(iCursorX + nJoyAX, iStageLeft, iStageRight - 1),
+      UtilClamp(iCursorY + nJoyAY, iStageTop, iStageBottom - 1));
+  -- No axis pressed
   end
-  -- Check for setup buttons
-  if IsMousePressed(5) and not IsFading() then InitSetup(1) end;
+  -- Check each joystick button
+  for iButtonId = 1, iJoyButtonMax do
+    -- Get current button state
+    local iButtonZeroId<const> = iButtonId - 1;
+    local iState<const> = InputGetJoyButton(iJoyActive, iButtonZeroId);
+    -- Get last button state and update current state
+    local iLastState<const> = aJoyState[iButtonId];
+    -- Button is pressed or held?
+    if iState == 1 then
+      -- It was released?
+      if iLastState == 0 then
+        -- If it was L1 button? Simulate scroll wheel down
+        if iButtonId == 5 then OnMouseScroll(0, -1);
+        -- If it was R1 button? Simulate scroll wheel up
+        elseif iButtonId == 6 then OnMouseScroll(0, 1);
+        -- If it was L2 button? Simulate scroll wheel left
+        elseif iButtonId == 7 then OnMouseScroll(-1, 0);
+        -- If it was R2 button? Simulate scroll wheel right
+        elseif iButtonId == 8 then OnMouseScroll(1, 0);
+        -- If it was SELECT button? Show setup
+        elseif iButtonId == 9 then InitSetup(1);
+        -- Anything else?
+        else
+          -- Treat it as a mouse click
+          OnMouseClick(iButtonZeroId, iPress);
+          -- Update the state
+          aJoyState[iButtonId] = iState;
+        end
+      end
+    -- If button is held then send repeat command
+    elseif iState >= 2 then
+      -- It was pressed?
+      if iLastState == 1 then
+        -- Treat it as a mouse click
+        OnMouseClick(iButtonZeroId, iRepeat);
+        -- Update the state
+        aJoyState[iButtonId] = iState;
+      end
+    -- Else if the button was pressed or release then simulate a release
+    elseif iLastState >= 1 then
+      -- Treat it as a mouse click
+      OnMouseClick(iButtonId - 1, iRelease);
+      -- Update the state
+      aJoyState[iButtonId] = iState;
+    end
+  end
 end
 -- Check joystick states --------------------------------------------------- --
 local function OnJoyState(iJ, bState)
@@ -214,6 +319,10 @@ local function OnJoyState(iJ, bState)
       if iNumAxises >= 2 then
         -- Set the first active joystick
         iJoyActive = iJoyPending;
+        -- Store maximum number of buttons
+        iJoyButtonMax = InputGetNumJoyButtons(iJoyActive);
+        -- Check each joystick button state
+        for iIndex = 1, iJoyButtonMax do aJoyState[iIndex] = 0 end;
         -- Success
         return;
       end
@@ -222,28 +331,121 @@ local function OnJoyState(iJ, bState)
   -- Joystick no longer valid
   iJoyActive = nil;
 end
--- When the mouse wheel is moved ------------------------------------------- --
-local function OnMouseScroll(nX, nY) nWheelX, nWheelY = nX, nY end;
--- When the mouse is moved ------------------------------------------------- --
-local function OnMouseMove(nX, nY)
-  iCursorX, iCursorY = floor(nX), floor(nY);
-end
 -- Get cursor -------------------------------------------------------------- --
 local function GetCursor() return iCId end;
 -- Set cursor -------------------------------------------------------------- --
-local function SetCursor(iId)
+local function SetCursor(iIdentifier)
   -- Check parameter
-  if not UtilIsInteger(iId) then
-    error("Cursor id integer is invalid! "..tostring(iId)) end;
+  if not UtilIsInteger(iIdentifier) then
+    error("Cursor id integer is invalid! "..tostring(iIdentifier)) end;
   -- Get cursor data for id and check it
-  local aCursorItem<const> = aCursorData[iId];
+  local aCursorItem<const> = aCursorData[iIdentifier];
   if not UtilIsTable(aCursorItem) then
     error("Cursor id not valid! "..tostring(aCursorItem)) end;
   -- Set new cursor dynamics
   iCursorMin, iCursorMax, iCursorAdjX, iCursorAdjY =
     aCursorItem[1], aCursorItem[2], aCursorItem[3], aCursorItem[4];
   -- Set cursor id
-  iCId = iId;
+  iCId = iIdentifier;
+end
+-- Execute command if mouse is overing ------------------------------------- --
+local function CheckHotSpotHover(aHotSpot)
+  -- Return if mouse not in bounds
+  if not IsMouseInBounds(aHotSpot[1], aHotSpot[2],
+                         aHotSpot[3], aHotSpot[4]) then return end;
+  -- Set the cursor
+  SetCursor(aHotSpot[6]);
+  -- Call the function if it is available?
+  local fcbCb<const> = aHotSpot[7];
+  if fcbCb then
+    -- Protected call so we can handle errors
+    local bResult<const>, sReason<const> =
+      xpcall(fcbCb, CoreStack, iCursorX, iCursorY);
+    if not bResult then SetErrorMessage(sReason) end;
+  end
+  -- Success
+  return true;
+end
+-- Update hotspot based on alignment --------------------------------------- --
+local function UpdateHotSpot(aHotSpot)
+  -- Update Y position
+  aHotSpot[4] = aHotSpot[11] + aHotSpot[13];
+  -- If position is static then just return
+  local iAlignment<const> = aHotSpot[5];
+  if iAlignment == 0 then
+    aHotSpot[3] = aHotSpot[10] + aHotSpot[12];
+  -- Left alignment?
+  elseif iAlignment == 1 then
+    aHotSpot[1] = iStageLeftD2 + aHotSpot[10];
+    aHotSpot[3] = aHotSpot[1] + aHotSpot[12];
+  -- Right alignment?
+  elseif iAlignment == 2 then
+    aHotSpot[1] = iStageRightD2 - aHotSpot[12] - aHotSpot[10];
+    aHotSpot[3] = aHotSpot[1] + aHotSpot[12];
+  -- Left AND right alignment?
+  elseif iAlignment == 3 then
+    aHotSpot[1] = iStageLeftD2 + aHotSpot[10];
+    aHotSpot[3] = iStageRightD2 - aHotSpot[12];
+  end
+end
+-- Update all hot spots ---------------------------------------------------- --
+local function UpdateAllHotSpots()
+  -- If there are no hot spots? Show a wait cursor and return
+  if #aHotSpotActive == 0 then return SetCursor(iCWait) end;
+  -- For each hotspot...
+  for iIndex = 1, #aHotSpotActive do
+    -- Get hotspot
+    local aHotSpot<const> = aHotSpotActive[iIndex];
+    -- Update the hotspot
+    UpdateHotSpot(aHotSpot);
+    -- If this hotspot is currently being hovered over?
+    if CheckHotSpotHover(aHotSpot) then
+      -- Enumerate the rest of the hotspots...
+      for iSubIndex = iIndex + 1, #aHotSpotActive do
+        -- Update but don't check this time
+        UpdateHotSpot(aHotSpotActive[iSubIndex]);
+      end
+      -- Done
+      return;
+    end
+  end
+  -- We have hot spots but none were matched so just show an arrow cursor
+  SetCursor(iCArrow);
+end
+-- Set a hotspot ----------------------------------------------------------- --
+local function SetHotSpot(iIdentifier)
+  -- No id specified?
+  if iIdentifier == nil then iIdentifier = 0;
+  -- Show error if invalid hotspot id
+  elseif not UtilIsInteger(iIdentifier) then
+    error("Hotspot id integer is invalid! "..tostring(iIdentifier)) end;
+  -- Reset and return if the requested value is zero
+  if iIdentifier == 0 then aHotSpotActive = aHotSpotNone;
+  -- Identifer is valid
+  else
+    -- Set the hotspot data
+    aHotSpotActive = aHotSpotBank[iIdentifier];
+    if not aHotSpotActive then
+      error("Hotspot id "..iIdentifier.." is invalid!") end;
+  end
+  -- Update active hotspots from back to front
+  UpdateAllHotSpots();
+  -- Set active hotspot id
+  iHotSpot = iIdentifier;
+end
+-- When the mouse is moved ------------------------------------------------- --
+local function OnMouseMove(nX, nY)
+  -- Update cursor bounds
+  iCursorRX, iCursorRY = floor(nX), floor(nY);
+  iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
+  -- Return if no hotspots
+  if #aHotSpotActive == 0 then return end;
+  -- Check if mouse in hotspots
+  for iIndex = 1, #aHotSpotActive do
+    if CheckHotSpotHover(aHotSpotActive[iIndex]) then return end;
+  end
+  -- No cursor was matched so we keep the arrow cursor
+  SetCursor(iCArrow);
 end
 -- Categorise the keys ----------------------------------------------------- --
 local function RegisterCategorise(sName, aKeys)
@@ -316,83 +518,77 @@ local function GetKeyBank() return iKeyBank end;
 -- Set global keys table --------------------------------------------------- --
 local function SetGlobalKeyBinds(aKeys) aGlobalKeyBinds = aKeys end;
 -- Set active keybinds ----------------------------------------------------- --
-local function SetKeys()
-  -- Get statics
-  local aStates<const> = Input.States;
-  local iPress<const>, iRelease<const>, iRepeat<const> =
-    aStates.PRESS, aStates.RELEASE, aStates.REPEAT;
-  -- Real function
-  local function DoSetKeys(bState, iIdentifier)
-    -- Check parameters
-    if not UtilIsBoolean(bState) then
-      error("Bad global key state: "..tostring(bState)) end;
-    -- Clear keybinds list
-    aKeyBinds = {
-      [iPress]   = { },                -- Pressed keys to functions
-      [iRelease] = { },                -- Released keys to functions
-      [iRepeat]  = { },                -- Repeated keys to functions
-    };
-    -- If we're to add the persistent keys?
-    if bState then
-      for iCategory, aBinds in pairs(aGlobalKeyBinds) do
-        local aKeyBindsCat<const> = aKeyBinds[iCategory];
-        for iIndex = 1, #aBinds do
-          local aBind<const> = aBinds[iIndex];
-          aKeyBindsCat[aBind[1]] = aBind[2];
-        end
-      end
-    end
-    -- Done if no keys are to be set?
-    if not iIdentifier then iKeyBank = 0 return end;
-    -- Make sure identifier is valid
-    if not UtilIsInteger(iIdentifier) then
-      error("Invalid table index type: "..tostring(iIdentifier)) end;
-    if iIdentifier == 0 then iKeyBank = 0 return end;
-    -- Get and check identifier in key bank
-    local aKeys<const> = aKeyBank[iIdentifier];
-    if not UtilIsTable(aKeys) then
-      error("Invalid table index not registered: "..iIdentifier) end;
-    -- Add binds from key bank to currently active keybinds
-    for iCategory, aBinds in pairs(aKeys[2]) do
-      local aKeyBindsCat<const> = aKeyBinds[iCategory];
+local function SetKeys(bState, iIdentifier)
+  -- Check parameters
+  if not UtilIsBoolean(bState) then
+    error("Bad global key state: "..tostring(bState)) end;
+  -- Clear keybinds list
+  aKeyBankActive = {
+    [iPress]   = { },                  -- Pressed keys to functions
+    [iRelease] = { },                  -- Released keys to functions
+    [iRepeat]  = { },                  -- Repeated keys to functions
+  };
+  -- If we're to add the persistent keys?
+  if bState then
+    for iCategory, aBinds in pairs(aGlobalKeyBinds) do
+      local aKeyBankActiveCat<const> = aKeyBankActive[iCategory];
       for iIndex = 1, #aBinds do
         local aBind<const> = aBinds[iIndex];
-        aKeyBindsCat[aBind[1]] = aBind[2];
+        aKeyBankActiveCat[aBind[1]] = aBind[2];
       end
     end
-    -- Set keybank id so modules can restore a previous keybank
-    iKeyBank = iIdentifier;
   end
-  -- Set the real function
-  SetKeys = DoSetKeys;
+  -- Done if no keys are to be set?
+  if iIdentifier == nil then iKeyBank = 0 return end;
+  -- Make sure identifier is valid
+  if not UtilIsInteger(iIdentifier) then
+    error("Invalid table index type: "..tostring(iIdentifier)) end;
+  if iIdentifier == 0 then iKeyBank = 0 return end;
+  -- Get and check identifier in key bank
+  local aKeys<const> = aKeyBank[iIdentifier];
+  if not UtilIsTable(aKeys) then
+    error("Invalid table index not registered: "..iIdentifier) end;
+  -- Add binds from key bank to currently active keybinds
+  for iCategory, aBinds in pairs(aKeys[2]) do
+    local aKeyBankActiveCat<const> = aKeyBankActive[iCategory];
+    for iIndex = 1, #aBinds do
+      local aBind<const> = aBinds[iIndex];
+      aKeyBankActiveCat[aBind[1]] = aBind[2];
+    end
+  end
+  -- Set keybank id so modules can restore a previous keybank
+  iKeyBank = iIdentifier;
 end
-SetKeys();
 -- Clear input states ------------------------------------------------------ --
 local function ClearStates()
   -- Make sure user can't input anything
   InputClearStates();
   -- Clear keyboard and mouse
-  for iButton in pairs(aMouseState) do aMouseState[iButton] = nil end
   nWheelX, nWheelY = 0, 0;
 end
 -- Renders the mouse cursor ------------------------------------------------ --
 local function CursorRender()
   texSpr:BlitSLT(CoreTicks() // 4 % iCursorMax + iCursorMin,
-    iCursorX + iCursorAdjX, iCursorY + iCursorAdjY);
+    iCursorRX + iCursorAdjX, iCursorRY + iCursorAdjY);
 end
 -- When the fbo is resized ------------------------------------------------- --
-local function OnFrameBufferUpdate(_, _, nLeft, nTop, nRight, nBottom)
-  -- Record stage bounds
-  iStageLeft, iStageTop, iStageRight, iStageBottom =
-    floor(nLeft), floor(nTop), floor(nRight), floor(nBottom);
-  -- If cursor is off the left of the screne? Clamp it to left
+local function OnStageUpdated(...)
+  -- Get stage bounds
+  local _ _, _, iStageLeft, iStageTop, iStageRight, iStageBottom = ...;
+  -- Clamp them to integers
+  iStageLeft, iStageTop, iStageRight, iStageRight =
+    floor(iStageLeft), floor(iStageTop), floor(iStageRight), floor(iStageRight);
+  -- Calculate scales version of the stage
+  iStageLeftD2 = iStageLeft // iTexScale;
+  iStageRightD2 = iStageRight // iTexScale;
+  -- If cursor is off the left or right of the screne? Clamp it
   if iCursorX < iStageLeft then iCursorX = iStageLeft;
-  -- Cursor is off the right of the screen? Clamp it to right
   elseif iCursorX >= iStageRight then iCursorX = iStageRight-1 end;
-  -- If cursor if off the top of the screen? Clamp it to top
+  -- If cursor if off the top or bottom of the screen? Clamp it
   if iCursorY < iStageTop then iCursorY = iStageTop;
-  -- Cursor is off the bottom of screen? Clamp it to bottom
   elseif iCursorY >= iStageBottom then iCursorY = iStageBottom-1 end;
+  -- Update active hotspots from back to front
+  UpdateAllHotSpots();
 end
 -- Disable key handlers ---------------------------------------------------- --
 local function DisableKeyHandlers()
@@ -404,58 +600,55 @@ local function RestoreKeyHandlers()
   InputOnJoyState(OnJoyState);
   InputOnKey(OnKey);
 end
+-- Global function key callbacks ------------------------------------------- --
+local function GkCbConfig() InitSetup(1) end;
+local function GkCbBinds() InitSetup(2) end;
+local function GkCbReadme() InitSetup(3) end;
+local function GkCbSShot() SShotFbo(fboMain) end;
 -- Script has been initialised --------------------------------------------- --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
   -- Get imports
-  InitSetup, IsFading, SetErrorMessage, aCursorData, texSpr =
-    GetAPI("InitSetup", "IsFading", "SetErrorMessage", "aCursorData",
-      "texSpr");
-  -- Enable cursor clamper when fbo changes
-  GetAPI("RegisterFBUCallback")("input", OnFrameBufferUpdate);
+  InitSetup, RegisterFBUCallback, SetErrorMessage, SetTip, aCursorData,
+    aCursorIdData, iTexScale, texSpr =
+      GetAPI("InitSetup", "RegisterFBUCallback", "SetErrorMessage", "SetTip",
+        "aCursorData", "aCursorIdData", "iTexScale", "texSpr");
+  -- Get arrow and wait cursor ids
+  iCArrow, iCWait = aCursorIdData.ARROW, aCursorIdData.WAIT;
   -- Enable input capture events
   InputOnJoyState(OnJoyState);
   InputOnKey(OnKey);
   InputOnMouseClick(OnMouseClick);
   InputOnMouseMove(OnMouseMove);
   InputOnMouseScroll(OnMouseScroll);
-  -- Global function key callbacks
-  local function GkCbConfig() InitSetup(1) end;
-  local function GkCbBinds() InitSetup(2) end;
-  local function GkCbReadme() InitSetup(3) end;
-  local function GkCbSShot() SShotFbo(fboMain) end;
+  -- Enable cursor clamper when fbo changes
+  RegisterFBUCallback("input", OnStageUpdated);
   -- Set the global keybinds
+  local aKeys<const> = Input.KeyCodes;
   aGlobalKeyBinds = { [Input.States.PRESS] = {
-    { aKeys.F1, GkCbConfig, "gksc", "SETUP SCREEN" };
-    { aKeys.F2, GkCbBinds, "gksb", "SETUP KEYBINDS" },
-    { aKeys.F3, GkCbReadme, "gksa", "SHOW ACKNOWLEDGEMENTS" },
-    { aKeys.F10, InputSetCursorCentre, "gkcc", "SET CURSOR CENTRE" },
-    { aKeys.F11, DisplayReset, "gkwr", "RESET WINDOW SIZE" },
-    { aKeys.F12, GkCbSShot, "gkss", "TAKE SCREENSHOT" },
+    { aKeys.F1,  GkCbConfig,           "gksc", "SETUP SCREEN"          };
+    { aKeys.F2,  GkCbBinds,            "gksb", "SETUP KEYBINDS"        },
+    { aKeys.F3,  GkCbReadme,           "gksa", "SHOW ACKNOWLEDGEMENTS" },
+    { aKeys.F10, InputSetCursorCentre, "gkcc", "SET CURSOR CENTRE"     },
+    { aKeys.F11, DisplayReset,         "gkwr", "RESET WINDOW SIZE"     },
+    { aKeys.F12, GkCbSShot,            "gkss", "TAKE SCREENSHOT"       },
   }}
   -- Add keybinds to key bank categories for configuration
   RegisterCategorise("GLOBAL", aGlobalKeyBinds);
 end
 -- Exports and imports ----------------------------------------------------- --
-return { F = OnReady, A = { ClearMouseState = ClearMouseState,
-  ClearStates = ClearStates, CursorRender = CursorRender,
-  DisableKeyHandlers = DisableKeyHandlers, GetCursor = GetCursor,
-  GetJoyState = GetJoyState, GetKeys = GetKeys, GetKeyBank = GetKeyBank,
-  GetMouseState = GetMouseState, GetMouseX = GetMouseX, GetMouseY = GetMouseY,
-  IsButtonHeld = IsButtonHeld, IsButtonPressed = IsButtonPressed,
-  IsButtonPressedNoRelease = IsButtonPressedNoRelease,
-  IsButtonReleased = IsButtonReleased, IsJoyHeld = IsJoyHeld,
-  IsJoyPressed = IsJoyPressed, IsJoyReleased = IsJoyReleased,
-  IsMouseHeld = IsMouseHeld, IsMouseInBounds = IsMouseInBounds,
-  IsMouseNotInBounds = IsMouseNotInBounds, IsMousePressed = IsMousePressed,
-  IsMousePressedNoRelease = IsMousePressedNoRelease,
-  IsMouseReleased = IsMouseReleased,
+return { F = OnScriptLoaded, A = { ClearStates = ClearStates,
+  CursorRender = CursorRender, DisableKeyHandlers = DisableKeyHandlers,
+  GetCursor = GetCursor, GetHotSpot = GetHotSpot, GetJoyState = GetJoyState,
+  GetKeys = GetKeys, GetKeyBank = GetKeyBank, GetMouseX = GetMouseX,
+  GetMouseY = GetMouseY, IsJoyHeld = IsJoyHeld, IsJoyPressed = IsJoyPressed,
+  IsJoyReleased = IsJoyReleased, IsMouseInBounds = IsMouseInBounds,
+  IsMouseNotInBounds = IsMouseNotInBounds,
   IsMouseXGreaterEqualThan = IsMouseXGreaterEqualThan,
   IsMouseXLessThan = IsMouseXLessThan,
   IsMouseYGreaterEqualThan = IsMouseYGreaterEqualThan,
-  IsMouseYLessThan = IsMouseYLessThan, IsScrollingDown = IsScrollingDown,
-  IsScrollingLeft = IsScrollingLeft, IsScrollingRight = IsScrollingRight,
-  IsScrollingUp = IsScrollingUp, JoystickProc = JoystickProc,
-  RegisterKeys = RegisterKeys, RestoreKeyHandlers = RestoreKeyHandlers,
-  SetCursor = SetCursor, SetKeys = SetKeys, aKeyBank = aKeyBank,
+  IsMouseYLessThan = IsMouseYLessThan, JoystickProc = JoystickProc,
+  RegisterHotSpot = RegisterHotSpot, RegisterKeys = RegisterKeys,
+  RestoreKeyHandlers = RestoreKeyHandlers, SetCursor = SetCursor,
+  SetHotSpot = SetHotSpot, SetKeys = SetKeys, aKeyBank = aKeyBank,
   aKeyBankCats = aKeyBankCats } };
 -- End-of-File ============================================================= --

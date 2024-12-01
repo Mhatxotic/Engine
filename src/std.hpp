@@ -118,7 +118,7 @@ static int StdMkDir(const string &strPath)
 /* -- Wrapper for _wrename() function -------------------------------------- */
 static int StdRename(const wchar_t*const wcpSrcPath,
   const wchar_t*const wcpDstPath)
-{ return _wrename(wcpSrcPath, wcpDstPath); }
+    { return _wrename(wcpSrcPath, wcpDstPath); }
 /* -- Wrapper for _wrename() function (wstring version) -------------------- */
 static int StdRename(const wstring &wstrSrcPath, const wstring &wstrDstPath)
   { return StdRename(wstrSrcPath.c_str(), wstrDstPath.c_str()); }
@@ -146,18 +146,18 @@ static int StdUnlink(const string &strPath)
 /* -- Wrapper for _wexecve() stdlib function ------------------------------- */
 static int StdExecVE(const wchar_t*const wcpaArg[],
   const wchar_t*const wcpaEnv[])
-{ return static_cast<int>(_wexecve(*wcpaArg, wcpaArg, wcpaEnv)); }
+    { return static_cast<int>(_wexecve(*wcpaArg, wcpaArg, wcpaEnv)); }
 /* -- Wrapper for _wspawnve() stdlib function ------------------------------ */
 static int StdSpawnVE(const wchar_t*const wcpaArg[],
   const wchar_t*const wcpaEnv[])
-{ return static_cast<int>(_wspawnve(P_NOWAIT,
-    *wcpaArg, wcpaArg, wcpaEnv) == -1); }
+    { return static_cast<int>(_wspawnve(P_NOWAIT,
+        *wcpaArg, wcpaArg, wcpaEnv) == -1); }
 /* -- Wrapper for _fileno() function --------------------------------------- */
 static int StdFileNo(FILE*const fStream) { return _fileno(fStream); }
 /* -- Wrapper for _wstat64() function -------------------------------------- */
 static int StdFStat(const wchar_t*const wcpPath,
   StdFStatStruct*const sDestBuffer)
-{ return _wstat64(wcpPath, sDestBuffer);  }
+    { return _wstat64(wcpPath, sDestBuffer);  }
 static int StdFStat(const wstring &wstrPath, StdFStatStruct*const sDestBuffer)
   { return StdFStat(wstrPath.c_str(), sDestBuffer);  }
 static int StdFStat(const string &strPath, StdFStatStruct*const sDestBuffer)
@@ -176,7 +176,7 @@ static int StdHStat(const int iFd, StdFStatStruct*const sDestBuffer)
 /* -- Wrapper for _localtime64_s() function -------------------------------- */
 static void StdLocalTime(StdTMStruct*const tmpResult,
   const StdTimeT*const tpTime)
-{ _localtime64_s(tmpResult, tpTime); }
+    { _localtime64_s(tmpResult, tpTime); }
 /* -- Wrapper for mktime() function ---------------------------------------- */
 static StdTimeT StdMkTime(StdTMStruct*const tmpResult)
   { return _mktime64(tmpResult); }
@@ -188,7 +188,7 @@ static FILE *StdPOpen[[maybe_unused]](const wstring &wstrCommand,
 { return StdPOpen(wstrCommand.c_str(), wcpType); }
 static FILE *StdPOpen[[maybe_unused]](const string &strCommand,
   const wchar_t*const wcpType=L"rt")
-{ return StdPOpen(UTFtoS16(strCommand), wcpType); }
+    { return StdPOpen(UTFtoS16(strCommand), wcpType); }
 /* -- Wrapper for _pclose() function --------------------------------------- */
 static int StdPClose[[maybe_unused]](FILE*const fStream)
   { return _pclose(fStream); }
@@ -272,7 +272,7 @@ static int StdHStat(const int iFd, StdFStatStruct*const sDestBuffer)
 /* -- Wrapper for localtime_r() function ----------------------------------- */
 static void StdLocalTime(StdTMStruct*const tmpResult,
   const StdTimeT*const tpTime)
-{ localtime_r(tpTime, tmpResult); }
+    { localtime_r(tpTime, tmpResult); }
 /* -- Wrapper for mktime() function ---------------------------------------- */
 static StdTimeT StdMkTime(StdTMStruct*const tmpResult)
   { return mktime(tmpResult); }
@@ -310,7 +310,7 @@ template<typename IntType=int64_t>
 }
 /* -- Returns if the specified number is a power of two -------------------- */
 template<typename IntType=int64_t>static bool StdIntIsPOW2(const IntType itVal)
-    { return !((itVal & (itVal - 1)) && itVal); }
+  { return !((itVal & (itVal - 1)) && itVal); }
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## Because some compilers may not allow me to alias ::std::move        ## **

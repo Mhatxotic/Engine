@@ -357,6 +357,7 @@ struct CLHelper :                      // Members initially public
   void CollectorDestroyUnsafe(void) { this->CLBaseDestroyUnsafe(); }
   /* -- Return if collector is empty --------------------------------------- */
   bool CollectorEmpty(void) { return this->CLEmpty(); }
+  bool CollectorNotEmpty(void) { return !CollectorEmpty(); }
   /* -- Check for overflow ------------------------------------------------- */
   void CollectorCheck(void) { this->CLCheck(); }
   void CollectorCheckUnsafe(void) { this->CLBaseCheckUnsafe(); }

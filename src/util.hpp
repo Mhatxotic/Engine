@@ -397,7 +397,7 @@ template<typename FloatType>
 /* -- Returns true if two numbers are NOT equal (Omit != and == warnings) -- */
 template<typename FloatType>
   static bool UtilIsFloatNotEqual(const FloatType f1, const FloatType f2)
-    { return !UtilIsFloatEqual<FloatType>(f1, f2); }
+    { return ((f1 < f2) || (f1 > f2)); }
 /* -- Clear any static data of any size ------------------------------------ */
 template<typename StaticType>void UtilClearStatic(StaticType &stData)
   { memset(&stData, '\0', sizeof(stData)); }

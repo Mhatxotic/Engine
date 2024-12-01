@@ -7,35 +7,36 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
-local tonumber<const>, format<const>, pairs<const>, floor<const> =
-  tonumber, string.format, pairs, math.floor;
+local cos<const>, floor<const>, format<const>, pairs<const>, sin<const>,
+  tonumber<const> =
+    math.cos, math.floor, string.format, pairs, math.sin, tonumber;
 -- M-Engine function aliases ----------------------------------------------- --
-local UtilFormatTime<const>, CoreOSTime<const>, VariableSave<const> =
-  Util.FormatTime, Core.OSTime, Variable.Save;
+local UtilFormatTime<const>, CoreOSTime<const>, CoreTime<const>,
+  VariableSave<const> = Util.FormatTime, Core.OSTime, Core.Time, Variable.Save;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitCon, IsButtonReleased, IsMouseInBounds, IsMouseNotInBounds,
-  LoadResources, PlayStaticSound, RenderShadow, SetBottomRightTipAndShadow,
-  SetCallbacks, SetCursor, SetKeys, aLevelsData, aObjectData, aObjectTypes,
-  fontSpeech, texSpr;
+local Fade, InitCon, LoadResources, PlayStaticSound, RenderFade, RenderShadow,
+  RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, SetTip, aLevelsData,
+  aObjectData, aObjectTypes, fontSpeech, texSpr;
 -- Locals ------------------------------------------------------------------ --
-local aFileData;                       -- File data
-local aNameData;                       -- File names data
+local aAssets,                         -- Required assets
+      aFileData, aNameData;            -- File and file names data
 local aSaveSlot<const> = { };          -- Contains save cvars
-local iCArrow, iCExit, iCOK, iCSelect; -- Cursor ids
-local iKeyBankId;                      -- Key bank id
-local iSClick, iSSelect;               -- Sound effects used
-local iSelected;                       -- File selected
-local sMsg;                            -- Title text
-local sTip;                            -- Current tip
-local texFile;                         -- File screen texture
-local texLobby;                        -- Lobby texture
-local tileFile;                        -- File texture tile
--- Assets required --------------------------------------------------------- --
-local aAssets<const> = { { T = 2, F = "cntrl",  P = { 0 } },
-                         { T = 2, F = "lobbyc", P = { 0 } } };
+local iHotSpotIdLoadOnly,              -- Hot spot id (Load only)
+      iHotSpotIdLoadSave,              -- Hot spot id (Load AND save)
+      iHotSpotIdNoLoadSave,            -- Hot spot id (No load/save)
+      iHotSpotIdSaveOnly,              -- Hot spot id (Save only)
+      iKeyBankIdLoadOnly,              -- Key bank id (Load only)
+      iKeyBankIdLoadSave,              -- Key bank id (Load AND save)
+      iKeyBankIdNoLoadSave,            -- Key bank id (No load/save)
+      iKeyBankIdSaveOnly,              -- Key bank id (Save only)
+      iSClick, iSSelect,               -- Sound effect ids
+      iSelected,                       -- File selected
+      sMsg,                            -- Title text
+      texFile, texLobby;               -- File screen and lobby texture
+local tileFile<const> = 20;            -- File texture tile
 -- Match text -------------------------------------------------------------- --
 local sFileMatchText<const> =
   "^(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),\z
@@ -48,11 +49,11 @@ local function InitNewGame()
   aGlobalData.gGameSaved,        aGlobalData.gLevelsCompleted,
   aGlobalData.gNewGame,          aGlobalData.gPercentCompleted,
   aGlobalData.gSelectedLevel,    aGlobalData.gSelectedRace,
-  aGlobalData.gTotalCapital,     aGlobalData.gTotalDeathExp,
+  aGlobalData.gTotalCapital,     aGlobalData.gTotalExploration,
   aGlobalData.gTotalDeaths,      aGlobalData.gTotalDug,
   aGlobalData.gTotalGemsFound,   aGlobalData.gTotalGemsSold,
-  aGlobalData.gTotalIncome,      aGlobalData.gTotalPurchExp,
-  aGlobalData.gTotalPurchases,   aGlobalData.gTotalSalaryPaid,
+  aGlobalData.gTotalIncome,      aGlobalData.gTotalEnemyKills,
+  aGlobalData.gTotalPurchases,   aGlobalData.gTotalHomicides,
   aGlobalData.gTotalTimeTaken,   aGlobalData.gZogsToWinGame =
     0,                             0,
     true,                          { },
@@ -119,88 +120,31 @@ local function LoadSaveData()
   -- Return data
   return aFileData, aNameData;
 end
--- Set tip and cursor ------------------------------------------------------ --
-local function SetCursorAndTip(iCId, sWhat) SetCursor(iCId) sTip = sWhat end;
 -- Render callback --------------------------------------------------------- --
 local function RenderFile()
-  -- Draw backdrop
+  -- Draw trace-centre backdrop, file screen and shadow
   texLobby:BlitLT(-54, 0);
-  -- Draw controller screen
   texFile:BlitSLT(tileFile, 8, 8);
-  -- Render shadow
   RenderShadow(8, 8, 312, 208);
   -- Draw message
   fontSpeech:SetCRGB(0, 0, 0.25);
   fontSpeech:PrintC(160, 31, sMsg);
   -- Render file names
-  for I = 1, 4 do
+  for iFileId = 1, 4 do
     -- File selected? Draw selection box!
-    if iSelected == I then
-      texSpr:BlitSLTRB(801, 35, 47+(I*13), 285, 60+(I*13));
+    if iSelected == iFileId then
+      local nTime<const> = CoreTime();
+      RenderFade(0.5+(sin(nTime)*cos(nTime)*0.25), 35, 47 + (iFileId * 13), 285, 60 + (iFileId * 13));
     end
     -- Print name of file
     fontSpeech:SetCRGB(1, 1, 1);
-    fontSpeech:PrintC(160, 49+(I*13), aNameData[I]);
+    fontSpeech:PrintC(160, 49 + (iFileId * 13), aNameData[iFileId]);
   end
   -- Draw tip
-  SetBottomRightTipAndShadow(sTip);
+  RenderTipShadow();
 end
--- Mouse over events ------------------------------------------------------- --
-local function MouseOverExit()
-  return IsMouseNotInBounds(8, 8, 312, 208) end;
-local function MouseOverLoad()
-  return IsMouseInBounds(57, 126, 115, 183) end;
-local function MouseOverSave()
-  return IsMouseInBounds(201, 126, 259, 183) end;
-local function MouseOverFile1()
-  return IsMouseInBounds(35, 60, 281, 73) end;
-local function MouseOverFile2()
-  return IsMouseInBounds(35, 71, 281, 88) end;
-local function MouseOverFile3()
-  return IsMouseInBounds(35, 84, 281, 101) end;
-local function MouseOverFile4()
-  return IsMouseInBounds(35, 97, 281, 114) end;
--- Item selected ----------------------------------------------------------- --
-local function Select(Id)
-  -- Play select sound
-  PlayStaticSound(iSClick);
-  -- Set selected file
-  iSelected = Id;
-  -- Set message to selected file
-  sMsg = aNameData[iSelected];
-end
--- File screen logic ------------------------------------------------------- --
-local function FileLogic()
-  -- Load icon?
-  if MouseOverLoad() then
-    -- If we can load?
-    if iSelected and aFileData[iSelected] then
-      return SetCursorAndTip(iCOK, "LOAD "..iSelected) end;
-    -- Can't load
-    return SetCursorAndTip(iCArrow, "CAN'T LOAD");
-  end
-  -- Save icon?
-  if MouseOverSave() then
-    -- Race selected, file selected and not a new game? Can save!
-    if aGlobalData.gSelectedRace and
-       iSelected and
-       not aGlobalData.gNewGame then
-      return SetCursorAndTip(iCOK, "SAVE "..iSelected) end;
-    -- Can't save
-    return SetCursorAndTip(iCArrow, "CAN'T SAVE");
-  end
-  -- File selection
-  if MouseOverFile1() then return SetCursorAndTip(iCSelect, "SELECT 1") end;
-  if MouseOverFile2() then return SetCursorAndTip(iCSelect, "SELECT 2") end;
-  if MouseOverFile3() then return SetCursorAndTip(iCSelect, "SELECT 3") end;
-  if MouseOverFile4() then return SetCursorAndTip(iCSelect, "SELECT 4") end;
-  -- Mouse over exit area
-  if MouseOverExit() then return SetCursorAndTip(iCExit, "CONTROLLER") end;
-  -- Nothing selected, show subject
-  SetCursorAndTip(iCArrow, "FILE");
-end
--- Fade to lobby ----------------------------------------------------------- --
-local function Finish()
+-- Fade to controller ------------------------------------------------------ --
+local function GoCntrl()
   -- Play select sound
   PlayStaticSound(iSSelect);
   -- When faded out?
@@ -213,13 +157,30 @@ local function Finish()
   -- Fade out
   Fade(0, 1, 0.04, RenderFile, OnFadeOut);
 end
--- Select files ------------------------------------------------------------ --
-local function SelectFile1() Select(1) end;
-local function SelectFile2() Select(2) end;
-local function SelectFile3() Select(3) end;
-local function SelectFile4() Select(4) end;
+-- Item selected ----------------------------------------------------------- --
+local function Select(iId)
+  -- Return if already selected
+  if iId == iSelected then return end;
+  -- Play select sound
+  PlayStaticSound(iSClick);
+  -- Set selected file
+  iSelected = iId;
+  -- Set message to selected file
+  sMsg = aNameData[iSelected];
+  -- If new game?
+  if not aGlobalData.gSelectedRace or aGlobalData.gNewGame then
+    -- We can't save yet but can load
+    SetKeys(true, iKeyBankIdLoadOnly);
+    SetHotSpot(iHotSpotIdLoadOnly);
+  -- Continuation game?
+  else
+    -- We can save or load
+    SetKeys(true, iKeyBankIdLoadSave);
+    SetHotSpot(iHotSpotIdLoadSave);
+  end
+end
 -- Delete file ------------------------------------------------------------- --
-local function FileDelete()
+local function GoDelete()
   -- No id? Ignore
   if not iSelected or not aFileData[iSelected] then return end;
   -- Play sound
@@ -232,11 +193,20 @@ local function FileDelete()
   VariableSave();
   -- Refresh data
   aFileData, aNameData = LoadSaveData();
+  -- If new game?
+  if not aGlobalData.gSelectedRace or aGlobalData.gNewGame then
+    -- We can't save or load now
+    SetKeys(true, iKeyBankIdNoLoadSave);
+    SetHotSpot(iHotSpotIdNoLoadSave);
+  -- Continuation game?
+  else
+    -- We can save again
+    SetKeys(true, iKeyBankIdSaveOnly);
+    SetHotSpot(iHotSpotIdSaveOnly);
+  end
 end
 -- Load file --------------------------------------------------------------- --
-local function FileLoad()
-  -- No id? Ignore
-  if not iSelected or not aFileData[iSelected] then return end
+local function GoLoad()
   -- Play sound
   PlayStaticSound(iSSelect);
   -- Get data and if no data then ignore
@@ -246,11 +216,11 @@ local function FileLoad()
   aGlobalData.gSelectedLevel,  aGlobalData.gZogsToWinGame,
   aGlobalData.gBankBalance,    aGlobalData.gPercentCompleted,
   aGlobalData.gCapitalCarried, aGlobalData.gNewGame,
-  aGlobalData.gGameSaved,      aGlobalData.gTotalSalaryPaid,
-  aGlobalData.gTotalCapital,   aGlobalData.gTotalDeathExp,
+  aGlobalData.gGameSaved,      aGlobalData.gTotalHomicides,
+  aGlobalData.gTotalCapital,   aGlobalData.gTotalExploration,
   aGlobalData.gTotalDeaths,    aGlobalData.gTotalGemsSold,
   aGlobalData.gTotalGemsFound, aGlobalData.gTotalIncome,
-  aGlobalData.gTotalDug,       aGlobalData.gTotalPurchExp,
+  aGlobalData.gTotalDug,       aGlobalData.gTotalEnemyKills,
   aGlobalData.gTotalPurchases, aGlobalData.gLevelsCompleted =
     Data[2],                     Data[3],
     nil,                         17500,
@@ -265,13 +235,12 @@ local function FileLoad()
     Data[15],                    Data[16];
   -- Set success message
   sMsg = "FILE LOADED SUCCESSFULLY!";
+  -- Can save now
+  SetKeys(true, iKeyBankIdLoadSave);
+  SetHotSpot(iHotSpotIdLoadSave);
 end
--- Save file --------------------------------------------------------------- --
-local function FileSave()
-  -- No id or race? Ignore
-  if not iSelected or
-     not aGlobalData.gSelectedRace or
-     aGlobalData.gNewGame then return end;
+-- Save file
+local function GoSave()
   -- Number of levels and levels completed
   local NL, LC = 0, "";
   -- For each level completed
@@ -286,11 +255,11 @@ local function FileSave()
     format("%u,%u,%u,%d,%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%s",
       CoreOSTime(), aGlobalData.gTotalTimeTaken,
       aGlobalData.gSelectedRace, aGlobalData.gBankBalance,
-      aGlobalData.gCapitalCarried, aGlobalData.gTotalSalaryPaid,
-      aGlobalData.gTotalCapital, aGlobalData.gTotalDeathExp,
+      aGlobalData.gCapitalCarried, aGlobalData.gTotalHomicides,
+      aGlobalData.gTotalCapital, aGlobalData.gTotalExploration,
       aGlobalData.gTotalDeaths, aGlobalData.gTotalGemsSold,
       aGlobalData.gTotalGemsFound, aGlobalData.gTotalIncome,
-      aGlobalData.gTotalDug, aGlobalData.gTotalPurchExp,
+      aGlobalData.gTotalDug, aGlobalData.gTotalEnemyKills,
       aGlobalData.gTotalPurchases, NL, LC));
   -- Set message
   sMsg = "FILE "..iSelected.." SAVED SUCCESSFULLY!";
@@ -301,88 +270,109 @@ local function FileSave()
   -- Refresh data
   aFileData, aNameData = LoadSaveData();
 end
--- File screen input logic ------------------------------------------------- --
-local function FileInput()
-  -- Mouse button not clicked? Return!
-  if IsButtonReleased(0) then return;
-  -- Load clicked and file selected?
-  elseif MouseOverLoad() then FileLoad();
-  -- Save clicked and file selected?
-  elseif MouseOverSave() then FileSave();
-  -- File 1 clicked?
-  elseif MouseOverFile1() then SelectFile1();
-  -- File 2 clicked?
-  elseif MouseOverFile2() then SelectFile2();
-  -- File 3 clicked?
-  elseif MouseOverFile3() then SelectFile3();
-  -- File 4 clicked?
-  elseif MouseOverFile4() then SelectFile4();
-  -- Exit clicked?
-  elseif MouseOverExit() then Finish() end;
+-- Action functions -------------------------------------------------------- --
+local function GoFile1() Select(1) end;
+local function GoFile2() Select(2) end;
+local function GoFile3() Select(3) end;
+local function GoFile4() Select(4) end;
+-- Selection adjust function ----------------------------------------------- --
+local function GoAdjustFile(iAmount)
+  Select(1 + ((((iSelected or 0) + iAmount) - 1) % 4));
+end
+-- Mouse scroll event ------------------------------------------------------ --
+local function OnScroll(nX, nY)
+  if nY < 0 then GoAdjustFile(1) elseif nY > 0 then GoAdjustFile(-1) end
 end
 -- When file screen has faded in? ------------------------------------------ --
 local function OnFadeIn()
-  -- Set key bank
-  SetKeys(true, iKeyBankId);
+  -- Set key bank and hotspot id
+  SetKeys(true, iKeyBankIdNoLoadSave);
+  SetHotSpot(iHotSpotIdNoLoadSave);
   -- Set controller callbacks
-  SetCallbacks(FileLogic, RenderFile, FileInput);
+  SetCallbacks(nil, RenderFile);
 end
 -- When file assets have loaded? ------------------------------------------- --
-local function OnLoaded(aResources)
+local function OnAssetsLoaded(aResources)
   -- Set loaded texture resource and create tile for file screen
   texFile = aResources[1];
-  tileFile = texFile:TileA(207, 0, 512, 200);
   -- Setup lobby texture
   texLobby = aResources[2];
-  texLobby:TileSTC(1);
-  texLobby:TileS(0, 0, 272, 428, 512);
   -- Display data
   aFileData, aNameData = LoadSaveData();
-  -- Top message, selected file and bottom-right tip
-  sMsg, iSelected, sTip = "SELECT FILE", nil, nil;
+  -- Make sure nothing selected so load/save buttons are disabled
+  iSelected, sMsg = nil, "SELECT FILE";
   -- Change render procedures
   Fade(1, 0, 0.04, RenderFile, OnFadeIn);
 end
 -- Init load/save screen function ------------------------------------------ --
-local function InitFile() LoadResources("File", aAssets, OnLoaded) end;
+local function InitFile() LoadResources("File", aAssets, OnAssetsLoaded) end;
 -- Scripts have been loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitCon, IsButtonReleased, IsMouseInBounds, IsMouseNotInBounds,
-    LoadResources, PlayStaticSound, RenderShadow, SetBottomRightTipAndShadow,
-    SetCallbacks, SetCursor, SetKeys, aLevelsData, aObjectData, aObjectTypes,
-    aSaveSlot[1], aSaveSlot[2], aSaveSlot[3], aSaveSlot[4], fontSpeech,
-    texSpr =
-      GetAPI("Fade", "InitCon", "IsButtonReleased", "IsMouseInBounds",
-        "IsMouseNotInBounds", "LoadResources", "PlayStaticSound",
-        "RenderShadow", "SetBottomRightTipAndShadow", "SetCallbacks",
-        "SetCursor", "SetKeys", "aLevelsData", "aObjectData", "aObjectTypes",
-        "cvData1", "cvData2", "cvData3", "cvData4", "fontSpeech", "texSpr");
-  -- Register keybinds
-  local aKeys<const> = Input.KeyCodes;
-  iKeyBankId = GetAPI("RegisterKeys")("ZMTC FILE", {
-    [Input.States.PRESS] = {
-      { aKeys.BACKSPACE, FileDelete, "zmtcfdsf", "DELETE SELECTED FILE" },
-      { aKeys.L, FileLoad, "zmtcflsf", "LOAD SELECTED FILE" },
-      { aKeys.S, FileSave, "zmtcfssf", "SAVE SELECTED FILE" },
-      { aKeys.N1, SelectFile1, "zmtcfsfa", "SELECT 1ST FILE" },
-      { aKeys.N2, SelectFile2, "zmtcfsfb", "SELECT 2ND FILE" },
-      { aKeys.N3, SelectFile3, "zmtcfsfc", "SELECT 3RD FILE" },
-      { aKeys.N4, SelectFile4, "zmtcfsfd", "SELECT 4TH FILE" },
-      { aKeys.ESCAPE, Finish, "zmtcfc", "CANCEL" }
-    }
-  });
+  Fade, InitCon, LoadResources, PlayStaticSound, RegisterHotSpot, RegisterKeys,
+    RenderFade, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot,
+    SetKeys, SetTip, aAssetsData, aCursorIdData, aLevelsData, aObjectData,
+    aObjectTypes, aSaveSlot[1], aSaveSlot[2], aSaveSlot[3], aSaveSlot[4],
+    aSfxData, fontSpeech, texSpr =
+      GetAPI("Fade", "InitCon", "LoadResources", "PlayStaticSound",
+        "RegisterHotSpot", "RegisterKeys", "RenderFade", "RenderShadow",
+        "RenderTipShadow", "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip",
+        "aAssetsData", "aCursorIdData", "aLevelsData", "aObjectData",
+        "aObjectTypes", "cvData1", "cvData2", "cvData3", "cvData4", "aSfxData",
+        "fontSpeech", "texSpr");
+  -- Set assets data
+  aAssets = { aAssetsData.cntrl, aAssetsData.lobbyc };
   -- Set sound effect ids
-  local aSfxData<const> = GetAPI("aSfxData");
-    iSClick, iSSelect = aSfxData.CLICK, aSfxData.SELECT;
-  -- Set cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
-  iCOK, iCSelect, iCExit, iCArrow = aCursorIdData.OK, aCursorIdData.SELECT,
-    aCursorIdData.EXIT, aCursorIdData.ARROW;
+  iSClick, iSSelect = aSfxData.CLICK, aSfxData.SELECT;
+  -- Setup key banks
+  local aKeys<const> = Input.KeyCodes;
+  local iPress<const> = Input.States.PRESS;
+  local aKBDelete<const>, aKBLoad<const>, aKBSave<const>, aKBFile1<const>,
+    aKBFile2<const>, aKBFile3<const>, aKBFile4<const>, aKBEscape<const> =
+      { aKeys.BACKSPACE, GoDelete, "zmtcfdsf", "DELETE SELECTED FILE" },
+      { aKeys.L,         GoLoad,   "zmtcflsf", "LOAD SELECTED FILE"   },
+      { aKeys.S,         GoSave,   "zmtcfssf", "SAVE SELECTED FILE"   },
+      { aKeys.N1,        GoFile1,  "zmtcfsfa", "SELECT 1ST FILE"      },
+      { aKeys.N2,        GoFile2,  "zmtcfsfb", "SELECT 2ND FILE"      },
+      { aKeys.N3,        GoFile3,  "zmtcfsfc", "SELECT 3RD FILE"      },
+      { aKeys.N4,        GoFile4,  "zmtcfsfd", "SELECT 4TH FILE"      },
+      { aKeys.ESCAPE,    GoCntrl,  "zmtcfc",   "CANCEL"               };
+  local sName<const> = "ZMTC FILE";
+  iKeyBankIdLoadSave = RegisterKeys(sName, { [iPress] = { aKBDelete,
+    aKBLoad, aKBSave, aKBFile1, aKBFile2, aKBFile3, aKBFile4, aKBEscape } });
+  iKeyBankIdLoadOnly = RegisterKeys(sName, { [iPress] = { aKBDelete,
+    aKBLoad, aKBFile1, aKBFile2, aKBFile3, aKBFile4, aKBEscape } });
+  iKeyBankIdSaveOnly = RegisterKeys(sName, { [iPress] = { aKBDelete,
+    aKBSave, aKBFile1, aKBFile2, aKBFile3, aKBFile4, aKBEscape } });
+  iKeyBankIdNoLoadSave = RegisterKeys(sName, { [iPress] = { aKBDelete,
+    aKBFile1, aKBFile2, aKBFile3, aKBFile4, aKBEscape } });
+  -- Get cursor ids
+  local iCOK<const>, iCSelect<const>, iCExit<const> =
+    aCursorIdData.OK, aCursorIdData.SELECT, aCursorIdData.EXIT;
+  -- Setup hot spots
+  local aHSLoad<const>, aHSSave<const>, aHS1<const>, aHS2<const>, aHS3<const>,
+    aHS4<const>, aHSFile<const>, aHSCntrl<const> =
+      {  57, 126,  60,  60, 0, iCOK,     "LOAD FILE",  OnScroll, GoLoad  },
+      { 201, 126,  60,  60, 0, iCOK,     "SAVE FILE",  OnScroll, GoSave  },
+      {  35,  60, 250,  13, 0, iCSelect, "FILE 1",     OnScroll, GoFile1 },
+      {  35,  73, 250,  13, 0, iCSelect, "FILE 2",     OnScroll, GoFile2 },
+      {  35,  86, 250,  13, 0, iCSelect, "FILE 3",     OnScroll, GoFile3 },
+      {  35,  99, 250,  13, 0, iCSelect, "FILE 4",     OnScroll, GoFile4 },
+      {   8,   8, 304, 200, 0, 0,        "LOAD/SAVE",  OnScroll, false   },
+      {   0,   0,   0, 240, 3, iCExit,   "CONTROLLER", OnScroll, GoCntrl };
+  iHotSpotIdLoadSave = RegisterHotSpot({
+    aHSLoad, aHSSave, aHS1, aHS2, aHS3, aHS4, aHSFile, aHSCntrl });
+  iHotSpotIdLoadOnly = RegisterHotSpot({
+    aHSLoad, aHS1, aHS2, aHS3, aHS4, aHSFile, aHSCntrl });
+  iHotSpotIdSaveOnly = RegisterHotSpot({
+    aHSSave, aHS1, aHS2, aHS3, aHS4, aHSFile, aHSCntrl });
+  iHotSpotIdNoLoadSave = RegisterHotSpot({
+    aHS1, aHS2, aHS3, aHS4, aHSFile, aHSCntrl });
 end
 -- Exports and imports ----------------------------------------------------- --
-return { F = OnReady, A = { InitFile = InitFile,
-                            InitNewGame = InitNewGame,
-                            LoadSaveData = LoadSaveData,
-                            aGlobalData = aGlobalData } };
+return { F = OnScriptLoaded, A = { InitFile = InitFile,
+  InitNewGame = InitNewGame, LoadSaveData = LoadSaveData,
+  aGlobalData = aGlobalData } };
 -- End-of-File ============================================================= --

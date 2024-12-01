@@ -19,8 +19,9 @@ namespace LLFont {                     // Font namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IConsole::P;           using namespace IFont::P;
 using namespace IFtf::P;               using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IOgl::P;
-using namespace ITexture::P;           using namespace Common;
+using namespace IImageDef::P;          using namespace IJson::P;
+using namespace IOgl::P;               using namespace ITexture::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Font common helper classes                                          ## **
@@ -41,6 +42,13 @@ struct AgPositive : public AgNumberL<GLfloat> {
 struct AgFontFlags : public AgFlags<ImageFlagsConst> {
   explicit AgFontFlags(lua_State*const lS, const int iArg) :
     AgFlags{ lS, iArg, FF_MASK }{} };
+/* -- Read vector of the specified number type ----------------------------- */
+template<class VectorValueType, class VectorType = vector<VectorValueType>>
+  struct AgNumberVector : public VectorType
+{ const VectorType &operator()(void) const { return *this; }
+  operator const VectorType&(void) const { return operator()(); }
+  explicit AgNumberVector(lua_State*const lS, const int iArg) :
+    VectorType{ LuaUtilToNumVector<VectorType>(lS, iArg)}{} };
 /* -- Other types ---------------------------------------------------------- */
 using Lib::OS::GlFW::GLubyte;
 typedef AgCString<GLubyte> AgGLString;
@@ -713,28 +721,15 @@ LLRSMFBEGIN                            // Font:* member functions begin
   LLRSFUNC(SetSpacing),
 LLRSEND                                // Font:* member functions end
 /* ========================================================================= */
-// $ Font.Image
-// > Source:Image=The source image for use with the font.
-// < Handle:Font=A handle to the newly created texture.
-// ? Creates a texture as a font tileset. The function looks for a file with
-// ? the same name as 'filename' with the .txt extension which explains the
-// ? parameters for the font tileset. These parameters are as follows...
-// ?
-// ? rangestart = The ASCII character to represent the first tile.
-// ? range = The number of ASCII characters in the tileset.
-// ? tilewidth = The width of the tile.
-// ? tileheight = The height of the tile.
-// ? tilespacingwidth = The horizontal spacing between each tile.
-// ? tilespacingheight = The vertical spacing between each tile.
-// ? filetype = The source type of texture.
-// ? width = The widths of each character separated by a whitespace.
-// ? default = The default ASCII character to draw if char not available.
-// ? name = A name to describe the font.
-// ? scale = The starting scale of the characters (i.e. 1=100%, 0.5=50%).
+// $ Font.Console
+// < Handle:Font=Font handle to console texture
+// ? Returns the handle to the console font. Useful if you want to reuse the
+// ? font in your application. Careful not to mess around with it's properties!
+/* ------------------------------------------------------------------------- */
+LLFUNC(Console, 1,
+  LuaUtilClassCreatePtr<Font>(lS, *cFonts, cConGraphics->GetFont()))
 /* ========================================================================= */
-LLFUNC(Image, 1, const AgImage aImage{lS, 1}; AcFont{lS}().InitFont(aImage))
-/* ========================================================================= */
-// $ Font.Create
+// $ Font.Ftf
 // > Font:Ftf=An ftf object of a loaded freetype font.
 // > Size:integer=The initial canvas size of the texture.
 // > Padding:integer=Amount of padding to use to prevent texture spilling.
@@ -745,28 +740,73 @@ LLFUNC(Image, 1, const AgImage aImage{lS, 1}; AcFont{lS}().InitFont(aImage))
 // ? ftf object invalidated externally as the new font object will assume
 // ? private ownership of it.
 /* ========================================================================= */
-LLFUNC(Create, 1,
+LLFUNC(Ftf, 1,
   const AgFtf aFtf{lS, 1};
   const AgGLuintLG aSize{lS, 2, 0, cOgl->MaxTexSize()},
                    aPadding{lS, 3, 0, 16};
   const AgFilterId aFilterId{lS, 4};
   const AgFontFlags aFlags{lS, 5};
-  AcFont{lS}().InitFTFont(aFtf, aSize, aPadding, aFilterId, aFlags))
+  AcFont{lS}().InitFontFtf(aFtf, aSize, aPadding, aFilterId, aFlags))
 /* ========================================================================= */
-// $ Font.Console
-// < Handle:Font=Font handle to console texture
-// ? Returns the handle to the console font. Useful if you want to reuse the
-// ? font in your application. Careful not to mess around with it's properties!
-/* ------------------------------------------------------------------------- */
-LLFUNC(Console, 1,
-  LuaUtilClassCreatePtr<Font>(lS, *cFonts, cConGraphics->GetFont()))
+// $ Font.Image
+// > Source:Image=The source image for use with the font.
+// > TileWidth:integer=The maximum width of each font glyph.
+// > TileHeight:integer=The maximum height of each font glyph.
+// > PaddingWidth:integer=Pixels to ignore on the right of each glpyh.
+// > PaddingHeight:integer=Pixels to ignore on below each glpyh.
+// > FilterId:integer=The filter id to use.
+// > CharCount:integer=Number of characters available in the font.
+// > CharStart:integer=The starting UTF8 character id to begin with.
+// > CharDefault:integer=The default character for unsupported characters.
+// > Widths:table=Pixel widths of each glyph. Empty to set all to TileWidth.
+// < Handle:Font=A handle to the newly created texture.
+// ? Creates a texture as a font tileset.
+/* ========================================================================= */
+LLFUNC(Image, 1,
+  const AgImage aImage{lS, 1};
+  const AgGLuintLG aTileWidth{lS, 2, 0, cOgl->MaxTexSize()},
+                   aTileHeight{lS, 3, 0, cOgl->MaxTexSize()},
+                   aPaddingWidth{lS, 4, 0, cOgl->MaxTexSize()},
+                   aPaddingHeight{lS, 5, 0, cOgl->MaxTexSize()};
+  const AgFilterId aFilterId{lS, 6};
+  const AgSizeTL aCharCount{lS, 7, 1},
+                 aCharBegin{lS, 8, 0};
+  const AgSizeTLGE aCharDef{lS, 9, aCharBegin(), aCharBegin() + aCharCount()};
+  const AgNumberVector<GLfloat> aWidths{lS, 10};
+  AcFont{lS}().InitFontImage(aImage, aTileWidth(), aTileHeight(),
+    aPaddingWidth(), aPaddingHeight(), aFilterId(), aCharCount(), aCharBegin(),
+    aCharDef(),
+    aWidths))
+/* ========================================================================= */
+// $ Font.Manifest
+// > Source:Image=The source image for use with the font.
+// > Manifest:JSon=The manifest of information to describe the font.
+// < Handle:Font=A handle to the newly created texture.
+// ? Creates a texture as a font tileset using values from the specified
+// ? manifest. These parameters in the root object are as follows...
+// ?
+// ? Version:UInt = The current version of the manifest (1).
+// ? Default:UInt = The default UTF8 character to draw if char not available.
+// ? CharCount:UInt = The number of UTF8 characters in the tileset.
+// ? CharBegin:UInt = The UTF8 character to represent the first tile.
+// ? InitialScale:Number = The starting scale of the chars (0.0=0%><1.0=100%).
+// ? TileWidth:UInt = The width of the tile.
+// ? TileHeight:UInt = The height of the tile.
+// ? TileSpacingHeight:UInt = The vertical spacing between each tile.
+// ? TileSpacingWidth:UInt = The horizontal spacing between each tile.
+// ? Widths:Array = The widths of each character from value 'rangestart'
+/* ========================================================================= */
+LLFUNC(Manifest, 1,
+  const AgImage aImage{lS, 1};
+  const AgJson aJson{lS, 2};
+  AcFont{lS}().InitFontImageManifest(aImage, aJson))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Font.* namespace functions structure                                ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 LLRSBEGIN                              // Font.* namespace functions begin
-  LLRSFUNC(Create), LLRSFUNC(Image), LLRSFUNC(Console),
+  LLRSFUNC(Console), LLRSFUNC(Ftf), LLRSFUNC(Image), LLRSFUNC(Manifest),
 LLRSEND                                // Font.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

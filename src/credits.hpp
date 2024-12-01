@@ -97,7 +97,7 @@ static const class Credits final :     // Members initially private
   const string CreditGetItemText(const CreditLib &libItem) const try
   { // Using codec namespace
     using namespace ICodec;
-    return Block<CoDecoder>{ libItem }.MemToString();
+    return Block<CoDecoder>{ libItem }.MemToStringSafe();
   } // exception occured?
   catch(const exception &e)
   { // Log failure and try to reset the initial var so this does not
@@ -151,7 +151,7 @@ static const class Credits final :     // Members initially private
 #endif
       LD("OggVorbis", Lib::Ogg::vorbis_version_string()+19, "Xiph.Org",
         false, OGGVORBISTHEORA),
-      LD("OpenALSoft", "1.23.1", "Chris Robinson", false, OPENALSOFT),
+      LD("OpenALSoft", "1.24.1", "Chris Robinson", false, OPENALSOFT),
       LD("OpenSSL", STR(OPENSSL_VERSION_MAJOR) "." STR(OPENSSL_VERSION_MINOR)
         "." STR(OPENSSL_VERSION_PATCH), "OpenSSL Software Foundation", true,
         OPENSSL),

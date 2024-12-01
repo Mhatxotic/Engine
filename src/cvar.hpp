@@ -457,7 +457,8 @@ class CVarItem :                       // Members initially private
                     XC("CVar trusted path name is invalid!",
                        "Reason",   cDirBase->VNRtoStr(vrRes),
                        "Result",   vrRes,
-                       "Variable", GetVar());
+                       "Variable", GetVar(),
+                       "Path",     strNewValue);
         }
       } // Alpha characters only?
       if(FlagIsSet(CALPHA))

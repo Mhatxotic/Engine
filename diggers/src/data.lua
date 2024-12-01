@@ -7,7 +7,7 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Menu data types array --------------------------------------------------- --
 local MNU<const> = {                   -- Menu ids
@@ -159,11 +159,11 @@ local CID<const> = {
 -- Cursor data ------------------------------------------------------------- --
 local aCursorData<const> = {
   -- CID ------- S - C - X  Y ---- CID ------- S - C - X  Y ---
-  [CID.ARROW] ={ 992,  1, 0, 0}, [CID.OK]    ={1005,  4,-7,-7},
-  [CID.EXIT]  ={1001,  4,-7,-7}, [CID.LEFT]  ={ 997,  1,-7,-7},
-  [CID.TOP]   ={ 998,  1,-7,-7}, [CID.RIGHT] ={ 999,  1,-7,-7},
-  [CID.BOTTOM]={1000,  1,-7,-7}, [CID.SELECT]={ 993,  4,-7,-7},
-  [CID.WAIT]  ={ 960,  8,-7,-7}, [CID.NONE]  ={1009,  1, 0, 0},
+  [CID.ARROW] ={ 992,  1, 0,  0}, [CID.OK]    ={1005,  4,-7,-8},
+  [CID.EXIT]  ={1001,  4,-7, -8}, [CID.LEFT]  ={ 997,  1,-7,-7},
+  [CID.TOP]   ={ 998,  1,-7,  0}, [CID.RIGHT] ={ 999,  1,-7,-7},
+  [CID.BOTTOM]={1000,  1,-7,-15}, [CID.SELECT]={ 993,  4,-7,-7},
+  [CID.WAIT]  ={ 960,  8,-7, -7}, [CID.NONE]  ={1009,  1, 0, 0},
   -- CID ------- S - C - X  Y ---- CID ------- S - C - X  Y ---
 };
 -- Object flags ------------------------------------------------------------ --
@@ -173,44 +173,48 @@ local OFL<const> = {          -- Max 64-bits
   RESPAWN      = 0x000000001, -- Object respawns where it was created
   BUSY         = 0x000000002, -- Object is busy and commands disabled
   FALL         = 0x000000004, -- Object should fall
-  DELICATE     = 0x000000008, -- Object is delicate (takes more damage)
-  INWATER      = 0x000000010, -- Object is in water
-  PHASETARGET  = 0x000000020, -- Object is a valid random phase target
-  SOUNDLOOP    = 0x000000040, -- Object sound looped when sprite anim is reset
-  NOANIMLOOP   = 0x000000080, -- Object is not allowed to loop its animation
-  DIGGER       = 0x000000100, -- Object is a digger
-  REGENERATE   = 0x000000200, -- Object can regenerate health?
-  TPMASTER     = 0x000000400, -- Object is master at teleporting
-  IMPATIENT    = 0x000000800, -- Object is a digger and becoming impatient
-  JUMPFALL     = 0x000001000, -- Object is falling (while jumping)
-  JUMPRISE     = 0x000002000, -- Object is jumping
-  EXPLODE      = 0x000004000, -- Object explodes on death
-  FLOAT        = 0x000008000, -- Object floats in water
-  FLOATING     = 0x000010000, -- Object is floating right now
-  HURTDIGGER   = 0x000020000, -- Object hurts diggers
-  PHASEDIGGER  = 0x000040000, -- Object teleports diggers anywhere
-  PICKUP       = 0x000080000, -- Object can be picked up
-  PURSUEDIGGER = 0x000100000, -- Object follows a digger when colliding
-  RNGSPRITE    = 0x000200000, -- Object selects a random sprite in animation.
-  SELLABLE     = 0x000400000, -- Object is sellable to shop
-  STATIONARY   = 0x000800000, -- Object does not move and is stationary
-  TRACK        = 0x001000000, -- Object can only move on tracks
-  TREASURE     = 0x002000000, -- Object is treasure
-  DANGEROUS    = 0x004000000, -- Object is dangerous and diggers run away
-  WATERBASED   = 0x008000000, -- Object is water based
-  AQUALUNG     = 0x010000000, -- Object can breathe in water
-  BLOCK        = 0x020000000, -- Object is a platform for diggers
-  DEVICE       = 0x040000000, -- Object is a device
-  HEALNEARBY   = 0x080000000, -- Object heals nearby Diggers
-  CONSUME      = 0x100000000, -- Object consumes another object
-  NOHOME       = 0x200000000, -- Object cannot enter home
+  LIVING       = 0x000000008, -- Object is a living object
+  ENEMY        = 0x000000010, -- Object is an enemy
+  DELICATE     = 0x000000020, -- Object is delicate (takes more damage)
+  INWATER      = 0x000000040, -- Object is in water
+  PHASETARGET  = 0x000000080, -- Object is a valid random phase target
+  SOUNDLOOP    = 0x000000100, -- Object sound looped when sprite anim is reset
+  NOANIMLOOP   = 0x000000200, -- Object is not allowed to loop its animation
+  DIGGER       = 0x000000400, -- Object is a digger
+  REGENERATE   = 0x000000800, -- Object can regenerate health?
+  TPMASTER     = 0x000001000, -- Object is master at teleporting
+  IMPATIENT    = 0x000002000, -- Object is a digger and becoming impatient
+  JUMPFALL     = 0x000004000, -- Object is falling (while jumping)
+  JUMPRISE     = 0x000008000, -- Object is jumping
+  EXPLODE      = 0x000010000, -- Object explodes on death
+  FLOAT        = 0x000020000, -- Object floats in water
+  FLOATING     = 0x000040000, -- Object is floating right now
+  HURTDIGGER   = 0x000080000, -- Object hurts diggers
+  PHASEDIGGER  = 0x000100000, -- Object teleports diggers anywhere
+  PICKUP       = 0x000200000, -- Object can be picked up
+  PURSUEDIGGER = 0x000400000, -- Object follows a digger when colliding
+  RNGSPRITE    = 0x000800000, -- Object selects a random sprite in animation.
+  SELLABLE     = 0x001000000, -- Object is sellable to shop
+  STATIONARY   = 0x002000000, -- Object does not move and is stationary
+  TRACK        = 0x004000000, -- Object can only move on tracks
+  TREASURE     = 0x008000000, -- Object is treasure
+  DANGEROUS    = 0x010000000, -- Object is dangerous and diggers run away
+  WATERBASED   = 0x020000000, -- Object is water based
+  AQUALUNG     = 0x040000000, -- Object can breathe in water
+  BLOCK        = 0x080000000, -- Object is a platform for diggers
+  DEVICE       = 0x100000000, -- Object is a device
+  HEALNEARBY   = 0x200000000, -- Object heals nearby Diggers
+  CONSUME      = 0x400000000, -- Object consumes another object
+  NOHOME       = 0x800000000, -- Object cannot enter home
 };
 OFL.JUMPMASK = OFL.JUMPRISE|OFL.JUMPFALL;
 -- Jumping ----------------------------------------------------------------- --
 local aJumpRiseData<const> =
-  { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0 };
+  { -2, -2, -2, -1, -1, -1, -1,    -1, -1, -1,  0, -1,  0,  0, -1,  0,
+     0,  0, -1,  0,  0,  0,  0 };
 local aJumpFallData<const> =
-  { 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+  {  0,  0,  0,  0,  0,  0,  1,     0,  0,  1,  0,  1,  0,  1,  1,  1,
+     1,  1,  1,  1,  2,  2,  2 };
 -- Directions -------------------------------------------------------------- --
 local DIR<const> = {
   UL       = 0x01, -- Move left and dig up-left diagonally
@@ -413,46 +417,54 @@ local aLevelTypesData<const> = {
   aLevelTypeDesert,   aLevelTypeGrass, aLevelTypeIslands, aLevelTypeJungle,
   aLevelTypeMountain, aLevelTypeRock,  aLevelTypeWinter,
 };
--- Skill levels and Zogs required for each zone --------------------------- --
-local iSkillEasiest<const>, iSkillEasy<const>, iSkillMedium<const>,
-  iSkillHard<const>, iSkillHardest<const> = 600, 1000, 1300, 1500, 2100;
+-- Skill levels ------------------------------------------------------------ --
+local aSkillLevels<const> = {
+  { r= 600, n="VERY EASY" }, { r=1000, n="EASY" }, { r=1300, n="AVERAGE" },
+  { r=1500, n="HARD" }, { r=2100, n="VERY HARD" }
+};
+local aSkillEasiest<const>, aSkillEasy<const>,
+      aSkillMedium<const>,  aSkillHard<const>,
+      aSkillHardest<const> =
+        aSkillLevels[1], aSkillLevels[2],
+        aSkillLevels[3], aSkillLevels[4],
+        aSkillLevels[5];
 -- Level data types array -------------------------------------------------- --
 local aLevelsData<const> =
 { -- Name --------- WinReq - Filename ----- Terrain type ------------------- --
-  { n="AZERG",     w=iSkillEasiest,  f="azerg",     t=aLevelTypeRock     },
-  { n="DHOBBS",    w=iSkillEasiest,  f="dhobbs",    t=aLevelTypeGrass    },
-  { n="ELEEVATE",  w=iSkillEasiest,  f="eleevate",  t=aLevelTypeGrass    },
-  { n="DEENA",     w=iSkillEasiest,  f="deena",     t=aLevelTypeGrass    },
-  { n="JUHSTYN",   w=iSkillEasiest,  f="juhstyn",   t=aLevelTypeIslands  },
-  { n="FUJALE",    w=iSkillEasy,     f="fujale",    t=aLevelTypeGrass    },
-  { n="HAEWOULD",  w=iSkillEasiest,  f="haewould",  t=aLevelTypeGrass    },
-  { n="SAIRRUHR",  w=iSkillEasy,     f="sairruhr",  t=aLevelTypeJungle   },
-  { n="TRARGHE",   w=iSkillEasiest,  f="trarghe",   t=aLevelTypeJungle   },
-  { n="KURVELYNN", w=iSkillMedium,   f="kurvelynn", t=aLevelTypeMountain },
-  { n="SQUEEK",    w=iSkillMedium,   f="squeek",    t=aLevelTypeJungle   },
-  { n="MYKEBORL",  w=iSkillMedium,   f="mykeborl",  t=aLevelTypeDesert   },
-  { n="ZORLYACK",  w=iSkillMedium,   f="zorlyack",  t=aLevelTypeRock     },
-  { n="FTARGUS",   w=iSkillMedium,   f="ftargus",   t=aLevelTypeRock     },
-  { n="TRAISA",    w=iSkillMedium,   f="traisa",    t=aLevelTypeDesert   },
-  { n="KLINDYKE",  w=iSkillMedium,   f="klindyke",  t=aLevelTypeMountain },
-  { n="EEANZONE",  w=iSkillMedium,   f="eeanzone",  t=aLevelTypeGrass    },
-  { n="CHYEISHIR", w=iSkillMedium,   f="chyeishir", t=aLevelTypeGrass    },
-  { n="DJENNEEE",  w=iSkillMedium,   f="djenneee",  t=aLevelTypeWinter   },
-  { n="DWINDERA",  w=iSkillMedium,   f="dwindera",  t=aLevelTypeWinter   },
-  { n="TWANG",     w=iSkillMedium,   f="twang",     t=aLevelTypeJungle   },
-  { n="HABBARD",   w=iSkillMedium,   f="habbard",   t=aLevelTypeMountain },
-  { n="BENJAR",    w=iSkillMedium,   f="benjar",    t=aLevelTypeDesert   },
-  { n="SHRUBREE",  w=iSkillHard,     f="shrubree",  t=aLevelTypeJungle   },
-  { n="BAROK",     w=iSkillHard,     f="barok",     t=aLevelTypeIslands  },
-  { n="MUHLAHRD",  w=iSkillHard,     f="muhlahrd",  t=aLevelTypeDesert   },
-  { n="CHONSKEE",  w=iSkillHard,     f="chonskee",  t=aLevelTypeRock     },
-  { n="PURTH",     w=iSkillHard,     f="purth",     t=aLevelTypeMountain },
-  { n="ANKH",      w=iSkillHard,     f="ankh",      t=aLevelTypeWinter   },
-  { n="ZELIOS",    w=iSkillHardest,  f="zelios",    t=aLevelTypeWinter   },
-  { n="FRUER",     w=iSkillHardest,  f="fruer",     t=aLevelTypeIslands  },
-  { n="KLARSH",    w=iSkillHardest,  f="klarsh",    t=aLevelTypeJungle   },
-  { n="SUHMNER",   w=iSkillHardest,  f="suhmner",   t=aLevelTypeIslands  },
-  { n="SIMTOB",    w=iSkillHardest,  f="simtob",    t=aLevelTypeJungle   },
+  { n="AZERG",     w=aSkillEasiest,  f="azerg",     t=aLevelTypeRock     },
+  { n="DHOBBS",    w=aSkillEasiest,  f="dhobbs",    t=aLevelTypeGrass    },
+  { n="ELEEVATE",  w=aSkillEasiest,  f="eleevate",  t=aLevelTypeGrass    },
+  { n="DEENA",     w=aSkillEasiest,  f="deena",     t=aLevelTypeGrass    },
+  { n="JUHSTYN",   w=aSkillEasiest,  f="juhstyn",   t=aLevelTypeIslands  },
+  { n="FUJALE",    w=aSkillEasy,     f="fujale",    t=aLevelTypeGrass    },
+  { n="HAEWOULD",  w=aSkillEasiest,  f="haewould",  t=aLevelTypeGrass    },
+  { n="SAIRRUHR",  w=aSkillEasy,     f="sairruhr",  t=aLevelTypeJungle   },
+  { n="TRARGHE",   w=aSkillEasiest,  f="trarghe",   t=aLevelTypeJungle   },
+  { n="KURVELYNN", w=aSkillMedium,   f="kurvelynn", t=aLevelTypeMountain },
+  { n="SQUEEK",    w=aSkillMedium,   f="squeek",    t=aLevelTypeJungle   },
+  { n="MYKEBORL",  w=aSkillMedium,   f="mykeborl",  t=aLevelTypeDesert   },
+  { n="ZORLYACK",  w=aSkillMedium,   f="zorlyack",  t=aLevelTypeRock     },
+  { n="FTARGUS",   w=aSkillMedium,   f="ftargus",   t=aLevelTypeRock     },
+  { n="TRAISA",    w=aSkillMedium,   f="traisa",    t=aLevelTypeDesert   },
+  { n="KLINDYKE",  w=aSkillMedium,   f="klindyke",  t=aLevelTypeMountain },
+  { n="EEANZONE",  w=aSkillMedium,   f="eeanzone",  t=aLevelTypeGrass    },
+  { n="CHYEISHIR", w=aSkillMedium,   f="chyeishir", t=aLevelTypeGrass    },
+  { n="DJENNEEE",  w=aSkillMedium,   f="djenneee",  t=aLevelTypeWinter   },
+  { n="DWINDERA",  w=aSkillMedium,   f="dwindera",  t=aLevelTypeWinter   },
+  { n="TWANG",     w=aSkillMedium,   f="twang",     t=aLevelTypeJungle   },
+  { n="HABBARD",   w=aSkillMedium,   f="habbard",   t=aLevelTypeMountain },
+  { n="BENJAR",    w=aSkillMedium,   f="benjar",    t=aLevelTypeDesert   },
+  { n="SHRUBREE",  w=aSkillHard,     f="shrubree",  t=aLevelTypeJungle   },
+  { n="BAROK",     w=aSkillHard,     f="barok",     t=aLevelTypeIslands  },
+  { n="MUHLAHRD",  w=aSkillHard,     f="muhlahrd",  t=aLevelTypeDesert   },
+  { n="CHONSKEE",  w=aSkillHard,     f="chonskee",  t=aLevelTypeRock     },
+  { n="PURTH",     w=aSkillHard,     f="purth",     t=aLevelTypeMountain },
+  { n="ANKH",      w=aSkillHard,     f="ankh",      t=aLevelTypeWinter   },
+  { n="ZELIOS",    w=aSkillHardest,  f="zelios",    t=aLevelTypeWinter   },
+  { n="FRUER",     w=aSkillHardest,  f="fruer",     t=aLevelTypeIslands  },
+  { n="KLARSH",    w=aSkillHardest,  f="klarsh",    t=aLevelTypeJungle   },
+  { n="SUHMNER",   w=aSkillHardest,  f="suhmner",   t=aLevelTypeIslands  },
+  { n="SIMTOB",    w=aSkillHardest,  f="simtob",    t=aLevelTypeJungle   },
   -- Name --------- WinReq ----- Map name ------------ Map objects name --- --
 };
 -- Map data lookup table -------------------------------------------------- --
@@ -528,14 +540,14 @@ local aDiggerKeys<const> = {
   [ACT.DROP]  = aObjectJobDirKeep,
   [ACT.GRAB]  = aObjectJobDirKeep,
   [ACT.JUMP]  = aObjectJobDirKeep,
-  [ACT.PHASE] = { [JOB.PHASE] = { [DIR.U] = true } };
+  [ACT.PHASE] = { [JOB.PHASE] = { [DIR.U] = true } },
   [ACT.RUN]   = aDiggerMovement,
   [ACT.STOP]  = aObjectStop,
   [ACT.WALK]  = aDiggerMovement,
 }
 -- Small and large tuneller accepted keys ---------------------------------- --
 local aTunnellerKeys<const> = {
-  [ACT.STOP] = aObjectStop;
+  [ACT.STOP] = aObjectStop,
   [ACT.WALK] = { [JOB.NONE] = aObjectLeftRight,
                  [JOB.DIG] = aObjectLeftRight }
 };
@@ -635,7 +647,8 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION       = ACT.STOP,              AITYPE       = AI.DIGGER,
  ANIMTIMER    = aTimerData.ANIMNORMAL, DIGDELAY     = 60,
- DIRECTION    = DIR.NONE,              FLAGS        = OFL.DIGGER|OFL.DELICATE,
+ DIRECTION    = DIR.NONE,
+ FLAGS        = OFL.DIGGER|OFL.DELICATE|OFL.LIVING,
  INTELLIGENCE = 0.7,                   JOB          = JOB.NONE,
  KEYS         = aDiggerKeys,           LONGNAME     = "F'TARG",
  LUNGS        = 4,                     MENU         = MNU.MAIN,
@@ -698,7 +711,7 @@ local aObjectData<const> = {           -- Objects data
  ACTION       = ACT.STOP,              AITYPE       = AI.DIGGER,
  ANIMTIMER    = aTimerData.ANIMNORMAL, DIGDELAY     = 70,
  DIRECTION    = DIR.NONE,
- FLAGS        = OFL.DIGGER|OFL.DELICATE|OFL.TPMASTER,
+ FLAGS        = OFL.DIGGER|OFL.DELICATE|OFL.TPMASTER|OFL.LIVING,
  INTELLIGENCE = 0.9,                   JOB          = JOB.NONE,
  KEYS         = aDiggerKeys,           LONGNAME     = "HABBISH",
  LUNGS        = 12,                    MENU         = MNU.MAIN,
@@ -757,7 +770,8 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION       = ACT.STOP,              AITYPE       = AI.DIGGER,
  ANIMTIMER    = aTimerData.ANIMNORMAL, DIGDELAY     = 50,
- DIRECTION    = DIR.NONE,              FLAGS        = OFL.DIGGER|OFL.DELICATE,
+ DIRECTION    = DIR.NONE,
+ FLAGS        = OFL.DIGGER|OFL.DELICATE|OFL.LIVING,
  INTELLIGENCE = 0.8,                   JOB          = JOB.NONE,
  KEYS         = aDiggerKeys,           LONGNAME     = "GRABLIN",
  LUNGS        = 8,                     MENU         = MNU.MAIN,
@@ -816,7 +830,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION       = ACT.STOP,              AITYPE       = AI.DIGGER,
  ANIMTIMER    = aTimerData.ANIMNORMAL, DIGDELAY     = 80,
- DIRECTION    = DIR.NONE,              FLAGS        = OFL.DIGGER,
+ DIRECTION    = DIR.NONE,              FLAGS        = OFL.DIGGER|OFL.LIVING,
  INTELLIGENCE = 0.6,                   JOB          = JOB.NONE,
  KEYS         = aDiggerKeys,           LONGNAME     = "QUARRIOR",
  LUNGS        = 16,                    MENU         = MNU.MAIN,
@@ -937,7 +951,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.RANDOM,
  ANIMTIMER = aTimerData.ANIMFAST,      DIRECTION = DIR.NONE,
- FLAGS     = OFL.AQUALUNG,             JOB       = JOB.NONE,
+ FLAGS     = OFL.AQUALUNG|OFL.ENEMY,   JOB       = JOB.NONE,
  LONGNAME  = "PHANTOM",                NAME      = "PHANTOM",
  STAMINA   = -1,                       STRENGTH  = 0,
  TELEDELAY = 200,                      VALUE     = 0,
@@ -955,7 +969,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.FINDSLOW,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.AQUALUNG,             JOB       = JOB.NONE,
+ FLAGS     = OFL.AQUALUNG|OFL.ENEMY,   JOB       = JOB.NONE,
  LONGNAME  = "SKELETON",               NAME      = "SKELETON",
  STAMINA   = -1,                       STRENGTH  = 0,
  TELEDELAY = 200,                      VALUE     = 0,
@@ -973,7 +987,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.FIND,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.AQUALUNG,             JOB       = JOB.NONE,
+ FLAGS     = OFL.AQUALUNG|OFL.ENEMY,   JOB       = JOB.NONE,
  LONGNAME  = "ZOMBIE",                 NAME      = "ZOMBIE",
  STAMINA   = -1,                       STRENGTH  = 0,
  TELEDELAY = 200,                      VALUE     = 0,
@@ -991,7 +1005,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.FINDSLOW,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.AQUALUNG,             JOB       = JOB.NONE,
+ FLAGS     = OFL.AQUALUNG|OFL.ENEMY,   JOB       = JOB.NONE,
  LONGNAME  = "GHOST",                  NAME      = "GHOST",
  STAMINA   = -1,                       STRENGTH  = 0,
  TELEDELAY = 200,                      VALUE     = 0,
@@ -1009,7 +1023,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.FINDSLOW,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.AQUALUNG,             JOB       = JOB.NONE,
+ FLAGS     = OFL.AQUALUNG|OFL.ENEMY,   JOB       = JOB.NONE,
  LONGNAME  = "ZIPPER",                 NAME      = "ZIPPER",
  STAMINA   = -1,                       STRENGTH  = 0,
  TELEDELAY = 200,                      VALUE     = 0,
@@ -1027,7 +1041,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.FIND,
  ANIMTIMER = aTimerData.ANIMFAST,      DIRECTION = DIR.NONE,
- FLAGS     = OFL.AQUALUNG,             JOB       = JOB.NONE,
+ FLAGS     = OFL.AQUALUNG|OFL.ENEMY,   JOB       = JOB.NONE,
  LONGNAME  = "SWIRLYPORT",             NAME      = "SWRLYPRT",
  STAMINA   = -1,                       STRENGTH  = 0,
  TELEDELAY = 200,                      VALUE     = 0,
@@ -1046,7 +1060,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.STATIONARY,           JOB       = JOB.NONE,
+ FLAGS     = OFL.STATIONARY|OFL.LIVING,JOB       = JOB.NONE,
  LONGNAME  = "PIRANA PLANT",           LUNGS     = 128,
  NAME      = "PIRANA",                 STAMINA   = -1,
  STRENGTH  = 0,                        TELEDELAY = 200,
@@ -1065,7 +1079,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.STATIONARY|OFL.AQUALUNG,
+ FLAGS     = OFL.STATIONARY|OFL.AQUALUNG|OFL.LIVING,
  JOB       = JOB.NONE,                 LONGNAME  = "FUNGUS",
  NAME      = "FUNGUS",                 STAMINA   = -1,
  STRENGTH  = 0,                        TELEDELAY = 200,
@@ -1081,11 +1095,11 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.RUN,                  AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
- JOB       = JOB.BOUNCE,               LONGNAME  = "ALIEN",
- LUNGS     = 32,                       NAME      = "ALIEN",
- STAMINA   = -1,                       STRENGTH  = 0,
- TELEDELAY = 20,                       VALUE     = 0,
- WEIGHT    = 0
+ FLAGS     = OFL.ENEMY,                JOB       = JOB.BOUNCE,
+ LONGNAME  = "ALIEN",                  LUNGS     = 32,
+ NAME      = "ALIEN",                  STAMINA   = -1,
+ STRENGTH  = 0,                        TELEDELAY = 20,
+ VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.EGG] = {
  [ACT.STOP]  = {
@@ -1100,11 +1114,11 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.PHASE,                AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- JOB       = JOB.SPAWN,                LONGNAME  = "MYSTERIOUS EGG",
- LUNGS     = 128,                      NAME      = "EGG",
- STAMINA   = -1,                       STRENGTH  = 0,
- TELEDELAY = 3600,                     VALUE     = 0,
- WEIGHT    = 0
+ FLAGS     = OFL.ENEMY,                JOB       = JOB.SPAWN,
+ LONGNAME  = "MYSTERIOUS EGG",         LUNGS     = 128,
+ NAME      = "EGG",                    STAMINA   = -1,
+ STRENGTH  = 0,                        TELEDELAY = 3600,
+ VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.BIRD] = {
  [ACT.STOP] = {
@@ -1114,11 +1128,11 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.CRITTER,
  ANIMTIMER = aTimerData.ANIMNORMAL ,   DIRECTION = DIR.LR,
- JOB       = JOB.BOUNCE,               LONGNAME  = "BIRD",
- LUNGS     = 2,                        NAME      = "BIRD",
- STAMINA   = -1,                       STRENGTH  = 0,
- TELEDELAY = 200,                      VALUE     = 0,
- WEIGHT    = 0
+ FLAGS     = OFL.LIVING,               JOB       = JOB.BOUNCE,
+ LONGNAME  = "BIRD",                   LUNGS     = 2,
+ NAME      = "BIRD",                   STAMINA   = -1,
+ STRENGTH  = 0,                        TELEDELAY = 200,
+ VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.FISH] = {
  [ACT.STOP] = {
@@ -1129,7 +1143,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.CRITTERSLOW,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
- FLAGS     = OFL.AQUALUNG|OFL.WATERBASED,
+ FLAGS     = OFL.AQUALUNG|OFL.WATERBASED|OFL.LIVING,
  JOB       = JOB.BOUNCE,               LONGNAME  = "GOLDFISH",
  NAME      = "FISH",                   STAMINA   = -1,
  STRENGTH  = 0,                        TELEDELAY = 200,
@@ -1144,11 +1158,11 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.RUN,                  AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
- JOB       = JOB.BOUNCE,               LONGNAME  = "VELOCIRAPTOR",
- LUNGS     = 16,                       NAME      = "VRAPTOR",
- STAMINA   = -1,                       STRENGTH  = 0,
- TELEDELAY = 200,                      VALUE     = 0,
- WEIGHT    = 0,
+ FLAGS     = OFL.LIVING,               JOB       = JOB.BOUNCE,
+ LONGNAME  = "VELOCIRAPTOR",           LUNGS     = 16,
+ NAME      = "VRAPTOR",                STAMINA   = -1,
+ STRENGTH  = 0,                        TELEDELAY = 200,
+ VALUE     = 0,                        WEIGHT    = 0,
 -- ------------------------------------------------------------------------- --
 }, [TYP.ROTARY] = {
  [ACT.WALK] = {
@@ -1160,11 +1174,11 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.WALK,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
- JOB       = JOB.BOUNCE,               LONGNAME  = "ROTARYSAURUS",
- LUNGS     = 16,                       NAME      = "RTRYSRUS",
- STAMINA   = -1,                       STRENGTH  = 0,
- TELEDELAY = 200,                      VALUE     = 0,
- WEIGHT    = 0
+ FLAGS     = OFL.LIVING,               JOB       = JOB.BOUNCE,
+ LONGNAME  = "ROTARYSAURUS",           LUNGS     = 16,
+ NAME      = "RTRYSRUS",               STAMINA   = -1,
+ STRENGTH  = 0,                        TELEDELAY = 200,
+ VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.STEGO] = {
  [ACT.CREEP] = {
@@ -1176,11 +1190,12 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION     = ACT.CREEP,               AITYPE     = AI.NONE,
  ANIMTIMER  = aTimerData.ANIMNORMAL,   ATTACHMENT = TYP.STEGOB,
- DIRECTION  = DIR.LR,                  JOB        = JOB.BOUNCE,
- LONGNAME   = "STEGOSAURUS",           LUNGS      = 16,
- NAME       = "STEGSAUR",              STAMINA    = -1,
- STRENGTH   = 0,                       TELEDELAY  = 200,
- VALUE      = 0,                       WEIGHT     = 0,
+ DIRECTION  = DIR.LR,                  FLAGS      = OFL.LIVING,
+ JOB        = JOB.BOUNCE,              LONGNAME   = "STEGOSAURUS",
+ LUNGS      = 16,                      NAME       = "STEGSAUR",
+ STAMINA    = -1,                      STRENGTH   = 0,
+ TELEDELAY  = 200,                     VALUE      = 0,
+ WEIGHT     = 0,
 -- ------------------------------------------------------------------------- --
 }, [TYP.STEGOB] = {
  [ACT.CREEP] = {
@@ -1199,7 +1214,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.CRITTER,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
- FLAGS     = OFL.AQUALUNG|OFL.WATERBASED,
+ FLAGS     = OFL.AQUALUNG|OFL.WATERBASED|OFL.LIVING,
  JOB       = JOB.BOUNCE,               LONGNAME  = "TURTLE",
  NAME      = "TURTLE",                 STAMINA   = -1,
  STRENGTH  = 0,                        TELEDELAY = 200,
@@ -1229,7 +1244,7 @@ local aObjectData<const> = {           -- Objects data
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.BIGFOOT,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
- FLAGS     = OFL.AQUALUNG,             JOB       = JOB.BOUNCE,
+ FLAGS     = OFL.AQUALUNG|OFL.LIVING,  JOB       = JOB.BOUNCE,
  LONGNAME  = "SKINWALKER",             NAME      = "BIGFOOT",
  STAMINA   = -1,                       STRENGTH  = 100,
  TELEDELAY = 100,                      VALUE     = 0,
@@ -1310,7 +1325,7 @@ local aObjectData<const> = {           -- Objects data
   [DIR.D] = { 288, 288 },
   FLAGS   = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
  }, [ACT.CREEP] = {
-  [DIR.L] = { 288, 290 }, [DIR.R] = { 288, 290 },
+  [DIR.L] = { 288, 290 }, [DIR.R] = { 288, 290 }, [DIR.D] = { 288, 290 },
   FLAGS   = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
  }, [ACT.DIG] = {
   [DIR.D] = { 288, 290 },
@@ -1410,12 +1425,12 @@ local aObjectData<const> = {           -- Objects data
  ANIMTIMER = aTimerData.ANIMNORMAL,
  DESC      = "VIEW THE ENTIRE ZONE\nLAYOUT WITH THIS MAP",
  DIRECTION = DIR.NONE,                 FLAGS     = OFL.SELLABLE|OFL.DEVICE,
- KEYS      = { [ACT.MAP] = aObjectStop },
- JOB       = JOB.NONE,                 LONGNAME  = "TNT MAP",
- LUNGS     = 32,                       MENU      = MNU.MAP,
- NAME      = "MAP",                    STAMINA   = -1,
- STRENGTH  = 0,                        TELEDELAY = 200,
- VALUE     = 300,                      WEIGHT    = 3,
+ JOB       = JOB.NONE,                 KEYS      = { [ACT.MAP] = aObjectStop },
+ LONGNAME  = "TNT MAP",                LUNGS     = 32,
+ MENU      = MNU.MAP,                  NAME      = "MAP",
+ STAMINA   = -1,                       STRENGTH  = 0,
+ TELEDELAY = 200,                      VALUE     = 300,
+ WEIGHT    = 3,
 -- ------------------------------------------------------------------------- --
 }, [TYP.TRACK] = {
  [ACT.STOP] = {
@@ -1576,7 +1591,8 @@ local aObjectData<const> = {           -- Objects data
   [DIR.NONE] = { 451, 454 },
   FLAGS      = OFL.BUSY
  }, KEYS = {
-   [ACT.CREEP] = { [JOB.NONE] = { [DIR.U] = true, [DIR.D] = true } };
+   [ACT.STOP] = aObjectStop,
+   [ACT.CREEP] = { [JOB.NONE] = { [DIR.U] = true, [DIR.D] = true } }
  },
  ACTION     = ACT.STOP,                AITYPE     = AI.LIFT,
  ANIMTIMER  = aTimerData.ANIMNORMAL,   ATTACHMENT = TYP.LIFTC,
@@ -2638,54 +2654,92 @@ local aCreditsXData<const> = {
   { "Thank you for playing!",          "The End!" },
 };
 -- Setup buttons data ------------------------------------------------------ --
-local aSetupButtonData<const> = { -- nil's are filled in 'setup.lua' init
-  APPLY = { nil, nil, nil, nil, CID.OK,   nil, 101, nil, nil,
-    "CLICK TO APPLY ANY SYSTEM AFFECTING SETTINGS YOU HAVE CHANGED" },
-  DONE  = { nil, nil, nil, nil, CID.EXIT, nil, 102, nil, nil,
-    "CLICK TO EXIT THIS SETUP WINDOW AND RETURN TO YOUR GAME. ANY CHANGED \z
-     SETTINGS THAT NEED TO BE APPLIED WILL BE CANCELLED" },
-  RESET = { nil, nil, nil, nil, CID.OK,   nil, 103, nil, nil,
-    "CLICK TO RESET ALL VALUES TO DEFAULTS AND AUTOMATICALLY APPLY THE \z
-     SETTINGS" },
-  BINDS = { nil, nil, nil, nil, CID.OK,   nil, 104, nil, nil,
-    "CLICK TO CHANGE KEYBINDS FOR THIS GAME" },
-  ABOUT = { nil, nil, nil, nil, CID.OK,   nil, 105, nil, nil,
-    "CLICK TO VIEW THE ACKNOWLEDGEMENTS FOR THIS GAME" },
+local aSetupButtonData<const> = {
+  -- -- Legend ------------------------------------------------------------- --
+  -- [*1] Unique hot spot template.    [!2] Unique tip id.
+  -- [*3] X text position.             [*4] Y text position.
+  -- [!5] Button text.                 [!6] Scrolling text information tip.
+  -- ! = static, * = Filled in at setup.lua > OnScriptLoaded() function.
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.EXIT, false, false, false }, 101, nil, nil,
+    "CLOSE", "CLOSE THIS CONFIGURATION DIALOG AND RETURN TO THE GAME. YOU \z
+     WILL LOSE ANY SYSTEM AFFECTING CHANGES THAT REQUIRE THE 'APPLY' BUTTON \z
+     TO BE CLICKED" },
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 101, nil, nil,
+    "APPLY", "CLICK TO APPLY ANY SYSTEM AFFECTING SETTINGS YOU HAVE CHANGED" },
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 103, nil, nil,
+    "RESET", "CLICK TO RESET ALL VALUES TO DEFAULTS AND AUTOMATICALLY APPLY \z
+     THE SETTINGS" },
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 104, nil, nil,
+    "BINDS", "CLICK TO CHANGE KEYBINDS FOR THIS GAME" },
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 105, nil, nil,
+    "ABOUT", "CLICK TO VIEW THE ACKNOWLEDGEMENTS FOR THIS GAME" },
 };-- Setup options data ---------------------------------------------------- --
-local aSetupOptionData<const> = { -- nil's are filled in 'setup.lua' init
-  -- Option name -- Value -- UpdateFunc --- DownFunc --- UpFunc ------------ --
-  { "Monitor",         "", nil,           nil,         nil,
+local aSetupOptionData<const> = {
+  -- -- Legend ------------------------------------------------------------- --
+  -- [*1] Unique hot spot template.    [*2] Update text value [7] callback.
+  -- [*3] Y position of text line.     [*4] X position of left justified text.
+  -- [!5] Category text.               [*6] X position of right justified text.
+  -- [*7] Value text.                  [!8] Scrolling text information tip.
+  -- ! = static, * = Filled in at setup.lua > OnScriptLoaded() function.
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Monitor",         0, "",
     "CHANGES THE MONITOR THE GAME WILL APPEAR ON BY DEFAULT. PRESS APPLY \z
      WHEN YOU ARE HAPPY WITH THE SELECTION TO ACTIVATE IT", },
-  { "Display State",   "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Display State",   0, "",
     "CHANGES THE DEFAULT WINDOW STYLE OF THE GAME. PRESS APPLY WHEN YOU ARE \z
      HAPPY WITH THE SELECTION TO ACTIVATE IT" },
-  { "Full-Resolution", "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Full-Resolution", 0, "",
     "ALLOWS YOU TO SET A CUSTOM DESKTOP RESOLUTION FOR EXCLUSIVE FULL-SCREEN \z
      MODE. PRESS APPLY WHEN YOU ARE HAPPY WITH THE SELECTION TO ACTIVATE IT" },
-  { "Window Size",     "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Window Size",     0, "",
     "ALLOWS YOU TO SET A CUSTOM WINDOW SIZE FOR DECORATED WINDOW ONLY MODE. \z
      PRESS APPLY WHEN YOU ARE HAPPY WITH THE SELECTION TO ACTIVATE IT" },
-  { "Frame Limiter",   "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Frame Limiter",   0, "",
     "ALLOWS YOU TO CHOOSE FROM A RANGE OF FRAME-LIMITING OPTIONS TO BALANCE \z
      THE PERFORMANCE VERSUS POWER USAGE OF RENDERING. SOME VALUES MAY BE \z
      INEFFECTIVE WHEN THE VSYNC VALUE IS BEING OVERRIDDEN IN YOUR VIDEO \z
      ADAPTER SETTINGS OR WHEN YOUR SYSTEM IS UNDERPERFORMING. THE CHANGE IS \z
      INSTANTLY APPLIED" },
-  { "Texture Filter",  "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Texture Filter",  0, "",
     "APPLY A BILINEAR UPSCALE FILTER TO THE MAIN FRAMEBUFFER. THE GAME IS \z
      RENDERED IN 320x240. THE CHANGE OF OPTION IS INSTANTLY APPLIED" },
-  { "Audio Device",    "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Audio Device",    0, "",
     "ALLOWS YOU TO SET THE DEFAULT AUDIO DEVICE TO USE FOR THE GAME. PRESS \z
      APPLY WHEN YOU ARE HAPPY WITH THE SELECTION TO ACTIVATE IT" },
-  { "Master Volume",   "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Master Volume",   0, "",
     "CHANGES THE FINAL OUTPUT VOLUME OF ALL MUSIC, SOUND EFFECTS AND FMV \z
      MIXED TOGETHER. THE CHANGE OF OPTION IS INSTANTLY APPLIED" },
-  { "Music Volume",    "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Music Volume",    0, "",
     "CHANGES THE MUSIC VOLUME. THE CHANGE OF OPTION IS INSTANTLY APPLIED" },
-  { "Effect Volume",   "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Effect Volume",   0, "",
     "CHANGES THE SFX VOLUME. THE CHANGE OF OPTION IS INSTANTLY APPLIED" },
-  { "Fmv Volume",      "", nil,           nil,         nil,
+  -- ----------------------------------------------------------------------- --
+  { { nil, nil, nil, nil, 0, CID.SELECT, false, false, false },
+    false, 0, 0, "Fmv Volume",      0, "",
     "CHANGES THE FMV VOLUME. THE CHANGE OF OPTION IS INSTANTLY APPLIED" },
 };-- Option name -- Value -- UpdateFunc --- DownFunc --- UpFunc ------------ --
 local aIntroSubTitles<const> = {

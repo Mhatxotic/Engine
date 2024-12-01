@@ -39,20 +39,20 @@ class FStreamBase :                    // File stream base class
   FILE            *fStream;            // Stream handle
   int              iErrNo;             // Stored error number
   /* -- Accept a file stream from DoOpen() --------------------------------- */
-  bool FStreamDoAccept(const string &strFile, FILE*const fPtr)
+  int FStreamDoAccept(const string &strFile, FILE*const fPtr)
   { // Close original file if opened
     FStreamCloseSafe();
     // Set the new handle and file name
     FStreamSetHandle(fPtr);
     IdentSet(strFile);
     // Success!
-    return true;
+    return 0;
   }
   /* -- Error number wrapper handle ---------------------------------------- */
   template<typename AnyType>AnyType FStreamErrNoWrapper(AnyType atVal)
     { iErrNo = errno; return atVal; }
-  /* -- Open a file -------------------------------------------------------- */
-  bool FStreamDoOpen(const string &strFile, const FStreamMode fsmMode)
+  /* -- Open a file and return its handle ---------------------------------- */
+  FILE *FStreamDoOpenDirect(const string &strFile, const FStreamMode fsmMode)
   { // Obviously Windows has to be different from everyone else!
 #if defined(WINDOWS)                   // Using windows?
     // The mode supported (in unicode)
@@ -61,10 +61,7 @@ class FStreamBase :                    // File stream base class
       L"rb", L"wb", L"ab", L"r+b", L"w+b", L"a+b"
     };
     // Send it to the Windows file open call and accept it if successful
-    if(FILE*const fPtr =
-      FStreamErrNoWrapper(_wfsopen(UTFtoS16(strFile).c_str(),
-        cplModes[fsmMode], _SH_DENYWR)))
-          return FStreamDoAccept(strFile, fPtr);
+    return _wfsopen(UTFtoS16(strFile).c_str(), cplModes[fsmMode], _SH_DENYWR);
 #else                                  // Using linux or MacOS?
     // The mode supported (in ansi string)
     static const array<const char*const,FM_MAX>cplModes{
@@ -72,12 +69,19 @@ class FStreamBase :                    // File stream base class
       "rb", "wb", "ab", "r+b", "w+b", "a+b"
     };
     // Send it to the posix file open call and accept it if successful
-    if(FILE*const fPtr =
-      FStreamErrNoWrapper(fopen(strFile.c_str(), cplModes[fsmMode])))
-        return FStreamDoAccept(strFile, fPtr);
+    return fopen(strFile.c_str(), cplModes[fsmMode]);
 #endif                                 // Operating system check
-    // Failed
-    return false;
+  }
+  /* -- Check that already set members are valid --------------------------- */
+  void FStreamDoCheckOpenDirect(const string &strF, const FStreamMode fsmMode)
+  { // Return if the file is opened successfully
+    if(FStreamOpened()) return;
+    // Return if there is no home directory
+    using namespace ICmdLine::P;
+    if(cCmdLine->IsNoHome()) return;
+    // Try opened again from persist directory
+    IdentSet(cCmdLine->GetHome(strF));
+    FStreamSetHandle(FStreamDoOpenDirect(IdentGet(), fsmMode));
   }
   /* -- Retrun true if internal stream or stream closed successfully ------- */
   bool FStreamDoClose(void)
@@ -279,17 +283,19 @@ class FStreamBase :                    // File stream base class
   int64_t FStreamSizeSafe(void) { return FStreamClosed() ? 0 : FStreamSize(); }
   /* -- Open a file without filename validation ---------------------------- */
   int FStreamOpen(const string &strFile, const FStreamMode fsmMode)
-  { // Try to open the file on disk and if failed??
-    if(!FStreamDoOpen(strFile, fsmMode))
-    { // Get error
-      const int iError = StdGetError();
-      // If theres no persist directory or opening there fails, return error
-      using namespace ICmdLine::P;
-      if(cCmdLine->IsNoHome() ||
-         !FStreamDoOpen(cCmdLine->GetHome(strFile), fsmMode))
-        return iError;
-    } // Succeeded
-    return 0;
+  { // Try to open the file on disk and if succeeded? Return the result
+    if(FILE*const fPtr =
+      FStreamErrNoWrapper(FStreamDoOpenDirect(strFile, fsmMode)))
+        return FStreamDoAccept(strFile, fPtr);
+    // Return original error if there is a home directory?
+    using namespace ICmdLine::P;
+    if(cCmdLine->IsHome())
+    { // Build new filename and return the new open result
+      string strFilePersist{ cCmdLine->GetHome(strFile) };
+      if(FILE*const fPtr = FStreamDoOpenDirect(strFilePersist, fsmMode))
+        return FStreamDoAccept(strFilePersist, fPtr);
+    } // Failed so return error number
+    return iErrNo;
   }
   /* -- Close file --------------------------------------------------------- */
   bool FStreamClose(void)
@@ -309,13 +315,26 @@ class FStreamBase :                    // File stream base class
     iErrNo(0)                          // Error number not initialised yet
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* -- Constructor with optional checking --------------------------------- */
+  /* -- Constructor with direct open (copy filename) ----------------------- */
   FStreamBase(const string &strF, const FStreamMode fsmMode) :
     /* -- Initialisers ----------------------------------------------------- */
-    FStreamBase{}                      // Initialise defaults
-    /* -- Open the file and throw error if failed -------------------------- */
-    { if(FStreamOpen(strF, fsmMode))
-        XCL("Failed to open file!", "File", strF, "Mode", fsmMode); }
+    Ident{ strF },                     // Copy filename
+    fStream(FStreamDoOpenDirect(       // Open a stream
+      IdentGet(),                      // - with the specified filename
+      fsmMode)),                       // - with the specified mode
+    iErrNo(errno)                      // Set the error number
+    /* -- Check that the file was opened and try persist dir if failed ----- */
+    { FStreamDoCheckOpenDirect(IdentGet(), fsmMode); }
+  /* -- Constructor with direct open (move filename) ----------------------- */
+  FStreamBase(string &&strF, const FStreamMode fsmMode) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Ident{ StdMove(strF) },            // Move filename
+    fStream(FStreamDoOpenDirect(       // Open a stream
+      IdentGet(),                      // - with the specified filename
+      fsmMode)),                       // - with the specified mode
+    iErrNo(errno)                      // Set the error number
+    /* -- Check that the file was opened and try persist dir if failed ----- */
+    { FStreamDoCheckOpenDirect(IdentGet(), fsmMode); }
   /* -- Constructor with rvalue name init, no open ------------------------- */
   explicit FStreamBase(string &&strF) :    // Movable filename string
     /* -- Initialisers ----------------------------------------------------- */

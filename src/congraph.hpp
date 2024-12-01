@@ -91,7 +91,7 @@ static class ConGraphics final :       // Members initially private
     Ftf fFTFont;
     fFTFont.InitFile(cCVars->GetStrInternal(CON_FONT), fTextWidth,
       fTextHeight, 96, 96, 0.0f);
-    GetFontRef().InitFTFont(fFTFont,
+    GetFontRef().InitFontFtf(fFTFont,
       cCVars->GetInternal<GLuint>(CON_FONTTEXSIZE),
       cCVars->GetInternal<GLuint>(CON_FONTPADDING), OF_L_L_MM_L,
         GetFontRef());
@@ -116,12 +116,12 @@ static class ConGraphics final :       // Members initially private
     if(strCT.empty())
     { // Create simple image for solid colour and load it into a texture
       Image imgData{ 0xFFFFFFFF };
-      GetTextureRef().InitImage(imgData, 0, 0, 0, 0, OF_N_N);
+      GetTextureRef().InitTextureImage(imgData, 0, 0, 0, 0, OF_N_N);
     } // Else filename specified so load it!
     else
     { // Load image from disk and load it into a texture
       Image imgData{ strCT, IL_NONE };
-      GetTextureRef().InitImage(imgData, 0, 0, 0, 0, OF_L_L_MM_L);
+      GetTextureRef().InitTextureImage(imgData, 0, 0, 0, 0, OF_L_L_MM_L);
     } // LUA will not be allowed to garbage collect this texture class!
     GetTextureRef().LockSet();
   }
@@ -165,7 +165,7 @@ static class ConGraphics final :       // Members initially private
   /* -- Set Console status ------------------------------------------------- */
   void SetCantDisable(const bool bState)
   { // Ignore if not in graphical mode because CON_HEIGHT isn't defined in
-    // bot mode as it is unneeded or the flag is already set as such.
+    // terminal mode as it is unneeded or the flag is already set as such.
     if(cSystem->IsNotGraphicalMode()) return;
     // Return if state not changed
     if(cConsole->FlagIsEqualToBool(CF_CANTDISABLE, bState)) return;
@@ -291,7 +291,7 @@ static class ConGraphics final :       // Members initially private
     { GetTextureRef().ReloadTexture(); GetFontRef().ReloadTexture(); }
   /* -- Init framebuffer object -------------------------------------------- */
   void InitFBO(void)
-  { // Ignore if bot mode
+  { // Ignore if terminal mode
     if(GetFontRef().IsNotInitialised()) return;
     // Get reference to main FBO and initialise it
     cFboCore->InitConsoleFBO();
@@ -345,8 +345,8 @@ static class ConGraphics final :       // Members initially private
     fTextLineSpacing(0.0f),            // No text line spacing
     fTextWidth(0.0f),                  // No text width
     fTextHeight(0.0f),                 // No text height
-    ctConsole{ true },                 // Console texture on stand-by
-    cfConsole{ true },                 // Console font on stand-by
+    ctConsole{ IP_TEXTURE },           // Console texture on stand-by
+    cfConsole{ IP_FONT },              // Console font on stand-by
     cCursor('|')                       // Cursor shape
     /* --------------------------------------------------------------------- */
     { }
@@ -400,7 +400,7 @@ static class ConGraphics final :       // Members initially private
   CVarReturn ConsoleFontFlagsModified(const ImageFlagsType iftFlags)
   { // Return failure if invalid flags else set flags and return success
     if(iftFlags != IL_NONE && (iftFlags & ~FF_MASK)) return DENY;
-    GetFontRef().FlagReset(iftFlags);
+    GetFontRef().FlagClearAndSet(FF_MASK, ImageFlagsConst{ iftFlags });
     return ACCEPT;
   }
   /* -- Set Console status ------------------------------------------------- */

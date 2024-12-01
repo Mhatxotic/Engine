@@ -30,7 +30,7 @@ using namespace IStd::P;               using namespace IString::P;
 namespace P {                          // Start of public module namespace
 /* -- Convert back slashes to forward slashes ------------------------------ */
 static string &PSplitBackToForwardSlashes(string &strText)
-  { return StrReplace(strText, '\\', '/'); }
+  { return StrReplace(strText, '\\', cCommon->CFSlash()); }
 static const string PSplitBackToForwardSlashes(const string &strIn)
   { string strOut{ strIn }; return PSplitBackToForwardSlashes(strOut); }
 #if defined(WINDOWS)
@@ -128,13 +128,18 @@ class PathSplit :
       strDir.capacity() < strFull.capacity() ?
         strDir.capacity() : strFull.capacity());
     if(const char*const cpDir = dirname(const_cast<char*>(strDir.c_str())))
-    { // If the pointer is not the same as our string? Copy it.
-      if(cpDir != strDir.c_str()) strDir.assign(cpDir);
-      // Finalise the size of the original directory name
-      else strDir.resize(strlen(strDir.c_str()));
-      // Finalise directory and append slash if there is not one to match how
-      // Win32's splitpath works which is better really.
-      if(strDir.back() != '/') strDir.append(cCommon->FSlash());
+    { // If the directory is not just a dot (current dir)?
+      if(cpDir[0] != '.' || cpDir[1] != '\0')
+      { // If the pointer is not the same as our string? Copy it.
+        if(cpDir != strDir.c_str()) strDir.assign(cpDir);
+        // Finalise the size of the original directory name
+        else strDir.resize(strlen(strDir.c_str()));
+        // Finalise directory and append slash if there is not one to match how
+        // Win32's splitpath works which is better really.
+        if(strDir.back() != cCommon->CFSlash())
+          strDir.append(cCommon->FSlash());
+      } // We're not interested in pointlessly prepending the current dir
+      else strDir.clear();
     } // Fiailed so clear the directory name
     else strDir.clear();
     // This is the final directory string so compact it
@@ -151,7 +156,7 @@ class PathSplit :
     } // Failed so clear the filename
     else strFile.clear();
     // Prepare extension and save extension and if found?
-    const size_t stSlashPos = strFile.find_last_of('/'),
+    const size_t stSlashPos = strFile.find_last_of(cCommon->CFSlash()),
     stDotPos = StrFindCharBackwards(strFile, strFile.length() - 1,
       stSlashPos != string::npos ? (stSlashPos + 1) : 0, '.');
     if(stDotPos != string::npos)

@@ -201,24 +201,26 @@ static class Lua final :
     cLog->LogDebugSafe("Lua registering engine namespaces...");
     // Counters for logging stats
     int iCount        = 0,           // Number of global namespaces used
-        iTotal        = 0,           // Number of global namespaces in total
         iMembers      = 0,           // Number of static functions used
         iMethods      = 0,           // Number of class methods used
         iTables       = 0,           // Number of tables used
         iStatics      = 0,           // Number of static vars registered
+        iTotal        = 0,           // Number of global namespaces in total
         iTotalMembers = 0,           // Number of static functions in total
         iTotalMethods = 0,           // Number of class methods in total
         iTotalTables  = 0,           // Number of tables in total
         iTotalStatics = 0;           // Number of static vars in total
     // Init core libraries
     for(const LuaLibStatic &llRef : llsaAPI)
-    { // Increment total statistics
+    { // If there is nothing to add in this namespace? Go to the next one
+      if(!llRef.iLLTotal) continue;
+      // Increment total statistics
       iTotalMembers += llRef.iLLCount;
       iTotalMethods += llRef.iLLMFCount;
       iTotalTables += llRef.iLLKICount;
       ++iTotal;
-      // Ignore if this API is not allowed in the current operation mode
-      if(!cSystem->IsCoreFlagsHave(llRef.cfcRequired))
+      // If this namespace is not allowed in the current operation mode?
+      if(cSystem->IsCoreFlagsNotHave(llRef.cfcRequired))
       { // If we have consts list?
         if(llRef.lkiList)
         { // Number of static vars registered in this namespace
@@ -237,8 +239,7 @@ static class Lua final :
       iTables += llRef.iLLKICount;
       ++iCount;
       // Load class creation functions
-      LuaUtilPushTable(GetState(), 0,
-        llRef.iLLCount + llRef.iLLMFCount + llRef.iLLKICount);
+      LuaUtilPushTable(GetState(), 0, llRef.iLLTotal);
       luaL_setfuncs(GetState(), llRef.libList, 0);
       // Number of static vars registered in this namespace
       int iStaticsNS = 0;
@@ -520,6 +521,9 @@ static class Lua final :
   /* -- Set GC step -------------------------------------------------------- */
   CVarReturn SetSeed(const lua_Integer liV)
     { return CVarSimpleSetInt(liSeed, liV); }
+  /* -- Set debug locals on stack ------------------------------------------ */
+  CVarReturn SetDebugLocals(const bool bState)
+    { return CVarSimpleSetInt(bDebugLocals, bState); }
   /* -- End ---------------------------------------------------------------- */
 } *cLua = nullptr;                     // Pointer to static class
 /* ------------------------------------------------------------------------- */

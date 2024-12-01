@@ -180,6 +180,18 @@ static const unsigned char *GlFWGetJoystickButtons(int iJ, int &iJAB)
 /* -- Joystick other ------------------------------------------------------- */
 static const char *GlFWGetJoystickName(const int iJ)
   { return glfwGetJoystickName(iJ); }
+/* -- Joystick is actually a game controller ------------------------------- */
+static bool GlFWJoystickIsGamepad(const int iJ)
+  { return glfwJoystickIsGamepad(iJ); }
+/* -- Get gamepad name ----------------------------------------------------- */
+static const char *GlFWGetGamepadName(const int iJ)
+  { return glfwGetGamepadName(iJ); }
+/* -- Get joystick unique identification number ---------------------------- */
+static const char *GlFWGetJoystickGUID(const int iJ)
+  { return glfwGetJoystickGUID(iJ); }
+/* -- Return if joystick is present ---------------------------------------- */
+static bool GlFWJoystickPresent(const int iJ)
+  { return glfwJoystickPresent(iJ); }
 /* -- Set swap interval ---------------------------------------------------- */
 static void GlFWSetVSync(const int iI) { glfwSwapInterval(iI); }
 /* -- Wait for window event ------------------------------------------------ */

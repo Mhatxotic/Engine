@@ -20,7 +20,7 @@ struct Url                             // Members initially public
     R_GOOD,                            // Url is good
     R_TOOLONG,                         // Url is too long
     R_EMURL,                           // Empty URL specified
-    R_EMPROTO,                         // Empty protocol after processing
+    R_EMSCHEME,                        // Empty scheme after processing
     R_EMHOSTUSERPASSPORT,              // Empty hostname/username/password/port
     R_EMUSERPASS,                      // Empty username and password
     R_EMUSER,                          // Empty username
@@ -28,14 +28,14 @@ struct Url                             // Members initially public
     R_EMHOSTPORT,                      // Empty hostname/port
     R_EMHOST,                          // Empty hostname
     R_EMPORT,                          // Empty port number
-    R_NOPROTO,                         // No protocol delimiter ':'
-    R_INVPROTO,                        // Invalid protocol (not ://)
+    R_NOSCHEME,                        // No scheme delimiter ':'
+    R_INVSCHEME,                       // Invalid scheme (not ://)
     R_INVPORT,                         // Invalid port number (1-65535)
-    R_UNKPROTO,                        // Unknown protocol without port
+    R_UNKSCHEME,                       // Unknown scheme without port
     R_MAX                              // Maximum number of codes
   };/* -- Private variables --------------------------------------- */ private:
   Result           rResult;            // Result
-  string           strProtocol,        // 'http' or 'https'
+  string           strScheme,          // 'http' or 'https'
                    strUsername,        // Username
                    strPassword,        // Password
                    strHost,            // Hostname
@@ -45,7 +45,7 @@ struct Url                             // Members initially public
   bool             bSecure;            // Connection would require SSL?
   /* -- Return data ------------------------------------------------ */ public:
   Result GetResult(void) const { return rResult; }
-  const string &GetProtocol(void) const { return strProtocol; }
+  const string &GetScheme(void) const { return strScheme; }
   const string &GetUsername(void) const { return strUsername; }
   const string &GetPassword(void) const { return strPassword; }
   const string &GetHost(void) const { return strHost; }
@@ -59,22 +59,23 @@ struct Url                             // Members initially public
     if(strUrl.empty()) { rResult = R_EMURL; return; }
     // Error if url is too long
     if(strUrl.size() > 2048) { rResult = R_TOOLONG; return; }
-    // Find protocol and throw if error
-    const size_t stProtPos = strUrl.find(':');
-    if(stProtPos == string::npos) { rResult = R_NOPROTO; return; }
-    for(size_t stPos = stProtPos + 1, stPosEnd = stPos + 1;
+    // Find scheme and throw if error
+    const size_t stSchemePos = strUrl.find(':');
+    if(stSchemePos == string::npos) { rResult = R_NOSCHEME; return; }
+    for(size_t stPos = stSchemePos + 1, stPosEnd = stPos + 1;
                stPos < stPosEnd;
              ++stPos)
-      if(strUrl[stPos] != '/') { rResult = R_INVPROTO; return; }
-    // Copy the protocol part and throw error if empty string
-    strProtocol = strUrl.substr(0, stProtPos);
-    if(strProtocol.empty()) { rResult = R_EMPROTO; return; }
+      if(strUrl[stPos] != cCommon->CFSlash())
+        { rResult = R_INVSCHEME; return; }
+    // Copy the scheme part and throw error if empty string
+    strScheme = strUrl.substr(0, stSchemePos);
+    if(strScheme.empty()) { rResult = R_EMSCHEME; return; }
     // Find hostname and if we couldn't find it?
-    const size_t stLocStartPos = stProtPos + 3,
-                 stHostPos = strUrl.find('/', stLocStartPos);
+    const size_t stLocStartPos = stSchemePos + 3,
+                 stHostPos = strUrl.find(cCommon->CFSlash(), stLocStartPos);
     if(stHostPos == string::npos)
     { // Set default resource to root
-      strResource = '/';
+      strResource = cCommon->CFSlash();
       // Finalise hostname
       strHost = strUrl.substr(stLocStartPos);
     } // Request not found
@@ -115,22 +116,22 @@ struct Url                             // Members initially public
       uiPort = StrToNum<unsigned int>(strPort);
       if(!uiPort || uiPort > 65535) { rResult = R_INVPORT; return; }
       // We have to find the port so set insecure port 80 if scheme is http
-      if(strProtocol == "http") bSecure = false;
-      // Set 443 if protocol is secure https
-      else if(strProtocol == "https") bSecure = true;
+      if(strScheme == "http") bSecure = false;
+      // Set 443 if scheme is secure https
+      else if(strScheme == "https") bSecure = true;
       // We don't know what the port is
-      else { rResult = R_UNKPROTO; return; }
+      else { rResult = R_UNKSCHEME; return; }
       // Copy host part without port
       strHost.resize(stPortPos);
       if(strHost.empty()) { rResult = R_EMHOST; return; }
     } // Port number not found?
     else
     { // We have to find the port so set insecure port 80 if scheme is http
-      if(strProtocol == "http") { uiPort = 80; bSecure = false; }
-      // Set 443 if protocol is secure https
-      else if(strProtocol == "https") { uiPort = 443; bSecure = true; }
+      if(strScheme == "http") { uiPort = 80; bSecure = false; }
+      // Set 443 if scheme is secure https
+      else if(strScheme == "https") { uiPort = 443; bSecure = true; }
       // We don't know what the port is
-      else { rResult = R_UNKPROTO; return; }
+      else { rResult = R_UNKSCHEME; return; }
     } // Find bookmark and if there is one?
     const size_t stBookmarkPos = strResource.find('#');
     if(stBookmarkPos != string::npos)

@@ -57,6 +57,7 @@ enum OglUndefinedEnums : GLenum        // Some undefined OpenGL consts
   GL_RGBA_DXT5               = 0x83F3, // GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
 };/* ----------------------------------------------------------------------- */
 typedef vector<GLuint> GLUIntVector;   // Vector of GLuints
+typedef vector<GLfloat> GLFloatVector; // Vector of GLfloats
 /* -- OpenGL manager class ------------------------------------------------- */
 static class Ogl final :               // OGL class for OpenGL use simplicity
   /* -- Sub-classes -------------------------------------------------------- */

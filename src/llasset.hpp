@@ -361,7 +361,7 @@ LLFUNC(Reverse, 0, AgAsset{lS, 1}().MemReverse())
 // ? terminate at the first null character or at the end of array, whichever
 // ? comes first.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ToString, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().MemToString()))
+LLFUNC(ToString, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().MemToStringSafe()))
 /* ========================================================================= */
 // $ Asset:ToFile
 // > Filename:string=Filename to write to.

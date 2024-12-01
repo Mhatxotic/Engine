@@ -14,11 +14,11 @@ using namespace ICVar::P;              using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IEvtMain::P;
 using namespace IEvtWin::P;            using namespace IFboCore::P;
 using namespace IFlags;                using namespace IGlFW::P;
-using namespace IGlFWUtil::P;          using namespace IIdent::P;
+using namespace IGlFWUtil::P;          using namespace IJoystick::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtf;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Input flags ========================================================== */
@@ -30,322 +30,13 @@ BUILD_FLAGS(Input,
   IF_FSTOGGLER              {Flag[2]}, IF_MOUSEFOCUS             {Flag[3]},
   // Send events at startup            Do joystick polling?
   IF_INITEVENTS             {Flag[4]}, IF_POLLJOYSTICKS          {Flag[5]}
-);/* -- Axis class --------------------------------------------------------- */
-class JoyAxisInfo
-{ /* -------------------------------------------------------------- */ private:
-  const int        iId;                // Axis unique identifier
-  float            fDeadZoneR;         // Reverse deadzone threshold
-  float            fDeadZoneF;         // Forward deadzone threshold
-  float            fUnbuffered;        // Current unbuffered axis press state
-  int              iBuffered;          // Current buffered axis press state
-  /* -- Get axis identifier ---------------------------------------- */ public:
-  int AxisGetId(void) const { return iId; }
-  /* -- Get reverse deadzone value ----------------------------------------- */
-  float AxisGetReverseDeadZone(void) const { return fDeadZoneR; }
-  /* -- Get forward deadzone value ----------------------------------------- */
-  float AxisGetForwardDeadZone(void) const { return fDeadZoneF; }
-  /* -- Set reverse deadzone value ----------------------------------------- */
-  void AxisSetReverseDeadZone(const float fDZ) { fDeadZoneR = -fDZ; }
-  /* -- Set forward deadzone value ----------------------------------------- */
-  void AxisSetForwardDeadZone(const float fDZ) { fDeadZoneF = fDZ; }
-  /* -- Get unbuffered state ----------------------------------------------- */
-  float AxisGetUnbufferedState(void) const { return fUnbuffered; }
-  /* -- Get buffered state ------------------------------------------------- */
-  int AxisGetBufferedState(void) const { return iBuffered; }
-  /* -- Clear button state ------------------------------------------------- */
-  void AxisClearState(void) { fUnbuffered = 0.0f; iBuffered = GLFW_RELEASE; }
-  /* -- Set axis state ----------------------------------------------------- */
-  void AxisSetState(const float*const fpData)
-  { // Get the axis reading and if it's moving negatively?
-    fUnbuffered = fpData[AxisGetId()];
-    if(fUnbuffered < fDeadZoneR)
-    { // Released or already in reverse position?
-      if(iBuffered <= GLFW_RELEASE)
-      { // Set to -GLFW_REPEAT if currently -GLFW_PRESSED or
-        //        -GLFW_PRESSED if currently GLFW_RELEASE
-        if(iBuffered > -GLFW_REPEAT) --iBuffered;
-        // State changed
-        return;
-      }
-    } // Moving positively?
-    else if(fUnbuffered > fDeadZoneF)
-    { // Released or already in forward position?
-      if(iBuffered >= GLFW_RELEASE)
-      { // Set to GLFW_REPEAT if currentl GLFW_PRESSED or
-        //        GLFW_PRESSED if currently GLFW_RELEASE
-        if(iBuffered < GLFW_REPEAT) ++iBuffered;
-        // State changed
-        return;
-      }
-    } // Nothing pressed so reset buffered counter
-    iBuffered = GLFW_RELEASE;
-  }
-  /* -- Constructor with unique id ----------------------------------------- */
-  explicit JoyAxisInfo(const int iNId) :
-    /* -- Initialisers ----------------------------------------------------- */
-    iId(iNId),                         // Set unique id
-    fDeadZoneR(-0.25f),                // Set default reverse deadzone
-    fDeadZoneF(0.25f),                 // Set default forward deadzone
-    fUnbuffered(0.0f),                 // Set default unbuffered state
-    iBuffered(GLFW_RELEASE)            // Set default state
-    /* -- No code ---------------------------------------------------------- */
-    { }
-};/* -- Axis data list type ------------------------------------------------ */
-typedef array<JoyAxisInfo, GLFW_GAMEPAD_AXIS_LAST+1> JoyAxisList;
-/* -- Button class --------------------------------------------------------- */
-class JoyButtonInfo
-{ /* -- Private variables ----------------------------------------- */ private:
-  const int        iId;                // Button unique identifier
-  unsigned int     uiUnbuffered,       // Current unbuffered butn press state
-                   uiBuffered;         // Current buffered butn press state
-  /* -- Get button id ---------------------------------------------- */ public:
-  int ButtonGetId(void) const { return iId; }
-  /* -- Get unbuffered state (GLFW_RELEASE or GLFW_PRESS) ------------------ */
-  unsigned int ButtonGetUnbufferedState(void) const { return uiUnbuffered; }
-  /* -- Get buffered state (GLFW_RELEASE, GLFW_PRESS or GLFW_REPEAT) ------- */
-  unsigned int ButtonGetBufferedState(void) const { return uiBuffered; }
-  /* -- Clear button state ------------------------------------------------- */
-  void ButtonClearState(void) { uiUnbuffered = uiBuffered = GLFW_RELEASE; }
-  /* -- Set button state --------------------------------------------------- */
-  void ButtonSetState(const unsigned char*const ucpState)
-  { // Save unbuffered state and compare it
-    uiUnbuffered = static_cast<unsigned int>(ucpState[ButtonGetId()]);
-    switch(uiUnbuffered)
-    { // Button is released?
-      case GLFW_RELEASE:
-        // Reset button state if not released (0 = released)
-        if(uiBuffered > GLFW_RELEASE) uiBuffered = GLFW_RELEASE;
-        // Done
-        return;
-      // Button is pressed? Increase button state (1=pressed and 2=held)
-      case GLFW_PRESS:
-        // Set GLFW_PRESSED if GLFW_RELEASED or
-        //     GLFW_REPEAT if GLFW_PRESSED.
-        if(uiBuffered < GLFW_REPEAT) ++uiBuffered;
-        // Done
-        return;
-      // Shouldn't get here
-      default: break;
-    } // Reset to released
-    uiBuffered = GLFW_RELEASE;
-  }
-  /* -- Constructor with unique id ----------------------------------------- */
-  explicit JoyButtonInfo(const int iNId) :
-    /* -- Initialisers ----------------------------------------------------- */
-    iId(iNId),                         // Set unique id
-    uiUnbuffered(GLFW_RELEASE),        // Set default unbuffered state
-    uiBuffered(GLFW_RELEASE)           // Set default buffered state
-    /* -- No code ---------------------------------------------------------- */
-    { }
-};/* -- Button data list --------------------------------------------------- */
-typedef array<JoyButtonInfo, GLFW_GAMEPAD_BUTTON_LAST+1> JoyButtonList;
-/* -- Joystick type typedef ------------------------------------------------ */
-BUILD_FLAGS(Joy,
-  /* ----------------------------------------------------------------------- */
-  // No flags                          Joystick is connnected?
-  JF_NONE                   {Flag[0]}, JF_CONNECTED              {Flag[1]},
-  // Joystick is actually a gamepad
-  JF_GAMEPAD                {Flag[2]}
-);/* -- Joystick class ----------------------------------------------------- */
-class JoyInfo :
-  /* -- Derived classes ---------------------------------------------------- */
-  public JoyFlags,                     // Joystick flags
-  private JoyAxisList,                 // Joystick axises data
-  private JoyButtonList,               // Joystick buttons data
-  public Ident                         // Joystick identifier
-{ /* -------------------------------------------------------------- */ private:
-  const int      iId;                  // Unique identifier of this
-  /* -- Unbuffered and buffered axis data struct --------------------------- */
-  size_t         stAxises;             // Axis count
-  size_t         stButtons;            // Button count
-  /* -- Return joystick id ----------------------------------------- */ public:
-  int GetId(void) const { return iId; }
-  /* -- Get button list data ----------------------------------------------- */
-  JoyButtonList &GetButtonList(void)
-    { return static_cast<JoyButtonList&>(*this); }
-  const JoyButtonList &GetConstButtonList(void) const
-    { return static_cast<const JoyButtonList&>(*this); }
-  /* -- Clear button state ------------------------------------------------- */
-  void ClearButtonState(void)
-    { StdForEach(par_unseq, GetButtonList().begin(), GetButtonList().end(),
-        [](JoyButtonInfo& jbiItem) { jbiItem.ButtonClearState(); }); }
-  /* -- Get button count ------------------------------------------------- */
-  size_t GetButtonCount(void) const { return stButtons; }
-  /* -- Refresh button data ---------------------------------------------- */
-  void RefreshButtons(void)
-  { // Get joystick buttons and if found?
-    int iButtons;
-    if(const unsigned char*const cpData =
-      GlFWGetJoystickButtons(GetId(), iButtons))
-    { // Clamp count to number we support on the stack
-      stButtons = UtilMinimum(static_cast<size_t>(iButtons),
-        GetConstButtonList().size());
-      // Return if no buttons
-      if(!stButtons) return;
-      // Enumate state for each joy button
-      for(size_t stBId = 0; stBId < stButtons; ++stBId)
-        GetButtonList()[stBId].ButtonSetState(cpData);
-    }
-  }
-  /* -- Get axis list data ------------------------------------------------- */
-  JoyAxisList &GetAxisList(void)
-    { return static_cast<JoyAxisList&>(*this); }
-  const JoyAxisList &GetConstAxisList(void) const
-    { return static_cast<const JoyAxisList&>(*this); }
-  /* -- Clear axis state ------------------------------------------------- */
-  void ClearAxisState(void)
-    { StdForEach(par_unseq, GetAxisList().begin(), GetAxisList().end(),
-        [](JoyAxisInfo &jaiItem) { jaiItem.AxisClearState(); }); }
-  /* -- Get axis count --------------------------------------------------- */
-  size_t GetAxisCount(void) const { return stAxises; }
-  /* -- Refresh axis data for this --------------------------------------- */
-  void RefreshAxes(void)
-  { // Get axis data and if succeeded?
-    int iAxises;
-    if(const float*const fpData = GlFWGetJoystickAxes(GetId(), iAxises))
-    { // Clamp count to number we support on the stack
-      stAxises = UtilMinimum(static_cast<size_t>(iAxises),
-        GetConstAxisList().size());
-      // Return if no axis
-      if(!stAxises) return;
-      // Enumate state for each joystick axis
-      for(size_t stAId = 0; stAId < stAxises; ++stAId)
-        GetAxisList()[stAId].AxisSetState(fpData);
-    }
-  }
-  /* -- Refresh data ----------------------------------------------------- */
-  void RefreshData(void) { RefreshAxes(); RefreshButtons(); }
-  /* -- Return type of joystick ------------------------------------------ */
-  const char *GetGamepadOrJoystickString(void) const
-    { return FlagIsSetTwo(JF_GAMEPAD, "gamepad", "joystick"); }
-  /* -- Joystick is connected? ----------------------------------- */ public:
-  bool IsConnected(void) const { return FlagIsSet(JF_CONNECTED); }
-  /* -- Joystick is disconnected? ---------------------------------------- */
-  bool IsDisconnected(void) const { return !IsConnected(); }
-  /* -- Clear button state if connected ---------------------------------- */
-  void ClearButtonStateIfConnected(void)
-    { if(IsConnected()) ClearButtonState(); }
-  /* -- Clear buttons and axis state ------------------------------------- */
-  void ClearState(void) { ClearAxisState(); ClearButtonState(); }
-  /* -- Refresh data if connected ---------------------------------------- */
-  void RefreshDataIfConnected() { if(IsConnected()) RefreshData(); }
-  /* -- Get button state ------------------------------------------------- */
-  unsigned int GetButtonState(const size_t stButtonId) const
-    { return GetConstButtonList()[stButtonId].ButtonGetBufferedState(); }
-  /* -- Get axis state --------------------------------------------------- */
-  int GetAxisState(const size_t stAxisId) const
-    { return GetConstAxisList()[stAxisId].AxisGetBufferedState(); }
-  /* -- Get unbuffered axis state ---------------------------------------- */
-  float GetUnbufferedAxisState(const size_t stAxisId) const
-    { return GetConstAxisList()[stAxisId].AxisGetUnbufferedState(); }
-  /* -- Get axis state --------------------------------------------------- */
-  void SetAxisForwardDeadZone(const size_t stAxisId, const float fDZ)
-    { GetAxisList()[stAxisId].AxisSetForwardDeadZone(fDZ); }
-  void SetAxisReverseDeadZone(const size_t stAxisId, const float fDZ)
-    { GetAxisList()[stAxisId].AxisSetReverseDeadZone(fDZ); }
-  void SetAxisDeadZones(const size_t stAxisId,
-    const float fFDZ, const float fRDZ)
-  { // Get axis data and set the new values
-    JoyAxisInfo &jaiItem = GetAxisList()[stAxisId];
-    jaiItem.AxisSetForwardDeadZone(fFDZ);
-    jaiItem.AxisSetReverseDeadZone(fRDZ);
-  }
-  /* -- Set default positive deadzone -------------------------------------- */
-  void SetReverseDeadZone(const float fDZ)
-    { StdForEach(par_unseq, GetAxisList().begin(), GetAxisList().end(),
-        [fDZ](JoyAxisInfo &jaiItem)
-          { jaiItem.AxisSetReverseDeadZone(fDZ); }); }
-  /* -- Set default positive deadzone -------------------------------------- */
-  void SetForwardDeadZone(const float fDZ)
-    { StdForEach(par_unseq, GetAxisList().begin(), GetAxisList().end(),
-        [fDZ](JoyAxisInfo &jaiItem)
-          { jaiItem.AxisSetForwardDeadZone(fDZ); }); }
-  /* -- Get/Set gamepad status ------------------------------------------- */
-  void Connect(void)
-  { // Now connected
-    FlagSet(JF_CONNECTED);
-    // Set gamepad status
-    FlagSetOrClear(JF_GAMEPAD, glfwJoystickIsGamepad(GetId()));
-    // Get joystick name and if it's not null?
-    if(const char*const cpName = GlFWGetJoystickName(GetId()))
-    { // If monitor name is blank return blank name
-      if(*cpName) IdentSet(cpName);
-      // Return blank name
-      else IdentSet(cCommon->Unspec());
-    } // Return null name
-    else IdentSet(cCommon->Null());
-    // Refresh joystick data
-    RefreshData();
-    // We gained this joystick
-    cLog->LogInfoExSafe("Input detected $ '$' (I:$;B:$;A:$).",
-      GetGamepadOrJoystickString(), IdentGet(), GetId(), GetButtonCount(),
-      GetAxisCount());
-    // Return if it's not a gamepad
-    if(FlagIsClear(JF_GAMEPAD)) return;
-    // Report name and identifier
-    if(const char*const cpN = glfwGetGamepadName(GetId()))
-      cLog->LogDebugExSafe("- Gamepad Name: $.", cpN);
-    if(const char*const cpG = glfwGetJoystickGUID(GetId()))
-      cLog->LogDebugExSafe("- Gamepad Identifier: $.", cpG);
-  }
-  /* -- Remove connected flag ---------------------------------------------- */
-  void DoDisconnect(void) { FlagClear(JF_CONNECTED); }
-  /* -- Reset data --------------------------------------------------------- */
-  void Disconnect(void)
-  { // Ignore if already disconnected
-    if(IsDisconnected()) return;
-    // No longer connected
-    DoDisconnect();
-    // We lost the specified joystick
-    cLog->LogInfoExSafe("Input disconnected $ '$' (I:$).",
-      GetGamepadOrJoystickString(), IdentGet(), GetId());
-  }
-  /* -- Detect joystick ---------------------------------------------------- */
-  bool IsPresent(void) { return glfwJoystickPresent(GetId()); }
-  /* -- Constructor -------------------------------------------------------- */
-  explicit JoyInfo(const int iNId) :
-    /* -- Initialisers ----------------------------------------------------- */
-    JoyFlags{ JF_NONE },               // Set no flags
-    /* -- Initialise joystick axises --------------------------------------- */
-#define JAI(x) JoyAxisInfo{ GLFW_GAMEPAD_AXIS_ ## x }
-    /* --------------------------------------------------------------------- */
-    JoyAxisList{ {                     // Initialise joystick axises ids
-      /* ------------------------------------------------------------------- */
-      JAI(LEFT_X),  JAI(LEFT_Y),       JAI(RIGHT_X),
-      JAI(RIGHT_Y), JAI(LEFT_TRIGGER), JAI(RIGHT_TRIGGER)
-      /* ------------------------------------------------------------------- */
-    } },                               // End of joystic axises ids init
-    /* --------------------------------------------------------------------- */
-#undef JAI                             // Done with this macro
-    /* -- Initialise joystick buttons -------------------------------------- */
-#define JBL(x) JoyButtonInfo{ GLFW_GAMEPAD_BUTTON_ ## x }
-    /* --------------------------------------------------------------------- */
-    JoyButtonList{ {                   // Initialise joystick buttons ids
-      /* ------------------------------------------------------------------- */
-      JBL(A),           JBL(B),            JBL(X),           JBL(Y),
-      JBL(LEFT_BUMPER), JBL(RIGHT_BUMPER), JBL(BACK),        JBL(START),
-      JBL(GUIDE),       JBL(LEFT_THUMB),   JBL(RIGHT_THUMB), JBL(DPAD_UP),
-      JBL(DPAD_RIGHT),  JBL(DPAD_DOWN),    JBL(DPAD_LEFT)
-      /* ------------------------------------------------------------------- */
-    } },                               // End of joystick button ids init
-    /* --------------------------------------------------------------------- */
-#undef JBL                             // Done with this macro
-    /* -- Other initialisers ----------------------------------------------- */
-    iId(iNId),                         // Set unique joystick id
-    stAxises(0),                       // Set no axies
-    stButtons(0)                       // Set no buttons
-    /* -- No code ---------------------------------------------------------- */
-    { }
-};/* -- Joystick state typedefs -------------------------------------------- */
-typedef array<JoyInfo, GLFW_JOYSTICK_LAST+1> JoyList; // Actual joystick data
-typedef JoyList::const_iterator JoyListIt; // Iterator for vector of joys
-/* == Input class ========================================================== */
+);/* == Input class ======================================================== */
 static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Base classes ------------------------------------------------------- */
   private IHelper,                     // Initialsation helper
   public InputFlags,                   // Input configuration settings
-  private JoyList,                     // Joystick data
-  private EvtMain::RegVec              // Events list to register
+  private EvtMain::RegVec,             // Events list to register
+  public Joystick                      // Joystick class
 { /* -- Console ------------------------------------------------------------ */
   int              iConsoleKey1,       // First console key
                    iConsoleKey2;       // Second console key
@@ -356,10 +47,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
                    lfOnMouseFocus,     // Mouse focus changed from window
                    lfOnKey,            // Unfiltered key pressed
                    lfOnChar,           // Filtered key pressed
-                   lfOnDragDrop,       // Drag and dropped files
-                   lfOnJoyState;       // Joystick connection event
-  /* -------------------------------------------------------------- */ private:
-  size_t           stConnected;        // Joysticks connected
+                   lfOnDragDrop;       // Drag and dropped files
   /* ----------------------------------------------------------------------- */
   int              iWinWidth,          // Actual window width
                    iWinHeight;         // Actual window height
@@ -492,49 +180,14 @@ static class Input final :             // Handles keyboard, mouse & controllers
     vFiles.clear();
     vFiles.shrink_to_fit();
   }
-  /* -- Enable or disable joystick polling --------------------------------- */
-  void EnablePolling(void) { FlagSet(IF_POLLJOYSTICKS); }
-  void DisablePolling(void) { FlagClear(IF_POLLJOYSTICKS); }
-  /* -- Joystick state changed --------------------------------------------- */
-  void OnJoyState(const EvtMainEvent &emeEvent)
-  { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
-    // Get joystick id as int
-    const int iId = emaArgs[0].i;
-    // What happened to the joystick?
-    switch(const int iState = emaArgs[1].i)
-    { // Connected?
-      case GLFW_CONNECTED:
-        // Increase connected count and enable polling if the first
-        if(++stConnected == 1) EnablePolling();
-        // Setup the joystick state and return
-        return SetupJoystickAndDispatch(static_cast<size_t>(iId));
-      // Disconnected?
-      case GLFW_DISCONNECTED:
-        // Decrease connected count and disable polling if the last
-        if(!--stConnected) DisablePolling();
-        // Clear the joystick state and return
-        return ClearJoystickAndDispatch(static_cast<size_t>(iId));
-      // Invalid code?
-      default:
-        // Log the bad joystick state and return
-        cLog->LogWarningExSafe("Input ignored bad joystick state ($ = $$)!",
-          iId, hex, iState);
-        // No need to dispatch any events
-        return;
-    }
-  }
   /* -- Window past event--------------------------------------------------- */
   void OnWindowPaste(const EvtMainEvent&)
   { // Get text in clipboard
-    UtfDecoder utfString{ cGlFW->WinGetClipboard() };
+    IUtf::UtfDecoder utfString{ cGlFW->WinGetClipboard() };
     // For each character, ddd the character to queue if valid
     while(const unsigned int uiChar = utfString.Next())
       if(uiChar >= 32) cConsole->OnCharPress(uiChar);
   }
-  /* -- Event handler for 'glfwSetJoystickCallback' ------------------------ */
-  static void OnGamePad(int iJId, int iEvent)
-    { cEvtMain->Add(EMC_INP_JOY_STATE, iJId, iEvent); }
   /* -- Commit cursor visibility now ------------------------------- */ public:
   void CommitCursorNow(void) { cGlFW->WinSetCursor(FlagIsSet(IF_CURSOR)); }
   /* -- Commit cursor visibility ------------------------------------------- */
@@ -552,22 +205,9 @@ static class Input final :             // Handles keyboard, mouse & controllers
   void ResetEnvironment(void)
   { // Reset cursor visibility
     SetCursor(true);
-    // For each joystick
-    for(JoyInfo &jsData : GetJoyList())
-    { // Clear the connected flag
-      jsData.DoDisconnect();
-      // Clear the state
-      jsData.ClearState();
-    } // No devices connected until the joystick event is set again.
-    stConnected = 0;
-    // Disable polling
-    DisablePolling();
+    // Reset joystick environment
+    JoyReset();
   }
-  /* -- Get button list data ----------------------------------------------- */
-  JoyList &GetJoyList(void)
-    { return static_cast<JoyList&>(*this); }
-  const JoyList &GetConstJoyList(void) const
-    { return static_cast<const JoyList&>(*this); }
   /* -- Get window size ---------------------------------------------------- */
   int GetWindowWidth(void) const { return iWinWidth; }
   int GetWindowHeight(void) const { return iWinHeight; }
@@ -601,79 +241,9 @@ static class Input final :             // Handles keyboard, mouse & controllers
   void SetCursorCentre(void)
     { SetCursorPos(cFboCore->GetMatrixWidth() / 2.0f,
                    cFboCore->GetMatrixHeight() / 2.0f); }
-  /* -- Joystick main tick ------------------------------------------------- */
-  void DoPollJoysticks(void)
-    { for(JoyInfo &jsData : GetJoyList())
-        jsData.RefreshDataIfConnected(); }
-  void PollJoysticks(void)
-    { if(FlagIsSet(IF_POLLJOYSTICKS)) DoPollJoysticks(); }
-  bool JoystickExists(const size_t stId)
-    { return GetJoyData(stId).IsConnected(); }
-  /* -- Dispatch connected event to lua ------------------------------------ */
-  void DispatchLuaEvent(const size_t stJoystickId, const bool bConnected)
-    { lfOnJoyState.LuaFuncDispatch(static_cast<lua_Integer>(stJoystickId),
-        bConnected); }
-  /* -- DeInitialise a joystick -------------------------------------------- */
-  void ClearJoystickAndDispatch(const size_t stJoystickId)
-  { // Get joystick data and ign ore if joystick wasn't originally connected
-    JoyInfo &jsData = GetJoyData(stJoystickId);
-    if(jsData.IsDisconnected()) return;
-    // Send lua event to let guest know joystick was disconnected
-    DispatchLuaEvent(stJoystickId, false);
-    // Clear joystick, axis and button data
-    jsData.Disconnect();
-    jsData.ClearState();
-  }
-  /* -- Initialise a new joystick ------------------------------------------ */
-  void SetupJoystickAndDispatch(const size_t stJoystickId)
-  { // Get joystick data and ign ore if joystick wasn't originally connected
-    JoyInfo &jsData = GetJoyData(stJoystickId);
-    if(jsData.IsConnected()) return;
-    // Begin detection and refresh data
-    jsData.Connect();
-    jsData.RefreshData();
-    // Send lua event to let guest know joystick was connected and return
-    DispatchLuaEvent(stJoystickId, true);
-  }
-  /* -- Return a joystick is present? -------------------------------------- */
-  void AutoDetectJoystick(void)
-  { // Reset connected count
-    stConnected = 0;
-    // Enumerate joysticks and if joystick is present?
-    for(JoyInfo &jsData : GetJoyList())
-      // If joystick is present?
-      if(jsData.IsPresent())
-      { // Send event that the joystick was connected
-        SetupJoystickAndDispatch(jsData.GetId());
-        // Increase connected count
-        ++stConnected;
-      } // Send event that the joystick was disconnected
-      else ClearJoystickAndDispatch(jsData.GetId());
-    // If we did not find joysticks?
-    if(!stConnected)
-    { // Disable polling to not waste CPU cycles
-      DisablePolling();
-      // Log no controllers
-      return cLog->LogDebugSafe("Input detected no controller devices.");
-    } // Enable polling
-    EnablePolling();
-    // Log result
-    cLog->LogDebugExSafe(
-      "Input enabling joystick polling as $ devices are detected.",
-      stConnected);
-  }
-  /* -- Clear joystick state ----------------------------------------------- */
-  void ClearJoystickButtons(void)
-    { StdForEach(par_unseq, GetJoyList().begin(), GetJoyList().end(),
-        [](JoyInfo &jsData) { jsData.ClearButtonStateIfConnected(); }); }
-  /* -- Clear keyboard, mouse and joystick states -------------------------- */
-  void ClearJoyStates(void) { ClearJoystickButtons(); }
-  /* -- Return joystick data ----------------------------------------------- */
-  JoyInfo &GetJoyData(const size_t stId) { return GetJoyList()[stId]; }
-  /* -- Return joysticks count --------------------------------------------- */
-  size_t GetJoyCount(void) const { return GetConstJoyList().size(); }
-  /* -- Disable/Enable input events ---------------------------------------- */
+  /* -- Disable input events ----------------------------------------------- */
   void DisableInputEvents(void) { cEvtMain->UnregisterEx(*this); }
+  /* -- Enable input events ------------------------------------------------ */
   void EnableInputEvents(void) { cEvtMain->RegisterEx(*this); }
   /* -- Init --------------------------------------------------------------- */
   void Init(void)
@@ -688,19 +258,19 @@ static class Input final :             // Handles keyboard, mouse & controllers
     IHInitialise();
     // Log progress
     cLog->LogDebugSafe("Input interface is initialising...");
-    // Init input engine events
-    EnableInputEvents();
     // Init input settings
     SetRawMouseEnabled(cCVars->GetInternal<bool>(INP_RAWMOUSE));
     SetStickyKeyEnabled(cCVars->GetInternal<bool>(INP_STICKYKEY));
     SetStickyMouseEnabled(cCVars->GetInternal<bool>(INP_STICKYMOUSE));
     // Set/Restore cursor state
     SetCursor(FlagIsSet(IF_CURSOR));
-    // Register joystick callback
-    glfwSetJoystickCallback(OnGamePad);
+    // Init joystick system
+    JoyInit();
+    // Init input engine events
+    EnableInputEvents();
     // Log progress
     cLog->LogDebugExSafe("Input interface initialised (R:$;J:$).",
-      StrFromBoolTF(GlFWIsRawMouseMotionSupported()), GetJoyCount());
+      StrFromBoolTF(GlFWIsRawMouseMotionSupported()), JoyGetCount());
   }
   /* -- DeInit ------------------------------------------------------------- */
   void DeInit(void)
@@ -708,27 +278,18 @@ static class Input final :             // Handles keyboard, mouse & controllers
     if(IHNotDeInitialise()) return;
     // Log progress
     cLog->LogDebugSafe("Input interface deinitialising...");
-    // Unregister joystick callback
-    glfwSetJoystickCallback(nullptr);
     // Deinit engine events in the order they were registered
     DisableInputEvents();
+    // De-init joystick system
+    JoyDeInit();
     // Log progress
     cLog->LogDebugSafe("Input interface deinitialised.");
   }
   /* -- Constructor -------------------------------------------------------- */
   Input(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper(__FUNCTION__),             // Init initialisation helper class
-    InputFlags(IF_NONE),               // No flags set initially
-    /* -- Init joysticks --------------------------------------------------- */
-    JoyList{ { JoyInfo{ GLFW_JOYSTICK_1  }, JoyInfo{ GLFW_JOYSTICK_2 },
-               JoyInfo{ GLFW_JOYSTICK_3  }, JoyInfo{ GLFW_JOYSTICK_4 },
-               JoyInfo{ GLFW_JOYSTICK_5  }, JoyInfo{ GLFW_JOYSTICK_6 },
-               JoyInfo{ GLFW_JOYSTICK_7  }, JoyInfo{ GLFW_JOYSTICK_8 },
-               JoyInfo{ GLFW_JOYSTICK_9  }, JoyInfo{ GLFW_JOYSTICK_10 },
-               JoyInfo{ GLFW_JOYSTICK_11 }, JoyInfo{ GLFW_JOYSTICK_12 },
-               JoyInfo{ GLFW_JOYSTICK_13 }, JoyInfo{ GLFW_JOYSTICK_14 },
-               JoyInfo{ GLFW_JOYSTICK_15 }, JoyInfo{ GLFW_JOYSTICK_16 } } },
+    IHelper{ __FUNCTION__ },           // Init initialisation helper class
+    InputFlags{ IF_NONE },             // No flags set initially
     /* -- Init events for event manager ------------------------------------ */
     EvtMain::RegVec{                   // Events list to register
       { EMC_INP_CHAR,         bind(&Input::OnFilteredKey, this, _1) },
@@ -739,7 +300,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
       { EMC_INP_MOUSE_SCROLL, bind(&Input::OnMouseWheel,  this, _1) },
       { EMC_INP_KEYPRESS,     bind(&Input::OnKeyPress,    this, _1) },
       { EMC_INP_DRAG_DROP,    bind(&Input::OnDragDrop,    this, _1) },
-      { EMC_INP_JOY_STATE,    bind(&Input::OnJoyState,    this, _1) },
+      { EMC_INP_JOY_STATE,    bind(&Joystick::OnJoyState, this, _1) },
     },
     /* -- More initialisers ------------------------------------------------ */
     iConsoleKey1(GLFW_KEY_UNKNOWN),    // Init primary console key
@@ -751,8 +312,6 @@ static class Input final :             // Handles keyboard, mouse & controllers
     lfOnKey{ "OnUnfilteredKey" },      // Init unfiltered keypress lua event
     lfOnChar{ "OnFilteredKey" },       // Init filtered keypress lua event
     lfOnDragDrop{ "OnDragDrop" },      // Init drag & drop lua event
-    lfOnJoyState{ "OnJoyState" },      // Init joy state lua event
-    stConnected(0),                    // Init joystick count to zero
     iWinWidth(0),                      // Window width init by display
     iWinHeight(0)                      // Window height init by display
     /* -- No code ---------------------------------------------------------- */
@@ -782,25 +341,6 @@ static class Input final :             // Handles keyboard, mouse & controllers
     // CVar allowed to be set
     return ACCEPT;
   }
-  /* -- Handle a deadzone change ------------------------------------------- */
-  CVarReturn SetDefaultJoyDZ(const float fDZ,
-    const function<void(JoyInfo&)> &fcbCallBack)
-  { // Bail if invalid deadzone
-    if(fDZ > 1) return DENY;
-    // Set it
-    StdForEach(par_unseq, GetJoyList().begin(),
-      GetJoyList().end(), fcbCallBack);
-    // Success
-    return ACCEPT;
-  }
-  /* -- Set default negative deadzone -------------------------------------- */
-  CVarReturn SetDefaultJoyRevDZ(const float fNewDeadZone)
-    { return SetDefaultJoyDZ(fNewDeadZone, [fNewDeadZone](JoyInfo &jiItem)
-        { jiItem.SetReverseDeadZone(fNewDeadZone); }); }
-  /* -- Set default positive deadzone -------------------------------------- */
-  CVarReturn SetDefaultJoyFwdDZ(const float fNewDeadZone)
-    { return SetDefaultJoyDZ(fNewDeadZone, [fNewDeadZone](JoyInfo &jiItem)
-        { jiItem.SetForwardDeadZone(fNewDeadZone); }); }
   /* -- Set first console key ---------------------------------------------- */
   CVarReturn SetConsoleKey1(const int iK)
     { return CVarSimpleSetIntNG(iConsoleKey1, iK, GLFW_KEY_LAST); }

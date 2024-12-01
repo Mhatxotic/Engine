@@ -121,8 +121,8 @@
 #   error This MacOS architechture being compiled with is not supported!
 #  endif                               // Done checking architechture
 #  include <AvailabilityMacros.h>      // Get minimum operating system version
-#  if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_11
-#   error This project recommends at least MacOS 10.11 ElCapitan or later!
+#  if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_15
+#   error This project recommends at least MacOS 10.15 Catalina or later!
 #  endif                               // MacOS version check
 # else                                 // Not targeting MacOS?
 #  error This Apple target being compiled with is not yet supported!
@@ -184,7 +184,7 @@
 #define ARCHIVE_EXTENSION        "adb" // Default archive extension
 #define LOG_EXTENSION            "log" // Default log file extension
 #define UDB_EXTENSION            "udb" // Default database file extension
-#define CFG_EXTENSION            "cfg" // Default config file extension
+#define JSON_EXTENSION          "json" // Default json file extension
 #define CER_EXTENSION            "cer" // Default certificate file extension
 /* == Base STL includes ==================================================== */
 #include <algorithm>                   // Searching, sorting, counting, etc.
@@ -477,10 +477,12 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #define RAPIDJSON_NAMESPACE_BEGIN      // Keep blank or errors
 #define RAPIDJSON_NAMESPACE_END        // Keep blank or errors
 #define RAPIDJSON_ASSERT(x)          if(!(x)) throw ::std::runtime_error{(#x)};
+#define RAPIDJSON_HAS_CXX11_RVALUE_REFS 1 // So sorting works
 #define RAPIDJSON_HAS_CXX11_NOEXCEPT 1 // Force to use noexcept
 #include <rapidjson/document.h>        // Main header
 #include <rapidjson/prettywriter.h>    // Pretty formatting
 #include <rapidjson/error/en.h>        // Error handling
+#include <rapidjson/cursorstreamwrapper.h> // To get better error information
 #undef RAPIDJSON_HAS_CXX11_NOEXCEPT    // Done with this define
 #undef RAPIDJSON_ASSERT                // Done with this define
 #undef RAPIDJSON_NAMESPACE_END         // Done with this define

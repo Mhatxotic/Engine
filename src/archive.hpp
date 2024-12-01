@@ -26,6 +26,7 @@ namespace P {                          // Start of public module namespace
 /* == Archive collector with extract buffer size =========================== */
 CTOR_BEGIN_ASYNC(Archives, Archive, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
+  string           strArchiveExt;      // Archive extension
   size_t           stExtractBufSize;   // Extract buffer size
   ISzAlloc         isaData;            // Allocator functions
   /* -- Alloc function for lzma -------------------------------------------- */
@@ -368,7 +369,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   { // Store position
     uqArchPos = uqPosition;
     // Set filename without filename checking
-    SyncInitFile(strFile);
+    SyncInitFileDisk(strFile);
   }
   /* -- For loading via lua ------------------------------------------------ */
   Archive(void) :
@@ -470,20 +471,21 @@ static CVarReturn ArchiveInitExe(const bool bCheck)
   } // Status is acceptable regardless
   return ACCEPT;
 }
-/* -- Loads the specified archive ------------------------------------------ */
-static CVarReturn ArchiveInit(const string &strExt, string&)
-{ // Ignore if file mask not specified
-  if(strExt.empty()) return ACCEPT;
-  // Build archive listing and if none found?
-  cLog->LogDebugExSafe("Archives scanning for '$' files...", strExt);
-  const Dir dArchives{ cCommon->Blank(), strExt };
+/* -- Scan for the specified archives in the specified directory ----------- */
+static CVarReturn ArchiveScan(const char*const cpType, const string &strDir,
+  const string &strExt)
+{ // Build archive listing and if none found?
+  cLog->LogDebugExSafe("Archives scanning $ directory for '$' files...",
+    cpType, strExt);
+  // Do the scan and if there is no files?
+  const Dir dArchives{ strDir, strExt };
   if(dArchives.IsFilesEmpty())
-  { // Log no files and return success
-    cLog->LogWarningSafe("Archives matched no potential archive filenames!");
+  { // Report it in log and return success regardless
+    cLog->LogDebugSafe("Archives matched no potential archive filenames!");
     return ACCEPT;
   } // Start processing filenames
-  cLog->LogDebugExSafe("Archives loading $ files in working directory...",
-    dArchives.GetFilesSize());
+  cLog->LogDebugExSafe("Archives loading $ files in $ directory...",
+    cpType, dArchives.GetFilesSize());
   // Counters
   size_t stFound = 0, stFiles = 0, stDirs = 0;
   // For each archive file
@@ -495,7 +497,7 @@ static CVarReturn ArchiveInit(const string &strExt, string&)
       dempPair.second.Written());
     // Dynamically create the archive. The pointer is recorded in the parent
     // and is referenced from there when loading other files. If succeeded?
-    if(const Archive*const aPtr = ArchiveInitNew(dempPair.first))
+    if(const Archive*const aPtr = ArchiveInitNew({ strDir + dempPair.first }))
     { // Add counters to grand totals
       stFiles += aPtr->GetFileList().size();
       stDirs += aPtr->GetDirList().size();
@@ -503,8 +505,28 @@ static CVarReturn ArchiveInit(const string &strExt, string&)
   } // Log init
   cLog->LogInfoExSafe("Archives loaded $ of $ archives (F:$;D:$).",
     cArchives->CollectorCount(), dArchives.GetFilesSize(), stFiles, stDirs);
-  // Ok
+  // Success
   return ACCEPT;
+}
+/* -- Loads the specified archive ------------------------------------------ */
+static CVarReturn ArchiveInit(const string &strExt, string&)
+{ // Ignore if file mask not specified
+  if(strExt.empty()) return ACCEPT;
+  // Set bundle extension
+  cArchives->strArchiveExt = StdMove(strExt);
+  // Scan executable directory
+  return ArchiveScan("working", cCommon->Blank(), cArchives->strArchiveExt);
+}
+/* -- Loads the specified archive ------------------------------------------ */
+static CVarReturn ArchiveInitPersist(const bool bState)
+{ // Need functions from command-line module
+  using namespace ICmdLine::P;
+  // Ignore if requested to not do this or there is no home directory
+  if(!bState || cCmdLine->IsNoHome()) return ACCEPT;
+  // It is an error now if there is no extension
+  if(cArchives->strArchiveExt.empty()) return DENY;
+  // Now do the scan
+  return ArchiveScan("home", cCmdLine->GetHome(), cArchives->strArchiveExt);
 }
 /* -- Parallel enumeration ------------------------------------------------- */
 static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
@@ -514,7 +536,8 @@ static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
     [&strDir, &ssFiles, &mLock](const StrUIntMapPair &suimpRef)
   { // Ignore if folder name does not match or a forward-slash found after
     if(strDir != suimpRef.first.substr(0, strDir.length()) ||
-      suimpRef.first.find('/', strDir.length()+1) != string::npos) return;
+      suimpRef.first.find(cCommon->CFSlash(),
+        strDir.length() + 1) != string::npos) return;
     // Split file path
     const PathSplit psParts{ suimpRef.first };
     // Lock access to archives list
@@ -551,7 +574,8 @@ static const StrSet &ArchiveEnumerate(const string &strDir,
         [&strDir, &ssFiles, &mLock, &strExt](const StrUIntMapPair &suimpRef)
       { // Ignore if folder name does not match or a forward-slash found after
         if(strDir != suimpRef.first.substr(0, strDir.length()) ||
-          suimpRef.first.find('/', strDir.length()+1) != string::npos) return;
+          suimpRef.first.find(cCommon->CFSlash(),
+            strDir.length() + 1) != string::npos) return;
         // Split path parts, and ignore if extension does not match
         const PathSplit psParts{ suimpRef.first };
         if(psParts.strExt != strExt) return;
@@ -585,7 +609,7 @@ static FileMap ArchiveExtract(const string &strFile)
     // Something bad happened so relock the mutex and keep trying other
     // archives anyway.
     ulLock.lock();
-  } // FileMap not found
+  } // File not found
   return {};
 }
 /* -- ArchiveGetNames ------------------------------------------------------ */

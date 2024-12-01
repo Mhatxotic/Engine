@@ -84,7 +84,7 @@ else
   else
     EXE=../bin/engine64.$EXT
   fi
-  EXEPARAMS=" app_basedir=$PWD sql_db=$BASE"
+  EXEPARAMS=" ast_basedir=$PWD sql_db=$BASE"
 fi
 
 # Check that the file exists and is executable and try to make it executable

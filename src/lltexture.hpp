@@ -35,6 +35,13 @@ struct AgTileId : public AgIntegerLGE<size_t> {
 /* -- Other types ---------------------------------------------------------- */
 using Lib::OS::GlFW::GLint;
 typedef AgInteger<GLint> AgGLint;
+/* -- Read vector of the specified integer type ---------------------------- */
+template<class VectorValueType, class VectorType = vector<VectorValueType>>
+  struct AgIntegerVector : public VectorType
+{ const VectorType &operator()(void) const { return *this; }
+  operator const VectorType&(void) const { return operator()(); }
+  explicit AgIntegerVector(lua_State*const lS, const int iArg) :
+    VectorType{ LuaUtilToIntVector<VectorType>(lS, iArg)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Texture:* member functions                                          ## **
@@ -982,7 +989,19 @@ LLFUNC(Console, 1,
 LLFUNC(Create, 1,
   const AgImage aImage{lS, 1};
   const AgFilterId aFilterId{lS, 2};
-  AcTexture{lS}().InitImage(aImage, 0, 0, 0, 0, aFilterId))
+  AcTexture{lS}().InitTextureImage(aImage, 0, 0, 0, 0, aFilterId))
+/* ========================================================================= */
+// $ Texture.Manifest
+// > Source:image=The image class to load from.
+// > Manifest:Jsonr=The Json object containing the texture metadata.
+// < Handle:Texture=A handle to the texture(s) created.
+// ? Creates the specified texture from the specified image class with the
+// ? specified json metadata.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Manifest, 1,
+  const AgImage aImage{lS, 1};
+  const AgJson aJson{lS, 2};
+  AcTexture{lS}().InitTextureImageManifest(aImage, aJson))
 /* ========================================================================= */
 // $ Texture.CreateTS
 // > Source:image=The image class to load from.
@@ -999,14 +1018,28 @@ LLFUNC(CreateTS, 1,
   const AgUIntLG aTW{lS, 2, 0, UINT_MAX}, aTH{lS, 3, 0, UINT_MAX},
                  aPW{lS, 4, 0, UINT_MAX}, aPH{lS, 5, 0, UINT_MAX};
   const AgFilterId aFilterId{lS, 6};
-  AcTexture{lS}().InitImage(aImage, aTW, aTH, aPW, aPH, aFilterId))
+  AcTexture{lS}().InitTextureImage(aImage, aTW, aTH, aPW, aPH, aFilterId))
+/* ========================================================================= */
+// $ Texture.ImageUT
+// > Source:image=The image class to load from.
+// > Filter:integer=The filtering setting to use on texture
+// > Tiles:table=The tileset to use (X, Y, Width, Height, [...]).
+// < Handle:Texture=A handle to the texture(s) created.
+// ? Loads a texture and applies the specified tile set.
+/* ------------------------------------------------------------------------- */
+LLFUNC(ImageUT, 1,
+  const AgImage aImage{lS, 1};
+  const AgFilterId aFilterId{lS, 2};
+  const AgIntegerVector<GLuint> aTiles{lS, 3};
+  AcTexture{lS}().InitTextureImageTiles(aImage, aFilterId, aTiles))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Texture.* namespace functions structure                             ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 LLRSBEGIN                              // Texture.* namespace functions begin
-  LLRSFUNC(Create), LLRSFUNC(CreateTS), LLRSFUNC(Console),
+  LLRSFUNC(Create), LLRSFUNC(ImageUT), LLRSFUNC(Manifest), LLRSFUNC(CreateTS),
+  LLRSFUNC(Console),
 LLRSEND                                // Texture.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Texture namespace

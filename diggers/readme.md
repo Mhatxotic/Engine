@@ -26,41 +26,26 @@
 ## [Status](#status)…
 This Diggers fan remake was started in 2006 as a basic Win32 C application using DirectDraw, DirectSound and DirectMedia then rewritten from scratch in C++ from the ground up with a new fully customisable engine called *Mhatxotic Engine* to utilise open source, cross-platform technologies and conformed to ISO coding standards.
 
-Diggers will always be a work-in-progress since it is difficult and incredibly time consuming to work on a game single-handedly and there are always issues with upstream code due to the balancing of modernisation and compatibility. However, the following information is the current estimated status of the game…
+Diggers is a completely playable game from start to finish but will always be a work-in-progress since it is difficult and incredibly time consuming to work on a game single-handedly and there are always issues with upstream code due to the balancing of modernisation and compatibility. However, the following information is the current estimated status of the game…
 
-* *Engine:* `100%`…
-  * _Windows:_ `100%`…
-    * All functions accounted for.
-  * _MacOS:_ `100%`…
-    * All functions accounted for.
-  * _Linux:_ `100%`…
-    * Sometimes the full-screen/window toggle key might not work properly because of duplicated input keys. Hopefully will be fixed in Ubuntu 24.04 LTS.
-    * Skipping one rendered frame every few seconds only on Wayland, perhaps when only using a `59.97hz` NTSC display. Probably need to make animations based on time and not frames which could be extremely difficult.
-    * All other functions accounted for.
-* *Graphics*: `100%`…
-  * All other graphics accounted for.
-* *Sound*: `100%`…
-  * All music and sound accounted for.
-* *Input*: `100%`…
-  * Keyboard, mouse and controller accounted for but controller and keyboard inputs are suboptimal.
-* *Levels*: `100%`…
-  * All levels accounted for.
-* *Gameplay*: `95%`…
-  * Need proper ending movie with the stranger flying away in his pod.
-  * All other gameplay accounted for.
-* *Localisation*: `25%`…
-  * No French book, intro nor UI localisations yet.
-  * No German book, intro nor UI localisations yet.
-  * No Italian book, intro nor UI localisations yet.
-  * Only British translation so far.
+### MacOS engine outstanding issues…
+* If the game quits uncleanly, you have to run the game with `app_clearmutex=1` to clear the mutex that controls only allowing one instance of the game.
+
+### Linux engine outstanding issues…
+* Sometimes the full-screen/window toggle key might not work properly because of duplicated input keys. Hopefully will be fixed in Ubuntu 24.04 LTS.
+* Skipping one rendered frame every few seconds only on Wayland, perhaps when only using a `59.97hz` NTSC display. Probably need to make animations based on time and not frames which could be extremely difficult.
+
+### Game outstanding issues…
+* Need proper ending movie with the stranger flying away in his pod.
+* No French, German or Italian book, intro nor UI localisations yet.
 
 ## [System Requirements](#system-requirements)…
 | | Minimum | Recommended | Note |
 | --- | --- | --- | --- |
 | **Processor** | Dual-Core 2GHz  | Multi-Core 2GHz+ | Multithreaded! |
-| **System** *(Windows)* | XP SP3 *(X86/X64)* | 7/8.X/1X+ *(X64)* | 32 and 64bit executable. |
+| **System** *(Windows)* | XP *(SP3 X86/SP2 X64)* | 7/8.X/1X+ *(X64)* | 32 and 64bit executable. |
 | **Memory** *(Windows)* | 16MB *(XP/X86)* | 128MB+ *(Win7/X64)* | Close estimate. |
-| **System** *(MacOS)* | 10.7 *(Intel)* / 11 *(Arm)* | 13.0+ *(Arm)* | FAT Universal executable. |
+| **System** *(MacOS)* | 10.15 *(Intel)* / 11 *(Arm)* | 11.0+ *(Arm)* | FAT Universal executable. |
 | **Memory** *(MacOS)* | 256MB *(Intel)* | 512MB *(Arm)* | Close estimate. |
 | **System** *(Linux)* | Ubuntu 23.10 *(X64)* | Ubuntu 23.04+ *(X64)* | See below for packages. |
 | **Memory** *(Linux)* | 16MB | 128MB+ | Wild estimate. |
@@ -161,13 +146,23 @@ Press `F1` at any time in the game to access the setup screen, `F2` to configure
 * **RESET**
   - Resets all the settings to default and applys the default values.
 * **BINDS**
-  - Show the configure binds screen.
+  - Show the keyboard binds configuration screen.
 * **ABOUT**
   - Show the acknowledgements.
 
 ## [Controls](#controls)…
-You can control the game with just a mouse which is novice difficulty like the Amiga computer and DOS version. Add use of the keyboard with the mouse makes the game quite easy to play. Playing with a controller is hard as it will basically emulate the mouse like the Amiga CD32 version of the game did.
+You can control the game with just a mouse which is novice difficulty like the Amiga computer and DOS version. Adding use of the keyboard alongside the mouse makes the game quite easy to play. Playing with a controller is hard as it will basically emulate the mouse like the Amiga CD32 version of the game did.
 
+### Basic controls
+All scenes out of the game will usually allow `any button` to select any point of interest which will normally be accompanied by a tooltip in the bottom-right hand corner of the screen and the `mouse wheel`, `L1`, `L2`, `R1` or `R2 game controller buttons` to cycle quickly through multiple choices on some screens.
+
+In-game, the `left mouse button` or `first game controller button` will select the point of interest under the cursor and the `right mouse button` or `second game controller button` will bring up a menu for the selected in-game object. Pressing the `START` button will pause and unpause the game.
+
+Pressing the `SELECT BUTTON` to enter the setup screen at any time.
+
+To see a complete keyboard shortcut listing, press the `F2` key at any time.
+
+### Cursors
 If you move the cursor and the cursor becomes anything but an arrow graphic, then than particular item on the screen is selectable, e.g.
 * 4 small arrows pointing to the centre…
   - Select/Perform action/Go here.
@@ -178,7 +173,7 @@ If you move the cursor and the cursor becomes anything but an arrow graphic, the
 * Arrow cursor pointing up/down/left or right…
   - Scroll.
 * A ticking clock…
-  - Control is blocked.
+  - All control is blocked temporarily.
 
 ### In-game hud…
 The hud is explained as follows from left to right…
@@ -205,67 +200,13 @@ The hud is explained as follows from left to right…
   - Question: Shows statistics and prediction information about the current zone operations.
   - Page: Displays the book.
 
-### Aliases…
-These aliases are for the explanations below. Note that keyboard defaults can
-be seen by pressing the F2 key (by default) and will not be listed here.
-
-| Alias | Meaning | Alias | Meaning |
-| --- | --- | --- | --- |
-| `MSE` | Refers to mouse | `JOY` | Refers to joystick |
-| `LMB` | Left-Mouse Button | `RMB` | Right-Mouse Button |
-| `MMB` | Middle-Mouse Button | `MWU` | Mouse Wheel up |
-| `MWD` | Mouse Wheel Down | `MBx` | Mouse Button `x` |
-| `JBx` | Joystick Button `x` | | |
-
-### Playstation controller aliases…
-| `JB0` | *Square* Button | `JB1` | *Cross* Button |
-| `JB2` | *Circle* Button | `JB3` | *Triangle* Button |
-| `JB4` | *L1* Button | `JB5` | *R1* Button |
-| `JB6` | *L2* Button | `JB7` | *R2* Button |
-| `JB8` | *Select* Button | `JB9` | *Start* Button |
-| `JB10` | *L3* Button | `JB11` | *R3* Button |
-
 ### Anywhere in the game (not configurable)…
-* `Alt`+`F4` on Windows or `Cmd`+`Q` on a Mac…
+* `Alt`+`F4` on Windows and Linux or `Cmd`+`Q` on a Mac…
   - Instant quit. Any game progress is lost but engine settings and ALREADY SAVED game progress will be written to disk in a `.udb` file.
 * `Alt`+`Enter`…
   - Switch between borderless or exclusive full-Screen and decorated window mode which will persist through app restarts.
 * `World`+`F` on a Mac…
   - Switch between native full-screen and decorated window mode which may persist through app restarts using native functionality. Using the MacOS options disables the `Alt`+`Enter` logic and you have to exit native full-screen mode to be able to use that shortcut again.
-
-### Anywhere in the game (but not during a fade transition…
-* `JB8`…
-  - Configure the game engine, video/audio settings, etc.
-* `JOY` or `MSE` axes…
-  - Move cursor on screen.
-* `JB1` or `LMB`…
-  - Select control under mouse cursor.
-
-### Intro or title credits…
-* `LMB` or `JB1`…
-  - Skip cut-scene/intro.
-
-### In-Level…
-* `START`…
-  - Pause the game.
-* `LMB` or `JB1`…
-  - Action, Select or Cancel menu.
-* `RMB` or `JB2`…
-  - Open menu for selected digger.
-
-### In-Level (paused)…
-* `JB3`+`JB4` or `MB3`+`MB4`…
-  - Forfeit the game only when paused (Game over).
-
-### Map Post-Mortem
-* `JB3`, `JB4`, `MB3` or `MB4`…
-  - Cycle between objects.
-
-### In-shop/Race select screen…
-* `MWU`, `MWD`, `JB4` or `JB5`…
-  - Scroll available options.
-* `JB1` or `LMB`…
-  - Select item under cursor.
 
 ## [Advanced](#advanced)…
 If for some reason you're an advanced-user or admin and need to fine tune how the game engine works, we have some command-line parameters that might be useful and you can overload as much as the operating system allows…
@@ -289,8 +230,6 @@ You can change cvars by opening up the console with the `GRAVE` key (key under `
   - A. You can start the game with the `log_file=...` (filename) parameter to give a pretty detailed log of what the app is doing so you can send me that along with as much info as possible such as the `.log` `.crt` `.dbg` and `.udb` files that the app generates. Neither of these files will contain any personal information, only technical information to help me squash the problem.
 * **Q. I've picked the wrong game-engine settings and the game crashed/won't start.**
   - A. Try specifying the parameter `sql_defaults=1` command-line option to reset all the engine settings to default. If this doesn't work you'll have to delete the `.udb` file or set `sql_defaults=2` and start again from scratch thus losing all your Diggers saved game data. All that said though, the game shouldn't really crash though so please send me any logs/crash dumps you may have.
-* **Q. Diggers crashed and then when I start Diggers on MacOS, nothing happens.**
-  - A. If Diggers terminates uncleanly, you need to run it again manually with the `app_clearmutex=1` parameter. Also restarting your Mac helps but this is way too overkill. This problem does not affect Windows or Linux versions.
 * **Q. Why does the game run faster than the Amiga version?**
   - A. A fixed polling frequency of 60hz is used for the game logic and I originally enjoyed playing this game on a 486 DX2/66 with the original MS-DOS version that ran at refresh frequency of 70hz (in 320x200 mode X) which is quite speedy compared to the slow gameplay of the Amiga version and I always preferred the fast logic of the MS-DOS version.
 * **Q. Can I speed run or T.A.S. this game?**
@@ -351,4 +290,4 @@ See [this document](/contributing.md) for details on contributing to this projec
 ## [License](#license)…
 Please read [this document](/license.md) for the license and disclaimer for use of this software.
 
-## Copyright © 2006-2024 Mhatxotic Design. All Rights Reserved.
+## Copyright © 2006-2025 Mhatxotic Design. All Rights Reserved.

@@ -353,7 +353,7 @@ LLFUNC(IsFinished, 1,
 LLFUNC(GetMatrix, 6,
   const Fbo &fboCref = AgFbo{lS, 1}();
   const FboFloatCoords &ffcRef = fboCref.ffcStage;
-  LuaUtilPushVar(lS, fboCref.GetCoRight(), fboCref.GetCoBottom(),
+  LuaUtilPushVar(lS, fboCref.DimGetWidth(), fboCref.DimGetHeight(),
     ffcRef.GetCoLeft(), ffcRef.GetCoTop(), ffcRef.GetCoRight(),
     ffcRef.GetCoBottom()))
 /* ========================================================================= */
@@ -473,6 +473,22 @@ LLFUNC(ConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
 // ? because it only applies to opengl mode.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ConLock, 0, cConGraphics->SetCantDisable(AgBoolean{lS, 1}))
+/* ========================================================================= */
+// $ Fbo.Resize
+// < Width:number=The new width of the main frame buffer
+// < Height:number=The new height of the main frame buffer
+// > Success:boolean=Returns whether the frame buffer changed or not.
+// ? This is a run-time override for 'vid_orwidth' and 'vid_orheight' cvars in
+// ? which the main frame buffer viewport is re-calculated and re-initialised
+// ? to these dimensions. Note that this modifies the console size as well.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Resize, 1,
+  using namespace IDisplay::P;
+  const AgUIntLG aWidth{lS, 1, 1, cOgl->MaxTexSize() },
+                 aHeight{lS, 2, 1, cOgl->MaxTexSize() };
+  LuaUtilPushVar(lS,
+    cDisplay->AlterDefaultMatrix(static_cast<GLfloat>(aWidth()),
+                                 static_cast<GLfloat>(aHeight()))))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Fbo.* namespace functions structure                                 ## **
@@ -482,6 +498,7 @@ LLRSBEGIN                              // Fbo.* namespace functions begin
   LLRSFUNC(ConEnabled), LLRSFUNC(ConHeight), LLRSFUNC(ConLock),
   LLRSFUNC(ConSet),     LLRSFUNC(Create),    LLRSFUNC(Draw),
   LLRSFUNC(IsDrawing),  LLRSFUNC(Main),      LLRSFUNC(OnRedraw),
+  LLRSFUNC(Resize),
 LLRSEND                                // Fbo.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

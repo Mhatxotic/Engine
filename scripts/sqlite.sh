@@ -19,14 +19,14 @@ ZIP=$ARCHIVE/$FILE.zip
 if [ ! -e $ZIP ]; then
   echo Error: $ZIP not found!
   LS=`ls $ARCHIVE/$FILEPREFIX* 2>/dev/null`
-  if [ ! -z $LS ]; then
+  if [ ! -z "$LS" ]; then
     echo Available files...
     echo $LS
   fi
   exit 2;
 fi
 
-7z x -aos $ZIP
+7zz x -aos $ZIP
 if [ ! $? -eq 0 ]; then
   exit 3;
 fi
@@ -38,7 +38,7 @@ fi
 
 build()
 {
-  gcc -O3 -arch $1 -mtune=$2 -mmacosx-version-min=10.11 \
+  gcc -O3 -arch $1 -mtune=$2 -mmacosx-version-min=10.15 \
     -DSQLITE_DEFAULT_AUTOVACUUM=2 -DSQLITE_TEMP_STORE=2 \
     -DSQLITE_ENABLE_NULL_TRIM -DSQLITE_OS_UNIX -DSQLITE_OMIT_LOAD_EXTENSION \
     -DSQLITE_OMIT_WAL -DSQLITE_OMIT_UTF16 -DSQLITE_OMIT_DEPRECATED \

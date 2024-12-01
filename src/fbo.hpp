@@ -85,11 +85,11 @@ class FboBase :                        // Fbo base class
   GLuint           uiFBOtex;           // Frame buffer texture name
   FboFloatCoords   ffcStage;           // Stage co-ordinates
   /* -- Constructor -------------------------------------------------------- */
-  explicit FboBase(const GLint iPF, const bool bLockable) :
+  explicit FboBase(const GLint iPixFormat, const bool bLockable) :
     /* -- Initialisers ----------------------------------------------------- */
     Lockable{ bLockable },             ofeFilterId(OF_N_N),
     iMinFilter(GL_NEAREST),            iMagFilter(GL_NEAREST),
-    iWrapMode(GL_CLAMP_TO_EDGE),       iPixFormat(iPF),
+    iWrapMode(GL_CLAMP_TO_EDGE),       iPixFormat(iPixFormat),
     ePolyMode(GL_FILL),                uiTextureCache(0),
     uiTexUnitCache(0),                 uiShaderCache(0),
     stGLArrayOff(0),                   stTrianglesLast(0),
@@ -516,12 +516,12 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     /* -- Code ------------------------------------------------------------- */
     { }                                // Do nothing else
   /* -- Constructor WITHOUT registration (used for core Fbos)--------------- */
-  Fbo(const GLint iPF,                 // Pixel format requested
-      const bool bL) :                 // Default locked to true
+  Fbo(const GLint iPixFormat,          // Pixel format requested
+      const bool bLocked) :            // Locked from garbage collector
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFbo{ cFbos },              // Initially unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    FboBase{ iPF, bL }                 // Init alpha channel and lua protect
+    FboBase{ iPixFormat, bLocked }     // Init alpha channel and lua protect
     /* -- Code ------------------------------------------------------------- */
     { }                                // Do nothing else
   /* -- Destructor --------------------------------------------------------- */

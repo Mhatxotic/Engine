@@ -765,7 +765,7 @@ static struct Sql final :              // Members initially public
         "Sql integrity check failed to return result columns.");
       return false;
     } // Get result string. It should say 'ok' if everything went ok
-    const string strResult{ mbMap.cbegin()->second.MemToString() };
+    const string strResult{ mbMap.cbegin()->second.MemToStringSafe() };
     if(strResult != "ok")
     { // Log and return failure
       cLog->LogWarningExSafe("Sql database corrupted: $", strResult);

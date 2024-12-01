@@ -63,13 +63,14 @@ class Certs                            // Certificates store
   template<class SyncMethod>void CertsLoad(SyncMethod &smClass,
     const string &strD, const string &strF) try
   { // Load the certificate
-    const FileMap fC{ AssetExtract(StrAppend(strD, '/', strF)) };
+    const FileMap fmCert{
+      AssetExtract(StrAppend(strD, cCommon->CFSlash(), strF)) };
     // Get pointer
-    const unsigned char*ucpPtr = fC.MemPtr<unsigned char>();
+    const unsigned char*ucpPtr = fmCert.MemPtr<unsigned char>();
     // Load the raw certificate and ig it succeeded?
     typedef unique_ptr<X509, function<decltype(X509_free)>> X509Ptr;
     if(X509Ptr caCert{
-      d2i_X509(nullptr, &ucpPtr, fC.MemSize<long>()), X509_free })
+      d2i_X509(nullptr, &ucpPtr, fmCert.MemSize<long>()), X509_free })
     { // Get purpose struct of certificate
       if(X509_PURPOSE*const x509p = X509_PURPOSE_get0(X509_PURPOSE_SSL_SERVER))
       { // Get purpose id and reject if it is not a server CA certificate
@@ -80,28 +81,28 @@ class Certs                            // Certificates store
             if(X509_STORE_add_cert(xsCerts, caCert.get()))
             { // Lock access to the list
               smClass.LockFunction();
-              lCAStore.push_back({ fC.IdentGet(), caCert.get() });
+              lCAStore.push_back({ fmCert.IdentGet(), caCert.get() });
               smClass.UnlockFunction();
             } // Failed to add certificate to CA store
             else cLog->LogWarningExSafe(
-              "Certs failed to add '$' to SSL context!", fC.IdentGet());
+              "Certs failed to add '$' to SSL context!", fmCert.IdentGet());
             break;
           // The certificate was not created to perform the purpose represented
           case 0:
             cLog->LogWarningExSafe(
               "Certs rejected '$' as not a server CA certificate!",
-              fC.IdentGet());
+              fmCert.IdentGet());
             break;
           // An error occured
           default:
             cLog->LogWarningExSafe(
               "Certs rejected '$' because an error occurred!",
-              fC.IdentGet());
+              fmCert.IdentGet());
             break;
         }
       } // Failed to get purpose? Log the rejection
       else cLog->LogWarningExSafe(
-        "Certs rejected '$' as unable to get purpose!", fC.IdentGet());
+        "Certs rejected '$' as unable to get purpose!", fmCert.IdentGet());
     } // Release the certificate (caCert)
   } // In the rare occurence that an exception occurs we should skip the cert
   catch(const exception &e)

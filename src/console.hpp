@@ -94,7 +94,7 @@ static class Console final :           // Members initially private
   /* -- Other -------------------------------------------------------------- */
   AutoCompleteFlags acFlags;           // Flags for autocomplete
   const ConCmdStaticList &ccslInt;     // Default console cmds list
-  CmdMap          cmMap;               // Console commands list
+  CmdMap           cmMap;              // Console commands list
   const EvtMain::RegVec reEvents;      // Events list to register
   /* -- Do clear console, clear history and reset position ----------------- */
   void DoFlush(void)
@@ -230,16 +230,9 @@ static class Console final :           // Members initially private
     // Repalce character in input buffer
     else ReplaceInputChar(uiKey);
   }
-  /* -- OnForceRedraw ---------------- Force a bot console display update -- */
+  /* -- OnForceRedraw ------------------- Force a terminal display update -- */
   void OnForceRedraw(const EvtMainEvent&)
     { SetRedraw(); ciOutputRefresh.CISync(); }
-  /* -- Size updated event (unused on win32) ------------------------------- */
-  void OnResize(const EvtMainEvent &emeEvent)
-  { // Send the event to SysCon
-    cSystem->OnResize();
-    // Force a redraw
-    OnForceRedraw(emeEvent);
-  }
   /* -- OnKeyPress ---------------------------------- Console key pressed -- */
   void OnKeyPress(const int iKey, const int iAction, const int iMods)
   { // Key released? Ignore
@@ -680,15 +673,26 @@ static class Console final :           // Members initially private
     {  // Loop forever until no more keys are pressed
       for(int iKey, iMods;;) switch(cSystem->GetKey(iKey, iMods))
       { // No key is pressed (ignore)
-        case SysBase::SysCon::KT_NONE: goto Done;
-        // A key was pressed
-        case SysBase::SysCon::KT_KEY:
+        case SysCon::KT_NONE: goto Done;
+        // A key was pressed?
+        case SysCon::KT_KEY:
+          // Send it to the key press handler
           OnKeyPress(iKey, GLFW_PRESS, iMods);
+          // Try more keys
           continue;
-        // A scan code was pressed
-        case SysBase::SysCon::KT_CHAR:
+        // A scan code was pressed?
+        case SysCon::KT_CHAR:
+          // Send it to the key character handler
           OnCharPress(static_cast<unsigned int>(iKey));
+          // Try more keys
           continue;
+        // No key is pressed but a reset was requested?
+        case SysCon::KT_RESET:
+          // Set to redraw entire screen
+          ciOutputRefresh.CISync();
+          rfFlags.FlagSet(RD_TEXT);
+          // Break the for loop
+          goto Done;
       } // Only clean way to double-break without extra vars or functions
       Done:;
     } // Status update elapsed?
@@ -897,7 +901,6 @@ static class Console final :           // Members initially private
     /* --------------------------------------------------------------------- */
     reEvents{                          // Default events
       { EMC_CON_UPDATE, bind(&Console::OnForceRedraw, this, _1) },
-      { EMC_CON_RESIZE, bind(&Console::OnResize,      this, _1) },
     }
     /* --------------------------------------------------------------------- */
     { }

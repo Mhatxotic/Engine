@@ -14,11 +14,11 @@ namespace ICVar {                      // Start of private module namespace
 using namespace IAsset::P;             using namespace ICodec::P;
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDir::P;
-using namespace IError::P;             using namespace ILog::P;
-using namespace IParser::P;            using namespace ISql::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace Lib::Sqlite;
+using namespace IError::P;             using namespace IJson::P;
+using namespace ILog::P;               using namespace IPSplit::P;
+using namespace ISql::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -232,77 +232,6 @@ static struct CVars final :            // Start of vars class
     CVarSetEnums SetInternal(const CVarEnums cveId, const AnyType atV)
       { return SetInternal(cveId, StrFromNum(atV)); }
   /* ----------------------------------------------------------------------- */
-  bool ParseBuffer(const string &strBuffer, const CVarFlagsConst cvfcFlags,
-    const unsigned int uiLevel=0)
-  { // Bail if size not acceptable
-    if(strBuffer.length() <= stCVarConfigSizeMinimum ||
-       strBuffer.length() > stCVarConfigSizeMaximum)
-         return false;
-    // Split characters and if nothing found?
-    const string strSplit{ StrGetReturnFormat(strBuffer) };
-    if(strSplit.empty())
-    { // Log the detection issue and return failure
-      cLog->LogErrorSafe("CVars failed to detect config file type!");
-      return false;
-    } // Initialise it and log and return failed if there are no lines
-    const ParserConst<> pcConfig{ strBuffer, strSplit, '=' };
-    if(pcConfig.empty())
-    { // Log the issue and return failure
-      cLog->LogWarningSafe("CVars detected no readable variables!");
-      return false;
-    } // Total variables parsed, good vars and bad vars.
-    size_t stGood = 0, stBad = 0;
-    // For each item. Set variable or save for future reference.
-    for(const StrPair &spPair : pcConfig)
-    { // If first string is not empty then check first character
-      if(!spPair.first.empty()) switch(spPair.first.front())
-      { // Comment?
-        case '#': break;
-        // No key was parsed?
-        case '\255':
-        { // Test value
-          if(!spPair.second.empty()) switch(spPair.second.front())
-          { // Comment?
-            case '#': break;
-            // Include?
-            case '+':
-            { // Get new level and if the limit is exceeded then throw error
-              const unsigned int uiNewLevel = uiLevel + 1;
-              if(uiNewLevel >= stCVarConfigMaxLevel)
-                XC("CVar include nest level too deep!",
-                   "File", spPair.second, "Limit", stCVarConfigMaxLevel);
-              // Log the include and parse it
-              if(ParseBuffer(
-                   AssetExtract(StrTrim(spPair.second.substr(1), ' ')).
-                     MemToString(), cvfcFlags, uiNewLevel))
-                ++stGood;
-              else ++stBad;
-              // Done
-              break;
-            } // Something else?
-            default: ++stBad; break;
-          } // Done
-          break;
-        } // Something else?
-        default:
-        { // Set the variable and if succeeded increment good counter else bad
-          if(SetVarOrInitial(spPair.first, spPair.second, cvfcFlags,
-            CCF_IGNOREIFMISSING|CCF_THROWONERROR|CCF_NOMARKCOMMIT))
-              ++stGood;
-          else ++stBad;
-          // Done
-          break;
-        }
-      }
-    } // Set total cvars processed and log the result
-    const size_t stParsed = stGood + stBad,
-                 stIgnored = pcConfig.size() - stParsed;
-    cLog->LogInfoExSafe("CVars parsed $ lines with $ vars (G:$;B:$;I:$).",
-      pcConfig.size(), stParsed, stGood, stBad, stIgnored);
-    // Done
-    return true;
-  }
-  /* ----------------------------------------------------------------------- */
   void RefreshSettings(void)
   { // Completely clear SQL cvars table.
     cLog->LogDebugSafe("CVars erasing saved engine settings...");
@@ -426,9 +355,6 @@ static struct CVars final :            // Start of vars class
   size_t GetVarCount(void) { return cvmActive.size(); }
   const CVarMap &GetInitialVarList(void) { return cvmPending; }
   /* ----------------------------------------------------------------------- */
-  bool LoadFromFile(const string &strFile, const CVarFlagsConst cvfcFlags)
-    { return ParseBuffer(AssetExtract(strFile).MemToString(), cvfcFlags); }
-  /* ----------------------------------------------------------------------- */
   bool SetExistingInitialVar(const string &strVar, const string &strVal,
     const CVarFlagsConst cvfcFlags=PUSR)
   { // Find initial item and return failure if it doesn't exist
@@ -536,7 +462,7 @@ static struct CVars final :            // Start of vars class
           ++stCommit;
         continue;
       } // Get string and find cvar name in live cvar list, ignore if it exists
-      const string strKey{ sdRef.MemToString() };
+      const string strKey{ sdRef.MemToStringSafe() };
       if(VarExists(strKey)) continue;
       // Find item in initial/standby cvar list, delete it if found
       const CVarMapConstIt cvmciIt{ cvmPending.find(strKey) };
@@ -599,7 +525,7 @@ static struct CVars final :            // Start of vars class
         const SqlData &sdKeyRef = srmciKeyIt->second;
         if(sdKeyRef.iType != SQLITE_TEXT) return;
         // Convert the variable to string and ignore if invalid
-        const string strVar{ sdKeyRef.MemToString() };
+        const string strVar{ sdKeyRef.MemToStringSafe() };
         // Get flags and goto next record if not found, else set the key string
         const SqlRecordsMapConstIt
           srmciFlagsIt{ srmRef.find(cSql->strCVFlagsColumn) };
@@ -623,7 +549,7 @@ static struct CVars final :            // Start of vars class
               SQLITE_TEXT, sdValueRef.iType, strVar);
             return;
           } // Store value directly with synchronisation and goto next
-          if(SetVarOrInitial(strVar, sdValueRef.MemToString(),
+          if(SetVarOrInitial(strVar, sdValueRef.MemToStringSafe(),
             PUSR|SUDB, CCF_NOIOVERRIDE|CCF_NOTDECRYPTED))
               ++stLoaded;
           return;
@@ -634,7 +560,7 @@ static struct CVars final :            // Start of vars class
         // Capture exceptions because MagicBlock does that on error
         try
         { // Decrypt the value and get the result, and if that call fails?
-          strNewValue = Block<CoDecoder>{ sdValueRef }.MemToString();
+          strNewValue = Block<CoDecoder>{ sdValueRef }.MemToStringSafe();
         } // exception occured?
         catch(const exception &e)
         { // Log failure and try to reset the initial var so this does not
@@ -772,11 +698,144 @@ static struct CVars final :            // Start of vars class
     { return CVarSimpleSetInt(stMaxInactiveCount, stCount); }
   /* -- Set and execute default app configuration file --------------------- */
   CVarReturn ExecuteAppConfig(const string &strFile, string &strVal)
-  { // Build filename and deny change if failed
-    const string strCfgFile{ StrAppend(strFile, "." CFG_EXTENSION) };
-    if(!LoadFromFile(strCfgFile, PSYSTEM|SAPPCFG)) return DENY;
+  { // Convert whole file data to a string
+    const Json jsManifest{ StrAppend(strFile, "." JSON_EXTENSION) };
+    // Check version is correct
+    const unsigned int uiVersionRequired = 1;
+    const unsigned int uiVersion = jsManifest.GetInteger("Version");
+    if(uiVersion != uiVersionRequired)
+      XC("Invalid application manifest version!",
+         "Manfiest", jsManifest.IdentGet(), "Required", uiVersionRequired,
+         "Actual",   uiVersion);
+    // Look for constants and throw if there are none then report them in log
+    using Lib::RapidJson::Value;
+    const Value &rjvConstants = jsManifest.GetValue("Constants");
+    if(!rjvConstants.IsObject())
+      XC("Constants array not valid!", "Manfiest", jsManifest.IdentGet());
+    // Total variables parsed, good vars and bad vars.
+    size_t stGood = 0, stBad = 0;
+    // Precompute compulsory flags
+    const CVarFlagsConst cvfcFlags{ PSYSTEM|SAPPCFG };
+    const CVarConditionFlagsConst cvcfcFlags{
+      CCF_NOIOVERRIDE|CCF_IGNOREIFMISSING|CCF_THROWONERROR|CCF_NOMARKCOMMIT };
+    // Add the characters the manifest file cares about
+    StdForEach(par_unseq, rjvConstants.MemberBegin(), rjvConstants.MemberEnd(),
+      [this, &stGood, &stBad, cvfcFlags, cvcfcFlags]
+        (const Value::Member &rjvItem)
+    { // Get alias to keyname and value and check its type
+      const Value &rjvKey = rjvItem.name, &rjvValue = rjvItem.value;
+      switch(rjvValue.GetType())
+      { // Json entry is a number type?
+        case Lib::RapidJson::kNumberType:
+          if(SetVarOrInitial(rjvKey.GetString(),
+             (rjvValue.IsUint() ? StrFromNum(rjvValue.GetUint()) :
+             (rjvValue.IsInt() ? StrFromNum(rjvValue.GetInt()) :
+             StrFromNum(rjvValue.GetDouble()))), cvfcFlags, cvcfcFlags))
+            ++stGood; else ++stBad;
+          break;
+        // Json entry is a string type?
+        case Lib::RapidJson::kStringType:
+          if(SetVarOrInitial(rjvKey.GetString(), rjvValue.GetString(),
+             cvfcFlags, cvcfcFlags))
+            ++stGood; else ++stBad;
+          break;
+        // Json entry is a boolean type?
+        case Lib::RapidJson::kTrueType:
+          if(SetVarOrInitial(rjvKey.GetString(),
+             cCommon->One(), cvfcFlags, cvcfcFlags))
+            ++stGood; else ++stBad;
+          break;
+        case Lib::RapidJson::kFalseType:
+          if(SetVarOrInitial(rjvKey.GetString(),
+             cCommon->Zero(), cvfcFlags, cvcfcFlags))
+            ++stGood; else ++stBad;
+          break;
+        // Everything else is unsupported
+        default:
+          cLog->LogWarningExSafe(
+            "CVars constant value type '$' for '$' is invalid!",
+            rjvValue.GetType(), rjvKey.GetString());
+          break;
+      }
+    });
+    // Optionally look for a active set value and if it exists. This useful so
+    // developers can switch between different configurations easier.
+    const Value::ConstMemberIterator
+      vcmiIt{ jsManifest.FindMember("ActiveSet") };
+    if(vcmiIt != jsManifest.MemberEnd())
+    { // Get value and if it is not an unsigned integer throw an exception
+      const Value &rjvActiveSet = vcmiIt->value;
+      if(!rjvActiveSet.IsUint())
+        XC("Active set id invalid in app manifest!",
+           "Identifier", jsManifest.IdentGet());
+      // Get the sets value and it must be an array
+      const Value &rjvActiveSetArray = jsManifest.GetValue("Sets");
+      if(!rjvActiveSetArray.IsArray())
+        XC("Active set array invalid in app manifest!",
+           "Identifier", jsManifest.IdentGet(),
+           "Set",        rjvActiveSet.GetUint());
+      // Throw an exception if the specified value is out of range
+      if(rjvActiveSet.GetUint() >= rjvActiveSetArray.Size())
+        XC("Active set id out of range in app manifest!",
+           "Identifier", jsManifest.IdentGet(),
+           "Set",        rjvActiveSet.GetUint(),
+           "Maximum",    rjvActiveSetArray.Size());
+      // Throw an exception if the specified value is not an object
+      const Value &rjvObject = rjvActiveSetArray[rjvActiveSet.GetUint()];
+      if(!rjvObject.IsObject())
+        XC("Active set id not a valid object!",
+           "Identifier", jsManifest.IdentGet(),
+           "Set",        rjvActiveSet.GetUint());
+      // Add the characters the manifest file cares about
+      StdForEach(par_unseq, rjvObject.MemberBegin(),
+                            rjvObject.MemberEnd(),
+        [this, &rjvActiveSet, &stGood, &stBad, cvfcFlags, cvcfcFlags]
+          (const Value::Member &rjvItem)
+      { // Get alias to keyname and value and compare type
+        const Value &rjvKey = rjvItem.name, &rjvValue = rjvItem.value;
+        switch(rjvValue.GetType())
+        { // Json entry is a number type?
+          case Lib::RapidJson::kNumberType:
+            if(SetVarOrInitial(rjvKey.GetString(),
+               (rjvValue.IsUint() ? StrFromNum(rjvValue.GetUint()) :
+               (rjvValue.IsInt() ? StrFromNum(rjvValue.GetInt()) :
+               StrFromNum(rjvValue.GetDouble()))), cvfcFlags, cvcfcFlags))
+              ++stGood; else ++stBad;
+            break;
+          // Json entry is a string type?
+          case Lib::RapidJson::kStringType:
+            if(SetVarOrInitial(rjvKey.GetString(), rjvValue.GetString(),
+               cvfcFlags, cvcfcFlags))
+              ++stGood; else ++stBad;
+            break;
+          // Json entry is a boolean type?
+          case Lib::RapidJson::kTrueType:
+            if(SetVarOrInitial(rjvKey.GetString(),
+               cCommon->One(), cvfcFlags, cvcfcFlags))
+              ++stGood; else ++stBad;
+            break;
+          case Lib::RapidJson::kFalseType:
+            if(SetVarOrInitial(rjvKey.GetString(),
+               cCommon->Zero(), cvfcFlags, cvcfcFlags))
+              ++stGood; else ++stBad;
+            break;
+          // Everything else is unsupported
+          default:
+            cLog->LogWarningExSafe(
+              "CVars value for '$' in set '$' is invalid!",
+              rjvKey.GetType(), rjvActiveSet.GetUint(), rjvKey.GetString());
+            break;
+        }
+      }); // Log total cvars processed and log the result
+      cLog->LogInfoExSafe(
+        "CVars parsed $ of $ ($ bad) constant and set $ variables.",
+        stGood, stGood + stBad, stBad, rjvActiveSet.GetUint());
+    } // Log total cvars processed and log the result
+    else cLog->LogInfoExSafe("CVars parsed $ of $ ($ bad) constant variables.",
+      stGood, stGood + stBad, stBad);
     // We are manually updating the value with the correct filename
-    strVal = StdMove(strCfgFile);
+    strVal = StdMove(jsManifest.IdentGet());
+    // Carry on parsing cvars
     return ACCEPT_HANDLED;
   }
   /* ----------------------------------------------------------------------- */

@@ -20,6 +20,14 @@ using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* -- Override type -------------------------------------------------------- */
+enum FSOverrideType
+{ /* ----------------------------------------------------------------------- */
+   FO_INTONLY,                         // Internal archives only
+   FO_EXTINT,                          // External and then internal
+   FO_INTEXT,                          // Internal and then external
+   FO_EXTONLY                          // External files only
+}; /* ---------------------------------------------------------------------- */
 /* -- Typedefs ------------------------------------------------------------- */
 BUILD_FLAGS(Asset,                     // Asset loading flags
   /* -- Commands ----------------------------------------------------------- */
@@ -45,7 +53,7 @@ BUILD_FLAGS(Asset,                     // Asset loading flags
 );/* == Asset collector class for collector and custom variables =========== */
 CTOR_BEGIN_ASYNC(Assets, Asset, CLHelperUnsafe,
 /* -- Asset collector variables -------------------------------------------- */
-bool               bOverride;          // Allow load of external files
+FSOverrideType     fsotOverride;       // Allow load of external files
 SafeSizeT          stPipeBufSize;      // Pipe buffer size for execute
 ); /* ---------------------------------------------------------------------- */
 /* -- Function to load a file locally -------------------------------------- */
@@ -62,23 +70,55 @@ static FileMap AssetLoadFromDisk(const string &strFile)
 }
 /* -- Function to search local directory then archives for a file ---------- */
 static FileMap AssetExtract(const string &strFile)
-{ // Do we have the permission to load external files?
-  if(cAssets->bOverride)
-  { // Does the file exist on disk?
-    if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
-    // No need to try to check archives if there are no archives
-    if(cArchives->CollectorEmpty())
-      XCL("Local resource not found!", "File",  strFile, "Path", DirGetCWD());
-  } // Loading from archives only. No point continuing if there aren't any.
-  else if(cArchives->CollectorEmpty())
-    XC("No route to resource!", "File", strFile);
-  // Try to extract file from archives and return it if succeeded
-  if(FileMap fmFile{ ArchiveExtract(strFile) }) return fmFile;
-  // Or show archives list
-  XCL("Failed to open resource from archives!",
-    "File",     strFile,
-    "Count",    cArchives->CollectorCount(),
-    "Archives", ArchiveGetNames());
+{ // Check the order in which we load
+  switch(cAssets->fsotOverride)
+  { // Internal files from archives only?
+    case FO_INTONLY:
+      // If no archives just error out
+      if(cArchives->CollectorEmpty())
+        XC("Failed to find resource in archives!", "File", strFile);
+      // Load the file from archives
+      if(FileMap fmFile{ ArchiveExtract(strFile) }) return fmFile;
+      XCL("Failed to find resource in archives!",
+        "File",     strFile,
+        "Count",    cArchives->CollectorCount(),
+        "Archives", ArchiveGetNames());
+    // On disk files and then internal files from archives?
+    case FO_EXTINT:
+      // Load the file from disk if it exists try to load it
+      if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
+      // If no archives just error out
+      if(cArchives->CollectorEmpty())
+        XCL("Failed to find resource on disk or archives!", "File", strFile);
+      // Load the file from archives
+      if(FileMap fmFile{ ArchiveExtract(strFile) }) return fmFile;
+      XCL("Failed to load resource on disk or archives!",
+        "File",     strFile,
+        "Count",    cArchives->CollectorCount(),
+        "Archives", ArchiveGetNames());
+    // Internal files from archives and then on disk files?
+    case FO_INTEXT:
+      // If we have archives?
+      if(cArchives->CollectorNotEmpty())
+      { // Load the file from archives
+        if(FileMap fmFile{ ArchiveExtract(strFile) }) return fmFile;
+        // Load the file from disk if it exists try to load it
+        if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
+        XC("Failed to find resource in archives or on disk!", "File", strFile);
+      } // Load the file from disk if it exists try to load it
+      if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
+      XCL("Failed to load resource in archives or on disk!",
+        "File",     strFile,
+        "Count",    cArchives->CollectorCount(),
+        "Archives", ArchiveGetNames());
+    // On disk files only?
+    case FO_EXTONLY:
+      // Load the file from disk if it exists else throw and exception
+      if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
+      XC("Failed to find resource on disk!", "File", strFile);
+    // Anything else is a failure
+    default: XC("No route to resource!", "File", strFile);
+  }
 }
 /* == Asset object class =================================================== */
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
@@ -128,7 +168,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   void InitAsyncAsset(lua_State*const lS, const string &strName,
     const AssetFlagsConst &afcFlags, Asset &aCref)
   { // Prepare user flags
-    FlagReset(afcFlags);
+    FlagSet(afcFlags);
     // Dispatch the event
     AsyncInitArray(lS, strName, "assetdata", aCref);
   }
@@ -136,7 +176,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   void InitAsyncFile(lua_State*const lS, const string &strFile,
     const AssetFlagsConst &afcFlags)
   { // Prepare user flags
-    FlagReset(afcFlags);
+    FlagSet(afcFlags);
     // Load asset from file asynchronously
     AsyncInitFile(lS, strFile, "assetfile");
   }
@@ -144,7 +184,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   void InitAsyncCmdLine(lua_State*const lS, const string &strCmdLine,
     const AssetFlagsConst &afcFlags)
   { // Prepare user flags
-    FlagReset(afcFlags);
+    FlagSet(afcFlags);
     // Nothing to send to 'stdin'
     Memory mbBlank;
     // Dispatch the request asynchronously
@@ -154,7 +194,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   void InitAsyncCmdLineEx(lua_State*const lS, const string &strCmdLine,
     const AssetFlagsConst &afcFlags, Asset &aStdIn)
   { // Prepare user flags
-    FlagReset(afcFlags);
+    FlagSet(afcFlags);
     // Load asset from file asynchronously
     AsyncInitCmdLine(lS, strCmdLine,
       StrAppend("cmdline<", aStdIn.MemSize()), aStdIn);
@@ -162,7 +202,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   /* -- Init from file ----------------------------------------------------- */
   void InitFile(const string &strFile, const AssetFlagsConst &afcFlags)
   { // Set load flags
-    FlagReset(afcFlags);
+    FlagSet(afcFlags);
     // Load file normally
     SyncInitFileSafe(strFile);
   }
@@ -170,7 +210,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   void InitPtr(const string &strName, const AssetFlagsConst &afcFlags,
     size_t stNSize, const char*const cpNPtr)
   { // Prepare flags
-    FlagReset(afcFlags);
+    FlagSet(afcFlags);
     // Copy the memory
     Memory mData{ stNSize, cpNPtr };
     // Do the initialisation
@@ -185,7 +225,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   { // Copy name of asset
     IdentSet(aCref.IdentGet());
     // Copy flags
-    FlagReset(aCref.FlagGet());
+    FlagSet(aCref.FlagGet());
     // Then copy the memory over
     MemInitCopy(aCref);
   }
@@ -200,7 +240,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   void InitArray(const string &strName, Asset &aRef,
     const AssetFlagsConst &afcFlags)
   { // Set load flags
-    FlagReset(afcFlags);
+    FlagSet(afcFlags);
     // Set filename and flags
     SyncInitArray(strName, aRef);
   }
@@ -223,7 +263,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(Asset)               // Suppress default functions for safety
 };/* ======================================================================= */
-CTOR_END_ASYNC_NOFUNCS(Assets, Asset, ASSET, ASSET, bOverride(false));
+CTOR_END_ASYNC_NOFUNCS(Assets, Asset, ASSET, ASSET, fsotOverride(FO_EXTONLY));
 /* -- Class to help enumerate files ---------------------------------------- */
 struct AssetList :
   /* -- Dependents --------------------------------------------------------- */
@@ -251,8 +291,8 @@ struct AssetList :
 static bool AssetExists(const string &strFile)
   { return DirLocalFileExists(strFile) || ArchiveFileExists(strFile); }
 /* -- Allow external file access ------------------------------------------- */
-static CVarReturn AssetSetFSOverride(const bool bState)
-  { return CVarSimpleSetInt(cAssets->bOverride, bState); }
+static CVarReturn AssetSetFSOverride(const FSOverrideType fsState)
+  { return CVarSimpleSetInt(cAssets->fsotOverride, fsState); }
 /* -- Set pipe buffer size ------------------------------------------------- */
 static CVarReturn AssetSetPipeBufferSize(const size_t stSize)
   { return CVarSimpleSetIntNLG(cAssets->stPipeBufSize, stSize, 1UL, 4096UL); }

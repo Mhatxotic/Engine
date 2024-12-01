@@ -108,7 +108,7 @@ if [ "$PLATFORM" == 'Linux' ]; then
   build linux-x86_64 generic "" l64
   ar rcs "${LIB}/ssl64.la" ssl64-*.a
 else
-  build darwin64-x86_64 generic -mmacosx-version-min=10.11 o32
+  build darwin64-x86_64 generic -mmacosx-version-min=10.15 o32
   build darwin64-arm64 apple-m1 -mmacosx-version-min=11.0 o64
   lipo ssl64-*.a -create -output "${LIB}/ssl64.ma"
 fi

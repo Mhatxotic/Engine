@@ -14,31 +14,27 @@ ARCHIVE=$BASE/archive
 LIB=$BASE/lib
 FILEPREFIX=openal-soft-
 FILE=$FILEPREFIX$1
-ZIP=$ARCHIVE/$FILE.tar.bz2
+ZIP=$ARCHIVE/$FILE.zip
 
 if [ ! -e $ZIP ]; then
   echo Error: $ZIP not found!
-  LS=`ls $ARCHIVE/$FILEPREFIX* 2>/dev/null`
-  if [ ! -z $LS ]; then
+  LS=`echo $ARCHIVE/$FILEPREFIX* 2>/dev/null`
+  if [ ! -z "${LS}" ]; then
     echo Available files...
-    echo $LS
+    echo $LS | tr " " "\n"
   fi
   exit 2
 fi
 
-tar -xvzf $ZIP
+unzip -n $ZIP
 if [ ! $? -eq 0 ]; then
   exit 3
 fi
 
-chmod -R 700 $FILE
-if [ ! $? -eq 0 ]; then
-  exit 4
-fi
-
+FILE=${FILE:r}
 cd $FILE
 if [ ! $? -eq 0 ]; then
-  exit 5
+  exit 4
 fi
 
 build()
@@ -49,7 +45,7 @@ build()
         -D"CMAKE_BUILD_TYPE=Release" \
         -D"CMAKE_OSX_ARCHITECTURES=${1}" \
         -D"CMAKE_CXX_FLAGS=-mtune=${2} -stdlib=libc++" \
-        -D"CMAKE_OSX_DEPLOYMENT_TARGET=10.11" \
+        -D"CMAKE_OSX_DEPLOYMENT_TARGET=${3}" \
         -D"ALSOFT_BACKEND_PORTAUDIO=FALSE" \
         -D"ALSOFT_BACKEND_WAVE=FALSE" \
         -D"ALSOFT_DLOPEN=FALSE" \
@@ -116,8 +112,8 @@ build()
   fi
 }
 
-build x86_64 generic
-build arm64 apple-m1
+build x86_64 generic 10.15
+build arm64 apple-m1 11.0
 
 lipo al64-*.a -create -output "${LIB}/al64.ma"
 if [ ! $? -eq 0 ]; then

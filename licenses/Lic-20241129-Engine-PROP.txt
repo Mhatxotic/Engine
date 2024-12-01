@@ -7,7 +7,7 @@ Official binaries available for...
 + Windows XP 5.1.SP3 (i386) or later.
 + Windows XP 5.2.SP2 (x86-64) or later.
 + Ubuntu Linux 24.04 (x86-64) or later.
-+ MacOS El Capitan 10.11 (x86-64) or later.
++ MacOS Catalina 10.15 (x86-64) or later.
 + MacOS Big Sur 11.0 (arm64) or later
 
 This space will eventually give additional thanks to the following people for their contributions.

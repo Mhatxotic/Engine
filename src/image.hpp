@@ -558,110 +558,153 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     const size_t stOld = GetAlloc();
     // Convert to GPU copmatible texture?
     if(IsConvertGPUCompat())
-    { // Log that we're running this function
-      cLog->LogDebugExSafe("Image '$' safe pixel depth request...",
-        IdentGet());
-      // Run the function and log success if succeeded
-      if(ConvertGPUCompatible())
-      { // Log the successful result
-        cLog->LogInfoExSafe("Image '$' pixel-depth now safe.", IdentGet());
-        // Set activated flag
-        SetActiveGPUCompat();
-      } // Conversion did not happen so log that too
-      else cLog->LogDebugExSafe("Image '$' skipped safe pixel depth!",
+    { // If it is not already converted by the file filter?
+      if(IsNotActiveGPUCompat())
+      { // Log that we're running this function
+        cLog->LogDebugExSafe("Image '$' safe pixel depth request...",
+          IdentGet());
+        // Run the function and log success if succeeded
+        if(ConvertGPUCompatible())
+        { // Log the successful result
+          cLog->LogInfoExSafe("Image '$' pixel-depth now safe.", IdentGet());
+          // Set activated flag
+          SetActiveGPUCompat();
+        } // Conversion did not happen so log that too
+        else cLog->LogDebugExSafe("Image '$' skipped safe pixel depth!",
+          IdentGet());
+      } // Conversion handled by codec
+      else cLog->LogDebugExSafe("Image '$' safe pixel depth by codec!",
         IdentGet());
     } // If a request to convert to 24-bits per pixel?
     else if(IsConvertRGB())
-    { // Log that we're running this function
-      cLog->LogDebugExSafe("Image '$' force 24-bit request...", IdentGet());
-      // Run the function and log success if succeeded
-      if(ConvertRGB())
-      { // Log the successful result
-        cLog->LogInfoExSafe("Image '$' pixel depth now 24-bit.", IdentGet());
-        // Set activated flag
-        SetActiveRGB();
-      } // Conversion did not happen so log that too
-      else cLog->LogDebugExSafe("Image '$' skipped converting to 24-bit!",
+    { // If it is not already converted by the file filter?
+      if(IsNotActiveRGB())
+      { // Log that we're running this function
+        cLog->LogDebugExSafe("Image '$' force 24-bit request...", IdentGet());
+        // Run the function and log success if succeeded
+        if(ConvertRGB())
+        { // Log the successful result
+          cLog->LogInfoExSafe("Image '$' pixel depth now 24-bit.", IdentGet());
+          // Set activated flag
+          SetActiveRGB();
+        } // Conversion did not happen so log that too
+        else cLog->LogDebugExSafe("Image '$' skipped converting to 24-bit!",
+          IdentGet());
+      } // Conversion handled by codec
+      else cLog->LogDebugExSafe("Image '$' converted to 24-bit by codec!",
         IdentGet());
     } // If a request to convert to RGBA?
     else if(IsConvertRGBA())
-    { // Log that we're running this function
-      cLog->LogDebugExSafe("Image '$' force 32-bit request...", IdentGet());
-      // Run the function and log success if succeeded
-      if(ConvertRGBA())
-      { // Log the successful result
-        cLog->LogInfoExSafe("Image '$' pixel depth now 32-bit.", IdentGet());
-        // Set activated flag
-        SetActiveRGBA();
-      } // Conversion did not happen so log that too
-      else cLog->LogDebugExSafe("Image '$' skipped converting to 32-bit!",
+    { // If it is not already converted by the file filter?
+      if(IsNotActiveRGBA())
+      { // Log that we're running this function
+        cLog->LogDebugExSafe("Image '$' force 32-bit request...", IdentGet());
+        // Run the function and log success if succeeded
+        if(ConvertRGBA())
+        { // Log the successful result
+          cLog->LogInfoExSafe("Image '$' pixel depth now 32-bit.", IdentGet());
+          // Set activated flag
+          SetActiveRGBA();
+        } // Conversion did not happen so log that too
+        else cLog->LogDebugExSafe("Image '$' skipped converting to 32-bit!",
+          IdentGet());
+      } // Conversion handled by codec
+      else cLog->LogDebugExSafe("Image '$' converted to 32-bit by codec!",
         IdentGet());
     } // To BGR colour mode?
     if(IsConvertBGROrder())
-    { // Log that we're running this function
-      cLog->LogDebugExSafe("Image '$' re-order to BGR request...", IdentGet());
-      // Run the function and log success if succeeded
-      if(ForcePixelOrder(TT_BGR))
-      { // Log the successful result
-        cLog->LogInfoExSafe("Image '$' re-ordered to BGR.", IdentGet());
-        // Set activated flag
-        SetActiveBGROrder();
-      } // Conversion did not happen so log that too
-      else cLog->LogDebugExSafe("Image '$' re-order to BGR skipped!",
+    { // If it is not already converted by the file filter?
+      if(IsNotActiveBGROrder())
+      { // Log that we're running this function
+        cLog->LogDebugExSafe("Image '$' re-order to BGR request...",
+          IdentGet());
+        // Run the function and log success if succeeded
+        if(ForcePixelOrder(TT_BGR))
+        { // Log the successful result
+          cLog->LogInfoExSafe("Image '$' re-ordered to BGR.", IdentGet());
+          // Set activated flag
+          SetActiveBGROrder();
+        } // Conversion did not happen so log that too
+        else cLog->LogDebugExSafe("Image '$' re-order to BGR skipped!",
+          IdentGet());
+      } // Conversion handled by codec
+      else cLog->LogDebugExSafe("Image '$' re-ordered to BGR by codec!",
         IdentGet());
     } // To RGB colour mode
     else if(IsConvertRGBOrder())
-    { // Log that we're running this function
-      cLog->LogDebugExSafe("Image '$' re-order to RGB request...", IdentGet());
-      // Run the function and log success if succeeded
-      if(ForcePixelOrder(TT_RGB))
-      { // Log the successful result
-        cLog->LogInfoExSafe("Image '$' re-ordered now RGB.", IdentGet());
-        // Set activated flag
-        SetActiveRGBOrder();
-      } // Conversion did not happen so log that too
-      else cLog->LogDebugExSafe("Image '$' re-order to RGB skipped!",
+    { // If it is not already converted by the file filter?
+      if(IsNotActiveRGBOrder())
+      { // Log that we're running this function
+        cLog->LogDebugExSafe("Image '$' re-order to RGB request...",
+          IdentGet());
+        // Run the function and log success if succeeded
+        if(ForcePixelOrder(TT_RGB))
+        { // Log the successful result
+          cLog->LogInfoExSafe("Image '$' re-ordered now RGB.", IdentGet());
+          // Set activated flag
+          SetActiveRGBOrder();
+        } // Conversion did not happen so log that too
+        else cLog->LogDebugExSafe("Image '$' re-order to RGB skipped!",
+          IdentGet());
+      } // Conversion handled by codec
+      else cLog->LogDebugExSafe("Image '$' re-ordered to RGB by codec!",
         IdentGet());
     } // Reverse the image pixels
     if(IsConvertReverse())
-    { // Log that we're running this function
-      cLog->LogDebugExSafe("Image '$' pixel reversal request...", IdentGet());
-      // Run the function and log success if succeeded
-      if(ReversePixels())
-      { // Log the successful result
-        cLog->LogInfoExSafe("Image '$' pixels reversed!", IdentGet());
-        // Set activated flag
-        SetActiveReverse();
-      } // Conversion did not happen so log that too
-      else cLog->LogDebugExSafe("Image '$' skipped pixel reversal!",
+    { // If it is not already converted by the file filter?
+      if(IsNotActiveReverse())
+      { // Log that we're running this function
+        cLog->LogDebugExSafe("Image '$' pixel reversal request...",
+          IdentGet());
+        // Run the function and log success if succeeded
+        if(ReversePixels())
+        { // Log the successful result
+          cLog->LogInfoExSafe("Image '$' pixels reversed!", IdentGet());
+          // Set activated flag
+          SetActiveReverse();
+        } // Conversion did not happen so log that too
+        else cLog->LogDebugExSafe("Image '$' skipped pixel reversal!",
+          IdentGet());
+      } // Conversion handled by codec
+      else cLog->LogDebugExSafe("Image '$' reversal by codec!",
         IdentGet());
     } // To binary colour mode
     if(IsConvertBinary())
-    { // Log that we're running this function
-      cLog->LogDebugExSafe("Image '$' downsample to binary request...",
-        IdentGet());
-      // Run the function and log success if succeeded
-      if(ForceBinary())
-      { // Log the successful result
-        cLog->LogInfoExSafe("Image '$' downsample to binary completed.",
+    { // If it is not already converted by the file filter?
+      if(IsNotActiveBinary())
+      { // Log that we're running this function
+        cLog->LogDebugExSafe("Image '$' downsample to binary request...",
           IdentGet());
-        // Set activated flag
-        SetActiveBinary();
-      } // Conversion did not happen so log that too
-      else cLog->LogDebugExSafe("Image '$' downsample to binary skipped!",
+        // Run the function and log success if succeeded
+        if(ForceBinary())
+        { // Log the successful result
+          cLog->LogInfoExSafe("Image '$' downsample to binary completed.",
+            IdentGet());
+          // Set activated flag
+          SetActiveBinary();
+        } // Conversion did not happen so log that too
+        else cLog->LogDebugExSafe("Image '$' downsample to binary skipped!",
+          IdentGet());
+      } // Conversion handled by codec
+      else cLog->LogDebugExSafe("Image '$' downsampled to binary by codec!",
         IdentGet());
     } // Compact all slides into a single texture if possible
     if(IsConvertAtlas())
-    { // Log that we're running this function
-      cLog->LogDebugExSafe("Image '$' compact request...", IdentGet());
-      // Run the function and log success if succeeded
-      if(MakeAtlas())
-      { // Log the successful result
-        cLog->LogInfoExSafe("Image '$' compacted.", IdentGet());
-        // Set activated flag
-        SetActiveAtlas();
-      } // Conversion did not happen so log that too
-      else cLog->LogDebugExSafe("Image '$' compact skipped!", IdentGet());
+    { // If it is not already converted by the file filter?
+      if(IsNotActiveAtlas())
+      { // Log that we're running this function
+        cLog->LogDebugExSafe("Image '$' compact request...", IdentGet());
+        // Run the function and log success if succeeded
+        if(MakeAtlas())
+        { // Log the successful result
+          cLog->LogInfoExSafe("Image '$' compacted.", IdentGet());
+          // Set activated flag
+          SetActiveAtlas();
+        } // Conversion did not happen so log that too
+        else cLog->LogDebugExSafe("Image '$' compact skipped!", IdentGet());
+      } // Conversion handled by codec
+      else cLog->LogDebugExSafe("Image '$' compact handled by codec!",
+        IdentGet());
     } // Report status if we acticated anything
     if(IsActiveAtlas() || IsActiveReverse() || IsActiveRGB() ||
        IsActiveRGBA() || IsActiveBGROrder() || IsActiveBinary() ||
@@ -741,9 +784,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
       const { ImageSave(ifPId, strFile, *this, GetSlotsConst()[stSId]); }
   /* -- Load image from memory asynchronously ------------------------------ */
   void InitAsyncArray(lua_State*const lS, const string &strIdent, Asset &aData,
-    const ImageFlagsConst imcFlags)
+    const ImageFlagsConst ifcFlags)
   { // Set user flags
-    FlagReset(imcFlags);
+    FlagSet(ifcFlags);
     // The decoded image will be kept in memory
     SetDynamic();
     // Load image from memory asynchronously
@@ -751,9 +794,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   }
   /* -- Load image from file asynchronously -------------------------------- */
   void InitAsyncFile(lua_State*const lS, const string &strFile,
-    const ImageFlagsConst imcFlags)
+    const ImageFlagsConst ifcFlags)
   { // Set user flags
-    FlagReset(imcFlags);
+    FlagSet(ifcFlags);
     // Load image from file asynchronously
     AsyncInitFile(lS, strFile, "bmpfile");
   }
@@ -851,7 +894,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Init from file ----------------------------------------------------- */
   void InitFile(const string &strFileName, const ImageFlagsConst &ifcFlags)
   { // Set the loading flags
-    FlagReset(ifcFlags);
+    FlagSet(ifcFlags);
     // Load the file normally
     SyncInitFileSafe(strFileName);
   }
@@ -861,7 +904,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   { // Is dynamic because it was not loaded from disk
     SetDynamic();
     // Set the loading flags
-    FlagReset(ifcFlags);
+    FlagSet(ifcFlags);
     // Load the array normally
     SyncInitArray(strName, mRval);
   }
@@ -872,6 +915,18 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     AsyncLoaderImage{ *this, this,     // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
+    /* -- Code ------------------------------------------------------------- */
+    { }                                // Do nothing else
+  /* -- Constructor with purpose ------------------------------------------- */
+  explicit Image(
+    /* -- Parameters ------------------------------------------------------- */
+    const ImageFlagsConst ifcPurpose) :
+    /* -- Initialisers ----------------------------------------------------- */
+    ICHelperImage{ cImages },          // Initialise collector helper
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    AsyncLoaderImage{ *this, this,     // Initialise async loader
+      EMC_MP_IMAGE },                  // Initialise async event id
+    ImageData{ ifcPurpose }            // Initialise purpose of image class
     /* -- Code ------------------------------------------------------------- */
     { }                                // Do nothing else
   /* -- Constructor -------------------------------------------------------- */

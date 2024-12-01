@@ -10,8 +10,6 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-using namespace IThread::P;            // Using thread namespace
-/* ------------------------------------------------------------------------- */
 class SysBase :                        // Safe exception handler namespace
   /* -- Base classes ------------------------------------------------------- */
   public SysVersion,                   // Version information class
@@ -41,7 +39,7 @@ class SysBase :                        // Safe exception handler namespace
           default:
           { // Report read string to log
             cLog->LogWarningExSafe("$<$>: $",
-              IdentGet(), stRead, MemToString(stRead));
+              IdentGet(), stRead, MemToStringView(stRead));
             // Fallthrough to break
             [[fallthrough]];
           } // Handle was closed? Terminate the thread
@@ -106,11 +104,7 @@ class SysBase :                        // Safe exception handler namespace
       if(dup2(iWrite, iHandle) == iInvalid)
         XCL("Failed to redirect output handle to the pipe!",
             "Name", IdentGet(), "OldFd", iWrite, "NewFd", iHandle);
-      // Close the other handle
-      if(close(iWrite) == iInvalid)
-        XCL("Failed to close second pipe handle!",
-            "Name", IdentGet(), "Fd", iWrite);
-      // Reset the closed write handle now it is invalid
+      // Dup2() closes iWrite automatically so it is now invalid
       iWrite = iInvalid;
       // Start the monitoring thread if it is open
       if(iRead != iInvalid)
@@ -624,6 +618,6 @@ class SysBase :                        // Safe exception handler namespace
   DELETECOPYCTORS(SysBase)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
-  void SysBase::SysBase::HandleSignalStatic(int iSignal) \
+  void SysBase::HandleSignalStatic(int iSignal) \
     { cSystem->HandleSignal(iSignal); }
 /* == EoF =========================================================== EoF == */

@@ -17,6 +17,7 @@ using namespace IToken::P;             using namespace IUtil::P;
 namespace P {                          // Start of public module namespace
 /* -- Variables ------------------------------------------------------------ */
 static unsigned int uiLuaPaused = 0;   // Times Lua paused before handling it
+static bool bDebugLocals = true;       // Specifies to show locals on stack
 /* -- Utility type defs ---------------------------------------------------- */
 struct LuaUtilClass { void *vpPtr; };  // Holds a pointer to a class
 /* -- Prune stack ---------------------------------------------------------- */
@@ -396,7 +397,8 @@ static const string LuaUtilStack(lua_State*const lST)
   // call to the root call so we need to use this list to reverse them after.
   // Also we (or even Lua) does know how many total calls there has been, we
   // can only enumerate them.
-  typedef list<lua_Debug> LuaStack;
+  struct Debug { lua_State*const lS; lua_Debug ldD; };
+  typedef list<Debug> LuaStack;
   typedef LuaStack::reverse_iterator LuaStackRevIt;
   LuaStack lsStack;
   // Co-routine id so user knows which coroutine sub-level they were at.
@@ -415,7 +417,7 @@ static const string LuaUtilStack(lua_State*const lST)
       // LUA in lua_getinfo() according to ldebug.c.
       ldData.event = iCoId;
       // Insert into list
-      lsThread.emplace_front(StdMove(ldData));
+      lsThread.push_front({ lS, StdMove(ldData) });
     } // Move into lsStack in reverse order
     lsStack.splice(lsStack.cend(), lsThread);
     // If the top item is not a thread? We're done
@@ -435,9 +437,11 @@ static const string LuaUtilStack(lua_State*const lST)
                     lsriIt != lsStack.rend();
                   ++lsriIt)
   { // Get thread data
-    lua_Debug &ldData = *lsriIt;
+    Debug &dState = *lsriIt;
+    lua_State*const lSt = dState.lS;
+    lua_Debug &ldData = dState.ldD;
     // Query stack and ignore if failed or line is invalid and there is no name
-    if(!lua_getinfo(lS, "Slnu", &ldData) ||
+    if(!lua_getinfo(lSt, "Slnu", &ldData) ||
       (ldData.currentline == -1 && !ldData.name)) continue;
     // Prepare start of stack trace
     osS << "\n- " << --stId << ':' << ldData.event << " = "
@@ -451,6 +455,17 @@ static const string LuaUtilStack(lua_State*const lST)
         << (*ldData.namewhat ? ldData.namewhat : "?") << ';'
         << static_cast<unsigned int>(ldData.nparams) << ';'
         << static_cast<unsigned int>(ldData.nups) << ')';
+    // Debug locals? Enumerate through them all
+    if(bDebugLocals)
+      for(int iIndex = 1;
+        const char *cpVar = lua_getlocal(lSt, &ldData, iIndex);
+        ++iIndex)
+    { // Translate the value
+      osS << "\n-- " << iIndex << ": "
+          << cpVar << " = " << LuaUtilGetStackType( lSt, -1);
+      // Pop the value added by lua_getlocal
+      lua_pop(lSt, 1);
+    }
   } // Return formatted stack string
   return osS.str();
 }
@@ -599,7 +614,6 @@ template<typename NumType>
   static NumType LuaUtilGetNumL(lua_State*const lS, const int iIndex,
     const NumType ntMin)
 { // Return number if valid and in range else break execution
-  static_assert(is_floating_point_v<NumType>, "Not floating point!");
   const NumType ntVal = LuaUtilGetNum<NumType>(lS, iIndex);
   if(ntVal >= ntMin) return ntVal;
   XC("Number out of range!",
@@ -610,7 +624,6 @@ template<typename NumType>
   static NumType LuaUtilGetNumLG(lua_State*const lS, const int iIndex,
     const NumType ntMin, const NumType ntMax)
 { // Return number if valid and in range else break execution
-  static_assert(is_floating_point_v<NumType>, "Not floating point!");
   const NumType ntVal = LuaUtilGetNum<NumType>(lS, iIndex);
   if(ntVal >= ntMin && ntVal <= ntMax) return ntVal;
   XC("Number out of range!",
@@ -622,7 +635,6 @@ template<typename NumType>
   static NumType LuaUtilGetNumLGE(lua_State*const lS, const int iIndex,
     const NumType ntMin, const NumType ntMax)
 { // Return number if valid and in range else break execution
-  static_assert(is_floating_point_v<NumType>, "Not floating point!");
   const NumType ntVal = LuaUtilGetNum<NumType>(lS, iIndex);
   if(ntVal >= ntMin && ntVal < ntMax) return ntVal;
   XC("Number out of range!",
@@ -633,7 +645,6 @@ template<typename NumType>
 template<typename NumType>
   static NumType LuaUtilGetNormal(lua_State*const lS, const int iIndex)
 { // Throw error if value not a number else return it clamped between -1 and 1.
-  static_assert(is_floating_point_v<NumType>, "Not floating point!");
   const lua_Number lnVal = LuaUtilGetNum<lua_Number>(lS, iIndex);
   return static_cast<NumType>(fmod(lnVal, 1.0));
 }
@@ -650,7 +661,6 @@ template<typename IntType>
   static IntType LuaUtilGetIntL(lua_State*const lS, const int iIndex,
     const IntType itMin)
 { // Return integer if valid and in range else break execution
-  static_assert(is_integral_v<IntType> || is_enum_v<IntType>, "Not integral!");
   const IntType itVal = LuaUtilGetInt<IntType>(lS, iIndex);
   if(itVal >= itMin) return itVal;
   XC("Integer out of range!",
@@ -661,7 +671,6 @@ template<typename IntType>
   static IntType LuaUtilGetIntLG(lua_State*const lS, const int iIndex,
     const IntType itMin, const IntType itMax)
 { // Return integer if valid and in range else break execution
-  static_assert(is_integral_v<IntType> || is_enum_v<IntType>, "Not integral!");
   const IntType itVal = LuaUtilGetInt<IntType>(lS, iIndex);
   if(itVal >= itMin && itVal <= itMax) return itVal;
   XC("Integer out of range!",
@@ -673,7 +682,6 @@ template<typename IntType>
   static IntType LuaUtilGetIntLGP2(lua_State*const lS, const int iIndex,
     const IntType itMin, const IntType itMax)
 { // Return integer if valid, in range and is ^2 else break execution
-  static_assert(is_integral_v<IntType> || is_enum_v<IntType>, "Not integral!");
   const IntType itVal = LuaUtilGetIntLG(lS, iIndex, itMin, itMax);
   if(StdIntIsPOW2(itVal)) return itVal;
   XC("Integer is not a power of two!",
@@ -684,7 +692,6 @@ template<typename IntType>
   static IntType LuaUtilGetIntLGE(lua_State*const lS, const int iIndex,
     const IntType itMin, const IntType itMax)
 { // Return integer if valid and in range else break execution
-  static_assert(is_integral_v<IntType> || is_enum_v<IntType>, "Not integral!");
   const IntType itVal = LuaUtilGetInt<IntType>(lS, iIndex);
   if(itVal >= itMin && itVal < itMax) return itVal;
   XC("Integer out of range!",
@@ -696,7 +703,6 @@ template<typename IntType>
   static IntType LuaUtilGetIntLEG(lua_State*const lS, const int iIndex,
     const IntType itMin, const IntType itMax)
 { // Return integer if valid and in range else break execution
-  static_assert(is_integral_v<IntType> || is_enum_v<IntType>, "Not integral!");
   const IntType itVal = LuaUtilGetInt<IntType>(lS, iIndex);
   if(itVal > itMin && itVal <= itMax) return itVal;
   // Throw error
@@ -1143,6 +1149,54 @@ static void LuaUtilToTable(lua_State*const lS, const StrNCStrMap &sncsmMap)
     LuaUtilPushStr(lS, sncsmpPair.second);
     LuaUtilSetField(lS, -2, sncsmpPair.first.c_str());
   }
+}
+/* -- Convert varlist to lua table and put it on stack --------------------- */
+template<class VectorType,
+         typename VectorValueType = typename VectorType::value_type>
+  static VectorType LuaUtilToNumVector(lua_State*const lS, const int iArg)
+{ // Create the table, we're creating non-indexed key/value pairs
+  LuaUtilCheckTable(lS, iArg);
+  // Get maximums
+  const size_t stMax = UtilIntOrMax<size_t>(LuaUtilGetSize(lS, iArg));
+  const lua_Integer liMax = static_cast<lua_Integer>(stMax) + 1;
+  // Preallocate the table
+  VectorType vtArray;
+  vtArray.reserve(stMax);
+  // Walk the array
+  for(lua_Integer liI = 1; liI < liMax; ++liI)
+  { // Get item from table
+    LuaUtilPushInt(lS, liI);
+    lua_gettable(lS, -2);
+    // Get the string from Lua stack and save the length
+    vtArray.push_back(LuaUtilGetNum<VectorValueType>(lS, -1));
+    // Remove item from stack
+    LuaUtilRmStack(lS);
+  } // Return the container
+  return vtArray;
+}
+/* -- Convert varlist to lua table and put it on stack --------------------- */
+template<class VectorType,
+         typename VectorValueType = typename VectorType::value_type>
+  static VectorType LuaUtilToIntVector(lua_State*const lS, const int iArg)
+{ // Create the table, we're creating non-indexed key/value pairs
+  LuaUtilCheckTable(lS, iArg);
+  // Get maximums
+  const size_t stMax = UtilIntOrMax<size_t>(LuaUtilGetSize(lS, iArg));
+  const lua_Integer liMax = static_cast<lua_Integer>(stMax) + 1;
+  // Preallocate the table
+  VectorType vtArray;
+  vtArray.reserve(stMax);
+  // Walk the array
+  for(lua_Integer liI = 1; liI < liMax; ++liI)
+  { // Get item from table
+    LuaUtilPushInt(lS, liI);
+    lua_gettable(lS, -2);
+    // Get the string from Lua stack and save the length
+    vtArray.push_back(LuaUtilGetInt<VectorValueType>(lS, -1));
+    // Remove item from stack
+    LuaUtilRmStack(lS);
+  } // Return the container
+  return vtArray;
 }
 /* -- Set a global variable ------------------------------------------------ */
 static void LuaUtilSetGlobal(lua_State*const lS, const char*const cpKey)

@@ -257,7 +257,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
       throw;
     }
   }
-  /* -- InitFromFile ------------------------------------------------------- */
+  /* -- Initialise from an Image class ------------------------------------- */
   void InitFromImage(Image &imC, const unsigned int uiTileWidth,
     const unsigned int uiTileHeight)
   { // Set texture name

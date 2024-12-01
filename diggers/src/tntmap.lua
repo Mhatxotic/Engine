@@ -7,7 +7,7 @@
 -- 888---d88'--888--`88.---.88'-`88.---.88'-888-----o--888-`88b.--oo----.d8P --
 -- 888bd8P'--oo888oo-`Y8bod8P'---`Y8bod8P'-o888ooood8-o888o-o888o-8""8888P'- --
 -- ========================================================================= --
--- (c) Mhatxotic Design, 2024          (c) Millennium Interactive Ltd., 1994 --
+-- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 -- M-Engine function aliases ----------------------------------------------- --
@@ -15,101 +15,71 @@ local TextureCreateTS<const>, ImageRaw<const>, AssetCreate<const>
       = -- ----------------------------------------------------------------- --
       Texture.CreateTS, Image.Raw, Asset.Create;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GameProc, GetGameTicks, InitContinueGame, aLevelData, IsButtonHeld,
-  IsButtonPressed, IsMouseInBounds, IsMouseNotInBounds, LoadResources,
-  PlayStaticSound, RenderInterface, RenderShadow, SetBottomRightTip,
-  SetCallbacks, SetCursor, SetKeys, aObjects, aTileData, aTileFlags, texSpr;
--- Assets required --------------------------------------------------------- --
-local aAssets<const> = { { T = 2, F = "tntmap", P = { 0 } } };
+local Fade, GameProc, GetGameTicks, InitContinueGame, aLevelData,
+  LoadResources, PlayStaticSound, RenderInterface, RenderShadow, RenderTip,
+  SetCallbacks, SetHotSpot, SetKeys, aObjects, aTileData, aTileFlags, texSpr;
 -- Locals ------------------------------------------------------------------ --
+local aAssets;                         -- Assets required
 local iBSize<const> = 128 * 128 * 3;   -- Byte size of map
-local iCExit, iCSelect, iCArrow,       -- Cursor ids
-      iKeyBankId,                      -- Key bank id
-      iSFlags, iWFlags,                -- Solid and water tile flags
-      iSSelect,                        -- Select sound effect
-      iTerrainPage,                    -- Default top page
+local iHotSpotIdDown, iHotSpotIdUp,    -- Hot spot id (up and down)
+      iKeyBankIdDown, iKeyBankIdUp,    -- Key bank id (up and down)
+      iSClick, iSSelect,               -- Sound effect ids
+      iTerrainPage,                    -- Terrain page (0 or 1)
+      iWFlags, iSFlags,                -- Water and solid tile flag
       nNextUpdate,                     -- Next map update (updates on 1st tick)
-      sTip,                            -- Current tip
-      texTNTMap,                       -- TNT map texture
+      texMap,                          -- TNT map texture
       texTerrain;                      -- Terrain texture (dynamic)
--- POI testing ------------------------------------------------------------- --
-local function MouseOverExit()
-  return IsMouseNotInBounds(8, 8, 312, 208) end;
-local function MouseOverUpButton()
-  return IsMouseInBounds(140, 179, 156, 195) end;
-local function MouseOverDownButton()
-  return IsMouseInBounds(162, 179, 178, 195) end;
-local function MouseOverTerrain()
-  return IsMouseInBounds(32, 44, 288, 172) end;
--- Set tip and cursor ------------------------------------------------------ --
-local function SetTipAndCursor(sNewTip, iCursorId)
-  sTip = sNewTip;
-  SetCursor(iCursorId);
-end
--- Set map page ------------------------------------------------------------ --
-local function SetMapPage(iPage)
-  -- Ignore if already on this p age
-  if iTerrainPage == iPage then return end;
-  -- Play sound
-  PlayStaticSound(iSSelect);
-  -- Set page
-  iTerrainPage = iPage;
-end
 -- Leave the map ----------------------------------------------------------- --
-local function Finish()
+local function GoExit()
   -- Play sound
   PlayStaticSound(iSSelect);
   -- Dereference assets for garbage collector
-  texTNTMap, texTerrain = nil, nil;
+  texMap, texTerrain = nil, nil;
   -- Start the loading waiting procedure
-  SetCallbacks(GameProc, RenderInterface, nil);
+  SetCallbacks(GameProc, RenderInterface);
   -- Continue game
   InitContinueGame(false);
 end
--- Scrolling --------------------------------------------------------------- --
-local function GoScrollUp() SetMapPage(0) end;
-local function GoScrollDown() SetMapPage(1) end;
--- Input callback ---------------------------------------------------------- --
-local function InputProc()
-  -- Check where mouse is and show appropriate tip
-  if MouseOverExit() then
-    -- Set tip and cursor to go exit
-    SetTipAndCursor("CONTINUE", iCExit);
-    -- Mouse button clicked? Return!
-    if IsButtonHeld(0) then return Finish() end;
-  -- Mouse over up button and on first page?
-  elseif MouseOverUpButton() and iTerrainPage == 1 then
-    -- Set tip and cursor to go up
-    SetTipAndCursor("UP", iCSelect);
-    -- Mouse button clicked? Set top half of map
-    if IsButtonHeld(0) then GoScrollUp() end;
-  -- Mouse over down button and on first page?
-  elseif MouseOverDownButton() and iTerrainPage == 0 then
-    -- Set tip and cursor to go down
-    SetTipAndCursor("DOWN", iCSelect);
-    -- Mouse button clicked? Set bottom half of map
-    if IsButtonHeld(0) then GoScrollDown() end;
-  -- Mouse over something else?
-  else SetTipAndCursor("TNT MAP", iCArrow) end;
+-- Select a different page ------------------------------------------------- --
+local function GoSelect(iPageId, iSoundId, iKeyBankId, iHotSpotId)
+  -- Play requested sound effect
+  PlayStaticSound(iSoundId);
+  -- Set new page
+  iTerrainPage = iPageId;
+  -- Set new hotspot and keybank id
+  SetHotSpot(iHotSpotId);
+  SetKeys(true, iKeyBankId);
+end
+-- Scrolling callback functions -------------------------------------------- --
+local function GoUp()
+  GoSelect(0, iSSelect, iKeyBankIdDown, iHotSpotIdDown) end;
+local function GoDown()
+  GoSelect(1, iSSelect, iKeyBankIdUp, iHotSpotIdUp) end;
+local function GoScroll(nX, nY)
+  if nY > 0 and iTerrainPage == 1 then
+    GoSelect(0, iSClick, iKeyBankIdDown, iHotSpotIdDown);
+  elseif nY < 0 and iTerrainPage == 0 then
+    GoSelect(1, iSClick, iKeyBankIdUp, iHotSpotIdUp);
+  end
 end
 -- Render callback --------------------------------------------------------- --
-local function RenderProc()
+local function ProcRender()
   -- Render everything
   RenderInterface();
   -- Draw appropriate background
-  texTNTMap:BlitLT(8, 8);
+  texMap:BlitLT(8, 8);
   -- Render shadow
   RenderShadow(8, 8, 312, 208);
+  -- Render tip
+  RenderTip();
   -- Draw terrain
   texTerrain:BlitSLTRB(iTerrainPage, 32, 44, 288, 172);
   -- Dim appropriate button
   if iTerrainPage == 0 then texSpr:BlitSLTRB(801, 140, 179, 157, 196);
   elseif iTerrainPage == 1 then texSpr:BlitSLTRB(801, 162, 179, 179, 196) end;
-  -- Draw tip
-  SetBottomRightTip(sTip);
 end
 -- TNT map procedure ------------------------------------------------------- --
-local function MapProc()
+local function ProcLogic()
   -- Perform game actions
   GameProc();
   -- Done if map update interval not reached
@@ -118,18 +88,17 @@ local function MapProc()
   nNextUpdate = GetGameTicks() + 300;
   -- Create storage for bitmap data (128x128xRGB). The asset will be moved
   -- into the engine so we need to allocate it every time.
-  local asBData<const> = AssetCreate("TNTMap", iBSize)
+  local asBData<const> = AssetCreate("TNTMap", iBSize);
   -- For each pixel row
   for iY = 0, 127 do
     -- Calculate Y position in destination bitmap
     local iBYPos<const> = (iBSize - ((iY + 1) * 384)) + 3;
-    -- Calculate Y position from level data
-    local iLYPos<const> = iY * 128;
+    -- Calculate Y position from level data (with the index starting from 1)
+    local iLYPos<const> = 1 + (iY * 128);
     -- For each pixel column
     for iX = 0, 127 do
-      -- Get tile at level position
-      local iTId<const> = aLevelData[1 + iLYPos + iX];
-      -- Get tile flags
+      -- Get tile at level position and tile flags at it
+      local iTId<const> = aLevelData[iLYPos + iX];
       local iTFlags<const> = aTileData[1 + iTId];
       -- Get bitmap position and then the locations of the components
       local iBPos<const> = iBYPos + (iX * 3);
@@ -157,59 +126,72 @@ local function MapProc()
     -- Get object
     local aObj<const> = aObjects[iObjectId];
     -- Get position in pixel in bitmap for object
-    local iPos<const> =
-      (iBSize - ((aObj.AY + 1) * 384)) + (aObj.AX * 3) + 3;
+    local iPos<const> = (iBSize - ((aObj.AY + 1) * 384)) + (aObj.AX * 3) + 3;
     -- Make a white RGB dot
     asBData:WU16LE(iPos - 2, 0xFFFF);
     asBData:WU8(iPos - 3, 0xFF);
   end
-  -- Push array as texture
-  texTerrain = TextureCreateTS(ImageRaw("TNTMap", asBData,
-    128, 128, 24, 0x1907), 128, 64, 0, 0, 0);
+  -- Generate the image from the raw data we just built up
+  local imTerrain<const> = ImageRaw("TNTMap", asBData, 128, 128, 24, 0x1907);
+  -- Convert the image bits to a texture we can draw on the screen
+  texTerrain = TextureCreateTS(imTerrain, 128, 64, 0, 0, 0);
 end
 -- On assets loaded event -------------------------------------------------- --
-local function OnLoaded(aResources)
+local function OnAssetsLoaded(aResources)
   -- Initialise variables
-  texTNTMap, sTip, iTerrainPage, nNextUpdate = aResources[1], nil, 0, 0;
-  -- Set keybank keys
-  SetKeys(true, iKeyBankId);
+  texMap, iTerrainPage, nNextUpdate = aResources[1], 0, 0;
+  -- Set hotspot and key bank ids
+  SetHotSpot(iHotSpotIdDown);
+  SetKeys(true, iKeyBankIdDown);
   -- Set callbacks
-  SetCallbacks(MapProc, RenderProc, InputProc);
+  SetCallbacks(ProcLogic, ProcRender);
 end
 -- Init TNT map screen function -------------------------------------------- --
-local function InitTNTMap() LoadResources("TNT Map", aAssets, OnLoaded) end;
+local function InitTNTMap()
+  LoadResources("TNTMap", aAssets, OnAssetsLoaded);
+end
 -- Scripts have been loaded ------------------------------------------------ --
-local function OnReady(GetAPI)
+local function OnScriptLoaded(GetAPI)
+  -- Functions and variables used in this scope only
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, GameProc, GetGameTicks, InitContinueGame, IsButtonHeld,
-    IsMouseInBounds, IsMouseNotInBounds, LoadResources, PlayStaticSound,
-    RenderInterface, RenderShadow, SetBottomRightTip, SetCallbacks, SetCursor,
-    SetKeys, aLevelData, aObjects, aTileData, aTileFlags, texSpr =
-      GetAPI("Fade", "GameProc", "GetGameTicks","InitContinueGame",
-        "IsButtonHeld", "IsMouseInBounds", "IsMouseNotInBounds",
-         "LoadResources", "PlayStaticSound", "RenderInterface", "RenderShadow",
-        "SetBottomRightTip", "SetCallbacks", "SetCursor", "SetKeys",
-        "aLevelData",  "aObjects", "aTileData", "aTileFlags", "texSpr");
+  Fade, GameProc, GetGameTicks, InitContinueGame, LoadResources,
+    PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderInterface,
+    RenderShadow, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
+    aAssetsData, aCursorIdData, aLevelData, aObjects, aSfxData, aTileData,
+    aTileFlags, texSpr =
+      GetAPI("Fade", "GameProc", "GetGameTicks", "InitContinueGame",
+        "LoadResources", "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
+        "RenderInterface", "RenderShadow", "RenderTip", "SetCallbacks",
+        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData", "aLevelData",
+        "aObjects", "aSfxData", "aTileData", "aTileFlags", "texSpr");
+  -- Setup required assets
+  aAssets = { aAssetsData.tntmap };
+  -- Get sound effects
+  iSSelect, iSClick = aSfxData.SELECT, aSfxData.CLICK;
+  -- Get cursor ids
+  local iCExit, iCSelect = aCursorIdData.EXIT, aCursorIdData.SELECT;
+  -- Setup hotspots
+  local aHUp<const>, aHDown<const>, aHMap<const>, aHExit<const> =
+    { 140, 179,  17,  17, 0, iCSelect, "PAGE UP",   GoScroll, GoUp   },
+    { 162, 179,  17,  17, 0, iCSelect, "PAGE DOWN", GoScroll, GoDown },
+    {   8,   8, 304, 200, 0, 0,        "TNT MAP",   GoScroll, false  },
+    {   0,   0,   0, 240, 3, iCExit,   "CLOSE",     GoScroll, GoExit }
+  iHotSpotIdUp = RegisterHotSpot({ aHUp, aHMap, aHExit });
+  iHotSpotIdDown = RegisterHotSpot({ aHDown, aHMap, aHExit });
   -- Register keybinds
   local aKeys<const> = Input.KeyCodes;
-  iKeyBankId = GetAPI("RegisterKeys")("IN-GAME TNT MAP", {
-    [Input.States.PRESS] = {
-      { aKeys.ESCAPE, Finish, "igtnte", "LEAVE" },
-      { aKeys.UP, GoScrollUp, "igtntsu", "SCROLL UP" },
-      { aKeys.DOWN, GoScrollDown, "igtntsd", "SCROLL DOWN" },
-    }
-  });
-  -- Store water tile flags
-  iWFlags = aTileFlags.W;
-  -- Get solid tile flags
-  iSFlags = aTileFlags.D + aTileFlags.AD;
-  -- Set sound effect ids
-  iSSelect = GetAPI("aSfxData").SELECT;
-  -- Set cursor ids
-  local aCursorIdData<const> = GetAPI("aCursorIdData");
-  iCExit, iCSelect, iCArrow =
-    aCursorIdData.EXIT, aCursorIdData.SELECT, aCursorIdData.ARROW;
+  local sName<const> = "IN-GAME TNT MAP";
+  local iPress<const> = Input.States.PRESS;
+  local aKExit<const>, aKUp<const>, aKDown<const> =
+    { aKeys.ESCAPE, GoExit, "igtnte",  "LEAVE"       },
+    { aKeys.UP,     GoUp,   "igtntsu", "SCROLL UP"   },
+    { aKeys.DOWN,   GoDown, "igtntsd", "SCROLL DOWN" };
+  iKeyBankIdUp = RegisterKeys(sName, { [iPress] = { aKUp, aKExit } });
+  iKeyBankIdDown = RegisterKeys(sName, { [iPress] = { aKDown, aKExit } });
+  -- Store water and solid tile flags
+  iWFlags, iSFlags = aTileFlags.W, aTileFlags.D + aTileFlags.AD;
 end
 -- Exports and imports ----------------------------------------------------- --
-return { A = { InitTNTMap = InitTNTMap }, F = OnReady };
+return { A = { InitTNTMap = InitTNTMap }, F = OnScriptLoaded };
 -- End-of-File ============================================================= --

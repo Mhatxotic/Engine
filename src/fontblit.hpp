@@ -482,19 +482,6 @@ void UpdateCharSpacingTimesScale(void)
   { fCharSpacingScale = fCharSpacing * fScale; }
 void UpdateGlyphPaddingTimesScale(void)
   { fGPadScaled = fGPad * fScale; }
-/* ------------------------------------------------------------------------- */
-static GLuint GetMaxTexSizeFromBounds(const GLuint uiWidth,
-  const GLuint uiHeight, const GLuint uiXWidth, const GLuint uiXHeight,
-  const GLuint uiMultiplier)
-{ // Calculate the best possible texture size, by rounding up the
-  // requested glpyh size plus the current canvas size up to the
-  // nearest power of two, or double the current image size, whichever
-  // value is largest.
-  return UtilMaximum(UtilMaximum(UtilNearestPow2<GLuint>(uiWidth + uiXWidth),
-                                   uiWidth * uiMultiplier),
-         UtilMaximum(UtilNearestPow2<GLuint>(uiHeight + uiXHeight),
-                       uiHeight * uiMultiplier));
-}
 /* -- Check to make sure texture was loaded as a font ---------------------- */
 bool PrintSanityCheck(const UtfDecoder &utfRef)
 { // No string? Bail out
@@ -526,7 +513,7 @@ GLfloat PrintW(const GLfloat fX, const GLfloat fY, const GLfloat fW,
   // Restore colour intensity
   FboItemPopQuadColour();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
   // Return height of printed text
   return fHeight;
 }
@@ -579,7 +566,7 @@ GLfloat PrintWU(const GLfloat fX, const GLfloat fY, const GLfloat fW,
   // Restore colour intensity
   FboItemPopQuadColour();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
   // Return height of printed text
   return fHeight;
 }
@@ -598,7 +585,7 @@ void PrintU(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
   // Simulate the height of the print
   DoPrint(fX, fY-fHeight, fX, utfRef);
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
   // Restore colour intensity
   FboItemPopQuadColour();
 }
@@ -617,7 +604,7 @@ void PrintUC(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
   // Simulate the height of the print
   DoPrintC(fX, fY-fHeight, utfRef);
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
   // Restore colour intensity
   FboItemPopQuadColour();
 }
@@ -639,7 +626,7 @@ void PrintUCT(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr,
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* -- Print text upwards align right --------------------------------------- */
 void PrintUR(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
@@ -656,7 +643,7 @@ void PrintUR(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
   // Simulate the height of the print
   DoPrintR(fX, fY-fHeight, utfRef);
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
   // Restore colour intensity
   FboItemPopQuadColour();
 }
@@ -678,7 +665,7 @@ void PrintURT(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr,
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* -- Print text, wrap at specified width, return height ------------------- */
 GLfloat PrintWUT(const GLfloat fX, const GLfloat fY, const GLfloat fW,
@@ -698,7 +685,7 @@ GLfloat PrintWUT(const GLfloat fX, const GLfloat fY, const GLfloat fW,
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
   // Return height
   return fHeight;
 }
@@ -716,7 +703,7 @@ GLfloat PrintWT(const GLfloat fX, const GLfloat fY, const GLfloat fW,
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
   // Return height
   return fHeight;
 }
@@ -734,7 +721,7 @@ void PrintT(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr,
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* -- Print text with right align ------------------------------------------ */
 void PrintRT(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr,
@@ -750,7 +737,7 @@ void PrintRT(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr,
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* -- Print a string ------------------------------------------------------- */
 void Print(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
@@ -765,7 +752,7 @@ void Print(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
   // Restore colour intensity
   FboItemPopQuadColour();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* -- Print text with right align ------------------------------------------ */
 void PrintR(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
@@ -780,7 +767,7 @@ void PrintR(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
   // Restore colour intensity
   FboItemPopQuadColour();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* -- Print a string with centre alignment --------------------------------- */
 void PrintC(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
@@ -795,7 +782,7 @@ void PrintC(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr)
   // Restore colour
   FboItemPopQuadColour();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* -- Print text ----------------------------------------------------------- */
 void PrintCT(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr,
@@ -811,7 +798,7 @@ void PrintCT(const GLfloat fX, const GLfloat fY, const GLubyte*const ucpStr,
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* -- Print text with glyphs ----------------------------------------------- */
 void PrintMT(const GLfloat fX, const GLfloat fY, const GLfloat fL,
@@ -827,7 +814,7 @@ void PrintMT(const GLfloat fX, const GLfloat fY, const GLfloat fL,
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* -- Simulate printing a string and returning the height ------------------ */
 GLfloat PrintSU(const GLubyte*const ucpStr)
@@ -888,6 +875,6 @@ void PrintM(const GLfloat fX, const GLfloat fY, const GLfloat fL,
   // Restore colour intensity
   FboItemPopQuadColour();
   // Check if texture needs reloading
-  CheckReloadTexture();
+  AtlasCheckReloadTexture();
 }
 /* == EoF =========================================================== EoF == */
