@@ -11,8 +11,9 @@
 namespace IEvtWin {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IEvtCore::P;           using namespace IGlFWUtil::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace ILog::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Available engine commands -------------------------------------------- */
@@ -50,7 +51,7 @@ enum EvtWinCmd : size_t                // Render thread event commands
   EWC_WIN_CURPOSSET = EWC_NOLOG,       // 24: Set cursor position
   /* ----------------------------------------------------------------------- */
   EWC_MAX,                             // 25: Maximum number of async events
-};/* ----------------------------------------------------------------------- */
+};/* -- Remember to update the id strings at EvtWin constructor ------------ */
 static class EvtWin final :            // Event list for window thread
   /* -- Dependencies ------------------------------------------------------- */
   public EvtCore                       // Events common class
@@ -71,7 +72,23 @@ static class EvtWin final :            // Event list for window thread
   /* -- Constructor -------------------------------------------------------- */
   EvtWin(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    EvtCore{"EventWin"}                // Set name of this object
+    EvtCore{ "EventWin", ISList{{      // Set name of this object
+      /* ------------------------------------------------------------------- */
+#define EWC(x) STR(EWC_ ## x)          // Helper to define event id strings
+      /* ------------------------------------------------------------------- */
+      EWC(NONE),           EWC(WIN_ATTENTION),   EWC(WIN_CENTRE),
+      EWC(WIN_CURPOSGET),  EWC(WIN_CURRESET),    EWC(WIN_CURSET),
+      EWC(WIN_CURSETVIS),  EWC(WIN_FOCUS),       EWC(WIN_HIDE),
+      EWC(WIN_LIMITS),     EWC(WIN_MAXIMISE),    EWC(WIN_MINIMISE),
+      EWC(WIN_MOVE),       EWC(WIN_RESET),       EWC(WIN_RESIZE),
+      EWC(WIN_RESTORE),    EWC(WIN_SETICON),     EWC(WIN_SETRAWMOUSE),
+      EWC(WIN_SETSTKKEYS), EWC(WIN_SETSTKMOUSE), EWC(WIN_TOGGLE_FS),
+      EWC(CB_GET),         EWC(CB_SET),          EWC(CB_SETNR),
+      EWC(WIN_CURPOSSET)
+      /* ------------------------------------------------------------------- */
+#undef EWC                             // Done with this macro
+      /* ------------------------------------------------------------------- */
+    }}}
     /* -- No core ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */

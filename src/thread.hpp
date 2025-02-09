@@ -24,9 +24,9 @@ CTOR_BEGIN(Threads, Thread, CLHelperSafe,
 )/* ------------------------------------------------------------------------ */
 class ThreadBase                       // Thread variables class
 { /* -- Private typedefs ---------------------------------------- */ protected:
-  typedef int (CBFuncT)(Thread&);      // Thread callback function
+  typedef int (CbThFuncT)(Thread&);    // Thread callback function
   /* -- Public typedefs -------------------------------------------- */ public:
-  typedef function<CBFuncT> CBFunc;    // Wrapped inside a function class
+  typedef function<CbThFuncT> CBFunc;  // Wrapped inside a function class
   /* -- Private variables --------------------------------------- */ protected:
   SafeInt          siExitCode;         // Callback exit code
   void            *vpParam;            // User parameter

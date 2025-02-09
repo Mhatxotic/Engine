@@ -295,6 +295,12 @@ static IntTypeRet UtilNormaliseEx(const unsigned int uiV)
   return UtilNormalise<IntTypeRet>(UtilExtract<IntTypeInternal,
     stShift, IntTypeInternal>(uiV));
 }
+/* -- Scale a value from (0-max) to a different min-max -------------------- */
+template<typename DestIntType, typename PhysIntType, typename VirtIntType>
+DestIntType UtilScaleValue(const DestIntType itV, const PhysIntType itPMax,
+                           const VirtIntType itVMin, const VirtIntType itVMax)
+  { return static_cast<DestIntType>(itVMin) +
+      ((itV / itPMax) * static_cast<DestIntType>(itVMax)); }
 /* -- Returns if specified integer would overflow specified type ----------- */
 template<typename TestIntType, typename ParamIntType>
   static bool UtilIntWillOverflow(const ParamIntType pitVal)

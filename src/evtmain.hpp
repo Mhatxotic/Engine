@@ -82,9 +82,7 @@ enum EvtMainCmd : size_t               // Engine thread event commands
   EMC_MAX,                             // 49: Below are just codes
   /* ----------------------------------------------------------------------- */
   EMC_LUA_ERROR,                       // 50: Error in LUA exec (not an event)
-  /* ----------------------------------------------------------------------- */
-};
-/* ------------------------------------------------------------------------- */
+};/* -- Remember to update the id strings at EvtMain constructor ----------- */
 static class EvtMain final :           // Event list for render thread
   /* -- Dependencies ------------------------------------------------------- */
   private IHelper,                     // Initialisation helper
@@ -221,7 +219,30 @@ static class EvtMain final :           // Event list for render thread
   EvtMain(void) :
     /* -- Initialisers ----------------------------------------------------- */
     IHelper{ __FUNCTION__ },           // Initialise helper
-    EvtCore{ "EventMain" },            // Set name of this object
+    EvtCore{ "EventMain", ISList{{     // Set name of this object
+      /* ------------------------------------------------------------------- */
+#define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings
+      /* ------------------------------------------------------------------- */
+      EMC(NONE),            EMC(QUIT),             EMC(QUIT_THREAD),
+      EMC(QUIT_RESTART),    EMC(QUIT_RESTART_NP),  EMC(LUA_PAUSE),
+      EMC(LUA_RESUME),      EMC(LUA_REDRAW),       EMC(LUA_REINIT),
+      EMC(LUA_END),         EMC(LUA_ASK_EXIT),     EMC(LUA_CONFIRM_EXIT),
+      EMC(WIN_MOVED),       EMC(WIN_FOCUS),        EMC(WIN_SCALE),
+      EMC(WIN_RESIZED),     EMC(WIN_REFRESH),      EMC(WIN_ICONIFY),
+      EMC(WIN_CLOSE),       EMC(VID_FB_REINIT),    EMC(VID_MATRIX_REINIT),
+      EMC(AUD_REINIT),      EMC(INP_PASTE),        EMC(CON_UPDATE),
+      EMC(CON_KEYPRESS),    EMC(INP_KEYPRESS),     EMC(INP_CHAR),
+      EMC(INP_DRAG_DROP),   EMC(INP_MOUSE_FOCUS),  EMC(INP_MOUSE_MOVE),
+      EMC(INP_MOUSE_CLICK), EMC(INP_MOUSE_SCROLL), EMC(INP_JOY_STATE),
+      EMC(INP_SET_CUR_POS), EMC(MP_ARCHIVE),       EMC(MP_ASSET),
+      EMC(MP_FONT),         EMC(MP_IMAGE),         EMC(MP_JSON),
+      EMC(MP_PCM),          EMC(MP_PROCESS),       EMC(MP_SOCKET),
+      EMC(MP_STREAM),       EMC(MP_VIDEO),         EMC(STR_EVENT),
+      EMC(VID_EVENT),       EMC(CB_EVENT),         EMC(CUR_EVENT)
+      /* ------------------------------------------------------------------- */
+#undef EMC                             // Done with this macro
+      /* ------------------------------------------------------------------- */
+    }}},
     Thread{ "engine", STP_ENGINE },    // Set up high perf engine thread
     emcPending(EMC_NONE),              // Not exiting yet
     emcExit(EMC_NONE),                 // Not exited yet

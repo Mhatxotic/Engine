@@ -711,6 +711,8 @@ static class Display final :
     cGlFW->WinShow();
     // Window has been focued if auto-focus is enabled
     if(FlagIsSet(DF_AUTOFOCUS)) FlagSet(DF_FOCUSED);
+    // Tell input to reset mouse in window focus
+    cInput->FlagSet(IF_MOUSEFOCUS);
     // Update cursor visibility as OS or glfw can mess it up
     cInput->CommitCursorNow();
     // If we're in Linux?

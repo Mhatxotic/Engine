@@ -957,9 +957,11 @@ for(const JoyInfo &jiRef : jlList)
      .Data(jiRef.JoyGUID()).Data(jiRef.JoyGamePadName())
      .Data(jiRef.IdentGet());
 } // Print totals
-cConsole->AddLineF("$$ connected ($ supported).", sTable.Finish(),
-  StrCPluraliseNum(cInput->JoyGetConnected(), "input", "inputs"),
-    jlList.size());
+cConsole->AddLineF("$$ connected ($ supported).\n"
+                   "Input flags are 0x$$.",
+  sTable.Finish(),
+    StrCPluraliseNum(cInput->JoyGetConnected(), "input", "inputs"),
+    jlList.size(), hex, cInput->FlagGet());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'input' function
 /* ========================================================================= */
