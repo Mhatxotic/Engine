@@ -77,9 +77,17 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   void Reset(void) const { cCVars->Reset(lcvmiIt->second.second); }
   /* -- Returns if value is empty ------------------------------------------ */
   bool Empty(void) const { return Get().empty(); }
-  /* -- Set value ---------------------------------------------------------- */
-  CVarSetEnums Set(const string &strValue) const
+  /* -- Set value from different types ------------------------------------- */
+  CVarSetEnums SetString(const string &strValue) const
     { return cCVars->Set(lcvmiIt->second.second, strValue); }
+  CVarSetEnums Clear(void) const
+    { return SetString(cCommon->Blank()); }
+  CVarSetEnums SetBoolean(const bool bState) const
+    { return SetString(bState ? cCommon->One() : cCommon->Zero()); }
+  CVarSetEnums SetInteger(const lua_Integer liValue) const
+    { return SetString(StrFromNum(liValue)); }
+  CVarSetEnums SetNumber(const lua_Number lnValue) const
+    { return SetString(StrFromNum(lnValue, 0, 15)); }
   /* -- Register user console command from lua ----------------------------- */
   void Init(lua_State*const lS)
   { // Must be running on the main thread

@@ -62,8 +62,8 @@ static class Display final :
   /* -- Base classes ------------------------------------------------------- */
   private IHelper,                     // Initialisation helper
   public  DisplayFlags,                // Display settings
-  private EvtMain::RegVec,             // Main events list to register
-  private EvtWin::RegVec,              // Window events list to register
+  private EvtMainRegVec,               // Main events list to register
+  private EvtWinRegVec,                // Window events list to register
   private DimCoInt                     // Requested window position and size
 { /* -- Variables ---------------------------------------------------------- */
   GlFWMonitors     mlData;             // Monitor list data
@@ -71,9 +71,10 @@ static class Display final :
   const GlFWRes   *rSelected;          // Monitor resolution selected
   size_t           stMRequested,       // Monitor id request
                    stVRequested;       // Video mode requested
+  DimFloat         dfMatrix;           // Currently selected frame-buffer size
   GLfloat          fGamma,             // Monitor gamma setting
-                   fMatrixWidth,       // Saved matrix width
-                   fMatrixHeight;      // Saved matrix height
+                   fReqMatrixWidth,    // Saved matrix width
+                   fReqMatrixHeight;   // Saved matrix height
   int              iApi,               // Selected API from GLFW
                    iProfile,           // Selected profile for the context
                    iCtxMajor,          // Selected context major version
@@ -258,9 +259,10 @@ static class Display final :
   }
   /* -- Window contents damaged and needs refreshing ----------------------- */
   void OnRefresh(const EvtMainEvent&)
-  { // Report that the window was resized
-    cLog->LogDebugSafe("Display redrawing window contents.");
+  { // Return if already redrawing
+    if(cFboCore->CanDraw()) return;
     // Set to force redraw the next frame
+    cLog->LogDebugSafe("Display redrawing window contents.");
     cFboCore->SetDraw();
   }
   /* == Check if window resized ============================================ */
@@ -532,9 +534,7 @@ static class Display final :
   }
   /* -- Window centre request ---------------------------------------------- */
   void OnReqCentre(const EvtWinEvent&)
-  { // If in full screen mode, don't resize or move anything
-    if(FlagIsSet(DF_INFULLSCREEN)) return;
-    // Get centre co-ordinates
+  { // Get centre co-ordinates
     int iX, iY; GetCentreCoords(iX, iY,
       cInput->GetWindowWidth(), cInput->GetWindowHeight());
     // Move the window
@@ -711,6 +711,8 @@ static class Display final :
     cGlFW->WinShow();
     // Window has been focued if auto-focus is enabled
     if(FlagIsSet(DF_AUTOFOCUS)) FlagSet(DF_FOCUSED);
+    // Tell input to reset mouse in window focus
+    cInput->FlagSet(IF_MOUSEFOCUS);
     // Update cursor visibility as OS or glfw can mess it up
     cInput->CommitCursorNow();
     // If we're in Linux?
@@ -784,30 +786,38 @@ static class Display final :
   int GetVideoModeId(void) const { return rSelected->Index(); }
   /* -- Init info ---------------------------------------------------------- */
   const string &GetMonitorName(void) const { return moSelected->Name(); }
-  /* -- Set default matrix ------------------------------------------------- */
-  void SetDefaultMatrix(const bool bForce=true) const
+  /* -- Commit current matrix size ----------------------------------------- */
+  void CommitMatrix(const bool bForce=true) const
   { // Set the default matrix from the configuration and if it was changed
     // also update the consoles FBO too.
-    if(cFboCore->AutoMatrix(fMatrixWidth, fMatrixHeight, bForce))
+    if(cFboCore->AutoMatrix(
+         dfMatrix.DimGetWidth(), dfMatrix.DimGetHeight(), bForce))
       cConGraphics->InitFBO();
     // Else redraw the console if enabled
     else cConsole->SetRedrawIfEnabled();
   }
+  /* -- Restore default matrix --------------------------------------------- */
+  void CommitDefaultMatrix(void)
+  { // Restore default dimensions as set from the manifest
+    dfMatrix.DimSet(fReqMatrixWidth, fReqMatrixHeight);
+    // Restore matrix but don't need to re-init if size didn't change
+    CommitMatrix(false);
+  }
   /* -- Alter default matrix ----------------------------------------------- */
   bool AlterDefaultMatrix(const GLfloat fNewWidth, const GLfloat fNewHeight)
   { // If width changed?
-    if(UtilIsFloatNotEqual(fNewWidth, fMatrixWidth))
+    if(UtilIsFloatNotEqual(fNewWidth, dfMatrix.DimGetWidth()))
     { // Update width and if height changed? Update the height
-      fMatrixWidth = fNewWidth;
-      if(UtilIsFloatNotEqual(fNewHeight, fMatrixHeight))
-        fMatrixHeight = fNewHeight;
+      dfMatrix.DimSetWidth(fNewWidth);
+      if(UtilIsFloatNotEqual(fNewHeight, dfMatrix.DimGetHeight()))
+        dfMatrix.DimSetHeight(fNewHeight);
     } // If height changed? Update the height and fall through to re-init
-    else if(UtilIsFloatNotEqual(fNewHeight, fMatrixHeight))
-      fMatrixHeight = fNewHeight;
+    else if(UtilIsFloatNotEqual(fNewHeight, dfMatrix.DimGetHeight()))
+      dfMatrix.DimSetHeight(fNewHeight);
     // Not modified so don't change the fbo
     else return false;
     // Force re-initialise the matrix
-    SetDefaultMatrix();
+    CommitMatrix(false);
     // Send event to addons that the matrix changed
     cEvtMain->Add(EMC_VID_MATRIX_REINIT);
     // Success
@@ -816,7 +826,7 @@ static class Display final :
   /* -- ReInit matrix ------------------------------------------------------ */
   void ReInitMatrix(void)
   { // Force-reinitialise matrix
-    SetDefaultMatrix();
+    CommitMatrix();
     // Inform lua scripts that they should redraw the framebuffer
     cEvtMain->Add(EMC_LUA_REDRAW);
   }
@@ -1029,7 +1039,7 @@ static class Display final :
     /* --------------------------------------------------------------------- */
     IHelper{ __FUNCTION__ },           // Send name to init helper
     DisplayFlags{ DF_NONE },           // No display flags set
-    EvtMain::RegVec{                   // Register main events
+    EvtMainRegVec{                     // Register main events
       { EMC_VID_FB_REINIT,     bind(&Display::OnFBReset,     this, _1) },
       { EMC_VID_MATRIX_REINIT, bind(&Display::OnMatrixReset, this, _1) },
       { EMC_WIN_CLOSE,         bind(&Display::OnClose,       this, _1) },
@@ -1040,7 +1050,7 @@ static class Display final :
       { EMC_WIN_RESIZED,       bind(&Display::OnResized,     this, _1) },
       { EMC_WIN_SCALE,         bind(&Display::OnScale,       this, _1) },
     },
-    EvtWin::RegVec{                    // Register window events
+    EvtWinRegVec{                      // Register window events
       { EWC_WIN_ATTENTION,   bind(&Display::OnReqAttention,    this, _1) },
       { EWC_WIN_CENTRE,      bind(&Display::OnReqCentre,       this, _1) },
       { EWC_WIN_CURPOSGET,   bind(&Display::OnReqGetCursorPos, this, _1) },
@@ -1068,9 +1078,10 @@ static class Display final :
     rSelected(nullptr),                // No video mode selected
     stMRequested(StdMaxSizeT),         // No monitor requested
     stVRequested(StdMaxSizeT),         // No video mode id requested
+    dfMatrix{ 0.0f, 0.0f },            // Currently selected matrix
     fGamma(0),                         // Gamma initialised by CVars
-    fMatrixWidth(0.0f),                // Matrix width initialised by CVars
-    fMatrixHeight(0.0f),               // Matrix height initialised by CVars
+    fReqMatrixWidth(0.0f),             // Requested matrix width
+    fReqMatrixHeight(0.0f),            // Requested matrix height
     iApi(GLFW_DONT_CARE),              // Api type set by cvars
     iProfile(GLFW_DONT_CARE),          // Profile type set by cvars
     iCtxMajor(GLFW_DONT_CARE),         // Context major version set by cvars
@@ -1127,8 +1138,8 @@ static class Display final :
   CBCVARRANGE(int, SetForcedBitDepthB, iFBDepthB, GLFW_DONT_CARE, 16)
   CBCVARRANGE(int, SetForcedBitDepthG, iFBDepthG, GLFW_DONT_CARE, 16)
   CBCVARRANGE(int, SetForcedBitDepthR, iFBDepthR, GLFW_DONT_CARE, 16)
-  CBCVARRANGE(GLfloat, SetMatrixHeight, fMatrixHeight, 200.0f, 16384.0f)
-  CBCVARRANGE(GLfloat, SetMatrixWidth, fMatrixWidth, 320.0f, 16384.0f)
+  CBCVARRANGE(GLfloat, SetMatrixHeight, fReqMatrixHeight, 200.0f, 16384.0f)
+  CBCVARRANGE(GLfloat, SetMatrixWidth, fReqMatrixWidth, 320.0f, 16384.0f)
   /* ----------------------------------------------------------------------- */
 #if defined(MACOS)                     // Compiling on MacOS?
   /* ----------------------------------------------------------------------- */

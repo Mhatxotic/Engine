@@ -63,11 +63,12 @@ local iCVvidvsync<const>, iCVappdelay<const>, iCVtexfilter<const>,
       aCVars.vid_monitor, aCVars.win_width, aCVars.win_height, aCVars.vid_fs,
       aCVars.vid_fsmode, aCVars.aud_interface;
 -- Diggers function and data aliases --------------------------------------- --
-local DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
-  InitSetup, IsMouseYLessThan, LoadResources, PlayMusic, RegisterFBUCallback,
-  RenderFade, RenderShadow, RestoreKeyHandlers, SetCallbacks, SetHotSpot,
-  SetKeys, StopMusic, aKeyBankCats, aKeyToLiteral, aSetupButtonData,
-  aSetupOptionData, fontLarge, fontLittle, fontTiny, texSpr;
+local BlitSLTWHA, DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank,
+  GetMusic, InitSetup, IsMouseYLessThan, LoadResources, PlayMusic, PrintC,
+  PrintM, PrintR, PrintS, Print, RegisterFBUCallback, RenderFade, RenderShadow,
+  RestoreKeyHandlers, SetCallbacks, SetHotSpot, SetKeys, StopMusic, VideoPause,
+  VideoResume, aKeyBankCats, aKeyToLiteral, aSetupButtonData, aSetupOptionData,
+  fontLarge, fontLittle, fontTiny, texSpr;
 -- Frame-limiter types ----------------------------------------------------- --
 local aFrameLimiterLabels<const> = {
   "Adaptive VSync",                    -- VSync = -1; Delay = 0
@@ -222,7 +223,7 @@ local function RenderBackgroundStart(nId)
       nAngle = 0.5 + ((cos(nAngle) * sin(nAngle)));
       texSpr:SetCA(nAngle * 0.75);
       local nDim<const> = nAngle * 16;
-      texSpr:BlitSLTWHA(444, iX, iY, nDim, nDim, nAngle);
+      BlitSLTWHA(texSpr, 444, iX, iY, nDim, nDim, nAngle);
     end
   end
   -- Draw background for text
@@ -238,22 +239,22 @@ local function RenderBackgroundStart(nId)
   texSpr:SetCRGBA(1, 1, 1, 1);
   -- Set alternating colour for title
   FlickerColours(FlickerColour1, FlickerColour2);
-  fontLarge:PrintC(160, 8, ColouriseText(sTitle));
+  PrintC(fontLarge, 160, 8, ColouriseText(sTitle));
   -- Print tip
   if nStatusLineSize and nStatusLineSize > 0 then
-    fontTiny:PrintM(8 - nStatusLinePos, 226,
+    PrintM(fontTiny, 8 - nStatusLinePos, 226,
       nStatusLinePos, 304 + nStatusLinePos, sStatusLine2);
     nStatusLinePos = nStatusLinePos + 1;
     if nStatusLinePos >= nStatusLineSize then nStatusLinePos = 0 end;
-  else fontTiny:PrintC(160, 226, sStatusLine2) end;
+  else PrintC(fontTiny, 160, 226, sStatusLine2) end;
   -- Print system information
   FlickerColours(FlickerColour2, FlickerColour1);
-  fontTiny:PrintC(160, 217, sStatusLine1);
-  fontTiny:Print (  8,  9, format("RAM %.1f%%", nRAMUsePercentage));
-  fontTiny:PrintR(312, 18, format("%.1f%% ENG", nCPUUsageProcess));
+  PrintC(fontTiny, 160, 217, sStatusLine1);
+  Print(fontTiny, 8, 9, format("RAM %.1f%%", nRAMUsePercentage));
+  PrintR(fontTiny, 312, 18, format("%.1f%% ENG", nCPUUsageProcess));
   FlickerColours(FlickerColour1, FlickerColour2);
-  fontTiny:PrintR(312,  9, format("%.1f%% SYS", nCPUUsageSystem));
-  fontTiny:Print (  8, 18, format("%.1f FPS",   nGPUFramesPerSecond));
+  PrintR(fontTiny, 312, 9, format("%.1f%% SYS", nCPUUsageSystem));
+  Print(fontTiny, 8, 18, format("%.1f FPS",   nGPUFramesPerSecond));
 end
 -- ------------------------------------------------------------------------- --
 local function Refresh()
@@ -390,7 +391,7 @@ local function ProcRenderReadme()
     -- Set colour
     fontTiny:SetCRGB(nIntensity, nIntensity, nIntensity);
     -- Print line
-    fontTiny:Print(aData[1], aData[2], aData[3]);
+    Print(fontTiny, aData[1], aData[2], aData[3]);
   end
   -- Set alternating title colour based on current time
   if nTime % 0.43 < 0.215 then fontTiny:SetCRGBA(0.5, 0.5, 0.5, 1);
@@ -413,7 +414,7 @@ local function SetTip(nNewTipId, sTip)
   end
   -- Get size of tip
   local sTipPlusSep = sTip.." -+- "
-  local nTipSizePixels = fontTiny:PrintS(sTipPlusSep);
+  local nTipSizePixels = PrintS(fontTiny, sTipPlusSep);
   local nMaxLine = 304+nTipSizePixels;
   -- Fill the line until it is big enough to scroll seamlessly
   sStatusLine2, nStatusLineSize = "", nTipSizePixels;
@@ -421,7 +422,7 @@ local function SetTip(nNewTipId, sTip)
     -- Set the tip and append a separator for seamless repeating
     sStatusLine2 = sStatusLine2..sTipPlusSep;
     -- Calculate size
-    nStatusLineSize = fontTiny:PrintS(sStatusLine2);
+    nStatusLineSize = PrintS(fontTiny, sStatusLine2);
   end
   -- Reset size to tip length
   nStatusLineSize = nTipSizePixels;
@@ -497,13 +498,13 @@ local function ProcRenderSetup()
       texSpr:SetCRGB(1, 1, 1);
       fontLittle:SetCRGB(1, 1, 1);
     end
-    fontLittle:Print(aData[4], aData[3], aData[5]);
+    Print(fontLittle, aData[4], aData[3], aData[5]);
     if iSelectedOption == iIndex then fontLittle:SetCRGB(1, 1, 1);
     else
       nIntensity = 0.5 + (((iIndex/#aSetupOptionData) + -nTime) % 0.5);
       fontLittle:SetCRGB(0, nIntensity, 0);
     end
-    fontLittle:PrintR(aData[6], aData[3], aData[7]);
+    PrintR(fontLittle, aData[6], aData[3], aData[7]);
   end
   -- For each button
   texSpr:SetCRGB(0, 0, 0);
@@ -524,7 +525,7 @@ local function ProcRenderSetup()
     end
     -- Set button text colour and print the text
     fontLittle:SetCRGB(1, 1, 1);
-    fontLittle:PrintC(aData[3], aData[4], aData[5]);
+    PrintC(fontLittle, aData[3], aData[4], aData[5]);
   end
   -- Print generic info
   if nTime % 0.43 < 0.215 then fontTiny:SetCRGBA(0.5, 0.5, 0.5, 1);
@@ -630,7 +631,7 @@ local function RenderBinds()
     end
     -- Set text colour and print the bind line
     fontTiny:SetCRGB(nIntensity, nIntensity, nIntensity);
-    fontTiny:Print(aData[1], aData[2], aData[3]);
+    Print(fontTiny, aData[1], aData[2], aData[3]);
   end
   -- Set alternating title colour based on current time
   if nTime % 0.43 < 0.215 then fontTiny:SetCRGBA(0.5, 0.5, 0.5, 1);
@@ -694,6 +695,8 @@ local function DoInitSetup(iMode)
     -- Call the mode init function
     aMode[1]();
   end
+  -- Pause any video playing
+  VideoPause();
   -- Register frame buffer update
   RegisterFBUCallback("setup", OnStageUpdated);
   -- Load bank texture
@@ -706,20 +709,23 @@ local function OnScriptLoaded(GetAPI)
   local PlayStaticSound, RegisterHotSpot, RegisterKeys, aAssetsData,
     aCursorIdData, aSfxData;
   -- Grab import functions and data
-  DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
-    IsMouseYLessThan, LoadResources, PlayMusic, PlayStaticSound,
-    RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow,
+  BlitSLTWHA, DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank,
+    GetMusic, IsMouseYLessThan, LoadResources, PlayMusic, PlayStaticSound,
+    PrintC, PrintM, PrintR, PrintS, Print, RegisterFBUCallback,
+    RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow,
     RestoreKeyHandlers, SetCallbacks, SetHotSpot, SetKeys, StopMusic,
-    aAssetsData, aCursorIdData, aKeyBankCats, aKeyToLiteral, aSetupButtonData,
-    aSetupOptionData, aSfxData, fontLarge, fontLittle, fontTiny, texSpr =
-      GetAPI("DisableKeyHandlers", "GetCallbacks", "GetHotSpot", "GetKeyBank",
-        "GetMusic", "IsMouseYLessThan", "LoadResources", "PlayMusic",
-        "PlayStaticSound", "RegisterFBUCallback", "RegisterHotSpot",
-        "RegisterKeys", "RenderFade", "RenderShadow", "RestoreKeyHandlers",
-        "SetCallbacks", "SetHotSpot", "SetKeys", "StopMusic", "aAssetsData",
-        "aCursorIdData", "aKeyBankCats", "aKeyToLiteral", "aSetupButtonData",
-        "aSetupOptionData", "aSfxData", "fontLarge", "fontLittle", "fontTiny",
-        "texSpr");
+    VideoPause, VideoResume, aAssetsData, aCursorIdData, aKeyBankCats,
+    aKeyToLiteral, aSetupButtonData, aSetupOptionData, aSfxData, fontLarge,
+    fontLittle, fontTiny, texSpr =
+      GetAPI("BlitSLTWHA", "DisableKeyHandlers", "GetCallbacks", "GetHotSpot",
+        "GetKeyBank", "GetMusic", "IsMouseYLessThan", "LoadResources",
+        "PlayMusic", "PlayStaticSound", "PrintC", "PrintM", "PrintR", "PrintS",
+        "Print", "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys",
+        "RenderFade", "RenderShadow", "RestoreKeyHandlers", "SetCallbacks",
+        "SetHotSpot", "SetKeys", "StopMusic", "VideoPause", "VideoResume",
+        "aAssetsData", "aCursorIdData", "aKeyBankCats", "aKeyToLiteral",
+        "aSetupButtonData", "aSetupOptionData", "aSfxData", "fontLarge",
+        "fontLittle", "fontTiny", "texSpr");
   -- Set assetsData
   aAssets = { aAssetsData.setupm };
   -- Callback to set all settings to default
@@ -756,6 +762,8 @@ local function OnScriptLoaded(GetAPI)
       musLast = nil;
     -- No music to set? Just stop the setup music
     else StopMusic() end;
+    -- Resume any video that might be playing
+    VideoResume();
     -- Restore redraw callback
     RegisterFBUCallback("setup");
     -- Restore original hotspot and keyback
@@ -1077,9 +1085,9 @@ local function OnScriptLoaded(GetAPI)
   -- Get frequently used keyboard keys
   local aKeys<const>, aStates<const> = Input.KeyCodes, Input.States;
   local iPress<const>, iRepeat<const>, iControl<const>, iBackspace<const>,
-    iLetterC<const>, iEscape<const>, iSpace<const> = aStates.PRESS,
+    iLetterC<const>, iEscape<const>, iLetterD<const> = aStates.PRESS,
       aStates.REPEAT, aMods.CONTROL, aKeys.BACKSPACE, aKeys.C, aKeys.ESCAPE,
-      aKeys.SPACE;
+      aKeys.D;
   -- Setup key bank
   local aGenericEscape<const> = { iEscape, GoFinish, "sf", "CLOSE" };
   local aOnlyEscape<const> = { [iPress] = { aGenericEscape } };
@@ -1292,6 +1300,8 @@ local function OnScriptLoaded(GetAPI)
   -- Sort the bindings list
   local function BindSortFunction(aA, aB) return aA[6] < aB[6] end;
   sort(aBindingsList, BindSortFunction);
+  -- Get OK result for Variable:Integer()
+  local iVROK<const> = Variable.Result.OK;
   -- Binds area clicked
   local function OnBindsClick()
     -- Get key bind data
@@ -1307,14 +1317,14 @@ local function OnScriptLoaded(GetAPI)
     -- Update tip at the bottom
     sStatusLine1 = "PRESS ANY KEY TO USE AS NEW KEY BINDING";
     sStatusLine2 = "CTRL+C:CANCEL  \z
-                    CTRL+SPACE:DEFAULT  \z
+                    CTRL+D:DEFAULT  \z
                     CTRL+BACKSPACE:CLEAR";
     -- Unset hots pots to show wait cursor
     SetHotSpot();
     -- Disable all input events
     DisableKeyHandlers();
     -- On key scan functino
-    local function OnScanKey(iKey, iState, iMods)
+    local function OnScanKey(iKey, iState, iMods, iScan)
       -- Ignore if not pressed
       if iState ~= iPress then return end;
       -- Mods were pressed?
@@ -1325,8 +1335,8 @@ local function OnScriptLoaded(GetAPI)
           if iKey == iBackspace then iKey = 0;
           -- C was pressed? Keep existing key
           elseif iKey == iLetterC then iKey = aBindData[1];
-          -- Space key was pressed? Use default
-          elseif iKey == iSpace then iKey = aBindData[5];
+          -- D key was pressed? Use default
+          elseif iKey == iLetterD then iKey = aBindData[5];
           -- Not recognised? Ignore press
           else return end;
         -- Do not process key with mods
@@ -1335,7 +1345,7 @@ local function OnScriptLoaded(GetAPI)
       -- Apply bind to cvar the cvar callback will change the text to the
       -- new value but won't if the value could not be changed in which we
       -- restore the original text value here.
-      if aBindData[7]:Set(iKey) ~= 0 then aBindData[8] = sTextSave end;
+      if aBindData[7]:Integer(iKey) ~= iVROK then aBindData[8] = sTextSave end;
       -- Restore input handlers
       RestoreKeyHandlers();
       -- Restore hot spots

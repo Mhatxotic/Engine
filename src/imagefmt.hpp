@@ -591,10 +591,10 @@ class CodecPNG final :                 // Members initially private
       pwC.Meta("Copyright", cSystem->GetGuestCopyright());
       pwC.Meta("Creation Time", cmSys.FormatTime());
       pwC.Meta("Description", cSystem->ENGName() + " Exported Image");
-      pwC.Meta("Software", StrFormat("$ ($) v$.$.$.$ ($-bit) by $",
+      pwC.Meta("Software", StrFormat("$ ($) v$.$.$.$ ($-bit $) by $",
         cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
         cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
-        cSystem->ENGBits(), cSystem->ENGAuthor()));
+        cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor()));
       pwC.Meta("Comment", cSystem->GetGuestWebsite());
     } // Set renderer in metadata
     { using namespace IOgl::P;

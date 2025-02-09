@@ -23,7 +23,7 @@ namespace P {                          // Start of public module namespace
 /* -- Clipboard collector and lua interface class -------------------------- */
 CTOR_BEGIN(Clips, Clip, CLHelperUnsafe,
   /* ----------------------------------------------------------------------- */
-  const EvtWin::RegVec rvEvents;,,     // Events list to register
+  const EvtWinRegVec rvEvents;,,       // Events list to register
   private LuaEvtMaster<Clip, LuaEvtTypeAsync<Clip>>
 );/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),

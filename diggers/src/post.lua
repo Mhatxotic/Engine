@@ -11,15 +11,16 @@
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 -- M-Engine function aliases ----------------------------------------------- --
-local InputSetCursorPos<const>, UtilTableSize<const>, UtilIsInteger<const> =
-  Input.SetCursorPos, Util.TableSize, Util.IsInteger;
+local UtilTableSize<const>, UtilIsInteger<const> =
+  Util.TableSize, Util.IsInteger;
 -- Diggers function and data aliases --------------------------------------- --
-local AdjustViewPortX, AdjustViewPortY, DeInitLevel, Fade, GetAbsMousePos,
-  InitEnding, InitFail, InitLobby, IsMouseXGreaterEqualThan, IsMouseXLessThan,
-  IsMouseYGreaterEqualThan, IsMouseYLessThan, IsSpriteCollide, LoadResources,
-  PlayMusic, PlayStaticSound, RegisterFBUCallback, RenderFade, RenderObjects,
-  RenderTerrain, SelectObject, SetCallbacks, SetCursor, SetHotSpot, SetKeys,
-  aGlobalData, aLevelsData, aObjectFlags, aObjects, fontSpeech;
+local BlitSLT, AdjustViewPortX, AdjustViewPortY, DeInitLevel, Fade,
+  GetAbsMousePos, InitEnding, InitFail, InitLobby, IsMouseXGreaterEqualThan,
+  IsMouseXLessThan, IsMouseYGreaterEqualThan, IsMouseYLessThan,
+  IsSpriteCollide, LoadResources, PlayMusic, PlayStaticSound, PrintC,
+  RegisterFBUCallback, RenderFade, RenderObjects, RenderTerrain, SelectObject,
+  SetCallbacks, SetCursor, SetHotSpot, SetKeys, aGlobalData, aLevelsData,
+  aObjectFlags, aObjects, fontSpeech;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Required assets
       iCLeft, iCRight, iCTop, iCExit,  -- Cursor ids
@@ -29,6 +30,7 @@ local aAssets,                         -- Required assets
       iObject,                         -- Current object
       iStageLmove, iStageRmove,        -- Mouse scrolling positions
       iSSelect, iSClick,               -- Sound effect ids
+      nFade,                           -- Transition fade amount
       sObject;                         -- Object selected text
 local sObjectDefault<const> = "MAP POST MORTEM";
 local texEnd;                          -- Post mortem textures
@@ -38,14 +40,14 @@ local function ProcRenderPostMortem()
   RenderTerrain();
   RenderObjects();
   -- Render post mortem banner and text
-  texEnd:BlitSLT(4, 8, 208);
+  BlitSLT(texEnd, 4, 8, 208);
   fontSpeech:SetCRGB(0, 0, 0.25);
-  fontSpeech:PrintC(160, 215, sObject);
+  PrintC(fontSpeech, 160, 215, sObject);
 end
 -- On frame buffer updated ------------------------------------------------- --
 local function OnStageUpdated(...)
   -- Update stage bounds
-  local _ _, _, iStageL, _, iStageR, _ = ...;
+  local _, _, iStageL, _, iStageR, _ = ...;
   -- Update horizontal scrolling positions
   iStageLmove, iStageRmove = iStageL + 16, iStageR - 16;
 end
@@ -142,6 +144,14 @@ local function OnScroll(nX, nY)
 end
 -- On mouse released (remove logic function) ------------------------------- --
 local function OnRelease() SetCallbacks(nil, ProcRenderPostMortem) end;
+-- Cursor drag event ------------------------------------------------------- --
+local function OnDrag(_, _, _, iMoveX, iMoveY)
+  -- Move the level to how the mouse is dragging
+  AdjustViewPortX(iMoveX);
+  AdjustViewPortY(iMoveY);
+  -- Keep arrow shown
+  SetCursor(iCArrow)
+end
 -- On mouse pressed -------------------------------------------------------- --
 local function OnPress()
   -- Mouse pressed over  top edge of screen?
@@ -183,9 +193,9 @@ local function RenderAnimatedPostMortem()
   RenderFade(nFade);
   -- Render post mortem banner and text
   local nAdj<const> = nFade * 128;
-  texEnd:BlitSLT(4, 8, 208 + nAdj);
+  BlitSLT(texEnd, 4, 8, 208 + nAdj);
   fontSpeech:SetCRGB(0, 0, 0.25);
-  fontSpeech:PrintC(160, 215 + nAdj, sObject);
+  PrintC(fontSpeech, 160, 215 + nAdj, sObject);
 end
 -- When post mortem assets are loaded? ------------------------------------- --
 local function OnAssetsLoaded(aResources)
@@ -211,23 +221,24 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Imports
-  AdjustViewPortX, AdjustViewPortY, DeInitLevel, Fade, GetAbsMousePos,
+  AdjustViewPortX, AdjustViewPortY, BlitSLT, DeInitLevel, Fade, GetAbsMousePos,
     InitEnding, InitFail, InitLobby, IsMouseXGreaterEqualThan,
     IsMouseXLessThan, IsMouseYGreaterEqualThan, IsMouseYLessThan,
-    IsSpriteCollide, LoadResources, PlayMusic, PlayStaticSound,
+    IsSpriteCollide, LoadResources, PlayMusic, PlayStaticSound, PrintC,
     RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderFade,
     RenderObjects, RenderTerrain, SelectObject, SetCallbacks, SetCursor,
     SetHotSpot, SetKeys, aAssetsData, aCursorIdData, aGlobalData, aLevelsData,
     aObjectFlags, aObjects, aSfxData, fontSpeech =
-      GetAPI("AdjustViewPortX", "AdjustViewPortY", "DeInitLevel", "Fade",
-        "GetAbsMousePos", "InitEnding", "InitFail", "InitLobby",
+      GetAPI("AdjustViewPortX", "AdjustViewPortY", "BlitSLT", "DeInitLevel",
+        "Fade", "GetAbsMousePos", "InitEnding", "InitFail", "InitLobby",
         "IsMouseXGreaterEqualThan", "IsMouseXLessThan",
         "IsMouseYGreaterEqualThan", "IsMouseYLessThan", "IsSpriteCollide",
-        "LoadResources", "PlayMusic", "PlayStaticSound", "RegisterFBUCallback",
-        "RegisterHotSpot", "RegisterKeys", "RenderFade", "RenderObjects",
-        "RenderTerrain", "SelectObject", "SetCallbacks", "SetCursor",
-        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData", "aGlobalData",
-        "aLevelsData", "aObjectFlags", "aObjects", "aSfxData", "fontSpeech");
+        "LoadResources", "PlayMusic", "PlayStaticSound", "PrintC",
+        "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys", "RenderFade",
+        "RenderObjects", "RenderTerrain", "SelectObject", "SetCallbacks",
+        "SetCursor", "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData",
+        "aGlobalData", "aLevelsData", "aObjectFlags", "aObjects", "aSfxData",
+        "fontSpeech");
   -- Setup required assets
   aAssets = { aAssetsData.post, aAssetsData.postm };
   -- Register keybinds
@@ -239,7 +250,7 @@ local function OnScriptLoaded(GetAPI)
     { aKeys.RIGHT, GoScrollRight, "igpmsmr", "SCROLL MAP RIGHT" };
   iKeyBankId = RegisterKeys("IN-GAME POST MORTEM", {
     [aStates.PRESS] = {
-      { aKeys.ESCAPE, GoFinish,       "igpmc",  "CLOSE" },
+      { aKeys.ESCAPE, GoFinish,         "igpmc",  "CLOSE" },
       { aKeys.MINUS,  GoPreviousObject, "igpmop", "PREVIOUS" },
       { aKeys.EQUAL,  GoNextObject,     "igpmon", "NEXT" },
       aScrUp, aScrDown, aScrLeft, aScrRight
@@ -247,7 +258,7 @@ local function OnScriptLoaded(GetAPI)
   });
   -- Set hot spot
   iHotSpotId = RegisterHotSpot({
-    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress } }
+    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress, OnDrag } }
   });
   -- Set cursor ids
   iCLeft, iCRight, iCTop, iCBottom, iCWait, iCArrow, iCExit =

@@ -210,7 +210,18 @@ static class ConGraphics final :       // Members initially private
       case GLFW_KEY_ESCAPE : return ClearInputOrClose();
       default              : break;
     } // We didnt handle any keys so let the actual console handle them
-    return cConsole->OnKeyPress(iKey, iAction, iMods);
+    cConsole->OnKeyPress(iKey, iAction, iMods);
+  }
+  /* -- Check if console key pressed in console ---------------------------- */
+  bool IsKeyHandled(const int iKey, const int iState, const int iMod)
+  { // Return if console not visible
+    if(cConsole->IsNotVisible()) return false;
+    // Add normal key pressed. Since GLFW inconveniently gives us 3 int
+    // parameters, we need to pack 2 ints together. Luckily, GLFW_RELEASE etc
+    // is only 8-bit, we'll pack the modifiers with this value.
+    OnKeyPress(iKey, iState, iMod);
+    // We handled this key so do not dispatch it to scripts
+    return true;
   }
   /* -- Redraw the console fbo if the console contents changed ------------- */
   void Render(void)
@@ -361,8 +372,7 @@ static class ConGraphics final :       // Members initially private
   CVarReturn TextScaleModified(const GLfloat fNewScale)
   { // Failed if supplied scale is not in range
     if(!CVarToBoolReturn(CVarSimpleSetIntNLG(fTextScale,
-      fNewScale, 0.01f, 1.0f)))
-        return DENY;
+      fNewScale, 0.01f, 16.0f))) return DENY;
     // Set new font scale
     CommitScale();
     // Reallocate memory if neccesary for fbo lists

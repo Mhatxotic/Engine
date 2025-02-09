@@ -49,7 +49,7 @@ enum CoreErrorFlags                    // Lua error mode behaviour
 };/* ----------------------------------------------------------------------- */
 class Core final :                     // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private EvtMain::RegVec              // Events list to register
+  private EvtMainRegVec                // Events list to register
 { /* -- Public Variables --------------------------------------------------- */
   CoreErrorFlags   cefMode;            // Lua error mode behaviour
   unsigned int     uiErrorCount,       // Number of errors occured
@@ -96,31 +96,26 @@ class Core final :                     // Members initially private
     cSql->Reset();
     // If using graphical inteactive mode?
     if(cSystem->IsGraphicalMode())
-    { // Reset main fbo and back clear colour
-      cFboCore->ResetClearColour();
-      // Reset texture unit and shader program if in GUI mode
-      cOgl->ResetBinds();
-      // Reset default palette
-      cPalettes->palDefault.Commit();
-      // Set main framebuffer as default
-      cFboCore->ActivateMain();
-      // Reset input environment
+    { // Reset input environment
       cInput->ResetEnvironment();
-      // Reset main matrix. No need to force a change if it's already set.
-      cDisplay->SetDefaultMatrix(false);
+      // Reset fbo clear colour, selected binds and 8-bit shader palette
+      cFboCore->ResetClearColour();
+      cOgl->ResetBinds();
+      cPalettes->palDefault.Commit();
+      // Set main framebuffer as default and reset to original settings
+      cFboCore->ActivateMain();
+      cDisplay->CommitDefaultMatrix();
       // Cant't disable console if leaving, can if entering
       cConGraphics->SetCantDisable(bLeaving);
-      // Reset cursor if leaving
+      // Reset cursor if leaving else hide console if entering
       if(bLeaving) cDisplay->RequestResetCursor();
-      // Set console enabled if entering.
       else cConGraphics->SetVisible(false);
       // Restore console font properties
       cConGraphics->RestoreDefaultProperties();
     } // Bot mode? Clear bottom status texts
     if(cSystem->IsTextMode()) cConsole->ClearStatus();
-    // Reset timer
+    // Reset timer and clear any lingering engine events
     cTimer->TimerReset(bLeaving);
-    // Clear any lingering engine events
     cEvtMain->Flush();
     // Log that we've reset the environment
     cLog->LogDebugExSafe("Core environment $.",
@@ -346,8 +341,8 @@ class Core final :                     // Members initially private
       cEvtMain->RegisterEx(*this);
       // Done
       return;
-    } // Initialising for the first time so reconfigure matrix
-    cDisplay->SetDefaultMatrix();
+    } // Not initialising for the first time so reconfigure matrix
+    cDisplay->CommitMatrix();
     // Reset window icon
     cDisplay->UpdateIcons();
     // Reload textures
@@ -813,7 +808,7 @@ class Core final :                     // Members initially private
   /* -- Default constructor ------------------------------------------------ */
   Core(void) :                         // No parameters
     /* --------------------------------------------------------------------- */
-    EvtMain::RegVec{                   // Default events
+    EvtMainRegVec{                     // Default events
       { EMC_LUA_PAUSE,  bind(&Core::OnLuaPause,  this, _1) },
       { EMC_LUA_RESUME, bind(&Core::OnLuaResume, this, _1) },
     },

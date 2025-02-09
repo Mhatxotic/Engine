@@ -14,12 +14,13 @@ local cos<const>, floor<const>, format<const>, pairs<const>, sin<const>,
   tonumber<const> =
     math.cos, math.floor, string.format, pairs, math.sin, tonumber;
 -- M-Engine function aliases ----------------------------------------------- --
-local UtilFormatTime<const>, CoreOSTime<const>, CoreTime<const>,
-  VariableSave<const> = Util.FormatTime, Core.OSTime, Core.Time, Variable.Save;
+local UtilFormatNumber<const>, UtilFormatTime<const>, CoreOSTime<const>,
+  CoreTime<const>, VariableSave<const> = Util.FormatNumber, Util.FormatTime,
+    Core.OSTime, Core.Time, Variable.Save;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitCon, LoadResources, PlayStaticSound, RenderFade, RenderShadow,
-  RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, SetTip, aLevelsData,
-  aObjectData, aObjectTypes, fontSpeech, texSpr;
+local BlitLT, Fade, InitCon, LoadResources, PlayStaticSound, PrintC,
+  RenderFade, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys,
+  SetTip, aLevelsData, aObjectData, aObjectTypes, fontSpeech, texSpr;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Required assets
       aFileData, aNameData;            -- File and file names data
@@ -35,8 +36,7 @@ local iHotSpotIdLoadOnly,              -- Hot spot id (Load only)
       iSClick, iSSelect,               -- Sound effect ids
       iSelected,                       -- File selected
       sMsg,                            -- Title text
-      texFile, texLobby;               -- File screen and lobby texture
-local tileFile<const> = 20;            -- File texture tile
+      texFile, texZmtc;                -- File screen and zmtc texture
 -- Match text -------------------------------------------------------------- --
 local sFileMatchText<const> =
   "^(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),\z
@@ -109,10 +109,11 @@ local function LoadSaveData()
           aFileData[iIndex], aNameData[iIndex] =
             { T, TTT, R, B, C, TSP, TC, TDE, TD, TGS,
               TGF, TI, TDG, TPE, TP, CL },
-            format("%s (%s) %u%% (%05u$)",
+            format("%s (%s) %u%% (%s$)",
               UtilFormatTime(T, "%a %b %d %H:%M:%S %Y"):upper(),
               aObjectData[aObjectTypes.FTARG + R].NAME,
-              floor(B / aGlobalData.gZogsToWinGame * 100), B);
+              floor(B / aGlobalData.gZogsToWinGame * 100),
+              UtilFormatNumber(B, 0));
         else aNameData[iIndex] = "CORRUPTED SLOT "..iIndex.." (E#2)" end;
       else aNameData[iIndex] = "CORRUPTED SLOT "..iIndex.." (E#1)" end;
     else aNameData[iIndex] = "EMPTY SLOT "..iIndex end;
@@ -123,22 +124,23 @@ end
 -- Render callback --------------------------------------------------------- --
 local function RenderFile()
   -- Draw trace-centre backdrop, file screen and shadow
-  texLobby:BlitLT(-54, 0);
-  texFile:BlitSLT(tileFile, 8, 8);
+  BlitLT(texZmtc, -96, 0);
+  BlitLT(texFile, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw message
   fontSpeech:SetCRGB(0, 0, 0.25);
-  fontSpeech:PrintC(160, 31, sMsg);
+  PrintC(fontSpeech, 160, 31, sMsg);
   -- Render file names
   for iFileId = 1, 4 do
     -- File selected? Draw selection box!
     if iSelected == iFileId then
       local nTime<const> = CoreTime();
-      RenderFade(0.5+(sin(nTime)*cos(nTime)*0.25), 35, 47 + (iFileId * 13), 285, 60 + (iFileId * 13));
+      RenderFade(0.5+(sin(nTime)*cos(nTime)*0.25),
+        35, 47 + (iFileId * 13), 285, 60 + (iFileId * 13));
     end
     -- Print name of file
     fontSpeech:SetCRGB(1, 1, 1);
-    fontSpeech:PrintC(160, 49 + (iFileId * 13), aNameData[iFileId]);
+    PrintC(fontSpeech, 160, 49 + (iFileId * 13), aNameData[iFileId]);
   end
   -- Draw tip
   RenderTipShadow();
@@ -251,7 +253,7 @@ local function GoSave()
   -- Play sound
   PlayStaticSound(iSSelect);
   -- Write data
-  aSaveSlot[iSelected]:Set(
+  aSaveSlot[iSelected]:String(
     format("%u,%u,%u,%d,%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%s",
       CoreOSTime(), aGlobalData.gTotalTimeTaken,
       aGlobalData.gSelectedRace, aGlobalData.gBankBalance,
@@ -295,8 +297,8 @@ end
 local function OnAssetsLoaded(aResources)
   -- Set loaded texture resource and create tile for file screen
   texFile = aResources[1];
-  -- Setup lobby texture
-  texLobby = aResources[2];
+  -- Setup zmtc texture
+  texZmtc = aResources[2];
   -- Display data
   aFileData, aNameData = LoadSaveData();
   -- Make sure nothing selected so load/save buttons are disabled
@@ -311,19 +313,19 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitCon, LoadResources, PlayStaticSound, RegisterHotSpot, RegisterKeys,
-    RenderFade, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot,
-    SetKeys, SetTip, aAssetsData, aCursorIdData, aLevelsData, aObjectData,
-    aObjectTypes, aSaveSlot[1], aSaveSlot[2], aSaveSlot[3], aSaveSlot[4],
-    aSfxData, fontSpeech, texSpr =
-      GetAPI("Fade", "InitCon", "LoadResources", "PlayStaticSound",
-        "RegisterHotSpot", "RegisterKeys", "RenderFade", "RenderShadow",
-        "RenderTipShadow", "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip",
-        "aAssetsData", "aCursorIdData", "aLevelsData", "aObjectData",
-        "aObjectTypes", "cvData1", "cvData2", "cvData3", "cvData4", "aSfxData",
-        "fontSpeech", "texSpr");
+  BlitLT, Fade, InitCon, LoadResources, PlayStaticSound, PrintC,
+    RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow, RenderTipShadow,
+    SetCallbacks, SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData,
+    aLevelsData, aObjectData, aObjectTypes, aSaveSlot[1], aSaveSlot[2],
+    aSaveSlot[3], aSaveSlot[4], aSfxData, fontSpeech, texSpr =
+      GetAPI("BlitLT", "Fade", "InitCon", "LoadResources", "PlayStaticSound",
+        "PrintC", "RegisterHotSpot", "RegisterKeys", "RenderFade",
+        "RenderShadow", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
+        "SetKeys", "SetTip", "aAssetsData", "aCursorIdData", "aLevelsData",
+        "aObjectData", "aObjectTypes", "cvData1", "cvData2", "cvData3",
+        "cvData4", "aSfxData", "fontSpeech", "texSpr");
   -- Set assets data
-  aAssets = { aAssetsData.cntrl, aAssetsData.lobbyc };
+  aAssets = { aAssetsData.file, aAssetsData.zmtc };
   -- Set sound effect ids
   iSClick, iSSelect = aSfxData.CLICK, aSfxData.SELECT;
   -- Setup key banks

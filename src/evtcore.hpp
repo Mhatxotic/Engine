@@ -9,12 +9,12 @@
 /* ------------------------------------------------------------------------- */
 namespace IEvtCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IError::P;             using namespace ILog::P;
-using namespace IStd::P;
+using namespace IError::P;             using namespace IIdent::P;
+using namespace ILog::P;               using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public public namespace
 /* ------------------------------------------------------------------------- */
-enum EvtArgVarType: unsigned int       // EvtArgVar variable types
+enum EvtArgVarType : unsigned int      // EvtArgVar variable types
 { /* ----------------------------------------------------------------------- */
   EAVT_BOOL,     EAVT_CSTR,    EAVT_STR, EAVT_PTR,       EAVT_FLOAT,
   EAVT_DOUBLE,   EAVT_UINT,    EAVT_INT, EAVT_ULONGLONG, EAVT_LONGLONG,
@@ -70,28 +70,33 @@ template<typename Cmd,                 // Variable type of command to use
          size_t   EvtMaxEvents,        // Maximum number of events
          Cmd      EvtNone,             // Id of 'none' event
          Cmd      EvtNoLog>            // Id of succeeding ids to not log for
-class EvtCore                          // Start of common event system class
+class EvtCore :                        // Start of common event system class
+  /* -- Base classes ------------------------------------------------------- */
+  private Ident                        // Identifier of event list
 { /* -- Typedefs --------------------------------------------------- */ public:
-  struct Event;                         // (Prototype) Event packet info
-  typedef void (CBFuncT)(const Event&); // Event callback type
-  typedef function<CBFuncT> CBFunc;     // Actual event callback
+  struct Event;                           // (Prototype) Event packet info
+  typedef void (CbEcFuncT)(const Event&); // Event callback type
+  typedef function<CbEcFuncT> CbEcFunc;   // Actual event callback
   /* ----------------------------------------------------------------------- */
-  typedef array<CBFunc, EvtMaxEvents>    Funcs;        // Reg'd events vector
+  typedef array<CbEcFunc, EvtMaxEvents>  Funcs;        // Reg'd events vector
   typedef list<Event>                    Queue;        // Current events queue
   typedef typename Queue::const_iterator QueueConstIt; // Current events queue
   /* ----------------------------------------------------------------------- */
-  typedef pair<const Cmd, const CBFunc> RegPair; // Event command and callback
-  typedef const vector<RegPair>         RegVec;  // Event list
+  typedef pair<const Cmd, const CbEcFunc> RegPair; // Event command and cb func
+  typedef const vector<RegPair>           RegVec;  // Event list
   /* ----------------------------------------------------------------------- */
   typedef vector<EvtArgVar> Args;      // Vector of RegPairs
+  /* ----------------------------------------------------------------------- */
+  typedef IdList<EvtMaxEvents> ISList; // Events as strings
+  const ISList islEventStrings;        // Actual variable
   /* ----------------------------------------------------------------------- */
   struct Event                         // Event packet information
   { /* --------------------------------------------------------------------- */
     Cmd            cCmd;               // Command send
-    CBFunc         cbfFunc;            // Function to call
+    CbEcFunc       cbfFunc;            // Function to call
     Args           aArgs;              // User parameters
     /* -- Constructor with move parameters --------------------------------- */
-    Event(const Cmd cNCmd, const CBFunc &cbfNFunc, Args &&aNArgs) :
+    Event(const Cmd cNCmd, const CbEcFunc &cbfNFunc, Args &&aNArgs) :
       /* -- Initialisers --------------------------------------------------- */
       cCmd(cNCmd),                     // Set requested command
       cbfFunc{ cbfNFunc },             // Set callback function
@@ -99,7 +104,7 @@ class EvtCore                          // Start of common event system class
       /* -- No code -------------------------------------------------------- */
       { }
     /* -- Initialiser with copy parameters --------------------------------- */
-    Event(const Cmd cNCmd, const CBFunc &cbfNFunc, const Args &aNArgs) :
+    Event(const Cmd cNCmd, const CbEcFunc &cbfNFunc, const Args &aNArgs) :
       /* -- Initialisers --------------------------------------------------- */
       cCmd(cNCmd),                     // Set requested command
       cbfFunc{ cbfNFunc },             // Set callback function
@@ -109,9 +114,9 @@ class EvtCore                          // Start of common event system class
     /* -- Move constructor ------------------------------------------------- */
     Event(Event &&cOther) :
       /* -- Initialisers --------------------------------------------------- */
-      cCmd(cOther.cCmd),               // Set other command
+      cCmd(cOther.cCmd),                  // Set other command
       cbfFunc{ StdMove(cOther.cbfFunc) }, // Set other cb function
-      aArgs{ StdMove(cOther.aArgs) }   // Move other parameters
+      aArgs{ StdMove(cOther.aArgs) }      // Move other parameters
       /* -- No code -------------------------------------------------------- */
       { }
     /* --------------------------------------------------------------------- */
@@ -120,29 +125,30 @@ class EvtCore                          // Start of common event system class
   Funcs            fFuncs;             // Event callback storage
   mutex            mMutex;             // Primary events list mutex
   Queue            qlEvents;           // Primary events list
-  const string     strName;            // Name of event module
-  /* -- Generic event ------------------------------------------------------ */
-  void BlankFunction(const Event &eEvent)
+  /* -- Generic event that does absolutely nothing ------------------------- */
+  void NullOpFunction(const Event &) { }
+  /* -- Generic event that reports use as warning -------------------------- */
+  void WarningFunction(const Event &eEvent)
   { // Log the error
-    cLog->LogWarningExSafe("$ ignored unregistered event! ($>$).",
-      strName, eEvent.cCmd, eEvent.aArgs.size());
+    cLog->LogWarningExSafe("$ ignored unregistered event $<$>.",
+      IdentGet(), IdToString(eEvent.cCmd), eEvent.cCmd);
   }
   /* -- Get a function ----------------------------------------------------- */
-  const CBFunc GetFunction(const Cmd cCmd)
+  const CbEcFunc GetFunction(const Cmd cCmd)
   { // Get event function and return if it is valid
     if(cCmd < fFuncs.size()) return fFuncs[cCmd];
     // Log the error
     cLog->LogWarningExSafe("$ accessed an invalid event! ($>$).",
-      strName, cCmd, fFuncs.size());
+      IdentGet(), cCmd, fFuncs.size());
     // Return a blank function
-    return bind(&EvtCore::BlankFunction, this, _1);
+    return bind(&EvtCore::WarningFunction, this, _1);
   }
   /* -- Execute specified event NOW (finisher) ----------------------------- */
   void ExecuteParam(const Cmd cCmd, Args &aArgs)
   { // Get callback function
-    const CBFunc &fCB = GetFunction(cCmd);
+    const CbEcFunc &fnCB = GetFunction(cCmd);
     // Execute callback function
-    fCB({ cCmd, fCB, StdMove(aArgs) });
+    fnCB({ cCmd, fnCB, StdMove(aArgs) });
   }
   /* -- Execute specified event NOW (parameters) --------------------------- */
   template<typename ...VarArgs,typename AnyType>
@@ -178,6 +184,9 @@ class EvtCore                          // Start of common event system class
     // Return if queue is empty
     return qlEvents.empty();
   }
+  /* -- Convert event id to string ----------------------------------------- */
+  const string_view &IdToString(const Cmd cCmd) const
+    { return islEventStrings.Get(cCmd); }
   /* -- Returns number of events in queue ---------------------------------- */
   size_t SizeSafe(void)
   { // Lock access to events list
@@ -198,8 +207,8 @@ class EvtCore                          // Start of common event system class
       qlEvents.pop_front();
       // Log event if loggable
       if(epData.cCmd < EvtNoLog)
-        cLog->LogDebugExSafe("$ processing event $.",
-          strName, epData.cCmd);
+        cLog->LogDebugExSafe("$ processing event $<$>.",
+          IdentGet(), IdToString(epData.cCmd), epData.cCmd);
       // No callback? Return command to loop
       if(!epData.cbfFunc) return epData.cCmd;
       // Execute the event callback
@@ -225,8 +234,8 @@ class EvtCore                          // Start of common event system class
         qlEvents.pop_front();
         // Log event if loggable
         if(epData.cCmd < EvtNoLog)
-          cLog->LogDebugExSafe("$ system processing event $.",
-            strName, epData.cCmd);
+          cLog->LogDebugExSafe("$ system processing event $<$>.",
+            IdentGet(), IdToString(epData.cCmd), epData.cCmd);
         // No callback? Return command to loop
         if(!epData.cbfFunc) return epData.cCmd;
         // Unlock mutex so events can still be added
@@ -305,12 +314,12 @@ class EvtCore                          // Start of common event system class
     // Remove the event
     qlEvents.erase(qciIt);
   }
-  /* -- Register event ----------------------------------------------------- */
-  void Register(const Cmd cCmd, const CBFunc &cbfFunc)
+  /* -- Register single event ---------------------------------------------- */
+  void Register(const Cmd cCmd, const CbEcFunc &cbfFunc)
   { // Bail if invalid command
     if(cCmd >= fFuncs.size())
       XC("Invalid registration command!",
-         "System",   strName, "Event", cCmd,
+         "System",   IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd,
          "Function", reinterpret_cast<const void*>(&cbfFunc));
     // Assign callback function to event
     fFuncs[cCmd] = cbfFunc;
@@ -319,21 +328,34 @@ class EvtCore                          // Start of common event system class
   void RegisterEx(const RegVec &rvEvents)
     { for(const RegPair &rpItem : rvEvents)
         Register(rpItem.first, rpItem.second); }
-  /* -- Unregister event --------------------------------------------------- */
+  /* -- NullOp single event ------------------------------------------------ */
+  void NullOp(const Cmd cCmd)
+  { // Bail if invalid command
+    if(cCmd >= fFuncs.size())
+      XC("Invalid null-op command!", "System",
+        IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd);
+    // NullOp the callback function
+    fFuncs[cCmd] = bind(&EvtCore::NullOpFunction, this, _1);
+  }
+  /* -- NullOp multiple events --------------------------------------------- */
+  void NullOpEx(const RegVec &rvEvents)
+    { for(const RegPair &rpItem : rvEvents) NullOp(rpItem.first); }
+  /* -- Unregister single  event ------------------------------------------- */
   void Unregister(const Cmd cCmd)
   { // Bail if invalid command
     if(cCmd >= fFuncs.size())
       XC("Invalid de-registration command!", "System",
-        strName, "Event", cCmd);
+        IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd);
     // Unassign callback function
-    fFuncs[cCmd] = bind(&EvtCore::BlankFunction, this, _1);
+    fFuncs[cCmd] = bind(&EvtCore::WarningFunction, this, _1);
   }
   /* -- Unregister multiple events ----------------------------------------- */
   void UnregisterEx(const RegVec &rvEvents)
     { for(const RegPair &rpItem : rvEvents) Unregister(rpItem.first); }
-    /* -- Event data, all empty functions ---------------------------------- */
-  explicit EvtCore(const string &strN) : strName{StdMove(strN)}
-    { fFuncs.fill(bind(&EvtCore::BlankFunction, this, _1)); }
+  /* -- Event data, all empty functions ------------------------------------ */
+  EvtCore(string &&strName, ISList &&islStrings) :
+    Ident{ StdMove(strName) }, islEventStrings{ StdMove(islStrings) }
+      { fFuncs.fill(bind(&EvtCore::WarningFunction, this, _1)); }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(EvtCore)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */

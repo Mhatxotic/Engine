@@ -12,11 +12,11 @@
 -- Core function aliases --------------------------------------------------- --
 local random<const>, remove<const> = math.random, table.remove;
 -- Diggers function and data aliases --------------------------------------- --
-local DeInitLevel, Fade, GameProc, GetMusic, InitScore, LoadDemoLevel,
-  LoadLevel, LoadResources, LockViewPort, PlayMusic, RegisterFBUCallback,
-  RenderObjects, RenderTerrain, SelectObject, SetCallbacks, aCreditsData,
-  aCreditsXData, aEndLoadData, aLevelTypesData, aLevelsData, aObjectTypes,
-  aObjects, aPlayers, fontLarge, fontLittle;
+local BlitLTRB, DeInitLevel, Fade, GameProc, GetMusic, InitScore, LoadDemoLevel,
+  LoadLevel, LoadResources, LockViewPort, PlayMusic, PrintC, PrintR, Print,
+  PrintWS, RegisterFBUCallback, RenderObjects, RenderTerrain, SelectObject,
+  SetCallbacks, aCreditsData, aCreditsXData, aEndLoadData, aLevelTypesData,
+  aLevelsData, aObjectTypes, aObjects, aPlayers, fontLarge, fontLittle;
 -- Other locals ------------------------------------------------------------ --
 local aAssets,                         -- Assets required
       aLevels,                         -- Levels available to show
@@ -51,7 +51,7 @@ local function RenderExtra()
   RenderTerrain();
   RenderObjects();
   -- Render vignette
-  texVig:BlitLTRB(iStageL, iStageT, iStageR, iStageB);
+  BlitLTRB(texVig, iStageL, iStageT, iStageR, iStageB);
   -- Prepare font colours
   fontLarge:SetCRGBA(1, 1, 1, 1);
   fontLittle:SetCRGBA(0, 1, 0, 1);
@@ -78,11 +78,11 @@ local function RenderExtra()
       local iMiddle<const> = iRollingCreditY + aCredit[2];
       -- Draw credit title if below the top of the screen
       if iMiddle > iStageT then
-        fontLittle:PrintC(iStageM, iTop, aCredit[4]);
+        PrintC(fontLittle, iStageM, iTop, aCredit[4]);
       end
       -- Draw credit name if above the bottom of the screen
       if iMiddle < iStageB then
-        fontLarge:PrintC(iStageM, iMiddle, aCredit[5]);
+        PrintC(fontLarge, iStageM, iMiddle, aCredit[5]);
       end
       -- Process next credit
       iI = iI + 1;
@@ -110,11 +110,11 @@ local function InitRollingCredits(strMusic)
     -- Get credit title and name
     local aCredit<const> = aCreditsXData[iIndex];
     -- Simulate print of title string and return height
-    local nHeight1<const> = fontLittle:PrintWS(iStageW, 0, aCredit[1]);
+    local nHeight1<const> = PrintWS(fontLittle, iStageW, aCredit[1]);
     -- Calculate absolute bottom pixel of title text on screen
     local iYEndPnHeight1<const> = iYEnd + nHeight1;
     -- Simulate print of name string and return height
-    local nHeight2<const> = fontLarge:PrintWS(iStageW, 0, aCredit[2]);
+    local nHeight2<const> = PrintWS(fontLarge, iStageW, aCredit[2]);
     -- calculate absolute bottom pixel of name text on screen
     local iYEndPnHeight1PnHeight2<const> = iYEndPnHeight1 + nHeight2;
     -- Build credit data
@@ -140,7 +140,7 @@ local function ProcCreditsRender()
   RenderTerrain();
   RenderObjects();
   -- Render vignette
-  texVig:BlitLTRB(iStageL, iStageT, iStageR, iStageB);
+  BlitLTRB(texVig, iStageL, iStageT, iStageR, iStageB);
   -- Prepare font colours
   fontLarge:SetCRGBA(1, 1, 1, 1);
   fontLittle:SetCRGBA(0, 1, 0, 1);
@@ -151,8 +151,8 @@ local function RenderCreditsBottomLeft()
   ProcCreditsRender();
   -- Render credits
   local iLeft<const> = iStageL + 16;
-  fontLittle:Print(iLeft, iCredits1Y, strCredits1);
-  fontLarge:Print(iLeft, iCredits2Y, strCredits2);
+  Print(fontLittle, iLeft, iCredits1Y, strCredits1);
+  Print(fontLarge, iLeft, iCredits2Y, strCredits2);
 end
 -- Render function --------------------------------------------------------- --
 local function RenderCreditsTopRight()
@@ -160,8 +160,8 @@ local function RenderCreditsTopRight()
   ProcCreditsRender();
   -- Render credits
   local iRight<const> = iStageR - 16;
-  fontLittle:PrintR(iRight, 16, strCredits1);
-  fontLarge:PrintR(iRight, 28, strCredits2);
+  PrintR(fontLittle, iRight, 16, strCredits1);
+  PrintR(fontLarge, iRight, 28, strCredits2);
 end
 -- When faded out to next level? ------------------------------------------- --
 local function OnLevelFadedOut() LoadDemoLevel(1 + iCreditId) end;
@@ -205,11 +205,11 @@ local function DoLoadDemoLevel(iLCreditId, strMusic)
   if not aCredit then return LoadDemoLevel(iLevelId, iCreditId + 1) end;
   -- Get texts
   strCredits1, strCredits2 = aCredit[1], aCredit[2];
-  -- Now we need to measure the height of all three strings so we
-  -- can place the credits in the exact vertical centre of the screen
-  local iCredits1H<const> = fontLittle:PrintWS(iStageW, 0, strCredits1);
-  local iCredits2H<const> = fontLarge:PrintWS(iStageW, 0, strCredits2);
-  iCredits2Y = 228 - iCredits2H;
+  -- Now we need to measure the height of both fonts so we can place the
+  -- credits in the exact position of the screen
+  local iCredits1H<const> = PrintWS(fontLittle, iStageW, strCredits1);
+  local iCredits2H<const> = PrintWS(fontLarge, iStageW, strCredits2);
+  iCredits2Y = iStageB - 12 - iCredits2H;
   iCredits1Y = iCredits2Y - 4 - iCredits1H;
   -- Pick which way to render the credits
   if #aLevels % 2 == 0 then fcbCreditsRender = RenderCreditsTopRight;
@@ -222,9 +222,9 @@ LoadDemoLevel = DoLoadDemoLevel;
 -- When the opengl viewport has changed ------------------------------------ --
 local function OnStageUpdated(...)
   -- Get new stage values
-  iStageW, iStageH, iStageL, iStageT, iStageR, iStageB = ...;
+  local _; _, _, iStageL, iStageT, iStageR, iStageB, iStageW, iStageH = ...;
   -- Set middle of stage
-  iStageM = iStageL + (iStageW / 2);
+  iStageM = iStageW / 2;
 end
 -- When assets have loaded ------------------------------------------------- --
 local function OnAssetsLoaded(aResources, bRolling)
@@ -246,16 +246,17 @@ end
 -- Script has been laoded -------------------------------------------------- --
 local function OnScriptLoaded(GetAPI)
   -- Imports
-  DeInitLevel, Fade, GameProc, GetMusic, InitScore, LoadLevel, LoadResources,
-    LockViewPort, PlayMusic, RegisterFBUCallback, RenderObjects, RenderTerrain,
-    SelectObject, SetCallbacks, aCreditsData, aCreditsXData, aLevelTypesData,
+  BlitLTRB, DeInitLevel, Fade, GameProc, GetMusic, InitScore, LoadLevel,
+    LoadResources, LockViewPort, PlayMusic, PrintC, PrintR, Print, PrintWS,
+    RegisterFBUCallback, RenderObjects, RenderTerrain, SelectObject,
+    SetCallbacks, aCreditsData, aCreditsXData, aLevelTypesData,
     aLevelsData, aObjectTypes, aObjects, aPlayers, fontLarge, fontLittle =
-      GetAPI("DeInitLevel", "Fade", "GameProc", "GetMusic", "InitScore",
-        "LoadLevel", "LoadResources", "LockViewPort", "PlayMusic",
-        "RegisterFBUCallback", "RenderObjects", "RenderTerrain",
-        "SelectObject", "SetCallbacks", "aCreditsData", "aCreditsXData",
-        "aLevelTypesData", "aLevelsData", "aObjectTypes", "aObjects",
-        "aPlayers", "fontLarge", "fontLittle");
+      GetAPI("BlitLTRB", "DeInitLevel", "Fade", "GameProc", "GetMusic",
+        "InitScore", "LoadLevel", "LoadResources", "LockViewPort", "PlayMusic",
+        "PrintC", "PrintR", "Print", "PrintWS", "RegisterFBUCallback",
+        "RenderObjects", "RenderTerrain", "SelectObject", "SetCallbacks",
+        "aCreditsData", "aCreditsXData", "aLevelTypesData", "aLevelsData",
+        "aObjectTypes", "aObjects", "aPlayers", "fontLarge", "fontLittle");
   -- Setup required assets
   local aAssetsData<const> = GetAPI("aAssetsData");
   aAssets = { aAssetsData.credits };

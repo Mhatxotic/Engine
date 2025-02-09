@@ -5,7 +5,7 @@
 ** ## Defines the 'Pcm' namespace and methods for the guest to use in     ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -64,11 +64,15 @@ LLFUNC(Name, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().IdentGet()))
 ** ######################################################################### **
 ** ## Pcm:* member functions structure                                    ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Pcm:* member functions begin
   LLRSFUNC(Destroy), LLRSFUNC(Id), LLRSFUNC(Name),
 LLRSEND                                // Pcm:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Pcm.* namespace functions                                           ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Pcm.Asset
 // > Id:String=The identifier of the string
 // > Data:Asset=The file data of the audio file to load
@@ -99,6 +103,12 @@ LLFUNC(AssetAsync, 0,
   const AgPcmFlags aFlags{lS, 3};
   LuaUtilCheckFunc(lS, 4, 5, 6);
   AcPcm{lS}().InitAsyncArray(lS, aIdentifier, aAsset, aFlags))
+/* ========================================================================= */
+// $ Pcm.Count
+// < Count:integer=Total number of pcms created.
+// ? Returns the total number of pcm classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cPcms->CollectorCount()))
 /* ========================================================================= */
 // $ Pcm.File
 // > Filename:string=The filename of the audio file to load
@@ -153,10 +163,11 @@ LLFUNC(WaitAsync, 0, cPcms->WaitAsync())
 ** ######################################################################### **
 ** ## Pcm.* namespace functions structure                                 ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Pcm.* namespace functions begin
-  LLRSFUNC(AssetAsync), LLRSFUNC(Asset), LLRSFUNC(File),
-  LLRSFUNC(FileAsync),  LLRSFUNC(Raw),   LLRSFUNC(WaitAsync),
+  LLRSFUNC(AssetAsync), LLRSFUNC(Asset),     LLRSFUNC(Count),
+  LLRSFUNC(File),       LLRSFUNC(FileAsync), LLRSFUNC(Raw),
+  LLRSFUNC(WaitAsync),
 LLRSEND                                // Pcm.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

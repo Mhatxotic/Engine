@@ -192,12 +192,16 @@ static const string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
     case LUA_TUSERDATA:
     { // Save stack count and restore it when leaving scope
       const LuaStackSaver lssUserData{ lS };
-      // Read internal engine name if we can or return generic type
+      // Get metadata and return if not metadata (generic userdata)
       LuaUtilGetMetaTable(lS, -1);
+      if(!LuaUtilIsTable(lS, -1))
+        return StrFormat("<userdata:$>", LuaUtilToPtr(lS, iIndex));
+      // Read internal engine name and return generic data if not a string
       LuaUtilPushStr(lS, cCommon->LuaName());
       LuaUtilGetRaw(lS, -2);
-      return StrFormat("<$:$>", LuaUtilIsString(lS, -1) ?
-        LuaUtilToCppString(lS, -1) : "userdata", LuaUtilToPtr(lS, iIndex));
+      return StrFormat("<$:$>",
+        LuaUtilIsString(lS, -1) ? LuaUtilToCppString(lS, -1) : "Unknown",
+        LuaUtilToPtr(lS, iIndex));
     } // Who knows? Function? Userdata?
     default: return StrFormat("<$:$>",
       LuaUtilGetType(lS, iIndex), LuaUtilToPtr(lS, iIndex));

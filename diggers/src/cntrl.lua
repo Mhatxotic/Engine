@@ -11,21 +11,18 @@
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
 local unpack<const> = table.unpack;
--- M-Engine function aliases ----------------------------------------------- --
-local CoreTicks<const> = Core.Ticks;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitBook, InitFile, InitLobby, InitMap, InitRace, PlayStaticSound,
-  LoadResources, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot,
-  SetKeys, aGlobalData, fontSpeech;
+local BlitSLT, BlitLT, Fade, InitBook, InitFile, InitLobby, InitMap, InitRace,
+  LoadResources, PlayStaticSound, PrintC, RenderShadow, RenderTipShadow,
+  SetCallbacks, SetHotSpot, SetKeys, aGlobalData, fontSpeech;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets required
-      aFlashCache,                     -- Hot point flash data
       aFlashData,                      -- Active hot point
       aSpeechList,                     -- Controller speeches list
+      iAnimTimer,                      -- Action timer
       iHotSpotId, iKeyBankId,          -- Selected hotspot and keybank ids
       iHotSpotIdNew, iHotSpotIdCont,   -- Hot spot id (new game / continue)
       iKeyBankIdNew, iKeyBankIdCont,   -- Key bank id (new game / continue)
-      iLastHotpoint,                   -- Last hot point selected
       iSpeechIndex,                    -- Current speech index
       iSpeechListCount,                -- Controller speech chatter frame
       iSpeechListLoop,                 -- Controller speech chatter loop point
@@ -33,35 +30,42 @@ local aAssets,                         -- Assets required
       iSSelect,                        -- Select sound effect id
       sMsg,                            -- Controller speech message
       texCon,                          -- Controller texture
-      texLobby;                        -- Lobby texture
+      texZmtc;                         -- Zmtc background texture
 -- Tile ids (see data.lua/aAssetsData.cntrl.P) ----------------------------- --
-local tileConAnim<const> = 1;          local tileCon<const>     = 5;
-local tileSpeech<const>  = 6;          local tileFish<const>    = 7;
-local tileMap<const>     = 12;         local tileRace<const>    = 14;
-local tileBook<const>    = 16;         local tileFile<const>    = 18;
+local tileSpeech<const>  = 1;          local tileConAnim<const> = 1;
+local tileFish<const>    = 4;          local tileMap<const>     = 8;
+local tileRace<const>    = 9;          local tileBook<const>    = 10;
+local tileFile<const>    = 11;
+-- Data for flashing textures to help the player know what to do ----------- --
+local aFlashCache<const> = {
+  [tileMap]  = { tileMap,  9,   9 }, [tileRace] = { tileRace, 242, 160 },
+  [tileBook] = { tileBook, 9, 176 }, [tileFile] = { tileFile,  76, 181 },
+};
 -- Render callback --------------------------------------------------------- --
 local function ProcRender()
-  -- Frame timer slowed down
-  local iAnimTime<const> = CoreTicks() // 10;
-  -- Draw backdrop, controller screen and animated fish
-  texLobby:BlitLT(-54, 0);
-  texCon:BlitSLT(tileCon, 8, 8);
-  texCon:BlitSLT(iAnimTime % 5 + tileFish, 9, 119);
-  -- Render shadow
+  -- Draw backdrop, controller screen and shadow around it
+  BlitLT(texZmtc, -96, 0);
+  BlitLT(texCon, 8, 8);
   RenderShadow(8, 8, 312, 208);
-  -- Draw speech bubble
+  -- Draw animated fish. The first tile is already drawn.
+  local iFishAnimId<const> = iAnimTimer % 5;
+  if iFishAnimId > 0 then BlitSLT(texCon, tileFish + iFishAnimId, 19, 135) end;
+  -- Controller talking?
   if iSpeechTimer > 0 then
-    -- Draw yap
-    texCon:BlitSLT(iAnimTime % 4 + tileConAnim, 88, 36);
-    -- Draw flash
-    if aFlashData then texCon:BlitSLT(iAnimTime % 2 + aFlashData[1],
-      aFlashData[2], aFlashData[3]) end;
-    -- Draw speech bubble
-    texCon:BlitSLT(tileSpeech, 0, 150);
-    -- Draw text
-    fontSpeech:PrintC(78, 157, sMsg);
-    -- Decrement speech timer
-    iSpeechTimer = iSpeechTimer - 1;
+    -- Draw controller speaking. The first tile is already drawn.
+    local iAnimId<const> = iAnimTimer % 4;
+    if iAnimId > 0 then BlitSLT(texCon, iAnimId + tileConAnim, 100, 36) end;
+    -- Have flash data?
+    if aFlashData then
+      -- Draw flashing hotspot. The first tile is already drawn.
+      local iFlashAnimId<const> = iAnimTimer % 2;
+      if iFlashAnimId > 0 then
+        BlitSLT(texCon, iFlashAnimId + aFlashData[1],
+          aFlashData[2], aFlashData[3]) end;
+    end
+    -- Draw speech bubble and caption
+    BlitSLT(texCon, tileSpeech, 147, 139);
+    PrintC(fontSpeech, 225, 146, sMsg);
   end
   -- Draw tip
   RenderTipShadow();
@@ -77,6 +81,10 @@ local function ProcLogic()
   elseif iSpeechIndex == iSpeechListLoop then iSpeechIndex = 0 end;
   -- Increment index
   iSpeechIndex = iSpeechIndex + 1;
+  -- Calculate animation timer
+  iAnimTimer = iSpeechIndex // 10;
+  -- Decrease speech timer if controller speaking
+  if iSpeechTimer > 0 then iSpeechTimer = iSpeechTimer - 1 end;
 end
 -- Transition to another scene --------------------------------------------- --
 local function GoTransition(fcbOnFadeOut, ...);
@@ -87,7 +95,9 @@ local function GoTransition(fcbOnFadeOut, ...);
   -- GoTransition helper
   local function OnFadeOut()
     -- Dereference assets for garbage collection
-    texLobby, texCon = nil, nil;
+    aSpeechList, iAnimTimer, iHotSpotId, iKeyBankId, iSpeechIndex,
+      iSpeechListCount, iSpeechListLoop, iSpeechTimer, sMsg, texCon, texZmtc =
+        nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil;
     -- Do next procedure
     fcbOnFadeOut(unpack(aParams));
   end
@@ -110,19 +120,11 @@ local function OnFadedIn()
 end
 -- When controller resources have loaded? ---------------------------------- --
 local function OnAssetsLoaded(aResources)
-  -- Setup lobby texture
-  texLobby = aResources[1];
-  -- Setup controller texture
-  texCon = aResources[2];
-  -- Data for flashing textures to help the player know what to do
-  aFlashCache = {
-    [tileMap]  = { tileMap,  9,   9 }, [tileRace] = { tileRace, 232, 160 },
-    [tileBook] = { tileBook, 9, 176 }, [tileFile] = { tileFile,  73, 181 },
-  };
-  -- Set empty tip and speech timer
-  iSpeechTimer, sMsg, aFlashData, aSpeechList, iSpeechListCount,
-    iSpeechListLoop, iSpeechIndex, iLastHotpoint =
-      0, nil, nil, { }, 60, 0, 0, 0;
+  -- Set zmtc and controller texture handles
+  texZmtc, texCon = aResources[1], aResources[2];
+  -- Initialise animation and speech variables
+  iSpeechTimer, aSpeechList, iSpeechListCount, iSpeechListLoop, iSpeechIndex,
+    iAnimTimer = 0, { }, 60, 0, 0, 0;
   -- Add a speech item
   local function AddSpeechItem(sString, iId)
     aSpeechList[iSpeechListCount] = { sString, aFlashCache[iId] };
@@ -186,24 +188,23 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitBook, InitFile, InitLobby, InitMap, InitRace, LoadResources,
-    PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderShadow,
-    RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, aAssetsData,
-    aCursorIdData, aGlobalData, aSfxData, fontSpeech =
-      GetAPI("Fade", "InitBook", "InitFile", "InitLobby", "InitMap",
-        "InitRace", "LoadResources", "PlayStaticSound", "RegisterHotSpot",
-        "RegisterKeys", "RenderShadow", "RenderTipShadow", "SetCallbacks",
-        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData", "aGlobalData",
-        "aSfxData", "fontSpeech");
+  BlitSLT, BlitLT, Fade, InitBook, InitFile, InitLobby, InitMap, InitRace,
+    LoadResources, PlayStaticSound, PrintC, RegisterHotSpot, RegisterKeys,
+    RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys,
+    aAssetsData, aCursorIdData, aGlobalData, aSfxData, fontSpeech =
+      GetAPI("BlitSLT", "BlitLT", "Fade", "InitBook", "InitFile", "InitLobby",
+        "InitMap", "InitRace", "LoadResources", "PlayStaticSound", "PrintC",
+        "RegisterHotSpot", "RegisterKeys", "RenderShadow", "RenderTipShadow",
+        "SetCallbacks", "SetHotSpot", "SetKeys", "aAssetsData",
+        "aCursorIdData", "aGlobalData", "aSfxData", "fontSpeech");
   -- Set assets data
-  aAssets = { aAssetsData.lobbyc, aAssetsData.cntrl };
+  aAssets = { aAssetsData.zmtc, aAssetsData.cntrl };
   -- Set sound effect ids
   iSSelect = aSfxData.SELECT;
   -- Required cursor id
   local iCSelect<const>, iCExit<const> =
     aCursorIdData.SELECT, aCursorIdData.EXIT;
   -- Set up hotspots data
--- Hot spot hover functions ------------------------------------------------ --
   local aHSMap<const>, aHSBook<const>, aHSFile<const>,
         aHSCntrl<const>, aHSExit<const> =
     {   9,   9,  48,  52, 0, iCSelect, "SELECT ZONE", false, GoMap   },
@@ -213,7 +214,7 @@ local function OnScriptLoaded(GetAPI)
     {   0,   0,   0, 240, 3, iCExit,   "GO TO LOBBY", false, GoLobby }
   -- Register hotspots for new game
   iHotSpotIdNew = RegisterHotSpot({ aHSMap, aHSBook, aHSFile,
-    { 242, 160,  19, 123, 0, iCSelect, "SELECT RACE", false, GoRace  },
+    { 243, 160,  18,  44, 0, iCSelect, "SELECT RACE", false, GoRace  },
     aHSCntrl, aHSExit });
   -- Register hotspots for continue game
   iHotSpotIdCont =

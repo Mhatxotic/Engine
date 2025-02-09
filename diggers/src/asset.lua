@@ -21,7 +21,7 @@ local aAssetsData<const> = {
   font16 = { T=3, F="font16", P={ 20, 20,  4,  4,  0, 96, 32, 63,
     -- 032 033 034 035 036 037 038 039 040 041 042 043 044 045 046 047 048 049
     --      !   "   #   $   %   &   '   (   )   *   +   ,   -   .   /   0   1
-    {   4,  5,  8, 11,  9, 11, 10,  4,  5,  5,  9,  9,  3, 13,  2, 11, 13, 12,
+    {   4,  5,  8, 11,  9, 11, 10,  4,  5,  5,  9,  9,  4, 13,  3, 11, 13, 12,
     -- 050 051 052 053 054 055 056 057 058 059 060 061 062 063 064 065 066 067
     --  2   3   4   5   6   7   8   9   :   ;   <   =   >   ?   @   A   B   C
        13, 14, 13, 13, 13, 13, 13, 13,  3, 13, 11, 12, 11, 13, 13, 16, 16, 13,
@@ -42,19 +42,26 @@ local aAssetsData<const> = {
   -- Tiny font data ----------- TW  TH  PX  PY  TF  CT  CS  CD  AUTOFILL --- --
   font5 = { T=3, F="font5", P={  4,  6,  4,  2,  0, 96, 32, 63, {} } },
   -- Speech font data ----------- TW  TH  PX  PY  TF  CT  CS  CD ----------- --
-  font10 = { T=3, F="font10", P={  8, 10,  1,  1,  0, 59, 32, 63,
+  font10 = { T=3, F="font10", P={  8, 11,  1,  0,  0, 96, 32, 63,
     -- 032 033 034 035 036 037 038 039 040 041 042 043 044 045 046 047 048 049
     --      !   "   #   $   %   &   '   (   )   *   +   ,   -   .   /   0   1
     {   2,  2,  4,  7,  4,  8,  6,  2,  4,  4,  7,  6,  2,  5,  2,  5,  5,  4,
     -- 050 051 052 053 054 055 056 057 058 059 060 061 062 063 064 065 066 067
     --  2   3   4   5   6   7   8   9   :   ;   <   =   >   ?   @   A   B   C
-        5,  5,  5,  5,  5,  5,  5,  5,  2,  3,  5,  6,  5,  5,  8,  5,  5,  5,
+        4,  4,  5,  4,  4,  4,  4,  4,  2,  3,  5,  6,  5,  5,  8,  5,  5,  5,
     -- 068 069 070 071 072 073 074 075 076 077 078 079 080 081 082 083 084 085
     --  D   E   F   G   H   I   J   K   L   M   N   O   P   Q   R   S   T   U
-        5,  5,  5,  5,  5,  4,  4,  5,  5,  6,  6,  5,  5,  5,  5,  5,  6,  5,
-    -- 086 087 088 089 090
-    --  V   W   X   Y   Z
-        6,  6,  6,  6,  5 } } },
+        5,  5,  5,  6,  6,  4,  6,  6,  5,  6,  6,  5,  5,  5,  6,  5,  6,  5,
+    -- 086 087 088 089 090 091 092 093 094 095 096 097 098 099 100 101 102 103
+    --  V   W   X   Y   Z   [   \   ]   ^   _   `   a   b   c   d   e   f   g                        a
+        6,  6,  6,  6,  5,  9, 12,  9,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+    -- 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121
+    --  h   i   j   k   l   m   n   o   p   q   r   s   t   u   v   w   x   y
+        4,  2,  4,  5,  2,  6,  4,  4,  4,  4,  4,  4,  4,  4,  4,  6,  4,  4,
+    -- 122 123 124 125 126 127
+    --  z   {   |   }   ~   �
+        4,  4,  4,  4,  4,  4 } } },
+
   -- intro.lua ------------------------------------------------------------- --
   intro = { T = 8, F = "intro" },
   -- intro.lua, title.lua, tcredits.lua ------------------------------------ --
@@ -70,42 +77,35 @@ local aAssetsData<const> = {
   titlem = { T = 7, F = "title" },
   -- cntrl.lua, file.lua, lobby.lua, race.lua ------------------------------ --
   lobbyc = { T = 10, F = "lobbyc", P = { 0, {
-      0, 272, 512, 240, -- [00] Background graphic
-      0,   0, 304, 200, -- [01] Lobby graphic
-      0, 214, 238,  57, -- [02] Foliage graphic left
-    305,   0, 207, 184, -- [03] Foliage graphic right
-    305, 185,  93,  73, -- [04] Fire animation graphic B
-    400, 185,  93,  73  -- [05] Fire animation graphic C
+      0,   0, 304, 200, -- [00] Lobby graphic
+      0, 200, 238,  56, -- [01] Foliage graphic left
+    305,  75, 207, 184, -- [02] Foliage graphic right
+    324,   0,  94,  74, -- [03] Fire animation graphic B
+    418,   0,  94,  74  -- [04] Fire animation graphic C
   } } },
-  -- cntrl.lua, file.lua --------------------------------------------------- --
+  -- file.lua -------------------------------------------------------------- --
+  file = { T = 2, F = "file", P = { 0 } },
+  -- cntrl.lua ------------------------------------------------------------- --
   cntrl = { T = 10, F = "cntrl",  P = { 0, {
-      0, 272, 428, 240, -- [00] Trade centre outside background
-      0,   0, 160,  84, -- [01] Controller talking <1/4>
-      0,  85, 160,  84, -- [02] Controller talking <2/4>
-      0, 170, 160,  84, -- [03] Controller talking <3/4>
-      0, 255, 160,  84, -- [04] Controller talking <4/4>
-    208, 312, 304, 200, -- [05] Controller background screen
-    356, 250, 156,  24, -- [06] Controller speech bubble
-    273, 275,  47,  36, -- [07] Fish swimming <1/5>
-    321, 275,  47,  36, -- [08] Fish swimming <2/5>
-    369, 275,  47,  36, -- [09] Fish swimming <3/5>
-    417, 275,  47,  36, -- [10] Fish swimming <4/5>
-    465, 275,  47,  36, -- [11] Fish swimming <5/5>
-      0, 412,  63,  41, -- [12] Map flashing <1/2>
-     64, 412,  63,  41, -- [13] Map flashing <2/2>
-    128, 409,  32,  44, -- [14] Race flashing <1/2>
-    161, 409,  32,  44, -- [15] Race flashing <2/2>
-      0, 454,  79,  31, -- [16] Book flashing <1/2>
-     80, 454,  79,  31, -- [17] Book flashing <2/2>
-      0, 486,  95,  26, -- [18] File flashing <1/2>
-     96, 486,  95,  26, -- [19] File flashing <2/2>
-    208,   0, 304, 200  -- [20] Load/Save file background
+      0,   0, 304, 200, -- [00] Controller background screen
+    164, 200, 156,  23, -- [01] Controller speech bubble
+    376,   0, 136,  82, -- [02] Controller talking <2/4> (1/4 in tile 0)
+    376,  82, 136,  82, -- [03] Controller talking <3/4>
+    376, 164, 136,  82, -- [04] Controller talking <4/4>
+    304,  44,  28,  18, -- [05] Fish swimming <2/5> (1/5 in tile 0)
+    332,  44,  28,  18, -- [06] Fish swimming <3/5>
+    304,  62,  28,  18, -- [07] Fish swimming <4/5>
+    332,  62,  28,  18, -- [08] Fish swimming <5/5>
+    311,   0,  45,  40, -- [09] Map flashing <2/2> (1/2 in tile 0)
+    356,   0,  20,  44, -- [10] Race flashing <2/2> (1/2 in tile 0)
+     90, 200,  74,  31, -- [11] Book flashing <2/2> (1/2 in tile 0)
+      0, 200,  90,  26, -- [12] File flashing <2/2> (1/2 in tile 0)
   } } },
   -- scene.lua ------------------------------------------------------------- --
-  scene = { T = 10, F = false, P = { 0, {
-      0,   0, 320, 240, -- [00] The scene preview photograph
-    192, 272, 320, 240, -- [01] Pile of gold preview
-  } } },
+  scene = { T = 2, F = false, P = { 0 } }, -- File filled in at runtime
+  scenez = { T = 2, F = "scene", P = { 0 } },
+  -- end.lua, ending.lua, scene.lua ---------------------------------------- --
+  scenem = { T = 7, F = "select" },
   -- shop.lua -------------------------------------------------------------- --
   shopm = { T = 7, F = "shop" },
   shop = { T = 10, F = "shop", P = { 0, {
@@ -130,7 +130,7 @@ local aAssetsData<const> = {
     264, 132,  65,  65, -- [18] Holographic animation <6/7>
     330, 132,  65,  65, -- [19] Holographic animation <7/7>
     208, 312, 304, 200, -- [20] Shop background
-      0, 417, 112,  24, -- [21] Shopkeeper speech bubble
+      0, 418, 112,  23, -- [21] Shopkeeper speech bubble
       0, 264,  48,  48, -- [22] Shopkeeper talking animation <1/4>
      49, 264,  48,  48, -- [23] Shopkeeper talking animation <2/4>
      98, 264,  48,  48, -- [24] Shopkeeper talking animation <3/4>
@@ -170,36 +170,64 @@ local aAssetsData<const> = {
   -- bank.lua -------------------------------------------------------------- --
   bankm = { T = 7, F = "bank" },
   bank = { T = 10, F = "bank", P = { 0, {
-      0,   0,  80,  94, -- [00] Grablin banker talking <1/4>
-     80,   0,  80,  94, -- [01] Grablin banker talking <2/4>
-    160,   0,  80,  94, -- [02] Grablin banker talking <3/4>
-    240,   0,  80,  94, -- [03] Grablin banker talking <4/4>
-    320,   0,  80,  94, -- [04] Habbish banker talking <1/4>
-    400,   0,  80,  94, -- [05] Habbish banker talking <2/4>
-      0,  94,  80,  94, -- [06] Habbish banker talking <3/4>
-     80,  94,  80,  94, -- [07] Habbish banker talking <4/4>
-    160,  94,  80,  94, -- [08] F'Targ banker talking <1/4>
-    240,  94,  80,  94, -- [09] F'Targ banker talking <2/4>
-    320,  94,  80,  94, -- [10] F'Targ banker talking <3/4>
-    400,  94,  80,  94, -- [11] F'Targ banker talking <4/4>
-    208, 312, 304, 200, -- [12] Bank background scene
-      0, 488, 112,  24  -- [13] Banker speech bubble
+      0,   0, 304, 200, -- [00] Bank background scene
+      0, 200, 112,  23, -- [01] Banker speech bubble
+    304,   0,  63,  88, -- [02] Grablin banker talking <2/4> (1/4 in tile 0)
+    367,   0,  63,  88, -- [03] Grablin banker talking <3/4>
+    430,   0,  63,  88, -- [04] Grablin banker talking <4/4>
+    304,  88,  63,  88, -- [05] Habbish banker talking <2/4> (1/4 in tile 0)
+    367,  88,  63,  88, -- [06] Habbish banker talking <3/4>
+    430,  88,  63,  88, -- [07] Habbish banker talking <4/4>
+    304, 176,  63,  88, -- [08] F'Targ banker talking <2/4> (1/4 in tile 0)
+    367, 176,  63,  88, -- [09] F'Targ banker talking <3/4>
+    430, 176,  63,  88  -- [10] F'Targ banker talking <4/4>
   } } },
-  -- end.lua, ending.lua, scene.lua ---------------------------------------- --
-  scenem = { T = 7, F = "select" },
   -- book.lua -------------------------------------------------------------- --
-  book = { T = 10, F = "book", P = { 0, {
+  bookcover = { T = 10, F = "bookcover", P = { 0, {
       0,   0, 304, 200, -- [00] Book cover
-    305,   0,  55, 200, -- [01] Book spine
   } } },
-  bookpage = { T = 1, F = false, P = { 255, 200, 0, 0, 0 } },
+  bookpage = { T = 10, F = "bookpage", P = { 0, {
+      0,   0, 304, 200, -- [00] Blank page
+    624,   0,  16, 111, -- [01] Control icons (Page 14)
+    608,   0,  16, 150, -- [02] Control icons (Page 15)
+    576, 150,  64, 153, -- [03] Control icons (Page 16)
+      0, 521, 162, 119, -- [04] Hud (Page 17)
+    499, 313, 141,  90, -- [05] Characteristic icons (Page 18)
+    160, 200,  84,  99, -- [06] Habbish (Page 23)
+     75, 200,  85, 102, -- [07] Grablin (Page 26)
+    244, 200,  81,  76, -- [08] Quarrior (Page 28)
+      0, 200,  74, 109, -- [09] F'Targ (Page 30)
+      0, 309,  92, 100, -- [10] Pirana Plant (Page 38)
+     92, 303,  91,  92, -- [11] Mushroom (Page 39)
+    304,   0, 176, 102, -- [12] Stegosaurus (Page 40)
+    304, 102, 168,  97, -- [13] Eggs (Page 43)
+      0, 409, 164, 101, -- [14] Mammoth (Page 45)
+    325, 199, 186, 114, -- [15] Sailor (Page 47)
+    184, 300, 156,  97, -- [16] Worm (Page 49)
+    191, 522,  53,  52, -- [17] Flood Gate (Page 57)
+    458, 590,  47,  47, -- [18] Telepole (Page 58)
+    389, 595,  53,  37, -- [19] Track for train (Page 60)
+    256, 534,  55,  37, -- [20] Train for rails (Page 61)
+    324, 592,  50,  40, -- [21] Small tunneller (Page 62)
+    257, 589,  53,  50, -- [22] Bridge (Page 63)
+    190, 588,  54,  51, -- [23] Boat (Page 64)
+    525, 523,  46,  47, -- [24] Corkscrew (Page 65)
+    454, 525,  54,  41, -- [25] Large tunneller (Page 67)
+    391, 523,  45,  48, -- [26] Explosives (Page 68)
+    324, 520,  51,  53, -- [27] Lift (Page 69)
+    588, 524,  51,  45, -- [28] Map (Page 71)
+    526, 594,  44,  36, -- [28] First-aid kit (Page 72)
+    480,   0,  76,  84, -- [29] Wanted (Page 82)
+  } } },
+  -- book.lua, lobby.lua, cntrl.lua, race.lua, ending.lua ------------------ --
+  zmtc = { T = 2, F = "zmtc", P = { 0 } },
   -- book.lua, lobby.lua --------------------------------------------------- --
   lobbym = { T = 7, F = "lobby" },
   -- lobby.lua ------------------------------------------------------------- --
   lobbyo = { T = 10, F = "lobbyo", P = { 0, {
-    208, 312, 304, 200, -- [00] Lobby open graphic
-    305, 185,  93,  73, -- [01] Fire animation graphic B
-    400, 185,  93,  73  -- [02] Fire animation graphic C
+      0,   0, 304, 200, -- [00] Lobby open graphic
+    304,   0,  94,  74, -- [01] Fire animation graphic <2/3> (1/3 in tile 0)
+    304,  74,  94,  74  -- [02] Fire animation graphic <3/3>
   } } },
   -- map.lua --------------------------------------------------------------- --
   map = { T = 10, F = "map", P = { 0, {
@@ -209,22 +237,24 @@ local aAssetsData<const> = {
   } } },
   -- race.lua -------------------------------------------------------------- --
   race = { T = 10, F = "race", P = { 0, {
-      0,   0,  64, 128, -- [00] F'Targ portrait
-     65,   0,  64, 128, -- [01] Habbish portrait
-    130,   0,  64, 128, -- [02] Grablin portrait
-    195,   0,  64, 128, -- [03] Quarrior portrait
-    260,   0,  64, 128, -- [04] Selected race stamp
-      0, 496, 160,  16, -- [05] F'Targ name label
-      0, 479, 160,  16, -- [06] Habbish name label
-      0, 462, 160,  16, -- [07] Grablin name label
-      0, 445, 160,  16, -- [08] Quarrior name label
-    208, 312, 304, 200, -- [09] Race page background
-    190, 496,  16,  16, -- [10] Teleport special indicator
-    171, 496,  16,  16  -- [11] First-aid special indicator
+      0,   0, 304, 200, -- [00] Race page background
+    320,   0,  64, 128, -- [01] F'Targ portrait
+    384,   0,  64, 128, -- [02] Habbish portrait
+    448,   0,  64, 128, -- [03] Grablin portrait
+    320, 128,  64, 128, -- [04] Quarrior portrait
+    384, 128,  64, 128, -- [05] Selected race stamp
+      0, 200, 160,  16, -- [06] F'Targ label
+      0, 216, 160,  16, -- [07] Habbish label
+      0, 232, 160,  16, -- [08] Grablin label
+    160, 200, 160,  16, -- [09] Quarrior label
+    304,   0,  16,  16, -- [09] First-aid special indicator
+    304,  16,  16,  16, -- [10] Digging special indicator
+    304,  32,  16,  16, -- [11] Teleport special indicator
+    304,  48,  16,  16  -- [12] Strength special indicator
   } } },
   -- game.lua -------------------------------------------------------------- --
   mapt = { T = 5, F = false },
-  mapo = { T = 5, F = false },
+  mapo = { T = 11, F = false },
   game = { T = 1, F = false, P = { 16, 16, 0, 0, 0 } },
   gamem = { T = 7, F = "game" },
   gamecm = { T = 7, F = false },
@@ -242,13 +272,11 @@ local aAssetsData<const> = {
       0,  95, 159,  95, -- [03] Opponent raised the cash (lose)
     208, 232, 304,  24  -- [04] Map post mortem status graphic
   } } },
+  -- post.lua -------------------------------------------------------------- --
   postm = { T = 7, F = "win" },
   -- ending.lua ------------------------------------------------------------ --
-  ending = { T = 1, F = false, P = { 428, 240, 0, 0, 0 } },
-  ending3 = { T = 10, F = "ending3",P = { 0, {
-      0,   0, 428, 240, -- [00] Desert sunset background
-      0, 330, 113, 182  -- [01] Stranger graphic
-  } } },
+  ending2 = { T = 1, F = false, P = { 428, 240, 0, 0, 0 } },
+  ending3 = { T = 8, F = "outro" },
   -- credit.lua ------------------------------------------------------------ --
   credits = { T = 2, F = "vignette", P = { 0 } },
   -- setup.lua ------------------------------------------------------------- --
@@ -256,15 +284,16 @@ local aAssetsData<const> = {
 };-- End ------------------------------------------------------------------- --
 -- Base code scripts that are to be loaded (don't modify the order)
 local aBaseScripts<const> = {
-  { T=9, F="data"   }, { T=9, F="input" }, { T=9, F="audio"   },
-  { T=9, F="bank"   }, { T=9, F="book"  }, { T=9, F="cntrl"   },
-  { T=9, F="credit" }, { T=9, F="debug" }, { T=9, F="end"     },
-  { T=9, F="ending" }, { T=9, F="fail"  }, { T=9, F="file"    },
-  { T=9, F="game"   }, { T=9, F="intro" }, { T=9, F="lobby"   },
-  { T=9, F="map"    }, { T=9, F="pause" }, { T=9, F="post"    },
-  { T=9, F="race"   }, { T=9, F="scene" }, { T=9, F="score"   },
-  { T=9, F="shop"   }, { T=9, F="title" }, { T=9, F="tcredit" },
-  { T=9, F="tntmap" }, { T=9, F="setup" },
+  { T=9, F="data"   }, { T=9, F="blit"    }, { T=9, F="input"  },
+  { T=9, F="audio"  }, { T=9, F="bank"    }, { T=9, F="book"   },
+  { T=9, F="bpages" }, { T=9, F="cntrl"   }, { T=9, F="credit" },
+  { T=9, F="debug"  }, { T=9, F="end"     }, { T=9, F="ending" },
+  { T=9, F="fail"   }, { T=9, F="file"    }, { T=9, F="game"   },
+  { T=9, F="intro"  }, { T=9, F="lobby"   }, { T=9, F="map"    },
+  { T=9, F="pause"  }, { T=9, F="post"    }, { T=9, F="race"   },
+  { T=9, F="scene"  }, { T=9, F="score"   }, { T=9, F="shop"   },
+  { T=9, F="title"  }, { T=9, F="tcredit" }, { T=9, F="tntmap" },
+  { T=9, F="setup"  },
 };
 -- Base fonts that are to be loaded (and scaled) --------------------------- --
 local aBaseFonts<const> = { aAssetsData.font16, aAssetsData.font8,
@@ -285,11 +314,6 @@ local aBaseSounds<const> = {
   { T=4, F="select"   }, { T=4, F="sale"     }, { T=4, F="switch"   },
   { T=4, F="hololoop" }, { T=4, F="holo"     }
 };
--- Load texture scale (overridable by texture mods) ------------------------ --
-local asScale<const> = Asset.File("tex/scale.txt", 0);
-local iTexScale<const> = math.floor(tonumber(asScale:ToString()));
-if iTexScale ~= 1 and iTexScale ~= 2 and iTexScale ~= 4 and iTexScale ~= 8 then
-  error("Invalid texture scale '"..iScale.."'!") end;
 -- Add all these to all the base assets to load ---------------------------- --
 local aBaseAssetsCategories<const> =
   { aBaseScripts, aBaseFonts, aBaseTextures, aBaseMasks, aBaseSounds };
@@ -308,6 +332,6 @@ local iBaseTextures<const> = iBaseFonts + #aBaseFonts;
 local iBaseMasks<const> = iBaseTextures + #aBaseTextures;
 local iBaseSounds<const> = iBaseMasks + #aBaseMasks;
 -- Return all the assets data to main.lua ---------------------------------- --
-return aAssetsData, iTexScale, aBaseAssets, iBaseScripts, iBaseFonts,
+return aAssetsData, aBaseAssets, iBaseScripts, iBaseFonts,
        iBaseTextures, iBaseMasks, iBaseSounds, aBaseSounds;
 -- End-of-File ============================================================= --

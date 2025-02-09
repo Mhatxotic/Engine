@@ -6,7 +6,7 @@
 ** ## in registering their own cvars. This file is invoked by             ## **
 ** ## 'lualib.hpp'.                                                       ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -35,6 +35,22 @@ struct AcVariable : public ArClass<Variable> {
 struct AgCVarId : public AgIntegerLGE<CVarEnums>
   { explicit AgCVarId(lua_State*const lS, const int iArg) :
       AgIntegerLGE{ lS, iArg, CVAR_FIRST, CVAR_MAX } {} };
+/* ========================================================================= */
+// $ Variable:Boolean
+// > State:boolean=The new cvar value.
+// < Success:integer=The return code.
+// ? Sets the new value based on the specified boolean. "0" if false or "1" if
+// ? true. See Variable.Result to see the possible results.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Boolean, 1, LuaUtilPushVar(lS,
+  AgVariable{lS, 1}().SetBoolean(AgBoolean{lS, 2})))
+/* ========================================================================= */
+// $ Variable:Clear
+// < Success:integer=The return code.
+// ? Clears the variable (with an empty string). See Variable.Result to see
+// ?the possible results.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Clear, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Clear()))
 /* ========================================================================= */
 // $ Variable:Destroy
 // ? Unregisters the specified console command.
@@ -73,32 +89,58 @@ LLFUNC(Default, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Default()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Get, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Get()))
 /* ========================================================================= */
+// $ Variable:Integer
+// > Value:integer=The new cvar value.
+// < Success:integer=The return code.
+// ? Sets the new value based on the specified integer. See Variable.Result to
+// ? see the possible results.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Integer, 1, LuaUtilPushVar(lS,
+  AgVariable{lS, 1}().SetInteger(AgLuaInteger{lS, 2})))
+/* ========================================================================= */
+// $ Variable:Number
+// > Value:numberr=The new cvar value.
+// < Success:integer=The return code.
+// ? Sets the new value based on the specified number. See Variable.Result to
+// ? see the possible results.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Number, 1, LuaUtilPushVar(lS,
+  AgVariable{lS, 1}().SetNumber(AgLuaNumber{lS, 2})))
+/* ========================================================================= */
 // $ Variable:Reset
 // ? Resets the cvar to the default value as registered.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Reset, 0, AgVariable{lS, 1}().Reset())
 /* ========================================================================= */
-// $ Variable:Set
+// $ Variable:String
 // > String:string=The new cvar value.
 // < Success:integer=The return code.
 // ? Sets the new value of the specified cvar name. An exception is raised if
 // ? any error occurs. See Variable.Result to see the possible results.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Set, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Set(AgString{lS, 2})))
+LLFUNC(String, 1,
+  LuaUtilPushVar(lS, AgVariable{lS, 1}().SetString(AgString{lS, 2})))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Variable:* member functions structure                               ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Variable:* member functions begin
-  LLRSFUNC(Default), LLRSFUNC(Destroy), LLRSFUNC(Empty), LLRSFUNC(Get),
-  LLRSFUNC(Id),      LLRSFUNC(Name),    LLRSFUNC(Reset), LLRSFUNC(Set),
+  LLRSFUNC(Boolean), LLRSFUNC(Clear),   LLRSFUNC(Default), LLRSFUNC(Destroy),
+  LLRSFUNC(Empty),   LLRSFUNC(Get),     LLRSFUNC(Id),      LLRSFUNC(Integer),
+  LLRSFUNC(Name),    LLRSFUNC(Number),  LLRSFUNC(Reset),   LLRSFUNC(String),
 LLRSEND                                // Variable:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Variable.* namespace functions                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
+// $ Variable.Count
+// < Count:integer=Total number of variables created.
+// ? Returns the total number of variable classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
+/* ========================================================================= */
 // $ Variable.Register
 // > Name:string=The engine cvar name.
 // > Default:string=The default cvar value.
@@ -161,9 +203,9 @@ LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->Save()))
 ** ######################################################################### **
 ** ## Variable.* namespace functions structure                            ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Variable.* namespace functions begin
-  LLRSFUNC(Exists),   LLRSFUNC(GetInt), LLRSFUNC(Register),
+  LLRSFUNC(Count),    LLRSFUNC(Exists), LLRSFUNC(GetInt), LLRSFUNC(Register),
   LLRSFUNC(ResetInt), LLRSFUNC(Save),   LLRSFUNC(SetInt),
 LLRSEND                                // Variable.* namespace functions end
 /* ========================================================================= **
@@ -199,6 +241,14 @@ LLRSKTEND                              // End of cvar register status flags
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(Result)                    // Beginning of cvar result flags
   LLRSKTITEM(CVS_,OK),                 LLRSKTITEM(CVS_,OKNOTCHANGED),
+  LLRSKTITEM(CVS_,NOTFOUND),           LLRSKTITEM(CVS_,NOTWRITABLE),
+  LLRSKTITEM(CVS_,NOTINTEGER),         LLRSKTITEM(CVS_,NOTFLOAT),
+  LLRSKTITEM(CVS_,NOTBOOLEAN),         LLRSKTITEM(CVS_,NOTUNSIGNED),
+  LLRSKTITEM(CVS_,NOTPOW2),            LLRSKTITEM(CVS_,NOTALPHA),
+  LLRSKTITEM(CVS_,NOTNUMERIC),         LLRSKTITEM(CVS_,NOTALPHANUMERIC),
+  LLRSKTITEM(CVS_,NOTFILENAME),        LLRSKTITEM(CVS_,TRIGGERDENIED),
+  LLRSKTITEM(CVS_,TRIGGEREXCEPTION),   LLRSKTITEM(CVS_,EMPTY),
+  LLRSKTITEM(CVS_,ZERO),               LLRSKTITEM(CVS_,NOTYPESET),
 LLRSKTEND                              // End of cvar result flags
 /* ========================================================================= **
 ** ######################################################################### **

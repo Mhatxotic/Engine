@@ -552,33 +552,68 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc,
 /* -- Hashing functions ---------------------------------------------------- */
 #define DEFINE_HASH_FUNCS(x, s, f) \
   namespace x ## functions { \
-    static Memory HashPtrRaw(const unsigned char*const ucpIn, \
+    /* -- Hash raw ptr/size and return raw hash --------------------------- */\
+    static Memory HMR(const unsigned char*const ucpIn, const size_t stLen) \
+      { Memory mbOut{ s }; \
+        x(ucpIn, stLen, mbOut.MemPtr<unsigned char>()); \
+        return mbOut; } \
+    /* -- Hash raw data and return raw hash ------------------------------- */\
+    static Memory HMM(const MemConst &mcData) \
+      { return HMR(mcData.MemPtr<unsigned char>(), mcData.MemSize()); } \
+    /* -- Hash raw ptr/size and return string hash ------------------------ */\
+    static const string HSR(const unsigned char*const ucpIn, \
       const size_t stLen) \
-        { Memory mbOut{ s }; \
-          x(ucpIn, stLen, mbOut.MemPtr<unsigned char>()); \
-          return mbOut; } \
-    static const string HashPtr(const unsigned char*const ucpIn, \
-      const size_t stLen) \
-        { return CryptBin2Hex(StdMove(HashPtrRaw(ucpIn, stLen))); } \
-    static const string HashStr(const string &strIn) \
-      { return HashPtr(reinterpret_cast<const unsigned char*>(strIn.data()), \
+        { return CryptBin2HexL(StdMove(HMR(ucpIn, stLen))); } \
+    /* -- Hash string data and return string hash ------------------------- */\
+    static const string HSS(const string &strIn) \
+      { return HSR(reinterpret_cast<const unsigned char*>(strIn.data()), \
           strIn.length()); } \
-    static const string HashMB(const MemConst &mcSrc) \
-      { return HashPtr(mcSrc.MemPtr<unsigned char>(), mcSrc.MemSize()); } \
-    static Memory HashPtrRaw(const void*const vpSalt, const size_t stSaltSize,\
+    /* -- Hash string data and return raw hash ---------------------------- */\
+    static Memory HMS(const string &strIn) \
+      { return HMR(reinterpret_cast<const unsigned char*>(strIn.data()), \
+          strIn.length()); } \
+    /* -- Hash raw data and return string hash ---------------------------- */\
+    static const string HSM(const MemConst &mcData) \
+      { return HSR(mcData.MemPtr<unsigned char>(), mcData.MemSize()); } \
+    /* -- Hash raw key ptr/size, raw data ptr/size and return raw hash ---- */\
+    static Memory HMRR(const void*const vpSalt, const size_t stSaltSize,\
       const unsigned char*const cpDest, const size_t stDestSize) \
         { return CryptHMACCall(f(), vpSalt, stSaltSize, cpDest, stDestSize); }\
-    static Memory HashStrRaw(const string &strKey, const string &strIn) \
-      { return HashPtrRaw( \
-          reinterpret_cast<const void*>(strKey.data()), \
-          strKey.size(), \
-          reinterpret_cast<const unsigned char*>(strIn.data()),\
-          strIn.size()); } \
-    static const string HashStr(const string &strKey, const string &strIn) \
-      { return CryptBin2Hex(StdMove(HashStrRaw(strKey, strIn))); } \
-  };
+    /* -- Hash string key, string data and return raw hash ---------------- */\
+    static Memory HMSS(const string &strSalt, const string &strIn) \
+      { return HMRR(reinterpret_cast<const void*>(strSalt.data()), \
+                    strSalt.size(), \
+                    reinterpret_cast<const unsigned char*>(strIn.data()), \
+                    strIn.size()); } \
+    /* -- Hash string key, string data and return string hash ------------- */\
+    static const string HSSS(const string &strSalt, const string &strIn) \
+      { return CryptBin2HexL(StdMove(HMSS(strSalt, strIn))); } \
+    /* -- Hash raw key, raw data and return raw hash ---------------------- */\
+    static Memory HMMM(const MemConst &mcSalt, const MemConst &mcData) \
+      { return HMRR(mcSalt.MemPtr<const void>(), mcSalt.MemSize(), \
+                    mcData.MemPtr<unsigned char>(), mcData.MemSize()); } \
+    /* -- Hash raw key, string data and return raw hash ------------------- */\
+    static Memory HMMS(const MemConst &mcSalt, const string &strData) \
+      { return HMRR(mcSalt.MemPtr<const void*>(), \
+                    mcSalt.MemSize(), \
+                    reinterpret_cast<const unsigned char*>(strData.data()), \
+                    strData.size()); } \
+    /* -- Hash string key, raw data and return raw hash ------------------- */\
+    static Memory HMSM(const string &strSalt, const MemConst &mcData) \
+      { return HMRR(reinterpret_cast<const void*>(strSalt.data()), \
+          strSalt.size(), mcData.MemPtr<unsigned char>(), mcData.MemSize()); }\
+    /* -- Hash string key, string data and return string hash ------------- */\
+    static const string HSMM(const MemConst &mcSalt, const MemConst &mcData) \
+      { return CryptBin2HexL(StdMove(HMMM(mcSalt, mcData))); } \
+    /* -- Hash string key, raw data and return string hash ---------------- */\
+    static const string HSMS(const MemConst &mcSalt, const string &strData) \
+      { return CryptBin2HexL(StdMove(HMMS(mcSalt, strData))); } \
+    /* -- Hash raw key, string data and return string hash ---------------- */\
+    static const string HSSM(const string &strSalt, const MemConst &mcData) \
+      { return CryptBin2HexL(StdMove(HMSM(strSalt, mcData))); } \
+  };/* --------------------------------------------------------------------- */
 DEFINE_HASH_FUNCS(SHA1,   SHA_DIGEST_LENGTH,    EVP_sha1);   // Insecure
-DEFINE_HASH_FUNCS(SHA224, SHA224_DIGEST_LENGTH, EVP_sha224); // Secure
+DEFINE_HASH_FUNCS(SHA224, SHA224_DIGEST_LENGTH, EVP_sha224); // Maybe secure
 DEFINE_HASH_FUNCS(SHA256, SHA256_DIGEST_LENGTH, EVP_sha256); // Secure
 DEFINE_HASH_FUNCS(SHA384, SHA384_DIGEST_LENGTH, EVP_sha384); // Very secure
 DEFINE_HASH_FUNCS(SHA512, SHA512_DIGEST_LENGTH, EVP_sha512); // Really secure
@@ -633,7 +668,7 @@ static const string CryptURLDecode(const char*const cpURL)
   return osS.str();
 }
 /* ------------------------------------------------------------------------- */
-static const Memory CryptRandomBlock(const size_t stSize)
+static Memory CryptRandomBlock(const size_t stSize)
 { // Memory to hold data
   Memory mData{ stSize };
   // Fill data with random data

@@ -957,9 +957,11 @@ for(const JoyInfo &jiRef : jlList)
      .Data(jiRef.JoyGUID()).Data(jiRef.JoyGamePadName())
      .Data(jiRef.IdentGet());
 } // Print totals
-cConsole->AddLineF("$$ connected ($ supported).", sTable.Finish(),
-  StrCPluraliseNum(cInput->JoyGetConnected(), "input", "inputs"),
-    jlList.size());
+cConsole->AddLineF("$$ connected ($ supported).\n"
+                   "Input flags are 0x$$.",
+  sTable.Finish(),
+    StrCPluraliseNum(cInput->JoyGetConnected(), "input", "inputs"),
+    jlList.size(), hex, cInput->FlagGet());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'input' function
 /* ========================================================================= */
@@ -2041,8 +2043,7 @@ for(const Thread*const tPtr : *cThreads)
 { // Get reference to class and write its data to the table
   const Thread &tRef = *tPtr;
   sTable.DataN(tRef.CtrGet()).Data(StrFromEvalTokens({
-    { tRef.ThreadHaveCallback(), 'C' },
-    { tRef.ThreadIsParamSet(),   'P' }, { tRef.ThreadIsRunning(),    'R' },
+    { tRef.ThreadHaveCallback(), 'C' }, { tRef.ThreadIsParamSet(),   'P' },
     { tRef.ThreadShouldExit(),   'T' }, { tRef.ThreadIsException(),  'E' },
     { tRef.ThreadIsJoinable(),   'J' }, { tRef.ThreadIsExited(),     'X' },
   })).DataN(tRef.ThreadGetPerf()).DataN(tRef.ThreadGetExitCode())
@@ -2050,7 +2051,7 @@ for(const Thread*const tPtr : *cThreads)
        CCDeltaToClampedDouble(tRef.ThreadGetStartTime())))
      .Data(StrShortFromDuration(cLog->
        CCDeltaToClampedDouble(tRef.ThreadGetEndTime())))
-     .Data(StrShortFromDuration(tRef.ThreadIsRunning()
+     .Data(StrShortFromDuration(tRef.ThreadIsJoinable()
         ? cmHiRes.TimePointToClampedDouble(tRef.ThreadGetStartTime())
         : ClockTimePointRangeToClampedDouble(tRef.ThreadGetEndTime(),
             tRef.ThreadGetStartTime())))

@@ -5,7 +5,7 @@
 ** ## Defines the 'Fbo' namespace and methods for the guest to use in     ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -187,8 +187,7 @@ LLFUNC(SetVLTWHA, 0,
 // > Top:number=The top co-ordinate.
 // > Right:number=The right co-ordinate.
 // > Bottom:number=The bottom co-ordinate.
-// ? Sets the matrix of the specified fbo, meaning, these are the bounds of
-// ? where you can draw. Same as glOrtho().
+// ? Sets the 2D matrix of the specified fbo.
 // ? See: https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetMatrix, 0,
@@ -346,8 +345,6 @@ LLFUNC(IsFinished, 1,
 // < Top:number=Minimum viewable matrix Y position.
 // < Right:number=Maximum viewable matrix X position.
 // < Bottom:number=Maximum viewable matrix Y position.
-// < MatrixWidth:number=Current requested matrix width.
-// < MatrixHeight:number=Current requested matrix height.
 // ? Returns the current matrix information for the specified fbo.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetMatrix, 6,
@@ -385,7 +382,7 @@ LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().IdentGet()))
 ** ######################################################################### **
 ** ## Fbo:* member functions structure                                    ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Fbo:* member functions begin
   LLRSFUNC(Activate),     LLRSFUNC(Blit),           LLRSFUNC(BlitT),
   LLRSFUNC(Destroy),      LLRSFUNC(Finish),         LLRSFUNC(GetFloatCount),
@@ -397,7 +394,11 @@ LLRSMFBEGIN                            // Fbo:* member functions begin
   LLRSFUNC(SetTCX),       LLRSFUNC(SetVLTRB),       LLRSFUNC(SetVLTWH),
   LLRSFUNC(SetVLTWHA),    LLRSFUNC(SetVX),          LLRSFUNC(SetWireframe),
 LLRSEND                                // Fbo:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Fbo.* namespace functions                                           ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Fbo.Main
 // < Handle:Fbo=A handle to the main fbo object.
 // ? Returns a handle to the main FBO so you can draw to it. Changing the
@@ -474,6 +475,22 @@ LLFUNC(ConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(ConLock, 0, cConGraphics->SetCantDisable(AgBoolean{lS, 1}))
 /* ========================================================================= */
+// $ Fbo.Count
+// < Count:integer=Total number of fbos created.
+// ? Returns the total number of fbo classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
+/* ========================================================================= */
+// $ Fbo.Matrix
+// < Width:number=Current requested matrix width.
+// < Height:number=Current requested matrix height.
+// ? Returns the active matrix size of the main framebuffer. This is the value
+// ? set by cvars 'vid_orwidth', 'vid_orheight' and also modified with the
+// ? Fbo.Resize() function.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Matrix, 2, LuaUtilPushVar(lS, cFboCore->GetMatrixWidth(),
+                                     cFboCore->GetMatrixHeight()))
+/* ========================================================================= */
 // $ Fbo.Resize
 // < Width:number=The new width of the main frame buffer
 // < Height:number=The new height of the main frame buffer
@@ -493,12 +510,12 @@ LLFUNC(Resize, 1,
 ** ######################################################################### **
 ** ## Fbo.* namespace functions structure                                 ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Fbo.* namespace functions begin
   LLRSFUNC(ConEnabled), LLRSFUNC(ConHeight), LLRSFUNC(ConLock),
-  LLRSFUNC(ConSet),     LLRSFUNC(Create),    LLRSFUNC(Draw),
-  LLRSFUNC(IsDrawing),  LLRSFUNC(Main),      LLRSFUNC(OnRedraw),
-  LLRSFUNC(Resize),
+  LLRSFUNC(ConSet),     LLRSFUNC(Count),     LLRSFUNC(Create),
+  LLRSFUNC(Draw),       LLRSFUNC(IsDrawing), LLRSFUNC(Main),
+  LLRSFUNC(OnRedraw),   LLRSFUNC(Matrix),    LLRSFUNC(Resize),
 LLRSEND                                // Fbo.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

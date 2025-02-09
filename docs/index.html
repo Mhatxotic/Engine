@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.2.4.2 -->
-<!-- Automatically built at Tue Feb 04 13:05:31 2025 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.2.4.2 -->
+<!-- Reference for the Mhatxotic Engine API version 25.2.28.1 -->
+<!-- Automatically built at Sat Mar 01 00:33:27 2025 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.2.28.1 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.4.2">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.28.1">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.4.2">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.28.1">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.4.2">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.28.1">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.2.4.2 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.2.28.1 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.2.4.2 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.2.28.1 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.2.4.2 API reference</H1>
+	<H1>Mhatxotic Engine 25.2.28.1 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 826 functions (390 members, 436 methods) and 27 consts in 30 namespaces with 83 commands and 208 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 842 functions (402 members, 440 methods) and 27 consts in 30 namespaces with 83 commands and 210 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -160,8 +160,9 @@
 						<OL>
 							<LI><P>The archive class allows the programmer to load 7-zip archives into the engine in which any file loaded by the engine may exist in these archives as well. Although those files that exist on disk will always override any archive based file which is configured by the 'ast_override' cvar.  Archives with the extension specified in the cvar 'ast_bundles' in the current working directory will automatically be loaded at startup which is ".adb" by default (not .7z).  The executable file on Win32 systems is automatically loaded at startup in addition so that a programmer can store all assets inside the executable for portable distribution.  Of course the LZMA library handles the opening of such files so any such format of .7z file will work fine. Although it is recommended not to use solid archives as reading these archives will be extremely slow. Also note that encrypted or split archives are not supported yet as these features are not handled by the LZMA library.</P></LI>
 							<LI>
-								<B>Members</B> <I>(3 members)</I>
+								<B>Members</B> <I>(4 members)</I>
 								<OL>
+									<LI><A href="#Archive.Count">Count</A></LI>
 									<LI><A href="#Archive.Load">Load</A></LI>
 									<LI><A href="#Archive.LoadAsync">LoadAsync</A></LI>
 									<LI><A href="#Archive.WaitAsync">WaitAsync</A></LI>
@@ -195,7 +196,7 @@
 						<OL>
 							<LI><P>The Asset class allows the programmer to load files from disk for personal use and manipulation of that data with codecs or manually by the programmer.</P></LI>
 							<LI>
-								<B>Members</B> <I>(19 members)</I>
+								<B>Members</B> <I>(20 members)</I>
 								<OL>
 									<LI><A href="#Asset.Asset">Asset</A></LI>
 									<LI><A href="#Asset.AssetAsync">AssetAsync</A></LI>
@@ -203,6 +204,7 @@
 									<LI><A href="#Asset.CompileBlock">CompileBlock</A></LI>
 									<LI><A href="#Asset.CompileFunction">CompileFunction</A></LI>
 									<LI><A href="#Asset.CompileString">CompileString</A></LI>
+									<LI><A href="#Asset.Count">Count</A></LI>
 									<LI><A href="#Asset.Create">Create</A></LI>
 									<LI><A href="#Asset.Enumerate">Enumerate</A></LI>
 									<LI><A href="#Asset.EnumerateEx">EnumerateEx</A></LI>
@@ -265,6 +267,12 @@
 						<A href="#idx:Atlas">Atlas namespace</A>
 						<OL>
 							<LI><P>The atlas class allows dynamic building of an OpenGL texture by allowing the guest to combine multiple bitmaps into a single texture so there is less OpenGL texture id switching and fundamentally less CPU usage used.</P></LI>
+							<LI>
+								<B>Members</B> <I>(1 member)</I>
+								<OL>
+									<LI><A href="#Atlas.Count">Count</A></LI>
+								</OL>
+							</LI>
 							<LI><A href="#idx:Atlas">&#x25B2; Return to summary</A> / <A href="#idx.top">top</A></LI>
 						</OL>
 					</DIV>
@@ -307,8 +315,9 @@
 						<OL>
 							<LI><P>This gives the guest to have a virtual bin of the specified size and rectangles of a given size are placed inside until filled up.</P></LI>
 							<LI>
-								<B>Members</B> <I>(1 member)</I>
+								<B>Members</B> <I>(2 members)</I>
 								<OL>
+									<LI><A href="#Bin.Count">Count</A></LI>
 									<LI><A href="#Bin.Create">Create</A></LI>
 								</OL>
 							</LI>
@@ -337,8 +346,9 @@
 						<OL>
 							<LI><P>Contains functions for retrieving and setting text in the Clip.</P></LI>
 							<LI>
-								<B>Members</B> <I>(2 members)</I>
+								<B>Members</B> <I>(3 members)</I>
 								<OL>
+									<LI><A href="#Clip.Count">Count</A></LI>
 									<LI><A href="#Clip.Get">Get</A></LI>
 									<LI><A href="#Clip.Set">Set</A></LI>
 								</OL>
@@ -364,8 +374,9 @@
 						<OL>
 							<LI><P>The Command class allows creation and manipulation of console commands</P></LI>
 							<LI>
-								<B>Members</B> <I>(2 members)</I>
+								<B>Members</B> <I>(3 members)</I>
 								<OL>
+									<LI><A href="#Command.Count">Count</A></LI>
 									<LI><A href="#Command.Exists">Exists</A></LI>
 									<LI><A href="#Command.Register">Register</A></LI>
 								</OL>
@@ -473,7 +484,7 @@
 						<OL>
 							<LI><P>The window class contains functions for manipulating the Window.</P></LI>
 							<LI>
-								<B>Members</B> <I>(37 members)</I>
+								<B>Members</B> <I>(36 members)</I>
 								<OL>
 									<LI><A href="#Display.Attention">Attention</A></LI>
 									<LI><A href="#Display.Centre">Centre</A></LI>
@@ -502,7 +513,6 @@
 									<LI><A href="#Display.SetCursor">SetCursor</A></LI>
 									<LI><A href="#Display.SetFullScreen">SetFullScreen</A></LI>
 									<LI><A href="#Display.SetInterval">SetInterval</A></LI>
-									<LI><A href="#Display.SetMatrix">SetMatrix</A></LI>
 									<LI><A href="#Display.SetPos">SetPos</A></LI>
 									<LI><A href="#Display.SetSize">SetSize</A></LI>
 									<LI><A href="#Display.Transparent">Transparent</A></LI>
@@ -533,16 +543,18 @@
 						<OL>
 							<LI><P>The fbo class allows the programmer to create an OpenGL frame-buffer object which they can use to create seperate drawing canvases which they can apply special effects to without modifying other canvases.</P></LI>
 							<LI>
-								<B>Members</B> <I>(11 members)</I>
+								<B>Members</B> <I>(13 members)</I>
 								<OL>
 									<LI><A href="#Fbo.ConEnabled">ConEnabled</A></LI>
 									<LI><A href="#Fbo.ConHeight">ConHeight</A></LI>
 									<LI><A href="#Fbo.ConLock">ConLock</A></LI>
 									<LI><A href="#Fbo.ConSet">ConSet</A></LI>
+									<LI><A href="#Fbo.Count">Count</A></LI>
 									<LI><A href="#Fbo.Create">Create</A></LI>
 									<LI><A href="#Fbo.Draw">Draw</A></LI>
 									<LI><A href="#Fbo.IsDrawing">IsDrawing</A></LI>
 									<LI><A href="#Fbo.Main">Main</A></LI>
+									<LI><A href="#Fbo.Matrix">Matrix</A></LI>
 									<LI><A href="#Fbo.OnRedraw">OnRedraw</A></LI>
 									<LI><A href="#Fbo.Resize">Resize</A></LI>
 									<LI><A href="#Fbo.SetBlend">SetBlend</A></LI>
@@ -598,10 +610,11 @@
 						<OL>
 							<LI><P>The file class allows the programmer to read and write files from the game directory.</P></LI>
 							<LI>
-								<B>Members</B> <I>(24 members)</I>
+								<B>Members</B> <I>(25 members)</I>
 								<OL>
 									<LI><A href="#File.AppendOne">AppendOne</A></LI>
 									<LI><A href="#File.AppendOneStr">AppendOneStr</A></LI>
+									<LI><A href="#File.Count">Count</A></LI>
 									<LI><A href="#File.DirExists">DirExists</A></LI>
 									<LI><A href="#File.Enumerate">Enumerate</A></LI>
 									<LI><A href="#File.EnumerateEx">EnumerateEx</A></LI>
@@ -669,9 +682,10 @@
 						<OL>
 							<LI><P>The font class allows dynamic creation from font files using the FREETYPE library.</P></LI>
 							<LI>
-								<B>Members</B> <I>(4 members)</I>
+								<B>Members</B> <I>(5 members)</I>
 								<OL>
 									<LI><A href="#Font.Console">Console</A></LI>
+									<LI><A href="#Font.Count">Count</A></LI>
 									<LI><A href="#Font.Ftf">Ftf</A></LI>
 									<LI><A href="#Font.Image">Image</A></LI>
 									<LI><A href="#Font.Manifest">Manifest</A></LI>
@@ -749,10 +763,11 @@
 						<OL>
 							<LI><P>This allows the programmer to maniuplate supported freetype fonts forms asynchronously and send the objects to a font rendering object.</P></LI>
 							<LI>
-								<B>Members</B> <I>(5 members)</I>
+								<B>Members</B> <I>(6 members)</I>
 								<OL>
 									<LI><A href="#Ftf.Asset">Asset</A></LI>
 									<LI><A href="#Ftf.AssetAsync">AssetAsync</A></LI>
+									<LI><A href="#Ftf.Count">Count</A></LI>
 									<LI><A href="#Ftf.File">File</A></LI>
 									<LI><A href="#Ftf.FileAsync">FileAsync</A></LI>
 									<LI><A href="#Ftf.WaitAsync">WaitAsync</A></LI>
@@ -781,12 +796,13 @@
 						<OL>
 							<LI><P>This allows the programmer to manipulate images asynchronously and send the objects to the OpenGL if needed.  The list and order of supported formats can is subject to change without notice. Type 'imgfmts' in the console to see the most up to date list of formats supported.</P></LI>
 							<LI>
-								<B>Members</B> <I>(8 members)</I>
+								<B>Members</B> <I>(9 members)</I>
 								<OL>
 									<LI><A href="#Image.Asset">Asset</A></LI>
 									<LI><A href="#Image.AssetAsync">AssetAsync</A></LI>
 									<LI><A href="#Image.Blank">Blank</A></LI>
 									<LI><A href="#Image.Colour">Colour</A></LI>
+									<LI><A href="#Image.Count">Count</A></LI>
 									<LI><A href="#Image.File">File</A></LI>
 									<LI><A href="#Image.FileAsync">FileAsync</A></LI>
 									<LI><A href="#Image.Raw">Raw</A></LI>
@@ -872,8 +888,9 @@
 						<OL>
 							<LI><P>This allows the programmer to encode and decode Json objects.</P></LI>
 							<LI>
-								<B>Members</B> <I>(6 members)</I>
+								<B>Members</B> <I>(7 members)</I>
 								<OL>
+									<LI><A href="#Json.Count">Count</A></LI>
 									<LI><A href="#Json.File">File</A></LI>
 									<LI><A href="#Json.FileAsync">FileAsync</A></LI>
 									<LI><A href="#Json.String">String</A></LI>
@@ -908,8 +925,9 @@
 						<OL>
 							<LI><P>The mask class is a pixel-perfect 1-bit bitmask processing API which allows the programmer to create destructable terrain and collision testing whether the test maybe between two sprites or actual terrain background. You can create bitmasks as big as the system will allow.</P></LI>
 							<LI>
-								<B>Members</B> <I>(3 members)</I>
+								<B>Members</B> <I>(4 members)</I>
 								<OL>
+									<LI><A href="#Mask.Count">Count</A></LI>
 									<LI><A href="#Mask.Create">Create</A></LI>
 									<LI><A href="#Mask.CreateOne">CreateOne</A></LI>
 									<LI><A href="#Mask.CreateZero">CreateZero</A></LI>
@@ -920,7 +938,6 @@
 								<OL>
 									<LI><A href="#Mask:Clear">Clear</A></LI>
 									<LI><A href="#Mask:Copy">Copy</A></LI>
-									<LI><A href="#Mask:Count">Count</A></LI>
 									<LI><A href="#Mask:Destroy">Destroy</A></LI>
 									<LI><A href="#Mask:Erase">Erase</A></LI>
 									<LI><A href="#Mask:Fill">Fill</A></LI>
@@ -932,6 +949,7 @@
 									<LI><A href="#Mask:Name">Name</A></LI>
 									<LI><A href="#Mask:RayCast">RayCast</A></LI>
 									<LI><A href="#Mask:Save">Save</A></LI>
+									<LI><A href="#Mask:Tiles">Tiles</A></LI>
 									<LI><A href="#Mask:Width">Width</A></LI>
 								</OL>
 							</LI>
@@ -947,8 +965,9 @@
 						<OL>
 							<LI><P>The palette class allows creating and modifying palettes and uploading them to the GPU for use with 8-bit paletted textures. Only one palette can be active at once and textures marked with LF_PALETTE are affected by the palette.</P></LI>
 							<LI>
-								<B>Members</B> <I>(5 members)</I>
+								<B>Members</B> <I>(6 members)</I>
 								<OL>
+									<LI><A href="#Palette.Count">Count</A></LI>
 									<LI><A href="#Palette.Create">Create</A></LI>
 									<LI><A href="#Palette.Default">Default</A></LI>
 									<LI><A href="#Palette.Image">Image</A></LI>
@@ -1002,10 +1021,11 @@
 						<OL>
 							<LI><P>This allows the programmer to load pcm wave forms or decompress encoded pcm waveforms and send the objects to the OpenAL if needed. You can use the command 'pcmfmts' to see what formats are usable which are WAV (WaveForm Audio Format) PCM/INT/FLOAT/LE, CAF (CoreAudio Format), PCM/INT/FLOAT/LE/BE, OGG (OGG Vorbis) and MP3 (MPEG-Layer III).</P></LI>
 							<LI>
-								<B>Members</B> <I>(6 members)</I>
+								<B>Members</B> <I>(7 members)</I>
 								<OL>
 									<LI><A href="#Pcm.Asset">Asset</A></LI>
 									<LI><A href="#Pcm.AssetAsync">AssetAsync</A></LI>
+									<LI><A href="#Pcm.Count">Count</A></LI>
 									<LI><A href="#Pcm.File">File</A></LI>
 									<LI><A href="#Pcm.FileAsync">FileAsync</A></LI>
 									<LI><A href="#Pcm.Raw">Raw</A></LI>
@@ -1038,8 +1058,9 @@
 						<OL>
 							<LI><P>Contains functions for making a screenshot</P></LI>
 							<LI>
-								<B>Members</B> <I>(2 members)</I>
+								<B>Members</B> <I>(3 members)</I>
 								<OL>
+									<LI><A href="#SShot.Count">Count</A></LI>
 									<LI><A href="#SShot.Fbo">Fbo</A></LI>
 									<LI><A href="#SShot.Screen">Screen</A></LI>
 								</OL>
@@ -1064,8 +1085,9 @@
 						<OL>
 							<LI><P>The sample class allows loading of audio files into a single buffer. Samples can also be played with 3D positional audio.</P></LI>
 							<LI>
-								<B>Members</B> <I>(1 member)</I>
+								<B>Members</B> <I>(2 members)</I>
 								<OL>
+									<LI><A href="#Sample.Count">Count</A></LI>
 									<LI><A href="#Sample.Create">Create</A></LI>
 								</OL>
 							</LI>
@@ -1165,6 +1187,12 @@
 						<OL>
 							<LI><P>The source is a sound channel in OpenAL that can be manipulated such as */ changing volume, pitch, position and other things. It can only be       */ created by the Sample:Play() function.</P></LI>
 							<LI>
+								<B>Members</B> <I>(1 member)</I>
+								<OL>
+									<LI><A href="#Source.Count">Count</A></LI>
+								</OL>
+							</LI>
+							<LI>
 								<B>Methods</B> <I>(31 methods)</I>
 								<OL>
 									<LI><A href="#Source:Destroy">Destroy</A></LI>
@@ -1246,8 +1274,9 @@
 						<OL>
 							<LI><P>Allows creating of tables with properly justified and proportioned data. Useful for the neat display of debug data to the console or logging to a file.</P></LI>
 							<LI>
-								<B>Members</B> <I>(1 member)</I>
+								<B>Members</B> <I>(2 members)</I>
 								<OL>
+									<LI><A href="#Stat.Count">Count</A></LI>
 									<LI><A href="#Stat.Create">Create</A></LI>
 								</OL>
 							</LI>
@@ -1281,11 +1310,12 @@
 						<OL>
 							<LI><P>The stream class allows loading of large audio files such as ambience or music fuiles which are streamed into and played back from multiple buffers.  Only .OGG file format is supported at the moment. The entire file will be loaded into memory in it's compressed form. It will be decompressed into multiple buffers during playback.  The 'aud_strbufcount' cvar controls how many buffers are used to stream. The 'aud_strbufsiz' cvar controls the size of each buffers.  Since playback is done in separate threads, there is not much need to modify any of the above settings.</P></LI>
 							<LI>
-								<B>Members</B> <I>(6 members)</I>
+								<B>Members</B> <I>(7 members)</I>
 								<OL>
 									<LI><A href="#Stream.Asset">Asset</A></LI>
 									<LI><A href="#Stream.AssetAsync">AssetAsync</A></LI>
 									<LI><A href="#Stream.ClearEvents">ClearEvents</A></LI>
+									<LI><A href="#Stream.Count">Count</A></LI>
 									<LI><A href="#Stream.File">File</A></LI>
 									<LI><A href="#Stream.FileAsync">FileAsync</A></LI>
 									<LI><A href="#Stream.WaitAsync">WaitAsync</A></LI>
@@ -1346,13 +1376,15 @@
 						<OL>
 							<LI><P>The texture class allows the programmer to draw textures on the screen which also includes font management.</P></LI>
 							<LI>
-								<B>Members</B> <I>(5 members)</I>
+								<B>Members</B> <I>(7 members)</I>
 								<OL>
 									<LI><A href="#Texture.Console">Console</A></LI>
+									<LI><A href="#Texture.Count">Count</A></LI>
 									<LI><A href="#Texture.Create">Create</A></LI>
 									<LI><A href="#Texture.CreateTS">CreateTS</A></LI>
 									<LI><A href="#Texture.ImageUT">ImageUT</A></LI>
 									<LI><A href="#Texture.Manifest">Manifest</A></LI>
+									<LI><A href="#Texture.MaxSize">MaxSize</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1433,7 +1465,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(107 members)</I>
+								<B>Members</B> <I>(95 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1468,11 +1500,7 @@
 									<LI><A href="#Util.FormatTimeUTC">FormatTimeUTC</A></LI>
 									<LI><A href="#Util.GetRatio">GetRatio</A></LI>
 									<LI><A href="#Util.Grouped">Grouped</A></LI>
-									<LI><A href="#Util.HMSHA1">HMSHA1</A></LI>
-									<LI><A href="#Util.HMSHA224">HMSHA224</A></LI>
-									<LI><A href="#Util.HMSHA256">HMSHA256</A></LI>
-									<LI><A href="#Util.HMSHA384">HMSHA384</A></LI>
-									<LI><A href="#Util.HMSHA512">HMSHA512</A></LI>
+									<LI><A href="#Util.Hash">Hash</A></LI>
 									<LI><A href="#Util.Hex">Hex</A></LI>
 									<LI><A href="#Util.HexDecode">HexDecode</A></LI>
 									<LI><A href="#Util.HexDecodeA">HexDecodeA</A></LI>
@@ -1515,6 +1543,8 @@
 									<LI><A href="#Util.PlusOrMinusEx">PlusOrMinusEx</A></LI>
 									<LI><A href="#Util.Position">Position</A></LI>
 									<LI><A href="#Util.RandUUID">RandUUID</A></LI>
+									<LI><A href="#Util.Random">Random</A></LI>
+									<LI><A href="#Util.RandomA">RandomA</A></LI>
 									<LI><A href="#Util.RelTime">RelTime</A></LI>
 									<LI><A href="#Util.RelTimeEx">RelTimeEx</A></LI>
 									<LI><A href="#Util.Replace">Replace</A></LI>
@@ -1523,16 +1553,6 @@
 									<LI><A href="#Util.RoundInt">RoundInt</A></LI>
 									<LI><A href="#Util.RoundMul">RoundMul</A></LI>
 									<LI><A href="#Util.RoundPow2">RoundPow2</A></LI>
-									<LI><A href="#Util.SHA1">SHA1</A></LI>
-									<LI><A href="#Util.SHA1A">SHA1A</A></LI>
-									<LI><A href="#Util.SHA224">SHA224</A></LI>
-									<LI><A href="#Util.SHA224A">SHA224A</A></LI>
-									<LI><A href="#Util.SHA256">SHA256</A></LI>
-									<LI><A href="#Util.SHA256A">SHA256A</A></LI>
-									<LI><A href="#Util.SHA384">SHA384</A></LI>
-									<LI><A href="#Util.SHA384A">SHA384A</A></LI>
-									<LI><A href="#Util.SHA512">SHA512</A></LI>
-									<LI><A href="#Util.SHA512A">SHA512A</A></LI>
 									<LI><A href="#Util.Sanitise">Sanitise</A></LI>
 									<LI><A href="#Util.StretchInner">StretchInner</A></LI>
 									<LI><A href="#Util.StretchOuter">StretchOuter</A></LI>
@@ -1556,8 +1576,9 @@
 						<OL>
 							<LI><P>The Variable class allows creation and manipulation of console commands</P></LI>
 							<LI>
-								<B>Members</B> <I>(6 members)</I>
+								<B>Members</B> <I>(7 members)</I>
 								<OL>
+									<LI><A href="#Variable.Count">Count</A></LI>
 									<LI><A href="#Variable.Exists">Exists</A></LI>
 									<LI><A href="#Variable.GetInt">GetInt</A></LI>
 									<LI><A href="#Variable.Register">Register</A></LI>
@@ -1567,16 +1588,20 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(8 methods)</I>
+								<B>Methods</B> <I>(12 methods)</I>
 								<OL>
+									<LI><A href="#Variable:Boolean">Boolean</A></LI>
+									<LI><A href="#Variable:Clear">Clear</A></LI>
 									<LI><A href="#Variable:Default">Default</A></LI>
 									<LI><A href="#Variable:Destroy">Destroy</A></LI>
 									<LI><A href="#Variable:Empty">Empty</A></LI>
 									<LI><A href="#Variable:Get">Get</A></LI>
 									<LI><A href="#Variable:Id">Id</A></LI>
+									<LI><A href="#Variable:Integer">Integer</A></LI>
 									<LI><A href="#Variable:Name">Name</A></LI>
+									<LI><A href="#Variable:Number">Number</A></LI>
 									<LI><A href="#Variable:Reset">Reset</A></LI>
-									<LI><A href="#Variable:Set">Set</A></LI>
+									<LI><A href="#Variable:String">String</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1598,11 +1623,12 @@
 						<OL>
 							<LI><P>The video class allows loading of video streams using the Theora video codec, vorbis audio codec and ogg format container (.OGV) which will playback into a frame buffer object.</P></LI>
 							<LI>
-								<B>Members</B> <I>(6 members)</I>
+								<B>Members</B> <I>(7 members)</I>
 								<OL>
 									<LI><A href="#Video.Asset">Asset</A></LI>
 									<LI><A href="#Video.AssetAsync">AssetAsync</A></LI>
 									<LI><A href="#Video.ClearEvents">ClearEvents</A></LI>
+									<LI><A href="#Video.Count">Count</A></LI>
 									<LI><A href="#Video.File">File</A></LI>
 									<LI><A href="#Video.FileAsync">FileAsync</A></LI>
 									<LI><A href="#Video.WaitAsync">WaitAsync</A></LI>
@@ -1762,7 +1788,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(208 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(210 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -1845,9 +1871,11 @@
 									<LI><A href="#cv.fmv_abuffer">fmv_abuffer</A></LI>
 									<LI><A href="#cv.fmv_iobuffer">fmv_iobuffer</A></LI>
 									<LI><A href="#cv.fmv_maxdrift">fmv_maxdrift</A></LI>
+									<LI><A href="#cv.inp_clampmouse">inp_clampmouse</A></LI>
 									<LI><A href="#cv.inp_fstoggler">inp_fstoggler</A></LI>
 									<LI><A href="#cv.inp_joydeffdz">inp_joydeffdz</A></LI>
 									<LI><A href="#cv.inp_joydefrdz">inp_joydefrdz</A></LI>
+									<LI><A href="#cv.inp_nofocusignore">inp_nofocusignore</A></LI>
 									<LI><A href="#cv.inp_rawmouse">inp_rawmouse</A></LI>
 									<LI><A href="#cv.inp_stickykey">inp_stickykey</A></LI>
 									<LI><A href="#cv.inp_stickymouse">inp_stickymouse</A></LI>
@@ -1983,6 +2011,16 @@
 				</DIV>
 			</LI>
 		</OL>
+	</DIV>
+	<DIV id="Archive.Count" style="display:none">
+		<H3>Archive.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Archive.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of archives created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of archive classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Archive">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Archive.Load" style="display:none">
 		<H3>Archive.Load</H3>
@@ -2196,6 +2234,16 @@
 		<PRE><U>Function</U> <I>(function)</I> = The function<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Compiles the specified string and returns the function </PRE>
+		<H4><A href="#idx:Asset">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Asset.Count" style="display:none">
+		<H3>Asset.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Asset.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of assets created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of asset classes currently active&#x2e;<BR></PRE>
 		<H4><A href="#idx:Asset">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Asset.Create" style="display:none">
@@ -2610,6 +2658,16 @@
 		<PRE>A table of loading commands for the progress callback&#x2e; The first paramter in that callback is one of these&#x2e;<BR></PRE>
 		<H4><A href="#idx:Asset">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Atlas.Count" style="display:none">
+		<H3>Atlas.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Atlas.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of atlases created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of atlas classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Audio.GetGlobalVolume" style="display:none">
 		<H3>Audio.GetGlobalVolume</H3>
 		<H4>Syntax:-</H4>
@@ -2752,6 +2810,16 @@
 		<PRE>Sets new volume of all current and new videos&#x2e; This does not modify the cvar which controls the default video volume&#x2e;<BR></PRE>
 		<H4><A href="#idx:Audio">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Bin.Count" style="display:none">
+		<H3>Bin.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Bin.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of bins created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of bin classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Bin">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Bin.Create" style="display:none">
 		<H3>Bin.Create</H3>
 		<H4>Syntax:-</H4>
@@ -2848,6 +2916,16 @@
 		<PRE>Returns the width of the bin in units&#x2e;<BR></PRE>
 		<H4><A href="#idx:Bin">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Clip.Count" style="display:none">
+		<H3>Clip.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Clip.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of clips created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of clip classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Clip">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Clip.Get" style="display:none">
 		<H3>Clip.Get</H3>
 		<H4>Syntax:-</H4>
@@ -2905,6 +2983,16 @@
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the value sent with Clip&#x2e;Set or the value retrieved with Clip&#x2e;Get&#x2e;<BR></PRE>
 		<H4><A href="#idx:Clip">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Command.Count" style="display:none">
+		<H3>Command.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Command.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of commands created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of command classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Command.Exists" style="display:none">
 		<H3>Command.Exists</H3>
@@ -3824,16 +3912,6 @@
 		<PRE>This functions set the core timing frequency&#x2e; The default target is to perform at least 60 game loop iterations per second&#x2e; This is completely detatched from GPU rendering which will always render as fast as possible&#x2e;<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.SetMatrix" style="display:none">
-		<H3>Display.SetMatrix</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Display.SetMatrix(<I><U>Width</U>, <U>Height</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Width</U> <I>(number)</I> = Matrix width.<BR><U>Height</U> <I>(number)</I> = Matrix height.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Sets the 2D aspect size of the matrix&#x2e; Recommended to use a 4&#x3a;3 aspect ratio to allow the automatic aspect ratio feature to work properly for widescreen window sizes&#x2e;<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Display.SetPos" style="display:none">
 		<H3>Display.SetPos</H3>
 		<H4>Syntax:-</H4>
@@ -3986,6 +4064,16 @@
 		<PRE>Shows or hides the console&#x2e; This does not modify the cvar state&#x2e; This function is in Fbo because it only applies to opengl mode&#x2e; It also overrides the &#x27;con_disabled&#x27; setting&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Fbo.Count" style="display:none">
+		<H3>Fbo.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Fbo.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of fbos created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of fbo classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Fbo.Create" style="display:none">
 		<H3>Fbo.Create</H3>
 		<H4>Syntax:-</H4>
@@ -4024,6 +4112,16 @@
 		<PRE><U>Handle</U> <I>(Fbo)</I> = A handle to the main fbo object.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns a handle to the main FBO so you can draw to it&#x2e; Changing the properties of the main FBO may result in undefined behaviour&#x2e; Note that the engine console shares the same FBO so you may want to create a separatte FBO to draw to&#x2e;<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo.Matrix" style="display:none">
+		<H3>Fbo.Matrix</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U>, <U>Height</U> = Fbo.Matrix()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(number)</I> = Current requested matrix width.<BR><U>Height</U> <I>(number)</I> = Current requested matrix height.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the active matrix size of the main framebuffer&#x2e; This is the value set by cvars &#x27;vid_orwidth&#x27;&#x2c; &#x27;vid_orheight&#x27; and also modified with the Fbo&#x2e;Resize&#x28;&#x29; function&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo.OnRedraw" style="display:none">
@@ -4133,9 +4231,9 @@
 	<DIV id="Fbo:GetMatrix" style="display:none">
 		<H3>Fbo:GetMatrix</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Width</U>, <U>Height</U>, <U>Left</U>, <U>Top</U>, <U>Right</U>, <U>Bottom</U>, <U>MatrixWidth</U>, <U>MatrixHeight</U> = Fbo:GetMatrix()</PRE>
+		<PRE><U>Width</U>, <U>Height</U>, <U>Left</U>, <U>Top</U>, <U>Right</U>, <U>Bottom</U> = Fbo:GetMatrix()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Width</U> <I>(number)</I> = Total count of horizontal viewable pixels.<BR><U>Height</U> <I>(number)</I> = Total count of vertical viewable pixels.<BR><U>Left</U> <I>(number)</I> = Minimum viewable matrix X position.<BR><U>Top</U> <I>(number)</I> = Minimum viewable matrix Y position.<BR><U>Right</U> <I>(number)</I> = Maximum viewable matrix X position.<BR><U>Bottom</U> <I>(number)</I> = Maximum viewable matrix Y position.<BR><U>MatrixWidth</U> <I>(number)</I> = Current requested matrix width.<BR><U>MatrixHeight</U> <I>(number)</I> = Current requested matrix height.<BR></PRE>
+		<PRE><U>Width</U> <I>(number)</I> = Total count of horizontal viewable pixels.<BR><U>Height</U> <I>(number)</I> = Total count of vertical viewable pixels.<BR><U>Left</U> <I>(number)</I> = Minimum viewable matrix X position.<BR><U>Top</U> <I>(number)</I> = Minimum viewable matrix Y position.<BR><U>Right</U> <I>(number)</I> = Maximum viewable matrix X position.<BR><U>Bottom</U> <I>(number)</I> = Maximum viewable matrix Y position.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the current matrix information for the specified fbo&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
@@ -4227,7 +4325,7 @@
 		<H4>Function Parameters:-</H4>
 		<PRE><U>Left</U> <I>(number)</I> = The left co-ordinate.<BR><U>Top</U> <I>(number)</I> = The top co-ordinate.<BR><U>Right</U> <I>(number)</I> = The right co-ordinate.<BR><U>Bottom</U> <I>(number)</I> = The bottom co-ordinate.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Sets the matrix of the specified fbo&#x2c; meaning&#x2c; these are the bounds of where you can draw&#x2e; Same as glOrtho&#x28;&#x29;&#x2e;<BR>See&#x3a; https&#x3a;&#x2f;&#x2f;www&#x2e;opengl&#x2e;org&#x2f;sdk&#x2f;docs&#x2f;man2&#x2f;xhtml&#x2f;glOrtho&#x2e;xml </PRE>
+		<PRE>Sets the 2D matrix of the specified fbo&#x2e;<BR>See&#x3a; https&#x3a;&#x2f;&#x2f;www&#x2e;opengl&#x2e;org&#x2f;sdk&#x2f;docs&#x2f;man2&#x2f;xhtml&#x2f;glOrtho&#x2e;xml </PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo:SetTCLTRB" style="display:none">
@@ -4352,6 +4450,16 @@
 		<PRE><U>Result</U> <I>(multi)</I> = Result of operation<BR><U>Reason</U> <I>(string)</I> = (Conditional) Error reason<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Appends the specified string to the specified file&#x2e; Returns &#x27;false&#x27; if failed or bytes written if succeeded&#x2e; If &#x27;Result&#x27; is false then the second argument &#x27;Reason&#x27; returned is the error reason string&#x2e;<BR></PRE>
+		<H4><A href="#idx:File">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="File.Count" style="display:none">
+		<H3>File.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = File.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of files created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of file classes currently active&#x2e;<BR></PRE>
 		<H4><A href="#idx:File">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="File.DirExists" style="display:none">
@@ -4846,6 +4954,16 @@
 		<PRE><U>Handle</U> <I>(Font)</I> = Font handle to console texture<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the handle to the console font&#x2e; Useful if you want to reuse the font in your application&#x2e; Careful not to mess around with it&#x27;s properties&#x21; </PRE>
+		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Font.Count" style="display:none">
+		<H3>Font.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Font.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of fonts created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of font classes currently active&#x2e;<BR></PRE>
 		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Font.Ftf" style="display:none">
@@ -5426,6 +5544,16 @@
 		<PRE>Asyncronously loads a freetype font into memory for use with the Font&#x2e;Create&#x28;&#x29; function&#x2e; The original Asset class is destroyed in the process&#x2e;<BR></PRE>
 		<H4><A href="#idx:Ftf">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Ftf.Count" style="display:none">
+		<H3>Ftf.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Ftf.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of ftfs created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of ftf classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Ftf">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Ftf.File" style="display:none">
 		<H3>Ftf.File</H3>
 		<H4>Syntax:-</H4>
@@ -5558,6 +5686,16 @@
 		<PRE><U>Handle</U> <I>(Image)</I> = The image object<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Loads a 1x1 pixel for use as a solid&#x2e;<BR></PRE>
+		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Image.Count" style="display:none">
+		<H3>Image.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Image.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of images created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of image classes currently active&#x2e;<BR></PRE>
 		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Image.File" style="display:none">
@@ -5970,6 +6108,16 @@
 		<PRE>Returns a table of key&#x2f;value pairs that identify a the state in which the keyboard or mouse key was pressed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Input">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Json.Count" style="display:none">
+		<H3>Json.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Json.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of jsons created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of json classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Json.File" style="display:none">
 		<H3>Json.File</H3>
 		<H4>Syntax:-</H4>
@@ -6124,6 +6272,16 @@
 		<PRE>Dumps the entire contents of the JSON&#x27;s current scope as a LUA table </PRE>
 		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Mask.Count" style="display:none">
+		<H3>Mask.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Mask.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of masks created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of mask classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Mask.Create" style="display:none">
 		<H3>Mask.Create</H3>
 		<H4>Syntax:-</H4>
@@ -6178,16 +6336,6 @@
 		<PRE><U>SrcHandle</U> <I>(Mask)</I> = Source mask to merge from.<BR><U>SrcTileId</U> <I>(integer)</I> = The id number of the source mask.<BR><U>DestX</U> <I>(integer)</I> = Destination X position.<BR><U>DestY</U> <I>(integer)</I> = Destination Y position.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Copies the source mask id into destination mask id zero at the specified position&#x2e;<BR></PRE>
-		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Mask:Count" style="display:none">
-		<H3>Mask:Count</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Count</U> = Mask:Count()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Count</U> <I>(integer)</I> = Number of sub-masks in the mask.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the number of sub&#x2d;masks in the mask&#x2e;<BR></PRE>
 		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Mask:Destroy" style="display:none">
@@ -6304,6 +6452,16 @@
 		<PRE>Dumps the specified mask to disk for debugging purposes&#x2e;<BR></PRE>
 		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Mask:Tiles" style="display:none">
+		<H3>Mask:Tiles</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Mask:Tiles()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Number of sub-masks in the mask.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the number of sub&#x2d;masks in the mask&#x2e;<BR></PRE>
+		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Mask:Width" style="display:none">
 		<H3>Mask:Width</H3>
 		<H4>Syntax:-</H4>
@@ -6313,6 +6471,16 @@
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the width of each sub&#x2d;mask in the mask&#x2e;<BR></PRE>
 		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Palette.Count" style="display:none">
+		<H3>Palette.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Palette.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of palettes created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of palette classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Palette">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Palette.Create" style="display:none">
 		<H3>Palette.Create</H3>
@@ -6700,6 +6868,16 @@
 		<PRE>Loads an audio file off the main thread from the specified array object&#x2e;<BR>The callback functions send an argument to the Pcm object that was created&#x2e;<BR></PRE>
 		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Pcm.Count" style="display:none">
+		<H3>Pcm.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Pcm.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of pcms created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of pcm classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Pcm.File" style="display:none">
 		<H3>Pcm.File</H3>
 		<H4>Syntax:-</H4>
@@ -6780,6 +6958,16 @@
 		<PRE>Returns the pcm flags available&#x2e; Returned as key&#x2f;value pairs&#x2e; The value is a unique identifier to the flag&#x2e;<BR></PRE>
 		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="SShot.Count" style="display:none">
+		<H3>SShot.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = SShot.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of sshots created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of sshot classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:SShot">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="SShot.Fbo" style="display:none">
 		<H3>SShot.Fbo</H3>
 		<H4>Syntax:-</H4>
@@ -6829,6 +7017,16 @@
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the filename generated on this screenshot object&#x2e;<BR></PRE>
 		<H4><A href="#idx:SShot">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Sample.Count" style="display:none">
+		<H3>Sample.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Sample.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of samples created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of sample classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Sample">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Sample.Create" style="display:none">
 		<H3>Sample.Create</H3>
@@ -7374,6 +7572,16 @@
 		<PRE>Returns a key&#x2f;value table of socket connction status codes supported&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Source.Count" style="display:none">
+		<H3>Source.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Source.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of sources created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of source classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Source:Destroy" style="display:none">
 		<H3>Source:Destroy</H3>
 		<H4>Syntax:-</H4>
@@ -7800,6 +8008,16 @@
 		<PRE>Returns a table of key&#x2f;value pairs that identify a SQL error code&#x2e;<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Stat.Count" style="display:none">
+		<H3>Stat.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Stat.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of stats created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of stat classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Stat.Create" style="display:none">
 		<H3>Stat.Create</H3>
 		<H4>Syntax:-</H4>
@@ -7968,6 +8186,16 @@
 		<PRE>Stream.ClearEvents()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Clear the OnEvent callback on all Stream objects&#x2e; This might be useful for when you use the OnEvent&#x28;&#x29; function and the Stream object is still referenced and no longer accessable by your code in which the result is that the Stream object does not get garbage collected&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stream">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stream.Count" style="display:none">
+		<H3>Stream.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Stream.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of streams created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of stream classes currently active&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stream">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Stream.File" style="display:none">
@@ -8336,6 +8564,16 @@
 		<PRE>Returns the handle to the console texture&#x2e; Useful if you want to reuse the texture in your application&#x2e; Careful not to mess around with it&#x27;s properties&#x21; </PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Texture.Count" style="display:none">
+		<H3>Texture.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Texture.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of textures created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of texture classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Texture.Create" style="display:none">
 		<H3>Texture.Create</H3>
 		<H4>Syntax:-</H4>
@@ -8382,6 +8620,16 @@
 		<PRE><U>Handle</U> <I>(Texture)</I> = A handle to the texture(s) created.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Creates the specified texture from the specified image class with the specified json metadata&#x2e;<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Texture.MaxSize" style="display:none">
+		<H3>Texture.MaxSize</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Size</U> = Texture.MaxSize()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Size</U> <I>(integer)</I> = Maximum supported texture size.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the maximum texture size supported by the rendering system&#x2e;<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Texture:Blit" style="display:none">
@@ -9081,7 +9329,7 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Hash</U> = Util.B64EA(<I><U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to encode.<BR></PRE>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to encode.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Hash</U> <I>(string)</I> = The return string encoded to bas64.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -9137,11 +9385,11 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Hash</U> = Util.CRCA(<I><U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Hash</U> <I>(integer)</I> = The calculated CRC hash.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Calculates a CRC32 hash from an array class&#x2e; Insecure&#x2c; only use for super fast hashing of insignificant strings&#x2e; The benefit of CRC hashing though is that the function returns an integer&#x2e;<BR></PRE>
+		<PRE>Calculates a CRC32 hash from an Asset class&#x2e; Insecure&#x2c; only use for super fast hashing of insignificant strings&#x2e; The benefit of CRC hashing though is that the function returns an integer&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Capitalise" style="display:none">
@@ -9384,64 +9632,16 @@
 		<PRE>Converts the specified number into a human readable string&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Util.HMSHA1" style="display:none">
-		<H3>Util.HMSHA1</H3>
+	<DIV id="Util.Hash" style="display:none">
+		<H3>Util.Hash</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA1(<I><U>Key</U>, <U>Data</U></I>)</PRE>
+		<PRE><U>Hash</U> = Util.Hash(<I><U>Salt</U>, <U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
+		<PRE><U>Salt</U> <I>(string|Asset)</I> = The salt string or raw data used to randomise the data<BR><U>Data</U> <I>(string|Asset)</I> = The string or raw data to hash.<BR></PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA1 hash.<BR></PRE>
+		<PRE><U>Hash</U> <I>(string|Asset)</I> = The string or raw data calculated hash.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA1 hash from a string using the specifiy entropy&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.HMSHA224" style="display:none">
-		<H3>Util.HMSHA224</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA224(<I><U>Key</U>, <U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA224 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA224 hash from a string using the specifiy entropy&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.HMSHA256" style="display:none">
-		<H3>Util.HMSHA256</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA256(<I><U>Key</U>, <U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA256 hash from a string using the specifiy entropy&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.HMSHA384" style="display:none">
-		<H3>Util.HMSHA384</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA384(<I><U>Key</U>, <U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA384 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from a string using the specifiy entropy&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.HMSHA512" style="display:none">
-		<H3>Util.HMSHA512</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA512(<I><U>Key</U>, <U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA512 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA512 hash from a string using the specifiy entropy&#x2e;<BR></PRE>
+		<PRE>A collection of functions that will calculate a hash from a &#x27;string&#x27; class or raw &#x27;Asset&#x27; class with or without salting&#x2e;<BR><BR>Actual functions &#x28;Replace &#x27;Hash&#x27; with one of the below&#x29;&#x2e; Syntax of the function is &#x3c;TYP&#x3e;&#x3c;STR&#x3e;&#x3c;R&#x3e;&#x3c;P&#x2e;&#x2e;&#x2e;&#x3e; where &#x3c;TYP&#x3e; is the hash type&#x2e; &#x3c;STR&#x3e; is the strength of the hash&#x2c; &#x3c;R&#x3e; is either &#x27;A&#x27; returning an &#x27;Asset&#x27; class or &#x27;S&#x27; returning a string object and &#x3c;P&#x2e;&#x2e;&#x2e;&#x3e; means one or more &#x27;Asset&#x27; &#x28;A&#x29; or &#x27;String&#x27; &#x28;S&#x29; parameters&#x2e; &#x28;&#x2a;&#x29; denotes do not use due to collision risks&#x2e;&#x2e;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1AA&#x28;Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1AS&#x28;Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SA&#x28;Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SS&#x28;Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224AA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224AS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256AA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256AS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384AA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384AS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512AA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512AS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Hex" style="display:none">
@@ -9946,6 +10146,28 @@
 		<PRE>Generates a random UUIDv4 </PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.Random" style="display:none">
+		<H3>Util.Random</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.Random()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(Integer)</I> = The random number returned.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Uses OpenSSL to generate a random 64&#x2d;bit number&#x2e; This data is constantly salted so you always get unique data&#x2e; This function is provided for security over performance&#x2c; otherwise you should use &#x27;math&#x2e;random&#x28;&#x29;&#x27;&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.RandomA" style="display:none">
+		<H3>Util.RandomA</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.RandomA(<I><U>Size</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Size</U> <I>(integer)</I> = The size of the random data.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(Asset)</I> = The random data returned.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Uses OpenSSL to generate random data&#x2e; This data is constantly salted so you always get unique data&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.RelTime" style="display:none">
 		<H3>Util.RelTime</H3>
 		<H4>Syntax:-</H4>
@@ -10040,126 +10262,6 @@
 		<PRE><U>Result</U> <I>(integer)</I> = The resulting rounded value<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Rounds the specified integer up to the nearest power of two&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA1" style="display:none">
-		<H3>Util.SHA1</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA1(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA1 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA1 hash from a string&#x2e; This hashing algorithm is obsolete and insecure and should no longer be used and is here only for compatibility reasons only&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA1A" style="display:none">
-		<H3>Util.SHA1A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA1A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA1 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA1 hash from an array class&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA224" style="display:none">
-		<H3>Util.SHA224</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA224(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA224 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA224A" style="display:none">
-		<H3>Util.SHA224A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA224A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA224 hash from an array class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA256" style="display:none">
-		<H3>Util.SHA256</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA256(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA256 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA256A" style="display:none">
-		<H3>Util.SHA256A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA256A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA256 hash from an array class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA384" style="display:none">
-		<H3>Util.SHA384</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA384(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA384 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA384A" style="display:none">
-		<H3>Util.SHA384A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA384A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA384 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from an array class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA512" style="display:none">
-		<H3>Util.SHA512</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA512(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA512 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA512 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA512A" style="display:none">
-		<H3>Util.SHA512A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA512A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA512 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from an array class&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Sanitise" style="display:none">
@@ -10270,6 +10372,16 @@
 		<PRE>Word wraps the specified string into a table of lines&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Variable.Count" style="display:none">
+		<H3>Variable.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Variable.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of variables created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of variable classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Variable.Exists" style="display:none">
 		<H3>Variable.Exists</H3>
 		<H4>Syntax:-</H4>
@@ -10336,6 +10448,28 @@
 		<PRE>Sets the new value of the specified engine cvar name&#x2e; An exception is raised if any error occurds&#x2e; See Variable&#x2e;Result to see the possible results&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Variable:Boolean" style="display:none">
+		<H3>Variable:Boolean</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Success</U> = Variable:Boolean(<I><U>State</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = The new cvar value.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(integer)</I> = The return code.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Sets the new value based on the specified boolean&#x2e; &#x22;0&#x22; if false or &#x22;1&#x22; if true&#x2e; See Variable&#x2e;Result to see the possible results&#x2e;<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Variable:Clear" style="display:none">
+		<H3>Variable:Clear</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Success</U> = Variable:Clear()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(integer)</I> = The return code.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Clears the variable &#x28;with an empty string&#x29;&#x2e; See Variable&#x2e;Result to see he possible results&#x2e;<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Variable:Default" style="display:none">
 		<H3>Variable:Default</H3>
 		<H4>Syntax:-</H4>
@@ -10384,6 +10518,18 @@
 		<PRE>Returns the unique id of the Variable object&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Variable:Integer" style="display:none">
+		<H3>Variable:Integer</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Success</U> = Variable:Integer(<I><U>Value</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Value</U> <I>(integer)</I> = The new cvar value.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(integer)</I> = The return code.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Sets the new value based on the specified integer&#x2e; See Variable&#x2e;Result to see the possible results&#x2e;<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Variable:Name" style="display:none">
 		<H3>Variable:Name</H3>
 		<H4>Syntax:-</H4>
@@ -10394,6 +10540,18 @@
 		<PRE>Returns the name of the console command this object was registered with&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Variable:Number" style="display:none">
+		<H3>Variable:Number</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Success</U> = Variable:Number(<I><U>Value</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Value</U> <I>(numberr)</I> = The new cvar value.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(integer)</I> = The return code.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Sets the new value based on the specified number&#x2e; See Variable&#x2e;Result to see the possible results&#x2e;<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Variable:Reset" style="display:none">
 		<H3>Variable:Reset</H3>
 		<H4>Syntax:-</H4>
@@ -10402,10 +10560,10 @@
 		<PRE>Resets the cvar to the default value as registered&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Variable:Set" style="display:none">
-		<H3>Variable:Set</H3>
+	<DIV id="Variable:String" style="display:none">
+		<H3>Variable:String</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Success</U> = Variable:Set(<I><U>String</U></I>)</PRE>
+		<PRE><U>Success</U> = Variable:String(<I><U>String</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
 		<PRE><U>String</U> <I>(string)</I> = The new cvar value.<BR></PRE>
 		<H4>Return Parameters:-</H4>
@@ -10462,6 +10620,16 @@
 		<PRE>Video.ClearEvents()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Clear the OnEvent callback on all Video objects&#x2e; This might be useful for when you use the OnEvent&#x28;&#x29; function and the Video object is still referenced and no longer accessable by your code in which the result is that the Video object does not get garbage collected&#x2e;<BR></PRE>
+		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Video.Count" style="display:none">
+		<H3>Video.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Video.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of videos created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of video classes currently active&#x2e;<BR></PRE>
 		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Video.File" style="display:none">
@@ -10677,7 +10845,9 @@
 	<DIV id="Video:Pause" style="display:none">
 		<H3>Video:Pause</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Video:Pause()</PRE>
+		<PRE><U>Success</U> = Video:Pause()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(boolean)</I> = Did the video pause playback?<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Pauses the specified video&#x2e;<BR></PRE>
 		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
@@ -10685,7 +10855,9 @@
 	<DIV id="Video:Play" style="display:none">
 		<H3>Video:Play</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Video:Play()</PRE>
+		<PRE><U>Success</U> = Video:Play()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(boolean)</I> = Did the video start playing?<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Plays the specified video&#x2e;<BR></PRE>
 		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
@@ -10841,7 +11013,9 @@
 	<DIV id="Video:Stop" style="display:none">
 		<H3>Video:Stop</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Video:Stop()</PRE>
+		<PRE><U>Success</U> = Video:Stop()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(boolean)</I> = Did the video pause playback?<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Stops and unloads the specified video&#x2c; this also unloads the audio and video output structures&#x2e;<BR></PRE>
 		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
@@ -11661,6 +11835,11 @@
 		<PRE>The amount of time allowed to drift between audio and video before we start speeding up or slowing down audio&#x2e; Changing this value only takes effect the next time a &#x27;Video&#x27; object is constructed&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.inp_clampmouse" style="display:none">
+		<H3>inp_clampmouse</H3>
+		<PRE>When enabled &#x28;default&#x29; the mouse cursor is clamped to the window edge&#x2e;<BR>Since Windows and Linux already do this at the OS level&#x2c; it obviously only affects MacOS versions and changing it does nothing on anything but MacOS&#x2e;<BR>It is only here if the original OS level behaviour of MacOS is desired where the cursor is allowed to leave the window&#x2e; Recommended to enable &#x27;inp_fsignore&#x27; too to disable the input when mouse leaves the window&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.inp_fstoggler" style="display:none">
 		<H3>inp_fstoggler</H3>
 		<PRE>Enables or disables the ALT&#x2b;ENTER or OPTION&#x2b;ENTER combinations to switch between full&#x2d;screen or windowed mode &#x28;Uses value from &#x27;vid_fs&#x27;&#x29;&#x2e;<BR></PRE>
@@ -11674,6 +11853,11 @@
 	<DIV id="cv.inp_joydefrdz" style="display:none">
 		<H3>inp_joydefrdz</H3>
 		<PRE>Specifies the gamepad reverse deadzone&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.inp_nofocusignore" style="display:none">
+		<H3>inp_nofocusignore</H3>
+		<PRE>When enabled &#x28;default&#x29; all input is ignored when the window does not have mouse focus&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.inp_rawmouse" style="display:none">
@@ -12312,6 +12496,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Tue Feb 04 13:05:31 2025 +0000</ADDRESS>
+	This document was generated at Sat Mar 01 00:33:27 2025 +0000</ADDRESS>
 </BODY>
 </HTML>

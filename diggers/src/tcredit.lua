@@ -12,8 +12,8 @@
 -- Core function aliases --------------------------------------------------- --
 -- M-Engine function aliases ----------------------------------------------- --
 -- Diggers function and data aliases --------------------------------------- --
-local aCreditsData, Fade, fontLarge, fontLittle, InitTitle, LoadResources,
-  PlayMusic, SetCallbacks, SetHotSpot, SetKeys;
+local BlitLT, Fade, InitTitle, LoadResources, PlayMusic, PrintC, PrintWS,
+  SetCallbacks, SetHotSpot, SetKeys, aCreditsData, fontLarge, fontLittle;
 -- Locals ------------------------------------------------------------------ --
 local aAssetsMusic,                    -- Assets when music is required
       aAssetsNoMusic,                  -- Assets when no music is required
@@ -36,8 +36,8 @@ local function SetCreditId(iId)
   strCredits1, strCredits2 = aData[1], aData[2];
   -- Now we need to measure the height of all three strings so we
   -- can place the credits in the exact vertical centre of the screen
-  local iCredits1H = fontLittle:PrintWS(320, 0, strCredits1);
-  local iCredits2H = fontLarge:PrintWS(320, 0, strCredits2)/2;
+  local iCredits1H<const> = PrintWS(fontLittle, 320, strCredits1);
+  local iCredits2H<const> = PrintWS(fontLarge, 320, strCredits2)/2;
   iCredits1Y = 120 - iCredits2H - 4 - iCredits1H;
   iCredits2Y = 120 - iCredits2H;
   -- Success
@@ -49,10 +49,10 @@ local function ProcRender()
   fontLittle:SetCRGB(1, 0.7, 1);
   fontLarge:SetCRGB(1, 1, 1);
   -- Draw background
-  texTitle:BlitLT(-96, 0);
+  BlitLT(texTitle, -96, 0);
   -- Display text compared to amount of time passed
-  fontLittle:PrintC(160, iCredits1Y, strCredits1);
-  fontLarge:PrintC(160, iCredits2Y, strCredits2);
+  PrintC(fontLittle, 160, iCredits1Y, strCredits1);
+  PrintC(fontLarge, 160, iCredits2Y, strCredits2);
 end
 -- On fade out init title screen without setting music --------------------- --
 local function OnFadedOutToTitle()
@@ -111,12 +111,13 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterKeys, RegisterHotSpot, aAssetsData;
   -- Get imports
-  Fade, InitTitle, LoadResources, PlayMusic, RegisterKeys, RegisterHotSpot,
-    SetCallbacks, SetHotSpot, SetKeys, aAssetsData, aCreditsData, fontLarge,
-    fontLittle =
-      GetAPI("Fade", "InitTitle", "LoadResources", "PlayMusic", "RegisterKeys",
-        "RegisterHotSpot", "SetCallbacks", "SetHotSpot", "SetKeys",
-        "aAssetsData", "aCreditsData", "fontLarge", "fontLittle");
+  BlitLT, Fade, InitTitle, LoadResources, PlayMusic, PrintC, PrintWS,
+    RegisterKeys, RegisterHotSpot, SetCallbacks, SetHotSpot, SetKeys,
+    aAssetsData, aCreditsData, fontLarge, fontLittle =
+      GetAPI("BlitLT", "Fade", "InitTitle", "LoadResources", "PlayMusic",
+        "PrintC", "PrintWS", "RegisterKeys", "RegisterHotSpot", "SetCallbacks",
+        "SetHotSpot", "SetKeys", "aAssetsData", "aCreditsData", "fontLarge",
+        "fontLittle");
   -- Get assets data
   local aTexture<const> = aAssetsData.title;
   aAssetsNoMusic = { aTexture };

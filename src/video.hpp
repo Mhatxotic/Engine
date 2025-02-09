@@ -50,7 +50,9 @@ BUILD_FLAGS(Video,
   // Video is keyed?                   Filtering is enabled?
   FL_KEYED                  {Flag[4]}, FL_FILTER                 {Flag[5]},
   // Hard stopped?                     Video is playing?
-  FL_STOP                   {Flag[6]}, FL_PLAY                   {Flag[7]}
+  FL_STOP                   {Flag[6]}, FL_PLAY                   {Flag[7]},
+  // Play after re-init?
+  FL_RESUME                 {Flag[8]}
 );/* ======================================================================= */
 CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Base classes ------------------------------------------------------- */
@@ -436,7 +438,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     return false;
   }
   /* -- Manage video decoding thread for ogg supporting only audio --------- */
-  int VideoHandleAudioOnly(void)
+  bool VideoHandleAudioOnly(void)
   { // Process exhausted audio buffers if there is a source
     if(IsSourceAvailable()) ProcessExhaustedAudioBuffers();
     // If enough audio buffered and time is moving? Thread can breathe a little
@@ -445,15 +447,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Parse and render more vorbis data and if we didn't?
     else if(!ParseAndRenderVorbisData())
     { // Try to load more raw data and return if we're at the end of file
-      if(LoadRawData()) return 2;
+      if(LoadRawData()) return false;
       // Repeat until there are more audio packets to parse
       while(tThread.ThreadShouldNotExit() && ParseRawData())
         ogg_stream_pagein(&ostsVorbis, &opgData);
     } // Done
-    return 0;
+    return true;
   }
   /* -- Manage video decoding thread for ogg supporting only video --------- */
-  int VideoHandleVideoOnly(void)
+  bool VideoHandleVideoOnly(void)
   { // If it is not time to process a frame yet?
     if(CIIsNotTriggered())
     { // Wait a little bit if we can
@@ -464,15 +466,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // No video rendered?
     else
     { // Try to load more raw data and return if at end of file
-      if(LoadRawData()) return 2;
+      if(LoadRawData()) return false;
       // Repeat until there are more video packets to parse
       while(tThread.ThreadShouldNotExit() && ParseRawData())
         ogg_stream_pagein(&ostsTheora, &opgData);
     } // Keep thread loop alive
-    return 0;
+    return true;
   }
   /* -- Manage video decoding thread for ogg supporting audio and video ---- */
-  int VideoHandleAudioVideo(void)
+  bool VideoHandleAudioVideo(void)
   { // Stream status flags
     bool bVideoParsed = false, bAudioParsed = false;
     // If there is an audio source?
@@ -499,8 +501,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
             GetVideoTime() - GetAudioTime() : 0.0;
         // Wait a little bit if we can
         else if(CIIsNotTriggered(milliseconds{1})) cTimer->TimerSuspend(1);
-        // Done
-        return 0;
+        // Done, keep thread alive
+        return true;
       } // Time to check for new packets? Repeat...
       else if(ParseAndRenderTheoraData())
       { // Got a video packet
@@ -512,7 +514,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     } // Didn't process anything this time?
     if(!bAudioParsed && !bVideoParsed)
     { // Try to load more raw data and return if we're at the end of file
-      if(LoadRawData()) return 2;
+      if(LoadRawData()) return false;
       // Repeat until there are more audio and video packets to parse
       while(tThread.ThreadShouldNotExit() && ParseRawData())
       { // Parse more video and audio data. No point logging failures.
@@ -520,7 +522,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         ogg_stream_pagein(&ostsVorbis, &opgData);
       }
     } // Keep thread loop alive
-    return 0;
+    return true;
   }
   /* -- Thread main function ----------------------------------------------- */
   int VideoThreadMain(const Thread &tClass) try
@@ -528,11 +530,11 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(ubReason != UB_REINIT) LuaEvtDispatch(VE_PLAY);
     // Loop until thread should exit
     if(FlagIsSet(FL_THEORA|FL_VORBIS)) // Ogg has both audio and video streams?
-      while(tClass.ThreadShouldNotExit() && !VideoHandleAudioVideo());
+      while(tClass.ThreadShouldNotExit() && VideoHandleAudioVideo());
     else if(FlagIsSet(FL_VORBIS))      // Ogg has audio only stream?
-      while(tClass.ThreadShouldNotExit() && !VideoHandleAudioOnly());
+      while(tClass.ThreadShouldNotExit() && VideoHandleAudioOnly());
     else if(FlagIsSet(FL_THEORA))      // Ogg has video only stream?
-      while(tClass.ThreadShouldNotExit() && !VideoHandleVideoOnly());
+      while(tClass.ThreadShouldNotExit() && VideoHandleVideoOnly());
     // Log the reason why the thread should be terminated
     cLog->LogDebugExSafe("Video '$' main loop exit with reason $!",
       IdentGet(), ubReason.load());
@@ -921,13 +923,13 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     stFActive = (stFActive + 1) % faData.size();
   }
   /* -- Video is playing? -------------------------------------------------- */
-  bool IsPlaying(void) const { return tThread.ThreadIsRunning(); }
+  bool IsPlaying(void) const { return tThread.ThreadIsJoinable(); }
   /* -- DeInitialise audio ouput (because re-initialising) ----------------- */
   void DeInitAudio(void)
   { // Return if there is no audio in this video
     if(FlagIsClear(FL_VORBIS)) return;
-    // Pause the video from re-initialisation
-    Pause(UB_REINIT);
+    // Pause the video and set to resume on re-init
+    if(Pause(UB_REINIT)) FlagSet(FL_RESUME);
     // Audio buffers are empty
     dAudioBuffer = 0.0;
     // De-initialise the OpenAL segment
@@ -935,10 +937,10 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   }
   /* -- ReInitialise audio (because audio is restarting) ------------------- */
   void ReInitAudio(void)
-  { // Return if there is no audio in this video
-    if(FlagIsClear(FL_VORBIS)) return;
+  { // Just return if we're not to resume
+    if(FlagIsClear(FL_RESUME)) return;
     // If there is an audio stream and we're re-initialising then resume play
-    Play(UB_REINIT);
+    if(Play(UB_REINIT)) FlagClear(FL_RESUME);
   }
   /* -- Stop and unload audio buffers -------------------------------------- */
   void StopAudioAndUnloadBuffers(void)
@@ -952,18 +954,21 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     sSource = nullptr;
   }
   /* -- Do pause video ----------------------------------------------------- */
-  void Pause(const Unblock ubNewReason = UB_PAUSE)
+  bool Pause(const Unblock ubNewReason = UB_PAUSE)
   { // Make sure playing flag is removed
+    if(FlagIsClear(FL_PLAY)) return false;
     FlagClear(FL_PLAY);
     // Set exit reason
     ubReason = ubNewReason;
     // DeInit the thread, unblock the worker thread and stop and unload buffers
     tThread.ThreadStop();
+    // Success
+    return true;
   }
   /* -- Stop video and free everything ------------------------------------- */
-  void Stop(const Unblock ubNewReason = UB_STOP)
+  bool Stop(const Unblock ubNewReason = UB_STOP)
   { // Ignore if already stopped
-    if(FlagIsSet(FL_STOP)) return;
+    if(FlagIsSet(FL_STOP)) return false;
     FlagSet(FL_STOP);
     // Pause playback and synchronise
     Pause(ubNewReason);
@@ -982,6 +987,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Log that the video was stopped
     cLog->LogDebugExSafe("Video '$' stopped with reason $.",
       IdentGet(), ubNewReason);
+    // Success
+    return true;
   }
   /* -- Advance a frame ---------------------------------------------------- */
   void Advance(void)
@@ -1047,27 +1054,10 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     }
   }
   /* -- Play video --------------------------------------------------------- */
-  void Play(const Unblock ubNewReason = UB_PLAY)
+  bool Play(const Unblock ubNewReason = UB_PLAY)
   { // If playing flag is already set?
-    if(FlagIsSet(FL_PLAY))
-    { // Thread is not started?
-      if(tThread.ThreadIsExited())
-      { // Set reason for playing
-        ubReason = ubNewReason;
-        // Next frame can show immediately
-        CISync();
-        // Thread is stopped? Just start it again
-        tThread.ThreadStart(this);
-        // Log that the video was restarted
-        cLog->LogDebugExSafe("Video '$' restarted with reason $.",
-          IdentGet(), ubNewReason);
-      } // Log that the command was ignored
-      else cLog->LogWarningExSafe(
-        "Video '$' play request with reason $ ignored!",
-        IdentGet(), ubNewReason);
-      // Done
-      return;
-    } // Check that OpenGL and OpenAL is initialised
+    if(FlagIsSet(FL_PLAY)) return false;
+    // Check that OpenGL and OpenAL is initialised
     Awaken();
     // Set reason for playing
     ubReason = ubNewReason;
@@ -1080,6 +1070,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Log that the video was started
     cLog->LogDebugExSafe("Video '$' playing with reason $!",
       IdentGet(), ubNewReason);
+    // Success
+    return true;
   }
   /* -- Rewind video ------------------------------------------------------- */
   void Rewind(void)

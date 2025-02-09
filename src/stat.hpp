@@ -224,8 +224,8 @@ class Statistic
     Head &hRef = hdHeaders[svValues.size() % Headers()];
     // Move the value into the list and put the tring we inserted into
     // a decoder and get length of the utf8 string
-    const int iLength = UtilIntOrMax<int>(
-      UtfDecoder(*svValues.insert(svValues.cend(), StdMove(strVal))).Length());
+    const int iLength = UtilIntOrMax<int>(UtfDecoder{
+      *svValues.insert(svValues.cend(), StdMove(strVal)) }.Length());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
     if(iLength > hRef.iMaxLen) hRef.iMaxLen = iLength;

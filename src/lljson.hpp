@@ -5,7 +5,7 @@
 ** ## Defines the 'Json' namespace and methods for the guest to use in    ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -99,12 +99,22 @@ LLFUNC(Sort, 1, AgJson{lS, 1}().Sort(AgBoolean{lS, 2}))
 ** ######################################################################### **
 ** ## Json:* member functions structure                                   ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Json:* member functions begin
   LLRSFUNC(Destroy),    LLRSFUNC(Id),      LLRSFUNC(Name),
   LLRSFUNC(Sort),       LLRSFUNC(ToTable), LLRSFUNC(ToString),
   LLRSFUNC(ToHRString), LLRSFUNC(ToFile),  LLRSFUNC(ToHRFile),
 LLRSEND                                // Json:* member functions end
+/* ========================================================================= **
+** ######################################################################### **
+** ## Json.* namespace functions                                          ## **
+** ######################################################################### **
+** ========================================================================= */
+// $ Json.Count
+// < Count:integer=Total number of jsons created.
+// ? Returns the total number of json classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cJsons->CollectorCount()))
 /* ========================================================================= */
 // $ Json.File
 // > Filename:string=The filename of the json to load
@@ -156,10 +166,11 @@ LLFUNC(WaitAsync, 0, cJsons->WaitAsync())
 ** ######################################################################### **
 ** ## Json.* namespace functions structure                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Json.* namespace functions begin
-  LLRSFUNC(File),        LLRSFUNC(FileAsync), LLRSFUNC(String),
-  LLRSFUNC(StringAsync), LLRSFUNC(Table),     LLRSFUNC(WaitAsync),
+  LLRSFUNC(Count),     LLRSFUNC(File),        LLRSFUNC(FileAsync),
+  LLRSFUNC(String),    LLRSFUNC(StringAsync), LLRSFUNC(Table),
+  LLRSFUNC(WaitAsync),
 LLRSEND                                // Json.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Json namespace

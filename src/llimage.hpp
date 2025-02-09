@@ -5,7 +5,7 @@
 ** ## Defines the 'Image' namespace and methods for the guest to use in   ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -95,12 +95,16 @@ LLFUNC(Width, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().DimGetWidth()))
 ** ######################################################################### **
 ** ## Image:* member functions structure                                  ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Image:* member functions begin
   LLRSFUNC(Destroy), LLRSFUNC(Depth), LLRSFUNC(Height),  LLRSFUNC(Id),
   LLRSFUNC(Name),    LLRSFUNC(Save),  LLRSFUNC(Width),
 LLRSEND                                // Image:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Image.* namespace functions                                         ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Image.Asset
 // > Name:String=The user-defined id of the image
 // > Data:Asset=The data of the image to load
@@ -157,6 +161,12 @@ LLFUNC(Blank, 1,
 LLFUNC(Colour, 1, const AgUInt32 aColour{lS, 1};
   AcImage{lS}().InitColour(aColour))
 /* ========================================================================= */
+// $ Image.Count
+// < Count:integer=Total number of images created.
+// ? Returns the total number of image classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cImages->CollectorCount()))
+/* ========================================================================= */
 // $ Image.File
 // > Filename:string=The filename of the image to load
 // > Flags:Integer=Load flags
@@ -209,11 +219,11 @@ LLFUNC(WaitAsync, 0, cImages->WaitAsync())
 ** ######################################################################### **
 ** ## Image.* namespace functions structure                               ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Image.* namespace functions begin
-  LLRSFUNC(AssetAsync), LLRSFUNC(Asset),     LLRSFUNC(Blank),
-  LLRSFUNC(Colour),     LLRSFUNC(File),      LLRSFUNC(FileAsync),
-  LLRSFUNC(Raw),        LLRSFUNC(WaitAsync),
+  LLRSFUNC(AssetAsync), LLRSFUNC(Asset),  LLRSFUNC(Blank),
+  LLRSFUNC(Colour),     LLRSFUNC(Count),  LLRSFUNC(File),
+  LLRSFUNC(FileAsync),  LLRSFUNC(Raw),    LLRSFUNC(WaitAsync),
 LLRSEND                                // Image.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

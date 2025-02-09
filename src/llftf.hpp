@@ -5,7 +5,7 @@
 ** ## Defines the 'Ftf' namespace and methods for the guest to use in     ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -84,12 +84,16 @@ LLFUNC(Style, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetStyle()))
 ** ######################################################################### **
 ** ## Ftf:* member functions structure                                    ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Ftf:* member functions begin
   LLRSFUNC(Destroy), LLRSFUNC(Family), LLRSFUNC(Glyphs),
   LLRSFUNC(Id),      LLRSFUNC(Name),   LLRSFUNC(Style),
 LLRSEND                                // Ftf:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Ftf.* namespace functions                                           ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Ftf.Asset
 // > Id:String=The identifier string for the Freetype object.
 // > Data:Asset=The raw font data supported by FreeType.
@@ -140,6 +144,12 @@ LLFUNC(AssetAsync, 0,
   LuaUtilCheckFunc(lS, 8, 9, 10);
   AcFtf{lS}().InitAsyncArray(lS, aIdentifier, aAsset, aWidth, aHeight,
     aDpiWidth, aDpiHeight, aOutline))
+/* ========================================================================= */
+// $ Ftf.Count
+// < Count:integer=Total number of ftfs created.
+// ? Returns the total number of ftf classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cFtfs->CollectorCount()))
 /* ========================================================================= */
 // $ Ftf.File
 // > Filename:string=The filename of the ftf file to load
@@ -195,10 +205,10 @@ LLFUNC(WaitAsync, 0, cFtfs->WaitAsync())
 ** ######################################################################### **
 ** ## Ftf.* namespace functions structure                                 ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Ftf.* namespace functions begin
-  LLRSFUNC(Asset),     LLRSFUNC(AssetAsync), LLRSFUNC(File),
-  LLRSFUNC(FileAsync), LLRSFUNC(WaitAsync),
+  LLRSFUNC(Asset), LLRSFUNC(AssetAsync), LLRSFUNC(Count),
+  LLRSFUNC(File),  LLRSFUNC(FileAsync),  LLRSFUNC(WaitAsync),
 LLRSEND                                // Ftf.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Ftf namespace

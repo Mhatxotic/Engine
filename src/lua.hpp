@@ -30,7 +30,7 @@ namespace P {                          // Start of public module namespace
 static class Lua final :
   /* -- Base classes ------------------------------------------------------- */
   public ClockChrono<CoreClock>,       // Runtime clock
-  private EvtMain::RegVec              // Events list to register
+  private EvtMainRegVec                // Events list to register
 { /* -- Private typedefs --------------------------------------------------- */
   typedef unique_ptr<lua_State, function<decltype(lua_close)>> LuaPtr;
   /* -- Private variables -------------------------------------------------- */
@@ -483,7 +483,7 @@ static class Lua final :
   /* -- Constructor -------------------------------------------------------- */
   Lua(void) :
     /* --------------------------------------------------------------------- */
-    EvtMain::RegVec{                   // Lua events
+    EvtMainRegVec{                     // Lua events
       { EMC_LUA_REDRAW,                // Redraw event data
           bind(&Lua::SendRedraw,       // - Redraw callback
             this, _1) },               // - This class

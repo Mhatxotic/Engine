@@ -5,7 +5,7 @@
 ** ## Defines the 'Font' namespace and methods for the guest to use in    ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -700,7 +700,7 @@ LLFUNC(SetSpacing, 0,
 ** ######################################################################### **
 ** ## Font:* member functions structure                                   ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Font:* member functions begin
   LLRSFUNC(Destroy),    LLRSFUNC(Dump),        LLRSFUNC(GetHeight),
   LLRSFUNC(GetId),      LLRSFUNC(GetName),     LLRSFUNC(GetWidth),
@@ -720,7 +720,11 @@ LLRSMFBEGIN                            // Font:* member functions begin
   LLRSFUNC(SetGSize),   LLRSFUNC(SetLSpacing), LLRSFUNC(SetSize),
   LLRSFUNC(SetSpacing),
 LLRSEND                                // Font:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Font.* namespace functions                                          ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Font.Console
 // < Handle:Font=Font handle to console texture
 // ? Returns the handle to the console font. Useful if you want to reuse the
@@ -728,6 +732,12 @@ LLRSEND                                // Font:* member functions end
 /* ------------------------------------------------------------------------- */
 LLFUNC(Console, 1,
   LuaUtilClassCreatePtr<Font>(lS, *cFonts, cConGraphics->GetFont()))
+/* ========================================================================= */
+// $ Font.Count
+// < Count:integer=Total number of fonts created.
+// ? Returns the total number of font classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cFonts->CollectorCount()))
 /* ========================================================================= */
 // $ Font.Ftf
 // > Font:Ftf=An ftf object of a loaded freetype font.
@@ -804,9 +814,10 @@ LLFUNC(Manifest, 1,
 ** ######################################################################### **
 ** ## Font.* namespace functions structure                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Font.* namespace functions begin
-  LLRSFUNC(Console), LLRSFUNC(Ftf), LLRSFUNC(Image), LLRSFUNC(Manifest),
+  LLRSFUNC(Console), LLRSFUNC(Count), LLRSFUNC(Ftf), LLRSFUNC(Image),
+  LLRSFUNC(Manifest),
 LLRSEND                                // Font.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

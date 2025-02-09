@@ -130,11 +130,11 @@ local aRacesData<const> =
   { TYP.FTARG, TYP.GRABLIN, TYP.HABBISH, TYP.QUARRIOR };
 -- Race data --------------------------------------------------------------- --
 local aRaceStatData<const> = {
-  -- Object id -- STR STA DSP PAT ATP TEL SPC ------------------------------ --
-  { TYP.FTARG,    25, 50, 37, 32, 35, 42,  0 }, -- These are just values for
-  { TYP.HABBISH,  42, 45, 27, 25, 42, 50,  1 }, -- drawing. The actual values
-  { TYP.GRABLIN,  37, 35, 50, 35, 27, 38, -1 }, -- are in the actual object
-  { TYP.QUARRIOR, 50, 27, 20, 50, 48, 25, -1 }, -- data structures.
+  -- Object id -- STR STA DSP PAT ATP TEL ---------------------------------- --
+  { TYP.FTARG,    25, 50, 37, 32, 35, 42 },
+  { TYP.HABBISH,  42, 45, 27, 25, 42, 50 },
+  { TYP.GRABLIN,  37, 35, 50, 35, 27, 38 },
+  { TYP.QUARRIOR, 50, 27, 20, 50, 48, 25 }
 };
 -- Shop data statics ------------------------------------------------------- --
 local aShopData<const> = {
@@ -159,11 +159,11 @@ local CID<const> = {
 -- Cursor data ------------------------------------------------------------- --
 local aCursorData<const> = {
   -- CID ------- S - C - X  Y ---- CID ------- S - C - X  Y ---
-  [CID.ARROW] ={ 992,  1, 0,  0}, [CID.OK]    ={1005,  4,-7,-8},
-  [CID.EXIT]  ={1001,  4,-7, -8}, [CID.LEFT]  ={ 997,  1,-7,-7},
-  [CID.TOP]   ={ 998,  1,-7,  0}, [CID.RIGHT] ={ 999,  1,-7,-7},
-  [CID.BOTTOM]={1000,  1,-7,-15}, [CID.SELECT]={ 993,  4,-7,-7},
-  [CID.WAIT]  ={ 960,  8,-7, -7}, [CID.NONE]  ={1009,  1, 0, 0},
+  [CID.ARROW] ={ 992,  1,-3, -3}, [CID.OK]    ={1005,  4, -7,-8},
+  [CID.EXIT]  ={1001,  4,-7, -8}, [CID.LEFT]  ={ 997,  1, -2,-7},
+  [CID.TOP]   ={ 998,  1,-7, -2}, [CID.RIGHT] ={ 999,  1,-13,-7},
+  [CID.BOTTOM]={1000,  1,-7,-13}, [CID.SELECT]={ 993,  4, -7,-7},
+  [CID.WAIT]  ={ 960,  8,-7, -7}, [CID.NONE]  ={1009,  1,  0, 0},
   -- CID ------- S - C - X  Y ---- CID ------- S - C - X  Y ---
 };
 -- Object flags ------------------------------------------------------------ --
@@ -253,11 +253,6 @@ local aDigBlockData<const> =
 };
 -- Treasure spawning table ------------------------------------------------- --
 local aDigTileData<const> = { TYP.EMERALD, TYP.RUBY, TYP.DIAMOND, TYP.GOLD };
--- Treasure to UI status symbol tile ids ----------------------------------- --
-local aObjToUIData<const> = {
-  [TYP.RUBY]    = 846, [TYP.EMERALD] = 845, [TYP.GOLD]    = 844,
-  [TYP.DIAMOND] = 843, [TYP.JENNITE] = 842
-};
 -- AI Types ---------------------------------------------------------------- --
 local AI<const> = {
   NONE        = 0x00, -- Object has no AI
@@ -361,7 +356,7 @@ local isTL<const>, isTR<const> = ixTR|ixB,  ixTL|ixB;
 local isBL<const>, isBR<const> = ixT|ixBR,  ixT|ixBL;
 local ixA<const> = ixTL|ixTR|ixBL|ixBR;
 -- Lookup table for tile values -------------------------------------------- --
-local aShroudTileLookup<const> = {
+local aShroudTileLookup<const> = { -- {texSprTileId,...} -- 1ID-HEX-0ID ixFlag
   {iSH},     --[[ 00-0-01 Shrouded  --]] {iBR},     -- 01-1-02 ixTL
   {iBL},     --[[ 02-2-03 ixTR      --]] {iBA,iBB}, -- 03-3-04 ixT
   {iTR},     --[[ 04-4-05 ixBL      --]] {iRA,iRB}, -- 05-5-06 ixL
@@ -431,40 +426,40 @@ local aSkillEasiest<const>, aSkillEasy<const>,
 -- Level data types array -------------------------------------------------- --
 local aLevelsData<const> =
 { -- Name --------- WinReq - Filename ----- Terrain type ------------------- --
-  { n="AZERG",     w=aSkillEasiest,  f="azerg",     t=aLevelTypeRock     },
-  { n="DHOBBS",    w=aSkillEasiest,  f="dhobbs",    t=aLevelTypeGrass    },
-  { n="ELEEVATE",  w=aSkillEasiest,  f="eleevate",  t=aLevelTypeGrass    },
-  { n="DEENA",     w=aSkillEasiest,  f="deena",     t=aLevelTypeGrass    },
-  { n="JUHSTYN",   w=aSkillEasiest,  f="juhstyn",   t=aLevelTypeIslands  },
-  { n="FUJALE",    w=aSkillEasy,     f="fujale",    t=aLevelTypeGrass    },
-  { n="HAEWOULD",  w=aSkillEasiest,  f="haewould",  t=aLevelTypeGrass    },
-  { n="SAIRRUHR",  w=aSkillEasy,     f="sairruhr",  t=aLevelTypeJungle   },
-  { n="TRARGHE",   w=aSkillEasiest,  f="trarghe",   t=aLevelTypeJungle   },
-  { n="KURVELYNN", w=aSkillMedium,   f="kurvelynn", t=aLevelTypeMountain },
-  { n="SQUEEK",    w=aSkillMedium,   f="squeek",    t=aLevelTypeJungle   },
-  { n="MYKEBORL",  w=aSkillMedium,   f="mykeborl",  t=aLevelTypeDesert   },
-  { n="ZORLYACK",  w=aSkillMedium,   f="zorlyack",  t=aLevelTypeRock     },
-  { n="FTARGUS",   w=aSkillMedium,   f="ftargus",   t=aLevelTypeRock     },
-  { n="TRAISA",    w=aSkillMedium,   f="traisa",    t=aLevelTypeDesert   },
-  { n="KLINDYKE",  w=aSkillMedium,   f="klindyke",  t=aLevelTypeMountain },
-  { n="EEANZONE",  w=aSkillMedium,   f="eeanzone",  t=aLevelTypeGrass    },
-  { n="CHYEISHIR", w=aSkillMedium,   f="chyeishir", t=aLevelTypeGrass    },
-  { n="DJENNEEE",  w=aSkillMedium,   f="djenneee",  t=aLevelTypeWinter   },
-  { n="DWINDERA",  w=aSkillMedium,   f="dwindera",  t=aLevelTypeWinter   },
-  { n="TWANG",     w=aSkillMedium,   f="twang",     t=aLevelTypeJungle   },
-  { n="HABBARD",   w=aSkillMedium,   f="habbard",   t=aLevelTypeMountain },
-  { n="BENJAR",    w=aSkillMedium,   f="benjar",    t=aLevelTypeDesert   },
-  { n="SHRUBREE",  w=aSkillHard,     f="shrubree",  t=aLevelTypeJungle   },
-  { n="BAROK",     w=aSkillHard,     f="barok",     t=aLevelTypeIslands  },
-  { n="MUHLAHRD",  w=aSkillHard,     f="muhlahrd",  t=aLevelTypeDesert   },
-  { n="CHONSKEE",  w=aSkillHard,     f="chonskee",  t=aLevelTypeRock     },
-  { n="PURTH",     w=aSkillHard,     f="purth",     t=aLevelTypeMountain },
-  { n="ANKH",      w=aSkillHard,     f="ankh",      t=aLevelTypeWinter   },
-  { n="ZELIOS",    w=aSkillHardest,  f="zelios",    t=aLevelTypeWinter   },
-  { n="FRUER",     w=aSkillHardest,  f="fruer",     t=aLevelTypeIslands  },
-  { n="KLARSH",    w=aSkillHardest,  f="klarsh",    t=aLevelTypeJungle   },
-  { n="SUHMNER",   w=aSkillHardest,  f="suhmner",   t=aLevelTypeIslands  },
-  { n="SIMTOB",    w=aSkillHardest,  f="simtob",    t=aLevelTypeJungle   },
+  { n="AZERG",     w=aSkillEasiest,  f="azerg",     t=aLevelTypeRock     },--01
+  { n="DHOBBS",    w=aSkillEasiest,  f="dhobbs",    t=aLevelTypeGrass    },--02
+  { n="ELEEVATE",  w=aSkillEasiest,  f="eleevate",  t=aLevelTypeGrass    },--03
+  { n="DEENA",     w=aSkillEasiest,  f="deena",     t=aLevelTypeGrass    },--04
+  { n="JUHSTYN",   w=aSkillEasiest,  f="juhstyn",   t=aLevelTypeIslands  },--05
+  { n="FUJALE",    w=aSkillEasy,     f="fujale",    t=aLevelTypeGrass    },--06
+  { n="HAEWOULD",  w=aSkillEasiest,  f="haewould",  t=aLevelTypeGrass    },--07
+  { n="SAIRRUHR",  w=aSkillEasy,     f="sairruhr",  t=aLevelTypeJungle   },--08
+  { n="TRARGHE",   w=aSkillEasiest,  f="trarghe",   t=aLevelTypeJungle   },--09
+  { n="KURVELYNN", w=aSkillMedium,   f="kurvelynn", t=aLevelTypeMountain },--10
+  { n="SQUEEK",    w=aSkillMedium,   f="squeek",    t=aLevelTypeJungle   },--11
+  { n="MYKEBORL",  w=aSkillMedium,   f="mykeborl",  t=aLevelTypeDesert   },--12
+  { n="ZORLYACK",  w=aSkillMedium,   f="zorlyack",  t=aLevelTypeRock     },--13
+  { n="FTARGUS",   w=aSkillMedium,   f="ftargus",   t=aLevelTypeRock     },--14
+  { n="TRAISA",    w=aSkillMedium,   f="traisa",    t=aLevelTypeDesert   },--15
+  { n="KLINDYKE",  w=aSkillMedium,   f="klindyke",  t=aLevelTypeMountain },--16
+  { n="EEANZONE",  w=aSkillMedium,   f="eeanzone",  t=aLevelTypeGrass    },--17
+  { n="CHYEISHIR", w=aSkillMedium,   f="chyeishir", t=aLevelTypeGrass    },--18
+  { n="DJENNEEE",  w=aSkillMedium,   f="djenneee",  t=aLevelTypeWinter   },--19
+  { n="DWINDERA",  w=aSkillMedium,   f="dwindera",  t=aLevelTypeWinter   },--20
+  { n="TWANG",     w=aSkillMedium,   f="twang",     t=aLevelTypeJungle   },--21
+  { n="HABBARD",   w=aSkillMedium,   f="habbard",   t=aLevelTypeMountain },--22
+  { n="BENJAR",    w=aSkillMedium,   f="benjar",    t=aLevelTypeDesert   },--23
+  { n="SHRUBREE",  w=aSkillHard,     f="shrubree",  t=aLevelTypeJungle   },--24
+  { n="BAROK",     w=aSkillHard,     f="barok",     t=aLevelTypeIslands  },--25
+  { n="MUHLAHRD",  w=aSkillHard,     f="muhlahrd",  t=aLevelTypeDesert   },--26
+  { n="CHONSKEE",  w=aSkillHard,     f="chonskee",  t=aLevelTypeRock     },--27
+  { n="PURTH",     w=aSkillHard,     f="purth",     t=aLevelTypeMountain },--28
+  { n="ANKH",      w=aSkillHard,     f="ankh",      t=aLevelTypeWinter   },--29
+  { n="ZELIOS",    w=aSkillHardest,  f="zelios",    t=aLevelTypeWinter   },--30
+  { n="FRUER",     w=aSkillHardest,  f="fruer",     t=aLevelTypeIslands  },--31
+  { n="KLARSH",    w=aSkillHardest,  f="klarsh",    t=aLevelTypeJungle   },--32
+  { n="SUHMNER",   w=aSkillHardest,  f="suhmner",   t=aLevelTypeIslands  },--33
+  { n="SIMTOB",    w=aSkillHardest,  f="simtob",    t=aLevelTypeJungle   },--34
   -- Name --------- WinReq ----- Map name ------------ Map objects name --- --
 };
 -- Map data lookup table -------------------------------------------------- --
@@ -474,8 +469,8 @@ local aZoneData<const> = {
   -- R = Right bound on zone map.      B = Bottom bound on zone map.
   -- DEPENDENCY = Table of zone ids that unlock when any are completed.
   -- L -- T -- R -- B -- DEPENDENCY -------------------- ZONE ------- (1-10) --
-  { 188,  50, 245,  78, {                        } }, -- [01] Azerg
-  { 106,  63, 172,  90, {                        } }, -- [02] Dhobbs
+  { 188,  50, 245,  75, {                        } }, -- [01] Azerg
+  { 106,  63, 162,  97, {                        } }, -- [02] Dhobbs
   {  48, 137,  92, 167, {  2,  4,  5             } }, -- [03] Eleevate
   {  47, 192,  95, 245, {  3,  5,  9             } }, -- [04] Deena
   {  96, 154, 138, 185, {  2,  3,  4,  6,  8,  9 } }, -- [05] Justyn
@@ -526,6 +521,30 @@ local aObjectStop<const> = { [JOB.NONE] = { [DIR.NONE] = true } };
 local aObjectJobDirKeep<const> = { [JOB.KEEP] = { [DIR.KEEP] = true } };
 -- Search for treasure keys supported -------------------------------------- --
 local aObjectSearch<const> = { [DIR.LR] = true };
+-- Generic death data ------------------------------------------------------ --
+local aGenericActDeathData<const> =
+  { [DIR.NONE] = { 451, 454 }, FLAGS = OFL.BUSY };
+-- Find treasure phase data ------------------------------------------------ --
+local aTreasureActPhaseData<const> = {
+  [DIR.NONE] = { 106, 109, 0, 7 },
+  FLAGS      = OFL.FALL|OFL.PICKUP,
+  SOUND      = aSfxData.FIND
+};
+-- Generic object hide data ------------------------------------------------ --
+local aGenericActHideData<const> = {
+  [DIR.UL] = {  95,  95 }, [DIR.U]    = {  95,  95 }, [DIR.UR] = {  95,  95 },
+  [DIR.L]  = {  95,  95 }, [DIR.NONE] = {  95,  95 }, [DIR.R]  = {  95,  95 },
+  [DIR.DL] = {  95,  95 }, [DIR.D]    = {  95,  95 }, [DIR.DR] = {  95,  95 },
+  FLAGS    = OFL.BUSY
+};
+-- Digger phase data ------------------------------------------------------- --
+local aDiggerActPhaseData<const> = {
+  [DIR.UL] = { 106, 109 }, [DIR.U]    = { 106, 109 }, [DIR.UR] = { 106, 109 },
+  [DIR.L]  = { 106, 109 }, [DIR.NONE] = { 106, 109 }, [DIR.R]  = { 106, 109 },
+  [DIR.DL] = { 106, 109 }, [DIR.D]    = { 106, 109 }, [DIR.DR] = { 106, 109 },
+  FLAGS    = OFL.BUSY,
+  SOUND    = aSfxData.PHASE
+}
 -- Digger walk or run movement keys supported ------------------------------ --
 local aDiggerMovement<const> = {
   [JOB.NONE]    = aObjectLeftRight,
@@ -535,8 +554,8 @@ local aDiggerMovement<const> = {
   [JOB.SEARCH]  = aObjectSearch,
   [JOB.DIGDOWN] = { [DIR.TCTR] = true }
 };
--- Digger keep job and direction key operations supported ----------------- --
-local aDiggerKeys<const> = {
+-- Digger keep job and direction key operations supported ------------------ --
+local aKeysDigger<const> = {
   [ACT.DROP]  = aObjectJobDirKeep,
   [ACT.GRAB]  = aObjectJobDirKeep,
   [ACT.JUMP]  = aObjectJobDirKeep,
@@ -546,13 +565,108 @@ local aDiggerKeys<const> = {
   [ACT.WALK]  = aDiggerMovement,
 }
 -- Small and large tuneller accepted keys ---------------------------------- --
-local aTunnellerKeys<const> = {
+local aKeysTunneller<const> = {
   [ACT.STOP] = aObjectStop,
   [ACT.WALK] = { [JOB.NONE] = aObjectLeftRight,
                  [JOB.DIG] = aObjectLeftRight }
 };
 -- Deploy device ----------------------------------------------------------- --
-local aDeployDevice<const> = { [ACT.DEPLOY] = aObjectStop };
+local aKeysDeployDevice<const> = { [ACT.DEPLOY] = aObjectStop };
+-- Function to make data for a digger race --------------------------------- --
+local function MakeDiggerObject(iSB, iSE,  iWLB, iWLE, iWRB, iWRE,
+  iRLB, iRLE, iRRB, iRRE,  iDLB, iDLE, iDRB, iDRE, iDDB, iDDE,
+  iFLB, iFLE, iFRB, iFRE,  iELB, iELE, iERB, iERE,  iRB, iRE,  iSfxDeath,
+  iDigDelay, iIntelligence, iPatience, iLungs, iStamina, iStrength, iTeleDelay,
+  iFlags, sName, sLongName)
+  -- Build common animation tables
+  local aStop<const> = { iSB, iSE };
+  local aWalkLeft<const>, aWalkRight<const> = { iWLB, iWLE }, { iWRB, iWRE };
+  local aRunLeft<const>, aRunRight<const> = { iRLB, iRLE }, { iRRB, iRRE };
+  local aDigLeft<const>, aDigRight<const> = { iDLB, iDLE }, { iDRB, iDRE };
+  local aFightLeft<const>, aFightRight<const> = { iFLB, iFLE }, { iFRB, iFRE };
+  local aEatenLeft<const>, aEatenRight<const> = { iELB, iELE }, { iERB, iERE };
+  -- Add compulsory flags
+  iFlags = iFlags|OFL.DIGGER|OFL.LIVING;
+  -- Long name uses short name if not specified
+  if not sLongName then sLongName = sName end;
+  -- Rest is optional
+  local aRest;
+  if iRB and iRE then aRest = {
+    [DIR.NONE] = { iRB, iRE },
+    FLAGS      = OFL.BUSY|OFL.IMPATIENT|OFL.PHASETARGET
+  } end;
+  -- Build and return the table
+  return {
+    [ACT.PHASE] = aDiggerActPhaseData,
+    [ACT.HIDE] = aGenericActHideData,
+    [ACT.REST] = aRest,
+    [ACT.DEATH] = {
+      [DIR.NONE] = { 451, 454 },
+      FLAGS = OFL.BUSY,
+      SOUND = iSfxDeath
+    }, [ACT.STOP] = {
+      [DIR.UL] = aStop, [DIR.U]    = aStop, [DIR.UR] = aStop,
+      [DIR.L]  = aStop, [DIR.NONE] = aStop, [DIR.R]  = aStop,
+      [DIR.DL] = aStop, [DIR.D]    = aStop, [DIR.DR] = aStop,
+      FLAGS    = OFL.FALL|OFL.REGENERATE|OFL.PHASETARGET
+    }, [ACT.WALK] = {
+      [DIR.UL] = aWalkLeft, [DIR.U]    = aWalkLeft, [DIR.UR] = aWalkRight,
+      [DIR.L]  = aWalkLeft, [DIR.NONE] = aWalkLeft, [DIR.R]  = aWalkRight,
+      [DIR.DL] = aWalkLeft, [DIR.D]    = aWalkLeft, [DIR.DR] = aWalkRight,
+      FLAGS    = OFL.FALL|OFL.PHASETARGET
+    }, [ACT.RUN] = {
+      [DIR.UL] = aRunLeft, [DIR.U]    = aRunLeft, [DIR.UR] = aRunRight,
+      [DIR.L]  = aRunLeft, [DIR.NONE] = aRunLeft, [DIR.R]  = aRunRight,
+      [DIR.DL] = aRunLeft, [DIR.D]    = aRunLeft, [DIR.DR] = aRunRight,
+      FLAGS    = OFL.FALL|OFL.PHASETARGET
+    }, [ACT.DIG] = {
+      [DIR.UL] = aDigLeft, [DIR.U]    = aDigLeft,       [DIR.UR] = aDigRight,
+      [DIR.L]  = aDigLeft, [DIR.NONE] = aDigLeft,       [DIR.R]  = aDigRight,
+      [DIR.DL] = aDigLeft, [DIR.D]    = { iDDB, iDDE }, [DIR.DR] = aDigRight,
+      FLAGS    = OFL.FALL|OFL.SOUNDLOOP|OFL.PHASETARGET,
+      SOUNDRP  = aSfxData.DIG
+    }, [ACT.FIGHT] = {
+      [DIR.UL] = aFightLeft, [DIR.U]    = aFightLeft, [DIR.UR] = aFightRight,
+      [DIR.L]  = aFightLeft, [DIR.NONE] = aFightLeft, [DIR.R]  = aFightRight,
+      [DIR.DL] = aFightLeft, [DIR.D]    = aFightLeft, [DIR.DR] = aFightRight,
+      FLAGS    = OFL.FALL|OFL.RNGSPRITE|OFL.PHASETARGET
+    }, [ACT.EATEN] = {
+      [DIR.UL] = aEatenLeft, [DIR.U]    = aEatenLeft, [DIR.UR] = aEatenRight,
+      [DIR.L]  = aEatenLeft, [DIR.NONE] = aEatenLeft, [DIR.R]  = aEatenRight,
+      [DIR.DL] = aEatenLeft, [DIR.D]    = aEatenLeft, [DIR.DR] = aEatenRight,
+      FLAGS    = OFL.FALL|OFL.NOANIMLOOP|OFL.BUSY|OFL.PHASETARGET
+    },
+    ACTION       = ACT.STOP,              AITYPE       = AI.DIGGER,
+    ANIMTIMER    = aTimerData.ANIMNORMAL, DIGDELAY     = iDigDelay,
+    DIRECTION    = DIR.NONE,              FLAGS        = iFlags,
+    INTELLIGENCE = iIntelligence,         JOB          = JOB.NONE,
+    KEYS         = aKeysDigger,           LONGNAME     = sLongName,
+    LUNGS        = iLungs,                MENU         = MNU.MAIN,
+    NAME         = sName,                 PATIENCE     = iPatience,
+    STAMINA      = iStamina,              STRENGTH     = iStrength,
+    TELEDELAY    = iTeleDelay,            VALUE        = 1000,
+    WEIGHT       = 0
+  };
+end
+-- Function to make data for a treasure object ----------------------------- --
+local function MakeTreasureObject(iAB, iAE, iHS, iValue, sName)
+  return {
+    [ACT.DEATH] = aGenericActDeathData,
+    [ACT.PHASE] = aTreasureActPhaseData,
+    [ACT.STOP] = {
+      [DIR.NONE] = { iAB, iAE },
+      FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
+    },
+    ACTION    = ACT.PHASE,                AITYPE    = AI.NONE,
+    ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
+    FLAGS     = OFL.SELLABLE|OFL.TREASURE|OFL.AQUALUNG,
+    HUDSPRITE = iHS,                      JOB       = JOB.SPAWN,
+    LONGNAME  = sName,                    NAME      = sName,
+    STAMINA   = -1,                       STRENGTH  = 0,
+    TELEDELAY = 200,                      VALUE     = iValue,
+    WEIGHT    = 1,
+  }
+end
 -- ------------------------------------------------------------------------- --
 local aObjectData<const> = {           -- Objects data
 -- ------------------------------------------------------------------------- --
@@ -596,358 +710,37 @@ local aObjectData<const> = {           -- Objects data
 --   VALUE        = <integer>,         Cost of item to purchase (sell 1/2).
 --   WEIGHT       = <integer>          Required weight in order to carry.
 -- };                                  End of specific type data.
--- ------------------------------------------------------------------------- --
-[TYP.FTARG] = {
- [ACT.HIDE] = {
-  [DIR.UL] = {  95,  95 }, [DIR.U]    = {  95,  95 }, [DIR.UR] = {  95,  95 },
-  [DIR.L]  = {  95,  95 }, [DIR.NONE] = {  95,  95 }, [DIR.R]  = {  95,  95 },
-  [DIR.DL] = {  95,  95 }, [DIR.D]    = {  95,  95 }, [DIR.DR] = {  95,  95 },
-  FLAGS    = OFL.BUSY
- }, [ACT.STOP] = {
-  [DIR.UL] = { 138, 140 }, [DIR.U]    = { 138, 140 }, [DIR.UR] = { 138, 140 },
-  [DIR.L]  = { 138, 140 }, [DIR.NONE] = { 138, 140 }, [DIR.R]  = { 138, 140 },
-  [DIR.DL] = { 138, 140 }, [DIR.D]    = { 138, 140 }, [DIR.DR] = { 138, 140 },
-  FLAGS    = OFL.FALL|OFL.REGENERATE|OFL.PHASETARGET
- }, [ACT.WALK] = {
-  [DIR.UL] = {  12,  15 }, [DIR.U]    = {  12,  15 }, [DIR.UR] = {   8,  11 },
-  [DIR.L]  = {  12,  15 }, [DIR.NONE] = {  12,  15 }, [DIR.R]  = {   8,  11 },
-  [DIR.DL] = {  12,  15 }, [DIR.D]    = {  12,  15 }, [DIR.DR] = {   8,  11 },
-  FLAGS    = OFL.FALL|OFL.PHASETARGET
- }, [ACT.RUN] = {
-  [DIR.UL] = {  20,  23 }, [DIR.U]    = {  20,  23 }, [DIR.UR] = {  16,  19 },
-  [DIR.L]  = {  20,  23 }, [DIR.NONE] = {  20,  23 }, [DIR.R]  = {  16,  19 },
-  [DIR.DL] = {  20,  23 }, [DIR.D]    = {  20,  23 }, [DIR.DR] = {  16,  19 },
-  FLAGS    = OFL.FALL|OFL.PHASETARGET
- }, [ACT.DIG] = {
-  [DIR.UL] = {  63,  65 }, [DIR.U]    = {  63,  65 }, [DIR.UR] = {  60,  62 },
-  [DIR.L]  = {  63,  65 }, [DIR.NONE] = {  63,  65 }, [DIR.R]  = {  60,  62 },
-  [DIR.DL] = {  63,  65 }, [DIR.D]    = {  86,  88 }, [DIR.DR] = {  60,  62 },
-  FLAGS    = OFL.FALL|OFL.SOUNDLOOP|OFL.PHASETARGET,
-  SOUNDRP  = aSfxData.DIG
- }, [ACT.PHASE] = {
-  [DIR.UL] = { 106, 109 }, [DIR.U]    = { 106, 109 }, [DIR.UR] = { 106, 109 },
-  [DIR.L]  = { 106, 109 }, [DIR.NONE] = { 106, 109 }, [DIR.R]  = { 106, 109 },
-  [DIR.DL] = { 106, 109 }, [DIR.D]    = { 106, 109 }, [DIR.DR] = { 106, 109 },
-  FLAGS    = OFL.BUSY,
-  SOUND    = aSfxData.PHASE
- }, [ACT.FIGHT] = {
-  [DIR.UL] = { 245, 249 }, [DIR.U]    = { 240, 244 }, [DIR.UR] = { 240, 244 },
-  [DIR.L]  = { 245, 249 }, [DIR.NONE] = { 240, 244 }, [DIR.R]  = { 240, 244 },
-  [DIR.DL] = { 245, 249 }, [DIR.D]    = { 240, 244 }, [DIR.DR] = { 240, 244 },
-  FLAGS    = OFL.FALL|OFL.RNGSPRITE|OFL.PHASETARGET
- }, [ACT.EATEN] = {
-  [DIR.UL] = {  77,  79 }, [DIR.U]    = {  74,  76 }, [DIR.UR] = {  74,  76 },
-  [DIR.L]  = {  77,  79 }, [DIR.NONE] = {  74,  76 }, [DIR.R]  = {  74,  76 },
-  [DIR.DL] = {  77,  79 }, [DIR.D]    = {  74,  76 }, [DIR.DR] = {  74,  76 },
-  FLAGS    = OFL.FALL|OFL.NOANIMLOOP|OFL.BUSY|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY,
-  SOUND      = aSfxData.DIEFTAR
- },
- ACTION       = ACT.STOP,              AITYPE       = AI.DIGGER,
- ANIMTIMER    = aTimerData.ANIMNORMAL, DIGDELAY     = 60,
- DIRECTION    = DIR.NONE,
- FLAGS        = OFL.DIGGER|OFL.DELICATE|OFL.LIVING,
- INTELLIGENCE = 0.7,                   JOB          = JOB.NONE,
- KEYS         = aDiggerKeys,           LONGNAME     = "F'TARG",
- LUNGS        = 4,                     MENU         = MNU.MAIN,
- NAME         = "FTARG",               PATIENCE     = 9600,
- STAMINA      = 60,                    STRENGTH     = 3,
- TELEDELAY    = 120,                   VALUE        = 1000,
- WEIGHT       = 0
--- ------------------------------------------------------------------------- --
-}, [TYP.HABBISH] = {
- [ACT.HIDE] = {
-  [DIR.UL] = {  95,  95 }, [DIR.U]    = {  95,  95 }, [DIR.UR] = {  95,  95 },
-  [DIR.L]  = {  95,  95 }, [DIR.NONE] = {  95,  95 }, [DIR.R]  = {  95,  95 },
-  [DIR.DL] = {  95,  95 }, [DIR.D]    = {  95,  95 }, [DIR.DR] = {  95,  95 },
-  FLAGS    = OFL.BUSY
- }, [ACT.STOP] = {
-  [DIR.UL] = { 135, 137 }, [DIR.U]    = { 135, 137 }, [DIR.UR] = { 135, 137 },
-  [DIR.L]  = { 135, 137 }, [DIR.NONE] = { 135, 137 }, [DIR.R]  = { 135, 137 },
-  [DIR.DL] = { 135, 137 }, [DIR.D]    = { 135, 137 }, [DIR.DR] = { 135, 137 },
-  FLAGS    = OFL.FALL|OFL.REGENERATE|OFL.PHASETARGET
- }, [ACT.WALK] = {
-  [DIR.UL] = { 120, 123 }, [DIR.U]    = { 120, 123 }, [DIR.UR] = { 116, 119 },
-  [DIR.L]  = { 120, 123 }, [DIR.NONE] = { 120, 123 }, [DIR.R]  = { 116, 119 },
-  [DIR.DL] = { 120, 123 }, [DIR.D]    = { 120, 123 }, [DIR.DR] = { 116, 119 },
-  FLAGS    = OFL.FALL|OFL.PHASETARGET
- }, [ACT.RUN] = {
-  [DIR.UL] = { 128, 131 }, [DIR.U]    = { 128, 131 }, [DIR.UR] = { 124, 127 },
-  [DIR.L]  = { 128, 131 }, [DIR.NONE] = { 128, 131 }, [DIR.R]  = { 124, 127 },
-  [DIR.DL] = { 128, 131 }, [DIR.D]    = { 128, 131 }, [DIR.DR] = { 124, 127 },
-  FLAGS    = OFL.FALL|OFL.PHASETARGET
- }, [ACT.DIG] = {
-  [DIR.UL] = { 228, 230 }, [DIR.U]    = { 228, 230 }, [DIR.UR] = { 225, 227 },
-  [DIR.L]  = { 228, 230 }, [DIR.NONE] = { 228, 230 }, [DIR.R]  = { 225, 227 },
-  [DIR.DL] = { 228, 230 }, [DIR.D]    = { 237, 239 }, [DIR.DR] = { 225, 227 },
-  FLAGS    = OFL.FALL|OFL.SOUNDLOOP|OFL.PHASETARGET,
-  SOUNDRP  = aSfxData.DIG
- }, [ACT.PHASE] = {
-  [DIR.UL] = { 106, 109 }, [DIR.U]    = { 106, 109 }, [DIR.UR] = { 106, 109 },
-  [DIR.L]  = { 106, 109 }, [DIR.NONE] = { 106, 109 }, [DIR.R]  = { 106, 109 },
-  [DIR.DL] = { 106, 109 }, [DIR.D]    = { 106, 109 }, [DIR.DR] = { 106, 109 },
-  FLAGS    = OFL.BUSY,
-  SOUND    = aSfxData.PHASE
- }, [ACT.FIGHT] = {
-  [DIR.UL] = { 255, 259 }, [DIR.U]    = { 250, 254 }, [DIR.UR] = { 250, 254 },
-  [DIR.L]  = { 255, 259 }, [DIR.NONE] = { 250, 254 }, [DIR.R]  = { 250, 254 },
-  [DIR.DL] = { 255, 259 }, [DIR.D]    = { 250, 254 }, [DIR.DR] = { 250, 254 },
-  FLAGS    = OFL.FALL|OFL.RNGSPRITE|OFL.PHASETARGET,
- }, [ACT.EATEN] = {
-  [DIR.UL] = { 151, 153 }, [DIR.U]    = { 141, 143 }, [DIR.UR] = { 141, 143 },
-  [DIR.L]  = { 151, 153 }, [DIR.NONE] = { 141, 143 }, [DIR.R]  = { 141, 143 },
-  [DIR.DL] = { 151, 153 }, [DIR.D]    = { 141, 143 }, [DIR.DR] = { 141, 143 },
-  FLAGS    = OFL.FALL|OFL.NOANIMLOOP|OFL.BUSY|OFL.PHASETARGET,
- }, [ACT.REST] = {
-  [DIR.NONE] = { 132, 132 },
-  FLAGS      = OFL.BUSY|OFL.IMPATIENT|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY,
-  SOUND      = aSfxData.DIEHABB
- },
- ACTION       = ACT.STOP,              AITYPE       = AI.DIGGER,
- ANIMTIMER    = aTimerData.ANIMNORMAL, DIGDELAY     = 70,
- DIRECTION    = DIR.NONE,
- FLAGS        = OFL.DIGGER|OFL.DELICATE|OFL.TPMASTER|OFL.LIVING,
- INTELLIGENCE = 0.9,                   JOB          = JOB.NONE,
- KEYS         = aDiggerKeys,           LONGNAME     = "HABBISH",
- LUNGS        = 12,                    MENU         = MNU.MAIN,
- NAME         = "HABBISH",             PATIENCE     = 7500,
- STAMINA      = 120,                   STRENGTH     = 5,
- TELEDELAY    = 60,                    VALUE        = 1000,
- WEIGHT       = 0
--- ------------------------------------------------------------------------- --
-}, [TYP.GRABLIN] = {
- [ACT.HIDE] = {
-  [DIR.UL] = {  95,  95 }, [DIR.U]    = {  95,  95 }, [DIR.UR] = {  95,  95 },
-  [DIR.L]  = {  95,  95 }, [DIR.NONE] = {  95,  95 }, [DIR.R]  = {  95,  95 },
-  [DIR.DL] = {  95,  95 }, [DIR.D]    = {  95,  95 }, [DIR.DR] = {  95,  95 },
-  FLAGS    = OFL.BUSY
- }, [ACT.STOP] = {
-  [DIR.UL] = { 222, 224 }, [DIR.U]    = { 222, 224 }, [DIR.UR] = { 222, 224 },
-  [DIR.L]  = { 222, 224 }, [DIR.NONE] = { 222, 224 }, [DIR.R]  = { 222, 224 },
-  [DIR.DL] = { 222, 224 }, [DIR.D]    = { 222, 224 }, [DIR.DR] = { 222, 224 },
-  FLAGS    = OFL.FALL|OFL.REGENERATE|OFL.PHASETARGET
- }, [ACT.WALK] = {
-  [DIR.UL] = { 204, 207 }, [DIR.U]    = { 204, 207 }, [DIR.UR] = { 200, 203 },
-  [DIR.L]  = { 204, 207 }, [DIR.NONE] = { 204, 207 }, [DIR.R]  = { 200, 203 },
-  [DIR.DL] = { 204, 207 }, [DIR.D]    = { 204, 207 }, [DIR.DR] = { 200, 203 },
-  FLAGS    = OFL.FALL|OFL.PHASETARGET
- }, [ACT.RUN] = {
-  [DIR.UL] = { 212, 215 }, [DIR.U]    = { 212, 215 }, [DIR.UR] = { 208, 211 },
-  [DIR.L]  = { 212, 215 }, [DIR.NONE] = { 212, 215 }, [DIR.R]  = { 208, 211 },
-  [DIR.DL] = { 212, 215 }, [DIR.D]    = { 212, 215 }, [DIR.DR] = { 208, 211 },
-  FLAGS    = OFL.FALL|OFL.PHASETARGET
- }, [ACT.DIG] = {
-  [DIR.UL] = {  83,  85 }, [DIR.U]    = {  83,  85 }, [DIR.UR] = {  80,  82 },
-  [DIR.L]  = {  83,  85 }, [DIR.NONE] = {  83,  85 }, [DIR.R]  = {  80,  82 },
-  [DIR.DL] = {  83,  85 }, [DIR.D]    = {  89,  91 }, [DIR.DR] = {  80,  82 },
-  FLAGS    = OFL.FALL|OFL.SOUNDLOOP|OFL.PHASETARGET,
-  SOUNDRP  = aSfxData.DIG
- }, [ACT.PHASE] = {
-  [DIR.UL] = { 106, 109 }, [DIR.U]    = { 106, 109 }, [DIR.UR] = { 106, 109 },
-  [DIR.L]  = { 106, 109 }, [DIR.NONE] = { 106, 109 }, [DIR.R]  = { 106, 109 },
-  [DIR.DL] = { 106, 109 }, [DIR.D]    = { 106, 109 }, [DIR.DR] = { 106, 109 },
-  FLAGS    = OFL.BUSY,
-  SOUND    = aSfxData.PHASE
- }, [ACT.FIGHT] = {
-  [DIR.UL] = { 275, 279 }, [DIR.U]    = { 270, 274 }, [DIR.UR] = { 270, 274 },
-  [DIR.L]  = { 275, 279 }, [DIR.NONE] = { 270, 274 }, [DIR.R]  = { 270, 274 },
-  [DIR.DL] = { 275, 279 }, [DIR.D]    = { 270, 274 }, [DIR.DR] = { 270, 274 },
-  FLAGS    = OFL.FALL|OFL.RNGSPRITE|OFL.PHASETARGET
- }, [ACT.EATEN] = {
-  [DIR.UL] = { 219, 221 }, [DIR.U]    = { 216, 218 }, [DIR.UR] = { 216, 218 },
-  [DIR.L]  = { 219, 221 }, [DIR.NONE] = { 216, 218 }, [DIR.R]  = { 216, 218 },
-  [DIR.DL] = { 219, 221 }, [DIR.D]    = { 216, 218 }, [DIR.DR] = { 216, 218 },
-  FLAGS    = OFL.FALL|OFL.NOANIMLOOP|OFL.BUSY|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  SOUND      = aSfxData.DIEGRAB,
-  FLAGS      = OFL.BUSY
- },
- ACTION       = ACT.STOP,              AITYPE       = AI.DIGGER,
- ANIMTIMER    = aTimerData.ANIMNORMAL, DIGDELAY     = 50,
- DIRECTION    = DIR.NONE,
- FLAGS        = OFL.DIGGER|OFL.DELICATE|OFL.LIVING,
- INTELLIGENCE = 0.8,                   JOB          = JOB.NONE,
- KEYS         = aDiggerKeys,           LONGNAME     = "GRABLIN",
- LUNGS        = 8,                     MENU         = MNU.MAIN,
- NAME         = "GRABLIN",             PATIENCE     = 10500,
- STAMINA      = 120,                   STRENGTH     = 4,
- TELEDELAY    = 120,                   VALUE        = 1000,
- WEIGHT       = 0,
--- ------------------------------------------------------------------------- --
-}, [TYP.QUARRIOR] = {
- [ACT.HIDE] = {
-  [DIR.UL] = {  95,  95 }, [DIR.U]    = {  95,  95 }, [DIR.UR] = {  95,  95 },
-  [DIR.L]  = {  95,  95 }, [DIR.NONE] = {  95,  95 }, [DIR.R]  = {  95,  95 },
-  [DIR.DL] = {  95,  95 }, [DIR.D]    = {  95,  95 }, [DIR.DR] = {  95,  95 },
-  FLAGS    = OFL.BUSY
- }, [ACT.STOP] = {
-  [DIR.UL] = { 178, 180 }, [DIR.U]    = { 178, 180 }, [DIR.UR] = { 178, 180 },
-  [DIR.L]  = { 178, 180 }, [DIR.NONE] = { 178, 180 }, [DIR.R]  = { 178, 180 },
-  [DIR.DL] = { 178, 180 }, [DIR.D]    = { 178, 180 }, [DIR.DR] = { 178, 180 },
-  FLAGS    = OFL.FALL|OFL.REGENERATE|OFL.PHASETARGET
- }, [ACT.WALK] = {
-  [DIR.UL] = { 160, 163 }, [DIR.U]    = { 160, 163 }, [DIR.UR] = { 156, 159 },
-  [DIR.L]  = { 160, 163 }, [DIR.NONE] = { 160, 163 }, [DIR.R]  = { 156, 159 },
-  [DIR.DL] = { 160, 163 }, [DIR.D]    = { 160, 163 }, [DIR.DR] = { 156, 159 },
-  FLAGS    = OFL.FALL|OFL.PHASETARGET
- }, [ACT.RUN] = {
-  [DIR.UL] = { 168, 171 }, [DIR.U]    = { 168, 171 }, [DIR.UR] = { 164, 167 },
-  [DIR.L]  = { 168, 171 }, [DIR.NONE] = { 168, 171 }, [DIR.R]  = { 164, 167 },
-  [DIR.DL] = { 168, 171 }, [DIR.D]    = { 168, 171 }, [DIR.DR] = { 164, 167 },
-  FLAGS    = OFL.FALL|OFL.PHASETARGET
- }, [ACT.DIG] = {
-  [DIR.UL] = { 234, 236 }, [DIR.U]    = { 234, 236 }, [DIR.UR] = { 231, 233 },
-  [DIR.L]  = { 234, 236 }, [DIR.NONE] = { 234, 236 }, [DIR.R]  = { 231, 233 },
-  [DIR.DL] = { 234, 236 }, [DIR.D]    = {  92,  94 }, [DIR.DR] = { 231, 233 },
-  FLAGS    = OFL.FALL|OFL.SOUNDLOOP|OFL.PHASETARGET,
-  SOUNDRP  = aSfxData.DIG
- }, [ACT.PHASE] = {
-  [DIR.UL] = { 106, 109 }, [DIR.U]    = { 106, 109 }, [DIR.UR] = { 106, 109 },
-  [DIR.L]  = { 106, 109 }, [DIR.NONE] = { 106, 109 }, [DIR.R]  = { 106, 109 },
-  [DIR.DL] = { 106, 109 }, [DIR.D]    = { 106, 109 }, [DIR.DR] = { 106, 109 },
-  FLAGS    = OFL.BUSY,
-  SOUND    = aSfxData.PHASE
- }, [ACT.FIGHT] = {
-  [DIR.UL] = { 265, 269 }, [DIR.U]    = { 260, 264 }, [DIR.UR] = { 260, 264 },
-  [DIR.L]  = { 265, 269 }, [DIR.NONE] = { 260, 264 }, [DIR.R]  = { 260, 264 },
-  [DIR.DL] = { 265, 269 }, [DIR.D]    = { 260, 264 }, [DIR.DR] = { 260, 264 },
-  FLAGS    = OFL.FALL|OFL.RNGSPRITE|OFL.PHASETARGET
- }, [ACT.EATEN] = {
-  [DIR.UL] = { 175, 177 }, [DIR.U]    = { 172, 174 }, [DIR.UR] = { 172, 174 },
-  [DIR.L]  = { 175, 177 }, [DIR.NONE] = { 172, 174 }, [DIR.R]  = { 172, 174 },
-  [DIR.DL] = { 175, 177 }, [DIR.D]    = { 172, 174 }, [DIR.DR] = { 172, 174 },
-  FLAGS    = OFL.FALL|OFL.NOANIMLOOP|OFL.BUSY|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY,
-  SOUND      = aSfxData.DIEQUAR
- },
- ACTION       = ACT.STOP,              AITYPE       = AI.DIGGER,
- ANIMTIMER    = aTimerData.ANIMNORMAL, DIGDELAY     = 80,
- DIRECTION    = DIR.NONE,              FLAGS        = OFL.DIGGER|OFL.LIVING,
- INTELLIGENCE = 0.6,                   JOB          = JOB.NONE,
- KEYS         = aDiggerKeys,           LONGNAME     = "QUARRIOR",
- LUNGS        = 16,                    MENU         = MNU.MAIN,
- NAME         = "QUARRIOR",            PATIENCE     = 15000,
- STAMINA      = 120,                   STRENGTH     = 6,
- TELEDELAY    = 180,                   VALUE        = 1000,
- WEIGHT       = 0
--- ------------------------------------------------------------------------- --
-}, [TYP.JENNITE] = {
- [ACT.STOP] = {
-  [DIR.NONE] = { 315, 318 },
-  FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
- }, [ACT.PHASE] = {
-  [DIR.NONE] = { 106, 109, 0, 7 },
-  FLAGS      = OFL.FALL|OFL.PICKUP,
-  SOUND      = aSfxData.FIND
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- },
- ACTION    = ACT.PHASE,                AITYPE    = AI.NONE,
- ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.SELLABLE|OFL.TREASURE|OFL.AQUALUNG,
- JOB       = JOB.SPAWN,                LONGNAME  = "JENNITE",
- NAME      = "JENNITE",                STAMINA   = -1,
- STRENGTH  = 0,                        TELEDELAY = 200,
- VALUE     = 280,                      WEIGHT    = 1,
--- ------------------------------------------------------------------------- --
-}, [TYP.DIAMOND] = {
- [ACT.STOP] = {
-  [DIR.NONE] = { 428, 431 },
-  FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
- }, [ACT.PHASE] = {
-  [DIR.NONE] = { 106, 109, 0, 7 },
-  FLAGS      = OFL.FALL|OFL.PICKUP,
-  SOUND      = aSfxData.FIND
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- },
- ACTION    = ACT.PHASE,                AITYPE    = AI.NONE,
- ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.SELLABLE|OFL.TREASURE|OFL.AQUALUNG,
- JOB       = JOB.SPAWN,                LONGNAME  = "DIAMOND",
- NAME      = "DIAMOND",                STAMINA   = -1,
- STRENGTH  = 0,                        TELEDELAY = 200,
- VALUE     = 100,                      WEIGHT    = 1
--- ------------------------------------------------------------------------- --
-}, [TYP.GOLD] = {
- [ACT.STOP] = {
-  [DIR.NONE] = {  96,  99 },
-  FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
- }, [ACT.PHASE] = {
-  [DIR.NONE] = { 106, 109, 0, 7 },
-  FLAGS      = OFL.FALL|OFL.PICKUP,
-  SOUND      = aSfxData.FIND
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- },
- ACTION    = ACT.PHASE,                AITYPE    = AI.NONE,
- ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.SELLABLE|OFL.TREASURE|OFL.AQUALUNG,
- JOB       = JOB.SPAWN,                LONGNAME  = "GOLD",
- NAME      = "GOLD",                   STAMINA   = -1,
- STRENGTH  = 0,                        TELEDELAY = 200,
- VALUE     = 80,                       WEIGHT    = 1
--- ------------------------------------------------------------------------- --
-}, [TYP.EMERALD] = {
- [ACT.STOP] = {
-  [DIR.NONE] = { 432, 435 },
-  FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
- }, [ACT.PHASE] = {
-  [DIR.NONE] = { 106, 109, 0, 7 },
-  FLAGS      = OFL.FALL|OFL.PICKUP,
-  SOUND      = aSfxData.FIND
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- },
- ACTION    = ACT.PHASE,                AITYPE    = AI.NONE,
- ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.SELLABLE|OFL.TREASURE|OFL.AQUALUNG,
- JOB       = JOB.SPAWN,                LONGNAME  = "EMERALD",
- NAME      = "EMERALD",                STAMINA   = -1,
- STRENGTH  = 0,                        TELEDELAY = 200,
- VALUE     = 60,                       WEIGHT    = 1
--- ------------------------------------------------------------------------- --
-}, [TYP.RUBY] = {
- [ACT.STOP] = {
-  [DIR.NONE] = { 436, 439 },
-  FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
- }, [ACT.PHASE] = {
-  [DIR.NONE] = { 106, 109, 0, 7 },
-  FLAGS      = OFL.FALL|OFL.PICKUP,
-  SOUND      = aSfxData.FIND
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- },
- ACTION    = ACT.PHASE,                AITYPE    = AI.NONE,
- ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
- FLAGS     = OFL.SELLABLE|OFL.TREASURE|OFL.AQUALUNG,
- JOB       = JOB.SPAWN,                LONGNAME  = "RUBY",
- NAME      = "RUBY",                   STAMINA   = -1,
- STRENGTH  = 0,                        TELEDELAY = 200,
- VALUE     = 40,                       WEIGHT    = 1,
--- ------------------------------------------------------------------------- --
-}, [TYP.PHANTOM] = {
+-- Digger races (S2,W4,R4,D6,F4,E4,R2,DS,DD,INT,PAT,LUN,STA,STR,TLD,FL,N,LN) --
+[TYP.FTARG] = MakeDiggerObject(138, 140,  12, 15, 8, 11,
+  20, 23, 16, 19,  63, 65, 60, 62, 86, 88,  245, 249, 240, 244,
+  77, 79, 74, 76,  nil, nil,  aSfxData.DIEFTAR,  60,  0.7,  9600,  4,
+  60,  3,  120,  OFL.DELICATE,  "FTARG",  "F'TARG"),
+[TYP.HABBISH] = MakeDiggerObject(135, 137,  120, 123, 116, 119,
+  128, 131, 124, 127,  228, 230, 225, 227, 237, 239,  255, 259, 250, 254,
+  151, 153, 141, 143,  132, 132,  aSfxData.DIEHABB,  70,  0.9,  7500,  12,
+  120,  5,  60,  OFL.DELICATE|OFL.TPMASTER,  "HABBISH"),
+[TYP.GRABLIN] = MakeDiggerObject(222, 224,  204, 207, 200, 203,
+  212, 215, 208, 211,  83, 85, 80, 82, 89, 91,  275, 279, 270, 274,
+  219, 221, 216, 218,  nil, nil,  aSfxData.DIEGRAB,  50,  0.8,  10500,  8,
+  120,  4,  120,  OFL.DELICATE,  "GRABLIN"),
+[TYP.QUARRIOR] = MakeDiggerObject(178, 180,  160, 163, 156, 159,
+  168, 171, 164, 167,  234, 236, 231, 233, 92, 94,  265, 269, 260, 264,
+  175, 177, 172, 174,  nil, nil,  aSfxData.DIEQUAR, 80, 0.6, 15000, 16,
+  120,  6,  180,  OFL.NONE,  "QUARRIOR"),
+-- Treasure objects -------------------------------------------------------- --
+[TYP.JENNITE] = MakeTreasureObject(315, 318, 842, 280, "JENNITE"),
+[TYP.DIAMOND] = MakeTreasureObject(428, 431, 843, 100, "DIAMOND"),
+[TYP.GOLD]    = MakeTreasureObject( 96,  99, 844,  80, "GOLD"),
+[TYP.EMERALD] = MakeTreasureObject(432, 435, 845,  60, "EMERALD"),
+[TYP.RUBY]    = MakeTreasureObject(436, 439, 846,  40, "RUBY"),
+-- Residents --------------------------------------------------------------- --
+[TYP.PHANTOM] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
                           [DIR.U]    = { 442, 445 },
   [DIR.L] = { 442, 445 }, [DIR.NONE] = { 446, 449 }, [DIR.R] = { 446, 449 },
                           [DIR.D]    = { 446, 449 },
   FLAGS   = OFL.HURTDIGGER
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.RANDOM,
  ANIMTIMER = aTimerData.ANIMFAST,      DIRECTION = DIR.NONE,
@@ -958,14 +751,12 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.SKELETON] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.UL] = { 409, 412 }, [DIR.U]    = { 413, 416 }, [DIR.UR] = { 413, 416 },
   [DIR.L]  = { 409, 412 }, [DIR.NONE] = { 413, 416 }, [DIR.R]  = { 413, 416 },
   [DIR.DL] = { 409, 412 }, [DIR.D]    = { 413, 416 }, [DIR.DR] = { 413, 416 },
   FLAGS    = OFL.HURTDIGGER
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.FINDSLOW,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
@@ -976,14 +767,12 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.ZOMBIE] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.UL] = { 147, 148 }, [DIR.U]    = { 149, 150 }, [DIR.UR] = { 149, 150 },
   [DIR.L]  = { 147, 148 }, [DIR.NONE] = { 149, 150 }, [DIR.R]  = { 149, 150 },
   [DIR.DL] = { 147, 148 }, [DIR.D]    = { 149, 150 }, [DIR.DR] = { 149, 150 },
   FLAGS    = OFL.HURTDIGGER
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.FIND,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
@@ -1012,14 +801,12 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.ZIPPER] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.UL] = { 371, 374 }, [DIR.U]    = { 371, 374 }, [DIR.UR] = { 371, 374 },
   [DIR.L]  = { 371, 374 }, [DIR.NONE] = { 371, 374 }, [DIR.R]  = { 371, 374 },
   [DIR.DL] = { 371, 374 }, [DIR.D]    = { 371, 374 }, [DIR.DR] = { 371, 374 },
   FLAGS    = OFL.PHASEDIGGER
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.FINDSLOW,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
@@ -1030,14 +817,12 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT    = 0,
 -- ------------------------------------------------------------------------- --
 }, [TYP.SWRLYPRT] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.UL] = { 417, 427 }, [DIR.U]    = { 417, 427 }, [DIR.UR] = { 417, 427 },
   [DIR.L]  = { 417, 427 }, [DIR.NONE] = { 417, 427 }, [DIR.R]  = { 417, 427 },
   [DIR.DL] = { 417, 427 }, [DIR.D]    = { 417, 427 }, [DIR.DR] = { 417, 427 },
   FLAGS    = OFL.PHASEDIGGER
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.FIND,
  ANIMTIMER = aTimerData.ANIMFAST,      DIRECTION = DIR.NONE,
@@ -1048,15 +833,13 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.PIRANA] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.L] = { 388, 388 }, [DIR.NONE] = { 393, 393 }, [DIR.R] = { 393, 393 },
   FLAGS   = OFL.FALL|OFL.HURTDIGGER|OFL.PHASETARGET
  }, [ACT.FIGHT] = {
   [DIR.L] = { 389, 392 }, [DIR.R] = { 394, 397 },
   FLAGS   = OFL.FALL|OFL.HURTDIGGER|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
@@ -1067,15 +850,13 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.FUNGUS] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.L] = { 398, 401 }, [DIR.NONE] = { 398, 401 }, [DIR.R] = { 398, 401 },
   FLAGS   = OFL.FALL|OFL.HURTDIGGER|OFL.PHASETARGET
  }, [ACT.FIGHT] = {
   [DIR.L] = { 402, 408 }, [DIR.NONE] = { 402, 408 }, [DIR.R] = { 402, 408 },
   FLAGS   = OFL.FALL|OFL.HURTDIGGER|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
@@ -1086,12 +867,10 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.ALIEN] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.RUN] = {
   [DIR.L] = { 102, 105 }, [DIR.NONE] = { 112, 115 }, [DIR.R] = { 112, 115 },
   FLAGS   = OFL.FALL|OFL.HURTDIGGER|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.RUN,                  AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
@@ -1121,11 +900,8 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.BIRD] = {
- [ACT.STOP] = {
-  [DIR.L] = { 297, 301 }, [DIR.R] = { 302, 306 }
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 }, FLAGS = OFL.BUSY
- },
+ [ACT.DEATH] = aGenericActDeathData,
+ [ACT.STOP] = { [DIR.L] = { 297, 301 }, [DIR.R] = { 302, 306 } },
  ACTION    = ACT.STOP,                 AITYPE    = AI.CRITTER,
  ANIMTIMER = aTimerData.ANIMNORMAL ,   DIRECTION = DIR.LR,
  FLAGS     = OFL.LIVING,               JOB       = JOB.BOUNCE,
@@ -1135,12 +911,8 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.FISH] = {
- [ACT.STOP] = {
-  [DIR.L] = { 58, 59 }, [DIR.R] = { 56, 57 }
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- },
+ [ACT.DEATH] = aGenericActDeathData,
+ [ACT.STOP] = { [DIR.L] = { 58, 59 }, [DIR.R] = { 56, 57 } },
  ACTION    = ACT.STOP,                 AITYPE    = AI.CRITTERSLOW,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
  FLAGS     = OFL.AQUALUNG|OFL.WATERBASED|OFL.LIVING,
@@ -1150,11 +922,10 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.RAPTOR] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.RUN] = {
   [DIR.L] = { 362, 365 }, [DIR.R] = { 366, 369 },
   FLAGS   = OFL.FALL|OFL.HURTDIGGER|OFL.PURSUEDIGGER|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 }, FLAGS = OFL.BUSY
  },
  ACTION    = ACT.RUN,                  AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
@@ -1165,12 +936,10 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 0,                        WEIGHT    = 0,
 -- ------------------------------------------------------------------------- --
 }, [TYP.ROTARY] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.WALK] = {
   [DIR.L] = { 380, 383 }, [DIR.R] = { 384, 387 },
   FLAGS   = OFL.FALL|OFL.HURTDIGGER|OFL.PURSUEDIGGER|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.WALK,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
@@ -1181,12 +950,10 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.STEGO] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.CREEP] = {
   [DIR.L] = { 29, 32, 3, 0 }, [DIR.R] = { 39, 42, -3, 0 },
   FLAGS   = OFL.FALL|OFL.HURTDIGGER|OFL.PURSUEDIGGER|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION     = ACT.CREEP,               AITYPE     = AI.NONE,
  ANIMTIMER  = aTimerData.ANIMNORMAL,   ATTACHMENT = TYP.STEGOB,
@@ -1198,20 +965,12 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT     = 0,
 -- ------------------------------------------------------------------------- --
 }, [TYP.STEGOB] = {
- [ACT.CREEP] = {
-  [DIR.L] = { 25, 28, -16, 0 }, [DIR.R] = { 43, 46, 16, 0 }
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454, -16, 0 },
-  FLAGS      = OFL.BUSY
- }
+ [ACT.CREEP] = { [DIR.L] = { 25, 28, -16, 0 }, [DIR.R] = { 43, 46, 16, 0 } },
+ [ACT.DEATH] = { [DIR.NONE] = { 451, 454, -16, 0 }, FLAGS = OFL.BUSY }
 -- ------------------------------------------------------------------------- --
 }, [TYP.TURTLE] = {
- [ACT.STOP] = {
-  [DIR.L] = { 307, 310 }, [DIR.R] = { 311, 314 }
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- },
+ [ACT.DEATH] = aGenericActDeathData,
+ [ACT.STOP]  = { [DIR.L] = { 307, 310 }, [DIR.R] = { 311, 314 } },
  ACTION    = ACT.STOP,                 AITYPE    = AI.CRITTER,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
  FLAGS     = OFL.AQUALUNG|OFL.WATERBASED|OFL.LIVING,
@@ -1221,10 +980,10 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.BIGFOOT] = {
- [ACT.HIDE] = {
-  [DIR.NONE] = { 95, 95 },
-  FLAGS      = OFL.BUSY
- }, [ACT.STOP] = {
+ [ACT.DEATH] = aGenericActDeathData,
+ [ACT.PHASE] = aDiggerActPhaseData,
+ [ACT.HIDE] = aGenericActHideData,
+ [ACT.STOP] = {
   [DIR.UL] = { 329, 331 }, [DIR.U]    = { 329, 331 }, [DIR.UR] = { 329, 331 },
   [DIR.L]  = { 329, 331 }, [DIR.NONE] = { 329, 331 }, [DIR.R]  = { 329, 331 },
   [DIR.DL] = { 329, 331 }, [DIR.D]    = { 329, 331 }, [DIR.DR] = { 329, 331 },
@@ -1234,13 +993,6 @@ local aObjectData<const> = {           -- Objects data
   [DIR.L]  = { 321, 324 }, [DIR.NONE] = { 321, 324 }, [DIR.R]  = { 325, 328 },
   [DIR.DL] = { 321, 324 }, [DIR.D]    = { 321, 324 }, [DIR.DR] = { 325, 328 },
   FLAGS    = OFL.FALL|OFL.REGENERATE|OFL.PHASETARGET
- }, [ACT.PHASE] = {
-  [DIR.NONE] = { 106, 109 }, [DIR.D] = { 106, 109 },
-  FLAGS      = OFL.BUSY,
-  SOUND      = aSfxData.PHASE
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.BIGFOOT,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.LR,
@@ -1249,8 +1001,9 @@ local aObjectData<const> = {           -- Objects data
  STAMINA   = -1,                       STRENGTH  = 100,
  TELEDELAY = 100,                      VALUE     = 0,
  WEIGHT    = 100
--- ------------------------------------------------------------------------- --
+-- Devices ----------------------------------------------------------------- --
 }, [TYP.STUNNEL] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.L] = { 284, 284 }, [DIR.NONE] = { 280, 280 }, [DIR.R] = { 280, 280 },
   FLAGS   = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
@@ -1261,16 +1014,13 @@ local aObjectData<const> = {           -- Objects data
   [DIR.L] = { 284, 287 }, [DIR.NONE] = { 280, 283 }, [DIR.R] = { 280, 283 },
   FLAGS   = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET,
   SOUNDRP = aSfxData.DIG
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.TUNNELER,
  ANIMTIMER = aTimerData.ANIMNORMAL,
  DESC      = "A MECHANICAL DIGGER\nTHAT DIGS HORIZONTALLY",
  DIGDELAY  = 30,                       DIRECTION = DIR.NONE,
  FLAGS     = OFL.SELLABLE|OFL.DEVICE|OFL.EXPLODE,
- KEYS      = aTunnellerKeys,           JOB       = JOB.NONE,
+ KEYS      = aKeysTunneller,           JOB       = JOB.NONE,
  LONGNAME  = "SMALL TUNNELER",         LUNGS     = 1,
  MENU      = MNU.TUNNEL,               NAME      = "SMALLTUN",
  STAMINA   = -1,                       STRENGTH  = 0,
@@ -1278,6 +1028,7 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT    = 2,
 -- ------------------------------------------------------------------------- --
 }, [TYP.LTUNNEL] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.L] = { 185, 185 }, [DIR.NONE] = { 189, 189 }, [DIR.R] = { 189, 189 },
   FLAGS   = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
@@ -1288,23 +1039,21 @@ local aObjectData<const> = {           -- Objects data
   [DIR.L] = { 185, 188 }, [DIR.R] = { 189, 192 },
   FLAGS   = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET,
   SOUNDRP = aSfxData.DIG
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
- ACTION     = ACT.STOP,                AITYPE     = AI.TUNNELER,
- ANIMTIMER  = aTimerData.ANIMNORMAL,   ATTACHMENT = TYP.LTUNNELB,
- DESC       = "A FAST MECHANICAL DIGGER\nTHAT DIGS HORIZONTALLY",
- DIGDELAY   = 10,                      DIRECTION  = DIR.NONE,
- FLAGS      = OFL.SELLABLE|OFL.DEVICE|OFL.EXPLODE,
- JOB        = JOB.NONE,                KEYS       = aTunnellerKeys,
- LONGNAME   = "LARGE TUNNELER",        LUNGS      = 1,
- MENU       = MNU.TUNNEL,              NAME       = "LARGETUN",
- STAMINA    = -1,                      STRENGTH   = 0,
- TELEDELAY  = 200,                     VALUE      = 230,
- WEIGHT     = 3
+ ACTION    = ACT.STOP,                 AITYPE     = AI.TUNNELER,
+ ANIMTIMER = aTimerData.ANIMNORMAL,    ATTACHMENT = TYP.LTUNNELB,
+ DESC      = "A FAST MECHANICAL DIGGER\nTHAT DIGS HORIZONTALLY",
+ DIGDELAY  = 10,                       DIRECTION  = DIR.NONE,
+ FLAGS     = OFL.SELLABLE|OFL.DEVICE|OFL.EXPLODE,
+ JOB       = JOB.NONE,                 KEYS       = aKeysTunneller,
+ LONGNAME  = "LARGE TUNNELER",         LUNGS      = 1,
+ MENU      = MNU.TUNNEL,               NAME       = "LARGETUN",
+ STAMINA   = -1,                       STRENGTH   = 0,
+ TELEDELAY = 200,                      VALUE      = 230,
+ WEIGHT    = 3
 -- ------------------------------------------------------------------------- --
 }, [TYP.LTUNNELB] = {
+ [ACT.DEATH] = { [DIR.NONE] = { 451, 454, -16, 0 }, FLAGS = OFL.BUSY },
  [ACT.STOP] = {
   [DIR.L] = { 181, 181, -16, 0 }, [DIR.NONE] = { 193, 193, 16, 0 },
   [DIR.R] = { 193, 193,  16, 0 }
@@ -1314,12 +1063,10 @@ local aObjectData<const> = {           -- Objects data
  }, [ACT.DIG] = {
   [DIR.L] = { 181, 184, -16, 0 }, [DIR.NONE] = { 193, 196, 16, 0 },
   [DIR.R] = { 193, 196,  16, 0 }
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454, 16, 0 },
-  FLAGS      = OFL.BUSY
- },
+ }
 -- ------------------------------------------------------------------------- --
 }, [TYP.CORK] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.L] = { 288, 288 }, [DIR.NONE] = { 288, 288 }, [DIR.R] = { 288, 288 },
   [DIR.D] = { 288, 288 },
@@ -1331,10 +1078,8 @@ local aObjectData<const> = {           -- Objects data
   [DIR.D] = { 288, 290 },
   FLAGS   = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET,
   SOUNDRP = aSfxData.DIG
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- }, KEYS = {
+ },
+ KEYS = {
   [ACT.STOP] = aObjectStop,
   [ACT.CREEP] = {
    [JOB.NONE]    = aObjectLeftRight,
@@ -1353,12 +1098,10 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 170,                      WEIGHT    = 3
 -- ------------------------------------------------------------------------- --
 }, [TYP.TELEPOLE] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.NONE] = { 66, 67 },
   FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454},
-  FLAGS = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,
@@ -1396,12 +1139,10 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 20,                       WEIGHT    = 1
 -- ------------------------------------------------------------------------- --
 }, [TYP.FIRSTAID] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.NONE] = { 450, 450 },
   FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,
@@ -1414,12 +1155,10 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT    = 2,
 -- ------------------------------------------------------------------------- --
 }, [TYP.MAP] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.NONE] = { 370, 370 },
   FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,
@@ -1433,40 +1172,34 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT    = 3,
 -- ------------------------------------------------------------------------- --
 }, [TYP.TRACK] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.NONE] = { 441, 441 },
   FLAGS      = OFL.FALL|OFL.PICKUP|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.DEPLOY,
  ANIMTIMER = aTimerData.ANIMNORMAL,
  DESC      = "CARRYS A TRAIN\nWITH VALUABLE CARGO",
  DIRECTION = DIR.NONE,
  FLAGS     = OFL.SELLABLE|OFL.DEVICE|OFL.AQUALUNG,
- JOB       = JOB.NONE,                 KEYS      = aDeployDevice,
+ JOB       = JOB.NONE,                 KEYS      = aKeysDeployDevice,
  LONGNAME  = "TRACK FOR TRAIN",        MENU      = MNU.DEPLOY,
  NAME      = "TRACK",                  STAMINA   = -1,
  STRENGTH  = 0,                        TELEDELAY = 200,
  VALUE     = 10,                       WEIGHT    = 1,
 -- ------------------------------------------------------------------------- --
 }, [TYP.TRAIN] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.L] = { 4, 4 }, [DIR.NONE] = { 4, 4 }, [DIR.R] = { 4, 4 },
   FLAGS   = OFL.PICKUP|OFL.FALL|OFL.PHASETARGET
  }, [ACT.WALK] = {
   [DIR.L] = { 4, 7 }, [DIR.NONE] = { 4, 7 }, [DIR.R] = { 4, 7 },
   FLAGS   = OFL.PICKUP|OFL.FALL|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- }, KEYS = {
+ },
+ KEYS = {
   [ACT.STOP] = aObjectStop,
-  [ACT.WALK] = {
-    [JOB.SEARCH] = aObjectSearch,
-    [JOB.NONE] = aObjectLeftRight,
-  },
+  [ACT.WALK] = { [JOB.SEARCH] = aObjectSearch, [JOB.NONE] = aObjectLeftRight },
   [ACT.DROP] = aObjectJobDirKeep,
   [ACT.GRAB] = aObjectJobDirKeep,
  },
@@ -1478,16 +1211,14 @@ local aObjectData<const> = {           -- Objects data
  JOB       = JOB.NONE,                 LONGNAME  = "TRAIN FOR RAILS",
  LUNGS     = 1,                        MENU      = MNU.TRAIN,
  NAME      = "TRAIN",                  STAMINA   = -1,
- STRENGTH  = 255,                      TELEDELAY = 200,
+ STRENGTH  = 20,                       TELEDELAY = 200,
  VALUE     = 100,                      WEIGHT    = 3
 -- ------------------------------------------------------------------------- --
 }, [TYP.BRIDGE] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.NONE] = { 146, 146 },
   FLAGS      = OFL.PICKUP|OFL.FALL|OFL.FLOAT|OFL.BLOCK|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,
@@ -1500,96 +1231,77 @@ local aObjectData<const> = {           -- Objects data
  VALUE     = 25,                       WEIGHT    = 1
 -- ------------------------------------------------------------------------- --
 }, [TYP.BOAT] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.L] = { 154, 155 }, [DIR.NONE] = { 154, 155 }, [DIR.R] = { 154, 155 },
   FLAGS   = OFL.PICKUP|OFL.FALL|OFL.FLOAT|OFL.BLOCK|OFL.PHASETARGET
  }, [ACT.CREEP] = {
   [DIR.L] = { 154, 155 }, [DIR.NONE] = { 154, 155 }, [DIR.R] = { 154, 155 },
   FLAGS   = OFL.PICKUP|OFL.FALL|OFL.FLOAT|OFL.BLOCK|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454},
-  FLAGS      = OFL.BUSY
- }, KEYS = {
-  [ACT.STOP] = aObjectStop,
-  [ACT.CREEP] = aObjectMove,
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.BOAT,
  ANIMTIMER = aTimerData.ANIMNORMAL,
  DESC      = "TRAVEL OVER WATERS\nTO DISTANT LOCATIONS",
  DIRECTION = DIR.NONE,
  FLAGS     = OFL.SELLABLE|OFL.DEVICE|OFL.AQUALUNG,
- JOB       = JOB.NONE,                 LONGNAME  = "INFLATABLE BOAT",
- MENU      = MNU.FLOAT,                NAME      = "BOAT",
- STAMINA   = -1,                       STRENGTH  = 0,
- TELEDELAY = 200,                      VALUE     = 60,
- WEIGHT    = 2
+ JOB       = JOB.NONE,
+ KEYS      = { [ACT.STOP] = aObjectStop, [ACT.CREEP] = aObjectMove },
+ LONGNAME  = "INFLATABLE BOAT",        MENU      = MNU.FLOAT,
+ NAME      = "BOAT",                   STAMINA   = -1,
+ STRENGTH  = 0,                        TELEDELAY = 200,
+ VALUE     = 60,                       WEIGHT    = 2
 -- ------------------------------------------------------------------------- --
 }, [TYP.GATE] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.NONE] = { 440, 440 },
   FLAGS      = OFL.PICKUP|OFL.FALL|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.DEPLOY,
  ANIMTIMER = aTimerData.ANIMNORMAL,
  DESC      = "PROTECT FROM DANGERS\nAND FLOODING",
  DIRECTION = DIR.NONE,
  FLAGS     = OFL.SELLABLE|OFL.DEVICE|OFL.AQUALUNG,
- JOB       = JOB.NONE,                 KEYS      = aDeployDevice,
+ JOB       = JOB.NONE,                 KEYS      = aKeysDeployDevice,
  LONGNAME  = "FLOOD GATE",             MENU      = MNU.DEPLOY,
  NAME      = "GATE",                   STAMINA   = -1,
  STRENGTH  = 0,                        TELEDELAY = 200,
  VALUE     = 80,                       WEIGHT    = 2
 -- ------------------------------------------------------------------------- --
 }, [TYP.GATEB] = {
- [ACT.STOP] = {
-  [DIR.NONE] = { 475, 475 }
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- }, KEYS = {
-  [ACT.OPEN]  = aObjectStop,
-  [ACT.CLOSE] = aObjectStop,
- },
+ [ACT.DEATH] = aGenericActDeathData,
+ [ACT.STOP] = { [DIR.NONE] = { 475, 475 } },
  ACTION    = ACT.STOP,                 AITYPE    = AI.GATE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
  FLAGS     = OFL.DEVICE|OFL.AQUALUNG,  JOB       = JOB.NONE,
- MENU      = MNU.GATE,                 NAME      = "GATE",
- STAMINA   = -1,                       STRENGTH  = 0,
- TELEDELAY = 200,                      VALUE     = 0,
- WEIGHT    = 0
+ KEYS = { [ACT.OPEN] = aObjectStop, [ACT.CLOSE] = aObjectStop },
+ MENU      = MNU.GATE,                 LONGNAME  = "FLOOD GATE",
+ NAME      = "GATE",                   STAMINA   = -1,
+ STRENGTH  = 0,                        TELEDELAY = 200,
+ VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.LIFT] = {
- [ACT.STOP] = {
-  [DIR.NONE] = { 320, 320 },
-  FLAGS      = OFL.PICKUP|OFL.FALL
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
- },
+ [ACT.DEATH] = aGenericActDeathData,
+ [ACT.STOP] = { [DIR.NONE] = { 320, 320 }, FLAGS = OFL.PICKUP|OFL.FALL },
  ACTION    = ACT.STOP,                 AITYPE    = AI.DEPLOY,
  ANIMTIMER = aTimerData.ANIMNORMAL,
  DESC      = "A VERTICAL MOVING PLATFORM\nCARRIES YOUR DIGGERS",
  DIRECTION = DIR.NONE,
  FLAGS     = OFL.SELLABLE|OFL.DEVICE|OFL.EXPLODE|OFL.AQUALUNG,
- JOB       = JOB.NONE,                 KEYS      = aDeployDevice,
+ JOB       = JOB.NONE,                 KEYS      = aKeysDeployDevice,
  LONGNAME  = "LIFT",                   MENU      = MNU.DEPLOY,
  NAME      = "LIFT",                   STAMINA   = -1,
  STRENGTH  = 0,                        TELEDELAY = 200,
  VALUE     = 220,                      WEIGHT    = 3
 -- ------------------------------------------------------------------------- --
 }, [TYP.LIFTB] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.U] = { 0, 0 }, [DIR.NONE] = { 0, 0 }, [DIR.D] = { 0, 0 },
   FLAGS   = OFL.BLOCK|OFL.PHASETARGET
  }, [ACT.CREEP] = {
   [DIR.U] = { 0, 0 }, [DIR.NONE] = { 0, 0 }, [DIR.D] = { 0, 0 },
   FLAGS   = OFL.BLOCK|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
  }, KEYS = {
    [ACT.STOP] = aObjectStop,
    [ACT.CREEP] = { [JOB.NONE] = { [DIR.U] = true, [DIR.D] = true } }
@@ -1605,15 +1317,13 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT     = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.LIFTC] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.U] = { 1, 1, 0, -16 }, [DIR.NONE] = { 1, 1, 0, -16 },
   [DIR.D] = { 1, 1, 0, -16 }
  }, [ACT.CREEP] = {
-  [DIR.U] = { 1, 1, 0, -16}, [DIR.NONE] = { 1, 1, 0, -16 },
-  [DIR.D] = { 1, 1, 0, -16}
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 451, 454 },
-  FLAGS      = OFL.BUSY
+  [DIR.U] = { 1, 1, 0, -16 }, [DIR.NONE] = { 1, 1, 0, -16 },
+  [DIR.D] = { 1, 1, 0, -16 }
  },
  ACTION     = ACT.STOP,                ANIMTIMER  = aTimerData.ANIMNORMAL,
  ATTACHMENT = TYP.LIFT,                DIRECTION  = DIR.NONE,
@@ -1625,12 +1335,10 @@ local aObjectData<const> = {           -- Objects data
  WEIGHT     = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.CAMPFIRE] = {
+ [ACT.DEATH] = aGenericActDeathData,
  [ACT.STOP] = {
   [DIR.NONE] = { 133, 134 },
   FLAGS      = OFL.BUSY|OFL.HEALNEARBY|OFL.PHASETARGET
- }, [ACT.DEATH] = {
-  [DIR.NONE] = { 133, 134 },
-  FLAGS      = OFL.BUSY
  },
  ACTION    = ACT.STOP,                 AITYPE    = AI.NONE,
  ANIMTIMER = aTimerData.ANIMNORMAL,
@@ -1661,7 +1369,7 @@ local DF<const> = {
   -- ----------------------------------------------------------------------- --
 };
 -- Digging tile data ------------------------------------------------------- --
-local aDigData<const> = {
+local aDigData<const> = {              -- Note that tile ids are 0-indexed here
 -- ------------------------------------------------------------------------- --
 -- FO    (FromOver)    DF.MO*. Tile to match from object's over tile
 -- FA    (FromAbove)   DF.MA*. Tile to match from object's above tile
@@ -1678,6 +1386,8 @@ local aDigData<const> = {
 {  3,  3,  0,  0, 44,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,  7,  0, 12,208,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
 {  3,  7,  0,  0, 44,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
+{  3, 95,  0, 12,208,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
+{  3, 96,  0,  0, 44,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,150,  0, 12,208,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
 {  3,150,  0,  0, 44,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,170,  0, 12,208,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
@@ -1702,6 +1412,8 @@ local aDigData<const> = {
 {  3,  3,  0,  0, 26,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,  7,  0,  6, 33,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
 {  3,  7,  0,  0, 26,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
+{  3, 95,  0,  6, 33,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
+{  3, 96,  0,  0, 26,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,150,  0,  6, 33,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
 {  3,150,  0,  0, 26,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,170,  0,  6, 33,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
@@ -1900,489 +1612,521 @@ TF.ELRB = TF.EL|TF.ER|TF.EB;           -- < v> Left/Down/Right exposed
 TF.ELTB = TF.EL|TF.ET|TF.EB;           -- <^v  Left/Up/Down exposed
 TF.EA   = TF.EL|TF.ET|TF.ER|TF.EB;     -- <^v> All directions exposed
 -- Tile data flags lookup ------------------------------------------------- --
-local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
-  TF.NONE,                             -- 001 01x01 Air (Passive)
-  TF.NONE,                             -- 002 02x01 Grass (Passive)
-  TF.NONE,                             -- 003 03x01 Solid undiggable stone
-  TF.F|TF.D,                           -- 004 04x01 Solid diggable dirt
-  TF.F|TF.D|TF.ERB,                    -- 005 05x01 75%dirt+25%dug 22deg UR>DL
-  TF.F|TF.D|TF.ELRB,                   -- 006 06x01 25%dirt+75%dug 22deg UR>DL
-  TF.F|TF.D|TF.ELTR,                   -- 007 07x01 75%dug+25%dirt 22deg UR>DL
-  TF.AD|TF.EA,                         -- 008 08x01 Clear dug tile
-  TF.D|TF.ELT,                         -- 009 09x01 25%dug+75%dirt 22deg UR>DL
-  TF.F|TF.D|TF.ELRB,                   -- 010 10x01 25%dirt+75%dug 22deg UL>DR
-  TF.F|TF.D|TF.ELB,                    -- 011 11x01 75%dirt+25%dug 22deg UL>DR
-  TF.D|TF.ETR,                         -- 012 12x01 25%dug+75%dirt 22deg UL>DR
-  TF.D|TF.ELTR,                        -- 013 13x01 75%dug+25%dirt 22deg UL>DR
-  TF.F|TF.D|TF.ERB,                    -- 014 14x01 50%dirt+50%dug 45deg UR>DL
-  TF.D|TF.ELT,                         -- 015 15x01 50%dug+50%dirt 45deg UR>DL
-  TF.D|TF.ETR,                         -- 016 16x01 50%dug+50%dirt 45deg UL>DR
-  TF.F|TF.D|TF.ELB,                    -- 017 17x01 50%dirt+50%dug 45deg UL>DR
-  TF.F|TF.D|TF.ER,                     -- 018 18x01
-  TF.F|TF.D|TF.ERB,                    -- 019 19x01
-  TF.D|TF.ET,                          -- 020 20x01
-  TF.F|TF.D|TF.ERB,                    -- 021 21x01
-  TF.D|TF.ETR,                         -- 022 22x01
-  TF.D|TF.ELT,                         -- 023 23x01
-  TF.F|TF.D|TF.ERB,                    -- 024 24x01
-  TF.D|TF.ETR,                         -- 025 25x01
-  TF.D|TF.ETR,                         -- 026 26x01
-  TF.F|TF.D|TF.EL,                     -- 027 27x01
-  TF.F|TF.D|TF.EB,                     -- 028 28x01
-  TF.D|TF.ELT,                         -- 029 29x01
-  TF.F|TF.D|TF.EB,                     -- 030 30x01
-  TF.D|TF.ELTR,                        -- 031 31x01
-  TF.F|TF.D|TF.EL,                     -- 032 32x01
-  TF.F|TF.D|TF.ELB,                    -- 033 01x02
-  TF.D|TF.ELT,                         -- 034 02x02
-  TF.F|TF.D|TF.ELB,                    -- 035 03x02
-  TF.F|TF.D|TF.ELB,                    -- 036 04x02
-  TF.F|TF.D|TF.ELB,                    -- 037 05x02
-  TF.D|TF.ET,                          -- 038 06x02
-  TF.F|TF.D|TF.ELB,                    -- 039 07x02
-  TF.D|TF.ETR,                         -- 040 08x02
-  TF.D|TF.ELT,                         -- 041 09x02
-  TF.D|TF.ELB,                         -- 042 10x02
-  TF.F|TF.D|TF.ELT,                    -- 043 11x02
-  TF.D|TF.ELT,                         -- 044 12x02
-  TF.D|TF.ER,                          -- 045 13x02
-  TF.F|TF.D|TF.EB,                     -- 046 14x02
-  TF.F|TF.D|TF.ERB,                    -- 047 15x02
-  TF.F|TF.D|TF.ELRB,                   -- 048 16x02
-  TF.F|TF.D|TF.ELRB,                   -- 049 17x02
-  TF.F|TF.D|TF.ETRB,                   -- 050 18x02
-  TF.D|TF.ETRB,                        -- 051 19x02
-  TF.D|TF.ETR,                         -- 052 20x02
-  TF.D|TF.ELTR,                        -- 053 21x02 Cave floor 1
-  TF.D|TF.ELTR,                        -- 054 22x02 Cave floor 2
-  TF.D|TF.ELB,                         -- 055 23x02
-  TF.F|TF.D|TF.ELTB,                   -- 056 24x02
-  TF.F|TF.D|TF.ELTB,                   -- 057 25x02
-  TF.D|TF.ELT,                         -- 058 26x02
-  TF.D|TF.EA,                          -- 059 27x02
-  TF.D|TF.EA,                          -- 060 28x02
-  TF.D|TF.EA,                          -- 061 29x02
-  TF.D|TF.EA,                          -- 062 30x02
-  TF.ELRB,                             -- 063 31x02
-  TF.F,                                -- 064 32x02
-  TF.F,                                -- 065 01x03
-  TF.NONE,                             -- 066 02x03
-  TF.NONE,                             -- 067 03x03
-  TF.NONE,                             -- 068 04x03
-  TF.NONE,                             -- 069 05x03
-  TF.NONE,                             -- 070 06x03
-  TF.NONE,                             -- 071 07x03
-  TF.NONE,                             -- 072 08x03
-  TF.NONE,                             -- 073 09x03
-  TF.NONE,                             -- 074 10x03
-  TF.NONE,                             -- 075 11x03
-  TF.NONE,                             -- 076 12x03
-  TF.P|TF.EA,                          -- 077 13x03
-  TF.P|TF.EA,                          -- 078 14x03
-  TF.P|TF.EA,                          -- 079 15x03
-  TF.P|TF.EA,                          -- 080 16x03
-  TF.P|TF.EA,                          -- 081 17x03
-  TF.P|TF.EA,                          -- 082 18x03
-  TF.P|TF.EA,                          -- 083 19x03
-  TF.P|TF.EA,                          -- 084 20x03
-  TF.P|TF.EA,                          -- 085 21x03
-  TF.NONE,                             -- 086 22x03
-  TF.NONE,                             -- 087 23x03
-  TF.NONE,                             -- 088 24x03
-  TF.D|TF.P|TF.EA,                     -- 089 25x03 Left end of track
-  TF.NONE,                             -- 090 26x03
-  TF.NONE,                             -- 091 27x03
-  TF.D|TF.P|TF.EA,                     -- 092 28x03 Right end of track
-  TF.NONE,                             -- 093 29x03
-  TF.NONE,                             -- 094 30x03
-  TF.NONE,                             -- 095 31x03
-  TF.EA,                               -- 096 32x03 Clear dug tile with window
-  TF.EA,                               -- 097 01x04 Clear dug tile with skull
-  TF.W|TF.AB,                          -- 098 02x04 Ocean surface 1/4
-  TF.W|TF.AB,                          -- 099 03x04 Ocean surface 2/4
-  TF.W|TF.AB,                          -- 100 04x04 Ocean surface 3/4
-  TF.W|TF.AE,                          -- 101 05x04 Ocean surface 4/4
-  TF.W|TF.AB,                          -- 102 06x04 Ocean bubble large 1/4
-  TF.W|TF.AB,                          -- 103 07x04 Ocean bubble large 2/4
-  TF.W|TF.AB,                          -- 104 08x04 Ocean bubble large 3/4
-  TF.W|TF.AE,                          -- 105 09x04 Ocean bubble large 4/4
-  TF.W|TF.AB,                          -- 106 10x04 Ocean surface bubble L 1/4
-  TF.W|TF.AB,                          -- 107 11x04 Ocean surface bubble L 2/4
-  TF.W|TF.AB,                          -- 108 12x04 Ocean surface bubble L 3/4
-  TF.W|TF.AE,                          -- 109 13x04 Ocean surface bubble L 4/4
-  TF.W|TF.AB,                          -- 110 14x04 Ocean bubble small 1/4
-  TF.W|TF.AB,                          -- 111 15x04 Ocean bubble small 2/4
-  TF.W|TF.AB,                          -- 112 16x04 Ocean bubble small 3/4
-  TF.W|TF.AE,                          -- 113 17x04 Ocean bubble small 4/4
-  TF.W,                                -- 114 18x04 Ocean surface bubble S 1/4
-  TF.W,                                -- 115 19x04 Ocean surface bubble S 2/4
-  TF.W,                                -- 116 20x04 Ocean surface bubble S 3/4
-  TF.W,                                -- 117 21x04 Ocean surface bubble S 4/4
-  TF.W,                                -- 118 22x04 Ocean
-  TF.W|TF.AB,                          -- 119 23x04 Ocean surface weed 1/4
-  TF.W|TF.AB,                          -- 120 24x04 Ocean surface weed 2/4
-  TF.W|TF.AB,                          -- 121 25x04 Ocean surface weed 3/4
-  TF.W|TF.AE,                          -- 122 26x04 Ocean surface weed 4/4
-  TF.NONE,                             -- 123 27x04
-  TF.NONE,                             -- 124 28x04
-  TF.NONE,                             -- 125 29x04
-  TF.NONE,                             -- 126 30x04
-  TF.NONE,                             -- 127 31x04
-  TF.NONE,                             -- 128 32x04
-  TF.NONE,                             -- 129 01x05
-  TF.NONE,                             -- 130 02x05
-  TF.NONE,                             -- 131 03x05
-  TF.NONE,                             -- 132 04x05
-  TF.NONE,                             -- 133 05x05
-  TF.NONE,                             -- 134 06x05
-  TF.P|TF.EA,                          -- 135 07x05
-  TF.P|TF.EA,                          -- 136 08x05
-  TF.P|TF.EA,                          -- 137 09x05
-  TF.P|TF.EA,                          -- 138 10x05
-  TF.W,                                -- 139 11x05
-  TF.W,                                -- 140 12x05
-  TF.W,                                -- 141 13x05
-  TF.W,                                -- 142 14x05
-  TF.NONE,                             -- 143 15x05
-  TF.NONE,                             -- 144 16x05
-  TF.W,                                -- 145 17x05
-  TF.NONE,                             -- 146 18x05
-  TF.NONE,                             -- 147 19x05
-  TF.W,                                -- 148 20x05
-  TF.NONE,                             -- 149 21x05
-  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 150 22x05 Dug tile track with light
-  TF.D|TF.AD|TF.EA,                    -- 151 23x05 Dug tile with light
-  TF.F,                                -- 152 24x05 Quad rock bottom left
-  TF.F,                                -- 153 25x05 Quad rock bottom right
-  TF.F,                                -- 154 26x05 Quad rock top left
-  TF.F,                                -- 155 27x05 Quad rock top right
-  TF.F,                                -- 156 28x05 Impenetrable rock
-  TF.F,                                -- 157 29x05 Impenetrable rock
-  TF.F,                                -- 158 30x05 Horizontal rock left
-  TF.F,                                -- 159 31x05 Horizontal rock right
-  TF.F,                                -- 160 32x05 Impenetrable rock
-  TF.F,                                -- 161 01x06
-  TF.NONE,                             -- 162 02x06
-  TF.NONE,                             -- 163 03x06
-  TF.NONE,                             -- 164 04x06 Outside decoration only
-  TF.NONE,                             -- 165 05x06 Outside decoration only
-  TF.NONE,                             -- 166 06x06 Outside decoration only
-  TF.NONE,                             -- 167 07x06 Outside decoration only
-  TF.NONE,                             -- 168 08x06 Outside decoration only
-  TF.NONE,                             -- 169 09x06 Outside decoration only
-  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 170 10x06 Dug tile beam forward track
-  TF.D|TF.AD|TF.EA,                    -- 171 11x06 Dug tile beam forward
-  TF.D|TF.AD|TF.EA,                    -- 172 12x06 Dug tile beam backwards
-  TF.D|TF.AD|TF.EA,                    -- 173 13x06 Dug tile beam horizontal
-  TF.D|TF.ELTR,                        -- 174 14x06 Dug tile down 1/3
-  TF.D|TF.ELTR,                        -- 175 15x06 Dug tile down 2/3
-  TF.D|TF.ELTR,                        -- 176 16x06 Dug tile down 3/3
-  TF.NONE,                             -- 177 17x06 Outside decoration only
-  TF.NONE,                             -- 178 18x06 Outside decoration only
-  TF.NONE,                             -- 179 19x06 Outside decoration only
-  TF.NONE,                             -- 180 20x06 Outside decoration only
-  TF.NONE,                             -- 181 21x06 Outside decoration only
-  TF.NONE,                             -- 182 22x06 Outside decoration only
-  TF.NONE,                             -- 183 23x06 Outside decoration only
-  TF.NONE,                             -- 184 24x06 Outside decoration only
-  TF.NONE,                             -- 185 25x06 Outside decoration only
-  TF.NONE,                             -- 186 26x06 Outside decoration only
-  TF.NONE,                             -- 187 27x06 Outside decoration only
-  TF.NONE,                             -- 188 28x06 Outside decoration only
-  TF.NONE,                             -- 189 29x06 Outside decoration only
-  TF.EA|TF.E,                          -- 190 30x06 Elevator shaft wire
-  TF.NONE,                             -- 191 31x06 Elevator base
-  TF.NONE,                             -- 192 32x06 Trade centre top left
-  TF.NONE,                             -- 193 01x07 Trade centre top right
-  TF.NONE,                             -- 194 02x07 Trade centre bottom left
-  TF.NONE,                             -- 195 03x07 Trade centre bottom right
-  TF.AB|TF.PO,                         -- 196 04x07 Player 1 home flag (1/4)
-  TF.AB|TF.PO,                         -- 197 05x07 Player 1 home flag (2/4)
-  TF.AB|TF.PO,                         -- 198 06x07 Player 1 home flag (3/4)
-  TF.AE|TF.PO,                         -- 199 07x07 Player 1 home flag (4/4)
-  TF.AB|TF.PT,                         -- 200 08x07 Player 2 home flag (1/4)
-  TF.AB|TF.PT,                         -- 201 09x07 Player 2 home flag (2/4)
-  TF.AB|TF.PT,                         -- 202 10x07 Player 2 home flag (3/4)
-  TF.AE|TF.PT,                         -- 203 11x07 Player 2 home flag (4/4)
-  TF.D|TF.ELR,                         -- 204 12x07
-  TF.F|TF.D|TF.EB,                     -- 205 13x07
-  TF.F|TF.D|TF.ER,                     -- 206 14x07
-  TF.D|TF.ELTR,                        -- 207 15x07
-  TF.F|TF.D|TF.ERB,                    -- 208 16x07
-  TF.D|TF.ETR,                         -- 209 17x07
-  TF.F|TF.D|TF.ERB,                    -- 210 18x07
-  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 211 19x07 Clear tile with track
-  TF.F|TF.D|TF.ETR,                    -- 212 20x07
-  TF.F|TF.D|TF.ETRB,                   -- 213 21x07
-  TF.D|TF.ETR,                         -- 214 22x07
-  TF.D|TF.ETR,                         -- 215 23x07
-  TF.D|TF.ELTB,                        -- 216 24x07
-  TF.F|TF.D|TF.ELB,                    -- 217 25x07
-  TF.D|TF.ELTB,                        -- 218 26x07
-  TF.D|TF.ELRB,                        -- 219 27x07
-  TF.D|TF.ELT,                         -- 220 28x07
-  TF.D|TF.ELTB,                        -- 221 29x07
-  TF.D|TF.ELT,                         -- 222 30x07
-  TF.D|TF.ELT,                         -- 223 31x07
-  TF.F|TF.D|TF.ETRB,                   -- 224 32x07
-  TF.W|TF.D|TF.ERB,                    -- 225 01x08
-  TF.F|TF.D|TF.ETRB,                   -- 226 02x08
-  TF.D|TF.ELRB,                        -- 227 03x08
-  TF.D|TF.ELTB,                        -- 228 04x08
-  TF.D|TF.ELTB,                        -- 229 05x08
-  TF.D|TF.ELTB,                        -- 230 06x08
-  TF.D|TF.ETRB,                        -- 231 07x08
-  TF.D|TF.ETRB,                        -- 232 08x08
-  TF.D|TF.ETRB,                        -- 233 09x08
-  TF.NONE,                             -- 234 10x08
-  TF.NONE,                             -- 235 11x08
-  TF.D|TF.EA,                          -- 236 12x08 90%dug+10%dirt 11deg UR>DL
-  TF.D|TF.EA,                          -- 237 13x08 90%dug+10%dirt 11deg UL>DR
-  TF.D|TF.ELTR,                        -- 238 14x08 25%dug+75%dirt vertical
-  TF.D|TF.ELTR,                        -- 239 15x08 50%dug+50%dirt vertical
-  TF.D|TF.ELTR,                        -- 240 16x08 75%dug+25%dirt vertical
-  TF.F,                                -- 241 17x08 Double horizontal rock 1/2
-  TF.F,                                -- 242 18x08 Double horizontal rock 2/2
-  TF.F,                                -- 243 19x08 Double vertical rock 1/2
-  TF.F,                                -- 244 20x08 Double vertical rock 2/2
-  TF.F|TF.D|TF.W|TF.ERB,               -- 245 21x08
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 246 22x08
-  TF.D|TF.W|TF.ELTR,                   -- 247 23x08
-  TF.D|TF.W|TF.EA|TF.AD,               -- 248 24x08 Clear water tile
-  TF.D|TF.W|TF.ELT,                    -- 249 25x08
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 250 26x08
-  TF.F|TF.D|TF.W|TF.ELB,               -- 251 27x08
-  TF.D|TF.W|TF.ETR,                    -- 252 28x08
-  TF.D|TF.W|TF.ELTR,                   -- 253 29x08
-  TF.F|TF.D|TF.W|TF.EA,                -- 254 30x08
-  TF.D|TF.W|TF.EA,                     -- 255 31x08
-  TF.D|TF.W|TF.EA,                     -- 256 32x08
-  TF.F|TF.D|TF.W|TF.EA,                -- 257 01x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 258 02x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 259 03x09
-  TF.D|TF.W|TF.ET,                     -- 260 04x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 261 05x09
-  TF.D|TF.W|TF.ETR,                    -- 262 06x09
-  TF.D|TF.W|TF.ELT,                    -- 263 07x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 264 08x09
-  TF.D|TF.W|TF.ETR,                    -- 265 09x09
-  TF.D|TF.W|TF.ETR,                    -- 266 10x09
-  TF.F|TF.D|TF.W|TF.EL,                -- 267 11x09
-  TF.F|TF.D|TF.W|TF.EB,                -- 268 12x09
-  TF.D|TF.W|TF.ELT,                    -- 269 13x09
-  TF.F|TF.D|TF.W|TF.EB,                -- 270 14x09
-  TF.D|TF.W|TF.ELTR,                   -- 271 15x09
-  TF.F|TF.D|TF.W|TF.EL,                -- 272 16x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 273 17x09
-  TF.D|TF.W|TF.ELT,                    -- 274 18x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 275 19x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 276 20x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 277 21x09
-  TF.D|TF.W|TF.EB,                     -- 278 22x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 279 23x09
-  TF.D|TF.W|TF.ERB,                    -- 280 24x09
-  TF.D|TF.W|TF.ELT,                    -- 281 25x09
-  TF.D|TF.W|TF.ELB,                    -- 282 26x09
-  TF.F|TF.D|TF.W|TF.ELT,               -- 283 27x09
-  TF.D|TF.W|TF.ELT,                    -- 284 28x09
-  TF.F|TF.D|TF.W|TF.ER,                -- 285 29x09
-  TF.F|TF.D|TF.W|TF.EB,                -- 286 30x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 287 31x09
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 288 32x09
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 289 01x10
-  TF.D|TF.W|TF.ETRB,                   -- 290 02x10
-  TF.D|TF.W|TF.ETRB,                   -- 291 03x10
-  TF.D|TF.W|TF.ETR,                    -- 292 04x10
-  TF.D|TF.W|TF.ELTR,                   -- 293 05x10
-  TF.D|TF.W|TF.ELTR,                   -- 294 06x10
-  TF.F|TF.D|TF.W|TF.ELB,               -- 295 07x10
-  TF.D|TF.W|TF.ELTB,                   -- 296 08x10
-  TF.D|TF.W|TF.ELTB,                   -- 297 09x10
-  TF.D|TF.W|TF.ELT,                    -- 298 10x10
-  TF.D|TF.W|TF.EA,                     -- 299 11x10
-  TF.D|TF.W|TF.EA,                     -- 300 12x10
-  TF.D|TF.W|TF.EA,                     -- 301 13x10
-  TF.D|TF.W|TF.EA,                     -- 302 14x10
-  TF.D|TF.W|TF.ELRB,                   -- 303 15x10
-  TF.F,                                -- 304 16x10
-  TF.F,                                -- 305 17x10
-  TF.F,                                -- 306 18x10
-  TF.F,                                -- 307 19x10
-  TF.F,                                -- 308 20x10
-  TF.F,                                -- 309 21x10
-  TF.F,                                -- 310 22x10
-  TF.F,                                -- 311 23x10
-  TF.F,                                -- 312 24x10
-  TF.F,                                -- 313 25x10
-  TF.F,                                -- 314 26x10
-  TF.F,                                -- 315 27x10
-  TF.F,                                -- 316 28x10
-  TF.D|TF.W|TF.P|TF.EA,                -- 317 29x10 Top of gold pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 318 30x10 Vertical gold pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 319 31x10 Bottom of gold pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 320 32x10 Broken top pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 321 01x11 Gold house bottom
-  TF.D|TF.W|TF.P|TF.EA,                -- 322 02x11 Gold house top
-  TF.D|TF.W|TF.P|TF.EA,                -- 323 03x11 Broken half top pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 324 04x11 Broken horizontal top
-  TF.D|TF.W|TF.P|TF.EA,                -- 325 05x11 Broken horizontal bottom
-  TF.D|TF.W,                           -- 326 06x11
-  TF.NONE,                             -- 327 07x11 Outside decoration only
-  TF.NONE,                             -- 328 08x11 Outside decoration only
-  TF.D|TF.W|TF.P|TF.EA,                -- 329 09x11 Water dug tile track end L
-  TF.NONE,                             -- 330 10x11 Outside decoration only
-  TF.NONE,                             -- 331 11x11 Outside decoration only
-  TF.D|TF.W|TF.P|TF.EA,                -- 332 12x11 Water dug tile track end R
-  TF.NONE,                             -- 333 13x11 Outside decoration only
-  TF.NONE,                             -- 334 14x11 Outside decoration only
-  TF.F,                                -- 335 15x11
-  TF.D|TF.W|TF.EA,                     -- 336 16x11 Water dug tile with window
-  TF.D|TF.W|TF.EA,                     -- 337 17x11 Water dug tile with skull
-  TF.NONE,                             -- 338 18x11
-  TF.NONE,                             -- 339 19x11
-  TF.NONE,                             -- 340 20x11
-  TF.NONE,                             -- 341 21x11
-  TF.NONE,                             -- 342 22x11 Sun top-left
-  TF.NONE,                             -- 343 23x11 Sun top-right
-  TF.NONE,                             -- 344 24x11 Moon top-left
-  TF.NONE,                             -- 345 25x11 Moon top-right
-  TF.NONE,                             -- 346 26x11 Moon bottom-right
-  TF.NONE,                             -- 347 27x11
-  TF.NONE,                             -- 348 28x11
-  TF.NONE,                             -- 349 29x11
-  TF.NONE,                             -- 350 30x11
-  TF.NONE,                             -- 351 31x11
-  TF.NONE,                             -- 352 32x11
-  TF.NONE,                             -- 353 01x12
-  TF.NONE,                             -- 354 02x12
-  TF.NONE,                             -- 355 03x12
-  TF.NONE,                             -- 356 04x12
-  TF.NONE,                             -- 357 05x12
-  TF.NONE,                             -- 358 06x12
-  TF.NONE,                             -- 359 07x12
-  TF.NONE,                             -- 360 08x12
-  TF.NONE,                             -- 361 09x12 Outside decoration only
-  TF.NONE,                             -- 362 10x12 Outside decoration only
-  TF.NONE,                             -- 363 11x12 Outside decoration only
-  TF.NONE,                             -- 364 12x12 Outside decoration only
-  TF.NONE,                             -- 365 13x12 Outside decoration only
-  TF.NONE,                             -- 366 14x12 Outside decoration only
-  TF.NONE,                             -- 367 15x12 Outside decoration only
-  TF.NONE,                             -- 368 16x12 Outside decoration only
-  TF.NONE,                             -- 369 17x12 Outside decoration only
-  TF.NONE,                             -- 370 18x12 Outside decoration only
-  TF.NONE,                             -- 371 19x12 Outside decoration only
-  TF.NONE,                             -- 372 20x12 Outside decoration only
-  TF.NONE,                             -- 373 21x12 Outside decoration only
-  TF.NONE,                             -- 374 22x12 Outside decoration only
-  TF.D|TF.W|TF.P|TF.EA,                -- 375 23x12 Water monument top-left
-  TF.D|TF.W|TF.P|TF.EA,                -- 376 24x12 Water monument top right
-  TF.D|TF.W|TF.P|TF.EA,                -- 377 25x12 Water monument bot-left
-  TF.D|TF.W|TF.P|TF.EA,                -- 378 26x12 Water monument bot-right
-  TF.NONE,                             -- 379 27x12 Outside decoration only
-  TF.NONE,                             -- 380 28x12 Outside decoration only
-  TF.NONE,                             -- 381 29x12 Outside decoration only
-  TF.NONE,                             -- 382 30x12 Outside decoration only
-  TF.NONE,                             -- 383 31x12 Outside decoration only
-  TF.NONE,                             -- 384 32x12 Outside decoration only
-  TF.NONE,                             -- 385 01x13 Outside decoration only
-  TF.NONE,                             -- 386 02x13 Outside decoration only
-  TF.NONE,                             -- 387 03x13 Outside decoration only
-  TF.NONE,                             -- 388 04x13 Outside decoration only
-  TF.NONE,                             -- 389 05x13 Outside decoration only
-  TF.D|TF.W|TF.AD|TF.T|TF.P|TF.EA,     -- 390 06x13 Water clear light track
-  TF.D|TF.W|TF.AD|TF.EA,               -- 391 07x13 Water clear light
-  TF.NONE,                             -- 392 08x13 Outside decoration only
-  TF.NONE,                             -- 393 09x13 Outside decoration only
-  TF.NONE,                             -- 394 10x13 Outside decoration only
-  TF.NONE,                             -- 395 11x13 Outside decoration only
-  TF.NONE,                             -- 396 12x13 Outside decoration only
-  TF.NONE,                             -- 397 13x13 Outside decoration only
-  TF.NONE,                             -- 398 14x13 Outside decoration only
-  TF.NONE,                             -- 399 15x13 Outside decoration only
-  TF.NONE,                             -- 400 16x13 Outside decoration only
-  TF.NONE,                             -- 401 17x13 Outside decoration only
-  TF.NONE,                             -- 402 18x13 Outside decoration only
-  TF.NONE,                             -- 403 19x13 Outside decoration only
-  TF.NONE,                             -- 404 20x13 Outside decoration only
-  TF.NONE,                             -- 405 21x13 Outside decoration only
-  TF.NONE,                             -- 406 22x13 Outside decoration only
-  TF.F,                                -- 407 23x13 Outside ceiling left
-  TF.F,                                -- 408 24x13 Outside ceiling straight
-  TF.F,                                -- 409 25x13 Outside ceiling right
-  TF.D|TF.W|TF.T|TF.P|TF.EA|TF.AD,     -- 410 26x13 Water beam forward track
-  TF.D|TF.W|TF.EA|TF.AD,               -- 411 27x13 Water beam forward
-  TF.D|TF.W|TF.EA|TF.AD,               -- 412 28x13 Water beam backward
-  TF.D|TF.W|TF.EA|TF.AD,               -- 413 29x13 Water beam horizontal
-  TF.D|TF.W|TF.ELTR,                   -- 414 30x13 Water dig down 1/3
-  TF.D|TF.W|TF.ELTR,                   -- 415 31x13 Water dig down 2/3
-  TF.D|TF.W|TF.ELTR,                   -- 416 32x13 Water dig down 3/3
-  TF.NONE,                             -- 417 01x14
-  TF.NONE,                             -- 418 02x14
-  TF.NONE,                             -- 419 03x14
-  TF.NONE,                             -- 420 04x14
-  TF.NONE,                             -- 421 05x14
-  TF.NONE,                             -- 422 06x14
-  TF.NONE,                             -- 423 07x14
-  TF.NONE,                             -- 424 08x14
-  TF.NONE,                             -- 425 09x14
-  TF.F,                                -- 426 10x14 Outside ceil L/R straight
-  TF.F,                                -- 427 11x14 Outside ceil R/D straight
-  TF.F,                                -- 428 12x14 Outside ceil U/R straight
-  TF.NONE,                             -- 429 13x14 Vertical dug leads outside
-  TF.D|TF.W|TF.E|TF.EA,                -- 430 14x14 Elevator wire (water)
-  TF.NONE,                             -- 431 15x14 Elevator foundation
-  TF.NONE,                             -- 432 16x14 Out half ceil D/R corner
-  TF.F,                                -- 433 17x14 Out half ceil L/R straight
-  TF.NONE,                             -- 434 18x14 Out half ceil R/U corner
-  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 435 19x14 Flood Gate (No water)
-  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 436 20x14 Flood Gate (Water left)
-  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 437 21x14 Flood Gate (Water right)
-  TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 438 22x14 Flood Gate (All water)
-  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 439 23x14 Flood Gate open (No water)
-  TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 440 24x14 Flood Gate open (Water)
-  TF.NONE,                             -- 441 25x14
-  TF.NONE,                             -- 442 26x14
-  TF.NONE,                             -- 443 27x14
-  TF.D|TF.W|TF.ETR,                    -- 444 28x14
-  TF.F|TF.D|TF.W|TF.EB,                -- 445 29x14
-  TF.F|TF.D|TF.W|TF.ER,                -- 446 30x14
-  TF.D|TF.W|TF.ELTR,                   -- 447 31x14
-  TF.F|TF.D|TF.W|TF.ERB,               -- 448 32x14
-  TF.D|TF.W|TF.ETR,                    -- 449 01x15
-  TF.F|TF.D|TF.W|TF.ERB,               -- 450 02x15
-  TF.D|TF.W|TF.AD|TF.T|TF.P|TF.EA,     -- 451 03x15 Watered clear track tile
-  TF.D|TF.W|TF.ETR,                    -- 452 04x15
-  TF.D|TF.W|TF.ETRB,                   -- 453 05x15
-  TF.D|TF.W|TF.ETR,                    -- 454 06x15
-  TF.D|TF.W|TF.ETR,                    -- 455 07x15
-  TF.D|TF.W|TF.ELTB,                   -- 456 08x15
-  TF.F|TF.D|TF.W|TF.ELB,               -- 457 09x15
-  TF.D|TF.W|TF.ELT,                    -- 458 10x15
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 459 11x15
-  TF.D|TF.W|TF.ELT,                    -- 460 12x15
-  TF.D|TF.W|TF.ELTB,                   -- 461 13x15
-  TF.D|TF.W|TF.ELB,                    -- 462 14x15
-  TF.D|TF.W|TF.ELB,                    -- 463 15x15
-  TF.D|TF.W|TF.ETRB,                   -- 464 16x15
-  TF.D|TF.W|TF.F|TF.ERB,               -- 465 17x15
-  TF.D|TF.W|TF.ETRB,                   -- 466 18x15
-  TF.D|TF.W|TF.F|TF.ELRB,              -- 467 19x15
-  TF.D|TF.W|TF.ELTB,                   -- 468 20x15
-  TF.D|TF.W|TF.ELTB,                   -- 469 21x15
-  TF.D|TF.W|TF.ELTB,                   -- 470 22x15
-  TF.D|TF.W|TF.ETRB,                   -- 471 23x15
-  TF.D|TF.W|TF.ETRB,                   -- 472 24x15
-  TF.D|TF.W|TF.ETRB,                   -- 473 25x15
-  TF.D|TF.W,                           -- 474 26x15
-  TF.NONE,                             -- 475 27x15
-  TF.D|TF.W|TF.P|TF.EA,                -- 476 28x15
-  TF.D|TF.W|TF.P|TF.EA,                -- 477 29x15
-  TF.D|TF.W|TF.ELTR,                   -- 478 30x15
-  TF.D|TF.W|TF.ELTR,                   -- 479 31x15
-  TF.D|TF.W|TF.ELTR                    -- 480 32x15
+local aTileData<const> = {             -- 0TITXTY NOTE (total 512 tiles)
+  TF.NONE,                             -- 0000000 Air (Passive)
+  TF.NONE,                             -- 0010100 Grass (Passive)
+  TF.NONE,                             -- 0020200 Solid undiggable stone
+  TF.F|TF.D,                           -- 0030300 Solid diggable dirt
+  TF.F|TF.D|TF.ERB,                    -- 0040400 75%dirt+25%dug 22deg UR>DL
+  TF.F|TF.D|TF.ELRB,                   -- 0050500 25%dirt+75%dug 22deg UR>DL
+  TF.F|TF.D|TF.ELTR,                   -- 0060600 75%dug+25%dirt 22deg UR>DL
+  TF.AD|TF.EA,                         -- 0070700 Clear dug tile
+  TF.D|TF.ELT,                         -- 0080800 25%dug+75%dirt 22deg UR>DL
+  TF.F|TF.D|TF.ELRB,                   -- 0090900 25%dirt+75%dug 22deg UL>DR
+  TF.F|TF.D|TF.ELB,                    -- 0101000 75%dirt+25%dug 22deg UL>DR
+  TF.D|TF.ETR,                         -- 0111100 25%dug+75%dirt 22deg UL>DR
+  TF.D|TF.ELTR,                        -- 0121200 75%dug+25%dirt 22deg UL>DR
+  TF.F|TF.D|TF.ERB,                    -- 0131300 50%dirt+50%dug 45deg UR>DL
+  TF.D|TF.ELT,                         -- 0141400 50%dug+50%dirt 45deg UR>DL
+  TF.D|TF.ETR,                         -- 0151500 50%dug+50%dirt 45deg UL>DR
+  TF.F|TF.D|TF.ELB,                    -- 0161600 50%dirt+50%dug 45deg UL>DR
+  TF.F|TF.D|TF.ER,                     -- 0171700
+  TF.F|TF.D|TF.ERB,                    -- 0181800
+  TF.D|TF.ET,                          -- 0191900
+  TF.F|TF.D|TF.ERB,                    -- 0202000
+  TF.D|TF.ETR,                         -- 0212100
+  TF.D|TF.ELT,                         -- 0222200
+  TF.F|TF.D|TF.ERB,                    -- 0232300
+  TF.D|TF.ETR,                         -- 0242400
+  TF.D|TF.ETR,                         -- 0252500
+  TF.F|TF.D|TF.EL,                     -- 0262600
+  TF.F|TF.D|TF.EB,                     -- 0272700
+  TF.D|TF.ELT,                         -- 0282800
+  TF.F|TF.D|TF.EB,                     -- 0292900
+  TF.D|TF.ELTR,                        -- 0303000
+  TF.F|TF.D|TF.EL,                     -- 0313100
+  TF.F|TF.D|TF.ELB,                    -- 0320001
+  TF.D|TF.ELT,                         -- 0330101
+  TF.F|TF.D|TF.ELB,                    -- 0340201
+  TF.F|TF.D|TF.ELB,                    -- 0350301
+  TF.F|TF.D|TF.ELB,                    -- 0360401
+  TF.D|TF.ET,                          -- 0370501
+  TF.F|TF.D|TF.ELB,                    -- 0380601
+  TF.D|TF.ETR,                         -- 0390701
+  TF.D|TF.ELT,                         -- 0400801
+  TF.D|TF.ELB,                         -- 0410901
+  TF.F|TF.D|TF.ELT,                    -- 0421001
+  TF.D|TF.ELT,                         -- 0431101
+  TF.D|TF.ER,                          -- 0441201
+  TF.F|TF.D|TF.EB,                     -- 0451301
+  TF.F|TF.D|TF.ERB,                    -- 0461401
+  TF.F|TF.D|TF.ELRB,                   -- 0471501
+  TF.F|TF.D|TF.ELRB,                   -- 0481601
+  TF.F|TF.D|TF.ETRB,                   -- 0491701
+  TF.D|TF.ETRB,                        -- 0501801
+  TF.D|TF.ETR,                         -- 0511901
+  TF.D|TF.ELTR,                        -- 0522001 Cave floor 1
+  TF.D|TF.ELTR,                        -- 0532101 Cave floor 2
+  TF.D|TF.ELB,                         -- 0542201
+  TF.F|TF.D|TF.ELTB,                   -- 0552301
+  TF.F|TF.D|TF.ELTB,                   -- 0562401
+  TF.D|TF.ELT,                         -- 0572501
+  TF.D|TF.EA,                          -- 0582601
+  TF.D|TF.EA,                          -- 0592701
+  TF.D|TF.EA,                          -- 0602801
+  TF.D|TF.EA,                          -- 0612901
+  TF.ELRB,                             -- 0623001
+  TF.F,                                -- 0633101
+  TF.F,                                -- 0640002
+  TF.NONE,                             -- 0650102
+  TF.NONE,                             -- 0660202
+  TF.NONE,                             -- 0670302
+  TF.NONE,                             -- 0680402
+  TF.NONE,                             -- 0690502
+  TF.NONE,                             -- 0700602
+  TF.NONE,                             -- 0710702
+  TF.NONE,                             -- 0720802
+  TF.NONE,                             -- 0730902
+  TF.NONE,                             -- 0741002
+  TF.NONE,                             -- 0751102
+  TF.P|TF.EA,                          -- 0761202
+  TF.P|TF.EA,                          -- 0771302
+  TF.P|TF.EA,                          -- 0781402
+  TF.P|TF.EA,                          -- 0791502
+  TF.P|TF.EA,                          -- 0801602
+  TF.P|TF.EA,                          -- 0811702
+  TF.P|TF.EA,                          -- 0821802
+  TF.P|TF.EA,                          -- 0831902
+  TF.P|TF.EA,                          -- 0842002
+  TF.NONE,                             -- 0852102 Unused
+  TF.NONE,                             -- 0862202 Unused
+  TF.NONE,                             -- 0872302 Platform cliff edge right
+  TF.D|TF.P|TF.EA,                     -- 0882402 Left end of track
+  TF.NONE,                             -- 0892502 Floor to wall right
+  TF.NONE,                             -- 0902602 Platform cliff edge left
+  TF.D|TF.P|TF.EA,                     -- 0912702 Right end of track
+  TF.NONE,                             -- 0922802 Right cliff wall
+  TF.NONE,                             -- 0932902 Left cliff wall
+  TF.NONE,                             -- 0943002 Floor to wall left
+  TF.EA,                               -- 0953102 Clear dug tile with window
+  TF.EA,                               -- 0960003 Clear dug tile with skull
+  TF.W|TF.AB,                          -- 0970103 Ocean surface 1/4
+  TF.W|TF.AB,                          -- 0980203 Ocean surface 2/4
+  TF.W|TF.AB,                          -- 0990303 Ocean surface 3/4
+  TF.W|TF.AE,                          -- 1000403 Ocean surface 4/4
+  TF.W|TF.AB,                          -- 1010503 Ocean bubble large 1/4
+  TF.W|TF.AB,                          -- 1020603 Ocean bubble large 2/4
+  TF.W|TF.AB,                          -- 1030703 Ocean bubble large 3/4
+  TF.W|TF.AE,                          -- 1040803 Ocean bubble large 4/4
+  TF.W|TF.AB,                          -- 1050903 Ocean surface bubble L 1/4
+  TF.W|TF.AB,                          -- 1061003 Ocean surface bubble L 2/4
+  TF.W|TF.AB,                          -- 1071103 Ocean surface bubble L 3/4
+  TF.W|TF.AE,                          -- 1081203 Ocean surface bubble L 4/4
+  TF.W|TF.AB,                          -- 1091303 Ocean bubble small 1/4
+  TF.W|TF.AB,                          -- 1101403 Ocean bubble small 2/4
+  TF.W|TF.AB,                          -- 1111503 Ocean bubble small 3/4
+  TF.W|TF.AE,                          -- 1121603 Ocean bubble small 4/4
+  TF.W,                                -- 1131703 Ocean surface bubble S 1/4
+  TF.W,                                -- 1141803 Ocean surface bubble S 2/4
+  TF.W,                                -- 1151903 Ocean surface bubble S 3/4
+  TF.W,                                -- 1162003 Ocean surface bubble S 4/4
+  TF.W,                                -- 1172103 Ocean
+  TF.W|TF.AB,                          -- 1182203 Ocean surface weed 1/4
+  TF.W|TF.AB,                          -- 1192303 Ocean surface weed 2/4
+  TF.W|TF.AB,                          -- 1202403 Ocean surface weed 3/4
+  TF.W|TF.AE,                          -- 1212503 Ocean surface weed 4/4
+  TF.NONE,                             -- 1222603
+  TF.NONE,                             -- 1232703
+  TF.NONE,                             -- 1242803
+  TF.NONE,                             -- 1252903 Cliff edge right (Jng/Snow)
+  TF.NONE,                             -- 1263003 Cliff edge left (Jng/Snow)
+  TF.NONE,                             -- 1273103
+  TF.NONE,                             -- 1280004
+  TF.NONE,                             -- 1290104
+  TF.NONE,                             -- 1300204
+  TF.NONE,                             -- 1310304
+  TF.NONE,                             -- 1320404
+  TF.NONE,                             -- 1330504
+  TF.P|TF.EA,                          -- 1340604
+  TF.P|TF.EA,                          -- 1350704
+  TF.P|TF.EA,                          -- 1360804
+  TF.P|TF.EA,                          -- 1370904
+  TF.W,                                -- 1381004
+  TF.W,                                -- 1391104
+  TF.W,                                -- 1401204
+  TF.W,                                -- 1411304 Cliff edge left (Jun/Snow)
+  TF.NONE,                             -- 1421404
+  TF.NONE,                             -- 1431504
+  TF.W,                                -- 1441604 Cliff edge right (Jun/Snow)
+  TF.NONE,                             -- 1451704
+  TF.NONE,                             -- 1461804
+  TF.W,                                -- 1471904
+  TF.NONE,                             -- 1482004
+  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 1492104 Dug tile track with light
+  TF.D|TF.AD|TF.EA,                    -- 1502204 Dug tile with light
+  TF.F,                                -- 1512304 Quad rock bottom left
+  TF.F,                                -- 1522404 Quad rock bottom right
+  TF.F,                                -- 1532504 Quad rock top left
+  TF.F,                                -- 1542604 Quad rock top right
+  TF.F,                                -- 1552704 Impenetrable rock
+  TF.F,                                -- 1562804 Impenetrable rock
+  TF.F,                                -- 1572904 Horizontal rock left
+  TF.F,                                -- 1583004 Horizontal rock right
+  TF.F,                                -- 1593104 Impenetrable rock
+  TF.F,                                -- 1600005 Unused
+  TF.NONE,                             -- 1610105 Unused
+  TF.NONE,                             -- 1620205
+  TF.NONE,                             -- 1630305 Outside decoration only
+  TF.NONE,                             -- 1640405 Outside decoration only
+  TF.NONE,                             -- 1650505 Outside decoration only
+  TF.NONE,                             -- 1660605 Outside decoration only
+  TF.NONE,                             -- 1670705 Outside decoration only
+  TF.NONE,                             -- 1680805 Outside decoration only
+  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 1690905 Dug tile beam forward track
+  TF.D|TF.AD|TF.EA,                    -- 1701005 Dug tile beam forward
+  TF.D|TF.AD|TF.EA,                    -- 1711105 Dug tile beam backwards
+  TF.D|TF.AD|TF.EA,                    -- 1721205 Dug tile beam horizontal
+  TF.D|TF.ELTR,                        -- 1731305 Dug tile down 1/3
+  TF.D|TF.ELTR,                        -- 1741405 Dug tile down 2/3
+  TF.D|TF.ELTR,                        -- 1751505 Dug tile down 3/3
+  TF.NONE,                             -- 1761605 Outside decoration only
+  TF.NONE,                             -- 1771705 Outside decoration only
+  TF.NONE,                             -- 1781805 Outside decoration only
+  TF.NONE,                             -- 179195 Outside decoration only
+  TF.NONE,                             -- 1802005 Outside decoration only
+  TF.NONE,                             -- 1812105 Outside decoration only
+  TF.NONE,                             -- 1822205 Outside decoration only
+  TF.NONE,                             -- 1832305 Outside decoration only
+  TF.NONE,                             -- 1842405 Outside decoration only
+  TF.NONE,                             -- 1852505 Outside decoration only
+  TF.NONE,                             -- 1862605 Outside decoration only
+  TF.NONE,                             -- 1872705 Outside decoration only
+  TF.NONE,                             -- 1882805 Outside decoration only
+  TF.EA|TF.E,                          -- 1892905 Elevator shaft wire
+  TF.NONE,                             -- 1903005 Elevator base
+  TF.NONE,                             -- 1913105 Trade centre top left
+  TF.NONE,                             -- 1920006 Trade centre top right
+  TF.NONE,                             -- 1930106 Trade centre bottom left
+  TF.NONE,                             -- 1940206 Trade centre bottom right
+  TF.AB|TF.PO,                         -- 1950306 Player 1 home flag (1/4)
+  TF.AB|TF.PO,                         -- 1960406 Player 1 home flag (2/4)
+  TF.AB|TF.PO,                         -- 1970506 Player 1 home flag (3/4)
+  TF.AE|TF.PO,                         -- 1980606 Player 1 home flag (4/4)
+  TF.AB|TF.PT,                         -- 1990706 Player 2 home flag (1/4)
+  TF.AB|TF.PT,                         -- 2000806 Player 2 home flag (2/4)
+  TF.AB|TF.PT,                         -- 2010906 Player 2 home flag (3/4)
+  TF.AE|TF.PT,                         -- 2021006 Player 2 home flag (4/4)
+  TF.D|TF.ELR,                         -- 2031106
+  TF.F|TF.D|TF.EB,                     -- 2041206
+  TF.F|TF.D|TF.ER,                     -- 2051306
+  TF.D|TF.ELTR,                        -- 2061406
+  TF.F|TF.D|TF.ERB,                    -- 2071506
+  TF.D|TF.ETR,                         -- 2081606
+  TF.F|TF.D|TF.ERB,                    -- 2091706
+  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 2101806 Clear tile with track
+  TF.F|TF.D|TF.ETR,                    -- 2111906
+  TF.F|TF.D|TF.ETRB,                   -- 2122006
+  TF.D|TF.ETR,                         -- 2132106
+  TF.D|TF.ETR,                         -- 2142206
+  TF.D|TF.ELTB,                        -- 2152306
+  TF.F|TF.D|TF.ELB,                    -- 2162406
+  TF.D|TF.ELTB,                        -- 2172506
+  TF.D|TF.ELRB,                        -- 2182606
+  TF.D|TF.ELT,                         -- 2192706
+  TF.D|TF.ELTB,                        -- 2202806
+  TF.D|TF.ELT,                         -- 2212906
+  TF.D|TF.ELT,                         -- 2223006
+  TF.F|TF.D|TF.ETRB,                   -- 2233106
+  TF.W|TF.D|TF.ERB,                    -- 2240007
+  TF.F|TF.D|TF.ETRB,                   -- 2250107
+  TF.D|TF.ELRB,                        -- 2260207
+  TF.D|TF.ELTB,                        -- 2270307
+  TF.D|TF.ELTB,                        -- 2280407
+  TF.D|TF.ELTB,                        -- 2290507
+  TF.D|TF.ETRB,                        -- 2300607
+  TF.D|TF.ETRB,                        -- 2310707
+  TF.D|TF.ETRB,                        -- 2320807
+  TF.NONE,                             -- 2330907
+  TF.NONE,                             -- 2341007
+  TF.D|TF.EA,                          -- 2351107 90%dug+10%dirt 11deg UR>DL
+  TF.D|TF.EA,                          -- 2361207 90%dug+10%dirt 11deg UL>DR
+  TF.NONE,                             -- 2371307 Unused
+  TF.NONE,                             -- 2381407 Unused
+  TF.NONE,                             -- 2391507 Unused
+  TF.F,                                -- 2401607 Double horizontal rock 1/2
+  TF.F,                                -- 2411707 Double horizontal rock 2/2
+  TF.F,                                -- 2421807 Double vertical rock 1/2
+  TF.F,                                -- 2431907 Double vertical rock 2/2
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2442007
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 2452107
+  TF.D|TF.W|TF.ELTR,                   -- 2462207
+  TF.D|TF.W|TF.EA|TF.AD,               -- 2472307 Clear water tile
+  TF.D|TF.W|TF.ELT,                    -- 2482407
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 2492507
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2502607
+  TF.D|TF.W|TF.ETR,                    -- 2512707
+  TF.D|TF.W|TF.ELTR,                   -- 2522807
+  TF.F|TF.D|TF.W|TF.EA,                -- 2532907
+  TF.D|TF.W|TF.EA,                     -- 2543007
+  TF.D|TF.W|TF.EA,                     -- 2553107
+  TF.F|TF.D|TF.W|TF.EA,                -- 2560008
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2570108
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2580208
+  TF.D|TF.W|TF.ET,                     -- 2590308
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2600408
+  TF.D|TF.W|TF.ETR,                    -- 2610508
+  TF.D|TF.W|TF.ELT,                    -- 2620608
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2630708
+  TF.D|TF.W|TF.ETR,                    -- 2640808
+  TF.D|TF.W|TF.ETR,                    -- 2650908
+  TF.F|TF.D|TF.W|TF.EL,                -- 2661008
+  TF.F|TF.D|TF.W|TF.EB,                -- 2671108
+  TF.D|TF.W|TF.ELT,                    -- 2681208
+  TF.F|TF.D|TF.W|TF.EB,                -- 2691308
+  TF.D|TF.W|TF.ELTR,                   -- 2701408
+  TF.F|TF.D|TF.W|TF.EL,                -- 2711508
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2721608
+  TF.D|TF.W|TF.ELT,                    -- 2731708
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2741808
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2751908
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2762008
+  TF.D|TF.W|TF.EB,                     -- 2772108
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2782208
+  TF.D|TF.W|TF.ERB,                    -- 2792308
+  TF.D|TF.W|TF.ELT,                    -- 2802408
+  TF.D|TF.W|TF.ELB,                    -- 2812508
+  TF.F|TF.D|TF.W|TF.ELT,               -- 2822608
+  TF.D|TF.W|TF.ELT,                    -- 2832708
+  TF.F|TF.D|TF.W|TF.ER,                -- 2842808
+  TF.F|TF.D|TF.W|TF.EB,                -- 2852908
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2863008 Flood cave ceiling left
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 2873108 Flood cave ceiling 1
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 2880009 Flood cave ceiling 2
+  TF.D|TF.W|TF.ETRB,                   -- 2890109 Flood cave left 1
+  TF.D|TF.W|TF.ETRB,                   -- 2900209 Flood cave left 2
+  TF.D|TF.W|TF.ETR,                    -- 2910309 Flood cave floor left
+  TF.D|TF.W|TF.ELTR,                   -- 2920409 Flood cave floor 1
+  TF.D|TF.W|TF.ELTR,                   -- 2930509 Flood cave floor 2
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2940609 Flood cave ceiling right
+  TF.D|TF.W|TF.ELTB,                   -- 2950709 Flood cave right 1
+  TF.D|TF.W|TF.ELTB,                   -- 2960809 Flood cave right 2
+  TF.D|TF.W|TF.ELT,                    -- 2970909 Flood cave floor right
+  TF.D|TF.W|TF.EA,                     -- 2981009 Flood cave floor bot-left
+  TF.D|TF.W|TF.EA,                     -- 2991109 Flood cave ceil top-left
+  TF.D|TF.W|TF.EA,                     -- 3001209 Flood cave ceil top-right
+  TF.D|TF.W|TF.EA,                     -- 3011309 Flood cave floor bot-right
+  TF.D|TF.W|TF.ELRB,                   -- 3021409 Flood elevator ceiling
+  TF.F,                                -- 3031509 Outside top-right ceiling 1
+  TF.F,                                -- 3041609 Outside top-right ceiling 2
+  TF.F,                                -- 3051709 Outside ceiling
+  TF.F,                                -- 3061809 Outside top-left ceiling 1
+  TF.F,                                -- 3071909 Outside top-left ceiling 2
+  TF.F,                                -- 3082009 Corpse column 1 row 1
+  TF.F,                                -- 3092109 Corpse column 2 row 1
+  TF.F,                                -- 3102209 Corpse column 3 row 1
+  TF.F,                                -- 3112309 Corpse column 4 row 1
+  TF.F,                                -- 3122409 Corpse column 1 row 2
+  TF.F,                                -- 3132509 Corpse column 2 row 2
+  TF.F,                                -- 3142609 Corpse column 3 row 2
+  TF.F,                                -- 3152709 Corpse column 4 row 2
+  TF.D|TF.W|TF.P|TF.EA,                -- 3162809 Top of gold pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3172909 Vertical gold pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3183009 Bottom of gold pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3193109 Broken top pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3200010 Gold house bottom
+  TF.D|TF.W|TF.P|TF.EA,                -- 3210110 Gold house top
+  TF.D|TF.W|TF.P|TF.EA,                -- 3220210 Broken half top pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3230310 Broken horizontal top
+  TF.D|TF.W|TF.P|TF.EA,                -- 3240410 Broken horizontal bottom
+  TF.D|TF.W,                           -- 3250510 Unused
+  TF.NONE,                             -- 3260610 Oil rig col 1 row 2
+  TF.NONE,                             -- 3270710 Oil rig col 2 row 2
+  TF.D|TF.W|TF.P|TF.EA,                -- 3280810 Water dug tile track end L
+  TF.NONE,                             -- 3290910 Oil rig col 1 row 1 anim 1
+  TF.NONE,                             -- 3301010 Oil rig col 2 row 1 anim 1
+  TF.D|TF.W|TF.P|TF.EA,                -- 3311110 Water dug tile track end R
+  TF.NONE,                             -- 3321210 Oil rig col 1 row 1 anim 2
+  TF.NONE,                             -- 3331310 Oil rig col 2 row 1 anim 2
+  TF.NONE,                             -- 3341410 Unused
+  TF.D|TF.W|TF.EA,                     -- 3351510 Water dug tile with window
+  TF.D|TF.W|TF.EA,                     -- 3361610 Water dug tile with skull
+  TF.NONE,                             -- 3371710 Unused
+  TF.NONE,                             -- 3381810 Unused
+  TF.NONE,                             -- 3391910 Unused
+  TF.NONE,                             -- 3402010 Unused
+  TF.NONE,                             -- 3412110 Sun top-left
+  TF.NONE,                             -- 3422210 Sun top-right
+  TF.NONE,                             -- 3432310 Moon top-left
+  TF.NONE,                             -- 3442410 Moon top-right
+  TF.NONE,                             -- 3452510 Moon bottom-right
+  TF.NONE,                             -- 3462610
+  TF.NONE,                             -- 3472710
+  TF.NONE,                             -- 3482810
+  TF.NONE,                             -- 3492910
+  TF.NONE,                             -- 3503010
+  TF.NONE,                             -- 3513110
+  TF.NONE,                             -- 3520011 Cave entrance right
+  TF.NONE,                             -- 3530111 Cave entrance left
+  TF.NONE,                             -- 3540211 Cave entrance down
+  TF.NONE,                             -- 3550311 Unused
+  TF.NONE,                             -- 3560411 Unused
+  TF.NONE,                             -- 3570511 Unused
+  TF.NONE,                             -- 3580611 Unused
+  TF.NONE,                             -- 3590711 Unused
+  TF.NONE,                             -- 3600811 Outside decoration only
+  TF.NONE,                             -- 3610911 Outside decoration only
+  TF.NONE,                             -- 3621011 Outside decoration only
+  TF.NONE,                             -- 3631111 Outside decoration only
+  TF.NONE,                             -- 3641211 Outside decoration only
+  TF.NONE,                             -- 3651311 Outside decoration only
+  TF.NONE,                             -- 3661411 Outside decoration only
+  TF.NONE,                             -- 3671511 Outside decoration only
+  TF.NONE,                             -- 3681611 Outside decoration only
+  TF.NONE,                             -- 3691711 Outside decoration only
+  TF.NONE,                             -- 3701811 Outside decoration only
+  TF.NONE,                             -- 3711911 Outside decoration only
+  TF.NONE,                             -- 3722011 Outside decoration only
+  TF.NONE,                             -- 3732111 Outside decoration only
+  TF.D|TF.W|TF.P|TF.EA,                -- 3742211 Water monument top-left
+  TF.D|TF.W|TF.P|TF.EA,                -- 3752311 Water monument top right
+  TF.D|TF.W|TF.P|TF.EA,                -- 3762411 Water monument bot-left
+  TF.D|TF.W|TF.P|TF.EA,                -- 3772511 Water monument bot-right
+  TF.NONE,                             -- 3782611 Outside decoration only
+  TF.NONE,                             -- 3792711 Outside decoration only
+  TF.NONE,                             -- 3802811 Outside decoration only
+  TF.NONE,                             -- 3812911 Outside decoration only
+  TF.NONE,                             -- 3823011 Outside decoration only
+  TF.NONE,                             -- 3833111 Outside decoration only
+  TF.NONE,                             -- 3840012 Outside decoration only
+  TF.NONE,                             -- 3850112 Outside decoration only
+  TF.NONE,                             -- 3860212 Outside decoration only
+  TF.NONE,                             -- 3870312 Outside decoration only
+  TF.NONE,                             -- 3880412 Outside decoration only
+  TF.D|TF.W|TF.AD|TF.T|TF.P|TF.EA,     -- 3890512 Water clear light track
+  TF.D|TF.W|TF.AD|TF.EA,               -- 3900612 Water clear light
+  TF.NONE,                             -- 3910712 Outside decoration only
+  TF.NONE,                             -- 3920812 Outside decoration only
+  TF.NONE,                             -- 3930912 Outside decoration only
+  TF.NONE,                             -- 3941012 Outside decoration only
+  TF.NONE,                             -- 3951112 Outside decoration only
+  TF.NONE,                             -- 3961212 Outside decoration only
+  TF.NONE,                             -- 3971312 Outside decoration only
+  TF.NONE,                             -- 3981412 Outside decoration only
+  TF.NONE,                             -- 3991512 Outside decoration only
+  TF.NONE,                             -- 4001612 Outside decoration only
+  TF.NONE,                             -- 4011712 Outside decoration only
+  TF.NONE,                             -- 4021812 Outside decoration only
+  TF.NONE,                             -- 4031912 Outside decoration only
+  TF.NONE,                             -- 4042012 Outside decoration only
+  TF.NONE,                             -- 4052112 Outside decoration only
+  TF.F,                                -- 4062212 Outside ceiling left
+  TF.F,                                -- 4072312 Outside ceiling straight
+  TF.F,                                -- 4082412 Outside ceiling right
+  TF.D|TF.W|TF.T|TF.P|TF.EA|TF.AD,     -- 4092512 Water beam forward track
+  TF.D|TF.W|TF.EA|TF.AD,               -- 4102612 Water beam forward
+  TF.D|TF.W|TF.EA|TF.AD,               -- 4112712 Water beam backward
+  TF.D|TF.W|TF.EA|TF.AD,               -- 4122812 Water beam horizontal
+  TF.D|TF.W|TF.ELTR,                   -- 4132912 Water dig down 1/3
+  TF.D|TF.W|TF.ELTR,                   -- 4143012 Water dig down 2/3
+  TF.D|TF.W|TF.ELTR,                   -- 4153112 Water dig down 3/3
+  TF.NONE,                             -- 4160013 Top-right cliff ceiling
+  TF.NONE,                             -- 4170113 Bottom-left cliff floor
+  TF.NONE,                             -- 4180213 Top-left cliff ceiling
+  TF.NONE,                             -- 4190313 Top-right cliff ceiling
+  TF.NONE,                             -- 4200413 Bottom-right cliff floor
+  TF.NONE,                             -- 4210513 Unused
+  TF.NONE,                             -- 4220613 Unused
+  TF.NONE,                             -- 4230713 Unused
+  TF.NONE,                             -- 4240813 Unused
+  TF.F,                                -- 4250913 Outside ceil L/R straight
+  TF.F,                                -- 4261013 Outside ceil R/D straight
+  TF.F,                                -- 4271113 Outside ceil U/R straight
+  TF.NONE,                             -- 4281213 Vertical dug leads outside
+  TF.D|TF.W|TF.E|TF.EA,                -- 4291313 Elevator wire (water)
+  TF.NONE,                             -- 4301413 Elevator foundation
+  TF.NONE,                             -- 4311513 Out half ceil D/R corner
+  TF.F,                                -- 4321613 Out half ceil L/R straight
+  TF.NONE,                             -- 4331713 Out half ceil R/U corner
+  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 4341813 Flood Gate (No water)
+  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 4351913 Flood Gate (Water left)
+  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 4362013 Flood Gate (Water right)
+  TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 4372113 Flood Gate (All water)
+  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 4382213 Flood Gate open (No water)
+  TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 4392313 Flood Gate open (Water)
+  TF.NONE,                             -- 4402413 Desert crystal 1
+  TF.NONE,                             -- 4412513 Desert crystal 2
+  TF.NONE,                             -- 4422613 Unused
+  TF.D|TF.W|TF.ETR,                    -- 4432713 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.EB,                -- 4442813 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.ER,                -- 4452913 Diagonal up-left flooded
+  TF.D|TF.W|TF.ELTR,                   -- 4463013 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.ERB,               -- 4473113 Diagonal up-left flooded
+  TF.D|TF.W|TF.ETR,                    -- 4480014 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.ERB,               -- 4490114 Diagonal up-left flooded
+  TF.D|TF.W|TF.AD|TF.T|TF.P|TF.EA,     -- 4500214 Watered clear track tile
+  TF.D|TF.W|TF.ETR,                    -- 4510314 Diagonal up-right flooded
+  TF.D|TF.W|TF.ETRB,                   -- 4520414 Diagonal up-right flooded
+  TF.D|TF.W|TF.ETR,                    -- 4530514 Diagonal up-right flooded
+  TF.D|TF.W|TF.ETR,                    -- 4540614 Diagonal up-right flooded
+  TF.D|TF.W|TF.ELTB,                   -- 4550714 Diagonal up-right flooded
+  TF.F|TF.D|TF.W|TF.ELB,               -- 4560814 Diagonal up-right flooded
+  TF.D|TF.W|TF.ELT,                    -- 4570914 Diagonal up-right flooded
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 4581014 Diagonal up-right flooded
+  TF.D|TF.W|TF.ELT,                    -- 4591114
+  TF.D|TF.W|TF.ELTB,                   -- 4601214
+  TF.D|TF.W|TF.ELB,                    -- 4611314
+  TF.D|TF.W|TF.ELB,                    -- 4621414
+  TF.D|TF.W|TF.ETRB,                   -- 4631514
+  TF.D|TF.W|TF.F|TF.ERB,               -- 4641614
+  TF.D|TF.W|TF.ETRB,                   -- 4651714
+  TF.D|TF.W|TF.F|TF.ELRB,              -- 4661814
+  TF.D|TF.W|TF.ELTB,                   -- 4671914
+  TF.D|TF.W|TF.ELTB,                   -- 4682014
+  TF.D|TF.W|TF.ELTB,                   -- 4692114
+  TF.D|TF.W|TF.ETRB,                   -- 4702214
+  TF.D|TF.W|TF.ETRB,                   -- 4712314
+  TF.D|TF.W|TF.ETRB,                   -- 4722414
+  TF.D|TF.W,                           -- 4732514
+  TF.NONE,                             -- 4742614
+  TF.D|TF.W|TF.P|TF.EA,                -- 4752714
+  TF.D|TF.W|TF.P|TF.EA,                -- 4762814
+  TF.NONE,                             -- 4772914 Unused
+  TF.NONE,                             -- 4783014 Unused
+  TF.NONE,                             -- 4793114 Unused
+  TF.NONE,                             -- 4800015 Unused
+  TF.NONE,                             -- 4810115 Unused
+  TF.NONE,                             -- 4820215 Unused
+  TF.NONE,                             -- 4830315 Unused
+  TF.NONE,                             -- 4840415 Unused
+  TF.NONE,                             -- 4850515 Unused
+  TF.NONE,                             -- 4860615 Unused
+  TF.NONE,                             -- 4870715 Unused
+  TF.NONE,                             -- 4880815 Unused
+  TF.NONE,                             -- 4890915 Unused
+  TF.NONE,                             -- 4901015 Unused
+  TF.NONE,                             -- 4911115 Unused
+  TF.NONE,                             -- 4921215 Unused
+  TF.NONE,                             -- 4931315 Unused
+  TF.NONE,                             -- 4941415 Unused
+  TF.NONE,                             -- 4951515 Unused
+  TF.NONE,                             -- 4961615 Unused
+  TF.NONE,                             -- 4971715 Unused
+  TF.NONE,                             -- 4981815 Unused
+  TF.NONE,                             -- 4991915 Unused
+  TF.NONE,                             -- 5002015 Unused
+  TF.NONE,                             -- 5012115 Unused
+  TF.NONE,                             -- 5022215 Unused
+  TF.NONE,                             -- 5032315 Unused
+  TF.NONE,                             -- 5042415 Unused
+  TF.NONE,                             -- 5052515 Unused
+  TF.NONE,                             -- 5062615 Unused
+  TF.NONE,                             -- 5072715 Unused
+  TF.NONE,                             -- 5082815 Unused
+  TF.NONE,                             -- 5092915 Unused
+  TF.NONE,                             -- 5103015 Unused
+  TF.NONE,                             -- 5113115 Unused
 };
-assert(#aTileData == 480, "aTileData must only have 480 tiles!");
+assert(#aTileData == 512, "aTileData must only have 512 tiles!");
 -- Explode directions data ------------------------------------------------- --
 local aExplodeDirData<const> = {
   -- X -- Y -- Flags -----
@@ -2566,14 +2310,18 @@ local aMenuData<const> = {
 };
 -- Endings data ------------------------------------------------------------ --
 local aEndingData<const> = {
-  [TYP.FTARG]    = { 1, 0, "THE F'TARGS CONSTRUCT THEIR OWN MUSEUM",
-                           "OF METAL MARVELS WITH THEIR EARNINGS" },
-  [TYP.HABBISH]  = { 1, 1, "THE HABBISH CONSTRUCT A TEMPLE IN HONOUR OF",
-                           "THE LORD HIGH HABBORG WITH THEIR EARNINGS" },
-  [TYP.GRABLIN]  = { 2, 0, "THE GRABLINS CONSTRUCT THEIR OWN GROK",
-                           "BREWERY WITH THEIR EARNINGS" },
-  [TYP.QUARRIOR] = { 2, 1, "THE QUARRIORS CONSTRUCT AN IMPENETRABLE",
-                           "FORTRESS WITH THEIR EARNINGS" }
+  [-1]           = {    "MINING OPERATIONS COMPLETED!",
+                        "ZOGS HAVE BEEN RAISED!" },
+  [TYP.FTARG]    = { 1, "THE F'TARGS CONSTRUCT THEIR OWN MUSEUM",
+                        "OF METAL MARVELS WITH THEIR EARNINGS..." },
+  [TYP.HABBISH]  = { 2, "THE HABBISH CONSTRUCT A TEMPLE IN HONOUR OF",
+                        "THE LORD HIGH HABBORG WITH THEIR EARNINGS..." },
+  [TYP.GRABLIN]  = { 3, "THE GRABLINS CONSTRUCT THEIR OWN GROK",
+                        "BREWERY WITH THEIR EARNINGS..." },
+  [TYP.QUARRIOR] = { 4, "THE QUARRIORS CONSTRUCT AN IMPENETRABLE",
+                        "FORTRESS WITH THEIR EARNINGS..." },
+  [-2]           = {    "...WHILST THE MYSTERIOUS FIGURE OF THE",
+                        "MASTER MINER RETURNS FROM WHENCE HE CAME!" }
 };
 -- Credits data ------------------------------------------------------------ --
 local aCreditsData<const> = {
@@ -2666,7 +2414,7 @@ local aSetupButtonData<const> = {
      WILL LOSE ANY SYSTEM AFFECTING CHANGES THAT REQUIRE THE 'APPLY' BUTTON \z
      TO BE CLICKED" },
   -- ----------------------------------------------------------------------- --
-  { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 101, nil, nil,
+  { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 102, nil, nil,
     "APPLY", "CLICK TO APPLY ANY SYSTEM AFFECTING SETTINGS YOU HAVE CHANGED" },
   -- ----------------------------------------------------------------------- --
   { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 103, nil, nil,
@@ -2857,12 +2605,11 @@ return { F = Util.Blank, A = {         -- Sending API to main loader
   aKeyToLiteral = aKeyToLiteral, aJumpFallData = aJumpFallData,
   aJumpRiseData = aJumpRiseData, aLevelTypesData = aLevelTypesData,
   aLevelsData = aLevelsData, aMenuData = aMenuData, aMenuFlags = MFL,
-  aMenuIds = MNU, aObjToUIData = aObjToUIData, aObjectActions = ACT,
-  aObjectData = aObjectData, aObjectDirections = DIR, aObjectFlags = OFL,
-  aObjectJobs = JOB, aObjectTypes = TYP, aRaceStatData = aRaceStatData,
-  aRacesData = aRacesData, aSetupButtonData = aSetupButtonData,
-  aSetupOptionData = aSetupOptionData, aSfxData = aSfxData,
-  aShopData = aShopData, aShroudCircle = aShroudCircle,
+  aMenuIds = MNU, aObjectActions = ACT, aObjectData = aObjectData,
+  aObjectDirections = DIR, aObjectFlags = OFL, aObjectJobs = JOB,
+  aObjectTypes = TYP, aRaceStatData = aRaceStatData, aRacesData = aRacesData,
+  aSetupButtonData = aSetupButtonData, aSetupOptionData = aSetupOptionData,
+  aSfxData = aSfxData, aShopData = aShopData, aShroudCircle = aShroudCircle,
   aShroudTileLookup = aShroudTileLookup, aTileData = aTileData,
   aTileFlags = TF, aTimerData = aTimerData, aTrainTrackData = aTrainTrackData,
   aZoneData = aZoneData

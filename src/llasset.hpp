@@ -5,7 +5,7 @@
 ** ## Defines the 'Asset' namespace and methods for the guest to use in   ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -460,7 +460,7 @@ LLFUNC(Name, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().IdentGet()))
 ** ######################################################################### **
 ** ## Asset:* member functions structure                                  ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Asset:* member functions begin
   LLRSFUNC(BitClear),                  LLRSFUNC(BitFlip),
   LLRSFUNC(BitSet),                    LLRSFUNC(BitState),
@@ -520,7 +520,11 @@ LLRSMFBEGIN                            // Asset:* member functions begin
   LLRSFUNCEX(WU64BE,WI64BE<uint64_t>), LLRSFUNCEX(WU64LE,WI64LE<uint64_t>),
   LLRSFUNCEX(WU8,WriteI<uint8_t>),
 LLRSEND                                // Asset:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Asset.* namespace functions                                         ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Asset.Asset
 // > Id:string=The filename of the file load
 // > Data:Asset=The array to duplicate
@@ -600,6 +604,12 @@ LLFUNC(Create, 1,
   const AgNeString aIdentifier{lS, 1};
   const AgSizeT aBytes{lS, 2};
   AcAsset{lS}().InitBlank(aIdentifier, aBytes))
+/* ========================================================================= */
+// $ Asset.Count
+// < Count:integer=Total number of assets created.
+// ? Returns the total number of asset classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cAssets->CollectorCount()))
 /* ========================================================================= */
 // $ Asset:Duplicate
 // < Handle:Asset=Handle to the duplicated asset.
@@ -779,15 +789,15 @@ LLFUNC(WaitAsync, 0, cAssets->WaitAsync())
 ** ######################################################################### **
 ** ## Asset.* namespace functions structure                               ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Asset.* namespace functions begin
-  LLRSFUNC(Asset),         LLRSFUNC(AssetAsync),      LLRSFUNC(Compile),
-  LLRSFUNC(CompileBlock),  LLRSFUNC(CompileFunction), LLRSFUNC(CompileString),
-  LLRSFUNC(Create),        LLRSFUNC(Duplicate),       LLRSFUNC(Enumerate),
-  LLRSFUNC(EnumerateEx),   LLRSFUNC(Exec),            LLRSFUNC(ExecEx),
-  LLRSFUNC(File),          LLRSFUNC(FileAsync),       LLRSFUNC(FileExists),
-  LLRSFUNC(Parse),         LLRSFUNC(ParseBlock),      LLRSFUNC(ParseString),
-  LLRSFUNC(String),        LLRSFUNC(WaitAsync),
+  LLRSFUNC(Asset),        LLRSFUNC(AssetAsync),      LLRSFUNC(Compile),
+  LLRSFUNC(CompileBlock), LLRSFUNC(CompileFunction), LLRSFUNC(CompileString),
+  LLRSFUNC(Count),        LLRSFUNC(Create),          LLRSFUNC(Duplicate),
+  LLRSFUNC(Enumerate),    LLRSFUNC(EnumerateEx),     LLRSFUNC(Exec),
+  LLRSFUNC(ExecEx),       LLRSFUNC(File),            LLRSFUNC(FileAsync),
+  LLRSFUNC(FileExists),   LLRSFUNC(Parse),           LLRSFUNC(ParseBlock),
+  LLRSFUNC(ParseString),  LLRSFUNC(String),          LLRSFUNC(WaitAsync),
 LLRSEND                                // Asset.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

@@ -617,7 +617,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   // memory leaks.
   ~AsyncLoader(void)
   { // Ignore if thread isn't running
-    if(tAsyncThread.ThreadIsNotRunning()) return;
+    if(tAsyncThread.ThreadIsNotJoinable()) return;
     // Print a warning to say that we should not be allowing this destructor
     // the clean up the thread
     cLog->LogWarningExSafe("AsyncLoader waiting for '$' to unload in its own "

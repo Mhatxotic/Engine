@@ -5,7 +5,7 @@
 ** ## Defines the 'Palette' namespace and methods for the guest to use in ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -395,7 +395,7 @@ LLFUNC(ShiftF, 0,
 ** ######################################################################### **
 ** ## Palette:* member functions structure                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Palette:* member functions begin
   LLRSFUNC(Commit),   LLRSFUNC(Copy),    LLRSFUNC(Destroy),  LLRSFUNC(Fill),
   LLRSFUNC(GetA),     LLRSFUNC(GetAI),   LLRSFUNC(GetB),     LLRSFUNC(GetBI),
@@ -406,7 +406,11 @@ LLRSMFBEGIN                            // Palette:* member functions begin
   LLRSFUNC(SetRGBAI), LLRSFUNC(SetRI),   LLRSFUNC(Shift),    LLRSFUNC(ShiftB),
   LLRSFUNC(ShiftF),
 LLRSEND                                // Palette:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Palette.* namespace functions                                       ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Palette.Create
 // > Identifier:string=Reference only user-defined identifier.
 // < Handle:Palette=A handle to the newly created palette object.
@@ -415,6 +419,12 @@ LLRSEND                                // Palette:* member functions end
 LLFUNC(Create, 1,
   const AgNeString aIdentifier{lS, 1};
   AcPalette{lS}().Init(aIdentifier))
+/* ========================================================================= */
+// $ Palette.Count
+// < Count:integer=Total number of palettes created.
+// ? Returns the total number of palette classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cPalettes->CollectorCount()))
 /* ========================================================================= */
 // $ Palette.Default
 // > Identifier:string=Reference only user-defined identifier.
@@ -459,10 +469,10 @@ LLFUNC(Texture, 1,
 ** ######################################################################### **
 ** ## Palette.* namespace functions structure                             ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Palette.* namespace functions begin
-  LLRSFUNC(Create),  LLRSFUNC(Default), LLRSFUNC(Image), LLRSFUNC(Palette),
-  LLRSFUNC(Texture),
+  LLRSFUNC(Create),  LLRSFUNC(Count), LLRSFUNC(Default), LLRSFUNC(Image),
+  LLRSFUNC(Palette), LLRSFUNC(Texture),
 LLRSEND                                // Palette.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Palette namespace

@@ -95,7 +95,7 @@ static class Console final :           // Members initially private
   AutoCompleteFlags acFlags;           // Flags for autocomplete
   const ConCmdStaticList &ccslInt;     // Default console cmds list
   CmdMap           cmMap;              // Console commands list
-  const EvtMain::RegVec reEvents;      // Events list to register
+  const EvtMainRegVec reEvents;        // Events list to register
   /* -- Do clear console, clear history and reset position ----------------- */
   void DoFlush(void)
   { // Do clear the console output lines

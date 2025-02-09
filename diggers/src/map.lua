@@ -10,16 +10,17 @@
 -- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
-local pairs<const> = pairs;
+local pairs<const>, floor<const> = pairs, math.floor;
 -- M-Engine function aliases ----------------------------------------------- --
-local CoreTicks<const>, InputSetCursorPos<const>, UtilClampInt<const>,
-  UtilIsNumber<const>, UtilIsTable<const> = Core.Ticks, Input.SetCursorPos,
-    Util.ClampInt, Util.IsNumber, Util.IsTable;
+local CoreTicks<const>, UtilClampInt<const>, UtilFormatNumber<const>,
+  UtilIsNumber<const>, UtilIsTable<const> = Core.Ticks, Util.ClampInt,
+    Util.FormatNumber, Util.IsNumber, Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GetMouseX, GetMouseY, InitCon, InitLobby, IsMouseXGreaterEqualThan,
-  IsMouseXLessThan,  IsMouseYGreaterEqualThan, IsMouseYLessThan, LoadResources,
-  PlayStaticSound, RegisterFBUCallback, RenderTipShadow, SetCallbacks,
-  SetCursor, SetHotSpot, SetKeys, SetTip, aGlobalData, aLevelsData, aZoneData;
+local BlitSLT, BlitLT, Fade, GetMouseX, GetMouseY, InitCon, InitLobby,
+  IsMouseXGreaterEqualThan, IsMouseXLessThan,  IsMouseYGreaterEqualThan,
+  IsMouseYLessThan, LoadResources, PlayStaticSound, RegisterFBUCallback,
+  RenderTipShadow, SetCallbacks, SetCursor, SetCursorPos, SetHotSpot, SetKeys,
+  SetTip, aGlobalData, aLevelsData, aZoneData;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets required
       aHoverData,                      -- Selected zone
@@ -35,7 +36,8 @@ local aAssets,                         -- Assets required
 local iMapSizeX<const>,                -- Map size pixel width
       iMapSizeY<const> = 640, 350;     -- Map size pixel height
 local iSClick, iSSelect,               -- Sound effect ids
-      iStageL, iStageT,                -- Stage upper-left co-ordinates
+      iStageL, iStageT, iStageR,       -- Stage upper-left co-ordinates
+      iStageW, iStageH,                -- Stage width and height
       iStageLneg, iStageTneg,          -- Negatated upper-left stage co-ords
       iStageLmove, iStageRmove;        -- Mouse scrolling positions
 local iZoneScroll;                     -- Zone button scrolling id
@@ -56,8 +58,8 @@ local function SetZone(iAdjust)
   iZonePosX = UtilClampInt(aZone[1] - 160, 0, iZoneMaxX);
   iZonePosY = UtilClampInt(aZone[2] - 120, 0, iZoneMaxY);
   -- Set the new cursor position
-  InputSetCursorPos(aZone[6] - (iZonePosX - iStageL),
-                    aZone[7] - (iZonePosY - iStageT));
+  SetCursorPos(aZone[6] - (iZonePosX - iStageL),
+               aZone[7] - (iZonePosY - iStageT));
 end
 -- Cycle between zones ----------------------------------------------------- --
 local function GoNextZone() SetZone(1) end;
@@ -65,18 +67,18 @@ local function GoPreviousZone() SetZone(-1) end;
 -- Render the map ---------------------------------------------------------- --
 local function RenderMap()
   -- Draw main chunk of map
-  texZone:BlitLT(-iZonePosX + iStageL, -iZonePosY + iStageT);
+  BlitLT(texZone, -iZonePosX + iStageL, -iZonePosY + iStageT);
   -- For each flag data in flag cache
   for iFlagId = 1, #aFlagCache do
     -- Get flag data and draw the flag to say the level was completed
     local aFlagData<const> = aFlagCache[iFlagId];
-    texZone:BlitSLT(1, aFlagData[1] - (iZonePosX + iStageLneg),
-                       aFlagData[2] - (iZonePosY + iStageTneg));
+    BlitSLT(texZone, 1, aFlagData[1] - (iZonePosX + iStageLneg),
+                        aFlagData[2] - (iZonePosY + iStageTneg));
   end
   -- Draw an icon for the zone that is selected
   if aSelectedZone then
-    texZone:BlitSLT(2, aSelectedZone[1] - (iZonePosX + iStageLneg),
-                       aSelectedZone[2] - (iZonePosY + iStageTneg));
+    BlitSLT(texZone, 2, aSelectedZone[1] - (iZonePosX + iStageLneg),
+                        aSelectedZone[2] - (iZonePosY + iStageTneg));
   end
   -- Draw tip
   RenderTipShadow();
@@ -87,7 +89,8 @@ local function SetTick(fcbFunc) SetCallbacks(fcbFunc, RenderMap) end;
 local aActionData<const> = {
   [  1] = function() SetTip(aHoverData.n) end,
   [ 60] = function() SetTip(aHoverData.t.n) end,
-  [120] = function() SetTip(aHoverData.w.r.." TO WIN") end,
+  [120] = function()
+    SetTip(UtilFormatNumber(aHoverData.w.r, 0).." TO WIN") end,
   [180] = function() SetTip(aHoverData.w.n) end,
   [240] = function() SetTip("ZONE "..iHoverZone.."/"..#aZoneData) end,
   [300] = function() iActionTimer = 0 end
@@ -200,7 +203,7 @@ end
 -- On frame buffer updated ------------------------------------------------- --
 local function OnStageUpdated(...)
   -- Update stage bounds
-  local _ _, _, iStageL, iStageT, iStageR, _ = ...;
+  iStageW, iStageH, iStageL, iStageT, iStageR = ...;
   -- Get negated stage left co-ordinate
   iStageLneg, iStageTneg = -iStageL, -iStageT;
   -- Update maximums
@@ -211,8 +214,9 @@ local function OnStageUpdated(...)
   -- Clamp current co-ordinates
   AdjustMapViewX(0);
   AdjustMapViewY(0);
-  -- Update hover state
-  OnHover();
+  -- The mouse could be over something else now so clear selections
+  aHoverData = 0;
+  OnHoverGeneric(iCArrow, nil, nil);
 end
 -- When screen has faded out ----------------------------------------------- --
 local function OnFadedOutToController()
@@ -246,9 +250,17 @@ local function GoScrollLeft() AdjustMapViewX(-8) OnHover() end;
 local function GoScrollRight() AdjustMapViewX(8) OnHover() end;
 local function GoScrollUp() AdjustMapViewY(-8) OnHover() end;
 local function GoScrollDown() AdjustMapViewY(8) OnHover() end;
+-- Cursor drag event ------------------------------------------------------- --
+local function OnDrag(_, _, _, iMoveX, iMoveY)
+  -- Move the map to how the mouse is dragging
+  AdjustMapViewX(iMoveX);
+  AdjustMapViewY(iMoveY);
+  -- Keep arrow shown
+  SetCursor(iCArrow)
+end
 -- Cursor pressed event ---------------------------------------------------- --
 local function OnPress()
-  -- Ignore if nothing pressed
+  -- Ignore if nothing pressed or left button not pressed
   if not aHoverData then return;
   -- If a zone is selected then accept the level and fade out to lobby
   elseif UtilIsTable(aHoverData) then FinishAndAccept();
@@ -325,19 +337,20 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, GetMouseX, GetMouseY, InitCon, InitLobby, IsMouseXGreaterEqualThan,
-    IsMouseXLessThan, IsMouseYGreaterEqualThan, IsMouseYLessThan,
-    LoadResources, PlayStaticSound, RegisterFBUCallback, RegisterHotSpot,
-    RegisterKeys, RenderTipShadow, SetCallbacks, SetCursor, SetHotSpot,
-    SetKeys, SetTip, aAssetsData, aCursorIdData, aGlobalData, aLevelsData,
-    aSfxData, aZoneData =
-      GetAPI("Fade", "GetMouseX", "GetMouseY", "InitCon", "InitLobby",
-        "IsMouseXGreaterEqualThan", "IsMouseXLessThan",
+  BlitSLT, BlitLT, Fade, GetMouseX, GetMouseY, InitCon, InitLobby,
+    IsMouseXGreaterEqualThan, IsMouseXLessThan, IsMouseYGreaterEqualThan,
+    IsMouseYLessThan, LoadResources, PlayStaticSound, RegisterFBUCallback,
+    RegisterHotSpot, RegisterKeys, RenderTipShadow, SetCallbacks, SetCursor,
+    SetCursorPos, SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData,
+    aGlobalData, aLevelsData, aSfxData, aZoneData =
+      GetAPI("BlitSLT", "BlitLT", "Fade", "GetMouseX", "GetMouseY", "InitCon",
+        "InitLobby", "IsMouseXGreaterEqualThan", "IsMouseXLessThan",
         "IsMouseYGreaterEqualThan", "IsMouseYLessThan", "LoadResources",
         "PlayStaticSound", "RegisterFBUCallback", "RegisterHotSpot",
         "RegisterKeys", "RenderTipShadow", "SetCallbacks", "SetCursor",
-        "SetHotSpot", "SetKeys", "SetTip", "aAssetsData", "aCursorIdData",
-        "aGlobalData", "aLevelsData", "aSfxData", "aZoneData");
+        "SetCursorPos", "SetHotSpot", "SetKeys", "SetTip", "aAssetsData",
+        "aCursorIdData", "aGlobalData", "aLevelsData", "aSfxData",
+        "aZoneData");
   -- Set assets data
   aAssets = { aAssetsData.map };
   -- Register keybinds
@@ -380,7 +393,7 @@ local function OnScriptLoaded(GetAPI)
   -- Setup hot spots. This scene is complicated with dynamically changing
   -- points of interest so we won't be directly using them.
   iHotSpotId = RegisterHotSpot({
-    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress } }
+    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress, OnDrag } }
   });
 end
 -- Exports and imports ----------------------------------------------------- --

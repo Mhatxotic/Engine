@@ -36,7 +36,6 @@ Diggers is a completely playable game from start to finish but will always be a 
 * Skipping one rendered frame every few seconds only on Wayland, perhaps when only using a `59.97hz` NTSC display. Probably need to make animations based on time and not frames which could be extremely difficult.
 
 ### Game outstanding issues…
-* Need proper ending movie with the stranger flying away in his pod.
 * No French, German or Italian book, intro nor UI localisations yet.
 
 ## [System Requirements](#system-requirements)…
@@ -88,7 +87,7 @@ As the diggers wait nervously, the stranger heads toward the trading centre. for
 Guide one of the four available races to raising 17,500 Zogs by mining valuable minerals across 34 zones in order to build their dream creation.
 
 ## [Setup](#setup)…
-Press `F1` at any time in the game to access the setup screen, `F2` to configure the key binds or `F3` to show the acknowledgements.
+Press `F1` at any time in the game to access the setup screen, `F2` to configure the key binds, `F3` to show the acknowledgements, `F11` to centre the window to the monitor or `F12` to write a direct frame buffer screenshot to disk.
 
 ### Configuration screen…
 * **Monitor**
@@ -221,19 +220,17 @@ If for some reason you're an advanced-user or admin and need to fine tune how th
 * `diggers.exe vid_fs=1 con_disabled=0`
   - Will make the engine startup in full-screen and enable the developer console.
 
-You can change cvars by opening up the console with the `GRAVE` key (key under `ESCAPE` key). You will have to start the game with `con_disabled=0` in order for this to work. This key may not be available on most keyboards so you can change it by changing the `con_key1` or `con_key2` var. This is a GLFW specific key code. Once you're in the console, type `cmdlist` for the commands you can use or `cvarlist` for the settings you can change. In the release version of the game, the console is semi-permanantly disabled, you can re-enable the console by using `con_disabled=0` to re-enable it. CVars can obviously be overloaded onto the command-line, not just one setting.
+You can change cvars by opening up the console with the `GRAVE` key (key under `ESCAPE` key). In the release version of the game, the console is semi-permanantly disabled, you can re-enable the console by using `con_disabled=0` to re-enable it. CVars can obviously be overloaded onto the command-line, not just one setting. This key may not be available on most keyboards so you can change it by changing the `con_key1` or `con_key2` var. This is a GLFW specific [key code](https://www.glfw.org/docs/3.4/group__keys.html). Once you're in the console, type `cmdlist` for the commands you can use or `cvarlist` for the settings you can change and escape key to clear the text input or to close the console.
 
 ## [F.A.Q.](#faq)…
-* **Q. This does not 'look' like the original game.**
-  - A. Well I've had to make a few changes because I want the remake to support 16:9 widescreen and ive had to modify and adapt most of the old textures that were originally in 320x200 (16:10), which is not a 4:3 resolution. If you can help upgrade the textures, that would be awesome!
+* **Q. This does not [look](https://www.youtube.com/watch?v=9w7v3TXBEGY) like the original game.**
+  - A. The original game was in a 320x200 resolution which is not an aspect ratio of 16:9 or even 4:3 like most modern displays are and adaptations had to be made to support all display types and most of the old textures had to be updated to be compatible with OpenGL. If you can help upgrade the textures to make them look better (up to 16x scale of the original) then that would be awesome!
 * **Q. I got an error, strange behaviour or found a bug.**
-  - A. You can start the game with the `log_file=...` (filename) parameter to give a pretty detailed log of what the app is doing so you can send me that along with as much info as possible such as the `.log` `.crt` `.dbg` and `.udb` files that the app generates. Neither of these files will contain any personal information, only technical information to help me squash the problem.
+  - A. You can start the game with the `log_file=...` (filename) and the `log_level=4` parameters to give a pretty detailed log of what the app is doing so you can send me that along with as much info as possible such as the `.log` `.crt` `.dbg` and `.udb` files that the app generates. Neither of these files will contain any personal information, only technical information to help me squash the problem.
 * **Q. I've picked the wrong game-engine settings and the game crashed/won't start.**
   - A. Try specifying the parameter `sql_defaults=1` command-line option to reset all the engine settings to default. If this doesn't work you'll have to delete the `.udb` file or set `sql_defaults=2` and start again from scratch thus losing all your Diggers saved game data. All that said though, the game shouldn't really crash though so please send me any logs/crash dumps you may have.
-* **Q. Why does the game run faster than the Amiga version?**
-  - A. A fixed polling frequency of 60hz is used for the game logic and I originally enjoyed playing this game on a 486 DX2/66 with the original MS-DOS version that ran at refresh frequency of 70hz (in 320x200 mode X) which is quite speedy compared to the slow gameplay of the Amiga version and I always preferred the fast logic of the MS-DOS version.
-* **Q. Can I speed run or T.A.S. this game?**
-  - A. This game is overkill on RNG but you can set the seed that makes the `math.random()` function predictable on the command-line with the `lua_randomseed=value` so hopefully you can use that to your advantage.
+* **Q. Can I [speed run](https://en.wikipedia.org/wiki/Speedrunning) or [T.A.S.](https://en.wikipedia.org/wiki/Tool-assisted_speedrun) this game?**
+  - A. This game is overkill on RNG but you can set the seed that makes the `math.random()` function predictable on the command-line with the `lua_randomseed=value` argument so hopefully you can use that to your advantage.
 
 ## [Credits](#credits)…
 ### Diggers for Amiga, CD32 and DOS…

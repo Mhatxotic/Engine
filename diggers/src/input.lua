@@ -17,20 +17,21 @@ local CoreStack<const>, CoreTicks<const>, DisplayReset<const>,
   InputClearStates<const>, InputGetJoyAxis<const>, InputGetJoyButton<const>,
   InputGetNumJoyAxises<const>, InputGetNumJoyButtons<const>,
   InputOnJoyState<const>, InputOnKey<const>, InputOnMouseClick<const>,
-  InputOnMouseMove<const>, InputOnMouseScroll<const>, InputSetCursor<const>,
-  InputSetCursorCentre<const>, InputSetCursorPos<const>, SShotFbo<const>,
-  UtilBlank<const>, UtilClamp<const>, UtilIsBoolean<const>,
+  InputOnMouseFocus<const>, InputOnMouseMove<const>, InputOnMouseScroll<const>,
+  InputSetCursor<const>, InputSetCursorCentre<const>, InputSetCursorPos<const>,
+  SShotFbo<const>, UtilBlank<const>, UtilClamp<const>, UtilIsBoolean<const>,
   UtilIsFunction<const>, UtilIsInteger<const>, UtilIsString<const>,
   UtilIsTable<const>, fboMain<const> =
     Core.Stack, Core.Ticks, Display.Reset, Input.ClearStates, Input.GetJoyAxis,
     Input.GetJoyButton, Input.GetNumJoyAxises, Input.GetNumJoyButtons,
-    Input.OnJoyState, Input.OnKey, Input.OnMouseClick, Input.OnMouseMove,
-    Input.OnMouseScroll, Input.SetCursor, Input.SetCursorCentre,
-    Input.SetCursorPos, SShot.Fbo, Util.Blank, Util.Clamp, Util.IsBoolean,
-    Util.IsFunction, Util.IsInteger, Util.IsString, Util.IsTable, Fbo.Main();
+    Input.OnJoyState, Input.OnKey, Input.OnMouseClick, Input.OnMouseFocus,
+    Input.OnMouseMove, Input.OnMouseScroll, Input.SetCursor,
+    Input.SetCursorCentre, Input.SetCursorPos, SShot.Fbo, Util.Blank,
+    Util.Clamp, Util.IsBoolean, Util.IsFunction, Util.IsInteger, Util.IsString,
+    Util.IsTable, Fbo.Main();
 -- Diggers function and data aliases --------------------------------------- --
-local aCursorIdData, InitSetup, SetErrorMessage, SetTip, aCursorData,
-  iTexScale, texSpr;
+local aCursorIdData, InitSetup, RegisterFBUCallback, SetErrorMessage, SetTip,
+  aCursorData, iTexScale, texSpr;
 -- Get input press states -------------------------------------------------- --
 local aStates<const> = Input.States;
 local iPress<const> = aStates.PRESS;
@@ -49,6 +50,7 @@ local iCursorMin, iCursorMax;          -- Cursor minimum and maximum
 local iCursorAdjX, iCursorAdjY;        -- Cursor origin co-ordinates
 local iCArrow, iCWait, iCId;           -- Arrow, wait and current cursor id
 local nWheelX, nWheelY = 0, 0;         -- Mouse wheel state
+local iDragZone, iDragButton;          -- Button held and dragging?
 -- Joystick ---------------------------------------------------------------- --
 local nJoyAX, nJoyAY = 0, 0;           -- Joystick axis values
 local aJoy<const> = { };               -- Joysticks connected data
@@ -58,7 +60,7 @@ local iJoyButtonMax;                   -- Maximum joystick buttons
 -- Stage ------------------------------------------------------------------- --
 local iStageLeft, iStageRight;         -- Stage left and top
 local iStageTop, iStageBottom;         -- Stage right and bottom
-local iStageLeftD2, iStageRightD2;     -- Stage left and top divided by two
+local iStageLeft, iStageRight;     -- Stage left and top divided by two
 -- Hotspots ---------------------------------------------------------------- --
 local aHotSpotNone<const> = { };       -- No hotspot data
 local aHotSpotBank<const> = { };       -- Bank of hotspots
@@ -125,12 +127,13 @@ local function RegisterHotSpot(aHotSpots)
     -- Get activate function and if it's set?
     local fcbActivate<const> = aHotSpot[9];
     if fcbActivate then
-      -- If it is just a function than format it in a release+press func table
-      if UtilIsFunction(fcbActivate) then aHotSpot[9] = { false, fcbActivate };
+      -- If it is just a function than format it in a rel+press+drag func table
+      if UtilIsFunction(fcbActivate) then
+        aHotSpot[9] = { false, fcbActivate, false };
       -- If it is a table?
       elseif UtilIsTable(fcbActivate) then
-        -- Must only contain two items (press and release)
-        if #fcbActivate ~= 2 then
+        -- Must only contain three items (press, release and drag)
+        if #fcbActivate ~= 3 then
           error("Hotspot activate table at index "..iIndex..
             " must have two entries only! "..#fcbActivate) end;
         -- Check that they're functions
@@ -144,7 +147,7 @@ local function RegisterHotSpot(aHotSpots)
       else error("Hotspot activate table at index "..iIndex..
         " is invalid! "..tostring(fcbActivate)) end;
     -- Not specified so just convert to table with release/press funcs
-    else aHotSpot[9] = { false, false } end;
+    else aHotSpot[9] = { false, false, false } end;
     -- Invalid function or table
     -- If we don't have 13 parameters?
     if #aHotSpot < 13 then
@@ -166,16 +169,77 @@ local function RegisterHotSpot(aHotSpots)
 end
 -- Get hotspot data -------------------------------------------------------- --
 local function GetHotSpot() return iHotSpot end;
+-- Set cursor position with scale ------------------------------------------ --
+local function SetCursorPos(iX, iY)
+  InputSetCursorPos(iX * iTexScale, iY * iTexScale);
+end
+-- Set cursor -------------------------------------------------------------- --
+local function SetCursor(iIdentifier)
+  -- Check parameter
+  if not UtilIsInteger(iIdentifier) then
+    error("Cursor id integer is invalid! "..tostring(iIdentifier)) end;
+  -- Get cursor data for id and check it
+  local aCursorItem<const> = aCursorData[iIdentifier];
+  if not UtilIsTable(aCursorItem) then
+    error("Cursor id not valid! "..tostring(aCursorItem)) end;
+  -- Set new cursor dynamics
+  iCursorMin, iCursorMax, iCursorAdjX, iCursorAdjY =
+    aCursorItem[1], aCursorItem[2], aCursorItem[3], aCursorItem[4];
+  -- Set cursor id
+  iCId = iIdentifier;
+end
+-- Execute command if mouse is overing ------------------------------------- --
+local function CheckHotSpotHover(aHotSpot)
+  -- Return if mouse not in bounds
+  if not IsMouseInBounds(aHotSpot[1], aHotSpot[2],
+                         aHotSpot[3], aHotSpot[4]) then return end;
+  -- Set the cursor
+  SetCursor(aHotSpot[6]);
+  -- Call the function if it is available?
+  local fcbCb<const> = aHotSpot[7];
+  if fcbCb then
+    -- Protected call so we can handle errors
+    local bResult<const>, sReason<const> =
+      xpcall(fcbCb, CoreStack, iCursorX, iCursorY);
+    if not bResult then SetErrorMessage(sReason) end;
+  end
+  -- Success
+  return true;
+end
+-- Recheck positions ------------------------------------------------------- --
+local function CheckHotSpots()
+  -- Enumerate hotspots
+  for iIndex = 1, #aHotSpotActive do
+    -- Check if mouse is in zone and if it was? We're done
+    if CheckHotSpotHover(aHotSpotActive[iIndex]) then return end;
+  end
+  -- No cursor was matched so we keep the arrow cursor
+  SetCursor(iCArrow);
+end
 -- When the mouse is clicked ----------------------------------------------- --
 local function OnMouseClick(iButton, iState)
   -- if have hotspots?
   if #aHotSpotActive >= 0 then
+    -- If mouse is dragging?
+    if iDragZone then
+      -- Button assigned is released?
+      if iState == iRelease and iButton == iDragButton then
+        -- Clear the drag
+        iDragZone, iDragButton = nil, nil;
+        -- Check hotspots
+        CheckHotSpots();
+      -- Do not process any more buttons while draging
+      else return end;
+    end
     -- Check if mouse in hotspots
     for iIndex = 1, #aHotSpotActive do
       -- Get hotspot and if cursor is in bounds?
       local aHotSpot<const> = aHotSpotActive[iIndex];
       if IsMouseInBounds(aHotSpot[1], aHotSpot[2],
                          aHotSpot[3], aHotSpot[4]) then
+        -- Button pressing? Set dragging
+        if iState == iPress and not iDragZone then
+          iDragZone, iDragButton = iIndex, iButton end;
         -- Get the callback and run it
         local fcbCb<const> = aHotSpot[9][1 + iState];
         if fcbCb then
@@ -189,6 +253,11 @@ local function OnMouseClick(iButton, iState)
       end
     end
   end
+end
+-- When the mouse leaves the window? --------------------------------------- --
+local function OnMouseFocus()
+  -- Disable mouse dragging if enabled
+  if iDragZone then iDragZone, iDragButton = nil, nil end;
 end
 -- When the mouse wheel is moved ------------------------------------------- --
 local function OnMouseScroll(nX, nY)
@@ -248,7 +317,7 @@ local function JoystickProc()
   -- Axis moving?
   if nJoyAX ~= 0 or nJoyAY ~= 0 then
     -- Update mouse position
-    InputSetCursorPos(
+    SetCursorPos(
       UtilClamp(iCursorX + nJoyAX, iStageLeft, iStageRight - 1),
       UtilClamp(iCursorY + nJoyAY, iStageTop, iStageBottom - 1));
   -- No axis pressed
@@ -333,39 +402,6 @@ local function OnJoyState(iJ, bState)
 end
 -- Get cursor -------------------------------------------------------------- --
 local function GetCursor() return iCId end;
--- Set cursor -------------------------------------------------------------- --
-local function SetCursor(iIdentifier)
-  -- Check parameter
-  if not UtilIsInteger(iIdentifier) then
-    error("Cursor id integer is invalid! "..tostring(iIdentifier)) end;
-  -- Get cursor data for id and check it
-  local aCursorItem<const> = aCursorData[iIdentifier];
-  if not UtilIsTable(aCursorItem) then
-    error("Cursor id not valid! "..tostring(aCursorItem)) end;
-  -- Set new cursor dynamics
-  iCursorMin, iCursorMax, iCursorAdjX, iCursorAdjY =
-    aCursorItem[1], aCursorItem[2], aCursorItem[3], aCursorItem[4];
-  -- Set cursor id
-  iCId = iIdentifier;
-end
--- Execute command if mouse is overing ------------------------------------- --
-local function CheckHotSpotHover(aHotSpot)
-  -- Return if mouse not in bounds
-  if not IsMouseInBounds(aHotSpot[1], aHotSpot[2],
-                         aHotSpot[3], aHotSpot[4]) then return end;
-  -- Set the cursor
-  SetCursor(aHotSpot[6]);
-  -- Call the function if it is available?
-  local fcbCb<const> = aHotSpot[7];
-  if fcbCb then
-    -- Protected call so we can handle errors
-    local bResult<const>, sReason<const> =
-      xpcall(fcbCb, CoreStack, iCursorX, iCursorY);
-    if not bResult then SetErrorMessage(sReason) end;
-  end
-  -- Success
-  return true;
-end
 -- Update hotspot based on alignment --------------------------------------- --
 local function UpdateHotSpot(aHotSpot)
   -- Update Y position
@@ -376,16 +412,16 @@ local function UpdateHotSpot(aHotSpot)
     aHotSpot[3] = aHotSpot[10] + aHotSpot[12];
   -- Left alignment?
   elseif iAlignment == 1 then
-    aHotSpot[1] = iStageLeftD2 + aHotSpot[10];
+    aHotSpot[1] = iStageLeft + aHotSpot[10];
     aHotSpot[3] = aHotSpot[1] + aHotSpot[12];
   -- Right alignment?
   elseif iAlignment == 2 then
-    aHotSpot[1] = iStageRightD2 - aHotSpot[12] - aHotSpot[10];
+    aHotSpot[1] = iStageRight - aHotSpot[12] - aHotSpot[10];
     aHotSpot[3] = aHotSpot[1] + aHotSpot[12];
   -- Left AND right alignment?
   elseif iAlignment == 3 then
-    aHotSpot[1] = iStageLeftD2 + aHotSpot[10];
-    aHotSpot[3] = iStageRightD2 - aHotSpot[12];
+    aHotSpot[1] = iStageLeft + aHotSpot[10];
+    aHotSpot[3] = iStageRight - aHotSpot[12];
   end
 end
 -- Update all hot spots ---------------------------------------------------- --
@@ -432,20 +468,46 @@ local function SetHotSpot(iIdentifier)
   UpdateAllHotSpots();
   -- Set active hotspot id
   iHotSpot = iIdentifier;
+  -- Disable mouse dragging if enabled
+  if iDragZone then iDragZone, iDragButton = nil, nil end;
 end
 -- When the mouse is moved ------------------------------------------------- --
 local function OnMouseMove(nX, nY)
-  -- Update cursor bounds
+  -- Update physical cursor bounds
   iCursorRX, iCursorRY = floor(nX), floor(nY);
-  iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
   -- Return if no hotspots
-  if #aHotSpotActive == 0 then return end;
-  -- Check if mouse in hotspots
-  for iIndex = 1, #aHotSpotActive do
-    if CheckHotSpotHover(aHotSpotActive[iIndex]) then return end;
+  if #aHotSpotActive == 0 then
+    -- Update cursor
+    iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
+    -- Return
+    return;
   end
-  -- No cursor was matched so we keep the arrow cursor
-  SetCursor(iCArrow);
+  -- If not hotspot is dragging? Update position and check hotspots
+  if not iDragZone then
+    -- Update cursor
+    iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
+    -- Check hotspots and return
+    return CheckHotSpots();
+  end
+  -- Get the drag callback and if not set?
+  local fcbCb<const> = aHotSpotActive[iDragZone][9][3];
+  if not fcbCb then
+    -- Update cursor
+    iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
+    -- Check hotspots and return
+    return CheckHotSpots();
+  end
+  -- Calculate new position but don't overwrite current one just yet
+  local iCursorNX<const>, iCursorNY<const> =
+    iCursorRX // iTexScale, iCursorRY // iTexScale;
+  -- Protected call so we can handle errors
+  local bResult<const>, sReason<const> =
+    xpcall(fcbCb, CoreStack, iDragButton, iCursorX, iCursorY,
+      iCursorNX-iCursorX, iCursorNY-iCursorY);
+  -- Now update the new cursor position
+  iCursorX, iCursorY = iCursorNX, iCursorNY;
+  -- Error if call failed
+  if not bResult then return SetErrorMessage(sReason) end;
 end
 -- Categorise the keys ----------------------------------------------------- --
 local function RegisterCategorise(sName, aKeys)
@@ -517,17 +579,21 @@ end
 local function GetKeyBank() return iKeyBank end;
 -- Set global keys table --------------------------------------------------- --
 local function SetGlobalKeyBinds(aKeys) aGlobalKeyBinds = aKeys end;
+-- Set blank active key bank data ------------------------------------------ --
+local function SetBlankKeyBankData()
+  aKeyBankActive = {
+    [iPress]   = { },                  -- Pressed keys to functions
+    [iRelease] = { },                  -- Released keys to functions
+    [iRepeat]  = { },                  -- Repeated keys to functions
+  };
+end
 -- Set active keybinds ----------------------------------------------------- --
 local function SetKeys(bState, iIdentifier)
   -- Check parameters
   if not UtilIsBoolean(bState) then
     error("Bad global key state: "..tostring(bState)) end;
   -- Clear keybinds list
-  aKeyBankActive = {
-    [iPress]   = { },                  -- Pressed keys to functions
-    [iRelease] = { },                  -- Released keys to functions
-    [iRepeat]  = { },                  -- Repeated keys to functions
-  };
+  SetBlankKeyBankData();
   -- If we're to add the persistent keys?
   if bState then
     for iCategory, aBinds in pairs(aGlobalKeyBinds) do
@@ -578,9 +644,6 @@ local function OnStageUpdated(...)
   -- Clamp them to integers
   iStageLeft, iStageTop, iStageRight, iStageRight =
     floor(iStageLeft), floor(iStageTop), floor(iStageRight), floor(iStageRight);
-  -- Calculate scales version of the stage
-  iStageLeftD2 = iStageLeft // iTexScale;
-  iStageRightD2 = iStageRight // iTexScale;
   -- If cursor is off the left or right of the screne? Clamp it
   if iCursorX < iStageLeft then iCursorX = iStageLeft;
   elseif iCursorX >= iStageRight then iCursorX = iStageRight-1 end;
@@ -614,10 +677,13 @@ local function OnScriptLoaded(GetAPI)
         "aCursorData", "aCursorIdData", "iTexScale", "texSpr");
   -- Get arrow and wait cursor ids
   iCArrow, iCWait = aCursorIdData.ARROW, aCursorIdData.WAIT;
+  -- Initialise keybinds list
+  SetBlankKeyBankData();
   -- Enable input capture events
   InputOnJoyState(OnJoyState);
   InputOnKey(OnKey);
   InputOnMouseClick(OnMouseClick);
+  InputOnMouseFocus(OnMouseFocus);
   InputOnMouseMove(OnMouseMove);
   InputOnMouseScroll(OnMouseScroll);
   -- Enable cursor clamper when fbo changes
@@ -649,6 +715,6 @@ return { F = OnScriptLoaded, A = { ClearStates = ClearStates,
   IsMouseYLessThan = IsMouseYLessThan, JoystickProc = JoystickProc,
   RegisterHotSpot = RegisterHotSpot, RegisterKeys = RegisterKeys,
   RestoreKeyHandlers = RestoreKeyHandlers, SetCursor = SetCursor,
-  SetHotSpot = SetHotSpot, SetKeys = SetKeys, aKeyBank = aKeyBank,
-  aKeyBankCats = aKeyBankCats } };
+  SetCursorPos = SetCursorPos, SetHotSpot = SetHotSpot, SetKeys = SetKeys,
+  aKeyBank = aKeyBank, aKeyBankCats = aKeyBankCats } };
 -- End-of-File ============================================================= --

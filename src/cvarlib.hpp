@@ -1088,6 +1088,17 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_AUDIOVIDEO, "fmv_maxdrift", "0.25",
   CB(VideoSetMaximumDrift, double), TUFLOATSAVE|PANY },
 /* == Input cvars ========================================================== */
+// ! INP_CLAMPMOUSE
+// ? When enabled (default) the mouse cursor is clamped to the window edge.
+// ? Since Windows and Linux already do this at the OS level, it obviously only
+// ? affects MacOS versions and changing it does nothing on anything but MacOS.
+// ? It is only here if the original OS level behaviour of MacOS is desired
+// ? where the cursor is allowed to leave the window. Recommended to enable
+// ? 'inp_fsignore' too to disable the input when mouse leaves the window.
+/* ------------------------------------------------------------------------- */
+{ CFL_VIDEO, "inp_clampmouse", cCommon->One(),
+  CB(cInput->SetClampMouse, bool), TBOOLEANSAVE|PANY },
+/* ------------------------------------------------------------------------- */
 // ! INP_JOYDEFFDZ
 // ? Specifies the gamepad forward deadzone.
 /* ------------------------------------------------------------------------- */
@@ -1106,6 +1117,13 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_fstoggler", cCommon->One(),
   CB(cInput->SetFSTogglerEnabled, bool), TBOOLEANSAVE|PANY },
+/* ------------------------------------------------------------------------- */
+// ! INP_NOFOCUSIGNORE
+// ? When enabled (default) all input is ignored when the window does not have
+// ? mouse focus.
+/* ------------------------------------------------------------------------- */
+{ CFL_VIDEO, "inp_nfignore", cCommon->One(),
+  CB(cInput->SetNoInputOnFocusLoss, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_RAWMOUSE
 // ? Enables raw mouse input if available.

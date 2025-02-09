@@ -1008,7 +1008,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Set error message
       iReturn = SetErrorStaticSafe(E.what());
     } // Have writer thread?
-    if(tWriter.ThreadIsNotCurrent() && tWriter.ThreadIsRunning())
+    if(tWriter.ThreadIsNotCurrent() && tWriter.ThreadIsJoinable())
     { // Call for writer thread to terminate
       tWriter.ThreadSetExit();
       // Unblock writer thread so that it may terminate cleanly
@@ -1179,7 +1179,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   { // Send disconnect to socket
     SendDisconnect();
     // Have read thread running?
-    if(tReader.ThreadIsRunning())
+    if(tReader.ThreadIsJoinable())
     { // Tell the thread to stop and wait for it. The end of the thread should
       // call FinishDisconnect() already.
       tReader.ThreadDeInit();
@@ -1260,7 +1260,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // We don't care if an error occured
       ERR_clear_error();
     } // Set thread to exit if we are not calling from it
-    if(tReader.ThreadIsNotCurrent() && tReader.ThreadIsRunning())
+    if(tReader.ThreadIsNotCurrent() && tReader.ThreadIsJoinable())
       tReader.ThreadSetExit();
     // Closing
     return true;
@@ -1429,7 +1429,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     SendDisconnect();
     // Have read thread running? Tell the thread to stop and wait for it. The
     // end of the thread should call FinishDisconnect() already.
-    if(tReader.ThreadIsRunning()) tReader.ThreadStopNoThrow();
+    if(tReader.ThreadIsJoinable()) tReader.ThreadStopNoThrow();
     // Cleanup the disconnect
     FinishDisconnect();
   }
@@ -1590,12 +1590,12 @@ static StrNCStrMap SocketOAuth11(const string &strMethod,
   // Put basic stuff in. Be careful of using StrPair with CStrings as
   // you cant use string& with cstrings, so use CSTR*PAIR's instead.
   StrNCStrMap ssmFinal{{
-    { "oauth_consumer_key",                       StdMove(strCK) },
-    { "oauth_nonce", SHA1functions::HashMB(CryptRandomBlock(64)) },
-    { "oauth_timestamp",              StrFromNum(cmSys.GetTimeS()) },
-    { "oauth_token",                             StdMove(strTok) },
-    { "oauth_signature_method",                      "HMAC-SHA1" },
-    { "oauth_version",                                     "1.0" }
+    { "oauth_consumer_key",                    StdMove(strCK) },
+    { "oauth_nonce", SHA1functions::HSM(CryptRandomBlock(64)) },
+    { "oauth_timestamp",         StrFromNum(cmSys.GetTimeS()) },
+    { "oauth_token",                          StdMove(strTok) },
+    { "oauth_signature_method",                   "HMAC-SHA1" },
+    { "oauth_version",                                  "1.0" }
   }};
   // Copy config vars and oauth vars into unsigned params map
   StrNCStrMap ssmDupe{ ssmFinal };
@@ -1609,7 +1609,7 @@ static StrNCStrMap SocketOAuth11(const string &strMethod,
   const string strBody{ CryptImplodeMapAndEncode(pParams, "&") };
   // Hash the string with the key and return empty if fail
   ssmFinal.insert({ "oauth_signature",
-    CryptURLEncode(CryptMBtoB64(StdMove(SHA1functions::HashStrRaw(
+    CryptURLEncode(CryptMBtoB64(StdMove(SHA1functions::HMSS(
       StrAppend(CryptURLEncode(strCS), '&', CryptURLEncode(strUS)),
       StrAppend(CryptURLEncode(strMethod), '&', CryptURLEncode(strAddr), '&',
                 CryptURLEncode(strOAParams))

@@ -5,7 +5,7 @@
 ** ## Defines the 'File' namespace and methods for the guest to use in    ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -198,7 +198,7 @@ LLFUNC(WriteStr, 1,
 ** ######################################################################### **
 ** ## File:* member functions structure                                   ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // File:* member functions begin
   LLRSFUNC(Close),    LLRSFUNC(Destroy), LLRSFUNC(End),     LLRSFUNC(Error),
   LLRSFUNC(ErrorStr), LLRSFUNC(FError),  LLRSFUNC(Flush),   LLRSFUNC(Id),
@@ -423,6 +423,12 @@ LLFUNC(AppendOneStr, 2, FileAppendString(lS))
 /* ------------------------------------------------------------------------- */
 LLFUNC(AppendOne, 2, FileAppendBlock(lS))
 /* ========================================================================= */
+// $ File.Count
+// < Count:integer=Total number of files created.
+// ? Returns the total number of file classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cFiles->CollectorCount()))
+/* ========================================================================= */
 // $ File.ReadOneStr
 // > Source:string=Filename to read string from
 // < Result:multi=Result of operation
@@ -466,16 +472,17 @@ LLFUNC(ValidName, 1, LuaUtilPushVar(lS, DirValidName(AgString{lS, 1})))
 ** ######################################################################### **
 ** ## File.* namespace functions structure                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // File.* namespace functions begin
-  LLRSFUNC(AppendOne),    LLRSFUNC(AppendOneStr), LLRSFUNC(DirExists),
-  LLRSFUNC(Enumerate),    LLRSFUNC(EnumerateEx),  LLRSFUNC(Executable),
-  LLRSFUNC(Exists),       LLRSFUNC(FileExists),   LLRSFUNC(Info),
-  LLRSFUNC(MkDir),        LLRSFUNC(MkDirEx),      LLRSFUNC(Open),
-  LLRSFUNC(Parts),        LLRSFUNC(Readable),     LLRSFUNC(ReadOneStr),
-  LLRSFUNC(ReadWritable), LLRSFUNC(Rename),       LLRSFUNC(RmDir),
-  LLRSFUNC(RmDirEx),      LLRSFUNC(Unlink),       LLRSFUNC(ValidName),
-  LLRSFUNC(Writable),     LLRSFUNC(WriteOne),     LLRSFUNC(WriteOneStr),
+  LLRSFUNC(AppendOne),    LLRSFUNC(AppendOneStr), LLRSFUNC(Count),
+  LLRSFUNC(DirExists),    LLRSFUNC(Enumerate),    LLRSFUNC(EnumerateEx),
+  LLRSFUNC(Executable),   LLRSFUNC(Exists),       LLRSFUNC(FileExists),
+  LLRSFUNC(Info),         LLRSFUNC(MkDir),        LLRSFUNC(MkDirEx),
+  LLRSFUNC(Open),         LLRSFUNC(Parts),        LLRSFUNC(Readable),
+  LLRSFUNC(ReadOneStr),   LLRSFUNC(ReadWritable), LLRSFUNC(Rename),
+  LLRSFUNC(RmDir),        LLRSFUNC(RmDirEx),      LLRSFUNC(Unlink),
+  LLRSFUNC(ValidName),    LLRSFUNC(Writable),     LLRSFUNC(WriteOne),
+  LLRSFUNC(WriteOneStr),
 LLRSEND                                // File.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

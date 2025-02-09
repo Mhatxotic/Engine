@@ -14,10 +14,10 @@ local cos<const>, sin<const> = math.cos, math.sin;
 -- M-Engine function aliases ----------------------------------------------- --
 local CoreTime<const>, UtilFormatNTime<const> = Core.Time, Util.FormatNTime;
 -- Diggers function and data aliases --------------------------------------- --
-local GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
-  InitLose, PlayMusic, PlayStaticSound, RegisterFBUCallback, RenderInterface,
-  RenderFade, RenderTip, SetCallbacks, SetHotSpot, SetKeys, SetTip, StopMusic,
-  TriggerEnd, aKeyBankCats, fontLittle, fontTiny;
+local BlitSLTWHA, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
+  InitLose, PlayMusic, PlayStaticSound, PrintC, RegisterFBUCallback,
+  RenderAll, RenderFade, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
+  SetTip, StopMusic, TriggerEnd, aKeyBankCats, fontLittle, fontTiny;
 -- Statics ------------------------------------------------------------------ --
 local iPauseX<const> = 160;            -- Pause text X position
 local iPauseY<const> = 72;             -- Pause text Y position
@@ -74,7 +74,7 @@ end
 -- Pause render callback --------------------------------------------------- --
 local function RenderPause()
   -- Render terrain, game objects, and a subtle fade
-  RenderInterface();
+  RenderAll();
   RenderFade(0.75);
   -- Draw background animations
   local iStageLP6<const> = iStageL + 6;
@@ -87,16 +87,16 @@ local function RenderPause()
       nAngle = 0.5 + ((cos(nAngle) * sin(nAngle)));
       texSpr:SetCRGBA(0, 0, 0, nAngle * 0.5);
       local nDim<const> = nAngle * 16;
-      texSpr:BlitSLTWHA(444, iX, iY, nDim, nDim, nAngle);
+      BlitSLTWHA(texSpr, 444, iX, iY, nDim, nDim, nAngle);
     end
   end
   texSpr:SetCRGBA(1, 1, 1, 1);
   -- Write text informations
   local nTime = CoreTime();
   fontLittle:SetCRGBA(1, 1, 1, 0.1 + (0.5 + (sin(nTime) * cos(nTime) * 0.9)));
-  fontLittle:PrintC(iPauseX, iInstructionY, sInstruction);
+  PrintC(fontLittle, iPauseX, iInstructionY, sInstruction);
   fontTiny:SetCRGBA(0.5, 0.5, 0.5, 1);
-  fontTiny:PrintC(iPauseX, iSmallTipsY, sSmallTips);
+  PrintC(fontTiny, iPauseX, iSmallTipsY, sSmallTips);
   fontLittle:SetCRGBA(1, 1, 1, 1);
   -- Get and print local time
   RenderTip();
@@ -150,17 +150,18 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aCursorIdData, aSfxData;
   -- Get imports
-  GetCallbacks, GetHotSpot, GetKeyBank, GetMusic, InitLose, PlayMusic,
-    PlayStaticSound, RegisterFBUCallback, RegisterHotSpot, RegisterKeys,
-    RenderInterface, RenderFade, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
-    SetTip, StopMusic, TriggerEnd, aCursorIdData, aKeyBankCats, aSfxData,
-    fontLittle, fontTiny, texSpr =
-      GetAPI("GetCallbacks", "GetHotSpot", "GetKeyBank", "GetMusic",
-        "InitLose", "PlayMusic", "PlayStaticSound", "RegisterFBUCallback",
-        "RegisterHotSpot", "RegisterKeys", "RenderInterface", "RenderFade",
-        "RenderTip", "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip",
-        "StopMusic", "TriggerEnd", "aCursorIdData", "aKeyBankCats", "aSfxData",
-        "fontLarge", "fontTiny", "texSpr");
+  BlitSLTWHA, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic, InitLose,
+    PlayMusic, PlayStaticSound, PrintC, RegisterFBUCallback, RegisterHotSpot,
+    RegisterKeys, RenderAll, RenderFade, RenderTip, SetCallbacks,
+    SetHotSpot, SetKeys, SetTip, StopMusic, TriggerEnd, aCursorIdData,
+    aKeyBankCats, aSfxData, fontLittle, fontTiny, texSpr =
+      GetAPI("BlitSLTWHA", "GetCallbacks", "GetHotSpot", "GetKeyBank",
+        "GetMusic", "InitLose", "PlayMusic", "PlayStaticSound", "PrintC",
+        "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys",
+        "RenderAll", "RenderFade", "RenderTip", "SetCallbacks",
+        "SetHotSpot", "SetKeys", "SetTip", "StopMusic", "TriggerEnd",
+        "aCursorIdData", "aKeyBankCats", "aSfxData", "fontLarge", "fontTiny",
+        "texSpr");
   -- Setup hot spot
   iHotSpotId = RegisterHotSpot({
     { 8, 8, 8, 224, 3, aCursorIdData.OK,   false, false, ContinueGame },

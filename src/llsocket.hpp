@@ -5,7 +5,7 @@
 ** ## Defines the 'Socket' namespace and methods for the guest to use in  ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -280,7 +280,7 @@ LLFUNC(WriteString, 1,
 ** ######################################################################### **
 ** ## Socket:* member functions structure                                 ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Socket:* member functions begin
   LLRSFUNC(Callback),      LLRSFUNC(CompactRecvQ), LLRSFUNC(CompactSendQ),
   LLRSFUNC(Destroy),       LLRSFUNC(Disconnect),   LLRSFUNC(GetAddress),
@@ -294,7 +294,11 @@ LLRSMFBEGIN                            // Socket:* member functions begin
   LLRSFUNC(TDisconnected), LLRSFUNC(TRead),        LLRSFUNC(TWrite),
   LLRSFUNC(Write),         LLRSFUNC(WriteString),
 LLRSEND                                // Socket:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Socket.* namespace functions                                        ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Socket.Connected
 // < Count:integer=Total number of sockets connected
 // ? Returns the total number of socket classes currently connected.
@@ -404,7 +408,7 @@ LLFUNC(WaitAsync, 1, LuaUtilPushVar(lS, SocketWaitAsync()))
 ** ######################################################################### **
 ** ## Socket.* namespace functions structure                              ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Socket.* namespace functions begin
   LLRSFUNC(Create),         LLRSFUNC(CreateHTTP),   LLRSFUNC(Count),
   LLRSFUNC(Connected),      LLRSFUNC(Flush),        LLRSFUNC(OAuth11),
