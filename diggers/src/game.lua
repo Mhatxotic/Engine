@@ -17,28 +17,28 @@ local abs<const>, ceil<const>, error<const>, floor<const>, format<const>,
     math.maxinteger, math.min, pairs, math.random, table.remove, tostring;
 -- M-Engine function aliases ----------------------------------------------- --
 local CoreLog<const>, CoreQuit<const>, CoreWrite<const>, CoreTicks<const>,
-  CoreTime<const>, InputSetCursorPos<const>, MaskCreateZero<const>,
-  UtilBlank<const>, UtilClamp<const>, UtilClampInt<const>,
-  UtilIsBoolean<const>, UtilIsFunction<const>, UtilIsInteger<const>,
-  UtilIsString<const>, UtilIsTable<const>, UtilRound<const> =
+  CoreTime<const>, MaskCreateZero<const>, UtilBlank<const>, UtilClamp<const>,
+  UtilClampInt<const>, UtilIsBoolean<const>, UtilIsFunction<const>,
+  UtilIsInteger<const>, UtilIsString<const>, UtilIsTable<const>,
+  UtilRound<const> =
     Core.Log, Core.Quit, Core.WriteEx, Core.Ticks, Core.Time,
-    Input.SetCursorPos, Mask.CreateZero, Util.Blank, Util.Clamp, Util.ClampInt,
-    Util.IsBoolean, Util.IsFunction, Util.IsInteger, Util.IsString,
-    Util.IsTable, Util.Round;
+    Mask.CreateZero, Util.Blank, Util.Clamp, Util.ClampInt, Util.IsBoolean,
+    Util.IsFunction, Util.IsInteger, Util.IsString, Util.IsTable, Util.Round;
 -- Assets required --------------------------------------------------------- --
 local aLvlTextureAsset, aAssetsMusic, aAssetsNoMusic, aContAssets;
 -- Diggers shared functions and data --------------------------------------- --
-local ACT, AI, DF, DIR, Fade, GetMouseX, GetMouseY, GetTestMode, InitBook,
-  InitLobby, InitLose, InitLoseDead, InitPause, InitTNTMap, InitWin,
-  InitWinDead, IsMouseInBounds, JOB, LoadResources, MFL, MNU, OFL, PlayMusic,
-  PlaySound, PlayStaticSound, RegisterFBUCallback, RenderFade, RenderShadow,
-  RenderTip, SetCallbacks, SetCursor, SetHotSpot, SetKeys, SetTip, TYP,
-  aAIChoicesData, aDigBlockData, aDigData, aDigTileData, aDugRandShaftData,
-  aExplodeAboveData, aExplodeDirData, aFloodGateData, aGlobalData,
-  aJumpFallData, aJumpRiseData, aLevelsData, aMenuData, aObjToUIData,
-  aObjectData, aSfxData, aShopData, aShroudCircle, aShroudTileLookup,
-  aTileData, aTileFlags, aTimerData, aTrainTrackData, fontLarge, fontLittle,
-  fontTiny, iPosX, iPosY, iTexScale, texSpr;
+local ACT, AI, BlitSLTRB, BlitSLT, DF, DIR, Fade, GetMouseX, GetMouseY,
+  GetTestMode, InitBook, InitLobby, InitLose, InitLoseDead, InitPause,
+  InitTNTMap, InitWin, InitWinDead, IsMouseInBounds, JOB, LoadResources, MFL,
+  MNU, OFL, PlayMusic, PlaySound, PlayStaticSound, Print, PrintC, PrintR,
+  RegisterFBUCallback, RenderFade, RenderShadow, RenderTip, SetCallbacks,
+  SetCursor, SetCursorPos, SetHotSpot, SetKeys, SetTip, TYP, aAIChoicesData,
+  aDigBlockData, aDigData, aDigTileData, aDugRandShaftData, aExplodeAboveData,
+  aExplodeDirData, aFloodGateData, aGlobalData, aJumpFallData, aJumpRiseData,
+  aLevelsData, aMenuData, aObjToUIData, aObjectData, aSfxData, aShopData,
+  aShroudCircle, aShroudTileLookup, aTileData, aTileFlags, aTimerData,
+  aTrainTrackData, fontLarge, fontLittle, fontTiny, iPosX, iPosY, iTexScale,
+  texSpr;
 -- High priority variables (because of MAXVARS limit) ---------------------- --
 local function HighPriorityVars()
 -- Prototype functions (assigned later) ------------------------------------ --
@@ -51,7 +51,7 @@ local aActiveObject, aActivePlayer, aContextMenu, aContextMenuData, aFloodData,
   iGameTicks, iHotSpotId, iKeyBankId, iLevelId, iLLAbsHmVP, iLLAbsWmVP,
   iLLPixHmVP, iLLPixWmVP, iMenuLeft, iMenuTop, iMenuRight, iMenuBottom,
   iPixCenPosX, iPixCenPosY, iPixPosTargetX, iPixPosTargetY, iPixPosX, iPixPosY,
-  iScaleTile, iScrTilesH, iScrTilesHd2, iScrTilesHd2p1, iScrTilesHm1,
+  iScrTilesH, iScrTilesHd2, iScrTilesHd2p1, iScrTilesHm1,
   iScrTilesHmVPS, iScrTilesW, iScrTilesWd2, iScrTilesWd2p1, iScrTilesWm1,
   iScrTilesWmVPS, iScrollRate, iStageB, iStageH, iStageL, iStageR, iStageT,
   iStageW, iTilesHeight, iTilesWidth, iUniqueId, iViewportH, iViewportW,
@@ -81,7 +81,7 @@ local function BCBlit(iTexIndex, iLeft, iTop, iRight, iBottom)
   -- Draw only if not occluded outside the viewport
   if min(iRight, iStageR) > max(iLeft, iStageL) or
      min(iBottom, iStageB) > max(iTop, iStageT) then
-    texSpr:BlitSLTRB(iTexIndex, iLeft, iTop, iRight, iBottom) end;
+    BlitSLTRB(texSpr, iTexIndex, iLeft, iTop, iRight, iBottom) end;
 end
 -- Function to play a sound ------------------------------------------------ --
 local function DoPlaySoundAtObject(aObject, iSfxId, nPitch)
@@ -251,49 +251,49 @@ local function SelectObject(aObj, bNow, bCursor)
   if bNow then ForceViewport() end;
   -- Also set the cursor?
   if bCursor then
-    InputSetCursorPos(aObj.X - (iPixPosX - iStageL) + aObj.OFX + 8,
-                      aObj.Y - (iPixPosY - iStageT) + aObj.OFY + 8) end;
+    SetCursorPos(aObj.X - (iPixPosX - iStageL) + aObj.OFX + 8,
+                 aObj.Y - (iPixPosY - iStageT) + aObj.OFY + 8) end;
 end
 -- Return game ticks ------------------------------------------------------- --
 local function GetGameTicks() return iGameTicks end;
 -- Render an information frame --------------------------------------------- --
 local function DrawInfoFrameAndTitle(iTileId)
   -- Draw the left part of the title bar
-  texSpr:BlitSLT(847, 8, 8);
+  BlitSLT(texSpr, 847, 8, 8);
   -- Draw the middle part of the title bar
-  for iColumn = 1, 17 do texSpr:BlitSLT(848, 8 + (iColumn * 16), 8) end;
+  for iColumn = 1, 17 do BlitSLT(texSpr, 848, 8 + (iColumn * 16), 8) end;
   -- Draw the right part of the title bar
-  texSpr:BlitSLT(849, 296, 8);
+  BlitSLT(texSpr, 849, 296, 8);
   -- Draw transparent backdrop
   RenderFade(0.75, 8, 32, 312, 208);
   -- Draw frame around transparent backdrop
-  texSpr:BlitSLT(850, 8, 32);
-  for iX = 24, 280, 16 do texSpr:BlitSLT(851, iX, 32) end;
-  texSpr:BlitSLT(852, 296, 32);
+  BlitSLT(texSpr, 850, 8, 32);
+  for iX = 24, 280, 16 do BlitSLT(texSpr, 851, iX, 32) end;
+  BlitSLT(texSpr, 852, 296, 32);
   for iY = 48, 176, 16 do
-    texSpr:BlitSLT(856, 8, iY);
-    texSpr:BlitSLT(858, 296, iY);
+    BlitSLT(texSpr, 856, 8, iY);
+    BlitSLT(texSpr, 858, 296, iY);
   end
-  texSpr:BlitSLT(853, 8, 192);
-  for iX = 24, 280, 16 do texSpr:BlitSLT(854, iX, 192) end;
-  texSpr:BlitSLT(855, 296, 192);
+  BlitSLT(texSpr, 853, 8, 192);
+  for iX = 24, 280, 16 do BlitSLT(texSpr, 854, iX, 192) end;
+  BlitSLT(texSpr, 855, 296, 192);
   -- Draw shadows
   RenderShadow(8, 8, 312, 24);
   RenderShadow(8, 32, 312, 208);
   -- Print the title bar text
-  fontLittle:PrintC(160, 12, iTileId);
+  PrintC(fontLittle, 160, 12, iTileId);
 end
 -- Draw health bar --------------------------------------------------------- --
 local function DrawHealthBar(iHealth, iDivisor, iL, iT, iR, iB)
   -- White (100%) to green bar (50%)
   if iHealth >= 50 then
     texSpr:SetCRGB(1, 1, (iHealth - 50) / 50);
-    texSpr:BlitSLTRB(1022, iL, iT, iR + iHealth / iDivisor, iB);
+    BlitSLTRB(texSpr, 1022, iL, iT, iR + iHealth / iDivisor, iB);
     texSpr:SetCRGB(1, 1 ,1);
   -- Green (50%) to red bar (0%)
   elseif iHealth > 0 then
     texSpr:SetCRGB(1, iHealth / 50, 0);
-    texSpr:BlitSLTRB(1022, iL, iT, iR + iHealth / iDivisor, iB);
+    BlitSLTRB(texSpr, 1022, iL, iT, iR + iHealth / iDivisor, iB);
     texSpr:SetCRGB(1, 1 ,1);
   end
 end
@@ -311,27 +311,27 @@ local function SelectInfoScreen()
       -- Calculate Y position
       local iY<const> = iDiggerId * 33;
       -- Print id number of digger
-      fontLarge:Print(16, iY + 8, iDiggerId);
+      Print(fontLarge, 16, iY + 8, iDiggerId);
       -- Draw health bar background
-      texSpr:BlitSLTRB(1023, 24, iY + 31, 291, iY + 33);
+      BlitSLTRB(texSpr, 1023, 24, iY + 31, 291, iY + 33);
       -- Get Digger data and if it exists?
       local aDigger<const> = aActivePlayer.D[iDiggerId];
       if aDigger then
         -- Draw digger health bar
         DrawHealthBar(aDigger.H, 0.375, 24, iY + 31, 24, iY + 33);
         -- Draw digger portrait
-        texSpr:BlitSLT(aDigger.S, 31, iY + 8);
+        BlitSLT(texSpr, aDigger.S, 31, iY + 8);
         -- Digger has items?
         if aDigger.IW > 0 then
           -- Get digger inventory and enumerate through it and draw it
           local aInventory<const> = aDigger.I;
           for iInvIndex = 1, #aInventory do
-            texSpr:BlitSLT(aInventory[iInvIndex].S,
+            BlitSLT(texSpr, aInventory[iInvIndex].S,
               iInvIndex * 16 + 32, iY + 8) end;
         -- No inventory. Print no inventory message
-        else fontTiny:Print(48, iY + 13, "NOT CARRYING ANYTHING") end;
+        else Print(fontTiny, 48, iY + 13, "NOT CARRYING ANYTHING") end;
         -- Draw weight and impatience
-        fontLittle:PrintR(308, iY + 4,
+        PrintR(fontLittle, 308, iY + 4,
           format("%03u%%          %03u%%\n\z
                   %03u%%         %05u\n\z
                   %04u          %03u%%",
@@ -341,16 +341,16 @@ local function SelectInfoScreen()
       -- Digger is dead
       else
         -- Draw grave icon
-        texSpr:BlitSLT(319, 31, iY + 8);
+        BlitSLT(texSpr, 319, 31, iY + 8);
         -- Draw dead labels
-        fontLittle:PrintR(308, iY + 4,
+        PrintR(fontLittle, 308, iY + 4,
           "---%          ---%\n\z
            ---%         -----\n\z
            ----          ---%");
       end
       -- Draw labels
       fontTiny:SetLSpacing(2);
-      fontTiny:PrintR(308, iY + 5,
+      PrintR(fontTiny, 308, iY + 5,
         "HEALTH:             WEIGHT:        \n\z
          IMPATIENCE:         GROADS DUG:        \n\z
          GEMS FOUND:         EFFICIENCY:        ");
@@ -364,41 +364,41 @@ local function SelectInfoScreen()
     DrawInfoFrameAndTitle("DIGGER LOCATIONS");
     -- Draw map grid of level
     for Y = 37, 188, 15 do for X = 141, 291, 15 do
-      texSpr:BlitSLT(864, X, Y);
+      BlitSLT(texSpr, 864, X, Y);
     end end
     -- For each digger
     for iDiggerId = 1, #aActivePlayer.D do
       -- Calculate Y position
       local iY<const> = iDiggerId * 31;
       -- Print id number of digger
-      fontLarge:Print(16, iY + 8, iDiggerId);
+      Print(fontLarge, 16, iY + 8, iDiggerId);
       -- Draw colour key of digger
-      texSpr:BlitSLT(858 + iDiggerId, 31, iY + 11);
+      BlitSLT(texSpr, 858 + iDiggerId, 31, iY + 11);
       -- Draw X and Y letters
       fontTiny:SetCRGB(0, 0.75, 1);
-      fontTiny:Print(64, iY + 8, "X:       Y:");
+      Print(fontTiny, 64, iY + 8, "X:       Y:");
       -- Draw health bar background
-      texSpr:BlitSLTRB(1023, 24, iY + 30, 124, iY + 32);
+      BlitSLTRB(texSpr, 1023, 24, iY + 30, 124, iY + 32);
       -- Get digger and if it exists?
       local aDigger<const> = aActivePlayer.D[iDiggerId];
       if aDigger then
         -- Draw digger health bar
         DrawHealthBar(aDigger.H, 1, 24, iY + 30, 24, iY + 32);
         -- Draw digger item data
-        fontLittle:Print(72, iY + 8,
+        Print(fontLittle, 72, iY + 8,
           format("%04u  %04u\n\\%03u  \\%03u",
             aDigger.X, aDigger.Y, aDigger.AX, aDigger.AY));
         -- Draw digger portrait
-        texSpr:BlitSLT(aDigger.S, 43, iY + 8);
+        BlitSLT(texSpr, aDigger.S, 43, iY + 8);
         -- Draw position of digger
-        texSpr:BlitSLT(858 + iDiggerId, 141 + (aDigger.AX * 1.25),
+        BlitSLT(texSpr, 858 + iDiggerId, 141 + (aDigger.AX * 1.25),
           38 + (aDigger.AY * 1.25));
       -- Digger is dead
       else
         -- Draw grave icon
-        texSpr:BlitSLT(319, 43, iY + 8);
+        BlitSLT(texSpr, 319, 43, iY + 8);
         -- Draw dashes for unavailable digger item data
-        fontLittle:Print(72, iY + 8, "----  ----\n\\---  \\---");
+        Print(fontLittle, 72, iY + 8, "----  ----\n\\---  \\---");
       end
     end
   end
@@ -409,10 +409,10 @@ local function SelectInfoScreen()
     -- Score for who is winning
     local ScoreAP, ScoreOP = 0, 0;
     -- Draw little labels first for rendering performance. Print level info
-    fontLittle:Print(16, 56, sLevelType.." TERRAIN");
-    fontLittle:PrintR(304, 56, "OPERATIONS TIME");
+    Print(fontLittle, 16, 56, sLevelType.." TERRAIN");
+    PrintR(fontLittle, 304, 56, "OPERATIONS TIME");
     local iPDiggers<const> = aActivePlayer.DC;
-    fontLittle:PrintC(160, 88, "YOU HAVE "..iPDiggers.." OF "..
+    PrintC(fontLittle, 160, 88, "YOU HAVE "..iPDiggers.." OF "..
       aActivePlayer.DT.." DIGGERS REMAINING");
     -- Draw who has the most diggers
     local iODiggers<const>, sDiggers = aOpponentPlayer.DC;
@@ -422,17 +422,17 @@ local function SelectInfoScreen()
     elseif iPDiggers < iODiggers then
       ScoreOP, sDiggers = ScoreOP + 1, "YOUR OPPONENT HAS MORE DIGGERS";
     else sDiggers = "YOU AND YOUR OPPONENT HAVE EQUAL DIGGERS" end;
-    fontLittle:PrintC(160, 96, sDiggers);
+    PrintC(fontLittle, 160, 96, sDiggers);
     -- Show who has mined the most terrain
     local iPDug, iODug<const> = aActivePlayer.DUG, aOpponentPlayer.DUG;
-    fontLittle:PrintC(160, 112, "YOU MINED "..aActivePlayer.GEM..
+    PrintC(fontLittle, 160, 112, "YOU MINED "..aActivePlayer.GEM..
       " GEMS AND "..iPDug.." GROADS OF TERRAIN");
     local sMined;
     if iPDug > iODug then sMined = "YOU HAVE MINED THE MOST TERRAIN";
     elseif iPDug < iODug then
       sMined = "YOUR OPPONENT HAS MINED THE MOST TERRAIN";
     else sMined = "YOU AND YOUR OPPONENT HAVE MINED EQUAL TERRAIN" end;
-    fontLittle:PrintC(160, 120, sMined);
+    PrintC(fontLittle, 160, 120, sMined);
     -- Draw who has found the most gems
     local iPGems<const>, iOGems<const>, sGems =
       aActivePlayer.GEM, aOpponentPlayer.GEM;
@@ -440,10 +440,10 @@ local function SelectInfoScreen()
     elseif iPGems < iOGems then
       sGems = "YOUR OPPONENT HAS FOUND THE MOST GEMS";
     else sGems = "YOU AND YOUR OPPONENT HAVE FOUND EQUAL GEMS" end;
-    fontLittle:PrintC(160, 128, sGems);
+    PrintC(fontLittle, 160, 128, sGems);
     -- Draw who has the most zogs
     local iPlayerMoney<const> = aActivePlayer.M;
-    fontLittle:PrintC(160,  146, "YOU HAVE RAISED "..iPlayerMoney..
+    PrintC(fontLittle, 160,  146, "YOU HAVE RAISED "..iPlayerMoney..
       " OF "..iWinLimit.." ZOGS ("..floor(iPlayerMoney/iWinLimit*100).."%)");
     local iOpponentMoney<const> = aOpponentPlayer.M;
     local sZogs;
@@ -452,8 +452,8 @@ local function SelectInfoScreen()
     elseif iPlayerMoney < iOpponentMoney then
       ScoreOP, sZogs = ScoreOP + 1, "YOUR OPPONENT HAS MORE ZOGS";
     else sZogs = "YOU AND YOUR OPPONENT HAVE EQUAL ZOGS" end;
-    fontLittle:PrintC(160, 154, sZogs);
-    fontLittle:PrintC(160, 162,
+    PrintC(fontLittle, 160, 154, sZogs);
+    PrintC(fontLittle, 160, 162,
       "RAISE "..(iWinLimit-iPlayerMoney).." MORE ZOGS TO WIN");
     -- Draw prediction
     local sPName<const>, sOName<const>, sWinning =
@@ -461,15 +461,15 @@ local function SelectInfoScreen()
     if ScoreAP > ScoreOP then sWinning = sPName;
     elseif ScoreAP < ScoreOP then sWinning = sOName;
     else sWinning = "NOBODY" end;
-    fontLittle:PrintC(160, 178, "THE TRADE CENTRE HAS PREDICTED");
+    PrintC(fontLittle, 160, 178, "THE TRADE CENTRE HAS PREDICTED");
     -- Draw large labels now
-    fontLarge:Print(16, 40, sLevelName);
-    fontLarge:PrintR(304, 40, format("%02u:%02u:%02u",
+    Print(fontLarge, 16, 40, sLevelName);
+    PrintR(fontLarge, 304, 40, format("%02u:%02u:%02u",
       iGameTicks // 216000 % 24,
       iGameTicks // 3600 % 60,
       iGameTicks // 60 % 60));
-    fontLarge:PrintC(160, 72, sPName.." VS "..sOName);
-    fontLarge:PrintC(160, 186, sWinning.." IS WINNING");
+    PrintC(fontLarge, 160, 72, sPName.." VS "..sOName);
+    PrintC(fontLarge, 160, 186, sWinning.." IS WINNING");
   end
   -- Inventory button pressed?
   local aInfoScreenData<const> = {
@@ -488,7 +488,7 @@ local function SelectInfoScreen()
       local aInfoScreenItem<const> = aInfoScreenData[iIndex];
       if aInfoScreenItem == aInfoScreenActiveItem then
         -- Draw enabled button
-        texSpr:BlitSLT(aInfoScreenItem[4],
+        BlitSLT(texSpr, aInfoScreenItem[4],
           aInfoScreenItem[1], aInfoScreenItem[2])
         -- Set font colours
         fontTiny:SetCRGB(1, 1, 1);
@@ -497,7 +497,7 @@ local function SelectInfoScreen()
         -- Execute render function
         aInfoScreenItem[5]();
       -- Inactive so draw disabled button
-      else texSpr:BlitSLT(aInfoScreenItem[3],
+      else BlitSLT(texSpr, aInfoScreenItem[3],
         aInfoScreenItem[1], aInfoScreenItem[2]) end;
     end
   end
@@ -508,7 +508,7 @@ local function SelectInfoScreen()
       -- Get info screen item
       local aInfoScreenItem<const> = aInfoScreenData[iIndex];
       -- Draw disabled button
-      texSpr:BlitSLT(aInfoScreenItem[3],
+      BlitSLT(texSpr, aInfoScreenItem[3],
         aInfoScreenItem[1], aInfoScreenItem[2]);
     end
   end
@@ -2140,7 +2140,7 @@ end
 -- Render terrain ---------------------------------------------------------- --
 local function RenderTerrain()
   -- Render the backdrop
-  texLev:BlitSLT(texBg,
+  BlitSLT(texLev, texBg,
     -iLLAbsW + ((iLLAbsW - iPosX) / iLLAbsW * 64),
     -32 + ((iLLAbsH - iPosY) / iLLAbsH * 32));
   -- Calculate the X pixel position to draw at
@@ -2150,11 +2150,11 @@ local function RenderTerrain()
     -- Calculate the Y position to grab from the level data
     local iYdest<const> = 1 + (iPosY + iY) * iLLAbsW;
     -- Calculate the Y pixel position to draw at
-    local iYdraw<const> = iStageT + iPixCenPosY + (iY * iScaleTile);
+    local iYdraw<const> = iStageT + iPixCenPosY + (iY * 16);
     -- For each screen column to draw tile at, draw the tile from level data
     for iX = 0, iTilesWidth do
-      texLev:BlitSLT(aLevelData[iYdest + iPosX + iX],
-        iXdraw + (iX * iScaleTile), iYdraw);
+      BlitSLT(texLev, aLevelData[iYdest + iPosX + iX],
+        iXdraw + (iX * 16), iYdraw);
     end
   end
 end
@@ -2175,7 +2175,7 @@ local function RenderShroud()
       -- Get shroud information at specified tile and draw it if theres data
       local aItem<const> = aShroudData[iYdest + iPosX + iX];
       if aItem[2] < 0xF then
-        texSpr:BlitSLT(aItem[1], iXdraw + (iX * 16), iYdraw);
+        BlitSLT(texSpr, aItem[1], iXdraw + (iX * 16), iYdraw);
       end
     end
   end
@@ -2193,11 +2193,11 @@ local function RenderObjects()
     -- Holds objects render position on-screen
     local iXX, iYY = aObject.X - nVPX + aObject.OFX,
                      aObject.Y - nVPY + aObject.OFY;
-    BCBlit(aObject.S, iXX, iYY, iXX + iScaleTile, iYY + iScaleTile);
+    BCBlit(aObject.S, iXX, iYY, iXX + 16, iYY + 16);
     -- Got an attachment? Draw it too!
     if aObject.STA then
       iXX, iYY = iXX + aObject.OFXA, iYY + aObject.OFYA;
-      BCBlit(aObject.SA, iXX, iYY, iXX + iScaleTile, iYY + iScaleTile);
+      BCBlit(aObject.SA, iXX, iYY, iXX + 16, iYY + 16);
     end
   end
 end
@@ -2213,7 +2213,7 @@ local function RenderInterface()
   RenderShadow(232, 216, 312, 232);
   -- Draw bottom left part, money and health backgrounds
   for iColumn = 0, 6 do
-    texSpr:BlitSLT(821 + iColumn, 8 + (iColumn * 16), 216) end;
+    BlitSLT(texSpr, 821 + iColumn, 8 + (iColumn * 16), 216) end;
   -- What object is selected?
   if aActiveObject then
     -- Which indicator to draw?
@@ -2238,7 +2238,7 @@ local function RenderInterface()
         -- Is a digger?
         if aActiveObject.DI then
           -- Draw a pulsating heart
-          texSpr:BlitSLT(797 +
+          BlitSLT(texSpr, 797 +
             (iGameTicks // (1 + (iHealth // 5))) % 4, 47, 216);
           -- Digger has inventory?
           if aActiveObject.IW > 0 then
@@ -2251,9 +2251,9 @@ local function RenderInterface()
               local aObj<const> = aObjInv[iObjIndex];
               -- Get inventory conversion id and if we got it then draw it
               local iObjConvId<const> = aObjToUIData[aObj.ID];
-              if iObjConvId then texSpr:BlitSLT(iObjConvId, 61 + iX, 218);
+              if iObjConvId then BlitSLT(texSpr, iObjConvId, 61 + iX, 218);
               -- Draw as resized sprite
-              else texSpr:BlitSLTRB(aObj.S, 61 + iX, 218, 69 + iX, 226) end;
+              else BlitSLTRB(texSpr, aObj.S, 61 + iX, 218, 69 + iX, 226) end;
               -- Increase X position
               iX = iX + 8;
             end
@@ -2264,7 +2264,7 @@ local function RenderInterface()
       end
     end
     -- Draw the indicator
-    texSpr:BlitSLT(iGameTicks // 5 % 4 + iStatusId,
+    BlitSLT(texSpr, iGameTicks // 5 % 4 + iStatusId,
       iStageL + iPixCenPosX + aActiveObject.X - iPosX * 16,
       iStageT + iPixCenPosY + aActiveObject.Y - iPosY * 16 - 16);
   end
@@ -2280,7 +2280,7 @@ local function RenderInterface()
        -- Digger is selected?
       if aActiveObject and aDigger == aActiveObject then
         -- Show lightened up button
-        texSpr:BlitSLT(808 + iDiggerId, 128 + iY, 216)
+        BlitSLT(texSpr, 808 + iDiggerId, 128 + iY, 216)
         -- Object is jumping?
         if aActiveObject.F & OFL.JUMPMASK ~= 0 then iTile = 836;
         -- Not jumping?
@@ -2307,7 +2307,7 @@ local function RenderInterface()
           end
         end
       -- Show dimmed button
-      else texSpr:BlitSLT(803 + iDiggerId, 128 + iY, 216) end;
+      else BlitSLT(texSpr, 803 + iDiggerId, 128 + iY, 216) end;
       -- Status tile to draw
       local iStatusTile;
       -- Digger is in danger?
@@ -2327,15 +2327,15 @@ local function RenderInterface()
       -- Not in danger, not busy and not doing something
       else iStatusTile = 828 end;
       -- Show activity indicator (78-84)
-      texSpr:BlitSLT(iStatusTile, 128 + iY, 204);
+      BlitSLT(texSpr, iStatusTile, 128 + iY, 204);
     -- Digger is not alive! Show dimmed button
-    else texSpr:BlitSLT(803 + iDiggerId, 128 + iY, 216) end;
+    else BlitSLT(texSpr, 803 + iDiggerId, 128 + iY, 216) end;
   end
   -- Get player and opponent money
   local iPlayerMoney<const>, iOpponentMoney<const> =
     aActivePlayer.M, aOpponentPlayer.M;
   -- Tile was set? Draw it
-  if iTile then texSpr:BlitSLT(iTile, 120, 216);
+  if iTile then BlitSLT(texSpr, iTile, 120, 216);
   -- No tile was set
   else
     -- Set tile id based on diggers count
@@ -2344,8 +2344,8 @@ local function RenderInterface()
     if iPlayerMoney > iOpponentMoney then iOTile = iOTile + 1;
     elseif iPlayerMoney < iOpponentMoney then iATile = iATile + 1 end;
     -- Draw flags for both sides
-    texSpr:BlitSLT(iATile, 120, 216);
-    texSpr:BlitSLT(iOTile, 120, 216);
+    BlitSLT(texSpr, iATile, 120, 216);
+    BlitSLT(texSpr, iOTile, 120, 216);
   end
   -- Animate player one's money
   if iAnimMoney ~= iPlayerMoney then
@@ -2357,7 +2357,7 @@ local function RenderInterface()
       sMoney = format("%04u", min(9999, iAnimMoney));
       -- Red colour, draw money and reset colour
       fontLittle:SetCRGB(1, 0.75, 0.75);
-      fontLittle:Print(15, 220, sMoney);
+      Print(fontLittle, 15, 220, sMoney);
       fontLittle:SetCRGB(1, 1, 1);
     -- Animated money under actual money? Increment
     elseif iAnimMoney < iPlayerMoney then
@@ -2367,27 +2367,27 @@ local function RenderInterface()
       sMoney = format("%04u", min(9999, iAnimMoney));
       -- Green colour, draw money and reset colour
       fontLittle:SetCRGB(0.75, 1, 0.75);
-      fontLittle:Print(15, 220, sMoney);
+      Print(fontLittle, 15, 220, sMoney);
       fontLittle:SetCRGB(1, 1, 1);
     -- No change so set white font
     else
       -- Reset colour and draw money
       fontLittle:SetCRGB(1, 1, 1);
-      fontLittle:Print(15, 220, sMoney);
+      Print(fontLittle, 15, 220, sMoney);
     end
   -- Animated money/actual money is synced, display blue if > 9999
   elseif iPlayerMoney > 9999 then
     -- Set other colour and draw money
     fontLittle:SetCRGB(0.75, 0.75, 1);
-    fontLittle:Print(15, 220, sMoney);
+    Print(fontLittle, 15, 220, sMoney);
   -- Normal display
   else
     -- Reset colour and draw money
     fontLittle:SetCRGB(1, 1, 1);
-    fontLittle:Print(15, 220, sMoney);
+    Print(fontLittle, 15, 220, sMoney);
   end
   -- Draw utility button
-  texSpr:BlitSLT(814, 232, 216);
+  BlitSLT(texSpr, 814, 232, 216);
   -- Draw info screen
   fcbInfoScreenCallback();
   -- I context menu selected?
@@ -2398,11 +2398,11 @@ local function RenderInterface()
     for iMIndex = 1, #aContextMenuData do
       -- Get context menu item and draw it
       local aMItem<const> = aContextMenuData[iMIndex];
-      texSpr:BlitSLTRB(aMItem[2], aMItem[4], aMItem[5], aMItem[6], aMItem[7]);
+      BlitSLTRB(texSpr, aMItem[2], aMItem[4], aMItem[5], aMItem[6], aMItem[7]);
       -- Render a dim if object is busy and tile data says we should
       if aMItem[3] and bBusy then
         texSpr:SetCRGBA(1, 0, 0, 0.5);
-        texSpr:BlitSLTRB(1022, aMItem[4], aMItem[5], aMItem[6], aMItem[7]);
+        BlitSLTRB(texSpr, 1022, aMItem[4], aMItem[5], aMItem[6], aMItem[7]);
         texSpr:SetCRGBA(1, 1, 1, 1);
       end
     end
@@ -2412,9 +2412,9 @@ local function RenderInterface()
     local aInventory<const> = aActiveObject.IS;
     if aInventory and aContextMenu == aMenuData[MNU.DROP] then
       -- Draw active inventory item and health
-      texSpr:BlitSLT(aInventory.S, iMenuLeft+23, iMenuTop+4);
+      BlitSLT(texSpr, aInventory.S, iMenuLeft+23, iMenuTop+4);
       fontTiny:SetCRGB(1, 1, 1);
-      fontTiny:PrintR(iMenuRight-2, iMenuTop+24, aInventory.H.."%");
+      PrintR(fontTiny, iMenuRight-2, iMenuTop+24, aInventory.H.."%");
     end
   end
   -- Render tooltip
@@ -4174,8 +4174,7 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
   else aAssets = aAssetsNoMusic end;
   -- Set correct scale on tileset
   local aTexParams<const> = aLvlTextureAsset.P;
-  iScaleTile = 16 * iTexScale;
-  aTexParams[1] = iScaleTile;
+  aTexParams[1] = 16 * iTexScale;
   aTexParams[2] = aTexParams[1];
   -- Update asset filenames to load
   local sLevelFile<const> = aLevelInfo.f;
@@ -4417,33 +4416,35 @@ local function OnScriptLoaded(GetAPI)
   -- Get imports
   TYP, aLevelsData, LoadResources, aObjectData, ACT, JOB, DIR, aTimerData, AI,
     OFL, aDigTileData, PlayMusic, aTileData, aTileFlags, Fade, BCBlit,
-    SetCallbacks, IsMouseInBounds, aDigData, DF, aSfxData, aJumpRiseData,
-    aJumpFallData, GetMouseX, GetMouseY, PlayStaticSound, PlaySound, aMenuData,
-    MFL, MNU, InitBook, aObjToUIData, RenderFade, InitWin, InitWinDead,
-    InitLose, InitLoseDead, InitPause, InitTNTMap, InitLobby,
-    RegisterHotSpot, RegisterKeys, texSpr, fontLarge, fontLittle, fontTiny,
-    aDigBlockData, aExplodeDirData, SetCursor, SetKeys, RegisterFBUCallback,
-    GetTestMode, RenderShadow, RenderTip, SetHotSpot, SetTip, aRacesData,
-    aDugRandShaftData, aFloodGateData, aTrainTrackData, aExplodeAboveData,
-    maskLev, maskSpr, aGlobalData, aShopData, aAssetsData, aAIChoicesData,
-    aCursorIdData, aShroudCircle, aShroudTileLookup, iTexScale =
+    SetCallbacks, IsMouseInBounds, aDigData, BlitSLTRB, BlitSLT, DF, aSfxData,
+    aJumpRiseData, aJumpFallData, GetMouseX, GetMouseY, PlayStaticSound,
+    PlaySound, Print, PrintC, PrintR, aMenuData, MFL, MNU, InitBook,
+    aObjToUIData, RenderFade, InitWin, InitWinDead, InitLose, InitLoseDead,
+    InitPause, InitTNTMap, InitLobby, RegisterHotSpot, RegisterKeys, texSpr,
+    fontLarge, fontLittle, fontTiny, aDigBlockData, aExplodeDirData, SetCursor,
+    SetCursorPos, SetKeys, RegisterFBUCallback, GetTestMode, RenderShadow,
+    RenderTip, SetHotSpot, SetTip, aRacesData, aDugRandShaftData,
+    aFloodGateData, aTrainTrackData, aExplodeAboveData, maskLev, maskSpr,
+    aGlobalData, aShopData, aAssetsData, aAIChoicesData, aCursorIdData,
+    aShroudCircle, aShroudTileLookup, iTexScale =
       GetAPI("aObjectTypes", "aLevelsData", "LoadResources", "aObjectData",
         "aObjectActions", "aObjectJobs", "aObjectDirections", "aTimerData",
         "aAITypesData", "aObjectFlags", "aDigTileData", "PlayMusic",
         "aTileData", "aTileFlags", "Fade", "BCBlit", "SetCallbacks",
-        "IsMouseInBounds", "aDigData", "aDigTileFlags", "aSfxData",
-        "aJumpRiseData", "aJumpFallData", "GetMouseX", "GetMouseY",
-        "PlayStaticSound", "PlaySound", "aMenuData", "aMenuFlags", "aMenuIds",
-        "InitBook", "aObjToUIData", "RenderFade",
-        "InitWin", "InitWinDead", "InitLose", "InitLoseDead", "InitPause",
-        "InitTNTMap", "InitLobby", "RegisterHotSpot", "RegisterKeys", "texSpr",
-        "fontLarge", "fontLittle", "fontTiny", "aDigBlockData",
-        "aExplodeDirData", "SetCursor", "SetKeys", "RegisterFBUCallback",
-        "GetTestMode", "RenderShadow", "RenderTip", "SetHotSpot",
-        "SetTip", "aRacesData", "aDugRandShaftData", "aFloodGateData",
-        "aTrainTrackData", "aExplodeAboveData", "maskLevel", "maskSprites",
-        "aGlobalData", "aShopData", "aAssetsData", "aAIChoicesData",
-        "aCursorIdData", "aShroudCircle", "aShroudTileLookup", "iTexScale");
+        "IsMouseInBounds", "aDigData", "BlitSLTRB", "BlitSLT", "aDigTileFlags",
+        "aSfxData", "aJumpRiseData", "aJumpFallData", "GetMouseX", "GetMouseY",
+        "PlayStaticSound", "PlaySound", "Print", "PrintC", "PrintR",
+        "aMenuData", "aMenuFlags", "aMenuIds", "InitBook", "aObjToUIData",
+        "RenderFade", "InitWin", "InitWinDead", "InitLose", "InitLoseDead",
+        "InitPause", "InitTNTMap", "InitLobby", "RegisterHotSpot",
+        "RegisterKeys", "texSpr", "fontLarge", "fontLittle", "fontTiny",
+        "aDigBlockData", "aExplodeDirData", "SetCursor", "SetCursorPos",
+        "SetKeys", "RegisterFBUCallback", "GetTestMode", "RenderShadow",
+        "RenderTip", "SetHotSpot", "SetTip", "aRacesData", "aDugRandShaftData",
+        "aFloodGateData", "aTrainTrackData", "aExplodeAboveData", "maskLevel",
+        "maskSprites", "aGlobalData", "aShopData", "aAssetsData",
+        "aAIChoicesData", "aCursorIdData", "aShroudCircle",
+        "aShroudTileLookup", "iTexScale");
   -- Setup required assets
   local aLvlTerrainAsset<const> = aAssetsData.mapt;
   local aLvlObjectAsset<const> = aAssetsData.mapo;

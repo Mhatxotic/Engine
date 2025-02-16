@@ -12,8 +12,8 @@
 -- Core function aliases --------------------------------------------------- --
 -- M-Engine function aliases ----------------------------------------------- --
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, LoadLevel, LoadResources, PlayMusic, SetCallbacks, aGlobalData,
-  aLevelTypesData, aLevelsData, fontLarge;
+local BlitSLT, Fade, LoadLevel, LoadResources, PlayMusic, PrintC, SetCallbacks,
+  aGlobalData, aLevelTypesData, aLevelsData, fontLarge;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets required
       aLevelInfo,                      -- Selected level information
@@ -25,12 +25,12 @@ local aAssets,                         -- Assets required
 -- Render the scene callback since we're using it multiple times ----------- --
 local function ProcRenderScene()
   -- Draw appropriate background
-  texScene:BlitSLT(iTileId, 0, 0);
+  BlitSLT(texScene, iTileId, 0, 0);
   -- Return if not ready
   if iTileId ~= 1 then return end;
   -- Draw the text to win
   fontLarge:SetCRGBA(1, 1, 1, 1);
-  fontLarge:PrintC(160, 192, sTextToWin);
+  PrintC(fontLarge, 160, 192, sTextToWin);
 end
 -- On required fade out? --------------------------------------------------- --
 local function OnFadeOutToGame()
@@ -103,10 +103,11 @@ end
 -- Scripts have been loaded ------------------------------------------------ --
 local function OnScriptLoaded(GetAPI)
   -- Grab imports
-  Fade, LoadLevel, LoadResources, PlayMusic, SetCallbacks, aGlobalData,
-    aLevelTypesData, aLevelsData, fontLarge =
-      GetAPI("Fade", "LoadLevel", "LoadResources", "PlayMusic", "SetCallbacks",
-        "aGlobalData", "aLevelTypesData", "aLevelsData", "fontLarge");
+  BlitSLT, Fade, LoadLevel, LoadResources, PlayMusic, PrintC, SetCallbacks,
+    aGlobalData, aLevelTypesData, aLevelsData, fontLarge =
+      GetAPI("BlitSLT", "Fade", "LoadLevel", "LoadResources", "PlayMusic",
+        "PrintC", "SetCallbacks", "aGlobalData", "aLevelTypesData",
+        "aLevelsData", "fontLarge");
   -- Setup assets
   local aAssetsData<const> = GetAPI("aAssetsData");
   aAssets = { aAssetsData.scene, aAssetsData.scenem };

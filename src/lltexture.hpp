@@ -1003,6 +1003,12 @@ LLFUNC(Manifest, 1,
   const AgJson aJson{lS, 2};
   AcTexture{lS}().InitTextureImageManifest(aImage, aJson))
 /* ========================================================================= */
+// $ Texture.MaxSize
+// < Size:integer=Maximum supported texture size.
+// ? Returns the maximum texture size supported by the rendering system.
+/* ------------------------------------------------------------------------- */
+LLFUNC(MaxSize, 1, LuaUtilPushVar(lS, cOgl->MaxTexSize()))
+/* ========================================================================= */
 // $ Texture.CreateTS
 // > Source:image=The image class to load from.
 // > TWidth:integer=The width of each tile in the image.
@@ -1038,8 +1044,8 @@ LLFUNC(ImageUT, 1,
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 LLRSBEGIN                              // Texture.* namespace functions begin
-  LLRSFUNC(Create), LLRSFUNC(ImageUT), LLRSFUNC(Manifest), LLRSFUNC(CreateTS),
-  LLRSFUNC(Console),
+  LLRSFUNC(Create),   LLRSFUNC(ImageUT), LLRSFUNC(Manifest), LLRSFUNC(MaxSize),
+  LLRSFUNC(CreateTS), LLRSFUNC(Console),
 LLRSEND                                // Texture.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Texture namespace

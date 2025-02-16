@@ -96,7 +96,9 @@ class Core final :                     // Members initially private
     cSql->Reset();
     // If using graphical inteactive mode?
     if(cSystem->IsGraphicalMode())
-    { // Reset main fbo and back clear colour
+    { // Reset matrix
+      cDisplay->SetDefaultMatrix();
+      // Reset main fbo and back clear colour
       cFboCore->ResetClearColour();
       // Reset texture unit and shader program if in GUI mode
       cOgl->ResetBinds();

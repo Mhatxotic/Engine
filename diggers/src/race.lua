@@ -12,9 +12,9 @@
 -- Core function aliases --------------------------------------------------- --
 -- M-Engine function aliases ----------------------------------------------- --
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitCon, LoadResources, PlayStaticSound, RenderShadow,
-  RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, TypeIdToId, aGlobalData,
-  aRaceStatData, texSpr;
+local BlitSLTRB, BlitSLT, BlitLT, Fade, InitCon, LoadResources,
+  PlayStaticSound, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot,
+  SetKeys, TypeIdToId, aGlobalData, aRaceStatData, texSpr;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets Required
       aRaceDataSelected,               -- Race id data
@@ -37,27 +37,28 @@ end
 -- Render race ------------------------------------------------------------- --
 local function ProcRenderRace()
   -- Draw backdrop, race screen and it's shadow
-  texLobby:BlitLT(-54, 0);
-  texRace:BlitSLT(iTileBG, 8, 8);
+  BlitLT(texLobby, -54, 0);
+  BlitSLT(texRace, iTileBG, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw race and title text
-  texRace:BlitSLT(iRaceId, 172, 54);
-  texRace:BlitSLT(iTileName+iRaceId, 80, 24);
+  BlitSLT(texRace, iRaceId, 172, 54);
+  BlitSLT(texRace, iTileName+iRaceId, 80, 24);
   -- Draw stats
   texSpr:SetCRGBA(1, 0, 0, 0.5);
-  texSpr:BlitSLTRB(1022, 115,  62, 115+aRaceDataSelected[2],  65);
-  texSpr:BlitSLTRB(1022, 115,  82, 115+aRaceDataSelected[3],  85);
-  texSpr:BlitSLTRB(1022, 115, 102, 115+aRaceDataSelected[4], 105);
-  texSpr:BlitSLTRB(1022, 115, 122, 115+aRaceDataSelected[5], 125);
-  texSpr:BlitSLTRB(1022, 115, 142, 115+aRaceDataSelected[6], 145);
-  texSpr:BlitSLTRB(1022, 115, 162, 115+aRaceDataSelected[7], 165);
+  BlitSLTRB(texSpr, 1022, 115,  62, 115+aRaceDataSelected[2],  65);
+  BlitSLTRB(texSpr, 1022, 115,  82, 115+aRaceDataSelected[3],  85);
+  BlitSLTRB(texSpr, 1022, 115, 102, 115+aRaceDataSelected[4], 105);
+  BlitSLTRB(texSpr, 1022, 115, 122, 115+aRaceDataSelected[5], 125);
+  BlitSLTRB(texSpr, 1022, 115, 142, 115+aRaceDataSelected[6], 145);
+  BlitSLTRB(texSpr, 1022, 115, 162, 115+aRaceDataSelected[7], 165);
   texSpr:SetCRGBA(1, 1, 1, 1);
   -- Draw special
   if aRaceDataSelected[8] >= 0 then
-    texRace:BlitSLT(iTileSpecial+aRaceDataSelected[8], 110, 175);
+    BlitSLT(texRace, iTileSpecial+aRaceDataSelected[8], 110, 175);
   end
   -- Draw selected symbol
-  if iRaceId == iRaceIdSelected then texRace:BlitSLT(4, 132, 80, 192, 208) end;
+  if iRaceId == iRaceIdSelected then
+    BlitSLT(texRace, 4, 132, 80, 192, 208) end;
   -- Draw tip and shadow
   RenderTipShadow();
 end
@@ -122,13 +123,15 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitCon, LoadResources, PlayStaticSound, RegisterHotSpot, RegisterKeys,
-    RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys,
-    aAssetsData, aCursorIdData, aGlobalData, aRaceStatData, aSfxData, texSpr =
-      GetAPI("Fade", "InitCon", "LoadResources", "PlayStaticSound",
-        "RegisterHotSpot", "RegisterKeys", "RenderShadow", "RenderTipShadow",
-        "SetCallbacks", "SetHotSpot", "SetKeys", "aAssetsData",
-        "aCursorIdData", "aGlobalData", "aRaceStatData", "aSfxData", "texSpr");
+  BlitSLTRB, BlitSLT, BlitLT, Fade, InitCon, LoadResources, PlayStaticSound,
+    RegisterHotSpot, RegisterKeys, RenderShadow, RenderTipShadow, SetCallbacks,
+    SetHotSpot, SetKeys, aAssetsData, aCursorIdData, aGlobalData,
+    aRaceStatData, aSfxData, texSpr =
+      GetAPI("BlitSLTRB", "BlitSLT", "BlitLT", "Fade", "InitCon",
+        "LoadResources", "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
+        "RenderShadow", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
+        "SetKeys", "aAssetsData", "aCursorIdData", "aGlobalData",
+        "aRaceStatData", "aSfxData", "texSpr");
   -- Set assets data
   aAssets = { aAssetsData.lobbyc, aAssetsData.race };
   -- Set sound effect ids

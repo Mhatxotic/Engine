@@ -16,9 +16,10 @@ local error<const>, max<const>, maxinteger<const> =
 local UtilBlank<const>, CoreTime<const>, UtilIsInteger<const> =
   Util.Blank, Core.Time, Util.IsInteger;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GetCallbacks, InitSetup, InitTitle, LoadResources,
-  RegisterFBUCallback, RenderFade, RenderShadow, SetCallbacks, SetHotSpot,
-  VideoPlay, VideoStop, aIntroSubTitles, fontLittle, texSpr, SetKeys;
+local BlitSLT, BlitSLTRB, Fade, GetCallbacks, InitSetup, InitTitle,
+  LoadResources, PrintC, RegisterFBUCallback, RenderFade, RenderShadow,
+  SetCallbacks, SetHotSpot, SetVLTRB, VideoPlay, VideoStop, aIntroSubTitles,
+  fontLittle, texSpr, SetKeys;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets data to load
       aSubTitle,                       -- Active subtitle to wait for
@@ -33,7 +34,6 @@ local aAssets,                         -- Assets data to load
       iStageW, iStageH, iStageL,       -- Stage width, height and left
       iSubTitle, iFrameEnd,            -- Subtitle and frame end
       iSubTitle1, iSubTitle2,          -- First and second line subtitle id
-      iTexScale,                       -- Current texture scale
       sSubTitle1, sSubTitle2,          -- First and second line of subtitles
       texTitle,                        -- Texture handle
       vidVideo;                        -- Video handle
@@ -43,41 +43,41 @@ local function ProcRenderPlaying()
   if iStageL == 0 then
     -- Draw video normally
     vidVideo:SetTCLTRB(0, 0, 1, 1);
-    vidVideo:SetVLTRB(0, 0, 320, 240);
+    SetVLTRB(vidVideo, 0, 0, 320, 240);
     vidVideo:Blit();
   -- In widescreen?
   else
     -- Draw video effect for widescreen (left side)
     vidVideo:SetCRGBA(0.5, 0.5, 0.5, 1);
     vidVideo:SetTCLTRB(0, 0, 0, 1);
-    vidVideo:SetVLTRB(0, 0, iStageL, 240);
+    SetVLTRB(vidVideo, 0, 0, iStageL, iStageH);
     vidVideo:Blit();
     -- Draw video effect for widescreen (right side)
     vidVideo:SetTCLTRB(1, 0, 1, 1);
-    vidVideo:SetVLTRB(iStageR, 0, 320, 240);
+    SetVLTRB(vidVideo, iStageR, 0, iStageW, iStageH);
     vidVideo:Blit();
     -- Draw the actual video in the centre (4:3)
     vidVideo:SetCRGBA(1, 1, 1, 1);
     vidVideo:SetTCLTRB(0, 0, 1, 1);
-    vidVideo:SetVLTRB(0, 0, 320, 240);
+    SetVLTRB(vidVideo, 0, 0, iStageW, iStageH);
     vidVideo:Blit();
     -- Draw transparent tiles over the top of the widescreen border
     texTitle:SetCA(0.5);
-    for iY = 0, 240, 16 do
-      for iX = -16, iStageL-16, -16 do texTitle:BlitSLT(5, iX, iY) end;
-      for iX = 320, iStageR, 16 do texTitle:BlitSLT(5, iX, iY) end;
+    for iY = 0, iStageH, 16 do
+      for iX = -16, iStageL-16, -16 do BlitSLT(texTitle, 5, iX, iY) end;
+      for iX = iStageW, iStageR, 16 do BlitSLT(texTitle, 5, iX, iY) end;
     end
     texTitle:SetCA(1);
     -- Draw shadow
     texSpr:SetCA(0.75);
-    texSpr:BlitSLTRB(1023,   0, 0,  -1, 240);
-    texSpr:BlitSLTRB(1023, 320, 0, 321, 240);
+    BlitSLTRB(texSpr, 1023,   0, 0,  -1, 240);
+    BlitSLTRB(texSpr, 1023, 320, 0, 321, 240);
     texSpr:SetCA(0.5);
-    texSpr:BlitSLTRB(1023,  -1, 0,  -2, 240);
-    texSpr:BlitSLTRB(1023, 321, 0, 322, 240);
+    BlitSLTRB(texSpr, 1023,  -1, 0,  -2, 240);
+    BlitSLTRB(texSpr, 1023, 321, 0, 322, 240);
     texSpr:SetCA(0.25);
-    texSpr:BlitSLTRB(1023,  -2, 0,  -3, 240);
-    texSpr:BlitSLTRB(1023, 322, 0, 323, 240);
+    BlitSLTRB(texSpr, 1023,  -2, 0,  -3, 240);
+    BlitSLTRB(texSpr, 1023, 322, 0, 323, 240);
     texSpr:SetCA(1);
   end
   -- Get frame number
@@ -91,13 +91,14 @@ local function ProcRenderPlaying()
     RenderFade(0.75, iFadeX1, iFadeY1, iFadeX2, iFadeY2);
     RenderShadow(iFadeX1, iFadeY1, iFadeX2, iFadeY2);
     -- Draw subtitle
-    fontLittle:PrintC(iStageST, iSubTitle1, sSubTitle1);
+    PrintC(fontLittle, iStageST, iSubTitle1, sSubTitle1);
     -- If we have subtitle two
-    if sSubTitle2 then fontLittle:PrintC(iStageST, iSubTitle2, sSubTitle2) end;
+    if sSubTitle2 then
+      PrintC(fontLittle, iStageST, iSubTitle2, sSubTitle2) end;
     -- Hide subtitle if timed out
     if iFrame >= iFrameEnd then sSubTitle1, sSubTitle2 = nil, nil end;
   end
-  -- Get next subtitle data (fontLittle:PrintC(iStageST, 170, iFrame);)
+  -- Get next subtitle data
   if iFrame >= aSubTitle[1] then
     -- Grab new fade bounds
     iFadeX, iFadeY1, iFadeY2 = aSubTitle[6], aSubTitle[7], aSubTitle[8];
@@ -130,22 +131,22 @@ local function ProcRenderSetup()
   local nHeightPiLY = nHeight + iLY;
   local iXRight<const> = 320 + iWidth;
   texTitle:SetCA(0.25);
-  texTitle:BlitSLTRB(1, iX, -240+iLX, iXpWidth, -240 + nHeightPiLX);
-  texTitle:BlitSLTRB(1, iX,      iLX, iXpWidth,        nHeightPiLX);
-  texTitle:BlitSLTRB(1, iX,  240+iLX, iXpWidth,  240 + nHeightPiLX);
-  texTitle:BlitSLTRB(1, iXRight,       nHeightPiLY, 320,       iLY);
-  texTitle:BlitSLTRB(1, iXRight, 240 + nHeightPiLY, 320, 240 + iLY);
-  texTitle:BlitSLTRB(1, iXRight, 480 + nHeightPiLY, 320, 480 + iLY);
+  BlitSLTRB(texTitle, 1, iX, -240+iLX, iXpWidth, -240 + nHeightPiLX);
+  BlitSLTRB(texTitle, 1, iX,      iLX, iXpWidth,        nHeightPiLX);
+  BlitSLTRB(texTitle, 1, iX,  240+iLX, iXpWidth,  240 + nHeightPiLX);
+  BlitSLTRB(texTitle, 1, iXRight,       nHeightPiLY, 320,       iLY);
+  BlitSLTRB(texTitle, 1, iXRight, 240 + nHeightPiLY, 320, 240 + iLY);
+  BlitSLTRB(texTitle, 1, iXRight, 480 + nHeightPiLY, 320, 480 + iLY);
   iLX = -iLX;
   iLY = -iLY - 240;
   nHeightPiLX = nHeight + iLX;
   nHeightPiLY = nHeight + iLY;
-  texTitle:BlitSLTRB(1, iX, -240 + iLX, iXpWidth, -240 + nHeightPiLX);
-  texTitle:BlitSLTRB(1, iX,        iLX, iXpWidth,        nHeightPiLX);
-  texTitle:BlitSLTRB(1, iX,  240 + iLX, iXpWidth,  240 + nHeightPiLX);
-  texTitle:BlitSLTRB(1, iXRight,       nHeightPiLY, 320,       iLY);
-  texTitle:BlitSLTRB(1, iXRight, 240 + nHeightPiLY, 320, 240 + iLY);
-  texTitle:BlitSLTRB(1, iXRight, 480 + nHeightPiLY, 320, 480 + iLY);
+  BlitSLTRB(texTitle, 1, iX, -240 + iLX, iXpWidth, -240 + nHeightPiLX);
+  BlitSLTRB(texTitle, 1, iX,        iLX, iXpWidth,        nHeightPiLX);
+  BlitSLTRB(texTitle, 1, iX,  240 + iLX, iXpWidth,  240 + nHeightPiLX);
+  BlitSLTRB(texTitle, 1, iXRight,       nHeightPiLY, 320,       iLY);
+  BlitSLTRB(texTitle, 1, iXRight, 240 + nHeightPiLY, 320, 240 + iLY);
+  BlitSLTRB(texTitle, 1, iXRight, 480 + nHeightPiLY, 320, 480 + iLY);
 end
 -- Call render function ---------------------------------------------------- --
 local function ProcRender() fcbRender() end;
@@ -203,8 +204,8 @@ local function SetupVideo()
 end
 -- Register frame buffer update -------------------------------------------- --
 local function OnStageUpdated(...)
-  iStageW, iStageH, iStageL, iStageT, iStageR, iStageB = ...;
-  iStageST = iStageL + (iStageW / 2);
+  local _; _, _, iStageL, iStageT, iStageR, iStageB, iStageW, iStageH = ...;
+  iStageST = iStageW / 2;
 end
 -- When video has faded in? ------------------------------------------------ --
 local function OnFadeIn()
@@ -304,22 +305,24 @@ end
 -- When script has loaded -------------------------------------------------- --
 local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
-  local RegisterHotSpot, RegisterKeys, aAssetsData;
+  local RegisterHotSpot, RegisterKeys, aAssetsData, iTexScale;
   -- Get imports
-  Fade, GetCallbacks, InitSetup, InitTitle, LoadResources, RegisterFBUCallback,
-    RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow, SetCallbacks,
-    SetHotSpot, SetKeys, VideoPlay, VideoStop, aAssetsData, aIntroSubTitles,
-    fontLittle, texSpr, iTexScale =
-      GetAPI("Fade", "GetCallbacks", "InitSetup", "InitTitle", "LoadResources",
-        "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys", "RenderFade",
-        "RenderShadow", "SetCallbacks", "SetHotSpot", "SetKeys", "VideoPlay",
+  BlitSLT, BlitSLTRB, Fade, GetCallbacks, InitSetup, InitTitle, LoadResources,
+    PrintC, RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderFade,
+    RenderShadow, SetCallbacks, SetHotSpot, SetKeys, SetVLTRB, VideoPlay,
+    VideoStop, aAssetsData, aIntroSubTitles, fontLittle, texSpr, iTexScale =
+      GetAPI("BlitSLT", "BlitSLTRB", "Fade", "GetCallbacks", "InitSetup",
+        "InitTitle", "LoadResources", "PrintC", "RegisterFBUCallback",
+        "RegisterHotSpot", "RegisterKeys", "RenderFade", "RenderShadow",
+        "SetCallbacks", "SetHotSpot", "SetKeys", "SetVLTRB", "VideoPlay",
         "VideoStop", "aAssetsData", "aIntroSubTitles", "fontLittle", "texSpr",
         "iTexScale");
   -- Build assets to load
   aAssets = { aAssetsData.title, aAssetsData.intro };
   -- Get font size and padding
   iFWidth, iFHeight, iPadding =
-    fontLittle:GetWidth(), fontLittle:GetHeight(), 5;
+    fontLittle:GetWidth() / iTexScale,
+    fontLittle:GetHeight() / iTexScale, 5;
   -- Register keybinds
   iKeyBankId = RegisterKeys("TITLE INTRO", {
     [Input.States.PRESS] =

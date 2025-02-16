@@ -17,11 +17,11 @@ local CoreTicks<const>, UtilBlank<const>, UtilIsTable<const>,
   UtilIsBoolean<const>, UtilIsInteger<const> =
     Core.Ticks, Util.Blank, Util.IsTable, Util.IsBoolean, Util.IsInteger;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GameProc, GetActiveObject, InitBank, InitCon, InitContinueGame,
-  InitScene, InitShop, InitTitle, LoadResources, PlayMusic, PlayStaticSound,
-  RegisterFBUCallback, RenderInterface, RenderShadow, RenderTip,
-  RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, SetTip, aGlobalData,
-  fontSpeech;
+local BlitLT, BlitSLT, Fade, GameProc, GetActiveObject, InitBank, InitCon,
+  InitContinueGame, InitScene, InitShop, InitTitle, LoadResources, PlayMusic,
+  PlayStaticSound, Print, RegisterFBUCallback, RenderInterface, RenderShadow,
+  RenderTip, RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, SetTip,
+  aGlobalData, fontSpeech;
 -- Locals ------------------------------------------------------------------ --
 local aActiveObject,                   -- Selected object when entering lobby
       aClosedAssetsMusic,              -- Out of game lobby with music
@@ -50,12 +50,12 @@ end
 local function RenderOpen()
   -- Render game interface, backdrop, shadow and tip
   RenderInterface();
-  texLobby:BlitLT(8, 8);
+  BlitLT(texLobby, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Render fire
   local iFrame<const> = CoreTicks() % 9;
-  if iFrame >= 6 then texLobby:BlitSLT(1, 113, 74);
-  elseif iFrame >= 3 then texLobby:BlitSLT(2, 113, 74);
+  if iFrame >= 6 then BlitSLT(texLobby, 1, 113, 74);
+  elseif iFrame >= 3 then BlitSLT(texLobby, 2, 113, 74);
   else fcbRenderExtra() end;
   -- Render tip
   RenderTip();
@@ -63,20 +63,20 @@ end
 -- Lobby closed render proc ------------------------------------------------ --
 local function RenderClosed()
   -- Draw backdrop
-  texLobby:BlitLT(-54, 0);
+  BlitLT(texLobby, -54, 0);
   -- Render lobby
-  texLobby:BlitSLT(1, 8, 8);
+  BlitSLT(texLobby, 1, 8, 8);
   -- Render lobby shadow
   RenderShadow(8, 8, 312, 208);
   -- Render fire
   local iFrame<const> = CoreTicks() % 9;
-  if iFrame >= 6 then texLobby:BlitSLT(5, 113, 74);
-  elseif iFrame >= 3 then texLobby:BlitSLT(4, 113, 74);
+  if iFrame >= 6 then BlitSLT(texLobby, 5, 113, 74);
+  elseif iFrame >= 3 then BlitSLT(texLobby, 4, 113, 74);
   -- Flash if not ready to play
   else fcbRenderExtra() end;
   -- Draw foliage
-  texLobby:BlitSLT(2, iStageR-238, 183);
-  texLobby:BlitSLT(3, iStageL,      56);
+  BlitSLT(texLobby, 2, iStageR-238, 183);
+  BlitSLT(texLobby, 3, iStageL,      56);
   -- Render tip
   RenderTipShadow();
 end
@@ -119,7 +119,7 @@ local function OnAssetsLoaded(aResources, fcbOnLoaded, iSaveMusicPos)
   fcbOnLoaded();
 end
 -- Not ready callback ------------------------------------------------------ --
-local function NotReadyCallback() fontSpeech:Print(157, 115, "!") end;
+local function NotReadyCallback() Print(fontSpeech, 157, 115, "!") end;
 -- Init lobby function ----------------------------------------------------- --
 local function InitLobby(bNoSetMusic, iSaveMusicPos)
   -- Active object must be specified or omitted
@@ -228,19 +228,19 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, GameProc, GetActiveObject, InitBank, InitCon, InitContinueGame,
-    InitScene, InitShop, InitTitle, LoadResources, PlayMusic, PlayStaticSound,
-    RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderInterface,
-    RenderShadow, RenderTip, RenderTipShadow, SetCallbacks, SetHotSpot,
-    SetKeys, SetTip, aAssetsData, aCursorIdData, aGlobalData, aSfxData,
-    fontSpeech =
-      GetAPI("Fade", "GameProc", "GetActiveObject", "InitBank", "InitCon",
-        "InitContinueGame", "InitScene", "InitShop", "InitTitle",
-        "LoadResources", "PlayMusic", "PlayStaticSound", "RegisterFBUCallback",
-        "RegisterHotSpot", "RegisterKeys", "RenderInterface", "RenderShadow",
-        "RenderTip", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
-        "SetKeys", "SetTip", "aAssetsData", "aCursorIdData", "aGlobalData",
-        "aSfxData", "fontSpeech");
+  BlitLT, BlitSLT, Fade, GameProc, GetActiveObject, InitBank, InitCon,
+    InitContinueGame, InitScene, InitShop, InitTitle, LoadResources, PlayMusic,
+    PlayStaticSound, Print, RegisterFBUCallback, RegisterHotSpot, RegisterKeys,
+    RenderInterface, RenderShadow, RenderTip, RenderTipShadow, SetCallbacks,
+    SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData, aGlobalData,
+    aSfxData, fontSpeech =
+      GetAPI("BlitLT", "BlitSLT", "Fade", "GameProc", "GetActiveObject",
+        "InitBank", "InitCon", "InitContinueGame", "InitScene", "InitShop",
+        "InitTitle", "LoadResources", "PlayMusic", "PlayStaticSound", "Print",
+        "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys",
+        "RenderInterface", "RenderShadow", "RenderTip", "RenderTipShadow",
+        "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip", "aAssetsData",
+        "aCursorIdData", "aGlobalData", "aSfxData", "fontSpeech");
   -- Prepare assets
   local aMusicAsset<const> = aAssetsData.lobbym;
   local aClosedTexture<const> = aAssetsData.lobbyc;

@@ -58,7 +58,7 @@ local iJoyButtonMax;                   -- Maximum joystick buttons
 -- Stage ------------------------------------------------------------------- --
 local iStageLeft, iStageRight;         -- Stage left and top
 local iStageTop, iStageBottom;         -- Stage right and bottom
-local iStageLeftD2, iStageRightD2;     -- Stage left and top divided by two
+local iStageLeft, iStageRight;     -- Stage left and top divided by two
 -- Hotspots ---------------------------------------------------------------- --
 local aHotSpotNone<const> = { };       -- No hotspot data
 local aHotSpotBank<const> = { };       -- Bank of hotspots
@@ -210,6 +210,10 @@ local function OnMouseScroll(nX, nY)
       return;
     end
   end
+end
+-- Set cursor position with scale ------------------------------------------ --
+local function SetCursorPos(iX, iY)
+  InputSetCursorPos(iX * iTexScale, iY * iTexScale);
 end
 -- Joystick procedure ------------------------------------------------------ --
 local function JoystickProc()
@@ -376,16 +380,16 @@ local function UpdateHotSpot(aHotSpot)
     aHotSpot[3] = aHotSpot[10] + aHotSpot[12];
   -- Left alignment?
   elseif iAlignment == 1 then
-    aHotSpot[1] = iStageLeftD2 + aHotSpot[10];
+    aHotSpot[1] = iStageLeft + aHotSpot[10];
     aHotSpot[3] = aHotSpot[1] + aHotSpot[12];
   -- Right alignment?
   elseif iAlignment == 2 then
-    aHotSpot[1] = iStageRightD2 - aHotSpot[12] - aHotSpot[10];
+    aHotSpot[1] = iStageRight - aHotSpot[12] - aHotSpot[10];
     aHotSpot[3] = aHotSpot[1] + aHotSpot[12];
   -- Left AND right alignment?
   elseif iAlignment == 3 then
-    aHotSpot[1] = iStageLeftD2 + aHotSpot[10];
-    aHotSpot[3] = iStageRightD2 - aHotSpot[12];
+    aHotSpot[1] = iStageLeft + aHotSpot[10];
+    aHotSpot[3] = iStageRight - aHotSpot[12];
   end
 end
 -- Update all hot spots ---------------------------------------------------- --
@@ -578,9 +582,6 @@ local function OnStageUpdated(...)
   -- Clamp them to integers
   iStageLeft, iStageTop, iStageRight, iStageRight =
     floor(iStageLeft), floor(iStageTop), floor(iStageRight), floor(iStageRight);
-  -- Calculate scales version of the stage
-  iStageLeftD2 = iStageLeft // iTexScale;
-  iStageRightD2 = iStageRight // iTexScale;
   -- If cursor is off the left or right of the screne? Clamp it
   if iCursorX < iStageLeft then iCursorX = iStageLeft;
   elseif iCursorX >= iStageRight then iCursorX = iStageRight-1 end;
@@ -649,6 +650,6 @@ return { F = OnScriptLoaded, A = { ClearStates = ClearStates,
   IsMouseYLessThan = IsMouseYLessThan, JoystickProc = JoystickProc,
   RegisterHotSpot = RegisterHotSpot, RegisterKeys = RegisterKeys,
   RestoreKeyHandlers = RestoreKeyHandlers, SetCursor = SetCursor,
-  SetHotSpot = SetHotSpot, SetKeys = SetKeys, aKeyBank = aKeyBank,
-  aKeyBankCats = aKeyBankCats } };
+  SetCursorPos = SetCursorPos, SetHotSpot = SetHotSpot, SetKeys = SetKeys,
+  aKeyBank = aKeyBank, aKeyBankCats = aKeyBankCats } };
 -- End-of-File ============================================================= --

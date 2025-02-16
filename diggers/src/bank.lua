@@ -16,11 +16,11 @@ local format<const>, unpack<const>, error<const> =
 local CoreTicks<const>, UtilBlank<const>, UtilIsTable<const> =
   Core.Ticks, Util.Blank, Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin, InitLobby,
-  LoadResources, PlayMusic, PlayStaticSound, RenderInterface, RenderShadow,
-  RenderTip, SellSpecifiedItems, SetCallbacks, SetHotSpot, SetKeys, SetTip,
-  aGemsAvailable, aObjectActions, aObjectData, aObjectDirections, aObjectJobs,
-  aObjectTypes, fontSpeech, texSpr;
+local BlitSLT, Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin,
+  InitLobby, LoadResources, PlayMusic, PlayStaticSound, PrintC,
+  RenderInterface, RenderShadow, RenderTip, SellSpecifiedItems, SetCallbacks,
+  SetHotSpot, SetKeys, SetTip, aGemsAvailable, aObjectActions, aObjectData,
+  aObjectDirections, aObjectJobs, aObjectTypes, fontSpeech, texSpr;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Required assets
       aBankerData,                     -- Banker data
@@ -172,22 +172,22 @@ local function ProcRender()
   -- Render original interface
   RenderInterface();
   -- Draw backdrop with bankers and windows
-  texBank:BlitSLT(tileBG, 8, 8);
+  BlitSLT(texBank, tileBG, 8, 8);
   -- Render shadow
   RenderShadow(8, 8, 312, 208);
   -- For each banker
   for iI = 1, #aBankerData do
     -- Get banker data and draw it
     local aData<const> = aBankerData[iI];
-    texSpr:BlitSLT(aData[4], aData[6], aData[7]);
+    BlitSLT(texSpr, aData[4], aData[6], aData[7]);
   end
   -- Speech bubble should show?
   if iSpeechTimer > 0 then
     -- Show banker talking graphic, speech bubble and text
-    texBank:BlitSLT(CoreTicks() // 10 % 4 + iBankerTexId,
+    BlitSLT(texBank, CoreTicks() // 10 % 4 + iBankerTexId,
       iBankerX, iBankerY);
-    texBank:BlitSLT(tileSpeech, iSpeechBubbleX, iSpeechBubbleY);
-    fontSpeech:PrintC(iSpeechTextX, iSpeechTextY, strBankerSpeech);
+    BlitSLT(texBank, tileSpeech, iSpeechBubbleX, iSpeechBubbleY);
+    PrintC(fontSpeech, iSpeechTextX, iSpeechTextY, strBankerSpeech);
   end
   -- Render tip
   RenderTip();
@@ -260,15 +260,16 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin, InitLobby,
-    LoadResources, PlayMusic, PlayStaticSound, RegisterHotSpot, RegisterKeys,
-    RenderInterface, RenderShadow, RenderTip, SellSpecifiedItems,
-    SetCallbacks, SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData,
-    aGemsAvailable, aObjectActions, aObjectData, aObjectDirections,
-    aObjectJobs, aObjectTypes, aSfxData, fontSpeech, texSpr =
-      GetAPI("Fade", "GameProc", "GetActiveObject", "GetGameTicks",
+  BlitSLT, Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin,
+    InitLobby, LoadResources, PlayMusic, PlayStaticSound, PrintC,
+    RegisterHotSpot, RegisterKeys, RenderInterface, RenderShadow, RenderTip,
+    SellSpecifiedItems, SetCallbacks, SetHotSpot, SetKeys, SetTip, aAssetsData,
+    aCursorIdData, aGemsAvailable, aObjectActions, aObjectData,
+    aObjectDirections, aObjectJobs, aObjectTypes, aSfxData, fontSpeech,
+    texSpr =
+      GetAPI("BlitSLT", "Fade", "GameProc", "GetActiveObject", "GetGameTicks",
         "HaveZogsToWin", "InitLobby", "LoadResources", "PlayMusic",
-        "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
+        "PlayStaticSound", "PrintC", "RegisterHotSpot", "RegisterKeys",
         "RenderInterface", "RenderShadow", "RenderTip", "SellSpecifiedItems",
         "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip", "aAssetsData",
         "aCursorIdData", "aGemsAvailable", "aObjectActions", "aObjectData",

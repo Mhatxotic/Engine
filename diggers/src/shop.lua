@@ -16,11 +16,11 @@ local random<const>, format<const>, error<const>, tostring<const> =
 local CoreTicks<const>, UtilIsInteger<const>, UtilIsTable<const> =
   Core.Ticks, Util.IsInteger, Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local BuyItem, Fade, GameProc, GetActiveObject, InitCon, InitLobby,
-  LoadResources, LoopStaticSound, PlayMusic, PlayStaticSound, RenderInterface,
-  RenderShadow, RenderTip, SetCallbacks, SetHotSpot, SetKeys, SetTip,
-  StopSound, aObjectActions, aObjectData, aObjectDirections, aObjectJobs,
-  aShopData, fontLittle, fontSpeech, fontTiny;
+local BlitSLT, BuyItem, Fade, GameProc, GetActiveObject, InitCon, InitLobby,
+  LoadResources, LoopStaticSound, PlayMusic, PlayStaticSound, PrintC,
+  RenderInterface, RenderShadow, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
+  SetTip, StopSound, aObjectActions, aObjectData, aObjectDirections,
+  aObjectJobs, aShopData, fontLittle, fontSpeech, fontTiny;
 -- Locals ------------------------------------------------------------------ --
 local aActiveObject,                   -- Currently selected digger
       aAssets,                         -- Assets required
@@ -122,13 +122,13 @@ end
 local function RenderBackground()
   -- Render original interface backdrop and shadow
   RenderInterface();
-  texShop:BlitSLT(20, 8, 8);
+  BlitSLT(texShop, 20, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw animations
-  if iAnimDoor ~= 0 then texShop:BlitSLT(iAnimDoor, 272, 79) end;
+  if iAnimDoor ~= 0 then BlitSLT(texShop, iAnimDoor, 272, 79) end;
   if random() < 0.001 and iAnimDoorMod == 0 then iAnimDoorMod = 1 end;
-  texShop:BlitSLT(CoreTicks() // 10 % 3 + 28, 9, 174); -- Floor lights
-  if iForkAnim ~= 0 then texShop:BlitSLT(iForkAnim, 112, 95) end;
+  BlitSLT(texShop, CoreTicks() // 10 % 3 + 28, 9, 174); -- Floor lights
+  if iForkAnim ~= 0 then BlitSLT(texShop, iForkAnim, 112, 95) end;
   if random() < 0.001 and iForkAnimMod == 0 then iForkAnimMod = 1 end;
 end
 -- Render speech bubble scene ---------------------------------------------- --
@@ -136,9 +136,9 @@ local function RenderSpeech()
   -- Speech ticks set?
   if iSpeechTicks > 0 then
     -- Render shopkeeper talking and speech bubble
-    texShop:BlitSLT(CoreTicks() // 10 % 4 + 22, 112, 127);
-    texShop:BlitSLT(21, 0, 160);
-    fontSpeech:PrintC(57, 168, sMsg);
+    BlitSLT(texShop, CoreTicks() // 10 % 4 + 22, 112, 127);
+    BlitSLT(texShop, 21, 0, 160);
+    PrintC(fontSpeech, 57, 168, sMsg);
   end
   -- Render tip
   RenderTip();
@@ -148,16 +148,16 @@ local function RenderOpen()
   -- Render background part
   RenderBackground();
   -- Render open parts
-  texShop:BlitSLT(iBuyHoloId, 197, 88);
-  texShop:BlitSLT(iHoloAnimTileId, 197, 88);
-  texShop:BlitSLT(27, 200, 168); -- Holo emitter light
-  texShop:BlitSLT(26, 16, 16); -- Product info background
+  BlitSLT(texShop, iBuyHoloId, 197, 88);
+  BlitSLT(texShop, iHoloAnimTileId, 197, 88);
+  BlitSLT(texShop, 27, 200, 168); -- Holo emitter light
+  BlitSLT(texShop, 26, 16, 16); -- Product info background
   fontLittle:SetCRGB(0.5, 1, 0.5);
-  fontLittle:PrintC(80, 31, sLongName);
+  PrintC(fontLittle, 80, 31, sLongName);
   fontLittle:SetCRGB(1, 1, 0);
-  fontLittle:PrintC(80, 63, sPrice);
+  PrintC(fontLittle, 80, 63, sPrice);
   fontTiny:SetCRGB(0.5, 0.75, 0);
-  fontTiny:PrintC(80, 43, sDesc);
+  PrintC(fontTiny, 80, 43, sDesc);
   -- Render speech and tip
   RenderSpeech();
 end
@@ -270,20 +270,20 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  BuyItem, Fade, GameProc, GetActiveObject, InitCon, InitLobby, LoadResources,
-    LoopStaticSound, PlayMusic, PlayStaticSound, RegisterHotSpot, RegisterKeys,
-    RenderInterface, RenderShadow, RenderTip, SetCallbacks, SetHotSpot,
-    SetKeys, SetTip, StopSound, aAssetsData, aCursorIdData, aObjectActions,
-    aObjectData, aObjectDirections, aObjectJobs, aSfxData, aShopData,
-    fontLittle, fontSpeech, fontTiny =
-      GetAPI("BuyItem", "Fade", "GameProc", "GetActiveObject", "InitCon",
-        "InitLobby", "LoadResources", "LoopStaticSound", "PlayMusic",
-        "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
-        "RenderInterface", "RenderShadow", "RenderTip", "SetCallbacks",
-        "SetHotSpot", "SetKeys", "SetTip", "StopSound", "aAssetsData",
-        "aCursorIdData", "aObjectActions", "aObjectData", "aObjectDirections",
-        "aObjectJobs", "aSfxData", "aShopData", "fontLittle", "fontSpeech",
-        "fontTiny");
+  BlitSLT, BuyItem, Fade, GameProc, GetActiveObject, InitCon, InitLobby,
+    LoadResources, LoopStaticSound, PlayMusic, PlayStaticSound, PrintC,
+    RegisterHotSpot, RegisterKeys, RenderInterface, RenderShadow, RenderTip,
+    SetCallbacks, SetHotSpot, SetKeys, SetTip, StopSound, aAssetsData,
+    aCursorIdData, aObjectActions, aObjectData, aObjectDirections, aObjectJobs,
+    aSfxData, aShopData, fontLittle, fontSpeech, fontTiny =
+      GetAPI("BlitSLT", "BuyItem", "Fade", "GameProc", "GetActiveObject",
+        "InitCon", "InitLobby", "LoadResources", "LoopStaticSound",
+        "PlayMusic", "PlayStaticSound", "PrintC", "RegisterHotSpot",
+        "RegisterKeys", "RenderInterface", "RenderShadow", "RenderTip",
+        "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip", "StopSound",
+        "aAssetsData", "aCursorIdData", "aObjectActions", "aObjectData",
+        "aObjectDirections", "aObjectJobs", "aSfxData", "aShopData",
+        "fontLittle", "fontSpeech", "fontTiny");
   -- Setup assets required
   aAssets = { aAssetsData.shop, aAssetsData.shopm };
   -- Register hotspots

@@ -15,9 +15,10 @@ local TextureCreateTS<const>, ImageRaw<const>, AssetCreate<const>
       = -- ----------------------------------------------------------------- --
       Texture.CreateTS, Image.Raw, Asset.Create;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GameProc, GetGameTicks, InitContinueGame, aLevelData,
-  LoadResources, PlayStaticSound, RenderInterface, RenderShadow, RenderTip,
-  SetCallbacks, SetHotSpot, SetKeys, aObjects, aTileData, aTileFlags, texSpr;
+local BlitSLTRB, BlitLT, Fade, GameProc, GetGameTicks, InitContinueGame,
+  aLevelData, LoadResources, PlayStaticSound, RenderInterface, RenderShadow,
+  RenderTip, SetCallbacks, SetHotSpot, SetKeys, aObjects, aTileData,
+  aTileFlags, texSpr;
 -- Locals ------------------------------------------------------------------ --
 local aAssets;                         -- Assets required
 local iBSize<const> = 128 * 128 * 3;   -- Byte size of map
@@ -67,16 +68,16 @@ local function ProcRender()
   -- Render everything
   RenderInterface();
   -- Draw appropriate background
-  texMap:BlitLT(8, 8);
+  BlitLT(texMap, 8, 8);
   -- Render shadow
   RenderShadow(8, 8, 312, 208);
   -- Render tip
   RenderTip();
   -- Draw terrain
-  texTerrain:BlitSLTRB(iTerrainPage, 32, 44, 288, 172);
+  BlitSLTRB(texTerrain, iTerrainPage, 32, 44, 288, 172);
   -- Dim appropriate button
-  if iTerrainPage == 0 then texSpr:BlitSLTRB(801, 140, 179, 157, 196);
-  elseif iTerrainPage == 1 then texSpr:BlitSLTRB(801, 162, 179, 179, 196) end;
+  if iTerrainPage == 0 then BlitSLTRB(texSpr, 801, 140, 179, 157, 196);
+  elseif iTerrainPage == 1 then BlitSLTRB(texSpr, 801, 162, 179, 179, 196) end;
 end
 -- TNT map procedure ------------------------------------------------------- --
 local function ProcLogic()
@@ -155,16 +156,17 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, GameProc, GetGameTicks, InitContinueGame, LoadResources,
-    PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderInterface,
-    RenderShadow, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
-    aAssetsData, aCursorIdData, aLevelData, aObjects, aSfxData, aTileData,
-    aTileFlags, texSpr =
-      GetAPI("Fade", "GameProc", "GetGameTicks", "InitContinueGame",
-        "LoadResources", "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
-        "RenderInterface", "RenderShadow", "RenderTip", "SetCallbacks",
-        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData", "aLevelData",
-        "aObjects", "aSfxData", "aTileData", "aTileFlags", "texSpr");
+  BlitSLTRB, BlitLT, Fade, GameProc, GetGameTicks, InitContinueGame,
+    LoadResources, PlayStaticSound, RegisterHotSpot, RegisterKeys,
+    RenderInterface, RenderShadow, RenderTip, SetCallbacks, SetHotSpot,
+    SetKeys, aAssetsData, aCursorIdData, aLevelData, aObjects, aSfxData,
+    aTileData, aTileFlags, texSpr =
+      GetAPI("BlitSLTRB", "BlitLT", "Fade", "GameProc", "GetGameTicks",
+        "InitContinueGame", "LoadResources", "PlayStaticSound",
+        "RegisterHotSpot", "RegisterKeys", "RenderInterface", "RenderShadow",
+        "RenderTip", "SetCallbacks", "SetHotSpot", "SetKeys", "aAssetsData",
+        "aCursorIdData", "aLevelData", "aObjects", "aSfxData", "aTileData",
+        "aTileFlags", "texSpr");
   -- Setup required assets
   aAssets = { aAssetsData.tntmap };
   -- Get sound effects

@@ -12,7 +12,8 @@
 -- Core function aliases --------------------------------------------------- --
 local max<const>, min<const>, random<const>, format<const>, ceil<const>,
   sin<const>, cos<const> =
-  math.max, math.min, math.random, string.format, math.ceil, math.sin, math.cos;
+    math.max, math.min, math.random, string.format, math.ceil, math.sin,
+    math.cos;
 -- M-Engine function aliases ----------------------------------------------- --
 local UtilHex<const>, CoreCPUUsage<const>, CoreRAM<const>,
   DisplayGPUFPS<const>, CoreUptime<const>, CoreLUATime<const>,
@@ -20,12 +21,12 @@ local UtilHex<const>, CoreCPUUsage<const>, CoreRAM<const>,
     Util.Hex, Core.CPUUsage, Core.RAM, Display.GPUFPS, Core.Uptime,
     Core.LUATime, Core.LUAUsage, Util.Duration;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GetGameTicks, GetMouseX, GetMouseY, aPlayers, aObjects,
+local BlitSLTRB, Fade, GetGameTicks, GetMouseX, GetMouseY, aPlayers, aObjects,
   RenderTerrain, RenderObjects, RenderShroud, BCBlit, texSpr, fontLarge,
   fontLittle, fontTiny, SelectObject, GameProc, GetActiveObject,
-  GetActivePlayer, SetCallbacks, LoadLevel, UpdateShroud, SetPlaySounds,
-  HaveZogsToWin, GetOpponentPlayer, RegisterFBUCallback,
-  aLevelsData, GetViewportData, GetLevelInfo;
+  GetActivePlayer, SetCallbacks, LoadLevel, PrintC, PrintCT, PrintT, PrintR,
+  Print, UpdateShroud, SetPlaySounds, HaveZogsToWin, GetOpponentPlayer,
+  RegisterFBUCallback, aLevelsData, GetViewportData, GetLevelInfo;
 -- Load infinite play ------------------------------------------------------ --
 local function InitDebugPlay(iId)
   -- Frame buffer updated function
@@ -102,7 +103,7 @@ local function InitDebugPlay(iId)
       if min(iXX + 16, iStageR) > max(iXX, iStageL) and
          min(iYY + 16, iStageB) > max(iYY, iStageT) then
         -- Draw the texture
-        texSpr:BlitSLTRB(aObject.S, iXX, iYY, iXX + 16, iYY + 16);
+        BlitSLTRB(texSpr, aObject.S, iXX, iYY, iXX + 16, iYY + 16);
         -- Get health
         local iHealth<const> = aObject.H;
         -- Centre location of digger information
@@ -124,7 +125,7 @@ local function InitDebugPlay(iId)
           -- Inactive object? Set dim
           else fontTiny:SetCRGBA(0.24, 0.8, 0.4, 0.75) end;
           -- Draw name and id of digger
-          fontTiny:PrintC(iXXC, iYY - 9, aObject.OD.NAME.." "..iDiggerId);
+          PrintC(fontTiny, iXXC, iYY - 9, aObject.OD.NAME.." "..iDiggerId);
           -- Get object inventory and if have any
           local aObjInv<const> = aObject.I;
           if #aObjInv > 0 then
@@ -133,7 +134,7 @@ local function InitDebugPlay(iId)
             local iY<const> = iYY - 18;
             local iY2<const> = iY + 8;
             for iIIndex = 1, #aObjInv do
-              texSpr:BlitSLTRB(aObjInv[iIIndex].S, iX, iY, iX+8, iY2);
+              BlitSLTRB(texSpr, aObjInv[iIIndex].S, iX, iY, iX+8, iY2);
               iX = iX + 8;
             end
           end
@@ -144,7 +145,7 @@ local function InitDebugPlay(iId)
           -- Inactive object? Set dim
           else fontTiny:SetCRGBA(0.9, 0.9, 0.9, 0.75) end;
           -- Draw name of object
-          fontTiny:PrintC(iXXC, iYY - 9, aObject.OD.NAME.." "..aObject.U);
+          PrintC(fontTiny, iXXC, iYY - 9, aObject.OD.NAME.." "..aObject.U);
         end
         -- Set string for object target
         local aTarget = aObject.T;
@@ -161,20 +162,20 @@ local function InitDebugPlay(iId)
           if #aTarget <= 1 then aTarget = "" end;
         end
         -- Draw object status under object
-        fontTiny:PrintCT(iXXC, iYY + 17, iX.."x"..iY.."\n"..
+        PrintCT(fontTiny, iXXC, iYY + 17, iX.."x"..iY.."\n"..
           aObject.A..":"..aObject.J..":"..aObject.D.." "..aObject.AT.."\n"..
           UtilHex(aObject.F)..aTarget, texSpr);
         -- Draw health bar background
         local iYHealth<const> = iYY - 1;
         local iYHealth2<const> = iYHealth - 1;
         texSpr:SetCRGB(0, 0, 0)
-        texSpr:BlitSLTRB(1022, iXX, iYHealth, iXX + 16, iYHealth2);
+        BlitSLTRB(texSpr, 1022, iXX, iYHealth, iXX + 16, iYHealth2);
         -- White to orange
         if iHealth >= 50 then texSpr:SetCRGB(1, 1, (iHealth-50)/50)
         -- Orange to red
         elseif iHealth > 0 then texSpr:SetCRGB(1, iHealth/50, 0) end;
         -- Draw health bar
-        texSpr:BlitSLTRB(1022,
+        BlitSLTRB(texSpr, 1022,
           iXX, iYHealth, iXX + iHealth / 6.25, iYHealth2);
         texSpr:SetCRGB(1, 1 ,1);
         -- Got an attachment? Draw it too!
@@ -224,17 +225,17 @@ local function InitDebugPlay(iId)
       nFade1, nFade2, nR, nG, nB = 1, 1, 1, 1, 1;
     end
     texSpr:SetCRGBA(nR, nG, nB, 1);
-    texSpr:BlitSLTRB(1022, 159, 198, 160, 234);
+    BlitSLTRB(texSpr, 1022, 159, 198, 160, 234);
     texSpr:SetCRGB(0, 0, 0);
-    texSpr:BlitSLTRB(1022, 160, 199, 161, 235);
+    BlitSLTRB(texSpr, 1022, 160, 199, 161, 235);
     texSpr:SetCRGB(1, 1, 1);
     -- Draw engine info
     fontTiny:SetCRGBA(1, 0.6, 0.7, nFade1);
-    fontTiny:PrintR(155, 210, aActivePlayer.RD.LONGNAME);
+    PrintR(fontTiny, 155, 210, aActivePlayer.RD.LONGNAME);
     fontTiny:SetCRGBA(0.24, 0.8, 0.4, nFade2);
-    fontTiny:Print(165, 210, aOpponentPlayer.RD.LONGNAME);
+    Print(fontTiny, 165, 210, aOpponentPlayer.RD.LONGNAME);
     fontTiny:SetCRGBA(1, 1, 1, 1);
-    fontTiny:Print(iStageL + 5, 193, format(
+    Print(fontTiny, iStageL + 5, 193, format(
       "FPS  %7.3f\n\z
        CPUP %7.3f %%\n\z
        RAMP %7.3f M\n\z
@@ -245,7 +246,7 @@ local function InitDebugPlay(iId)
       nGPUFramesPerSecond, nCpu, nProc / 1048576, nPeak / 1048576,
       CoreLUAUsage() / 1048576, nSys, nPerc));
     -- Draw viewport info
-    fontTiny:Print(iStageL + 5, 5,
+    Print(fontTiny, iStageL + 5, 5,
       format("VPXC %4d/%4d\n\z
               VPXT %4d/%4d\n\z
               VCPX %4d/%4d\n\z
@@ -259,7 +260,7 @@ local function InitDebugPlay(iId)
         iAbsCenPosX, iAbsCenPosY,
         iViewportW, iViewportH));
     -- Draw level and duration info
-    fontTiny:PrintR(iStageR - 5, 187,
+    PrintR(fontTiny, iStageR - 5, 187,
       format("%s [%02u]\n\z
               %s TYPE\n\z
               %u TWIN\n\z
@@ -277,12 +278,12 @@ local function InitDebugPlay(iId)
         UtilDuration(CoreLUATime(), 2),
         UtilDuration(CoreUptime(), 2)));
     -- Flash debug mode
-    fontTiny:PrintR(iStageR - 5, 5, "DEBUG MODE");
+    PrintR(fontTiny, iStageR - 5, 5, "DEBUG MODE");
     -- Draw gems and dug count
     fontLittle:SetCRGBA(1, 1, 1, nFade1);
-    fontLittle:PrintR(155, 198, "("..iGems1..") "..iDug1);
+    PrintR(fontLittle, 155, 198, "("..iGems1..") "..iDug1);
     fontLittle:SetCA(nFade2);
-    fontLittle:Print(165, 198, iDug2.." ("..iGems2..")");
+    Print(fontLittle, 165, 198, iDug2.." ("..iGems2..")");
     -- Animate player one's money
     if iAnimMoney ~= iMoney1 then
       -- Animated money over actual money?
@@ -293,7 +294,7 @@ local function InitDebugPlay(iId)
         sMoney = min(9999, iAnimMoney);
         -- Red colour and draw money
         fontLarge:SetCRGBA(1, 0.75, 0.75, nFade1);
-        fontLarge:Print(15, 220, sMoney);
+        Print(fontLarge, 15, 220, sMoney);
       -- Animated money under actual money? Increment
       elseif iAnimMoney < iMoney1 then
         -- Increment it
@@ -302,20 +303,20 @@ local function InitDebugPlay(iId)
         sMoney = min(9999, iAnimMoney);
         -- Green colour and draw money
         fontLarge:SetCRGBA(0.75, 1, 0.75, nFade1);
-        fontLarge:PrintR(155, 219, sMoney);
+        PrintR(fontLarge, 155, 219, sMoney);
       -- No change so set white font
       else
         -- Set money
         iAnimMoney, sMoney = iMoney1, iMoney1;
         -- Reset colour and draw money
         fontLarge:SetCRGBA(1, 1, 1, nFade1);
-        fontLarge:PrintR(155, 219, sMoney);
+        PrintR(fontLarge, 155, 219, sMoney);
       end
     -- Normal display
     else
       -- Reset colour and draw money
       fontLarge:SetCRGBA(1, 1, 1, nFade1);
-      fontLarge:PrintR(155, 219, sMoney);
+      PrintR(fontLarge, 155, 219, sMoney);
     end
     -- Animate player one's money
     if iOppAnimMoney ~= iMoney2 then
@@ -327,7 +328,7 @@ local function InitDebugPlay(iId)
         sOppMoney = min(9999, iOppAnimMoney);
         -- Red colour and draw money
         fontLarge:SetCRGBA(1, 0.75, 0.75, nFade2);
-        fontLarge:Print(165, 219, sOppMoney);
+        Print(fontLarge, 165, 219, sOppMoney);
       -- Animated money under actual money? Increment
       elseif iOppAnimMoney < iMoney2 then
         -- Increment it
@@ -336,20 +337,20 @@ local function InitDebugPlay(iId)
         sOppMoney = min(9999, iOppAnimMoney);
         -- Green colour and draw money
         fontLarge:SetCRGBA(0.75, 1, 0.75, nFade2);
-        fontLarge:Print(165, 219, sOppMoney);
+        Print(fontLarge, 165, 219, sOppMoney);
       -- No change so set white font
       else
         -- Set money
         iOppAnimMoney, sMoney = iMoney2, iMoney2;
         -- Reset colour and draw money
         fontLarge:SetCRGBA(1, 1, 1, nFade2);
-        fontLarge:Print(165, 219, sOppMoney);
+        Print(fontLarge, 165, 219, sOppMoney);
       end
     -- Normal display
     else
       -- Reset colour and draw money
       fontLarge:SetCRGBA(1, 1, 1, nFade2);
-      fontLarge:Print(165, 219, sOppMoney);
+      Print(fontLarge, 165, 219, sOppMoney);
     end
   end
   -- Finished playing this zone
@@ -434,19 +435,20 @@ end
 -- Scripts have been loaded ------------------------------------------------ --
 local function OnScriptLoaded(GetAPI)
   -- Grab imports
-  BCBlit, Fade, GameProc, GetActiveObject, GetActivePlayer, GetGameTicks,
-    GetLevelInfo, GetMouseX, GetMouseY, GetOpponentPlayer, GetViewportData,
-    HaveZogsToWin, LoadLevel, RegisterFBUCallback, RenderObjects,
-    RenderShroud, RenderTerrain, SelectObject, SetCallbacks, SetPlaySounds,
-    UpdateShroud, aLevelsData, aObjects, aPlayers, fontLarge, fontLittle,
-    fontTiny, texSpr =
-      GetAPI("BCBlit", "Fade", "GameProc", "GetActiveObject",
+  BlitSLTRB, BCBlit, Fade, GameProc, GetActiveObject, GetActivePlayer,
+    GetGameTicks, GetLevelInfo, GetMouseX, GetMouseY, GetOpponentPlayer,
+    GetViewportData, HaveZogsToWin, LoadLevel, PrintC, PrintCT, PrintR,
+    Print, RegisterFBUCallback, RenderObjects, RenderShroud, RenderTerrain,
+    SelectObject, SetCallbacks, SetPlaySounds, UpdateShroud, aLevelsData,
+    aObjects, aPlayers, fontLarge, fontLittle, fontTiny, texSpr =
+      GetAPI("BlitSLTRB", "BCBlit", "Fade", "GameProc", "GetActiveObject",
         "GetActivePlayer", "GetGameTicks", "GetLevelInfo", "GetMouseX",
         "GetMouseY", "GetOpponentPlayer", "GetViewportData", "HaveZogsToWin",
-        "LoadLevel", "RegisterFBUCallback", "RenderObjects",
-        "RenderShroud", "RenderTerrain", "SelectObject", "SetCallbacks",
-        "SetPlaySounds", "UpdateShroud", "aLevelsData", "aObjects", "aPlayers",
-        "fontLarge", "fontLittle", "fontTiny", "texSpr");
+        "LoadLevel", "PrintC", "PrintCT", "PrintR", "Print",
+        "RegisterFBUCallback", "RenderObjects", "RenderShroud",
+        "RenderTerrain", "SelectObject", "SetCallbacks", "SetPlaySounds",
+        "UpdateShroud", "aLevelsData", "aObjects", "aPlayers", "fontLarge",
+        "fontLittle", "fontTiny", "texSpr");
 end
 -- Exports and imports ----------------------------------------------------- --
 return { F = OnScriptLoaded, A = { InitDebugPlay = InitDebugPlay } };

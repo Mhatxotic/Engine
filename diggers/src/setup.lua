@@ -63,11 +63,12 @@ local iCVvidvsync<const>, iCVappdelay<const>, iCVtexfilter<const>,
       aCVars.vid_monitor, aCVars.win_width, aCVars.win_height, aCVars.vid_fs,
       aCVars.vid_fsmode, aCVars.aud_interface;
 -- Diggers function and data aliases --------------------------------------- --
-local DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
-  InitSetup, IsMouseYLessThan, LoadResources, PlayMusic, RegisterFBUCallback,
-  RenderFade, RenderShadow, RestoreKeyHandlers, SetCallbacks, SetHotSpot,
-  SetKeys, StopMusic, aKeyBankCats, aKeyToLiteral, aSetupButtonData,
-  aSetupOptionData, fontLarge, fontLittle, fontTiny, texSpr;
+local BlitSLTWHA, DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank,
+  GetMusic, InitSetup, IsMouseYLessThan, LoadResources, PlayMusic, PrintC,
+  PrintM, PrintR, PrintS, Print,
+  RegisterFBUCallback, RenderFade, RenderShadow, RestoreKeyHandlers,
+  SetCallbacks, SetHotSpot, SetKeys, StopMusic, aKeyBankCats, aKeyToLiteral,
+  aSetupButtonData, aSetupOptionData, fontLarge, fontLittle, fontTiny, texSpr;
 -- Frame-limiter types ----------------------------------------------------- --
 local aFrameLimiterLabels<const> = {
   "Adaptive VSync",                    -- VSync = -1; Delay = 0
@@ -222,7 +223,7 @@ local function RenderBackgroundStart(nId)
       nAngle = 0.5 + ((cos(nAngle) * sin(nAngle)));
       texSpr:SetCA(nAngle * 0.75);
       local nDim<const> = nAngle * 16;
-      texSpr:BlitSLTWHA(444, iX, iY, nDim, nDim, nAngle);
+      BlitSLTWHA(texSpr, 444, iX, iY, nDim, nDim, nAngle);
     end
   end
   -- Draw background for text
@@ -238,22 +239,22 @@ local function RenderBackgroundStart(nId)
   texSpr:SetCRGBA(1, 1, 1, 1);
   -- Set alternating colour for title
   FlickerColours(FlickerColour1, FlickerColour2);
-  fontLarge:PrintC(160, 8, ColouriseText(sTitle));
+  PrintC(fontLarge, 160, 8, ColouriseText(sTitle));
   -- Print tip
   if nStatusLineSize and nStatusLineSize > 0 then
-    fontTiny:PrintM(8 - nStatusLinePos, 226,
+    PrintM(fontTiny, 8 - nStatusLinePos, 226,
       nStatusLinePos, 304 + nStatusLinePos, sStatusLine2);
     nStatusLinePos = nStatusLinePos + 1;
     if nStatusLinePos >= nStatusLineSize then nStatusLinePos = 0 end;
-  else fontTiny:PrintC(160, 226, sStatusLine2) end;
+  else PrintC(fontTiny, 160, 226, sStatusLine2) end;
   -- Print system information
   FlickerColours(FlickerColour2, FlickerColour1);
-  fontTiny:PrintC(160, 217, sStatusLine1);
-  fontTiny:Print (  8,  9, format("RAM %.1f%%", nRAMUsePercentage));
-  fontTiny:PrintR(312, 18, format("%.1f%% ENG", nCPUUsageProcess));
+  PrintC(fontTiny, 160, 217, sStatusLine1);
+  Print(fontTiny, 8, 9, format("RAM %.1f%%", nRAMUsePercentage));
+  PrintR(fontTiny, 312, 18, format("%.1f%% ENG", nCPUUsageProcess));
   FlickerColours(FlickerColour1, FlickerColour2);
-  fontTiny:PrintR(312,  9, format("%.1f%% SYS", nCPUUsageSystem));
-  fontTiny:Print (  8, 18, format("%.1f FPS",   nGPUFramesPerSecond));
+  PrintR(fontTiny, 312, 9, format("%.1f%% SYS", nCPUUsageSystem));
+  Print(fontTiny, 8, 18, format("%.1f FPS",   nGPUFramesPerSecond));
 end
 -- ------------------------------------------------------------------------- --
 local function Refresh()
@@ -390,7 +391,7 @@ local function ProcRenderReadme()
     -- Set colour
     fontTiny:SetCRGB(nIntensity, nIntensity, nIntensity);
     -- Print line
-    fontTiny:Print(aData[1], aData[2], aData[3]);
+    Print(fontTiny, aData[1], aData[2], aData[3]);
   end
   -- Set alternating title colour based on current time
   if nTime % 0.43 < 0.215 then fontTiny:SetCRGBA(0.5, 0.5, 0.5, 1);
@@ -413,7 +414,7 @@ local function SetTip(nNewTipId, sTip)
   end
   -- Get size of tip
   local sTipPlusSep = sTip.." -+- "
-  local nTipSizePixels = fontTiny:PrintS(sTipPlusSep);
+  local nTipSizePixels = PrintS(fontTiny, sTipPlusSep);
   local nMaxLine = 304+nTipSizePixels;
   -- Fill the line until it is big enough to scroll seamlessly
   sStatusLine2, nStatusLineSize = "", nTipSizePixels;
@@ -421,7 +422,7 @@ local function SetTip(nNewTipId, sTip)
     -- Set the tip and append a separator for seamless repeating
     sStatusLine2 = sStatusLine2..sTipPlusSep;
     -- Calculate size
-    nStatusLineSize = fontTiny:PrintS(sStatusLine2);
+    nStatusLineSize = PrintS(fontTiny, sStatusLine2);
   end
   -- Reset size to tip length
   nStatusLineSize = nTipSizePixels;
@@ -497,13 +498,13 @@ local function ProcRenderSetup()
       texSpr:SetCRGB(1, 1, 1);
       fontLittle:SetCRGB(1, 1, 1);
     end
-    fontLittle:Print(aData[4], aData[3], aData[5]);
+    Print(fontLittle, aData[4], aData[3], aData[5]);
     if iSelectedOption == iIndex then fontLittle:SetCRGB(1, 1, 1);
     else
       nIntensity = 0.5 + (((iIndex/#aSetupOptionData) + -nTime) % 0.5);
       fontLittle:SetCRGB(0, nIntensity, 0);
     end
-    fontLittle:PrintR(aData[6], aData[3], aData[7]);
+    PrintR(fontLittle, aData[6], aData[3], aData[7]);
   end
   -- For each button
   texSpr:SetCRGB(0, 0, 0);
@@ -524,7 +525,7 @@ local function ProcRenderSetup()
     end
     -- Set button text colour and print the text
     fontLittle:SetCRGB(1, 1, 1);
-    fontLittle:PrintC(aData[3], aData[4], aData[5]);
+    PrintC(fontLittle, aData[3], aData[4], aData[5]);
   end
   -- Print generic info
   if nTime % 0.43 < 0.215 then fontTiny:SetCRGBA(0.5, 0.5, 0.5, 1);
@@ -630,7 +631,7 @@ local function RenderBinds()
     end
     -- Set text colour and print the bind line
     fontTiny:SetCRGB(nIntensity, nIntensity, nIntensity);
-    fontTiny:Print(aData[1], aData[2], aData[3]);
+    Print(fontTiny, aData[1], aData[2], aData[3]);
   end
   -- Set alternating title colour based on current time
   if nTime % 0.43 < 0.215 then fontTiny:SetCRGBA(0.5, 0.5, 0.5, 1);
@@ -706,20 +707,21 @@ local function OnScriptLoaded(GetAPI)
   local PlayStaticSound, RegisterHotSpot, RegisterKeys, aAssetsData,
     aCursorIdData, aSfxData;
   -- Grab import functions and data
-  DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
-    IsMouseYLessThan, LoadResources, PlayMusic, PlayStaticSound,
+  BlitSLTWHA, DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
+    IsMouseYLessThan, LoadResources, PlayMusic, PlayStaticSound, PrintC,
+  PrintM, PrintR, PrintS, Print,
     RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow,
     RestoreKeyHandlers, SetCallbacks, SetHotSpot, SetKeys, StopMusic,
     aAssetsData, aCursorIdData, aKeyBankCats, aKeyToLiteral, aSetupButtonData,
     aSetupOptionData, aSfxData, fontLarge, fontLittle, fontTiny, texSpr =
-      GetAPI("DisableKeyHandlers", "GetCallbacks", "GetHotSpot", "GetKeyBank",
-        "GetMusic", "IsMouseYLessThan", "LoadResources", "PlayMusic",
-        "PlayStaticSound", "RegisterFBUCallback", "RegisterHotSpot",
-        "RegisterKeys", "RenderFade", "RenderShadow", "RestoreKeyHandlers",
-        "SetCallbacks", "SetHotSpot", "SetKeys", "StopMusic", "aAssetsData",
-        "aCursorIdData", "aKeyBankCats", "aKeyToLiteral", "aSetupButtonData",
-        "aSetupOptionData", "aSfxData", "fontLarge", "fontLittle", "fontTiny",
-        "texSpr");
+      GetAPI("BlitSLTWHA", "DisableKeyHandlers", "GetCallbacks", "GetHotSpot",
+        "GetKeyBank", "GetMusic", "IsMouseYLessThan", "LoadResources",
+        "PlayMusic", "PlayStaticSound", "PrintC", "PrintM", "PrintR", "PrintS", "Print",
+        "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys", "RenderFade",
+        "RenderShadow", "RestoreKeyHandlers", "SetCallbacks", "SetHotSpot",
+        "SetKeys", "StopMusic", "aAssetsData", "aCursorIdData", "aKeyBankCats",
+        "aKeyToLiteral", "aSetupButtonData", "aSetupOptionData", "aSfxData",
+        "fontLarge", "fontLittle", "fontTiny", "texSpr");
   -- Set assetsData
   aAssets = { aAssetsData.setupm };
   -- Callback to set all settings to default

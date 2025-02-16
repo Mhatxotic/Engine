@@ -256,15 +256,15 @@ local aAssetsData<const> = {
 };-- End ------------------------------------------------------------------- --
 -- Base code scripts that are to be loaded (don't modify the order)
 local aBaseScripts<const> = {
-  { T=9, F="data"   }, { T=9, F="input" }, { T=9, F="audio"   },
-  { T=9, F="bank"   }, { T=9, F="book"  }, { T=9, F="cntrl"   },
-  { T=9, F="credit" }, { T=9, F="debug" }, { T=9, F="end"     },
-  { T=9, F="ending" }, { T=9, F="fail"  }, { T=9, F="file"    },
-  { T=9, F="game"   }, { T=9, F="intro" }, { T=9, F="lobby"   },
-  { T=9, F="map"    }, { T=9, F="pause" }, { T=9, F="post"    },
-  { T=9, F="race"   }, { T=9, F="scene" }, { T=9, F="score"   },
-  { T=9, F="shop"   }, { T=9, F="title" }, { T=9, F="tcredit" },
-  { T=9, F="tntmap" }, { T=9, F="setup" },
+  { T=9, F="data"    }, { T=9, F="blit"   }, { T=9, F="input" },
+  { T=9, F="audio"   }, { T=9, F="bank"   }, { T=9, F="book"  },
+  { T=9, F="cntrl"   }, { T=9, F="credit" }, { T=9, F="debug" },
+  { T=9, F="end"     }, { T=9, F="ending" }, { T=9, F="fail"  },
+  { T=9, F="file"    }, { T=9, F="game"   }, { T=9, F="intro" },
+  { T=9, F="lobby"   }, { T=9, F="map"    }, { T=9, F="pause" },
+  { T=9, F="post"    }, { T=9, F="race"   }, { T=9, F="scene" },
+  { T=9, F="score"   }, { T=9, F="shop"   }, { T=9, F="title" },
+  { T=9, F="tcredit" }, { T=9, F="tntmap" }, { T=9, F="setup" },
 };
 -- Base fonts that are to be loaded (and scaled) --------------------------- --
 local aBaseFonts<const> = { aAssetsData.font16, aAssetsData.font8,

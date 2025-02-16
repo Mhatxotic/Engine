@@ -17,8 +17,8 @@ local UtilIsBoolean<const>, UtilIsInteger<const>, UtilIsString<const>,
   UtilIsTable<const> = Util.IsBoolean, Util.IsInteger, Util.IsString,
   Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GetGameTicks, InitPost, InitScore, LoadResources,
-  PlayMusic, PlayStaticSound, RenderFade, RenderObjects, RenderTerrain,
+local BlitSLTWHA, Fade, GetGameTicks, InitPost, InitScore, LoadResources,
+  PlayMusic, PlayStaticSound, PrintC, RenderFade, RenderObjects, RenderTerrain,
   SetCallbacks, SetHotSpot, SetKeys, aGemsAvailable, aGlobalData, aObjects,
   aShroudData, fontLarge;
 -- Locals ------------------------------------------------------------------ --
@@ -95,7 +95,7 @@ local function DrawCollection(aCollection)
   fontLarge:SetCRGBA(1, 1, 1, 1);
   for iLineId = 1, #aCollection do
     local aItem<const> = aCollection[iLineId];
-    fontLarge:PrintC(aItem[1], aItem[2], aItem[4]);
+    PrintC(fontLarge, aItem[1], aItem[2], aItem[4]);
   end
 end
 -- Render end function ----------------------------------------------------- --
@@ -108,7 +108,7 @@ local function RenderEnd()
   -- Draw ending graphic
   local nScale<const> = nFade * 2;
   texEnd:SetCA(nScale);
-  texEnd:BlitSLTWHA(iEndTexId, 160, 120, 159 * nScale, 95 * nScale, nScale);
+  BlitSLTWHA(texEnd, iEndTexId, 160, 120, 159 * nScale, 95 * nScale, nScale);
   -- Set font colour and draw lines
   for iCollectionId = 1, #aCollections do
     DrawCollection(aCollections[iCollectionId]);
@@ -365,17 +365,17 @@ local function OnScriptLoaded(GetAPI)
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData,
     aObjectFlags, aSfxData;
   -- Grab imports
-  Fade, GetGameTicks, InitPost, InitScore, LoadResources, PlayMusic,
-    PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderFade, RenderObjects,
-    RenderTerrain, SetCallbacks, SetHotSpot, SetKeys, aAssetsData,
-    aCursorIdData, aGemsAvailable, aGlobalData, aObjectFlags, aObjects,
-    aSfxData, aShroudData, fontLarge =
-      GetAPI("Fade", "GetGameTicks", "InitPost", "InitScore", "LoadResources",
-        "PlayMusic", "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
-        "RenderFade", "RenderObjects", "RenderTerrain", "SetCallbacks",
-        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData",
-        "aGemsAvailable", "aGlobalData", "aObjectFlags", "aObjects",
-        "aSfxData", "aShroudData", "fontLarge");
+  BlitSLTWHA, Fade, GetGameTicks, InitPost, InitScore, LoadResources,
+    PlayMusic, PlayStaticSound, PrintC, RegisterHotSpot, RegisterKeys,
+    RenderFade, RenderObjects, RenderTerrain, SetCallbacks, SetHotSpot,
+    SetKeys, aAssetsData, aCursorIdData, aGemsAvailable, aGlobalData,
+    aObjectFlags, aObjects, aSfxData, aShroudData, fontLarge =
+      GetAPI("BlitSLTWHA", "Fade", "GetGameTicks", "InitPost", "InitScore",
+        "LoadResources", "PlayMusic", "PlayStaticSound", "PrintC",
+        "RegisterHotSpot", "RegisterKeys", "RenderFade", "RenderObjects",
+        "RenderTerrain", "SetCallbacks", "SetHotSpot", "SetKeys",
+        "aAssetsData", "aCursorIdData", "aGemsAvailable", "aGlobalData",
+        "aObjectFlags", "aObjects", "aSfxData", "aShroudData", "fontLarge");
   -- Setup assets required
   local aEndAssets<const> = aAssetsData.post;
   aWinAssets = { true, { aEndAssets, aAssetsData.scenem } };

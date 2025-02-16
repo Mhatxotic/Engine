@@ -12,8 +12,8 @@
 -- Core function aliases --------------------------------------------------- --
 -- M-Engine function aliases ----------------------------------------------- --
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitScore, LoadResources, PlayMusic, PlayStaticSound, SetCallbacks,
-  SetHotSpot, SetKeys, aGlobalData, fontLarge;
+local Fade, InitScore, LoadResources, PlayMusic, PlayStaticSound, PrintC,
+  SetCallbacks, SetHotSpot, SetKeys, aGlobalData, fontLarge;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets required
       iHotSpotId,                      -- Hot spot id
@@ -24,7 +24,7 @@ local aAssets,                         -- Assets required
 local function ProcRender()
   -- Show fail message
   fontLarge:SetCRGB(1, 0.25, 0.25);
-  fontLarge:PrintC(160, 58, strMsg);
+  PrintC(fontLarge, 160, 58, strMsg);
 end
 -- Finish procedure -------------------------------------------------------- --
 local function GoScore()
@@ -63,13 +63,13 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitScore, LoadResources, PlayMusic, PlayStaticSound, RegisterHotSpot,
-    RegisterKeys, SetCallbacks, SetHotSpot, SetKeys, aAssetsData,
-    aCursorIdData, aGlobalData, aSfxData, fontLarge =
+  Fade, InitScore, LoadResources, PlayMusic, PlayStaticSound, PrintC,
+    RegisterHotSpot, RegisterKeys, SetCallbacks, SetHotSpot, SetKeys,
+    aAssetsData, aCursorIdData, aGlobalData, aSfxData, fontLarge =
       GetAPI("Fade", "InitScore", "LoadResources", "PlayMusic",
-        "PlayStaticSound", "RegisterHotSpot", "RegisterKeys", "SetCallbacks",
-        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData",
-        "aGlobalData", "aSfxData", "fontLarge");
+        "PlayStaticSound", "PrintC", "RegisterHotSpot", "RegisterKeys",
+        "SetCallbacks", "SetHotSpot", "SetKeys", "aAssetsData",
+        "aCursorIdData", "aGlobalData", "aSfxData", "fontLarge");
   -- Set assets required
   aAssets = { aAssetsData.losem };
   -- Register hot spot

@@ -14,9 +14,9 @@ local unpack<const> = table.unpack;
 -- M-Engine function aliases ----------------------------------------------- --
 local CoreTicks<const> = Core.Ticks;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitBook, InitFile, InitLobby, InitMap, InitRace, PlayStaticSound,
-  LoadResources, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot,
-  SetKeys, aGlobalData, fontSpeech;
+local BlitSLT, BlitLT, Fade, InitBook, InitFile, InitLobby, InitMap, InitRace,
+  LoadResources, PlayStaticSound, PrintC, RenderShadow, RenderTipShadow,
+  SetCallbacks, SetHotSpot, SetKeys, aGlobalData, fontSpeech;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets required
       aFlashCache,                     -- Hot point flash data
@@ -44,22 +44,22 @@ local function ProcRender()
   -- Frame timer slowed down
   local iAnimTime<const> = CoreTicks() // 10;
   -- Draw backdrop, controller screen and animated fish
-  texLobby:BlitLT(-54, 0);
-  texCon:BlitSLT(tileCon, 8, 8);
-  texCon:BlitSLT(iAnimTime % 5 + tileFish, 9, 119);
+  BlitLT(texLobby, -54, 0);
+  BlitSLT(texCon, tileCon, 8, 8);
+  BlitSLT(texCon, iAnimTime % 5 + tileFish, 9, 119);
   -- Render shadow
   RenderShadow(8, 8, 312, 208);
   -- Draw speech bubble
   if iSpeechTimer > 0 then
     -- Draw yap
-    texCon:BlitSLT(iAnimTime % 4 + tileConAnim, 88, 36);
+    BlitSLT(texCon, iAnimTime % 4 + tileConAnim, 88, 36);
     -- Draw flash
-    if aFlashData then texCon:BlitSLT(iAnimTime % 2 + aFlashData[1],
+    if aFlashData then BlitSLT(texCon, iAnimTime % 2 + aFlashData[1],
       aFlashData[2], aFlashData[3]) end;
     -- Draw speech bubble
-    texCon:BlitSLT(tileSpeech, 0, 150);
+    BlitSLT(texCon, tileSpeech, 0, 150);
     -- Draw text
-    fontSpeech:PrintC(78, 157, sMsg);
+    PrintC(fontSpeech, 78, 157, sMsg);
     -- Decrement speech timer
     iSpeechTimer = iSpeechTimer - 1;
   end
@@ -186,15 +186,15 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitBook, InitFile, InitLobby, InitMap, InitRace, LoadResources,
-    PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderShadow,
-    RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, aAssetsData,
-    aCursorIdData, aGlobalData, aSfxData, fontSpeech =
-      GetAPI("Fade", "InitBook", "InitFile", "InitLobby", "InitMap",
-        "InitRace", "LoadResources", "PlayStaticSound", "RegisterHotSpot",
-        "RegisterKeys", "RenderShadow", "RenderTipShadow", "SetCallbacks",
-        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData", "aGlobalData",
-        "aSfxData", "fontSpeech");
+  BlitSLT, BlitLT, Fade, InitBook, InitFile, InitLobby, InitMap, InitRace,
+    LoadResources, PlayStaticSound, PrintC, RegisterHotSpot, RegisterKeys,
+    RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys,
+    aAssetsData, aCursorIdData, aGlobalData, aSfxData, fontSpeech =
+      GetAPI("BlitSLT", "BlitLT", "Fade", "InitBook", "InitFile", "InitLobby",
+        "InitMap", "InitRace", "LoadResources", "PlayStaticSound", "PrintC",
+        "RegisterHotSpot", "RegisterKeys", "RenderShadow", "RenderTipShadow",
+        "SetCallbacks", "SetHotSpot", "SetKeys", "aAssetsData",
+        "aCursorIdData", "aGlobalData", "aSfxData", "fontSpeech");
   -- Set assets data
   aAssets = { aAssetsData.lobbyc, aAssetsData.cntrl };
   -- Set sound effect ids

@@ -14,8 +14,8 @@ local error<const>, max<const> = error, math.max;
 -- M-Engine function aliases ----------------------------------------------- --
 local UtilIsInteger<const>, UtilIsTable<const> = Util.IsInteger, Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitCredits, LoadResources, PlayMusic, SetCallbacks, aEndingData,
-  fontLittle;
+local BlitLT, BlitSLT, Fade, InitCredits, LoadResources, PlayMusic, PrintC,
+  SetCallbacks, aEndingData, fontLittle;
 -- Locals ------------------------------------------------------------------ --
 local aEndingItem;                     -- Race ending data
 local iActionTimer;                    -- Action timer for delays
@@ -37,16 +37,16 @@ end
 -- Credits render callback ------------------------------------------------- --
 local function ProcRenderEnding3()
   -- Draw background
-  texStr:BlitLT(-54, 0);
+  BlitLT(texStr, -54, 0);
   -- Draw stranger
   texStr:SetCA(iAlphaValue);
-  texStr:BlitSLT(1, 0, 68);
+  BlitSLT(texStr, 1, 0, 68);
   texStr:SetCA(1);
   -- Draw text
   fontLittle:SetCRGBA(1,1,1,1);
-  fontLittle:PrintC(160, 200,
+  PrintC(fontLittle, 160, 200,
     "...WHILST THE MYSTERIOUS FIGURE OF THE");
-  fontLittle:PrintC(160, 220,
+  PrintC(fontLittle, 160, 220,
     "MASTER MINER RETURNS FROM WHENCE HE CAME");
 end
 -- Ending 3 procedure ------------------------------------------------------ --
@@ -83,11 +83,11 @@ end
 -- Render ending part 2 ---------------------------------------------------- --
 local function ProcRenderEnding2()
   -- Draw background
-  texEnding:BlitSLT(iTileEnding, -54, 0);
+  BlitSLT(texEnding, iTileEnding, -54, 0);
   -- Draw text
   fontLittle:SetCRGBA(1, 1, 1, 1);
-  fontLittle:PrintC(160, 200, sText1);
-  fontLittle:PrintC(160, 220, sText2);
+  PrintC(fontLittle, 160, 200, sText1);
+  PrintC(fontLittle, 160, 220, sText2);
 end
 -- Ending two procedure ---------------------------------------------------- --
 local function ProcLogicEnding2()
@@ -127,10 +127,10 @@ end
 -- Render callback --------------------------------------------------------- --
 local function ProcRenderEnding1()
   -- Draw background
-  texLobby:BlitLT(-54, 0);
+  BlitLT(texLobby, -54, 0);
   -- Draw text
   fontLittle:SetCRGBA(1,1,1,1);
-  fontLittle:PrintC(160, 200, "MINING OPERATIONS COMPLETED!");
+  PrintC(fontLittle, 160, 200, "MINING OPERATIONS COMPLETED!");
 end
 -- First ending scene waiting ---------------------------------------------- --
 local function ProcLogicEnding1()
@@ -168,10 +168,10 @@ end
 -- Scripts have been loaded ------------------------------------------------ --
 local function OnScriptLoaded(GetAPI)
   -- Grab imports
-  Fade, InitCredits, LoadResources, PlayMusic, SetCallbacks, aEndingData,
-    fontLittle =
-      GetAPI("Fade", "InitCredits","LoadResources", "PlayMusic",
-        "SetCallbacks", "aEndingData", "fontLittle");
+  BlitLT, BlitSLT, Fade, InitCredits, LoadResources, PlayMusic, PrintC,
+    SetCallbacks, aEndingData, fontLittle =
+      GetAPI("BlitLT", "BlitSLT", "Fade", "InitCredits", "LoadResources",
+        "PlayMusic", "PrintC", "SetCallbacks", "aEndingData", "fontLittle");
   -- Setup required assets
   local aAssetsData<const> = GetAPI("aAssetsData");
   aAssets1 = { aAssetsData.lobbyc, aAssetsData.scenem };

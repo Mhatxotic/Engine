@@ -18,9 +18,9 @@ local CoreRAM<const>, DisplayVRAM<const>, UtilBytes<const>,
 local iCVAppTitle<const> = Variable.Internal.app_version;
 local strVersion<const> = VariableGetInt(iCVAppTitle).." ";
 -- Diggers function and data aliases --------------------------------------- --
-local DeInitLevel, Fade, GameProc, GetActivePlayer, GetGameTicks,
+local BlitSLT, DeInitLevel, Fade, GameProc, GetActivePlayer, GetGameTicks,
   GetOpponentPlayer, InitLobby, InitNewGame, InitTitleCredits, LoadLevel,
-  LoadResources, LoadSaveData, PlayStaticSound, ProcessViewPort,
+  LoadResources, LoadSaveData, PlayStaticSound, PrintC, ProcessViewPort,
   RegisterFBUCallback, RenderObjects, RenderTerrain, SelectObject, SetHotSpot,
   aKeyBankCats, aLevelsData, aObjectTypes, aObjects, fontTiny;
 -- Locals ------------------------------------------------------------------ --
@@ -33,7 +33,6 @@ local aAssets,                         -- Assets to load
       iNextUpdate,                     -- Next system information update
       iSSelect,                        -- Select sound effect id
       iStageB, iStageL, iStageR,       -- Stage bounds
-      iTexScale,                       -- Texture scale
       strCredits,                      -- Credits
       strSubTitle,                     -- Version and system information text
       texTitle;                        -- Texture tile
@@ -43,7 +42,8 @@ local sAppTitle, sAppVendor, iAppMajor<const>, iAppMinor<const>,
 sAppTitle, sAppVendor, sAppExeType =
   sAppTitle:upper(), sAppVendor:upper(), sAppExeType:upper();
 -- Static element positions ------------------------------------------------ --
-local iCentreX, iCreditsY, iLogoX, iLogoY, iPostSGX, iPostY, iSubY;
+local iCentreX, iCreditsY, iLogoX, iLogoY, iPostY, iSubY =
+  160, 206, 79, 12, 72, 58;
 -- Render in procedure ----------------------------------------------------- --
 local function RenderProcEnterAnim()
   -- Scroll in amount
@@ -54,13 +54,13 @@ local function RenderProcEnterAnim()
     RenderTerrain();
     RenderObjects();
     -- Render title objects
-    texTitle:BlitSLT(2, iLogoX, iTexScale * (12 - n1));
-    texTitle:BlitSLT(3, iStageL - (iTexScale * n1), iPostY);
-    texTitle:BlitSLT(4, iStageR - (iTexScale * (168 - n2)), iPostY);
+    BlitSLT(texTitle, 2, iLogoX, 12 - n1);
+    BlitSLT(texTitle, 3, iStageL - n1, iPostY);
+    BlitSLT(texTitle, 4, iStageR - (168 - n2), iPostY);
     -- Render status text
     fontTiny:SetCRGB(1, 0.9, 0);
-    fontTiny:PrintC(iCentreX, iTexScale * (58 - n1), strSubTitle);
-    fontTiny:PrintC(iCentreX, iTexScale * (206 + n1), strCredits);
+    PrintC(fontTiny, iCentreX, 58 - n1, strSubTitle);
+    PrintC(fontTiny, iCentreX, 206 + n1, strCredits);
     -- Move components in
     n1 = n1 - (n1 * 0.1);
     n2 = n2 - (n2 * 0.1);
@@ -71,13 +71,13 @@ local function RenderProcEnterAnim()
       RenderTerrain();
       RenderObjects();
       -- Render title objects
-      texTitle:BlitSLT(2, iLogoX, iLogoY);
-      texTitle:BlitSLT(3, iStageL, iPostY);
-      texTitle:BlitSLT(4, iPostSGX, iPostY);
+      BlitSLT(texTitle, 2, iLogoX, iLogoY);
+      BlitSLT(texTitle, 3, iStageL, iPostY);
+      BlitSLT(texTitle, 4, iPostSGX, iPostY);
       -- Render status text
       fontTiny:SetCRGB(1, 0.9, 0);
-      fontTiny:PrintC(iCentreX, iSubY, strSubTitle);
-      fontTiny:PrintC(iCentreX, iCreditsY, strCredits);
+      PrintC(fontTiny, iCentreX, iSubY, strSubTitle);
+      PrintC(fontTiny, iCentreX, iCreditsY, strCredits);
     end
     -- Set finished callback and execute it
     fcbEnterAnimProc = RenderProcFinishedAnim;
@@ -97,13 +97,13 @@ local function RenderProcLeaveAnim()
     RenderTerrain();
     RenderObjects();
     -- Render title objects
-    texTitle:BlitSLT(2, iLogoX, iTexScale * (-148 + n1));
-    texTitle:BlitSLT(3, iStageL - (iTexScale * 168) + (iTexScale * n1), iPostY);
-    texTitle:BlitSLT(4, iStageR - (iTexScale * n2), iPostY);
+    BlitSLT(texTitle, 2, iLogoX, -148 + n1);
+    BlitSLT(texTitle, 3, iStageL - 168 + n1, iPostY);
+    BlitSLT(texTitle, 4, iStageR - n2, iPostY);
     -- Render status text
     fontTiny:SetCRGB(1, 0.9, 0);
-    fontTiny:PrintC(iCentreX, iTexScale * (58 - n1), strSubTitle);
-    fontTiny:PrintC(iCentreX, iTexScale * (370 - n1), strCredits);
+    PrintC(fontTiny, iCentreX, 58 - n1, strSubTitle);
+    PrintC(fontTiny, iCentreX, 370 - n1, strCredits);
     -- Move components in
     n1 = n1 - (n1 * 0.05);
     n2 = n2 - (n2 * 0.05);
@@ -204,14 +204,8 @@ end
 local function OnStageUpdated(...)
   -- Update stage bounds
   local _ _, _, iStageL, _, iStageR, iStageB = ...;
-  -- Recalculate static element positions
-  iCentreX = iTexScale * 160;
-  iCreditsY = iTexScale * 206;
-  iLogoX = iTexScale * 79;
-  iLogoY = iTexScale * 12;
-  iPostSGX = iStageR - (iTexScale * 168);
-  iPostY = iTexScale * 72;
-  iSubY = iTexScale * 58;
+  -- Recalculate post start game position
+  iPostSGX = iStageR - 168;
   -- Re-detect video RAM
   DetectVideoMemory();
 end
@@ -292,21 +286,21 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Get imports
-  DeInitLevel, Fade, GameProc, GetActivePlayer, GetGameTicks,
+  BlitSLT, DeInitLevel, Fade, GameProc, GetActivePlayer, GetGameTicks,
     GetOpponentPlayer, InitLobby, InitNewGame, InitTitleCredits,
-    LoadLevel, LoadResources, LoadSaveData, PlayStaticSound, ProcessViewPort,
+    LoadLevel, LoadResources, LoadSaveData, PlayStaticSound, PrintC,
+    ProcessViewPort,
     RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderObjects,
     RenderTerrain, SelectObject, SetHotSpot, aAssetsData, aCursorIdData,
-    aKeyBankCats, aLevelsData, aObjectTypes, aObjects, aSfxData, fontTiny,
-    iTexScale =
-      GetAPI("DeInitLevel", "Fade", "GameProc", "GetActivePlayer",
+    aKeyBankCats, aLevelsData, aObjectTypes, aObjects, aSfxData, fontTiny =
+      GetAPI("BlitSLT", "DeInitLevel", "Fade", "GameProc", "GetActivePlayer",
         "GetGameTicks", "GetOpponentPlayer", "InitLobby", "InitNewGame",
         "InitTitleCredits", "LoadLevel", "LoadResources", "LoadSaveData",
-        "PlayStaticSound", "ProcessViewPort", "RegisterFBUCallback",
+        "PlayStaticSound", "PrintC", "ProcessViewPort", "RegisterFBUCallback",
         "RegisterHotSpot", "RegisterKeys", "RenderObjects", "RenderTerrain",
         "SelectObject", "SetHotSpot", "aAssetsData", "aCursorIdData",
         "aKeyBankCats", "aLevelsData", "aObjectTypes", "aObjects", "aSfxData",
-        "fontTiny", "iTexScale");
+        "fontTiny");
   -- Build assets data
   aAssets = { aAssetsData.title };
   -- Get sound id

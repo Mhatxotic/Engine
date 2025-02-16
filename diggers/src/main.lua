@@ -21,17 +21,17 @@ local collectgarbage<const>, cos<const>, error<const>, floor<const>,
 local AssetParseBlock<const>, ClipSet<const>, CoreCatchup<const>,
   CoreEnd<const>, CoreLog<const>, CoreLogEx<const>, CoreOnTick<const>,
   CoreQuit<const>, CoreReset<const>, CoreStack<const>, CoreWrite<const>,
-  FboDraw<const>, InputOnKey<const>, InputSetCursor<const>, CoreTime<const>,
-  TextureCreate<const>, UtilBlank<const>, UtilClamp<const>,
+  FboDraw<const>, FboMatrix<const>,  InputOnKey<const>, InputSetCursor<const>,
+  CoreTime<const>, TextureCreate<const>, UtilBlank<const>, UtilClamp<const>,
   UtilDuration<const>, UtilExplode<const>, UtilImplode<const>,
   UtilIsFunction<const>, UtilIsInteger<const>, UtilIsNumber<const>,
   UtilIsString<const>, UtilIsTable<const>, VariableRegister<const> =
     Asset.ParseBlock, Clip.Set, Core.Catchup, Core.End, Core.Log, Core.LogEx,
     Core.OnTick, Core.Quit, Core.Reset, Core.Stack, Core.Write, Fbo.Draw,
-    Input.OnKey, Input.SetCursor, Core.Time, Texture.Create, Util.Blank,
-    Util.Clamp, Util.Duration, Util.Explode, Util.Implode, Util.IsFunction,
-    Util.IsInteger, Util.IsNumber, Util.IsString, Util.IsTable,
-    Variable.Register;
+    Fbo.Matrix, Input.OnKey, Input.SetCursor, Core.Time, Texture.Create,
+    Util.Blank, Util.Clamp, Util.Duration, Util.Explode, Util.Implode,
+    Util.IsFunction, Util.IsInteger, Util.IsNumber, Util.IsString,
+    Util.IsTable, Variable.Register;
 -- Locals ------------------------------------------------------------------ --
 local CBProc, CBRender;                -- Generic tick callbacks
 local aAPI<const> = { };               -- API to send to other functions
@@ -47,20 +47,26 @@ local fontLarge;                       -- Large font (16px)
 local fontLittle;                      -- Little font (8px)
 local fontSpeech;                      -- Speech font (10px)
 local fontTiny;                        -- Tiny font (5px)
+local iTexScale;                       -- Texture scale
 local sTip;                            -- Current tip and bounds
 local texSpr;                          -- Sprites texture
 -- Stage dimensions -------------------------------------------------------- --
-local iStageWidth  = 320;              -- Width of stage
-local iStageHeight = 240;              -- Height of stage
+local iStageWidth  = 320;              -- Width of stage (Monitor)
+local iStageHeight = 240;              -- Height of stage (Monitor)
+local iOrthoWidth  = iStageWidth;      -- Width of stage (4:3)
+local iOrthoHeight = iStageHeight;     -- Height of stage (4:3)
 local iStageLeft   = 0;                -- Left of stage
 local iStageTop    = 0;                -- Top of stage
 local iStageRight  = iStageWidth;      -- Right of stage
 local iStageBottom = iStageHeight;     -- Bottom of stage
+local iStageLeftO  = iStageLeft;       -- Left of stage
+local iStageTopO   = iStageTop;        -- Top of stage
+local iStageWidthO = iStageWidth;      -- Top of stage
 -- Library functions loaded later ------------------------------------------ --
-local ClearStates, InitCredits, InitTitleCredits, InitDebugPlay, InitEnding,
-  InitFail, InitIntro, InitNewGame, InitScene, InitScore, InitTitle,
-  IsMouseInBounds, JoystickProc, LoadLevel, MainProcFunc, MusicVolume,
-  aLevelsData, aObjectTypes, aRacesData;
+local BlitSLTRB, BlitSLT, ClearStates, InitCredits, InitTitleCredits, InitDebugPlay,
+  InitEnding, InitFail, InitIntro, InitNewGame, InitScene, InitScore,
+  InitTitle, IsMouseInBounds, JoystickProc, LoadLevel, MainProcFunc,
+  MusicVolume, PrintC, aLevelsData, aObjectTypes, aRacesData;
 -- These could be called even though they aren't initialised yet ----------- --
 local DisableKeyHandlers, RestoreKeyHandlers, SetKeys, SetHotSpot =
   UtilBlank, UtilBlank, UtilBlank, UtilBlank;
@@ -172,7 +178,7 @@ local function SetErrorMessage(sReason)
   -- Add generic info to the message
   local sMessage<const> =
     "ERROR!\n\n\z
-     \rcffffff00The program has halted and cannot continue.\rr\n\n\z
+     \rcffffff00The program has halted due to an unexpected problem.\rr\n\n\z
      Reason:-\n\n\z
      \rcffffff00"..sReason.."\rr\n\n\z
      C:Continue  R:Restart  A:Abort  P:Clipboard  F:Fail";
@@ -217,7 +223,8 @@ local function SetErrorMessage(sReason)
     fboMain:SetClearColour(nRed, 0, 0, 1);
     fFont:SetCRGBA(1, 1, 1, 1);
     fFont:SetSize(1);
-    fFont:PrintW(iStageLeft + 8, iStageTop + 8, iStageWidth - 60, 0, sMessage);
+    fFont:PrintW(iStageLeftO + 8, iStageTopO + 8,
+      iStageWidthO - 60, 0, sMessage);
     -- Draw frame if we changed the background colour
     if nTime >= nNext then FboDraw() nNext = nTime + 0.032 end;
   end
@@ -227,14 +234,14 @@ end
 -- Do render the tip ------------------------------------------------------- --
 local function DoRenderTip(iX)
   -- Draw the background of the tip rect
-  texSpr:BlitSLT(847, iX,      216);
-  texSpr:BlitSLT(848, iX + 16, 216);
-  texSpr:BlitSLT(848, iX + 32, 216);
-  texSpr:BlitSLT(848, iX + 48, 216);
-  texSpr:BlitSLT(849, iX + 64, 216);
+  BlitSLT(texSpr, 847, iX,      216);
+  BlitSLT(texSpr, 848, iX + 16, 216);
+  BlitSLT(texSpr, 848, iX + 32, 216);
+  BlitSLT(texSpr, 848, iX + 48, 216);
+  BlitSLT(texSpr, 849, iX + 64, 216);
   -- Set tip colour and render the text
   fontLittle:SetCRGB(1, 1, 1);
-  fontLittle:PrintC(iX + 40, 220, sTip);
+  PrintC(fontLittle, iX + 40, 220, sTip);
 end
 -- Render the tip in the bottom right -------------------------------------- --
 local function RenderTip()
@@ -426,24 +433,24 @@ end
 -- Render fade ------------------------------------------------------------- --
 local function RenderFade(nAmount, iL, iT, iR, iB, iS)
   texSpr:SetCA(nAmount);
-  texSpr:BlitSLTRB(iS or 1023, iL or iStageLeft,  iT or iStageTop,
-                               iR or iStageRight, iB or iStageBottom);
+  BlitSLTRB(texSpr, iS or 1023, iL or iStageLeft,  iT or iStageTop,
+                                iR or iStageRight, iB or iStageBottom);
   texSpr:SetCA(1);
 end
 -- Render shadow ----------------------------------------------------------- --
 local function RenderShadow(iL, iT, iR, iB)
   -- Draw a shadow using the solid sprite
   texSpr:SetCA(0.2);
-  texSpr:BlitSLTRB(1023, iL+3, iB, iR, iB+1); -- Horizontal row 1
-  texSpr:BlitSLTRB(1023, iR, iT+3, iR+1, iB); -- Vertical column 1
+  BlitSLTRB(texSpr, 1023, iL+3, iB, iR, iB+1); -- Horizontal row 1
+  BlitSLTRB(texSpr, 1023, iR, iT+3, iR+1, iB); -- Vertical column 1
   texSpr:SetCA(0.1);
-  texSpr:BlitSLTRB(1023, iL+4, iB, iR, iB+2); -- Horizontal row 2
-  texSpr:BlitSLTRB(1023, iR, iT+4, iR+2, iB); -- Vertical column 2
-  texSpr:BlitSLTRB(1023, iR, iB, iR+2, iB+1); -- Horizontal corner 1
-  texSpr:BlitSLTRB(1023, iR, iB, iR+1, iB+2); -- Vertical corner 2
+  BlitSLTRB(texSpr, 1023, iL+4, iB, iR, iB+2); -- Horizontal row 2
+  BlitSLTRB(texSpr, 1023, iR, iT+4, iR+2, iB); -- Vertical column 2
+  BlitSLTRB(texSpr, 1023, iR, iB, iR+2, iB+1); -- Horizontal corner 1
+  BlitSLTRB(texSpr, 1023, iR, iB, iR+1, iB+2); -- Vertical corner 2
   texSpr:SetCA(0.05);
-  texSpr:BlitSLTRB(1023, iL+5, iB, iR, iB+3); -- Horizontal row 3
-  texSpr:BlitSLTRB(1023, iR, iT+5, iR+3, iB); -- Vertical column 3
+  BlitSLTRB(texSpr, 1023, iL+5, iB, iR, iB+3); -- Horizontal row 3
+  BlitSLTRB(texSpr, 1023, iR, iT+5, iR+3, iB); -- Vertical column 3
   texSpr:SetCA(1);
 end
 -- Fade -------------------------------------------------------------------- --
@@ -537,17 +544,22 @@ end
 -- Refresh viewport info --------------------------------------------------- --
 local function RefreshViewportInfo()
   -- Refresh matrix parameters
-  iStageWidth, iStageHeight,
-    iStageLeft, iStageTop, iStageRight, iStageBottom = fboMain:GetMatrix();
+  iStageWidthO, iStageHeight,
+    iStageLeftO, iStageTopO, iStageRight, iStageBottom = fboMain:GetMatrix();
+  iOrthoWidth, iOrthoHeight = FboMatrix();
   -- Floor all the values as the main frame buffer object is always on the
   -- pixel boundary
-  iStageWidth, iStageHeight, iStageLeft, iStageTop, iStageRight, iStageBottom =
-    floor(iStageWidth), floor(iStageHeight), floor(iStageLeft),
-    floor(iStageTop), floor(iStageRight), floor(iStageBottom);
+  iStageWidth, iStageHeight, iStageLeft, iStageTop, iStageRight, iStageBottom,
+    iOrthoWidth, iOrthoHeight =
+      floor(iStageWidthO)//iTexScale, floor(iStageHeight)//iTexScale,
+      floor(iStageLeftO)//iTexScale, floor(iStageTopO)//iTexScale,
+      floor(iStageRight)//iTexScale, floor(iStageBottom)//iTexScale,
+      floor(iOrthoWidth)//iTexScale, floor(iOrthoHeight)//iTexScale;
   -- Call frame buffer callbacks
   for _, fcbC in pairs(fcbFrameBufferCbs) do
     fcbC(iStageWidth, iStageHeight,
-      iStageLeft, iStageTop, iStageRight, iStageBottom) end;
+      iStageLeft, iStageTop, iStageRight, iStageBottom,
+      iOrthoWidth, iOrthoHeight) end;
 end
 -- Register a callback and automatically when window size changes ---------- --
 local function RegisterFrameBufferUpdateCallback(sName, fCB)
@@ -559,16 +571,14 @@ local function RegisterFrameBufferUpdateCallback(sName, fCB)
   -- Register callback when frame buffer is updated
   fcbFrameBufferCbs[sName] = fCB;
   -- If a callback was set then call it
-  if nil ~= fCB then fCB(iStageWidth, iStageHeight,
-    iStageLeft, iStageTop, iStageRight, iStageBottom) end;
+  if nil ~= fCB then
+    fCB(iStageWidth, iStageHeight, iStageLeft, iStageTop, iStageRight,
+      iStageBottom, iOrthoWidth, iOrthoHeight) end;
 end
 -- Returns wether test mode is enabled ------------------------------------- --
 local function GetTestMode() return bTestMode end;
 -- The first tick function ------------------------------------------------- --
 local function fcbTick()
-  -- Refresh viewport info and automatically when window size changes
-  Fbo.OnRedraw(RefreshViewportInfo);
-  RefreshViewportInfo();
   -- Initialise base API functions
   ParseScriptResult("main", { F=UtilBlank, A={ Fade = Fade,
     GetCallbacks = GetCallbacks, GetTestMode = GetTestMode,
@@ -586,15 +596,30 @@ local function fcbTick()
   SetCallbacks(nil, nil);
   -- Get base assets
   local aScriptTypeData<const> = aTypes[9];
-  local aAssetsData<const>, iTexScale<const>, aBaseAssets<const>,
-    iBaseScripts<const>, iBaseFonts<const>, iBaseTextures<const>,
-    iBaseMasks<const>, iBaseSounds<const>, aBaseSounds<const> =
+  local aAssetsData, aBaseAssets, iBaseScripts, iBaseFonts, iBaseTextures,
+    iBaseMasks, iBaseSounds, aBaseSounds;
+  aAssetsData, iTexScale, aBaseAssets, iBaseScripts, iBaseFonts, iBaseTextures,
+    iBaseMasks, iBaseSounds, aBaseSounds =
       Asset.Parse(aScriptTypeData[3].."asset"..aScriptTypeData[4], 9);
+  -- Refresh viewport info and automatically when window size changes
+  Fbo.OnRedraw(RefreshViewportInfo);
+  RefreshViewportInfo();
   -- Store texture scale and assets data
   aAPI.iTexScale = iTexScale;
   aAPI.aAssetsData = aAssetsData;
   -- Texture scale is over 1?
   if iTexScale > 1 then
+    -- Get maximum texture size and make sure guest's GPU supports it. 1024^2
+    -- is the maximum size texture we use at 1X scale.
+    local iMaxUsedTexSize<const> = 1024;
+    local iMaxSize<const> = Texture.MaxSize();
+    if iTexScale * iMaxUsedTexSize > iMaxSize then
+      local _<const>, _<const>, sDisplay<const> = Display.GPU();
+      error("Fatal error! The installed "..iTexScale.."X scale texture pack \z
+             is not supported on this rendering device ("..sDisplay..") as \z
+             it will only support a maximum scale of "..
+             (iMaxSize//iMaxUsedTexSize).."X ("..iMaxSize.."^2).");
+    end
     -- Resize frame buffer if texture scale different
     local VariableGetInt<const>, aVariables<const> =
       Variable.GetInt, Variable.Internal;
@@ -719,17 +744,17 @@ local function fcbTick()
     -- ...and a CVar that lets us start straight into a level
     aAPI.cvTest = VariableRegister("gam_test", "", aCVF.STRING, fcbEmpty);
     -- Load dependecies we need on this module
-    ClearStates, DisableKeyHandlers, InitCredits, InitDebugPlay, InitEnding,
-      InitFail, InitIntro, InitNewGame, InitScene, InitScore, InitTitle,
-      InitTitleCredits, IsMouseInBounds, JoystickProc, LoadLevel, MusicVolume,
-      RestoreKeyHandlers, SetHotSpot, SetKeys, aLevelsData, aObjectTypes,
-      aRacesData =
-        GetAPI("ClearStates", "DisableKeyHandlers", "InitCredits",
-          "InitDebugPlay", "InitEnding", "InitFail", "InitIntro",
-          "InitNewGame", "InitScene", "InitScore", "InitTitle",
+    BlitSLTRB, BlitSLT, ClearStates, DisableKeyHandlers, InitCredits,
+      InitDebugPlay, InitEnding, InitFail, InitIntro, InitNewGame, InitScene,
+      InitScore, InitTitle, InitTitleCredits, IsMouseInBounds, JoystickProc,
+      LoadLevel, MusicVolume, PrintC, RestoreKeyHandlers, SetHotSpot, SetKeys,
+      aLevelsData, aObjectTypes, aRacesData =
+        GetAPI("BlitSLTRB", "BlitSLT", "ClearStates", "DisableKeyHandlers",
+          "InitCredits", "InitDebugPlay", "InitEnding", "InitFail",
+          "InitIntro", "InitNewGame", "InitScene", "InitScore", "InitTitle",
           "InitTitleCredits", "IsMouseInBounds", "JoystickProc", "LoadLevel",
-          "MusicVolume", "RestoreKeyHandlers", "SetHotSpot", "SetKeys",
-          "aLevelsData", "aObjectTypes", "aRacesData");
+          "MusicVolume", "PrintC", "RestoreKeyHandlers", "SetHotSpot",
+          "SetKeys", "aLevelsData", "aObjectTypes", "aRacesData");
     -- Assign loaded sound effects (audio.hpp)
     GetAPI("RegisterSounds")(aResources, iBaseSounds, #aBaseSounds);
     -- Get cursor render function (input.hpp)

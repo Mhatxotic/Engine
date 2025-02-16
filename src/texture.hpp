@@ -11,18 +11,21 @@
 /* ------------------------------------------------------------------------- */
 namespace ITexture {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IError::P;
-using namespace IFboDef::P;            using namespace IFbo::P;
-using namespace IFboItem::P;           using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IJson::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IShader::P;            using namespace IShaders::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace ICollector::P;         using namespace IDim;
+using namespace IError::P;             using namespace IFboDef::P;
+using namespace IFbo::P;               using namespace IFboItem::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IJson::P;              using namespace ILog::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IShader::P;
+using namespace IShaders::P;           using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
+typedef Dimensions<GLfloat> DimFloat;  // Dimension using GLfloats
+typedef Dimensions<GLuint>  DimUInt;   // Dimension of GLuint's
 /* -- Texture collector class for collector data and custom variables ------ */
 CTOR_BEGIN_NOBB(Textures, Texture, CLHelperUnsafe)
 /* ------------------------------------------------------------------------- */
@@ -30,9 +33,7 @@ class TextureBase :                    // All members initially private
   /* -- Base classes ------------------------------------------------------- */
   public FboItem,                      // Fbo item class with drawing co-ords
   public Image                         // Image class with raw image pixel data
-{ /* -- Protected typedefs -------------------------------------- */ protected:
-  typedef Dimensions<GLfloat> DimFloat;// Dimension using GLfloats
-  /* -- Protected variables ------------------------------------------------ */
+{ /* -- Protected variables ------------------------------------- */ protected:
   GLint            iTexMinFilter,      // GL texture minification setting
                    iTexMagFilter,      // GL texture magnification setting
                    iMipmaps;           // Sub-image's are mipmaps (count)
@@ -74,7 +75,6 @@ class TextureBase :                    // All members initially private
   typedef vector<CoordData>   CoordList;   // Tile coordinates data list
   typedef CoordList::iterator CoordListIt; // Iterator to a CoordList
   typedef vector<CoordList>   CoordsList;  // A list of tile coords per sub-tex
-  typedef Dimensions<GLuint>  DimUInt;     // Dimension of GLuint's
   /* ----------------------------------------------------------------------- */
   CoordsList       clTiles;            // Texture coordinates for tiles
   GLUIntVector     uivTexture;         // OpenGL texture handle list
@@ -82,7 +82,7 @@ class TextureBase :                    // All members initially private
   DimUInt          duiTile;            // Texture tile width and height
   DimFloat         dfPad,              // Texture tile padding (GL)
                    dfImage,            // Texture image width and height (GL)
-                   dfTile;             // Texture tile width and height (GL)
+                   dfTile;             // Same as duiTile but as a GLfloat
   /* -- Constructor -------------------------------------------------------- */
   explicit TextureBase(const ImageFlagsConst ifcPurpose) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -143,6 +143,14 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       }
     };
   };
+  /* -- Do create textures ------------------------------------------------- */
+  void CreateTextureHandles(const size_t stCount)
+  { // Resize array to fit texture names
+    uivTexture.resize(stCount);
+    // Make OpenGL to generate texture names and throw error if failed
+    GL(cOgl->CreateTextures(uivTexture), "Failed to generate textures!",
+      "Identifier", IdentGet(), "Count", stCount);
+  }
   /* -- Generate mipmaps if needed ----------------------------------------- */
   void ReGenerateMipmaps(void)
   { // Only need to generate mipmaps if we're actually using mipmapping
@@ -245,9 +253,9 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   const CoordData NewTile(const GLfloat fLeft, const GLfloat fTop,
     const GLfloat fRight, const GLfloat fBottom, const GLfloat fWidth,
     const GLfloat fHeight)
-      { return { fWidth, fHeight, fLeft / GetFWidth(),
-                 1.0f - fTop / GetFHeight(), fRight / GetFWidth(),
-                 1.0f - fBottom/GetFHeight() }; }
+      { return { fWidth, fHeight, fLeft / dfImage.DimGetWidth(),
+          1.0f - fTop / dfImage.DimGetHeight(), fRight / dfImage.DimGetWidth(),
+          1.0f - fBottom / dfImage.DimGetHeight() }; }
   /* -- Set the texture co-ordinates of a tile ----------------------------- */
   void SetTile(const size_t stSubTexId, const size_t stTileId,
     const GLfloat fLeft, const GLfloat fTop, const GLfloat fRight,
@@ -264,8 +272,8 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   void SetTileR(const size_t stSubTexId, const size_t stTileId,
     const GLfloat fLeft, const GLfloat fTop, const GLfloat fRight,
     const GLfloat fBottom)
-      { const GLfloat fNTop = GetFHeight() - fTop,
-                      fNBottom = GetFHeight() - fBottom;
+      { const GLfloat fNTop = dfImage.DimGetHeight() - fTop,
+                      fNBottom = dfImage.DimGetHeight() - fBottom;
         SetTile(stSubTexId, stTileId, fLeft, fNTop,
           fRight, fNBottom, fRight - fLeft, fNTop - fNBottom); }
   /* -- Add a tile with width and height ----------------------------------- */
@@ -280,7 +288,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   void SetTileRWH(const size_t stSubTexId, const size_t stTileId,
     const GLfloat fLeft, const GLfloat fTop, const GLfloat fWidth,
     const GLfloat fHeight)
-      { const GLfloat fNTop = GetFHeight()-fTop,
+      { const GLfloat fNTop = dfImage.DimGetHeight()-fTop,
                       fNBottom = fNTop + fHeight,
                       fNRight = fLeft + fWidth;
         SetTile(stSubTexId, stTileId, fLeft, fTop, fNRight, fNBottom,
@@ -299,8 +307,8 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   /* -- Add a reversed tile ------------------------------------------------ */
   void AddTileR(const size_t stSubTexId, const GLfloat fLeft,
     const GLfloat fTop, const GLfloat fRight, const GLfloat fBottom)
-      { const GLfloat fNTop = GetFHeight() - fTop,
-                      fNBottom = GetFHeight() - fBottom;
+      { const GLfloat fNTop = dfImage.DimGetHeight() - fTop,
+                      fNBottom = dfImage.DimGetHeight() - fBottom;
         AddTile(stSubTexId, fLeft, fNTop, fRight, fNBottom,
           fRight - fLeft, fNTop - fNBottom); }
   /* -- Add a tile with width and height ----------------------------------- */
@@ -313,7 +321,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   /* -- Add a reversed tile with width and height -------------------------- */
   void AddTileRWH(const size_t stSubTexId, const GLfloat fLeft,
     const GLfloat fTop, const GLfloat fWidth, const GLfloat fHeight)
-      { const GLfloat fNTop = GetFHeight() - fTop,
+      { const GLfloat fNTop = dfImage.DimGetHeight() - fTop,
                       fNBottom = fNTop + fHeight, fNRight = fLeft+fWidth;
         AddTile(stSubTexId, fLeft, fTop, fNRight, fNBottom, fNRight - fLeft,
           fNTop - fNBottom); }
@@ -338,14 +346,6 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       "Could not set texture magnification filter!",
       "Identifier", IdentGet(), "Index", stSubTexId,
       "MagFilter",  iTexMagFilter);
-  }
-  /* -- Do create textures ------------------------------------------------- */
-  void CreateTextureHandles(const size_t stCount)
-  { // Resize array to fit texture names
-    uivTexture.resize(stCount);
-    // Make OpenGL to generate texture names and throw error if failed
-    GL(cOgl->CreateTextures(uivTexture), "Failed to generate textures!",
-      "Identifier", IdentGet(), "Count", stCount);
   }
   /* -- Load texture from image class -------------------------------------- */
   void LoadFromImage(void)
@@ -448,21 +448,23 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     } // The pixel type is raw uniform pixels so upload them
     UploadTexture<TexCompFtor::RAW>(stSlots, isSlot, ttICFormat, ttNXCFormat);
   }
+  /* -- Return tile dimensions as float ------------------------- */ protected:
+  GLfloat GetTileWidthFloat(void) const { return dfTile.DimGetWidth(); }
+  GLfloat GetTileHeightFloat(void) const { return dfTile.DimGetHeight(); }
   /* -- Return padding dimensions ---------------------------------- */ public:
   GLfloat GetPaddingWidth(void) const { return dfPad.DimGetWidth(); }
   GLfloat GetPaddingHeight(void) const { return dfPad.DimGetHeight(); }
   /* -- Return tile dimensions --------------------------------------------- */
-  GLuint GetTileWidth(void) const { return duiTile.DimGetWidth(); }
-  GLuint GetTileHeight(void) const { return duiTile.DimGetHeight(); }
+  template<typename IntType=GLuint>IntType GetTileWidth(void) const
+    { return duiTile.DimGetWidth<IntType>(); }
+  template<typename IntType=GLuint>IntType GetTileHeight(void) const
+    { return duiTile.DimGetHeight<IntType>(); }
   /* -- Return number of tiles --------------------------------------------- */
   size_t GetTileCount(const size_t stSubTexId=0) const
     { return clTiles[stSubTexId].size(); }
   /* -- Set tile count ----------------------------------------------------- */
   void SetTileCount(const size_t stCount, const size_t stSubTexId=0)
     { clTiles[stSubTexId].resize(stCount); }
-  /* -- Return image float value dimensions -------------------------------- */
-  GLfloat GetFWidth(void) const { return dfImage.DimGetWidth(); }
-  GLfloat GetFHeight(void) const { return dfImage.DimGetHeight(); }
   /* -- Return the number of mipmaps in the texture ------------------------ */
   GLint GetMipmaps(void) const { return iMipmaps; }
   /* -- Return the current texture filter index setting -------------------- */
@@ -718,18 +720,18 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       // Set override tile size from Image loader if specified
       if(duTileOR.DimIsSet()) duiTile.DimSet(duTileOR);
       // Else clamp bounds to image size if unspecified or invalid size
-      else if(duiTile.DimIsNotSet() || duiTile.DimGetWidth() > DimGetWidth() ||
-                duiTile.DimGetHeight() > DimGetHeight())
+      else if(duiTile.DimIsNotSet() ||
+              GetTileWidth() > DimGetWidth() ||
+              GetTileHeight() > DimGetHeight())
         duiTile.DimSet(*this);
       // Set tile dimensions as opengl float
-      dfTile.DimSet(duiTile.DimGetWidth<GLfloat>(),
-                    duiTile.DimGetHeight<GLfloat>());
+      dfTile.DimSet(GetTileWidth<GLfloat>(), GetTileHeight<GLfloat>());
       // Create clamped image size
       const GLfloat
         fTPSizeX = dfTile.DimGetWidth() + GetPaddingWidth(),
         fTPSizeY = dfTile.DimGetHeight() + GetPaddingHeight(),
-        fBTSizeX = floorf(GetFWidth() / fTPSizeX) * fTPSizeX,
-        fBTSizeY = floorf(GetFHeight() / fTPSizeY) * fTPSizeY;
+        fBTSizeX = floorf(dfImage.DimGetWidth() / fTPSizeX) * fTPSizeX,
+        fBTSizeY = floorf(dfImage.DimGetHeight() / fTPSizeY) * fTPSizeY;
       // Calculate number of tile needed
       const size_t stTilesMax = static_cast<size_t>(
         floorf(fBTSizeX / fTPSizeX) * floorf(fBTSizeY / fTPSizeY));
@@ -739,22 +741,24 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
                            ++stSubTexId)
       { // Make sure theres enough memory allocated for each coord data
         clTiles[stSubTexId].reserve(stTiles);
+        // Get tile count
+        const size_t stTileCount = GetTileCount(stSubTexId);
         // Image is reversed?
         if(IsReversed())
           for(GLfloat fTop = 0.0f;
-                      fTop < fBTSizeY && GetTileCount(stSubTexId) < stTiles;
+                      fTop < fBTSizeY && stTileCount < stTiles;
                       fTop += fTPSizeY)
             for(GLfloat fLeft = 0.0f;
-                        fLeft < fBTSizeX && GetTileCount(stSubTexId) < stTiles;
+                        fLeft < fBTSizeX && stTileCount < stTiles;
                         fLeft += fTPSizeX)
               AddTileR(stSubTexId, fLeft, fTop,
                 fLeft + dfTile.DimGetWidth(), fTop + dfTile.DimGetHeight());
         // Not reversed
         else for(GLfloat fTop = 0.0f;
-                         fTop < fBTSizeY && GetTileCount(stSubTexId) < stTiles;
+                         fTop < fBTSizeY && stTileCount < stTiles;
                          fTop += fTPSizeY)
           for(GLfloat fLeft = 0.0f;
-                      fLeft < fBTSizeX && GetTileCount(stSubTexId) < stTiles;
+                      fLeft < fBTSizeX && stTileCount < stTiles;
                       fLeft += fTPSizeX)
             AddTile(stSubTexId, fLeft, fTop,
               fLeft + dfTile.DimGetWidth(), fTop + dfTile.DimGetHeight());
@@ -780,10 +784,10 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
         // Recover memory
         clTiles[stSubTexId].shrink_to_fit();
       } // Log tiling data
-      cLog->LogDebugExSafe("- Tile data: $/$ (B=$$x$;T=$x$;TP=$x$;BT=$x$).",
-        GetTileCount(), GetSubCount(), fixed, setprecision(0), GetTileCount(),
-        GetFWidth(), GetFHeight(), dfTile.DimGetWidth(),
-        dfTile.DimGetHeight(), fTPSizeX, fTPSizeY, fBTSizeX, fBTSizeY);
+      cLog->LogDebugExSafe("- Tiles: $ (SC=$;B=$x$;T=$x$;P=$$x$).",
+        GetTileCount(), GetSubCount(), DimGetWidth(), DimGetHeight(),
+        GetTileWidth(), GetTileHeight(), fixed, GetPaddingWidth(),
+        GetPaddingHeight());
     }
     // Remove all image data because we can just load it from file again
     // and theres no point taking up precious memory for it.

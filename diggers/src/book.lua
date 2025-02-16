@@ -13,9 +13,9 @@
 -- M-Engine function aliases ----------------------------------------------- --
 local UtilBlank<const>, UtilClampInt<const> = Util.Blank, Util.ClampInt;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GameProc, InitCon, InitContinueGame, LoadResources, PlayMusic,
-  PlayStaticSound, RenderInterface, RenderShadow, RenderTip, RenderTipShadow,
-  SetTip, SetCallbacks, SetHotSpot, SetKeys;
+local BlitSLT, BlitLT, Fade, GameProc, InitCon, InitContinueGame,
+  LoadResources, PlayMusic, PlayStaticSound, RenderInterface, RenderShadow,
+  RenderTip, RenderTipShadow, SetTip, SetCallbacks, SetHotSpot, SetKeys;
 -- Consts ------------------------------------------------------------------ --
 -- Pages each sized 510x200 stored inside texture sized 1024^2. OpenGL 3.2
 -- guarantees us that 1024^2 textures are supported by every renderer.
@@ -47,8 +47,8 @@ local strExitTip, strPage,             -- Tip strings
 local function ProcRenderPage()
   -- Render book background, spine and backdrop
   fcbProcRenderBack();
-  texBook:BlitSLT(1, 8, 8);
-  texPage:BlitSLT(iTilePage, 57, 8);
+  BlitSLT(texBook, 1, 8, 8);
+  BlitSLT(texPage, iTilePage, 57, 8);
 end
 -- Page texture texture handles loaded -------------------------------------- --
 local function OnPageAssetsLoaded(aResource, fcbOnComplete)
@@ -119,7 +119,7 @@ local function ProcRenderCover()
   -- Render background
   fcbProcRenderBack();
   -- Draw backdrop
-  texBook:BlitLT(8, 8);
+  BlitLT(texBook, 8, 8);
 end
 -- Change cover to inside the book ----------------------------------------- --
 local function GoOpen()
@@ -147,7 +147,7 @@ end
 -- Set render background function ------------------------------------------ --
 local function ProcRenderBackLobby()
   -- Render static background
-  texLobby:BlitLT(-54, 0);
+  BlitLT(texLobby, -54, 0);
   -- Draw tip and return
   RenderTipShadow();
 end
@@ -265,15 +265,15 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, GameProc, InitCon, InitContinueGame, LoadResources, PlayMusic,
-    PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderInterface,
+  BlitSLT, BlitLT, Fade, GameProc, InitCon, InitContinueGame, LoadResources,
+    PlayMusic, PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderInterface,
     RenderShadow, RenderTip, RenderTipShadow, SetCallbacks, SetHotSpot,
     SetKeys, SetTip, aAssetsData, aCursorIdData, aSfxData =
-      GetAPI("Fade", "GameProc", "InitCon", "InitContinueGame",
-        "LoadResources", "PlayMusic", "PlayStaticSound", "RegisterHotSpot",
-        "RegisterKeys", "RenderInterface", "RenderShadow", "RenderTip",
-        "RenderTipShadow", "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip",
-        "aAssetsData", "aCursorIdData", "aSfxData");
+      GetAPI("BlitSLT", "BlitLT", "Fade", "GameProc", "InitCon",
+        "InitContinueGame", "LoadResources", "PlayMusic", "PlayStaticSound",
+        "RegisterHotSpot", "RegisterKeys", "RenderInterface", "RenderShadow",
+        "RenderTip", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
+        "SetKeys", "SetTip", "aAssetsData", "aCursorIdData", "aSfxData");
   -- Prepare assets
   local aTexture<const> = aAssetsData.book;
   aLobbyMusic = aAssetsData.lobbym;

@@ -19,9 +19,9 @@ local unpack<const>, error<const>, pairs<const>, ipairs<const>, max<const>,
 local CoreTime<const>, UtilIsInteger<const>, UtilIsString<const> =
   Core.Time, Util.IsInteger, Util.IsString;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitTitle, LoadResources, PlayMusic, PlayStaticSound,
-  RegisterFBUCallback, aGlobalData, RenderFade, SetCallbacks, SetHotSpot,
-  SetKeys, fontLittle, fontTiny, texSpr;
+local BlitLT, BlitSLTWH, BlitSLT, Fade, InitTitle, LoadResources, PlayMusic,
+  PlayStaticSound, Print, PrintC, PrintR, RegisterFBUCallback, aGlobalData,
+  RenderFade, SetCallbacks, SetHotSpot, SetKeys, fontLittle, fontTiny, texSpr;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets required
       aTotals,                         -- Score categories
@@ -62,22 +62,22 @@ local function DrawLogos()
   local nLY = -nLX;
   local nRH = nHeight + nLY;
   texTitle:SetCA(0.25);
-  texTitle:BlitSLTWH(1, nLX1,-240+nLX, nWidth,  nHeight);
-  texTitle:BlitSLTWH(1, nLX1,     nLX, nWidth,  nHeight);
-  texTitle:BlitSLTWH(1, nLX1, 240+nLX, nWidth,  nHeight);
-  texTitle:BlitSLTWH(1, nRX1,     nRH, nWidthN, nHeightN);
-  texTitle:BlitSLTWH(1, nRX1, 240+nRH, nWidthN, nHeightN);
-  texTitle:BlitSLTWH(1, nRX1, 480+nRH, nWidthN, nHeightN);
+  BlitSLTWH(texTitle, 1, nLX1,-240+nLX, nWidth,  nHeight);
+  BlitSLTWH(texTitle, 1, nLX1,     nLX, nWidth,  nHeight);
+  BlitSLTWH(texTitle, 1, nLX1, 240+nLX, nWidth,  nHeight);
+  BlitSLTWH(texTitle, 1, nRX1,     nRH, nWidthN, nHeightN);
+  BlitSLTWH(texTitle, 1, nRX1, 240+nRH, nWidthN, nHeightN);
+  BlitSLTWH(texTitle, 1, nRX1, 480+nRH, nWidthN, nHeightN);
   -- Draw left moving down and right moving up logogs
   nLX = -nLX;
   nLY = -nLY - 240;
   nRH = nHeight + nLY;
-  texTitle:BlitSLTWH(1, nLX1,-240+nLX, nWidth,  nHeight);
-  texTitle:BlitSLTWH(1, nLX1,     nLX, nWidth,  nHeight);
-  texTitle:BlitSLTWH(1, nLX1, 240+nLX, nWidth,  nHeight);
-  texTitle:BlitSLTWH(1, nRX1,     nRH, nWidthN, nHeightN);
-  texTitle:BlitSLTWH(1, nRX1, 240+nRH, nWidthN, nHeightN);
-  texTitle:BlitSLTWH(1, nRX1, 480+nRH, nWidthN, nHeightN);
+  BlitSLTWH(texTitle, 1, nLX1,-240+nLX, nWidth,  nHeight);
+  BlitSLTWH(texTitle, 1, nLX1,     nLX, nWidth,  nHeight);
+  BlitSLTWH(texTitle, 1, nLX1, 240+nLX, nWidth,  nHeight);
+  BlitSLTWH(texTitle, 1, nRX1,     nRH, nWidthN, nHeightN);
+  BlitSLTWH(texTitle, 1, nRX1, 240+nRH, nWidthN, nHeightN);
+  BlitSLTWH(texTitle, 1, nRX1, 480+nRH, nWidthN, nHeightN);
   -- Reset lobby texture colour
   texTitle:SetCRGBA(1, 1, 1, 1);
 end
@@ -85,7 +85,7 @@ end
 local function ProcRenderScore()
   -- Draw background
   texTitle:SetCRGBA(1, 1, 1, 1);
-  texTitle:BlitLT(-96, 0);
+  BlitLT(texTitle, -96, 0);
   -- Draw logos
   DrawLogos();
   -- Draw title
@@ -97,13 +97,13 @@ local function ProcRenderScore()
       texSpr:SetCRGB(0, 0.5, 0);
       RenderFade(1, 8, aData[8]-2, 312, aData[8]+10, 1022);
       fontLittle:SetCRGBA(1, 1, 1, 1);
-      fontLittle:Print(aData[7]+16, aData[8], aData[6]);
+      Print(fontLittle, aData[7]+16, aData[8], aData[6]);
       fontTiny:SetCRGBA(1, 1, 1, 1);
-      fontTiny:PrintR(aData[7]+160, aData[8]+1, floor(aData[2]));
+      PrintR(fontTiny, aData[7]+160, aData[8]+1, floor(aData[2]));
       fontTiny:SetCRGBA(1, 1, 1, 1);
-      fontTiny:Print(aData[7]+160, aData[8]+1, "x"..aData[5]);
+      Print(fontTiny, aData[7]+160, aData[8]+1, "x"..aData[5]);
       fontLittle:SetCRGBA(1, 1, 1, 1);
-      fontLittle:PrintR(aData[7]+304, aData[8], floor(aData[9]));
+      PrintR(fontLittle, aData[7]+304, aData[8], floor(aData[9]));
     else
       if iTotalId > iI then texSpr:SetCRGB(0, 0, 0.5);
                        else texSpr:SetCRGB(0.5, 0, 0) end;
@@ -111,13 +111,13 @@ local function ProcRenderScore()
       RenderFade(sin(nVal)*cos(nVal)+0.75,
         aData[7]+8, aData[8]-2, aData[7]+312, aData[8]+10, 1022);
       fontLittle:SetCRGBA(0.75, 0.75, 0.75, 1);
-      fontLittle:Print(aData[7]+16, aData[8], aData[6]);
+      Print(fontLittle, aData[7]+16, aData[8], aData[6]);
       fontTiny:SetCRGBA(0, 1, 0, 1);
-      fontTiny:PrintR(aData[7]+160, aData[8]+1, aData[2]);
+      PrintR(fontTiny, aData[7]+160, aData[8]+1, aData[2]);
       fontTiny:SetCRGBA(1, 0.5, 0, 1);
-      fontTiny:Print(aData[7]+160, aData[8]+1, "x"..aData[5]);
+      Print(fontTiny, aData[7]+160, aData[8]+1, "x"..aData[5]);
       fontLittle:SetCRGBA(1, 0, 1, 1);
-      fontLittle:PrintR(aData[7]+304, aData[8], aData[9]);
+      PrintR(fontLittle, aData[7]+304, aData[8], aData[9]);
     end
   end
   -- Set text colour
@@ -128,7 +128,7 @@ local function ProcRenderScore()
     -- Starting X position
     local iX = 8;
     -- Draw the left side of the title and status bar
-    for iY = 8, 216, 208 do texSpr:BlitSLT(847, iX, iY) end;
+    for iY = 8, 216, 208 do BlitSLT(texSpr, 847, iX, iY) end;
     -- Move along X axis again by one tile
     iX = iX + 16;
     -- Calculate X position where we are ending drawing at
@@ -136,22 +136,22 @@ local function ProcRenderScore()
     -- Until we are at the maximum
     while iX <= iXmax do
       -- Draw top and bottom part
-      for iY = 8, 216, 208 do texSpr:BlitSLT(848, iX, iY) end;
+      for iY = 8, 216, 208 do BlitSLT(texSpr, 848, iX, iY) end;
       -- Move X along
       iX = iX + 16;
     end
     -- Draw the right side of the title and status bar
-    for iY = 8, 216, 208 do texSpr:BlitSLT(849, iX, iY) end;
+    for iY = 8, 216, 208 do BlitSLT(texSpr, 849, iX, iY) end;
     -- Draw title
-    fontLittle:PrintC(160, 12, sTitleText);
+    PrintC(fontLittle, 160, 12, sTitleText);
     -- Draw pulsating score
     fontLittle:SetSize(3);
     local nVal = CoreTime();
     fontLittle:SetCA(sin(nVal) * cos(nVal) + 0.75);
-    fontLittle:PrintR(304, 213, strScore);
+    PrintR(fontLittle, 304, 213, strScore);
     -- Draw rank
     fontLittle:SetSize(1);
-    fontLittle:Print(16, 220, strScoreC);
+    Print(fontLittle, 16, 220, strScoreC);
   -- Still tallying?
   else
     -- Animate title and status bars
@@ -159,30 +159,30 @@ local function ProcRenderScore()
     -- Starting X position
     local iX = 8;
     -- Draw left part of title and status bar including animation
-    texSpr:BlitSLT(847, iX, -16+iBarY);
-    texSpr:BlitSLT(847, iX, 216+(24-iBarY));
+    BlitSLT(texSpr, 847, iX, -16+iBarY);
+    BlitSLT(texSpr, 847, iX, 216+(24-iBarY));
     -- Move X along one tile
     iX = iX + 16;
     -- Draw centre part of title and status bar
     local iXmax = iX + (16 * 16);
     while iX <= iXmax do
       -- Draw top and bottom part
-      texSpr:BlitSLT(848, iX, -16+iBarY);
-      texSpr:BlitSLT(848, iX, 216+(24-iBarY));
+      BlitSLT(texSpr, 848, iX, -16+iBarY);
+      BlitSLT(texSpr, 848, iX, 216+(24-iBarY));
       -- Move X along one tile
       iX = iX + 16;
     end
     -- Draw right part of title and status bar
-    texSpr:BlitSLT(849, iX, -16+iBarY);
-    texSpr:BlitSLT(849, iX, 216+(24-iBarY));
+    BlitSLT(texSpr, 849, iX, -16+iBarY);
+    BlitSLT(texSpr, 849, iX, 216+(24-iBarY));
     -- Draw title text
-    fontLittle:PrintC(160, -12+iBarY, sTitleText);
+    PrintC(fontLittle, 160, -12+iBarY, sTitleText);
     -- Draw score text
     fontLittle:SetSize(3);
-    fontLittle:PrintR(304, 213+(24-iBarY), strScore);
+    PrintR(fontLittle, 304, 213+(24-iBarY), strScore);
     -- Draw rank
     fontLittle:SetSize(1);
-    fontLittle:Print(16, 220+(24-iBarY), strScoreC);
+    Print(fontLittle, 16, 220+(24-iBarY), strScoreC);
   end
   -- Reset sprites and font colour this for mouse cursor
   texSpr:SetCRGBAI(0xFFFFFFFF);
@@ -276,7 +276,7 @@ end
 -- Render function --------------------------------------------------------- --
 local function RenderSimple()
   -- Draw backdrop
-  texTitle:BlitLT(-96, 0);
+  BlitLT(texTitle, -96, 0);
   -- Draw logos
   DrawLogos();
 end
@@ -394,14 +394,16 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitTitle, LoadResources, PlayMusic, PlayStaticSound,
-    RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderFade,
-    SetCallbacks, SetHotSpot, SetKeys, aAssetsData, aCursorIdData, aGlobalData,
-    aSfxData, fontLittle, fontTiny, texSpr =
-      GetAPI("Fade", "InitTitle", "LoadResources", "PlayMusic",
-        "PlayStaticSound", "RegisterFBUCallback", "RegisterHotSpot",
-        "RegisterKeys", "RenderFade", "SetCallbacks", "SetHotSpot", "SetKeys",
-        "aAssetsData", "aCursorIdData", "aGlobalData", "aSfxData", "fontLittle",
+  BlitLT, BlitSLTWH, BlitSLT, Fade, InitTitle, LoadResources, PlayMusic,
+    PlayStaticSound, Print, PrintC, PrintR, RegisterFBUCallback,
+    RegisterHotSpot, RegisterKeys, RenderFade, SetCallbacks, SetHotSpot,
+    SetKeys, aAssetsData, aCursorIdData, aGlobalData, aSfxData, fontLittle,
+    fontTiny, texSpr =
+      GetAPI("BlitLT", "BlitSLTWH", "BlitSLT", "Fade", "InitTitle",
+        "LoadResources", "PlayMusic", "PlayStaticSound", "Print", "PrintC",
+        "PrintR", "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys",
+        "RenderFade", "SetCallbacks", "SetHotSpot", "SetKeys", "aAssetsData",
+        "aCursorIdData", "aGlobalData", "aSfxData", "fontLittle",
         "fontTiny", "texSpr");
   -- Setup required assets
   aAssets = { aAssetsData.title, aAssetsData.scorem };

@@ -21,9 +21,9 @@ using namespace IImageDef::P;          using namespace IJson::P;
 using namespace ILog::P;               using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtf;
-using namespace IUtil::P;              using namespace Lib::FreeType;
-using namespace Lib::OS::GlFW;
+using namespace ITexDef::P;            using namespace ITexture::P;
+using namespace IUtf;                  using namespace IUtil::P;
+using namespace Lib::FreeType;         using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Font collector class for collector data and custom variables ========= */
@@ -162,8 +162,8 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   { // Set scale
     fScale = UtilClamp(fNScale, 0.0f, 1024.0f);
     // Update scaled dimensions
-    dfScale.DimSet(dfTile.DimGetWidth() * fScale,
-                   dfTile.DimGetHeight() * fScale);
+    dfScale.DimSet(GetTileWidthFloat() * fScale,
+                   GetTileHeightFloat() * fScale);
     // Update glyph size
     SetGlyphSize(dfScale.DimGetHeight());
     // Update frequently used values
@@ -228,8 +228,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Set default scaled font size and line spacing adjust
     SetSize(1.0f);
     // Update tile size as GLfloat for opengl
-    dfTile.DimSet(duiTile.DimGetWidth<GLfloat>(),
-                  duiTile.DimGetHeight<GLfloat>());
+    dfTile.DimSet(GetTileWidth<GLfloat>(), GetTileHeight<GLfloat>());
     // Make enough space for initial tex coords set
     clTiles.resize(1);
     // Show that we've loaded the file

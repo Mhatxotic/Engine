@@ -17,9 +17,9 @@ local cos<const>, floor<const>, format<const>, pairs<const>, sin<const>,
 local UtilFormatTime<const>, CoreOSTime<const>, CoreTime<const>,
   VariableSave<const> = Util.FormatTime, Core.OSTime, Core.Time, Variable.Save;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, InitCon, LoadResources, PlayStaticSound, RenderFade, RenderShadow,
-  RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, SetTip, aLevelsData,
-  aObjectData, aObjectTypes, fontSpeech, texSpr;
+local BlitSLT, BlitLT, Fade, InitCon, LoadResources, PlayStaticSound,
+  PrintC, RenderFade, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot,
+  SetKeys, SetTip, aLevelsData, aObjectData, aObjectTypes, fontSpeech, texSpr;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Required assets
       aFileData, aNameData;            -- File and file names data
@@ -123,12 +123,12 @@ end
 -- Render callback --------------------------------------------------------- --
 local function RenderFile()
   -- Draw trace-centre backdrop, file screen and shadow
-  texLobby:BlitLT(-54, 0);
-  texFile:BlitSLT(tileFile, 8, 8);
+  BlitLT(texLobby, -54, 0);
+  BlitSLT(texFile, tileFile, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw message
   fontSpeech:SetCRGB(0, 0, 0.25);
-  fontSpeech:PrintC(160, 31, sMsg);
+  PrintC(fontSpeech, 160, 31, sMsg);
   -- Render file names
   for iFileId = 1, 4 do
     -- File selected? Draw selection box!
@@ -138,7 +138,7 @@ local function RenderFile()
     end
     -- Print name of file
     fontSpeech:SetCRGB(1, 1, 1);
-    fontSpeech:PrintC(160, 49 + (iFileId * 13), aNameData[iFileId]);
+    PrintC(fontSpeech, 160, 49 + (iFileId * 13), aNameData[iFileId]);
   end
   -- Draw tip
   RenderTipShadow();
@@ -311,17 +311,17 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, InitCon, LoadResources, PlayStaticSound, RegisterHotSpot, RegisterKeys,
-    RenderFade, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot,
-    SetKeys, SetTip, aAssetsData, aCursorIdData, aLevelsData, aObjectData,
-    aObjectTypes, aSaveSlot[1], aSaveSlot[2], aSaveSlot[3], aSaveSlot[4],
-    aSfxData, fontSpeech, texSpr =
-      GetAPI("Fade", "InitCon", "LoadResources", "PlayStaticSound",
-        "RegisterHotSpot", "RegisterKeys", "RenderFade", "RenderShadow",
-        "RenderTipShadow", "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip",
-        "aAssetsData", "aCursorIdData", "aLevelsData", "aObjectData",
-        "aObjectTypes", "cvData1", "cvData2", "cvData3", "cvData4", "aSfxData",
-        "fontSpeech", "texSpr");
+  BlitSLT, BlitLT, Fade, InitCon, LoadResources, PlayStaticSound, PrintC,
+    RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow, RenderTipShadow,
+    SetCallbacks, SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData,
+    aLevelsData, aObjectData, aObjectTypes, aSaveSlot[1], aSaveSlot[2],
+    aSaveSlot[3], aSaveSlot[4], aSfxData, fontSpeech, texSpr =
+      GetAPI("BlitSLT", "BlitLT", "Fade", "InitCon", "LoadResources",
+        "PlayStaticSound", "PrintC", "RegisterHotSpot", "RegisterKeys",
+        "RenderFade", "RenderShadow", "RenderTipShadow", "SetCallbacks",
+        "SetHotSpot", "SetKeys", "SetTip", "aAssetsData", "aCursorIdData",
+        "aLevelsData", "aObjectData", "aObjectTypes", "cvData1", "cvData2",
+        "cvData3", "cvData4", "aSfxData", "fontSpeech", "texSpr");
   -- Set assets data
   aAssets = { aAssetsData.cntrl, aAssetsData.lobbyc };
   -- Set sound effect ids

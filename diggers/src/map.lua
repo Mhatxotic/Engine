@@ -12,14 +12,14 @@
 -- Core function aliases --------------------------------------------------- --
 local pairs<const> = pairs;
 -- M-Engine function aliases ----------------------------------------------- --
-local CoreTicks<const>, InputSetCursorPos<const>, UtilClampInt<const>,
-  UtilIsNumber<const>, UtilIsTable<const> = Core.Ticks, Input.SetCursorPos,
-    Util.ClampInt, Util.IsNumber, Util.IsTable;
+local CoreTicks<const>, UtilClampInt<const>, UtilIsNumber<const>,
+  UtilIsTable<const> = Core.Ticks, Util.ClampInt, Util.IsNumber, Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local Fade, GetMouseX, GetMouseY, InitCon, InitLobby, IsMouseXGreaterEqualThan,
-  IsMouseXLessThan,  IsMouseYGreaterEqualThan, IsMouseYLessThan, LoadResources,
-  PlayStaticSound, RegisterFBUCallback, RenderTipShadow, SetCallbacks,
-  SetCursor, SetHotSpot, SetKeys, SetTip, aGlobalData, aLevelsData, aZoneData;
+local BlitSLT, BlitLT, Fade, GetMouseX, GetMouseY, InitCon, InitLobby,
+  IsMouseXGreaterEqualThan, IsMouseXLessThan,  IsMouseYGreaterEqualThan,
+  IsMouseYLessThan, LoadResources, PlayStaticSound, RegisterFBUCallback,
+  RenderTipShadow, SetCallbacks, SetCursor, SetCursorPos, SetHotSpot, SetKeys,
+  SetTip, aGlobalData, aLevelsData, aZoneData;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets required
       aHoverData,                      -- Selected zone
@@ -56,8 +56,8 @@ local function SetZone(iAdjust)
   iZonePosX = UtilClampInt(aZone[1] - 160, 0, iZoneMaxX);
   iZonePosY = UtilClampInt(aZone[2] - 120, 0, iZoneMaxY);
   -- Set the new cursor position
-  InputSetCursorPos(aZone[6] - (iZonePosX - iStageL),
-                    aZone[7] - (iZonePosY - iStageT));
+  SetCursorPos(aZone[6] - (iZonePosX - iStageL),
+               aZone[7] - (iZonePosY - iStageT));
 end
 -- Cycle between zones ----------------------------------------------------- --
 local function GoNextZone() SetZone(1) end;
@@ -65,18 +65,18 @@ local function GoPreviousZone() SetZone(-1) end;
 -- Render the map ---------------------------------------------------------- --
 local function RenderMap()
   -- Draw main chunk of map
-  texZone:BlitLT(-iZonePosX + iStageL, -iZonePosY + iStageT);
+  BlitLT(texZone, -iZonePosX + iStageL, -iZonePosY + iStageT);
   -- For each flag data in flag cache
   for iFlagId = 1, #aFlagCache do
     -- Get flag data and draw the flag to say the level was completed
     local aFlagData<const> = aFlagCache[iFlagId];
-    texZone:BlitSLT(1, aFlagData[1] - (iZonePosX + iStageLneg),
-                       aFlagData[2] - (iZonePosY + iStageTneg));
+    BlitSLT(texZone, 1, aFlagData[1] - (iZonePosX + iStageLneg),
+                        aFlagData[2] - (iZonePosY + iStageTneg));
   end
   -- Draw an icon for the zone that is selected
   if aSelectedZone then
-    texZone:BlitSLT(2, aSelectedZone[1] - (iZonePosX + iStageLneg),
-                       aSelectedZone[2] - (iZonePosY + iStageTneg));
+    BlitSLT(texZone, 2, aSelectedZone[1] - (iZonePosX + iStageLneg),
+                        aSelectedZone[2] - (iZonePosY + iStageTneg));
   end
   -- Draw tip
   RenderTipShadow();
@@ -325,19 +325,20 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  Fade, GetMouseX, GetMouseY, InitCon, InitLobby, IsMouseXGreaterEqualThan,
-    IsMouseXLessThan, IsMouseYGreaterEqualThan, IsMouseYLessThan,
-    LoadResources, PlayStaticSound, RegisterFBUCallback, RegisterHotSpot,
-    RegisterKeys, RenderTipShadow, SetCallbacks, SetCursor, SetHotSpot,
-    SetKeys, SetTip, aAssetsData, aCursorIdData, aGlobalData, aLevelsData,
-    aSfxData, aZoneData =
-      GetAPI("Fade", "GetMouseX", "GetMouseY", "InitCon", "InitLobby",
-        "IsMouseXGreaterEqualThan", "IsMouseXLessThan",
+  BlitSLT, BlitLT, Fade, GetMouseX, GetMouseY, InitCon, InitLobby,
+    IsMouseXGreaterEqualThan, IsMouseXLessThan, IsMouseYGreaterEqualThan,
+    IsMouseYLessThan, LoadResources, PlayStaticSound, RegisterFBUCallback,
+    RegisterHotSpot, RegisterKeys, RenderTipShadow, SetCallbacks, SetCursor,
+    SetCursorPos, SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData,
+    aGlobalData, aLevelsData, aSfxData, aZoneData =
+      GetAPI("BlitSLT", "BlitLT", "Fade", "GetMouseX", "GetMouseY", "InitCon",
+        "InitLobby", "IsMouseXGreaterEqualThan", "IsMouseXLessThan",
         "IsMouseYGreaterEqualThan", "IsMouseYLessThan", "LoadResources",
         "PlayStaticSound", "RegisterFBUCallback", "RegisterHotSpot",
         "RegisterKeys", "RenderTipShadow", "SetCallbacks", "SetCursor",
-        "SetHotSpot", "SetKeys", "SetTip", "aAssetsData", "aCursorIdData",
-        "aGlobalData", "aLevelsData", "aSfxData", "aZoneData");
+        "SetCursorPos", "SetHotSpot", "SetKeys", "SetTip", "aAssetsData",
+        "aCursorIdData", "aGlobalData", "aLevelsData", "aSfxData",
+        "aZoneData");
   -- Set assets data
   aAssets = { aAssetsData.map };
   -- Register keybinds

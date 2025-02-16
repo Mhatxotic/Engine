@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.2.8.9 -->
-<!-- Automatically built at Sat Feb 08 01:27:00 2025 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.2.8.9 -->
+<!-- Reference for the Mhatxotic Engine API version 25.2.16.37 -->
+<!-- Automatically built at Sun Feb 16 23:58:02 2025 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.2.16.37 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.8.9">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.16.37">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.8.9">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.16.37">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.8.9">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.16.37">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.2.8.9 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.2.16.37 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.2.8.9 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.2.16.37 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.2.8.9 API reference</H1>
+	<H1>Mhatxotic Engine 25.2.16.37 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 826 functions (390 members, 436 methods) and 27 consts in 30 namespaces with 83 commands and 209 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 828 functions (392 members, 436 methods) and 27 consts in 30 namespaces with 83 commands and 210 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -533,7 +533,7 @@
 						<OL>
 							<LI><P>The fbo class allows the programmer to create an OpenGL frame-buffer object which they can use to create seperate drawing canvases which they can apply special effects to without modifying other canvases.</P></LI>
 							<LI>
-								<B>Members</B> <I>(11 members)</I>
+								<B>Members</B> <I>(12 members)</I>
 								<OL>
 									<LI><A href="#Fbo.ConEnabled">ConEnabled</A></LI>
 									<LI><A href="#Fbo.ConHeight">ConHeight</A></LI>
@@ -543,6 +543,7 @@
 									<LI><A href="#Fbo.Draw">Draw</A></LI>
 									<LI><A href="#Fbo.IsDrawing">IsDrawing</A></LI>
 									<LI><A href="#Fbo.Main">Main</A></LI>
+									<LI><A href="#Fbo.Matrix">Matrix</A></LI>
 									<LI><A href="#Fbo.OnRedraw">OnRedraw</A></LI>
 									<LI><A href="#Fbo.Resize">Resize</A></LI>
 									<LI><A href="#Fbo.SetBlend">SetBlend</A></LI>
@@ -1346,13 +1347,14 @@
 						<OL>
 							<LI><P>The texture class allows the programmer to draw textures on the screen which also includes font management.</P></LI>
 							<LI>
-								<B>Members</B> <I>(5 members)</I>
+								<B>Members</B> <I>(6 members)</I>
 								<OL>
 									<LI><A href="#Texture.Console">Console</A></LI>
 									<LI><A href="#Texture.Create">Create</A></LI>
 									<LI><A href="#Texture.CreateTS">CreateTS</A></LI>
 									<LI><A href="#Texture.ImageUT">ImageUT</A></LI>
 									<LI><A href="#Texture.Manifest">Manifest</A></LI>
+									<LI><A href="#Texture.MaxSize">MaxSize</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1762,7 +1764,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(209 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(210 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -1845,6 +1847,7 @@
 									<LI><A href="#cv.fmv_abuffer">fmv_abuffer</A></LI>
 									<LI><A href="#cv.fmv_iobuffer">fmv_iobuffer</A></LI>
 									<LI><A href="#cv.fmv_maxdrift">fmv_maxdrift</A></LI>
+									<LI><A href="#cv.inp_clampmouse">inp_clampmouse</A></LI>
 									<LI><A href="#cv.inp_fstoggler">inp_fstoggler</A></LI>
 									<LI><A href="#cv.inp_joydeffdz">inp_joydeffdz</A></LI>
 									<LI><A href="#cv.inp_joydefrdz">inp_joydefrdz</A></LI>
@@ -4027,6 +4030,16 @@
 		<PRE>Returns a handle to the main FBO so you can draw to it&#x2e; Changing the properties of the main FBO may result in undefined behaviour&#x2e; Note that the engine console shares the same FBO so you may want to create a separatte FBO to draw to&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Fbo.Matrix" style="display:none">
+		<H3>Fbo.Matrix</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U>, <U>Height</U> = Fbo.Matrix()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(number)</I> = Current requested matrix width.<BR><U>Height</U> <I>(number)</I> = Current requested matrix height.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the active matrix size of the main framebuffer&#x2e; This is the value set by cvars &#x27;vid_orwidth&#x27;&#x2c; &#x27;vid_orheight&#x27; and also modified with the Fbo&#x2e;Resize&#x28;&#x29; function&#x2e;<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Fbo.OnRedraw" style="display:none">
 		<H3>Fbo.OnRedraw</H3>
 		<H4>Syntax:-</H4>
@@ -4134,9 +4147,9 @@
 	<DIV id="Fbo:GetMatrix" style="display:none">
 		<H3>Fbo:GetMatrix</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Width</U>, <U>Height</U>, <U>Left</U>, <U>Top</U>, <U>Right</U>, <U>Bottom</U>, <U>MatrixWidth</U>, <U>MatrixHeight</U> = Fbo:GetMatrix()</PRE>
+		<PRE><U>Width</U>, <U>Height</U>, <U>Left</U>, <U>Top</U>, <U>Right</U>, <U>Bottom</U> = Fbo:GetMatrix()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Width</U> <I>(number)</I> = Total count of horizontal viewable pixels.<BR><U>Height</U> <I>(number)</I> = Total count of vertical viewable pixels.<BR><U>Left</U> <I>(number)</I> = Minimum viewable matrix X position.<BR><U>Top</U> <I>(number)</I> = Minimum viewable matrix Y position.<BR><U>Right</U> <I>(number)</I> = Maximum viewable matrix X position.<BR><U>Bottom</U> <I>(number)</I> = Maximum viewable matrix Y position.<BR><U>MatrixWidth</U> <I>(number)</I> = Current requested matrix width.<BR><U>MatrixHeight</U> <I>(number)</I> = Current requested matrix height.<BR></PRE>
+		<PRE><U>Width</U> <I>(number)</I> = Total count of horizontal viewable pixels.<BR><U>Height</U> <I>(number)</I> = Total count of vertical viewable pixels.<BR><U>Left</U> <I>(number)</I> = Minimum viewable matrix X position.<BR><U>Top</U> <I>(number)</I> = Minimum viewable matrix Y position.<BR><U>Right</U> <I>(number)</I> = Maximum viewable matrix X position.<BR><U>Bottom</U> <I>(number)</I> = Maximum viewable matrix Y position.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the current matrix information for the specified fbo&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
@@ -4228,7 +4241,7 @@
 		<H4>Function Parameters:-</H4>
 		<PRE><U>Left</U> <I>(number)</I> = The left co-ordinate.<BR><U>Top</U> <I>(number)</I> = The top co-ordinate.<BR><U>Right</U> <I>(number)</I> = The right co-ordinate.<BR><U>Bottom</U> <I>(number)</I> = The bottom co-ordinate.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Sets the matrix of the specified fbo&#x2c; meaning&#x2c; these are the bounds of where you can draw&#x2e; Same as glOrtho&#x28;&#x29;&#x2e;<BR>See&#x3a; https&#x3a;&#x2f;&#x2f;www&#x2e;opengl&#x2e;org&#x2f;sdk&#x2f;docs&#x2f;man2&#x2f;xhtml&#x2f;glOrtho&#x2e;xml </PRE>
+		<PRE>Sets the 2D matrix of the specified fbo&#x2e;<BR>See&#x3a; https&#x3a;&#x2f;&#x2f;www&#x2e;opengl&#x2e;org&#x2f;sdk&#x2f;docs&#x2f;man2&#x2f;xhtml&#x2f;glOrtho&#x2e;xml </PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo:SetTCLTRB" style="display:none">
@@ -8385,6 +8398,16 @@
 		<PRE>Creates the specified texture from the specified image class with the specified json metadata&#x2e;<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Texture.MaxSize" style="display:none">
+		<H3>Texture.MaxSize</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Size</U> = Texture.MaxSize()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Size</U> <I>(integer)</I> = Maximum supported texture size.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the maximum texture size supported by the rendering system&#x2e;<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Texture:Blit" style="display:none">
 		<H3>Texture:Blit</H3>
 		<H4>Syntax:-</H4>
@@ -11662,6 +11685,11 @@
 		<PRE>The amount of time allowed to drift between audio and video before we start speeding up or slowing down audio&#x2e; Changing this value only takes effect the next time a &#x27;Video&#x27; object is constructed&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.inp_clampmouse" style="display:none">
+		<H3>inp_clampmouse</H3>
+		<PRE>When enabled &#x28;default&#x29; the mouse cursor is clamped to the window edge&#x2e;<BR>Since Windows and Linux already do this at the OS level&#x2c; it obviously only affects MacOS versions and changing it does nothing on anything but MacOS&#x2e;<BR>It is only here if the original OS level behaviour of MacOS is desired where the cursor is allowed to leave the window&#x2e; Recommended to enable &#x27;inp_fsignore&#x27; too to disable the input when mouse leaves the window&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.inp_fstoggler" style="display:none">
 		<H3>inp_fstoggler</H3>
 		<PRE>Enables or disables the ALT&#x2b;ENTER or OPTION&#x2b;ENTER combinations to switch between full&#x2d;screen or windowed mode &#x28;Uses value from &#x27;vid_fs&#x27;&#x29;&#x2e;<BR></PRE>
@@ -11679,7 +11707,7 @@
 	</DIV>
 	<DIV id="cv.inp_nofocusignore" style="display:none">
 		<H3>inp_nofocusignore</H3>
-		<PRE>When enabled &#x28;default&#x29; all input is ignored when the window does not have focus&#x2e;<BR></PRE>
+		<PRE>When enabled &#x28;default&#x29; all input is ignored when the window does not have mouse focus&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.inp_rawmouse" style="display:none">
@@ -12318,6 +12346,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sat Feb 08 01:27:00 2025 +0000</ADDRESS>
+	This document was generated at Sun Feb 16 23:58:02 2025 +0000</ADDRESS>
 </BODY>
 </HTML>
