@@ -214,17 +214,20 @@ local function SetErrorMessage(sReason)
   InputOnKey(OnKey);
   -- Second change bool
   local nNext = 0;
+  -- Text position and width
+  local iTextLeft<const> = iStageLeftO + 8;
+  local iTextTop<const> = iStageTopO + 8;
+  local iTextWidth<const> = iStageWidthO - 8;
   -- Callback function
   local function OnTick()
     -- Set clear colour depending on time
     local nTime<const>, nRed = CoreTime();
-    nRed = cos(nTime)*sin(nTime)+0.5;
+    nRed = cos(nTime) * sin(nTime) + 0.5;
     -- Show error message
     fboMain:SetClearColour(nRed, 0, 0, 1);
     fFont:SetCRGBA(1, 1, 1, 1);
     fFont:SetSize(1);
-    fFont:PrintW(iStageLeftO + 8, iStageTopO + 8,
-      iStageWidthO - 60, 0, sMessage);
+    fFont:PrintW(iTextLeft, iTextTop, iTextWidth, 0, sMessage);
     -- Draw frame if we changed the background colour
     if nTime >= nNext then FboDraw() nNext = nTime + 0.032 end;
   end
@@ -579,36 +582,24 @@ end
 local function GetTestMode() return bTestMode end;
 -- The first tick function ------------------------------------------------- --
 local function fcbTick()
-  -- Initialise base API functions
-  ParseScriptResult("main", { F=UtilBlank, A={ Fade = Fade,
-    GetCallbacks = GetCallbacks, GetTestMode = GetTestMode,
-    LoadResources = LoadResources, RefreshViewportInfo = RefreshViewportInfo,
-    RegisterFBUCallback = RegisterFrameBufferUpdateCallback,
-    RenderFade = RenderFade, RenderShadow = RenderShadow,
-    RenderTip = RenderTip,
-    RenderTipShadow = RenderTipShadow, SetCallbacks = SetCallbacks,
-    SetErrorMessage = SetErrorMessage, SetTip = SetTip, TimeIt = TimeIt } });
-  -- Setup a default sprite set until the real sprite is loaded since we are
-  -- loading everything asynchronously.
-  texSpr = TextureCreate(Image.Blank("placeholder", 1, 1, false, true), 0);
-  texSpr:TileSTC(1024);
-  -- Initialise function callbacks
-  SetCallbacks(nil, nil);
-  -- Get base assets
+  -- Load base assets data
   local aScriptTypeData<const> = aTypes[9];
   local aAssetsData, aBaseAssets, iBaseScripts, iBaseFonts, iBaseTextures,
     iBaseMasks, iBaseSounds, aBaseSounds;
-  aAssetsData, iTexScale, aBaseAssets, iBaseScripts, iBaseFonts, iBaseTextures,
+  aAssetsData, aBaseAssets, iBaseScripts, iBaseFonts, iBaseTextures,
     iBaseMasks, iBaseSounds, aBaseSounds =
       Asset.Parse(aScriptTypeData[3].."asset"..aScriptTypeData[4], 9);
-  -- Refresh viewport info and automatically when window size changes
-  Fbo.OnRedraw(RefreshViewportInfo);
-  RefreshViewportInfo();
-  -- Store texture scale and assets data
-  aAPI.iTexScale = iTexScale;
-  aAPI.aAssetsData = aAssetsData;
-  -- Texture scale is over 1?
-  if iTexScale > 1 then
+  -- Customised texture scale file exists?
+  local sScaleFile<const> = "tex/scale.txt";
+  if Asset.FileExists(sScaleFile) then
+    -- Load the texture scale number from file and make sure it is valid
+    local nTexScale<const> = tonumber(Asset.File(sScaleFile, 0):ToString());
+    if not nTexScale then error("Erroneous texture scale '"..
+      tostring(nTexScale).."' in '"..sScaleFile.."'!") end;
+    -- Round it down and check it incase it's not a valid integer and check it
+    iTexScale = math.floor(nTexScale);
+    if iTexScale ~= nTexScale or iTexScale > 16 then
+      error("Bad texture scale '"..nTexScale.."' in '"..sScaleFile.."'!") end;
     -- Get maximum texture size and make sure guest's GPU supports it. 1024^2
     -- is the maximum size texture we use at 1X scale.
     local iMaxUsedTexSize<const> = 1024;
@@ -620,11 +611,6 @@ local function fcbTick()
              it will only support a maximum scale of "..
              (iMaxSize//iMaxUsedTexSize).."X ("..iMaxSize.."^2).");
     end
-    -- Resize frame buffer if texture scale different
-    local VariableGetInt<const>, aVariables<const> =
-      Variable.GetInt, Variable.Internal;
-    Fbo.Resize(VariableGetInt(aVariables.vid_orwidth) * iTexScale,
-               VariableGetInt(aVariables.vid_orheight) * iTexScale);
     -- Now we have to scale all relavant co-ordinates so for each asset
     for sIdentifier, aAssetData in pairs(aAssetsData) do
       -- Get type and if not valid show an error
@@ -674,7 +660,28 @@ local function fcbTick()
         error("Invalid type param data '"..tostring(aParamsToModify)..
           "' for type "..iType.." in "..sIdentifier.."!") end;
     end
-  end
+    -- Resize frame buffer if texture scale different
+    local VariableGetInt<const>, aVariables<const> =
+      Variable.GetInt, Variable.Internal;
+    Fbo.Resize(VariableGetInt(aVariables.vid_orwidth) * iTexScale,
+               VariableGetInt(aVariables.vid_orheight) * iTexScale);
+  -- No scale file found so no texture scale by default
+  else iTexScale = 1 end;
+  -- Refresh viewport info and automatically when window size changes
+  Fbo.OnRedraw(RefreshViewportInfo);
+  RefreshViewportInfo();
+  -- Initialise base API functions
+  ParseScriptResult("main", { F=UtilBlank, A={ Fade = Fade,
+    GetCallbacks = GetCallbacks, GetTestMode = GetTestMode,
+    LoadResources = LoadResources, RefreshViewportInfo = RefreshViewportInfo,
+    RegisterFBUCallback = RegisterFrameBufferUpdateCallback,
+    RenderFade = RenderFade, RenderShadow = RenderShadow,
+    RenderTip = RenderTip, RenderTipShadow = RenderTipShadow,
+    SetCallbacks = SetCallbacks, SetErrorMessage = SetErrorMessage,
+    SetTip = SetTip, TimeIt = TimeIt } });
+  -- Store texture scale and assets data
+  aAPI.iTexScale = iTexScale;
+  aAPI.aAssetsData = aAssetsData;
   -- When base assets have loaded
   local function OnLoaded(aResources)
     -- Set font handles

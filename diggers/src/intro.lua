@@ -16,7 +16,7 @@ local error<const>, max<const>, maxinteger<const> =
 local UtilBlank<const>, CoreTime<const>, UtilIsInteger<const> =
   Util.Blank, Core.Time, Util.IsInteger;
 -- Diggers function and data aliases --------------------------------------- --
-local BlitSLT, BlitSLTRB, Fade, GetCallbacks, InitSetup, InitTitle,
+local BlitSLT, BlitSLTRB, BlitLT, Fade, GetCallbacks, InitSetup, InitTitle,
   LoadResources, PrintC, RegisterFBUCallback, RenderFade, RenderShadow,
   SetCallbacks, SetHotSpot, SetVLTRB, VideoPlay, VideoStop, aIntroSubTitles,
   fontLittle, texSpr, SetKeys;
@@ -116,7 +116,7 @@ end
 local function ProcRenderSetup()
   -- Draw background
   texTitle:SetCRGBA(1, 1, 1, 1);
-  texTitle:BlitLT(-96, 0);
+  BlitLT(texTitle, -96, 0);
   -- Don't draw anything if in 4:3 mode
   if iStageL >= 0 then return end;
   -- Draw sidebar scrolling logo's
@@ -307,16 +307,17 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, iTexScale;
   -- Get imports
-  BlitSLT, BlitSLTRB, Fade, GetCallbacks, InitSetup, InitTitle, LoadResources,
-    PrintC, RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderFade,
-    RenderShadow, SetCallbacks, SetHotSpot, SetKeys, SetVLTRB, VideoPlay,
-    VideoStop, aAssetsData, aIntroSubTitles, fontLittle, texSpr, iTexScale =
-      GetAPI("BlitSLT", "BlitSLTRB", "Fade", "GetCallbacks", "InitSetup",
-        "InitTitle", "LoadResources", "PrintC", "RegisterFBUCallback",
-        "RegisterHotSpot", "RegisterKeys", "RenderFade", "RenderShadow",
-        "SetCallbacks", "SetHotSpot", "SetKeys", "SetVLTRB", "VideoPlay",
-        "VideoStop", "aAssetsData", "aIntroSubTitles", "fontLittle", "texSpr",
-        "iTexScale");
+  BlitSLT, BlitSLTRB, BlitLT, Fade, GetCallbacks, InitSetup, InitTitle,
+    LoadResources, PrintC, RegisterFBUCallback, RegisterHotSpot, RegisterKeys,
+    RenderFade, RenderShadow, SetCallbacks, SetHotSpot, SetKeys, SetVLTRB,
+    VideoPlay, VideoStop, aAssetsData, aIntroSubTitles, fontLittle, texSpr,
+    iTexScale =
+      GetAPI("BlitSLT", "BlitSLTRB", "BlitLT", "Fade", "GetCallbacks",
+        "InitSetup", "InitTitle", "LoadResources", "PrintC",
+        "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys", "RenderFade",
+        "RenderShadow", "SetCallbacks", "SetHotSpot", "SetKeys", "SetVLTRB",
+        "VideoPlay", "VideoStop", "aAssetsData", "aIntroSubTitles",
+        "fontLittle", "texSpr", "iTexScale");
   -- Build assets to load
   aAssets = { aAssetsData.title, aAssetsData.intro };
   -- Get font size and padding

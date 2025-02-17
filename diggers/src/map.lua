@@ -381,7 +381,7 @@ local function OnScriptLoaded(GetAPI)
   -- Setup hot spots. This scene is complicated with dynamically changing
   -- points of interest so we won't be directly using them.
   iHotSpotId = RegisterHotSpot({
-    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress } }
+    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress, false } }
   });
 end
 -- Exports and imports ----------------------------------------------------- --

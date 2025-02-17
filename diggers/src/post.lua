@@ -249,7 +249,7 @@ local function OnScriptLoaded(GetAPI)
   });
   -- Set hot spot
   iHotSpotId = RegisterHotSpot({
-    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress } }
+    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress, false } }
   });
   -- Set cursor ids
   iCLeft, iCRight, iCTop, iCBottom, iCWait, iCArrow, iCExit =

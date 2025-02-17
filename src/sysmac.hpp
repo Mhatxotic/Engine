@@ -617,14 +617,15 @@ class SysCore :
     // Remove unnecessary whitespaces
     StrCompactRef(strProcessorName);
     // Processor speeds common speeds (lowest vs highest speed).
-    typedef array<const unsigned int, 2> UIntDouble;
-    const UIntDouble uidM1{ { 2064, 3228 } }, // Apple M1
-                     uidM2{ { 2420, 3480 } }, // Apple M2
-                     uidM3{ { 2748, 4056 } }, // Apple M3
-                     uidM4{ { 2890, 4400 } }; // Apple M4 (Inexact)
+    typedef array<const unsigned int, 2> UIntPair;
+    const UIntPair uidM1{ { 2064, 3228 } }, // Apple M1
+                   uidM2{ { 2420, 3480 } }, // Apple M2
+                   uidM3{ { 2748, 4056 } }, // Apple M3
+                   uidM4{ { 2896, 4464 } }; // Apple M4
+    //             uidM5{ { 3000, 5000 } }; // Apple M5 (Guess)
     // Processor table with speeds. This is because there is no API to get
     // the speed of Apple branded processors.
-    typedef pair<const string, const UIntDouble &> MacCpuListMapPair;
+    typedef pair<const string, const UIntPair &> MacCpuListMapPair;
     typedef map<MacCpuListMapPair::first_type, MacCpuListMapPair::second_type>
       MacCpuListMap;
     typedef MacCpuListMap::const_iterator MacCpuListMapConstIt;
@@ -636,7 +637,9 @@ class SysCore :
       { "Apple M3",       uidM3 }, { "Apple M3 Pro",   uidM3 },
       { "Apple M3 Max",   uidM3 }, { "Apple M3 Ultra", uidM3 },
       { "Apple M4",       uidM4 }, { "Apple M4 Pro",   uidM4 },
-      { "Apple M4 Max",   uidM4 }, { "Apple M4 Ultra", uidM4 }
+      { "Apple M4 Max",   uidM4 }, { "Apple M4 Ultra", uidM4 },
+    //{ "Apple M5",       uidM5 }, { "Apple M5 Pro",   uidM5 },
+    //{ "Apple M5 Max",   uidM5 }, { "Apple M5 Ultra", uidM5 }
     };
     // Find processor name to speed table and if we found it? Then copy the
     // value from the table as the actual speed.

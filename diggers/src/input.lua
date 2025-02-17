@@ -17,17 +17,18 @@ local CoreStack<const>, CoreTicks<const>, DisplayReset<const>,
   InputClearStates<const>, InputGetJoyAxis<const>, InputGetJoyButton<const>,
   InputGetNumJoyAxises<const>, InputGetNumJoyButtons<const>,
   InputOnJoyState<const>, InputOnKey<const>, InputOnMouseClick<const>,
-  InputOnMouseMove<const>, InputOnMouseScroll<const>, InputSetCursor<const>,
-  InputSetCursorCentre<const>, InputSetCursorPos<const>, SShotFbo<const>,
-  UtilBlank<const>, UtilClamp<const>, UtilIsBoolean<const>,
+  InputOnMouseFocus<const>, InputOnMouseMove<const>, InputOnMouseScroll<const>,
+  InputSetCursor<const>, InputSetCursorCentre<const>, InputSetCursorPos<const>,
+  SShotFbo<const>, UtilBlank<const>, UtilClamp<const>, UtilIsBoolean<const>,
   UtilIsFunction<const>, UtilIsInteger<const>, UtilIsString<const>,
   UtilIsTable<const>, fboMain<const> =
     Core.Stack, Core.Ticks, Display.Reset, Input.ClearStates, Input.GetJoyAxis,
     Input.GetJoyButton, Input.GetNumJoyAxises, Input.GetNumJoyButtons,
-    Input.OnJoyState, Input.OnKey, Input.OnMouseClick, Input.OnMouseMove,
-    Input.OnMouseScroll, Input.SetCursor, Input.SetCursorCentre,
-    Input.SetCursorPos, SShot.Fbo, Util.Blank, Util.Clamp, Util.IsBoolean,
-    Util.IsFunction, Util.IsInteger, Util.IsString, Util.IsTable, Fbo.Main();
+    Input.OnJoyState, Input.OnKey, Input.OnMouseClick, Input.OnMouseFocus,
+    Input.OnMouseMove, Input.OnMouseScroll, Input.SetCursor,
+    Input.SetCursorCentre, Input.SetCursorPos, SShot.Fbo, Util.Blank,
+    Util.Clamp, Util.IsBoolean, Util.IsFunction, Util.IsInteger, Util.IsString,
+    Util.IsTable, Fbo.Main();
 -- Diggers function and data aliases --------------------------------------- --
 local aCursorIdData, InitSetup, SetErrorMessage, SetTip, aCursorData,
   iTexScale, texSpr;
@@ -49,6 +50,7 @@ local iCursorMin, iCursorMax;          -- Cursor minimum and maximum
 local iCursorAdjX, iCursorAdjY;        -- Cursor origin co-ordinates
 local iCArrow, iCWait, iCId;           -- Arrow, wait and current cursor id
 local nWheelX, nWheelY = 0, 0;         -- Mouse wheel state
+local iDragZone, iDragButton;          -- Button held and dragging?
 -- Joystick ---------------------------------------------------------------- --
 local nJoyAX, nJoyAY = 0, 0;           -- Joystick axis values
 local aJoy<const> = { };               -- Joysticks connected data
@@ -125,12 +127,13 @@ local function RegisterHotSpot(aHotSpots)
     -- Get activate function and if it's set?
     local fcbActivate<const> = aHotSpot[9];
     if fcbActivate then
-      -- If it is just a function than format it in a release+press func table
-      if UtilIsFunction(fcbActivate) then aHotSpot[9] = { false, fcbActivate };
+      -- If it is just a function than format it in a rel+press+drag func table
+      if UtilIsFunction(fcbActivate) then
+        aHotSpot[9] = { false, fcbActivate, false };
       -- If it is a table?
       elseif UtilIsTable(fcbActivate) then
-        -- Must only contain two items (press and release)
-        if #fcbActivate ~= 2 then
+        -- Must only contain three items (press, release and drag)
+        if #fcbActivate ~= 3 then
           error("Hotspot activate table at index "..iIndex..
             " must have two entries only! "..#fcbActivate) end;
         -- Check that they're functions
@@ -144,7 +147,7 @@ local function RegisterHotSpot(aHotSpots)
       else error("Hotspot activate table at index "..iIndex..
         " is invalid! "..tostring(fcbActivate)) end;
     -- Not specified so just convert to table with release/press funcs
-    else aHotSpot[9] = { false, false } end;
+    else aHotSpot[9] = { false, false, false } end;
     -- Invalid function or table
     -- If we don't have 13 parameters?
     if #aHotSpot < 13 then
@@ -170,12 +173,22 @@ local function GetHotSpot() return iHotSpot end;
 local function OnMouseClick(iButton, iState)
   -- if have hotspots?
   if #aHotSpotActive >= 0 then
+    -- If mouse is dragging and the button assigned is released? Clear the drag
+    if iDragZone then
+      if iState == iRelease and iButton == iDragButton then
+        iDragZone, iDragButton = nil, nil end;
+      -- Do not process any more buttons while draging
+      return;
+    end
     -- Check if mouse in hotspots
     for iIndex = 1, #aHotSpotActive do
       -- Get hotspot and if cursor is in bounds?
       local aHotSpot<const> = aHotSpotActive[iIndex];
       if IsMouseInBounds(aHotSpot[1], aHotSpot[2],
                          aHotSpot[3], aHotSpot[4]) then
+        -- Button pressing? Set dragging
+        if iState == iPress and not iDragZone then
+          iDragZone, iDragButton = iIndex, iButton end;
         -- Get the callback and run it
         local fcbCb<const> = aHotSpot[9][1 + iState];
         if fcbCb then
@@ -189,6 +202,11 @@ local function OnMouseClick(iButton, iState)
       end
     end
   end
+end
+-- When the mouse leaves the window? --------------------------------------- --
+local function OnMouseFocus()
+  -- Disable mouse dragging if enabled
+  if iDragZone then iDragZone, iDragButton = nil, nil end;
 end
 -- When the mouse wheel is moved ------------------------------------------- --
 local function OnMouseScroll(nX, nY)
@@ -436,6 +454,8 @@ local function SetHotSpot(iIdentifier)
   UpdateAllHotSpots();
   -- Set active hotspot id
   iHotSpot = iIdentifier;
+  -- Disable mouse dragging if enabled
+  if iDragZone then iDragZone, iDragButton = nil, nil end;
 end
 -- When the mouse is moved ------------------------------------------------- --
 local function OnMouseMove(nX, nY)
@@ -444,8 +464,20 @@ local function OnMouseMove(nX, nY)
   iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
   -- Return if no hotspots
   if #aHotSpotActive == 0 then return end;
-  -- Check if mouse in hotspots
+  -- If a hotspot is dragging?
+  if iDragZone then
+    -- Get the drag callback and run it
+    local fcbCb<const> = aHotSpotActive[iDragZone][9][3];
+    if fcbCb then
+      -- Protected call so we can handle errors
+      local bResult<const>, sReason<const> =
+        xpcall(fcbCb, CoreStack, iDragButton, iCursorX, iCursorY);
+      if not bResult then SetErrorMessage(sReason) end;
+    end
+  end
+  -- Enumerate hotspots
   for iIndex = 1, #aHotSpotActive do
+    -- Check if mouse is in zone and if it was? We're done
     if CheckHotSpotHover(aHotSpotActive[iIndex]) then return end;
   end
   -- No cursor was matched so we keep the arrow cursor
@@ -619,6 +651,7 @@ local function OnScriptLoaded(GetAPI)
   InputOnJoyState(OnJoyState);
   InputOnKey(OnKey);
   InputOnMouseClick(OnMouseClick);
+  InputOnMouseFocus(OnMouseFocus);
   InputOnMouseMove(OnMouseMove);
   InputOnMouseScroll(OnMouseScroll);
   -- Enable cursor clamper when fbo changes

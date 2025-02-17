@@ -48,9 +48,13 @@ static class Input final :             // Handles keyboard, mouse & controllers
   double           dCursorX,           // Cursor X position
                    dCursorY;           // Cursor Y position
   /* -- Alternative mouse movement functions ------------------------------- */
+#if defined(MACOS)                     // Compiling MacOS version?
   EvtMain::CbEcFunc fnMouseFocus,      // OnMouseFocus event
                     fnMoveUnfocused,   // OnMouseMove event on unfocused window
                     fnMoveClamped;     // OnMouseMove event for clamping mouse
+#else                                  // Compiling Windows or linux version?
+  EvtMain::CbEcFunc fnMouseFocus;      // OnMouseFocus event
+#endif                                 // #if defined(MACOS)
   /* -- Events ----------------------------------------------------- */ public:
   LuaFunc          lfOnMouseClick,     // Mouse button clicked
                    lfOnMouseMove,      // Mouse cursor moved
@@ -108,7 +112,6 @@ static class Input final :             // Handles keyboard, mouse & controllers
     // Disable further mouse input
     cEvtMain->NullOp(EMC_INP_MOUSE_MOVE);
   }
-#endif
   /* -- Mouse moved but keeping it clamped --------------------------------- */
   void OnMouseMoveClamped(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
@@ -127,6 +130,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
         cFboCore->fboMain.ffcStage.GetCoTop(),
         cFboCore->fboMain.GetCoBottom()));
   }
+#endif
   /* -- Mouse went inside the window --------------------------------------- */
   void OnMouseFocus(const EvtMainEvent &emeEvent)
   { // Get and check state
@@ -417,8 +421,10 @@ static class Input final :             // Handles keyboard, mouse & controllers
     iConsoleKey2(GLFW_KEY_UNKNOWN),    // Init secondary console key
     dCursorX(0.0), dCursorY(0.0),      // Initialise cursor position
     fnMouseFocus{ bind(&Input::OnMouseFocus, this, _1) },
+#if defined(MACOS)                     // Is compiling MacOS version?
     fnMoveUnfocused{ bind(&Input::OnMouseMoveUnfocused, this, _1) },
     fnMoveClamped{ bind(&Input::OnMouseMoveClamped, this, _1) },
+#endif                                 // #if defined(MACOS)
     lfOnMouseClick{ "OnMouseClick" },  // Init mouse click lua event
     lfOnMouseMove{ "OnMouseMove" },    // Init mouse movement lua event
     lfOnMouseScroll{ "OnMouseScroll" },// Init mouse wheel lua event

@@ -218,18 +218,6 @@ LLFUNC(SetFullScreen, 0, cDisplay->RequestFSToggle(AgBoolean{lS, 1}))
 LLFUNC(SetInterval, 1, cTimer->TimerSetInterval(AgUInt64LG{lS, 1,
   cTimer->TimerGetMinInterval(), cTimer->TimerGetMaxInterval()}))
 /* ========================================================================= */
-// $ Display.SetMatrix
-// > Width:number=Matrix width.
-// > Height:number=Matrix height.
-// ? Sets the 2D aspect size of the matrix. Recommended to use a 4:3
-// ? aspect ratio to allow the automatic aspect ratio feature to work properly
-// ? for widescreen window sizes.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetMatrix, 0,
-  const AgNumberL<GLfloat> aWidth{lS, 1, 1.0f},
-                           aHeight{lS, 2, 1.0f};
-  cFboCore->AutoMatrix(aWidth, aHeight, false))
-/* ========================================================================= */
 // $ Display.SetPos
 // > X:integer=New X position of the window.
 // > Y:integer=New Y position of the window.
@@ -326,10 +314,9 @@ LLRSBEGIN                              // Display.* namespace func
   LLRSFUNC(Monitors),    LLRSFUNC(OnFocused),     LLRSFUNC(Reset),
   LLRSFUNC(ResetCursor), LLRSFUNC(Resizable),     LLRSFUNC(Restore),
   LLRSFUNC(SetCursor),   LLRSFUNC(SetFullScreen), LLRSFUNC(SetInterval),
-  LLRSFUNC(SetMatrix),   LLRSFUNC(SetPos),        LLRSFUNC(SetSize),
-  LLRSFUNC(Transparent), LLRSFUNC(VidMode),       LLRSFUNC(VidModeData),
-  LLRSFUNC(VidModes),    LLRSFUNC(Visible),       LLRSFUNC(VRAM),
-  LLRSFUNC(VReset),
+  LLRSFUNC(SetPos),      LLRSFUNC(SetSize),       LLRSFUNC(Transparent),
+  LLRSFUNC(VidMode),     LLRSFUNC(VidModeData),   LLRSFUNC(VidModes),
+  LLRSFUNC(Visible),     LLRSFUNC(VRAM),          LLRSFUNC(VReset),
 LLRSEND                                // Display.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

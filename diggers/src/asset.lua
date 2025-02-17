@@ -285,11 +285,6 @@ local aBaseSounds<const> = {
   { T=4, F="select"   }, { T=4, F="sale"     }, { T=4, F="switch"   },
   { T=4, F="hololoop" }, { T=4, F="holo"     }
 };
--- Load texture scale (overridable by texture mods) ------------------------ --
-local asScale<const> = Asset.File("tex/scale.txt", 0);
-local iTexScale<const> = math.floor(tonumber(asScale:ToString()));
-if iTexScale ~= 1 and iTexScale ~= 2 and iTexScale ~= 4 and iTexScale ~= 8 then
-  error("Invalid texture scale '"..iScale.."'!") end;
 -- Add all these to all the base assets to load ---------------------------- --
 local aBaseAssetsCategories<const> =
   { aBaseScripts, aBaseFonts, aBaseTextures, aBaseMasks, aBaseSounds };
@@ -308,6 +303,6 @@ local iBaseTextures<const> = iBaseFonts + #aBaseFonts;
 local iBaseMasks<const> = iBaseTextures + #aBaseTextures;
 local iBaseSounds<const> = iBaseMasks + #aBaseMasks;
 -- Return all the assets data to main.lua ---------------------------------- --
-return aAssetsData, iTexScale, aBaseAssets, iBaseScripts, iBaseFonts,
+return aAssetsData, aBaseAssets, iBaseScripts, iBaseFonts,
        iBaseTextures, iBaseMasks, iBaseSounds, aBaseSounds;
 -- End-of-File ============================================================= --

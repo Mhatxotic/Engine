@@ -46,17 +46,16 @@ local CreateObject, MoveOtherObjects, PlaySoundAtObject, SetAction;
 -- Locals ------------------------------------------------------------------ --
 local aActiveObject, aActivePlayer, aContextMenu, aContextMenuData, aFloodData,
   aGemsAvailable, aLevelData, aObjects, aOpponentPlayer, aPlayers, aRacesData,
-  aRacesAvailable, aShroudColour, aShroudData, bAIvsAI, bContextDrag,
-  fcbInfoScreenCallback, fcbPause, iAbsCenPosX, iAbsCenPosY, iAnimMoney,
-  iGameTicks, iHotSpotId, iKeyBankId, iLevelId, iLLAbsHmVP, iLLAbsWmVP,
-  iLLPixHmVP, iLLPixWmVP, iMenuLeft, iMenuTop, iMenuRight, iMenuBottom,
-  iPixCenPosX, iPixCenPosY, iPixPosTargetX, iPixPosTargetY, iPixPosX, iPixPosY,
-  iScrTilesH, iScrTilesHd2, iScrTilesHd2p1, iScrTilesHm1,
-  iScrTilesHmVPS, iScrTilesW, iScrTilesWd2, iScrTilesWd2p1, iScrTilesWm1,
-  iScrTilesWmVPS, iScrollRate, iStageB, iStageH, iStageL, iStageR, iStageT,
-  iStageW, iTilesHeight, iTilesWidth, iUniqueId, iViewportH, iViewportW,
-  iWinLimit, maskLev, maskSpr, maskZone, sLevelName, sLevelType, sMoney, texBg,
-  texLev =
+  aRacesAvailable, aShroudColour, aShroudData, bAIvsAI, fcbInfoScreenCallback,
+  fcbPause, iAbsCenPosX, iAbsCenPosY, iAnimMoney, iGameTicks, iHotSpotId,
+  iKeyBankId, iLevelId, iLLAbsHmVP, iLLAbsWmVP, iLLPixHmVP, iLLPixWmVP,
+  iMenuLeft, iMenuTop, iMenuRight, iMenuBottom, iPixCenPosX, iPixCenPosY,
+  iPixPosTargetX, iPixPosTargetY, iPixPosX, iPixPosY, iScrTilesH, iScrTilesHd2,
+  iScrTilesHd2p1, iScrTilesHm1, iScrTilesHmVPS, iScrTilesW, iScrTilesWd2,
+  iScrTilesWd2p1, iScrTilesWm1, iScrTilesWmVPS, iScrollRate, iStageB, iStageH,
+  iStageL, iStageR, iStageT, iStageW, iTilesHeight, iTilesWidth, iUniqueId,
+  iViewportH, iViewportW, iWinLimit, maskLev, maskSpr, maskZone, sLevelName,
+  sLevelType, sMoney, texBg, texLev =
     nil, nil, nil, nil, { }, { }, { }, { }, nil, { }, { }, { }, nil, { }, nil,
     nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
     nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
@@ -225,8 +224,7 @@ end
 -- Set active object menu -------------------------------------------------- --
 local function SetContextMenu(iId, bUpdatePos)
   -- Hide the menu?
-  if not iId then
-    bContextDrag, aContextMenu, aContextMenuData = false, nil, nil return end;
+  if not iId then aContextMenu, aContextMenuData = nil, nil return end;
   -- Get requested context menu and if it is a different context menu?
   aContextMenu = aMenuData[iId];
   if not UtilIsTable(aContextMenu) then
@@ -3597,8 +3595,6 @@ local function PhaseLogic()
     SelectObject(aObj);
     -- Now in trade centre
     SetAction(aObj, ACT.HIDE, JOB.PHASE, DIR.R);
-    -- Unset dragging of context menu
-    bContextDrag = false;
     -- We don't want to hear sounds
     SetPlaySounds(false);
     -- Init lobby
@@ -4068,8 +4064,6 @@ local function GameProc()
   end
   -- Increment game ticks processed count
   iGameTicks = iGameTicks + 1;
-  -- Drag menu
-  if bContextDrag then UpdateMenuPositionAtMouseCursor() end;
 end
 -- Select devices ---------------------------------------------------------- --
 local function SelectDevice()
@@ -4677,8 +4671,11 @@ local function OnScriptLoaded(GetAPI)
   -- Get cursor ids
   local iCSelect<const> = aCursorIdData.SELECT;
   -- Object released on screen
-  local function SelectObjectOnScreenRelease(iButton)
-    if iButton == 1 and aContextMenu then bContextDrag = false end;
+  local function SelectObjectOnScreenDrag(iButton, iX, iY)
+    -- Return if not right mouse button
+    if iButton ~= 1 then return end;
+    -- Drag menu if open
+    if aContextMenu then UpdateMenuPosition(iX, iY) end;
   end
   -- Object released on screen
   local function SelectObjectOnScreenPress(iButton)
@@ -4739,7 +4736,7 @@ local function OnScriptLoaded(GetAPI)
     -- Right mouse button button or Joystick button 1 is held?
     if iButton == 1 then
       -- Right mouse button held down and menu open?
-      if aContextMenu then bContextDrag = true;
+      if aContextMenu then UpdateMenuPositionAtMouseCursor();
       -- Is the right mouse button pressed? (Don't release the click).
       elseif aActiveObject then
         -- Get active objectmenu data
@@ -4754,8 +4751,6 @@ local function OnScriptLoaded(GetAPI)
           -- set the appropriate default menu for the object.
           PlayStaticSound(iSClick);
           SetContextMenu(aObjContextMenu, true);
-          -- Drag allowed
-          bContextDrag = true;
         -- Object does not belong to active player? Play error sound
         else PlayStaticSound(iSError) end
       end
@@ -4805,7 +4800,7 @@ local function OnScriptLoaded(GetAPI)
       SelectBook },
     -- Anything else on the screen (too complecated to put here)
     { 0, 0, 0, 240, 3, 0, OnHover, OnScroll,
-      { SelectObjectOnScreenRelease, SelectObjectOnScreenPress } },
+      { false, SelectObjectOnScreenPress, SelectObjectOnScreenDrag } },
   });
   -- Pre-initialisations of functions
   CreateObject = InitCreateObject();
