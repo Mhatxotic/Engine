@@ -5,7 +5,7 @@
 ** ## Defines the 'Texture' namespace and methods for the guest to use in ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -946,7 +946,7 @@ LLFUNC(UploadEx, 0,
 ** ######################################################################### **
 ** ## Texture:* member functions structure                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Texture:* member functions begin
   LLRSFUNC(Blit),        LLRSFUNC(BlitILT),     LLRSFUNC(BlitILTA),
   LLRSFUNC(BlitILTRB),   LLRSFUNC(BlitILTWH),   LLRSFUNC(BlitILTWHA),
@@ -970,7 +970,11 @@ LLRSMFBEGIN                            // Texture:* member functions begin
   LLRSFUNC(TileSSTC),    LLRSFUNC(TileSTC),     LLRSFUNC(Upload),
   LLRSFUNC(UploadEx),
 LLRSEND                                // Texture:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Texture.* namespace functions                                       ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Texture.Console
 // < Handle:Texture=Texture handle to console texture
 // ? Returns the handle to the console texture. Useful if you want to reuse the
@@ -990,6 +994,12 @@ LLFUNC(Create, 1,
   const AgImage aImage{lS, 1};
   const AgFilterId aFilterId{lS, 2};
   AcTexture{lS}().InitTextureImage(aImage, 0, 0, 0, 0, aFilterId))
+/* ========================================================================= */
+// $ Texture.Count
+// < Count:integer=Total number of textures created.
+// ? Returns the total number of texture classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cTextures->CollectorCount()))
 /* ========================================================================= */
 // $ Texture.Manifest
 // > Source:image=The image class to load from.
@@ -1042,10 +1052,10 @@ LLFUNC(ImageUT, 1,
 ** ######################################################################### **
 ** ## Texture.* namespace functions structure                             ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Texture.* namespace functions begin
-  LLRSFUNC(Create),   LLRSFUNC(ImageUT), LLRSFUNC(Manifest), LLRSFUNC(MaxSize),
-  LLRSFUNC(CreateTS), LLRSFUNC(Console),
+  LLRSFUNC(Create),  LLRSFUNC(Count),    LLRSFUNC(ImageUT), LLRSFUNC(Manifest),
+  LLRSFUNC(MaxSize), LLRSFUNC(CreateTS), LLRSFUNC(Console),
 LLRSEND                                // Texture.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Texture namespace

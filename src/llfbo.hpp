@@ -5,7 +5,7 @@
 ** ## Defines the 'Fbo' namespace and methods for the guest to use in     ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -382,7 +382,7 @@ LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().IdentGet()))
 ** ######################################################################### **
 ** ## Fbo:* member functions structure                                    ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Fbo:* member functions begin
   LLRSFUNC(Activate),     LLRSFUNC(Blit),           LLRSFUNC(BlitT),
   LLRSFUNC(Destroy),      LLRSFUNC(Finish),         LLRSFUNC(GetFloatCount),
@@ -394,7 +394,11 @@ LLRSMFBEGIN                            // Fbo:* member functions begin
   LLRSFUNC(SetTCX),       LLRSFUNC(SetVLTRB),       LLRSFUNC(SetVLTWH),
   LLRSFUNC(SetVLTWHA),    LLRSFUNC(SetVX),          LLRSFUNC(SetWireframe),
 LLRSEND                                // Fbo:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Fbo.* namespace functions                                           ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Fbo.Main
 // < Handle:Fbo=A handle to the main fbo object.
 // ? Returns a handle to the main FBO so you can draw to it. Changing the
@@ -471,6 +475,12 @@ LLFUNC(ConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(ConLock, 0, cConGraphics->SetCantDisable(AgBoolean{lS, 1}))
 /* ========================================================================= */
+// $ Fbo.Count
+// < Count:integer=Total number of fbos created.
+// ? Returns the total number of fbo classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
+/* ========================================================================= */
 // $ Fbo.Matrix
 // < Width:number=Current requested matrix width.
 // < Height:number=Current requested matrix height.
@@ -500,12 +510,12 @@ LLFUNC(Resize, 1,
 ** ######################################################################### **
 ** ## Fbo.* namespace functions structure                                 ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Fbo.* namespace functions begin
   LLRSFUNC(ConEnabled), LLRSFUNC(ConHeight), LLRSFUNC(ConLock),
-  LLRSFUNC(ConSet),     LLRSFUNC(Create),    LLRSFUNC(Draw),
-  LLRSFUNC(IsDrawing),  LLRSFUNC(Main),      LLRSFUNC(OnRedraw),
-  LLRSFUNC(Matrix),     LLRSFUNC(Resize),
+  LLRSFUNC(ConSet),     LLRSFUNC(Count),     LLRSFUNC(Create),
+  LLRSFUNC(Draw),       LLRSFUNC(IsDrawing), LLRSFUNC(Main),
+  LLRSFUNC(OnRedraw),   LLRSFUNC(Matrix),    LLRSFUNC(Resize),
 LLRSEND                                // Fbo.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

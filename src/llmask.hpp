@@ -5,7 +5,7 @@
 ** ## Defines the 'Mask' namespace and methods for the guest to use in    ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -42,12 +42,6 @@ struct AgTileId : public AgSizeTLGE {
 ** ## Mask:* member functions                                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Mask:Count
-// < Count:integer=Number of sub-masks in the mask.
-// ? Returns the number of sub-masks in the mask.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, AgMask{lS, 1}().size()))
-/* ========================================================================= */
 // $ Mask:Destroy
 // ? destroys the mask and frees all the memory associated with it. The object
 // ? will no longer be useable after this call and an error will be generated
@@ -225,6 +219,12 @@ LLFUNC(Save, 0,
   const AgFilename aFilename{lS, 3};
   aMask().Dump(aTileId, aFilename))
 /* ========================================================================= */
+// $ Mask:Tiles
+// < Count:integer=Number of sub-masks in the mask.
+// ? Returns the number of sub-masks in the mask.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Tiles, 1, LuaUtilPushVar(lS, AgMask{lS, 1}().size()))
+/* ========================================================================= */
 // $ Mask:Width
 // < Width:integer=Width of each tile in sub-masks.
 // ? Returns the width of each sub-mask in the mask.
@@ -234,14 +234,24 @@ LLFUNC(Width, 1, LuaUtilPushVar(lS, AgMask{lS, 1}().DimGetWidth()))
 ** ######################################################################### **
 ** ## Mask:* member functions structure                                   ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Mask:* member functions begin
-  LLRSFUNC(Clear),       LLRSFUNC(Copy),  LLRSFUNC(Count),
-  LLRSFUNC(Destroy),     LLRSFUNC(Erase), LLRSFUNC(Fill),
-  LLRSFUNC(Height),      LLRSFUNC(Id),    LLRSFUNC(IsCollide),
-  LLRSFUNC(IsCollideEx), LLRSFUNC(Merge), LLRSFUNC(Name),
-  LLRSFUNC(Raycast),     LLRSFUNC(Save),  LLRSFUNC(Width),
+  LLRSFUNC(Clear), LLRSFUNC(Copy),      LLRSFUNC(Destroy),
+  LLRSFUNC(Erase), LLRSFUNC(Fill),      LLRSFUNC(Height),
+  LLRSFUNC(Id),    LLRSFUNC(IsCollide), LLRSFUNC(IsCollideEx),
+  LLRSFUNC(Merge), LLRSFUNC(Name),      LLRSFUNC(Raycast),
+  LLRSFUNC(Save),  LLRSFUNC(Tiles),     LLRSFUNC(Width),
 LLRSEND                                // Mask:* member functions end
+/* ========================================================================= **
+** ######################################################################### **
+** ## Mask.* namespace functions                                          ## **
+** ######################################################################### **
+** ========================================================================= */
+// $ Mask.Count
+// < Count:integer=Total number of masks created.
+// ? Returns the total number of mask classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cMasks->CollectorCount()))
 /* ========================================================================= */
 // $ Mask.Create
 // > Image:image=The monochrome image to open.
@@ -288,9 +298,9 @@ LLFUNC(CreateZero, 1,
 ** ######################################################################### **
 ** ## Mask.* namespace functions structure                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Mask.* namespace functions begin
-  LLRSFUNC(Create), LLRSFUNC(CreateOne), LLRSFUNC(CreateZero),
+  LLRSFUNC(Count), LLRSFUNC(Create), LLRSFUNC(CreateOne), LLRSFUNC(CreateZero),
 LLRSEND                                // Mask.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Mask namespace

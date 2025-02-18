@@ -618,11 +618,11 @@ class SysCore :
     StrCompactRef(strProcessorName);
     // Processor speeds common speeds (lowest vs highest speed).
     typedef array<const unsigned int, 2> UIntPair;
-    const UIntPair uidM1{ { 2064, 3228 } }, // Apple M1
-                   uidM2{ { 2420, 3480 } }, // Apple M2
-                   uidM3{ { 2748, 4056 } }, // Apple M3
-                   uidM4{ { 2896, 4464 } }; // Apple M4
-    //             uidM5{ { 3000, 5000 } }; // Apple M5 (Guess)
+    const UIntPair uipM1{ { 2064, 3228 } }, // Apple M1
+                   uipM2{ { 2420, 3480 } }, // Apple M2
+                   uipM3{ { 2748, 4056 } }, // Apple M3
+                   uipM4{ { 2896, 4464 } }; // Apple M4
+    //             uipM5{ { 3000, 5000 } }; // Apple M5 (Guess)
     // Processor table with speeds. This is because there is no API to get
     // the speed of Apple branded processors.
     typedef pair<const string, const UIntPair &> MacCpuListMapPair;
@@ -630,16 +630,16 @@ class SysCore :
       MacCpuListMap;
     typedef MacCpuListMap::const_iterator MacCpuListMapConstIt;
     const MacCpuListMap mclmData{
-      { "Apple M1",       uidM1 }, { "Apple M1 Pro",   uidM1 },
-      { "Apple M1 Max",   uidM1 }, { "Apple M1 Ultra", uidM1 },
-      { "Apple M2",       uidM2 }, { "Apple M2 Pro",   uidM2 },
-      { "Apple M2 Max",   uidM2 }, { "Apple M2 Ultra", uidM2 },
-      { "Apple M3",       uidM3 }, { "Apple M3 Pro",   uidM3 },
-      { "Apple M3 Max",   uidM3 }, { "Apple M3 Ultra", uidM3 },
-      { "Apple M4",       uidM4 }, { "Apple M4 Pro",   uidM4 },
-      { "Apple M4 Max",   uidM4 }, { "Apple M4 Ultra", uidM4 },
-    //{ "Apple M5",       uidM5 }, { "Apple M5 Pro",   uidM5 },
-    //{ "Apple M5 Max",   uidM5 }, { "Apple M5 Ultra", uidM5 }
+      { "Apple M1",       uipM1 }, { "Apple M1 Pro",   uipM1 },
+      { "Apple M1 Max",   uipM1 }, { "Apple M1 Ultra", uipM1 },
+      { "Apple M2",       uipM2 }, { "Apple M2 Pro",   uipM2 },
+      { "Apple M2 Max",   uipM2 }, { "Apple M2 Ultra", uipM2 },
+      { "Apple M3",       uipM3 }, { "Apple M3 Pro",   uipM3 },
+      { "Apple M3 Max",   uipM3 }, { "Apple M3 Ultra", uipM3 },
+      { "Apple M4",       uipM4 }, { "Apple M4 Pro",   uipM4 },
+      { "Apple M4 Max",   uipM4 }, { "Apple M4 Ultra", uipM4 },
+    // { "Apple M5",       uipM5 }, { "Apple M5 Pro",   uipM5 },
+    // { "Apple M5 Max",   uipM5 }, { "Apple M5 Ultra", uipM5 }
     };
     // Find processor name to speed table and if we found it? Then copy the
     // value from the table as the actual speed.

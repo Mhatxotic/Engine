@@ -176,9 +176,9 @@ local function OnMouseClick(iButton, iState)
     -- If mouse is dragging and the button assigned is released? Clear the drag
     if iDragZone then
       if iState == iRelease and iButton == iDragButton then
-        iDragZone, iDragButton = nil, nil end;
+        iDragZone, iDragButton = nil, nil;
       -- Do not process any more buttons while draging
-      return;
+      else return end;
     end
     -- Check if mouse in hotspots
     for iIndex = 1, #aHotSpotActive do

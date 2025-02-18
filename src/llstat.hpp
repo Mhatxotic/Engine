@@ -5,7 +5,7 @@
 ** ## Defines the 'Stat' namespace and methods for the guest to use in    ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -154,13 +154,23 @@ LLFUNC(SortTwo, 0,
 ** ######################################################################### **
 ** ## Stat:* member functions structure                                   ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // stat:* member functions begin
   LLRSFUNC(Data),   LLRSFUNC(DataI),  LLRSFUNC(DataN),      LLRSFUNC(Destroy),
   LLRSFUNC(Finish), LLRSFUNC(Header), LLRSFUNC(HeaderDupe), LLRSFUNC(Headers),
   LLRSFUNC(Id),     LLRSFUNC(Name),   LLRSFUNC(Reserve),    LLRSFUNC(Sort),
   LLRSFUNC(SortTwo),
 LLRSEND                                // Stat:* member functions end
+/* ========================================================================= **
+** ######################################################################### **
+** ## Stat:* namespace functions                                          ## **
+** ######################################################################### **
+** ========================================================================= */
+// $ Stat.Count
+// < Count:integer=Total number of stats created.
+// ? Returns the total number of stat classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cStats->CollectorCount()))
 /* ========================================================================= */
 // $ Stat.Create
 // > Name:string=Name of the class
@@ -171,9 +181,9 @@ LLFUNC(Create, 1, AcStat{lS}().IdentSet(AgNeString{lS, 1}))
 ** ######################################################################### **
 ** ## Stat:* namespace functions structure                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Bin.* namespace functions begin
-  LLRSFUNC(Create),
+  LLRSFUNC(Count), LLRSFUNC(Create),
 LLRSEND                                // Bin.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Bin namespace

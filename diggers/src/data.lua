@@ -431,40 +431,40 @@ local aSkillEasiest<const>, aSkillEasy<const>,
 -- Level data types array -------------------------------------------------- --
 local aLevelsData<const> =
 { -- Name --------- WinReq - Filename ----- Terrain type ------------------- --
-  { n="AZERG",     w=aSkillEasiest,  f="azerg",     t=aLevelTypeRock     },
-  { n="DHOBBS",    w=aSkillEasiest,  f="dhobbs",    t=aLevelTypeGrass    },
-  { n="ELEEVATE",  w=aSkillEasiest,  f="eleevate",  t=aLevelTypeGrass    },
-  { n="DEENA",     w=aSkillEasiest,  f="deena",     t=aLevelTypeGrass    },
-  { n="JUHSTYN",   w=aSkillEasiest,  f="juhstyn",   t=aLevelTypeIslands  },
-  { n="FUJALE",    w=aSkillEasy,     f="fujale",    t=aLevelTypeGrass    },
-  { n="HAEWOULD",  w=aSkillEasiest,  f="haewould",  t=aLevelTypeGrass    },
-  { n="SAIRRUHR",  w=aSkillEasy,     f="sairruhr",  t=aLevelTypeJungle   },
-  { n="TRARGHE",   w=aSkillEasiest,  f="trarghe",   t=aLevelTypeJungle   },
-  { n="KURVELYNN", w=aSkillMedium,   f="kurvelynn", t=aLevelTypeMountain },
-  { n="SQUEEK",    w=aSkillMedium,   f="squeek",    t=aLevelTypeJungle   },
-  { n="MYKEBORL",  w=aSkillMedium,   f="mykeborl",  t=aLevelTypeDesert   },
-  { n="ZORLYACK",  w=aSkillMedium,   f="zorlyack",  t=aLevelTypeRock     },
-  { n="FTARGUS",   w=aSkillMedium,   f="ftargus",   t=aLevelTypeRock     },
-  { n="TRAISA",    w=aSkillMedium,   f="traisa",    t=aLevelTypeDesert   },
-  { n="KLINDYKE",  w=aSkillMedium,   f="klindyke",  t=aLevelTypeMountain },
-  { n="EEANZONE",  w=aSkillMedium,   f="eeanzone",  t=aLevelTypeGrass    },
-  { n="CHYEISHIR", w=aSkillMedium,   f="chyeishir", t=aLevelTypeGrass    },
-  { n="DJENNEEE",  w=aSkillMedium,   f="djenneee",  t=aLevelTypeWinter   },
-  { n="DWINDERA",  w=aSkillMedium,   f="dwindera",  t=aLevelTypeWinter   },
-  { n="TWANG",     w=aSkillMedium,   f="twang",     t=aLevelTypeJungle   },
-  { n="HABBARD",   w=aSkillMedium,   f="habbard",   t=aLevelTypeMountain },
-  { n="BENJAR",    w=aSkillMedium,   f="benjar",    t=aLevelTypeDesert   },
-  { n="SHRUBREE",  w=aSkillHard,     f="shrubree",  t=aLevelTypeJungle   },
-  { n="BAROK",     w=aSkillHard,     f="barok",     t=aLevelTypeIslands  },
-  { n="MUHLAHRD",  w=aSkillHard,     f="muhlahrd",  t=aLevelTypeDesert   },
-  { n="CHONSKEE",  w=aSkillHard,     f="chonskee",  t=aLevelTypeRock     },
-  { n="PURTH",     w=aSkillHard,     f="purth",     t=aLevelTypeMountain },
-  { n="ANKH",      w=aSkillHard,     f="ankh",      t=aLevelTypeWinter   },
-  { n="ZELIOS",    w=aSkillHardest,  f="zelios",    t=aLevelTypeWinter   },
-  { n="FRUER",     w=aSkillHardest,  f="fruer",     t=aLevelTypeIslands  },
-  { n="KLARSH",    w=aSkillHardest,  f="klarsh",    t=aLevelTypeJungle   },
-  { n="SUHMNER",   w=aSkillHardest,  f="suhmner",   t=aLevelTypeIslands  },
-  { n="SIMTOB",    w=aSkillHardest,  f="simtob",    t=aLevelTypeJungle   },
+  { n="AZERG",     w=aSkillEasiest,  f="azerg",     t=aLevelTypeRock     },--01
+  { n="DHOBBS",    w=aSkillEasiest,  f="dhobbs",    t=aLevelTypeGrass    },--02
+  { n="ELEEVATE",  w=aSkillEasiest,  f="eleevate",  t=aLevelTypeGrass    },--03
+  { n="DEENA",     w=aSkillEasiest,  f="deena",     t=aLevelTypeGrass    },--04
+  { n="JUHSTYN",   w=aSkillEasiest,  f="juhstyn",   t=aLevelTypeIslands  },--05
+  { n="FUJALE",    w=aSkillEasy,     f="fujale",    t=aLevelTypeGrass    },--06
+  { n="HAEWOULD",  w=aSkillEasiest,  f="haewould",  t=aLevelTypeGrass    },--07
+  { n="SAIRRUHR",  w=aSkillEasy,     f="sairruhr",  t=aLevelTypeJungle   },--08
+  { n="TRARGHE",   w=aSkillEasiest,  f="trarghe",   t=aLevelTypeJungle   },--09
+  { n="KURVELYNN", w=aSkillMedium,   f="kurvelynn", t=aLevelTypeMountain },--10
+  { n="SQUEEK",    w=aSkillMedium,   f="squeek",    t=aLevelTypeJungle   },--11
+  { n="MYKEBORL",  w=aSkillMedium,   f="mykeborl",  t=aLevelTypeDesert   },--12
+  { n="ZORLYACK",  w=aSkillMedium,   f="zorlyack",  t=aLevelTypeRock     },--13
+  { n="FTARGUS",   w=aSkillMedium,   f="ftargus",   t=aLevelTypeRock     },--14
+  { n="TRAISA",    w=aSkillMedium,   f="traisa",    t=aLevelTypeDesert   },--15
+  { n="KLINDYKE",  w=aSkillMedium,   f="klindyke",  t=aLevelTypeMountain },--16
+  { n="EEANZONE",  w=aSkillMedium,   f="eeanzone",  t=aLevelTypeGrass    },--17
+  { n="CHYEISHIR", w=aSkillMedium,   f="chyeishir", t=aLevelTypeGrass    },--18
+  { n="DJENNEEE",  w=aSkillMedium,   f="djenneee",  t=aLevelTypeWinter   },--19
+  { n="DWINDERA",  w=aSkillMedium,   f="dwindera",  t=aLevelTypeWinter   },--20
+  { n="TWANG",     w=aSkillMedium,   f="twang",     t=aLevelTypeJungle   },--21
+  { n="HABBARD",   w=aSkillMedium,   f="habbard",   t=aLevelTypeMountain },--22
+  { n="BENJAR",    w=aSkillMedium,   f="benjar",    t=aLevelTypeDesert   },--23
+  { n="SHRUBREE",  w=aSkillHard,     f="shrubree",  t=aLevelTypeJungle   },--24
+  { n="BAROK",     w=aSkillHard,     f="barok",     t=aLevelTypeIslands  },--25
+  { n="MUHLAHRD",  w=aSkillHard,     f="muhlahrd",  t=aLevelTypeDesert   },--26
+  { n="CHONSKEE",  w=aSkillHard,     f="chonskee",  t=aLevelTypeRock     },--27
+  { n="PURTH",     w=aSkillHard,     f="purth",     t=aLevelTypeMountain },--28
+  { n="ANKH",      w=aSkillHard,     f="ankh",      t=aLevelTypeWinter   },--29
+  { n="ZELIOS",    w=aSkillHardest,  f="zelios",    t=aLevelTypeWinter   },--30
+  { n="FRUER",     w=aSkillHardest,  f="fruer",     t=aLevelTypeIslands  },--31
+  { n="KLARSH",    w=aSkillHardest,  f="klarsh",    t=aLevelTypeJungle   },--32
+  { n="SUHMNER",   w=aSkillHardest,  f="suhmner",   t=aLevelTypeIslands  },--33
+  { n="SIMTOB",    w=aSkillHardest,  f="simtob",    t=aLevelTypeJungle   },--34
   -- Name --------- WinReq ----- Map name ------------ Map objects name --- --
 };
 -- Map data lookup table -------------------------------------------------- --
@@ -1986,16 +1986,16 @@ local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
   TF.P|TF.EA,                          -- 083 19x03
   TF.P|TF.EA,                          -- 084 20x03
   TF.P|TF.EA,                          -- 085 21x03
-  TF.NONE,                             -- 086 22x03
-  TF.NONE,                             -- 087 23x03
-  TF.NONE,                             -- 088 24x03
+  TF.NONE,                             -- 086 22x03 Unused
+  TF.NONE,                             -- 087 23x03 Unused
+  TF.NONE,                             -- 088 24x03 Platform cliff edge right
   TF.D|TF.P|TF.EA,                     -- 089 25x03 Left end of track
-  TF.NONE,                             -- 090 26x03
-  TF.NONE,                             -- 091 27x03
+  TF.NONE,                             -- 090 26x03 Floor to wall right
+  TF.NONE,                             -- 091 27x03 Platform cliff edge left
   TF.D|TF.P|TF.EA,                     -- 092 28x03 Right end of track
-  TF.NONE,                             -- 093 29x03
-  TF.NONE,                             -- 094 30x03
-  TF.NONE,                             -- 095 31x03
+  TF.NONE,                             -- 093 29x03 Right cliff wall
+  TF.NONE,                             -- 094 30x03 Left cliff wall
+  TF.NONE,                             -- 095 31x03 Floor to wall left
   TF.EA,                               -- 096 32x03 Clear dug tile with window
   TF.EA,                               -- 097 01x04 Clear dug tile with skull
   TF.W|TF.AB,                          -- 098 02x04 Ocean surface 1/4
@@ -2061,8 +2061,8 @@ local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
   TF.F,                                -- 158 30x05 Horizontal rock left
   TF.F,                                -- 159 31x05 Horizontal rock right
   TF.F,                                -- 160 32x05 Impenetrable rock
-  TF.F,                                -- 161 01x06
-  TF.NONE,                             -- 162 02x06
+  TF.F,                                -- 161 01x06 Unused
+  TF.NONE,                             -- 162 02x06 Unused
   TF.NONE,                             -- 163 03x06
   TF.NONE,                             -- 164 04x06 Outside decoration only
   TF.NONE,                             -- 165 05x06 Outside decoration only
@@ -2138,9 +2138,9 @@ local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
   TF.NONE,                             -- 235 11x08
   TF.D|TF.EA,                          -- 236 12x08 90%dug+10%dirt 11deg UR>DL
   TF.D|TF.EA,                          -- 237 13x08 90%dug+10%dirt 11deg UL>DR
-  TF.D|TF.ELTR,                        -- 238 14x08 25%dug+75%dirt vertical
-  TF.D|TF.ELTR,                        -- 239 15x08 50%dug+50%dirt vertical
-  TF.D|TF.ELTR,                        -- 240 16x08 75%dug+25%dirt vertical
+  TF.NONE,                             -- 238 14x08 Unused
+  TF.NONE,                             -- 239 15x08 Unused
+  TF.NONE,                             -- 240 16x08 Unused
   TF.F,                                -- 241 17x08 Double horizontal rock 1/2
   TF.F,                                -- 242 18x08 Double horizontal rock 2/2
   TF.F,                                -- 243 19x08 Double vertical rock 1/2
@@ -2187,36 +2187,36 @@ local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
   TF.D|TF.W|TF.ELT,                    -- 284 28x09
   TF.F|TF.D|TF.W|TF.ER,                -- 285 29x09
   TF.F|TF.D|TF.W|TF.EB,                -- 286 30x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 287 31x09
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 288 32x09
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 289 01x10
-  TF.D|TF.W|TF.ETRB,                   -- 290 02x10
-  TF.D|TF.W|TF.ETRB,                   -- 291 03x10
-  TF.D|TF.W|TF.ETR,                    -- 292 04x10
-  TF.D|TF.W|TF.ELTR,                   -- 293 05x10
-  TF.D|TF.W|TF.ELTR,                   -- 294 06x10
-  TF.F|TF.D|TF.W|TF.ELB,               -- 295 07x10
-  TF.D|TF.W|TF.ELTB,                   -- 296 08x10
-  TF.D|TF.W|TF.ELTB,                   -- 297 09x10
-  TF.D|TF.W|TF.ELT,                    -- 298 10x10
-  TF.D|TF.W|TF.EA,                     -- 299 11x10
-  TF.D|TF.W|TF.EA,                     -- 300 12x10
-  TF.D|TF.W|TF.EA,                     -- 301 13x10
-  TF.D|TF.W|TF.EA,                     -- 302 14x10
-  TF.D|TF.W|TF.ELRB,                   -- 303 15x10
-  TF.F,                                -- 304 16x10
-  TF.F,                                -- 305 17x10
-  TF.F,                                -- 306 18x10
-  TF.F,                                -- 307 19x10
-  TF.F,                                -- 308 20x10
-  TF.F,                                -- 309 21x10
-  TF.F,                                -- 310 22x10
-  TF.F,                                -- 311 23x10
-  TF.F,                                -- 312 24x10
-  TF.F,                                -- 313 25x10
-  TF.F,                                -- 314 26x10
-  TF.F,                                -- 315 27x10
-  TF.F,                                -- 316 28x10
+  TF.F|TF.D|TF.W|TF.ERB,               -- 287 31x09 Flood cave ceiling left
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 288 32x09 Flood cave ceiling 1
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 289 01x10 Flood cave ceiling 2
+  TF.D|TF.W|TF.ETRB,                   -- 290 02x10 Flood cave left 1
+  TF.D|TF.W|TF.ETRB,                   -- 291 03x10 Flood cave left 2
+  TF.D|TF.W|TF.ETR,                    -- 292 04x10 Flood cave floor left
+  TF.D|TF.W|TF.ELTR,                   -- 293 05x10 Flood cave floor 1
+  TF.D|TF.W|TF.ELTR,                   -- 294 06x10 Flood cave floor 2
+  TF.F|TF.D|TF.W|TF.ELB,               -- 295 07x10 Flood cave ceiling right
+  TF.D|TF.W|TF.ELTB,                   -- 296 08x10 Flood cave right 1
+  TF.D|TF.W|TF.ELTB,                   -- 297 09x10 Flood cave right 2
+  TF.D|TF.W|TF.ELT,                    -- 298 10x10 Flood cave floor right
+  TF.D|TF.W|TF.EA,                     -- 299 11x10 Flood cave floor bot-left
+  TF.D|TF.W|TF.EA,                     -- 300 12x10 Flood cave ceil top-left
+  TF.D|TF.W|TF.EA,                     -- 301 13x10 Flood cave ceil top-right
+  TF.D|TF.W|TF.EA,                     -- 302 14x10 Flood cave floor bot-right
+  TF.D|TF.W|TF.ELRB,                   -- 303 15x10 Flood elevator ceiling
+  TF.F,                                -- 304 16x10 Outside top-right ceiling 1
+  TF.F,                                -- 305 17x10 Outside top-right ceiling 2
+  TF.F,                                -- 306 18x10 Outside ceiling
+  TF.F,                                -- 307 19x10 Outside top-left ceiling 1
+  TF.F,                                -- 308 20x10 Outside top-left ceiling 2
+  TF.F,                                -- 309 21x10 Corpse column 1 row 1
+  TF.F,                                -- 310 22x10 Corpse column 2 row 1
+  TF.F,                                -- 311 23x10 Corpse column 3 row 1
+  TF.F,                                -- 312 24x10 Corpse column 4 row 1
+  TF.F,                                -- 313 25x10 Corpse column 1 row 2
+  TF.F,                                -- 314 26x10 Corpse column 2 row 2
+  TF.F,                                -- 315 27x10 Corpse column 3 row 2
+  TF.F,                                -- 316 28x10 Corpse column 4 row 2
   TF.D|TF.W|TF.P|TF.EA,                -- 317 29x10 Top of gold pillar
   TF.D|TF.W|TF.P|TF.EA,                -- 318 30x10 Vertical gold pillar
   TF.D|TF.W|TF.P|TF.EA,                -- 319 31x10 Bottom of gold pillar
@@ -2226,22 +2226,22 @@ local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
   TF.D|TF.W|TF.P|TF.EA,                -- 323 03x11 Broken half top pillar
   TF.D|TF.W|TF.P|TF.EA,                -- 324 04x11 Broken horizontal top
   TF.D|TF.W|TF.P|TF.EA,                -- 325 05x11 Broken horizontal bottom
-  TF.D|TF.W,                           -- 326 06x11
-  TF.NONE,                             -- 327 07x11 Outside decoration only
-  TF.NONE,                             -- 328 08x11 Outside decoration only
+  TF.D|TF.W,                           -- 326 06x11 Unused
+  TF.NONE,                             -- 327 07x11 Oil rig col 1 row 2
+  TF.NONE,                             -- 328 08x11 Oil rig col 2 row 2
   TF.D|TF.W|TF.P|TF.EA,                -- 329 09x11 Water dug tile track end L
-  TF.NONE,                             -- 330 10x11 Outside decoration only
-  TF.NONE,                             -- 331 11x11 Outside decoration only
+  TF.NONE,                             -- 330 10x11 Oil rig col 1 row 1 anim 1
+  TF.NONE,                             -- 331 11x11 Oil rig col 2 row 1 anim 1
   TF.D|TF.W|TF.P|TF.EA,                -- 332 12x11 Water dug tile track end R
-  TF.NONE,                             -- 333 13x11 Outside decoration only
-  TF.NONE,                             -- 334 14x11 Outside decoration only
-  TF.F,                                -- 335 15x11
+  TF.NONE,                             -- 333 13x11 Oil rig col 1 row 1 anim 2
+  TF.NONE,                             -- 334 14x11 Oil rig col 2 row 1 anim 2
+  TF.NONE,                             -- 335 15x11 Unused
   TF.D|TF.W|TF.EA,                     -- 336 16x11 Water dug tile with window
   TF.D|TF.W|TF.EA,                     -- 337 17x11 Water dug tile with skull
-  TF.NONE,                             -- 338 18x11
-  TF.NONE,                             -- 339 19x11
-  TF.NONE,                             -- 340 20x11
-  TF.NONE,                             -- 341 21x11
+  TF.NONE,                             -- 338 18x11 Unused
+  TF.NONE,                             -- 339 19x11 Unused
+  TF.NONE,                             -- 340 20x11 Unused
+  TF.NONE,                             -- 341 21x11 Unused
   TF.NONE,                             -- 342 22x11 Sun top-left
   TF.NONE,                             -- 343 23x11 Sun top-right
   TF.NONE,                             -- 344 24x11 Moon top-left
@@ -2253,14 +2253,14 @@ local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
   TF.NONE,                             -- 350 30x11
   TF.NONE,                             -- 351 31x11
   TF.NONE,                             -- 352 32x11
-  TF.NONE,                             -- 353 01x12
-  TF.NONE,                             -- 354 02x12
-  TF.NONE,                             -- 355 03x12
-  TF.NONE,                             -- 356 04x12
-  TF.NONE,                             -- 357 05x12
-  TF.NONE,                             -- 358 06x12
-  TF.NONE,                             -- 359 07x12
-  TF.NONE,                             -- 360 08x12
+  TF.NONE,                             -- 353 01x12 Cave entrance right
+  TF.NONE,                             -- 354 02x12 Cave entrance left
+  TF.NONE,                             -- 355 03x12 Cave entrance down
+  TF.NONE,                             -- 356 04x12 Unused
+  TF.NONE,                             -- 357 05x12 Unused
+  TF.NONE,                             -- 358 06x12 Unused
+  TF.NONE,                             -- 359 07x12 Unused
+  TF.NONE,                             -- 360 08x12 Unused
   TF.NONE,                             -- 361 09x12 Outside decoration only
   TF.NONE,                             -- 362 10x12 Outside decoration only
   TF.NONE,                             -- 363 11x12 Outside decoration only
@@ -2317,15 +2317,15 @@ local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
   TF.D|TF.W|TF.ELTR,                   -- 414 30x13 Water dig down 1/3
   TF.D|TF.W|TF.ELTR,                   -- 415 31x13 Water dig down 2/3
   TF.D|TF.W|TF.ELTR,                   -- 416 32x13 Water dig down 3/3
-  TF.NONE,                             -- 417 01x14
-  TF.NONE,                             -- 418 02x14
-  TF.NONE,                             -- 419 03x14
-  TF.NONE,                             -- 420 04x14
-  TF.NONE,                             -- 421 05x14
-  TF.NONE,                             -- 422 06x14
-  TF.NONE,                             -- 423 07x14
-  TF.NONE,                             -- 424 08x14
-  TF.NONE,                             -- 425 09x14
+  TF.NONE,                             -- 417 01x14 Top-right cliff ceiling
+  TF.NONE,                             -- 418 02x14 Bottom-left cliff floor
+  TF.NONE,                             -- 419 03x14 Top-left cliff ceiling
+  TF.NONE,                             -- 420 04x14 Top-right cliff ceiling
+  TF.NONE,                             -- 421 05x14 Bottom-right cliff floor
+  TF.NONE,                             -- 422 06x14 Unused
+  TF.NONE,                             -- 423 07x14 Unused
+  TF.NONE,                             -- 424 08x14 Unused
+  TF.NONE,                             -- 425 09x14 Unused
   TF.F,                                -- 426 10x14 Outside ceil L/R straight
   TF.F,                                -- 427 11x14 Outside ceil R/D straight
   TF.F,                                -- 428 12x14 Outside ceil U/R straight
@@ -2341,25 +2341,25 @@ local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
   TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 438 22x14 Flood Gate (All water)
   TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 439 23x14 Flood Gate open (No water)
   TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 440 24x14 Flood Gate open (Water)
-  TF.NONE,                             -- 441 25x14
-  TF.NONE,                             -- 442 26x14
-  TF.NONE,                             -- 443 27x14
-  TF.D|TF.W|TF.ETR,                    -- 444 28x14
-  TF.F|TF.D|TF.W|TF.EB,                -- 445 29x14
-  TF.F|TF.D|TF.W|TF.ER,                -- 446 30x14
-  TF.D|TF.W|TF.ELTR,                   -- 447 31x14
-  TF.F|TF.D|TF.W|TF.ERB,               -- 448 32x14
-  TF.D|TF.W|TF.ETR,                    -- 449 01x15
-  TF.F|TF.D|TF.W|TF.ERB,               -- 450 02x15
+  TF.NONE,                             -- 441 25x14 Desert crystal 1
+  TF.NONE,                             -- 442 26x14 Desert crystal 2
+  TF.NONE,                             -- 443 27x14 Unused
+  TF.D|TF.W|TF.ETR,                    -- 444 28x14 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.EB,                -- 445 29x14 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.ER,                -- 446 30x14 Diagonal up-left flooded
+  TF.D|TF.W|TF.ELTR,                   -- 447 31x14 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.ERB,               -- 448 32x14 Diagonal up-left flooded
+  TF.D|TF.W|TF.ETR,                    -- 449 01x15 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.ERB,               -- 450 02x15 Diagonal up-left flooded
   TF.D|TF.W|TF.AD|TF.T|TF.P|TF.EA,     -- 451 03x15 Watered clear track tile
-  TF.D|TF.W|TF.ETR,                    -- 452 04x15
-  TF.D|TF.W|TF.ETRB,                   -- 453 05x15
-  TF.D|TF.W|TF.ETR,                    -- 454 06x15
-  TF.D|TF.W|TF.ETR,                    -- 455 07x15
-  TF.D|TF.W|TF.ELTB,                   -- 456 08x15
-  TF.F|TF.D|TF.W|TF.ELB,               -- 457 09x15
-  TF.D|TF.W|TF.ELT,                    -- 458 10x15
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 459 11x15
+  TF.D|TF.W|TF.ETR,                    -- 452 04x15 Diagonal up-right flooded
+  TF.D|TF.W|TF.ETRB,                   -- 453 05x15 Diagonal up-right flooded
+  TF.D|TF.W|TF.ETR,                    -- 454 06x15 Diagonal up-right flooded
+  TF.D|TF.W|TF.ETR,                    -- 455 07x15 Diagonal up-right flooded
+  TF.D|TF.W|TF.ELTB,                   -- 456 08x15 Diagonal up-right flooded
+  TF.F|TF.D|TF.W|TF.ELB,               -- 457 09x15 Diagonal up-right flooded
+  TF.D|TF.W|TF.ELT,                    -- 458 10x15 Diagonal up-right flooded
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 459 11x15 Diagonal up-right flooded
   TF.D|TF.W|TF.ELT,                    -- 460 12x15
   TF.D|TF.W|TF.ELTB,                   -- 461 13x15
   TF.D|TF.W|TF.ELB,                    -- 462 14x15
@@ -2378,11 +2378,43 @@ local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
   TF.NONE,                             -- 475 27x15
   TF.D|TF.W|TF.P|TF.EA,                -- 476 28x15
   TF.D|TF.W|TF.P|TF.EA,                -- 477 29x15
-  TF.D|TF.W|TF.ELTR,                   -- 478 30x15
-  TF.D|TF.W|TF.ELTR,                   -- 479 31x15
-  TF.D|TF.W|TF.ELTR                    -- 480 32x15
+  TF.NONE,                             -- 478 30x15 Unused
+  TF.NONE,                             -- 479 31x15 Unused
+  TF.NONE,                             -- 480 32x15 Unused
+  TF.NONE,                             -- 481 01x16 Unused
+  TF.NONE,                             -- 482 02x16 Unused
+  TF.NONE,                             -- 483 03x16 Unused
+  TF.NONE,                             -- 484 04x16 Unused
+  TF.NONE,                             -- 485 05x16 Unused
+  TF.NONE,                             -- 486 06x16 Unused
+  TF.NONE,                             -- 487 07x16 Unused
+  TF.NONE,                             -- 488 08x16 Unused
+  TF.NONE,                             -- 489 09x16 Unused
+  TF.NONE,                             -- 490 10x16 Unused
+  TF.NONE,                             -- 491 11x16 Unused
+  TF.NONE,                             -- 492 12x16 Unused
+  TF.NONE,                             -- 493 13x16 Unused
+  TF.NONE,                             -- 494 14x16 Unused
+  TF.NONE,                             -- 495 15x16 Unused
+  TF.NONE,                             -- 496 16x16 Unused
+  TF.NONE,                             -- 497 17x16 Unused
+  TF.NONE,                             -- 498 18x16 Unused
+  TF.NONE,                             -- 499 19x16 Unused
+  TF.NONE,                             -- 500 20x16 Unused
+  TF.NONE,                             -- 501 21x16 Unused
+  TF.NONE,                             -- 502 22x16 Unused
+  TF.NONE,                             -- 503 23x16 Unused
+  TF.NONE,                             -- 504 24x16 Unused
+  TF.NONE,                             -- 505 25x16 Unused
+  TF.NONE,                             -- 506 26x16 Unused
+  TF.NONE,                             -- 507 27x16 Unused
+  TF.NONE,                             -- 508 28x16 Unused
+  TF.NONE,                             -- 509 29x16 Unused
+  TF.NONE,                             -- 510 30x16 Unused
+  TF.NONE,                             -- 511 31x16 Unused
+  TF.NONE,                             -- 512 32x16 Unused
 };
-assert(#aTileData == 480, "aTileData must only have 480 tiles!");
+assert(#aTileData == 512, "aTileData must only have 512 tiles!");
 -- Explode directions data ------------------------------------------------- --
 local aExplodeDirData<const> = {
   -- X -- Y -- Flags -----

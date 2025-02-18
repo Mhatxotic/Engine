@@ -5,7 +5,7 @@
 ** ## Defines the 'Archive' namespace and methods for the guest to use in ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -137,12 +137,22 @@ LLFUNC(Total, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().GetTotal()))
 ** ######################################################################### **
 ** ## Archive:* member functions structure                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Archive:* member functions begin
   LLRSFUNC(Destroy), LLRSFUNC(Dir),   LLRSFUNC(Dirs),     LLRSFUNC(DirList),
   LLRSFUNC(File),    LLRSFUNC(Files), LLRSFUNC(FileList), LLRSFUNC(Id),
   LLRSFUNC(Name),    LLRSFUNC(Size),  LLRSFUNC(Total),
 LLRSEND                                // Archive:* member functions end
+/* ========================================================================= **
+** ######################################################################### **
+** ## Archive.* namespace functions                                       ## **
+** ######################################################################### **
+** ========================================================================= */
+// $ Archive.Count
+// < Count:integer=Total number of archives created.
+// ? Returns the total number of archive classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cArchives->CollectorCount()))
 /* ========================================================================= */
 // $ Archive.Load
 // > Filename:string=The filename of the archive to load
@@ -180,9 +190,9 @@ LLFUNC(WaitAsync, 0, cArchives->WaitAsync())
 ** ######################################################################### **
 ** ## Archive.* namespace functions structure                             ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Archive.* namespace functions begin
-  LLRSFUNC(Load), LLRSFUNC(LoadAsync), LLRSFUNC(WaitAsync),
+  LLRSFUNC(Count), LLRSFUNC(Load), LLRSFUNC(LoadAsync), LLRSFUNC(WaitAsync),
 LLRSEND                                // Archive.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Archive namespace

@@ -759,14 +759,14 @@ class SysCore :
     } };
     // Iterate through the versions and try to find a match for the
     // versions above. 'Unknown' is caught if none are found.
-    for(const OSListItem &osItem : osList)
+    for(const OSListItem &oslIt : osList)
     { // Ignore if this version item doesn't match
-      if(osviData.dwMajorVersion < osItem.uiHi ||
-         osviData.dwMinorVersion < osItem.uiLo ||
-         osviData.dwBuildNumber < osItem.uiBd ||
-         osviData.wServicePackMajor < osItem.uiSp) continue;
+      if(osviData.dwMajorVersion < oslIt.uiHi ||
+         osviData.dwMinorVersion < oslIt.uiLo ||
+         osviData.dwBuildNumber < oslIt.uiBd ||
+         osviData.wServicePackMajor < oslIt.uiSp) continue;
       // Set operating system version
-      osOS << osItem.cpLabel;
+      osOS << oslIt.cpLabel;
       // Skip adding version numbers
       goto SkipNumericalVersionNumber;
     } // Nothing was found so add version number detected

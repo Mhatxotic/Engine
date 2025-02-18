@@ -5,7 +5,7 @@
 ** ## Defines the 'Video' namespace and methods for the guest to use in   ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -165,14 +165,16 @@ LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetWidth()))
 LLFUNC(OnEvent, 0, AgVideo{lS, 1}().LuaEvtInit(lS))
 /* ========================================================================= */
 // $ Video:Pause
+// < Success:boolean=Did the video pause playback?
 // ? Pauses the specified video.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Pause, 0, AgVideo{lS, 1}().Pause())
+LLFUNC(Pause, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Pause()))
 /* ========================================================================= */
 // $ Video:Play
+// < Success:boolean=Did the video start playing?
 // ? Plays the specified video.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Play, 0, AgVideo{lS, 1}().Play())
+LLFUNC(Play, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Play()))
 /* ========================================================================= */
 // $ Video:Rewind
 // ? Rewinds the specified video back to the beginning.
@@ -388,15 +390,16 @@ LLFUNC(SetVX, 0,
   aVideo().FboItemSetVertexEx(aTriangleId, tpdNew))
 /* ========================================================================= */
 // $ Video:Stop
+// < Success:boolean=Did the video pause playback?
 // ? Stops and unloads the specified video, this also unloads the audio and
 // ? video output structures.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Stop, 0, AgVideo{lS, 1}().Stop())
+LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Stop()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Video:* member functions structure                                  ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Video:* member functions begin
   LLRSFUNC(Advance),
   LLRSFUNC(Awaken),        LLRSFUNC(Blit),      LLRSFUNC(BlitT),
@@ -412,7 +415,11 @@ LLRSMFBEGIN                            // Video:* member functions begin
   LLRSFUNC(SetVLTRB),      LLRSFUNC(SetVLTWH),  LLRSFUNC(SetVLTWHA),
   LLRSFUNC(SetVX),         LLRSFUNC(SetVolume), LLRSFUNC(Stop),
 LLRSEND                                // Video:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Video.* namespace functions                                         ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Video.Asset
 // > Id:String=The identifier of the string
 // > Data:Asset=The file data of the ogg file to load
@@ -441,6 +448,12 @@ LLFUNC(AssetAsync, 0,
   const AgAsset aAsset{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
   AcVideo{lS}().AsyncInitArray(lS, aIdentifier, "videoarray", aAsset))
+/* ========================================================================= */
+// $ Video.Count
+// < Count:integer=Total number of videos created.
+// ? Returns the total number of video classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cVideos->CollectorCount()))
 /* ========================================================================= */
 // $ Video.File
 // > Filename:string=The filename of the ogg file to load
@@ -482,10 +495,11 @@ LLFUNC(ClearEvents, 0, VideoClearEvents())
 ** ######################################################################### **
 ** ## Video.* namespace functions structure                               ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Video.* namespace functions begin
-  LLRSFUNC(Asset), LLRSFUNC(AssetAsync), LLRSFUNC(ClearEvents),
-  LLRSFUNC(File),  LLRSFUNC(FileAsync),  LLRSFUNC(WaitAsync),
+  LLRSFUNC(Asset),     LLRSFUNC(AssetAsync), LLRSFUNC(ClearEvents),
+  LLRSFUNC(Count),     LLRSFUNC(File),       LLRSFUNC(FileAsync),
+  LLRSFUNC(WaitAsync),
 LLRSEND                                // Video.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -505,7 +519,7 @@ LLRSKTEND                              // End of Stream event flags
 ** ######################################################################### **
 ** ## Video.* namespace constants structure                               ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSCONSTBEGIN                         // Video.* namespace consts begin
   LLRSCONST(Events),
 LLRSCONSTEND                           // Video.* namespace consts end

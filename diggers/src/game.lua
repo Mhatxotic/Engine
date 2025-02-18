@@ -25,20 +25,20 @@ local CoreLog<const>, CoreQuit<const>, CoreWrite<const>, CoreTicks<const>,
     Mask.CreateZero, Util.Blank, Util.Clamp, Util.ClampInt, Util.IsBoolean,
     Util.IsFunction, Util.IsInteger, Util.IsString, Util.IsTable, Util.Round;
 -- Assets required --------------------------------------------------------- --
-local aLvlTextureAsset, aAssetsMusic, aAssetsNoMusic, aContAssets;
+local aAssetsMusic, aAssetsNoMusic, aAssetsContinue;
 -- Diggers shared functions and data --------------------------------------- --
 local ACT, AI, BlitSLTRB, BlitSLT, DF, DIR, Fade, GetMouseX, GetMouseY,
   GetTestMode, InitBook, InitLobby, InitLose, InitLoseDead, InitPause,
   InitTNTMap, InitWin, InitWinDead, IsMouseInBounds, JOB, LoadResources, MFL,
   MNU, OFL, PlayMusic, PlaySound, PlayStaticSound, Print, PrintC, PrintR,
   RegisterFBUCallback, RenderFade, RenderShadow, RenderTip, SetCallbacks,
-  SetCursor, SetCursorPos, SetHotSpot, SetKeys, SetTip, TYP, aAIChoicesData,
-  aDigBlockData, aDigData, aDigTileData, aDugRandShaftData, aExplodeAboveData,
-  aExplodeDirData, aFloodGateData, aGlobalData, aJumpFallData, aJumpRiseData,
-  aLevelsData, aMenuData, aObjToUIData, aObjectData, aSfxData, aShopData,
-  aShroudCircle, aShroudTileLookup, aTileData, aTileFlags, aTimerData,
-  aTrainTrackData, fontLarge, fontLittle, fontTiny, iPosX, iPosY, iTexScale,
-  texSpr;
+  SetCursor, SetCursorPos, SetHotSpot, SetKeys, SetTip, TileA, TYP,
+  aAIChoicesData, aDigBlockData, aDigData, aDigTileData, aDugRandShaftData,
+  aExplodeAboveData, aExplodeDirData, aFloodGateData, aGlobalData,
+  aJumpFallData, aJumpRiseData, aLevelsData, aMenuData, aObjToUIData,
+  aObjectData, aSfxData, aShopData, aShroudCircle, aShroudTileLookup,
+  aTileData, aTileFlags, aTimerData, aTrainTrackData, fontLarge, fontLittle,
+  fontTiny, iPosX, iPosY, texSpr;
 -- High priority variables (because of MAXVARS limit) ---------------------- --
 local function HighPriorityVars()
 -- Prototype functions (assigned later) ------------------------------------ --
@@ -60,7 +60,7 @@ local aActiveObject, aActivePlayer, aContextMenu, aContextMenuData, aFloodData,
     nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
     nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
     nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-    nil, nil, nil, nil, nil, nil, nil, nil, nil, nil;
+    nil, nil, nil, nil, nil, nil, nil, nil, nil;
 -- Level limits ------------------------------------------------------------ --
 local iLLAbsW<const>   = 128;                -- Total # of horizontal tiles
 local iLLAbsH<const>   = 128;                -- Total # of vertical tiles
@@ -1870,10 +1870,9 @@ local function DigTile(aObject)
     -- Get the tile adjacent to the object
     AId = aLevelData[1 + DP];
     -- Get the tile left of the object
-    if DP - 2 >= 0 then LId = aLevelData[1 + (DP - 2)] else LId = 0 end;
+    if DP - 1 >= 0 then LId = aLevelData[1 + (DP - 1)] else LId = 0 end;
     -- Get the tile right of the object
-    if DP + 2 < iLLAbs then RId = aLevelData[1 + DP + 2]
-                             else RId = 0 end;
+    if DP + 1 < iLLAbs then RId = aLevelData[1 + DP + 1] else RId = 0 end;
   end
   -- Cache digging direction of object and if going left or up-left?
   local iDirection<const> = aObject.D;
@@ -4166,10 +4165,6 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
   local aAssets;
   if sMusic then aAssets, aAssetsMusic[4].F = aAssetsMusic, sMusic;
   else aAssets = aAssetsNoMusic end;
-  -- Set correct scale on tileset
-  local aTexParams<const> = aLvlTextureAsset.P;
-  aTexParams[1] = 16 * iTexScale;
-  aTexParams[2] = aTexParams[1];
   -- Update asset filenames to load
   local sLevelFile<const> = aLevelInfo.f;
   aAssets[1].F = "lvl/"..sLevelFile..".dat";
@@ -4185,17 +4180,19 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
     texLev = aResources[3];
     -- Makes sure we have the same number of terrain masks as texture tiles
     local iMaskLev<const>, iMaskLevExpect<const> =
-      maskLev:Count(), texLev:TileGTC();
+      maskLev:Tiles(), texLev:TileGTC();
     if iMaskLev < iMaskLevExpect then
       error("Got only "..iMaskLev.." of "..iMaskLevExpect.." level masks!");
     end
-    -- Each level supports 480 tiles right now (512 on texture)
-    texLev:TileSTC(480);
+    -- Cap tile count to the number of tile identifiers because the first
+    -- half of the texture is dedicated to level tiles and the second half of
+    -- the texture is dedicated to the parallax background.
+    texLev:TileSTC(#aTileData);
     -- Grab the background part
-    texBg = texLev:TileA(0, 256*iTexScale, 512*iTexScale, 512*iTexScale);
+    texBg = TileA(texLev, 0, 256, 512, 512);
     -- Makes sure we have the same number of sprite masks as sprite tiles
     local iMaskSpr<const>, iMaskSprExpect<const> =
-      maskSpr:Count(), texSpr:TileGTC();
+      maskSpr:Tiles(), texSpr:TileGTC();
     if iMaskSpr ~= iMaskSprExpect then
       error("Got only "..iMaskSpr.." of "..iMaskSprExpect.." sprite masks!");
     end
@@ -4383,7 +4380,8 @@ local function InitContinueGame(bMusic)
     PostLoaded();
   end
   -- If music reset required then load it
-  if bMusic then return LoadResources("Continue", aContAssets, OnLoaded) end;
+  if bMusic then
+    return LoadResources("Continue", aAssetsContinue, OnLoaded) end;
   -- Run post loaded functions
   PostLoaded();
 end
@@ -4414,13 +4412,13 @@ local function OnScriptLoaded(GetAPI)
     aJumpRiseData, aJumpFallData, GetMouseX, GetMouseY, PlayStaticSound,
     PlaySound, Print, PrintC, PrintR, aMenuData, MFL, MNU, InitBook,
     aObjToUIData, RenderFade, InitWin, InitWinDead, InitLose, InitLoseDead,
-    InitPause, InitTNTMap, InitLobby, RegisterHotSpot, RegisterKeys, texSpr,
-    fontLarge, fontLittle, fontTiny, aDigBlockData, aExplodeDirData, SetCursor,
-    SetCursorPos, SetKeys, RegisterFBUCallback, GetTestMode, RenderShadow,
-    RenderTip, SetHotSpot, SetTip, aRacesData, aDugRandShaftData,
+    InitPause, InitTNTMap, InitLobby, RegisterHotSpot, RegisterKeys, TileA,
+    texSpr, fontLarge, fontLittle, fontTiny, aDigBlockData, aExplodeDirData,
+    SetCursor, SetCursorPos, SetKeys, RegisterFBUCallback, GetTestMode,
+    RenderShadow, RenderTip, SetHotSpot, SetTip, aRacesData, aDugRandShaftData,
     aFloodGateData, aTrainTrackData, aExplodeAboveData, maskLev, maskSpr,
     aGlobalData, aShopData, aAssetsData, aAIChoicesData, aCursorIdData,
-    aShroudCircle, aShroudTileLookup, iTexScale =
+    aShroudCircle, aShroudTileLookup =
       GetAPI("aObjectTypes", "aLevelsData", "LoadResources", "aObjectData",
         "aObjectActions", "aObjectJobs", "aObjectDirections", "aTimerData",
         "aAITypesData", "aObjectFlags", "aDigTileData", "PlayMusic",
@@ -4431,22 +4429,21 @@ local function OnScriptLoaded(GetAPI)
         "aMenuData", "aMenuFlags", "aMenuIds", "InitBook", "aObjToUIData",
         "RenderFade", "InitWin", "InitWinDead", "InitLose", "InitLoseDead",
         "InitPause", "InitTNTMap", "InitLobby", "RegisterHotSpot",
-        "RegisterKeys", "texSpr", "fontLarge", "fontLittle", "fontTiny",
-        "aDigBlockData", "aExplodeDirData", "SetCursor", "SetCursorPos",
-        "SetKeys", "RegisterFBUCallback", "GetTestMode", "RenderShadow",
-        "RenderTip", "SetHotSpot", "SetTip", "aRacesData", "aDugRandShaftData",
-        "aFloodGateData", "aTrainTrackData", "aExplodeAboveData", "maskLevel",
-        "maskSprites", "aGlobalData", "aShopData", "aAssetsData",
-        "aAIChoicesData", "aCursorIdData", "aShroudCircle",
-        "aShroudTileLookup", "iTexScale");
+        "RegisterKeys", "TileA", "texSpr", "fontLarge", "fontLittle",
+        "fontTiny", "aDigBlockData", "aExplodeDirData", "SetCursor",
+        "SetCursorPos", "SetKeys", "RegisterFBUCallback", "GetTestMode",
+        "RenderShadow", "RenderTip", "SetHotSpot", "SetTip", "aRacesData",
+        "aDugRandShaftData", "aFloodGateData", "aTrainTrackData",
+        "aExplodeAboveData", "maskLevel", "maskSprites", "aGlobalData",
+        "aShopData", "aAssetsData", "aAIChoicesData", "aCursorIdData",
+        "aShroudCircle", "aShroudTileLookup");
   -- Setup required assets
-  local aLvlTerrainAsset<const> = aAssetsData.mapt;
-  local aLvlObjectAsset<const> = aAssetsData.mapo;
-  aLvlTextureAsset = aAssetsData.game;
-  aAssetsMusic =
-    { aLvlTerrainAsset, aLvlObjectAsset, aLvlTextureAsset, aAssetsData.gamem };
-  aAssetsNoMusic = { aLvlTerrainAsset, aLvlObjectAsset, aLvlTextureAsset };
-  aContAssets = { aAssetsData.gamem };
+  local aAssetTerrain<const>, aAssetObject<const>, aAssetTexture<const> =
+    aAssetsData.mapt, aAssetsData.mapo, aAssetsData.game;
+  aAssetsMusic, aAssetsNoMusic, aAssetsContinue =
+    { aAssetTerrain, aAssetObject, aAssetTexture, aAssetsData.gamem },
+    { aAssetTerrain, aAssetObject, aAssetTexture },
+    { aAssetsData.gamem };
   -- Get required sound effects
   local iSClick<const>, iSError<const>, iSSelect<const> =
     aSfxData.CLICK, aSfxData.ERROR, aSfxData.SELECT;
@@ -4814,7 +4811,7 @@ local function OnScriptLoaded(GetAPI)
   local function DumpLevelMask(_, strFile)
     if maskZone then maskZone:Save(0, strFile or "mask") end;
   end
-  aLvlTerrainAsset.C = Command.Register("dump", 1, 2, DumpLevelMask);
+  aAssetTerrain.C = Command.Register("dump", 1, 2, DumpLevelMask);
 end
 -- Exports and imports ----------------------------------------------------- --
 return { F = OnScriptLoaded, A = { AdjustObjectHealth = AdjustObjectHealth,

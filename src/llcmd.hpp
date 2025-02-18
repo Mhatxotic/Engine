@@ -6,7 +6,7 @@
 ** ## registering their own console commands. This file is invoked by     ## **
 ** ## 'lualib.hpp'.                                                       ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -56,7 +56,7 @@ LLFUNC(Name, 1, AgCommand{lS, 1}().Name())
 ** ######################################################################### **
 ** ## Command:* member functions structure                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Command:* member functions begin
   LLRSFUNC(Destroy), LLRSFUNC(Id), LLRSFUNC(Name),
 LLRSEND                                // Command:* member functions end
@@ -65,6 +65,12 @@ LLRSEND                                // Command:* member functions end
 ** ## Command.* namespace functions                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
+// $ Command.Count
+// < Count:integer=Total number of commands created.
+// ? Returns the total number of command classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cCommands->CollectorCount()))
+/* ========================================================================= */
 // $ Command.Exists
 // > Identifier:string=The console command name to lookup
 // < Registered:boolean=True if the command is registered
@@ -94,9 +100,9 @@ LLFUNC(Register, 1,
 ** ######################################################################### **
 ** ## Command.* namespace functions structure                             ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Command.* namespace functions begin
-  LLRSFUNC(Exists), LLRSFUNC(Register),
+  LLRSFUNC(Count), LLRSFUNC(Exists), LLRSFUNC(Register),
 LLRSEND                                // Command.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Console namespace

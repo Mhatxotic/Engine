@@ -14,11 +14,12 @@ local FontPrint<const>, FontPrintC<const>, FontPrintCT<const>,
   FontPrintM<const>, FontPrintR<const>, FontPrintS<const>, FontPrintU<const>,
   FontPrintUR<const>, FontPrintWS<const>, TextureBlitLTRB<const>,
   TextureBlitSLTWHA<const>, TextureBlitSLTWH<const>, TextureBlitLT<const>,
-  TextureBlitSLT<const>, TextureBlitSLTRB<const>, VideoSetVLTRB =
+  TextureBlitSLT<const>, TextureBlitSLTRB<const>, TextureTileA<const>,
+  VideoSetVLTRB =
     Font.Print, Font.PrintC, Font.PrintCT, Font.PrintM, Font.PrintR,
     Font.PrintS, Font.PrintU, Font.PrintUR, Font.PrintWS, Texture.BlitLTRB,
     Texture.BlitSLTWHA, Texture.BlitSLTWH, Texture.BlitLT, Texture.BlitSLT,
-    Texture.BlitSLTRB, Video.SetVLTRB;
+    Texture.BlitSLTRB, Texture.TileA, Video.SetVLTRB;
 -- Locals ------------------------------------------------------------------ --
 local iTexScale;                       -- Texture scale
 -- Print text left with scale ---------------------------------------------- --
@@ -108,10 +109,16 @@ local function OnScriptLoaded(GetAPI)
     aCData[4] = iY * iTexScale;
   end
 end
+-- Add a tile to a texture ------------------------------------------------- --
+local function TileA(texHandle, iX1, iY1, iX2, iY2)
+  return TextureTileA(texHandle, iX1 * iTexScale, iY1 * iTexScale,
+                                 iX2 * iTexScale, iY2 * iTexScale);
+end
 -- Return imports and exports ---------------------------------------------- --
-return { A = { Print = Print, PrintC = PrintC, PrintCT = PrintCT,
-  PrintM = PrintM, PrintR = PrintR, PrintS = PrintS, PrintU = PrintU,
-  PrintUR = PrintUR, PrintWS = PrintWS, BlitLTRB = BlitLTRB, BlitLT = BlitLT,
-  BlitSLT = BlitSLT, BlitSLTRB = BlitSLTRB, BlitSLTWH = BlitSLTWH,
-  BlitSLTWHA = BlitSLTWHA, SetVLTRB = SetVLTRB }, F = OnScriptLoaded };
+return { F = OnScriptLoaded, A = { Print = Print, PrintC = PrintC,
+  PrintCT = PrintCT, PrintM = PrintM, PrintR = PrintR, PrintS = PrintS,
+  PrintU = PrintU, PrintUR = PrintUR, PrintWS = PrintWS, BlitLTRB = BlitLTRB,
+  BlitLT = BlitLT, BlitSLT = BlitSLT, BlitSLTRB = BlitSLTRB,
+  BlitSLTWH = BlitSLTWH, BlitSLTWHA = BlitSLTWHA, SetVLTRB = SetVLTRB,
+  TileA = TileA } };
 -- End-of-File ============================================================= --

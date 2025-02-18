@@ -5,7 +5,7 @@
 ** ## Defines the 'Stream' namespace and methods for the guest to use in  ## **
 ** ## Lua. This file is invoked by 'lualib.hpp'.                          ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -285,7 +285,7 @@ LLFUNC(GetChannels, 1, LuaUtilPushVar(lS, AgStream{lS, 1}().GetChannels()))
 ** ######################################################################### **
 ** ## Stream:* member functions structure                                 ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Stream:* member functions begin
   LLRSFUNC(OnEvent),        LLRSFUNC(GetBitRate),   LLRSFUNC(GetBytes),
   LLRSFUNC(GetChannels),    LLRSFUNC(GetDuration),  LLRSFUNC(GetElapsed),
@@ -298,7 +298,11 @@ LLRSMFBEGIN                            // Stream:* member functions begin
   LLRSFUNC(SetLoop),        LLRSFUNC(SetLoopBegin), LLRSFUNC(SetLoopEnd),
   LLRSFUNC(SetLoopRange),   LLRSFUNC(SetVolume),    LLRSFUNC(Stop),
 LLRSEND                                // Stream:* member functions end
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Stream.* namespace functions                                        ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Stream.Asset
 // > Id:String=The identifier of the string
 // > Data:Asset=The file data of the ogg file to load
@@ -336,6 +340,12 @@ LLFUNC(AssetAsync, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(ClearEvents, 0, StreamClearEvents())
 /* ========================================================================= */
+// $ Stream.Count
+// < Count:integer=Total number of streams created.
+// ? Returns the total number of stream classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cStreams->CollectorCount()))
+/* ========================================================================= */
 // $ Stream.File
 // > Filename:string=The filename of the ogg file to load
 // < Handle:Stream=The stream object
@@ -367,10 +377,11 @@ LLFUNC(WaitAsync, 0, cStreams->WaitAsync())
 ** ######################################################################### **
 ** ## Stream.* namespace functions structure                              ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Stream.* namespace functions begin
-  LLRSFUNC(Asset), LLRSFUNC(AssetAsync), LLRSFUNC(ClearEvents),
-  LLRSFUNC(File),  LLRSFUNC(FileAsync),  LLRSFUNC(WaitAsync),
+  LLRSFUNC(Asset),     LLRSFUNC(AssetAsync), LLRSFUNC(ClearEvents),
+  LLRSFUNC(Count),     LLRSFUNC(File),       LLRSFUNC(FileAsync),
+  LLRSFUNC(WaitAsync),
 LLRSEND                                // Stream.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -382,7 +393,7 @@ LLRSEND                                // Stream.* namespace functions end
 // ? Returns possible values for Stream:OnEvent() event command.
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(Events)                    // Beginning of Video event flags
-LLRSKTITEM(SE_,PLAY),                  LLRSKTITEM(SE_,STOP),
+  LLRSKTITEM(SE_,PLAY),                LLRSKTITEM(SE_,STOP),
 LLRSKTEND                              // End of Video event flags
 /* ========================================================================= */
 // @ Stream.States
@@ -390,9 +401,9 @@ LLRSKTEND                              // End of Video event flags
 // ? Returns possible values for Stream:OnEvent() last state command.
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(States)                    // Beginning of Stream last state flags
-LLRSKTITEM(PS_,STANDBY),               LLRSKTITEM(PS_,PLAYING),
-LLRSKTITEM(PS_,PLAYING),               LLRSKTITEM(PS_,FINISHING),
-LLRSKTITEM(PS_,WASPLAYING),            LLRSKTITEM(PS_,MAX),
+  LLRSKTITEM(PS_,STANDBY),             LLRSKTITEM(PS_,PLAYING),
+  LLRSKTITEM(PS_,PLAYING),             LLRSKTITEM(PS_,FINISHING),
+  LLRSKTITEM(PS_,WASPLAYING),          LLRSKTITEM(PS_,MAX),
 LLRSKTEND                              // End of Stream last state flags
 /* ========================================================================= */
 // @ Stream.Reasons
@@ -400,18 +411,18 @@ LLRSKTEND                              // End of Stream last state flags
 // ? Returns possible values for Stream:OnEvent() stop reason command.
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(Reasons)                   // Beginning of Stream stop reasons
-LLRSKTITEM(SR_,STOPNOUNQ),             LLRSKTITEM(SR_,STOPUNQ),
-LLRSKTITEM(SR_,REBUFFAIL),             LLRSKTITEM(SR_,RWREBUFFAIL),
-LLRSKTITEM(SR_,GENBUFFAIL),            LLRSKTITEM(SR_,STOPALL),
-LLRSKTITEM(SR_,LUA),                   LLRSKTITEM(SR_,MAX),
+  LLRSKTITEM(SR_,STOPNOUNQ),           LLRSKTITEM(SR_,STOPUNQ),
+  LLRSKTITEM(SR_,REBUFFAIL),           LLRSKTITEM(SR_,RWREBUFFAIL),
+  LLRSKTITEM(SR_,GENBUFFAIL),          LLRSKTITEM(SR_,STOPALL),
+  LLRSKTITEM(SR_,LUA),                 LLRSKTITEM(SR_,MAX),
 LLRSKTEND                              // End of Stream stop reasons
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Stream.* namespace constants structure                              ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSCONSTBEGIN                         // Stream.* namespace consts begin
-LLRSCONST(Events), LLRSCONST(States), LLRSCONST(Reasons),
+  LLRSCONST(Events), LLRSCONST(States), LLRSCONST(Reasons),
 LLRSCONSTEND                           // Stream.* namespace consts end
 /* ========================================================================= */
 }                                      // End of Stream namespace

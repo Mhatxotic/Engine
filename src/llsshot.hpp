@@ -4,7 +4,7 @@
 ** ######################################################################### **
 ** ## Allows taking of asynchronous screenshots                           ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -54,7 +54,7 @@ LLFUNC(Name, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().IdentGet()))
 ** ######################################################################### **
 ** ## SShot:* member functions structure                                  ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // SShot:* member functions begin
   LLRSFUNC(Destroy), LLRSFUNC(Id), LLRSFUNC(Name),
 LLRSEND                                // SShot:* member functions end
@@ -63,6 +63,12 @@ LLRSEND                                // SShot:* member functions end
 ** ## SShot.* namespace functions                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
+// $ SShot.Count
+// < Count:integer=Total number of sshots created.
+// ? Returns the total number of sshot classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cSShots->CollectorCount()))
+/* ========================================================================= */
 // $ SShot.Screen
 // < Object:SShot=The screenshot object created.
 // ? Takes a screenshot of the screen.
@@ -83,9 +89,9 @@ LLFUNC(Fbo, 1, const AgFbo aFbo{lS,1};
 ** ######################################################################### **
 ** ## SShot.* namespace functions structure                               ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // SShot.* namespace functions begin
-  LLRSFUNC(Fbo), LLRSFUNC(Screen),
+  LLRSFUNC(Count), LLRSFUNC(Fbo), LLRSFUNC(Screen),
 LLRSEND                                // SShot.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Util namespace

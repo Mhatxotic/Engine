@@ -153,7 +153,7 @@ local function ProcRender() fcbRender() end;
 -- When video has faded out? ----------------------------------------------- --
 local function OnFadedOutToTitle()
   -- Dereference loaded assets for garbage collector
-  texTitle, vidVideo = nil, nil, nil;
+  texTitle, vidVideo = nil, nil;
   -- Remove frame buffer update callback
   RegisterFBUCallback("intro");
   -- Destroy video and texture handles

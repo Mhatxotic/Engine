@@ -1079,9 +1079,9 @@ local function OnScriptLoaded(GetAPI)
   -- Get frequently used keyboard keys
   local aKeys<const>, aStates<const> = Input.KeyCodes, Input.States;
   local iPress<const>, iRepeat<const>, iControl<const>, iBackspace<const>,
-    iLetterC<const>, iEscape<const>, iSpace<const> = aStates.PRESS,
+    iLetterC<const>, iEscape<const>, iLetterD<const> = aStates.PRESS,
       aStates.REPEAT, aMods.CONTROL, aKeys.BACKSPACE, aKeys.C, aKeys.ESCAPE,
-      aKeys.SPACE;
+      aKeys.D;
   -- Setup key bank
   local aGenericEscape<const> = { iEscape, GoFinish, "sf", "CLOSE" };
   local aOnlyEscape<const> = { [iPress] = { aGenericEscape } };
@@ -1309,14 +1309,14 @@ local function OnScriptLoaded(GetAPI)
     -- Update tip at the bottom
     sStatusLine1 = "PRESS ANY KEY TO USE AS NEW KEY BINDING";
     sStatusLine2 = "CTRL+C:CANCEL  \z
-                    CTRL+SPACE:DEFAULT  \z
+                    CTRL+D:DEFAULT  \z
                     CTRL+BACKSPACE:CLEAR";
     -- Unset hots pots to show wait cursor
     SetHotSpot();
     -- Disable all input events
     DisableKeyHandlers();
     -- On key scan functino
-    local function OnScanKey(iKey, iState, iMods)
+    local function OnScanKey(iKey, iState, iMods, iScan)
       -- Ignore if not pressed
       if iState ~= iPress then return end;
       -- Mods were pressed?
@@ -1327,8 +1327,8 @@ local function OnScriptLoaded(GetAPI)
           if iKey == iBackspace then iKey = 0;
           -- C was pressed? Keep existing key
           elseif iKey == iLetterC then iKey = aBindData[1];
-          -- Space key was pressed? Use default
-          elseif iKey == iSpace then iKey = aBindData[5];
+          -- D key was pressed? Use default
+          elseif iKey == iLetterD then iKey = aBindData[5];
           -- Not recognised? Ignore press
           else return end;
         -- Do not process key with mods

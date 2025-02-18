@@ -6,7 +6,7 @@
 ** ## in registering their own cvars. This file is invoked by             ## **
 ** ## 'lualib.hpp'.                                                       ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ========================================================================= **
 ** ######################################################################### **
@@ -89,7 +89,7 @@ LLFUNC(Set, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Set(AgString{lS, 2})))
 ** ######################################################################### **
 ** ## Variable:* member functions structure                               ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSMFBEGIN                            // Variable:* member functions begin
   LLRSFUNC(Default), LLRSFUNC(Destroy), LLRSFUNC(Empty), LLRSFUNC(Get),
   LLRSFUNC(Id),      LLRSFUNC(Name),    LLRSFUNC(Reset), LLRSFUNC(Set),
@@ -99,6 +99,12 @@ LLRSEND                                // Variable:* member functions end
 ** ## Variable.* namespace functions                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
+// $ Variable.Count
+// < Count:integer=Total number of variables created.
+// ? Returns the total number of variable classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Count, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
+/* ========================================================================= */
 // $ Variable.Register
 // > Name:string=The engine cvar name.
 // > Default:string=The default cvar value.
@@ -161,9 +167,9 @@ LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->Save()))
 ** ######################################################################### **
 ** ## Variable.* namespace functions structure                            ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** ========================================================================= */
 LLRSBEGIN                              // Variable.* namespace functions begin
-  LLRSFUNC(Exists),   LLRSFUNC(GetInt), LLRSFUNC(Register),
+  LLRSFUNC(Count),    LLRSFUNC(Exists), LLRSFUNC(GetInt), LLRSFUNC(Register),
   LLRSFUNC(ResetInt), LLRSFUNC(Save),   LLRSFUNC(SetInt),
 LLRSEND                                // Variable.* namespace functions end
 /* ========================================================================= **
