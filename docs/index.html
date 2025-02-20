@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.2.18.22 -->
-<!-- Automatically built at Tue Feb 18 16:01:41 2025 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.2.18.22 -->
+<!-- Reference for the Mhatxotic Engine API version 25.2.19.4 -->
+<!-- Automatically built at Wed Feb 19 23:59:34 2025 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.2.19.4 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.18.22">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.19.4">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.18.22">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.19.4">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.18.22">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.19.4">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.2.18.22 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.2.19.4 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.2.18.22 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.2.19.4 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.2.18.22 API reference</H1>
+	<H1>Mhatxotic Engine 25.2.19.4 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 850 functions (414 members, 436 methods) and 27 consts in 30 namespaces with 83 commands and 210 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 860 functions (424 members, 436 methods) and 27 consts in 30 namespaces with 83 commands and 210 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1465,7 +1465,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(107 members)</I>
+								<B>Members</B> <I>(117 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1557,14 +1557,24 @@
 									<LI><A href="#Util.RoundPow2">RoundPow2</A></LI>
 									<LI><A href="#Util.SHA1">SHA1</A></LI>
 									<LI><A href="#Util.SHA1A">SHA1A</A></LI>
+									<LI><A href="#Util.SHA1R">SHA1R</A></LI>
+									<LI><A href="#Util.SHA1RA">SHA1RA</A></LI>
 									<LI><A href="#Util.SHA224">SHA224</A></LI>
 									<LI><A href="#Util.SHA224A">SHA224A</A></LI>
+									<LI><A href="#Util.SHA224R">SHA224R</A></LI>
+									<LI><A href="#Util.SHA224RA">SHA224RA</A></LI>
 									<LI><A href="#Util.SHA256">SHA256</A></LI>
 									<LI><A href="#Util.SHA256A">SHA256A</A></LI>
+									<LI><A href="#Util.SHA256R">SHA256R</A></LI>
+									<LI><A href="#Util.SHA256RA">SHA256RA</A></LI>
 									<LI><A href="#Util.SHA384">SHA384</A></LI>
 									<LI><A href="#Util.SHA384A">SHA384A</A></LI>
+									<LI><A href="#Util.SHA384R">SHA384R</A></LI>
+									<LI><A href="#Util.SHA384RA">SHA384RA</A></LI>
 									<LI><A href="#Util.SHA512">SHA512</A></LI>
 									<LI><A href="#Util.SHA512A">SHA512A</A></LI>
+									<LI><A href="#Util.SHA512R">SHA512R</A></LI>
+									<LI><A href="#Util.SHA512RA">SHA512RA</A></LI>
 									<LI><A href="#Util.Sanitise">Sanitise</A></LI>
 									<LI><A href="#Util.StretchInner">StretchInner</A></LI>
 									<LI><A href="#Util.StretchOuter">StretchOuter</A></LI>
@@ -9337,7 +9347,7 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Hash</U> = Util.B64EA(<I><U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to encode.<BR></PRE>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to encode.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Hash</U> <I>(string)</I> = The return string encoded to bas64.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -9393,11 +9403,11 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Hash</U> = Util.CRCA(<I><U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Hash</U> <I>(integer)</I> = The calculated CRC hash.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Calculates a CRC32 hash from an array class&#x2e; Insecure&#x2c; only use for super fast hashing of insignificant strings&#x2e; The benefit of CRC hashing though is that the function returns an integer&#x2e;<BR></PRE>
+		<PRE>Calculates a CRC32 hash from an Asset class&#x2e; Insecure&#x2c; only use for super fast hashing of insignificant strings&#x2e; The benefit of CRC hashing though is that the function returns an integer&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Capitalise" style="display:none">
@@ -10315,11 +10325,35 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Hash</U> = Util.SHA1A(<I><U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA1 hash.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA1 hash from an array class&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
+		<PRE>Calculates a SHA1 hash from an Asset class&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA1R" style="display:none">
+		<H3>Util.SHA1R</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA1R(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA1 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a SHA1 raw hash from an Asset class&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA1RA" style="display:none">
+		<H3>Util.SHA1RA</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA1RA(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA1 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a SHA1 raw hash from an Asset class&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.SHA224" style="display:none">
@@ -10339,11 +10373,35 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Hash</U> = Util.SHA224A(<I><U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA224 hash from an array class&#x2e;<BR></PRE>
+		<PRE>Calculates a SHA224 hash from an Asset class&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA224R" style="display:none">
+		<H3>Util.SHA224R</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA224R(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA224 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a raw SHA224 hash from a string&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA224RA" style="display:none">
+		<H3>Util.SHA224RA</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA224RA(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA224 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a SHA224 raw hash from an Asset class&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.SHA256" style="display:none">
@@ -10363,11 +10421,35 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Hash</U> = Util.SHA256A(<I><U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA256 hash from an array class&#x2e;<BR></PRE>
+		<PRE>Calculates a SHA256 hash from an Asset class&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA256R" style="display:none">
+		<H3>Util.SHA256R</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA256R(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA256 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a raw SHA256 hash from a string&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA256RA" style="display:none">
+		<H3>Util.SHA256RA</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA256RA(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA256 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a SHA256 raw hash from an Asset class&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.SHA384" style="display:none">
@@ -10387,11 +10469,35 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Hash</U> = Util.SHA384A(<I><U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA384 hash.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from an array class&#x2e;<BR></PRE>
+		<PRE>Calculates a SHA384 hash from an Asset class&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA384R" style="display:none">
+		<H3>Util.SHA384R</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA384R(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA384 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a raw SHA384 hash from a string&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA384RA" style="display:none">
+		<H3>Util.SHA384RA</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA384RA(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA384 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a SHA384 raw hash from an Asset class&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.SHA512" style="display:none">
@@ -10411,11 +10517,35 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Hash</U> = Util.SHA512A(<I><U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(array)</I> = The data to hash.<BR></PRE>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA512 hash.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from an array class&#x2e;<BR></PRE>
+		<PRE>Calculates a SHA384 hash from an Asset class&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA512R" style="display:none">
+		<H3>Util.SHA512R</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA512R(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA512 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a raw SHA512 hash from a string&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.SHA512RA" style="display:none">
+		<H3>Util.SHA512RA</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Hash</U> = Util.SHA512RA(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA512 hash.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Calculates a SHA512 raw hash from an Asset class&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Sanitise" style="display:none">
@@ -12604,6 +12734,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Tue Feb 18 16:01:41 2025 +0000</ADDRESS>
+	This document was generated at Wed Feb 19 23:59:34 2025 +0000</ADDRESS>
 </BODY>
 </HTML>

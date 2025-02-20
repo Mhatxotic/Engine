@@ -96,7 +96,7 @@ LLFUNC(B64DA, 1,
 LLFUNC(B64E, 1, LuaUtilPushVar(lS, CryptStoB64(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.B64EA
-// > Data:array=The data to encode.
+// > Data:Asset=The data to encode.
 // < Hash:string=The return string encoded to bas64.
 // ? Encodes the specified data array to base64.
 /* ------------------------------------------------------------------------- */
@@ -141,9 +141,9 @@ LLFUNC(Bytes, 1,
 LLFUNC(CRC, 1, LuaUtilPushVar(lS, CryptToCRC32(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.CRCA
-// > Data:array=The data to hash.
+// > Data:Asset=The data to hash.
 // < Hash:integer=The calculated CRC hash.
-// ? Calculates a CRC32 hash from an array class. Insecure, only use for super
+// ? Calculates a CRC32 hash from an Asset class. Insecure, only use for super
 // ? fast hashing of insignificant strings. The benefit of CRC hashing though
 // ? is that the function returns an integer.
 /* ------------------------------------------------------------------------- */
@@ -867,12 +867,30 @@ LLFUNC(RoundPow2, 1,
 LLFUNC(SHA1, 1, LuaUtilPushVar(lS, SHA1functions::HashStr(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.SHA1A
-// > Data:array=The data to hash.
+// > Data:Asset=The data to hash.
 // < Hash:string=The calculated SHA1 hash.
-// ? Calculates a SHA1 hash from an array class. Insecure, only use for
+// ? Calculates a SHA1 hash from an Asset class. Insecure, only use for
 // ? hashing of insignificant data.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SHA1A, 1, LuaUtilPushVar(lS, SHA1functions::HashMB(AgAsset{lS, 1})))
+/* ========================================================================= */
+// $ Util.SHA1R
+// > Data:Asset=The data to hash.
+// < Hash:Asset=The raw calculated SHA1 hash.
+// ? Calculates a SHA1 raw hash from an Asset class. Insecure, only use for
+// ? hashing of insignificant data.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA1R, 1,
+  AcAsset{lS}().MemSwap({ SHA1functions::HashStrRaw(AgString{lS, 1})}))
+/* ========================================================================= */
+// $ Util.SHA1RA
+// > Data:Asset=The raw data to hash.
+// < Hash:Asset=The raw calculated SHA1 hash.
+// ? Calculates a SHA1 raw hash from an Asset class. Insecure, only use for
+// ? hashing of insignificant data.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA1RA, 1,
+  AcAsset{lS}().MemSwap({ SHA1functions::HashMBtoMB(AgAsset{lS, 1})}))
 /* ========================================================================= */
 // $ Util.SHA224
 // > Data:string=The string to hash.
@@ -883,12 +901,28 @@ LLFUNC(SHA224, 1,
   LuaUtilPushVar(lS, SHA224functions::HashStr(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.SHA224A
-// > Data:array=The data to hash.
+// > Data:Asset=The data to hash.
 // < Hash:string=The calculated SHA256 hash.
-// ? Calculates a SHA224 hash from an array class.
+// ? Calculates a SHA224 hash from an Asset class.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SHA224A, 1,
   LuaUtilPushVar(lS, SHA224functions::HashMB(AgAsset{lS, 1})))
+/* ========================================================================= */
+// $ Util.SHA224R
+// > Data:Asset=The data to hash.
+// < Hash:Asset=The raw calculated SHA224 hash.
+// ? Calculates a raw SHA224 hash from a string.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA224R, 1,
+  AcAsset{lS}().MemSwap({ SHA224functions::HashStrRaw(AgString{lS, 1})}))
+/* ========================================================================= */
+// $ Util.SHA224RA
+// > Data:Asset=The raw data to hash.
+// < Hash:Asset=The raw calculated SHA224 hash.
+// ? Calculates a SHA224 raw hash from an Asset class.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA224RA, 1,
+  AcAsset{lS}().MemSwap({ SHA224functions::HashMBtoMB(AgAsset{lS, 1})}))
 /* ========================================================================= */
 // $ Util.SHA256
 // > Data:string=The string to hash.
@@ -899,12 +933,28 @@ LLFUNC(SHA256, 1,
   LuaUtilPushVar(lS, SHA256functions::HashStr(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.SHA256A
-// > Data:array=The data to hash.
+// > Data:Asset=The data to hash.
 // < Hash:string=The calculated SHA256 hash.
-// ? Calculates a SHA256 hash from an array class.
+// ? Calculates a SHA256 hash from an Asset class.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SHA256A, 1,
   LuaUtilPushVar(lS, SHA256functions::HashMB(AgAsset{lS, 1})))
+/* ========================================================================= */
+// $ Util.SHA256R
+// > Data:Asset=The data to hash.
+// < Hash:Asset=The raw calculated SHA256 hash.
+// ? Calculates a raw SHA256 hash from a string.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA256R, 1,
+  AcAsset{lS}().MemSwap({ SHA256functions::HashStrRaw(AgString{lS, 1})}))
+/* ========================================================================= */
+// $ Util.SHA256RA
+// > Data:Asset=The raw data to hash.
+// < Hash:Asset=The raw calculated SHA256 hash.
+// ? Calculates a SHA256 raw hash from an Asset class.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA256RA, 1,
+  AcAsset{lS}().MemSwap({ SHA256functions::HashMBtoMB(AgAsset{lS, 1})}))
 /* ========================================================================= */
 // $ Util.SHA384
 // > Data:string=The string to hash.
@@ -915,12 +965,28 @@ LLFUNC(SHA384, 1,
   LuaUtilPushVar(lS, SHA384functions::HashStr(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.SHA384A
-// > Data:array=The data to hash.
+// > Data:Asset=The data to hash.
 // < Hash:string=The calculated SHA384 hash.
-// ? Calculates a SHA384 hash from an array class.
+// ? Calculates a SHA384 hash from an Asset class.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SHA384A, 1,
   LuaUtilPushVar(lS, SHA384functions::HashMB(AgAsset{lS, 1})))
+/* ========================================================================= */
+// $ Util.SHA384R
+// > Data:Asset=The data to hash.
+// < Hash:Asset=The raw calculated SHA384 hash.
+// ? Calculates a raw SHA384 hash from a string.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA384R, 1,
+  AcAsset{lS}().MemSwap({ SHA384functions::HashStrRaw(AgString{lS, 1})}))
+/* ========================================================================= */
+// $ Util.SHA384RA
+// > Data:Asset=The raw data to hash.
+// < Hash:Asset=The raw calculated SHA384 hash.
+// ? Calculates a SHA384 raw hash from an Asset class.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA384RA, 1,
+  AcAsset{lS}().MemSwap({ SHA384functions::HashMBtoMB(AgAsset{lS, 1})}))
 /* ========================================================================= */
 // $ Util.SHA512
 // > Data:string=The string to hash.
@@ -931,12 +997,28 @@ LLFUNC(SHA512, 1,
   LuaUtilPushVar(lS, SHA512functions::HashStr(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.SHA512A
-// > Data:array=The data to hash.
+// > Data:Asset=The data to hash.
 // < Hash:string=The calculated SHA512 hash.
-// ? Calculates a SHA384 hash from an array class.
+// ? Calculates a SHA384 hash from an Asset class.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SHA512A, 1,
   LuaUtilPushVar(lS, SHA512functions::HashMB(AgAsset{lS, 1})))
+/* ========================================================================= */
+// $ Util.SHA512R
+// > Data:Asset=The data to hash.
+// < Hash:Asset=The raw calculated SHA512 hash.
+// ? Calculates a raw SHA512 hash from a string.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA512R, 1,
+  AcAsset{lS}().MemSwap({ SHA512functions::HashStrRaw(AgString{lS, 1})}))
+/* ========================================================================= */
+// $ Util.SHA512RA
+// > Data:Asset=The raw data to hash.
+// < Hash:Asset=The raw calculated SHA512 hash.
+// ? Calculates a SHA512 raw hash from an Asset class.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SHA512RA, 1,
+  AcAsset{lS}().MemSwap({ SHA512functions::HashMBtoMB(AgAsset{lS, 1})}))
 /* ========================================================================= */
 // $ Util.Sanitise
 // > Text:string=The string to sanitise.
@@ -1079,12 +1161,15 @@ LLRSBEGIN                              // Util.* namespace functions begin
   LLRSFUNC(RelTimeEx),     LLRSFUNC(Replace),       LLRSFUNC(ReplaceEx),
   LLRSFUNC(Round),         LLRSFUNC(RoundInt),      LLRSFUNC(RoundMul),
   LLRSFUNC(RoundPow2),     LLRSFUNC(SHA1),          LLRSFUNC(SHA1A),
-  LLRSFUNC(SHA224),        LLRSFUNC(SHA224A),       LLRSFUNC(SHA256),
-  LLRSFUNC(SHA256A),       LLRSFUNC(SHA384),        LLRSFUNC(SHA384A),
-  LLRSFUNC(SHA512),        LLRSFUNC(SHA512A),       LLRSFUNC(Sanitise),
-  LLRSFUNC(StretchInner),  LLRSFUNC(StretchOuter),  LLRSFUNC(TableSize),
-  LLRSFUNC(Trim),          LLRSFUNC(UrlDecode),     LLRSFUNC(UrlEncode),
-  LLRSFUNC(UTF8Char),      LLRSFUNC(WordWrap),
+  LLRSFUNC(SHA1R),         LLRSFUNC(SHA1RA),        LLRSFUNC(SHA224),
+  LLRSFUNC(SHA224A),       LLRSFUNC(SHA224R),       LLRSFUNC(SHA224RA),
+  LLRSFUNC(SHA256),        LLRSFUNC(SHA256A),       LLRSFUNC(SHA256R),
+  LLRSFUNC(SHA256RA),      LLRSFUNC(SHA384),        LLRSFUNC(SHA384A),
+  LLRSFUNC(SHA384R),       LLRSFUNC(SHA384RA),      LLRSFUNC(SHA512),
+  LLRSFUNC(SHA512A),       LLRSFUNC(SHA512R),       LLRSFUNC(SHA512RA),
+  LLRSFUNC(Sanitise),      LLRSFUNC(StretchInner),  LLRSFUNC(StretchOuter),
+  LLRSFUNC(TableSize),     LLRSFUNC(Trim),          LLRSFUNC(UrlDecode),
+  LLRSFUNC(UrlEncode),     LLRSFUNC(UTF8Char),      LLRSFUNC(WordWrap),
 LLRSEND                                // Util.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Util namespace

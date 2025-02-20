@@ -4167,16 +4167,13 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
   else aAssets = aAssetsNoMusic end;
   -- Update asset filenames to load
   local sLevelFile<const> = aLevelInfo.f;
-  aAssets[1].F = "lvl/"..sLevelFile..".dat";
-  aAssets[2].F = "lvl/"..sLevelFile..".dao";
+  local sFilePrefix<const> = "lvl/"..sLevelFile;
+  aAssets[1].F = sFilePrefix..".dat";
+  aAssets[2].F = sFilePrefix;
   aAssets[3].F = aLevelTypeData.f;
   -- Level assets loaded function
   local function OnLoaded(aResources)
-    -- Set level data handles
-    local binLevel<const> = aResources[1];
-    -- Set level objects handle
-    local aLevelObj<const> = aResources[2];
-    -- Set textures and masks
+    -- Set texture handle
     texLev = aResources[3];
     -- Makes sure we have the same number of terrain masks as texture tiles
     local iMaskLev<const>, iMaskLevExpect<const> =
@@ -4202,13 +4199,13 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
       { 199, 202, iRace2, bAI2 }    -- Player 2 start data
     };
     -- Create a blank mask
-    maskZone = MaskCreateZero(sLevelFile, iLLPixW,
-      iLLPixH);
+    maskZone = MaskCreateZero(sLevelFile, iLLPixW, iLLPixH);
     -- Get minimum and maximum object id
     local iMinObjId<const>, iMaxObjId<const> = TYP.JENNITE, TYP.MAX;
     -- Player starting point data found
     local aPlayersFound<const> = { };
     -- For each row in the data file
+    local binLevel<const> = aResources[1];
     for iY = 0, iLLAbsHm1 do
       -- Calculate precise Y position for object
       local iPreciseY<const> = iY * 16;
@@ -4253,26 +4250,6 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
         -- Show error. Level could be corrupted
         else error("Error! Invalid tile "..iTerrainId.."/"..#aTileData..
           " at X="..iX..", Y="..iY..", Abs="..iPosition.."!") end;
-        -- We need to check for objects at the same position now too. We
-        -- can store two items on one 16-bit tile...
-        for iPos = iPosition, iPosition + 1 do
-          -- Get object id at position and if it's interesting?
-          local iObjId<const> = aLevelObj:RU8(iPos);
-          if iObjId ~= 0 then
-            if iObjId < iMinObjId or iObjId >= iMaxObjId then
-              -- Show map maker in console that the object id is invalid
-              CoreWrite("Warning! Object id invalid! Id="..
-                iObjId..", X="..iX..", Y="..iY..", Abs="..
-                iPosition..", Slot="..iPos..", Max="..iMaxObjId..".", 9);
-            -- Object id is valid? Create the object
-            elseif not CreateObject(iObjId, iPreciseX, iPreciseY) then
-              -- Show map maker in console that the object id is invalid
-              CoreWrite("Warning! Couldn't create object! Id="..
-                iObjId..", X="..iX..", Y="..iY..", Abs="..
-                iPosition..", Slot="..iPos..", Max="..iMaxObjId..".", 9);
-            end
-          end
-        end
       end
     end
     -- Make sure we got the correct amount of level tiles
@@ -4286,6 +4263,22 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
     maskZone:Fill(0, 0, 1, iLLPixH);
     maskZone:Fill(iLLPixWm1, 0, 1, iLLPixH);
     maskZone:Fill(0, iLLPixHm1, iLLPixW, 1);
+    -- For each pre-positioned object
+    local aLevelObj<const> = aResources[2];
+    for iObjIndex = 1, #aLevelObj do
+      -- Get object id at position and if it's interesting?
+      local aObj<const> = aLevelObj[iObjIndex];
+      local iObjId<const>, iX<const>, iY<const> = aObj[1], aObj[2], aObj[3];
+      if iObjId < iMinObjId or iObjId >= iMaxObjId then
+        error("Warning! Object id invalid! Id="..iObjIndex..", Item="..iObjId..
+          ", X="..iX..", Y="..iY..", Max="..iMaxObjId..".");
+      -- Object id is valid? Create the object and log error if failed
+      elseif not CreateObject(iObjId, iX, iY) then
+        -- Show map maker in console that the object id is invalid
+        error("Warning! Couldn't create object! Id="..iObjIndex..
+          ", Item="..iObjId..", X="..iX..", Y="..iY..".");
+      end
+    end
     -- Reset races available
     for iI = 1, #aRacesData do
       aRacesAvailable[1 + #aRacesAvailable] = aRacesData[iI] end;

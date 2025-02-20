@@ -224,7 +224,7 @@ local aAssetsData<const> = {
   } } },
   -- game.lua -------------------------------------------------------------- --
   mapt = { T = 5, F = false },
-  mapo = { T = 5, F = false },
+  mapo = { T = 11, F = false },
   game = { T = 1, F = false, P = { 16, 16, 0, 0, 0 } },
   gamem = { T = 7, F = "game" },
   gamecm = { T = 7, F = false },

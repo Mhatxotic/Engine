@@ -291,6 +291,7 @@ local aTypes<const> = {
   { Asset.FileAsync,  {0},    "src/", ".lua", ParseScript,      true  }, --  9
   { Image.FileAsync,  {iPNG}, "tex/", ".png", Texture.ImageUT,  false,   -- 10
     { 2 } },
+  { Json.FileAsync,   {},     "",    ".json", Json.ToTable,     false }, -- 11
   -- Async function   Params  Prefix Suffix  Data loader function  Info?    Id
 };
 -- Loader ------------------------------------------------------------------ --

@@ -557,12 +557,18 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc,
         { Memory mbOut{ s }; \
           x(ucpIn, stLen, mbOut.MemPtr<unsigned char>()); \
           return mbOut; } \
+    static Memory HashMBtoMB(const MemConst &mcSrc) \
+      { return HashPtrRaw(mcSrc.MemPtr<unsigned char>(), mcSrc.MemSize()); } \
     static const string HashPtr(const unsigned char*const ucpIn, \
       const size_t stLen) \
         { return CryptBin2Hex(StdMove(HashPtrRaw(ucpIn, stLen))); } \
     static const string HashStr(const string &strIn) \
       { return HashPtr(reinterpret_cast<const unsigned char*>(strIn.data()), \
           strIn.length()); } \
+    static Memory HashStrRaw(const string &strIn) \
+      { return \
+          HashPtrRaw(reinterpret_cast<const unsigned char*>(strIn.data()), \
+            strIn.length()); } \
     static const string HashMB(const MemConst &mcSrc) \
       { return HashPtr(mcSrc.MemPtr<unsigned char>(), mcSrc.MemSize()); } \
     static Memory HashPtrRaw(const void*const vpSalt, const size_t stSaltSize,\
