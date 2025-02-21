@@ -1590,12 +1590,12 @@ static StrNCStrMap SocketOAuth11(const string &strMethod,
   // Put basic stuff in. Be careful of using StrPair with CStrings as
   // you cant use string& with cstrings, so use CSTR*PAIR's instead.
   StrNCStrMap ssmFinal{{
-    { "oauth_consumer_key",                       StdMove(strCK) },
-    { "oauth_nonce", SHA1functions::HashMB(CryptRandomBlock(64)) },
-    { "oauth_timestamp",              StrFromNum(cmSys.GetTimeS()) },
-    { "oauth_token",                             StdMove(strTok) },
-    { "oauth_signature_method",                      "HMAC-SHA1" },
-    { "oauth_version",                                     "1.0" }
+    { "oauth_consumer_key",                    StdMove(strCK) },
+    { "oauth_nonce", SHA1functions::HSM(CryptRandomBlock(64)) },
+    { "oauth_timestamp",         StrFromNum(cmSys.GetTimeS()) },
+    { "oauth_token",                          StdMove(strTok) },
+    { "oauth_signature_method",                   "HMAC-SHA1" },
+    { "oauth_version",                                  "1.0" }
   }};
   // Copy config vars and oauth vars into unsigned params map
   StrNCStrMap ssmDupe{ ssmFinal };
@@ -1609,7 +1609,7 @@ static StrNCStrMap SocketOAuth11(const string &strMethod,
   const string strBody{ CryptImplodeMapAndEncode(pParams, "&") };
   // Hash the string with the key and return empty if fail
   ssmFinal.insert({ "oauth_signature",
-    CryptURLEncode(CryptMBtoB64(StdMove(SHA1functions::HashStrRaw(
+    CryptURLEncode(CryptMBtoB64(StdMove(SHA1functions::HMSS(
       StrAppend(CryptURLEncode(strCS), '&', CryptURLEncode(strUS)),
       StrAppend(CryptURLEncode(strMethod), '&', CryptURLEncode(strAddr), '&',
                 CryptURLEncode(strOAParams))

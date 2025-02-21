@@ -169,14 +169,65 @@ local function RegisterHotSpot(aHotSpots)
 end
 -- Get hotspot data -------------------------------------------------------- --
 local function GetHotSpot() return iHotSpot end;
+-- Set cursor position with scale ------------------------------------------ --
+local function SetCursorPos(iX, iY)
+  InputSetCursorPos(iX * iTexScale, iY * iTexScale);
+end
+-- Set cursor -------------------------------------------------------------- --
+local function SetCursor(iIdentifier)
+  -- Check parameter
+  if not UtilIsInteger(iIdentifier) then
+    error("Cursor id integer is invalid! "..tostring(iIdentifier)) end;
+  -- Get cursor data for id and check it
+  local aCursorItem<const> = aCursorData[iIdentifier];
+  if not UtilIsTable(aCursorItem) then
+    error("Cursor id not valid! "..tostring(aCursorItem)) end;
+  -- Set new cursor dynamics
+  iCursorMin, iCursorMax, iCursorAdjX, iCursorAdjY =
+    aCursorItem[1], aCursorItem[2], aCursorItem[3], aCursorItem[4];
+  -- Set cursor id
+  iCId = iIdentifier;
+end
+-- Execute command if mouse is overing ------------------------------------- --
+local function CheckHotSpotHover(aHotSpot)
+  -- Return if mouse not in bounds
+  if not IsMouseInBounds(aHotSpot[1], aHotSpot[2],
+                         aHotSpot[3], aHotSpot[4]) then return end;
+  -- Set the cursor
+  SetCursor(aHotSpot[6]);
+  -- Call the function if it is available?
+  local fcbCb<const> = aHotSpot[7];
+  if fcbCb then
+    -- Protected call so we can handle errors
+    local bResult<const>, sReason<const> =
+      xpcall(fcbCb, CoreStack, iCursorX, iCursorY);
+    if not bResult then SetErrorMessage(sReason) end;
+  end
+  -- Success
+  return true;
+end
+-- Recheck positions ------------------------------------------------------- --
+local function CheckHotSpots()
+  -- Enumerate hotspots
+  for iIndex = 1, #aHotSpotActive do
+    -- Check if mouse is in zone and if it was? We're done
+    if CheckHotSpotHover(aHotSpotActive[iIndex]) then return end;
+  end
+  -- No cursor was matched so we keep the arrow cursor
+  SetCursor(iCArrow);
+end
 -- When the mouse is clicked ----------------------------------------------- --
 local function OnMouseClick(iButton, iState)
   -- if have hotspots?
   if #aHotSpotActive >= 0 then
-    -- If mouse is dragging and the button assigned is released? Clear the drag
+    -- If mouse is dragging?
     if iDragZone then
+      -- Button assigned is released?
       if iState == iRelease and iButton == iDragButton then
+        -- Clear the drag
         iDragZone, iDragButton = nil, nil;
+        -- Check hotspots
+        CheckHotSpots();
       -- Do not process any more buttons while draging
       else return end;
     end
@@ -228,10 +279,6 @@ local function OnMouseScroll(nX, nY)
       return;
     end
   end
-end
--- Set cursor position with scale ------------------------------------------ --
-local function SetCursorPos(iX, iY)
-  InputSetCursorPos(iX * iTexScale, iY * iTexScale);
 end
 -- Joystick procedure ------------------------------------------------------ --
 local function JoystickProc()
@@ -355,39 +402,6 @@ local function OnJoyState(iJ, bState)
 end
 -- Get cursor -------------------------------------------------------------- --
 local function GetCursor() return iCId end;
--- Set cursor -------------------------------------------------------------- --
-local function SetCursor(iIdentifier)
-  -- Check parameter
-  if not UtilIsInteger(iIdentifier) then
-    error("Cursor id integer is invalid! "..tostring(iIdentifier)) end;
-  -- Get cursor data for id and check it
-  local aCursorItem<const> = aCursorData[iIdentifier];
-  if not UtilIsTable(aCursorItem) then
-    error("Cursor id not valid! "..tostring(aCursorItem)) end;
-  -- Set new cursor dynamics
-  iCursorMin, iCursorMax, iCursorAdjX, iCursorAdjY =
-    aCursorItem[1], aCursorItem[2], aCursorItem[3], aCursorItem[4];
-  -- Set cursor id
-  iCId = iIdentifier;
-end
--- Execute command if mouse is overing ------------------------------------- --
-local function CheckHotSpotHover(aHotSpot)
-  -- Return if mouse not in bounds
-  if not IsMouseInBounds(aHotSpot[1], aHotSpot[2],
-                         aHotSpot[3], aHotSpot[4]) then return end;
-  -- Set the cursor
-  SetCursor(aHotSpot[6]);
-  -- Call the function if it is available?
-  local fcbCb<const> = aHotSpot[7];
-  if fcbCb then
-    -- Protected call so we can handle errors
-    local bResult<const>, sReason<const> =
-      xpcall(fcbCb, CoreStack, iCursorX, iCursorY);
-    if not bResult then SetErrorMessage(sReason) end;
-  end
-  -- Success
-  return true;
-end
 -- Update hotspot based on alignment --------------------------------------- --
 local function UpdateHotSpot(aHotSpot)
   -- Update Y position
@@ -459,29 +473,41 @@ local function SetHotSpot(iIdentifier)
 end
 -- When the mouse is moved ------------------------------------------------- --
 local function OnMouseMove(nX, nY)
-  -- Update cursor bounds
+  -- Update physical cursor bounds
   iCursorRX, iCursorRY = floor(nX), floor(nY);
-  iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
   -- Return if no hotspots
-  if #aHotSpotActive == 0 then return end;
-  -- If a hotspot is dragging?
-  if iDragZone then
-    -- Get the drag callback and run it
-    local fcbCb<const> = aHotSpotActive[iDragZone][9][3];
-    if fcbCb then
-      -- Protected call so we can handle errors
-      local bResult<const>, sReason<const> =
-        xpcall(fcbCb, CoreStack, iDragButton, iCursorX, iCursorY);
-      if not bResult then SetErrorMessage(sReason) end;
-    end
+  if #aHotSpotActive == 0 then
+    -- Update cursor
+    iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
+    -- Return
+    return;
   end
-  -- Enumerate hotspots
-  for iIndex = 1, #aHotSpotActive do
-    -- Check if mouse is in zone and if it was? We're done
-    if CheckHotSpotHover(aHotSpotActive[iIndex]) then return end;
+  -- If not hotspot is dragging? Update position and check hotspots
+  if not iDragZone then
+    -- Update cursor
+    iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
+    -- Check hotspots and return
+    return CheckHotSpots();
   end
-  -- No cursor was matched so we keep the arrow cursor
-  SetCursor(iCArrow);
+  -- Get the drag callback and if not set?
+  local fcbCb<const> = aHotSpotActive[iDragZone][9][3];
+  if not fcbCb then
+    -- Update cursor
+    iCursorX, iCursorY = iCursorRX // iTexScale, iCursorRY // iTexScale;
+    -- Check hotspots and return
+    return CheckHotSpots();
+  end
+  -- Calculate new position but don't overwrite current one just yet
+  local iCursorNX<const>, iCursorNY<const> =
+    iCursorRX // iTexScale, iCursorRY // iTexScale;
+  -- Protected call so we can handle errors
+  local bResult<const>, sReason<const> =
+    xpcall(fcbCb, CoreStack, iDragButton, iCursorX, iCursorY,
+      iCursorNX-iCursorX, iCursorNY-iCursorY);
+  -- Now update the new cursor position
+  iCursorX, iCursorY = iCursorNX, iCursorNY;
+  -- Error if call failed
+  if not bResult then return SetErrorMessage(sReason) end;
 end
 -- Categorise the keys ----------------------------------------------------- --
 local function RegisterCategorise(sName, aKeys)

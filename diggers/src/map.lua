@@ -10,7 +10,7 @@
 -- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
 -- Core function aliases --------------------------------------------------- --
-local pairs<const> = pairs;
+local pairs<const>, floor<const> = pairs, math.floor;
 -- M-Engine function aliases ----------------------------------------------- --
 local CoreTicks<const>, UtilClampInt<const>, UtilIsNumber<const>,
   UtilIsTable<const> = Core.Ticks, Util.ClampInt, Util.IsNumber, Util.IsTable;
@@ -36,6 +36,7 @@ local iMapSizeX<const>,                -- Map size pixel width
       iMapSizeY<const> = 640, 350;     -- Map size pixel height
 local iSClick, iSSelect,               -- Sound effect ids
       iStageL, iStageT,                -- Stage upper-left co-ordinates
+      iStageW, iStageH,                -- Stage width and height
       iStageLneg, iStageTneg,          -- Negatated upper-left stage co-ords
       iStageLmove, iStageRmove;        -- Mouse scrolling positions
 local iZoneScroll;                     -- Zone button scrolling id
@@ -200,7 +201,7 @@ end
 -- On frame buffer updated ------------------------------------------------- --
 local function OnStageUpdated(...)
   -- Update stage bounds
-  local _ _, _, iStageL, iStageT, iStageR, _ = ...;
+  iStageW, iStageH, iStageL, iStageT, iStageR = ...;
   -- Get negated stage left co-ordinate
   iStageLneg, iStageTneg = -iStageL, -iStageT;
   -- Update maximums
@@ -246,10 +247,20 @@ local function GoScrollLeft() AdjustMapViewX(-8) OnHover() end;
 local function GoScrollRight() AdjustMapViewX(8) OnHover() end;
 local function GoScrollUp() AdjustMapViewY(-8) OnHover() end;
 local function GoScrollDown() AdjustMapViewY(8) OnHover() end;
+-- Cursor drag event ------------------------------------------------------- --
+local function OnDrag(iButton, _, _, iMoveX, iMoveY)
+  -- Return if not right mouse button
+  if iButton ~= 1 then return end;
+  -- Move the map to how the mouse is dragging
+  AdjustMapViewX(iMoveX);
+  AdjustMapViewY(iMoveY);
+  -- Keep arrow shown
+  SetCursor(iCArrow)
+end
 -- Cursor pressed event ---------------------------------------------------- --
-local function OnPress()
-  -- Ignore if nothing pressed
-  if not aHoverData then return;
+local function OnPress(iButton)
+  -- Ignore if nothing pressed or left button not pressed
+  if not aHoverData or iButton ~= 0 then return;
   -- If a zone is selected then accept the level and fade out to lobby
   elseif UtilIsTable(aHoverData) then FinishAndAccept();
   -- If mouse is over the exit then cancel back to lobby
@@ -381,7 +392,7 @@ local function OnScriptLoaded(GetAPI)
   -- Setup hot spots. This scene is complicated with dynamically changing
   -- points of interest so we won't be directly using them.
   iHotSpotId = RegisterHotSpot({
-    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress, false } }
+    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress, OnDrag } }
   });
 end
 -- Exports and imports ----------------------------------------------------- --

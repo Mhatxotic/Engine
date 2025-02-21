@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.2.19.4 -->
-<!-- Automatically built at Wed Feb 19 23:59:34 2025 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.2.19.4 -->
+<!-- Reference for the Mhatxotic Engine API version 25.2.20.46 -->
+<!-- Automatically built at Fri Feb 21 01:43:23 2025 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.2.20.46 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.19.4">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.20.46">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.19.4">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.20.46">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.19.4">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.20.46">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.2.19.4 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.2.20.46 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.2.19.4 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.2.20.46 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.2.19.4 API reference</H1>
+	<H1>Mhatxotic Engine 25.2.20.46 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 860 functions (424 members, 436 methods) and 27 consts in 30 namespaces with 83 commands and 210 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 838 functions (402 members, 436 methods) and 27 consts in 30 namespaces with 83 commands and 210 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1465,7 +1465,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(117 members)</I>
+								<B>Members</B> <I>(95 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1500,11 +1500,7 @@
 									<LI><A href="#Util.FormatTimeUTC">FormatTimeUTC</A></LI>
 									<LI><A href="#Util.GetRatio">GetRatio</A></LI>
 									<LI><A href="#Util.Grouped">Grouped</A></LI>
-									<LI><A href="#Util.HMSHA1">HMSHA1</A></LI>
-									<LI><A href="#Util.HMSHA224">HMSHA224</A></LI>
-									<LI><A href="#Util.HMSHA256">HMSHA256</A></LI>
-									<LI><A href="#Util.HMSHA384">HMSHA384</A></LI>
-									<LI><A href="#Util.HMSHA512">HMSHA512</A></LI>
+									<LI><A href="#Util.Hash">Hash</A></LI>
 									<LI><A href="#Util.Hex">Hex</A></LI>
 									<LI><A href="#Util.HexDecode">HexDecode</A></LI>
 									<LI><A href="#Util.HexDecodeA">HexDecodeA</A></LI>
@@ -1547,6 +1543,8 @@
 									<LI><A href="#Util.PlusOrMinusEx">PlusOrMinusEx</A></LI>
 									<LI><A href="#Util.Position">Position</A></LI>
 									<LI><A href="#Util.RandUUID">RandUUID</A></LI>
+									<LI><A href="#Util.Random">Random</A></LI>
+									<LI><A href="#Util.RandomA">RandomA</A></LI>
 									<LI><A href="#Util.RelTime">RelTime</A></LI>
 									<LI><A href="#Util.RelTimeEx">RelTimeEx</A></LI>
 									<LI><A href="#Util.Replace">Replace</A></LI>
@@ -1555,26 +1553,6 @@
 									<LI><A href="#Util.RoundInt">RoundInt</A></LI>
 									<LI><A href="#Util.RoundMul">RoundMul</A></LI>
 									<LI><A href="#Util.RoundPow2">RoundPow2</A></LI>
-									<LI><A href="#Util.SHA1">SHA1</A></LI>
-									<LI><A href="#Util.SHA1A">SHA1A</A></LI>
-									<LI><A href="#Util.SHA1R">SHA1R</A></LI>
-									<LI><A href="#Util.SHA1RA">SHA1RA</A></LI>
-									<LI><A href="#Util.SHA224">SHA224</A></LI>
-									<LI><A href="#Util.SHA224A">SHA224A</A></LI>
-									<LI><A href="#Util.SHA224R">SHA224R</A></LI>
-									<LI><A href="#Util.SHA224RA">SHA224RA</A></LI>
-									<LI><A href="#Util.SHA256">SHA256</A></LI>
-									<LI><A href="#Util.SHA256A">SHA256A</A></LI>
-									<LI><A href="#Util.SHA256R">SHA256R</A></LI>
-									<LI><A href="#Util.SHA256RA">SHA256RA</A></LI>
-									<LI><A href="#Util.SHA384">SHA384</A></LI>
-									<LI><A href="#Util.SHA384A">SHA384A</A></LI>
-									<LI><A href="#Util.SHA384R">SHA384R</A></LI>
-									<LI><A href="#Util.SHA384RA">SHA384RA</A></LI>
-									<LI><A href="#Util.SHA512">SHA512</A></LI>
-									<LI><A href="#Util.SHA512A">SHA512A</A></LI>
-									<LI><A href="#Util.SHA512R">SHA512R</A></LI>
-									<LI><A href="#Util.SHA512RA">SHA512RA</A></LI>
 									<LI><A href="#Util.Sanitise">Sanitise</A></LI>
 									<LI><A href="#Util.StretchInner">StretchInner</A></LI>
 									<LI><A href="#Util.StretchOuter">StretchOuter</A></LI>
@@ -9650,64 +9628,16 @@
 		<PRE>Converts the specified number into a human readable string&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Util.HMSHA1" style="display:none">
-		<H3>Util.HMSHA1</H3>
+	<DIV id="Util.Hash" style="display:none">
+		<H3>Util.Hash</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA1(<I><U>Key</U>, <U>Data</U></I>)</PRE>
+		<PRE><U>Hash</U> = Util.Hash(<I><U>Salt</U>, <U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
+		<PRE><U>Salt</U> <I>(string|Asset)</I> = The salt string or raw data used to randomise the data<BR><U>Data</U> <I>(string|Asset)</I> = The string or raw data to hash.<BR></PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA1 hash.<BR></PRE>
+		<PRE><U>Hash</U> <I>(string|Asset)</I> = The string or raw data calculated hash.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA1 hash from a string using the specifiy entropy&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.HMSHA224" style="display:none">
-		<H3>Util.HMSHA224</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA224(<I><U>Key</U>, <U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA224 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA224 hash from a string using the specifiy entropy&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.HMSHA256" style="display:none">
-		<H3>Util.HMSHA256</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA256(<I><U>Key</U>, <U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA256 hash from a string using the specifiy entropy&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.HMSHA384" style="display:none">
-		<H3>Util.HMSHA384</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA384(<I><U>Key</U>, <U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA384 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from a string using the specifiy entropy&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.HMSHA512" style="display:none">
-		<H3>Util.HMSHA512</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.HMSHA512(<I><U>Key</U>, <U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Key</U> <I>(string)</I> = The entropy to use.<BR><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA512 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA512 hash from a string using the specifiy entropy&#x2e;<BR></PRE>
+		<PRE>A collection of functions that will calculate a hash from a &#x27;string&#x27; class or raw &#x27;Asset&#x27; class with or without salting&#x2e;<BR><BR>Actual functions &#x28;Replace &#x27;Hash&#x27; with one of the below&#x29;&#x2e; Syntax of the function is &#x3c;TYP&#x3e;&#x3c;STR&#x3e;&#x3c;R&#x3e;&#x3c;P&#x2e;&#x2e;&#x2e;&#x3e; where &#x3c;TYP&#x3e; is the hash type&#x2e; &#x3c;STR&#x3e; is the strength of the hash&#x2c; &#x3c;R&#x3e; is either &#x27;A&#x27; returning an &#x27;Asset&#x27; class or &#x27;S&#x27; returning a string object and &#x3c;P&#x2e;&#x2e;&#x2e;&#x3e; means one or more &#x27;Asset&#x27; &#x28;A&#x29; or &#x27;String&#x27; &#x28;S&#x29; parameters&#x2e; &#x28;&#x2a;&#x29; denotes do not use due to collision risks&#x2e;&#x2e;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1AA&#x28;Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1AS&#x28;Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA1ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SA&#x28;Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SS&#x28;Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA1SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29; &#x28;&#x2a;&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224AA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224AS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA224ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA224SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256AA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256AS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA256ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA256SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384AA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384AS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA384ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA384SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512AA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512AAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512AAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512AS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512ASA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;Asset &#x3d; SHA512ASS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SA&#x28;Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SAA&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SAS&#x28;Salt&#x3a;Asset&#x2c; Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SS&#x28;Data&#x3a;string&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SSA&#x28;Salt&#x3a;string&#x2c; Data&#x3a;Asset&#x29;&#x2e;<BR>&#x2d; Hash&#x3a;string &#x3d; SHA512SSS&#x28;Salt&#x3a;string&#x2c; Data&#x3a;string&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Hex" style="display:none">
@@ -10212,6 +10142,28 @@
 		<PRE>Generates a random UUIDv4 </PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.Random" style="display:none">
+		<H3>Util.Random</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.Random()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(Integer)</I> = The random number returned.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Uses OpenSSL to generate a random 64&#x2d;bit number&#x2e; This data is constantly salted so you always get unique data&#x2e; This function is provided for security over performance&#x2c; otherwise you should use &#x27;math&#x2e;random&#x28;&#x29;&#x27;&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.RandomA" style="display:none">
+		<H3>Util.RandomA</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.RandomA(<I><U>Size</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Size</U> <I>(integer)</I> = The size of the random data.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(Asset)</I> = The random data returned.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Uses OpenSSL to generate random data&#x2e; This data is constantly salted so you always get unique data&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.RelTime" style="display:none">
 		<H3>Util.RelTime</H3>
 		<H4>Syntax:-</H4>
@@ -10306,246 +10258,6 @@
 		<PRE><U>Result</U> <I>(integer)</I> = The resulting rounded value<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Rounds the specified integer up to the nearest power of two&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA1" style="display:none">
-		<H3>Util.SHA1</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA1(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA1 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA1 hash from a string&#x2e; This hashing algorithm is obsolete and insecure and should no longer be used and is here only for compatibility reasons only&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA1A" style="display:none">
-		<H3>Util.SHA1A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA1A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA1 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA1 hash from an Asset class&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA1R" style="display:none">
-		<H3>Util.SHA1R</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA1R(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA1 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA1 raw hash from an Asset class&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA1RA" style="display:none">
-		<H3>Util.SHA1RA</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA1RA(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA1 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA1 raw hash from an Asset class&#x2e; Insecure&#x2c; only use for hashing of insignificant data&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA224" style="display:none">
-		<H3>Util.SHA224</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA224(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA224 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA224A" style="display:none">
-		<H3>Util.SHA224A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA224A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA224 hash from an Asset class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA224R" style="display:none">
-		<H3>Util.SHA224R</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA224R(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA224 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a raw SHA224 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA224RA" style="display:none">
-		<H3>Util.SHA224RA</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA224RA(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA224 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA224 raw hash from an Asset class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA256" style="display:none">
-		<H3>Util.SHA256</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA256(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA256 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA256A" style="display:none">
-		<H3>Util.SHA256A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA256A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA256 hash from an Asset class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA256R" style="display:none">
-		<H3>Util.SHA256R</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA256R(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a raw SHA256 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA256RA" style="display:none">
-		<H3>Util.SHA256RA</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA256RA(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA256 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA256 raw hash from an Asset class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA384" style="display:none">
-		<H3>Util.SHA384</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA384(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA384 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA384A" style="display:none">
-		<H3>Util.SHA384A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA384A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA384 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from an Asset class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA384R" style="display:none">
-		<H3>Util.SHA384R</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA384R(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA384 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a raw SHA384 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA384RA" style="display:none">
-		<H3>Util.SHA384RA</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA384RA(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA384 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 raw hash from an Asset class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA512" style="display:none">
-		<H3>Util.SHA512</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA512(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(string)</I> = The string to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA512 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA512 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA512A" style="display:none">
-		<H3>Util.SHA512A</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA512A(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(string)</I> = The calculated SHA512 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA384 hash from an Asset class&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA512R" style="display:none">
-		<H3>Util.SHA512R</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA512R(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA512 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a raw SHA512 hash from a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.SHA512RA" style="display:none">
-		<H3>Util.SHA512RA</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Hash</U> = Util.SHA512RA(<I><U>Data</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The raw data to hash.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Hash</U> <I>(Asset)</I> = The raw calculated SHA512 hash.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a SHA512 raw hash from an Asset class&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Sanitise" style="display:none">
@@ -12734,6 +12446,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Wed Feb 19 23:59:34 2025 +0000</ADDRESS>
+	This document was generated at Fri Feb 21 01:43:23 2025 +0000</ADDRESS>
 </BODY>
 </HTML>
