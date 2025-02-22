@@ -143,6 +143,14 @@ local function OnScroll(nX, nY)
 end
 -- On mouse released (remove logic function) ------------------------------- --
 local function OnRelease() SetCallbacks(nil, ProcRenderPostMortem) end;
+-- Cursor drag event ------------------------------------------------------- --
+local function OnDrag(_, _, _, iMoveX, iMoveY)
+  -- Move the level to how the mouse is dragging
+  AdjustViewPortX(iMoveX);
+  AdjustViewPortY(iMoveY);
+  -- Keep arrow shown
+  SetCursor(iCArrow)
+end
 -- On mouse pressed -------------------------------------------------------- --
 local function OnPress()
   -- Mouse pressed over  top edge of screen?
@@ -249,7 +257,7 @@ local function OnScriptLoaded(GetAPI)
   });
   -- Set hot spot
   iHotSpotId = RegisterHotSpot({
-    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress, false } }
+    { 0, 0, 0, 240, 3, 0, OnHover, OnScroll, { OnRelease, OnPress, OnDrag } }
   });
   -- Set cursor ids
   iCLeft, iCRight, iCTop, iCBottom, iCWait, iCArrow, iCExit =

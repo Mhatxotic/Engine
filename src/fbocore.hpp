@@ -302,8 +302,8 @@ static class FboCore final :           // The main fbo operations manager
     // Commit the filters
     fboMain.FboCommitFilter();
     fboConsole.FboCommitFilter();
-    // Ask LUA to tell guest to redraw if needed
-    cEvtMain->Add(EMC_LUA_REDRAW);
+    // Redraw the main frame-buffer
+    SetDraw();
     // Return success
     return ACCEPT;
   }

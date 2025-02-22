@@ -212,8 +212,9 @@ local function OnStageUpdated(...)
   -- Clamp current co-ordinates
   AdjustMapViewX(0);
   AdjustMapViewY(0);
-  -- Update hover state
-  OnHover();
+  -- The mouse could be over something else now so clear selections
+  aHoverData = 0;
+  OnHoverGeneric(iCArrow, nil, nil);
 end
 -- When screen has faded out ----------------------------------------------- --
 local function OnFadedOutToController()
@@ -248,9 +249,7 @@ local function GoScrollRight() AdjustMapViewX(8) OnHover() end;
 local function GoScrollUp() AdjustMapViewY(-8) OnHover() end;
 local function GoScrollDown() AdjustMapViewY(8) OnHover() end;
 -- Cursor drag event ------------------------------------------------------- --
-local function OnDrag(iButton, _, _, iMoveX, iMoveY)
-  -- Return if not right mouse button
-  if iButton ~= 1 then return end;
+local function OnDrag(_, _, _, iMoveX, iMoveY)
   -- Move the map to how the mouse is dragging
   AdjustMapViewX(iMoveX);
   AdjustMapViewY(iMoveY);
@@ -258,9 +257,9 @@ local function OnDrag(iButton, _, _, iMoveX, iMoveY)
   SetCursor(iCArrow)
 end
 -- Cursor pressed event ---------------------------------------------------- --
-local function OnPress(iButton)
+local function OnPress()
   -- Ignore if nothing pressed or left button not pressed
-  if not aHoverData or iButton ~= 0 then return;
+  if not aHoverData then return;
   -- If a zone is selected then accept the level and fade out to lobby
   elseif UtilIsTable(aHoverData) then FinishAndAccept();
   -- If mouse is over the exit then cancel back to lobby

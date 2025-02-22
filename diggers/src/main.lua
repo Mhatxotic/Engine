@@ -561,9 +561,12 @@ local function RefreshViewportInfo()
       floor(iOrthoWidth)//iTexScale, floor(iOrthoHeight)//iTexScale;
   -- Call frame buffer callbacks
   for _, fcbC in pairs(fcbFrameBufferCbs) do
-    fcbC(iStageWidth, iStageHeight,
-      iStageLeft, iStageTop, iStageRight, iStageBottom,
-      iOrthoWidth, iOrthoHeight) end;
+    -- Protected call so we can handle errors
+    local bResult<const>, sReason<const> = xpcall(fcbC, CoreStack,
+      iStageWidth, iStageHeight, iStageLeft, iStageTop, iStageRight,
+      iStageBottom, iOrthoWidth, iOrthoHeight);
+    if not bResult then SetErrorMessage(sReason) end;
+  end
 end
 -- Register a callback and automatically when window size changes ---------- --
 local function RegisterFrameBufferUpdateCallback(sName, fCB)

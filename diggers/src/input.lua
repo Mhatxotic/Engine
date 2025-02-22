@@ -317,7 +317,7 @@ local function JoystickProc()
   -- Axis moving?
   if nJoyAX ~= 0 or nJoyAY ~= 0 then
     -- Update mouse position
-    InputSetCursorPos(
+    SetCursorPos(
       UtilClamp(iCursorX + nJoyAX, iStageLeft, iStageRight - 1),
       UtilClamp(iCursorY + nJoyAY, iStageTop, iStageBottom - 1));
   -- No axis pressed

@@ -159,11 +159,11 @@ local CID<const> = {
 -- Cursor data ------------------------------------------------------------- --
 local aCursorData<const> = {
   -- CID ------- S - C - X  Y ---- CID ------- S - C - X  Y ---
-  [CID.ARROW] ={ 992,  1, 0,  0}, [CID.OK]    ={1005,  4,-7,-8},
-  [CID.EXIT]  ={1001,  4,-7, -8}, [CID.LEFT]  ={ 997,  1,-7,-7},
-  [CID.TOP]   ={ 998,  1,-7,  0}, [CID.RIGHT] ={ 999,  1,-7,-7},
-  [CID.BOTTOM]={1000,  1,-7,-15}, [CID.SELECT]={ 993,  4,-7,-7},
-  [CID.WAIT]  ={ 960,  8,-7, -7}, [CID.NONE]  ={1009,  1, 0, 0},
+  [CID.ARROW] ={ 992,  1,-3, -3}, [CID.OK]    ={1005,  4, -7,-8},
+  [CID.EXIT]  ={1001,  4,-7, -8}, [CID.LEFT]  ={ 997,  1, -2,-7},
+  [CID.TOP]   ={ 998,  1,-7, -2}, [CID.RIGHT] ={ 999,  1,-13,-7},
+  [CID.BOTTOM]={1000,  1,-7,-13}, [CID.SELECT]={ 993,  4, -7,-7},
+  [CID.WAIT]  ={ 960,  8,-7, -7}, [CID.NONE]  ={1009,  1,  0, 0},
   -- CID ------- S - C - X  Y ---- CID ------- S - C - X  Y ---
 };
 -- Object flags ------------------------------------------------------------ --
@@ -1661,7 +1661,7 @@ local DF<const> = {
   -- ----------------------------------------------------------------------- --
 };
 -- Digging tile data ------------------------------------------------------- --
-local aDigData<const> = {
+local aDigData<const> = {              -- Note that tile ids are 0-indexed here
 -- ------------------------------------------------------------------------- --
 -- FO    (FromOver)    DF.MO*. Tile to match from object's over tile
 -- FA    (FromAbove)   DF.MA*. Tile to match from object's above tile
@@ -1678,6 +1678,8 @@ local aDigData<const> = {
 {  3,  3,  0,  0, 44,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,  7,  0, 12,208,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
 {  3,  7,  0,  0, 44,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
+{  3, 95,  0, 12,208,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
+{  3, 96,  0,  0, 44,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,150,  0, 12,208,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
 {  3,150,  0,  0, 44,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,170,  0, 12,208,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
@@ -1702,6 +1704,8 @@ local aDigData<const> = {
 {  3,  3,  0,  0, 26,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,  7,  0,  6, 33,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
 {  3,  7,  0,  0, 26,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
+{  3, 95,  0,  6, 33,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
+{  3, 96,  0,  0, 26,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,150,  0,  6, 33,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
 {  3,150,  0,  0, 26,  0,  0,DF.MO|DF.MA      |DF.SO      |DF.OB},
 {  3,170,  0,  6, 33,  0,  0,DF.MO|DF.MA|DF.MC|DF.SO      |DF.OB},
