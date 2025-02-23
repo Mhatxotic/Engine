@@ -22,6 +22,9 @@ template<typename Int = unsigned int>class IntPair
     { return static_cast<RInt>(i2); }
   template<typename RInt=Int>RInt IPDefGet(void) const
     { return static_cast<RInt>(iD0); }
+  /* -- Get reference ------------------------------------------------------ */
+  Int &IPGetOneRef(void) { return i1; }
+  Int &IPGetTwoRef(void) { return i2; }
   /* -- Set ---------------------------------------------------------------- */
   void IPSetOne(const Int iV) { i1 = iV; }
   void IPSetTwo(const Int iV) { i2 = iV; }
@@ -79,6 +82,9 @@ struct Dimensions :                    // Members initially public
     { return this->template IPGetTwo<RInt>(); }
   template<typename RInt=Int>RInt DimDefGet(void) const
     { return this->template IPDefGet<RInt>(); }
+  /* -- Get reference ------------------------------------------------------ */
+  Int &DimGetWidthRef(void) { return this->IPGetOneRef(); }
+  Int &DimGetHeightRef(void) { return this->IPGetTwoRef(); }
   /* -- Set ---------------------------------------------------------------- */
   void DimSetWidth(const Int iV) { this->IPSetOne(iV); }
   void DimSetHeight(const Int iV) { this->IPSetTwo(iV); }
@@ -124,6 +130,9 @@ struct Coordinates :                   // Members initially public
     { return this->template IPGetTwo<RInt>(); }
   template<typename RInt=Int>RInt CoordDefGet(void) const
     { return this->template IPDefGet<RInt>(); }
+  /* -- Get reference ------------------------------------------------------ */
+  Int &CoordGetXRef(void) { return this->IPGetOneRef(); }
+  Int &CoordGetYRef(void) { return this->IPGetTwoRef(); }
   /* -- Set ---------------------------------------------------------------- */
   void CoordSetX(const Int iV) { this->IPSetOne(iV); }
   void CoordSetY(const Int iV) { this->IPSetTwo(iV); }

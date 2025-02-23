@@ -212,7 +212,7 @@ end
 -- Resources loaded event callback ----------------------------------------- --
 local function OnAssetsLoaded(aResources)
   -- Play bank music
-  PlayMusic(aResources[2]);
+  PlayMusic(aResources[2], nil, nil, nil, 237364);
   -- Load texture. We only have 12 animations, discard all the other tiles
   -- as we're using the same bitmap for other sized textures.
   texBank = aResources[1];

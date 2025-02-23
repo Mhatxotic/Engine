@@ -25,63 +25,66 @@ enum EvtMainCmd : size_t               // Engine thread event commands
   EMC_QUIT_RESTART,                    // 03: Cleanly quit and restart app
   EMC_QUIT_RESTART_NP,                 // 04: Same as above but without args
   /* -- Lua events --------------------------------------------------------- */
-  EMC_LUA_PAUSE,                       // 05: Pause LUA execution
-  EMC_LUA_RESUME,                      // 06: Resume LUA execution
-  EMC_LUA_REDRAW,                      // 07: Ask LUA guest to redraw fbo's
-  EMC_LUA_REINIT,                      // 08: Reinit LUA execution
-  EMC_LUA_END,                         // 09: End LUA execution
-  EMC_LUA_ASK_EXIT,                    // 10: To LUA asking to clean up & exit
-  EMC_LUA_CONFIRM_EXIT,                // 11: From LUA to confirm the exit
+  EMC_LUA_ASK_EXIT,                    // 05: To LUA asking to clean up & exit
+  EMC_LUA_CONFIRM_EXIT,                // 06: From LUA to confirm the exit
+  EMC_LUA_END,                         // 07: End LUA execution
+  EMC_LUA_PAUSE,                       // 08: Pause LUA execution
+  EMC_LUA_REDRAW,                      // 09: Ask LUA guest to redraw fbo's
+  EMC_LUA_REINIT,                      // 10: Reinit LUA execution
+  EMC_LUA_RESUME,                      // 11: Resume LUA execution
   /* -- Window events ------------------------------------------------------ */
-  EMC_WIN_MOVED,                       // 12: Window was moved
+  EMC_WIN_CLOSE,                       // 12: Window wants to be closed
   EMC_WIN_FOCUS,                       // 13: Window focus was changed
-  EMC_WIN_SCALE,                       // 14: Window content scale changed
-  EMC_WIN_RESIZED,                     // 15: Window was resized
+  EMC_WIN_ICONIFY,                     // 14: Window was minimised or restored
+  EMC_WIN_MOVED,                       // 15: Window was moved
   EMC_WIN_REFRESH,                     // 16: Window content needs refresh
-  EMC_WIN_ICONIFY,                     // 17: Window was minimised or restored
-  EMC_WIN_CLOSE,                       // 18: Window wants to be closed
+  EMC_WIN_RESIZED,                     // 17: Window was resized
+  EMC_WIN_SCALE,                       // 18: Window content scale changed
   /* -- OpenGL events ------------------------------------------------------ */
   EMC_VID_FB_REINIT,                   // 19: Reset frame buffer
   EMC_VID_MATRIX_REINIT,               // 20: Reset matrix
   /* -- Audio events ------------------------------------------------------- */
   EMC_AUD_REINIT,                      // 21: Re-initialise audio
   /* -- Input events ------------------------------------------------------- */
-  EMC_INP_PASTE,                       // 22: Paste into input from clipboard
-  /* ----------------------------------------------------------------------- */
-  EMC_NOLOG,                           // 23: Events after this aren't logged
-  /* -- Console events ----------------------------------------------------- */
-  EMC_CON_UPDATE = EMC_NOLOG,          // 24: Force a syscon display update
-  EMC_CON_KEYPRESS,                    // 25: Console key pressed
+  EMC_INP_DRAG_DROP,                   // 22: Files dragged and dropped
+  EMC_INP_JOY_STATE,                   // 23: Joystick status changed
+  EMC_INP_MOUSE_FOCUS,                 // 24: Mouse moved (in|out)side window
+  EMC_INP_PASTE,                       // 25: Paste into input from clipboard
+  /* -- Unique async events ------------------------------------------------ */
+  EMC_CB_EVENT,                        // 26: Clipboard event occured
+  EMC_CUR_EVENT,                       // 27: Cursor event occured
+  EMC_STR_EVENT,                       // 28: Stream event occured
+  EMC_VID_EVENT,                       // 29: Video event occured
+  /* -- Console events------------------------------------------------------ */
+  EMC_CON_UPDATE,                      // 30: Force syscon display update
+  EMC_CON_KEYPRESS,                    // 31: Console key pressed (NoLog here)
   /* -- Input events ------------------------------------------------------- */
-  EMC_INP_KEYPRESS,                    // 26: Unfiltered key pressed
-  EMC_INP_CHAR,                        // 27: Filtered key pressed
-  EMC_INP_DRAG_DROP,                   // 28: Files dragged and dropped
-  EMC_INP_MOUSE_FOCUS,                 // 29: Mouse moved outside/inside window
-  EMC_INP_MOUSE_MOVE,                  // 30: Mouse cursor moved
-  EMC_INP_MOUSE_CLICK,                 // 31: Mouse button clicked
-  EMC_INP_MOUSE_SCROLL,                // 32: Mouse wheel scrolled
-  EMC_INP_JOY_STATE,                   // 33: Joystick status changed
-  EMC_INP_SET_CUR_POS,                 // 34: Set cursor position
-  /* -- Async events ------------------------------------------------------- */
-  EMC_MP_ARCHIVE,                      // 35: Archive async event occured
-  EMC_MP_ASSET,                        // 36: Asset async event occured
-  EMC_MP_FONT,                         // 37: Char async event occured
-  EMC_MP_IMAGE,                        // 38: Image async event occured
-  EMC_MP_JSON,                         // 39: Json async event occured
-  EMC_MP_PCM,                          // 40: Pcm async event occured
-  EMC_MP_PROCESS,                      // 41: Process async event occured
-  EMC_MP_SOCKET,                       // 42: Socket async event occured
-  EMC_MP_STREAM,                       // 43: Stream async event occured
-  EMC_MP_VIDEO,                        // 44: Video async event occured
-  /* -- Other async events ------------------------------------------------- */
-  EMC_STR_EVENT,                       // 45: Stream event occured
-  EMC_VID_EVENT,                       // 46: Video event occured
-  EMC_CB_EVENT,                        // 47: Clipboard event occured
-  EMC_CUR_EVENT,                       // 48: Cursor event occured
+  EMC_INP_CHAR,                        // 32: Filtered key pressed
+  EMC_INP_KEYPRESS,                    // 33: Unfiltered key pressed
+  EMC_INP_MOUSE_CLICK,                 // 34: Mouse button clicked
+  EMC_INP_MOUSE_MOVE,                  // 35: Mouse cursor moved
+  EMC_INP_MOUSE_SCROLL,                // 36: Mouse wheel scrolled
+  /* -- Loading async events ----------------------------------------------- */
+  EMC_MP_ARCHIVE,                      // 37: Archive async event occured
+  EMC_MP_ASSET,                        // 38: Asset async event occured
+  EMC_MP_FONT,                         // 39: Char async event occured
+  EMC_MP_IMAGE,                        // 40: Image async event occured
+  EMC_MP_JSON,                         // 41: Json async event occured
+  EMC_MP_PCM,                          // 42: Pcm async event occured
+  EMC_MP_PROCESS,                      // 43: Process async event occured
+  EMC_MP_SOCKET,                       // 44: Socket async event occured
+  EMC_MP_STREAM,                       // 45: Stream async event occured
+  EMC_MP_VIDEO,                        // 46: Video async event occured
   /* ----------------------------------------------------------------------- */
-  EMC_MAX,                             // 49: Below are just codes
+  EMC_MAX,                             // 47: Below are just codes
   /* ----------------------------------------------------------------------- */
-  EMC_LUA_ERROR,                       // 50: Error in LUA exec (not an event)
+  EMC_LUA_ERROR,                       // 48: Error in LUA exec (not an event)
+  /* ----------------------------------------------------------------------- */
+#if defined(ALPHA)                     // Compiling debug version?
+  EMC_NOLOG = EMC_MAX                  // Log all events
+#else                                  // Compiling on beta or release?
+  EMC_NOLOG = EMC_CON_KEYPRESS         // Suppress log from this event forwards
+#endif                                 // Build check
 };/* -- Remember to update the id strings at EvtMain constructor ----------- */
 static class EvtMain final :           // Event list for render thread
   /* -- Dependencies ------------------------------------------------------- */
@@ -223,22 +226,38 @@ static class EvtMain final :           // Event list for render thread
       /* ------------------------------------------------------------------- */
 #define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings
       /* ------------------------------------------------------------------- */
-      EMC(NONE),            EMC(QUIT),             EMC(QUIT_THREAD),
-      EMC(QUIT_RESTART),    EMC(QUIT_RESTART_NP),  EMC(LUA_PAUSE),
-      EMC(LUA_RESUME),      EMC(LUA_REDRAW),       EMC(LUA_REINIT),
-      EMC(LUA_END),         EMC(LUA_ASK_EXIT),     EMC(LUA_CONFIRM_EXIT),
-      EMC(WIN_MOVED),       EMC(WIN_FOCUS),        EMC(WIN_SCALE),
-      EMC(WIN_RESIZED),     EMC(WIN_REFRESH),      EMC(WIN_ICONIFY),
-      EMC(WIN_CLOSE),       EMC(VID_FB_REINIT),    EMC(VID_MATRIX_REINIT),
-      EMC(AUD_REINIT),      EMC(INP_PASTE),        EMC(CON_UPDATE),
-      EMC(CON_KEYPRESS),    EMC(INP_KEYPRESS),     EMC(INP_CHAR),
-      EMC(INP_DRAG_DROP),   EMC(INP_MOUSE_FOCUS),  EMC(INP_MOUSE_MOVE),
-      EMC(INP_MOUSE_CLICK), EMC(INP_MOUSE_SCROLL), EMC(INP_JOY_STATE),
-      EMC(INP_SET_CUR_POS), EMC(MP_ARCHIVE),       EMC(MP_ASSET),
-      EMC(MP_FONT),         EMC(MP_IMAGE),         EMC(MP_JSON),
-      EMC(MP_PCM),          EMC(MP_PROCESS),       EMC(MP_SOCKET),
-      EMC(MP_STREAM),       EMC(MP_VIDEO),         EMC(STR_EVENT),
-      EMC(VID_EVENT),       EMC(CB_EVENT),         EMC(CUR_EVENT)
+      EMC(NONE),
+      /* ------------------------------------------------------------------- */
+      EMC(QUIT),            EMC(QUIT_THREAD),      EMC(QUIT_RESTART),
+      EMC(QUIT_RESTART_NP),
+      /* ------------------------------------------------------------------- */
+      EMC(LUA_ASK_EXIT),    EMC(LUA_CONFIRM_EXIT), EMC(LUA_END),
+      EMC(LUA_PAUSE),       EMC(LUA_REDRAW),       EMC(LUA_REINIT),
+      EMC(LUA_RESUME),
+      /* ------------------------------------------------------------------- */
+      EMC(WIN_FOCUS),       EMC(WIN_ICONIFY),      EMC(WIN_MOVED),
+      EMC(WIN_REFRESH),     EMC(WIN_RESIZED),      EMC(WIN_SCALE),
+      EMC(WIN_CLOSE),
+      /* ------------------------------------------------------------------- */
+      EMC(VID_FB_REINIT),   EMC(VID_MATRIX_REINIT),
+      /* ------------------------------------------------------------------- */
+      EMC(AUD_REINIT),
+      /* ------------------------------------------------------------------- */
+      EMC(INP_DRAG_DROP),   EMC(INP_JOY_STATE),    EMC(INP_MOUSE_FOCUS),
+      EMC(INP_PASTE),
+      /* ------------------------------------------------------------------- */
+      EMC(CB_EVENT),        EMC(CUR_EVENT),        EMC(STR_EVENT),
+      EMC(VID_EVENT),
+      /* ------------------------------------------------------------------- */
+      EMC(CON_UPDATE),      EMC(CON_KEYPRESS),
+      /* ------------------------------------------------------------------- */
+      EMC(INP_CHAR),        EMC(INP_KEYPRESS),     EMC(INP_MOUSE_CLICK),
+      EMC(INP_MOUSE_MOVE),  EMC(INP_MOUSE_SCROLL),
+      /* ------------------------------------------------------------------- */
+      EMC(MP_ARCHIVE),      EMC(MP_ASSET),         EMC(MP_FONT),
+      EMC(MP_IMAGE),        EMC(MP_JSON),          EMC(MP_PCM),
+      EMC(MP_PROCESS),      EMC(MP_SOCKET),        EMC(MP_STREAM),
+      EMC(MP_VIDEO),
       /* ------------------------------------------------------------------- */
 #undef EMC                             // Done with this macro
       /* ------------------------------------------------------------------- */
@@ -249,9 +268,9 @@ static class EvtMain final :           // Event list for render thread
     uiConfirm(0),                      // Exit not confirmed yet
     /* --------------------------------------------------------------------- */
     rvEvents{                          // Initialise custom handled events
-      { EMC_QUIT,             nullptr },  { EMC_QUIT_THREAD,      nullptr },
-      { EMC_QUIT_RESTART,     nullptr },  { EMC_QUIT_RESTART_NP,  nullptr },
-      { EMC_LUA_END,          nullptr },  { EMC_LUA_REINIT,       nullptr },
+      { EMC_QUIT,             nullptr }, { EMC_QUIT_THREAD,      nullptr },
+      { EMC_QUIT_RESTART,     nullptr }, { EMC_QUIT_RESTART_NP,  nullptr },
+      { EMC_LUA_END,          nullptr }, { EMC_LUA_REINIT,       nullptr },
       { EMC_LUA_CONFIRM_EXIT, nullptr }
     }
     /* --------------------------------------------------------------------- */

@@ -3845,14 +3845,15 @@ local function ProcessObjects()
         end
       end
       -- Object is...
-      if aObj.A == ACT.DEATH and                    -- ...dead?
+      local iAction<const> = aObj.A;
+      if iAction == ACT.DEATH and                   -- ...dead?
          aObj.AT >= aTimerData.DEADWAIT and         -- ...death timer exceeded?
          DestroyObject(iObjId, aObj) then goto EOO; -- ...object destroyed?
       -- Object is phasing and phase delay reached? Process phase destination
-      elseif aObj.A == ACT.PHASE and aObj.AT >= aObj.OD.TELEDELAY then
+      elseif iAction == ACT.PHASE and aObj.AT >= aObj.OD.TELEDELAY then
         return PhaseLogic(aObj);
       -- Object is hidden and object is in the trade-centre?
-      elseif aObj.A == ACT.HIDE and aObj.J == JOB.PHASE then
+      elseif iAction == ACT.HIDE and aObj.J == JOB.PHASE then
         -- Health at full?
         if aObj.H >= 100 then
           -- Re-appear the object if is not the player otherwise wait for the
@@ -3861,22 +3862,24 @@ local function ProcessObjects()
             SetAction(aObj, ACT.PHASE, JOB.NONE, DIR.R) end;
         -- Health not full? Regenerate health
         elseif aObj.AT % 10 == 0 then AdjustObjectHealth(aObj, 1) end;
+        -- Keep object from becoming impatient
+        aObj.JT = 0;
       -- Object has been eaten
-      elseif aObj.A == ACT.EATEN and aObj.AT >= aTimerData.MUTATEWAIT then
+      elseif iAction == ACT.EATEN and aObj.AT >= aTimerData.MUTATEWAIT then
         -- Spawn alien and kill digger
         AdjustObjectHealth(aObj, -100,
           CreateObject(TYP.ALIEN, aObj.X, aObj.Y));
       -- Object is dying? Slowly drain it's health
-      elseif aObj.A == ACT.DYING and aObj.AT % 6 == 0 then
+      elseif iAction == ACT.DYING and aObj.AT % 6 == 0 then
         AdjustObjectHealth(aObj, -1);
       -- Object is creeping, walking and running? Limit FPS depending on action
-      elseif (aObj.A == ACT.CREEP and aObj.AT % 4 == 0) or
-             (aObj.A == ACT.WALK and aObj.AT % 2 == 0) or
-              aObj.A == ACT.RUN then
+      elseif (iAction == ACT.CREEP and aObj.AT % 4 == 0) or
+             (iAction == ACT.WALK and aObj.AT % 2 == 0) or
+              iAction == ACT.RUN then
         -- Process object movement logic
         ProcessObjectMovement(aObj);
       -- Object is digging and digging delay reached?
-      elseif aObj.A == ACT.DIG and aObj.AT >= aObj.DID then
+      elseif iAction == ACT.DIG and aObj.AT >= aObj.DID then
         -- Terrain dig was successful?
         if DigTile(aObj) then
           -- Get last dig action and if set?
@@ -4166,8 +4169,7 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
   if sMusic then aAssets, aAssetsMusic[4].F = aAssetsMusic, sMusic;
   else aAssets = aAssetsNoMusic end;
   -- Update asset filenames to load
-  local sLevelFile<const> = aLevelInfo.f;
-  local sFilePrefix<const> = "lvl/"..sLevelFile;
+  local sFilePrefix<const> = "lvl/"..aLevelInfo.f;
   aAssets[1].F = sFilePrefix..".dat";
   aAssets[2].F = sFilePrefix;
   aAssets[3].F = aLevelTypeData.f;
@@ -4177,7 +4179,7 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
     texLev = aResources[3];
     -- Makes sure we have the same number of terrain masks as texture tiles
     local iMaskLev<const>, iMaskLevExpect<const> =
-      maskLev:Tiles(), texLev:TileGTC();
+      maskLev:Tiles(), texLev:TileGTC()//2;
     if iMaskLev < iMaskLevExpect then
       error("Got only "..iMaskLev.." of "..iMaskLevExpect.." level masks!");
     end
@@ -4189,9 +4191,14 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
     texBg = TileA(texLev, 0, 256, 512, 512);
     -- Makes sure we have the same number of sprite masks as sprite tiles
     local iMaskSpr<const>, iMaskSprExpect<const> =
-      maskSpr:Tiles(), texSpr:TileGTC();
+      maskSpr:Tiles(), texSpr:TileGTC()//2;
     if iMaskSpr ~= iMaskSprExpect then
       error("Got only "..iMaskSpr.." of "..iMaskSprExpect.." sprite masks!");
+    end
+    -- Makes sure we have the same number of sprite tiles as level tiles
+    if iMaskSpr ~= iMaskLev then
+      error("Sprite count of "..iMaskSpr..
+        " not equal to level count of "..iMaskLev.."!");
     end
     -- Player starting positions
     local aPlayerStartData<const> = {
@@ -4199,7 +4206,7 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
       { 199, 202, iRace2, bAI2 }    -- Player 2 start data
     };
     -- Create a blank mask
-    maskZone = MaskCreateZero(sLevelFile, iLLPixW, iLLPixH);
+    maskZone = MaskCreateZero(sFilePrefix, iLLPixW, iLLPixH);
     -- Get minimum and maximum object id
     local iMinObjId<const>, iMaxObjId<const> = TYP.JENNITE, TYP.MAX;
     -- Player starting point data found

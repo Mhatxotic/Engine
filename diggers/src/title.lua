@@ -218,12 +218,15 @@ local function GoLoadLevel(strTitle)
     RenderProcEnterAnim, RenderProcLeaveAnim;
   -- Next update time
   iNextUpdate = GetGameTicks();
-  -- Levels completed
-  local aZones<const> = { };
   -- Build array of all the completed levels from every save slot
+  local aZones, aZonesKV<const> = { }, { };
   for iSlotId, aSlotData in pairs(LoadSaveData()) do
     for iZoneId in pairs(aSlotData[16]) do
-      aZones[1 + #aZones] = iZoneId end;
+      if not aZonesKV[iZoneId] then
+        aZonesKV[iZoneId] = true;
+        aZones[1 + #aZones] = iZoneId;
+      end
+    end
   end
   -- If zero or one zone completed then allow showing the first two zones
   if #aZones <= 1 then aZones[1], aZones[2] = 1, 2 end;

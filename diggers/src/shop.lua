@@ -235,7 +235,7 @@ end
 -- When shop assets have loaded? ------------------------------------------- --
 local function OnAssetsLoaded(aResources)
   -- Play shop music
-  PlayMusic(aResources[2]);
+  PlayMusic(aResources[2], nil, nil, nil, 854034);
   -- Set texture handle
   texShop = aResources[1];
   -- Reset animations

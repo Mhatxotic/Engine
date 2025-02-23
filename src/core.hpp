@@ -49,7 +49,7 @@ enum CoreErrorFlags                    // Lua error mode behaviour
 };/* ----------------------------------------------------------------------- */
 class Core final :                     // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private EvtMain::RegVec              // Events list to register
+  private EvtMainRegVec                // Events list to register
 { /* -- Public Variables --------------------------------------------------- */
   CoreErrorFlags   cefMode;            // Lua error mode behaviour
   unsigned int     uiErrorCount,       // Number of errors occured
@@ -808,7 +808,7 @@ class Core final :                     // Members initially private
   /* -- Default constructor ------------------------------------------------ */
   Core(void) :                         // No parameters
     /* --------------------------------------------------------------------- */
-    EvtMain::RegVec{                   // Default events
+    EvtMainRegVec{                     // Default events
       { EMC_LUA_PAUSE,  bind(&Core::OnLuaPause,  this, _1) },
       { EMC_LUA_RESUME, bind(&Core::OnLuaResume, this, _1) },
     },

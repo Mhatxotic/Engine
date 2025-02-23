@@ -1556,10 +1556,10 @@ local aObjectData<const> = {           -- Objects data
  ACTION    = ACT.STOP,                 AITYPE    = AI.GATE,
  ANIMTIMER = aTimerData.ANIMNORMAL,    DIRECTION = DIR.NONE,
  FLAGS     = OFL.DEVICE|OFL.AQUALUNG,  JOB       = JOB.NONE,
- MENU      = MNU.GATE,                 NAME      = "GATE",
- STAMINA   = -1,                       STRENGTH  = 0,
- TELEDELAY = 200,                      VALUE     = 0,
- WEIGHT    = 0
+ MENU      = MNU.GATE,                 LONGNAME  = "FLOOD GATE",
+ NAME      = "GATE",                   STAMINA   = -1,
+ STRENGTH  = 0,                        TELEDELAY = 200,
+ VALUE     = 0,                        WEIGHT    = 0
 -- ------------------------------------------------------------------------- --
 }, [TYP.LIFT] = {
  [ACT.STOP] = {
@@ -1904,519 +1904,519 @@ TF.ELRB = TF.EL|TF.ER|TF.EB;           -- < v> Left/Down/Right exposed
 TF.ELTB = TF.EL|TF.ET|TF.EB;           -- <^v  Left/Up/Down exposed
 TF.EA   = TF.EL|TF.ET|TF.ER|TF.EB;     -- <^v> All directions exposed
 -- Tile data flags lookup ------------------------------------------------- --
-local aTileData<const> = {             -- TID TXxTY NOTE (total 480 tiles)
-  TF.NONE,                             -- 001 01x01 Air (Passive)
-  TF.NONE,                             -- 002 02x01 Grass (Passive)
-  TF.NONE,                             -- 003 03x01 Solid undiggable stone
-  TF.F|TF.D,                           -- 004 04x01 Solid diggable dirt
-  TF.F|TF.D|TF.ERB,                    -- 005 05x01 75%dirt+25%dug 22deg UR>DL
-  TF.F|TF.D|TF.ELRB,                   -- 006 06x01 25%dirt+75%dug 22deg UR>DL
-  TF.F|TF.D|TF.ELTR,                   -- 007 07x01 75%dug+25%dirt 22deg UR>DL
-  TF.AD|TF.EA,                         -- 008 08x01 Clear dug tile
-  TF.D|TF.ELT,                         -- 009 09x01 25%dug+75%dirt 22deg UR>DL
-  TF.F|TF.D|TF.ELRB,                   -- 010 10x01 25%dirt+75%dug 22deg UL>DR
-  TF.F|TF.D|TF.ELB,                    -- 011 11x01 75%dirt+25%dug 22deg UL>DR
-  TF.D|TF.ETR,                         -- 012 12x01 25%dug+75%dirt 22deg UL>DR
-  TF.D|TF.ELTR,                        -- 013 13x01 75%dug+25%dirt 22deg UL>DR
-  TF.F|TF.D|TF.ERB,                    -- 014 14x01 50%dirt+50%dug 45deg UR>DL
-  TF.D|TF.ELT,                         -- 015 15x01 50%dug+50%dirt 45deg UR>DL
-  TF.D|TF.ETR,                         -- 016 16x01 50%dug+50%dirt 45deg UL>DR
-  TF.F|TF.D|TF.ELB,                    -- 017 17x01 50%dirt+50%dug 45deg UL>DR
-  TF.F|TF.D|TF.ER,                     -- 018 18x01
-  TF.F|TF.D|TF.ERB,                    -- 019 19x01
-  TF.D|TF.ET,                          -- 020 20x01
-  TF.F|TF.D|TF.ERB,                    -- 021 21x01
-  TF.D|TF.ETR,                         -- 022 22x01
-  TF.D|TF.ELT,                         -- 023 23x01
-  TF.F|TF.D|TF.ERB,                    -- 024 24x01
-  TF.D|TF.ETR,                         -- 025 25x01
-  TF.D|TF.ETR,                         -- 026 26x01
-  TF.F|TF.D|TF.EL,                     -- 027 27x01
-  TF.F|TF.D|TF.EB,                     -- 028 28x01
-  TF.D|TF.ELT,                         -- 029 29x01
-  TF.F|TF.D|TF.EB,                     -- 030 30x01
-  TF.D|TF.ELTR,                        -- 031 31x01
-  TF.F|TF.D|TF.EL,                     -- 032 32x01
-  TF.F|TF.D|TF.ELB,                    -- 033 01x02
-  TF.D|TF.ELT,                         -- 034 02x02
-  TF.F|TF.D|TF.ELB,                    -- 035 03x02
-  TF.F|TF.D|TF.ELB,                    -- 036 04x02
-  TF.F|TF.D|TF.ELB,                    -- 037 05x02
-  TF.D|TF.ET,                          -- 038 06x02
-  TF.F|TF.D|TF.ELB,                    -- 039 07x02
-  TF.D|TF.ETR,                         -- 040 08x02
-  TF.D|TF.ELT,                         -- 041 09x02
-  TF.D|TF.ELB,                         -- 042 10x02
-  TF.F|TF.D|TF.ELT,                    -- 043 11x02
-  TF.D|TF.ELT,                         -- 044 12x02
-  TF.D|TF.ER,                          -- 045 13x02
-  TF.F|TF.D|TF.EB,                     -- 046 14x02
-  TF.F|TF.D|TF.ERB,                    -- 047 15x02
-  TF.F|TF.D|TF.ELRB,                   -- 048 16x02
-  TF.F|TF.D|TF.ELRB,                   -- 049 17x02
-  TF.F|TF.D|TF.ETRB,                   -- 050 18x02
-  TF.D|TF.ETRB,                        -- 051 19x02
-  TF.D|TF.ETR,                         -- 052 20x02
-  TF.D|TF.ELTR,                        -- 053 21x02 Cave floor 1
-  TF.D|TF.ELTR,                        -- 054 22x02 Cave floor 2
-  TF.D|TF.ELB,                         -- 055 23x02
-  TF.F|TF.D|TF.ELTB,                   -- 056 24x02
-  TF.F|TF.D|TF.ELTB,                   -- 057 25x02
-  TF.D|TF.ELT,                         -- 058 26x02
-  TF.D|TF.EA,                          -- 059 27x02
-  TF.D|TF.EA,                          -- 060 28x02
-  TF.D|TF.EA,                          -- 061 29x02
-  TF.D|TF.EA,                          -- 062 30x02
-  TF.ELRB,                             -- 063 31x02
-  TF.F,                                -- 064 32x02
-  TF.F,                                -- 065 01x03
-  TF.NONE,                             -- 066 02x03
-  TF.NONE,                             -- 067 03x03
-  TF.NONE,                             -- 068 04x03
-  TF.NONE,                             -- 069 05x03
-  TF.NONE,                             -- 070 06x03
-  TF.NONE,                             -- 071 07x03
-  TF.NONE,                             -- 072 08x03
-  TF.NONE,                             -- 073 09x03
-  TF.NONE,                             -- 074 10x03
-  TF.NONE,                             -- 075 11x03
-  TF.NONE,                             -- 076 12x03
-  TF.P|TF.EA,                          -- 077 13x03
-  TF.P|TF.EA,                          -- 078 14x03
-  TF.P|TF.EA,                          -- 079 15x03
-  TF.P|TF.EA,                          -- 080 16x03
-  TF.P|TF.EA,                          -- 081 17x03
-  TF.P|TF.EA,                          -- 082 18x03
-  TF.P|TF.EA,                          -- 083 19x03
-  TF.P|TF.EA,                          -- 084 20x03
-  TF.P|TF.EA,                          -- 085 21x03
-  TF.NONE,                             -- 086 22x03 Unused
-  TF.NONE,                             -- 087 23x03 Unused
-  TF.NONE,                             -- 088 24x03 Platform cliff edge right
-  TF.D|TF.P|TF.EA,                     -- 089 25x03 Left end of track
-  TF.NONE,                             -- 090 26x03 Floor to wall right
-  TF.NONE,                             -- 091 27x03 Platform cliff edge left
-  TF.D|TF.P|TF.EA,                     -- 092 28x03 Right end of track
-  TF.NONE,                             -- 093 29x03 Right cliff wall
-  TF.NONE,                             -- 094 30x03 Left cliff wall
-  TF.NONE,                             -- 095 31x03 Floor to wall left
-  TF.EA,                               -- 096 32x03 Clear dug tile with window
-  TF.EA,                               -- 097 01x04 Clear dug tile with skull
-  TF.W|TF.AB,                          -- 098 02x04 Ocean surface 1/4
-  TF.W|TF.AB,                          -- 099 03x04 Ocean surface 2/4
-  TF.W|TF.AB,                          -- 100 04x04 Ocean surface 3/4
-  TF.W|TF.AE,                          -- 101 05x04 Ocean surface 4/4
-  TF.W|TF.AB,                          -- 102 06x04 Ocean bubble large 1/4
-  TF.W|TF.AB,                          -- 103 07x04 Ocean bubble large 2/4
-  TF.W|TF.AB,                          -- 104 08x04 Ocean bubble large 3/4
-  TF.W|TF.AE,                          -- 105 09x04 Ocean bubble large 4/4
-  TF.W|TF.AB,                          -- 106 10x04 Ocean surface bubble L 1/4
-  TF.W|TF.AB,                          -- 107 11x04 Ocean surface bubble L 2/4
-  TF.W|TF.AB,                          -- 108 12x04 Ocean surface bubble L 3/4
-  TF.W|TF.AE,                          -- 109 13x04 Ocean surface bubble L 4/4
-  TF.W|TF.AB,                          -- 110 14x04 Ocean bubble small 1/4
-  TF.W|TF.AB,                          -- 111 15x04 Ocean bubble small 2/4
-  TF.W|TF.AB,                          -- 112 16x04 Ocean bubble small 3/4
-  TF.W|TF.AE,                          -- 113 17x04 Ocean bubble small 4/4
-  TF.W,                                -- 114 18x04 Ocean surface bubble S 1/4
-  TF.W,                                -- 115 19x04 Ocean surface bubble S 2/4
-  TF.W,                                -- 116 20x04 Ocean surface bubble S 3/4
-  TF.W,                                -- 117 21x04 Ocean surface bubble S 4/4
-  TF.W,                                -- 118 22x04 Ocean
-  TF.W|TF.AB,                          -- 119 23x04 Ocean surface weed 1/4
-  TF.W|TF.AB,                          -- 120 24x04 Ocean surface weed 2/4
-  TF.W|TF.AB,                          -- 121 25x04 Ocean surface weed 3/4
-  TF.W|TF.AE,                          -- 122 26x04 Ocean surface weed 4/4
-  TF.NONE,                             -- 123 27x04
-  TF.NONE,                             -- 124 28x04
-  TF.NONE,                             -- 125 29x04
-  TF.NONE,                             -- 126 30x04
-  TF.NONE,                             -- 127 31x04
-  TF.NONE,                             -- 128 32x04
-  TF.NONE,                             -- 129 01x05
-  TF.NONE,                             -- 130 02x05
-  TF.NONE,                             -- 131 03x05
-  TF.NONE,                             -- 132 04x05
-  TF.NONE,                             -- 133 05x05
-  TF.NONE,                             -- 134 06x05
-  TF.P|TF.EA,                          -- 135 07x05
-  TF.P|TF.EA,                          -- 136 08x05
-  TF.P|TF.EA,                          -- 137 09x05
-  TF.P|TF.EA,                          -- 138 10x05
-  TF.W,                                -- 139 11x05
-  TF.W,                                -- 140 12x05
-  TF.W,                                -- 141 13x05
-  TF.W,                                -- 142 14x05
-  TF.NONE,                             -- 143 15x05
-  TF.NONE,                             -- 144 16x05
-  TF.W,                                -- 145 17x05
-  TF.NONE,                             -- 146 18x05
-  TF.NONE,                             -- 147 19x05
-  TF.W,                                -- 148 20x05
-  TF.NONE,                             -- 149 21x05
-  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 150 22x05 Dug tile track with light
-  TF.D|TF.AD|TF.EA,                    -- 151 23x05 Dug tile with light
-  TF.F,                                -- 152 24x05 Quad rock bottom left
-  TF.F,                                -- 153 25x05 Quad rock bottom right
-  TF.F,                                -- 154 26x05 Quad rock top left
-  TF.F,                                -- 155 27x05 Quad rock top right
-  TF.F,                                -- 156 28x05 Impenetrable rock
-  TF.F,                                -- 157 29x05 Impenetrable rock
-  TF.F,                                -- 158 30x05 Horizontal rock left
-  TF.F,                                -- 159 31x05 Horizontal rock right
-  TF.F,                                -- 160 32x05 Impenetrable rock
-  TF.F,                                -- 161 01x06 Unused
-  TF.NONE,                             -- 162 02x06 Unused
-  TF.NONE,                             -- 163 03x06
-  TF.NONE,                             -- 164 04x06 Outside decoration only
-  TF.NONE,                             -- 165 05x06 Outside decoration only
-  TF.NONE,                             -- 166 06x06 Outside decoration only
-  TF.NONE,                             -- 167 07x06 Outside decoration only
-  TF.NONE,                             -- 168 08x06 Outside decoration only
-  TF.NONE,                             -- 169 09x06 Outside decoration only
-  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 170 10x06 Dug tile beam forward track
-  TF.D|TF.AD|TF.EA,                    -- 171 11x06 Dug tile beam forward
-  TF.D|TF.AD|TF.EA,                    -- 172 12x06 Dug tile beam backwards
-  TF.D|TF.AD|TF.EA,                    -- 173 13x06 Dug tile beam horizontal
-  TF.D|TF.ELTR,                        -- 174 14x06 Dug tile down 1/3
-  TF.D|TF.ELTR,                        -- 175 15x06 Dug tile down 2/3
-  TF.D|TF.ELTR,                        -- 176 16x06 Dug tile down 3/3
-  TF.NONE,                             -- 177 17x06 Outside decoration only
-  TF.NONE,                             -- 178 18x06 Outside decoration only
-  TF.NONE,                             -- 179 19x06 Outside decoration only
-  TF.NONE,                             -- 180 20x06 Outside decoration only
-  TF.NONE,                             -- 181 21x06 Outside decoration only
-  TF.NONE,                             -- 182 22x06 Outside decoration only
-  TF.NONE,                             -- 183 23x06 Outside decoration only
-  TF.NONE,                             -- 184 24x06 Outside decoration only
-  TF.NONE,                             -- 185 25x06 Outside decoration only
-  TF.NONE,                             -- 186 26x06 Outside decoration only
-  TF.NONE,                             -- 187 27x06 Outside decoration only
-  TF.NONE,                             -- 188 28x06 Outside decoration only
-  TF.NONE,                             -- 189 29x06 Outside decoration only
-  TF.EA|TF.E,                          -- 190 30x06 Elevator shaft wire
-  TF.NONE,                             -- 191 31x06 Elevator base
-  TF.NONE,                             -- 192 32x06 Trade centre top left
-  TF.NONE,                             -- 193 01x07 Trade centre top right
-  TF.NONE,                             -- 194 02x07 Trade centre bottom left
-  TF.NONE,                             -- 195 03x07 Trade centre bottom right
-  TF.AB|TF.PO,                         -- 196 04x07 Player 1 home flag (1/4)
-  TF.AB|TF.PO,                         -- 197 05x07 Player 1 home flag (2/4)
-  TF.AB|TF.PO,                         -- 198 06x07 Player 1 home flag (3/4)
-  TF.AE|TF.PO,                         -- 199 07x07 Player 1 home flag (4/4)
-  TF.AB|TF.PT,                         -- 200 08x07 Player 2 home flag (1/4)
-  TF.AB|TF.PT,                         -- 201 09x07 Player 2 home flag (2/4)
-  TF.AB|TF.PT,                         -- 202 10x07 Player 2 home flag (3/4)
-  TF.AE|TF.PT,                         -- 203 11x07 Player 2 home flag (4/4)
-  TF.D|TF.ELR,                         -- 204 12x07
-  TF.F|TF.D|TF.EB,                     -- 205 13x07
-  TF.F|TF.D|TF.ER,                     -- 206 14x07
-  TF.D|TF.ELTR,                        -- 207 15x07
-  TF.F|TF.D|TF.ERB,                    -- 208 16x07
-  TF.D|TF.ETR,                         -- 209 17x07
-  TF.F|TF.D|TF.ERB,                    -- 210 18x07
-  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 211 19x07 Clear tile with track
-  TF.F|TF.D|TF.ETR,                    -- 212 20x07
-  TF.F|TF.D|TF.ETRB,                   -- 213 21x07
-  TF.D|TF.ETR,                         -- 214 22x07
-  TF.D|TF.ETR,                         -- 215 23x07
-  TF.D|TF.ELTB,                        -- 216 24x07
-  TF.F|TF.D|TF.ELB,                    -- 217 25x07
-  TF.D|TF.ELTB,                        -- 218 26x07
-  TF.D|TF.ELRB,                        -- 219 27x07
-  TF.D|TF.ELT,                         -- 220 28x07
-  TF.D|TF.ELTB,                        -- 221 29x07
-  TF.D|TF.ELT,                         -- 222 30x07
-  TF.D|TF.ELT,                         -- 223 31x07
-  TF.F|TF.D|TF.ETRB,                   -- 224 32x07
-  TF.W|TF.D|TF.ERB,                    -- 225 01x08
-  TF.F|TF.D|TF.ETRB,                   -- 226 02x08
-  TF.D|TF.ELRB,                        -- 227 03x08
-  TF.D|TF.ELTB,                        -- 228 04x08
-  TF.D|TF.ELTB,                        -- 229 05x08
-  TF.D|TF.ELTB,                        -- 230 06x08
-  TF.D|TF.ETRB,                        -- 231 07x08
-  TF.D|TF.ETRB,                        -- 232 08x08
-  TF.D|TF.ETRB,                        -- 233 09x08
-  TF.NONE,                             -- 234 10x08
-  TF.NONE,                             -- 235 11x08
-  TF.D|TF.EA,                          -- 236 12x08 90%dug+10%dirt 11deg UR>DL
-  TF.D|TF.EA,                          -- 237 13x08 90%dug+10%dirt 11deg UL>DR
-  TF.NONE,                             -- 238 14x08 Unused
-  TF.NONE,                             -- 239 15x08 Unused
-  TF.NONE,                             -- 240 16x08 Unused
-  TF.F,                                -- 241 17x08 Double horizontal rock 1/2
-  TF.F,                                -- 242 18x08 Double horizontal rock 2/2
-  TF.F,                                -- 243 19x08 Double vertical rock 1/2
-  TF.F,                                -- 244 20x08 Double vertical rock 2/2
-  TF.F|TF.D|TF.W|TF.ERB,               -- 245 21x08
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 246 22x08
-  TF.D|TF.W|TF.ELTR,                   -- 247 23x08
-  TF.D|TF.W|TF.EA|TF.AD,               -- 248 24x08 Clear water tile
-  TF.D|TF.W|TF.ELT,                    -- 249 25x08
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 250 26x08
-  TF.F|TF.D|TF.W|TF.ELB,               -- 251 27x08
-  TF.D|TF.W|TF.ETR,                    -- 252 28x08
-  TF.D|TF.W|TF.ELTR,                   -- 253 29x08
-  TF.F|TF.D|TF.W|TF.EA,                -- 254 30x08
-  TF.D|TF.W|TF.EA,                     -- 255 31x08
-  TF.D|TF.W|TF.EA,                     -- 256 32x08
-  TF.F|TF.D|TF.W|TF.EA,                -- 257 01x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 258 02x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 259 03x09
-  TF.D|TF.W|TF.ET,                     -- 260 04x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 261 05x09
-  TF.D|TF.W|TF.ETR,                    -- 262 06x09
-  TF.D|TF.W|TF.ELT,                    -- 263 07x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 264 08x09
-  TF.D|TF.W|TF.ETR,                    -- 265 09x09
-  TF.D|TF.W|TF.ETR,                    -- 266 10x09
-  TF.F|TF.D|TF.W|TF.EL,                -- 267 11x09
-  TF.F|TF.D|TF.W|TF.EB,                -- 268 12x09
-  TF.D|TF.W|TF.ELT,                    -- 269 13x09
-  TF.F|TF.D|TF.W|TF.EB,                -- 270 14x09
-  TF.D|TF.W|TF.ELTR,                   -- 271 15x09
-  TF.F|TF.D|TF.W|TF.EL,                -- 272 16x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 273 17x09
-  TF.D|TF.W|TF.ELT,                    -- 274 18x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 275 19x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 276 20x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 277 21x09
-  TF.D|TF.W|TF.EB,                     -- 278 22x09
-  TF.F|TF.D|TF.W|TF.ELB,               -- 279 23x09
-  TF.D|TF.W|TF.ERB,                    -- 280 24x09
-  TF.D|TF.W|TF.ELT,                    -- 281 25x09
-  TF.D|TF.W|TF.ELB,                    -- 282 26x09
-  TF.F|TF.D|TF.W|TF.ELT,               -- 283 27x09
-  TF.D|TF.W|TF.ELT,                    -- 284 28x09
-  TF.F|TF.D|TF.W|TF.ER,                -- 285 29x09
-  TF.F|TF.D|TF.W|TF.EB,                -- 286 30x09
-  TF.F|TF.D|TF.W|TF.ERB,               -- 287 31x09 Flood cave ceiling left
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 288 32x09 Flood cave ceiling 1
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 289 01x10 Flood cave ceiling 2
-  TF.D|TF.W|TF.ETRB,                   -- 290 02x10 Flood cave left 1
-  TF.D|TF.W|TF.ETRB,                   -- 291 03x10 Flood cave left 2
-  TF.D|TF.W|TF.ETR,                    -- 292 04x10 Flood cave floor left
-  TF.D|TF.W|TF.ELTR,                   -- 293 05x10 Flood cave floor 1
-  TF.D|TF.W|TF.ELTR,                   -- 294 06x10 Flood cave floor 2
-  TF.F|TF.D|TF.W|TF.ELB,               -- 295 07x10 Flood cave ceiling right
-  TF.D|TF.W|TF.ELTB,                   -- 296 08x10 Flood cave right 1
-  TF.D|TF.W|TF.ELTB,                   -- 297 09x10 Flood cave right 2
-  TF.D|TF.W|TF.ELT,                    -- 298 10x10 Flood cave floor right
-  TF.D|TF.W|TF.EA,                     -- 299 11x10 Flood cave floor bot-left
-  TF.D|TF.W|TF.EA,                     -- 300 12x10 Flood cave ceil top-left
-  TF.D|TF.W|TF.EA,                     -- 301 13x10 Flood cave ceil top-right
-  TF.D|TF.W|TF.EA,                     -- 302 14x10 Flood cave floor bot-right
-  TF.D|TF.W|TF.ELRB,                   -- 303 15x10 Flood elevator ceiling
-  TF.F,                                -- 304 16x10 Outside top-right ceiling 1
-  TF.F,                                -- 305 17x10 Outside top-right ceiling 2
-  TF.F,                                -- 306 18x10 Outside ceiling
-  TF.F,                                -- 307 19x10 Outside top-left ceiling 1
-  TF.F,                                -- 308 20x10 Outside top-left ceiling 2
-  TF.F,                                -- 309 21x10 Corpse column 1 row 1
-  TF.F,                                -- 310 22x10 Corpse column 2 row 1
-  TF.F,                                -- 311 23x10 Corpse column 3 row 1
-  TF.F,                                -- 312 24x10 Corpse column 4 row 1
-  TF.F,                                -- 313 25x10 Corpse column 1 row 2
-  TF.F,                                -- 314 26x10 Corpse column 2 row 2
-  TF.F,                                -- 315 27x10 Corpse column 3 row 2
-  TF.F,                                -- 316 28x10 Corpse column 4 row 2
-  TF.D|TF.W|TF.P|TF.EA,                -- 317 29x10 Top of gold pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 318 30x10 Vertical gold pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 319 31x10 Bottom of gold pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 320 32x10 Broken top pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 321 01x11 Gold house bottom
-  TF.D|TF.W|TF.P|TF.EA,                -- 322 02x11 Gold house top
-  TF.D|TF.W|TF.P|TF.EA,                -- 323 03x11 Broken half top pillar
-  TF.D|TF.W|TF.P|TF.EA,                -- 324 04x11 Broken horizontal top
-  TF.D|TF.W|TF.P|TF.EA,                -- 325 05x11 Broken horizontal bottom
-  TF.D|TF.W,                           -- 326 06x11 Unused
-  TF.NONE,                             -- 327 07x11 Oil rig col 1 row 2
-  TF.NONE,                             -- 328 08x11 Oil rig col 2 row 2
-  TF.D|TF.W|TF.P|TF.EA,                -- 329 09x11 Water dug tile track end L
-  TF.NONE,                             -- 330 10x11 Oil rig col 1 row 1 anim 1
-  TF.NONE,                             -- 331 11x11 Oil rig col 2 row 1 anim 1
-  TF.D|TF.W|TF.P|TF.EA,                -- 332 12x11 Water dug tile track end R
-  TF.NONE,                             -- 333 13x11 Oil rig col 1 row 1 anim 2
-  TF.NONE,                             -- 334 14x11 Oil rig col 2 row 1 anim 2
-  TF.NONE,                             -- 335 15x11 Unused
-  TF.D|TF.W|TF.EA,                     -- 336 16x11 Water dug tile with window
-  TF.D|TF.W|TF.EA,                     -- 337 17x11 Water dug tile with skull
-  TF.NONE,                             -- 338 18x11 Unused
-  TF.NONE,                             -- 339 19x11 Unused
-  TF.NONE,                             -- 340 20x11 Unused
-  TF.NONE,                             -- 341 21x11 Unused
-  TF.NONE,                             -- 342 22x11 Sun top-left
-  TF.NONE,                             -- 343 23x11 Sun top-right
-  TF.NONE,                             -- 344 24x11 Moon top-left
-  TF.NONE,                             -- 345 25x11 Moon top-right
-  TF.NONE,                             -- 346 26x11 Moon bottom-right
-  TF.NONE,                             -- 347 27x11
-  TF.NONE,                             -- 348 28x11
-  TF.NONE,                             -- 349 29x11
-  TF.NONE,                             -- 350 30x11
-  TF.NONE,                             -- 351 31x11
-  TF.NONE,                             -- 352 32x11
-  TF.NONE,                             -- 353 01x12 Cave entrance right
-  TF.NONE,                             -- 354 02x12 Cave entrance left
-  TF.NONE,                             -- 355 03x12 Cave entrance down
-  TF.NONE,                             -- 356 04x12 Unused
-  TF.NONE,                             -- 357 05x12 Unused
-  TF.NONE,                             -- 358 06x12 Unused
-  TF.NONE,                             -- 359 07x12 Unused
-  TF.NONE,                             -- 360 08x12 Unused
-  TF.NONE,                             -- 361 09x12 Outside decoration only
-  TF.NONE,                             -- 362 10x12 Outside decoration only
-  TF.NONE,                             -- 363 11x12 Outside decoration only
-  TF.NONE,                             -- 364 12x12 Outside decoration only
-  TF.NONE,                             -- 365 13x12 Outside decoration only
-  TF.NONE,                             -- 366 14x12 Outside decoration only
-  TF.NONE,                             -- 367 15x12 Outside decoration only
-  TF.NONE,                             -- 368 16x12 Outside decoration only
-  TF.NONE,                             -- 369 17x12 Outside decoration only
-  TF.NONE,                             -- 370 18x12 Outside decoration only
-  TF.NONE,                             -- 371 19x12 Outside decoration only
-  TF.NONE,                             -- 372 20x12 Outside decoration only
-  TF.NONE,                             -- 373 21x12 Outside decoration only
-  TF.NONE,                             -- 374 22x12 Outside decoration only
-  TF.D|TF.W|TF.P|TF.EA,                -- 375 23x12 Water monument top-left
-  TF.D|TF.W|TF.P|TF.EA,                -- 376 24x12 Water monument top right
-  TF.D|TF.W|TF.P|TF.EA,                -- 377 25x12 Water monument bot-left
-  TF.D|TF.W|TF.P|TF.EA,                -- 378 26x12 Water monument bot-right
-  TF.NONE,                             -- 379 27x12 Outside decoration only
-  TF.NONE,                             -- 380 28x12 Outside decoration only
-  TF.NONE,                             -- 381 29x12 Outside decoration only
-  TF.NONE,                             -- 382 30x12 Outside decoration only
-  TF.NONE,                             -- 383 31x12 Outside decoration only
-  TF.NONE,                             -- 384 32x12 Outside decoration only
-  TF.NONE,                             -- 385 01x13 Outside decoration only
-  TF.NONE,                             -- 386 02x13 Outside decoration only
-  TF.NONE,                             -- 387 03x13 Outside decoration only
-  TF.NONE,                             -- 388 04x13 Outside decoration only
-  TF.NONE,                             -- 389 05x13 Outside decoration only
-  TF.D|TF.W|TF.AD|TF.T|TF.P|TF.EA,     -- 390 06x13 Water clear light track
-  TF.D|TF.W|TF.AD|TF.EA,               -- 391 07x13 Water clear light
-  TF.NONE,                             -- 392 08x13 Outside decoration only
-  TF.NONE,                             -- 393 09x13 Outside decoration only
-  TF.NONE,                             -- 394 10x13 Outside decoration only
-  TF.NONE,                             -- 395 11x13 Outside decoration only
-  TF.NONE,                             -- 396 12x13 Outside decoration only
-  TF.NONE,                             -- 397 13x13 Outside decoration only
-  TF.NONE,                             -- 398 14x13 Outside decoration only
-  TF.NONE,                             -- 399 15x13 Outside decoration only
-  TF.NONE,                             -- 400 16x13 Outside decoration only
-  TF.NONE,                             -- 401 17x13 Outside decoration only
-  TF.NONE,                             -- 402 18x13 Outside decoration only
-  TF.NONE,                             -- 403 19x13 Outside decoration only
-  TF.NONE,                             -- 404 20x13 Outside decoration only
-  TF.NONE,                             -- 405 21x13 Outside decoration only
-  TF.NONE,                             -- 406 22x13 Outside decoration only
-  TF.F,                                -- 407 23x13 Outside ceiling left
-  TF.F,                                -- 408 24x13 Outside ceiling straight
-  TF.F,                                -- 409 25x13 Outside ceiling right
-  TF.D|TF.W|TF.T|TF.P|TF.EA|TF.AD,     -- 410 26x13 Water beam forward track
-  TF.D|TF.W|TF.EA|TF.AD,               -- 411 27x13 Water beam forward
-  TF.D|TF.W|TF.EA|TF.AD,               -- 412 28x13 Water beam backward
-  TF.D|TF.W|TF.EA|TF.AD,               -- 413 29x13 Water beam horizontal
-  TF.D|TF.W|TF.ELTR,                   -- 414 30x13 Water dig down 1/3
-  TF.D|TF.W|TF.ELTR,                   -- 415 31x13 Water dig down 2/3
-  TF.D|TF.W|TF.ELTR,                   -- 416 32x13 Water dig down 3/3
-  TF.NONE,                             -- 417 01x14 Top-right cliff ceiling
-  TF.NONE,                             -- 418 02x14 Bottom-left cliff floor
-  TF.NONE,                             -- 419 03x14 Top-left cliff ceiling
-  TF.NONE,                             -- 420 04x14 Top-right cliff ceiling
-  TF.NONE,                             -- 421 05x14 Bottom-right cliff floor
-  TF.NONE,                             -- 422 06x14 Unused
-  TF.NONE,                             -- 423 07x14 Unused
-  TF.NONE,                             -- 424 08x14 Unused
-  TF.NONE,                             -- 425 09x14 Unused
-  TF.F,                                -- 426 10x14 Outside ceil L/R straight
-  TF.F,                                -- 427 11x14 Outside ceil R/D straight
-  TF.F,                                -- 428 12x14 Outside ceil U/R straight
-  TF.NONE,                             -- 429 13x14 Vertical dug leads outside
-  TF.D|TF.W|TF.E|TF.EA,                -- 430 14x14 Elevator wire (water)
-  TF.NONE,                             -- 431 15x14 Elevator foundation
-  TF.NONE,                             -- 432 16x14 Out half ceil D/R corner
-  TF.F,                                -- 433 17x14 Out half ceil L/R straight
-  TF.NONE,                             -- 434 18x14 Out half ceil R/U corner
-  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 435 19x14 Flood Gate (No water)
-  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 436 20x14 Flood Gate (Water left)
-  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 437 21x14 Flood Gate (Water right)
-  TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 438 22x14 Flood Gate (All water)
-  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 439 23x14 Flood Gate open (No water)
-  TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 440 24x14 Flood Gate open (Water)
-  TF.NONE,                             -- 441 25x14 Desert crystal 1
-  TF.NONE,                             -- 442 26x14 Desert crystal 2
-  TF.NONE,                             -- 443 27x14 Unused
-  TF.D|TF.W|TF.ETR,                    -- 444 28x14 Diagonal up-left flooded
-  TF.F|TF.D|TF.W|TF.EB,                -- 445 29x14 Diagonal up-left flooded
-  TF.F|TF.D|TF.W|TF.ER,                -- 446 30x14 Diagonal up-left flooded
-  TF.D|TF.W|TF.ELTR,                   -- 447 31x14 Diagonal up-left flooded
-  TF.F|TF.D|TF.W|TF.ERB,               -- 448 32x14 Diagonal up-left flooded
-  TF.D|TF.W|TF.ETR,                    -- 449 01x15 Diagonal up-left flooded
-  TF.F|TF.D|TF.W|TF.ERB,               -- 450 02x15 Diagonal up-left flooded
-  TF.D|TF.W|TF.AD|TF.T|TF.P|TF.EA,     -- 451 03x15 Watered clear track tile
-  TF.D|TF.W|TF.ETR,                    -- 452 04x15 Diagonal up-right flooded
-  TF.D|TF.W|TF.ETRB,                   -- 453 05x15 Diagonal up-right flooded
-  TF.D|TF.W|TF.ETR,                    -- 454 06x15 Diagonal up-right flooded
-  TF.D|TF.W|TF.ETR,                    -- 455 07x15 Diagonal up-right flooded
-  TF.D|TF.W|TF.ELTB,                   -- 456 08x15 Diagonal up-right flooded
-  TF.F|TF.D|TF.W|TF.ELB,               -- 457 09x15 Diagonal up-right flooded
-  TF.D|TF.W|TF.ELT,                    -- 458 10x15 Diagonal up-right flooded
-  TF.F|TF.D|TF.W|TF.ELRB,              -- 459 11x15 Diagonal up-right flooded
-  TF.D|TF.W|TF.ELT,                    -- 460 12x15
-  TF.D|TF.W|TF.ELTB,                   -- 461 13x15
-  TF.D|TF.W|TF.ELB,                    -- 462 14x15
-  TF.D|TF.W|TF.ELB,                    -- 463 15x15
-  TF.D|TF.W|TF.ETRB,                   -- 464 16x15
-  TF.D|TF.W|TF.F|TF.ERB,               -- 465 17x15
-  TF.D|TF.W|TF.ETRB,                   -- 466 18x15
-  TF.D|TF.W|TF.F|TF.ELRB,              -- 467 19x15
-  TF.D|TF.W|TF.ELTB,                   -- 468 20x15
-  TF.D|TF.W|TF.ELTB,                   -- 469 21x15
-  TF.D|TF.W|TF.ELTB,                   -- 470 22x15
-  TF.D|TF.W|TF.ETRB,                   -- 471 23x15
-  TF.D|TF.W|TF.ETRB,                   -- 472 24x15
-  TF.D|TF.W|TF.ETRB,                   -- 473 25x15
-  TF.D|TF.W,                           -- 474 26x15
-  TF.NONE,                             -- 475 27x15
-  TF.D|TF.W|TF.P|TF.EA,                -- 476 28x15
-  TF.D|TF.W|TF.P|TF.EA,                -- 477 29x15
-  TF.NONE,                             -- 478 30x15 Unused
-  TF.NONE,                             -- 479 31x15 Unused
-  TF.NONE,                             -- 480 32x15 Unused
-  TF.NONE,                             -- 481 01x16 Unused
-  TF.NONE,                             -- 482 02x16 Unused
-  TF.NONE,                             -- 483 03x16 Unused
-  TF.NONE,                             -- 484 04x16 Unused
-  TF.NONE,                             -- 485 05x16 Unused
-  TF.NONE,                             -- 486 06x16 Unused
-  TF.NONE,                             -- 487 07x16 Unused
-  TF.NONE,                             -- 488 08x16 Unused
-  TF.NONE,                             -- 489 09x16 Unused
-  TF.NONE,                             -- 490 10x16 Unused
-  TF.NONE,                             -- 491 11x16 Unused
-  TF.NONE,                             -- 492 12x16 Unused
-  TF.NONE,                             -- 493 13x16 Unused
-  TF.NONE,                             -- 494 14x16 Unused
-  TF.NONE,                             -- 495 15x16 Unused
-  TF.NONE,                             -- 496 16x16 Unused
-  TF.NONE,                             -- 497 17x16 Unused
-  TF.NONE,                             -- 498 18x16 Unused
-  TF.NONE,                             -- 499 19x16 Unused
-  TF.NONE,                             -- 500 20x16 Unused
-  TF.NONE,                             -- 501 21x16 Unused
-  TF.NONE,                             -- 502 22x16 Unused
-  TF.NONE,                             -- 503 23x16 Unused
-  TF.NONE,                             -- 504 24x16 Unused
-  TF.NONE,                             -- 505 25x16 Unused
-  TF.NONE,                             -- 506 26x16 Unused
-  TF.NONE,                             -- 507 27x16 Unused
-  TF.NONE,                             -- 508 28x16 Unused
-  TF.NONE,                             -- 509 29x16 Unused
-  TF.NONE,                             -- 510 30x16 Unused
-  TF.NONE,                             -- 511 31x16 Unused
-  TF.NONE,                             -- 512 32x16 Unused
+local aTileData<const> = {             -- 0TITXTY NOTE (total 512 tiles)
+  TF.NONE,                             -- 0000000 Air (Passive)
+  TF.NONE,                             -- 0010100 Grass (Passive)
+  TF.NONE,                             -- 0020200 Solid undiggable stone
+  TF.F|TF.D,                           -- 0030300 Solid diggable dirt
+  TF.F|TF.D|TF.ERB,                    -- 0040400 75%dirt+25%dug 22deg UR>DL
+  TF.F|TF.D|TF.ELRB,                   -- 0050500 25%dirt+75%dug 22deg UR>DL
+  TF.F|TF.D|TF.ELTR,                   -- 0060600 75%dug+25%dirt 22deg UR>DL
+  TF.AD|TF.EA,                         -- 0070700 Clear dug tile
+  TF.D|TF.ELT,                         -- 0080800 25%dug+75%dirt 22deg UR>DL
+  TF.F|TF.D|TF.ELRB,                   -- 0090900 25%dirt+75%dug 22deg UL>DR
+  TF.F|TF.D|TF.ELB,                    -- 0101000 75%dirt+25%dug 22deg UL>DR
+  TF.D|TF.ETR,                         -- 0111100 25%dug+75%dirt 22deg UL>DR
+  TF.D|TF.ELTR,                        -- 0121200 75%dug+25%dirt 22deg UL>DR
+  TF.F|TF.D|TF.ERB,                    -- 0131300 50%dirt+50%dug 45deg UR>DL
+  TF.D|TF.ELT,                         -- 0141400 50%dug+50%dirt 45deg UR>DL
+  TF.D|TF.ETR,                         -- 0151500 50%dug+50%dirt 45deg UL>DR
+  TF.F|TF.D|TF.ELB,                    -- 0161600 50%dirt+50%dug 45deg UL>DR
+  TF.F|TF.D|TF.ER,                     -- 0171700
+  TF.F|TF.D|TF.ERB,                    -- 0181800
+  TF.D|TF.ET,                          -- 0191900
+  TF.F|TF.D|TF.ERB,                    -- 0202000
+  TF.D|TF.ETR,                         -- 0212100
+  TF.D|TF.ELT,                         -- 0222200
+  TF.F|TF.D|TF.ERB,                    -- 0232300
+  TF.D|TF.ETR,                         -- 0242400
+  TF.D|TF.ETR,                         -- 0252500
+  TF.F|TF.D|TF.EL,                     -- 0262600
+  TF.F|TF.D|TF.EB,                     -- 0272700
+  TF.D|TF.ELT,                         -- 0282800
+  TF.F|TF.D|TF.EB,                     -- 0292900
+  TF.D|TF.ELTR,                        -- 0303000
+  TF.F|TF.D|TF.EL,                     -- 0313100
+  TF.F|TF.D|TF.ELB,                    -- 0320001
+  TF.D|TF.ELT,                         -- 0330101
+  TF.F|TF.D|TF.ELB,                    -- 0340201
+  TF.F|TF.D|TF.ELB,                    -- 0350301
+  TF.F|TF.D|TF.ELB,                    -- 0360401
+  TF.D|TF.ET,                          -- 0370501
+  TF.F|TF.D|TF.ELB,                    -- 0380601
+  TF.D|TF.ETR,                         -- 0390701
+  TF.D|TF.ELT,                         -- 0400801
+  TF.D|TF.ELB,                         -- 0410901
+  TF.F|TF.D|TF.ELT,                    -- 0421001
+  TF.D|TF.ELT,                         -- 0431101
+  TF.D|TF.ER,                          -- 0441201
+  TF.F|TF.D|TF.EB,                     -- 0451301
+  TF.F|TF.D|TF.ERB,                    -- 0461401
+  TF.F|TF.D|TF.ELRB,                   -- 0471501
+  TF.F|TF.D|TF.ELRB,                   -- 0481601
+  TF.F|TF.D|TF.ETRB,                   -- 0491701
+  TF.D|TF.ETRB,                        -- 0501801
+  TF.D|TF.ETR,                         -- 0511901
+  TF.D|TF.ELTR,                        -- 0522001 Cave floor 1
+  TF.D|TF.ELTR,                        -- 0532101 Cave floor 2
+  TF.D|TF.ELB,                         -- 0542201
+  TF.F|TF.D|TF.ELTB,                   -- 0552301
+  TF.F|TF.D|TF.ELTB,                   -- 0562401
+  TF.D|TF.ELT,                         -- 0572501
+  TF.D|TF.EA,                          -- 0582601
+  TF.D|TF.EA,                          -- 0592701
+  TF.D|TF.EA,                          -- 0602801
+  TF.D|TF.EA,                          -- 0612901
+  TF.ELRB,                             -- 0623001
+  TF.F,                                -- 0633101
+  TF.F,                                -- 0640002
+  TF.NONE,                             -- 0650102
+  TF.NONE,                             -- 0660202
+  TF.NONE,                             -- 0670302
+  TF.NONE,                             -- 0680402
+  TF.NONE,                             -- 0690502
+  TF.NONE,                             -- 0700602
+  TF.NONE,                             -- 0710702
+  TF.NONE,                             -- 0720802
+  TF.NONE,                             -- 0730902
+  TF.NONE,                             -- 0741002
+  TF.NONE,                             -- 0751102
+  TF.P|TF.EA,                          -- 0761202
+  TF.P|TF.EA,                          -- 0771302
+  TF.P|TF.EA,                          -- 0781402
+  TF.P|TF.EA,                          -- 0791502
+  TF.P|TF.EA,                          -- 0801602
+  TF.P|TF.EA,                          -- 0811702
+  TF.P|TF.EA,                          -- 0821802
+  TF.P|TF.EA,                          -- 0831902
+  TF.P|TF.EA,                          -- 0842002
+  TF.NONE,                             -- 0852102 Unused
+  TF.NONE,                             -- 0862202 Unused
+  TF.NONE,                             -- 0872302 Platform cliff edge right
+  TF.D|TF.P|TF.EA,                     -- 0882402 Left end of track
+  TF.NONE,                             -- 0892502 Floor to wall right
+  TF.NONE,                             -- 0902602 Platform cliff edge left
+  TF.D|TF.P|TF.EA,                     -- 0912702 Right end of track
+  TF.NONE,                             -- 0922802 Right cliff wall
+  TF.NONE,                             -- 0932902 Left cliff wall
+  TF.NONE,                             -- 0943002 Floor to wall left
+  TF.EA,                               -- 0953102 Clear dug tile with window
+  TF.EA,                               -- 0960003 Clear dug tile with skull
+  TF.W|TF.AB,                          -- 0970103 Ocean surface 1/4
+  TF.W|TF.AB,                          -- 0980203 Ocean surface 2/4
+  TF.W|TF.AB,                          -- 0990303 Ocean surface 3/4
+  TF.W|TF.AE,                          -- 1000403 Ocean surface 4/4
+  TF.W|TF.AB,                          -- 1010503 Ocean bubble large 1/4
+  TF.W|TF.AB,                          -- 1020603 Ocean bubble large 2/4
+  TF.W|TF.AB,                          -- 1030703 Ocean bubble large 3/4
+  TF.W|TF.AE,                          -- 1040803 Ocean bubble large 4/4
+  TF.W|TF.AB,                          -- 1050903 Ocean surface bubble L 1/4
+  TF.W|TF.AB,                          -- 1061003 Ocean surface bubble L 2/4
+  TF.W|TF.AB,                          -- 1071103 Ocean surface bubble L 3/4
+  TF.W|TF.AE,                          -- 1081203 Ocean surface bubble L 4/4
+  TF.W|TF.AB,                          -- 1091303 Ocean bubble small 1/4
+  TF.W|TF.AB,                          -- 1101403 Ocean bubble small 2/4
+  TF.W|TF.AB,                          -- 1111503 Ocean bubble small 3/4
+  TF.W|TF.AE,                          -- 1121603 Ocean bubble small 4/4
+  TF.W,                                -- 1131703 Ocean surface bubble S 1/4
+  TF.W,                                -- 1141803 Ocean surface bubble S 2/4
+  TF.W,                                -- 1151903 Ocean surface bubble S 3/4
+  TF.W,                                -- 1162003 Ocean surface bubble S 4/4
+  TF.W,                                -- 1172103 Ocean
+  TF.W|TF.AB,                          -- 1182203 Ocean surface weed 1/4
+  TF.W|TF.AB,                          -- 1192303 Ocean surface weed 2/4
+  TF.W|TF.AB,                          -- 1202403 Ocean surface weed 3/4
+  TF.W|TF.AE,                          -- 1212503 Ocean surface weed 4/4
+  TF.NONE,                             -- 1222603
+  TF.NONE,                             -- 1232703
+  TF.NONE,                             -- 1242803
+  TF.NONE,                             -- 1252903 Cliff edge right (Jng/Snow)
+  TF.NONE,                             -- 1263003 Cliff edge left (Jng/Snow)
+  TF.NONE,                             -- 1273103
+  TF.NONE,                             -- 1280004
+  TF.NONE,                             -- 1290104
+  TF.NONE,                             -- 1300204
+  TF.NONE,                             -- 1310304
+  TF.NONE,                             -- 1320404
+  TF.NONE,                             -- 1330504
+  TF.P|TF.EA,                          -- 1340604
+  TF.P|TF.EA,                          -- 1350704
+  TF.P|TF.EA,                          -- 1360804
+  TF.P|TF.EA,                          -- 1370904
+  TF.W,                                -- 1381004
+  TF.W,                                -- 1391104
+  TF.W,                                -- 1401204
+  TF.W,                                -- 1411304 Cliff edge left (Jun/Snow)
+  TF.NONE,                             -- 1421404
+  TF.NONE,                             -- 1431504
+  TF.W,                                -- 1441604 Cliff edge right (Jun/Snow)
+  TF.NONE,                             -- 1451704
+  TF.NONE,                             -- 1461804
+  TF.W,                                -- 1471904
+  TF.NONE,                             -- 1482004
+  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 1492104 Dug tile track with light
+  TF.D|TF.AD|TF.EA,                    -- 1502204 Dug tile with light
+  TF.F,                                -- 1512304 Quad rock bottom left
+  TF.F,                                -- 1522404 Quad rock bottom right
+  TF.F,                                -- 1532504 Quad rock top left
+  TF.F,                                -- 1542604 Quad rock top right
+  TF.F,                                -- 1552704 Impenetrable rock
+  TF.F,                                -- 1562804 Impenetrable rock
+  TF.F,                                -- 1572904 Horizontal rock left
+  TF.F,                                -- 1583004 Horizontal rock right
+  TF.F,                                -- 1593104 Impenetrable rock
+  TF.F,                                -- 1600005 Unused
+  TF.NONE,                             -- 1610105 Unused
+  TF.NONE,                             -- 1620205
+  TF.NONE,                             -- 1630305 Outside decoration only
+  TF.NONE,                             -- 1640405 Outside decoration only
+  TF.NONE,                             -- 1650505 Outside decoration only
+  TF.NONE,                             -- 1660605 Outside decoration only
+  TF.NONE,                             -- 1670705 Outside decoration only
+  TF.NONE,                             -- 1680805 Outside decoration only
+  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 1690905 Dug tile beam forward track
+  TF.D|TF.AD|TF.EA,                    -- 1701005 Dug tile beam forward
+  TF.D|TF.AD|TF.EA,                    -- 1711105 Dug tile beam backwards
+  TF.D|TF.AD|TF.EA,                    -- 1721205 Dug tile beam horizontal
+  TF.D|TF.ELTR,                        -- 1731305 Dug tile down 1/3
+  TF.D|TF.ELTR,                        -- 1741405 Dug tile down 2/3
+  TF.D|TF.ELTR,                        -- 1751505 Dug tile down 3/3
+  TF.NONE,                             -- 1761605 Outside decoration only
+  TF.NONE,                             -- 1771705 Outside decoration only
+  TF.NONE,                             -- 1781805 Outside decoration only
+  TF.NONE,                             -- 179195 Outside decoration only
+  TF.NONE,                             -- 1802005 Outside decoration only
+  TF.NONE,                             -- 1812105 Outside decoration only
+  TF.NONE,                             -- 1822205 Outside decoration only
+  TF.NONE,                             -- 1832305 Outside decoration only
+  TF.NONE,                             -- 1842405 Outside decoration only
+  TF.NONE,                             -- 1852505 Outside decoration only
+  TF.NONE,                             -- 1862605 Outside decoration only
+  TF.NONE,                             -- 1872705 Outside decoration only
+  TF.NONE,                             -- 1882805 Outside decoration only
+  TF.EA|TF.E,                          -- 1892905 Elevator shaft wire
+  TF.NONE,                             -- 1903005 Elevator base
+  TF.NONE,                             -- 1913105 Trade centre top left
+  TF.NONE,                             -- 1920006 Trade centre top right
+  TF.NONE,                             -- 1930106 Trade centre bottom left
+  TF.NONE,                             -- 1940206 Trade centre bottom right
+  TF.AB|TF.PO,                         -- 1950306 Player 1 home flag (1/4)
+  TF.AB|TF.PO,                         -- 1960406 Player 1 home flag (2/4)
+  TF.AB|TF.PO,                         -- 1970506 Player 1 home flag (3/4)
+  TF.AE|TF.PO,                         -- 1980606 Player 1 home flag (4/4)
+  TF.AB|TF.PT,                         -- 1990706 Player 2 home flag (1/4)
+  TF.AB|TF.PT,                         -- 2000806 Player 2 home flag (2/4)
+  TF.AB|TF.PT,                         -- 2010906 Player 2 home flag (3/4)
+  TF.AE|TF.PT,                         -- 2021006 Player 2 home flag (4/4)
+  TF.D|TF.ELR,                         -- 2031106
+  TF.F|TF.D|TF.EB,                     -- 2041206
+  TF.F|TF.D|TF.ER,                     -- 2051306
+  TF.D|TF.ELTR,                        -- 2061406
+  TF.F|TF.D|TF.ERB,                    -- 2071506
+  TF.D|TF.ETR,                         -- 2081606
+  TF.F|TF.D|TF.ERB,                    -- 2091706
+  TF.D|TF.AD|TF.P|TF.T|TF.EA,          -- 2101806 Clear tile with track
+  TF.F|TF.D|TF.ETR,                    -- 2111906
+  TF.F|TF.D|TF.ETRB,                   -- 2122006
+  TF.D|TF.ETR,                         -- 2132106
+  TF.D|TF.ETR,                         -- 2142206
+  TF.D|TF.ELTB,                        -- 2152306
+  TF.F|TF.D|TF.ELB,                    -- 2162406
+  TF.D|TF.ELTB,                        -- 2172506
+  TF.D|TF.ELRB,                        -- 2182606
+  TF.D|TF.ELT,                         -- 2192706
+  TF.D|TF.ELTB,                        -- 2202806
+  TF.D|TF.ELT,                         -- 2212906
+  TF.D|TF.ELT,                         -- 2223006
+  TF.F|TF.D|TF.ETRB,                   -- 2233106
+  TF.W|TF.D|TF.ERB,                    -- 2240007
+  TF.F|TF.D|TF.ETRB,                   -- 2250107
+  TF.D|TF.ELRB,                        -- 2260207
+  TF.D|TF.ELTB,                        -- 2270307
+  TF.D|TF.ELTB,                        -- 2280407
+  TF.D|TF.ELTB,                        -- 2290507
+  TF.D|TF.ETRB,                        -- 2300607
+  TF.D|TF.ETRB,                        -- 2310707
+  TF.D|TF.ETRB,                        -- 2320807
+  TF.NONE,                             -- 2330907
+  TF.NONE,                             -- 2341007
+  TF.D|TF.EA,                          -- 2351107 90%dug+10%dirt 11deg UR>DL
+  TF.D|TF.EA,                          -- 2361207 90%dug+10%dirt 11deg UL>DR
+  TF.NONE,                             -- 2371307 Unused
+  TF.NONE,                             -- 2381407 Unused
+  TF.NONE,                             -- 2391507 Unused
+  TF.F,                                -- 2401607 Double horizontal rock 1/2
+  TF.F,                                -- 2411707 Double horizontal rock 2/2
+  TF.F,                                -- 2421807 Double vertical rock 1/2
+  TF.F,                                -- 2431907 Double vertical rock 2/2
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2442007
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 2452107
+  TF.D|TF.W|TF.ELTR,                   -- 2462207
+  TF.D|TF.W|TF.EA|TF.AD,               -- 2472307 Clear water tile
+  TF.D|TF.W|TF.ELT,                    -- 2482407
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 2492507
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2502607
+  TF.D|TF.W|TF.ETR,                    -- 2512707
+  TF.D|TF.W|TF.ELTR,                   -- 2522807
+  TF.F|TF.D|TF.W|TF.EA,                -- 2532907
+  TF.D|TF.W|TF.EA,                     -- 2543007
+  TF.D|TF.W|TF.EA,                     -- 2553107
+  TF.F|TF.D|TF.W|TF.EA,                -- 2560008
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2570108
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2580208
+  TF.D|TF.W|TF.ET,                     -- 2590308
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2600408
+  TF.D|TF.W|TF.ETR,                    -- 2610508
+  TF.D|TF.W|TF.ELT,                    -- 2620608
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2630708
+  TF.D|TF.W|TF.ETR,                    -- 2640808
+  TF.D|TF.W|TF.ETR,                    -- 2650908
+  TF.F|TF.D|TF.W|TF.EL,                -- 2661008
+  TF.F|TF.D|TF.W|TF.EB,                -- 2671108
+  TF.D|TF.W|TF.ELT,                    -- 2681208
+  TF.F|TF.D|TF.W|TF.EB,                -- 2691308
+  TF.D|TF.W|TF.ELTR,                   -- 2701408
+  TF.F|TF.D|TF.W|TF.EL,                -- 2711508
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2721608
+  TF.D|TF.W|TF.ELT,                    -- 2731708
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2741808
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2751908
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2762008
+  TF.D|TF.W|TF.EB,                     -- 2772108
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2782208
+  TF.D|TF.W|TF.ERB,                    -- 2792308
+  TF.D|TF.W|TF.ELT,                    -- 2802408
+  TF.D|TF.W|TF.ELB,                    -- 2812508
+  TF.F|TF.D|TF.W|TF.ELT,               -- 2822608
+  TF.D|TF.W|TF.ELT,                    -- 2832708
+  TF.F|TF.D|TF.W|TF.ER,                -- 2842808
+  TF.F|TF.D|TF.W|TF.EB,                -- 2852908
+  TF.F|TF.D|TF.W|TF.ERB,               -- 2863008 Flood cave ceiling left
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 2873108 Flood cave ceiling 1
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 2880009 Flood cave ceiling 2
+  TF.D|TF.W|TF.ETRB,                   -- 2890109 Flood cave left 1
+  TF.D|TF.W|TF.ETRB,                   -- 2900209 Flood cave left 2
+  TF.D|TF.W|TF.ETR,                    -- 2910309 Flood cave floor left
+  TF.D|TF.W|TF.ELTR,                   -- 2920409 Flood cave floor 1
+  TF.D|TF.W|TF.ELTR,                   -- 2930509 Flood cave floor 2
+  TF.F|TF.D|TF.W|TF.ELB,               -- 2940609 Flood cave ceiling right
+  TF.D|TF.W|TF.ELTB,                   -- 2950709 Flood cave right 1
+  TF.D|TF.W|TF.ELTB,                   -- 2960809 Flood cave right 2
+  TF.D|TF.W|TF.ELT,                    -- 2970909 Flood cave floor right
+  TF.D|TF.W|TF.EA,                     -- 2981009 Flood cave floor bot-left
+  TF.D|TF.W|TF.EA,                     -- 2991109 Flood cave ceil top-left
+  TF.D|TF.W|TF.EA,                     -- 3001209 Flood cave ceil top-right
+  TF.D|TF.W|TF.EA,                     -- 3011309 Flood cave floor bot-right
+  TF.D|TF.W|TF.ELRB,                   -- 3021409 Flood elevator ceiling
+  TF.F,                                -- 3031509 Outside top-right ceiling 1
+  TF.F,                                -- 3041609 Outside top-right ceiling 2
+  TF.F,                                -- 3051709 Outside ceiling
+  TF.F,                                -- 3061809 Outside top-left ceiling 1
+  TF.F,                                -- 3071909 Outside top-left ceiling 2
+  TF.F,                                -- 3082009 Corpse column 1 row 1
+  TF.F,                                -- 3092109 Corpse column 2 row 1
+  TF.F,                                -- 3102209 Corpse column 3 row 1
+  TF.F,                                -- 3112309 Corpse column 4 row 1
+  TF.F,                                -- 3122409 Corpse column 1 row 2
+  TF.F,                                -- 3132509 Corpse column 2 row 2
+  TF.F,                                -- 3142609 Corpse column 3 row 2
+  TF.F,                                -- 3152709 Corpse column 4 row 2
+  TF.D|TF.W|TF.P|TF.EA,                -- 3162809 Top of gold pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3172909 Vertical gold pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3183009 Bottom of gold pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3193109 Broken top pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3200010 Gold house bottom
+  TF.D|TF.W|TF.P|TF.EA,                -- 3210110 Gold house top
+  TF.D|TF.W|TF.P|TF.EA,                -- 3220210 Broken half top pillar
+  TF.D|TF.W|TF.P|TF.EA,                -- 3230310 Broken horizontal top
+  TF.D|TF.W|TF.P|TF.EA,                -- 3240410 Broken horizontal bottom
+  TF.D|TF.W,                           -- 3250510 Unused
+  TF.NONE,                             -- 3260610 Oil rig col 1 row 2
+  TF.NONE,                             -- 3270710 Oil rig col 2 row 2
+  TF.D|TF.W|TF.P|TF.EA,                -- 3280810 Water dug tile track end L
+  TF.NONE,                             -- 3290910 Oil rig col 1 row 1 anim 1
+  TF.NONE,                             -- 3301010 Oil rig col 2 row 1 anim 1
+  TF.D|TF.W|TF.P|TF.EA,                -- 3311110 Water dug tile track end R
+  TF.NONE,                             -- 3321210 Oil rig col 1 row 1 anim 2
+  TF.NONE,                             -- 3331310 Oil rig col 2 row 1 anim 2
+  TF.NONE,                             -- 3341410 Unused
+  TF.D|TF.W|TF.EA,                     -- 3351510 Water dug tile with window
+  TF.D|TF.W|TF.EA,                     -- 3361610 Water dug tile with skull
+  TF.NONE,                             -- 3371710 Unused
+  TF.NONE,                             -- 3381810 Unused
+  TF.NONE,                             -- 3391910 Unused
+  TF.NONE,                             -- 3402010 Unused
+  TF.NONE,                             -- 3412110 Sun top-left
+  TF.NONE,                             -- 3422210 Sun top-right
+  TF.NONE,                             -- 3432310 Moon top-left
+  TF.NONE,                             -- 3442410 Moon top-right
+  TF.NONE,                             -- 3452510 Moon bottom-right
+  TF.NONE,                             -- 3462610
+  TF.NONE,                             -- 3472710
+  TF.NONE,                             -- 3482810
+  TF.NONE,                             -- 3492910
+  TF.NONE,                             -- 3503010
+  TF.NONE,                             -- 3513110
+  TF.NONE,                             -- 3520011 Cave entrance right
+  TF.NONE,                             -- 3530111 Cave entrance left
+  TF.NONE,                             -- 3540211 Cave entrance down
+  TF.NONE,                             -- 3550311 Unused
+  TF.NONE,                             -- 3560411 Unused
+  TF.NONE,                             -- 3570511 Unused
+  TF.NONE,                             -- 3580611 Unused
+  TF.NONE,                             -- 3590711 Unused
+  TF.NONE,                             -- 3600811 Outside decoration only
+  TF.NONE,                             -- 3610911 Outside decoration only
+  TF.NONE,                             -- 3621011 Outside decoration only
+  TF.NONE,                             -- 3631111 Outside decoration only
+  TF.NONE,                             -- 3641211 Outside decoration only
+  TF.NONE,                             -- 3651311 Outside decoration only
+  TF.NONE,                             -- 3661411 Outside decoration only
+  TF.NONE,                             -- 3671511 Outside decoration only
+  TF.NONE,                             -- 3681611 Outside decoration only
+  TF.NONE,                             -- 3691711 Outside decoration only
+  TF.NONE,                             -- 3701811 Outside decoration only
+  TF.NONE,                             -- 3711911 Outside decoration only
+  TF.NONE,                             -- 3722011 Outside decoration only
+  TF.NONE,                             -- 3732111 Outside decoration only
+  TF.D|TF.W|TF.P|TF.EA,                -- 3742211 Water monument top-left
+  TF.D|TF.W|TF.P|TF.EA,                -- 3752311 Water monument top right
+  TF.D|TF.W|TF.P|TF.EA,                -- 3762411 Water monument bot-left
+  TF.D|TF.W|TF.P|TF.EA,                -- 3772511 Water monument bot-right
+  TF.NONE,                             -- 3782611 Outside decoration only
+  TF.NONE,                             -- 3792711 Outside decoration only
+  TF.NONE,                             -- 3802811 Outside decoration only
+  TF.NONE,                             -- 3812911 Outside decoration only
+  TF.NONE,                             -- 3823011 Outside decoration only
+  TF.NONE,                             -- 3833111 Outside decoration only
+  TF.NONE,                             -- 3840012 Outside decoration only
+  TF.NONE,                             -- 3850112 Outside decoration only
+  TF.NONE,                             -- 3860212 Outside decoration only
+  TF.NONE,                             -- 3870312 Outside decoration only
+  TF.NONE,                             -- 3880412 Outside decoration only
+  TF.D|TF.W|TF.AD|TF.T|TF.P|TF.EA,     -- 3890512 Water clear light track
+  TF.D|TF.W|TF.AD|TF.EA,               -- 3900612 Water clear light
+  TF.NONE,                             -- 3910712 Outside decoration only
+  TF.NONE,                             -- 3920812 Outside decoration only
+  TF.NONE,                             -- 3930912 Outside decoration only
+  TF.NONE,                             -- 3941012 Outside decoration only
+  TF.NONE,                             -- 3951112 Outside decoration only
+  TF.NONE,                             -- 3961212 Outside decoration only
+  TF.NONE,                             -- 3971312 Outside decoration only
+  TF.NONE,                             -- 3981412 Outside decoration only
+  TF.NONE,                             -- 3991512 Outside decoration only
+  TF.NONE,                             -- 4001612 Outside decoration only
+  TF.NONE,                             -- 4011712 Outside decoration only
+  TF.NONE,                             -- 4021812 Outside decoration only
+  TF.NONE,                             -- 4031912 Outside decoration only
+  TF.NONE,                             -- 4042012 Outside decoration only
+  TF.NONE,                             -- 4052112 Outside decoration only
+  TF.F,                                -- 4062212 Outside ceiling left
+  TF.F,                                -- 4072312 Outside ceiling straight
+  TF.F,                                -- 4082412 Outside ceiling right
+  TF.D|TF.W|TF.T|TF.P|TF.EA|TF.AD,     -- 4092512 Water beam forward track
+  TF.D|TF.W|TF.EA|TF.AD,               -- 4102612 Water beam forward
+  TF.D|TF.W|TF.EA|TF.AD,               -- 4112712 Water beam backward
+  TF.D|TF.W|TF.EA|TF.AD,               -- 4122812 Water beam horizontal
+  TF.D|TF.W|TF.ELTR,                   -- 4132912 Water dig down 1/3
+  TF.D|TF.W|TF.ELTR,                   -- 4143012 Water dig down 2/3
+  TF.D|TF.W|TF.ELTR,                   -- 4153112 Water dig down 3/3
+  TF.NONE,                             -- 4160013 Top-right cliff ceiling
+  TF.NONE,                             -- 4170113 Bottom-left cliff floor
+  TF.NONE,                             -- 4180213 Top-left cliff ceiling
+  TF.NONE,                             -- 4190313 Top-right cliff ceiling
+  TF.NONE,                             -- 4200413 Bottom-right cliff floor
+  TF.NONE,                             -- 4210513 Unused
+  TF.NONE,                             -- 4220613 Unused
+  TF.NONE,                             -- 4230713 Unused
+  TF.NONE,                             -- 4240813 Unused
+  TF.F,                                -- 4250913 Outside ceil L/R straight
+  TF.F,                                -- 4261013 Outside ceil R/D straight
+  TF.F,                                -- 4271113 Outside ceil U/R straight
+  TF.NONE,                             -- 4281213 Vertical dug leads outside
+  TF.D|TF.W|TF.E|TF.EA,                -- 4291313 Elevator wire (water)
+  TF.NONE,                             -- 4301413 Elevator foundation
+  TF.NONE,                             -- 4311513 Out half ceil D/R corner
+  TF.F,                                -- 4321613 Out half ceil L/R straight
+  TF.NONE,                             -- 4331713 Out half ceil R/U corner
+  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 4341813 Flood Gate (No water)
+  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 4351913 Flood Gate (Water left)
+  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 4362013 Flood Gate (Water right)
+  TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 4372113 Flood Gate (All water)
+  TF.D|TF.P|TF.EL|TF.ER|TF.G,          -- 4382213 Flood Gate open (No water)
+  TF.D|TF.W|TF.D|TF.P|TF.EL|TF.ER|TF.G,-- 4392313 Flood Gate open (Water)
+  TF.NONE,                             -- 4402413 Desert crystal 1
+  TF.NONE,                             -- 4412513 Desert crystal 2
+  TF.NONE,                             -- 4422613 Unused
+  TF.D|TF.W|TF.ETR,                    -- 4432713 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.EB,                -- 4442813 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.ER,                -- 4452913 Diagonal up-left flooded
+  TF.D|TF.W|TF.ELTR,                   -- 4463013 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.ERB,               -- 4473113 Diagonal up-left flooded
+  TF.D|TF.W|TF.ETR,                    -- 4480014 Diagonal up-left flooded
+  TF.F|TF.D|TF.W|TF.ERB,               -- 4490114 Diagonal up-left flooded
+  TF.D|TF.W|TF.AD|TF.T|TF.P|TF.EA,     -- 4500214 Watered clear track tile
+  TF.D|TF.W|TF.ETR,                    -- 4510314 Diagonal up-right flooded
+  TF.D|TF.W|TF.ETRB,                   -- 4520414 Diagonal up-right flooded
+  TF.D|TF.W|TF.ETR,                    -- 4530514 Diagonal up-right flooded
+  TF.D|TF.W|TF.ETR,                    -- 4540614 Diagonal up-right flooded
+  TF.D|TF.W|TF.ELTB,                   -- 4550714 Diagonal up-right flooded
+  TF.F|TF.D|TF.W|TF.ELB,               -- 4560814 Diagonal up-right flooded
+  TF.D|TF.W|TF.ELT,                    -- 4570914 Diagonal up-right flooded
+  TF.F|TF.D|TF.W|TF.ELRB,              -- 4581014 Diagonal up-right flooded
+  TF.D|TF.W|TF.ELT,                    -- 4591114
+  TF.D|TF.W|TF.ELTB,                   -- 4601214
+  TF.D|TF.W|TF.ELB,                    -- 4611314
+  TF.D|TF.W|TF.ELB,                    -- 4621414
+  TF.D|TF.W|TF.ETRB,                   -- 4631514
+  TF.D|TF.W|TF.F|TF.ERB,               -- 4641614
+  TF.D|TF.W|TF.ETRB,                   -- 4651714
+  TF.D|TF.W|TF.F|TF.ELRB,              -- 4661814
+  TF.D|TF.W|TF.ELTB,                   -- 4671914
+  TF.D|TF.W|TF.ELTB,                   -- 4682014
+  TF.D|TF.W|TF.ELTB,                   -- 4692114
+  TF.D|TF.W|TF.ETRB,                   -- 4702214
+  TF.D|TF.W|TF.ETRB,                   -- 4712314
+  TF.D|TF.W|TF.ETRB,                   -- 4722414
+  TF.D|TF.W,                           -- 4732514
+  TF.NONE,                             -- 4742614
+  TF.D|TF.W|TF.P|TF.EA,                -- 4752714
+  TF.D|TF.W|TF.P|TF.EA,                -- 4762814
+  TF.NONE,                             -- 4772914 Unused
+  TF.NONE,                             -- 4783014 Unused
+  TF.NONE,                             -- 4793114 Unused
+  TF.NONE,                             -- 4800015 Unused
+  TF.NONE,                             -- 4810115 Unused
+  TF.NONE,                             -- 4820215 Unused
+  TF.NONE,                             -- 4830315 Unused
+  TF.NONE,                             -- 4840415 Unused
+  TF.NONE,                             -- 4850515 Unused
+  TF.NONE,                             -- 4860615 Unused
+  TF.NONE,                             -- 4870715 Unused
+  TF.NONE,                             -- 4880815 Unused
+  TF.NONE,                             -- 4890915 Unused
+  TF.NONE,                             -- 4901015 Unused
+  TF.NONE,                             -- 4911115 Unused
+  TF.NONE,                             -- 4921215 Unused
+  TF.NONE,                             -- 4931315 Unused
+  TF.NONE,                             -- 4941415 Unused
+  TF.NONE,                             -- 4951515 Unused
+  TF.NONE,                             -- 4961615 Unused
+  TF.NONE,                             -- 4971715 Unused
+  TF.NONE,                             -- 4981815 Unused
+  TF.NONE,                             -- 4991915 Unused
+  TF.NONE,                             -- 5002015 Unused
+  TF.NONE,                             -- 5012115 Unused
+  TF.NONE,                             -- 5022215 Unused
+  TF.NONE,                             -- 5032315 Unused
+  TF.NONE,                             -- 5042415 Unused
+  TF.NONE,                             -- 5052515 Unused
+  TF.NONE,                             -- 5062615 Unused
+  TF.NONE,                             -- 5072715 Unused
+  TF.NONE,                             -- 5082815 Unused
+  TF.NONE,                             -- 5092915 Unused
+  TF.NONE,                             -- 5103015 Unused
+  TF.NONE,                             -- 5113115 Unused
 };
 assert(#aTileData == 512, "aTileData must only have 512 tiles!");
 -- Explode directions data ------------------------------------------------- --

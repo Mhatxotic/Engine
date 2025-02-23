@@ -62,8 +62,8 @@ static class Display final :
   /* -- Base classes ------------------------------------------------------- */
   private IHelper,                     // Initialisation helper
   public  DisplayFlags,                // Display settings
-  private EvtMain::RegVec,             // Main events list to register
-  private EvtWin::RegVec,              // Window events list to register
+  private EvtMainRegVec,               // Main events list to register
+  private EvtWinRegVec,                // Window events list to register
   private DimCoInt                     // Requested window position and size
 { /* -- Variables ---------------------------------------------------------- */
   GlFWMonitors     mlData;             // Monitor list data
@@ -259,9 +259,10 @@ static class Display final :
   }
   /* -- Window contents damaged and needs refreshing ----------------------- */
   void OnRefresh(const EvtMainEvent&)
-  { // Report that the window was resized
-    cLog->LogDebugSafe("Display redrawing window contents.");
+  { // Return if already redrawing
+    if(cFboCore->CanDraw()) return;
     // Set to force redraw the next frame
+    cLog->LogDebugSafe("Display redrawing window contents.");
     cFboCore->SetDraw();
   }
   /* == Check if window resized ============================================ */
@@ -533,9 +534,7 @@ static class Display final :
   }
   /* -- Window centre request ---------------------------------------------- */
   void OnReqCentre(const EvtWinEvent&)
-  { // If in full screen mode, don't resize or move anything
-    if(FlagIsSet(DF_INFULLSCREEN)) return;
-    // Get centre co-ordinates
+  { // Get centre co-ordinates
     int iX, iY; GetCentreCoords(iX, iY,
       cInput->GetWindowWidth(), cInput->GetWindowHeight());
     // Move the window
@@ -1040,7 +1039,7 @@ static class Display final :
     /* --------------------------------------------------------------------- */
     IHelper{ __FUNCTION__ },           // Send name to init helper
     DisplayFlags{ DF_NONE },           // No display flags set
-    EvtMain::RegVec{                   // Register main events
+    EvtMainRegVec{                     // Register main events
       { EMC_VID_FB_REINIT,     bind(&Display::OnFBReset,     this, _1) },
       { EMC_VID_MATRIX_REINIT, bind(&Display::OnMatrixReset, this, _1) },
       { EMC_WIN_CLOSE,         bind(&Display::OnClose,       this, _1) },
@@ -1051,7 +1050,7 @@ static class Display final :
       { EMC_WIN_RESIZED,       bind(&Display::OnResized,     this, _1) },
       { EMC_WIN_SCALE,         bind(&Display::OnScale,       this, _1) },
     },
-    EvtWin::RegVec{                    // Register window events
+    EvtWinRegVec{                      // Register window events
       { EWC_WIN_ATTENTION,   bind(&Display::OnReqAttention,    this, _1) },
       { EWC_WIN_CENTRE,      bind(&Display::OnReqCentre,       this, _1) },
       { EWC_WIN_CURPOSGET,   bind(&Display::OnReqGetCursorPos, this, _1) },
