@@ -19,7 +19,7 @@ local CoreTicks<const>, UtilBlank<const>, UtilIsTable<const>,
 -- Diggers function and data aliases --------------------------------------- --
 local BlitLT, BlitSLT, Fade, GameProc, GetActiveObject, InitBank, InitCon,
   InitContinueGame, InitScene, InitShop, InitTitle, LoadResources, PlayMusic,
-  PlayStaticSound, Print, RegisterFBUCallback, RenderInterface, RenderShadow,
+  PlayStaticSound, Print, RegisterFBUCallback, RenderAll, RenderShadow,
   RenderTip, RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys, SetTip,
   aGlobalData, fontSpeech;
 -- Locals ------------------------------------------------------------------ --
@@ -49,7 +49,7 @@ end
 -- Lobby open render proc -------------------------------------------------- --
 local function RenderOpen()
   -- Render game interface, backdrop, shadow and tip
-  RenderInterface();
+  RenderAll();
   BlitLT(texLobby, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Render fire
@@ -209,7 +209,7 @@ local function ExitOpen(fcbCallback, ...)
   SetHotSpot();
   SetKeys(false);
   -- Start the loading waiting procedure
-  SetCallbacks(GameProc, RenderInterface);
+  SetCallbacks(GameProc, RenderAll);
   -- Load requested screen
   fcbCallback(...);
   -- Dereference assets for the garbage collector
@@ -231,14 +231,14 @@ local function OnScriptLoaded(GetAPI)
   BlitLT, BlitSLT, Fade, GameProc, GetActiveObject, InitBank, InitCon,
     InitContinueGame, InitScene, InitShop, InitTitle, LoadResources, PlayMusic,
     PlayStaticSound, Print, RegisterFBUCallback, RegisterHotSpot, RegisterKeys,
-    RenderInterface, RenderShadow, RenderTip, RenderTipShadow, SetCallbacks,
+    RenderAll, RenderShadow, RenderTip, RenderTipShadow, SetCallbacks,
     SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData, aGlobalData,
     aSfxData, fontSpeech =
       GetAPI("BlitLT", "BlitSLT", "Fade", "GameProc", "GetActiveObject",
         "InitBank", "InitCon", "InitContinueGame", "InitScene", "InitShop",
         "InitTitle", "LoadResources", "PlayMusic", "PlayStaticSound", "Print",
         "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys",
-        "RenderInterface", "RenderShadow", "RenderTip", "RenderTipShadow",
+        "RenderAll", "RenderShadow", "RenderTip", "RenderTipShadow",
         "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip", "aAssetsData",
         "aCursorIdData", "aGlobalData", "aSfxData", "fontSpeech");
   -- Prepare assets

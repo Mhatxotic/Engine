@@ -16,7 +16,7 @@ local CoreTime<const>, UtilFormatNTime<const> = Core.Time, Util.FormatNTime;
 -- Diggers function and data aliases --------------------------------------- --
 local BlitSLTWHA, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
   InitLose, PlayMusic, PlayStaticSound, PrintC, RegisterFBUCallback,
-  RenderInterface, RenderFade, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
+  RenderAll, RenderFade, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
   SetTip, StopMusic, TriggerEnd, aKeyBankCats, fontLittle, fontTiny;
 -- Statics ------------------------------------------------------------------ --
 local iPauseX<const> = 160;            -- Pause text X position
@@ -74,7 +74,7 @@ end
 -- Pause render callback --------------------------------------------------- --
 local function RenderPause()
   -- Render terrain, game objects, and a subtle fade
-  RenderInterface();
+  RenderAll();
   RenderFade(0.75);
   -- Draw background animations
   local iStageLP6<const> = iStageL + 6;
@@ -152,13 +152,13 @@ local function OnScriptLoaded(GetAPI)
   -- Get imports
   BlitSLTWHA, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic, InitLose,
     PlayMusic, PlayStaticSound, PrintC, RegisterFBUCallback, RegisterHotSpot,
-    RegisterKeys, RenderInterface, RenderFade, RenderTip, SetCallbacks,
+    RegisterKeys, RenderAll, RenderFade, RenderTip, SetCallbacks,
     SetHotSpot, SetKeys, SetTip, StopMusic, TriggerEnd, aCursorIdData,
     aKeyBankCats, aSfxData, fontLittle, fontTiny, texSpr =
       GetAPI("BlitSLTWHA", "GetCallbacks", "GetHotSpot", "GetKeyBank",
         "GetMusic", "InitLose", "PlayMusic", "PlayStaticSound", "PrintC",
         "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys",
-        "RenderInterface", "RenderFade", "RenderTip", "SetCallbacks",
+        "RenderAll", "RenderFade", "RenderTip", "SetCallbacks",
         "SetHotSpot", "SetKeys", "SetTip", "StopMusic", "TriggerEnd",
         "aCursorIdData", "aKeyBankCats", "aSfxData", "fontLarge", "fontTiny",
         "texSpr");

@@ -47,20 +47,20 @@ local CreateObject, MoveOtherObjects, PlaySoundAtObject, SetAction;
 local aActiveObject, aActivePlayer, aContextMenu, aContextMenuData, aFloodData,
   aGemsAvailable, aLevelData, aObjects, aOpponentPlayer, aPlayers, aRacesData,
   aRacesAvailable, aShroudColour, aShroudData, bAIvsAI, fcbInfoScreenCallback,
-  fcbPause, iAbsCenPosX, iAbsCenPosY, iAnimMoney, iGameTicks, iHotSpotId,
-  iKeyBankId, iLevelId, iLLAbsHmVP, iLLAbsWmVP, iLLPixHmVP, iLLPixWmVP,
-  iMenuLeft, iMenuTop, iMenuRight, iMenuBottom, iPixCenPosX, iPixCenPosY,
-  iPixPosTargetX, iPixPosTargetY, iPixPosX, iPixPosY, iScrTilesH, iScrTilesHd2,
-  iScrTilesHd2p1, iScrTilesHm1, iScrTilesHmVPS, iScrTilesW, iScrTilesWd2,
-  iScrTilesWd2p1, iScrTilesWm1, iScrTilesWmVPS, iScrollRate, iStageB, iStageH,
-  iStageL, iStageR, iStageT, iStageW, iTilesHeight, iTilesWidth, iUniqueId,
-  iViewportH, iViewportW, iWinLimit, maskLev, maskSpr, maskZone, sLevelName,
-  sLevelType, sMoney, texBg, texLev =
+  fcbLogic, fcbRender, iAbsCenPosX, iAbsCenPosY, iAnimMoney, iGameTicks,
+  iHotSpotId, iKeyBankId, iLevelId, iLLAbsHmVP, iLLAbsWmVP, iLLPixHmVP,
+  iLLPixWmVP, iMenuLeft, iMenuTop, iMenuRight, iMenuBottom, iPixCenPosX,
+  iPixCenPosY, iPixPosTargetX, iPixPosTargetY, iPixPosX, iPixPosY, iScrTilesH,
+  iScrTilesHd2, iScrTilesHd2p1, iScrTilesHm1, iScrTilesHmVPS, iScrTilesW,
+  iScrTilesWd2, iScrTilesWd2p1, iScrTilesWm1, iScrTilesWmVPS, iScrollRate,
+  iStageB, iStageH, iStageL, iStageR, iStageT, iStageW, iTilesHeight,
+  iTilesWidth, iUniqueId, iViewportH, iViewportW, iWinLimit, maskLev, maskSpr,
+  maskZone, sLevelName, sLevelType, sMoney, texBg, texLev =
     nil, nil, nil, nil, { }, { }, { }, { }, nil, { }, { }, { }, nil, { }, nil,
     nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
     nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
     nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
-    nil, nil, nil, nil, nil, nil, nil, nil, nil;
+    nil, nil, nil, nil, nil, nil, nil, nil, nil, nil;
 -- Level limits ------------------------------------------------------------ --
 local iLLAbsW<const>   = 128;                -- Total # of horizontal tiles
 local iLLAbsH<const>   = 128;                -- Total # of vertical tiles
@@ -334,7 +334,7 @@ local function SelectInfoScreen()
                   %03u%%         %05u\n\z
                   %04u          %03u%%",
             aDigger.H, floor(aDigger.IW / aDigger.STR * 100),
-            floor(aDigger.JT / aDigger.PL * 100), aDigger.DUG,
+            max(0, floor(aDigger.JT / aDigger.PL * 100)), aDigger.DUG,
             aDigger.GEM, ceil(aDigger.LDT / iGameTicks * 100)));
       -- Digger is dead
       else
@@ -562,8 +562,8 @@ local function DeInitLevel()
   end
   -- Reset positions and other variables
   iPixPosTargetX, iPixPosTargetY, iPixPosX, iPixPosY, iGameTicks, iAnimMoney,
-    iLevelId, iWinLimit, sMoney, iUniqueId =
-      0, 0, 0, 0, 0, 0, nil, nil, nil, 0;
+    iLevelId, iWinLimit, sMoney, iUniqueId, fcbLogic, fcbRender =
+      0, 0, 0, 0, 0, 0, nil, nil, nil, 0, nil, nil;
   -- Reset active objects, menus and players
   aActivePlayer, aOpponentPlayer = nil, nil;
   -- Remove active object and menu data
@@ -1206,9 +1206,9 @@ local function CreatePlayer(iX, iY, iPlayerId, iRaceId, bIsAI)
     SY  = (iY + 2) * 16,               -- Adjust home point Y
     RD  = aRaceData                    -- Race data
   };
-  -- If this is player one
+  -- If this is player one?
   if iPlayerId == 1 then
-    -- Set as my player
+    -- Set active player
     aActivePlayer = aPlayer;
     -- Is not AI?
     if not bIsAI then
@@ -1231,8 +1231,8 @@ local function CreatePlayer(iX, iY, iPlayerId, iRaceId, bIsAI)
       -- Demo mode
       bAIvsAI = true;
     end
-  -- Opponent player? Set Opponent
-  elseif iPlayerId == 2 then aOpponentPlayer = aPlayer end;
+  -- Set opponent player
+  else aOpponentPlayer = aPlayer end;
   -- Adjust starting X co-ordinate for first Digger at the trade centre
   iHomeX = iHomeX - 16;
   -- Get weight of treasure
@@ -1264,6 +1264,8 @@ local function CreatePlayer(iX, iY, iPlayerId, iRaceId, bIsAI)
         aDigger.MI = iMaxInventory;
         -- Initialise Digger AI anti-wriggle system
         aDigger.AW, aDigger.AWR = 0, 0;
+        -- Infinite patience
+        aDigger.PW, aDigger.PL = maxinteger, maxinteger;
       end;
       -- Set Digger id
       aDigger.DI = iDiggerId;
@@ -2200,10 +2202,6 @@ local function RenderObjects()
 end
 -- Render Interface -------------------------------------------------------- --
 local function RenderInterface()
-  -- Render terrain, game objects and shroud
-  RenderTerrain();
-  RenderObjects();
-  RenderShroud();
   -- Render shadows around ui parts at button
   RenderShadow(8, 216, 136, 232);
   RenderShadow(144, 216, 224, 232);
@@ -2309,8 +2307,6 @@ local function RenderInterface()
       local iStatusTile;
       -- Digger is in danger?
       if aDigger.J == JOB.INDANGER then
-        -- Every second? Play error sound each second
-        if iGameTicks % 60 == 0 then PlayStaticSound(aSfxData.ERROR) end;
         -- Every even second set a different blue indicator.
         if iGameTicks % 120 < 60 then iStatusTile = 831;
                                  else iStatusTile = 832 end;
@@ -2416,6 +2412,13 @@ local function RenderInterface()
   end
   -- Render tooltip
   RenderTip();
+end
+-- Render all screen elements ---------------------------------------------- --
+local function RenderAll()
+  RenderTerrain();
+  RenderObjects();
+  RenderShroud();
+  RenderInterface();
 end
 -- Check object is in water at specified pixel height ---------------------- --
 local function CheckObjectInWater(aObject, iY)
@@ -3654,12 +3657,12 @@ local function PhaseLogic()
       SelectObject();
     end
     -- Get and check logic function for phasing.
-    local fcbLogic<const> = aFunctions[aObj.D];
-    if not UtilIsFunction(fcbLogic) then
+    local fcbPhaseLogic<const> = aFunctions[aObj.D];
+    if not UtilIsFunction(fcbPhaseLogic) then
       error("Invalid phase logic function at "..aObj.D.."! "..
-        tostring(fcbLogic)) end;
+        tostring(fcbPhaseLogic)) end;
     -- Execute the phase logic
-    fcbLogic(aObj);
+    fcbPhaseLogic(aObj);
   end
   -- Return actual function
   return PhaseLogic;
@@ -4058,11 +4061,24 @@ local function GameProc()
   ProcessViewPort();
   -- Process object logic
   ProcessObjects();
-  -- Rotate gems in bank every five minutes
-  if iGameTicks % 18000 == 0 then
-    -- Move first gem to last gem
-    aGemsAvailable[1 + #aGemsAvailable] = aGemsAvailable[1];
-    remove(aGemsAvailable, 1);
+  -- If a second has passed?
+  if iGameTicks % 60 == 0 then
+    -- Get player diggers and enumerate them
+    local aDiggers<const> = aActivePlayer.D;
+    for iDiggerId = 1, #aDiggers do
+      -- Play warning sound for any digger in danger
+      local aDigger<const> = aDiggers[iDiggerId];
+      if aDigger and aDigger.J == JOB.INDANGER then
+        PlayStaticSound(aSfxData.ERROR);
+        break;
+      end
+    end
+    -- Rotate gems in bank every five minutes
+    if iGameTicks % 18000 == 0 then
+      -- Move first gem to last gem
+      aGemsAvailable[1 + #aGemsAvailable] = aGemsAvailable[1];
+      remove(aGemsAvailable, 1);
+    end
   end
   -- Increment game ticks processed count
   iGameTicks = iGameTicks + 1;
@@ -4118,20 +4134,30 @@ local function SelectBook()
 end
 -- Load level -------------------------------------------------------------- --
 local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
-  fcbProc, fcbRender, iNHotSpotId)
-  -- Set default callbacks if not set
-  if not fcbProc then fcbProc = GameProc end;
-  if not fcbRender then fcbRender = RenderInterface end;
+  fcbNLogic, fcbNRender, iNHotSpotId)
+  -- De-init/Reset current level
+  DeInitLevel();
+  -- Check and set default logic callback
+  if fcbNLogic ~= nil then
+    if not UtilIsFunction(fcbNLogic) then
+      error("Logic function invalid! "..tostring(fcbNLogic)) end;
+    fcbLogic = fcbNLogic;
+  else fcbLogic = GameProc end;
+  -- Check and set default render callback
+  if fcbNRender ~= nil then
+    if not UtilIsFunction(fcbNRender) then
+      error("Render function invalid! "..tostring(fcbNRender)) end;
+    fcbRender = fcbNRender;
+  else fcbRender = RenderAll end;
+  -- Initialise default hotspot id if not specified
   if not iNHotSpotId then iNHotSpotId = iHotSpotId end;
   -- Set default players if not set
   if not iRace1 then iRace1 = aGlobalData.gSelectedRace or TYP.DIGRANDOM end;
   if not bAI1 then bAI1 = false end;
   if not iRace2 then iRace2 = TYP.DIGRANDOM end;
   if not bAI2 then bAI2 = true end;
-  -- De-init/Reset current level
-  DeInitLevel();
   -- Set FBU callback
-  local function OnStageUpdatedd(...)
+  local function OnStageUpdated(...)
     -- Set new stage bounds
     iStageW, iStageH, iStageL, iStageT, iStageR, iStageB = ...;
     -- Set new limits based on frame buffer size
@@ -4147,7 +4173,7 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
     AdjustViewPortX(0);
     AdjustViewPortY(0);
   end
-  RegisterFBUCallback("game", OnStageUpdatedd);
+  RegisterFBUCallback("game", OnStageUpdated);
   -- Set level number and get data for it.
   local aLevelInfo;
   if UtilIsTable(iLId) then iLevelId, aLevelInfo = 1, iLId;
@@ -4177,29 +4203,8 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
   local function OnLoaded(aResources)
     -- Set texture handle
     texLev = aResources[3];
-    -- Makes sure we have the same number of terrain masks as texture tiles
-    local iMaskLev<const>, iMaskLevExpect<const> =
-      maskLev:Tiles(), texLev:TileGTC()//2;
-    if iMaskLev < iMaskLevExpect then
-      error("Got only "..iMaskLev.." of "..iMaskLevExpect.." level masks!");
-    end
-    -- Cap tile count to the number of tile identifiers because the first
-    -- half of the texture is dedicated to level tiles and the second half of
-    -- the texture is dedicated to the parallax background.
-    texLev:TileSTC(#aTileData);
     -- Grab the background part
     texBg = TileA(texLev, 0, 256, 512, 512);
-    -- Makes sure we have the same number of sprite masks as sprite tiles
-    local iMaskSpr<const>, iMaskSprExpect<const> =
-      maskSpr:Tiles(), texSpr:TileGTC()//2;
-    if iMaskSpr ~= iMaskSprExpect then
-      error("Got only "..iMaskSpr.." of "..iMaskSprExpect.." sprite masks!");
-    end
-    -- Makes sure we have the same number of sprite tiles as level tiles
-    if iMaskSpr ~= iMaskLev then
-      error("Sprite count of "..iMaskSpr..
-        " not equal to level count of "..iMaskLev.."!");
-    end
     -- Player starting positions
     local aPlayerStartData<const> = {
       { 195, 198, iRace1, bAI1 },   -- Player 1 start data
@@ -4327,7 +4332,7 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
     if not iWinLimit then iWinLimit = aGlobalData.gCapitalCarried end;
     -- Do one tick at least or the fade will try to render with variables
     -- that haven't been initialised yet
-    fcbProc();
+    fcbLogic();
     -- Do fade then set requested game callbacks
     local function OnFadeIn()
       -- Key bank rqeusted?
@@ -4340,7 +4345,7 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
       -- Set specified hot spot
       SetHotSpot(iNHotSpotId);
       -- Set requested callbacks
-      SetCallbacks(fcbProc, fcbRender);
+      SetCallbacks(fcbLogic, fcbRender);
     end
     Fade(1, 0, 0.04, fcbRender, OnFadeIn, not not sMusic);
   end
@@ -4354,7 +4359,7 @@ local function InitContinueGame(bMusic)
     -- We want to hear sounds
     SetPlaySounds(true);
     -- Return control to main loop
-    SetCallbacks(GameProc, RenderInterface);
+    SetCallbacks(fcbLogic, fcbRender);
     -- Restore key bank keys and hot spots
     SetKeys(true, iKeyBankId);
     SetHotSpot(iHotSpotId);
@@ -4437,6 +4442,16 @@ local function OnScriptLoaded(GetAPI)
         "aExplodeAboveData", "maskLevel", "maskSprites", "aGlobalData",
         "aShopData", "aAssetsData", "aAIChoicesData", "aCursorIdData",
         "aShroudCircle", "aShroudTileLookup");
+  -- Make sure we have the correct number of level tiles
+  local iMaskLev<const> = maskLev:Tiles();
+  if iMaskLev ~= #aTileData then
+    error("Got only "..iMaskLev.." of "..#aTileData.." mask level tiles!");
+  end
+  -- Make sure we have the correct number of sprite tiles
+  local iMaskSpr<const> = maskSpr:Tiles();
+  if iMaskSpr ~= #aTileData then
+    error("Got only "..iMaskSpr.." of "..#aTileData.." mask sprite tiles");
+  end
   -- Setup required assets
   local aAssetTerrain<const>, aAssetObject<const>, aAssetTexture<const> =
     aAssetsData.mapt, aAssetsData.mapo, aAssetsData.game;
@@ -4825,13 +4840,14 @@ return { F = OnScriptLoaded, A = { AdjustObjectHealth = AdjustObjectHealth,
   GetViewportData = GetViewportData, HaveZogsToWin = HaveZogsToWin,
   InitContinueGame = InitContinueGame, IsSpriteCollide = IsSpriteCollide,
   LoadLevel = LoadLevel, LockViewPort = LockViewPort,
-  ProcessViewPort = ProcessViewPort, RenderInterface = RenderInterface,
-  RenderObjects = RenderObjects, RenderShroud = RenderShroud,
-  RenderTerrain = RenderTerrain, SelectObject = SelectObject,
-  SellSpecifiedItems = SellSpecifiedItems, SetPlaySounds = SetPlaySounds,
-  TriggerEnd = TriggerEnd, UpdateShroud = UpdateShroud,
-  aGemsAvailable = aGemsAvailable, aLevelData = aLevelData,
-  aObjects = aObjects, aPlayers = aPlayers, aShroudData = aShroudData } };
+  ProcessViewPort = ProcessViewPort, RenderAll = RenderAll,
+  RenderInterface = RenderInterface, RenderObjects = RenderObjects,
+  RenderShroud = RenderShroud, RenderTerrain = RenderTerrain,
+  SelectObject = SelectObject, SellSpecifiedItems = SellSpecifiedItems,
+  SetPlaySounds = SetPlaySounds, TriggerEnd = TriggerEnd,
+  UpdateShroud = UpdateShroud, aGemsAvailable = aGemsAvailable,
+  aLevelData = aLevelData, aObjects = aObjects, aPlayers = aPlayers,
+  aShroudData = aShroudData } };
 -- ------------------------------------------------------------------------- --
 end                                    -- End of 'InternalsScope' namespace
 -- ------------------------------------------------------------------------- --

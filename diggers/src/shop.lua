@@ -18,7 +18,7 @@ local CoreTicks<const>, UtilIsInteger<const>, UtilIsTable<const> =
 -- Diggers function and data aliases --------------------------------------- --
 local BlitSLT, BuyItem, Fade, GameProc, GetActiveObject, InitCon, InitLobby,
   LoadResources, LoopStaticSound, PlayMusic, PlayStaticSound, PrintC,
-  RenderInterface, RenderShadow, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
+  RenderAll, RenderShadow, RenderTip, SetCallbacks, SetHotSpot, SetKeys,
   SetTip, StopSound, aObjectActions, aObjectData, aObjectDirections,
   aObjectJobs, aShopData, fontLittle, fontSpeech, fontTiny;
 -- Locals ------------------------------------------------------------------ --
@@ -121,7 +121,7 @@ end
 -- Render main background scene--------------------------------------------- --
 local function RenderBackground()
   -- Render original interface backdrop and shadow
-  RenderInterface();
+  RenderAll();
   BlitSLT(texShop, 20, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw animations
@@ -209,7 +209,7 @@ local function GoExit()
   SetKeys(true);
   SetHotSpot();
   -- Start the loading waiting procedure
-  SetCallbacks(GameProc, RenderInterface);
+  SetCallbacks(GameProc, RenderAll);
   -- Return to lobby
   InitLobby();
 end
@@ -272,14 +272,14 @@ local function OnScriptLoaded(GetAPI)
   -- Grab imports
   BlitSLT, BuyItem, Fade, GameProc, GetActiveObject, InitCon, InitLobby,
     LoadResources, LoopStaticSound, PlayMusic, PlayStaticSound, PrintC,
-    RegisterHotSpot, RegisterKeys, RenderInterface, RenderShadow, RenderTip,
+    RegisterHotSpot, RegisterKeys, RenderAll, RenderShadow, RenderTip,
     SetCallbacks, SetHotSpot, SetKeys, SetTip, StopSound, aAssetsData,
     aCursorIdData, aObjectActions, aObjectData, aObjectDirections, aObjectJobs,
     aSfxData, aShopData, fontLittle, fontSpeech, fontTiny =
       GetAPI("BlitSLT", "BuyItem", "Fade", "GameProc", "GetActiveObject",
         "InitCon", "InitLobby", "LoadResources", "LoopStaticSound",
         "PlayMusic", "PlayStaticSound", "PrintC", "RegisterHotSpot",
-        "RegisterKeys", "RenderInterface", "RenderShadow", "RenderTip",
+        "RegisterKeys", "RenderAll", "RenderShadow", "RenderTip",
         "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip", "StopSound",
         "aAssetsData", "aCursorIdData", "aObjectActions", "aObjectData",
         "aObjectDirections", "aObjectJobs", "aSfxData", "aShopData",

@@ -16,7 +16,7 @@ local TextureCreateTS<const>, ImageRaw<const>, AssetCreate<const>
       Texture.CreateTS, Image.Raw, Asset.Create;
 -- Diggers function and data aliases --------------------------------------- --
 local BlitSLTRB, BlitLT, Fade, GameProc, GetGameTicks, InitContinueGame,
-  aLevelData, LoadResources, PlayStaticSound, RenderInterface, RenderShadow,
+  aLevelData, LoadResources, PlayStaticSound, RenderAll, RenderShadow,
   RenderTip, SetCallbacks, SetHotSpot, SetKeys, aObjects, aTileData,
   aTileFlags, texSpr;
 -- Locals ------------------------------------------------------------------ --
@@ -37,7 +37,7 @@ local function GoExit()
   -- Dereference assets for garbage collector
   texMap, texTerrain = nil, nil;
   -- Start the loading waiting procedure
-  SetCallbacks(GameProc, RenderInterface);
+  SetCallbacks(GameProc, RenderAll);
   -- Continue game
   InitContinueGame(false);
 end
@@ -66,7 +66,7 @@ end
 -- Render callback --------------------------------------------------------- --
 local function ProcRender()
   -- Render everything
-  RenderInterface();
+  RenderAll();
   -- Draw appropriate background
   BlitLT(texMap, 8, 8);
   -- Render shadow
@@ -158,12 +158,12 @@ local function OnScriptLoaded(GetAPI)
   -- Grab imports
   BlitSLTRB, BlitLT, Fade, GameProc, GetGameTicks, InitContinueGame,
     LoadResources, PlayStaticSound, RegisterHotSpot, RegisterKeys,
-    RenderInterface, RenderShadow, RenderTip, SetCallbacks, SetHotSpot,
+    RenderAll, RenderShadow, RenderTip, SetCallbacks, SetHotSpot,
     SetKeys, aAssetsData, aCursorIdData, aLevelData, aObjects, aSfxData,
     aTileData, aTileFlags, texSpr =
       GetAPI("BlitSLTRB", "BlitLT", "Fade", "GameProc", "GetGameTicks",
         "InitContinueGame", "LoadResources", "PlayStaticSound",
-        "RegisterHotSpot", "RegisterKeys", "RenderInterface", "RenderShadow",
+        "RegisterHotSpot", "RegisterKeys", "RenderAll", "RenderShadow",
         "RenderTip", "SetCallbacks", "SetHotSpot", "SetKeys", "aAssetsData",
         "aCursorIdData", "aLevelData", "aObjects", "aSfxData", "aTileData",
         "aTileFlags", "texSpr");

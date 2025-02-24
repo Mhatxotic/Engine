@@ -18,7 +18,7 @@ local CoreTicks<const>, UtilBlank<const>, UtilIsTable<const> =
 -- Diggers function and data aliases --------------------------------------- --
 local BlitSLT, Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin,
   InitLobby, LoadResources, PlayMusic, PlayStaticSound, PrintC,
-  RenderInterface, RenderShadow, RenderTip, SellSpecifiedItems, SetCallbacks,
+  RenderAll, RenderShadow, RenderTip, SellSpecifiedItems, SetCallbacks,
   SetHotSpot, SetKeys, SetTip, aGemsAvailable, aObjectActions, aObjectData,
   aObjectDirections, aObjectJobs, aObjectTypes, fontSpeech, texSpr;
 -- Locals ------------------------------------------------------------------ --
@@ -163,14 +163,14 @@ local function GoToLobby()
   SetKeys(true);
   SetHotSpot();
   -- Start the loading waiting procedure
-  SetCallbacks(GameProc, RenderInterface);
+  SetCallbacks(GameProc, RenderAll);
   -- Return to lobby
   InitLobby();
 end
 -- Speech render procedure ------------------------------------------------- --
 local function ProcRender()
   -- Render original interface
-  RenderInterface();
+  RenderAll();
   -- Draw backdrop with bankers and windows
   BlitSLT(texBank, tileBG, 8, 8);
   -- Render shadow
@@ -262,7 +262,7 @@ local function OnScriptLoaded(GetAPI)
   -- Grab imports
   BlitSLT, Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin,
     InitLobby, LoadResources, PlayMusic, PlayStaticSound, PrintC,
-    RegisterHotSpot, RegisterKeys, RenderInterface, RenderShadow, RenderTip,
+    RegisterHotSpot, RegisterKeys, RenderAll, RenderShadow, RenderTip,
     SellSpecifiedItems, SetCallbacks, SetHotSpot, SetKeys, SetTip, aAssetsData,
     aCursorIdData, aGemsAvailable, aObjectActions, aObjectData,
     aObjectDirections, aObjectJobs, aObjectTypes, aSfxData, fontSpeech,
@@ -270,7 +270,7 @@ local function OnScriptLoaded(GetAPI)
       GetAPI("BlitSLT", "Fade", "GameProc", "GetActiveObject", "GetGameTicks",
         "HaveZogsToWin", "InitLobby", "LoadResources", "PlayMusic",
         "PlayStaticSound", "PrintC", "RegisterHotSpot", "RegisterKeys",
-        "RenderInterface", "RenderShadow", "RenderTip", "SellSpecifiedItems",
+        "RenderAll", "RenderShadow", "RenderTip", "SellSpecifiedItems",
         "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip", "aAssetsData",
         "aCursorIdData", "aGemsAvailable", "aObjectActions", "aObjectData",
         "aObjectDirections", "aObjectJobs", "aObjectTypes", "aSfxData",

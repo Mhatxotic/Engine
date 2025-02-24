@@ -14,7 +14,7 @@
 local UtilBlank<const>, UtilClampInt<const> = Util.Blank, Util.ClampInt;
 -- Diggers function and data aliases --------------------------------------- --
 local BlitSLT, BlitLT, Fade, GameProc, InitCon, InitContinueGame,
-  LoadResources, PlayMusic, PlayStaticSound, RenderInterface, RenderShadow,
+  LoadResources, PlayMusic, PlayStaticSound, RenderAll, RenderShadow,
   RenderTip, RenderTipShadow, SetTip, SetCallbacks, SetHotSpot, SetKeys;
 -- Consts ------------------------------------------------------------------ --
 -- Pages each sized 510x200 stored inside texture sized 1024^2. OpenGL 3.2
@@ -138,7 +138,7 @@ end
 -- Set render background function ------------------------------------------ --
 local function ProcRenderBackInGame()
   -- Render game interface
-  RenderInterface();
+  RenderAll();
   -- Draw tip
   RenderTip();
   -- Render shadow
@@ -179,7 +179,7 @@ local function ExitInGame()
   -- Dereference assets for garbage collector
   texPage, texBook = nil, nil;
   -- Start the loading waiting procedure
-  SetCallbacks(GameProc, RenderInterface);
+  SetCallbacks(GameProc, RenderAll);
   -- Continue game
   InitContinueGame();
 end
@@ -266,12 +266,12 @@ local function OnScriptLoaded(GetAPI)
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
   BlitSLT, BlitLT, Fade, GameProc, InitCon, InitContinueGame, LoadResources,
-    PlayMusic, PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderInterface,
+    PlayMusic, PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderAll,
     RenderShadow, RenderTip, RenderTipShadow, SetCallbacks, SetHotSpot,
     SetKeys, SetTip, aAssetsData, aCursorIdData, aSfxData =
       GetAPI("BlitSLT", "BlitLT", "Fade", "GameProc", "InitCon",
         "InitContinueGame", "LoadResources", "PlayMusic", "PlayStaticSound",
-        "RegisterHotSpot", "RegisterKeys", "RenderInterface", "RenderShadow",
+        "RegisterHotSpot", "RegisterKeys", "RenderAll", "RenderShadow",
         "RenderTip", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
         "SetKeys", "SetTip", "aAssetsData", "aCursorIdData", "aSfxData");
   -- Prepare assets

@@ -697,7 +697,7 @@ local function fcbTick()
     -- Set sprites texture
     texSpr = aResources[iBaseTextures];
     aAPI.texSpr = texSpr;
-    -- Set masks
+    -- Set and check masks
     aAPI.maskLevel, aAPI.maskSprites =
       aResources[iBaseMasks], aResources[iBaseMasks + 1];
     -- Function to grab an API function. This function will be sent to all
