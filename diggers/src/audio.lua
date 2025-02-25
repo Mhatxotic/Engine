@@ -25,6 +25,10 @@ local function VideoStop()
   if vidVideo then vidVideo = vidVideo:Destroy() end;
 end
 -- ------------------------------------------------------------------------- --
+local function VideoPause() if vidVideo then vidVideo:Pause() end end;
+-- ------------------------------------------------------------------------- --
+local function VideoResume() if vidVideo then vidVideo:Play() end end;
+-- ------------------------------------------------------------------------- --
 local function VideoPlay(Handle)
   VideoStop();
   vidVideo = Handle;
@@ -56,8 +60,6 @@ local function StopMusic(iPosCmd)
     -- Save loop count
     iLoops = musMusic:GetLoop();
   end
-  -- Resume video if there is one
-  if vidVideo then vidVideo:Play() end;
   -- Stop music
   musMusic = musMusic:Stop();
 end
@@ -146,5 +148,6 @@ return { F = Util.Blank, A = { GetMusic = GetMusic, LoopSound = LoopSound,
   PauseMusic = PauseMusic, PlayMusic = PlayMusic, PlaySound = PlaySound,
   PlayStaticSound = PlayStaticSound, RegisterSounds = RegisterSounds,
   ResumeMusic = ResumeMusic, StopMusic = StopMusic, StopSound = StopSound,
-  VideoPlay = VideoPlay, VideoStop = VideoStop, InitTNTMap = InitTNTMap } };
+  VideoPause = VideoPause, VideoPlay = VideoPlay, VideoResume = VideoResume,
+  VideoStop = VideoStop, InitTNTMap = InitTNTMap } };
 -- End-of-File ============================================================= --

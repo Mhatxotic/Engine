@@ -152,12 +152,12 @@ end
 local function ProcRender() fcbRender() end;
 -- When video has faded out? ----------------------------------------------- --
 local function OnFadedOutToTitle()
-  -- Dereference loaded assets for garbage collector
-  texTitle, vidVideo = nil, nil;
   -- Remove frame buffer update callback
   RegisterFBUCallback("intro");
   -- Destroy video and texture handles
   VideoStop();
+  -- Dereference loaded assets for garbage collector
+  texTitle, vidVideo = nil, nil;
   -- Load title screen
   InitTitle();
 end
@@ -181,8 +181,12 @@ local function OnVideoEvent()
       -- If we were in our render loop? Transition to title screen
       if fcbRender == ProcRenderSetup then
          fcbRender = ProcRenderPlaying end;
-    -- Paused, stopped or finished?
-    elseif iEvent == iPause or iEvent == iStop or iEvent == iFinish then
+    -- Paused?
+    elseif iEvent == iPause then
+      -- Set pause screen if not already done so
+      if CBRender == ProcRenderSetup then fcbRender = ProcRenderSetup end;
+    -- Stopped or finished?
+    elseif iEvent == iStop or iEvent == iFinish then
       -- We someone took our render callback (i.e. setup) then we need to
       -- to switch render proc
       local _, CBRender = GetCallbacks();

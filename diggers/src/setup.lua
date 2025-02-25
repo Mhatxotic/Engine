@@ -65,10 +65,10 @@ local iCVvidvsync<const>, iCVappdelay<const>, iCVtexfilter<const>,
 -- Diggers function and data aliases --------------------------------------- --
 local BlitSLTWHA, DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank,
   GetMusic, InitSetup, IsMouseYLessThan, LoadResources, PlayMusic, PrintC,
-  PrintM, PrintR, PrintS, Print,
-  RegisterFBUCallback, RenderFade, RenderShadow, RestoreKeyHandlers,
-  SetCallbacks, SetHotSpot, SetKeys, StopMusic, aKeyBankCats, aKeyToLiteral,
-  aSetupButtonData, aSetupOptionData, fontLarge, fontLittle, fontTiny, texSpr;
+  PrintM, PrintR, PrintS, Print, RegisterFBUCallback, RenderFade, RenderShadow,
+  RestoreKeyHandlers, SetCallbacks, SetHotSpot, SetKeys, StopMusic, VideoPause,
+  VideoResume, aKeyBankCats, aKeyToLiteral, aSetupButtonData, aSetupOptionData,
+  fontLarge, fontLittle, fontTiny, texSpr;
 -- Frame-limiter types ----------------------------------------------------- --
 local aFrameLimiterLabels<const> = {
   "Adaptive VSync",                    -- VSync = -1; Delay = 0
@@ -695,6 +695,8 @@ local function DoInitSetup(iMode)
     -- Call the mode init function
     aMode[1]();
   end
+  -- Pause any video playing
+  VideoPause();
   -- Register frame buffer update
   RegisterFBUCallback("setup", OnStageUpdated);
   -- Load bank texture
@@ -707,21 +709,23 @@ local function OnScriptLoaded(GetAPI)
   local PlayStaticSound, RegisterHotSpot, RegisterKeys, aAssetsData,
     aCursorIdData, aSfxData;
   -- Grab import functions and data
-  BlitSLTWHA, DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank, GetMusic,
-    IsMouseYLessThan, LoadResources, PlayMusic, PlayStaticSound, PrintC,
-  PrintM, PrintR, PrintS, Print,
-    RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow,
+  BlitSLTWHA, DisableKeyHandlers, GetCallbacks, GetHotSpot, GetKeyBank,
+    GetMusic, IsMouseYLessThan, LoadResources, PlayMusic, PlayStaticSound,
+    PrintC, PrintM, PrintR, PrintS, Print, RegisterFBUCallback,
+    RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow,
     RestoreKeyHandlers, SetCallbacks, SetHotSpot, SetKeys, StopMusic,
-    aAssetsData, aCursorIdData, aKeyBankCats, aKeyToLiteral, aSetupButtonData,
-    aSetupOptionData, aSfxData, fontLarge, fontLittle, fontTiny, texSpr =
+    VideoPause, VideoResume, aAssetsData, aCursorIdData, aKeyBankCats,
+    aKeyToLiteral, aSetupButtonData, aSetupOptionData, aSfxData, fontLarge,
+    fontLittle, fontTiny, texSpr =
       GetAPI("BlitSLTWHA", "DisableKeyHandlers", "GetCallbacks", "GetHotSpot",
         "GetKeyBank", "GetMusic", "IsMouseYLessThan", "LoadResources",
-        "PlayMusic", "PlayStaticSound", "PrintC", "PrintM", "PrintR", "PrintS", "Print",
-        "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys", "RenderFade",
-        "RenderShadow", "RestoreKeyHandlers", "SetCallbacks", "SetHotSpot",
-        "SetKeys", "StopMusic", "aAssetsData", "aCursorIdData", "aKeyBankCats",
-        "aKeyToLiteral", "aSetupButtonData", "aSetupOptionData", "aSfxData",
-        "fontLarge", "fontLittle", "fontTiny", "texSpr");
+        "PlayMusic", "PlayStaticSound", "PrintC", "PrintM", "PrintR", "PrintS",
+        "Print", "RegisterFBUCallback", "RegisterHotSpot", "RegisterKeys",
+        "RenderFade", "RenderShadow", "RestoreKeyHandlers", "SetCallbacks",
+        "SetHotSpot", "SetKeys", "StopMusic", "VideoPause", "VideoResume",
+        "aAssetsData", "aCursorIdData", "aKeyBankCats", "aKeyToLiteral",
+        "aSetupButtonData", "aSetupOptionData", "aSfxData", "fontLarge",
+        "fontLittle", "fontTiny", "texSpr");
   -- Set assetsData
   aAssets = { aAssetsData.setupm };
   -- Callback to set all settings to default
@@ -758,6 +762,8 @@ local function OnScriptLoaded(GetAPI)
       musLast = nil;
     -- No music to set? Just stop the setup music
     else StopMusic() end;
+    -- Resume any video that might be playing
+    VideoResume();
     -- Restore redraw callback
     RegisterFBUCallback("setup");
     -- Restore original hotspot and keyback

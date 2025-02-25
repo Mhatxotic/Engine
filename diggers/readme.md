@@ -36,7 +36,6 @@ Diggers is a completely playable game from start to finish but will always be a 
 * Skipping one rendered frame every few seconds only on Wayland, perhaps when only using a `59.97hz` NTSC display. Probably need to make animations based on time and not frames which could be extremely difficult.
 
 ### Game outstanding issues…
-* Need proper ending movie with the stranger flying away in his pod.
 * No French, German or Italian book, intro nor UI localisations yet.
 
 ## [System Requirements](#system-requirements)…

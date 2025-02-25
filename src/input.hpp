@@ -84,12 +84,12 @@ static class Input final :             // Handles keyboard, mouse & controllers
         cFboCore->fboMain.ffcStage.GetCoLeft(),
         cFboCore->fboMain.GetCoRight()),
         cFboCore->fboMain.ffcStage.GetCoLeft(),
-        cFboCore->fboMain.ffcStage.GetCoRight() - 1.0),
+        cFboCore->fboMain.ffcStage.GetCoRight() - 1.0f),
       UtilClamp(UtilScaleValue(CoordGetY(), GetWindowHeight(),
         cFboCore->fboMain.ffcStage.GetCoTop(),
         cFboCore->fboMain.GetCoBottom()),
         cFboCore->fboMain.ffcStage.GetCoTop(),
-        cFboCore->fboMain.ffcStage.GetCoBottom() - 1.0));
+        cFboCore->fboMain.ffcStage.GetCoBottom() - 1.0f));
     // We clamped the cursor
     return true;
   }

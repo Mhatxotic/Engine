@@ -77,35 +77,29 @@ local aAssetsData<const> = {
     305, 185,  93,  73, -- [04] Fire animation graphic B
     400, 185,  93,  73  -- [05] Fire animation graphic C
   } } },
-  -- cntrl.lua, file.lua --------------------------------------------------- --
+  -- file.lua -------------------------------------------------------------- --
+  file = { T = 2, F = "file", P = { 0 } },
+  -- cntrl.lua ------------------------------------------------------------- --
   cntrl = { T = 10, F = "cntrl",  P = { 0, {
-      0, 272, 428, 240, -- [00] Trade centre outside background
-      0,   0, 160,  84, -- [01] Controller talking <1/4>
-      0,  85, 160,  84, -- [02] Controller talking <2/4>
-      0, 170, 160,  84, -- [03] Controller talking <3/4>
-      0, 255, 160,  84, -- [04] Controller talking <4/4>
-    208, 312, 304, 200, -- [05] Controller background screen
-    356, 250, 156,  24, -- [06] Controller speech bubble
-    273, 275,  47,  36, -- [07] Fish swimming <1/5>
-    321, 275,  47,  36, -- [08] Fish swimming <2/5>
-    369, 275,  47,  36, -- [09] Fish swimming <3/5>
-    417, 275,  47,  36, -- [10] Fish swimming <4/5>
-    465, 275,  47,  36, -- [11] Fish swimming <5/5>
-      0, 412,  63,  41, -- [12] Map flashing <1/2>
-     64, 412,  63,  41, -- [13] Map flashing <2/2>
-    128, 409,  32,  44, -- [14] Race flashing <1/2>
-    161, 409,  32,  44, -- [15] Race flashing <2/2>
-      0, 454,  79,  31, -- [16] Book flashing <1/2>
-     80, 454,  79,  31, -- [17] Book flashing <2/2>
-      0, 486,  95,  26, -- [18] File flashing <1/2>
-     96, 486,  95,  26, -- [19] File flashing <2/2>
-    208,   0, 304, 200  -- [20] Load/Save file background
+      0,   0, 304, 200, -- [00] Controller background screen
+    164, 200, 156,  24, -- [01] Controller speech bubble
+    376,   0, 136,  82, -- [02] Controller talking <2/4> (1/4 in tile 0)
+    376,  82, 136,  82, -- [03] Controller talking <3/4>
+    376, 164, 136,  82, -- [04] Controller talking <4/4>
+    304,  44,  28,  18, -- [05] Fish swimming <2/5> (1/5 in tile 0)
+    332,  44,  28,  18, -- [06] Fish swimming <3/5>
+    304,  62,  28,  18, -- [07] Fish swimming <4/5>
+    332,  62,  28,  18, -- [08] Fish swimming <5/5>
+    311,   0,  45,  40, -- [09] Map flashing <2/2> (1/2 in tile 0)
+    356,   0,  20,  44, -- [10] Race flashing <2/2> (1/2 in tile 0)
+     90, 200,  74,  31, -- [11] Book flashing <2/2> (1/2 in tile 0)
+      0, 200,  90,  26, -- [12] File flashing <2/2> (1/2 in tile 0)
   } } },
   -- scene.lua ------------------------------------------------------------- --
-  scene = { T = 10, F = false, P = { 0, {
-      0,   0, 320, 240, -- [00] The scene preview photograph
-    192, 272, 320, 240, -- [01] Pile of gold preview
-  } } },
+  scene = { T = 2, F = false, P = { 0 } },
+  scenez = { T = 2, F = "scene", P = { 0 } },
+  -- end.lua, ending.lua, scene.lua ---------------------------------------- --
+  scenem = { T = 7, F = "select" },
   -- shop.lua -------------------------------------------------------------- --
   shopm = { T = 7, F = "shop" },
   shop = { T = 10, F = "shop", P = { 0, {
@@ -185,8 +179,6 @@ local aAssetsData<const> = {
     208, 312, 304, 200, -- [12] Bank background scene
       0, 488, 112,  24  -- [13] Banker speech bubble
   } } },
-  -- end.lua, ending.lua, scene.lua ---------------------------------------- --
-  scenem = { T = 7, F = "select" },
   -- book.lua -------------------------------------------------------------- --
   book = { T = 10, F = "book", P = { 0, {
       0,   0, 304, 200, -- [00] Book cover
@@ -242,13 +234,11 @@ local aAssetsData<const> = {
       0,  95, 159,  95, -- [03] Opponent raised the cash (lose)
     208, 232, 304,  24  -- [04] Map post mortem status graphic
   } } },
+  -- post.lua -------------------------------------------------------------- --
   postm = { T = 7, F = "win" },
   -- ending.lua ------------------------------------------------------------ --
-  ending = { T = 1, F = false, P = { 428, 240, 0, 0, 0 } },
-  ending3 = { T = 10, F = "ending3",P = { 0, {
-      0,   0, 428, 240, -- [00] Desert sunset background
-      0, 330, 113, 182  -- [01] Stranger graphic
-  } } },
+  ending2 = { T = 1, F = false, P = { 428, 240, 0, 0, 0 } },
+  ending3 = { T = 8, F = "outro" },
   -- credit.lua ------------------------------------------------------------ --
   credits = { T = 2, F = "vignette", P = { 0 } },
   -- setup.lua ------------------------------------------------------------- --

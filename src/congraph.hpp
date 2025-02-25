@@ -372,8 +372,7 @@ static class ConGraphics final :       // Members initially private
   CVarReturn TextScaleModified(const GLfloat fNewScale)
   { // Failed if supplied scale is not in range
     if(!CVarToBoolReturn(CVarSimpleSetIntNLG(fTextScale,
-      fNewScale, 0.01f, 1.0f)))
-        return DENY;
+      fNewScale, 0.01f, 16.0f))) return DENY;
     // Set new font scale
     CommitScale();
     // Reallocate memory if neccesary for fbo lists

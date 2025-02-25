@@ -63,7 +63,7 @@ class SysBase :                        // Safe exception handler namespace
     { // Close write pipe handle if opened
       if(iWrite != iInvalid) close(iWrite);
       // Thread is running?
-      if(ThreadIsRunning())
+      if(ThreadIsJoinable())
       { // Signal the exit
         ThreadSetExit();
         // Close the read pipe so the thread can exit

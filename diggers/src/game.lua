@@ -42,7 +42,8 @@ local ACT, AI, BlitSLTRB, BlitSLT, DF, DIR, Fade, GetMouseX, GetMouseY,
 -- High priority variables (because of MAXVARS limit) ---------------------- --
 local function HighPriorityVars()
 -- Prototype functions (assigned later) ------------------------------------ --
-local CreateObject, MoveOtherObjects, PlaySoundAtObject, SetAction;
+local CreateObject, MoveOtherObjects, PlayInterfaceSound, PlaySoundAtObject,
+  SetAction;
 -- Locals ------------------------------------------------------------------ --
 local aActiveObject, aActivePlayer, aContextMenu, aContextMenuData, aFloodData,
   aGemsAvailable, aLevelData, aObjects, aOpponentPlayer, aPlayers, aRacesData,
@@ -94,8 +95,9 @@ local function DoPlaySoundAtObject(aObject, iSfxId, nPitch)
 end
 -- Enable or disable playing sounds ---------------------------------------- --
 local function SetPlaySounds(bState)
-  if bState then PlaySoundAtObject = DoPlaySoundAtObject;
-            else PlaySoundAtObject = UtilBlank end;
+  if bState then PlaySoundAtObject, PlayInterfaceSound =
+    DoPlaySoundAtObject, PlayStaticSound;
+  else PlaySoundAtObject, PlayInterfaceSound = UtilBlank, UtilBlank end;
 end
 -- Update viewport data ---------------------------------------------------- --
 local function UpdateViewPort(nPos, iTLMVPS, iTTD2, iTT, iTL)
@@ -526,7 +528,7 @@ local function SelectInfoScreen()
            iScreen > #aInfoScreenData then
       error("Invalid screen! "..tostring(iScreen)) end
     -- Play sound effect to show the player clicked it
-    PlayStaticSound(aSfxData.CLICK);
+    PlayInterfaceSound(aSfxData.CLICK);
     -- Get the screen info data and if we're already showing it?
     local aInfoScreenItem<const> = aInfoScreenData[iScreen];
     if aInfoScreenActiveItem == aInfoScreenItem then
@@ -4069,7 +4071,7 @@ local function GameProc()
       -- Play warning sound for any digger in danger
       local aDigger<const> = aDiggers[iDiggerId];
       if aDigger and aDigger.J == JOB.INDANGER then
-        PlayStaticSound(aSfxData.ERROR);
+        PlayInterfaceSound(aSfxData.ERROR);
         break;
       end
     end
@@ -4097,11 +4099,11 @@ local function SelectDevice()
       -- Set as active object
       SelectObject(aObject);
       -- Success!
-      return PlayStaticSound(aSfxData.CLICK);
+      return PlayInterfaceSound(aSfxData.CLICK);
     end
   end
   -- Failed? Play sound
-  PlayStaticSound(aSfxData.ERROR);
+  PlayInterfaceSound(aSfxData.ERROR);
 end
 -- Pause the game ---------------------------------------------------------- --
 local function SelectPauseScreen() SelectInfoScreen() InitPause() end;
@@ -4120,13 +4122,13 @@ local function SelectBook()
     local aDigger<const> = aDiggers[iDigger];
     if aDigger.F & OFL.NOHOME ~= 0 or aDigger.J == JOB.HOME then
       -- Play error sound effect and return
-      return PlayStaticSound(aSfxData.ERROR);
+      return PlayInterfaceSound(aSfxData.ERROR);
     end
   end
   -- Clear any information screens
   SelectInfoScreen();
   -- Play sound effect to show the player clicked it
-  PlayStaticSound(aSfxData.CLICK);
+  PlayInterfaceSound(aSfxData.CLICK);
   -- Remove play sound function
   SetPlaySounds(false);
   -- Init the book

@@ -12,32 +12,36 @@
 -- Core function aliases --------------------------------------------------- --
 -- M-Engine function aliases ----------------------------------------------- --
 -- Diggers function and data aliases --------------------------------------- --
-local BlitSLT, Fade, LoadLevel, LoadResources, PlayMusic, PrintC, SetCallbacks,
+local BlitLT, Fade, LoadLevel, LoadResources, PlayMusic, PrintC, SetCallbacks,
   aGlobalData, aLevelTypesData, aLevelsData, fontLarge;
 -- Locals ------------------------------------------------------------------ --
-local aAssets,                         -- Assets required
+local aAssetsScene,                    -- Scene assets required
+      aAssetsRequire,                  -- Required assets required
       aLevelInfo,                      -- Selected level information
       iLevelId,                        -- Level id to load
-      iTileId,                         -- First tile number
       iWaitCounter,                    -- Ticks counted for next screen
+      iTerrainId,                      -- Selected terrain id
       sTextToWin,                      -- Text to win label
+      texRequire,                      -- Pile of zogs
       texScene;                        -- Scene texture
--- Render the scene callback since we're using it multiple times ----------- --
-local function ProcRenderScene()
+-- Render the zogs requirement callback ------------------------------------ --
+local function ProcRenderRequire()
   -- Draw appropriate background
-  BlitSLT(texScene, iTileId, 0, 0);
-  -- Return if not ready
-  if iTileId ~= 1 then return end;
+  BlitLT(texRequire, 72, 32);
   -- Draw the text to win
   fontLarge:SetCRGBA(1, 1, 1, 1);
   PrintC(fontLarge, 160, 192, sTextToWin);
 end
+-- Render the scene callback since we're using it multiple times ----------- --
+local function ProcRenderScene() BlitLT(texScene, 0, 20) end;
 -- On required fade out? --------------------------------------------------- --
 local function OnFadeOutToGame()
   -- Release assets to garbage collector
-  texScene = nil;
+  texRequire, sTextToWin, iWaitCounter = nil, nil, nil;
   -- Load the requested level
   LoadLevel(iLevelId, "game", -1);
+  -- Done with level id
+  iLevelId = nil;
 end
 -- Required Zogs wait procedure -------------------------------------------- --
 local function ProcLogicRequired()
@@ -45,22 +49,32 @@ local function ProcLogicRequired()
   iWaitCounter = iWaitCounter + 1;
   if iWaitCounter < 300 then return end;
   -- Fade out and then load the level
-  Fade(0, 1, 0.04, ProcRenderScene, OnFadeOutToGame, true);
+  Fade(0, 1, 0.04, ProcRenderRequire, OnFadeOutToGame, true);
 end
 -- Required Zogs fade in proc ---------------------------------------------- --
 local function OnFadeInToRequired()
   -- Set required wait callbacks
-  SetCallbacks(ProcLogicRequired, ProcRenderScene);
+  SetCallbacks(ProcLogicRequired, ProcRenderRequire);
 end
--- Scene fade out proc ----------------------------------------------------- --
-local function OnSceneFadedOut()
+-- Scene required assets loaded -------------------------------------------- --
+local function OnRequireAssetsLoaded(aResources)
+  -- Set pile of zogs texture
+  texRequire = aResources[1];
   -- Set text to win label
   sTextToWin = "RAISE "..(aLevelInfo.w.r + aGlobalData.gCapitalCarried)..
     " ZOGS TO WIN";
-  -- Set next tile number
-  iTileId = 1;
   -- Fade in required scene
-  Fade(1, 0, 0.04, ProcRenderScene, OnFadeInToRequired);
+  Fade(1, 0, 0.04, ProcRenderRequire, OnFadeInToRequired);
+end
+-- Scene fade out proc ----------------------------------------------------- --
+local function OnSceneFadedOut()
+  -- Release scene asset
+  texScene = nil;
+  -- Load resources
+  LoadResources("Scene Require "..aLevelInfo.n.."/"..iTerrainId,
+    aAssetsRequire, OnRequireAssetsLoaded);
+  -- Don't need terrain id value anymore
+  iTerrainId = nil;
 end
 -- Waiting on scene graphic ------------------------------------------------ --
 local function ProcLogicScene()
@@ -78,13 +92,11 @@ local function OnSceneFadedIn()
   SetCallbacks(ProcLogicScene, ProcRenderScene);
 end
 -- On loaded function ------------------------------------------------------ --
-local function OnAssetsLoaded(aResources)
+local function OnSceneAssetsLoaded(aResources)
+  -- Set scene textures
+  texScene = aResources[1];
   -- Play scene music
   PlayMusic(aResources[2]);
-  -- Set scene texture
-  texScene = aResources[1];
-  -- Set first tile number
-  iTileId = 0;
   -- Fade in
   Fade(1, 0, 0.04, ProcRenderScene, OnSceneFadedIn);
 end
@@ -95,22 +107,24 @@ local function InitScene(iZoneId)
   aLevelInfo = aLevelsData[iLevelId];
   -- Get level terrain information and set scene setter texture to load
   local aTerrain<const> = aLevelInfo.t;
-  aAssets[1].F = aTerrain.f.."ss";
+  aAssetsScene[1].F = aTerrain.f.."ss";
+  iTerrainId = aTerrain.n;
   -- Load resources
-  LoadResources("Scene "..aLevelInfo.n.."/"..aTerrain.n,
-    aAssets, OnAssetsLoaded);
+  LoadResources("Scene "..aLevelInfo.n.."/"..iTerrainId,
+    aAssetsScene, OnSceneAssetsLoaded);
 end
 -- Scripts have been loaded ------------------------------------------------ --
 local function OnScriptLoaded(GetAPI)
   -- Grab imports
-  BlitSLT, Fade, LoadLevel, LoadResources, PlayMusic, PrintC, SetCallbacks,
+  BlitLT, Fade, LoadLevel, LoadResources, PlayMusic, PrintC, SetCallbacks,
     aGlobalData, aLevelTypesData, aLevelsData, fontLarge =
-      GetAPI("BlitSLT", "Fade", "LoadLevel", "LoadResources", "PlayMusic",
+      GetAPI("BlitLT", "Fade", "LoadLevel", "LoadResources", "PlayMusic",
         "PrintC", "SetCallbacks", "aGlobalData", "aLevelTypesData",
         "aLevelsData", "fontLarge");
   -- Setup assets
   local aAssetsData<const> = GetAPI("aAssetsData");
-  aAssets = { aAssetsData.scene, aAssetsData.scenem };
+  aAssetsScene = { aAssetsData.scene, aAssetsData.scenem };
+  aAssetsRequire = { aAssetsData.scenez };
 end
 -- Exports and imports ----------------------------------------------------- --
 return { A = { InitScene = InitScene }, F = OnScriptLoaded };

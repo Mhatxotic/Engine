@@ -63,9 +63,9 @@ local iStageLeftO  = iStageLeft;       -- Left of stage
 local iStageTopO   = iStageTop;        -- Top of stage
 local iStageWidthO = iStageWidth;      -- Top of stage
 -- Library functions loaded later ------------------------------------------ --
-local BlitSLTRB, BlitSLT, ClearStates, InitCredits, InitTitleCredits, InitDebugPlay,
-  InitEnding, InitFail, InitIntro, InitNewGame, InitScene, InitScore,
-  InitTitle, IsMouseInBounds, JoystickProc, LoadLevel, MainProcFunc,
+local BlitSLTRB, BlitSLT, ClearStates, InitCon, InitCredits, InitTitleCredits,
+  InitDebugPlay, InitEnding, InitFail, InitIntro, InitNewGame, InitScene,
+  InitScore, InitTitle, IsMouseInBounds, JoystickProc, LoadLevel, MainProcFunc,
   MusicVolume, PrintC, aLevelsData, aObjectTypes, aRacesData;
 -- These could be called even though they aren't initialised yet ----------- --
 local DisableKeyHandlers, RestoreKeyHandlers, SetKeys, SetHotSpot =
@@ -755,13 +755,13 @@ local function fcbTick()
     -- ...and a CVar that lets us start straight into a level
     aAPI.cvTest = VariableRegister("gam_test", "", aCVF.STRING, fcbEmpty);
     -- Load dependecies we need on this module
-    BlitSLTRB, BlitSLT, ClearStates, DisableKeyHandlers, InitCredits,
+    BlitSLTRB, BlitSLT, ClearStates, DisableKeyHandlers, InitCon, InitCredits,
       InitDebugPlay, InitEnding, InitFail, InitIntro, InitNewGame, InitScene,
       InitScore, InitTitle, InitTitleCredits, IsMouseInBounds, JoystickProc,
       LoadLevel, MusicVolume, PrintC, RestoreKeyHandlers, SetHotSpot, SetKeys,
       aLevelsData, aObjectTypes, aRacesData =
         GetAPI("BlitSLTRB", "BlitSLT", "ClearStates", "DisableKeyHandlers",
-          "InitCredits", "InitDebugPlay", "InitEnding", "InitFail",
+          "InitCon", "InitCredits", "InitDebugPlay", "InitEnding", "InitFail",
           "InitIntro", "InitNewGame", "InitScene", "InitScore", "InitTitle",
           "InitTitleCredits", "IsMouseInBounds", "JoystickProc", "LoadLevel",
           "MusicVolume", "PrintC", "RestoreKeyHandlers", "SetHotSpot",
@@ -815,11 +815,13 @@ local function fcbTick()
       elseif iStartLevel == -5 then return InitCredits(true);
       -- Testing the title screen rolling credits
       elseif iStartLevel == -6 then return InitTitleCredits();
+      -- Testing the controller screen
+      elseif iStartLevel == -7 then return InitCon();
       -- Testing a races ending
-      elseif iStartLevel > -11 and iStartLevel <= -7 then
-        return InitEnding(#aRacesData + (-11 - iStartLevel));
+      elseif iStartLevel > -12 and iStartLevel <= -8 then
+        return InitEnding(#aRacesData + (-12 - iStartLevel));
       -- Reserved for testing map post mortem maybe (todo)
-      elseif iStartLevel <= -11 then
+      elseif iStartLevel <= -12 then
       -- Test a specific lvel
       elseif iStartLevel <= #aLevelsData then
         return LoadLevel(iStartLevel, "game", -1);

@@ -2602,14 +2602,18 @@ local aMenuData<const> = {
 };
 -- Endings data ------------------------------------------------------------ --
 local aEndingData<const> = {
-  [TYP.FTARG]    = { 1, 0, "THE F'TARGS CONSTRUCT THEIR OWN MUSEUM",
-                           "OF METAL MARVELS WITH THEIR EARNINGS" },
-  [TYP.HABBISH]  = { 1, 1, "THE HABBISH CONSTRUCT A TEMPLE IN HONOUR OF",
-                           "THE LORD HIGH HABBORG WITH THEIR EARNINGS" },
-  [TYP.GRABLIN]  = { 2, 0, "THE GRABLINS CONSTRUCT THEIR OWN GROK",
-                           "BREWERY WITH THEIR EARNINGS" },
-  [TYP.QUARRIOR] = { 2, 1, "THE QUARRIORS CONSTRUCT AN IMPENETRABLE",
-                           "FORTRESS WITH THEIR EARNINGS" }
+  [-1]           = {    "MINING OPERATIONS COMPLETED!",
+                        "ZOGS HAVE BEEN RAISED!" },
+  [TYP.FTARG]    = { 1, "THE F'TARGS CONSTRUCT THEIR OWN MUSEUM",
+                        "OF METAL MARVELS WITH THEIR EARNINGS..." },
+  [TYP.HABBISH]  = { 2, "THE HABBISH CONSTRUCT A TEMPLE IN HONOUR OF",
+                        "THE LORD HIGH HABBORG WITH THEIR EARNINGS..." },
+  [TYP.GRABLIN]  = { 3, "THE GRABLINS CONSTRUCT THEIR OWN GROK",
+                        "BREWERY WITH THEIR EARNINGS..." },
+  [TYP.QUARRIOR] = { 4, "THE QUARRIORS CONSTRUCT AN IMPENETRABLE",
+                        "FORTRESS WITH THEIR EARNINGS..." },
+  [-2]           = {    "...WHILST THE MYSTERIOUS FIGURE OF THE",
+                        "MASTER MINER RETURNS FROM WHENCE HE CAME!" }
 };
 -- Credits data ------------------------------------------------------------ --
 local aCreditsData<const> = {
@@ -2702,7 +2706,7 @@ local aSetupButtonData<const> = {
      WILL LOSE ANY SYSTEM AFFECTING CHANGES THAT REQUIRE THE 'APPLY' BUTTON \z
      TO BE CLICKED" },
   -- ----------------------------------------------------------------------- --
-  { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 101, nil, nil,
+  { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 102, nil, nil,
     "APPLY", "CLICK TO APPLY ANY SYSTEM AFFECTING SETTINGS YOU HAVE CHANGED" },
   -- ----------------------------------------------------------------------- --
   { { nil, nil, nil, nil, 0, CID.OK, false, false, false }, 103, nil, nil,

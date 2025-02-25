@@ -31,8 +31,7 @@ class ThreadBase                       // Thread variables class
   SafeInt          siExitCode;         // Callback exit code
   void            *vpParam;            // User parameter
   CBFunc           cbfFunc;            // Thread callback function
-  SafeBool         sbShouldExit,       // Thread should exit
-                   sbRunning;          // Thread is running?
+  SafeBool         sbShouldExit;       // Thread should exit
   SafeClkDuration  scdStart,           // Thread start time
                    scdEnd;             // Thread end time
   const SysThread  stPerf;             // Thread is high performance?
@@ -45,7 +44,6 @@ class ThreadBase                       // Thread variables class
     vpParam(vpNParam),                 // Set user thread parameter
     cbfFunc{ cbfNFunc },               // Set thread callback function
     sbShouldExit(false),               // Should never exit at first
-    sbRunning(false),                  // Should never be running at first
     scdStart{ seconds{ 0 } },          // Never started time
     scdEnd{ seconds{ 0 } },            // Never finished time
     stPerf(stNPerf)                    // Set thread high performance
@@ -64,8 +62,6 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   void ThreadHandler(void) try
   { // Incrememt thread running count
     ++cParent->stRunning;
-    // Thread longer running
-    sbRunning = true;
     // Thread starting up in log
     cLog->LogDebugExSafe("Thread $<$> started.", CtrGet(), IdentGet());
     // Set the start time and initialise the end time
@@ -79,9 +75,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
       ThreadSetExitCode(ThreadGetCallback()(*this));
       // If non-zero then break else start thread again
       if(ThreadGetExitCode()) break;
-    } // Thread no longer running
-    sbRunning = false;
-    // Set shutdown time
+    } // Set shutdown time
     scdEnd = cmHiRes.GetEpochTime();
     // Log if thread didn't signal to exit
     cLog->LogDebugExSafe("Thread $<$> exited in $ with code $<$$>.",
@@ -93,9 +87,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     --cParent->stRunning;
   } // exception occured in thread so handle it
   catch(const exception &e)
-  { // Thread no longer running
-    sbRunning = false;
-    // Return error and set thread to exit
+  { // Return error and set thread to exit
     ThreadSetExitCode(-2);
     // Reduce thread count
     --cParent->stRunning;
@@ -165,7 +157,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   void ThreadStopNoCheck(void)
   { // Thread is running? Inform thread loops that it should exit now
-    if(ThreadIsRunning()) ThreadSetExit();
+    ThreadSetExit();
     // Wait for thread to complete
     ThreadWait();
     // Set to standby with a new thread
@@ -173,7 +165,9 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   }
   /* ----------------------------------------------------------------------- */
   void ThreadStopNoThrow(void)
-  { // If is this thread then this is a bad idea
+  { // Return if thread is not running
+    if(ThreadIsNotJoinable()) return;
+    // If is this thread then this is a bad idea
     if(ThreadIsCurrent())
       return cLog->LogWarningExSafe(
         "Thread '$' tried to join from the same thread!", IdentGet());
@@ -182,7 +176,9 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   }
   /* ----------------------------------------------------------------------- */
   void ThreadStop(void)
-  { // If is this thread then this is a bad idea
+  { // Return if thread is not running
+    if(ThreadIsNotJoinable()) return;
+    // If is this thread then this is a bad idea
     if(ThreadIsCurrent())
       XC("Tried to join from the same thread!", "Identifier", IdentGet());
     // Proceed with termination
@@ -198,9 +194,6 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   bool ThreadShouldExit(void) const { return sbShouldExit; }
   bool ThreadShouldNotExit(void) const { return !ThreadShouldExit(); }
-  /* ----------------------------------------------------------------------- */
-  bool ThreadIsRunning(void) const { return sbRunning; }
-  bool ThreadIsNotRunning(void) const { return !ThreadIsRunning(); }
   /* ----------------------------------------------------------------------- */
   bool ThreadIsJoinable(void) const { return joinable(); }
   bool ThreadIsNotJoinable(void) const { return !ThreadIsJoinable(); }
@@ -242,7 +235,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   { // Done if not running
     if(ThreadIsNotJoinable()) return;
     // Not signalled to exit?
-    if(ThreadIsRunning() && ThreadShouldNotExit())
+    if(ThreadShouldNotExit())
     { // Set exit signal
       sbShouldExit = true;
       // Log signalled to exit in destructor
@@ -356,7 +349,7 @@ template<class Callbacks>class ThreadSyncHelper : private Callbacks
   /* -- End notification to Thread A from Thread B ------------------------- */
   void FinishNotifyThreadA(void)
   { // Ignore if render thread isn't running
-    if(tOwner.ThreadIsNotRunning()) return;
+    if(tOwner.ThreadIsNotJoinable()) return;
     // Call final Thread B callback
     this->FinishThreadBCallback();
     // Send notification to Thread A
@@ -367,7 +360,7 @@ template<class Callbacks>class ThreadSyncHelper : private Callbacks
   /* -- Begin notification to Thread A from Thread B ----------------------- */
   void StartNotifyThreadA(void)
   { // Ignore if render thread isn't running
-    if(tOwner.ThreadIsNotRunning()) return;
+    if(tOwner.ThreadIsNotJoinable()) return;
     // Set state so Thread A thread knows to proceed
     bUnlock = true;
     // Wait for Thread A to send notification back to us in Thread B

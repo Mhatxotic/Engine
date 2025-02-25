@@ -1008,7 +1008,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Set error message
       iReturn = SetErrorStaticSafe(E.what());
     } // Have writer thread?
-    if(tWriter.ThreadIsNotCurrent() && tWriter.ThreadIsRunning())
+    if(tWriter.ThreadIsNotCurrent() && tWriter.ThreadIsJoinable())
     { // Call for writer thread to terminate
       tWriter.ThreadSetExit();
       // Unblock writer thread so that it may terminate cleanly
@@ -1179,7 +1179,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   { // Send disconnect to socket
     SendDisconnect();
     // Have read thread running?
-    if(tReader.ThreadIsRunning())
+    if(tReader.ThreadIsJoinable())
     { // Tell the thread to stop and wait for it. The end of the thread should
       // call FinishDisconnect() already.
       tReader.ThreadDeInit();
@@ -1260,7 +1260,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // We don't care if an error occured
       ERR_clear_error();
     } // Set thread to exit if we are not calling from it
-    if(tReader.ThreadIsNotCurrent() && tReader.ThreadIsRunning())
+    if(tReader.ThreadIsNotCurrent() && tReader.ThreadIsJoinable())
       tReader.ThreadSetExit();
     // Closing
     return true;
@@ -1429,7 +1429,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     SendDisconnect();
     // Have read thread running? Tell the thread to stop and wait for it. The
     // end of the thread should call FinishDisconnect() already.
-    if(tReader.ThreadIsRunning()) tReader.ThreadStopNoThrow();
+    if(tReader.ThreadIsJoinable()) tReader.ThreadStopNoThrow();
     // Cleanup the disconnect
     FinishDisconnect();
   }

@@ -438,7 +438,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     return false;
   }
   /* -- Manage video decoding thread for ogg supporting only audio --------- */
-  int VideoHandleAudioOnly(void)
+  bool VideoHandleAudioOnly(void)
   { // Process exhausted audio buffers if there is a source
     if(IsSourceAvailable()) ProcessExhaustedAudioBuffers();
     // If enough audio buffered and time is moving? Thread can breathe a little
@@ -447,15 +447,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Parse and render more vorbis data and if we didn't?
     else if(!ParseAndRenderVorbisData())
     { // Try to load more raw data and return if we're at the end of file
-      if(LoadRawData()) return 2;
+      if(LoadRawData()) return false;
       // Repeat until there are more audio packets to parse
       while(tThread.ThreadShouldNotExit() && ParseRawData())
         ogg_stream_pagein(&ostsVorbis, &opgData);
     } // Done
-    return 0;
+    return true;
   }
   /* -- Manage video decoding thread for ogg supporting only video --------- */
-  int VideoHandleVideoOnly(void)
+  bool VideoHandleVideoOnly(void)
   { // If it is not time to process a frame yet?
     if(CIIsNotTriggered())
     { // Wait a little bit if we can
@@ -466,15 +466,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // No video rendered?
     else
     { // Try to load more raw data and return if at end of file
-      if(LoadRawData()) return 2;
+      if(LoadRawData()) return false;
       // Repeat until there are more video packets to parse
       while(tThread.ThreadShouldNotExit() && ParseRawData())
         ogg_stream_pagein(&ostsTheora, &opgData);
     } // Keep thread loop alive
-    return 0;
+    return true;
   }
   /* -- Manage video decoding thread for ogg supporting audio and video ---- */
-  int VideoHandleAudioVideo(void)
+  bool VideoHandleAudioVideo(void)
   { // Stream status flags
     bool bVideoParsed = false, bAudioParsed = false;
     // If there is an audio source?
@@ -501,8 +501,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
             GetVideoTime() - GetAudioTime() : 0.0;
         // Wait a little bit if we can
         else if(CIIsNotTriggered(milliseconds{1})) cTimer->TimerSuspend(1);
-        // Done
-        return 0;
+        // Done, keep thread alive
+        return true;
       } // Time to check for new packets? Repeat...
       else if(ParseAndRenderTheoraData())
       { // Got a video packet
@@ -514,7 +514,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     } // Didn't process anything this time?
     if(!bAudioParsed && !bVideoParsed)
     { // Try to load more raw data and return if we're at the end of file
-      if(LoadRawData()) return 2;
+      if(LoadRawData()) return false;
       // Repeat until there are more audio and video packets to parse
       while(tThread.ThreadShouldNotExit() && ParseRawData())
       { // Parse more video and audio data. No point logging failures.
@@ -522,7 +522,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         ogg_stream_pagein(&ostsVorbis, &opgData);
       }
     } // Keep thread loop alive
-    return 0;
+    return true;
   }
   /* -- Thread main function ----------------------------------------------- */
   int VideoThreadMain(const Thread &tClass) try
@@ -530,11 +530,11 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(ubReason != UB_REINIT) LuaEvtDispatch(VE_PLAY);
     // Loop until thread should exit
     if(FlagIsSet(FL_THEORA|FL_VORBIS)) // Ogg has both audio and video streams?
-      while(tClass.ThreadShouldNotExit() && !VideoHandleAudioVideo());
+      while(tClass.ThreadShouldNotExit() && VideoHandleAudioVideo());
     else if(FlagIsSet(FL_VORBIS))      // Ogg has audio only stream?
-      while(tClass.ThreadShouldNotExit() && !VideoHandleAudioOnly());
+      while(tClass.ThreadShouldNotExit() && VideoHandleAudioOnly());
     else if(FlagIsSet(FL_THEORA))      // Ogg has video only stream?
-      while(tClass.ThreadShouldNotExit() && !VideoHandleVideoOnly());
+      while(tClass.ThreadShouldNotExit() && VideoHandleVideoOnly());
     // Log the reason why the thread should be terminated
     cLog->LogDebugExSafe("Video '$' main loop exit with reason $!",
       IdentGet(), ubReason.load());
@@ -923,7 +923,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     stFActive = (stFActive + 1) % faData.size();
   }
   /* -- Video is playing? -------------------------------------------------- */
-  bool IsPlaying(void) const { return tThread.ThreadIsRunning(); }
+  bool IsPlaying(void) const { return tThread.ThreadIsJoinable(); }
   /* -- DeInitialise audio ouput (because re-initialising) ----------------- */
   void DeInitAudio(void)
   { // Return if there is no audio in this video

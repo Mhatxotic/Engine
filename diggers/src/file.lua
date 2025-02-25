@@ -17,9 +17,9 @@ local cos<const>, floor<const>, format<const>, pairs<const>, sin<const>,
 local UtilFormatTime<const>, CoreOSTime<const>, CoreTime<const>,
   VariableSave<const> = Util.FormatTime, Core.OSTime, Core.Time, Variable.Save;
 -- Diggers function and data aliases --------------------------------------- --
-local BlitSLT, BlitLT, Fade, InitCon, LoadResources, PlayStaticSound,
-  PrintC, RenderFade, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot,
-  SetKeys, SetTip, aLevelsData, aObjectData, aObjectTypes, fontSpeech, texSpr;
+local BlitLT, Fade, InitCon, LoadResources, PlayStaticSound, PrintC,
+  RenderFade, RenderShadow, RenderTipShadow, SetCallbacks, SetHotSpot, SetKeys,
+  SetTip, aLevelsData, aObjectData, aObjectTypes, fontSpeech, texSpr;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Required assets
       aFileData, aNameData;            -- File and file names data
@@ -36,7 +36,6 @@ local iHotSpotIdLoadOnly,              -- Hot spot id (Load only)
       iSelected,                       -- File selected
       sMsg,                            -- Title text
       texFile, texLobby;               -- File screen and lobby texture
-local tileFile<const> = 20;            -- File texture tile
 -- Match text -------------------------------------------------------------- --
 local sFileMatchText<const> =
   "^(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),\z
@@ -124,7 +123,7 @@ end
 local function RenderFile()
   -- Draw trace-centre backdrop, file screen and shadow
   BlitLT(texLobby, -54, 0);
-  BlitSLT(texFile, tileFile, 8, 8);
+  BlitLT(texFile, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw message
   fontSpeech:SetCRGB(0, 0, 0.25);
@@ -311,19 +310,19 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  BlitSLT, BlitLT, Fade, InitCon, LoadResources, PlayStaticSound, PrintC,
+  BlitLT, Fade, InitCon, LoadResources, PlayStaticSound, PrintC,
     RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow, RenderTipShadow,
     SetCallbacks, SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData,
     aLevelsData, aObjectData, aObjectTypes, aSaveSlot[1], aSaveSlot[2],
     aSaveSlot[3], aSaveSlot[4], aSfxData, fontSpeech, texSpr =
-      GetAPI("BlitSLT", "BlitLT", "Fade", "InitCon", "LoadResources",
-        "PlayStaticSound", "PrintC", "RegisterHotSpot", "RegisterKeys",
-        "RenderFade", "RenderShadow", "RenderTipShadow", "SetCallbacks",
-        "SetHotSpot", "SetKeys", "SetTip", "aAssetsData", "aCursorIdData",
-        "aLevelsData", "aObjectData", "aObjectTypes", "cvData1", "cvData2",
-        "cvData3", "cvData4", "aSfxData", "fontSpeech", "texSpr");
+      GetAPI("BlitLT", "Fade", "InitCon", "LoadResources", "PlayStaticSound",
+        "PrintC", "RegisterHotSpot", "RegisterKeys", "RenderFade",
+        "RenderShadow", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
+        "SetKeys", "SetTip", "aAssetsData", "aCursorIdData", "aLevelsData",
+        "aObjectData", "aObjectTypes", "cvData1", "cvData2", "cvData3",
+        "cvData4", "aSfxData", "fontSpeech", "texSpr");
   -- Set assets data
-  aAssets = { aAssetsData.cntrl, aAssetsData.lobbyc };
+  aAssets = { aAssetsData.file, aAssetsData.lobbyc };
   -- Set sound effect ids
   iSClick, iSSelect = aSfxData.CLICK, aSfxData.SELECT;
   -- Setup key banks
