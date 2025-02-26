@@ -35,7 +35,7 @@ local iHotSpotIdLoadOnly,              -- Hot spot id (Load only)
       iSClick, iSSelect,               -- Sound effect ids
       iSelected,                       -- File selected
       sMsg,                            -- Title text
-      texFile, texLobby;               -- File screen and lobby texture
+      texFile, texZmtc;                -- File screen and zmtc texture
 -- Match text -------------------------------------------------------------- --
 local sFileMatchText<const> =
   "^(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),(%d+),\z
@@ -122,7 +122,7 @@ end
 -- Render callback --------------------------------------------------------- --
 local function RenderFile()
   -- Draw trace-centre backdrop, file screen and shadow
-  BlitLT(texLobby, -54, 0);
+  BlitLT(texZmtc, -96, 0);
   BlitLT(texFile, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw message
@@ -294,8 +294,8 @@ end
 local function OnAssetsLoaded(aResources)
   -- Set loaded texture resource and create tile for file screen
   texFile = aResources[1];
-  -- Setup lobby texture
-  texLobby = aResources[2];
+  -- Setup zmtc texture
+  texZmtc = aResources[2];
   -- Display data
   aFileData, aNameData = LoadSaveData();
   -- Make sure nothing selected so load/save buttons are disabled
@@ -322,7 +322,7 @@ local function OnScriptLoaded(GetAPI)
         "aObjectData", "aObjectTypes", "cvData1", "cvData2", "cvData3",
         "cvData4", "aSfxData", "fontSpeech", "texSpr");
   -- Set assets data
-  aAssets = { aAssetsData.file, aAssetsData.lobbyc };
+  aAssets = { aAssetsData.file, aAssetsData.zmtc };
   -- Set sound effect ids
   iSClick, iSSelect = aSfxData.CLICK, aSfxData.SELECT;
   -- Setup key banks

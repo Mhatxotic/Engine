@@ -30,7 +30,7 @@ local sText2A, sText2B;                -- Race specific ending dialogue
 local sText3A, sText3B, sText3Ad;      -- Stranger movie dialogue
 local sText3Bd;                        -- Actual animating ending texts
 local texEnding;                       -- Race specific ending texture handle
-local texLobby;                        -- Lobby texture handle
+local texZmtc;                         -- Zmtc texture handle
 local texSpr;                          -- Sprite textures
 local texTitle;                        -- Title textures
 local vidEnding;                       -- Ending video
@@ -42,7 +42,7 @@ local function OnEnding3FadedOut()
   VideoStop();
   -- Clear variables
   aEndingItem, iActionTimer, iMarqueePos1, iMarqueePos2, iStageH, iStageL,
-    iStageR, iStageW, sText1Bd, sText3Ad, sText3Bd, texLobby, texSpr, texTitle,
+    iStageR, iStageW, sText1Bd, sText3Ad, sText3Bd, texZmtc, texSpr, texTitle,
     vidEnding =
       nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
       nil;
@@ -200,7 +200,7 @@ end
 -- When ending 1 has faded out --------------------------------------------- --
 local function OnEnding1FadedOut()
   -- Dereference lobby asset to garbage collector
-  texLobby = nil;
+  texZmtc = nil;
   -- Reset action timer
   iActionTimer = 0;
   -- Set race scene filename
@@ -211,7 +211,7 @@ end
 -- Render callback --------------------------------------------------------- --
 local function ProcRenderEnding1()
   -- Draw background
-  BlitLT(texLobby, -54, 0);
+  BlitLT(texZmtc, -96, 0);
   -- Draw text
   fontLittle:SetCRGBA(1, 1, 1, 1);
   PrintC(fontLittle, 160, 200, sText1A);
@@ -237,7 +237,7 @@ local function OnEnding1AssetsLoaded(aResources)
   -- Play win music
   PlayMusic(aResources[2]);
   -- Load lobby texture
-  texLobby = aResources[1];
+  texZmtc = aResources[1];
   -- Set dynamic completed text
   sText1Bd = UtilFormatNumber(aGlobalData.gBankBalance, 0).." OF THE "..
              UtilFormatNumber(aGlobalData.gZogsToWinGame, 0).." "..sText1B;
@@ -265,7 +265,7 @@ local function OnScriptLoaded(GetAPI)
         "fontLittle", "texSpr");
   -- Setup required assets
   local aAssetsData<const> = GetAPI("aAssetsData");
-  aAssets1 = { aAssetsData.lobbyc, aAssetsData.postm };
+  aAssets1 = { aAssetsData.zmtc, aAssetsData.postm };
   aAssets2 = { aAssetsData.ending2 };
   aAssets3 = { aAssetsData.ending3, aAssetsData.title };
   -- Set ending texts

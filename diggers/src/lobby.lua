@@ -41,7 +41,8 @@ local aActiveObject,                   -- Selected object when entering lobby
       iKeyBankOpenedId,                -- Opened key bank id
       iSSelect,                        -- Select sound effect id
       iStageL, iStageR,                -- Stage bounds
-      texLobby;                        -- Lobby texture
+      texLobby,                        -- Lobby texture
+      texZmtc;                         -- Background texture
 -- Register frame buffer update -------------------------------------------- --
 local function OnStageUpdated(...)
   local _; _, _, iStageL, _, iStageR, _ = ...;
@@ -62,21 +63,19 @@ local function RenderOpen()
 end
 -- Lobby closed render proc ------------------------------------------------ --
 local function RenderClosed()
-  -- Draw backdrop
-  BlitLT(texLobby, -54, 0);
-  -- Render lobby
-  BlitSLT(texLobby, 1, 8, 8);
-  -- Render lobby shadow
+  -- Draw backdrop, lobby background and shadow around lobby
+  BlitLT(texZmtc, -96, 0);
   RenderShadow(8, 8, 312, 208);
+  BlitLT(texLobby, 8, 8);
   -- Render fire
   local iFrame<const> = CoreTicks() % 9;
-  if iFrame >= 6 then BlitSLT(texLobby, 5, 113, 74);
-  elseif iFrame >= 3 then BlitSLT(texLobby, 4, 113, 74);
+  if iFrame >= 6 then BlitSLT(texLobby, 4, 113, 74);
+  elseif iFrame >= 3 then BlitSLT(texLobby, 3, 113, 74);
   -- Flash if not ready to play
   else fcbRenderExtra() end;
   -- Draw foliage
-  BlitSLT(texLobby, 2, iStageR-238, 183);
-  BlitSLT(texLobby, 3, iStageL,      56);
+  BlitSLT(texLobby, 1, iStageR-238, 184);
+  BlitSLT(texLobby, 2, iStageL,      56);
   -- Render tip
   RenderTipShadow();
 end
@@ -90,7 +89,13 @@ local function OnFadedIn()
   SetCallbacks(ProcClosed, RenderClosed);
 end
 -- Lobby loaded in game ---------------------------------------------------- --
-local function OnLoadedOpened()
+local function OnLoadedOpened(aResources, bSetMusic, iSaveMusicPos)
+  -- Play lobby music if requested
+  if bSetMusic then PlayMusic(aResources[2], nil, iSaveMusicPos) end;
+  -- Set lobby texture
+  texLobby = aResources[1];
+  -- Clear tip
+  SetTip();
   -- Set opened hotspots
   SetHotSpot(iHotSpotOpenedId);
   -- Set opened key bank
@@ -99,24 +104,19 @@ local function OnLoadedOpened()
   SetCallbacks(GameProc, RenderOpen);
 end
 -- Lobby loaded pre-game --------------------------------------------------- --
-local function OnLoadedClosed()
+local function OnLoadedClosed(aResources, bSetMusic)
+  -- Play lobby music if requested
+  if bSetMusic then PlayMusic(aResources[3]) end;
+  -- Set background and lobby texture
+  texZmtc, texLobby = aResources[1], aResources[2];
+  -- Clear tip
+  SetTip();
   -- Register frame buffer update
   RegisterFBUCallback("lobby", OnStageUpdated);
   -- Set speech colour to white
   fontSpeech:SetCRGBAI(0xFFFFFFFF);
   -- Fade In a closed lobby
   Fade(1, 0, 0.04, RenderClosed, OnFadedIn);
-end
--- When assets have loaded? ------------------------------------------------ --
-local function OnAssetsLoaded(aResources, fcbOnLoaded, iSaveMusicPos)
-  -- Play lobby music if requested
-  if #aResources == 2 then PlayMusic(aResources[2], nil, iSaveMusicPos) end;
-  -- Set lobby texture
-  texLobby = aResources[1];
-  -- Clear tip
-  SetTip();
-  -- From in game?
-  fcbOnLoaded();
 end
 -- Not ready callback ------------------------------------------------------ --
 local function NotReadyCallback() Print(fontSpeech, 157, 115, "!") end;
@@ -181,7 +181,7 @@ local function InitLobby(bNoSetMusic, iSaveMusicPos)
     end
   end
   -- Load closed lobby texture
-  LoadResources("Lobby", aAssets, OnAssetsLoaded, fcbOnLoaded, iSaveMusicPos);
+  LoadResources("Lobby", aAssets, fcbOnLoaded, not bNoSetMusic, iSaveMusicPos);
 end
 -- Click when lobby is closed ---------------------------------------------- --
 local function ExitClose(bFadeMusic, fcbCallback, ...)
@@ -196,7 +196,7 @@ local function ExitClose(bFadeMusic, fcbCallback, ...)
     -- Call exit function with requested parameters
     fcbCallback(unpack(aParams));
     -- Dereference assets for the garbage collector
-    texLobby = nil;
+    texLobby, texZmtc = nil, nil;
   end
   -- Fade out to title screen
   return Fade(0, 1, 0.04, RenderClosed, OnFadeOutClosed, bFadeMusic);
@@ -244,8 +244,9 @@ local function OnScriptLoaded(GetAPI)
   -- Prepare assets
   local aMusicAsset<const> = aAssetsData.lobbym;
   local aClosedTexture<const> = aAssetsData.lobbyc;
-  aClosedAssetsNoMusic = { aClosedTexture };
-  aClosedAssetsMusic = { aClosedTexture, aMusicAsset };
+  local aZmtcTexture<const> = aAssetsData.zmtc;
+  aClosedAssetsNoMusic = { aZmtcTexture, aClosedTexture };
+  aClosedAssetsMusic = { aZmtcTexture, aClosedTexture, aMusicAsset };
   local aOpenTexture<const> = aAssetsData.lobbyo;
   aOpenAssetsNoMusic = { aOpenTexture };
   aOpenAssetsMusic = { aOpenTexture, aMusicAsset };

@@ -30,7 +30,7 @@ local aAssets,                         -- Assets required
       iSSelect,                        -- Select sound effect id
       sMsg,                            -- Controller speech message
       texCon,                          -- Controller texture
-      texLobby;                        -- Lobby texture
+      texZmtc;                         -- Zmtc background texture
 -- Tile ids (see data.lua/aAssetsData.cntrl.P) ----------------------------- --
 local tileSpeech<const>  = 1;          local tileConAnim<const> = 1;
 local tileFish<const>    = 4;          local tileMap<const>     = 8;
@@ -44,7 +44,7 @@ local aFlashCache<const> = {
 -- Render callback --------------------------------------------------------- --
 local function ProcRender()
   -- Draw backdrop, controller screen and shadow around it
-  BlitLT(texLobby, -54, 0);
+  BlitLT(texZmtc, -96, 0);
   BlitLT(texCon, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw animated fish. The first tile is already drawn.
@@ -96,7 +96,7 @@ local function GoTransition(fcbOnFadeOut, ...);
   local function OnFadeOut()
     -- Dereference assets for garbage collection
     aSpeechList, iAnimTimer, iHotSpotId, iKeyBankId, iSpeechIndex,
-      iSpeechListCount, iSpeechListLoop, iSpeechTimer, sMsg, texCon, texLobby =
+      iSpeechListCount, iSpeechListLoop, iSpeechTimer, sMsg, texCon, texZmtc =
         nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil;
     -- Do next procedure
     fcbOnFadeOut(unpack(aParams));
@@ -120,8 +120,8 @@ local function OnFadedIn()
 end
 -- When controller resources have loaded? ---------------------------------- --
 local function OnAssetsLoaded(aResources)
-  -- Set lobby and controller texture handles
-  texLobby, texCon = aResources[1], aResources[2];
+  -- Set zmtc and controller texture handles
+  texZmtc, texCon = aResources[1], aResources[2];
   -- Initialise animation and speech variables
   iSpeechTimer, aSpeechList, iSpeechListCount, iSpeechListLoop, iSpeechIndex,
     iAnimTimer = 0, { }, 60, 0, 0, 0;
@@ -198,7 +198,7 @@ local function OnScriptLoaded(GetAPI)
         "SetCallbacks", "SetHotSpot", "SetKeys", "aAssetsData",
         "aCursorIdData", "aGlobalData", "aSfxData", "fontSpeech");
   -- Set assets data
-  aAssets = { aAssetsData.lobbyc, aAssetsData.cntrl };
+  aAssets = { aAssetsData.zmtc, aAssetsData.cntrl };
   -- Set sound effect ids
   iSSelect = aSfxData.SELECT;
   -- Required cursor id

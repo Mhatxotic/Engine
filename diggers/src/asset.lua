@@ -42,19 +42,26 @@ local aAssetsData<const> = {
   -- Tiny font data ----------- TW  TH  PX  PY  TF  CT  CS  CD  AUTOFILL --- --
   font5 = { T=3, F="font5", P={  4,  6,  4,  2,  0, 96, 32, 63, {} } },
   -- Speech font data ----------- TW  TH  PX  PY  TF  CT  CS  CD ----------- --
-  font10 = { T=3, F="font10", P={  8, 10,  1,  1,  0, 59, 32, 63,
+  font10 = { T=3, F="font10", P={  8, 11,  1,  0,  0, 96, 32, 63,
     -- 032 033 034 035 036 037 038 039 040 041 042 043 044 045 046 047 048 049
     --      !   "   #   $   %   &   '   (   )   *   +   ,   -   .   /   0   1
     {   2,  2,  4,  7,  4,  8,  6,  2,  4,  4,  7,  6,  2,  5,  2,  5,  5,  4,
     -- 050 051 052 053 054 055 056 057 058 059 060 061 062 063 064 065 066 067
     --  2   3   4   5   6   7   8   9   :   ;   <   =   >   ?   @   A   B   C
-        5,  5,  5,  5,  5,  5,  5,  5,  2,  3,  5,  6,  5,  5,  8,  5,  5,  5,
+        4,  4,  5,  4,  4,  4,  4,  4,  2,  3,  5,  6,  5,  5,  8,  5,  5,  5,
     -- 068 069 070 071 072 073 074 075 076 077 078 079 080 081 082 083 084 085
     --  D   E   F   G   H   I   J   K   L   M   N   O   P   Q   R   S   T   U
-        5,  5,  5,  5,  5,  4,  4,  5,  5,  6,  6,  5,  5,  5,  5,  5,  6,  5,
-    -- 086 087 088 089 090
-    --  V   W   X   Y   Z
-        6,  6,  6,  6,  5 } } },
+        5,  5,  5,  6,  6,  4,  6,  6,  5,  6,  6,  5,  5,  5,  6,  5,  6,  5,
+    -- 086 087 088 089 090 091 092 093 094 095 096 097 098 099 100 101 102 103
+    --  V   W   X   Y   Z   [   \   ]   ^   _   `   a   b   c   d   e   f   g                        a
+        6,  6,  6,  6,  5,  9, 12,  9,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+    -- 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121
+    --  h   i   j   k   l   m   n   o   p   q   r   s   t   u   v   w   x   y
+        4,  2,  4,  5,  2,  6,  4,  4,  4,  4,  4,  4,  4,  4,  4,  6,  4,  4,
+    -- 122 123 124 125 126 127
+    --  z   {   |   }   ~   �
+        4,  4,  4,  4,  4,  4 } } },
+
   -- intro.lua ------------------------------------------------------------- --
   intro = { T = 8, F = "intro" },
   -- intro.lua, title.lua, tcredits.lua ------------------------------------ --
@@ -70,12 +77,11 @@ local aAssetsData<const> = {
   titlem = { T = 7, F = "title" },
   -- cntrl.lua, file.lua, lobby.lua, race.lua ------------------------------ --
   lobbyc = { T = 10, F = "lobbyc", P = { 0, {
-      0, 272, 512, 240, -- [00] Background graphic
-      0,   0, 304, 200, -- [01] Lobby graphic
-      0, 214, 238,  57, -- [02] Foliage graphic left
-    305,   0, 207, 184, -- [03] Foliage graphic right
-    305, 185,  93,  73, -- [04] Fire animation graphic B
-    400, 185,  93,  73  -- [05] Fire animation graphic C
+      0,   0, 304, 200, -- [00] Lobby graphic
+      0, 200, 238,  56, -- [01] Foliage graphic left
+    305,  75, 207, 184, -- [02] Foliage graphic right
+    324,   0,  94,  74, -- [03] Fire animation graphic B
+    418,   0,  94,  74  -- [04] Fire animation graphic C
   } } },
   -- file.lua -------------------------------------------------------------- --
   file = { T = 2, F = "file", P = { 0 } },
@@ -180,18 +186,21 @@ local aAssetsData<const> = {
       0, 488, 112,  24  -- [13] Banker speech bubble
   } } },
   -- book.lua -------------------------------------------------------------- --
-  book = { T = 10, F = "book", P = { 0, {
+  bookcover = { T = 10, F = "bookcover", P = { 0, {
       0,   0, 304, 200, -- [00] Book cover
-    305,   0,  55, 200, -- [01] Book spine
   } } },
-  bookpage = { T = 1, F = false, P = { 255, 200, 0, 0, 0 } },
+  bookpage = { T = 10, F = "bookpage", P = { 0, {
+      0,   0, 304, 200, -- [00] Blank page
+  } } },
+  -- book.lua, lobby.lua, cntrl.lua, race.lua, ending.lua ------------------ --
+  zmtc = { T = 2, F = "zmtc", P = { 0 } },
   -- book.lua, lobby.lua --------------------------------------------------- --
   lobbym = { T = 7, F = "lobby" },
   -- lobby.lua ------------------------------------------------------------- --
   lobbyo = { T = 10, F = "lobbyo", P = { 0, {
-    208, 312, 304, 200, -- [00] Lobby open graphic
-    305, 185,  93,  73, -- [01] Fire animation graphic B
-    400, 185,  93,  73  -- [02] Fire animation graphic C
+      0,   0, 304, 200, -- [00] Lobby open graphic
+    324,   0,  94,  74, -- [01] Fire animation graphic B
+    418,   0,  94,  74  -- [02] Fire animation graphic C
   } } },
   -- map.lua --------------------------------------------------------------- --
   map = { T = 10, F = "map", P = { 0, {

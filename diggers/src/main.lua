@@ -59,9 +59,9 @@ local iStageLeft   = 0;                -- Left of stage
 local iStageTop    = 0;                -- Top of stage
 local iStageRight  = iStageWidth;      -- Right of stage
 local iStageBottom = iStageHeight;     -- Bottom of stage
-local iStageLeftO  = iStageLeft;       -- Left of stage
-local iStageTopO   = iStageTop;        -- Top of stage
-local iStageWidthO = iStageWidth;      -- Top of stage
+local iStageLeftO  = iStageLeft;       -- Left of stage (unscaled)
+local iStageTopO   = iStageTop;        -- Top of stage (unscaled)
+local iStageRightO = iStageRight;      -- Right of stage (unscaled)
 -- Library functions loaded later ------------------------------------------ --
 local BlitSLTRB, BlitSLT, ClearStates, InitCon, InitCredits, InitTitleCredits,
   InitDebugPlay, InitEnding, InitFail, InitIntro, InitNewGame, InitScene,
@@ -217,7 +217,7 @@ local function SetErrorMessage(sReason)
   -- Text position and width
   local iTextLeft<const> = iStageLeftO + 8;
   local iTextTop<const> = iStageTopO + 8;
-  local iTextWidth<const> = iStageWidthO - 8;
+  local iTextRight<const> = iStageRightO - 8;
   -- Callback function
   local function OnTick()
     -- Set clear colour depending on time
@@ -227,7 +227,7 @@ local function SetErrorMessage(sReason)
     fboMain:SetClearColour(nRed, 0, 0, 1);
     fFont:SetCRGBA(1, 1, 1, 1);
     fFont:SetSize(1);
-    fFont:PrintW(iTextLeft, iTextTop, iTextWidth, 0, sMessage);
+    fFont:PrintW(iTextLeft, iTextTop, iTextRight, 0, sMessage);
     -- Draw frame if we changed the background colour
     if nTime >= nNext then FboDraw() nNext = nTime + 0.032 end;
   end
@@ -548,16 +548,16 @@ end
 -- Refresh viewport info --------------------------------------------------- --
 local function RefreshViewportInfo()
   -- Refresh matrix parameters
-  iStageWidthO, iStageHeight,
-    iStageLeftO, iStageTopO, iStageRight, iStageBottom = fboMain:GetMatrix();
+  iStageWidth, iStageHeight,
+    iStageLeftO, iStageTopO, iStageRightO, iStageBottom = fboMain:GetMatrix();
   iOrthoWidth, iOrthoHeight = FboMatrix();
   -- Floor all the values as the main frame buffer object is always on the
   -- pixel boundary
   iStageWidth, iStageHeight, iStageLeft, iStageTop, iStageRight, iStageBottom,
     iOrthoWidth, iOrthoHeight =
-      floor(iStageWidthO)//iTexScale, floor(iStageHeight)//iTexScale,
+      floor(iStageWidth)//iTexScale, floor(iStageHeight)//iTexScale,
       floor(iStageLeftO)//iTexScale, floor(iStageTopO)//iTexScale,
-      floor(iStageRight)//iTexScale, floor(iStageBottom)//iTexScale,
+      floor(iStageRightO)//iTexScale, floor(iStageBottom)//iTexScale,
       floor(iOrthoWidth)//iTexScale, floor(iOrthoHeight)//iTexScale;
   -- Call frame buffer callbacks
   for _, fcbC in pairs(fcbFrameBufferCbs) do

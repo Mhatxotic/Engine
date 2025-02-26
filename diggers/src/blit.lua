@@ -12,14 +12,14 @@
 -- M-Engine function aliases ----------------------------------------------- --
 local FontPrint<const>, FontPrintC<const>, FontPrintCT<const>,
   FontPrintM<const>, FontPrintR<const>, FontPrintS<const>, FontPrintU<const>,
-  FontPrintUR<const>, FontPrintWS<const>, TextureBlitLTRB<const>,
-  TextureBlitSLTWHA<const>, TextureBlitSLTWH<const>, TextureBlitLT<const>,
-  TextureBlitSLT<const>, TextureBlitSLTRB<const>, TextureTileA<const>,
-  VideoSetVLTRB =
+  FontPrintUR<const>, FontPrintW<const>, FontPrintWS<const>,
+  TextureBlitLTRB<const>, TextureBlitSLTWHA<const>, TextureBlitSLTWH<const>,
+  TextureBlitLT<const>, TextureBlitSLT<const>, TextureBlitSLTRB<const>,
+  TextureTileA<const>, VideoSetVLTRB =
     Font.Print, Font.PrintC, Font.PrintCT, Font.PrintM, Font.PrintR,
-    Font.PrintS, Font.PrintU, Font.PrintUR, Font.PrintWS, Texture.BlitLTRB,
-    Texture.BlitSLTWHA, Texture.BlitSLTWH, Texture.BlitLT, Texture.BlitSLT,
-    Texture.BlitSLTRB, Texture.TileA, Video.SetVLTRB;
+    Font.PrintS, Font.PrintU, Font.PrintUR, Font.PrintW, Font.PrintWS,
+    Texture.BlitLTRB, Texture.BlitSLTWHA, Texture.BlitSLTWH, Texture.BlitLT,
+    Texture.BlitSLT, Texture.BlitSLTRB, Texture.TileA, Video.SetVLTRB;
 -- Locals ------------------------------------------------------------------ --
 local iTexScale;                       -- Texture scale
 -- Print text left with scale ---------------------------------------------- --
@@ -41,6 +41,11 @@ end
 -- Simulate a print with maximum width ------------------------------------- --
 local function PrintWS(fontHandle, iWidth, strText)
   return FontPrintWS(fontHandle, iWidth * iTexScale, 0, strText) / iTexScale;
+end
+-- Print with maximum width ------------------------------------------------ --
+local function PrintW(fontHandle, iX, iY, iWrapX, strText)
+  FontPrintW(fontHandle, iX * iTexScale, iY * iTexScale,
+    iWrapX * iTexScale, 0, strText);
 end
 -- Simulate a print -------------------------------------------------------- --
 local function PrintS(fontHandle, strText)
@@ -117,8 +122,8 @@ end
 -- Return imports and exports ---------------------------------------------- --
 return { F = OnScriptLoaded, A = { Print = Print, PrintC = PrintC,
   PrintCT = PrintCT, PrintM = PrintM, PrintR = PrintR, PrintS = PrintS,
-  PrintU = PrintU, PrintUR = PrintUR, PrintWS = PrintWS, BlitLTRB = BlitLTRB,
-  BlitLT = BlitLT, BlitSLT = BlitSLT, BlitSLTRB = BlitSLTRB,
-  BlitSLTWH = BlitSLTWH, BlitSLTWHA = BlitSLTWHA, SetVLTRB = SetVLTRB,
-  TileA = TileA } };
+  PrintU = PrintU, PrintUR = PrintUR, PrintW = PrintW, PrintWS = PrintWS,
+  BlitLTRB = BlitLTRB, BlitLT = BlitLT, BlitSLT = BlitSLT,
+  BlitSLTRB = BlitSLTRB, BlitSLTWH = BlitSLTWH, BlitSLTWHA = BlitSLTWHA,
+  SetVLTRB = SetVLTRB, TileA = TileA } };
 -- End-of-File ============================================================= --

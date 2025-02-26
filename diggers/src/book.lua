@@ -13,9 +13,10 @@
 -- M-Engine function aliases ----------------------------------------------- --
 local UtilBlank<const>, UtilClampInt<const> = Util.Blank, Util.ClampInt;
 -- Diggers function and data aliases --------------------------------------- --
-local BlitSLT, BlitLT, Fade, GameProc, InitCon, InitContinueGame,
+local BlitLT, Fade, GameProc, InitCon, InitContinueGame,
   LoadResources, PlayMusic, PlayStaticSound, RenderAll, RenderShadow,
-  RenderTip, RenderTipShadow, SetTip, SetCallbacks, SetHotSpot, SetKeys;
+  RenderTip, RenderTipShadow, SetTip, SetCallbacks, SetHotSpot, SetKeys,
+  fontSpeech;
 -- Consts ------------------------------------------------------------------ --
 -- Pages each sized 510x200 stored inside texture sized 1024^2. OpenGL 3.2
 -- guarantees us that 1024^2 textures are supported by every renderer.
@@ -24,77 +25,43 @@ local iTotalPages<const> = 88;                -- Maximum number of pages
 local iTotalPagesM1<const> = iTotalPages - 1; -- Maximum " minus one
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets required
+      aBookData,                       -- Book data
       aLobbyMusic,                     -- Lobby music asset
-      aLobbyClosedTexture,             -- Lobby closed texture asset
+      aZmtcTexture,             -- Lobby closed texture asset
       aPageAsset;                      -- Book page asset
-local bCoverPage = true;               -- Cover page was displayed?
 local fcbFinish,                       -- Callback to call to exit
       fcbOnPageAssetsPost,             -- When page assets have loaded
       fcbProcLogic,                    -- Main page logic callback
       fcbProcRenderBack,               -- Rendering background callback
       fcbProcRenderCover;              -- Render callback for cover page
 local iPage = 0;                       -- Book current page (persisted)
-local iFilePage, iTilePage,            -- File id and tile id
-      iHotSpotCoverId, iHotSpotPageId, -- Hot spot id for cover and pages part
+local iHotSpotCoverId, iHotSpotPageId, -- Hot spot id for cover and pages part
       iHotSpotStartId,                 -- Hot spot to set when cover page load
       iKeyBankCoverId, iKeyBankPageId, -- Key bank id for cover and pages part
       iKeyBankStartId,                 -- Key bank to set when cover page load
-      iLoadPage,                       -- Current physical page
       iSClick, iSSelect;               -- Sound effects used
-local strExitTip, strPage,             -- Tip strings
-      texBook, texLobby, texPage;      -- Book, lobby and page texture handles
+local strExitTip, strPage, strText,    -- Tip strings
+      texCover, texLobby,               -- Book, lobby and page texture handles
+      texActive;
 -- Book render callback ---------------------------------------------------- --
 local function ProcRenderPage()
   -- Render book background, spine and backdrop
   fcbProcRenderBack();
-  BlitSLT(texBook, 1, 8, 8);
-  BlitSLT(texPage, iTilePage, 57, 8);
-end
--- Page texture texture handles loaded -------------------------------------- --
-local function OnPageAssetsLoaded(aResource, fcbOnComplete)
-  -- Set displayed page number and assign the tip to it
-  strPage = "PAGE "..(1 + iPage).."/"..iTotalPages;
-  -- Set new page
-  iFilePage = iLoadPage;
-  -- Set new page texture
-  texPage = aResource[1];
-  -- Set actual page on texture
-  iTilePage = iPage % iPagesPerTexture;
-  -- Call callback function if set on load completion
-  if fcbOnComplete then return fcbOnComplete() end;
-  -- Enable keybank
-  SetKeys(true, iKeyBankPageId);
-  SetHotSpot(iHotSpotPageId);
-  -- Run page loaded function
-  SetCallbacks(fcbProcLogic, ProcRenderPage);
+  BlitLT(texActive, 8, 8);
+  if strText then PrintW(fontSpeech, 76, 24, 298, strText) end;
 end
 -- Page loader function ---------------------------------------------------- --
 local function LoadPage(fcbOnComplete)
-  -- Calculate page plus one
-  local iPageP1<const> = 1 + iPage;
-  -- Which texture page do we need and if we need to load it?
-  iLoadPage = iPage // iPagesPerTexture;
-  if iLoadPage == iFilePage and not fcbOnComplete then
-    -- Set new page and actual page on texture
-    iFilePage, iTilePage = iLoadPage, iPage % iPagesPerTexture;
-    -- Update page number
-    strPage = "PAGE "..iPageP1.."/"..iTotalPages;
-    SetTip(strPage);
-    -- No need to do anything else
-    return;
-  end
-  -- Set displayed page number and assign the tip to it
-  strPage = "LOADING P"..iPageP1;
+  -- Set text
+  strText = aBookData[iPage][1];
+  -- Update page number
+  strPage = "PAGE "..iPage.."/"..#aBookData;
   SetTip(strPage);
-  -- Load the specified texture with the page image
-  aPageAsset[1].F = "e/"..iLoadPage;
-  LoadResources("Book"..iLoadPage,
-    aPageAsset, OnPageAssetsLoaded, fcbOnComplete);
 end
 -- Switch page with sound -------------------------------------------------- --
 local function GoAdjustPage(iNewPage)
   -- Return if same page else set new page
-  iNewPage = UtilClampInt(iNewPage, 0, iTotalPagesM1);
+  iNewPage = UtilClampInt(iNewPage, 1, #aBookData);
   if iNewPage == iPage then return end;
   iPage = iNewPage;
   -- Play the sound
@@ -119,14 +86,17 @@ local function ProcRenderCover()
   -- Render background
   fcbProcRenderBack();
   -- Draw backdrop
-  BlitLT(texBook, 8, 8);
+  BlitLT(texCover, 8, 8);
 end
 -- Change cover to inside the book ----------------------------------------- --
 local function GoOpen()
-  -- Cover page confirmed
-  bCoverPage = false;
   -- Set renderer to book page
   fcbProcRenderCover = ProcRenderPage;
+  -- Set active page texture and clear cover texture
+  texActive, texCover = texPage, nil;
+  -- Load first page
+  iPage = 1;
+  LoadPage();
   -- Play click sound
   PlayStaticSound(iSSelect);
   -- Set page keys and hot spots
@@ -177,7 +147,7 @@ local function ExitInGame()
   -- Play sound
   PlayStaticSound(iSSelect);
   -- Dereference assets for garbage collector
-  texPage, texBook = nil, nil;
+  texPage, texCover, texActive = nil, nil, nil;
   -- Start the loading waiting procedure
   SetCallbacks(GameProc, RenderAll);
   -- Continue game
@@ -186,7 +156,7 @@ end
 -- On faded event ---------------------------------------------------------- --
 local function OnExitLobbyFadedOut()
   -- Dereference assets for garbage collector
-  texPage, texBook, texLobby = nil, nil, nil;
+  texPage, texCover, texLobby, texActive = nil, nil, nil, nil;
   -- Init controller screen
   InitCon();
 end
@@ -203,30 +173,27 @@ local function OnAssetsLoadedLobby(texHandle)
   -- from in-game so it doesn't matter. Already handled.
   texLobby = texHandle;
 end
--- When cover page has loaded ---------------------------------------------- --
-local function OnPageAssetsPost()
+-- When the resources have loaded ------------------------------------------ --
+local function OnAssetsLoaded(aResources, fcbProcCustomHandle)
+  -- Set texture and setup tiles
+  texCover, texPage = aResources[1], aResources[2];
+  -- Call supplimental load routine depending if we're in-game or not
+  fcbProcCustomHandle(aResources[3]);
   -- If we've shown the cover page?
-  if not bCoverPage then
+  if strText then
     -- Set page keybank and callbacks
     iKeyBankStartId, iHotSpotStartId = iKeyBankPageId, iHotSpotPageId;
     fcbProcRenderCover = ProcRenderPage;
+    texActive = texPage;
   -- Not shown the cover page yet? Set render callback
   else
     -- Set cover page keybank and callbanks
     iKeyBankStartId, iHotSpotStartId = iKeyBankCoverId, iHotSpotCoverId;
     fcbProcRenderCover = ProcRenderCover;
+    texActive = texCover;
   end
   -- Cover has loaded
   fcbOnPageAssetsPost();
-end
--- When the resources have loaded ------------------------------------------ --
-local function OnAssetsLoaded(aResources, fcbProcCustomHandle)
-  -- Set texture and setup tiles
-  texBook = aResources[1];
-  -- Call supplimental load routine depending if we're in-game or not
-  fcbProcCustomHandle(aResources[2]);
-  -- Load current page
-  LoadPage(OnPageAssetsPost);
 end
 -- Init book screen function ----------------------------------------------- --
 local function InitBook(bFromInGame)
@@ -237,7 +204,7 @@ local function InitBook(bFromInGame)
     -- Set text for exit tip
     strExitTip = "BACK TO GAME";
     -- Nothing to load in slot two
-    aAssets[2] = nil;
+    aAssets[3] = nil;
     -- Set specific behaviour from in-game
     fcbProcCustomHandle = UtilBlank;
     fcbOnPageAssetsPost = OnPageAssetsPostInGame;
@@ -249,7 +216,7 @@ local function InitBook(bFromInGame)
     -- Set text for exit tip
     strExitTip = "CONTROLLER";
     -- Load backdrop from closed lobby
-    aAssets[2] = aLobbyClosedTexture;
+    aAssets[3] = aZmtcTexture;
     -- Set specific behaviour from the lobby
     fcbProcCustomHandle = OnAssetsLoadedLobby;
     fcbOnPageAssetsPost = OnPageAssetsPostLobby;
@@ -265,21 +232,22 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  BlitSLT, BlitLT, Fade, GameProc, InitCon, InitContinueGame, LoadResources,
-    PlayMusic, PlayStaticSound, RegisterHotSpot, RegisterKeys, RenderAll,
-    RenderShadow, RenderTip, RenderTipShadow, SetCallbacks, SetHotSpot,
-    SetKeys, SetTip, aAssetsData, aCursorIdData, aSfxData =
-      GetAPI("BlitSLT", "BlitLT", "Fade", "GameProc", "InitCon",
-        "InitContinueGame", "LoadResources", "PlayMusic", "PlayStaticSound",
+  BlitLT, Fade, GameProc, InitCon, InitContinueGame, LoadResources,
+    PlayMusic, PlayStaticSound, PrintW, RegisterHotSpot, RegisterKeys,
+    RenderAll, RenderShadow, RenderTip, RenderTipShadow, SetCallbacks,
+    SetHotSpot, SetKeys, SetTip, aAssetsData, aBookData, aCursorIdData,
+    aSfxData, fontSpeech =
+      GetAPI("BlitLT", "Fade", "GameProc", "InitCon", "InitContinueGame",
+        "LoadResources", "PlayMusic", "PlayStaticSound", "PrintW",
         "RegisterHotSpot", "RegisterKeys", "RenderAll", "RenderShadow",
         "RenderTip", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
-        "SetKeys", "SetTip", "aAssetsData", "aCursorIdData", "aSfxData");
+        "SetKeys", "SetTip", "aAssetsData", "aBookData", "aCursorIdData",
+        "aSfxData", "fontSpeech");
+  -- Set book data language
+  aBookData = aBookData.en;
   -- Prepare assets
-  local aTexture<const> = aAssetsData.book;
-  aLobbyMusic = aAssetsData.lobbym;
-  aLobbyClosedTexture = aAssetsData.lobbyc;
-  aAssets = { aTexture, false };
-  aPageAsset = { aAssetsData.bookpage };
+  aZmtcTexture = aAssetsData.zmtc;
+  aAssets = { aAssetsData.bookcover, aAssetsData.bookpage, false };
   -- Register key binds
   local aKeys<const> = Input.KeyCodes;
   local iPress<const> = Input.States.PRESS;
@@ -304,9 +272,9 @@ local function OnScriptLoaded(GetAPI)
   });
   -- Set points of interest data
   iHotSpotPageId = RegisterHotSpot({
-    {  17,  70,  37,  22, 0, iCSelect, "INDEX PAGE", OnScroll, GoIndex },
-    {  17,  96,  37,  22, 0, iCSelect, "NEXT PAGE",  OnScroll, GoNext  },
-    {  17, 122,  37,  22, 0, iCSelect, "LAST PAGE",  OnScroll, GoLast  },
+    {  19,  68,  20,  22, 0, iCSelect, "INDEX PAGE", OnScroll, GoIndex },
+    {  19,  96,  20,  22, 0, iCSelect, "NEXT PAGE",  OnScroll, GoNext  },
+    {  19, 122,  20,  22, 0, iCSelect, "LAST PAGE",  OnScroll, GoLast  },
     {   8,   8, 304, 200, 0, 0,        HoverIdle,    OnScroll, false   },
     {   0,   0,   0, 240, 3, iCExit,   HoverExit,    OnScroll, GoExit  }
   });

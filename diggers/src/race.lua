@@ -23,7 +23,7 @@ local aAssets,                         -- Assets Required
       iRaceId,                         -- Chosen race id
       iRaceIdSelected,                 -- Currently displayed race id
       iSClick, iSSelect,               -- Sound effect ids
-      texLobby,                        -- Lobby texture
+      texZmtc,                         -- Lobby texture
       texRace;                         -- Race texture
 -- Tile data (See data.lua/aAssetsData.race.P) ----------------------------- --
 local iTileBG<const>      =  9;        -- Race screen background
@@ -37,7 +37,7 @@ end
 -- Render race ------------------------------------------------------------- --
 local function ProcRenderRace()
   -- Draw backdrop, race screen and it's shadow
-  BlitLT(texLobby, -54, 0);
+  BlitLT(texZmtc, -96, 0);
   BlitSLT(texRace, iTileBG, 8, 8);
   RenderShadow(8, 8, 312, 208);
   -- Draw race and title text
@@ -85,7 +85,7 @@ local function GoCntrl()
   -- When faded out?
   local function OnFadeOut()
     -- Dereference assets for garbage collector
-    texRace, texLobby = nil, nil;
+    texRace, texZmtc = nil, nil;
     -- Load controller screen
     InitCon();
   end
@@ -106,7 +106,7 @@ end
 -- Data loaded function ---------------------------------------------------- --
 local function OnAssetsLoaded(aResources)
   -- Setup lobby texture
-  texLobby = aResources[1];
+  texZmtc = aResources[1];
   -- Get texture resource and trim texture coordinates list to 5
   texRace = aResources[2];
   -- Set currently selected race
@@ -133,7 +133,7 @@ local function OnScriptLoaded(GetAPI)
         "SetKeys", "aAssetsData", "aCursorIdData", "aGlobalData",
         "aRaceStatData", "aSfxData", "texSpr");
   -- Set assets data
-  aAssets = { aAssetsData.lobbyc, aAssetsData.race };
+  aAssets = { aAssetsData.zmtc, aAssetsData.race };
   -- Set sound effect ids
   iSClick, iSSelect = aSfxData.CLICK, aSfxData.SELECT;
   -- Register keybinds
