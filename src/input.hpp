@@ -230,9 +230,9 @@ static class Input final :             // Handles keyboard, mouse & controllers
         if(cConGraphics->IsKeyNotHandled(iKey, iState, iMod))
         { // If modifier key or console key not pressed then don't handle it
           if(iMod || (iKey != iConKey1 && iKey != iConKey2)) break;
-          // Set console enabled and if enabled? Ignore first key as registering
-          // OnCharPress will trigger this keystroke and print it out in the
-          // console.
+          // Set console enabled and if enabled? Ignore first key as
+          // registering OnCharPress will trigger this keystroke and print it
+          // out in the console.
           if(cConGraphics->SetVisible(true)) cConsole->FlagSet(CF_IGNOREKEY);
         } // We handled this key so do not dispatch it to scripts
         return;

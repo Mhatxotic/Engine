@@ -43,10 +43,8 @@ local fFont<const> = Font.Console();   -- Main console class
 local fboMain<const> = Fbo.Main();     -- Main frame buffer object class
 local fcbFading = false;               -- Fading callback
 local fcbFrameBufferCbs<const> = { };  -- Frame buffer updated function
-local fontLarge;                       -- Large font (16px)
-local fontLittle;                      -- Little font (8px)
-local fontSpeech;                      -- Speech font (10px)
-local fontTiny;                        -- Tiny font (5px)
+local fontLarge, fontLittle;           -- Large font (16px) & Little font (8px)
+local fontSpeech, fontTiny;            -- Speech font (10px) & Tiny font (5px)
 local iTexScale;                       -- Texture scale
 local sTip;                            -- Current tip and bounds
 local texSpr;                          -- Sprites texture
@@ -63,10 +61,11 @@ local iStageLeftO  = iStageLeft;       -- Left of stage (unscaled)
 local iStageTopO   = iStageTop;        -- Top of stage (unscaled)
 local iStageRightO = iStageRight;      -- Right of stage (unscaled)
 -- Library functions loaded later ------------------------------------------ --
-local BlitSLTRB, BlitSLT, ClearStates, InitCon, InitCredits, InitTitleCredits,
-  InitDebugPlay, InitEnding, InitFail, InitIntro, InitNewGame, InitScene,
-  InitScore, InitTitle, IsMouseInBounds, JoystickProc, LoadLevel, MainProcFunc,
-  MusicVolume, PrintC, aLevelsData, aObjectTypes, aRacesData;
+local BlitSLTRB, BlitSLT, ClearStates, InitBook, InitCon, InitCredits,
+  InitTitleCredits, InitDebugPlay, InitEnding, InitFail, InitFile, InitIntro,
+  InitMap, InitNewGame, InitRace, InitScene, InitScore, InitTitle,
+  IsMouseInBounds, JoystickProc, LoadLevel, MainProcFunc, MusicVolume, PrintC,
+  aLevelsData, aObjectTypes, aRacesData;
 -- These could be called even though they aren't initialised yet ----------- --
 local DisableKeyHandlers, RestoreKeyHandlers, SetKeys, SetHotSpot =
   UtilBlank, UtilBlank, UtilBlank, UtilBlank;
@@ -755,20 +754,22 @@ local function fcbTick()
     -- ...and a CVar that lets us start straight into a level
     aAPI.cvTest = VariableRegister("gam_test", "", aCVF.STRING, fcbEmpty);
     -- Load dependecies we need on this module
-    BlitSLTRB, BlitSLT, ClearStates, DisableKeyHandlers, InitCon, InitCredits,
-      InitDebugPlay, InitEnding, InitFail, InitIntro, InitNewGame, InitScene,
-      InitScore, InitTitle, InitTitleCredits, IsMouseInBounds, JoystickProc,
-      LoadLevel, MusicVolume, PrintC, RestoreKeyHandlers, SetHotSpot, SetKeys,
-      aLevelsData, aObjectTypes, aRacesData =
+    BlitSLTRB, BlitSLT, ClearStates, DisableKeyHandlers, InitBook, InitCon,
+      InitCredits, InitDebugPlay, InitEnding, InitFail, InitFile, InitIntro,
+      InitMap, InitNewGame, InitRace, InitScene, InitScore, InitTitle,
+      InitTitleCredits, IsMouseInBounds, JoystickProc, LoadLevel, MusicVolume,
+      PrintC, RestoreKeyHandlers, SetHotSpot, SetKeys, aLevelsData,
+      aObjectTypes, aRacesData =
         GetAPI("BlitSLTRB", "BlitSLT", "ClearStates", "DisableKeyHandlers",
-          "InitCon", "InitCredits", "InitDebugPlay", "InitEnding", "InitFail",
-          "InitIntro", "InitNewGame", "InitScene", "InitScore", "InitTitle",
+          "InitBook", "InitCon", "InitCredits", "InitDebugPlay", "InitEnding",
+          "InitFail", "InitFile", "InitIntro", "InitMap", "InitNewGame",
+          "InitRace", "InitScene", "InitScore", "InitTitle",
           "InitTitleCredits", "IsMouseInBounds", "JoystickProc", "LoadLevel",
           "MusicVolume", "PrintC", "RestoreKeyHandlers", "SetHotSpot",
           "SetKeys", "aLevelsData", "aObjectTypes", "aRacesData");
-    -- Assign loaded sound effects (audio.hpp)
+    -- Assign loaded sound effects (audio.lua)
     GetAPI("RegisterSounds")(aResources, iBaseSounds, #aBaseSounds);
-    -- Get cursor render function (input.hpp)
+    -- Get cursor render function (input.lua)
     local CursorRender<const> = aAPI.CursorRender;
     -- Ask modules to grab needed functions from the API
     for iI = 1, #aModules do
@@ -777,12 +778,12 @@ local function fcbTick()
     end
     -- Main procedure callback
     local function MainCallback()
-      -- Poll joysticks (input.hpp)
+      -- Poll joysticks (input.lua)
       JoystickProc();
-      -- Execute input, tick and render callbacks
+      -- Execute tick and render callbacks
       CBProc();
       CBRender();
-      -- Draw mouse cursor (input.hpp)
+      -- Render the cursor (input.lua)
       CursorRender();
       -- Draw screen at end of LUA tick
       FboDraw();
@@ -793,41 +794,51 @@ local function fcbTick()
     InitNewGame();
     -- Hide the cursor
     InputSetCursor(false);
-    -- Tests
+    -- Test mode requested?
     local sTestValue<const> = aAPI.cvTest:Get();
     if #sTestValue > 0 then
       -- Test mode enabled
       bTestMode = true;
       -- Get start level
       local iStartLevel<const> = tonumber(sTestValue) or 0;
-      -- Test random level?
+      -- Test random level? (game.lua)
       if iStartLevel == 0 then
         return LoadLevel(random(#aLevelsData), "game", -1);
-      -- Testing infinite play mode?
-      elseif iStartLevel == -1 then return InitDebugPlay();
-      -- Testing the fail screen
-      elseif iStartLevel == -2 then return InitFail();
-      -- Testing the game over
-      elseif iStartLevel == -3 then return InitScore();
-      -- Testing the final credits
-      elseif iStartLevel == -4 then return InitCredits(false);
-      -- Testing the final rolling credits
-      elseif iStartLevel == -5 then return InitCredits(true);
-      -- Testing the title screen rolling credits
-      elseif iStartLevel == -6 then return InitTitleCredits();
-      -- Testing the controller screen
-      elseif iStartLevel == -7 then return InitCon();
-      -- Testing a races ending
-      elseif iStartLevel > -12 and iStartLevel <= -8 then
-        return InitEnding(#aRacesData + (-12 - iStartLevel));
-      -- Reserved for testing map post mortem maybe (todo)
-      elseif iStartLevel <= -12 then
-      -- Test a specific lvel
-      elseif iStartLevel <= #aLevelsData then
+      -- Test a specific level (game.lua)
+      elseif iStartLevel >= 1 and iStartLevel <= #aLevelsData then
         return LoadLevel(iStartLevel, "game", -1);
-      -- Test a specific level with starting scene
+      -- Test a specific level with starting scene (scene.lua)
       elseif iStartLevel > #aLevelsData and iStartLevel <= #aLevelsData*2 then
         return InitScene(iStartLevel-#aLevelsData, "game");
+      -- Testing infinite play mode? (debug.lua)
+      elseif iStartLevel == -1 then return InitDebugPlay();
+      -- Testing the fail screen (fail.lua)
+      elseif iStartLevel == -2 then return InitFail();
+      -- Testing the game over (score.lua)
+      elseif iStartLevel == -3 then return InitScore();
+      -- Testing the final credits (ending.lua)
+      elseif iStartLevel == -4 then return InitCredits(false);
+      -- Testing the final rolling credits (ending.lua)
+      elseif iStartLevel == -5 then return InitCredits(true);
+      -- Testing the title screen rolling credits (tcredits.lua)
+      elseif iStartLevel == -6 then return InitTitleCredits();
+      -- Testing the controller screen (cntrl.lua)
+      elseif iStartLevel == -7 then return InitCon();
+      -- Testing the book screen (book.lua)
+      elseif iStartLevel == -8 then return InitBook();
+      -- Testing the race screen (race.lua)
+      elseif iStartLevel == -9 then return InitRace();
+      -- Testing the map screen (map.lua)
+      elseif iStartLevel == -10 then return InitMap();
+      -- Testing the file select screen (file.lua)
+      elseif iStartLevel == -11 then return InitFile();
+      -- Testing a races ending (ending.lua)
+      elseif iStartLevel > -16 and iStartLevel <= -12 then
+        return InitEnding(#aRacesData + (-16 - iStartLevel));
+      -- Reserved for testing win and map post mortem (game/post.lua)
+      elseif iStartLevel <= -16 and iStartLevel > -16 - #aLevelsData then
+        LoadLevel(-iStartLevel-15, "game", -1, nil, nil, nil, nil, nil, nil,
+          nil, 17550);
       end
     end
     -- If being run for first time
@@ -840,7 +851,7 @@ local function fcbTick()
     -- Initialise setup screen by default
     InitIntro(true);
     -- No longer show setup screen
-    aAPI.cvSetup:Set(0);
+    aAPI.cvSetup:Boolean(false);
   end
   -- Start loading assets
   local fcbProgress<const> = LoadResources("Core", aBaseAssets, OnLoaded);

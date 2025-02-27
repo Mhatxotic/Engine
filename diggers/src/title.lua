@@ -31,6 +31,7 @@ local aAssets,                         -- Assets to load
       iHotSpotId,                      -- Button hotspot id
       iKeyBankId,                      -- Title key bank id
       iNextUpdate,                     -- Next system information update
+      iPostSGX,                        -- Quit game post position
       iSSelect,                        -- Select sound effect id
       iStageB, iStageL, iStageR,       -- Stage bounds
       strCredits,                      -- Credits

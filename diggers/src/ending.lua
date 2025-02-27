@@ -16,8 +16,8 @@ local UtilFormatNumber<const>, UtilIsInteger<const>, UtilIsTable<const> =
   Util.FormatNumber, Util.IsInteger, Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
 local BlitLT, BlitSLTRB, BlitSLT, Fade, GetCallbacks, InitCredits,
-  LoadResources, PlayMusic, PrintC, SetCallbacks, SetVLTRB, VideoPlay,
-  VideoStop, aEndingData, aGlobalData, fontLittle;
+  LoadResources, PlayMusic, PrintC, RegisterFBUCallback, SetCallbacks,
+  SetVLTRB, VideoPlay, VideoStop, aEndingData, aGlobalData, fontLittle;
 -- Locals ------------------------------------------------------------------ --
 local aAssets1, aAssets2, aAssets3;    -- Assets required
 local aEndingItem;                     -- Race ending data
@@ -257,12 +257,12 @@ end
 local function OnScriptLoaded(GetAPI)
   -- Grab imports
   BlitLT, BlitSLT, BlitSLTRB, Fade, GetCallbacks, InitCredits, LoadResources,
-    PlayMusic, PrintC, SetCallbacks, SetVLTRB, VideoPlay, VideoStop,
-    aEndingData, aGlobalData, fontLittle, texSpr =
+    PlayMusic, PrintC, RegisterFBUCallback, SetCallbacks, SetVLTRB, VideoPlay,
+    VideoStop, aEndingData, aGlobalData, fontLittle, texSpr =
       GetAPI("BlitLT", "BlitSLT", "BlitSLTRB", "Fade", "GetCallbacks",
-        "InitCredits", "LoadResources", "PlayMusic", "PrintC", "SetCallbacks",
-        "SetVLTRB", "VideoPlay", "VideoStop", "aEndingData", "aGlobalData",
-        "fontLittle", "texSpr");
+        "InitCredits", "LoadResources", "PlayMusic", "PrintC",
+        "RegisterFBUCallback", "SetCallbacks", "SetVLTRB", "VideoPlay",
+        "VideoStop", "aEndingData", "aGlobalData", "fontLittle", "texSpr");
   -- Setup required assets
   local aAssetsData<const> = GetAPI("aAssetsData");
   aAssets1 = { aAssetsData.zmtc, aAssetsData.postm };

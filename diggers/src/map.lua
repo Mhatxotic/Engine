@@ -35,7 +35,7 @@ local aAssets,                         -- Assets required
 local iMapSizeX<const>,                -- Map size pixel width
       iMapSizeY<const> = 640, 350;     -- Map size pixel height
 local iSClick, iSSelect,               -- Sound effect ids
-      iStageL, iStageT,                -- Stage upper-left co-ordinates
+      iStageL, iStageT, iStageR,       -- Stage upper-left co-ordinates
       iStageW, iStageH,                -- Stage width and height
       iStageLneg, iStageTneg,          -- Negatated upper-left stage co-ords
       iStageLmove, iStageRmove;        -- Mouse scrolling positions

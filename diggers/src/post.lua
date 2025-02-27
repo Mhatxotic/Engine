@@ -30,6 +30,7 @@ local aAssets,                         -- Required assets
       iObject,                         -- Current object
       iStageLmove, iStageRmove,        -- Mouse scrolling positions
       iSSelect, iSClick,               -- Sound effect ids
+      nFade,                           -- Transition fade amount
       sObject;                         -- Object selected text
 local sObjectDefault<const> = "MAP POST MORTEM";
 local texEnd;                          -- Post mortem textures
@@ -46,7 +47,7 @@ end
 -- On frame buffer updated ------------------------------------------------- --
 local function OnStageUpdated(...)
   -- Update stage bounds
-  local _ _, _, iStageL, _, iStageR, _ = ...;
+  local _, _, iStageL, _, iStageR, _ = ...;
   -- Update horizontal scrolling positions
   iStageLmove, iStageRmove = iStageL + 16, iStageR - 16;
 end

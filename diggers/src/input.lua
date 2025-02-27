@@ -30,8 +30,8 @@ local CoreStack<const>, CoreTicks<const>, DisplayReset<const>,
     Util.Clamp, Util.IsBoolean, Util.IsFunction, Util.IsInteger, Util.IsString,
     Util.IsTable, Fbo.Main();
 -- Diggers function and data aliases --------------------------------------- --
-local aCursorIdData, InitSetup, SetErrorMessage, SetTip, aCursorData,
-  iTexScale, texSpr;
+local aCursorIdData, InitSetup, RegisterFBUCallback, SetErrorMessage, SetTip,
+  aCursorData, iTexScale, texSpr;
 -- Get input press states -------------------------------------------------- --
 local aStates<const> = Input.States;
 local iPress<const> = aStates.PRESS;

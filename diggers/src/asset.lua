@@ -191,6 +191,36 @@ local aAssetsData<const> = {
   } } },
   bookpage = { T = 10, F = "bookpage", P = { 0, {
       0,   0, 304, 200, -- [00] Blank page
+    624,   0,  16, 111, -- [01] Control icons (Page 14)
+    608,   0,  16, 150, -- [02] Control icons (Page 15)
+    576, 150,  64, 153, -- [03] Control icons (Page 16)
+      0, 521, 162, 119, -- [04] Hud (Page 17)
+    499, 313, 141,  90, -- [05] Characteristic icons (Page 18)
+    160, 200,  84,  99, -- [06] Habbish (Page 23)
+     75, 200,  85, 102, -- [07] Grablin (Page 26)
+    244, 200,  81,  76, -- [08] Quarrior (Page 28)
+      0, 200,  74, 109, -- [09] F'Targ (Page 30)
+      0, 309,  92, 100, -- [10] Pirana Plant (Page 38)
+     92, 303,  91,  92, -- [11] Mushroom (Page 39)
+    304,   0, 176, 102, -- [12] Stegosaurus (Page 40)
+    304, 102, 168,  97, -- [13] Eggs (Page 43)
+      0, 409, 164, 101, -- [14] Mammoth (Page 45)
+    325, 199, 186, 114, -- [15] Sailor (Page 47)
+    184, 300, 156,  97, -- [16] Worm (Page 49)
+    191, 522,  53,  52, -- [17] Flood Gate (Page 57)
+    458, 590,  47,  47, -- [18] Telepole (Page 58)
+    389, 595,  53,  37, -- [19] Track for train (Page 60)
+    256, 534,  55,  37, -- [20] Train for rails (Page 61)
+    324, 592,  50,  40, -- [21] Small tunneller (Page 62)
+    257, 589,  53,  50, -- [22] Bridge (Page 63)
+    190, 588,  54,  51, -- [23] Boat (Page 64)
+    525, 523,  46,  47, -- [24] Corkscrew (Page 65)
+    454, 525,  54,  41, -- [25] Large tunneller (Page 67)
+    391, 523,  45,  48, -- [26] Explosives (Page 68)
+    324, 520,  51,  53, -- [27] Lift (Page 69)
+    588, 524,  51,  45, -- [28] Map (Page 71)
+    526, 594,  44,  36, -- [28] First-aid kit (Page 72)
+    480,   0,  76,  84, -- [29] Wanted (Page 82)
   } } },
   -- book.lua, lobby.lua, cntrl.lua, race.lua, ending.lua ------------------ --
   zmtc = { T = 2, F = "zmtc", P = { 0 } },
@@ -255,15 +285,16 @@ local aAssetsData<const> = {
 };-- End ------------------------------------------------------------------- --
 -- Base code scripts that are to be loaded (don't modify the order)
 local aBaseScripts<const> = {
-  { T=9, F="data"    }, { T=9, F="blit"   }, { T=9, F="input" },
-  { T=9, F="audio"   }, { T=9, F="bank"   }, { T=9, F="book"  },
-  { T=9, F="cntrl"   }, { T=9, F="credit" }, { T=9, F="debug" },
-  { T=9, F="end"     }, { T=9, F="ending" }, { T=9, F="fail"  },
-  { T=9, F="file"    }, { T=9, F="game"   }, { T=9, F="intro" },
-  { T=9, F="lobby"   }, { T=9, F="map"    }, { T=9, F="pause" },
-  { T=9, F="post"    }, { T=9, F="race"   }, { T=9, F="scene" },
-  { T=9, F="score"   }, { T=9, F="shop"   }, { T=9, F="title" },
-  { T=9, F="tcredit" }, { T=9, F="tntmap" }, { T=9, F="setup" },
+  { T=9, F="data"   }, { T=9, F="blit"    }, { T=9, F="input"  },
+  { T=9, F="audio"  }, { T=9, F="bank"    }, { T=9, F="book"   },
+  { T=9, F="bpages" }, { T=9, F="cntrl"   }, { T=9, F="credit" },
+  { T=9, F="debug"  }, { T=9, F="end"     }, { T=9, F="ending" },
+  { T=9, F="fail"   }, { T=9, F="file"    }, { T=9, F="game"   },
+  { T=9, F="intro"  }, { T=9, F="lobby"   }, { T=9, F="map"    },
+  { T=9, F="pause"  }, { T=9, F="post"    }, { T=9, F="race"   },
+  { T=9, F="scene"  }, { T=9, F="score"   }, { T=9, F="shop"   },
+  { T=9, F="title"  }, { T=9, F="tcredit" }, { T=9, F="tntmap" },
+  { T=9, F="setup"  },
 };
 -- Base fonts that are to be loaded (and scaled) --------------------------- --
 local aBaseFonts<const> = { aAssetsData.font16, aAssetsData.font8,

@@ -79,7 +79,6 @@ local function InitDebugPlay(iId)
     if aObject then
       -- Select the object and player if we got something!
       SelectObject(aObject);
-      aObjectAutoSelected = aObject;
       -- Next object
       iSelectedDiggerId = iSelectedDiggerId + 1;
       if iSelectedDiggerId > 5 then

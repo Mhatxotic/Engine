@@ -37,8 +37,8 @@ local ACT, AI, BlitSLTRB, BlitSLT, DF, DIR, Fade, GetMouseX, GetMouseY,
   aExplodeAboveData, aExplodeDirData, aFloodGateData, aGlobalData,
   aJumpFallData, aJumpRiseData, aLevelsData, aMenuData, aObjToUIData,
   aObjectData, aSfxData, aShopData, aShroudCircle, aShroudTileLookup,
-  aTileData, aTileFlags, aTimerData, aTrainTrackData, fontLarge, fontLittle,
-  fontTiny, iPosX, iPosY, texSpr;
+  aTileData, aTileFlags, aTimerData, aTrainTrackData, iSlowDown, fontLarge,
+  fontLittle, fontTiny, iPosX, iPosY, texSpr;
 -- High priority variables (because of MAXVARS limit) ---------------------- --
 local function HighPriorityVars()
 -- Prototype functions (assigned later) ------------------------------------ --
@@ -3947,6 +3947,8 @@ local function ProcessObjects()
 end
 -- Game tick function ------------------------------------------------------ --
 local function GameProc()
+  -- Ignore if we're in slowdown mode
+  if iGameTicks % iSlowDown ~= 0 then iGameTicks = iGameTicks + 1 return end;
   -- Process terrain animation if the frame animation timer ticks
   if iGameTicks % aTimerData.ANIMTERRAIN == 0 then
     -- For each screen row we are looking at
@@ -4136,7 +4138,7 @@ local function SelectBook()
 end
 -- Load level -------------------------------------------------------------- --
 local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
-  fcbNLogic, fcbNRender, iNHotSpotId)
+  fcbNLogic, fcbNRender, iNHotSpotId, iSM1, iSM2)
   -- De-init/Reset current level
   DeInitLevel();
   -- Check and set default logic callback
@@ -4348,6 +4350,11 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
       SetHotSpot(iNHotSpotId);
       -- Set requested callbacks
       SetCallbacks(fcbLogic, fcbRender);
+      -- Add extra money if requested
+      if iSM1 then aActivePlayer.M = aActivePlayer.M + iSM1 end
+      if iSM2 then aOpponentPlayer.M = aOpponentPlayer.M + iSM2 end
+      -- Check for win (test end/post-morten)
+      EndConditionsCheck();
     end
     Fade(1, 0, 0.04, fcbRender, OnFadeIn, not not sMusic);
   end
@@ -4624,6 +4631,27 @@ local function OnScriptLoaded(GetAPI)
         CreateObject(TYP.TNT, GetTileUnderMouse()), -100, aActiveObject);
     end
   end
+  -- Slow down cvar
+  local cvSlowDown;
+  -- Toggle slow down event
+  local function ToggleSlowDown()
+    -- Toggle slow down
+    if iSlowDown == 1 then iSlowDown = 2 else iSlowDown = 1 end;
+    -- Update cvar
+    cvSlowDown:Integer(iSlowDown);
+  end
+  -- Register slow down variable
+  local function OnSlowDown(sV)
+    sV = tonumber(sV);
+    if sV < 1 or sV > 2 then return false end;
+    iSlowDown = sV;
+    return true;
+  end
+  -- Register the variable
+  cvSlowDown = Variable.Register("gam_slowdown", 1,
+    Variable.Flags.UINTEGERSAVE, OnSlowDown);
+  -- Put variable 'anywhere' to stop it being GC'd
+  aAssetTerrain.V = cvSlowDown;
   -- Move viewport
   local function ScrollH(iX) AdjustViewPortX(iX) iPixPosTargetX = iPosX*16 end;
   local function ScrollV(iY) AdjustViewPortY(iY) iPixPosTargetY = iPosY*16 end;
@@ -4656,6 +4684,7 @@ local function OnScriptLoaded(GetAPI)
       { aKeys.ESCAPE, SelectPauseScreen, "igp", "PAUSE THE GAME" },
       { aKeys.MINUS, SelectLastDigger, "igsld", "SELECT LAST DIGGER" },
       { aKeys.EQUAL, SelectNextDigger, "igsnd", "SELECT NEXT DIGGER" },
+      { aKeys.F4, ToggleSlowDown, "igts", "TOGGLE SLOWDOWN" },
       { aKeys.F5, SelectInventoryScreen, "igshi", "SHOW DIGGER INVENTORY" },
       { aKeys.F6, SelectLocationScreen, "igshl", "SHOW DIGGER LOCATIONS" },
       { aKeys.F7, SelectStatusScreen, "igshs", "SHOW GAME STATUS" },
