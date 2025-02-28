@@ -579,17 +579,21 @@ end
 local function GetKeyBank() return iKeyBank end;
 -- Set global keys table --------------------------------------------------- --
 local function SetGlobalKeyBinds(aKeys) aGlobalKeyBinds = aKeys end;
+-- Set blank active key bank data ------------------------------------------ --
+local function SetBlankKeyBankData()
+  aKeyBankActive = {
+    [iPress]   = { },                  -- Pressed keys to functions
+    [iRelease] = { },                  -- Released keys to functions
+    [iRepeat]  = { },                  -- Repeated keys to functions
+  };
+end
 -- Set active keybinds ----------------------------------------------------- --
 local function SetKeys(bState, iIdentifier)
   -- Check parameters
   if not UtilIsBoolean(bState) then
     error("Bad global key state: "..tostring(bState)) end;
   -- Clear keybinds list
-  aKeyBankActive = {
-    [iPress]   = { },                  -- Pressed keys to functions
-    [iRelease] = { },                  -- Released keys to functions
-    [iRepeat]  = { },                  -- Repeated keys to functions
-  };
+  SetBlankKeyBankData();
   -- If we're to add the persistent keys?
   if bState then
     for iCategory, aBinds in pairs(aGlobalKeyBinds) do
@@ -673,6 +677,8 @@ local function OnScriptLoaded(GetAPI)
         "aCursorData", "aCursorIdData", "iTexScale", "texSpr");
   -- Get arrow and wait cursor ids
   iCArrow, iCWait = aCursorIdData.ARROW, aCursorIdData.WAIT;
+  -- Initialise keybinds list
+  SetBlankKeyBankData();
   -- Enable input capture events
   InputOnJoyState(OnJoyState);
   InputOnKey(OnKey);

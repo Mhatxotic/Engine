@@ -241,6 +241,14 @@ LLRSKTEND                              // End of cvar register status flags
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(Result)                    // Beginning of cvar result flags
   LLRSKTITEM(CVS_,OK),                 LLRSKTITEM(CVS_,OKNOTCHANGED),
+  LLRSKTITEM(CVS_,NOTFOUND),           LLRSKTITEM(CVS_,NOTWRITABLE),
+  LLRSKTITEM(CVS_,NOTINTEGER),         LLRSKTITEM(CVS_,NOTFLOAT),
+  LLRSKTITEM(CVS_,NOTBOOLEAN),         LLRSKTITEM(CVS_,NOTUNSIGNED),
+  LLRSKTITEM(CVS_,NOTPOW2),            LLRSKTITEM(CVS_,NOTALPHA),
+  LLRSKTITEM(CVS_,NOTNUMERIC),         LLRSKTITEM(CVS_,NOTALPHANUMERIC),
+  LLRSKTITEM(CVS_,NOTFILENAME),        LLRSKTITEM(CVS_,TRIGGERDENIED),
+  LLRSKTITEM(CVS_,TRIGGEREXCEPTION),   LLRSKTITEM(CVS_,EMPTY),
+  LLRSKTITEM(CVS_,ZERO),               LLRSKTITEM(CVS_,NOTYPESET),
 LLRSKTEND                              // End of cvar result flags
 /* ========================================================================= **
 ** ######################################################################### **

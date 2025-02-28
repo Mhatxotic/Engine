@@ -17,48 +17,66 @@ local BlitSLTRB, BlitSLT, BlitLT, Fade, InitCon, LoadResources,
   SetKeys, TypeIdToId, aGlobalData, aRaceStatData, texSpr;
 -- Locals ------------------------------------------------------------------ --
 local aAssets,                         -- Assets Required
-      aRaceDataSelected,               -- Race id data
       iHotSpotId,                      -- Hot spot id
       iKeyBankId,                      -- Key bank id
       iRaceId,                         -- Chosen race id
       iRaceIdSelected,                 -- Currently displayed race id
+      iRaceObjId,                      -- Race object id selected
+      iStatStr, iStatSta, iStatDsp,    -- Race trait power bars
+      iStatPat, iStatAtp, iStatTel,    -- Race trait power bars
       iSClick, iSSelect,               -- Sound effect ids
+      iTileLabel,                      -- Label id to draw
+      iTilePortrait,                   -- Portrait id to draw
+      iTileSpecial,                    -- Special id to draw
       texZmtc,                         -- Lobby texture
       texRace;                         -- Race texture
 -- Tile data (See data.lua/aAssetsData.race.P) ----------------------------- --
-local iTileBG<const>      =  9;        -- Race screen background
-local iTileName<const>    =  5;        -- First race texture
-local iTileSpecial<const> = 10;        -- Special items tile
+local iTileRaceStart<const>    = 1;    -- First race texture
+local iTileLabelStart<const>   = 6;    -- Race labels
+local iTileSpecialStart<const> = 10;   -- Special items tile
 -- Set clamped race id and race data --------------------------------------- --
 local function SetRaceId(iId)
+  -- Adjust and clamp race selection id
   iRaceId = iId % #aRaceStatData;
-  aRaceDataSelected = aRaceStatData[iRaceId + 1];
+  -- Set tile ids to draw
+  iTileLabel, iTilePortrait, iTileSpecial =
+    iTileLabelStart + iRaceId,
+    iTileRaceStart + iRaceId,
+    iTileSpecialStart + iRaceId;
+  -- Set race selected data
+  local aRaceDataSelected<const> = aRaceStatData[1 + iRaceId];
+  -- Set actual race object type
+  iRaceObjId = aRaceDataSelected[1];
+  -- Set power bars
+  local iX<const> = 115;
+  iStatStr, iStatSta, iStatDsp, iStatPat, iStatAtp, iStatTel =
+    iX + aRaceDataSelected[2], iX + aRaceDataSelected[3],
+    iX + aRaceDataSelected[4], iX + aRaceDataSelected[5],
+    iX + aRaceDataSelected[6], iX + aRaceDataSelected[7];
 end
 -- Render race ------------------------------------------------------------- --
 local function ProcRenderRace()
-  -- Draw backdrop, race screen and it's shadow
+  -- Draw zmtc backdrop
   BlitLT(texZmtc, -96, 0);
-  BlitSLT(texRace, iTileBG, 8, 8);
-  RenderShadow(8, 8, 312, 208);
-  -- Draw race and title text
-  BlitSLT(texRace, iRaceId, 172, 54);
-  BlitSLT(texRace, iTileName+iRaceId, 80, 24);
+  -- Draw race page backdrop, race title text and race special
+  BlitLT(texRace, 8, 8);
+  BlitSLT(texRace, iTilePortrait, 172, 54);
+  BlitSLT(texRace, iTileLabel, 80, 24);
+  BlitSLT(texRace, iTileSpecial, 114, 175);
+  -- Draw selected symbol if this is the selected digger
+  if iRaceId == iRaceIdSelected then
+    BlitSLT(texRace, 5, 132, 80, 192, 208) end;
   -- Draw stats
   texSpr:SetCRGBA(1, 0, 0, 0.5);
-  BlitSLTRB(texSpr, 1022, 115,  62, 115+aRaceDataSelected[2],  65);
-  BlitSLTRB(texSpr, 1022, 115,  82, 115+aRaceDataSelected[3],  85);
-  BlitSLTRB(texSpr, 1022, 115, 102, 115+aRaceDataSelected[4], 105);
-  BlitSLTRB(texSpr, 1022, 115, 122, 115+aRaceDataSelected[5], 125);
-  BlitSLTRB(texSpr, 1022, 115, 142, 115+aRaceDataSelected[6], 145);
-  BlitSLTRB(texSpr, 1022, 115, 162, 115+aRaceDataSelected[7], 165);
+  BlitSLTRB(texSpr, 1022, 115,  62, iStatStr,  65);
+  BlitSLTRB(texSpr, 1022, 115,  82, iStatSta,  85);
+  BlitSLTRB(texSpr, 1022, 115, 102, iStatDsp, 105);
+  BlitSLTRB(texSpr, 1022, 115, 122, iStatPat, 125);
+  BlitSLTRB(texSpr, 1022, 115, 142, iStatAtp, 145);
+  BlitSLTRB(texSpr, 1022, 115, 162, iStatTel, 165);
   texSpr:SetCRGBA(1, 1, 1, 1);
-  -- Draw special
-  if aRaceDataSelected[8] >= 0 then
-    BlitSLT(texRace, iTileSpecial+aRaceDataSelected[8], 110, 175);
-  end
-  -- Draw selected symbol
-  if iRaceId == iRaceIdSelected then
-    BlitSLT(texRace, 4, 132, 80, 192, 208) end;
+  -- Draw background shadow
+  RenderShadow(8, 8, 312, 208);
   -- Draw tip and shadow
   RenderTipShadow();
 end
@@ -84,8 +102,10 @@ local function GoCntrl()
   PlayStaticSound(iSSelect)
   -- When faded out?
   local function OnFadeOut()
-    -- Dereference assets for garbage collector
-    texRace, texZmtc = nil, nil;
+    -- Dereference used variables and handles
+    iRaceId, iRaceObjId, iStatStr, iStatSta, iStatDsp, iStatPat, iStatAtp,
+      iStatTel, iTileLabel, iTilePortrait, iTileSpecial, texZmtc, texRace =
+        nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil;
     -- Load controller screen
     InitCon();
   end
@@ -95,7 +115,7 @@ end
 -- When accepting the race selection --------------------------------------- --
 local function GoAccept()
   -- Apply new setting
-  aGlobalData.gSelectedRace, iRaceIdSelected = aRaceDataSelected[1], iRaceId;
+  aGlobalData.gSelectedRace, iRaceIdSelected = iRaceObjId, iRaceId;
   -- Fade out to lobby
   GoCntrl();
 end
@@ -105,10 +125,8 @@ local function OnScroll(nX, nY)
 end
 -- Data loaded function ---------------------------------------------------- --
 local function OnAssetsLoaded(aResources)
-  -- Setup lobby texture
-  texZmtc = aResources[1];
-  -- Get texture resource and trim texture coordinates list to 5
-  texRace = aResources[2];
+  -- Get lobby and race texture
+  texZmtc, texRace = aResources[1], aResources[2];
   -- Set currently selected race
   iRaceIdSelected = aGlobalData.gSelectedRace;
   -- Set race already selected
@@ -128,9 +146,9 @@ local function OnScriptLoaded(GetAPI)
     SetHotSpot, SetKeys, aAssetsData, aCursorIdData, aGlobalData,
     aRaceStatData, aSfxData, texSpr =
       GetAPI("BlitSLTRB", "BlitSLT", "BlitLT", "Fade", "InitCon",
-        "LoadResources", "PlayStaticSound", "RegisterHotSpot", "RegisterKeys",
-        "RenderShadow", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
-        "SetKeys", "aAssetsData", "aCursorIdData", "aGlobalData",
+        "LoadResources", "PlayStaticSound", "RegisterHotSpot",
+        "RegisterKeys", "RenderShadow", "RenderTipShadow", "SetCallbacks",
+        "SetHotSpot", "SetKeys", "aAssetsData", "aCursorIdData", "aGlobalData",
         "aRaceStatData", "aSfxData", "texSpr");
   -- Set assets data
   aAssets = { aAssetsData.zmtc, aAssetsData.race };

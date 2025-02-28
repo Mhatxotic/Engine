@@ -88,7 +88,7 @@ local aAssetsData<const> = {
   -- cntrl.lua ------------------------------------------------------------- --
   cntrl = { T = 10, F = "cntrl",  P = { 0, {
       0,   0, 304, 200, -- [00] Controller background screen
-    164, 200, 156,  24, -- [01] Controller speech bubble
+    164, 200, 156,  23, -- [01] Controller speech bubble
     376,   0, 136,  82, -- [02] Controller talking <2/4> (1/4 in tile 0)
     376,  82, 136,  82, -- [03] Controller talking <3/4>
     376, 164, 136,  82, -- [04] Controller talking <4/4>
@@ -102,7 +102,7 @@ local aAssetsData<const> = {
       0, 200,  90,  26, -- [12] File flashing <2/2> (1/2 in tile 0)
   } } },
   -- scene.lua ------------------------------------------------------------- --
-  scene = { T = 2, F = false, P = { 0 } },
+  scene = { T = 2, F = false, P = { 0 } }, -- File filled in at runtime
   scenez = { T = 2, F = "scene", P = { 0 } },
   -- end.lua, ending.lua, scene.lua ---------------------------------------- --
   scenem = { T = 7, F = "select" },
@@ -130,7 +130,7 @@ local aAssetsData<const> = {
     264, 132,  65,  65, -- [18] Holographic animation <6/7>
     330, 132,  65,  65, -- [19] Holographic animation <7/7>
     208, 312, 304, 200, -- [20] Shop background
-      0, 417, 112,  24, -- [21] Shopkeeper speech bubble
+      0, 418, 112,  23, -- [21] Shopkeeper speech bubble
       0, 264,  48,  48, -- [22] Shopkeeper talking animation <1/4>
      49, 264,  48,  48, -- [23] Shopkeeper talking animation <2/4>
      98, 264,  48,  48, -- [24] Shopkeeper talking animation <3/4>
@@ -170,20 +170,17 @@ local aAssetsData<const> = {
   -- bank.lua -------------------------------------------------------------- --
   bankm = { T = 7, F = "bank" },
   bank = { T = 10, F = "bank", P = { 0, {
-      0,   0,  80,  94, -- [00] Grablin banker talking <1/4>
-     80,   0,  80,  94, -- [01] Grablin banker talking <2/4>
-    160,   0,  80,  94, -- [02] Grablin banker talking <3/4>
-    240,   0,  80,  94, -- [03] Grablin banker talking <4/4>
-    320,   0,  80,  94, -- [04] Habbish banker talking <1/4>
-    400,   0,  80,  94, -- [05] Habbish banker talking <2/4>
-      0,  94,  80,  94, -- [06] Habbish banker talking <3/4>
-     80,  94,  80,  94, -- [07] Habbish banker talking <4/4>
-    160,  94,  80,  94, -- [08] F'Targ banker talking <1/4>
-    240,  94,  80,  94, -- [09] F'Targ banker talking <2/4>
-    320,  94,  80,  94, -- [10] F'Targ banker talking <3/4>
-    400,  94,  80,  94, -- [11] F'Targ banker talking <4/4>
-    208, 312, 304, 200, -- [12] Bank background scene
-      0, 488, 112,  24  -- [13] Banker speech bubble
+      0,   0, 304, 200, -- [00] Bank background scene
+      0, 200, 112,  23, -- [01] Banker speech bubble
+    304,   0,  63,  88, -- [02] Grablin banker talking <2/4> (1/4 in tile 0)
+    367,   0,  63,  88, -- [03] Grablin banker talking <3/4>
+    430,   0,  63,  88, -- [04] Grablin banker talking <4/4>
+    304,  88,  63,  88, -- [05] Habbish banker talking <2/4> (1/4 in tile 0)
+    367,  88,  63,  88, -- [06] Habbish banker talking <3/4>
+    430,  88,  63,  88, -- [07] Habbish banker talking <4/4>
+    304, 176,  63,  88, -- [08] F'Targ banker talking <2/4> (1/4 in tile 0)
+    367, 176,  63,  88, -- [09] F'Targ banker talking <3/4>
+    430, 176,  63,  88  -- [10] F'Targ banker talking <4/4>
   } } },
   -- book.lua -------------------------------------------------------------- --
   bookcover = { T = 10, F = "bookcover", P = { 0, {
@@ -229,8 +226,8 @@ local aAssetsData<const> = {
   -- lobby.lua ------------------------------------------------------------- --
   lobbyo = { T = 10, F = "lobbyo", P = { 0, {
       0,   0, 304, 200, -- [00] Lobby open graphic
-    324,   0,  94,  74, -- [01] Fire animation graphic B
-    418,   0,  94,  74  -- [02] Fire animation graphic C
+    304,   0,  94,  74, -- [01] Fire animation graphic <2/3> (1/3 in tile 0)
+    304,  74,  94,  74  -- [02] Fire animation graphic <3/3>
   } } },
   -- map.lua --------------------------------------------------------------- --
   map = { T = 10, F = "map", P = { 0, {
@@ -240,18 +237,20 @@ local aAssetsData<const> = {
   } } },
   -- race.lua -------------------------------------------------------------- --
   race = { T = 10, F = "race", P = { 0, {
-      0,   0,  64, 128, -- [00] F'Targ portrait
-     65,   0,  64, 128, -- [01] Habbish portrait
-    130,   0,  64, 128, -- [02] Grablin portrait
-    195,   0,  64, 128, -- [03] Quarrior portrait
-    260,   0,  64, 128, -- [04] Selected race stamp
-      0, 496, 160,  16, -- [05] F'Targ name label
-      0, 479, 160,  16, -- [06] Habbish name label
-      0, 462, 160,  16, -- [07] Grablin name label
-      0, 445, 160,  16, -- [08] Quarrior name label
-    208, 312, 304, 200, -- [09] Race page background
-    190, 496,  16,  16, -- [10] Teleport special indicator
-    171, 496,  16,  16  -- [11] First-aid special indicator
+      0,   0, 304, 200, -- [00] Race page background
+    320,   0,  64, 128, -- [01] F'Targ portrait
+    384,   0,  64, 128, -- [02] Habbish portrait
+    448,   0,  64, 128, -- [03] Grablin portrait
+    320, 128,  64, 128, -- [04] Quarrior portrait
+    384, 128,  64, 128, -- [05] Selected race stamp
+      0, 200, 160,  16, -- [06] F'Targ label
+      0, 216, 160,  16, -- [07] Habbish label
+      0, 232, 160,  16, -- [08] Grablin label
+    160, 200, 160,  16, -- [09] Quarrior label
+    304,   0,  16,  16, -- [09] First-aid special indicator
+    304,  16,  16,  16, -- [10] Digging special indicator
+    304,  32,  16,  16, -- [11] Teleport special indicator
+    304,  48,  16,  16  -- [12] Strength special indicator
   } } },
   -- game.lua -------------------------------------------------------------- --
   mapt = { T = 5, F = false },

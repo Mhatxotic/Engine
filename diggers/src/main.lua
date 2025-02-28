@@ -11,43 +11,35 @@
 -- ========================================================================= --
 -- Lua aliases (optimisation) ---------------------------------------------- --
 local collectgarbage<const>, cos<const>, error<const>, floor<const>,
-  format<const>, max<const>, min<const>, pairs<const>, random<const>,
-  remove<const>, rep<const>, sin<const>, tonumber<const>, tostring<const>,
-  type<const>, unpack<const> =
-    collectgarbage, math.cos, error, math.floor, string.format, math.max,
-    math.min, pairs, math.random, table.remove, string.rep, math.sin, tonumber,
+  format<const>, pairs<const>, random<const>, remove<const>, rep<const>,
+  sin<const>, tonumber<const>, tostring<const>, type<const>, unpack<const> =
+    collectgarbage, math.cos, error, math.floor, string.format,
+    pairs, math.random, table.remove, string.rep, math.sin, tonumber,
     tostring, type, table.unpack;
 -- M-Engine aliases (optimisation) ----------------------------------------- --
 local AssetParseBlock<const>, ClipSet<const>, CoreCatchup<const>,
   CoreEnd<const>, CoreLog<const>, CoreLogEx<const>, CoreOnTick<const>,
   CoreQuit<const>, CoreReset<const>, CoreStack<const>, CoreWrite<const>,
-  FboDraw<const>, FboMatrix<const>,  InputOnKey<const>, InputSetCursor<const>,
-  CoreTime<const>, TextureCreate<const>, UtilBlank<const>, UtilClamp<const>,
-  UtilDuration<const>, UtilExplode<const>, UtilImplode<const>,
-  UtilIsFunction<const>, UtilIsInteger<const>, UtilIsNumber<const>,
-  UtilIsString<const>, UtilIsTable<const>, VariableRegister<const> =
+  FboDraw<const>, FboMatrix<const>, InputOnKey<const>, InputSetCursor<const>,
+  CoreTime<const>, TextureCreate<const>, UtilBlank<const>, UtilDuration<const>,
+  UtilExplode<const>, UtilImplode<const>, UtilIsFunction<const>,
+  UtilIsInteger<const>, UtilIsString<const>, UtilIsTable<const>,
+  VariableRegister<const> =
     Asset.ParseBlock, Clip.Set, Core.Catchup, Core.End, Core.Log, Core.LogEx,
     Core.OnTick, Core.Quit, Core.Reset, Core.Stack, Core.Write, Fbo.Draw,
     Fbo.Matrix, Input.OnKey, Input.SetCursor, Core.Time, Texture.Create,
-    Util.Blank, Util.Clamp, Util.Duration, Util.Explode, Util.Implode,
-    Util.IsFunction, Util.IsInteger, Util.IsNumber, Util.IsString,
-    Util.IsTable, Variable.Register;
+    Util.Blank, Util.Duration, Util.Explode, Util.Implode, Util.IsFunction,
+    Util.IsInteger, Util.IsString, Util.IsTable, Variable.Register;
 -- Locals ------------------------------------------------------------------ --
 local CBProc, CBRender;                -- Generic tick callbacks
 local aAPI<const> = { };               -- API to send to other functions
 local aCache = { };                    -- File cache
-local aKeys<const> = Input.KeyCodes;   -- Keyboard codes
 local aModules<const> = { };           -- Modules data
 local bTestMode = false;               -- Test mode enabled
 local fFont<const> = Font.Console();   -- Main console class
 local fboMain<const> = Fbo.Main();     -- Main frame buffer object class
-local fcbFading = false;               -- Fading callback
 local fcbFrameBufferCbs<const> = { };  -- Frame buffer updated function
-local fontLarge, fontLittle;           -- Large font (16px) & Little font (8px)
-local fontSpeech, fontTiny;            -- Speech font (10px) & Tiny font (5px)
 local iTexScale;                       -- Texture scale
-local sTip;                            -- Current tip and bounds
-local texSpr;                          -- Sprites texture
 -- Stage dimensions -------------------------------------------------------- --
 local iStageWidth  = 320;              -- Width of stage (Monitor)
 local iStageHeight = 240;              -- Height of stage (Monitor)
@@ -60,15 +52,10 @@ local iStageBottom = iStageHeight;     -- Bottom of stage
 local iStageLeftO  = iStageLeft;       -- Left of stage (unscaled)
 local iStageTopO   = iStageTop;        -- Top of stage (unscaled)
 local iStageRightO = iStageRight;      -- Right of stage (unscaled)
--- Library functions loaded later ------------------------------------------ --
-local BlitSLTRB, BlitSLT, ClearStates, InitBook, InitCon, InitCredits,
-  InitTitleCredits, InitDebugPlay, InitEnding, InitFail, InitFile, InitIntro,
-  InitMap, InitNewGame, InitRace, InitScene, InitScore, InitTitle,
-  IsMouseInBounds, JoystickProc, LoadLevel, MainProcFunc, MusicVolume, PrintC,
-  aLevelsData, aObjectTypes, aRacesData;
 -- These could be called even though they aren't initialised yet ----------- --
-local DisableKeyHandlers, RestoreKeyHandlers, SetKeys, SetHotSpot =
-  UtilBlank, UtilBlank, UtilBlank, UtilBlank;
+local DisableKeyHandlers, MainProcFunc, RestoreKeyHandlers, SetKeys,
+  SetHotSpot, SetTip = UtilBlank, UtilBlank, UtilBlank, UtilBlank, UtilBlank,
+    UtilBlank;
 -- Constants for loader ---------------------------------------------------- --
 local aBFlags<const> = Image.Flags;        -- Get bitmap loading flags
 local iPNG<const> = aBFlags.TOGPU|aBFlags.FCE_PNG;-- Get forced PNG format flag
@@ -76,7 +63,7 @@ local aPFlags<const> = Pcm.Flags;          -- Get waveform loading flags
 local iOGG<const> = aPFlags.FCE_OGG;       -- Get forced wave format
 local aPrFlags<const> = Asset.Progress;    -- Asset progress flags
 local iFStart<const> = aPrFlags.FILESTART; -- File opened with information
--- Table debug function (global) ------------------------------------------- --
+-- Table debug function (global on purpose) -------------------------------- --
 function Debug(aData)
   -- Printing function
   local function Print(iIndent, sWhat) CoreWrite(rep(" ", iIndent)..sWhat) end
@@ -91,9 +78,9 @@ function Debug(aData)
     -- Enumerate keys and values
     for sK, vV in pairs(aData) do
       -- Recurse if a table
-      if type(vV) == "table" then DoDump(sK, vV, iLv);
+      if UtilIsTable(vV) then DoDump(sK, vV, iLv);
       -- Print key and value
-      else Print(iLv, sK.." : "..type(vV).." = "..tostring(vV)) end;
+      else Print(iLv, tostring(sK).." : "..type(vV).." = "..tostring(vV)) end;
       -- Increment counter
       iI = iI + 1;
     end
@@ -103,7 +90,7 @@ function Debug(aData)
     Print(iLv, "} = "..iI.." ["..#aData.."]");
   end
   -- Must be a table
-  if type(aData) == "table" then return DoDump("ROOT", aData, 0) end;
+  if UtilIsTable(aData) then return DoDump("ROOT", aData, 0) end;
   -- Just a variable
   Print(0, type(aData).." = "..tostring(aData));
 end
@@ -184,6 +171,7 @@ local function SetErrorMessage(sReason)
   -- Get key states
   local iRelease<const> = Input.States.RELEASE;
   -- Keys used in tick function
+  local aKeys<const> = Input.KeyCodes;
   local iKeyC<const>, iKeyR<const>, iKeyA<const>, iKeyP<const>, iKeyF<const> =
     aKeys.C, aKeys.R, aKeys.A, aKeys.P, aKeys.F;
   -- Disable key handlers
@@ -233,30 +221,6 @@ local function SetErrorMessage(sReason)
   -- Set loop function
   CoreOnTick(OnTick);
 end
--- Do render the tip ------------------------------------------------------- --
-local function DoRenderTip(iX)
-  -- Draw the background of the tip rect
-  BlitSLT(texSpr, 847, iX,      216);
-  BlitSLT(texSpr, 848, iX + 16, 216);
-  BlitSLT(texSpr, 848, iX + 32, 216);
-  BlitSLT(texSpr, 848, iX + 48, 216);
-  BlitSLT(texSpr, 849, iX + 64, 216);
-  -- Set tip colour and render the text
-  fontLittle:SetCRGB(1, 1, 1);
-  PrintC(fontLittle, iX + 40, 220, sTip);
-end
--- Render the tip in the bottom right -------------------------------------- --
-local function RenderTip()
-  -- Return if no tip
-  if not sTip then return end;
-  -- Draw tip in different positions if mouse cursor is over the tip
-  if IsMouseInBounds(232, 216, 312, 232) then DoRenderTip(144);
-                                         else DoRenderTip(232) end;
-end
--- Render the tip ---------------------------------------------------------- --
-local function RenderTipShadow() if sTip then DoRenderTip(232) end end;
--- Set bottom right tip ---------------------------------------------------- --
-local function SetTip(strTip) sTip = strTip end;
 -- ------------------------------------------------------------------------- --
 local function TimeIt(sName, fcbCallback, ...)
   -- Check parameters
@@ -270,7 +234,7 @@ local function TimeIt(sName, fcbCallback, ...)
   fcbCallback(...);
   -- Put result in console
   CoreLog("Procedure '"..sName.."' completed in "..
-    UtilDuration(CoreTime()-nTime, 3).." sec!");
+    UtilDuration(CoreTime() - nTime, 3).." sec!");
 end
 -- Generic function to return a handle ------------------------------------- --
 local function NoSecondStage(hH) return hH end;
@@ -320,19 +284,25 @@ local function LoadResources(sProcedure, aResources, fComplete, ...)
     if not UtilIsTable(aResource) then
       error("Supplied table at index "..iI.." is invalid!") end;
     -- Get type of resource and throw error if the type is invalid
-    local aTypeData<const> = aTypes[aResource.T];
+    local iType<const> = aResource.T;
+    local aTypeData<const> = aTypes[iType];
     if not UtilIsTable(aTypeData) then
-      error("Supplied load type of '"..tostring(aResource.T)..
+      error("Supplied load type of '"..tostring(iType)..
         "' is invalid at index "..iI.."!") end;
     -- Get destination file to load and check it
     sDst = aTypeData[3]..aResource.F..aTypeData[4];
     if #sDst == 0 then error("Filename at index "..iI.." is empty!") end;
+    -- Set tip to loading incase players computer is slow. May show, may not.
+    SetTip("LOADING "..floor(iI / #aResources * 100).."%");
     -- Build parameters table to send to function
     local aSrcParams<const> = aTypeData[2];
     local aDstParams<const> = { sDst,                 -- [1]
                                 unpack(aSrcParams) }; -- [2]
     aDstParams[1 + #aDstParams] = SetErrorMessage;    -- [3]
     aDstParams[1 + #aDstParams] = ProgressUpdate;     -- [4]
+    -- Say in log that we are loading
+    CoreLog("Loading resource "..iI.."/"..iTotal.." of type "..iType..": '"..
+      sDst.."'...");
     -- Get no-cache setting
     local bNoCache<const> = aResource.NC;
     -- When final handle has been acquired
@@ -420,8 +390,6 @@ local function LoadResources(sProcedure, aResources, fComplete, ...)
   SetKeys(false);
   -- Disable hotspots
   SetHotSpot();
-  -- Set tip to loading
-  SetTip("LOADING...");
   -- Initialise counters
   iTotal, iLoaded = #aResources, 0;
   -- Clear callbacks but keep the last render callback
@@ -432,117 +400,6 @@ local function LoadResources(sProcedure, aResources, fComplete, ...)
   local function GetProgress() return iLoaded/iTotal, sDst end
   -- Return progress function
   return GetProgress;
-end
--- Render fade ------------------------------------------------------------- --
-local function RenderFade(nAmount, iL, iT, iR, iB, iS)
-  texSpr:SetCA(nAmount);
-  BlitSLTRB(texSpr, iS or 1023, iL or iStageLeft,  iT or iStageTop,
-                                iR or iStageRight, iB or iStageBottom);
-  texSpr:SetCA(1);
-end
--- Render shadow ----------------------------------------------------------- --
-local function RenderShadow(iL, iT, iR, iB)
-  -- Draw a shadow using the solid sprite
-  texSpr:SetCA(0.2);
-  BlitSLTRB(texSpr, 1023, iL+3, iB, iR, iB+1); -- Horizontal row 1
-  BlitSLTRB(texSpr, 1023, iR, iT+3, iR+1, iB); -- Vertical column 1
-  texSpr:SetCA(0.1);
-  BlitSLTRB(texSpr, 1023, iL+4, iB, iR, iB+2); -- Horizontal row 2
-  BlitSLTRB(texSpr, 1023, iR, iT+4, iR+2, iB); -- Vertical column 2
-  BlitSLTRB(texSpr, 1023, iR, iB, iR+2, iB+1); -- Horizontal corner 1
-  BlitSLTRB(texSpr, 1023, iR, iB, iR+1, iB+2); -- Vertical corner 2
-  texSpr:SetCA(0.05);
-  BlitSLTRB(texSpr, 1023, iL+5, iB, iR, iB+3); -- Horizontal row 3
-  BlitSLTRB(texSpr, 1023, iR, iT+5, iR+3, iB); -- Vertical column 3
-  texSpr:SetCA(1);
-end
--- Fade -------------------------------------------------------------------- --
-local function Fade(S, E, C, D, A, M, L, T, R, B, Z)
-  -- Check parameters
-  if not UtilIsNumber(S) then
-    error("Invalid starting value number! "..tostring(S)) end;
-  if not UtilIsNumber(E) then
-    error("Invalid ending value number! "..tostring(E)) end;
-  if not UtilIsNumber(C) then
-    error("Invalid fade inc/decremember value! "..tostring(C)) end
-  if not UtilIsFunction(A) then
-    error("Invalid after function! "..tostring(A)) end;
-  -- If already fading, run the after function
-  if UtilIsFunction(fcbFading) then fcbFading() end;
-  -- Disable all keybanks and globals
-  SetKeys(false);
-  -- Disable hotspots
-  SetHotSpot();
-  -- During function
-  local function During(nVal)
-    -- Clear states
-    ClearStates();
-    -- Call users during function
-    D();
-    -- Clamp new fade value
-    S = UtilClamp(nVal, 0, 1);
-    -- Render blackout
-    RenderFade(S, L, T, R, B, Z);
-    -- Fade music too
-    if M then MusicVolume(1 - S) end;
-  end
-  -- Finished function
-  local function Finish()
-    -- Reset fade vars
-    S, fcbFading = E, nil;
-    -- Enable global keys
-    SetKeys(true);
-    -- No callbacks incase caller forgets to set anything
-    SetCallbacks(nil, nil);
-    -- Call the after function
-    A();
-  end
-  -- Cleanup function
-  local function Clean()
-    -- Garbage collect
-    collectgarbage();
-    -- Reset hi-res timer
-    CoreCatchup();
-  end
-  -- Fade out?
-  if S < E then
-    -- Save old fade function
-    fcbFading = A;
-    -- Function during
-    local function OnFadeOutFrame()
-      -- Fade out
-      During(S + C);
-      -- Finished if we reached the ending point
-      if S < E then return end;
-      -- Cleanup
-      Clean();
-      -- Call finish function
-      Finish()
-    end
-    -- Set fade out procedure
-    SetCallbacks(nil, OnFadeOutFrame);
-  -- Fade in?
-  elseif S > E then
-    -- Cleanup
-    Clean();
-    -- Save old fade function
-    fcbFading = A;
-    -- Function during
-    local function OnFadeInFrame()
-      -- Fade in
-      During(S - C);
-      -- Finished if we reached the ending point
-      if S <= E then Finish() end;
-    end
-    -- Set fade in procedure
-    SetCallbacks(nil, OnFadeInFrame);
-  -- Ending already reached?
-  else
-    -- Cleanup
-    Clean();
-    -- Call finish function
-    Finish();
-  end
 end
 -- Refresh viewport info --------------------------------------------------- --
 local function RefreshViewportInfo()
@@ -600,7 +457,7 @@ local function fcbTick()
     if not nTexScale then error("Erroneous texture scale '"..
       tostring(nTexScale).."' in '"..sScaleFile.."'!") end;
     -- Round it down and check it incase it's not a valid integer and check it
-    iTexScale = math.floor(nTexScale);
+    iTexScale = floor(nTexScale);
     if iTexScale ~= nTexScale or iTexScale > 16 then
       error("Bad texture scale '"..nTexScale.."' in '"..sScaleFile.."'!") end;
     -- Get maximum texture size and make sure guest's GPU supports it. 1024^2
@@ -674,28 +531,23 @@ local function fcbTick()
   Fbo.OnRedraw(RefreshViewportInfo);
   RefreshViewportInfo();
   -- Initialise base API functions
-  ParseScriptResult("main", { F=UtilBlank, A={ Fade = Fade,
-    GetCallbacks = GetCallbacks, GetTestMode = GetTestMode,
-    LoadResources = LoadResources, RefreshViewportInfo = RefreshViewportInfo,
+  ParseScriptResult("main", { F=UtilBlank, A={ GetCallbacks = GetCallbacks,
+    GetTestMode = GetTestMode, LoadResources = LoadResources,
+    RefreshViewportInfo = RefreshViewportInfo,
     RegisterFBUCallback = RegisterFrameBufferUpdateCallback,
-    RenderFade = RenderFade, RenderShadow = RenderShadow,
-    RenderTip = RenderTip, RenderTipShadow = RenderTipShadow,
     SetCallbacks = SetCallbacks, SetErrorMessage = SetErrorMessage,
-    SetTip = SetTip, TimeIt = TimeIt } });
+    TimeIt = TimeIt } });
   -- Store texture scale and assets data
   aAPI.iTexScale = iTexScale;
   aAPI.aAssetsData = aAssetsData;
   -- When base assets have loaded
   local function OnLoaded(aResources)
     -- Set font handles
-    fontLarge, fontLittle, fontTiny, fontSpeech =
+    aAPI.fontLarge, aAPI.fontLittle, aAPI.fontTiny, aAPI.fontSpeech =
       aResources[iBaseFonts], aResources[iBaseFonts + 1],
       aResources[iBaseFonts + 2], aResources[iBaseFonts + 3];
-    aAPI.fontLarge, aAPI.fontLittle, aAPI.fontTiny, aAPI.fontSpeech =
-      fontLarge, fontLittle, fontTiny, fontSpeech;
     -- Set sprites texture
-    texSpr = aResources[iBaseTextures];
-    aAPI.texSpr = texSpr;
+    aAPI.texSpr = aResources[iBaseTextures];
     -- Set and check masks
     aAPI.maskLevel, aAPI.maskSprites =
       aResources[iBaseMasks], aResources[iBaseMasks + 1];
@@ -753,20 +605,23 @@ local function fcbTick()
     aAPI.cvIntro = VariableRegister("gam_intro", 1, iCFB, fcbEmpty);
     -- ...and a CVar that lets us start straight into a level
     aAPI.cvTest = VariableRegister("gam_test", "", aCVF.STRING, fcbEmpty);
+    -- Some library functions and variables only for this scope
+    local InitBook, InitCon, InitCredits, InitTitleCredits, InitDebugPlay,
+      InitEnding, InitFail, InitFile, InitIntro, InitMap, InitNewGame,
+      InitRace, InitScene, InitScore, InitTitle, JoystickProc, LoadLevel,
+      aLevelsData, aObjectTypes, aRacesData;
     -- Load dependecies we need on this module
-    BlitSLTRB, BlitSLT, ClearStates, DisableKeyHandlers, InitBook, InitCon,
-      InitCredits, InitDebugPlay, InitEnding, InitFail, InitFile, InitIntro,
-      InitMap, InitNewGame, InitRace, InitScene, InitScore, InitTitle,
-      InitTitleCredits, IsMouseInBounds, JoystickProc, LoadLevel, MusicVolume,
-      PrintC, RestoreKeyHandlers, SetHotSpot, SetKeys, aLevelsData,
-      aObjectTypes, aRacesData =
-        GetAPI("BlitSLTRB", "BlitSLT", "ClearStates", "DisableKeyHandlers",
-          "InitBook", "InitCon", "InitCredits", "InitDebugPlay", "InitEnding",
-          "InitFail", "InitFile", "InitIntro", "InitMap", "InitNewGame",
-          "InitRace", "InitScene", "InitScore", "InitTitle",
-          "InitTitleCredits", "IsMouseInBounds", "JoystickProc", "LoadLevel",
-          "MusicVolume", "PrintC", "RestoreKeyHandlers", "SetHotSpot",
-          "SetKeys", "aLevelsData", "aObjectTypes", "aRacesData");
+    DisableKeyHandlers, InitBook, InitCon, InitCredits, InitDebugPlay,
+      InitEnding, InitFail, InitFile, InitIntro, InitMap, InitNewGame,
+      InitRace, InitScene, InitScore, InitTitle, InitTitleCredits,
+      JoystickProc, LoadLevel, RestoreKeyHandlers, SetHotSpot, SetKeys, SetTip,
+      aLevelsData, aObjectTypes, aRacesData =
+        GetAPI("DisableKeyHandlers", "InitBook", "InitCon", "InitCredits",
+          "InitDebugPlay", "InitEnding", "InitFail", "InitFile", "InitIntro",
+          "InitMap", "InitNewGame", "InitRace", "InitScene", "InitScore",
+          "InitTitle", "InitTitleCredits", "JoystickProc", "LoadLevel",
+          "RestoreKeyHandlers", "SetHotSpot", "SetKeys", "SetTip",
+          "aLevelsData", "aObjectTypes", "aRacesData");
     -- Assign loaded sound effects (audio.lua)
     GetAPI("RegisterSounds")(aResources, iBaseSounds, #aBaseSounds);
     -- Get cursor render function (input.lua)

@@ -9,19 +9,32 @@
 -- ========================================================================= --
 -- (c) Mhatxotic Design, 2025          (c) Millennium Interactive Ltd., 1994 --
 -- ========================================================================= --
+-- Lua aliases (optimisation) ---------------------------------------------- --
+local collectgarbage<const> = collectgarbage;
 -- M-Engine function aliases ----------------------------------------------- --
-local FontPrint<const>, FontPrintC<const>, FontPrintCT<const>,
+local CoreCatchup<const>, FontPrint<const>, FontPrintC<const>, FontPrintCT<const>,
   FontPrintM<const>, FontPrintR<const>, FontPrintS<const>, FontPrintU<const>,
   FontPrintUR<const>, FontPrintW<const>, FontPrintWS<const>,
   TextureBlitLTRB<const>, TextureBlitSLTWHA<const>, TextureBlitSLTWH<const>,
   TextureBlitLT<const>, TextureBlitSLT<const>, TextureBlitSLTRB<const>,
-  TextureTileA<const>, VideoSetVLTRB =
+  TextureTileA<const>, UtilClamp<const>, UtilIsFunction<const>,
+  UtilIsNumber<const>, VideoSetVLTRB<const> = Core.Catchup,
     Font.Print, Font.PrintC, Font.PrintCT, Font.PrintM, Font.PrintR,
     Font.PrintS, Font.PrintU, Font.PrintUR, Font.PrintW, Font.PrintWS,
     Texture.BlitLTRB, Texture.BlitSLTWHA, Texture.BlitSLTWH, Texture.BlitLT,
-    Texture.BlitSLT, Texture.BlitSLTRB, Texture.TileA, Video.SetVLTRB;
+    Texture.BlitSLT, Texture.BlitSLTRB, Texture.TileA, Util.Clamp,
+    Util.IsFunction, Util.IsNumber, Video.SetVLTRB;
+-- Library functions loaded later ------------------------------------------ --
+local ClearStates, IsMouseInBounds, MusicVolume, SetCallbacks, SetHotSpot,
+  SetKeys;
 -- Locals ------------------------------------------------------------------ --
-local iTexScale;                       -- Texture scale
+local fcbFading = false;               -- Fading callback
+local fontLittle,                      -- Little font
+      iStageBottom, iStageLeft,        -- Stage bottom and left co-ord
+      iStageRight, iStageTop,          -- Stage right and top co-ord
+      iTexScale,                       -- Texture scale
+      sTip,                            -- Current tip and bounds
+      texSpr;                          -- Sprites texture
 -- Print text left with scale ---------------------------------------------- --
 local function Print(fontHandle, iX, iY, sText)
   FontPrint(fontHandle, iX * iTexScale, iY * iTexScale, sText);
@@ -97,10 +110,168 @@ local function SetVLTRB(vidHandle, iX1, iY1, iX2, iY2)
   VideoSetVLTRB(vidHandle, iX1 * iTexScale, iY1 * iTexScale,
                            iX2 * iTexScale, iY2 * iTexScale);
 end
+-- Add a tile to a texture ------------------------------------------------- --
+local function TileA(texHandle, iX1, iY1, iX2, iY2)
+  return TextureTileA(texHandle, iX1 * iTexScale, iY1 * iTexScale,
+                                 iX2 * iTexScale, iY2 * iTexScale);
+end
+-- Do render the tip ------------------------------------------------------- --
+local function DoRenderTip(iX)
+  -- Draw the background of the tip rect
+  BlitSLT(texSpr, 847, iX,      216);
+  BlitSLT(texSpr, 848, iX + 16, 216);
+  BlitSLT(texSpr, 848, iX + 32, 216);
+  BlitSLT(texSpr, 848, iX + 48, 216);
+  BlitSLT(texSpr, 849, iX + 64, 216);
+  -- Set tip colour and render the text
+  fontLittle:SetCRGB(1, 1, 1);
+  PrintC(fontLittle, iX + 40, 220, sTip);
+end
+-- Render the tip in the bottom right -------------------------------------- --
+local function RenderTip()
+  -- Return if no tip
+  if not sTip then return end;
+  -- Draw tip in different positions if mouse cursor is over the tip
+  if IsMouseInBounds(232, 216, 312, 232) then DoRenderTip(144);
+                                         else DoRenderTip(232) end;
+end
+-- Render shadow ----------------------------------------------------------- --
+local function RenderShadow(iL, iT, iR, iB)
+  -- Draw a shadow using the solid sprite
+  texSpr:SetCA(0.2);
+  BlitSLTRB(texSpr, 1023, iL+3, iB, iR, iB+1); -- Horizontal row 1
+  BlitSLTRB(texSpr, 1023, iR, iT+3, iR+1, iB); -- Vertical column 1
+  texSpr:SetCA(0.1);
+  BlitSLTRB(texSpr, 1023, iL+4, iB, iR, iB+2); -- Horizontal row 2
+  BlitSLTRB(texSpr, 1023, iR, iT+4, iR+2, iB); -- Vertical column 2
+  BlitSLTRB(texSpr, 1023, iR, iB, iR+2, iB+1); -- Horizontal corner 1
+  BlitSLTRB(texSpr, 1023, iR, iB, iR+1, iB+2); -- Vertical corner 2
+  texSpr:SetCA(0.05);
+  BlitSLTRB(texSpr, 1023, iL+5, iB, iR, iB+3); -- Horizontal row 3
+  BlitSLTRB(texSpr, 1023, iR, iT+5, iR+3, iB); -- Vertical column 3
+  texSpr:SetCA(1);
+end
+-- Render the tip and shadow ----------------------------------------------- --
+local function RenderTipShadow()
+  -- Return if no tip
+  if not sTip then return end;
+  -- Render the tip
+  DoRenderTip(232)
+  -- Render the shadow
+  RenderShadow(232, 216, 312, 232);
+end;
+-- Set bottom right tip ---------------------------------------------------- --
+local function SetTip(strTip) sTip = strTip end;
+-- Render fade ------------------------------------------------------------- --
+local function RenderFade(nAmount, iL, iT, iR, iB, iS)
+  texSpr:SetCA(nAmount);
+  BlitSLTRB(texSpr, iS or 1023, iL or iStageLeft,  iT or iStageTop,
+                                iR or iStageRight, iB or iStageBottom);
+  texSpr:SetCA(1);
+end
+-- Fade -------------------------------------------------------------------- --
+local function Fade(S, E, C, D, A, M, L, T, R, B, Z)
+  -- Check parameters
+  if not UtilIsNumber(S) then
+    error("Invalid starting value number! "..tostring(S)) end;
+  if not UtilIsNumber(E) then
+    error("Invalid ending value number! "..tostring(E)) end;
+  if not UtilIsNumber(C) then
+    error("Invalid fade inc/decremember value! "..tostring(C)) end
+  if not UtilIsFunction(A) then
+    error("Invalid after function! "..tostring(A)) end;
+  -- If already fading, run the after function
+  if UtilIsFunction(fcbFading) then fcbFading() end;
+  -- Disable all keybanks and globals
+  SetKeys(false);
+  -- Disable hotspots
+  SetHotSpot();
+  -- During function
+  local function During(nVal)
+    -- Clear states
+    ClearStates();
+    -- Call users during function
+    D();
+    -- Clamp new fade value
+    S = UtilClamp(nVal, 0, 1);
+    -- Render blackout
+    RenderFade(S, L, T, R, B, Z);
+    -- Fade music too
+    if M then MusicVolume(1 - S) end;
+  end
+  -- Finished function
+  local function Finish()
+    -- Reset fade vars
+    S, fcbFading = E, nil;
+    -- Enable global keys
+    SetKeys(true);
+    -- Just draw tip while the after function decides what to do
+    SetCallbacks(nil, RenderTip);
+    -- Call the after function
+    A();
+  end
+  -- Cleanup function
+  local function Clean()
+    -- Garbage collect
+    collectgarbage();
+    -- Reset hi-res timer
+    CoreCatchup();
+  end
+  -- Fade out?
+  if S < E then
+    -- Save old fade function
+    fcbFading = A;
+    -- Function during
+    local function OnFadeOutFrame()
+      -- Fade out
+      During(S + C);
+      -- Finished if we reached the ending point
+      if S < E then return end;
+      -- Cleanup
+      Clean();
+      -- Call finish function
+      Finish()
+    end
+    -- Set fade out procedure
+    SetCallbacks(nil, OnFadeOutFrame);
+  -- Fade in?
+  elseif S > E then
+    -- Cleanup
+    Clean();
+    -- Save old fade function
+    fcbFading = A;
+    -- Function during
+    local function OnFadeInFrame()
+      -- Fade in
+      During(S - C);
+      -- Finished if we reached the ending point
+      if S <= E then Finish() end;
+    end
+    -- Set fade in procedure
+    SetCallbacks(nil, OnFadeInFrame);
+  -- Ending already reached?
+  else
+    -- Cleanup
+    Clean();
+    -- Call finish function
+    Finish();
+  end
+end
 -- Script ready function --------------------------------------------------- --
 local function OnScriptLoaded(GetAPI)
+  -- Functions only for this scope
+  local RegisterFBUCallback;
   -- Get and store texture scale
-  iTexScale = GetAPI("iTexScale");
+  ClearStates, IsMouseInBounds, MusicVolume, RegisterFBUCallback, SetCallbacks,
+    SetHotSpot, SetKeys, fontLittle, iTexScale, texSpr =
+      GetAPI("ClearStates", "IsMouseInBounds", "MusicVolume",
+        "RegisterFBUCallback", "SetCallbacks", "SetHotSpot", "SetKeys",
+        "fontLittle", "iTexScale", "texSpr");
+  -- Set frame buffer update callback (always active)
+  local function OnStageUpdated(...)
+    local _; _, _, iStageLeft, iStageTop, iStageRight, iStageBottom = ...;
+  end
+  RegisterFBUCallback("blit", OnStageUpdated);
   -- Return if texture scale is set to 1
   if iTexScale <= 1 then return end;
   -- Enumerate cursor id datas
@@ -114,16 +285,13 @@ local function OnScriptLoaded(GetAPI)
     aCData[4] = iY * iTexScale;
   end
 end
--- Add a tile to a texture ------------------------------------------------- --
-local function TileA(texHandle, iX1, iY1, iX2, iY2)
-  return TextureTileA(texHandle, iX1 * iTexScale, iY1 * iTexScale,
-                                 iX2 * iTexScale, iY2 * iTexScale);
-end
 -- Return imports and exports ---------------------------------------------- --
-return { F = OnScriptLoaded, A = { Print = Print, PrintC = PrintC,
+return { F = OnScriptLoaded, A = { Fade = Fade, Print = Print, PrintC = PrintC,
   PrintCT = PrintCT, PrintM = PrintM, PrintR = PrintR, PrintS = PrintS,
   PrintU = PrintU, PrintUR = PrintUR, PrintW = PrintW, PrintWS = PrintWS,
   BlitLTRB = BlitLTRB, BlitLT = BlitLT, BlitSLT = BlitSLT,
   BlitSLTRB = BlitSLTRB, BlitSLTWH = BlitSLTWH, BlitSLTWHA = BlitSLTWHA,
-  SetVLTRB = SetVLTRB, TileA = TileA } };
+  RenderFade = RenderFade, RenderShadow = RenderShadow, RenderTip = RenderTip,
+  RenderTipShadow = RenderTipShadow, SetTip = SetTip, SetVLTRB = SetVLTRB,
+  TileA = TileA } };
 -- End-of-File ============================================================= --

@@ -130,11 +130,11 @@ local aRacesData<const> =
   { TYP.FTARG, TYP.GRABLIN, TYP.HABBISH, TYP.QUARRIOR };
 -- Race data --------------------------------------------------------------- --
 local aRaceStatData<const> = {
-  -- Object id -- STR STA DSP PAT ATP TEL SPC ------------------------------ --
-  { TYP.FTARG,    25, 50, 37, 32, 35, 42,  0 }, -- These are just values for
-  { TYP.HABBISH,  42, 45, 27, 25, 42, 50,  1 }, -- drawing. The actual values
-  { TYP.GRABLIN,  37, 35, 50, 35, 27, 38, -1 }, -- are in the actual object
-  { TYP.QUARRIOR, 50, 27, 20, 50, 48, 25, -1 }, -- data structures.
+  -- Object id -- STR STA DSP PAT ATP TEL ---------------------------------- --
+  { TYP.FTARG,    25, 50, 37, 32, 35, 42 },
+  { TYP.HABBISH,  42, 45, 27, 25, 42, 50 },
+  { TYP.GRABLIN,  37, 35, 50, 35, 27, 38 },
+  { TYP.QUARRIOR, 50, 27, 20, 50, 48, 25 }
 };
 -- Shop data statics ------------------------------------------------------- --
 local aShopData<const> = {
@@ -474,8 +474,8 @@ local aZoneData<const> = {
   -- R = Right bound on zone map.      B = Bottom bound on zone map.
   -- DEPENDENCY = Table of zone ids that unlock when any are completed.
   -- L -- T -- R -- B -- DEPENDENCY -------------------- ZONE ------- (1-10) --
-  { 188,  50, 245,  78, {                        } }, -- [01] Azerg
-  { 106,  63, 172,  90, {                        } }, -- [02] Dhobbs
+  { 188,  50, 245,  75, {                        } }, -- [01] Azerg
+  { 106,  63, 162,  97, {                        } }, -- [02] Dhobbs
   {  48, 137,  92, 167, {  2,  4,  5             } }, -- [03] Eleevate
   {  47, 192,  95, 245, {  3,  5,  9             } }, -- [04] Deena
   {  96, 154, 138, 185, {  2,  3,  4,  6,  8,  9 } }, -- [05] Justyn

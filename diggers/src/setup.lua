@@ -1300,6 +1300,8 @@ local function OnScriptLoaded(GetAPI)
   -- Sort the bindings list
   local function BindSortFunction(aA, aB) return aA[6] < aB[6] end;
   sort(aBindingsList, BindSortFunction);
+  -- Get OK result for Variable:Integer()
+  local iVROK<const> = Variable.Result.OK;
   -- Binds area clicked
   local function OnBindsClick()
     -- Get key bind data
@@ -1343,7 +1345,7 @@ local function OnScriptLoaded(GetAPI)
       -- Apply bind to cvar the cvar callback will change the text to the
       -- new value but won't if the value could not be changed in which we
       -- restore the original text value here.
-      if aBindData[7]:Set(iKey) ~= 0 then aBindData[8] = sTextSave end;
+      if aBindData[7]:Integer(iKey) ~= iVROK then aBindData[8] = sTextSave end;
       -- Restore input handlers
       RestoreKeyHandlers();
       -- Restore hot spots

@@ -36,6 +36,7 @@ local aZmtcTexture,                    -- Lobby closed texture asset
       iPage,                           -- Book current page
       iSClick, iSSelect,               -- Sound effects used
       strExitTip, strPage, strText,    -- Tip strings and actual page text
+      strPageNext, strPageLast,        -- Next and last page tips
       texCover, texPage, texZmtc;      -- Book, page and bg texture handles
 -- Book render callback ---------------------------------------------------- --
 local function ProcRenderPage()
@@ -61,7 +62,14 @@ local function LoadPage(fcbOnComplete)
   fontSpeech:SetLSpacing(aPage.L or 0);
   -- Update page and set it as tip
   strPage = "PAGE "..iPage.."/"..#aBookData;
-  SetTip(strPage);
+  SetTip(strPage)
+  -- Set last and next page tip
+  strPageNext = iPage + 1;
+  if strPageNext < #aBookData then strPageNext = "TO PAGE "..strPageNext.." >";
+  else strPageNext = "AT END" end;
+  strPageLast = iPage - 1;
+  if strPageLast > 0 then strPageLast = "< TO PAGE "..strPageLast;
+  else strPageLast = "AT START" end;
   -- Set hotspots based on page
   SetHotSpot(aPageHotSpots[iPage] or iHotSpotPageId);
 end
@@ -95,6 +103,8 @@ local function GoNext() GoAdjustPage(iPage + 1) end;
 -- Hover functions (dynamic) ----------------------------------------------- --
 local function HoverExit() SetTip(strExitTip) end;
 local function HoverIdle() SetTip(strPage) end;
+local function HoverNext() SetTip(strPageNext) end;
+local function HoverLast() SetTip(strPageLast) end;
 -- Scroll wheel callback --------------------------------------------------- --
 local function OnScroll(nX, nY)
   if nY > 0 then GoLast() elseif nY < 0 then GoNext() end;
@@ -314,8 +324,8 @@ local function OnScriptLoaded(GetAPI)
   local aHSIndex<const>, aHSNext<const>, aHSLast<const>, aHSIdle<const>,
     aHSExit<const> =
       {  19,  68,  20,  22, 0, iCSelect, "INDEX PAGE", OnScroll, GoIndex   },
-      {  19,  96,  20,  22, 0, iCSelect, "NEXT PAGE",  OnScroll, GoNext    },
-      {  19, 122,  20,  22, 0, iCSelect, "LAST PAGE",  OnScroll, GoLast    },
+      {  19,  96,  20,  22, 0, iCSelect, HoverNext,    OnScroll, GoNext    },
+      {  19, 122,  20,  22, 0, iCSelect, HoverLast,    OnScroll, GoLast    },
       {   8,   8, 304, 200, 0, 0,        HoverIdle,    OnScroll, false     },
       {   0,   0,   0, 240, 3, iCExit,   HoverExit,    OnScroll, GoExit    };
   -- Start building page specific hotspots

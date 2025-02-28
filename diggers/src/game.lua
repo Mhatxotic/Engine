@@ -37,8 +37,8 @@ local ACT, AI, BlitSLTRB, BlitSLT, DF, DIR, Fade, GetMouseX, GetMouseY,
   aExplodeAboveData, aExplodeDirData, aFloodGateData, aGlobalData,
   aJumpFallData, aJumpRiseData, aLevelsData, aMenuData, aObjToUIData,
   aObjectData, aSfxData, aShopData, aShroudCircle, aShroudTileLookup,
-  aTileData, aTileFlags, aTimerData, aTrainTrackData, iSlowDown, fontLarge,
-  fontLittle, fontTiny, iPosX, iPosY, texSpr;
+  aTileData, aTileFlags, aTimerData, aTrainTrackData, iSlowDown,
+  iSavedSlowDown, fontLarge, fontLittle, fontTiny, iPosX, iPosY, texSpr;
 -- High priority variables (because of MAXVARS limit) ---------------------- --
 local function HighPriorityVars()
 -- Prototype functions (assigned later) ------------------------------------ --
@@ -356,7 +356,7 @@ local function SelectInfoScreen()
          GEMS FOUND:         EFFICIENCY:        ");
     end
     -- Reset tiny font spacing
-    fontTiny:SetLSpacing(1);
+    fontTiny:SetLSpacing(0);
   end
   -- Draw digger locations
   local function InfoScreenRenderLocations()
@@ -3002,18 +3002,20 @@ local function InitCreateObject()
         until iHealth <= 0;
         -- Do we have intelligence to check the gap?
         if random() >= aObject.IN and CheckForJump(aObject) then return end;
-        -- Get last anti-wriggle timeout value and if we exceeded it
+        -- Get last anti-wriggle timeout value and if we're under reset limit?
         local iAntiWriggleTime<const> = aObject.AW;
-        if iGameTicks >= iAntiWriggleTime then
-          -- Reset anti-wriggle timeframe to another 5 seconds
-          aObject.AW = iGameTicks + 300;
-          -- Get wriggle count because it will be reset now
-          local iAntiWriggleRemain<const> = aObject.AWR;
-          aObject.AWR = 0
-          -- too many times in this timeframe?
-          if iAntiWriggleRemain >= 10 then return PhaseHome(aObject) end;
-        -- Still in the timeframe so keep increasing anti- wriggle counter
-        else aObject.AWR = aObject.AWR + 1 end;
+        if iGameTicks < iAntiWriggleTime then
+          -- Get current wriggle count and if we've wriggled too much?
+          local iAntiWriggleRemain<const> = aObject.AWR + 1;
+          if iAntiWriggleRemain >= 10 then
+            -- Reset anti-wriggle timeframe to another 5 seconds
+            aObject.AW, aObject.AWR = iGameTicks + 300, 0;
+            -- Phase home
+            return PhaseHome(aObject);
+          -- Set new wriggle count
+          else aObject.AWR = iAntiWriggleRemain end;
+        -- Still in the timeframe? Reset anti-wriggle timeframe to another 5 seconds
+        else aObject.AW, aObject.AWR = iGameTicks + 300, 0 end;
         -- This fall would kill cause the digger harm so evade the fall.
         do return SetAction(aObject, ACT.KEEP, JOB.KEEP, DIR.OPPOSITE) end;
         -- Fall is 'safe'
@@ -4339,10 +4341,11 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
     fcbLogic();
     -- Do fade then set requested game callbacks
     local function OnFadeIn()
-      -- Key bank rqeusted?
+      -- Key bank requested?
       if iKB then
-        -- Use default keybank?
-        if iKB < 0 then iKB = iKeyBankId end;
+        -- Use default keybank? Use users slowdown value else don't slowdown
+        if iKB < 0 then iKB, iSlowDown = iKeyBankId, iSavedSlowDown;
+                   else iSlowDown = 1 end;
         -- Set specified keybank
         SetKeys(true, iKB);
       end
@@ -4635,16 +4638,21 @@ local function OnScriptLoaded(GetAPI)
   local cvSlowDown;
   -- Toggle slow down event
   local function ToggleSlowDown()
+    -- New value to set
+    local iNewSlowDown;
     -- Toggle slow down
-    if iSlowDown == 1 then iSlowDown = 2 else iSlowDown = 1 end;
-    -- Update cvar
-    cvSlowDown:Integer(iSlowDown);
+    if iSlowDown == 1 then iNewSlowDown = 2 else iNewSlowDown = 1 end;
+    -- Set cvar to new value which also calls OnSlowDown()
+    cvSlowDown:Integer(iNewSlowDown);
   end
   -- Register slow down variable
   local function OnSlowDown(sV)
+    -- Covert string to number and return if invalid
     sV = tonumber(sV);
     if sV < 1 or sV > 2 then return false end;
-    iSlowDown = sV;
+    -- Set slow down and saved slow down value
+    iSlowDown, iSavedSlowDown = sV, sV;
+    -- Done
     return true;
   end
   -- Register the variable

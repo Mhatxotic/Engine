@@ -222,47 +222,44 @@ static class Input final :             // Handles keyboard, mouse & controllers
     const EvtMainArgs &emaArgs = emeEvent.aArgs;
     // Get key code, state and modifier state
     const int iKey = emaArgs[1].i, iState = emaArgs[3].i, iMod = emaArgs[4].i;
-    // Compare press state
+    // If...
+    if(iMod == GLFW_MOD_ALT &&         // ALT key pressed/released/repeated?
+       iKey == GLFW_KEY_ENTER &&       // ENTER key pressed/released/repeated?
+       FlagIsSet(IF_FSTOGGLER))        // Full-screen toggler key enabled?
+    { // Return if key has not been released
+      if(iState != GLFW_RELEASE) return;
+      // Get inverted full-screen setting
+      const bool bFullScreen = !cCVars->GetInternal<bool>(VID_FS);
+      // Set full screen setting depending on current state
+      cCVars->SetInternal<bool>(VID_FS, bFullScreen);
+      // Send command to toggle full-screen
+      cEvtWin->AddUnblock(EWC_WIN_TOGGLE_FS, bFullScreen);
+      // Don't send key to guest
+      return;
+    } // Return if console handled this key
+    else if(cConGraphics->IsKeyHandled(iKey, iState, iMod)) return;
+    // Compare state
     switch(iState)
     { // Key initially pressed down?
       case GLFW_PRESS:
-        // If the console didn't handle this key?
-        if(cConGraphics->IsKeyNotHandled(iKey, iState, iMod))
-        { // If modifier key or console key not pressed then don't handle it
-          if(iMod || (iKey != iConKey1 && iKey != iConKey2)) break;
-          // Set console enabled and if enabled? Ignore first key as
-          // registering OnCharPress will trigger this keystroke and print it
-          // out in the console.
-          if(cConGraphics->SetVisible(true)) cConsole->FlagSet(CF_IGNOREKEY);
-        } // We handled this key so do not dispatch it to scripts
-        return;
+        // If modifier key or console key not pressed and setting console to
+        // enabled worked? Ignore first key as registering OnCharPress will
+        // trigger this keystroke and print it out in the console.
+        if(!iMod && (iKey == iConKey1 || iKey == iConKey2) &&
+           cConGraphics->SetVisible(true))
+          return cConsole->FlagSet(CF_IGNOREKEY);
+        // Key not handled so send event to guest
+        break;
       // Key released?
       case GLFW_RELEASE:
-        // Return if alt+enter not pressed or input toggler key is disabled
-        if(iKey == GLFW_KEY_ENTER && iMod == GLFW_MOD_ALT &&
-           FlagIsSet(IF_FSTOGGLER))
-        { // Get inverted full-screen setting
-          const bool bFullScreen = !cCVars->GetInternal<bool>(VID_FS);
-          // Set full screen setting depending on current state
-          cCVars->SetInternal<bool>(VID_FS, bFullScreen);
-          // Send command to toggle full-screen
-          cEvtWin->AddUnblock(EWC_WIN_TOGGLE_FS, bFullScreen);
-        } // If console cannot handle this key?
-        else if(cConGraphics->IsKeyNotHandled(iKey, iState, iMod))
-        { // Ignore the ESCAPE generated from hiding the console
-          if(cConsole->FlagIsSet(CF_IGNOREESC) &&
-             !iMod && iKey == GLFW_KEY_ESCAPE)
-            cConsole->FlagClear(CF_IGNOREESC);
-          // No key was handled
-          else break;
-        } // We handled this key so do not dispatch it to scripts
-        return;
-      // Key still being pressed?
-      case GLFW_REPEAT:
-        // Break if console cannot handle this key
-        if(cConGraphics->IsKeyNotHandled(iKey, iState, iMod)) break;
-        // Console handled the key so return;
-        return;
+        // Ignore the ESCAPE generated from hiding the console
+        if(cConsole->FlagIsSet(CF_IGNOREESC) &&
+           !iMod && iKey == GLFW_KEY_ESCAPE)
+          return cConsole->FlagClear(CF_IGNOREESC);
+        // Key not handled so send event to guest
+        break;
+      // Key still being pressed? Key not handled so send event to guest
+      case GLFW_REPEAT: break;
       // Anything else just ignore
       default:
         // Log the bad mouse focus state and return

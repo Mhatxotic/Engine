@@ -138,7 +138,7 @@ local function RenderSpeech()
     -- Render shopkeeper talking and speech bubble
     BlitSLT(texShop, CoreTicks() // 10 % 4 + 22, 112, 127);
     BlitSLT(texShop, 21, 0, 160);
-    PrintC(fontSpeech, 56, 168, sMsg);
+    PrintC(fontSpeech, 56, 167, sMsg);
   end
   -- Render tip
   RenderTip();

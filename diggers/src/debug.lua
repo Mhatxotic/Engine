@@ -51,11 +51,11 @@ local function InitDebugPlay(iId)
         -- Get digger object and if it is in danger?
         local aDigger<const> = aDiggers[iDigger];
         if aDigger.J == JOB.INDANGER and
+           aDigger.A ~= ACT.DEATH and
           (aDigger.A ~= ACT.FIGHT or
            aDigger.P == aActivePlayer) then
           -- It is selected
-          iSelectedPlayerId = iPlayer;
-          iSelectedDiggerId = iDigger;
+          iSelectedPlayerId, iSelectedDiggerId = iPlayer, iDigger;
           aObject = aDigger;
           -- Do not check any more diggers
           break;
@@ -256,14 +256,14 @@ local function InitDebugPlay(iId)
       nFade1, nFade2, nR, nG, nB = 1, 1, 1, 1, 1;
     end
     texSpr:SetCRGBA(nR, nG, nB, 1);
-    BlitSLTRB(texSpr, 1022, 159, 4, 160, 40);
+    BlitSLTRB(texSpr, 1022, 159, 5, 160, 39);
     texSpr:SetCRGB(0, 0, 0);
-    BlitSLTRB(texSpr, 1022, 160, 5, 161, 41);
+    BlitSLTRB(texSpr, 1022, 160, 6, 161, 40);
     texSpr:SetCRGB(1, 1, 1);
     fontTiny:SetCRGBA(1, 0.6, 0.7, nFade1);
-    PrintR(fontTiny, 155, 16, aActivePlayer.RD.LONGNAME);
+    PrintR(fontTiny, 155, 34, aActivePlayer.RD.LONGNAME);
     fontTiny:SetCRGBA(0.24, 0.8, 0.4, nFade2);
-    Print(fontTiny, 165, 16, aOpponentPlayer.RD.LONGNAME);
+    Print(fontTiny, 165, 34, aOpponentPlayer.RD.LONGNAME);
     fontTiny:SetCRGBA(1, 1, 1, 1);
     -- Draw engine info
     Print(fontTiny, iStageL + 5, 5, format(
@@ -308,9 +308,9 @@ local function InitDebugPlay(iId)
         iViewportW, iViewportH));
     -- Draw gems and dug count
     fontLittle:SetCRGBA(1, 1, 1, nFade1);
-    PrintR(fontLittle, 155, 4, "("..iGems1..") "..iDug1);
+    PrintR(fontLittle, 155, 23, iDug1.." ("..iGems1..")");
     fontLittle:SetCA(nFade2);
-    Print(fontLittle, 165, 4, iDug2.." ("..iGems2..")");
+    Print(fontLittle, 165, 23, "("..iGems2..") "..iDug2);
     -- Animate player one's money
     if iAnimMoney ~= iMoney1 then
       -- Animated money over actual money?
@@ -321,7 +321,7 @@ local function InitDebugPlay(iId)
         sMoney = min(9999, iAnimMoney);
         -- Red colour and draw money
         fontLarge:SetCRGBA(1, 0.75, 0.75, nFade1);
-        Print(fontLarge, 165, 25, sMoney);
+        Print(fontLarge, 165, 4, sMoney);
       -- Animated money under actual money? Increment
       elseif iAnimMoney < iMoney1 then
         -- Increment it
@@ -330,20 +330,20 @@ local function InitDebugPlay(iId)
         sMoney = min(9999, iAnimMoney);
         -- Green colour and draw money
         fontLarge:SetCRGBA(0.75, 1, 0.75, nFade1);
-        PrintR(fontLarge, 155, 25, sMoney);
+        PrintR(fontLarge, 155, 4, sMoney);
       -- No change so set white font
       else
         -- Set money
         iAnimMoney, sMoney = iMoney1, iMoney1;
         -- Reset colour and draw money
         fontLarge:SetCRGBA(1, 1, 1, nFade1);
-        PrintR(fontLarge, 155, 25, sMoney);
+        PrintR(fontLarge, 155, 4, sMoney);
       end
     -- Normal display
     else
       -- Reset colour and draw money
       fontLarge:SetCRGBA(1, 1, 1, nFade1);
-      PrintR(fontLarge, 155, 25, sMoney);
+      PrintR(fontLarge, 155, 4, sMoney);
     end
     -- Animate player one's money
     if iOppAnimMoney ~= iMoney2 then
@@ -355,7 +355,7 @@ local function InitDebugPlay(iId)
         sOppMoney = min(9999, iOppAnimMoney);
         -- Red colour and draw money
         fontLarge:SetCRGBA(1, 0.75, 0.75, nFade2);
-        Print(fontLarge, 165, 25, sOppMoney);
+        Print(fontLarge, 165, 4, sOppMoney);
       -- Animated money under actual money? Increment
       elseif iOppAnimMoney < iMoney2 then
         -- Increment it
@@ -364,21 +364,25 @@ local function InitDebugPlay(iId)
         sOppMoney = min(9999, iOppAnimMoney);
         -- Green colour and draw money
         fontLarge:SetCRGBA(0.75, 1, 0.75, nFade2);
-        Print(fontLarge, 165, 25, sOppMoney);
+        Print(fontLarge, 165, 4, sOppMoney);
       -- No change so set white font
       else
         -- Set money
         iOppAnimMoney, sMoney = iMoney2, iMoney2;
         -- Reset colour and draw money
         fontLarge:SetCRGBA(1, 1, 1, nFade2);
-        Print(fontLarge, 165, 25, sOppMoney);
+        Print(fontLarge, 165, 4, sOppMoney);
       end
     -- Normal display
     else
       -- Reset colour and draw money
       fontLarge:SetCRGBA(1, 1, 1, nFade2);
-      Print(fontLarge, 165, 25, sOppMoney);
+      Print(fontLarge, 165, 4, sOppMoney);
     end
+    -- Reset colours
+    fontLarge:SetCRGBA(1, 1, 1, 1);
+    fontLittle:SetCRGBA(1, 1, 1, 1);
+    fontTiny:SetCRGBA(1, 1, 1, 1);
     -- Render interface
     RenderInterface();
   end

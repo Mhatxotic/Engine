@@ -13,11 +13,10 @@
 local format<const>, unpack<const>, error<const> =
   string.format, table.unpack, error;
 -- M-Engine function aliases ----------------------------------------------- --
-local CoreTicks<const>, UtilBlank<const>, UtilIsTable<const> =
-  Core.Ticks, Util.Blank, Util.IsTable;
+local UtilBlank<const>, UtilIsTable<const> = Util.Blank, Util.IsTable;
 -- Diggers function and data aliases --------------------------------------- --
-local BlitSLT, Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin,
-  InitLobby, LoadResources, PlayMusic, PlayStaticSound, PrintC,
+local BlitLT, BlitSLT, Fade, GameProc, GetActiveObject, GetGameTicks,
+  HaveZogsToWin, InitLobby, LoadResources, PlayMusic, PlayStaticSound, PrintC,
   RenderAll, RenderShadow, RenderTip, SellSpecifiedItems, SetCallbacks,
   SetHotSpot, SetKeys, SetTip, aGemsAvailable, aObjectActions, aObjectData,
   aObjectDirections, aObjectJobs, aObjectTypes, fontSpeech, texSpr;
@@ -28,6 +27,7 @@ local aAssets,                         -- Required assets
       aPlayer,                         -- Owner of digger
       bGameWon,                        -- Game is won?
       fcbSpeechCallback,               -- Speech callback
+      iAnimTimer,                      -- Animation timer
       iBankerId,                       -- Banker id selected
       iBankerTexId,                    -- Banker texture id selected
       iBankerX, iBankerY,              -- Banker position
@@ -42,14 +42,13 @@ local aAssets,                         -- Required assets
       strBankerSpeech,                 -- Speech bubble text
       texBank;                         -- Bank texture
 -- Tile data (See data.hpp/aAssetsData.bank.P) ----------------------------- --
-local tileBG<const>     = 12;          -- Background tile
-local tileSpeech<const> = 13;          -- Speech tile
+local tileSpeech<const> = 1;           -- Speech tile
 -- Banker id to mouse function look up table ------------------------------- --
 local aBankerStaticData<const> = {
   -- Gem XY  Tex<Bank>XY  Bub XY  Msg XY ----
-  {  50,21, { 0,  16,96,   0,62,  56,70 } }, -- [01]
-  { 153,21, { 4, 112,96, 104,62, 160,70 } }, -- [02]
-  { 257,21, { 8, 224,96, 208,62, 264,70 } }  -- [03]
+  {  50,21, { 1,  25,96,   0,62,  56,69 } }, -- [01]
+  { 153,21, { 4, 129,96, 104,62, 160,69 } }, -- [02]
+  { 257,21, { 7, 233,96, 208,62, 264,69 } }  -- [03]
   -- Gem XY  Tex<Bank>XY  Bub XY  Msg XY ----
 };
 -- Function to refresh banker data ----------------------------------------- --
@@ -172,20 +171,20 @@ local function ProcRender()
   -- Render original interface
   RenderAll();
   -- Draw backdrop with bankers and windows
-  BlitSLT(texBank, tileBG, 8, 8);
-  -- Render shadow
-  RenderShadow(8, 8, 312, 208);
+  BlitLT(texBank, 8, 8);
   -- For each banker
   for iI = 1, #aBankerData do
-    -- Get banker data and draw it
+    -- Get banker data and draw the gem that the banker will sell
     local aData<const> = aBankerData[iI];
     BlitSLT(texSpr, aData[4], aData[6], aData[7]);
   end
   -- Speech bubble should show?
   if iSpeechTimer > 0 then
     -- Show banker talking graphic, speech bubble and text
-    BlitSLT(texBank, CoreTicks() // 10 % 4 + iBankerTexId,
-      iBankerX, iBankerY);
+    local iAnimId<const> = iAnimTimer % 4;
+    if iAnimId > 0 then
+      BlitSLT(texBank, iAnimId + iBankerTexId, iBankerX, iBankerY);
+    end
     BlitSLT(texBank, tileSpeech, iSpeechBubbleX, iSpeechBubbleY);
     PrintC(fontSpeech, iSpeechTextX, iSpeechTextY, strBankerSpeech);
   end
@@ -198,10 +197,13 @@ local function ProcLogic()
   GameProc();
   -- Check for change
   RefreshData();
-  -- Speech bubble should show?
+  -- Return if no speech bubble should show
   if iSpeechTimer == 0 then return end;
-  -- Decrement speech bubble timer and if zero?
+  -- Decrement speech bubble timer
   iSpeechTimer = iSpeechTimer - 1;
+  -- Calculate animation timer
+  iAnimTimer = iSpeechTimer // 10;
+  -- Return if still talking
   if iSpeechTimer > 0 then return end;
   -- Restore bank keys and hot spots
   SetKeys(true, iKeyBankId);
@@ -260,21 +262,21 @@ local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Grab imports
-  BlitSLT, Fade, GameProc, GetActiveObject, GetGameTicks, HaveZogsToWin,
-    InitLobby, LoadResources, PlayMusic, PlayStaticSound, PrintC,
-    RegisterHotSpot, RegisterKeys, RenderAll, RenderShadow, RenderTip,
+  BlitLT, BlitSLT, Fade, GameProc, GetActiveObject, GetGameTicks,
+    HaveZogsToWin, InitLobby, LoadResources, PlayMusic, PlayStaticSound,
+    PrintC, RegisterHotSpot, RegisterKeys, RenderAll, RenderShadow, RenderTip,
     SellSpecifiedItems, SetCallbacks, SetHotSpot, SetKeys, SetTip, aAssetsData,
     aCursorIdData, aGemsAvailable, aObjectActions, aObjectData,
     aObjectDirections, aObjectJobs, aObjectTypes, aSfxData, fontSpeech,
     texSpr =
-      GetAPI("BlitSLT", "Fade", "GameProc", "GetActiveObject", "GetGameTicks",
-        "HaveZogsToWin", "InitLobby", "LoadResources", "PlayMusic",
-        "PlayStaticSound", "PrintC", "RegisterHotSpot", "RegisterKeys",
-        "RenderAll", "RenderShadow", "RenderTip", "SellSpecifiedItems",
-        "SetCallbacks", "SetHotSpot", "SetKeys", "SetTip", "aAssetsData",
-        "aCursorIdData", "aGemsAvailable", "aObjectActions", "aObjectData",
-        "aObjectDirections", "aObjectJobs", "aObjectTypes", "aSfxData",
-        "fontSpeech", "texSpr");
+      GetAPI("BlitLT", "BlitSLT", "Fade", "GameProc", "GetActiveObject",
+        "GetGameTicks", "HaveZogsToWin", "InitLobby", "LoadResources",
+        "PlayMusic", "PlayStaticSound", "PrintC", "RegisterHotSpot",
+        "RegisterKeys", "RenderAll", "RenderShadow", "RenderTip",
+        "SellSpecifiedItems", "SetCallbacks", "SetHotSpot", "SetKeys",
+        "SetTip", "aAssetsData", "aCursorIdData", "aGemsAvailable",
+        "aObjectActions", "aObjectData", "aObjectDirections", "aObjectJobs",
+        "aObjectTypes", "aSfxData", "fontSpeech", "texSpr");
   -- Setup required assets
   aAssets = { aAssetsData.bank, aAssetsData.bankm };
   -- Set sound effect ids

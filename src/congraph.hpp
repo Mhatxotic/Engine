@@ -213,15 +213,15 @@ static class ConGraphics final :       // Members initially private
     cConsole->OnKeyPress(iKey, iAction, iMods);
   }
   /* -- Check if console key pressed in console ---------------------------- */
-  bool IsKeyNotHandled(const int iKey, const int iState, const int iMod)
+  bool IsKeyHandled(const int iKey, const int iState, const int iMod)
   { // Return if console not visible
-    if(cConsole->IsNotVisible()) return true;
+    if(cConsole->IsNotVisible()) return false;
     // Add normal key pressed. Since GLFW inconveniently gives us 3 int
     // parameters, we need to pack 2 ints together. Luckily, GLFW_RELEASE etc
     // is only 8-bit, we'll pack the modifiers with this value.
     OnKeyPress(iKey, iState, iMod);
     // We handled this key so do not dispatch it to scripts
-    return false;
+    return true;
   }
   /* -- Redraw the console fbo if the console contents changed ------------- */
   void Render(void)
