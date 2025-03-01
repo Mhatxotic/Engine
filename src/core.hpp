@@ -12,55 +12,55 @@ namespace ICore {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArchive::P;           using namespace IAsset::P;
 using namespace IAudio::P;             using namespace ICmdLine::P;
-using namespace IConDef::P;            using namespace IConsole::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IDir::P;
-using namespace IDisplay::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IEvtWin::P;
-using namespace IFbo::P;               using namespace IFboCore::P;
-using namespace IJson::P;              using namespace IFont::P;
-using namespace IFreeType::P;          using namespace IFtf::P;
-using namespace IGlFW::P;              using namespace IGlFWUtil::P;
-using namespace IImage::P;             using namespace IInput::P;
-using namespace ILog::P;               using namespace ILua::P;
-using namespace ILuaCode::P;           using namespace ILuaUtil::P;
-using namespace ILuaVariable::P;       using namespace IOgl::P;
-using namespace IPalette::P;           using namespace IPcm::P;
-using namespace IPSplit::P;            using namespace IShaders::P;
-using namespace ISql::P;               using namespace ISource::P;
-using namespace IStd::P;               using namespace IStream::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITexture::P;
-using namespace IThread::P;            using namespace ITimer::P;
-using namespace IToken::P;             using namespace IVideo::P;
+using namespace IConDef::P;            using namespace IConGraph::P;
+using namespace IConsole::P;           using namespace ICVar::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IDir::P;               using namespace IDisplay::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IEvtWin::P;            using namespace IFbo::P;
+using namespace IFboCore::P;           using namespace IJson::P;
+using namespace IFont::P;              using namespace IFreeType::P;
+using namespace IFtf::P;               using namespace IGlFW::P;
+using namespace IGlFWUtil::P;          using namespace IImage::P;
+using namespace IInput::P;             using namespace ILog::P;
+using namespace ILua::P;               using namespace ILuaCode::P;
+using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
+using namespace IOgl::P;               using namespace IPalette::P;
+using namespace IPcm::P;               using namespace IPSplit::P;
+using namespace IShaders::P;           using namespace ISql::P;
+using namespace ISource::P;            using namespace IStd::P;
+using namespace IStream::P;            using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITexture::P;           using namespace IThread::P;
+using namespace ITimer::P;             using namespace IToken::P;
+using namespace IVideo::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Prototype ------------------------------------------------------------ */
 class Core;                            // Core class prototype
 static Core *cCore = nullptr;          // Pointer to static class
 /* ------------------------------------------------------------------------- */
-enum CoreErrorFlags                    // Lua error mode behaviour
+enum CoreErrorReason                   // Lua error mode behaviour
 { /* ----------------------------------------------------------------------- */
-  CEF_IGNORE,                          // Ignore errors and try to continue
-  CEF_RESET,                           // Automatically reset on error
-  CEF_SHOW,                            // Open console and show error
-  CEF_CRITICAL,                        // Terminate engine with error
-  CEF_MAX,                             // Maximum number of options supported
+  CER_IGNORE,                          // Ignore errors and try to continue
+  CER_RESET,                           // Automatically reset on error
+  CER_SHOW,                            // Open console and show error
+  CER_CRITICAL,                        // Terminate engine with error
+  CER_MAX,                             // Maximum number of options supported
 };/* ----------------------------------------------------------------------- */
-class Core final :                     // Members initially private
-  /* -- Base classes ------------------------------------------------------- */
-  private EvtMainRegVec                // Events list to register
-{ /* -- Public Variables --------------------------------------------------- */
-  CoreErrorFlags   cefMode;            // Lua error mode behaviour
+class Core final                       // Members initially private
+{ /* -- Private Variables -------------------------------------------------- */
+  const EvtMainRegVec emrvEvents;      // Core events list
+  const CbThFunc   cbtMain;            // Bound main thread function
+  CoreErrorReason  cerMode;            // Lua error mode behaviour
   unsigned int     uiErrorCount,       // Number of errors occured
                    uiErrorLimit;       // Number of errors allowed
   /* -- Fired when lua needs to be paused (EMC_LUA_PAUSE) ------------------ */
   void OnLuaPause(const EvtMainEvent &emeEvent)
   { // Pause execution and if paused for the first time?
     if(!cLua->PauseExecution())
-    { // The mainmanual* functions will consume 100% of the thread load
-      // when it doesn't request a request to redraw so make sure to
-      // throttle it.
+    { // The mainmanual* functions will consume 100% of the thread load when
+      // it doesn't request a request to redraw so make sure to throttle it.
       if(cSystem->IsNotGraphicalMode()) cTimer->TimerSetDelayIfZero();
       // Can't disable console while paused
       cConGraphics->SetCantDisable(true);
@@ -224,11 +224,11 @@ class Core final :                     // Members initially private
         while(cEvtMain->HandleSafe()) CoreTick();
       }
     } // exception occured so throw LUA stackdump and leave the sandbox
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Allow Lue to process error. WARNING!! This prevents destructors on all
       // statically initialised classes to NEVER call so make sure we do not
       // statically create something above!
-      LuaUtilPushErr(lS, E.what());
+      LuaUtilPushErr(lS, eReason.what());
     } // Returning nothing
     return 0;
   }
@@ -274,7 +274,7 @@ class Core final :                     // Members initially private
         // De-initialise Lua
         CoreLuaDeInitHelper();
         // Deregister lua pause and resume callbacks
-        cEvtMain->UnregisterEx(*this);
+        cEvtMain->UnregisterEx(emrvEvents);
         // If in graphical mode?
         if(cSystem->IsGraphicalMode())
         { // De-init console graphics and input
@@ -296,9 +296,9 @@ class Core final :                     // Members initially private
     // Request to close window
     cDisplay->RequestClose();
   } // exception occured?
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Make sure the exception is logged
-    cLog->LogErrorExSafe("(ENGINE THREAD DE-INIT EXCEPTION) $", E.what());
+    cLog->LogErrorExSafe("(ENGINE THREAD DE-INIT EXCEPTION) $", eReason);
   }
   /* -- Redraw the frame buffer when error occurs -------------------------- */
   void CoreForceRedrawFrameBuffer(const bool bAndConsole)
@@ -338,7 +338,7 @@ class Core final :                     // Members initially private
       cConGraphics->Init();
       cInput->Init();
       // Register lua pause and resume events
-      cEvtMain->RegisterEx(*this);
+      cEvtMain->RegisterEx(emrvEvents);
       // Done
       return;
     } // Not initialising for the first time so reconfigure matrix
@@ -369,7 +369,7 @@ class Core final :                     // Members initially private
       { // Initialise freetype and console
         cFreeType->Init();
         cConsole->Init();
-        cEvtMain->RegisterEx(*this);
+        cEvtMain->RegisterEx(emrvEvents);
       } // Initialising for first time? Just update window icons
       else cDisplay->UpdateIcons();
     } // Init interactive console?
@@ -388,9 +388,9 @@ class Core final :                     // Members initially private
     { // ...and enter sand box mode. Below function is when we're in sandbox
       cLua->EnterSandbox(CoreThreadSandboxStatic, this);
     } // ...and if exception occured?
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Show error in console
-      cConsole->AddLine(COLOUR_LRED, E.what());
+      cConsole->AddLine(COLOUR_LRED, eReason.what());
       // Disable garbage collector so no shenangians while we reset
       // environment.
       cLua->StopGC();
@@ -403,25 +403,25 @@ class Core final :                     // Members initially private
           // If we are not in the exit script?
           if(!cLua->Exiting())
           { // Compare error mode behaviour
-            switch(cefMode)
+            switch(cerMode)
             { // Ignore errors and try to continue? Execute again
-              case CEF_IGNORE:
+              case CER_IGNORE:
                 // Write ignore exception to log and pause if at the limit.
                 if(uiErrorCount >= uiErrorLimit) goto Pause;
                 cLog->LogErrorExSafe(
                   "Core sandbox ignored #$/$ run-time exception: $",
-                  ++uiErrorCount, uiErrorLimit, E.what());
+                  ++uiErrorCount, uiErrorLimit, eReason);
                 // Redraw the console but do not show it.
                 CoreForceRedrawFrameBuffer(false);
                 // Go back into the sandbox.
                 goto SandBox;
               // Automatically reset on error?
-              case CEF_RESET:
+              case CER_RESET:
                 // Write ignore exception to log and pause if at the limit.
                 if(uiErrorCount >= uiErrorLimit) goto Pause;
                 cLog->LogErrorExSafe(
                   "Core sandbox reset #$/$ with run-time exception: $",
-                  ++uiErrorCount, uiErrorLimit, E.what());
+                  ++uiErrorCount, uiErrorLimit, eReason);
                 // Flush events and restart the guest
                 cLua->ReInit();
                 // Redraw the console but do not show it
@@ -429,10 +429,10 @@ class Core final :                     // Members initially private
                 // Go back into the sandbox
                 goto SandBox;
               // Open console and show error? Just break to other code.
-              case CEF_SHOW: Pause:      // May come here from above too
+              case CER_SHOW: Pause:      // May come here from above too
                 // Write ignore exception to log.
                 cLog->LogErrorExSafe("Core sandbox run-time exception: $",
-                  E.what());
+                  eReason);
                 // Add event to pause
                 cLua->RequestPause(false);
                 // Redraw the console and show it.
@@ -444,11 +444,11 @@ class Core final :                     // Members initially private
                 // Report it!
                 cLog->LogErrorExSafe(
                   "Core exception with unknown behaviour $: $",
-                  cefMode, E.what());
-                // Fall through to CEF_CRITICAL
+                  cerMode, eReason);
+                // Fall through to CER_CRITICAL
                 [[fallthrough]];
               // Terminate engine with error? Throw to critical error dialog.
-              case CEF_CRITICAL:
+              case CER_CRITICAL:
                 // Redraw the console.
                 CoreForceRedrawFrameBuffer(false);
                 // Throw to critical error dialog
@@ -469,7 +469,7 @@ class Core final :                     // Members initially private
             case EMC_LUA_REINIT:
               // Write exception to log.
               cLog->LogErrorExSafe("Core sandbox de-init exception: $",
-                E.what());
+                eReason);
               // Break
               break;
             // Unknown exit reason?
@@ -525,7 +525,7 @@ class Core final :                     // Members initially private
         goto SandBoxInit;
       // Unknown value so report it and fall through.
       default: cLog->LogWarningExSafe("Core has unknown error behaviour of $!",
-        cefMode); [[fallthrough]];
+        cerMode); [[fallthrough]];
       // Execution ended because of error. Shouldn't get here. Fall through.
       case EMC_LUA_ERROR: [[fallthrough]];
       // Restarting engine completely? Fall through.
@@ -540,13 +540,14 @@ class Core final :                     // Members initially private
     // Kill thread
     return 1;
   } // exception occured out of loop. Fatal so we have to quit
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // We will quit since this is fatal
     cEvtMain->SetExitReason(EMC_QUIT);
     // Write exception to log
-    cLog->LogErrorExSafe("(ENGINE THREAD FATAL EXCEPTION) $", E.what());
+    cLog->LogErrorExSafe("(ENGINE THREAD FATAL EXCEPTION) $", eReason);
     // Show error
-    cSystem->SysMsgEx("Engine Thread Fatal Exception", E.what(), MB_ICONSTOP);
+    cSystem->SysMsgEx("Engine Thread Fatal Exception", eReason.what(),
+      MB_ICONSTOP);
     // De-inti everything
     CoreDeInitEverything();
     // Kill thread
@@ -577,7 +578,7 @@ class Core final :                     // Members initially private
       // Full window events
       cEvtWin->Flush();
       // Setup main thread and start it
-      cEvtMain->ThreadInit(bind(&Core::CoreThreadMain, this, _1), nullptr);
+      cEvtMain->ThreadInit(cbtMain, nullptr);
       // Loop until window should close
       while(cGlFW->WinShouldNotClose())
       { // Process window event manager commands from other threads
@@ -586,18 +587,19 @@ class Core final :                     // Members initially private
         GlFWWaitEvents();
       }
     } // Error occured
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Send to log and show error message to user
-      cLog->LogErrorExSafe("(WINDOW LOOP EXCEPTION) $", E.what());
+      cLog->LogErrorExSafe("(WINDOW LOOP EXCEPTION) $", eReason);
       // Exit loop so we don't infinite loop
       cEvtMain->SetExitReason(EMC_QUIT);
       // Show error and try to carry on and clean everything up
-      cSystem->SysMsgEx("Window Loop Fatal Exception", E.what(), MB_ICONSTOP);
+      cSystem->SysMsgEx("Window Loop Fatal Exception", eReason.what(),
+        MB_ICONSTOP);
    } // Engine should terminate from here-on
   }
   /* -- Wait async on all systems ---------------------------------- */ public:
   void CoreWaitAllAsync(void)
-  { // Wait for all asyncronous operations to complete.
+  { // Wait for all asynchronous operations to complete.
     const scoped_lock slCollectorMutexes{
       cArchives->CollectorGetMutex(), cAssets->CollectorGetMutex(),
       cFtfs->CollectorGetMutex(),     cImages->CollectorGetMutex(),
@@ -625,24 +627,24 @@ class Core final :                     // Members initially private
     // Capture exceptions so we can log any errors
     try
     { // Dependencies required only in this scope
-      using namespace IArgs;           using namespace IAtlas::P;
+      using namespace IArgs::P;        using namespace IAtlas::P;
       using namespace IBin::P;         using namespace ICert::P;
       using namespace IClipboard::P;   using namespace ICmdLine::P;
-      using namespace IClock::P;       using namespace IConLib::P;
+      using namespace IClock::P;       using namespace ICodecCAF::P;
+      using namespace ICodecDDS::P;    using namespace ICodecGIF::P;
+      using namespace ICodecJPG::P;    using namespace ICodecMP3::P;
+      using namespace ICodecOGG::P;    using namespace ICodecPNG::P;
+      using namespace ICodecWAV::P;    using namespace IConLib::P;
       using namespace ICredit::P;      using namespace ICrypt::P;
       using namespace IFile::P;        using namespace IGlFWMonitor::P;
-      using namespace IImageDef::P;    using namespace IImageFormat::P;
-      using namespace IImageLib::P;    using namespace ILuaCommand::P;
-      using namespace ILuaFunc::P;     using namespace IMask::P;
-      using namespace IMemory::P;      using namespace IOal::P;
-      using namespace IParser::P;      using namespace IPcmFormat::P;
-      using namespace IPcmLib::P;      using namespace ISample::P;
-      using namespace IShader::P;      using namespace ISocket::P;
-      using namespace ISShot::P;       using namespace IStat::P;
-      using namespace IUtil::P;        using namespace IUtf;
-      using namespace Lib::OpenAL;     using namespace Lib::OS::GlFW;
-      using namespace Lib::Sqlite;
-      // Initialise other systems. The order is important!
+      using namespace IImageDef::P;    using namespace IImageLib::P;
+      using namespace ILuaCommand::P;  using namespace ILuaFunc::P;
+      using namespace IMask::P;        using namespace IMemory::P;
+      using namespace IOal::P;         using namespace IPcmLib::P;
+      using namespace ISample::P;      using namespace IShader::P;
+      using namespace ISocket::P;      using namespace ISShot::P;
+      using namespace IStat::P;        using namespace IUtil::P;
+      // Initialise other subsystems. The order is important!
       INITSS(Stats);                   // cppcheck-suppress danglingLifetime
       INITSS(Threads);                 // cppcheck-suppress danglingLifetime
       INITSS(EvtMain);                 // cppcheck-suppress danglingLifetime
@@ -668,6 +670,10 @@ class Core final :                     // Members initially private
       INITSS(Bins);                    // cppcheck-suppress danglingLifetime
       INITSS(Oal);                     // cppcheck-suppress danglingLifetime
       INITSS(PcmLibs);                 // cppcheck-suppress danglingLifetime
+      INITSS(CodecWAV); /* PCMFID=0 */ // cppcheck-suppress danglingLifetime
+      INITSS(CodecCAF); /* PCMFID=1 */ // cppcheck-suppress danglingLifetime
+      INITSS(CodecOGG); /* PCMFID=2 */ // cppcheck-suppress danglingLifetime
+      INITSS(CodecMP3); /* PCMFID=3 */ // cppcheck-suppress danglingLifetime
       INITSS(Pcms);                    // cppcheck-suppress danglingLifetime
       INITSS(Audio);                   // cppcheck-suppress danglingLifetime
       INITSS(Sources);                 // cppcheck-suppress danglingLifetime
@@ -676,6 +682,10 @@ class Core final :                     // Members initially private
       INITSS(EvtWin);                  // cppcheck-suppress danglingLifetime
       INITSS(Ogl);                     // cppcheck-suppress danglingLifetime
       INITSS(ImageLibs);               // cppcheck-suppress danglingLifetime
+      INITSS(CodecPNG); /* IMGFID=0 */ // cppcheck-suppress danglingLifetime
+      INITSS(CodecJPG); /* IMGFID=1 */ // cppcheck-suppress danglingLifetime
+      INITSS(CodecGIF); /* IMGFID=2 */ // cppcheck-suppress danglingLifetime
+      INITSS(CodecDDS); /* IMGFID=3 */ // cppcheck-suppress danglingLifetime
       INITSS(Images);                  // cppcheck-suppress danglingLifetime
       INITSS(Shaders);                 // cppcheck-suppress danglingLifetime
       INITSS(Clips);                   // cppcheck-suppress danglingLifetime
@@ -696,18 +706,6 @@ class Core final :                     // Members initially private
       INITSS(Lua);                     // cppcheck-suppress danglingLifetime
       // Done with this macro
 #undef INITSS
-      // Codec helper macro. Do not change the order or you will have to update
-      // the index and order in Image::LoadFlags or Pcm::LoadFlags
-      // respectively.
-#define INITCODEC(x) const Codec ## x engCodec ## x
-      // This must match the exact order of the values in 'ImageFormat' enums
-      INITCODEC(PNG); /* 0 */ INITCODEC(JPG); /* 1 */ INITCODEC(GIF); /* 2 */
-      INITCODEC(DDS); /* 3 */
-      // This must match the exact order of the values in 'PcmFormat' enums
-      INITCODEC(WAV); /* 0 */ INITCODEC(CAF); /* 1 */ INITCODEC(OGG); /* 2 */
-      INITCODEC(MP3); /* 3 */
-      // Done with this macro
-#undef INITCODEC
       // Register default cvars and pass over the current gui mode by ref. All
       // the core parts of the engine are initialised from cvar callbacks.
       cCVars->Init();
@@ -789,42 +787,41 @@ class Core final :                     // Members initially private
         default: break;
       }
     } // Safe loggable exception occured?
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Send to log and show error message to user
-      cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", E.what());
+      cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", eReason);
       // Show message box
-      SysMessage("Main Thread Exception", E.what(), MB_ICONSTOP);
+      SysMessage("Main Thread Exception", eReason.what(), MB_ICONSTOP);
       // Done
       return 2;
     } // Clean exit
     return 0;
   } // Unsafe exception occured?
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Show message box
-    SysMessage("Main Init Exception", E.what(), MB_ICONSTOP);
+    SysMessage("Main Init Exception", eReason.what(), MB_ICONSTOP);
     // Done
     return 1;
   }
   /* -- Default constructor ------------------------------------------------ */
   Core(void) :                         // No parameters
     /* --------------------------------------------------------------------- */
-    EvtMainRegVec{                     // Default events
+    emrvEvents{                     // Default events
       { EMC_LUA_PAUSE,  bind(&Core::OnLuaPause,  this, _1) },
       { EMC_LUA_RESUME, bind(&Core::OnLuaResume, this, _1) },
     },
     /* -- Initialisers ----------------------------------------------------- */
-    cefMode{ CEF_CRITICAL },           // Init lua error mode behaviour
+    cbtMain{ bind(&Core::CoreThreadMain, this, _1) },
+    cerMode{ CER_CRITICAL },           // Init lua error mode behaviour
     uiErrorCount(0),                   // Init number of errors occured
     uiErrorLimit(0)                    // Init number of errors allowed
     /* -- Set pointer to this class ---------------------------------------- */
     { cCore = this; }
   /* -- Destructor that clears the core pointer ---------------------------- */
   DTORHELPER(~Core, cCore = nullptr)
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Core)                // Suppress default functions for safety
   /* -- Set lua error mode behaviour --------------------------------------- */
-  CVarReturn CoreErrorBehaviourModified(const CoreErrorFlags cefNMode)
-    { return CVarSimpleSetIntNGE(cefMode, cefNMode, CEF_MAX); }
+  CVarReturn CoreErrorBehaviourModified(const CoreErrorReason cefNMode)
+    { return CVarSimpleSetIntNGE(cerMode, cefNMode, CER_MAX); }
   /* -- Title modified ----------------------------------------------------- */
   CVarReturn CoreTitleModified(const string &strN, string &strV)
   { // Do not allow user to set this variable, only empty is allowed

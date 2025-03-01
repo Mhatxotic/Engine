@@ -15,12 +15,13 @@ namespace IFbo {                       // Start of private module namespace
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFboDef::P;
 using namespace IFboItem::P;           using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IOgl::P;               using namespace IShader::P;
 using namespace IShaders::P;           using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace ITimer::P;             using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo collector class for collector data and custom variables ========== */
@@ -97,8 +98,6 @@ class FboBase :                        // Fbo base class
     stFinishCounter(0),                uiFBOtex(0)
     /* --------------------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FboBase)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Fbo object class ===================================================== */
 CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
@@ -503,9 +502,8 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     FboCommitWrap();
     // Say we've initialised the frame buffer
     cLog->LogDebugExSafe("Fbo initialised '$' at $ (S=$x$;A=$;T=$;F=$).",
-      IdentGet(), uiFBO, DimGetWidth(), DimGetHeight(),
-      StrFromRatio(GetCoRight(), GetCoBottom()), uiFBOtex,
-      cOgl->GetPixelFormat(iPixFormat));
+      IdentGet(), uiFBO, DimGetWidth(), DimGetHeight(), StrFromRatio(siW, siH),
+      uiFBOtex, cOgl->GetPixelFormat(iPixFormat));
   }
   /* -- Constructor -------------------------------------------------------- */
   Fbo(void) :                          // No parameters
@@ -526,8 +524,6 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     { }                                // Do nothing else
   /* -- Destructor --------------------------------------------------------- */
   ~Fbo(void) { FboDeInit(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Fbo)                 // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END(Fbos, Fbo, FBO,,,, fboActive(nullptr), fboMain(nullptr))
 /* ========================================================================= */

@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IStd {                       // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IUtf;
+using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -86,7 +86,7 @@ typedef struct __stat64 StdFStatStruct; // Different on Windows
 typedef struct tm       StdTMStruct;    // Different on Windows
 typedef __time64_t      StdTimeT;       // Different on Windows
 /* -- Typedefs for types not in Windows ------------------------------------ */
-typedef ::std::make_signed<size_t>::type ssize_t; // Not in MSVC
+typedef make_signed_t<size_t> ssize_t;  // Not in MSVC
 /* -- Convert any widestring pointer type to utf8 class string ------------- */
 inline const string S16toUTF(const wchar_t*const wcpStr)
   { return UtfFromWide(wcpStr); }
@@ -292,6 +292,7 @@ static void StdSRand(const unsigned int uiSeed) { srandom(uiSeed); }
 constexpr const unsigned int StdMaxUInt = numeric_limits<unsigned int>::max();
 constexpr const uint64_t StdMaxUInt64 = numeric_limits<uint64_t>::max();
 constexpr const size_t StdMaxSizeT = numeric_limits<size_t>::max();
+constexpr const size_t StdNPos = string::npos;
 /* -- Set error number ----------------------------------------------------- */
 static void StdSetError(const int iValue) { errno = iValue; }
 /* -- Get error number ----------------------------------------------------- */
@@ -300,6 +301,44 @@ static int StdGetError(void) { return errno; }
 static bool StdIsError(const int iValue) { return StdGetError() == iValue; }
 /* -- Is error number not equal to ----------------------------------------- */
 static bool StdIsNotError(const int iValue) { return !StdIsError(iValue); }
+/* -- Uppercases the specified character ----------------------------------- */
+template<typename IntType>static char StdToUpper(const IntType itC)
+  { return static_cast<char>(toupper(static_cast<int>(itC))); }
+/* -- Lowercases the specified character ----------------------------------- */
+template<typename IntType>static char StdToLower(const IntType itC)
+  { return static_cast<char>(tolower(static_cast<int>(itC))); }
+/* -- Returns if character is a whitespace --------------------------------- */
+template<typename IntType>
+  constexpr static bool StdIsSpace(const IntType itChar)
+    { return ::std::isspace(static_cast<int>(itChar)); }
+/* -- Returns if character is NOT a whitespace ----------------------------- */
+template<typename IntType>
+  constexpr static bool StdIsNotSpace(const IntType itChar)
+    { return !StdIsSpace(itChar); }
+/* -- Returns if character is a digit (0-9) -------------------------------- */
+template<typename IntType>
+  constexpr static bool StdIsDigit(const IntType itChar)
+    { return ::std::isdigit(static_cast<int>(itChar)); }
+/* -- Returns if character is NOT a digit (0-9) ---------------------------- */
+template<typename IntType>
+  constexpr static bool StdIsNotDigit(const IntType itChar)
+    { return !StdIsDigit(itChar); }
+/* -- Returns if character is alphanumeric (A-Za-z) ------------------------ */
+template<typename IntType>
+  constexpr static bool StdIsAlpha(const IntType itChar)
+    { return ::std::isalpha(static_cast<int>(itChar)); }
+/* -- Returns if character is NOT alphanumeric (A-Za-z) -------------------- */
+template<typename IntType>
+  constexpr static bool StdIsNotAlpha(const IntType itChar)
+    { return !StdIsAlpha(itChar); }
+/* -- Returns if character is alphanumeric or numeric (0-9A-Za-z) ---------- */
+template<typename IntType>
+  constexpr static bool StdIsAlnum(const IntType itChar)
+    { return ::std::isalnum(static_cast<int>(itChar)); }
+/* -- Returns if character is NOT alphanumeric or numeric (0-9A-Za-z) ------ */
+template<typename IntType>
+  constexpr static bool StdIsNotAlnum(const IntType itChar)
+    { return !StdIsAlnum(itChar); }
 /* -- Return absolute number ----------------------------------------------- */
 template<typename IntType=int64_t>
   static IntType StdAbsolute(const IntType itVal)
@@ -311,6 +350,10 @@ template<typename IntType=int64_t>
 /* -- Returns if the specified number is a power of two -------------------- */
 template<typename IntType=int64_t>static bool StdIntIsPOW2(const IntType itVal)
   { return !((itVal & (itVal - 1)) && itVal); }
+/* -- Get the distance between two opposing corners ------------------------ */
+template<typename IntType>static double StdHypot(const IntType itWidth,
+  const IntType itHeight)
+    { return ::std::hypot(itWidth, itHeight); }
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## Because some compilers may not allow me to alias ::std::move        ## **
@@ -323,23 +366,14 @@ template<class AnyType>
   constexpr static std::remove_reference_t<AnyType>
     &&StdMove(AnyType &&atVar) noexcept
       { return ::std::move(atVar); }
-/* == Omission macros ====================================================== **
-** ######################################################################### **
-** ## These allow us to delete the assignment operator and assignment     ## **
-** ## copy constructor in a class so we don't accidently perform copies   ## **
-** ## instead of StdMove()'s.                                             ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-#define DELETECOPYCTORS(x) \
-  x(const x&) = delete; const x &operator=(const x&) = delete;
 /* == Static class try/catch helpers ======================================= **
 ** ######################################################################### **
 ** ## Don't put try/catch on func level. (C++ ISO/IEC JTC 1/SC 22 N 4411) ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 #define DTORHELPERBEGIN(c) c(void) noexcept(false) { try {
-#define DTORHELPEREND(c) } catch(const exception &E) \
-  { SysMessage(STR(c) " Shutdown Exception", E.what(), MB_ICONSTOP); } }
+#define DTORHELPEREND(c) } catch(const exception &eReason) \
+  { SysMessage(STR(c) " Shutdown Exception", eReason.what(), MB_ICONSTOP); } }
 #define DTORHELPER(c,...) DTORHELPERBEGIN(c) __VA_ARGS__; DTORHELPEREND(c)
 /* == Init helper ========================================================== **
 ** ######################################################################### **

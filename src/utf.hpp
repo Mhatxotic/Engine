@@ -8,11 +8,27 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
+/* -- Wrapper for STL character functions (can't put in std.hpp) ----------- */
+namespace IStd {                       // Start of module namespace
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* -- Returns if character is hexadecimal (0-9A-Fa-f) ---------------------- */
+template<typename IntType>
+  constexpr static bool StdIsXDigit(const IntType itChar)
+    { return ::std::isxdigit(static_cast<int>(itChar)); }
+/* ------------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of module namespace
 /* ------------------------------------------------------------------------- */
 namespace IUtf {                       // Start of module namespace
+/* ------------------------------------------------------------------------- */
+using namespace IStd::P;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
 /* -- Remove const from a pointer ------------------------------------------ */
 template<typename TypeTo, typename TypeFrom, typename TypeNonConst =
-  typename remove_const<typename remove_pointer<TypeFrom>::type>::type*>
+  remove_const_t<remove_pointer_t<TypeFrom>>*>
 static TypeTo UtfToNonConstCast(TypeFrom tfV)
 { // Check that type has a pointer
   static_assert(is_pointer_v<TypeFrom>, "Input type must have pointer!");
@@ -26,32 +42,6 @@ template<typename PtrType>
 template<typename PtrType>
   static bool UtfIsCStringNotValid(const PtrType*const ptpStr)
     { return !UtfIsCStringValid<PtrType>(ptpStr); }
-/* -- Lookup table for decoder --------------------------------------------- **
-** ######################################################################### **
-** ## The first part of the table maps bytes to character classes to      ## **
-** ## reduce the size of the transition table and create bitmasks.        ## **
-** ######################################################################### */
-static const array<const unsigned int,256> uiaDecodeMap{
-   0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
-   0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
-   0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
-   0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,  0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,
-   1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,  9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,
-   7,7,7,7,7,7,7,7, 7,7,7,7,7,7,7,7,  7,7,7,7,7,7,7,7, 7,7,7,7,7,7,7,7,
-   8,8,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,  2,2,2,2,2,2,2,2, 2,2,2,2,2,2,2,2,
-  10,3,3,3,3,3,3,3, 3,3,3,3,3,4,3,3, 11,6,6,6,5,8,8,8, 8,8,8,8,8,8,8,8
-};
-/* ######################################################################### **
-** ## The second part is a transition table that maps a combination of a  ## **
-** ## state of the automaton and a character class to a state.            ## **
-** ######################################################################### */
-static const array<const unsigned int,108> uiaDecodeTransition{
-   0,12,24,36,60,96,84,12, 12,12,48,72,12,12,12,12, 12,12,12,12,12,12,12,12,
-  12, 0,12,12,12,12,12, 0, 12, 0,12,12,12,24,12,12, 12,12,12,24,12,24,12,12,
-  12,12,12,12,12,12,12,24, 12,12,12,12,12,24,12,12, 12,12,12,12,12,24,12,12,
-  12,12,12,12,12,12,12,36, 12,36,12,12,12,36,12,12, 12,12,12,36,12,36,12,12,
-  12,36,12,12,12,12,12,12, 12,12,12,12
-};
 /* -- Structure for utf size and character code ---------------------------- */
 struct UtfEncoderEx { const size_t l;
   const union { const uint8_t u8[5]; const char c[5]; } u; };
@@ -86,17 +76,6 @@ static void UtfAppend(const unsigned int uiChar, string &strDest)
   strDest.append(utfCode.u.c, utfCode.l);
 }
 /* ------------------------------------------------------------------------- */
-static void UtfDecode(unsigned int &uiState, unsigned int &uiCode,
-  const unsigned char ucByte)
-{ // Get type from lookup table
-  const unsigned int uiType = uiaDecodeMap[ucByte];
-  // Calculate the utf code
-  uiCode = uiState ? (ucByte & 0x3fu) | (uiCode << 6) :
-                     (0xff >> uiType) & ucByte;
-  // Update the new state of the code
-  uiState = uiaDecodeTransition[uiState + uiType];
-}
-/* ------------------------------------------------------------------------- */
 static const string UtfDecodeNum(uint32_t ulVal)
 { // Unset the un-needed upper 8-bits. This will act as the nullptr character.
   ulVal &= 0x00FFFFFF;
@@ -107,29 +86,50 @@ static const string UtfDecodeNum(uint32_t ulVal)
   // Return the shifted value casted to a char pointer address.
   return { reinterpret_cast<const char*>(&ulVal) };
 }
+/* -- Decode UTF character ------------------------------------------------- */
+static void UtfDecode(unsigned int &uiState, unsigned int &uiCode,
+  const unsigned char ucByte)
+{ // No state?
+  if(uiState == 0)
+  { // 1-byte sequence?
+    if((ucByte & 0x80) == 0) { uiCode = ucByte; uiState = 0; }
+    // 2-byte sequence?
+    else if((ucByte & 0xE0) == 0xC0) { uiCode = ucByte & 0x1F; uiState = 1; }
+    // 3-byte sequence?
+    else if((ucByte & 0xF0) == 0xE0) { uiCode = ucByte & 0x0F; uiState = 2; }
+    // 4-byte sequence?
+    else if((ucByte & 0xF8) == 0xF0) { uiCode = ucByte & 0x07; uiState = 3; }
+    // Invalid byte? Set error state
+    else uiState = 12;
+    // Done
+    return;
+  } // State set so continuation byte?
+  if((ucByte & 0xC0) == 0x80)
+    { uiCode = (uiCode << 6) | (ucByte & 0x3F); --uiState; }
+  // Invalid continuation byte? Set error state
+  else uiState = 12;
+}
 /* -- Pop UTF character from start of string-------------------------------- */
-static bool UtfPopFront(string &strStr)
+static bool UtfPopFront(std::string &strStr)
 { // String is not empty?
   if(!strStr.empty())
-  { // Get start and end of buffer in string
-    const unsigned char*const cpB =
-      UtfToNonConstCast<unsigned char*>(strStr.data()),
-        *const cpE = cpB + strStr.size();
-    // Set start of string as enumerator
-    unsigned char *cpI = const_cast<unsigned char*>(cpB);
-    // Utf state and return code
-    unsigned int uiState = 0;
-    // Walk through the string until we get to a null terminator
-    do uiState = uiaDecodeTransition[uiState + uiaDecodeMap[*cpI]];
-      while(++cpI < cpE && uiState);
-    // If pointer moved?
-    if(cpI >= cpB)
-    { // Erase the specified characters
-      strStr.erase(0, static_cast<size_t>(cpI - cpB));
-      // Success
-      return true;
-    } // Pointer did not move
-  } // Return failure
+  { // Get buffer as unsigned char
+    const unsigned char *cpB =
+      reinterpret_cast<const unsigned char *>(strStr.data()),
+    // Get end of buffer
+    *cpE = cpB + strStr.size(),
+    // Make moveable pointer
+    *cpI = cpB;
+    // State and code
+    unsigned int uiState = 0, uiCode = 0;
+    // Repeat...
+    do { UtfDecode(uiState, uiCode, *cpI); }
+    // ...Until not end of string, not normal state or error state
+    while(++cpI < cpE && uiState != 0 && uiState != 12);
+    // Buffer still tp process and not error state? Erase characters
+    if (cpI > cpB && uiState != 12)
+      { strStr.erase(0, static_cast<size_t>(cpI - cpB)); return true; }
+  } // Failed
   return false;
 }
 /* -- Pop UTF character from end of string --------------------------------- */
@@ -296,7 +296,7 @@ class UtfDecoder                        // UTF8 string decoder helper
     const unsigned char*const ucpSaved = ucpPtr,
                        *const ucpEnd = ucpSaved + stMaximum;
     // Add characters as long as they are valid hexadecimal characters
-    while(isxdigit(*(ucpPtr++)) && ucpPtr < ucpEnd);
+    while(StdIsXDigit(*(ucpPtr++)) && ucpPtr < ucpEnd);
     // Return number of bytes read
     return static_cast<size_t>(ucpPtr - ucpSaved);
   }
@@ -310,7 +310,7 @@ class UtfDecoder                        // UTF8 string decoder helper
     // Add characters as long as they are valid hexadecimal characters and the
     // matched string has not reached eight characters. Anything that could be
     // unicode character should auto break anyway so this should be safe.
-    while(isxdigit(*ucpPtr) && strMatched.length() < stMaximum)
+    while(StdIsXDigit(*ucpPtr) && strMatched.length() < stMaximum)
       strMatched.push_back(static_cast<char>(*(ucpPtr++)));
     // Return failure if nothing added
     if(strMatched.empty()) return 0;
@@ -443,6 +443,8 @@ static const StrVector UtfWordWrap(const string &strText, const size_t stWidth,
   // Return list
   return svLines;
 }
+/* ------------------------------------------------------------------------- */
+}                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of module namespace
 /* == EoF =========================================================== EoF == */

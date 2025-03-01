@@ -9,10 +9,10 @@
 /* ------------------------------------------------------------------------- */
 namespace IImageDef {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IDim;                  using namespace IFlags;
+using namespace IDim::P;               using namespace IFlags;
 using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ITexDef::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -32,68 +32,68 @@ BUILD_FLAGS(Image,
   ** 'Texture' so it's important we don't duplicate values here.             **
   ** -- Font loading flags (Only used in 'Font' class) --------------------- */
   // No flags?                         True stroke but more buggy?
-  IL_NONE                   {Flag[0]}, FF_STROKETYPE2             {Flag[1]},
+  IL_NONE                   {Flag(0)}, FF_STROKETYPE2             {Flag(1)},
   // Use image glyph size for advance? Do round() on advance width?
-  FF_USEGLYPHSIZE           {Flag[2]}, FF_ROUNDADVANCE            {Flag[3]},
+  FF_USEGLYPHSIZE           {Flag(2)}, FF_ROUNDADVANCE            {Flag(3)},
   // Do floor() on advance width?      Do ceil() on advance width?
-  FF_FLOORADVANCE           {Flag[4]}, FF_CEILADVANCE             {Flag[5]},
+  FF_FLOORADVANCE           {Flag(4)}, FF_CEILADVANCE             {Flag(5)},
   /* -- Font loader public mask bits --------------------------------------- */
   FF_MASK{ FF_USEGLYPHSIZE|FF_STROKETYPE2|FF_FLOORADVANCE|FF_CEILADVANCE|
            FF_ROUNDADVANCE },
   /* -- Font types --------------------------------------------------------- */
   // Font is a freetype font?          Font is a static bitmap font?
-  FT_FREETYPE               {Flag[6]}, FT_BITMAP                  {Flag[7]},
+  FT_FREETYPE               {Flag(6)}, FT_BITMAP                  {Flag(7)},
   /* -- Post processing (Only used in 'Image' class) ----------------------- */
   // Convert to atlas?                 Image will be loadable in OpenGL?
-  IL_ATLAS                  {Flag[8]}, IL_TOGPU                   {Flag[9]},
+  IL_ATLAS                  {Flag(8)}, IL_TOGPU                   {Flag(9)},
   // Convert loaded image to 24bpp?    Convert loaded image to 32bpp?
-  IL_TO24BPP               {Flag[10]}, IL_TO32BPP                {Flag[11]},
+  IL_TO24BPP               {Flag(10)}, IL_TO32BPP                {Flag(11)},
   // Convert loaded image to BGR(A)?   Convert loaded image to RGB(A)?
-  IL_TOBGR                 {Flag[12]}, IL_TORGB                  {Flag[13]},
+  IL_TOBGR                 {Flag(12)}, IL_TORGB                  {Flag(13)},
   // Convert loaded image to BINARY?   Force reverse the image?
-  IL_TOBINARY              {Flag[14]}, IL_REVERSE                {Flag[15]},
+  IL_TOBINARY              {Flag(14)}, IL_REVERSE                {Flag(15)},
   /* -- Force load formats (Only used in 'Image' class) -------------------- */
   // Force load as PNG?                Force load as JPEG?
-  IL_FCE_PNG               {Flag[24]}, IL_FCE_JPG                {Flag[25]},
+  IL_FCE_PNG               {Flag(24)}, IL_FCE_JPG                {Flag(25)},
   // Force load as GIF?                // Force load as DDS?
-  IL_FCE_GIF               {Flag[26]}, IL_FCE_DDS                {Flag[27]},
+  IL_FCE_GIF               {Flag(26)}, IL_FCE_DDS                {Flag(27)},
   /* -- Image loader public mask bits -------------------------------------- */
   IL_MASK{ IL_TOGPU|IL_TO24BPP|IL_TO32BPP|IL_TOBGR|IL_TORGB|IL_TOBINARY|
     IL_REVERSE|IL_ATLAS|IL_FCE_JPG|IL_FCE_PNG|IL_FCE_GIF|IL_FCE_DDS },
   /* -- Active flags (Only used in 'Image' class) ----------------------- */
   // Image converted to load in GL?    Converted image to 24bpp?
-  IA_TOGPU                 {Flag[32]}, IA_TO24BPP                {Flag[33]},
+  IA_TOGPU                 {Flag(32)}, IA_TO24BPP                {Flag(33)},
   // Converted image to 32bpp?         Converted image to BGR(A)?
-  IA_TO32BPP               {Flag[34]}, IA_TOBGR                  {Flag[35]},
+  IA_TO32BPP               {Flag(34)}, IA_TOBGR                  {Flag(35)},
   // Converted image to RGB(A)?        Converted image to BINARY?
-  IA_TORGB                 {Flag[36]}, IA_TOBINARY               {Flag[37]},
+  IA_TORGB                 {Flag(36)}, IA_TOBINARY               {Flag(37)},
   // Force reversed the image?         Converted to atlas?
-  IA_REVERSE               {Flag[38]}, IA_ATLAS                  {Flag[39]},
+  IA_REVERSE               {Flag(38)}, IA_ATLAS                  {Flag(39)},
   /* -- Image loaded flags (Only used in 'ImageData' class) ---------------- */
   // Bitmap has mipmaps?               Bitmap FILE has reversed pixels?
-  IF_MIPMAPS               {Flag[48]}, IF_REVERSED               {Flag[49]},
+  IF_MIPMAPS               {Flag(48)}, IF_REVERSED               {Flag(49)},
   // Bitmap is compressed?             Bitmap is dynamically created?
-  IF_COMPRESSED            {Flag[50]}, IF_DYNAMIC                {Flag[51]},
+  IF_COMPRESSED            {Flag(50)}, IF_DYNAMIC                {Flag(51)},
   // A palette is included?            Move loaded data back
-  IF_PALETTE               {Flag[52]},
+  IF_PALETTE               {Flag(52)},
   /* -- Texture loaded flags (Only used in 'Image' class) ------------------ */
   // Marked for deletion
-  TF_DELETE                {Flag[55]},
+  TF_DELETE                {Flag(55)},
   /* -- Image purpose (help with debugging) -------------------------------- */
   // Image is stand-alone              Image is part of a Texture class
-  IP_IMAGE                 {Flag[61]}, IP_TEXTURE                {Flag[62]},
+  IP_IMAGE                 {Flag(61)}, IP_TEXTURE                {Flag(62)},
   // Image is part of a Font class     Image is part of an Atlas class
-  IP_FONT                  {Flag[63]}, IP_ATLAS                  {Flag[64]}
+  IP_FONT                  {Flag(63)}, IP_ATLAS                  {Flag(64)}
 );/* ----------------------------------------------------------------------- */
 struct ImageSlot :                     // Members initially public
   /* -- Initialisers ------------------------------------------------------- */
   public Memory,                       // Memory data
-  public Dimensions<>                  // Dimensions of data
+  public DimUInt                       // Bitmap dimensions
 { /* -- Init constructor --------------------------------------------------- */
   ImageSlot(Memory &&mData, const unsigned int uiW, const unsigned int uiH) :
     /* -- Initialisers ----------------------------------------------------- */
-    Memory{ StdMove(mData) },             // Move memory in place
-    Dimensions<>{ uiW, uiH }           // Set dimensions
+    Memory{ StdMove(mData) },          // Move memory in place
+    DimUInt{ uiW, uiH }                // Set dimensions
     /* -- No code ---------------------------------------------------------- */
     { }
 };/* ----------------------------------------------------------------------- */
@@ -111,7 +111,7 @@ enum BitDepth : unsigned int           // Human readable bit-depths
 class ImageData :                      // Members initially private
   /* ----------------------------------------------------------------------- */
   public ImageFlags,                   // Shared with 'Image' class if needed
-  public Dimensions<>                  // Image dimensions
+  public DimUInt                       // Bitmap dimensions
 { /* ----------------------------------------------------------------------- */
   BitDepth         bdDepth;            // Image bits per pixel
   ByteDepth        byDepth;            // Image bytes per pixel
@@ -120,7 +120,7 @@ class ImageData :                      // Members initially private
   /* ------------------------------------------------------------ */ protected:
   SlotList         slSlots;            // Image data
   /* --------------------------------------------------------------- */ public:
-  Dimensions<>     duTileOR;           // Override tile size if desired
+  DimUInt          duTileOR;           // Override tile size if desired
   size_t           stTiles;            // Override number of tiles
   /* ----------------------------------------------------------------------- */
   void ImageDataSwap(ImageData &imdRef)

@@ -9,34 +9,35 @@
 /* ------------------------------------------------------------------------- */
 namespace IAudio {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICollector::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFlags;
+using namespace IClock::P;             using namespace ICVar::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFlags;                using namespace IHelper::P;
 using namespace ILog::P;               using namespace IOal::P;
 using namespace ISample::P;            using namespace ISource::P;
 using namespace IStd::P;               using namespace IStream::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace IThread::P;            using namespace ITimer::P;
-using namespace IVideo::P;             using namespace Lib::OpenAL;
+using namespace IVideo::P;             using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Typedefs ============================================================= */
 BUILD_FLAGS(Audio,                     // Audio flags classes
   /* ----------------------------------------------------------------------- */
   // No settings?                      Audio system is resetting?
-  AF_NONE                   {Flag[0]}, AF_REINIT                 {Flag[1]}
+  AF_NONE                   {Flag(0)}, AF_REINIT                 {Flag(1)}
 );/* ======================================================================= */
 static class Audio final :             // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
-  private IHelper,                     // Initialisation helper class
+  private InitHelper,                  // Initialisation helper class
   public AudioFlags,                   // Audio flags
   private Thread                       // Audio monitoring thread
 { /* -- Monitoring thread timers ---------------------------------- */ private:
-  ClkTimePoint     tpNextCheck;        // Next check for hardware changes
-  SafeClkDuration  cdCheckRate,        // Check rate
-                   cdThreadDelay;      // Thread sleep time
-  const ClkDuration cdDiscWait;        // Sleep time waiting for main thread
+  const EvtMainRegVec emrvEvents;      // Frequently used events
+  ClkTimePoint        tpNextCheck;     // Next check for hardware changes
+  SafeClkDuration     cdCheckRate,     // Check rate
+                      cdThreadDelay;   // Thread sleep time
+  const ClkDuration   cdDiscWait;      // Sleep time waiting for main thread
   /* -- Devices ------------------------------------------------------------ */
   StrVector        dlPBDevices,        // list of playback devices
                    dlCTDevices;        // list of capture devices
@@ -49,10 +50,10 @@ static class Audio final :             // Audio manager class
       // De-Init thread
       DeInitThread();
       // Unload all buffers for streams and samples and destroy all sources
+      SourceDeInit();
+      VideoDeInit();
       StreamDeInit();
       SampleDeInit();
-      VideoDeInit();
-      cSources->CollectorDestroyUnsafe();
       // Deinit and reinit context
       DeInitContext();
       InitContext();
@@ -62,17 +63,18 @@ static class Audio final :             // Audio manager class
       StreamSetVolume(cSources->fMVolume);
       VideoSetVolume(cSources->fVVolume);
       // Re-create all buffers for streams and samples
-      VideoReInit();
       SampleReInit();
       StreamReInit();
+      VideoReInit();
+      SourceReInit();
       // Init monitoring thread
       InitThread();
       // Log status
       cLog->LogInfoSafe("Audio class re-initialised successfully.");
     } // We don't want LUA to hard break really.
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Log the exception first
-      cLog->LogErrorExSafe("Audio re-init exception: $", E.what());
+      cLog->LogErrorExSafe("Audio re-init exception: $", eReason);
       // Reset next thread check time
       ResetCheckTime();
     } // Remove re-initialisation flag
@@ -100,9 +102,9 @@ static class Audio final :             // Audio manager class
     } // Terminate thread
     return 1;
   } // exception occured in this thread
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Report error
-    cLog->LogErrorExSafe("(AUDIO THREAD EXCEPTION) $", E.what());
+    cLog->LogErrorExSafe("(AUDIO THREAD EXCEPTION) $", eReason);
     // Restart the thread
     return 0;
   }
@@ -197,7 +199,7 @@ static class Audio final :             // Audio manager class
     // Holding current device name
     string strDevice;
     // If -1 is not set (use specific device)
-    if(stDevice != string::npos)
+    if(stDevice != StdNPos)
     { // Invalid device? Use default device!
       if(stDevice >= dlPBDevices.size())
       { // Log that the device id is invalid
@@ -231,7 +233,7 @@ static class Audio final :             // Audio manager class
     // Allocate sources data
     SourceAlloc(cCVars->GetInternal<ALuint>(AUD_NUMSOURCES));
     // Register engine events
-    cEvtMain->Register(EMC_AUD_REINIT, bind(&Audio::OnReInit, this, _1));
+    cEvtMain->RegisterEx(emrvEvents);
     // Set parameters and check for errors
     SetDistanceModel(AL_NONE);
     SetPosition(0, 0, 0);
@@ -243,7 +245,7 @@ static class Audio final :             // Audio manager class
   { // Clear openAL context
     cOal->DeInit();
     // Unregister engine events
-    cEvtMain->Unregister(EMC_AUD_REINIT);
+    cEvtMain->UnregisterEx(emrvEvents);
   }
   /* -- Enumerate capture devices ------------------------------------------ */
   void EnumerateCaptureDevices(void)
@@ -386,7 +388,10 @@ static class Audio final :             // Audio manager class
     cLog->LogDebugSafe("Audio class shutting down...");
     // DeInit thread
     DeInitThread();
-    // Unload all Stream, Sample and Source classes
+    // Unload all Video, Stream, Sample and Source classes. All these should
+    // already by zero size at this point but they all rely on this class so we
+    // should make sure they're all loaded just incase.
+    cVideos->CollectorDestroyUnsafe();
     cStreams->CollectorDestroyUnsafe();
     cSamples->CollectorDestroyUnsafe();
     cSources->CollectorDestroyUnsafe();
@@ -414,19 +419,18 @@ static class Audio final :             // Audio manager class
   /* -- Default constructor ------------------------------------------------ */
   Audio(void) :                        // No parameters
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Initialise class name
+    InitHelper{ __FUNCTION__ },        // Initialise class name
     AudioFlags{ AF_NONE },             // Initialise no audio flags
     Thread{ "audio", STP_AUDIO,        // Initialise high perf audio thread
       bind(&Audio::AudioThreadMain,    // " with reference to callback
         this, _1) },                   // " function
+    emrvEvents{ { EMC_AUD_REINIT, bind(&Audio::OnReInit, this, _1) } },
     cdCheckRate{ seconds{ 0 } },       // Initialise thread check time
     cdDiscWait{ milliseconds{ 100 } }  // Initialise discrepency sleep time
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Audio, DeInit())         // Destructor helper
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Audio)               // Suppress default functions for safety
   /* ----------------------------------------------------------------------- */
   CVarReturn SetAudCheckRate(const unsigned int uiTime)
     { return CVarSimpleSetIntNLG(cdCheckRate,

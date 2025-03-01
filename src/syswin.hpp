@@ -226,8 +226,6 @@ class SysProcess                       // Need this before of System init order
     // Deinitialise COM
     CoUninitialize();
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysProcess)          // Suppress default functions for safety
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
@@ -1018,7 +1016,5 @@ class SysCore :
     if(hIconLarge) DestroyIcon(hIconLarge);
     if(hIconSmall) DestroyIcon(hIconSmall);
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysCore)             // Suppress default functions for safety
 }; /* ---------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

@@ -233,6 +233,13 @@ LLFUNC(SetCX, 0,
   };
   aVideo().FboItemSetColourEx(aTriangleId, tpdData))
 /* ========================================================================= */
+// $ Video:SetFDR
+// < Enabled:boolean=Video should be full dynamic range?
+// ? Enabling this changes the shader to adjust for full-dynamic range else
+// ? uses the defaul partial dynamic range.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetFDR, 0, AgVideo{lS, 1}().SetFDR(AgBoolean{lS, 2}))
+/* ========================================================================= */
 // $ Video:SetFilter
 // < Filter:boolean=Video should be filtered by OpenGL
 // ? Sets GL_LINEAR filtering on the video if true, GL_NEAREST if not.
@@ -260,6 +267,13 @@ LLFUNC(SetKeyColour, 0,
 // ? Sets the new playback loop count.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetLoop, 0, AgVideo{lS, 1}().SetLoop(AgSizeT{lS, 2}))
+/* ========================================================================= */
+// $ Video:SetRec709
+// < Enabled:boolean=Video should be Rec.709?
+// ? Enabling this changes the shader to use Rec.709 calculations if true else
+// ? uses Rec.601 calculations if false.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetRec709, 0, AgVideo{lS, 1}().Set709(AgBoolean{lS, 2}))
 /* ========================================================================= */
 // $ Video:SetTCLTRB
 // > Left:number=The left co-ordinate.
@@ -402,18 +416,19 @@ LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Stop()))
 ** ========================================================================= */
 LLRSMFBEGIN                            // Video:* member functions begin
   LLRSFUNC(Advance),
-  LLRSFUNC(Awaken),        LLRSFUNC(Blit),      LLRSFUNC(BlitT),
-  LLRSFUNC(Destroy),       LLRSFUNC(GetATime),  LLRSFUNC(GetDrift),
-  LLRSFUNC(GetFPS),        LLRSFUNC(GetFrame),  LLRSFUNC(GetFrames),
-  LLRSFUNC(GetFramesLost), LLRSFUNC(GetHeight), LLRSFUNC(GetId),
-  LLRSFUNC(GetLoop),       LLRSFUNC(GetName),   LLRSFUNC(GetPlaying),
-  LLRSFUNC(GetTime),       LLRSFUNC(GetWidth),  LLRSFUNC(OnEvent),
-  LLRSFUNC(Pause),         LLRSFUNC(Play),      LLRSFUNC(Rewind),
-  LLRSFUNC(SetCRGBA),      LLRSFUNC(SetCX),     LLRSFUNC(SetFilter),
-  LLRSFUNC(SetKeyColour),  LLRSFUNC(SetKeyed),  LLRSFUNC(SetLoop),
-  LLRSFUNC(SetTCLTRB),     LLRSFUNC(SetTCLTWH), LLRSFUNC(SetTCX),
-  LLRSFUNC(SetVLTRB),      LLRSFUNC(SetVLTWH),  LLRSFUNC(SetVLTWHA),
-  LLRSFUNC(SetVX),         LLRSFUNC(SetVolume), LLRSFUNC(Stop),
+  LLRSFUNC(Awaken),        LLRSFUNC(Blit),         LLRSFUNC(BlitT),
+  LLRSFUNC(Destroy),       LLRSFUNC(GetATime),     LLRSFUNC(GetDrift),
+  LLRSFUNC(GetFPS),        LLRSFUNC(GetFrame),     LLRSFUNC(GetFrames),
+  LLRSFUNC(GetFramesLost), LLRSFUNC(GetHeight),    LLRSFUNC(GetId),
+  LLRSFUNC(GetLoop),       LLRSFUNC(GetName),      LLRSFUNC(GetPlaying),
+  LLRSFUNC(GetTime),       LLRSFUNC(GetWidth),     LLRSFUNC(OnEvent),
+  LLRSFUNC(Pause),         LLRSFUNC(Play),         LLRSFUNC(Rewind),
+  LLRSFUNC(SetCRGBA),      LLRSFUNC(SetCX),        LLRSFUNC(SetFDR),
+  LLRSFUNC(SetFilter),     LLRSFUNC(SetKeyColour), LLRSFUNC(SetKeyed),
+  LLRSFUNC(SetLoop),       LLRSFUNC(SetRec709),    LLRSFUNC(SetTCLTRB),
+  LLRSFUNC(SetTCLTWH),     LLRSFUNC(SetTCX),       LLRSFUNC(SetVLTRB),
+  LLRSFUNC(SetVLTWH),      LLRSFUNC(SetVLTWHA),    LLRSFUNC(SetVX),
+  LLRSFUNC(SetVolume),     LLRSFUNC(Stop),
 LLRSEND                                // Video:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

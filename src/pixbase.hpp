@@ -39,7 +39,7 @@ class SysBase :                        // Safe exception handler namespace
           default:
           { // Report read string to log
             cLog->LogWarningExSafe("$<$>: $",
-              IdentGet(), stRead, MemToStringView(stRead));
+              IdentGet(), stRead, MemToStringViewSafe(stRead));
             // Fallthrough to break
             [[fallthrough]];
           } // Handle was closed? Terminate the thread
@@ -614,8 +614,6 @@ class SysBase :                        // Safe exception handler namespace
     // Delete global mutex
     DeleteGlobalMutex();
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysBase)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
   void SysBase::HandleSignalStatic(int iSignal) \

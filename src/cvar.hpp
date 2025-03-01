@@ -20,9 +20,9 @@ namespace P {                          // Start of public module namespace
 BUILD_FLAGS(CVarShow,
   /* ----------------------------------------------------------------------- */
   // Show no confidential cvars        Show private cvars
-  CSF_NONE                  {Flag[0]}, CSF_CONFIDENTIAL              {Flag[1]},
+  CSF_NONE                  {Flag(0)}, CSF_CONFIDENTIAL              {Flag(1)},
   // Show protected cvars
-  CSF_PROTECTED             {Flag[2]},
+  CSF_PROTECTED             {Flag(2)},
   /* ----------------------------------------------------------------------- */
   CSF_MASK { CSF_CONFIDENTIAL|CSF_PROTECTED }
 );/* ----------------------------------------------------------------------- */
@@ -61,13 +61,13 @@ enum CVarSetEnums : unsigned int       // Cvar set return codes
 BUILD_FLAGS(CVarCondition,             // For Set() functions
   /* ----------------------------------------------------------------------- */
   // No flags specified?               Do not mark as commit?
-  CCF_NOTHING               {Flag[0]}, CCF_NOMARKCOMMIT          {Flag[1]},
+  CCF_NOTHING               {Flag(0)}, CCF_NOMARKCOMMIT          {Flag(1)},
   // Don't throw if var missing?       Throw if there is an error?
-  CCF_IGNOREIFMISSING       {Flag[2]}, CCF_THROWONERROR          {Flag[3]},
+  CCF_IGNOREIFMISSING       {Flag(2)}, CCF_THROWONERROR          {Flag(3)},
   // Variable was just registered?     Do not override existing initial var?
-  CCF_NEWCVAR               {Flag[4]}, CCF_NOIOVERRIDE           {Flag[5]},
+  CCF_NEWCVAR               {Flag(4)}, CCF_NOIOVERRIDE           {Flag(5)},
   // The variable was decrypted?       The variable was not encrypted?
-  CCF_DECRYPTED             {Flag[6]}, CCF_NOTDECRYPTED          {Flag[7]}
+  CCF_DECRYPTED             {Flag(6)}, CCF_NOTDECRYPTED          {Flag(7)}
 );/* -- Cvar item class ---------------------------------------------------- */
 class CVarItem :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
@@ -203,15 +203,15 @@ class CVarItem :                       // Members initially private
       if(FlagIsSet(CDEFLATE)) Commit(Block<AESZLIBEncoder>(GetValue()));
       else Commit(Block<AESEncoder>(GetValue()));
     } // exception occured?
-    catch(const exception &e)
+    catch(const exception &eReason)
     { // Log exception
-      cLog->LogErrorExSafe("CVars encrypt exception: $", e.what());
+      cLog->LogErrorExSafe("CVars encrypt exception: $", eReason);
       // Capture exceptions again, try raw encoder and return string
       try { Commit(Block<RAWEncoder>(GetValue())); }
       // exception occured again?
-      catch(const exception &e2)
+      catch(const exception &eReason2)
       { // Log exception and return failure
-        cLog->LogErrorExSafe("CVars store exception: $", e2.what());
+        cLog->LogErrorExSafe("CVars store exception: $", eReason2);
         return CR_FAIL_ENCRYPT;
       } // Success
     } // If we are to compress?
@@ -219,15 +219,15 @@ class CVarItem :                       // Members initially private
     { // Try compression and commit the result to the database
       Commit(Block<ZLIBEncoder>(GetValue()));
     } // exception occured?
-    catch(const exception &e)
+    catch(const exception &eReason)
     { // Log exception
-      cLog->LogErrorExSafe("CVars compress exception: $", e.what());
+      cLog->LogErrorExSafe("CVars compress exception: $", eReason);
       // Capture exceptions again, try raw encoder and return string
       try { Commit(Block<RAWEncoder>(GetValue())); }
       // exception occured again?
-      catch(const exception &e2)
+      catch(const exception &eReason2)
       { // Log exception and return failure
-        cLog->LogErrorExSafe("CVars store exception: $", e2.what());
+        cLog->LogErrorExSafe("CVars store exception: $", eReason2);
         return CR_FAIL_COMPRESS;
       } // Success
     } // Commit the unencrypted cvar and return if failed
@@ -249,14 +249,14 @@ class CVarItem :                       // Members initially private
     }
   }
   /* ----------------------------------------------------------------------- */
-  CVarSetEnums HandleCallbackException(const char*const cpWhat,
+  CVarSetEnums HandleCallbackException(const exception &eReason,
     const CVarConditionFlagsConst &ccfcFlags, const string &strNValue,
     string &strCBError)
   { // Throw exception if requested
     if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
-      XC(cpWhat, "Variable", GetVar(), "Value", strNValue);
+      XC(eReason, "Variable", GetVar(), "Value", strNValue);
     // Save the error string because we have no access to the console
-    strCBError = StrAppend("CVar CB failed! > ", cpWhat);
+    strCBError = StrAppend("CVar CB failed! > ", eReason);
     // Return error
     return CVS_TRIGGEREXCEPTION;
   }
@@ -276,20 +276,20 @@ class CVarItem :                       // Members initially private
       // Call the trigger and capture the result of the callback
       try { cbrResult = GetTrigger()(*this, strNValue); }
       // exception occured?
-      catch(const exception &E)
+      catch(const exception &eReason)
       { // Remove the lock on the cvar
         FlagClear(LOCKED);
         // Handle exception and return error if no exception
-        return HandleCallbackException(E.what(), ccfcFlags, strNValue,
+        return HandleCallbackException(eReason, ccfcFlags, strNValue,
           strCBError);
       } // Remove the lock on the cvar
       FlagClear(LOCKED);
     } // Not a lua cvar? Call the trigger and capture the result of the cb
     else try { cbrResult = GetTrigger()(*this, strNValue); }
     // exception occured
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Handle exception and return error if no exception
-      return HandleCallbackException(E.what(), ccfcFlags, strNValue,
+      return HandleCallbackException(eReason, ccfcFlags, strNValue,
         strCBError);
     } // If triggered denied to set the var? DON'T REARRANGE THESE!
     switch(cbrResult)
@@ -523,8 +523,6 @@ class CVarItem :                       // Members initially private
     cfTrigger{ cfCb }                  // Initialise trigger function
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* -- Other -------------------------------------------------------------- */
-  DELETECOPYCTORS(CVarItem)            // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

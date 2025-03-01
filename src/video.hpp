@@ -10,12 +10,13 @@
 namespace IVideo {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IASync::P;
-using namespace IClock::P;             using namespace ICollector::P;
-using namespace ICVarDef::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFbo::P;
-using namespace IFileMap::P;           using namespace IFlags;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaEvt::P;            using namespace ILuaLib::P;
+using namespace IClock::P;             using namespace ICodecOGG::P;
+using namespace ICollector::P;         using namespace ICVarDef::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFbo::P;               using namespace IFileMap::P;
+using namespace IFlags;                using namespace IIdent::P;
+using namespace ILog::P;               using namespace ILuaEvt::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IMemory::P;
 using namespace IOal::P;               using namespace IOgl::P;
 using namespace IPcmLib::P;            using namespace IShader::P;
@@ -24,8 +25,8 @@ using namespace IStd::P;               using namespace IStream::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace IThread::P;            using namespace ITimer::P;
 using namespace IUtil::P;              using namespace Lib::Ogg;
-using namespace Lib::Ogg::Theora;      using namespace Lib::OpenAL;
-using namespace Lib::OS::GlFW;
+using namespace Lib::Ogg::Theora;      using namespace Lib::OpenAL::Types;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */
@@ -44,15 +45,17 @@ private LuaEvtMaster<Video, LuaEvtTypeParam<Video>>); // Lua event
 BUILD_FLAGS(Video,
   /* ----------------------------------------------------------------------- */
   // No flags set?                     Have a theora stream?
-  FL_NONE                   {Flag[0]}, FL_THEORA                 {Flag[1]},
+  FL_NONE                   {Flag(0)}, FL_THEORA                 {Flag(1)},
   // Have a vorbis stream?             Video output initialised?
-  FL_VORBIS                 {Flag[2]}, FL_GLINIT                 {Flag[3]},
-  // Video is keyed?                   Filtering is enabled?
-  FL_KEYED                  {Flag[4]}, FL_FILTER                 {Flag[5]},
+  FL_VORBIS                 {Flag(2)}, FL_GLINIT                 {Flag(3)},
+  // Video is keyed?                   Video is full dynamic range?
+  FL_KEYED                  {Flag(4)}, FL_FDR                    {Flag(5)},
+  // Video is Rec.709 colour space?    Filtering is enabled?
+  FL_REC709                 {Flag(6)}, FL_FILTER                 {Flag(7)},
   // Hard stopped?                     Video is playing?
-  FL_STOP                   {Flag[6]}, FL_PLAY                   {Flag[7]},
+  FL_STOP                   {Flag(8)}, FL_PLAY                   {Flag(9)},
   // Play after re-init?
-  FL_RESUME                 {Flag[8]}
+  FL_RESUME                {Flag(10)}
 );/* ======================================================================= */
 CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Base classes ------------------------------------------------------- */
@@ -235,7 +238,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         if(cOal->Have32FPPB())
         { // Allocate required memory and do the conversion
           MemResizeUp(stFrameSize);
-          PcmF32FromVorbisFrames(fpPCM, stFrames, stChannels,
+          cCodecOGG->F32FromVorbisFrames(fpPCM, stFrames, stChannels,
             MemPtr<ALfloat>());
         } // If the hardware only supports 16-bit (2b) integer playback?
         else
@@ -245,7 +248,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           // of CPU time to keep reallocating it hence the MemResizeUp().
           stFrameSize >>= 1;
           MemResizeUp(stFrameSize);
-          PcmI16FromVorbisFrames(fpPCM, stFrames, stChannels,
+          cCodecOGG->I16FromVorbisFrames(fpPCM, stFrames, stChannels,
             MemPtr<ALshort>());
         } // Generate a buffer for the pcm data and if succeeded?
         const ALuint uiBuffer = cOal->CreateBuffer();
@@ -559,9 +562,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     } // Exit thread cleanly with specified reason
     return 1;
   } // exception occured?
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Report it to log
-    cLog->LogErrorExSafe("(VIDEO THREAD EXCEPTION) $", E.what());
+    cLog->LogErrorExSafe("(VIDEO THREAD EXCEPTION) $", eReason);
     // Failure exit code
     return -1;
   }
@@ -717,7 +720,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(FlagIsSet(FL_THEORA))
     { // Parse the comments and then free the strings
       ssThMetaData =
-        StdMove(PcmVorbisParseComments(tcData.user_comments, tcData.comments));
+        StdMove(cCodecOGG->VorbisParseComments(tcData.user_comments,
+          tcData.comments));
       th_comment_clear(&tcData);
       // Allocate a new one and throw error if not allocated
       tdcPtr = th_decode_alloc(&tiData, tsiPtr);
@@ -743,7 +747,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       switch(GetColourSpace())
       { // Valid colour spaces
         case TH_CS_UNSPECIFIED: [[fallthrough]];  // No colour content?
-        case TH_CS_ITU_REC_470M: [[fallthrough]]; // NTSC content?
+        case TH_CS_ITU_REC_470M: [[fallthrough]]; // Monochrome content?
         case TH_CS_ITU_REC_470BG: break;          // PAL/SECAM content?
         // Invalid colour space
         default: XC("The specified colour space is unsupported!",
@@ -770,7 +774,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(FlagIsSet(FL_VORBIS))
     { // Parse the comments and then free the strings
       ssVoMetaData =
-        StdMove(PcmVorbisParseComments(vcData.user_comments, vcData.comments));
+        StdMove(cCodecOGG->VorbisParseComments(vcData.user_comments,
+          vcData.comments));
       vorbis_comment_clear(&vcData);
       // Make sure rate is sane
       if(GetSampleRate() < 1 || GetSampleRate() > 192000)
@@ -1134,13 +1139,28 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   size_t GetLoop(void) const { return stLoop; }
   void SetLoop(const size_t stCount) { stLoop = stCount; }
   /* -- Colour key functions ----------------------------------------------- */
-  bool GetKeyed(void) const
-    { return FlagIsSet(FL_KEYED); }
   void UpdateShader(void)
-    { shProgram = GetKeyed() ?
-        &cShaderCore->sh3DYCbCrK : &cShaderCore->sh3DYCbCr; }
-  void SetKeyed(const bool bState)
-    { FlagSetOrClear(FL_KEYED, bState); UpdateShader(); }
+  { // Set program depending on the specified parameters
+    shProgram =  GetFDR() ? (Get709() ?
+      (GetKeyed() ? &cShaderCore->sh3DYCbCrK709FR :
+                    &cShaderCore->sh3DYCbCr709FR) :
+      (GetKeyed() ? &cShaderCore->sh3DYCbCrK601FR :
+                    &cShaderCore->sh3DYCbCr601FR)
+    ) : (Get709() ?
+      (GetKeyed() ? &cShaderCore->sh3DYCbCrK709PR :
+                    &cShaderCore->sh3DYCbCr709PR) :
+      (GetKeyed() ? &cShaderCore->sh3DYCbCrK601PR :
+                    &cShaderCore->sh3DYCbCr601PR)
+    );
+  }
+  void UpdateShaderFlag(const VideoFlagsConst vfcFlag, const bool bState)
+    { FlagSetOrClear(vfcFlag, bState); UpdateShader(); }
+  bool GetFDR(void) const { return FlagIsSet(FL_FDR); }
+  void SetFDR(const bool bState) { UpdateShaderFlag(FL_FDR, bState); }
+  bool Get709(void) const { return FlagIsSet(FL_REC709); }
+  void Set709(const bool bState) { UpdateShaderFlag(FL_REC709, bState); }
+  bool GetKeyed(void) const { return FlagIsSet(FL_KEYED); }
+  void SetKeyed(const bool bState) { UpdateShaderFlag(FL_KEYED, bState); }
   /* -- Generate component textures ---------------------------------------- */
   void InitTexture(void)
   { // Ignore if we don't have a opengl
@@ -1214,7 +1234,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       EMC_MP_VIDEO },                  // ...video event code
     LuaEvtSlave{ this,                 // Initialise event handler
       EMC_VID_EVENT },                 // ...event handler code
-    VideoFlags{ FL_NONE },             // No video flags just yet
+    VideoFlags{ FL_FDR|FL_REC709 },    // Use full-dynamic range and Rec.709
     tThread{ "video", STP_HIGH,        // Initialise thread with high priority
       bind(&Video::VideoThreadMain,    // ...preset callback
         this, _1) },                   // ...class as parameter

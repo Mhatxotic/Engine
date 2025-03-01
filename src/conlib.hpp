@@ -84,14 +84,13 @@ for(const Asset *aPtr : *cAssets)
   // Show first sixteen bytes
   for(size_t stIndex = 0; stIndex < stMax; ++stIndex)
   { // Get character
-    const unsigned int uiChar =
-      static_cast<unsigned int>(aRef.MemReadInt<uint8_t>(stIndex));
+    const uint8_t ucChar = aRef.MemReadInt<uint8_t>(stIndex);
     // Add hex of block
-    strHex += StrHexFromInt(uiChar, 2) + ' ';
+    strHex += StrHexFromInt(ucChar, 2) + ' ';
     // Put a dot if character is invalid
-    if(uiChar < ' ') { strAscii += '.'; continue; }
+    if(ucChar < ' ') { strAscii += '.'; continue; }
     // Encode the character
-    UtfAppend(uiChar, strAscii);
+    strAscii += static_cast<char>(ucChar);
   } // Add padding for characters that don't exist
   for(size_t stIndex = stMax; stIndex < stCount; ++stIndex)
     { strHex += ".. "; strAscii += ' '; }
@@ -203,6 +202,8 @@ cConsole->AddLineA(sTable.Finish(),
 /* ------------------------------------------------------------------------- */
 { "certs", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
+// Required parser class
+using namespace IParser::P;
 // Make a table to automatically format our data neatly
 Statistic sTable;
 sTable.Header("X").Header("FILE", false).Header("C", false)
@@ -220,7 +221,7 @@ for(const Certs::X509Pair &xPair : cSockets->GetCertList())
   sTable.Data(iC == pSubject.cend() ? "--" : CryptURLDecode(iC->second))
         .Data(iCN == pSubject.cend() ?
           cCommon->Unspec() : CryptURLDecode(iCN->second));
-} // Print output and number of shaders listed
+} // Print output and number of root certificates listed
 cConsole->AddLineA(sTable.Finish(),
   StrCPluraliseNum(cSockets->GetCertListSize(),
     "root certificate.", "root certificates."));
@@ -378,7 +379,7 @@ Statistic sTable;
 sTable.Header("ID").Header("NAME", false).Header("VERSION")
       .Header("AUTHOR", false).Reserve(cCredits->CreditGetItemCount());
 // For each item, show library information
-for(const CreditLib &clRef : *cCredits)
+for(const CreditLib &clRef : cCredits->CreditGetLibList())
   sTable.DataN(clRef.GetID()).Data(clRef.GetName()).Data(clRef.GetVersion())
         .DataA(clRef.IsCopyright() ?
     "\xC2\xA9 " : cCommon->Blank(), clRef.GetAuthor());
@@ -490,7 +491,7 @@ for(const Archive*const aPtr : *cArchives)
     // Get filename, and continue again if it is a sub-directory/file
     string strName{ StrTrim(
       suimpPair.first.substr(strDir.length()), cCommon->CFSlash()) };
-    if(strName.find(cCommon->CFSlash()) != string::npos) continue;
+    if(strName.find(cCommon->CFSlash()) != StdNPos) continue;
     // Add to directory list and increment directory count
     silDirs.insert({ StdMove(strName),
       { StdMaxUInt64, suimpPair.second, aRef.IdentGet() } });
@@ -502,7 +503,7 @@ for(const Archive*const aPtr : *cArchives)
     // Get filename, and continue again if it is a sub-directory/file
     string strName{ StrTrim(
       suimpPair.first.substr(strDir.length()), cCommon->CFSlash()) };
-    if(strName.find(cCommon->CFSlash()) != string::npos) continue;
+    if(strName.find(cCommon->CFSlash()) != StdNPos) continue;
     // Add to file list and increment total bytes and file count
     const uint64_t uqSize = aRef.GetSize(suimpPair.second);
     silFiles.insert({ StdMove(strName),
@@ -740,7 +741,7 @@ for(const Ftf*const fPtr : *cFtfs)
   const Ftf &fRef = *fPtr;
   sTable.DataN(fRef.CtrGet()).DataN(fRef.GetGlyphCount())
         .DataN(fRef.DimGetWidth(),0).DataN(fRef.DimGetHeight(),0)
-        .DataN(fRef.diDPI.DimGetWidth()).DataN(fRef.diDPI.DimGetHeight())
+        .DataN(fRef.duDPI.DimGetWidth()).DataN(fRef.duDPI.DimGetHeight())
         .Data(fRef.GetStyle()).Data(fRef.GetFamily())
         .Data(fRef.IdentGet());
 } // Log counts
@@ -876,7 +877,7 @@ for(const ImageLib*const ilPtr : *cImageLibs)
 { // Get reference to class and write its data to the table
   const ImageLib &ilRef = *ilPtr;
   sTable.DataN(ilRef.CtrGet()).Data(StrFromEvalTokens({
-    { ilRef.HaveLoader(), 'L' }, { ilRef.HaveSaver(),  'S' }
+    { ilRef.HaveDecoder(), 'L' }, { ilRef.HaveEncoder(),  'S' }
   })).Data(ilRef.GetExt()).Data(ilRef.GetName());
 } // Log total plugins
 cConsole->AddLineA(sTable.Finish(),
@@ -889,8 +890,9 @@ cConsole->AddLineA(sTable.Finish(),
 /* ========================================================================= */
 { "input", 1, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-// Required joystick namespace
-using namespace IJoystick::P;
+// Required joystick namespaces
+using namespace IJoyAxis::P;           using namespace IJoyButton::P;
+using namespace IJoyInfo::P;           using namespace IJoystick::P;
 // If argument specified
 if(aArgs.size() > 1)
 { // Convert parmeter to number
@@ -1481,7 +1483,7 @@ for(const PcmLib*const plPtr : *cPcmLibs)
 { // Get reference to class and write its data to the table
   const PcmLib &plRef = *plPtr;
   sTable.DataN(plRef.CtrGet()).Data(StrFromEvalTokens({
-    { plRef.HaveLoader(), 'L' }, { plRef.HaveSaver(),  'S' }
+    { plRef.HaveDecoder(), 'L' }, { plRef.HaveEncoder(),  'S' }
   })).Data(plRef.GetExt()).Data(plRef.GetName());
 } // Log total plugins
 cConsole->AddLineA(sTable.Finish(),
@@ -1494,6 +1496,8 @@ cConsole->AddLineA(sTable.Finish(),
 /* ========================================================================= */
 { "pcms", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
+// Required pcm definition namespace
+using namespace IPcmDef::P;
 // Get reference to pcms collector class and lock it so it's not changed
 const LockGuard lgPcmsSync{ cPcms->CollectorGetMutex() };
 // Text table class to help us write neat output
@@ -1769,12 +1773,13 @@ for(const Source*const sPtr : *cSources)
   // Add data to text table
   sTable.DataN(sRef.CtrGet()).DataN(sRef.GetSource())
         .Data(StrFromEvalTokens({
-          { sRef.LockIsSet(),    'L' }, { sRef.GetExternal(),   'X' },
+          { sRef.GetClass(),     'C' }, { sRef.LockIsSet(),     'L' },
           { !!sRef.GetLooping(), 'O' }, { !!sRef.GetRelative(), 'R' },
+          { sRef.GetExternal(),  'X' }
         }))
         .DataC(alState == AL_INITIAL ? 'I' : (alState == AL_PLAYING ? 'P' :
               (alState == AL_PAUSED  ? 'H' : (alState == AL_STOPPED ? 'S' :
-                                      '?'))))
+                                       '?'))))
         .DataC(uiType == AL_UNDETERMINED ? 'U' : (uiType == AL_STATIC ? 'T' :
               (uiType == AL_STREAMING    ? 'S' : '?')))
         .DataN(sRef.GetBuffersQueued()).DataN(sRef.GetBuffersProcessed())
@@ -2111,9 +2116,10 @@ for(const Video*const vPtr : *cVideos)
   const Video &vRef = *vPtr;
   sTable.DataN(vRef.CtrGet())
     .Data(StrFromEvalTokens({
-      { vRef.LuaRefIsSet(),       'L' }, { vRef.IsSourceAvailable(), 'A' },
+      { vRef.Get709(),            '7' }, { vRef.IsSourceAvailable(), 'A' },
       { vRef.FlagIsSet(FL_FILTER),'F' }, { vRef.GetKeyed(),          'K' },
-      { vRef.FlagIsSet(FL_PLAY),  'P' }, { vRef.FlagIsSet(FL_STOP),  'S' },
+      { vRef.LuaRefIsSet(),       'L' }, { vRef.FlagIsSet(FL_PLAY),  'P' },
+      { vRef.GetFDR(),            'R' }, { vRef.FlagIsSet(FL_STOP),  'S' },
       { vRef.FlagIsSet(FL_THEORA),'T' }, { vRef.FlagIsSet(FL_VORBIS),'V' },
     }))
     .Data(vRef.GetFormatAsIdentifier()).DataH(vRef.GetPixelFormat(),4)

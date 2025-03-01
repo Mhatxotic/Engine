@@ -12,9 +12,9 @@ namespace IThread {                    // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICollector::P;
 using namespace IError::P;             using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Thread collector class with global thread id counter ================= */
@@ -22,15 +22,14 @@ CTOR_BEGIN(Threads, Thread, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
   SafeSizeT        stRunning;          // Number of threads running
 )/* ------------------------------------------------------------------------ */
+typedef int (CbThFuncT)(Thread&);      // Thread callback function
+typedef function<CbThFuncT> CbThFunc;  // Wrapped inside a function class
+/* ------------------------------------------------------------------------- */
 class ThreadBase                       // Thread variables class
-{ /* -- Private typedefs ---------------------------------------- */ protected:
-  typedef int (CbThFuncT)(Thread&);    // Thread callback function
-  /* -- Public typedefs -------------------------------------------- */ public:
-  typedef function<CbThFuncT> CBFunc;  // Wrapped inside a function class
-  /* -- Private variables --------------------------------------- */ protected:
+{ /* -- Private variables --------------------------------------- */ protected:
   SafeInt          siExitCode;         // Callback exit code
   void            *vpParam;            // User parameter
-  CBFunc           cbfFunc;            // Thread callback function
+  CbThFunc         ctfFunc;            // Thread callback function
   SafeBool         sbShouldExit;       // Thread should exit
   SafeClkDuration  scdStart,           // Thread start time
                    scdEnd;             // Thread end time
@@ -38,11 +37,11 @@ class ThreadBase                       // Thread variables class
   /* -- Constructor -------------------------------------------------------- */
   ThreadBase(const SysThread stNPerf,  // Thread is high performance?
              void*const vpNParam,      // Thread user parameter
-             const CBFunc &cbfNFunc) : // Thread callback function
+             const CbThFunc &ctfNFunc) : // Thread callback function
     /* -- Initialisers ----------------------------------------------------- */
     siExitCode(0),                     // Set exit code to standby
     vpParam(vpNParam),                 // Set user thread parameter
-    cbfFunc{ cbfNFunc },               // Set thread callback function
+    ctfFunc{ ctfNFunc },               // Set thread callback function
     sbShouldExit(false),               // Should never exit at first
     scdStart{ seconds{ 0 } },          // Never started time
     scdEnd{ seconds{ 0 } },            // Never finished time
@@ -66,7 +65,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     cLog->LogDebugExSafe("Thread $<$> started.", CtrGet(), IdentGet());
     // Set the start time and initialise the end time
     scdStart = cmHiRes.GetEpochTime();
-    scdEnd = seconds(0);
+    scdEnd = seconds{ 0 };
     // Loop forever until thread should exit
     while(ThreadShouldNotExit())
     { // Set exit code to -1 as a reference that execution is proceeding
@@ -86,7 +85,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Reduce thread count
     --cParent->stRunning;
   } // exception occured in thread so handle it
-  catch(const exception &e)
+  catch(const exception &eReason)
   { // Return error and set thread to exit
     ThreadSetExitCode(-2);
     // Reduce thread count
@@ -97,8 +96,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     cLog->LogErrorExSafe("Thread $<$> exited in $ due to exception: $!",
       CtrGet(), IdentGet(),
       StrShortFromDuration(ClockTimePointRangeToClampedDouble(
-        ThreadGetEndTime(), ThreadGetStartTime())),
-      e.what());
+        ThreadGetEndTime(), ThreadGetStartTime())), eReason);
   }
   /* ----------------------------------------------------------------------- */
   static void ThreadMain(void*const vpPtr)
@@ -128,7 +126,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   int ThreadGetExitCode(void) const { return siExitCode; }
   void ThreadSetExitCode(const int iNewCode) { siExitCode = iNewCode; }
   /* ----------------------------------------------------------------------- */
-  const CBFunc &ThreadGetCallback(void) const { return cbfFunc; }
+  const CbThFunc &ThreadGetCallback(void) const { return ctfFunc; }
   bool ThreadHaveCallback(void) const { return !!ThreadGetCallback(); }
   /* ----------------------------------------------------------------------- */
   bool ThreadIsParamSet(void) const { return !!vpParam; }
@@ -219,16 +217,16 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   void ThreadDeInit(void)
     { ThreadStop(); this->CollectorUnregister(); }
   /* -- Initialise with callback only and register ------------------------- */
-  void ThreadInit(const CBFunc &cbfC)
-    { cbfFunc = cbfC; this->CollectorRegister(); }
+  void ThreadInit(const CbThFunc &cbfC)
+    { ctfFunc = cbfC; this->CollectorRegister(); }
   /* -- Initialise with name and callback ---------------------------------- */
-  void ThreadInit(const string &strN, const CBFunc &cbfC)
+  void ThreadInit(const string &strN, const CbThFunc &cbfC)
     { IdentSet(strN); ThreadInit(cbfC); }
   /* -- Initialise with name, callback, parameter and start execute -------- */
-  void ThreadInit(const string &strN, const CBFunc &cbfC, void*const vpPtr)
+  void ThreadInit(const string &strN, const CbThFunc &cbfC, void*const vpPtr)
     { ThreadInit(strN, cbfC); ThreadStart(vpPtr); }
   /* -- Initialise with callback, parameter and start execute -------------- */
-  void ThreadInit(const CBFunc &cbfC, void*const vpPtr)
+  void ThreadInit(const CbThFunc &cbfC, void*const vpPtr)
     { ThreadInit(cbfC); ThreadStart(vpPtr); }
   /* -- Destructor --------------------------------------------------------- */
   ~Thread(void)
@@ -247,7 +245,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* -- Full initialise and execute constructor ---------------------------- */
   Thread(const string &strN,           // Requested Thread name
          const SysThread sP,           // Thread needs high performance?
-         const CBFunc &cbfC,           // Requested callback function
+         const CbThFunc &cbfC,         // Requested callback function
          void*const vpPtr) :           // User parameter to store
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
@@ -260,7 +258,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* -- Standby constructor (set everything except user parameter) --------- */
   Thread(const string &strN,           // Requested Thread name
          const SysThread sP,           // Thread needs high performance?
-         const CBFunc &cbfC) :         // Requested callback function
+         const CbThFunc &cbfC) :       // Requested callback function
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
@@ -286,8 +284,6 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     ThreadBase{ sP, nullptr, nullptr } // Initialise only thread priority
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Thread)              // Suppress default functions for safety
 };/* ======================================================================= */
 CTOR_END(Threads, Thread, THREAD,,,, stRunning{0});
 /* -- Thread sync helper --------------------------------------------------- */
@@ -377,8 +373,6 @@ template<class Callbacks>class ThreadSyncHelper : private Callbacks
     bBToA(false)                       // Not sending msg from Thread B to A
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ThreadSyncHelper)    // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 static size_t ThreadGetRunning(void) { return cThreads->stRunning; }
 /* ------------------------------------------------------------------------- */

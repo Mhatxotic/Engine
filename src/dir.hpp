@@ -264,7 +264,7 @@ class DirFile                          // Files container class
   bool IsFilesEmpty(void) const { return GetFiles().empty(); }
   bool IsFilesNotEmpty(void) const { return !IsFilesEmpty(); }
   /* -- Default constructor ------------------------------------------------ */
-  DirFile(void) { }
+  DirFile(void) = default;
   /* -- Move constructor --------------------------------------------------- */
   DirFile(DirEntMap &&demNDirs, DirEntMap &&demNFiles) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -279,8 +279,6 @@ class DirFile                          // Files container class
     demFiles{ StdMove(dfOther.demFiles) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(DirFile)             // Suppress default functions for safety
 };/* -- DirCore class ------------------------------------------------------ */
 class DirCore :                        // System specific implementation
   /* -- Base classes ------------------------------------------------------- */
@@ -425,8 +423,6 @@ class DirCore :                        // System specific implementation
     { if(dupHandle && !GetNextFile()) dupHandle.reset(); }
   /* ----------------------------------------------------------------------- */
 #endif                                 // End of system implementation check
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(DirCore)             // Suppress default functions for safety
 };/* == Dir class ========================================================== */
 class Dir :                            // Directory information class
   /* -- Base classes ------------------------------------------------------- */
@@ -496,8 +492,6 @@ class Dir :                            // Directory information class
   /* -- Scan specified directory for files with specified extension -------- */
   Dir(const string &strDir, const string &strExt) :
     DirFile{ ScanDirExt(strDir, strExt) } { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Dir)                 // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* -- Get current directory ------------------------------------------------ */
 static const string DirGetCWD(void)
@@ -537,7 +531,7 @@ static bool DirSetCWD(const string &strDirectory)
   // Set drive first if specified
   if(strDirectory.length() >= 3 && strDirectory[1] == ':' &&
      (strDirectory[2] == '\\' || strDirectory[2] != cCommon->CFSlash()) &&
-       _chdrive((toupper(ucD) - 'A') + 1) < 0) return false;
+       _chdrive((StdToUpper(ucD) - 'A') + 1) < 0) return false;
 #endif
   // Set current directory and return false if there is a problem
   return !StdChDir(strDirectory);

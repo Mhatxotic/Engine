@@ -17,11 +17,11 @@
 /* ========================================================================= */
 namespace LLUtil {                     // Util namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IArgs;                 using namespace IAsset::P;
+using namespace IArgs::P;              using namespace IAsset::P;
 using namespace IClock::P;             using namespace ICrypt::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace IUrl::P;
-using namespace IUtf;                  using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 using namespace IUuId::P;              using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
@@ -330,14 +330,14 @@ LLFUNC(FormatTimeUTC, 1,
   LuaUtilPushVar(lS, StrFromTimeTTUTC(aTimestamp, aFormat)))
 /* ========================================================================= */
 // $ Util.GetRatio
-// > Width:integer=The width number.
-// > Height:integer=The height number
+// > Width:integer=The width integer.
+// > Height:integer=The height integer.
 // < Result:string=The ratio between the two numbers.
 // ? Caclulates the ratio between the two numbers and returns a string in the
 // ? format of "n:n".
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetRatio, 1, const AgDoubleL aWidth{lS, 1, 1.0}, aHeight{lS, 2, 1.0};
-  LuaUtilPushVar(lS, StrFromRatio(aWidth, aHeight)))
+LLFUNC(GetRatio, 1, const AgLuaIntegerL aWidth{lS, 1, 1}, aHeight{lS, 2, 1};
+  LuaUtilPushVar(lS, StrFromRatio(aWidth(), aHeight())))
 /* ========================================================================= */
 // $ Util.Grouped
 // > Count:integer=The number to convert.
@@ -1016,14 +1016,14 @@ LLFUNC(UTF8Char, 1, LuaUtilPushVar(lS, UtfDecodeNum(AgUInt32{lS, 1})))
 // < Text:string=The URL decoded string.
 // ? URL decodes the specified string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UrlDecode, 1, LuaUtilPushVar(lS, CryptURLDecode(AgCStringChar{lS, 1})))
+LLFUNC(UrlDecode, 1, LuaUtilPushVar(lS, CryptURLDecode(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.UrlEncode
 // > Text:string=The URL string to encode.
 // < Text:string=The URL encoded string.
 // ? URL encodes the specified string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UrlEncode, 1, LuaUtilPushVar(lS, CryptURLEncode(AgCStringChar{lS, 1})))
+LLFUNC(UrlEncode, 1, LuaUtilPushVar(lS, CryptURLEncode(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.WordWrap
 // > Text:string=The text to word wrap

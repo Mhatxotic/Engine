@@ -443,6 +443,20 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <glfw/glfw3.h>                // Main header
 #include <glfw/glfw3native.h>          // Operating system includes
       /* ------------------------------------------------------------------- */
+      namespace Types                  // Common types
+      { /* ----------------------------------------------------------------- */
+        using GlFW::GLFWimage;         // GLFW specific image type
+        using GlFW::GLFWmonitor;       // GLFW specific monitor type
+        using GlFW::GLFWwindow;        // GLFW specific window type
+        using GlFW::GLchar;            // GL specific char type
+        using GlFW::GLenum;            // GL specific enum type
+        using GlFW::GLfloat;           // GL specific float type
+        using GlFW::GLint;             // GL specific int type
+        using GlFW::GLsizei;           // GL specific sizei type
+        using GlFW::GLubyte;           // GL specific unsigned char type
+        using GlFW::GLuint;            // GL specific unsigned int type
+        using GlFW::GLvoid;            // GL specific void type
+      };/* ----------------------------------------------------------------- */
 #if defined(MACOS)                     // MacOS defined?
       /* ------------------------------------------------------------------- */
       // This namespace is required to workaround a major crash bug in MacOS
@@ -460,6 +474,18 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #undef GLFW_EXPOSE_NATIVE_X11          // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_WAYLAND      // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_COCOA        // Done with this macro
+    /* --------------------------------------------------------------------- */
+    namespace MiniMP3                  // MINIMP3 API FUNCTIONS
+    { /* ------------------------------------------------------------------- */
+#define MINIMP3_IMPLEMENTATION         // Using MINIMP3 implementation
+#define MINIMP3_NO_STDIO               // No stdio routines
+#if defined(WINDOWS)                   // Using Windows
+#endif                                 // Using Windows
+#include <mp3/minimp3.h>               // Main decoder
+#include <mp3/minimp3_ex.h>            // Decoder utilities
+#if defined(WINDOWS)                   // Using Windows
+#endif                                 // Using Windows
+    }
   };/* --------------------------------------------------------------------- */
   namespace NSGif                      // LIBNSGIF API FUNCTIONS
   { /* --------------------------------------------------------------------- */
@@ -495,16 +521,29 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #define AL_ALEXT_PROTOTYPES            // So can get alcResetDevice
 #include <al/alext.h>                  // Main header
 #undef AL_ALEXT_PROTOTYPES             // Extra functions check
-  };/* --------------------------------------------------------------------- */
-  namespace MiniMP3                    // MINIMP3 API FUNCTIONS
-  { /* --------------------------------------------------------------------- */
-#include <mp3/minimp3.h>               // Main header
-  } /* -- Ogg Includes ----------------------------------------------------- */
+    /* --------------------------------------------------------------------- */
+    namespace Types                    // Common types
+    { /* ------------------------------------------------------------------- */
+      using OpenAL::ALdouble;          // AL specific double type
+      using OpenAL::ALenum;            // AL specific enum type
+      using OpenAL::ALfloat;           // AL specific float type
+      using OpenAL::ALint;             // AL specific int type
+      using OpenAL::ALshort;           // AL specific short type
+      using OpenAL::ALsizei;           // AL specific sizei type
+      using OpenAL::ALuint;            // AL specific unsigned int type
+      using OpenAL::ALvoid;            // AL specific void type
+    };/* ------------------------------------------------------------------- */
+  };/* -- Ogg Includes ----------------------------------------------------- */
   namespace Ogg                        // OGGVORBIS API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define OV_EXCLUDE_STATIC_CALLBACKS    // We don't need these callbacks
 #include <ogg/vorbisfile.h>            // Vorbis/ogg API headers
 #undef OV_EXCLUDE_STATIC_CALLBACKS     // The define is no longer needed
+    /* --------------------------------------------------------------------- */
+    namespace Types                    // Common types
+    { /* ------------------------------------------------------------------- */
+      using Ogg::ogg_int64_t;          // Ogg specific int64 type
+    };/* ------------------------------------------------------------------- */
     /* -- Theora decoder depends on ogg headers ---------------------------- */
     namespace Theora                   // THEORA API FUNCTIONS
     { /* ------------------------------------------------------------------- */
@@ -518,6 +557,11 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
   namespace Sqlite                     // SQLITE API FUNCTIONS
   {/* ---------------------------------------------------------------------- */
 #include <sql/sqlite3.h>               // Main header
+    /* --------------------------------------------------------------------- */
+    namespace Types                    // Common types
+    { /* ------------------------------------------------------------------- */
+      using Sqlite::sqlite3_int64;     // Sqlite specific int64 type
+    };/* ------------------------------------------------------------------- */
   };/* --------------------------------------------------------------------- */
   namespace FreeType                   // FREETYPE API FUNCTIONS
   { /* --------------------------------------------------------------------- */

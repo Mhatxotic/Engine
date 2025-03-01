@@ -9,14 +9,16 @@
 /* ------------------------------------------------------------------------- */
 namespace IString {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IStd::P;               using namespace IUtf;
+using namespace IStd::P;               using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Common class with common objects ------------------------------------- */
-static const class Common final        // Members initially private
+static class Common final              // Members initially private
 { /* -- Private variables -------------------------------------------------- */
   const string     strTrue,            // C++ string as "true"
                    strFalse,           // C++ string as "false"
+                   strY,               // C++ string as "Y"
+                   strN,               // C++ string as "N"
                    strEquals,          // C++ string as "="
                    strNOne,            // C++ string as "-1"
                    strZero,            // C++ string as "0"
@@ -37,56 +39,41 @@ static const class Common final        // Members initially private
                    strLuaName;         // C++ string as "__name"
   const char       cFSlash;            // Forward slash character
   const char*const cpBlank;            // Blank C-String
-  const locale     lLocaleCurrent;     // Current locale
+  locale           lLocaleCurrent;     // Current locale
   /* --------------------------------------------------------------- */ public:
   const locale &Locale(void) const { return lLocaleCurrent; }
+  void SetLocale(const string &strLocale)
+    { lLocaleCurrent = locale(strLocale); }
   /* ----------------------------------------------------------------------- */
   const string &Blank(void) const { return strBlank; }
   const char *CBlank(void) const { return cpBlank; }
-  /* ----------------------------------------------------------------------- */
   const string &Tru(void) const { return strTrue; }
-  /* ----------------------------------------------------------------------- */
   const string &Fals(void) const { return strFalse; }
-  /* ----------------------------------------------------------------------- */
+  const string &Y(void) const { return strY; }
+  const string &N(void) const { return strN; }
   const string &Equals(void) const { return strEquals; }
-  /* ----------------------------------------------------------------------- */
   const string &NOne(void) const { return strNOne; }
-  /* ----------------------------------------------------------------------- */
   const string &Zero(void) const { return strZero; }
-  /* ----------------------------------------------------------------------- */
   const string &One(void) const { return strOne; }
-  /* ----------------------------------------------------------------------- */
   const string &Cr(void) const { return strCr; }
-  /* ----------------------------------------------------------------------- */
   const string &Lf(void) const { return strLf; }
-  /* ----------------------------------------------------------------------- */
   const string &CrLf(void) const { return strCrLf; }
-  /* ----------------------------------------------------------------------- */
   const string &CrLf2(void) const { return strCrLf2; }
-  /* ----------------------------------------------------------------------- */
   const string &LfCr(void) const { return strLfCr; }
-  /* ----------------------------------------------------------------------- */
   const string &Space(void) const { return strSpace; }
-  /* ----------------------------------------------------------------------- */
   const string &Ellipsis(void) const { return strEllipsis; }
-  /* ----------------------------------------------------------------------- */
   const string &FSlash(void) const { return strFSlash; }
-  /* ----------------------------------------------------------------------- */
   char CFSlash(void) const { return cFSlash; }
-  /* ----------------------------------------------------------------------- */
   const string &Unspec(void) const { return strUnspec; }
-  /* ----------------------------------------------------------------------- */
   const string &Null(void) const { return strNull; }
-  /* ----------------------------------------------------------------------- */
   const string &Period(void) const { return strPeriod; }
-  /* ----------------------------------------------------------------------- */
   const string &TwoPeriod(void) const { return strTwoPeriod; }
-  /* ----------------------------------------------------------------------- */
   const string &LuaName(void) const { return strLuaName; }
   /* -- Default Constructor ------------------------------------------------ */
   Common(void) :                       // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     strTrue{ "true" },                 strFalse{ "false" },
+    strY{ "Y" },                       strN{ "N" },
     strEquals{ "=" },                  strNOne{ "-1" },
     strZero{ "0" },                    strOne{ "1" },
     strSpace{ " " },                   strEllipsis{ "..." },
@@ -103,89 +90,125 @@ static const class Common final        // Members initially private
 *cCommon;                              // Assigned in main function
 /* -- Some helpful globals so not to repeat anything ----------------------- */
 static const char*const cpTimeFormat = "%a %b %d %H:%M:%S %Y %z";
-/* -- Append final parameter (uses copy elision) --------------------------- */
-static void StrAppendHelper(ostringstream&) { }
-/* -- Append a parameter (uses copy elision) ------------------------------- */
-template<typename AnyType, typename ...VarArgs>
-  static void StrAppendHelper(ostringstream &osS, const AnyType &atVal,
-    const VarArgs &...vatArgs)
-      { osS << atVal; StrAppendHelper(osS, vatArgs...); }
-/* -- Append main function ------------------------------------------------- */
-template<typename ...VarArgs>
-  static const string StrAppend(const VarArgs &...vaVars)
-{ // Theres no need to call this if theres no parameters
-  static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-  // Stream to write to
-  ostringstream osS;
-  // Build string
-  StrAppendHelper(osS, vaVars...);
-  // Return string
-  return osS.str();
-}
-/* -- Append with formatted numbers ---------------------------------------- */
-template<typename ...VarArgs>
-  static const string StrAppendImbue(const VarArgs &...vaVars)
-{ // Theres no need to call this if theres no parameters
-  static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-  // Stream to write to
-  ostringstream osS;
-  // Imbue current locale
-  osS.imbue(cCommon->Locale());
-  // Build string
-  StrAppendHelper(osS, vaVars...);
-  // Return appended string
-  return osS.str();
-}
-/* -- Append final parameter (uses copy elision) --------------------------- */
-static void StrFormatHelper(ostringstream &osS, const char *cpPos)
-  { if(*cpPos) osS << cpPos; }
-/* -- Process any value ------------------------------------------------- -- */
-template<typename AnyType, typename ...VarArgs>
-  static void StrFormatHelper(ostringstream &osS, const char *cpPos,
-    const AnyType &atVal, const VarArgs &...vaVars)
-{ // Find the mark that will be replaced by this parameter and if we
-  // find the character?
-  if(const char*const cpNewPos = strchr(cpPos, '$'))
-  { // How far did we find the new position
-    switch(const size_t stNum = static_cast<size_t>(cpNewPos - cpPos))
-    { // One character? Just copy one character and move ahead two to skip
-      // over the '$' we just processed.
-      case 1: osS << *cpPos; cpPos += 2; break;
-      // More than one character? Copy characters and stride over the '$'
-      // we just processed. Better than storing single characters.
-      default: osS << StdMove(string{ cpPos, stNum });
-               cpPos += stNum + 1;
-               break;
-      // Did not move? This can happen at the start of the string. Just
-      // move over the first '$'.
-      case 0: ++cpPos; break;
-    } // Push the value we are supposed to replace the matched '$' with.
-    osS << atVal;
-    // Process more parameters if we can.
-    StrFormatHelper(osS, cpPos, vaVars...);
-  } // Return the rest of the string.
-  else StrFormatHelper(osS, cpPos);
-}
-/* -- Prepare message from c-string format --------------------------------- */
-template<typename ...VarArgs>
-  static const string StrFormat(const char*const cpFmt,
-    const VarArgs &...vaVars)
-{ // Theres no need to call this if theres no parameters
-  static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-  // Return if string empty of invalid
-  if(UtfIsCStringNotValid(cpFmt)) return {};
-  // Stream to write to
-  ostringstream osS;
-  // Format the text
-  StrFormatHelper(osS, cpFmt, vaVars...);
-  // Return formated text
-  return osS.str();
-}
+/* -- Functions for StrAppend, StrAppendImbue and StrFormat ---------------- */
+namespace H                            // Private functions
+{ /* -- Process any value -------------------------------------------------- */
+  template<typename AnyType>
+    static void Value(ostringstream &osS, const AnyType &atVal)
+  { // If is an exception object? Push the string of it
+    if constexpr(is_same_v<AnyType, exception>) osS << atVal.what();
+    // Let ostringstream handle the value
+    else osS << atVal;
+  }
+  /* -- Append functions --------------------------------------------------- */
+  namespace Append                     // Private functions
+  { /* -- Append final parameter ------------------------------------------- */
+    static void Param(ostringstream&) { }
+    /* -- Append a parameter ----------------------------------------------- */
+    template<typename AnyType, typename ...VarArgs>
+      static void Param(ostringstream &osS, const AnyType &atVal,
+        const VarArgs &...vatArgs)
+    { // Push the specified value
+      Value(osS, atVal);
+      // Process next argument
+      Param(osS, vatArgs...);
+    }
+    /* -- Append main function --------------------------------------------- */
+    template<typename ...VarArgs>
+      static const string StrAppend(const VarArgs &...vaVars)
+    { // Theres no need to call this if theres no parameters
+      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
+      // Stream to write to
+      ostringstream osS;
+      // Build string
+      Param(osS, vaVars...);
+      // Return string
+      return osS.str();
+    }
+    /* -- Append with formatted numbers ------------------------------------ */
+    template<typename ...VarArgs>
+      static const string StrAppendImbue(const VarArgs &...vaVars)
+    { // Theres no need to call this if theres no parameters
+      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
+      // Stream to write to
+      ostringstream osS;
+      // Imbue current locale
+      osS.imbue(cCommon->Locale());
+      // Build string
+      Param(osS, vaVars...);
+      // Return appended string
+      return osS.str();
+    }
+  } /* -- Format functions ------------------------------------------------- */
+  namespace Format                     // Private functions
+  { /* -- Append final parameter (uses copy elision) ----------------------- */
+    static void Param(ostringstream &osS, const char *cpPos)
+      { if(*cpPos) osS << cpPos; }
+    /* -- Process any value ------------------------------------------------ */
+    template<typename AnyType, typename ...VarArgs>
+      static void Param(ostringstream &osS, const char *cpPos,
+        const AnyType &atVal, const VarArgs &...vaVars)
+    { // Find the mark that will be replaced by this parameter and if we
+      // find the character?
+      if(const char*const cpNewPos = strchr(cpPos, '$'))
+      { // How far did we find the new position
+        switch(const size_t stNum = static_cast<size_t>(cpNewPos - cpPos))
+        { // One character? Just copy one character and move ahead two to skip
+          // over the '$' we just processed.
+          case 1: osS << *cpPos; cpPos += 2; break;
+          // More than one character? Copy characters and stride over the '$'
+          // we just processed. Better than storing single characters.
+          default: osS << string{ cpPos, stNum };
+                   cpPos += stNum + 1;
+                   break;
+          // Did not move? This can happen at the start of the string. Just
+          // move over the first '$'.
+          case 0: ++cpPos; break;
+        } // Push the value we are supposed to replace the matched '$' with.
+        Value(osS, atVal);
+        // Process more parameters if we can.
+        Param(osS, cpPos, vaVars...);
+      } // Return the rest of the string.
+      else Param(osS, cpPos);
+    }
+    /* -- Prepare message from c-string format ----------------------------- */
+    template<typename ...VarArgs>
+      static const string StrFormat(const char*const cpFmt,
+        const VarArgs &...vaVars)
+    { // Theres no need to call this if theres no parameters
+      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
+      // Return if string empty of invalid
+      if(UtfIsCStringNotValid(cpFmt)) return {};
+      // Stream to write to
+      ostringstream osS;
+      // Format the text
+      Param(osS, cpFmt, vaVars...);
+      // Return formated text
+      return osS.str();
+    }
+    /* -- Prepare message from string format ------------------------------- */
+    template<typename ...VarArgs>
+      static const string StrFormat[[maybe_unused]](const string &strS,
+        const VarArgs &...vaVars)
+    { // Return if string empty of invalid
+      if(strS.empty()) return {};
+      // Stream to write to
+      ostringstream osS;
+      // StrFormat the text
+      Param(osS, strS.c_str(), vaVars...);
+      // Return formated text
+      return osS.str();
+    }
+  }
+} /* ----------------------------------------------------------------------- */
+using H::Append::StrAppend;            // Alias 'StrAppend' here
+using H::Append::StrAppendImbue;       // Alias 'StrAppendImbue' here
+using H::Format::StrFormat;            // Alias 'StrFormat' here
 /* == Format a number ====================================================== */
 template<typename IntType>
   static const string StrReadableFromNum(const IntType itVal,
     const int iPrec=0)
-      { return StdMove(StrAppendImbue(fixed, setprecision(iPrec), itVal)); }
+      { return StrAppendImbue(fixed, setprecision(iPrec), itVal); }
 /* -- Trim specified characters from end of string ------------------------- */
 static const string StrTrimSuffix(const string &strStr, const char cChar)
 { // Return empty string if source string is empty or calculate ending
@@ -199,15 +222,14 @@ static const string StrTrim(const string &strStr, const char cChar)
   if(strStr.empty()) return strStr;
   // Calculate starting misoccurance of character. Return original if not found
   const size_t stBegin = strStr.find_first_not_of(cChar);
-  if(stBegin == string::npos) return strStr;
+  if(stBegin == StdNPos) return strStr;
   // Calculate ending misoccurance of character then copy and return the string
   return strStr.substr(stBegin, strStr.find_last_not_of(cChar) - stBegin + 1);
 }
 /* -- Convert integer to string with padding and precision ----------------- */
 template<typename IntType>static const string StrFromNum(const IntType itV,
   const int iW=0, const int iPrecision=numeric_limits<IntType>::digits10)
-    { return StdMove(StrAppend(setw(iW), fixed,
-        setprecision(iPrecision), itV)); }
+    { return StrAppend(setw(iW), fixed, setprecision(iPrecision), itV); }
 /* -- Quickly convert numbered string to integer --------------------------- */
 template<typename IntType=int64_t>
   static const IntType StrToNum(const string &strValue)
@@ -246,11 +268,10 @@ template<typename IntType=int64_t>
 /* -- Convert hex to string with zero padding ------------------------------ */
 template<typename IntType>
   static const string StrHexFromInt(const IntType itVal, const int iPrec=0)
-    { return StdMove(StrAppend(setfill('0'), hex, setw(iPrec), itVal)); }
+    { return StrAppend(setfill('0'), hex, setw(iPrec), itVal); }
 template<typename IntType>
   static const string StrHexUFromInt(const IntType itVal, const int iPrec=0)
-    { return StdMove(StrAppend(setfill('0'), hex, setw(iPrec), uppercase,
-        itVal)); }
+    { return StrAppend(setfill('0'), hex, setw(iPrec), uppercase, itVal); }
 /* -- Return if specified string has numbers ------------------------------- */
 static bool StrIsAlpha(const string &strValue)
   { return StdAllOf(par_unseq, strValue.cbegin(), strValue.cend(),
@@ -258,7 +279,8 @@ static bool StrIsAlpha(const string &strValue)
 /* -- Return if specified string has numbers ------------------------------- */
 static bool StrIsAlphaNum(const string &strValue)
   { return StdAllOf(par_unseq, strValue.cbegin(), strValue.cend(),
-      [](const char cValue) { return isalnum(static_cast<int>(cValue)); }); }
+      [](const char cValue)
+        { return StdIsAlnum(static_cast<int>(cValue)); }); }
 /* -- Return if specified string is a valid integer ------------------------ */
 template<typename IntType=int64_t>static bool StrIsInt(const string &strValue)
 { // Get string stream
@@ -356,9 +378,8 @@ static StdTimeT StrParseTime(const string &strS,
 static string &StrToUpCaseRef(string &strStr)
 { // If string is not empty
   if(!strStr.empty())
-    StdTransform(par_unseq, strStr.begin(), strStr.end(),
-      strStr.begin(), [](char cChar)->char
-        { return static_cast<char>(toupper(static_cast<int>(cChar))); });
+    StdTransform(par_unseq, strStr.begin(), strStr.end(), strStr.begin(),
+      [](unsigned char ucChar) { return StdToUpper(ucChar); });
   // Return output
   return strStr;
 }
@@ -366,11 +387,32 @@ static string &StrToUpCaseRef(string &strStr)
 static string &StrToLowCaseRef(string &strStr)
 { // If string is not empty
   if(!strStr.empty())
-    StdTransform(par_unseq, strStr.begin(), strStr.end(),
-      strStr.begin(), [](char cChar)->char
-        { return static_cast<char>(tolower(static_cast<int>(cChar))); });
+    StdTransform(par_unseq, strStr.begin(), strStr.end(), strStr.begin(),
+      [](unsigned char ucChar) { return StdToLower(ucChar); });
   // Return output
   return strStr;
+}
+/* -- Convert string to upper case ----------------------------------------- */
+static const string StrToUpCase[[maybe_unused]](const string &strSrc)
+{ // String empty? Return a blank one
+  if(strSrc.empty()) return {};
+  // Create memory for destination string and copy the string over
+  string strDst; strDst.reserve(strSrc.size());
+  transform(strSrc.begin(), strSrc.end(), back_inserter(strDst),
+    [](unsigned char ucChar) { return StdToUpper(ucChar); });
+  // Return result
+  return strDst;
+}
+/* -- Convert string to lower case ----------------------------------------- */
+static const string StrToLowCase[[maybe_unused]](const string &strSrc)
+{ // String empty? Return a blank one
+  if(strSrc.empty()) return {};
+  // Prepare destination string and run a transform to lowercase each char
+  string strDst; strDst.reserve(strSrc.size());
+  transform(strSrc.begin(), strSrc.end(), back_inserter(strDst),
+    [](unsigned char ucChar) { return StdToLower(ucChar); });
+  // Return result
+  return strDst;
 }
 /* -- Basic multiple replace of text in string ----------------------------- */
 template<class ListType=StrPairList>
@@ -413,7 +455,7 @@ static string &StrReplace(string &strStr, const char cWhat, const char cWith)
   if(strStr.empty()) return strStr;
   // For each occurence of 'strWhat' with 'strWith'.
   for(size_t stPos  = strStr.find(cWhat, 0);
-             stPos != string::npos;
+             stPos != StdNPos;
              stPos  = strStr.find(cWhat, stPos)) strStr[stPos++] = cWith;
   // Return string
   return strStr;
@@ -429,7 +471,7 @@ static string &StrReplace(string &strDest, const string &strWhat,
   if(strDest.empty()) return strDest;
   // For each occurence of 'strWhat' with 'strWith'.
   for(size_t stPos  = strDest.find(strWhat,0);
-             stPos != string::npos;
+             stPos != StdNPos;
              stPos  = strDest.find(strWhat, stPos))
   { // Replace occurence
     strDest.replace(stPos, strWhat.length(), strWith);
@@ -544,7 +586,7 @@ static const string StrCapitalise(const string &strStr)
   if(strStr.empty()) return strStr;
   // Duplicate the string anad uppercase the first character
   string strNew{ strStr };
-  strNew[0] = static_cast<char>(toupper(strStr.front()));
+  strNew[0] = StdToUpper<char>(strStr.front());
   // Return provided string
   return strNew;
 }
@@ -578,7 +620,7 @@ static const string StrShortFromDuration(const double dDuration,
   osS << fixed << setfill('0') << setprecision(0);
   // Have days?
   if(dInt >= 86400)
-    osS <<            floor(dInt/86400)          << ':'
+    osS <<                 floor(dInt/86400)     << ':'
         << setw(2) << fmod(floor(dInt/3600), 24) << ':'
         << setw(2) << fmod(floor(dInt/60),   60) << ':' << setw(2);
   // No days, but hours?
@@ -603,8 +645,8 @@ static const string StrShortFromDuration(const double dDuration,
 /* -- Return true of false ------------------------------------------------- */
 static const string &StrFromBoolTF(const bool bCondition)
   { return bCondition ? cCommon->Tru() : cCommon->Fals(); }
-static const char *StrFromBoolYN(const bool bCondition)
-  { return bCondition ? "X" : "-"; }
+static const string &StrFromBoolYN(const bool bCondition)
+  { return bCondition ? cCommon->Y() : cCommon->N(); }
 /* -- Count occurence of string -------------------------------------------- */
 static size_t StrCountOccurences(const string &strStr, const string &strWhat)
 { // Zero if string is empty
@@ -613,7 +655,7 @@ static size_t StrCountOccurences(const string &strStr, const string &strWhat)
   size_t stCount = 0;
   // Find occurences
   for(size_t stIndex = strStr.find(strWhat);
-             stIndex != string::npos;
+             stIndex != StdNPos;
              stIndex = strStr.find(strWhat, stIndex + 1)) ++stCount;
   // Return occurences
   return stCount;
@@ -652,8 +694,8 @@ static const string ImplodeMap(const StrNCStrMap &ssmSrc,
   StrVector svRet; svRet.reserve(ssmSrc.size());
   transform(ssmSrc.cbegin(), ssmSrc.cend(), back_inserter(svRet),
     [&strKeyValSep, &strValEncaps](const StrNCStrMapPair &sncsmpPair)
-      { return StdMove(StrAppend(sncsmpPair.first, strKeyValSep,
-          strValEncaps, sncsmpPair.second, strValEncaps)); });
+      { return StrAppend(sncsmpPair.first, strKeyValSep,
+          strValEncaps, sncsmpPair.second, strValEncaps); });
   // Return vector imploded into a string
   return StrImplode(svRet, 0, strLineSep);
 }
@@ -661,14 +703,13 @@ static const string ImplodeMap(const StrNCStrMap &ssmSrc,
 template<typename AnyType>
   static const string StrPrefixPosNeg(const AnyType atVal,
     const int iPrecision)
-      { return StdMove(StrAppend(showpos, fixed, setprecision(iPrecision),
-          atVal)); }
+      { return StrAppend(showpos, fixed, setprecision(iPrecision), atVal); }
 /* ------------------------------------------------------------------------- */
 template<typename AnyType>
   static const string StrPrefixPosNegReadable(const AnyType atVal,
     const int iPrecision)
-      { return StdMove(StrAppendImbue(showpos, fixed, setprecision(iPrecision),
-          atVal)); }
+      { return StrAppendImbue(showpos, fixed, setprecision(iPrecision),
+          atVal); }
 /* ------------------------------------------------------------------------- */
 template<typename OutType, typename InType, class SuffixClass>
   static OutType StrToReadableSuffix(const InType itValue,
@@ -725,7 +766,7 @@ template<typename IntType>
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // If input value is 32-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint32_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer
     static const array<const ByteValue,3> bvLookup{ {
       { 0x40000000, "GB" }, { 0x00100000, "MB" }, { 0x00000400, "KB" }
@@ -734,7 +775,7 @@ template<typename IntType>
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // If input value is 16-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer
     static const array<const ByteValue,1> bvLookup{ { { 0x0400, "KB" } } };
     // Return result
@@ -785,7 +826,7 @@ template<typename IntType>
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
   } // If input value is 32-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint32_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer.
     static const array<const BitValue,3> bvLookup{ {
       { 1000000000, "Gb" }, { 1000000, "Mb" }, { 1000, "Kb" },
@@ -794,7 +835,7 @@ template<typename IntType>
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
   } // If input value is 16-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer.
     static const array<const BitValue,6> bvLookup{ { { 1000, "Kb" } } };
     // Return result
@@ -842,7 +883,7 @@ template<typename IntType>
     // Return result
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   } // If input value is 32-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint32_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
     static const array<const Value,3> vLookup{ {
       { 1000000000, "B" }, { 1000000, "M" }, { 1000, "K" }
@@ -850,7 +891,7 @@ template<typename IntType>
     // Return result
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   } // If input value is 16-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
     static const array<const Value,1> vLookup{ { { 1000, "K" } } };
     // Return result
@@ -885,73 +926,73 @@ template<typename IntType>
 static size_t StrFindCharForwards(const string &strS, size_t stStart,
   const size_t stEnd, const char cpChar)
 { // Until we've reached the limit
-  while(stStart < stEnd && stStart != string::npos)
+  while(stStart < stEnd && stStart != StdNPos)
   { // Return position if we find the character
     if(strS[stStart] == cpChar) return stStart;
     // Goto next index and try again
     ++stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharBackwards[[maybe_unused]](const string &strS,
   size_t stStart, const size_t stEnd, const char cpChar)
 { // Until we've reached the limit
-  while(stStart >= stEnd && stStart != string::npos)
+  while(stStart >= stEnd && stStart != StdNPos)
   { // Return position if we find the character
     if(strS[stStart] == cpChar) return stStart;
     // Goto next index and try again
     --stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharNotForwards[[maybe_unused]](const string &strS,
   size_t stStart, const size_t stEnd, const char cpChar)
 { // Until we've reached the limit
-  while(stStart < stEnd && stStart != string::npos)
+  while(stStart < stEnd && stStart != StdNPos)
   { // Return position if we find the character
     if(strS[stStart] != cpChar) return stStart;
     // Goto next index and try again
     ++stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharNotForwards(const string &strS, size_t stStart,
   const size_t stEnd)
 { // Until we've reached the limit
-  while(stStart < stEnd && stStart != string::npos)
+  while(stStart < stEnd && stStart != StdNPos)
   { // Return position if we find a non-control character
     if(strS[stStart] > ' ') return stStart;
     // We could not match any character
     ++stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharNotBackwards[[maybe_unused]](const string &strS,
   size_t stStart, const size_t stEnd, const char cpChar)
 { // Until we've reached the limit
-  while(stStart >= stEnd && stStart != string::npos)
+  while(stStart >= stEnd && stStart != StdNPos)
   { // Return position if we find the character
     if(strS[stStart] != cpChar) return stStart;
     // Goto next index and try again
     --stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharNotBackwards(const string &strS, size_t stStart,
   const size_t stEnd)
 { // Until we've reached the limit
-  while(stStart >= stEnd && stStart != string::npos)
+  while(stStart >= stEnd && stStart != StdNPos)
   { // Return position if we find a non-control character
     if(strS[stStart] > ' ') return stStart;
     // We could not match any character
     --stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* -- Do convert the specified structure to string ------------------------= */
 static const string StrFromTimeTM(const StdTMStruct &tmData,
@@ -966,10 +1007,12 @@ static const string StrFromTimeTT(const StdTimeT ttTimestamp,
 }
 /* -- Remove suffixing carriage return and line feed ----------------------- */
 static string &StrChop(string &strStr)
-{ // Error message should have a carriage return/line feed so remove it
-  while(!strStr.empty() && (strStr.back() == '\r' || strStr.back() == '\n'))
-    strStr.pop_back();
-  // Return string
+{ // Find the pos of the last char that is not a carriage return or line feed
+  const size_t stEndPos = strStr.find_last_not_of("\r\n");
+  // If all characters are removed, set the string to empty else erase the part
+  if(stEndPos == StdNPos) strStr.clear();
+  else strStr.erase(stEndPos + 1);
+  // Return the modified string
   return strStr;
 }
 /* -- Convert specified timestamp to string (UTC) -------------------------- */
@@ -981,27 +1024,24 @@ static const string StrFromTimeTTUTC(const StdTimeT ttTimestamp,
   return StrFromTimeTM(tmData, cpFormat);
 }
 /* ------------------------------------------------------------------------- */
-template<typename FloatType>
-  static const string StrFromRatio(const FloatType ftAntecedent,
-    const FloatType ftConsequent)
-{ // Convert to double if neccesary
-  const double dAntecedent = static_cast<double>(ftAntecedent),
-               dConsequent = static_cast<double>(ftConsequent);
-  // Return if invalid number or the below loop can infinitely enumerate
-  if(dAntecedent <= 0.0 || dConsequent <= 0.0) return "N/A";
-  // Divisor to use
-  double dDivisor;
-  // Loop until common denominator found
-  for(double dNumerator = dAntecedent, dDenominator = dConsequent; ; )
-  { // Find the lowest numerator and break if we find it
-    dNumerator = fmod(dNumerator, dDenominator);
-    if(dNumerator == 0.0) { dDivisor = dDenominator; break; }
-    // Find the lowest denominator and break if we find it
-    dDenominator = fmod(dDenominator, dNumerator);
-    if(dDenominator == 0.0) { dDivisor = dNumerator; break; }
-  } // Return lowest numerator and denominator
-  return StrAppend(fixed, setprecision(0), ceil(dAntecedent / dDivisor), ':',
-    ceil(dConsequent / dDivisor));
+template<typename IntType>
+  string StrFromRatio(const IntType itAntecedent, const IntType itConsequent)
+{ // Return failure if parameters negative or zero
+  if(itAntecedent <= 0 || itConsequent <= 0) return "N/A";
+  // If we're a number, we need to convert it to an integer or std::gcd fails
+  if constexpr(is_floating_point_v<IntType>)
+    return StrFromRatio(static_cast<unsigned int>(itAntecedent),
+                        static_cast<unsigned int>(itConsequent));
+  // Integral?
+  else
+  { // Calculate the greatest common divisor
+    IntType itGCD = std::gcd(itAntecedent, itConsequent),
+    // Calculate the simplified ratio
+            itNum = itAntecedent / itGCD,
+            itDen = itConsequent / itGCD;
+    // Return the ratio as a string
+    return StrAppend(itNum, ':', itDen);
+  }
 }
 /* -- Convert list to exploded string -------------------------------------- */
 template<class ListType>
@@ -1033,40 +1073,35 @@ template<class ListType>
   } // Return the compacted string
   return ossOut.str();
 }
-/* -- Convert string to lower case ----------------------------------------- */
-static const string StrToLowCase[[maybe_unused]](const string &strSrc)
-{ // Create memory for destination string and copy the string over
-  string strDst; strDst.resize(strSrc.length());
-  for(size_t stI = 0; stI < strSrc.size(); ++stI)
-    strDst[stI] = static_cast<char>(tolower(static_cast<int>(strSrc[stI])));
-  // Return copied string
-  return strDst;
-}
-/* -- Convert string to upper case ----------------------------------------- */
-static const string StrToUpCase[[maybe_unused]](const string &strSrc)
-{ // Create memory for destination string and copy the string over
-  string strDst; strDst.resize(strSrc.length());
-  for(size_t stIndex = 0; stIndex < strSrc.size(); ++stIndex)
-    strDst[stIndex] =
-      static_cast<char>(toupper(static_cast<int>(strSrc[stIndex])));
-  // Return copied string
-  return strDst;
-}
 /* -- Compact a string removing leading, trailing and duplicate spaces ----- */
-static string &StrCompactRef(string &strStr, const char cToken=' ')
-{ // Enumerate every whitespace character until end-of-string
-  for(string::iterator siCharIt{ strStr.begin() }; siCharIt != strStr.end(); )
-  { // Not a whitespace?
-    if(*siCharIt != cToken)
-    { // Skip non-whitespace characters until end of string
-      while(++siCharIt != strStr.end())
-        // If is a whitespace go forward again and go back to for loop
-        if(*siCharIt == cToken) { ++siCharIt; break; }
-    } // Erase whitespace
-    else siCharIt = strStr.erase(siCharIt);
-  } // Remove trailing whitespace if there is one
-  if(!strStr.empty() && strStr.back() == cToken) strStr.pop_back();
-  // Return string
+static string &StrCompactRef(string &strStr)
+{ // Return if string is empty
+  if(strStr.empty()) return strStr;
+  // Return string if no whitespace found
+  const size_t stStart = strStr.find_first_not_of(' ');
+  if (stStart == StdNPos) { strStr.clear(); return strStr; }
+  // Trim trailing spaces
+  const size_t stEnd = strStr.find_last_not_of(' ');
+  strStr = strStr.substr(stStart, stEnd - stStart + 1);
+  // Enumerate through spaces
+  size_t stWriteIndex = 0;
+  bool bInToken = false;
+  for(size_t stReadIndex = 0; stReadIndex < strStr.size(); ++stReadIndex)
+  { // Is character not a whitespace?
+    if(StdIsNotSpace(strStr[stReadIndex]))
+    { // Write space and increment position if in a space and not writing at
+      // a different position.
+      if(bInToken && stWriteIndex > 0) strStr[stWriteIndex++] = ' ';
+      // Write the character
+      strStr[stWriteIndex++] = strStr[stReadIndex];
+      // No longer in a whitespace
+      bInToken = false;
+    } // Now in a whitespace block
+    else bInToken = true;
+  } // Resize the string to remove trailing spaces (if any)
+  if(stWriteIndex > 0 && StdIsSpace(strStr[stWriteIndex - 1])) --stWriteIndex;
+  // Truncate unused characters and the string
+  strStr.resize(stWriteIndex);
   return strStr;
 }
 /* -- Compact a c-string removing duplicate spaces ------------------------- */

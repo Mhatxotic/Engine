@@ -11,8 +11,9 @@ namespace IGlFWWindow {                // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IGlFWUtil::P;
-using namespace ILog::P;               using namespace IString::P;
-using namespace IUtf;                  using namespace Lib::OS::GlFW;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace IUtf::P;
+using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -21,7 +22,7 @@ class GlFWWindow :                     // GLFW window class
   public GlFWUtil                      // Include utilities
 { /* -- Private variables -------------------------------------------------- */
   GLFWwindow      *wClass;             // GLFW window context
-  StrVector        vFiles;             // Drag and drop file list
+  StrVector        svFiles;            // Drag and drop file list
   /* -- Return the window handle ------------------------------------------- */
   GLFWwindow *WinGetHandle(void) const { return wClass; }
   /* -- Get window data pointer -------------------------------------------- */
@@ -42,16 +43,19 @@ class GlFWWindow :                     // GLFW window class
     unsigned int uiC, const char **const cpaF)
   { // Check if is our window, and check the pointer and return if empty or
     // invalid or a previous event has not been processed yet.
-    if(wC != WinGetHandle() || UtfIsCStringNotValid(cpaF) || !vFiles.empty())
+    if(wC != WinGetHandle() ||
+       UtfIsCStringNotValid(cpaF) ||
+       !WinGetFiles().empty())
       return;
     // Because we're in the main thread, we need to tell the engine thread
     // but the problem is that glfw will free 'cpaFiles' after this function
     // returns so we need to copy all the strings across unfortunately. Not
-    // sure if I should mutex lock 'vFiles' as I am not sure if another
+    // sure if I should mutex lock 'svFiles' as I am not sure if another
     // 'OnDrop' event will fire before this list gets to the Lua callback.
     // I highly doubt it, but if we get crashes, just bear that in mind!
-    vFiles.reserve(uiC);
-    for(unsigned int uiI = 0; uiI < uiC; ++uiI) vFiles.emplace_back(cpaF[uiI]);
+    WinGetFiles().reserve(uiC);
+    for(unsigned int uiI = 0; uiI < uiC; ++uiI)
+      WinGetFiles().emplace_back(cpaF[uiI]);
     // Now dispatch the event
     cEvtMain->Add(EMC_INP_DRAG_DROP);
   }
@@ -178,11 +182,11 @@ class GlFWWindow :                     // GLFW window class
     glfwSetCursorEnterCallback(WinGetHandle(), nullptr);
     glfwSetCharCallback(WinGetHandle(), nullptr);
   }
-  /* -- Is the window handle set? ---------------------------------- */ public:
+  /* -- Get files -------------------------------------------------- */ public:
+  StrVector &WinGetFiles(void) { return svFiles; }
+  /* -- Is the window handle set? ------------------------------------------ */
   bool WinIsAvailable(void) const { return !!WinGetHandle(); }
   bool WinIsNotAvailable(void) const { return !WinIsAvailable(); }
-  /* -- Get files ---------------------------------------------------------- */
-  StrVector &WinGetFiles(void) { return vFiles; }
   /* -- Set window icon ---------------------------------------------------- */
   void WinSetIcon(const int iCount, const GLFWimage*const giImages) const
     { glfwSetWindowIcon(WinGetHandle(), iCount, giImages); }
@@ -288,7 +292,7 @@ class GlFWWindow :                     // GLFW window class
   void WinSetAspectRatio(const string &strVal) const
   { // Seperate numeric and denominator
     const size_t stPos = strVal.find('.');
-    if(stPos != string::npos)
+    if(stPos != StdNPos)
     { // Get numeric and denominator
       const int iNumeric = StrToNum<int>(strVal.substr(0, stPos)),
         iDenominator = StrToNum<int>(strVal.substr(stPos+1));
@@ -429,8 +433,6 @@ class GlFWWindow :                     // GLFW window class
     wClass{ nullptr }                  // Uninitialised window context
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(GlFWWindow)          // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -62,7 +62,7 @@ struct UuId                            // Members initially public
     // Return parsed values
     return { {
       // Helper macro
-#define HDC(i,m) (CryptHex2Char(static_cast<uint8_t>(strUUID[i]))*m)
+#define HDC(i,m) (CryptHex2Char<0>(static_cast<unsigned char>(strUUID[i]))*m)
       static_cast<uint32_t>(           // d.p.dwTimeLow
         HDC(0, 0x10000000) | HDC(1, 0x1000000) | HDC(2, 0x100000) |
         HDC(3, 0x10000)    | HDC(4, 0x1000)    | HDC(5, 0x100)    |

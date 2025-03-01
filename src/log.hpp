@@ -285,8 +285,6 @@ static class Log final :
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Log, DeInitSafe())
-  /* -- Macros ------------------------------------------------------------- */
-  DELETECOPYCTORS(Log)                 // Suppress default functions for safety
   /* -- Conlib callback function for APP_LOG variable ---------------------- */
   CVarReturn LogFileModified(const string &strFN, string &strCV)
   { // Lock mutex

@@ -192,6 +192,12 @@ static const char *GlFWGetJoystickGUID(const int iJ)
 /* -- Return if joystick is present ---------------------------------------- */
 static bool GlFWJoystickPresent(const int iJ)
   { return glfwJoystickPresent(iJ); }
+/* -- Set joystick callback ------------------------------------------------ */
+static GLFWjoystickfun GlFWSetJoystickCallback(GLFWjoystickfun gjfCb)
+  { return glfwSetJoystickCallback(gjfCb); }
+/* -- Set monitor change callback ------------------------------------------ */
+static GLFWmonitorfun GlFWSetMonitorCallback(GLFWmonitorfun gmfCb)
+  { return glfwSetMonitorCallback(gmfCb); }
 /* -- Set swap interval ---------------------------------------------------- */
 static void GlFWSetVSync(const int iI) { glfwSwapInterval(iI); }
 /* -- Wait for window event ------------------------------------------------ */

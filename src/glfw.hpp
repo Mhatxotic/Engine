@@ -9,9 +9,9 @@
 /* ------------------------------------------------------------------------- */
 namespace IGlFW {                      // Start of module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IError::P;
-using namespace IGlFWCursor::P;        using namespace IGlFWUtil::P;
-using namespace IGlFWWindow::P;        using namespace ILog::P;
+using namespace IError::P;             using namespace IGlFWCursor::P;
+using namespace IGlFWUtil::P;          using namespace IGlFWWindow::P;
+using namespace IHelper::P;            using namespace ILog::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace IToken::P;             using namespace ISysUtil::P;
 using namespace IUtil::P;              using namespace Lib::OS::GlFW;
@@ -22,7 +22,7 @@ namespace P {                          // Start of public module namespace
 /* ========================================================================= */
 static class GlFW final :              // Root engine class
   /* -- Base classes ------------------------------------------------------- */
-  public IHelper,                      // Initialisation helper
+  public InitHelper,                   // Initialisation helper
   public GlFWWindow,                   // GLFW window class
   private CursorStandard               // Standard cursors list
 { /* -- Private variables and functions ------------------------------------ */
@@ -163,7 +163,7 @@ static class GlFW final :              // Root engine class
   /* -- Constructor -------------------------------------------------------- */
   GlFW(void) :                         // Default constructor (No arguments)
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Set class function name
+    InitHelper{ __FUNCTION__ },        // Set class function name
     /* --------------------------------------------------------------------- */
 #define CURSOR(x) GlFWCursor{ GLFW_ ## x ## _CURSOR }
     /* --------------------------------------------------------------------- */
@@ -203,8 +203,6 @@ static class GlFW final :              // Root engine class
     bRawMouseSupported(false)          // Raw mouse support is detected soon
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(GlFW)                // Suppress default functions for safety
   /* ----------------------------------------------------------------------- */
 } *cGlFW = nullptr;                    // Pointer to static class
 /* == Process a glfw error ================================================= */

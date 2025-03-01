@@ -469,8 +469,7 @@ class CoDecoder :                      // Magic decoder derivative class
       // Unknown version
       default: XC("Invalid version!", "Version", uiVersionActual);
     }
-  } /* --------------------------------------------------------------------- */
-  DELETECOPYCTORS(CoDecoder)           // Suppress default functions for safety
+  }
 };/* == Encoder base class ================================================= */
 template<class EncPlugin>class CoEncoder :
   /* -- Base classes ------------------------------------------------------- */
@@ -507,8 +506,6 @@ template<class EncPlugin>class CoEncoder :
     EncPlugin{ mcSrc, *this, stLevel }
     /* -- Code ------------------------------------------------------------- */
     { InitHeader(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CoEncoder)           // Suppress default functions for safety
 };/* ======================================================================= **
 ** ######################################################################### **
 ** ## Encoder helpers                                                     ## **
@@ -516,7 +513,6 @@ template<class EncPlugin>class CoEncoder :
 ** -- Command helper interface to a class with encoder data ---------------- */
 #define CODEC_HELPER(n,...) namespace CodecHelper { \
   class n ## Encoder : public EncData { \
-    DELETECOPYCTORS(n ## Encoder) \
     public: n ## Encoder(const MemConst &dS, Memory &mD, const size_t stU) : \
       EncData{ CodecEncode ## n(dS, mD, stU, ## __VA_ARGS__, ENCHDR_SIZE) } {}\
   }; \
@@ -563,8 +559,6 @@ template<class EncoderType>class Block final : public EncoderType
     EncoderType{ StdMove(MemConst{ strIn }), stUser }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Block)               // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

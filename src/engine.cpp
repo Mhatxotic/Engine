@@ -40,6 +40,9 @@ namespace E {                          // Start of engine namespace
 #include "fstream.hpp"                 // File IO utility header
 #include "log.hpp"                     // Logging helper class header
 #include "luadef.hpp"                  // Lua definitions header
+#include "luaident.hpp"                // Lua ident class header
+#include "ihelper.hpp"                 // Init helper class header
+#include "lockable.hpp"                // Lockable class header
 #include "collect.hpp"                 // Class collector utility header
 #include "stat.hpp"                    // Statistic utility class header
 #include "thread.hpp"                  // Thread helper class header
@@ -50,7 +53,11 @@ namespace E {                          // Start of engine namespace
 #include "glfwcrsr.hpp"                // GLFW cursor class header
 #include "glfwwin.hpp"                 // GLFW window class header
 #include "glfw.hpp"                    // GLFW utilities header
-#include "dim.hpp"                     // Data grouping classes header
+#include "intpair.hpp"                 // Integer pair class header
+#include "coord.hpp"                   // Co-oridinates class header
+#include "rectangl.hpp"                // Rectangle class header
+#include "dim.hpp"                     // Dimensions class header
+#include "dimcoord.hpp"                // Joined dim/coord class header
 #include "glfwmon.hpp"                 // GLFW monitor class header
 #include "condef.hpp"                  // Console definitions header
 #include "syscore.hpp"                 // Operating system interface header
@@ -77,15 +84,22 @@ namespace E {                          // Start of engine namespace
 #include "console.hpp"                 // Console handling header
 #include "oal.hpp"                     // OpenAL audio header
 #include "pcmdef.hpp"                  // Pcm definitions header
+#include "dformat.hpp"                 // Data format helper header
 #include "pcmlib.hpp"                  // Pcm codecs handling header
-#include "pcmfmt.hpp"                  // Pcm format support plugins header
+#include "pcmwav.hpp"                  // PcmLib WAV file codec
+#include "pcmcaf.hpp"                  // PcmLib CAF file codec
+#include "pcmogg.hpp"                  // PcmLib OGG file codec
+#include "pcmmp3.hpp"                  // PcmLib MP3 file codec
 #include "pcm.hpp"                     // Pcm loader class header
 #include "fbodef.hpp"                  // Frambuffer object definitions header
 #include "texdef.hpp"                  // Texture data definitions header
 #include "ogl.hpp"                     // OpenGL graphics management header
 #include "imagedef.hpp"                // Image data definitions header
 #include "imagelib.hpp"                // Image codecs handling header
-#include "imagefmt.hpp"                // Image format support plugins header
+#include "imagedds.hpp"                // ImageLib DDS file codec
+#include "imagegif.hpp"                // ImageLib GIF file codec
+#include "imagepng.hpp"                // ImageLib PNG file codec
+#include "imagejpg.hpp"                // ImageLib JPG file codec
 #include "bin.hpp"                     // Bin packing class header
 #include "image.hpp"                   // Image load and save handling header
 #include "shader.hpp"                  // OpenGL Shader handling header
@@ -103,6 +117,9 @@ namespace E {                          // Start of engine namespace
 #include "file.hpp"                    // FStream+FileMap class header
 #include "clip.hpp"                    // Clipboard class header
 #include "congraph.hpp"                // Console rendering class header
+#include "joyaxis.hpp"                 // Joystick axis class header
+#include "joybutton.hpp"               // Joystick button class header
+#include "joyinfo.hpp"                 // Joystick info class header
 #include "joystick.hpp"                // Joystick structure class header
 #include "input.hpp"                   // Input handling class header
 #include "display.hpp"                 // Window handling class header

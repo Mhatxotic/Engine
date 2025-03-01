@@ -11,23 +11,29 @@ namespace IShaders {                   // Start of private module namespace
 using namespace ICVarDef::P;           using namespace IFboDef::P;
 using namespace ILog::P;               using namespace IOgl::P;
 using namespace IShader::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace Lib::OS::GlFW;
+using namespace IString::P;            using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Shader core class ==================================================== */
 static struct ShaderCore final
 { /* -- 3D shader references ----------------------------------------------- */
-  array<Shader,3> sh3DBuiltIns;        // list of built-in 3D shaders
-  Shader          &sh3D;               // Basic 3D transformation shader
-  Shader          &sh3DYCbCr;          // 3D YCbCr transformation shader
-  Shader          &sh3DYCbCrK;         // 3D YCbCr ckey transformation shader
+  array<Shader,9> sh3DBuiltIns;        // list of built-in 3D shaders
+  Shader          &sh3D,               // Basic 3D transformation shader
+                  &sh3DYCbCr601FR,     // 3D YCbCr Rec.601 full-range shader
+                  &sh3DYCbCr601PR,     // 3D YCbCr Rec.601 partial-range shader
+                  &sh3DYCbCr709FR,     // 3D YCbCr Rec.709 full-range shader
+                  &sh3DYCbCr709PR,     // 3D YCbCr Rec.709 partial-range shader
+                  &sh3DYCbCrK601FR,    // Keyed Rec.601 full-range shader
+                  &sh3DYCbCrK601PR,    // Keyed Rec.601 partial-range shader
+                  &sh3DYCbCrK709FR,    // Keyed Rec.709 full-range shader
+                  &sh3DYCbCrK709PR;    // Keyed Rec.709 partial-range shader
   /* -- 2D shader references ----------------------------------------------- */
   array<Shader,5> sh2DBuiltIns;        // list of built-in 2D shaders
-  Shader          &sh2D;               // 2D-3D transformation shader
-  Shader          &sh2DBGR;            // 2D BGR-3D transformation shader
-  Shader          &sh2D8;              // 2D LUM-3D transformation shader
-  Shader          &sh2D8Pal;           // 2D LUMPAL-3D transformation shader
-  Shader          &sh2D16;             // 2D LUMAL-3D transformation shader
+  Shader          &sh2D,               // 2D-3D transformation shader
+                  &sh2DBGR,            // 2D BGR-3D transformation shader
+                  &sh2D8,              // 2D LUM-3D transformation shader
+                  &sh2D8Pal,           // 2D LUMPAL-3D transformation shader
+                  &sh2D16;             // 2D LUMAL-3D transformation shader
   /* -------------------------------------------------------------- */ private:
   typedef array<const string,5> RoundList;
   const RoundList rList;               // Rounding method list
@@ -45,13 +51,13 @@ static struct ShaderCore final
       "out vec4 colourout;"            // Colour multiplier sent to frag shader
       "uniform vec4 matrix;"           // Current 2D matrix
       "void main(void){"               // Entry point
-        "vec4 v = vec4(vertex.xy,0,1);"    // Store vertex
-        "vec4 tc = vec4(texcoord.xy,0,0);" // Store texcoord
-        "vec4 c = colour;"             // Store colour
+        "vec4 v=vec4(vertex.xy,0,1);"  // Store vertex
+        "vec4 tc=vec4(texcoord.xy,0,0);" // Store texcoord
+        "vec4 c=colour;"               // Store colour
         "$"                            // Custom code here
-        "texcoordout = tc;"            // Set colour from glColorPointer
-        "colourout = c;"               // Set colour
-        "gl_Position = v;"             // Set vertex position
+        "texcoordout=tc;"              // Set colour from glColorPointer
+        "colourout=c;"                 // Set colour
+        "gl_Position=v;"               // Set vertex position
       "}",                             // End of main function
       stCompsPerCoord, stCompsPerPos, stCompsPerColour, cpCode);
   }
@@ -68,14 +74,14 @@ static struct ShaderCore final
       "in vec4 texcoordout;"           // [3][4]=({xy--},{xy--},{xy--})
       "in vec4 colourout;"             // [3][4]=({rgba},{rgba},{rgba})
       "out vec4 pixel;"                // Pixel (RGBA) to set
-      "uniform sampler2D tex;"                  // Input texture
-      "$"                                       // Any extra header code
-      "void main(void){"                        // Entry point
-        "vec4 p = texture(tex,texcoordout.xy);" // Save current pixel
-        "vec4 c = colourout;"                   // Save custom colour
-        "$"                                     // Custom code goes here
-        "pixel = p;"                            // Set actual pixel
-      "}", cpHeader, cpCode);                   // Done
+      "uniform sampler2D tex;"         // Input texture
+      "$"                              // Any extra header code
+      "void main(void){"               // Entry point
+        "vec4 p=texture(tex,texcoordout.xy);" // Save current pixel
+        "vec4 c=colourout;"            // Save custom colour
+        "$"                            // Custom code goes here
+        "pixel=p;"                     // Set actual pixel
+      "}", cpHeader, cpCode);          // Done
   }
   /* -- Add fragment shader with template ---------------------------------- */
   void AddFragmentShaderWithTemplate(Shader &shS, const string &strName)
@@ -90,8 +96,8 @@ static struct ShaderCore final
     const char*const cpCode)
   { // Add vertex shader program
     AddVertexShaderWith3DTemplate(shS, strName, StrFormat("$"
-      "v.x = -1.0+(((matrix.x+$(v.x))/matrix.z)*2.0);"  // X-coord
-      "v.y = -1.0+(((matrix.y+$(v.y))/matrix.w)*2.0);", // Y-coord
+      "v.x=-1.0+(((matrix.x+$(v.x))/matrix.z)*2.0);"  // X-coord
+      "v.y=-1.0+(((matrix.y+$(v.y))/matrix.w)*2.0);", // Y-coord
         cpCode, strSPRMethod, strSPRMethod).c_str());
   }
   /* -- Add vertex shader with template ------------------------------------ */
@@ -102,7 +108,7 @@ static struct ShaderCore final
   { // Add our basic 3D shader
     sh3D.LockSet();
     AddVertexShaderWith3DTemplate(sh3D, "VERT-3D");
-    AddFragmentShaderWithTemplate(sh3D, "FRAG-3D RGB", "p = p * c;");
+    AddFragmentShaderWithTemplate(sh3D, "FRAG-3D RGB", "p=p*c;");
     sh3D.Link();
   }
   /* ----------------------------------------------------------------------- */
@@ -110,7 +116,7 @@ static struct ShaderCore final
   { // Add our 2D to 3D transformation shader
     sh2D.LockSet();
     AddVertexShaderWith2DTemplate(sh2D, "VERT-2D");
-    AddFragmentShaderWithTemplate(sh2D, "FRAG-2D RGB", "p = p * c;");
+    AddFragmentShaderWithTemplate(sh2D, "FRAG-2D RGB", "p=p*c;");
     sh2D.Link();
   }
   /* ----------------------------------------------------------------------- */
@@ -119,7 +125,7 @@ static struct ShaderCore final
     sh2DBGR.LockSet();
     AddVertexShaderWith2DTemplate(sh2DBGR, "VERT-2D");
     AddFragmentShaderWithTemplate(sh2DBGR, "FRAG-2D BGR>RGB",
-      "float r = p.r; p.r = p.b; p.b = r; p = p * c;");
+      "float r=p.r;p.r=p.b;p.b=r;p=p*c;");
     sh2DBGR.Link();
   }
   /* ----------------------------------------------------------------------- */
@@ -128,7 +134,7 @@ static struct ShaderCore final
     sh2D8.LockSet();
     AddVertexShaderWith2DTemplate(sh2D8, "VERT-2D");
     AddFragmentShaderWithTemplate(sh2D8, "FRAG-2D LU>RGB",
-      "p.r = p.g = p.b = p.r; p.a = 1.0; p = p * c;");
+      "p.r=p.g=p.b=p.r;p.a=1.0;p=p*c;");
     sh2D8.Link();
   }
   /* ----------------------------------------------------------------------- */
@@ -137,7 +143,7 @@ static struct ShaderCore final
     sh2D8Pal.LockSet();
     AddVertexShaderWith2DTemplate(sh2D8Pal, "VERT-2D");
     AddFragmentShaderWithTemplate(sh2D8Pal, "FRAG-2D PAL>RGB",
-      "p = pal[int(p.r * 255)] * c;",  // Set pixel and modulate
+      "p=pal[int(p.r*255)]*c;",        // Set pixel and modulate
       "uniform vec4 pal[256];");       // Global colour palette
     sh2D8Pal.Link();
     // We need the location of the palette
@@ -149,31 +155,29 @@ static struct ShaderCore final
     sh2D16.LockSet();
     AddVertexShaderWith2DTemplate(sh2D16, "VERT-2D");
     AddFragmentShaderWithTemplate(sh2D16, "FRAG-2D LUA>RGB",
-      "p.a = p.g; p.g = p.b = p.r; p = p * c;");
+      "p.a=p.g;p.g=p.b=p.r;p=p*c;");
     sh2D16.Link();
   }
   /* ----------------------------------------------------------------------- */
-  void Init3DYCbCrTemplate(Shader &shDest, const char*const cpName,
-    const char*const cpCode)
+  void Init3DYCbCrTemplate(Shader &shDest, const string &strName,
+    const string_view &svRangeCode, const string_view &svMatrixCode,
+    const string_view &svKeyCode)
   { // Add YCbCr to RGB shaders
     shDest.LockSet();
     AddVertexShaderWith3DTemplate(shDest, "VERT-3D");
-    shDest.AddShaderEx(cpName, GL_FRAGMENT_SHADER,
+    shDest.AddShaderEx(strName, GL_FRAGMENT_SHADER,
       "in vec4 texcoordout;"           // Texture info
       "in vec4 colourout;"             // Colour info
       "out vec4 pixel;"                // Pixel out
       "uniform sampler2D texY;"        // MultiTex unit 0 for Y component data
       "uniform sampler2D texCb;"       // MultiTex unit 1 for Cb component data
       "uniform sampler2D texCr;"       // MultiTex unit 2 for Cr component data
-      "void main(void){"
-        "mediump vec3 ycbcr;"
-        "lowp vec3 rgb;"
-        "ycbcr.x = texture(texY,vec2(texcoordout)).r;"
-        "ycbcr.y = texture(texCb,vec2(texcoordout)).r-0.5;"
-        "ycbcr.z = texture(texCr,vec2(texcoordout)).r-0.5;"
-        "rgb = mat3(1,1,1,0,-0.344,1.77,1.403,-0.714,0)*ycbcr;"
-        "pixel = vec4(rgb,$);"
-      "}", cpCode);
+      "void main(void){"               // Entry point
+        "vec3 ycbcr;"                  // Y, Cb and Cr components
+        "$"                            // Dynamic range modification code
+        "vec3 rgb=mat3($)*ycbcr;"      // Convert YCbCr to RGB matrix code
+        "pixel=vec4(rgb,$);"           // Output the desired pixel color code
+      "}", svRangeCode, svMatrixCode, svKeyCode);
     shDest.Link();
     shDest.Activate();
     // For each texture unit
@@ -183,7 +187,7 @@ static struct ShaderCore final
     { // Get location of specified variable in gpu shader and set to the
       // required texture unit.
       const GLchar*const cpUniform = acpCmp[stIndex];
-      const GLint &iUniformId = sh3DYCbCr.GetUniformLocation(cpUniform);
+      const GLint &iUniformId = shDest.GetUniformLocation(cpUniform);
       GLC("Failed to get uniform location from YCbCr shader!",
         "Variable", cpUniform, "Index", stIndex);
       GL(cOgl->Uniform(iUniformId, static_cast<GLint>(stIndex)),
@@ -192,18 +196,62 @@ static struct ShaderCore final
     }
   }
   /* ----------------------------------------------------------------------- */
-  void Init3DYCbCrShader(void)
-  { // Initialuse YCbCr 3D shader with basic conversion
-    Init3DYCbCrTemplate(sh3DYCbCr, "FRAG-3D YCbCr>RGB",
-      "texture(texCr,vec2(texcoordout)).a");
-  }
-  /* ----------------------------------------------------------------------- */
-  void Init3DYCbCrKShader(void)
-  { // Initialuse YCbCr 3D shader with colour key decoder
-    Init3DYCbCrTemplate(sh3DYCbCrK, "FRAG-3D YCbCr>RGB>CK",
-      "abs(colourout.r-rgb.r)<=colourout.a&&"
-      "abs(colourout.g-rgb.g)<=colourout.a&&"
-      "abs(colourout.b-rgb.b)<=colourout.a?0:1");
+  void Init3DYCbCrShaders(void)
+  { // No colour keying (no transparency)
+    const string_view svNoKey = "texture(texCr,vec2(texcoordout)).a",
+    // Colour keying code
+    svKey = "abs(colourout.r-rgb.r)<=colourout.a&&"
+            "abs(colourout.g-rgb.g)<=colourout.a&&"
+            "abs(colourout.b-rgb.b)<=colourout.a?0:1",
+    // Rec.601 matrix code
+    sv601 = "1,1,1,0,-0.344,1.77,1.403,-0.714,0",
+    // Rec.709 matrix code
+    sv709 = "1.0,1.0,1.0,0.0,-0.18732,1.8556,1.5748,-0.46812,0.0",
+    // Full-dynamic range code
+    svFull =
+      // Sample the Y, Cb, and Cr components from textures
+      "ycbcr.x=texture(texY,vec2(texcoordout)).r*255.0;"
+      "ycbcr.y=texture(texCb,vec2(texcoordout)).r*255.0;"
+      "ycbcr.z=texture(texCr,vec2(texcoordout)).r*255.0;"
+      // Adjust for limited range YUV
+      "ycbcr.x=(ycbcr.x-16.0)/219.0;"
+      "ycbcr.y=(ycbcr.y-128.0)/224.0;"
+      "ycbcr.z=(ycbcr.z-128.0)/224.0;",
+    // Partial-dynamic range code
+    svPartial =
+      // Sample the Y, Cb, and Cr components from textures
+      "ycbcr.x=texture(texY,vec2(texcoordout)).r;"
+      "ycbcr.y=texture(texCb,vec2(texcoordout)).r-0.5;"
+      "ycbcr.z=texture(texCr,vec2(texcoordout)).r-0.5;";
+    // 3D YCbCr shaders to comple
+    const struct ShaderList {
+      Shader &shShader;                // Shader class destination
+      const string      &strName;      // Name of shader
+      const string_view &svRange,      // Shader dynamic range code
+                        &svMatrix,     // Shader colour range matrix code
+                        &svKey;        // RGB keying code
+    } slShaders[] = {
+      { sh3DYCbCr601FR, "FRAG-3D YCbCr>F601>RGB", svFull, sv601, svNoKey },
+      { sh3DYCbCr601FR, "FRAG-3D YCbCr>F601>RGB", svFull, sv601, svNoKey },
+      { sh3DYCbCr601PR, "FRAG-3D YCbCr>P601>RGB", svPartial, sv601, svNoKey },
+      { sh3DYCbCr601PR, "FRAG-3D YCbCr>P601>RGB", svPartial, sv601, svNoKey },
+      { sh3DYCbCr709FR, "FRAG-3D YCbCr>F709>RGB", svFull, sv709, svNoKey },
+      { sh3DYCbCr709FR, "FRAG-3D YCbCr>F709>RGB", svFull, sv709, svNoKey },
+      { sh3DYCbCr709PR, "FRAG-3D YCbCr>P709>RGB", svPartial, sv709, svNoKey },
+      { sh3DYCbCr709PR, "FRAG-3D YCbCr>P709>RGB", svPartial, sv709, svNoKey },
+      { sh3DYCbCrK601FR, "FRAG-3D YCbCr>F601>RGBK", svFull, sv601, svKey },
+      { sh3DYCbCrK601FR, "FRAG-3D YCbCr>F601>RGBK", svFull, sv601, svKey },
+      { sh3DYCbCrK601PR, "FRAG-3D YCbCr>P601>RGBK", svPartial, sv601, svKey },
+      { sh3DYCbCrK601PR, "FRAG-3D YCbCr>P601>RGBK", svPartial, sv601, svKey },
+      { sh3DYCbCrK709FR, "FRAG-3D YCbCr>F709>RGBK", svFull, sv709, svKey },
+      { sh3DYCbCrK709FR, "FRAG-3D YCbCr>F709>RGBK", svFull, sv709, svKey },
+      { sh3DYCbCrK709PR, "FRAG-3D YCbCr>P709>RGBK", svPartial, sv709, svKey },
+      { sh3DYCbCrK709PR, "FRAG-3D YCbCr>P709>RGBK", svPartial, sv709, svKey }
+    };
+    // Compile each of the above shaders
+    for(const ShaderList &slShader : slShaders)
+      Init3DYCbCrTemplate(slShader.shShader, slShader.strName,
+        slShader.svRange, slShader.svMatrix, slShader.svKey);
   }
   /* -- Initialise built-in shaders -------------------------------- */ public:
   void InitShaders(void)
@@ -213,8 +261,7 @@ static struct ShaderCore final
       sh3DBuiltIns.size());
     // Setup 3D shaders
     Init3DShader();
-    Init3DYCbCrShader();
-    Init3DYCbCrKShader();
+    Init3DYCbCrShaders();
     cLog->LogDebugExSafe(
       "ShaderCore initialising $ built-in 2D shader objects...",
       sh2DBuiltIns.size());
@@ -247,8 +294,11 @@ static struct ShaderCore final
   /* ----------------------------------------------------------------------- */
   ShaderCore(void) :                   // No parameters
     /* -- Initialisers ----------------------------------------------------- */
-    sh3D{ sh3DBuiltIns[0] },           sh3DYCbCr{ sh3DBuiltIns[1] },
-    sh3DYCbCrK{ sh3DBuiltIns[2] },     sh2D{ sh2DBuiltIns[0] },
+    sh3D{ sh3DBuiltIns[0] },           sh3DYCbCr601FR{ sh3DBuiltIns[1] },
+    sh3DYCbCr601PR{ sh3DBuiltIns[2] }, sh3DYCbCr709FR{ sh3DBuiltIns[3] },
+    sh3DYCbCr709PR{ sh3DBuiltIns[4] }, sh3DYCbCrK601FR{ sh3DBuiltIns[5] },
+    sh3DYCbCrK601PR{ sh3DBuiltIns[6] },sh3DYCbCrK709FR{ sh3DBuiltIns[7] },
+    sh3DYCbCrK709PR{ sh3DBuiltIns[8] },sh2D{ sh2DBuiltIns[0] },
     sh2DBGR{ sh2DBuiltIns[1] },        sh2D8{ sh2DBuiltIns[2] },
     sh2D8Pal{ sh2DBuiltIns[3] },       sh2D16{ sh2DBuiltIns[4] },
     /* -- Rounding list ---------------------------------------------------- */
@@ -261,8 +311,6 @@ static struct ShaderCore final
     }}                                 // End of rounding strings list
     /* -- Code ------------------------------------------------------------- */
     { }                                // No code
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ShaderCore)          // Suppress default functions for safety
   /* -- Set rounding method for the shader --------------------------------- */
   CVarReturn SetSPRoundingMethod(const size_t stMethod)
   { // Return if specified value is outrageous!

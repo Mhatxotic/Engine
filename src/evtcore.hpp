@@ -11,6 +11,7 @@ namespace IEvtCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IIdent::P;
 using namespace ILog::P;               using namespace IStd::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public public namespace
 /* ------------------------------------------------------------------------- */
@@ -119,14 +120,13 @@ class EvtCore :                        // Start of common event system class
       aArgs{ StdMove(cOther.aArgs) }      // Move other parameters
       /* -- No code -------------------------------------------------------- */
       { }
-    /* --------------------------------------------------------------------- */
-    DELETECOPYCTORS(Event)             // Suppress default functions for safety
   };/* -- Private variables --------------------------------------- */ private:
+  const CbEcFunc   cefEmpty;           // Empty function
   Funcs            fFuncs;             // Event callback storage
   mutex            mMutex;             // Primary events list mutex
   Queue            qlEvents;           // Primary events list
   /* -- Generic event that does absolutely nothing ------------------------- */
-  void NullOpFunction(const Event &) { }
+  void NullOpFunction(const Event&) { }
   /* -- Generic event that reports use as warning -------------------------- */
   void WarningFunction(const Event &eEvent)
   { // Log the error
@@ -141,7 +141,7 @@ class EvtCore :                        // Start of common event system class
     cLog->LogWarningExSafe("$ accessed an invalid event! ($>$).",
       IdentGet(), cCmd, fFuncs.size());
     // Return a blank function
-    return bind(&EvtCore::WarningFunction, this, _1);
+    return cefEmpty;
   }
   /* -- Execute specified event NOW (finisher) ----------------------------- */
   void ExecuteParam(const Cmd cCmd, Args &aArgs)
@@ -328,18 +328,6 @@ class EvtCore :                        // Start of common event system class
   void RegisterEx(const RegVec &rvEvents)
     { for(const RegPair &rpItem : rvEvents)
         Register(rpItem.first, rpItem.second); }
-  /* -- NullOp single event ------------------------------------------------ */
-  void NullOp(const Cmd cCmd)
-  { // Bail if invalid command
-    if(cCmd >= fFuncs.size())
-      XC("Invalid null-op command!", "System",
-        IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd);
-    // NullOp the callback function
-    fFuncs[cCmd] = bind(&EvtCore::NullOpFunction, this, _1);
-  }
-  /* -- NullOp multiple events --------------------------------------------- */
-  void NullOpEx(const RegVec &rvEvents)
-    { for(const RegPair &rpItem : rvEvents) NullOp(rpItem.first); }
   /* -- Unregister single  event ------------------------------------------- */
   void Unregister(const Cmd cCmd)
   { // Bail if invalid command
@@ -347,17 +335,20 @@ class EvtCore :                        // Start of common event system class
       XC("Invalid de-registration command!", "System",
         IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd);
     // Unassign callback function
-    fFuncs[cCmd] = bind(&EvtCore::WarningFunction, this, _1);
+    fFuncs[cCmd] = cefEmpty;
   }
   /* -- Unregister multiple events ----------------------------------------- */
   void UnregisterEx(const RegVec &rvEvents)
     { for(const RegPair &rpItem : rvEvents) Unregister(rpItem.first); }
   /* -- Event data, all empty functions ------------------------------------ */
-  EvtCore(string &&strName, ISList &&islStrings) :
-    Ident{ StdMove(strName) }, islEventStrings{ StdMove(islStrings) }
-      { fFuncs.fill(bind(&EvtCore::WarningFunction, this, _1)); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(EvtCore)             // Suppress default functions for safety
+  EvtCore(string &&strCName, ISList &&islStrings) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Ident{ StdMove(strCName) },             // Initialise event system name
+    islEventStrings{ StdMove(islStrings) }, // Initialise event id names
+    cefEmpty{ bind(&EvtCore::WarningFunction, this, _1) },
+    fFuncs{ UtilMkFilledContainer<Funcs>(cefEmpty) }
+    /* -- No code ---------------------------------------------------------- */
+    { }
 };/* ----------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -12,9 +12,9 @@ namespace ILuaFunc {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaLib::P;            using namespace ILuaRef::P;
-using namespace ILuaUtil::P;           using namespace IStd::P;
-using namespace ISysUtil::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaRef::P;            using namespace ILuaUtil::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- LuaFunc ollector class for collector data and custom variables ------- */
@@ -64,8 +64,6 @@ class LuaFuncBase :                    // Just for de-duplicating initialisers
     iPauseReference(aReferences[1])    // Set reference to paused reference
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(LuaFuncBase)         // Suppress default functions for safety
 };/* -- LuaFunc class ------------------------------------------------------ */
 CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
@@ -303,8 +301,6 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
            LuaFuncIsNotRefEmptyFunc(iReference))
           LuaUtilRmRef(LuaFuncGetState(), iReference);
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(LuaFunc)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* -- De-init state and all references ------------------------------------- */
 static void LuaFuncDeInitRef(void)

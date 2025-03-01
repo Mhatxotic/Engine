@@ -12,10 +12,11 @@ namespace IShader {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IFboDef::P;            using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IOgl::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -178,30 +179,31 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     // Set shader source code
     GL(cOgl->ShaderSource(scItem.GetHandle(), scItem.GetCodeCStr()),
       "Failed to set shader source code!",
-        "Identifier", scItem.IdentGet(),  "Type",   scItem.GetType(),
-        "Shader",     scItem.GetHandle(), "Source", scItem.GetCode());
+      "Identifier", scItem.IdentGet(),  "Type",   scItem.GetType(),
+      "Shader",     scItem.GetHandle(), "Source", scItem.GetCode());
     // Compile the shader source code
     GL(cOgl->CompileShader(scItem.GetHandle()),
       "Failed to compile shader source code!",
-        "Type", eT, "Shader", scItem.GetHandle(), "Source", scItem.GetCode());
+      "Type", eT, "Shader", scItem.GetHandle(), "Source", scItem.GetCode());
     // Get compiler result and show reason if failed
     if(cOgl->GetCompileStatus(scItem.GetHandle()) == GL_FALSE)
       XC("Shader compilation failed!",
-        "Identifier", scItem.IdentGet(), "Program", uiProgram,
-        "Type",       scItem.GetType(),  "Shader",  scItem.GetHandle(),
-        "Reason",     cOgl->GetCompileFailureReason(scItem.GetHandle()));
+         "Identifier", scItem.IdentGet(), "Program", uiProgram,
+         "Type",       scItem.GetType(),  "Shader",  scItem.GetHandle(),
+         "Reason",     cOgl->GetCompileFailureReason(scItem.GetHandle()));
     // If the program hasn't been setup yet?
     if(!uiProgram)
     { // Create the shader program, and if failed? We should bail out.
       uiProgram = cOgl->CreateProgram();
-      if(!uiProgram) XC("Failed to create shader program!",
-        "Identifier", scItem.IdentGet(),
-        "Type",       scItem.GetType(), "Shader", scItem.GetHandle());
+      if(!uiProgram)
+        XC("Failed to create shader program!",
+           "Identifier", scItem.IdentGet(),
+           "Type",       scItem.GetType(), "Shader", scItem.GetHandle());
     } // Attach the shader to the program
     GL(cOgl->AttachShader(uiProgram, scItem.GetHandle()),
       "Failed to attach shader to program!",
-        "Identifier", scItem.IdentGet(), "Program", uiProgram,
-        "Type",       scItem.GetType(),  "Shader",  scItem.GetHandle());
+      "Identifier", scItem.IdentGet(), "Program", uiProgram,
+      "Type",       scItem.GetType(),  "Shader",  scItem.GetHandle());
     // Shader compiled
     cLog->LogDebugExSafe("Shader '$'($) compiled at index $ on program $.",
       scItem.IdentGet(), scItem.GetHandle(), stIndex, uiProgram);
@@ -257,8 +259,6 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     { }
   /* -- Destructor --------------------------------------------------------- */
   ~Shader(void) { DeInitShaders(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Shader)              // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Shaders, Shader, SHADER) // Finish shaders collector
 /* ------------------------------------------------------------------------- */

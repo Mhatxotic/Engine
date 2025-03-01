@@ -10,49 +10,37 @@
 /* ------------------------------------------------------------------------- */
 namespace ICrypt {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICollector::P;
-using namespace IError::P;             using namespace ILog::P;
+using namespace IClock::P;             using namespace IError::P;
+using namespace IHelper::P;            using namespace ILog::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf;
-using namespace IUtil::P;              using namespace Lib::OS::OpenSSL;
-using namespace Lib::OS::SevenZip;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::OS::OpenSSL;      using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */
-static char CryptHex2Char(const uint8_t ucChar)
-{ // Hex lookup table
-  static const array<const char,256> caLookup{
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //   0 - 15
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //  16 - 31
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //  32 - 47
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, //  48 - 63   (48 = '0')
-    0,10,11,12,13,14,15, 0, 0, 0, 0, 0, 0, 0, 0, 0, //  64 - 79   (65 = 'A')
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, //  80 - 95
-    0,10,11,12,13,14,15, 0, 0, 0, 0, 0, 0, 0, 0, 0, //  96 - 111  (97 = 'a')
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 112 - 127
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 128 - 143
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 144 - 159
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 160 - 175
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 176 - 191
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 192 - 207
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 208 - 223
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // 224 - 239
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0  // 240 - 255
-  }; // Return character
-  return caLookup[ucChar];
+template<int iFailCode>static int CryptHex2Char(unsigned char ucChar)
+{ // Is a digit?
+  if(ucChar >= '0' && ucChar <= '9') return ucChar - '0';
+  // Is a upper-case letter?
+  if(ucChar >= 'A' && ucChar <= 'F') return ucChar - 'A' + 10;
+  // Is a lower-case letter?
+  if(ucChar >= 'a' && ucChar <= 'f') return ucChar - 'a' + 10;
+  // Is invalid? Just return zero
+  return iFailCode;
 }
-/* -- Convert the specified hexadecimanl string to 8-bit array ------------- */
-static void CryptHexDecodePtr(const char*const cpSrc, const size_t stSrcLen,
-  char*const cpDst)
-{ // Build 8-bit value from two ASCII characters
+/* -- Convert the specified hexadecimal string to 8-bit array -------------- */
+static void CryptHexDecodePtr(const char* const cpSrc, const size_t stSrcLen,
+  char* const cpDst)
+{ // Walk the string
   for(size_t stInPos = 0, stOutPos = 0;
              stInPos < stSrcLen;
              stInPos += 2, ++stOutPos)
-    cpDst[stOutPos] = static_cast<char>
-      ((CryptHex2Char(static_cast<uint8_t>(cpSrc[stInPos])) << 4) +
-        CryptHex2Char(static_cast<uint8_t>(cpSrc[stInPos + 1])));
+    // Decode the hexadecimal value
+    cpDst[stOutPos] = static_cast<char>(
+      (CryptHex2Char<0>(static_cast<unsigned char>(cpSrc[stInPos])) << 4) +
+       CryptHex2Char<0>(static_cast<unsigned char>(cpSrc[stInPos + 1])));
 }
 /* -- Convert the specified hexadecimanl string to 8-bit array ------------- */
 static Memory CryptHexDecodeA(const string &strSrc)
@@ -78,128 +66,46 @@ static string CryptHexDecodeStr(const string &strSrc)
   return strDst;
 }
 /* -- Convert the specified 8-bit char to a uppercase hex string ----------- */
-static const auto &CryptChar2HexU(const uint8_t ucP)
-{ // Lookup table for uppercase conversion. Don't know how to do this in C++ :(
-  static const array<const array<const char,2>,256>cHexTabUC{
-  { {'0','0'},{'0','1'},{'0','2'},{'0','3'},{'0','4'},{'0','5'},{'0','6'},
-    {'0','7'},{'0','8'},{'0','9'},{'0','A'},{'0','B'},{'0','C'},{'0','D'},
-    {'0','E'},{'0','F'},{'1','0'},{'1','1'},{'1','2'},{'1','3'},{'1','4'},
-    {'1','5'},{'1','6'},{'1','7'},{'1','8'},{'1','9'},{'1','A'},{'1','B'},
-    {'1','C'},{'1','D'},{'1','E'},{'1','F'},{'2','0'},{'2','1'},{'2','2'},
-    {'2','3'},{'2','4'},{'2','5'},{'2','6'},{'2','7'},{'2','8'},{'2','9'},
-    {'2','A'},{'2','B'},{'2','C'},{'2','D'},{'2','E'},{'2','F'},{'3','0'},
-    {'3','1'},{'3','2'},{'3','3'},{'3','4'},{'3','5'},{'3','6'},{'3','7'},
-    {'3','8'},{'3','9'},{'3','A'},{'3','B'},{'3','C'},{'3','D'},{'3','E'},
-    {'3','F'},{'4','0'},{'4','1'},{'4','2'},{'4','3'},{'4','4'},{'4','5'},
-    {'4','6'},{'4','7'},{'4','8'},{'4','9'},{'4','A'},{'4','B'},{'4','C'},
-    {'4','D'},{'4','E'},{'4','F'},{'5','0'},{'5','1'},{'5','2'},{'5','3'},
-    {'5','4'},{'5','5'},{'5','6'},{'5','7'},{'5','8'},{'5','9'},{'5','A'},
-    {'5','B'},{'5','C'},{'5','D'},{'5','E'},{'5','F'},{'6','0'},{'6','1'},
-    {'6','2'},{'6','3'},{'6','4'},{'6','5'},{'6','6'},{'6','7'},{'6','8'},
-    {'6','9'},{'6','A'},{'6','B'},{'6','C'},{'6','D'},{'6','E'},{'6','F'},
-    {'7','0'},{'7','1'},{'7','2'},{'7','3'},{'7','4'},{'7','5'},{'7','6'},
-    {'7','7'},{'7','8'},{'7','9'},{'7','A'},{'7','B'},{'7','C'},{'7','D'},
-    {'7','E'},{'7','F'},{'8','0'},{'8','1'},{'8','2'},{'8','3'},{'8','4'},
-    {'8','5'},{'8','6'},{'8','7'},{'8','8'},{'8','9'},{'8','A'},{'8','B'},
-    {'8','C'},{'8','D'},{'8','E'},{'8','F'},{'9','0'},{'9','1'},{'9','2'},
-    {'9','3'},{'9','4'},{'9','5'},{'9','6'},{'9','7'},{'9','8'},{'9','9'},
-    {'9','A'},{'9','B'},{'9','C'},{'9','D'},{'9','E'},{'9','F'},{'A','0'},
-    {'A','1'},{'A','2'},{'A','3'},{'A','4'},{'A','5'},{'A','6'},{'A','7'},
-    {'A','8'},{'A','9'},{'A','A'},{'A','B'},{'A','C'},{'A','D'},{'A','E'},
-    {'A','F'},{'B','0'},{'B','1'},{'B','2'},{'B','3'},{'B','4'},{'B','5'},
-    {'B','6'},{'B','7'},{'B','8'},{'B','9'},{'B','A'},{'B','B'},{'B','C'},
-    {'B','D'},{'B','E'},{'B','F'},{'C','0'},{'C','1'},{'C','2'},{'C','3'},
-    {'C','4'},{'C','5'},{'C','6'},{'C','7'},{'C','8'},{'C','9'},{'C','A'},
-    {'C','B'},{'C','C'},{'C','D'},{'C','E'},{'C','F'},{'D','0'},{'D','1'},
-    {'D','2'},{'D','3'},{'D','4'},{'D','5'},{'D','6'},{'D','7'},{'D','8'},
-    {'D','9'},{'D','A'},{'D','B'},{'D','C'},{'D','D'},{'D','E'},{'D','F'},
-    {'E','0'},{'E','1'},{'E','2'},{'E','3'},{'E','4'},{'E','5'},{'E','6'},
-    {'E','7'},{'E','8'},{'E','9'},{'E','A'},{'E','B'},{'E','C'},{'E','D'},
-    {'E','E'},{'E','F'},{'F','0'},{'F','1'},{'F','2'},{'F','3'},{'F','4'},
-    {'F','5'},{'F','6'},{'F','7'},{'F','8'},{'F','9'},{'F','A'},{'F','B'},
-    {'F','C'},{'F','D'},{'F','E'},{'F','F'} }
-  };
-  // Return the string. Remember there is no null terminator
-  return cHexTabUC[ucP];
+static void CryptChar2HexU(const uint8_t ucChar, char*const cpPtr)
+{ // Hex lookup table
+  static const char caHex[17] = "0123456789ABCDEF";
+  // Decode to buffer
+  cpPtr[0] = caHex[(ucChar >> 4) & 0x0F]; // High nibble
+  cpPtr[1] = caHex[ucChar & 0x0F];        // Low nibble
 }
 /* -- Convert the specified 8-bit array to a hexadecmial string (upcase) --- */
 static const string CryptBin2Hex(const uint8_t*const ucStr,
   const size_t stSize)
 { // The output string and we know what the size of the output will be so
   // we do not need to use an ostringstream object.
-  string strOut; strOut.reserve(stSize * 2);
-  // For each character in the string convert it to hex and push it onto
-  // the string. The CHAR2HEX function returns only 2 bytes, so we must make
-  // sure STL only processes 2 bytes!
-  for(const uint8_t *ucPtr = const_cast<uint8_t*>(ucStr),
-              *const ucPtrEnd = ucPtr + stSize;
-                     ucPtr < ucPtrEnd;
-                   ++ucPtr)
-    strOut.append(CryptChar2HexU(*ucPtr).data(), 2);
+  string strOut; strOut.resize(stSize * 2, '\0');
+  // Cast to a char so theres no warnings and process the buffer
+  char *cpBuffer = &strOut[0];
+  for(size_t stPos = 0; stPos < stSize; ++stPos)
+    CryptChar2HexU(ucStr[stPos], &cpBuffer[stPos * 2]);
   // We're done. return the string!
   return strOut;
 }
 static const string CryptBin2Hex(const MemConst &mcSrc)
   { return CryptBin2Hex(mcSrc.MemPtr<uint8_t>(), mcSrc.MemSize()); }
 /* -- Convert the specified 8-bit char to a lowercase hex string ----------- */
-static const auto &CryptChar2HexL(const uint8_t ucP)
-{ // Lookup table for lowercase conversion
-  static const array<const array<const char,2>,256>cHexTabLC{
-  { {'0','0'},{'0','1'},{'0','2'},{'0','3'},{'0','4'},{'0','5'},{'0','6'},
-    {'0','7'},{'0','8'},{'0','9'},{'0','a'},{'0','b'},{'0','c'},{'0','d'},
-    {'0','e'},{'0','f'},{'1','0'},{'1','1'},{'1','2'},{'1','3'},{'1','4'},
-    {'1','5'},{'1','6'},{'1','7'},{'1','8'},{'1','9'},{'1','a'},{'1','b'},
-    {'1','c'},{'1','d'},{'1','e'},{'1','f'},{'2','0'},{'2','1'},{'2','2'},
-    {'2','3'},{'2','4'},{'2','5'},{'2','6'},{'2','7'},{'2','8'},{'2','9'},
-    {'2','a'},{'2','b'},{'2','c'},{'2','d'},{'2','e'},{'2','f'},{'3','0'},
-    {'3','1'},{'3','2'},{'3','3'},{'3','4'},{'3','5'},{'3','6'},{'3','7'},
-    {'3','8'},{'3','9'},{'3','a'},{'3','b'},{'3','c'},{'3','d'},{'3','e'},
-    {'3','f'},{'4','0'},{'4','1'},{'4','2'},{'4','3'},{'4','4'},{'4','5'},
-    {'4','6'},{'4','7'},{'4','8'},{'4','9'},{'4','a'},{'4','b'},{'4','c'},
-    {'4','d'},{'4','e'},{'4','f'},{'5','0'},{'5','1'},{'5','2'},{'5','3'},
-    {'5','4'},{'5','5'},{'5','6'},{'5','7'},{'5','8'},{'5','9'},{'5','a'},
-    {'5','b'},{'5','c'},{'5','d'},{'5','e'},{'5','f'},{'6','0'},{'6','1'},
-    {'6','2'},{'6','3'},{'6','4'},{'6','5'},{'6','6'},{'6','7'},{'6','8'},
-    {'6','9'},{'6','a'},{'6','b'},{'6','c'},{'6','d'},{'6','e'},{'6','f'},
-    {'7','0'},{'7','1'},{'7','2'},{'7','3'},{'7','4'},{'7','5'},{'7','6'},
-    {'7','7'},{'7','8'},{'7','9'},{'7','a'},{'7','b'},{'7','c'},{'7','d'},
-    {'7','e'},{'7','f'},{'8','0'},{'8','1'},{'8','2'},{'8','3'},{'8','4'},
-    {'8','5'},{'8','6'},{'8','7'},{'8','8'},{'8','9'},{'8','a'},{'8','b'},
-    {'8','c'},{'8','d'},{'8','e'},{'8','f'},{'9','0'},{'9','1'},{'9','2'},
-    {'9','3'},{'9','4'},{'9','5'},{'9','6'},{'9','7'},{'9','8'},{'9','9'},
-    {'9','a'},{'9','b'},{'9','c'},{'9','d'},{'9','e'},{'9','f'},{'a','0'},
-    {'a','1'},{'a','2'},{'a','3'},{'a','4'},{'a','5'},{'a','6'},{'a','7'},
-    {'a','8'},{'a','9'},{'a','a'},{'a','b'},{'a','c'},{'a','d'},{'a','e'},
-    {'a','f'},{'b','0'},{'b','1'},{'b','2'},{'b','3'},{'b','4'},{'b','5'},
-    {'b','6'},{'b','7'},{'b','8'},{'b','9'},{'b','a'},{'b','b'},{'b','c'},
-    {'b','d'},{'b','e'},{'b','f'},{'c','0'},{'c','1'},{'c','2'},{'c','3'},
-    {'c','4'},{'c','5'},{'c','6'},{'c','7'},{'c','8'},{'c','9'},{'c','a'},
-    {'c','b'},{'c','c'},{'c','d'},{'c','e'},{'c','f'},{'d','0'},{'d','1'},
-    {'d','2'},{'d','3'},{'d','4'},{'d','5'},{'d','6'},{'d','7'},{'d','8'},
-    {'d','9'},{'d','a'},{'d','b'},{'d','c'},{'d','d'},{'d','e'},{'d','f'},
-    {'e','0'},{'e','1'},{'e','2'},{'e','3'},{'e','4'},{'e','5'},{'e','6'},
-    {'e','7'},{'e','8'},{'e','9'},{'e','a'},{'e','b'},{'e','c'},{'e','d'},
-    {'e','e'},{'e','f'},{'f','0'},{'f','1'},{'f','2'},{'f','3'},{'f','4'},
-    {'f','5'},{'f','6'},{'f','7'},{'f','8'},{'f','9'},{'f','a'},{'f','b'},
-    {'f','c'},{'f','d'},{'f','e'},{'f','f'} }
-  };
-  // Return the string. Remember there is no null terminator
-  return cHexTabLC[ucP];
+static void CryptChar2HexL(const uint8_t ucChar, char*const cpPtr)
+{ // Hex lookup table
+  static const char caHex[17] = "0123456789abcdef";
+  // Decode to buffer
+  cpPtr[0] = caHex[(ucChar >> 4) & 0x0F]; // High nibble
+  cpPtr[1] = caHex[ucChar & 0x0F];        // Low nibble
 }
 /* -- Convert the specified 8-bit array to a hexadecmial string (lwcase) --- */
 static const string CryptBin2HexL(const uint8_t*const ucStr,
   const size_t stSize)
-{ // The output string and we know what the size of the output will be so we
-  // don't need to use an ostringstream object.
-  string strOut; strOut.reserve(stSize * 2);
-  // For each character in the string convert it to hex and push it onto
-  // the string. The CHAR2HEX function returns only 2 bytes, so we must make
-  // sure STL only processes 2 bytes!
-  for(const uint8_t *ucPtr = const_cast<uint8_t*>(ucStr),
-                    *const ucPtrEnd = ucPtr + stSize;
-                     ucPtr < ucPtrEnd;
-                   ++ucPtr)
-    strOut.append(CryptChar2HexL(*ucPtr).data(), 2);
+{ // The output string and we know what the size of the output will be so
+  // we do not need to use an ostringstream object.
+  string strOut; strOut.resize(stSize * 2, '\0');
+  // Cast to a char so theres no warnings and process the buffer
+  char *cpBuffer = strOut.data();
+  for(size_t stPos = 0; stPos < stSize; ++stPos)
+    CryptChar2HexL(ucStr[stPos], &cpBuffer[stPos * 2]);
   // We're done. return the string!
   return strOut;
 }
@@ -243,36 +149,35 @@ template<typename AnyType>static const AnyType CryptRandom(void)
   return atData;
 }
 /* -- URL encode the specified c-string ------------------------------------ */
-static const string CryptURLEncode(const char*const cpURL)
-{ // Bail if passed string is invalid
-  if(UtfIsCStringNotValid(cpURL)) return {};
-  // We will use a ostringstream to build this as we do not know what the
-  // size of the output will be.
-  ostringstream osS;
+static const string CryptURLEncode(const string &strS)
+{ // Bail if passed string is empty
+  if(strS.empty()) return {};
   // Movable pointer to input string
-  const char *cpPtr = cpURL;
-  // Perform these action for each character...
+  const char *cpPtr = strS.c_str();
+  // Preallocate string to avoid multiple reallocations. Worst case: every char
+  // needs encoding.
+  string strURL; strURL.reserve(strS.size() * 3);
+  // Perform these actions for each character...
   do
   { // Get character
     const uint8_t ucC = static_cast<uint8_t>(*cpPtr);
     // Normal character? Append to string
-    if(isalnum(ucC)) osS << static_cast<char>(ucC);
-    // Test individual character
-    else switch(ucC)
-    { // A character we don't need to encode? Just add them 'as-is'.
-      case '-': case '.':
-      case '_': case '~': osS << static_cast<char>(ucC); break;
-      // Any other character? Encode it!
-      default: osS << '%' << CryptChar2HexU(ucC)[0]
-                          << CryptChar2HexU(ucC)[1]; break;
-    } // ...until null terminator
+    if(StdIsAlnum(ucC) || ucC == '-' || ucC == '.' || ucC == '_' || ucC == '~')
+      strURL += static_cast<char>(ucC);
+    else
+    { // Create storage for buffer and put the hexadecimal inside it
+      char cpBuf[2];
+      CryptChar2HexU(ucC, cpBuf);
+      // Put into string
+      strURL += '%';
+      strURL.append(cpBuf, sizeof(cpBuf));
+    } // Repeat until end of string
   } while(*(++cpPtr));
+  // Compact the URL
+  strURL.shrink_to_fit();
   // End of string so return it
-  return osS.str();
+  return strURL;
 }
-/* -- URL encode the specified string -------------------------------------- */
-static const string CryptURLEncode(const string &strS)
-  { return CryptURLEncode(strS.c_str()); }
 /* ------------------------------------------------------------------------- */
 template<class MapType>
   static const string CryptImplodeMapAndEncode(const MapType &mtRef,
@@ -342,7 +247,7 @@ static int CryptGetError(string &strError)
       strError = CryptGetErrorReason(ulErr);
       // If theres a colon in it, delete everything up to that colon
       const size_t stColon = strError.find_last_of(':');
-      if(stColon != string::npos)
+      if(stColon != StdNPos)
         strError = StrCapitalise(strError.substr(stColon + 1));
     }
   } // Free unused memory since the logevity of this value can be a while
@@ -625,47 +530,39 @@ static unsigned int CryptToCRC32(const string &strIn)
 static unsigned int CryptToCRC32(const MemConst &mcSrc)
   { return CrcCalc(mcSrc.MemPtr<void>(), mcSrc.MemSize()); }
 /* -- URL decode the specified c-string ------------------------------------ */
-static const string CryptURLDecode(const char*const cpURL)
+static string CryptURLDecode(const string &strS)
 { // Bail if passed string is invalid
-  if(UtfIsCStringNotValid(cpURL)) return {};
-  // We will use a ostringstream to build this as we do not know what the
-  // size of the output will be.
-  ostringstream osS;
-  // Movable pointer to input string
-  const char *cpPtr = cpURL;
-  // Perform these action for each character...
-  do
-  { // Get character and compare it
-    switch(unsigned char ucC = static_cast<unsigned char>(*cpPtr))
-    { // % symbol denoting a custom value
-      case '%':
-        // Convert hex to number and if not at end of string?
-        if(unsigned char uc1 = static_cast<unsigned char>(*(++cpPtr)))
-        { // Goto next character if not a valid digit
-          if(!isxdigit(uc1)) continue;
-          // Get second hex character and if not at end of string?
-          if(unsigned char uc2 = static_cast<unsigned char>(*(++cpPtr)))
-          { // Goto next character if not a valid digit
-            if(!isxdigit(uc2)) continue;
-            // Is lowecase 'a'
-            if(uc1 >= 'a') uc1 -= 'a'-'A';
-            uc1 -= uc1 >= 'A' ? ('A' - 10) : '0';
-            if(uc2 >= 'a') uc2 -= 'a'-'A';
-            uc2 -= uc2 >= 'A' ? ('A' - 10) : '0';
-            // Set new character and fall through to default
-            ucC = 16 * uc1 + uc2;
-          } // End of string so return it
-          else return osS.str();
-        } // End of string so return it
-        else return osS.str();
-        // Fall through
-        [[fallthrough]];
-      // Normal character? Push normal character
-      default: osS << ucC; break;
-    } // ...until null terminator
-  } while(*(++cpPtr));
-  // End of string so return it
-  return osS.str();
+  if(strS.empty()) return {};
+  // Preallocate string to avoid multiple reallocations
+  string strURL; strURL.reserve(strS.size());
+  // Movable pointer to input string and perform actions for each character...
+  for(const char *cpPtr = strS.c_str(); *cpPtr;)
+  { // Get the character and if it denotes a encoded value?
+    unsigned char ucC = static_cast<unsigned char>(*cpPtr);
+    if(ucC == '%')
+    { // Convert hex to number and if not at end of string?
+      if(const unsigned char uc1 = static_cast<unsigned char>(*(++cpPtr)))
+      { // Get the hexadecimal value and goto next character if not valid
+        const int iVal1 = CryptHex2Char<-1>(uc1);
+        if(iVal1 == -1) continue;
+        // Get second hex character and if not at end of string?
+        if(const unsigned char uc2 = static_cast<unsigned char>(*(++cpPtr)))
+        { // Get the hexadecimal value and goto next character if not valid
+          const int iVal2 = CryptHex2Char<-1>(uc2);
+          if(iVal2 == -1) continue;
+          // Set new character
+          ucC = static_cast<unsigned char>(16 * iVal1 + iVal2);
+        } // End of string
+        else break;
+      } // End of string
+      else break;
+    } // Normal character? Append to string
+    strURL += static_cast<char>(ucC);
+    cpPtr++;
+  } // Compact the URL
+  strURL.shrink_to_fit();
+  // Return the url
+  return strURL;
 }
 /* ------------------------------------------------------------------------- */
 static Memory CryptRandomBlock(const size_t stSize)
@@ -679,8 +576,8 @@ static Memory CryptRandomBlock(const size_t stSize)
 /* -- Sanitise a string removing excessive letters and words --------------- */
 static string CryptSanitise(const string &strMessage)
 { // Create output string and pre-allocate memory
-  string strOutput;
-  strOutput.reserve(strMessage.capacity());
+  string strPruned;
+  strPruned.reserve(strMessage.capacity());
   // Last character processed and count
   char cLastChar = '\0';
   size_t stCount = 0;
@@ -692,44 +589,44 @@ static string CryptSanitise(const string &strMessage)
       cLastChar = cChar;
       stCount = 0;
       // Add character
-      strOutput.push_back(cChar);
+      strPruned.push_back(cChar);
       // Next character
       continue;
     } // Increase repetition count and continue if over 2 repetitions
     if(++stCount > 1) continue;
     // Add character
-    strOutput.push_back(cChar);
-  } // Now split the string into words
-  Token tWords{ strOutput, cCommon->Space() };
-  // Return if empty?
-  if(tWords.empty()) return {};
-  // return single word?
-  if(tWords.size() == 1) return tWords.front();
-  // Clear output and recover memory now we've done with it
-  strOutput.clear();
-  strOutput.shrink_to_fit();
+    strPruned.push_back(cChar);
+  } // Return if string is empty
+  if(strPruned.empty()) return {};
   // Repeated words
-  string strWord;
+  string strWord, strLastWord;
+  // Output string
+  string strOutput; strOutput.reserve(strPruned.size());
+  // Put pruned string into a string stream
+  istringstream issS{ strPruned };
   // For each word
-  for(StrVectorIt svciIt{ tWords.begin() }; svciIt != tWords.end(); )
+  while(issS >> strWord)
   { // Character is different?
-    if(*svciIt != strWord)
-    { // Set new character found and reset times found
-      strWord = *svciIt;
+    if(strWord != strLastWord)
+    { // Set last word
+      strLastWord = strWord;
+      // Reset repetitions
       stCount = 0;
-      // Next word
-      continue;
-    } // Increase repetition count and continue if repeated
-    if(++stCount < 2) { ++svciIt; continue; }
-    // Remove word
-    svciIt = tWords.erase(svciIt);
-  } // Implode words and return output
-  return StrImplode(tWords);
+    } // Ignore repetitive uses of the word
+    else if(++stCount >= 2) continue;
+    // Set new character found and reset times found
+    if(!strOutput.empty()) strOutput += ' ';
+    // Add word
+    strOutput += strWord;
+  } // Trim string
+  strOutput.shrink_to_fit();
+  // Implode words and return output
+  return strOutput;
 }
 /* -- Crypt manager class -------------------------------------------------- */
 static class Crypt final :
   /* -- Base classes ------------------------------------------------------- */
-  public IHelper                       // The crypto manager class
+  public InitHelper                    // The crypto manager class
 { /* -------------------------------------------------------------- */ private:
   const StrVStrVMap svsvmEnt;          // Html entity decoding lookup table
   /* ----------------------------------------------------------------------- */
@@ -786,11 +683,11 @@ static class Crypt final :
     if(strS.empty()) return {};
     // Loop until we don't find anymore entities to decode
     for(size_t stAPos = strS.find('&');
-               stAPos != string::npos;
+               stAPos != StdNPos;
                stAPos = strS.find('&', stAPos))
     { // Get semi-colon position, break if not found
       const size_t stSPos = strS.find(';', stAPos+1);
-      if(stSPos == string::npos) break;
+      if(stSPos == StdNPos) break;
       // Copy out the entity
       const string strT{ strS.substr(stAPos+1, stSPos-stAPos-1) };
       // Cut out the entity
@@ -804,11 +701,10 @@ static class Crypt final :
         // Have more than 2 characters and hex character specified?
         if(strT.length() > 2 && (strT[1] == 'x' || strT[1] == 'X'))
           uiVal = StrHexToInt<unsigned int>
-            (strT.substr(2, string::npos));
+            (strT.substr(2, StdNPos));
         // Not hex but is a number? Normal number
-        else if(isdigit(static_cast<unsigned char>(strT[1])))
-          uiVal = StrToNum<unsigned int>
-            (strT.substr(1, string::npos));
+        else if(StdIsDigit(strT[1]))
+          uiVal = StrToNum<unsigned int>(strT.substr(1, StdNPos));
         // Shouldn't be anything else. Ignore insertations, goto next entity
         else continue;
         // Encoder character
@@ -832,7 +728,7 @@ static class Crypt final :
   /* -- Constructor -------------------------------------------------------- */
   Crypt(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },
+    InitHelper{ __FUNCTION__ },
     svsvmEnt{
       { "Agrave",  "\xC0"           }, { "Aacute",  "\xC1"           },
       { "Acirc",   "\xC2"           }, { "Atilde",  "\xC3"           },
@@ -982,13 +878,8 @@ static class Crypt final :
   SetDefaultPrivateKey();
   // Done
   DTORHELPEREND(~Crypt)
-  /* -- Macros ---------------------------------------------------- */ private:
-  DELETECOPYCTORS(Crypt)               // Suppress default functions for safety
   /* ----------------------------------------------------------------------- */
 } *cCrypt = nullptr;                   // Pointer to static class
-/* -- URL decode the specified string -------------------------------------- */
-static const string CryptURLDecode(const string &strS)
-  { return CryptURLDecode(strS.c_str()); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -58,9 +58,9 @@ template<typename AnyToType, typename AnyFromType, typename AnyRangeType>
 BUILD_FLAGS(Core,
   /* ----------------------------------------------------------------------- */
   // No flags?                         Want text mode console?
-  CFL_NONE                  {Flag[0]}, CFL_TERMINAL              {Flag[1]},
+  CFL_NONE                  {Flag(0)}, CFL_TERMINAL              {Flag(1)},
   // Want audio sub-system?            Want opengl window?
-  CFL_AUDIO                 {Flag[2]}, CFL_VIDEO                 {Flag[3]},
+  CFL_AUDIO                 {Flag(2)}, CFL_VIDEO                 {Flag(3)},
   /* ----------------------------------------------------------------------- */
   CFL_AUDIOVIDEO{ CFL_AUDIO|CFL_VIDEO },
   CFL_MASK{ CFL_TERMINAL|CFL_AUDIOVIDEO }
@@ -68,46 +68,46 @@ BUILD_FLAGS(Core,
 BUILD_FLAGS(CVar,
   /* -- Types (T) ---------------------------------------------------------- */
   // Variable is a string?             Variable is a integer?
-  TSTRING                   {Flag[8]}, TINTEGER                  {Flag[9]},
+  TSTRING                   {Flag(8)}, TINTEGER                  {Flag(9)},
   // Variable is a float?              Variable is a boolean
-  TFLOAT                   {Flag[10]}, TBOOLEAN                 {Flag[11]},
+  TFLOAT                   {Flag(10)}, TBOOLEAN                 {Flag(11)},
   /* -- Conditional (C) ---------------------------------------------------- */
   // Var string can contain letters?   Variable string can contain numerics?
-  CALPHA                   {Flag[16]}, CNUMERIC                 {Flag[17]},
+  CALPHA                   {Flag(16)}, CNUMERIC                 {Flag(17)},
   // Variable is written to database?  Variable is protected?
-  CSAVEABLE                {Flag[18]}, CPROTECTED               {Flag[19]},
+  CSAVEABLE                {Flag(18)}, CPROTECTED               {Flag(19)},
   // Variable is compressed?           Var cannot be empty (str) or zero? (int)
-  CDEFLATE                 {Flag[20]}, CNOTEMPTY                {Flag[21]},
+  CDEFLATE                 {Flag(20)}, CNOTEMPTY                {Flag(21)},
   // Variable must be unsigned?        Variable integer must be power of two?
-  CUNSIGNED                {Flag[22]}, CPOW2                    {Flag[23]},
+  CUNSIGNED                {Flag(22)}, CPOW2                    {Flag(23)},
   // Variable must be a valid filename?
-  CFILENAME                {Flag[24]},
+  CFILENAME                {Flag(24)},
   /* -- Manipulation (M) --------------------------------------------------- */
-  MTRIM                    {Flag[32]}, // Variable string should be trimmed
+  MTRIM                    {Flag(32)}, // Variable string should be trimmed
   /* -- Other (O) ---------------------------------------------------------- */
-  OSAVEFORCE               {Flag[40]}, // Force variable to be saved
+  OSAVEFORCE               {Flag(40)}, // Force variable to be saved
   /* -- Privates (Used internally) ----------------------------------------- */
   // Variable was created by LUA?      Variable is a trusted filename
-  TLUA                     {Flag[48]}, CTRUSTEDFN               {Flag[49]},
+  TLUA                     {Flag(48)}, CTRUSTEDFN               {Flag(49)},
   // Cannot unreg this in callback?    Variable should be committed to DB?
-  LOCKED                   {Flag[50]}, COMMIT                   {Flag[51]},
+  LOCKED                   {Flag(50)}, COMMIT                   {Flag(51)},
   // Var should be purged from DB?     Variable not readable by lua?
-  PURGE                    {Flag[52]}, CONFIDENTIAL             {Flag[53]},
+  PURGE                    {Flag(52)}, CONFIDENTIAL             {Flag(53)},
   // Variable value was loaded from db
-  LOADED                   {Flag[54]},
+  LOADED                   {Flag(54)},
   /* -- Sources (S) [Private] ---------------------------------------------- */
   // Set from engine internally?       Set from command-line?
-  SENGINE                  {Flag[56]}, SCMDLINE                 {Flag[57]},
+  SENGINE                  {Flag(56)}, SCMDLINE                 {Flag(57)},
   // Set from appconfig?               Set from database?
-  SAPPCFG                  {Flag[58]}, SUDB                     {Flag[59]},
+  SAPPCFG                  {Flag(58)}, SUDB                     {Flag(59)},
   /* -- Permissions (P) [Private] ------------------------------------------ */
   // Variable can be changed at boot?  Variable can be changed by system
-  PBOOT                    {Flag[62]}, PSYSTEM                  {Flag[63]},
+  PBOOT                    {Flag(62)}, PSYSTEM                  {Flag(63)},
   // Variable can be changed by user?
-  PUSR                     {Flag[64]},
+  PUSR                     {Flag(64)},
   /* -- Other -------------------------------------------------------------- */
   // No flags                          Private vars begin after here
-  NONE                      {Flag[0]}, PRIVATE                      {TLUA},
+  NONE                      {Flag(0)}, PRIVATE                      {TLUA},
   /* -- Collections -------------------------------------------------------- */
   // Shortcut to unsigned int type     Shortcut to 'unsigned float' type
   TUINTEGER{ TINTEGER|CUNSIGNED },     TUFLOAT{ TFLOAT|CUNSIGNED },
@@ -192,8 +192,8 @@ enum CVarEnums : size_t
   /* -- Fmv cvars ---------------------------------------------------------- */
   FMV_ABUFFER,      FMV_IOBUFFER,      FMV_MAXDRIFT,
   /* -- Input cvars -------------------------------------------------------- */
-  INP_CLAMPMOUSE,    INP_JOYDEFFDZ,    INP_JOYDEFRDZ,       INP_FSTOGGLER,
-  INP_NOFOCUSIGNORE, INP_RAWMOUSE,     INP_STICKYKEY,       INP_STICKYMOUSE,
+  INP_CLAMPMOUSE,   INP_JOYDEFFDZ,     INP_JOYDEFRDZ,       INP_FSTOGGLER,
+  INP_RAWMOUSE,     INP_STICKYKEY,     INP_STICKYMOUSE,
   /* -- Network cvars ------------------------------------------------------ */
   NET_CBPFLAG1,     NET_CBPFLAG2,      NET_BUFFER,          NET_RTIMEOUT,
   NET_STIMEOUT,     NET_CIPHERTLSv1,   NET_CIPHERTLSv13,    NET_CASTORE,

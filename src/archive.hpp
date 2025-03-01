@@ -15,11 +15,12 @@ using namespace ICollector::P;         using namespace ICrypt::P;
 using namespace ICVarDef::P;           using namespace IDir::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFileMap::P;           using namespace IFlags;
-using namespace IIdent::P;             using namespace ILog::P;
+using namespace IIdent::P;             using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IPSplit::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IUtf;
+using namespace ISysUtil::P;           using namespace IUtf::P;
 using namespace IUtil::P;              using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -39,9 +40,9 @@ CTOR_BEGIN_ASYNC(Archives, Archive, CLHelperSafe,
 BUILD_FLAGS(Archive,
   /* ----------------------------------------------------------------------- */
   // Archive on standby?             Archive file handle opened?
-  AE_STANDBY              {Flag[0]}, AE_FILEOPENED           {Flag[1]},
+  AE_STANDBY              {Flag(0)}, AE_FILEOPENED           {Flag(1)},
   // Allocated look2read structs?    Allocated archive structs?
-  AE_SETUPL2R             {Flag[2]}, AE_ARCHIVEINIT          {Flag[3]}
+  AE_SETUPL2R             {Flag(2)}, AE_ARCHIVEINIT          {Flag(3)}
 );/* == Archive object class =============================================== */
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
@@ -262,7 +263,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         // Done
         return fmFile;
       } // exception occured
-      catch(const exception &)
+      catch(const exception&)
       { // Clean up look to read
         CleanupLookToRead(cltrData2);
         // Free memory
@@ -415,8 +416,6 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // Log shutdown
     cLog->LogInfoExSafe("Archive unloaded '$' successfully.", IdentGet());
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Archive)             // Suppress default functions for safety
   /* -- Done with these defines -------------------------------------------- */
 #undef LZMAGetHandle                   // Done with this macro
 #undef LZMAOpen                        // Done with this macro
@@ -537,7 +536,7 @@ static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
   { // Ignore if folder name does not match or a forward-slash found after
     if(strDir != suimpRef.first.substr(0, strDir.length()) ||
       suimpRef.first.find(cCommon->CFSlash(),
-        strDir.length() + 1) != string::npos) return;
+        strDir.length() + 1) != StdNPos) return;
     // Split file path
     const PathSplit psParts{ suimpRef.first };
     // Lock access to archives list
@@ -575,7 +574,7 @@ static const StrSet &ArchiveEnumerate(const string &strDir,
       { // Ignore if folder name does not match or a forward-slash found after
         if(strDir != suimpRef.first.substr(0, strDir.length()) ||
           suimpRef.first.find(cCommon->CFSlash(),
-            strDir.length() + 1) != string::npos) return;
+            strDir.length() + 1) != StdNPos) return;
         // Split path parts, and ignore if extension does not match
         const PathSplit psParts{ suimpRef.first };
         if(psParts.strExt != strExt) return;

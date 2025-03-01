@@ -14,7 +14,10 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Built-in CVar definition struct ====================================== */
+/* == Required types ======================================================= */
+using namespace Lib::OpenAL::Types;    using namespace Lib::OS::GlFW::Types;
+using namespace Lib::Sqlite::Types;
+/* -- Built-in CVar definition struct -------------------------------------- */
 const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 /* -- Use this when cvar is an integer ------------------------------------- */
 #define CB(f,t) [](CVarItem&, const string &strV)->CVarReturn \
@@ -611,7 +614,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
   "2",
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreErrorBehaviourModified, CoreErrorFlags), TUINTEGER|PSYSTEM },
+  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! ERR_LMRESETLIMIT
 // ? When ERR_LUAMODE is set to 1, this specifies the number of LUA script
@@ -1117,13 +1120,6 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_fstoggler", cCommon->One(),
   CB(cInput->SetFSTogglerEnabled, bool), TBOOLEANSAVE|PANY },
-/* ------------------------------------------------------------------------- */
-// ! INP_NOFOCUSIGNORE
-// ? When enabled (default) all input is ignored when the window does not have
-// ? mouse focus.
-/* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_nfignore", cCommon->One(),
-  CB(cInput->SetNoInputOnFocusLoss, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_RAWMOUSE
 // ? Enables raw mouse input if available.

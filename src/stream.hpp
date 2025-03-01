@@ -15,17 +15,17 @@
 namespace IStream {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IASync::P;
-using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFileMap::P;           using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaEvt::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IOal::P;
-using namespace IPcmFormat::P;         using namespace IPcmLib::P;
-using namespace ISource::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::Ogg;
-using namespace Lib::OpenAL;
+using namespace ICodecOGG::P;          using namespace ICollector::P;
+using namespace ICVarDef::P;           using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFileMap::P;
+using namespace IIdent::P;             using namespace ILog::P;
+using namespace ILockable::P;          using namespace ILuaEvt::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IOal::P;               using namespace ISource::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace Lib::Ogg;              using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -178,13 +178,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
           if(lResult < 0)
             XC("Failed to decode ogg stream to float pcm!",
                "Identifier", IdentGet(), "Result", lResult,
-               "Reason",     cOal->GetOggErr(lResult));
+               "Reason",     cCodecOGG->GetOggErr(lResult));
           // Get size as size_t
           const size_t stBytes = static_cast<size_t>(lResult);
           // Converted to float buffer
           ALfloat*const fpPCMout = MemRead<ALfloat>(stBSize);
           // Process frames to buffer (iFI=FrameIndex / iCI=ChanIndex)
-          PcmF32FromVorbisFrames(fpPCM, stBytes, stChannels, fpPCMout);
+          cCodecOGG->F32FromVorbisFrames(fpPCM, stBytes, stChannels, fpPCMout);
           // Increase buffer
           stBSize += sizeof(ALfloat) * stBytes * stChannels;
         } // Break loop when no bytes read
@@ -205,7 +205,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
           if(lResult < 0)
             XC("Failed to decode ogg stream to integer pcm!",
                "Identifier", IdentGet(), "Result", lResult,
-               "Reason",     cOal->GetOggErr(lResult));
+               "Reason",     cCodecOGG->GetOggErr(lResult));
           // Add bytes read
           stBSize += static_cast<size_t>(lResult);
         } // Break loop when no bytes read
@@ -519,10 +519,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     fmFile.FileMapSwap(fmData);
     // Initialise context and test for error
     if(const int iResult = ov_open_callbacks(&fmFile, &ovfContext, nullptr, 0,
-         PcmGetOggCallbacks()))
+         cCodecOGG->GetCallbacks()))
       XC("Init OGG decoder context failed!",
         "Identifier", IdentGet(), "Code", iResult,
-        "Reason",     cOal->GetOggErr(iResult));
+        "Reason",     cCodecOGG->GetOggErr(iResult));
     // We don't need to create more buffers than we need. If we don't do this
     // then Rebuffer() will not fill all the buffers and subsequent OpenAL
     // calls will fail. We'll add a minimum value of 1 too just incase we get
@@ -551,8 +551,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     // Parse vorbis comments and if we got them?
     if(vorbis_comment*const vcStrings = ov_comment(&ovfContext, -1))
     { // Parse the comments and then free the strings
-      ssMetaData = StdMove(PcmVorbisParseComments(vcStrings->user_comments,
-        vcStrings->comments));
+      ssMetaData = StdMove(cCodecOGG->
+        VorbisParseComments(vcStrings->user_comments, vcStrings->comments));
       vorbis_comment_clear(vcStrings);
       // Write vorbis comments to log if debug mode set
       if(cLog->HasLevel(LH_DEBUG))
@@ -604,8 +604,6 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     // Log that the stream was unloaded
     cLog->LogDebugExSafe("Stream unloaded '$'!", IdentGet());
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Stream)              // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
   /* -- Initialisers ------------------------------------------------------- */

@@ -10,7 +10,8 @@
 /* ------------------------------------------------------------------------- */
 namespace Common {                     // Common namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IStd::P;
+using namespace IStd::P;               using namespace Lib::OS::GlFW::Types;
+using namespace Lib::OpenAL::Types;
 /* -- Read a LString ------------------------------------------------------- */
 struct AgLCString { size_t stB; const char *cpD;
   explicit AgLCString(lua_State*const lS, const int iArg) :
@@ -89,13 +90,11 @@ template<typename NumType>struct AgNumberN : public AgIntegral<NumType> {
   explicit AgNumberN(lua_State*const lS, const int iArg) :
       AgIntegral<NumType>{LuaUtilGetNormal<NumType>(lS, iArg)}{} };
 /* -- Different types we can use ------------------------------------------- */
-using Lib::OS::GlFW::GLfloat;
 typedef AgNumberN<GLfloat> AgAngle;
 typedef AgNumberLG<GLfloat> AgGLfloatLG;
 typedef AgNumber<lua_Number> AgLuaNumber;
 typedef AgNumber<double> AgDouble;
 typedef AgNumber<GLfloat> AgGLfloat;
-using Lib::OpenAL::ALfloat;
 typedef AgNumberLG<ALfloat> AgALfloatLG;
 typedef AgNumber<ALfloat> AgALfloat;
 /* -- Read a generic integer ----------------------------------------------- */
@@ -139,6 +138,7 @@ typedef AgInteger<uint64_t> AgUInt64;
 typedef AgInteger<uint8_t> AgUInt8;
 typedef AgInteger<unsigned int> AgUInt;
 typedef AgIntegerL<int> AgIntL;
+typedef AgIntegerL<lua_Integer> AgLuaIntegerL;
 typedef AgIntegerL<size_t> AgSizeTL;
 typedef AgIntegerLG<size_t> AgSizeTLG;
 typedef AgIntegerLG<ssize_t> AgSSizeTLG;
@@ -147,7 +147,6 @@ typedef AgIntegerLGE<int> AgIntLGE;
 typedef AgIntegerLGE<size_t> AgSizeTLGE;
 typedef AgIntegerLGE<ssize_t> AgSSizeTLGE;
 typedef AgIntegerLGE<unsigned int> AgUIntLGE;
-using Lib::OS::GlFW::GLuint;
 typedef AgInteger<GLuint> AgGLuint;
 /* -- Get/Create Asset object ---------------------------------------------- */
 using IAsset::P::Asset;
@@ -212,7 +211,6 @@ struct AgFilterId : public AgIntegerLGE<IOgl::P::OglFilterEnum> {
   explicit AgFilterId(lua_State*const lS, const int iArg) :
     AgIntegerLGE{lS, iArg, IOgl::P::OF_N_N, IOgl::P::OF_MAX}{} };
 /* -- Other types ---------------------------------------------------------- */
-using Lib::OS::GlFW::GLsizei;
 struct AgTextureDimension : public AgIntegerLG<GLsizei>
   { explicit AgTextureDimension(lua_State*const lS, const int iArg) :
       AgIntegerLG{lS, iArg, 1, IOgl::P::cOgl->MaxTexSize<GLsizei>()}{} };

@@ -32,16 +32,16 @@ typedef vector<ALuint>   ALUIntVector; // A vector of ALuint's
 BUILD_FLAGS(Oal,
   /* --------------------------------------------------------------------- */
   // No flags                          Device has been initialised?
-  AFL_NONE                  {Flag[0]}, AFL_INITDEVICE            {Flag[3]},
+  AFL_NONE                  {Flag(0)}, AFL_INITDEVICE            {Flag(3)},
   // Context has been initialised?     Have infinite sources?
-  AFL_INITCONTEXT           {Flag[4]}, AFL_INFINITESOURCES       {Flag[5]},
+  AFL_INITCONTEXT           {Flag(4)}, AFL_INFINITESOURCES       {Flag(5)},
   // Context has been made current?    OpenAL fully initialised
-  AFL_CONTEXTCURRENT        {Flag[6]}, AFL_INITIALISED           {Flag[7]},
+  AFL_CONTEXTCURRENT        {Flag(6)}, AFL_INITIALISED           {Flag(7)},
   // Can play 32-bit float audio?      Have ALC_ENUMERATE_ALL_EXT?
-  AFL_HAVE32FPPB            {Flag[8]}, AFL_HAVEENUMEXT           {Flag[9]},
+  AFL_HAVE32FPPB            {Flag(8)}, AFL_HAVEENUMEXT           {Flag(9)},
   /* -- Persistent across initialisations ---------------------------------- */
   // HRTF is enabled?
-  AFL_HRTF                 {Flag[64]},
+  AFL_HRTF                 {Flag(64)},
   /* -- Masks -------------------------------------------------------------- */
   AFL_VOLATILE{ AFL_INITDEVICE|AFL_INITCONTEXT|AFL_INFINITESOURCES|
                 AFL_CONTEXTCURRENT|AFL_INITIALISED|AFL_HAVE32FPPB|
@@ -56,7 +56,6 @@ static class Oal final :
   /* ----------------------------------------------------------------------- */
   const IdMap<ALenum> imOALCodes,      // OpenAL codes
                    imFormatCodes;      // OpenAL format codes
-  const IdMap<>    imOGGCodes;         // Ogg codes
   /* ----------------------------------------------------------------------- */
   ALuint           uiMaxStereoSources, // Maximum number of stereo sources
                    uiMaxMonoSources;   // Maximum number of mono sources
@@ -353,10 +352,6 @@ static class Oal final :
   }
   /* --------------------------------------------------------------- */ public:
   template<typename IntType>
-    const string_view &GetOggErr(const IntType itCode) const
-      { return imOGGCodes.Get(static_cast<unsigned int>(itCode)); }
-  /* ----------------------------------------------------------------------- */
-  template<typename IntType>
     const string_view &GetALErr(const IntType itCode) const
       { return imOALCodes.Get(static_cast<ALenum>(itCode)); }
   /* -- AL is initialised? ------------------------------------------------- */
@@ -521,15 +516,6 @@ static class Oal final :
       { AL_FORMAT_MONO16,         "MI16" }, { AL_FORMAT_STEREO16,     "SI16" },
       { AL_FORMAT_MONO8,          "MI08" }, { AL_FORMAT_STEREO8,      "SI08" }
     }, "????" },
-    imOGGCodes{{                       // Ogg error codes
-      IDMAPSTR(OV_EOF),                IDMAPSTR(OV_HOLE),
-      IDMAPSTR(OV_FALSE),              IDMAPSTR(OV_EREAD),
-      IDMAPSTR(OV_EFAULT),             IDMAPSTR(OV_EIMPL),
-      IDMAPSTR(OV_EINVAL),             IDMAPSTR(OV_ENOTVORBIS),
-      IDMAPSTR(OV_EBADHEADER),         IDMAPSTR(OV_EVERSION),
-      IDMAPSTR(OV_ENOTAUDIO),          IDMAPSTR(OV_EBADPACKET),
-      IDMAPSTR(OV_EBADLINK),           IDMAPSTR(OV_ENOSEEK)
-    }, "OV_UNKNOWN" },
     /* -- Initialisers ----------------------------------------------------- */
     uiMaxStereoSources(0),             // Stereo sources initialised later
     uiMaxMonoSources(0),               // Mono sources initialised later
@@ -540,8 +526,6 @@ static class Oal final :
     eQuery(AL_NONE)                    // Query method not initialised yet
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Oal)                 // Suppress default functions for safety
   /* -- Undefines ---------------------------------------------------------- */
 #undef IAL                             // Done with this macro
 #undef IALC                            //   "

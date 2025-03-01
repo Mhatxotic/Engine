@@ -12,10 +12,11 @@ namespace IPalette {                   // Start of private module namespace
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IFboDef::P;            using namespace IIdent::P;
 using namespace IImage::P;             using namespace IImageDef::P;
+using namespace ILockable::P;          using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IShaders::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace ITexDef::P;            using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 typedef array<FboColour, 256> PalData; // Palette data
 /* ------------------------------------------------------------------------- */
@@ -127,22 +128,17 @@ class Pal :                            // Members initially public
     const PalDataIt pdiStart{ begin() + stIndex };
     StdFill(par_unseq, pdiStart, pdiStart + stCount,
       FboColour{ fRed, fGreen, fBlue, fAlpha }); }
-  /* ----------------------------------------------------------------------- */
-  Pal(void) :                          // No parameters
-    /* -- Initialisers ----------------------------------------------------- */
-    PalData{}                          // Blank palette
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // Do nothing else
   /* -- Copy constructor from other palette data --------------------------- */
   explicit Pal(const PalData &pdOther) :
     /* -- Initialisers ----------------------------------------------------- */
     PalData{ pdOther }                 // Copy palette data
     /* -- Code ------------------------------------------------------------- */
     { }                                // Do nothing else
-};/* ----------------------------------------------------------------------- */
-CTOR_BEGIN(Palettes, Palette, CLHelperUnsafe,
-  const Pal palDefault;                // Default palette
-) /* ----------------------------------------------------------------------- */
+  /* -- Default constructor that does nothing ------------------------------ */
+  Pal(void) = default;                 // No parameters
+};/* -- Init collector with default palette array -------------------------- */
+CTOR_BEGIN(Palettes, Palette, CLHelperUnsafe, const Pal palDefault;)
+/* ------------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable,                     // Lua garbage collector instruction
@@ -198,8 +194,7 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
     /* -- Code  ------------------------------------------------------------ */
     { }                                // No code
 };/* ----------------------------------------------------------------------- */
-CTOR_END(Palettes, Palette, PALETTE,,,,
-  palDefault{{{ // Init default palette to VGA
+CTOR_END(Palettes, Palette, PALETTE,,,,palDefault{{{ // Init default pal to VGA
 /* -- 0-15 ----------------------------------------------------------------- */
 {.0f,.0f,.0f,.0f}, {   0,   2, 170 }, {  20, 170,   0 }, {   0, 170, 170 },
 { 170,   0,   3 }, { 170,   0, 170 }, { 170,  85,   0 }, { 170, 170, 170 },

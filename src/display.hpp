@@ -10,71 +10,71 @@
 /* ------------------------------------------------------------------------- */
 namespace IDisplay {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IConsole::P;
+using namespace IConGraph::P;          using namespace IConsole::P;
 using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IDim;
-using namespace IDir::P;               using namespace IEvtMain::P;
-using namespace IEvtWin::P;            using namespace IFboCore::P;
-using namespace IFlags;                using namespace IFont::P;
-using namespace IGlFW::P;              using namespace IGlFWCursor::P;
-using namespace IGlFWMonitor::P;       using namespace IGlFWUtil::P;
+using namespace ICVarLib::P;           using namespace IDim::P;
+using namespace IDimCoord::P;          using namespace IDir::P;
+using namespace IEvtMain::P;           using namespace IEvtWin::P;
+using namespace IFboCore::P;           using namespace IFlags;
+using namespace IFont::P;              using namespace IGlFW::P;
+using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
+using namespace IGlFWUtil::P;          using namespace IHelper::P;
 using namespace IIdent::P;             using namespace IImage::P;
 using namespace IImageDef::P;          using namespace IInput::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITexture::P;           using namespace IToken::P;
-using namespace IUtf;                  using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 BUILD_FLAGS(Display,
   /* -- Active flags ------------------------------------------------------- */
   // No display flags                  Window is focused?
-  DF_NONE                   {Flag[0]}, DF_FOCUSED                {Flag[1]},
+  DF_NONE                   {Flag(0)}, DF_FOCUSED                {Flag(1)},
   // Exclusive mode full-screen?       Full-screen locked?
-  DF_EXCLUSIVE              {Flag[2]}, DF_NATIVEFS               {Flag[3]},
+  DF_EXCLUSIVE              {Flag(2)}, DF_NATIVEFS               {Flag(3)},
   // Window is actually in fullscreen?
-  DF_INFULLSCREEN           {Flag[4]},
+  DF_INFULLSCREEN           {Flag(4)},
   /* -- End-user configuration flags --------------------------------------- */
   // Use forward compatible context?   Use double-buffering?
-  DF_FORWARD               {Flag[47]}, DF_DOUBLEBUFFER          {Flag[48]},
+  DF_FORWARD               {Flag(47)}, DF_DOUBLEBUFFER          {Flag(48)},
   // Automatic minimise?               Focus on show?
-  DF_AUTOICONIFY           {Flag[49]}, DF_AUTOFOCUS             {Flag[50]},
+  DF_AUTOICONIFY           {Flag(49)}, DF_AUTOFOCUS             {Flag(50)},
   // Window is resizable?              Always on top?
-  DF_SIZABLE               {Flag[51]}, DF_FLOATING              {Flag[52]},
+  DF_SIZABLE               {Flag(51)}, DF_FLOATING              {Flag(52)},
   // Window has a border?              Minimize on lose focus?
-  DF_BORDER                {Flag[53]}, DF_MINFOCUS              {Flag[54]},
+  DF_BORDER                {Flag(53)}, DF_MINFOCUS              {Flag(54)},
   // HiDPI is enabled?                 SRGB namespace is enabled?
-  DF_HIDPI                 {Flag[55]}, DF_SRGB                  {Flag[56]},
+  DF_HIDPI                 {Flag(55)}, DF_SRGB                  {Flag(56)},
   // Graphics switching enabled?       Full-screen mode set?
-  DF_GASWITCH              {Flag[57]}, DF_FULLSCREEN            {Flag[58]},
+  DF_GASWITCH              {Flag(57)}, DF_FULLSCREEN            {Flag(58)},
   // Window is closable?               Stereo mode enabled?
-  DF_CLOSEABLE             {Flag[59]}, DF_STEREO                {Flag[60]},
+  DF_CLOSEABLE             {Flag(59)}, DF_STEREO                {Flag(60)},
   // OpenGL debug context?             Window transparency enabled?
-  DF_DEBUG                 {Flag[61]}, DF_TRANSPARENT           {Flag[62]},
+  DF_DEBUG                 {Flag(61)}, DF_TRANSPARENT           {Flag(62)},
   // No opengl errors?                 Window maximised at start?
-  DF_NOERRORS              {Flag[63]}, DF_MAXIMISED             {Flag[64]}
+  DF_NOERRORS              {Flag(63)}, DF_MAXIMISED             {Flag(64)}
 );
 /* == Display class ======================================================== */
 static class Display final :
   /* -- Base classes ------------------------------------------------------- */
-  private IHelper,                     // Initialisation helper
+  private InitHelper,                  // Initialisation helper
   public  DisplayFlags,                // Display settings
-  private EvtMainRegVec,               // Main events list to register
-  private EvtWinRegVec,                // Window events list to register
   private DimCoInt                     // Requested window position and size
 { /* -- Variables ---------------------------------------------------------- */
-  GlFWMonitors     mlData;             // Monitor list data
+  const EvtMainRegVec emrvEvents;      // Main events list to register
+  const EvtWinRegVec  ewrvEvents;      // Window events list to register
+  GlFWMonitors        mlData;             // Monitor list data
   const GlFWMonitor *moSelected;       // Monitor selected
   const GlFWRes   *rSelected;          // Monitor resolution selected
   size_t           stMRequested,       // Monitor id request
                    stVRequested;       // Video mode requested
-  DimFloat         dfMatrix;           // Currently selected frame-buffer size
-  GLfloat          fGamma,             // Monitor gamma setting
-                   fReqMatrixWidth,    // Saved matrix width
-                   fReqMatrixHeight;   // Saved matrix height
+  DimGLFloat       dfMatrix,           // Currently selected frame-buffer dims
+                   dfMatrixReq,        // Requested frame-buffer dimensions
+                   dfWinScale;         // Window scale dimensions
+  GLfloat          fGamma;             // Monitor gamma setting
   int              iApi,               // Selected API from GLFW
                    iProfile,           // Selected profile for the context
                    iCtxMajor,          // Selected context major version
@@ -88,8 +88,6 @@ static class Display final :
                    iWinPosX, iWinPosY, // Window position
                    iAuxBuffers,        // Auxilliary buffers to use
                    iSamples;           // FSAA setting to use
-  float            fWinScaleWidth,     // Window scale width
-                   fWinScaleHeight;    // Window scale height
   string           strClipboard;       // Clipboard string to copy or grab
   /* -- Icons -------------------------------------------------------------- */
   typedef vector<GLFWimage> GlFWIconList; // Glfw image list
@@ -201,16 +199,16 @@ static class Display final :
     const float fNewWidth = emaArgs[1].f,
                 fNewHeight = emaArgs[2].f;
     // If scale not changed? Report event and return
-    if(UtilIsFloatEqual(fNewWidth, fWinScaleWidth) &&
-       UtilIsFloatEqual(fNewHeight, fWinScaleHeight))
+    if(UtilIsFloatEqual(fNewWidth, dfWinScale.DimGetWidth()) &&
+       UtilIsFloatEqual(fNewHeight, dfWinScale.DimGetHeight()))
       return cLog->LogDebugExSafe("Display received window scale of $x$.",
         fNewWidth, fNewHeight);
     // Report change
     cLog->LogInfoExSafe("Display changed window scale from $x$ to $x$.",
-      fWinScaleWidth, fWinScaleHeight, fNewWidth, fNewHeight);
+      dfWinScale.DimGetWidth(), dfWinScale.DimGetHeight(),
+      fNewWidth, fNewHeight);
     // Set new value
-    fWinScaleWidth = fNewWidth;
-    fWinScaleHeight = fNewHeight;
+    dfWinScale.DimSet(fNewWidth, fNewHeight);
   }
   /* -- Window limits change request --------------------------------------- */
   void OnReqSetLimits(const EvtWinEvent &eweEvent)
@@ -687,7 +685,8 @@ static class Display final :
     // window size isn't sent so we need to store the value.
     cInput->SetWindowSize(iWidth, iHeight);
     // Get scale of window
-    cGlFW->WinGetScale(fWinScaleWidth, fWinScaleHeight);
+    cGlFW->WinGetScale(dfWinScale.DimGetWidthRef(),
+                       dfWinScale.DimGetHeightRef());
     // Need to fix a GLFW scaling bug with this :(
 #if defined(MACOS)
     // If hidpi not enabled? Update the main fbo viewport size without scale
@@ -696,9 +695,9 @@ static class Display final :
                               static_cast<GLsizei>(cInput->GetWindowHeight()));
     // Update the main fbo viewport size with scale
     cFboCore->DimSet(static_cast<GLsizei>(cInput->GetWindowWidth()) *
-                       static_cast<GLsizei>(fWinScaleWidth),
+                       dfWinScale.DimGetWidth<GLsizei>(),
                      static_cast<GLsizei>(cInput->GetWindowHeight()) *
-                       static_cast<GLsizei>(fWinScaleHeight));
+                       dfWinScale.DimGetHeight<GLsizei>());
     // Remove native flag since GLFW canno set or detect this directly.
     FlagClear(DF_NATIVEFS);
     // Windows and linux doesn't need the scale
@@ -799,7 +798,7 @@ static class Display final :
   /* -- Restore default matrix --------------------------------------------- */
   void CommitDefaultMatrix(void)
   { // Restore default dimensions as set from the manifest
-    dfMatrix.DimSet(fReqMatrixWidth, fReqMatrixHeight);
+    dfMatrix.DimSet(dfMatrixReq);
     // Restore matrix but don't need to re-init if size didn't change
     CommitMatrix(false);
   }
@@ -844,11 +843,11 @@ static class Display final :
       // Exception occured? GLFW can throw GLFW_PLATFORM_ERROR on Wayland which
       // is absolutely retarded as is not consistent with other platforms such
       // as MacOS which will silently succeed
-      catch(const exception &e)
+      catch(const exception &eReason)
       { // Just log the error that occured
         cLog->LogWarningExSafe(
           "Display could not load $ icon files due to GlFW exception: $.",
-          gilIcons.size(), e.what());
+          gilIcons.size(), eReason);
         // Done
         return;
       } // Report that we updated the icons
@@ -929,8 +928,8 @@ static class Display final :
   /* -- Get window position ------------------------------------------------ */
   int GetWindowPosX(void) const { return iWinPosX; }
   int GetWindowPosY(void) const { return iWinPosY; }
-  float GetWindowScaleWidth(void) const { return fWinScaleWidth; }
-  float GetWindowScaleHeight(void) const { return fWinScaleHeight; }
+  float GetWindowScaleWidth(void) const { return dfWinScale.DimGetWidth(); }
+  float GetWindowScaleHeight(void) const { return dfWinScale.DimGetHeight(); }
   /* -- Init --------------------------------------------------------------- */
   void Init(void)
   { // Class initialised
@@ -982,14 +981,14 @@ static class Display final :
     // Register monitor removal event. We can't use our events system for this
     // because once the event callback is over, the data for the monitor is
     // freed.
-    glfwSetMonitorCallback(OnMonitorStatic);
+    GlFWSetMonitorCallback(OnMonitorStatic);
     // Update icons if there are some loaded by the cvars callbacks
     UpdateIcons();
     // Set default gamma for selected monitor
     ApplyGamma();
     // Register main and window thread events
-    cEvtMain->RegisterEx(*this);
-    cEvtWin->RegisterEx(*this);
+    cEvtMain->RegisterEx(emrvEvents);
+    cEvtWin->RegisterEx(ewrvEvents);
     // Log progress
     cLog->LogInfoSafe("Display class started successfully.");
   }
@@ -1000,14 +999,14 @@ static class Display final :
     // Log progress
     cLog->LogDebugSafe("Display class deinitialising...");
     // Remove events we personally handle
-    glfwSetMonitorCallback(nullptr);
+    GlFWSetMonitorCallback(nullptr);
     // Remove invalidated active flags
     FlagClear(DF_FOCUSED|DF_EXCLUSIVE|DF_INFULLSCREEN|DF_NATIVEFS);
     // Window type deinitialised
     fsType = FST_STANDBY;
     // Deinit window and engine events
-    cEvtWin->UnregisterEx(*this);
-    cEvtMain->UnregisterEx(*this);
+    cEvtWin->UnregisterEx(ewrvEvents);
+    cEvtMain->UnregisterEx(emrvEvents);
     // Have window?
     if(cGlFW->WinIsAvailable())
     { // If we have monitor?
@@ -1037,9 +1036,10 @@ static class Display final :
   /* -- Constructor -------------------------------------------------------- */
   Display(void) :
     /* --------------------------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Send name to init helper
+    InitHelper{ __FUNCTION__ },        // Send name to init helper
     DisplayFlags{ DF_NONE },           // No display flags set
-    EvtMainRegVec{                     // Register main events
+    DimCoInt{ -1, -1, 0, 0 },          // Requested position and size
+    emrvEvents{                        // Register main events
       { EMC_VID_FB_REINIT,     bind(&Display::OnFBReset,     this, _1) },
       { EMC_VID_MATRIX_REINIT, bind(&Display::OnMatrixReset, this, _1) },
       { EMC_WIN_CLOSE,         bind(&Display::OnClose,       this, _1) },
@@ -1050,7 +1050,7 @@ static class Display final :
       { EMC_WIN_RESIZED,       bind(&Display::OnResized,     this, _1) },
       { EMC_WIN_SCALE,         bind(&Display::OnScale,       this, _1) },
     },
-    EvtWinRegVec{                      // Register window events
+    ewrvEvents{                        // Register window events
       { EWC_WIN_ATTENTION,   bind(&Display::OnReqAttention,    this, _1) },
       { EWC_WIN_CENTRE,      bind(&Display::OnReqCentre,       this, _1) },
       { EWC_WIN_CURPOSGET,   bind(&Display::OnReqGetCursorPos, this, _1) },
@@ -1073,15 +1073,14 @@ static class Display final :
       { EWC_WIN_SETSTKMOUSE, bind(&Display::OnReqStickyMouse,  this, _1) },
       { EWC_WIN_TOGGLE_FS,   bind(&Display::OnReqToggleFS,     this, _1) },
     },
-    DimCoInt{ -1, -1, 0, 0 },          // Requested position and size
     moSelected(nullptr),               // No monitor selected
     rSelected(nullptr),                // No video mode selected
     stMRequested(StdMaxSizeT),         // No monitor requested
     stVRequested(StdMaxSizeT),         // No video mode id requested
-    dfMatrix{ 0.0f, 0.0f },            // Currently selected matrix
+    dfMatrix{ 0.0f, 0.0f },            // Selected matrix initialised later
+    dfMatrixReq{ dfMatrix },           // Requested matrix initialised later
+    dfWinScale{ 1.0f, 1.0f },          // Window scale initialised later
     fGamma(0),                         // Gamma initialised by CVars
-    fReqMatrixWidth(0.0f),             // Requested matrix width
-    fReqMatrixHeight(0.0f),            // Requested matrix height
     iApi(GLFW_DONT_CARE),              // Api type set by cvars
     iProfile(GLFW_DONT_CARE),          // Profile type set by cvars
     iCtxMajor(GLFW_DONT_CARE),         // Context major version set by cvars
@@ -1096,8 +1095,6 @@ static class Display final :
     iWinPosY(GLFW_DONT_CARE),          // No initial window Y position
     iAuxBuffers(GLFW_DONT_CARE),       // No auxiliary buffers specified
     iSamples(GLFW_DONT_CARE),          // No anti-aliasing samples specified
-    fWinScaleWidth(1.0f),              // No initial scale width
-    fWinScaleHeight(1.0f),             // No initial scale height
     lrFocused{ "OnFocused" },          // Set name for OnFocused lua event
     fsType(FST_STANDBY),               // Full-screen type
     fstStrings{{                       // Init full-screen type strings
@@ -1108,8 +1105,6 @@ static class Display final :
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Display, DeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Display)             // Suppress default functions for safety
   /* -- Helper macro for boolean based CVars based on OS ------------------- */
 #define CBCVARFLAG(n, f) CVarReturn n(const bool bState) \
     { FlagSetOrClear(f, bState); return ACCEPT; }
@@ -1138,8 +1133,10 @@ static class Display final :
   CBCVARRANGE(int, SetForcedBitDepthB, iFBDepthB, GLFW_DONT_CARE, 16)
   CBCVARRANGE(int, SetForcedBitDepthG, iFBDepthG, GLFW_DONT_CARE, 16)
   CBCVARRANGE(int, SetForcedBitDepthR, iFBDepthR, GLFW_DONT_CARE, 16)
-  CBCVARRANGE(GLfloat, SetMatrixHeight, fReqMatrixHeight, 200.0f, 16384.0f)
-  CBCVARRANGE(GLfloat, SetMatrixWidth, fReqMatrixWidth, 320.0f, 16384.0f)
+  CBCVARRANGE(GLfloat,
+    SetMatrixHeight, dfMatrixReq.DimGetHeightRef(), 200.0f, 16384.0f)
+  CBCVARRANGE(GLfloat,
+    SetMatrixWidth, dfMatrixReq.DimGetWidthRef(), 320.0f, 16384.0f)
   /* ----------------------------------------------------------------------- */
 #if defined(MACOS)                     // Compiling on MacOS?
   /* ----------------------------------------------------------------------- */

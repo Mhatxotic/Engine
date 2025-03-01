@@ -99,8 +99,6 @@ static class EvtWin final :            // Event list for window thread
     }}}
     /* -- No core ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(EvtWin)              // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cEvtWin = nullptr;                  // Pointer to static class
 /* ------------------------------------------------------------------------- */

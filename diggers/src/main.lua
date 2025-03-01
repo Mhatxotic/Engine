@@ -530,13 +530,15 @@ local function fcbTick()
   -- Refresh viewport info and automatically when window size changes
   Fbo.OnRedraw(RefreshViewportInfo);
   RefreshViewportInfo();
+  -- Empty CVar callback event function
+  local function fcbEmpty() return true end;
   -- Initialise base API functions
   ParseScriptResult("main", { F=UtilBlank, A={ GetCallbacks = GetCallbacks,
     GetTestMode = GetTestMode, LoadResources = LoadResources,
     RefreshViewportInfo = RefreshViewportInfo,
     RegisterFBUCallback = RegisterFrameBufferUpdateCallback,
     SetCallbacks = SetCallbacks, SetErrorMessage = SetErrorMessage,
-    TimeIt = TimeIt } });
+    TimeIt = TimeIt, fcbEmpty = fcbEmpty } });
   -- Store texture scale and assets data
   aAPI.iTexScale = iTexScale;
   aAPI.aAssetsData = aAssetsData;
@@ -586,19 +588,10 @@ local function fcbTick()
       -- Unpack returns table and return all the functions requested
       return unpack(tRets);
     end
-    -- Empty callback function for CVar events
-    local function fcbEmpty() return true end;
     -- Register file data CVar
     local aCVF<const> = Variable.Flags;
-    -- Default CVar flags for string storage
-    local iCFR<const> = aCVF.STRINGSAVE|aCVF.TRIM|aCVF.PROTECTED|aCVF.DEFLATE;
     -- Default CVar flags for boolean storage
     local iCFB<const> = aCVF.BOOLEANSAVE;
-    -- 4 save slots so 4 save variables
-    for iI = 1, 4 do
-      aAPI["cvData"..iI] =
-        VariableRegister("gam_data"..iI, "", iCFR, fcbEmpty);
-    end
     -- ...and a CVar that lets us show setup for the first time
     aAPI.cvSetup = VariableRegister("gam_setup", 1, iCFB, fcbEmpty);
     -- ...and a CVar that lets us skip the intro

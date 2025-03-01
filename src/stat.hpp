@@ -12,9 +12,10 @@
 namespace IStat {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
-using namespace IIdent::P;             using namespace ILuaLib::P;
+using namespace IIdent::P;             using namespace ILockable::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtf;
+using namespace ISysUtil::P;           using namespace IUtf::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -357,7 +358,7 @@ class Statistic
   /* -- Add data by pointer ------------------------------------------------ */
   Statistic &DataV(const void*const vpAddr) { return Data(StrAppend(vpAddr)); }
   /* -- Constructor that does nothing -------------------------------------- */
-  Statistic(void) { }
+  Statistic(void) = default;
 };/* ----------------------------------------------------------------------- */
 /* == Stat object collector and object class =============================== */
 CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
@@ -372,8 +373,6 @@ CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
     IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Stat)                // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Stats, Stat, STAT)    // End of stat objects collector
 /* ------------------------------------------------------------------------- */

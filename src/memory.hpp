@@ -13,7 +13,7 @@
 namespace IMemory {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 using namespace IError::P;             using namespace IIdent::P;
-using namespace IStd::P;               using namespace IUtf;
+using namespace IStd::P;               using namespace IUtf::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -48,6 +48,15 @@ class MemConst                         // Start of const MemBase Block Class
       { XC(cpAddr, "Position",  stPos,     "Amount",  stBytes,
                    "Maximum",   stSize,    "AddrPos", MemDoRead<void*>(stPos),
                    "AddrStart", MemPtr(),  "AddrMax", MemPtrEnd()); }
+  /* -- Find a NULL character in the memory -------------------------------- */
+  size_t MemFindNull(void) const
+  { // If memory is not empty, find a null character and resize up to it
+    if(const char*const cpLocPtr =
+         reinterpret_cast<char*>(memchr(MemPtr<char>(), '\0', MemSize())))
+      return static_cast<size_t>(cpLocPtr-MemPtr<char>());
+    // Not found
+    return StdMaxSizeT;
+  }
   /* -- Set size ----------------------------------------------------------- */
   void MemSetPtr(char*const cpNPtr = nullptr) { cpPtr = cpNPtr; }
   void MemSetSize(const size_t stBytes = 0) { stSize = stBytes; }
@@ -95,7 +104,7 @@ class MemConst                         // Start of const MemBase Block Class
     while(const char*const cpLoc = reinterpret_cast<char*>
       (memchr(MemDoRead(stPos), strWhat.front(), MemSize()-stPos)))
     { // Calculate index
-      stPos = static_cast<size_t>(MemPtr<char>()-cpPtr);
+      stPos = static_cast<size_t>(MemPtr<char>()-cpLoc);
       // Walk data until one of three things happen
       // - End of match string
       // - Character mismatch
@@ -147,8 +156,8 @@ class MemConst                         // Start of const MemBase Block Class
     // Return the tested bit
     return UtilBitTest(MemPtr<char>(), stPos);
   }
-  /* -- Stringview'ify the memory and check for null-terminator ------------ */
-  const string_view MemToStringView(const size_t stBytes) const
+  /* -- Stringview'ify the memory ------------------------------------------ */
+  const string_view MemToStringViewSafe(const size_t stBytes) const
   { // Return empty string if no size
     if(MemIsEmpty()) return { };
     // Check position
@@ -158,20 +167,26 @@ class MemConst                         // Start of const MemBase Block Class
     // There is no null character so we have to limit the size
     return { MemPtr<char>(), stBytes };
   }
+  /* -- Stringview'ify the memory with the current size -------------------- */
+  const string_view MemToStringViewSafe(void) const
+    { return MemToStringViewSafe(MemSize()); }
+  /* -- Stringviewify the memory (already assumes last char is '\0') ------- */
+  const string_view MemToStringView(void) const
+    { return { MemPtr<char>(), MemSize()-1 }; }
   /* -- Stringview'ify the memory ------------------------------------------ */
   const string MemToString(void) const
     { return { MemPtr<char>(), MemSize() }; }
   /* -- Stringify the memory ----------------------------------------------- */
   const string MemToStringSafe(void) const
-  { // Return empty string if no size
-    if(MemIsEmpty()) return { };
-    // Find a null character and if we found it? We know what the size is!
-    if(const char*const cpLocPtr =
-      reinterpret_cast<char*>(memchr(MemPtr<char>(), '\0', MemSize())))
-        return { MemPtr<char>(),
-          static_cast<size_t>(cpLocPtr-MemPtr<char>()) };
-    // There is no null character so we have to limit the size
-    return { MemPtr<char>(), MemSize() };
+  { // Return empty string if no memory
+    if(MemIsEmpty()) return {};
+    // Find the null character and if we find it?
+    switch(const size_t stPos = MemFindNull())
+    { // Not found? Return full string
+      case StdMaxSizeT: return MemToString();
+      // Anything else?
+      default: return { MemPtr<char>(), stPos };
+    }
   }
   /* -- Return if current size would overflow specified type --------------- */
   template<typename Type=size_t>bool MemIsSizeOverflow(void) const
@@ -215,8 +230,6 @@ class MemConst                         // Start of const MemBase Block Class
   /* -- Cast const void pointer to const char ------------------------------ */
   MemConst(const size_t stBytes, const void*const vpSrc) :
     MemConst(stBytes, const_cast<void*>(vpSrc)) { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(MemConst)            // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Read and write data class ============================================ */
 class MemBase :
@@ -369,9 +382,7 @@ class MemBase :
   MemBase(const size_t stBytes, const void*const vpSrc) :
     MemConst{ stBytes, vpSrc } { }
   /* -- Uninitialised constructor -- pointer ------------------------------- */
-  MemBase(void) { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(MemBase)             // Suppress default functions for safety
+  MemBase(void) = default;
 };/* ----------------------------------------------------------------------- */
 /* == Read, write and allocation data class ================================ */
 class Memory :
@@ -398,6 +409,18 @@ class Memory :
   /* -- Resize memory upwards never downwards ------------------------------ */
   void MemResizeUp(const size_t stBytes)
     { if(stBytes > MemSize()) MemDoResize(stBytes); }
+  /* -- Resize up to the NULL terminator ----------------------------------- */
+  void MemResizeToNull(void)
+  { // Return if no memory
+    if(MemIsEmpty()) return;
+    // Find the null character and if we find it?
+    switch(const size_t stPos = MemFindNull())
+    { // Not found? Nothing to do
+      case StdMaxSizeT: break;
+      // Anything else? Do the resize INCLUDING the null character
+      default: MemResize(stPos + 1); break;
+    }
+  }
   /* -- Append the specified amount of memory ------------------------------ */
   void MemAppend(const void*const vpSrc, const size_t stBytes)
   { // Bail out if the pointer is invalid
@@ -578,11 +601,9 @@ class Memory :
     /* -- Code to initialise pointer --------------------------------------- */
     { if(vpSrc) MemDoWrite(0, vpSrc, stBytes); }
   /* -- Standby constructor ------------------------------------------------ */
-  Memory(void) { }
+  Memory(void) = default;
   /* -- Destructor (just a free() needed) ---------------------------------- */
   ~Memory(void) { MemFreePtrIfSet(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Memory)              // Suppress default functions for safety
 };/* -- Useful types ------------------------------------------------------- */
 typedef list<Memory> MemoryList;       // List of memory blocks
 typedef vector<Memory> MemoryVector;   // A vector of memory classes

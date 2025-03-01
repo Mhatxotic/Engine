@@ -14,16 +14,17 @@
 namespace IFont {                      // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IAtlas::P;
-using namespace ICollector::P;         using namespace IDim;
+using namespace ICollector::P;         using namespace IDim::P;
 using namespace IError::P;             using namespace IFileMap::P;
 using namespace IFreeType::P;          using namespace IFtf::P;
 using namespace IImageDef::P;          using namespace IJson::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IRectangle::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace ITexDef::P;            using namespace ITexture::P;
-using namespace IUtf;                  using namespace IUtil::P;
-using namespace Lib::FreeType;         using namespace Lib::OS::GlFW;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::FreeType;         using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Font collector class for collector data and custom variables ========= */
@@ -37,11 +38,9 @@ class FontBase :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public Atlas                         // Atlas class
 { /* -- Protected typedefs -------------------------------------- */ protected:
-  typedef Rectangle<GLfloat> RectFloat;// Rectangle of GLfloats
-  /* ----------------------------------------------------------------------- */
   class Glyph :                        // Members initially private
     /* -- Dependencies ----------------------------------------------------- */
-    public DimFloat,                   // Dimension of floats
+    public DimGLFloat,                 // Dimension of floats
     public RectFloat                   // Glyph bounding co-ordinates
   { /* --------------------------------------------------------------------- */
     bool           bLoaded;            // 0=ft unloaded or 1=ft loaded
@@ -64,7 +63,7 @@ class FontBase :                       // Members initially private
           const GLfloat fX2,           // Top-right co-ordinate of glyph
           const GLfloat fY2) :         // Bottom-right co-ordinate of glyph
       /* -- Initialisers --------------------------------------------------- */
-      DimFloat{ fWidth, fHeight },     // Initialise glpyh size
+      DimGLFloat{ fWidth, fHeight },   // Initialise glpyh size
       RectFloat{ fX1, fY1, fX2, fY2 }, // Init adjustment co-ordinates
       bLoaded(bNLoaded),               // Init specified loaded value
       fAdvance(fNAdvance)              // Init specified advance value
@@ -73,8 +72,6 @@ class FontBase :                       // Members initially private
     /* -- Default Constructor ---------------------------------------------- */
     Glyph(void) :                      // No arguments
       /* -- Initialisers --------------------------------------------------- */
-      DimFloat{ },                     // Initialise default dimensions
-      RectFloat{ },                    // Initialise default rectangle
       bLoaded(false),                  // Character not loaded yet
       fAdvance(0.0f)                   // Character advance value
       /* -- No code -------------------------------------------------------- */
@@ -84,7 +81,7 @@ class FontBase :                       // Members initially private
   typedef GlyphVector::iterator GlyphVectorIt; // Iterator to GlyphVector
   /* --------------------------------------------------------------- */ public:
   GlyphVector      gvData;             // Glyph and outline data
-  DimFloat         dfScale,            // Scaled font width and height
+  DimGLFloat       dfScale,            // Scaled font width and height
                    dfFont;             // Requested font size for OpenGL
   size_t           stMultiplier;       // 1 if no outline, 2 if outline
   GLfloat          fCharSpacing,       // Character spacing adjustment
@@ -111,8 +108,6 @@ class FontBase :                       // Members initially private
     ulDefaultChar('?')
     /* --------------------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FontBase)            // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Font Class (which inherits an Atlas) ==========-====================== */
 CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
@@ -227,6 +222,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     dfFont.DimSet(ftfData);
     // Set default scaled font size and line spacing adjust
     SetSize(1.0f);
+    fLineSpacingHeight = ftfData.DimGetHeight();
     // Update tile size as GLfloat for opengl
     dfTile.DimSet(GetTileWidth<GLfloat>(), GetTileHeight<GLfloat>());
     // Make enough space for initial tex coords set
@@ -306,8 +302,9 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     CoordListIt cliItRightBegin{ clFirst.begin() };
     advance(cliItRightBegin, stCharEnd);
     StdFill(par_unseq, cliItRightBegin, clFirst.end(), cdRef);
-    // Initialise default font scale
+    // Initialise default font scale and line spacing to height
     SetSize(1.0f);
+    fLineSpacingHeight = fH;
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded from bitmap (T:$x$;F:$).",
       IdentGet(), uiTWidth, uiTHeight, ofeFilter);
@@ -417,8 +414,10 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     CoordListIt cliItRightBegin{ clFirst.begin() };
     advance(cliItRightBegin, stCharEnd);
     StdFill(par_unseq, cliItRightBegin, clFirst.end(), cdRef);
-    // Initialise default font scale
+    // Initialise default font scale, line and letter spacing
     SetSize(static_cast<GLfloat>(jsDoc.GetNumber("InitialScale")));
+    SetLineSpacing(static_cast<GLfloat>(jsDoc.GetNumber("LineSpacing")));
+    SetCharSpacing(static_cast<GLfloat>(jsDoc.GetNumber("LetterSpacing")));
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded from bitmap (T:$x$;F:$).",
       IdentGet(), uiTW, uiTH, ofeFilter);
@@ -436,8 +435,6 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     FontBase{ ifcPurpose }             // Set purpose
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Font)                // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Fonts, Font, FONT)    // End of collector class
 /* -- DeInit Font Textures ------------------------------------------------- */

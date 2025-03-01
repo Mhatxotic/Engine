@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IEvtMain {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IEvtCore::P;
+using namespace IEvtCore::P;           using namespace IHelper::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
@@ -57,38 +57,37 @@ enum EvtMainCmd : size_t               // Engine thread event commands
   EMC_VID_EVENT,                       // 29: Video event occured
   /* -- Console events------------------------------------------------------ */
   EMC_CON_UPDATE,                      // 30: Force syscon display update
-  EMC_CON_KEYPRESS,                    // 31: Console key pressed (NoLog here)
   /* -- Input events ------------------------------------------------------- */
-  EMC_INP_CHAR,                        // 32: Filtered key pressed
-  EMC_INP_KEYPRESS,                    // 33: Unfiltered key pressed
-  EMC_INP_MOUSE_CLICK,                 // 34: Mouse button clicked
-  EMC_INP_MOUSE_MOVE,                  // 35: Mouse cursor moved
-  EMC_INP_MOUSE_SCROLL,                // 36: Mouse wheel scrolled
+  EMC_INP_CHAR,                        // 31: Filtered key pressed
+  EMC_INP_KEYPRESS,                    // 32: Unfiltered key pressed
+  EMC_INP_MOUSE_CLICK,                 // 33: Mouse button clicked
+  EMC_INP_MOUSE_MOVE,                  // 34: Mouse cursor moved
+  EMC_INP_MOUSE_SCROLL,                // 35: Mouse wheel scrolled
   /* -- Loading async events ----------------------------------------------- */
-  EMC_MP_ARCHIVE,                      // 37: Archive async event occured
-  EMC_MP_ASSET,                        // 38: Asset async event occured
-  EMC_MP_FONT,                         // 39: Char async event occured
-  EMC_MP_IMAGE,                        // 40: Image async event occured
-  EMC_MP_JSON,                         // 41: Json async event occured
-  EMC_MP_PCM,                          // 42: Pcm async event occured
-  EMC_MP_PROCESS,                      // 43: Process async event occured
-  EMC_MP_SOCKET,                       // 44: Socket async event occured
-  EMC_MP_STREAM,                       // 45: Stream async event occured
-  EMC_MP_VIDEO,                        // 46: Video async event occured
+  EMC_MP_ARCHIVE,                      // 36: Archive async event occured
+  EMC_MP_ASSET,                        // 37: Asset async event occured
+  EMC_MP_FONT,                         // 38: Char async event occured
+  EMC_MP_IMAGE,                        // 39: Image async event occured
+  EMC_MP_JSON,                         // 40: Json async event occured
+  EMC_MP_PCM,                          // 41: Pcm async event occured
+  EMC_MP_PROCESS,                      // 42: Process async event occured
+  EMC_MP_SOCKET,                       // 43: Socket async event occured
+  EMC_MP_STREAM,                       // 44: Stream async event occured
+  EMC_MP_VIDEO,                        // 45: Video async event occured
   /* ----------------------------------------------------------------------- */
-  EMC_MAX,                             // 47: Below are just codes
+  EMC_MAX,                             // 46: Below are just codes
   /* ----------------------------------------------------------------------- */
-  EMC_LUA_ERROR,                       // 48: Error in LUA exec (not an event)
+  EMC_LUA_ERROR,                       // 47: Error in LUA exec (not an event)
   /* ----------------------------------------------------------------------- */
 #if defined(ALPHA)                     // Compiling debug version?
   EMC_NOLOG = EMC_MAX                  // Log all events
 #else                                  // Compiling on beta or release?
-  EMC_NOLOG = EMC_CON_KEYPRESS         // Suppress log from this event forwards
+  EMC_NOLOG = EMC_INP_CHAR             // Suppress log from this event forwards
 #endif                                 // Build check
 };/* -- Remember to update the id strings at EvtMain constructor ----------- */
 static class EvtMain final :           // Event list for render thread
   /* -- Dependencies ------------------------------------------------------- */
-  private IHelper,                     // Initialisation helper
+  private InitHelper,                  // Initialisation helper
   public EvtCore                       // Events common class
    <EvtMainCmd,                        // The enum list of events supported
     EMC_MAX,                           // Maximum events allowed
@@ -221,7 +220,7 @@ static class EvtMain final :           // Event list for render thread
   /* -- Constructor -------------------------------------------------------- */
   EvtMain(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Initialise helper
+    InitHelper{ __FUNCTION__ },        // Initialise helper
     EvtCore{ "EventMain", ISList{{     // Set name of this object
       /* ------------------------------------------------------------------- */
 #define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings
@@ -249,7 +248,7 @@ static class EvtMain final :           // Event list for render thread
       EMC(CB_EVENT),        EMC(CUR_EVENT),        EMC(STR_EVENT),
       EMC(VID_EVENT),
       /* ------------------------------------------------------------------- */
-      EMC(CON_UPDATE),      EMC(CON_KEYPRESS),
+      EMC(CON_UPDATE),
       /* ------------------------------------------------------------------- */
       EMC(INP_CHAR),        EMC(INP_KEYPRESS),     EMC(INP_MOUSE_CLICK),
       EMC(INP_MOUSE_MOVE),  EMC(INP_MOUSE_SCROLL),
@@ -275,8 +274,6 @@ static class EvtMain final :           // Event list for render thread
     }
     /* --------------------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(EvtMain)             // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cEvtMain = nullptr;                 // Pointer to static class
 /* ------------------------------------------------------------------------- */

@@ -14,5 +14,5 @@ cd ~/Assets/Engine
 # do -v to see command line or -### to print it and not compile
 
 # debug add -g and -rdynamic
-g++ -v -O3 -fmax-errors=1 -I./include -I./include/ft -std=c++20 -DBETA -o ./bin/build.elf ./src/build.cpp ./lib/lzma64.la ./lib/ssl64.la -lglfw -lz -lrt -lncurses -ldl -lX11 -lpthread
+g++ -v -O3 -fmax-errors=1 -I./include -I./include/ft -std=c++20 -DBETA -o ./bin/build.elf ./src/build.cpp ./lib/lua64.la ./lib/lzma64.la ./lib/ssl64.la -lglfw -lz -lrt -lncurses -ldl -lX11 -lpthread
 

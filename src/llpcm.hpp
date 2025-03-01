@@ -20,9 +20,7 @@
 /* ========================================================================= */
 namespace LLPcm {                      // Pcm namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IAsset::P;             using namespace IPcm::P;
-using namespace IStd::P;               using namespace IPcmLib::P;
-using namespace Common;
+using namespace IPcmDef::P;            using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Pcm common helper classes                                           ## **

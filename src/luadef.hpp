@@ -25,6 +25,7 @@ struct LuaTable                        // Lua table as C
 namespace ILuaLib {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 using namespace ICVarDef::P;           using namespace ILuaDef;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Lua API class namespace ids ------------------------------------------ */
@@ -40,9 +41,10 @@ enum LuaClassId : size_t {
   LMT_CLASSES,                         // Maximum number of classes
   /* ----------------------------------------------------------------------- */
   LMT_TOTAL = LMT_CLASSES + 1,         // Absolute total namespaces [31]
-};/* -- LUA class reference ids (referenced in collect.hpp) ---------------- */
+};/* -- LUA class reference ids (ref'd in luaident.hpp, lua.hpp) ----------- */
 typedef array<int, LMT_CLASSES> LuaLibClassIdReferences;
-static LuaLibClassIdReferences llcirAPI;
+static LuaLibClassIdReferences llcirAPI
+  { UtilMkFilledContainer<LuaLibClassIdReferences>(LUA_REFNIL) };
 /* -- Information about a LUA API namespace -------------------------------- */
 struct LuaLibStatic
 { /* ----------------------------------------------------------------------- */

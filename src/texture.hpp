@@ -11,21 +11,19 @@
 /* ------------------------------------------------------------------------- */
 namespace ITexture {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IDim;
-using namespace IError::P;             using namespace IFboDef::P;
-using namespace IFbo::P;               using namespace IFboItem::P;
+using namespace ICollector::P;         using namespace IDim::P;
+using namespace IError::P;             using namespace IFbo::P;
+using namespace IFboDef::P;            using namespace IFboItem::P;
 using namespace IImage::P;             using namespace IImageDef::P;
 using namespace IJson::P;              using namespace ILog::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IOgl::P;               using namespace IShader::P;
-using namespace IShaders::P;           using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IOgl::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace ITexDef::P;            using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-typedef Dimensions<GLfloat> DimFloat;  // Dimension using GLfloats
-typedef Dimensions<GLuint>  DimUInt;   // Dimension of GLuint's
 /* -- Texture collector class for collector data and custom variables ------ */
 CTOR_BEGIN_NOBB(Textures, Texture, CLHelperUnsafe)
 /* ------------------------------------------------------------------------- */
@@ -41,7 +39,7 @@ class TextureBase :                    // All members initially private
   /* -- Tile co-ordinates class ------------------------------------ */ public:
   struct CoordData :                   // All members are public
     /* -- Initialisers ----------------------------------------------------- */
-    public DimFloat,                   // Dimensions of texture
+    public DimGLFloat,                 // Dimensions of texture
     public QuadCoordData               // GL quad co-ords of two triangles
   { /* -- 2D tex-coord quad initialisation constructor --------------------- */
     CoordData(const GLfloat fWidth,    // Pixel width of tile   |---Y1---| ^
@@ -51,7 +49,7 @@ class TextureBase :                    // All members initially private
               const GLfloat fRight,    // Normal X2 coord (0-1) |---Y2---| v
               const GLfloat fBottom) : // Normal Y2 coord (0-1) <----W--->
       /* -- Initialisers --------------------------------------------------- */
-      DimFloat{ fWidth, fHeight },     // Initialise tile pixel dimensions
+      DimGLFloat{ fWidth, fHeight },   // Initialise tile pixel dimensions
       QuadCoordData{ {                 // Initialise two GL triangle tex coords
         { fLeft,  fTop,                // [0][0-1] T1 @ XY1    XY1--XY2 XY3
           fRight, fTop,                // [0][2-3] T1 @ XY2     |.../   /|
@@ -79,8 +77,8 @@ class TextureBase :                    // All members initially private
   CoordsList       clTiles;            // Texture coordinates for tiles
   GLUIntVector     uivTexture;         // OpenGL texture handle list
   Shader          *shProgram;          // Default shader program to use
-  DimUInt          duiTile;            // Texture tile width and height
-  DimFloat         dfPad,              // Texture tile padding (GL)
+  DimGLUInt        duiTile;            // Texture tile width and height
+  DimGLFloat       dfPad,              // Texture tile padding (GL)
                    dfImage,            // Texture image width and height (GL)
                    dfTile;             // Same as duiTile but as a GLfloat
   /* -- Constructor -------------------------------------------------------- */
@@ -94,8 +92,6 @@ class TextureBase :                    // All members initially private
     shProgram(nullptr)                 // No shader programme yet
     /* -- Code ------------------------------------------------------------- */
     { }                                // No code
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(TextureBase)         // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   /* -- Base classes ------------------------------------------------------- */
@@ -807,30 +803,32 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     clTiles.resize(1);
     CoordList &clFirst = clTiles.front();
     clFirst.reserve(gluvTiles.size() / 4);
+    // Shortcut to GLUIntVector const iterator
+    typedef GLUIntVector::const_iterator GLUIntVectorItConst;
     // Are image pixels reversed?
     if(IsReversed())
       // Until there are no more values to parse
-      for(GLUIntVector::const_iterator gluvciIt{ gluvTiles.cbegin() };
-                                       gluvciIt != gluvTiles.cend();
-                                     ++gluvciIt)
+      for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
+                              gluvicIt != gluvTiles.cend();
+                            ++gluvicIt)
       { // Add the user specified tile
-        const GLfloat fX      = static_cast<GLfloat>(*gluvciIt),
-                      fY      = static_cast<GLfloat>(*(++gluvciIt)),
-                      fWidth  = static_cast<GLfloat>(*(++gluvciIt)),
-                      fHeight = static_cast<GLfloat>(*(++gluvciIt));
+        const GLfloat fX      = static_cast<GLfloat>(*gluvicIt),
+                      fY      = static_cast<GLfloat>(*(++gluvicIt)),
+                      fWidth  = static_cast<GLfloat>(*(++gluvicIt)),
+                      fHeight = static_cast<GLfloat>(*(++gluvicIt));
         AddTileRWH(0, fX, fY, fWidth, fHeight);
       }
     // Image pixels are not reversed?
     else
       // Until there are no more values to parse
-      for(GLUIntVector::const_iterator gluvciIt{ gluvTiles.cbegin() };
-                                       gluvciIt != gluvTiles.cend();
-                                     ++gluvciIt)
+      for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
+                              gluvicIt != gluvTiles.cend();
+                            ++gluvicIt)
       { // Add the user specified tile
-        const GLfloat fX      = static_cast<GLfloat>(*gluvciIt),
-                      fY      = static_cast<GLfloat>(*(++gluvciIt)),
-                      fWidth  = static_cast<GLfloat>(*(++gluvciIt)),
-                      fHeight = static_cast<GLfloat>(*(++gluvciIt));
+        const GLfloat fX      = static_cast<GLfloat>(*gluvicIt),
+                      fY      = static_cast<GLfloat>(*(++gluvicIt)),
+                      fWidth  = static_cast<GLfloat>(*(++gluvicIt)),
+                      fHeight = static_cast<GLfloat>(*(++gluvicIt));
         AddTileWH(0, fX, fY, fWidth, fHeight);
       }
   }
@@ -850,7 +848,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     const OglFilterEnum ofeFilter =
       static_cast<OglFilterEnum>(jsDoc.GetInteger("Filter"));
     // Read automatic tile generation option and if it is set?
-    if(const bool bGenerateTileset = jsDoc.GetBoolean("GenerateTileset"))
+    if(jsDoc.GetBoolean("GenerateTileset"))
     { // Read required tile width and padding
       const GLuint uiTileWidth = jsDoc.GetInteger("TileWidth"),
                    uiTileHeight = jsDoc.GetInteger("TileHeight"),
@@ -934,8 +932,6 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     { }                                // Do nothing else
   /* -- Destructor (Unregistration then deinitialisation) ------------------ */
   ~Texture(void) { DeInit(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Texture)             // Suppress default functions for safety
 };/* -- Finish the collector ----------------------------------------------- */
 CTOR_END_NOINITS(Textures, Texture, TEXTURE)
 /* -- DeInit Textures ------------------------------------------------------ */

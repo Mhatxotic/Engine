@@ -15,14 +15,21 @@
 namespace ISource {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IOal::P;               using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::OpenAL;
+using namespace IFlags;                using namespace IIdent::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IOal::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Source collector class for collector data and custom variables ------- */
+/* -- Source flags --------------------------------------------------------- */
+BUILD_FLAGS(Source,
+  // No flags                          // Source is managed externally
+  SF_NONE{Flag(0)},                    SF_EXTERNAL{Flag(1)},
+  // Source is managed by LUA
+  SF_CLASS{Flag(2)}
+);/* -- Source collector class for collector data and custom variables ----- */
 CTOR_BEGIN(Sources, Source, CLHelperSafe,
 /* ------------------------------------------------------------------------- */
 typedef atomic<ALfloat> SafeALFloat;   // Multi-threaded AL float
@@ -34,10 +41,10 @@ SafeALFloat        fSVolume;           // Sample volume multiplier
 );/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Lockable                      // Lua garbage collector instruction
+  public Lockable,                     // Lua garbage collector instruction
+  public SourceFlags                   // Source flags
 { /* -- Private variables -------------------------------------------------- */
-  const ALuint     uiId;               // Source id
-  bool             bExternal;          // Ignore class in audio thread?
+  ALuint           uiId;               // Source id
   /* -- Get/set source float ----------------------------------------------- */
   void SetSourceFloat(const ALenum eP, const ALfloat fV) const
     { AL(cOal->SetSourceFloat(uiId, eP, fV), "Set source float failed!",
@@ -95,17 +102,22 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
     SetLooping(false);                 // Reset looping flag
   }
   /* -- Reset parameters --------------------------------------------------- */
-  void ReInit(void) { Init(); SetExternal(true); }
+  void Reset(void) { Init(); SetExternal(true); }
+  /* -- Re-initialise the source id ---------------------------------------- */
+  void ReInit(void) { uiId = cOal->CreateSource(); Reset(); }
   /* -- Unlock a source so it can be recycled ------------------------------ */
   void Unlock(void)
   { // Clear the attached buffer
     ClearBuffer();
     // Unlock the source so it can be recycled by the audio thread
-    SetExternal(false);
+    FlagReset(SF_NONE);
   }
   /* -- Get/set externally managed source ---------------------------------- */
-  bool GetExternal(void) const { return bExternal; }
-  void SetExternal(const bool bState) { bExternal = bState; }
+  bool GetExternal(void) const { return FlagIsSet(SF_EXTERNAL); }
+  void SetExternal(const bool bState) { FlagSetOrClear(SF_EXTERNAL, bState); }
+  /* -- Get/set externally managed by LUA source --------------------------- */
+  bool GetClass(void) const { return FlagIsSet(SF_CLASS); }
+  void SetClass(const bool bState) { FlagSetOrClear(SF_CLASS, bState); }
   /* -- Get/set elapsed time ----------------------------------------------- */
   ALfloat GetElapsed(void) const { return GetSourceFloat(AL_SEC_OFFSET); }
   void SetElapsed(const ALfloat fSeconds) const
@@ -281,12 +293,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   /* -- Constructor -------------------------------------------------------- */
   explicit Source(
     /* -- Parameters ------------------------------------------------------- */
-    const bool bLocked=true) :         // The source is initially locked?
+    const SourceFlagsConst sfFlags=SF_EXTERNAL) :  // Initial source flags
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperSource{ cSources, this },  // Register in Sources list
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    uiId(cOal->CreateSource()),        // Initialise a new source from OpenAL
-    bExternal(bLocked)                 // Set source managed flag
+    SourceFlags{ sfFlags },            // Set source managed flags
+    uiId(cOal->CreateSource())         // Initialise a new source from OpenAL
     /* -- Check for CreateSource error or initialise ----------------------- */
     { // Generate source
       ALC("Error generating al source id!");
@@ -298,8 +310,6 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   { // Delete the sourcess if id allocated
     if(uiId) ALL(cOal->DeleteSource(uiId), "Source failed to delete $!", uiId);
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Source)              // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END(Sources, Source, SOURCE,,,,
   fGVolume(0.0f), fMVolume(0.0f), fVVolume(0.0f), fSVolume(0.0f))
@@ -327,6 +337,41 @@ static unsigned int SourceStop(const ALUIntVector &uiBuffers)
   } // Else return stopped buffers
   return uiStopped;
 }
+/* == Destroy all sources (except LUA ones) ================================ */
+static void SourceDeInit(void)
+{ // Done if empty
+  if(cSources->empty()) return;
+  // Walk through the sources, only deleting the ones that aren't LUA owned
+  const size_t stSources = cSources->size();
+  cLog->LogDebugExSafe("Sources de-initialising $ objects...", stSources);
+  // Get first item and repeat until...
+  SourcesIt siIt{ cSources->begin() };
+  do
+  { // Get reference to source class
+    Source &soRef = **siIt;
+    // If it is not LUA managed then delete it because the Sample, Video and
+    // Stream classes will all re-initialise a new source again.
+    if(!soRef.GetClass()) { siIt = cSources->erase(siIt); continue; }
+    // Is a LUA class so just stop and clear it. LUA GC deletes this, not us.
+    soRef.Stop();
+    soRef.ClearBuffer();
+    ++siIt;
+  } // ...until we're at the end of the sources list
+  while(siIt != cSources->end());
+  // Log how many sources were deleted
+  cLog->LogInfoExSafe("Sources de-initialised $ objects.",
+    stSources - cSources->size());
+}
+/* ========================================================================= */
+static void SourceReInit(void)
+{ // Done if empty
+  if(cSources->empty()) return;
+  // Re-create buffers for all the samples and log pre/post re-init
+  cLog->LogDebugExSafe("Sources reinitialising $ objects...",
+    cSources->size());
+  for(Source*const soPtr : *cSources) soPtr->ReInit();
+  cLog->LogInfoExSafe("Sources reinitialised $ objects.", cSources->size());
+}
 /* == Manage sources (from audio thread) =================================== */
 static Source *SourceGetFree(void)
 { // Iterate through available sources
@@ -334,7 +379,7 @@ static Source *SourceGetFree(void)
   { // Is a locked stream? Then it's active and locked!
     if(sCptr->GetExternal() || sCptr->IsPlaying()) continue;
     // Reset source and return it
-    sCptr->ReInit();
+    sCptr->Reset();
     return sCptr;
   } // Couldn't find one
   return nullptr;
@@ -344,12 +389,22 @@ static bool SourceCanMakeNew(void)
   { return cSources->size() < cOal->GetMaxMonoSources(); }
 /* == Get a source using Lua to allocate it ================================ */
 static Source *SourceGetFromLua(lua_State*const lS)
-{ // Try to get an idle source and pass it to Lua if found
+{ // Try to get a used source and if failed?
   if(Source*const soNew = SourceGetFree())
+  { // Set that this is a LUA managed class
+    soNew->SetClass(true);
+    // Return reused class
     return LuaUtilClassReuse<Source>(lS, *cSources, soNew);
-  // Else try to make a new one if we can
-  return SourceCanMakeNew() ?
-    LuaUtilClassCreate<Source>(lS, *cSources) : nullptr;
+  } // If we can make a new source?
+  if(SourceCanMakeNew())
+    // Try to make a new one and if successful?
+    if(Source*const soNew = LuaUtilClassCreate<Source>(lS, *cSources))
+    { // Set that this is a LUA managed class
+      soNew->SetClass(true);
+      // Return the class
+      return soNew;
+    } // Failed so caller should handle this (for now).
+  return nullptr;
 }
 /* == Return a free source ================================================= */
 static Source *GetSource(void)
@@ -366,7 +421,7 @@ static void SourceAlloc(const size_t stCount)
   const size_t stSize = cSources->size();
   if(stSize >= stUsable) return;
   // Create new sources until we've reached the maximum and mark as usable
-  for(size_t stI = stSize; stI < stUsable; ++stI) new Source(false);
+  for(size_t stI = stSize; stI < stUsable; ++stI) new Source{ SF_NONE };
   // Log count
   cLog->LogDebugExSafe("Audio added new sources [$:$$].",
     cSources->size(), hex, cOal->GetError());

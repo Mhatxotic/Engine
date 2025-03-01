@@ -25,12 +25,10 @@ class SysCon :                         // All members initially private
   /* -- Base classes ------------------------------------------------------- */
   public SysBase,                      // Defined in 'sys(nix/mac).hpp'
   public SysConBase,                   // Defined in 'syscore.hpp'
-  private IHelper,                     // Allow access to windows console
+  private InitHelper,                  // Allow access to windows console
   private DimCoInt                     // Console drawing position & dimensions
 {  /* -- Typedefs ---------------------------------------------------------- */
   typedef ICurses::attr_t attr_t;      // NCurses alias
-  typedef Coordinates<int> CoordInt;   // Cordinates typedef
-  typedef Dimensions<int> DimInt;      // Dimension typedef
   /* -- Console data ------------------------------------------------------- */
   attr_t           aColour;            // Current colour
   attr_t           aColourSaved;       // Saved colour
@@ -101,8 +99,11 @@ class SysCon :                         // All members initially private
 #endif
     if(iNewW == DimGetWidth() && iNewH == DimGetHeight()) return;
     // Log the new size
-    cLog->LogDebugExSafe("SysCon resized from $x$ to $x$.",
-      iNewW, iNewH, DimGetWidth(), DimGetHeight());
+    if(DimIsSet())
+      cLog->LogDebugExSafe("SysCon resizing from $x$ to $x$.",
+        DimGetWidth(), DimGetHeight(), iNewW, iNewH);
+    else cLog->LogDebugExSafe("SysCon initialised to $x$.",
+      DimGetWidth(), DimGetHeight());
     // Update size
     DimSet(iNewW, iNewH);
     diSizeM1.DimSet(DimGetWidth() - 1, DimGetHeight() - 1);
@@ -696,10 +697,6 @@ class SysCon :                         // All members initially private
     if(IsInBackground())
       XC("Terminal NCurses mode cannot operate in the background so "
          "please try again running the process in the foreground instead!");
-    // Set locale
-    if(const char*const cpLocale = setlocale(LC_ALL, cCommon->CBlank()))
-      { cLog->LogDebugExSafe("SysCon initialised locale to $.", cpLocale); }
-    else XCL("Failed to initialse default locale!");
     // Init ncurses
     if(!initscr()) XC("Failed to initialise terminal window!");
     // No newlines on writing output
@@ -800,7 +797,7 @@ class SysCon :                         // All members initially private
   SysCon(SysModMap &&smmMap, const size_t stI) : // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     SysBase{ StdMove(smmMap), stI },   // Initialise base with module info
-    IHelper{ __FUNCTION__ },           // Initialise init helper
+    InitHelper{ __FUNCTION__ },        // Initialise init helper
     aColour(0),                        // Black colour
     aColourSaved(0),                   // Black saved colour
     stPalette(0),                      // No palette colours
@@ -812,8 +809,6 @@ class SysCon :                         // All members initially private
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~SysCon, SysConDeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysCon)              // Suppress default functions for safety
   /* -- Set maximum console line length ---------------------------- */ public:
   CVarReturn RowsModified(const size_t stRows)
   { // Deny if out of range. The maximum value is a SHORT from Win32 API.

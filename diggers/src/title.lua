@@ -291,9 +291,8 @@ local function OnScriptLoaded(GetAPI)
   local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
   -- Get imports
   BlitSLT, DeInitLevel, Fade, GameProc, GetActivePlayer, GetGameTicks,
-    GetOpponentPlayer, InitLobby, InitNewGame, InitTitleCredits,
-    LoadLevel, LoadResources, LoadSaveData, PlayStaticSound, PrintC,
-    ProcessViewPort,
+    GetOpponentPlayer, InitLobby, InitNewGame, InitTitleCredits, LoadLevel,
+    LoadResources, LoadSaveData, PlayStaticSound, PrintC, ProcessViewPort,
     RegisterFBUCallback, RegisterHotSpot, RegisterKeys, RenderObjects,
     RenderTerrain, SelectObject, SetHotSpot, aAssetsData, aCursorIdData,
     aKeyBankCats, aLevelsData, aObjectTypes, aObjects, aSfxData, fontTiny =

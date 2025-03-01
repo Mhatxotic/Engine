@@ -35,6 +35,7 @@ namespace E {                          // Put everything in engine namespace
 #include "sysutil.hpp"                 // System utilities header
 #include "cvardef.hpp"                 // CVar definitions header
 #include "clock.hpp"                   // Clock utilities header
+#include "ihelper.hpp"                 // Init helper utility header
 #include "args.hpp"                    // Arguments handling header
 #include "cmdline.hpp"                 // Command-line class header
 #include "memory.hpp"                  // Memory management utilities header
@@ -42,12 +43,17 @@ namespace E {                          // Put everything in engine namespace
 #include "log.hpp"                     // Logging helper class header
 #include "luadef.hpp"                  // Lua definitions header
 #include "collect.hpp"                 // Class collector utility header
+#include "lockable.hpp"                // Lockable collector utility header
+#include "luaident.hpp"                // Lua ident helper class header
 #include "stat.hpp"                    // Statistic utility class header
 #include "thread.hpp"                  // Thread helper class header
 #include "evtcore.hpp"                 // Thread-safe event system core header
 #include "evtmain.hpp"                 // Main engine events system header
-#include "dim.hpp"                     // Data grouping classes header
 #include "condef.hpp"                  // Console definitions header
+#include "intpair.hpp"                 // IntPair class header
+#include "coord.hpp"                   // Coord class header
+#include "dim.hpp"                     // Dimension class header
+#include "dimcoord.hpp"                // DimensionCoord class header
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
 #include "luautil.hpp"                 // Lua utility functions header
@@ -71,14 +77,16 @@ namespace E {                          // Put everything in engine namespace
 using namespace IClock::P;             using namespace ICmdLine::P;
 using namespace ICrypt::P;             using namespace ICodec::P;
 using namespace IDir::P;               using namespace IError::P;
-using namespace IFStream::P;           using namespace IJson::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IPSplit::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITimer::P;             using namespace IToken::P;
-using namespace IUtf;                  using namespace IUtil::P;
-using namespace IUuId::P;              using namespace IParser::P;
+using namespace IFStream::P;           using namespace IHelper::P;
+using namespace IJson::P;              using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IPSplit::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITimer::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;              using namespace IUuId::P;
+using namespace IParser::P;
 /* ========================================================================= */
 #define STANDARD   "c++20"             // Current compilation standard used
 #define ENGINENAME "engine"            // Name of engine 'engine'
@@ -104,20 +112,20 @@ using namespace IUuId::P;              using namespace IParser::P;
 struct Environment                     // Preconfigured environment settings
 { /* ------------------------------------------------------------ */ const char
   *const cpPerl,     *const cpCMake,    *const cpCppCheck, *const cpCppChkM,
-  *const cpCppChk32, *const cpCppChk64, *const cpCompress, *const cpDBG,
-  *const cp7z,       *const cpAC4,      *const cpAC8,      *const cpACM,
-  *const cpACA,      *const cpACB,      *const cpCCX,      *const cpCCM,
-  *const cpCCMX,     *const cpCCLIB,    *const cpCCIncDBG, *const cpCCASM,
-  *const cpCCAnal,   *const cpCCAA,     *const cpCCAB,     *const cpCCAR,
-  *const cpCCPP,     *const cpCC4,      *const cpCC8,      *const cpCCOBJ,
-  *const cpCCRES,    *const cpRCX,      *const cpRCM,      *const cpRCAA,
-  *const cpRCAB,     *const cpRCAR,     *const cpRC4,      *const cpRC8,
-  *const cpLDX4,     *const cpLDX8,     *const cpLDM,      *const cpLDAA,
-  *const cpLDAB,     *const cpLDAR,     *const cpLDE4,     *const cpLDE8,
-  *const cpLDB4,     *const cpLDB8,     *const cpLD4,      *const cpLD8,
-  *const cpLDL,      *const cpLDMAP,    *const cpLIB,      *const cpOBJ,
-  *const cpASM,      *const cpPDB,      *const cpLDEXE,    *const cpMAP,
-  *const cpEXE,      *const cpDBGSUF;
+  *const cpCppChk32, *const cpCppChk64, *const cpDBG,      *const cp7z,
+  *const cpAC4,      *const cpAC8,      *const cpACM,      *const cpACA,
+  *const cpACB,      *const cpCCX,      *const cpCCM,      *const cpCCMX,
+  *const cpCCLIB,    *const cpCCIncDBG, *const cpCCASM,    *const cpCCAnal,
+  *const cpCCAA,     *const cpCCAB,     *const cpCCAR,     *const cpCCPP,
+  *const cpCC4,      *const cpCC8,      *const cpCCOBJ,    *const cpCCRES,
+  *const cpRCX,      *const cpRCM,      *const cpRCAA,     *const cpRCAB,
+  *const cpRCAR,     *const cpRC4,      *const cpRC8,      *const cpLDX4,
+  *const cpLDX8,     *const cpLDM,      *const cpLDAA,     *const cpLDAB,
+  *const cpLDAR,     *const cpLDE4,     *const cpLDE8,     *const cpLDB4,
+  *const cpLDB8,     *const cpLD4,      *const cpLD8,      *const cpLDL,
+  *const cpLDMAP,    *const cpLIB,      *const cpOBJ,      *const cpASM,
+  *const cpPDB,      *const cpLDEXE,    *const cpMAP,      *const cpEXE,
+  *const cpDBGSUF;
 } /* ----------------------------------------------------------------------- */
 envWindowsMSVC =                       // Microsoft Visual C++ environment
 { /* ----------------------------------------------------------------------- */
@@ -128,7 +136,6 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
   /* CPPCHKP32  */ "-DX86 -D_M_IX86 -D_M_X86 -D_X86_ -D__i386__ "
                    "--platform=win32W",
   /* CPPCHKP64  */ "-DX64 -D__x86_64__ -D_WIN64 --platform=win64",
-  /* COMPRESS   */ UTLDIR "/UPX.EXE --best --crp-ms=999999",
   /* DEBUGGER   */ "D:\\Apps\\Dbg\\X96DBG.EXE \"$/$$$\"",
   /* 7Z         */ UTLDIR "/7Z.EXE",
   /* AC4        */ "ML.EXE -coff",
@@ -191,7 +198,6 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* CPPCHKP    */ envWindowsMSVC.cpCppChkM,
   /* CPPCHKP32  */ envWindowsMSVC.cpCppChk32,
   /* CPPCHKP64  */ envWindowsMSVC.cpCppChk64,
-  /* COMPRESS   */ envWindowsMSVC.cpCompress,
   /* DEBUGGER   */ envWindowsMSVC.cpDBG,
   /* 7Z         */ envWindowsMSVC.cp7z,
   /* AC4        */ envWindowsMSVC.cpAC4,
@@ -258,7 +264,6 @@ envWindowsLLVM =                       // LLVM on Windows
   /* CPPCHKP    */ envWindowsMSVC.cpCppChkM,
   /* CPPCHKP32  */ envWindowsMSVC.cpCppChk32,
   /* CPPCHKP64  */ envWindowsMSVC.cpCppChk64,
-  /* COMPRESS   */ envWindowsMSVC.cpCompress,
   /* DEBUGGER   */ envWindowsMSVC.cpDBG,
   /* 7Z         */ envWindowsMSVC.cp7z,
   /* AC4        */ envWindowsMSVC.cpAC4,
@@ -330,7 +335,6 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
                    "-DTARGET_OS_MAC --check-level=exhaustive",
   /* CPPCHKP32  */ "-DX86 -D__x86_64__ -DTARGET_CPU_X86_64 --platform=unix32",
   /* CPPCHKP64  */ "-DX64 -D__arm64__ -DTARGET_CPU_ARM64 --platform=unix64",
-  /* COMPRESS   */ "",
   /* DEBUGGER   */ "/usr/bin/lldb -- \"$/$$$\" app_basedir=\"$\" "
                    "sql_db=\"$/$\"",
   /* 7Z         */ "7zz",
@@ -411,7 +415,6 @@ envLinuxGCC =                          // GCC on Linux
                    "-D__GNUC_PATCHLEVEL__=" STR(__GNUC_PATCHLEVEL__),
   /* CPPCHKP32  */ envMacOSLLVM.cpCppChk32,
   /* CPPCHKP64  */ envMacOSLLVM.cpCppChk64,
-  /* COMPRESS   */ UTLDIR "/upx.elf --best --crp-ms=999999",
   /* DEBUGGER   */ "/usr/bin/gdb --args \"$/$$$\" app_basedir=\"$\" "
                    "sql_db=\"$/$\"",
   /* 7Z         */ "7za",
@@ -667,7 +670,7 @@ int CheckSources(void)
                 break;
               }
             } // Is alpha?
-            else if(isalnum(strLine[stPos])) bGotAlpha = true;
+            else if(StdIsAlnum(strLine[stPos])) bGotAlpha = true;
           } // exception occured
           catch(const exception &e)
           { // Print row number, column and error
@@ -840,10 +843,10 @@ int GenDoc(void)
           // Find colon and if we didn't find it?
           eType = TYP_CONST;
           size_t stPos = strNewFunc.find(':');
-          if(stPos == string::npos)
+          if(stPos == StdNPos)
           { // Find period and if we didn't find it? Parse error
             stPos = strNewFunc.find('.');
-            if(stPos == string::npos)
+            if(stPos == StdNPos)
               throw runtime_error{ "Period not found for new api func" };
           } // Is a member function
           else throw runtime_error{ "Method not allowed in const" };
@@ -853,7 +856,7 @@ int GenDoc(void)
           // Set the new function name
           strFunc = strNewFunc.substr(stPos+1);
           for(char cChar : strFunc)
-            if(!isalnum(static_cast<int>(cChar)) &&
+            if(StdIsNotAlnum(static_cast<int>(cChar)) &&
               cChar != ':' && cChar != '.')
                 throw runtime_error{ "Invalid class name" };
           // New function
@@ -890,10 +893,10 @@ int GenDoc(void)
           const string strNewFunc{ strLine.substr(5) };
           // Find colon and if we didn't find it?
           size_t stPos = strNewFunc.find(':');
-          if(stPos == string::npos)
+          if(stPos == StdNPos)
           { // Find period and if we didn't find it? Parse error
             stPos = strNewFunc.find('.');
-            if(stPos == string::npos)
+            if(stPos == StdNPos)
               throw runtime_error{ "Period not found for new api func" };
             // Is not a member function
             else eType = TYP_MEMBER;
@@ -905,7 +908,7 @@ int GenDoc(void)
           // Set the new function name
           strFunc = strNewFunc.substr(stPos+1);
           for(char cChar : strFunc)
-            if(!isalnum(static_cast<int>(cChar)) &&
+            if(StdIsNotAlnum(static_cast<int>(cChar)) &&
               cChar != ':' && cChar != '.')
                 throw runtime_error{ "Invalid function name" };
           // New function
@@ -930,7 +933,7 @@ int GenDoc(void)
           sParams.strName = strLine.substr(5);
           // Find colon and if not found? Parse error
           size_t stPos = sParams.strName.find(':');
-          if(stPos == string::npos)
+          if(stPos == StdNPos)
             throw runtime_error{ "Colon not found for in/out param" };
           // Set rest of string and name of parameter
           sParams.strType = sParams.strName.substr(stPos + 1);
@@ -938,7 +941,7 @@ int GenDoc(void)
           // Find equals
           stPos = sParams.strType.find('=');
           // Not found? Parse error
-          if(stPos == string::npos)
+          if(stPos == StdNPos)
             throw runtime_error{ "Equals not found for in/out param" };
           // Set rest of string and name of parameter
           sParams.strDesc = sParams.strType.substr(stPos + 1);
@@ -1955,7 +1958,7 @@ int SpecialExecute(const string strCmd, const size_t stML,
 int SpecialExecute2(const string &strCmd, const bool bOverride=true)
 { // Execute command line and throw error if it failed
   if(const int iR = SpecialExecute(strCmd,
-    uiFlags & PF_SYSOUT ? string::npos : 0, bOverride))
+    uiFlags & PF_SYSOUT ? StdNPos : 0, bOverride))
   { // Carriage return
     cout << '\n';
     // Throw error
@@ -1963,18 +1966,6 @@ int SpecialExecute2(const string &strCmd, const bool bOverride=true)
         "CmdLine", strCmd, "Directory", DirGetCWD(), "Exit", iR);
   } // Return status
   else return iR;
-}
-/* -- Prepare message from c-string format --------------------------------- */
-template<typename ...V>
-  static const string StrFormat(const string &strS, const V &...vV)
-{ // Return if string empty of invalid
-  if(strS.empty()) return {};
-  // Stream to write to
-  ostringstream osS;
-  // StrFormat the text
-  StrFormatHelper(osS, strS.c_str(), vV...);
-  // Return formated text
-  return osS.str();
 }
 /* ------------------------------------------------------ StrFormat a string -- */
 #define System(...) SpecialExecute2(__VA_ARGS__, true)
@@ -2203,9 +2194,6 @@ void BuildExecutable(const string &strTmp, const string &strOS,
 #if defined(WINDOWS)
   // Patch icon if on windows
   PatchIcon(StrFormat("$/$.ico", strName, strName), strOutTmp);
-  // Compress the executable. Upx requires executable bit
-  SystemF("chmod -v 755 \"$\"", strOutTmp);
-  SystemF("$ \"$\"", envActive.cpCompress, strOutTmp);
 #endif
   // Upx resets the attribute, let us reset it or cat won't append properly
   SystemF("chmod -v 755 \"$\"", strOutTmp);
@@ -2396,7 +2384,7 @@ int ChangeProject(const string &strProj)
   const string strVerFile{ StrFormat("$/$.ver", ETCDIR, ENGINENAME) };
   if(FStream{ strVerFile, FM_W_B }.
     FStreamWriteStringEx("$ $ $ $ $", uiVer[0], uiVer[1],
-      uiVer[2], uiVer[3], strProj) == string::npos)
+      uiVer[2], uiVer[3], strProj) == StdNPos)
         XCL("Failed to write version file!", "File", strVerFile);
   // Show success
   cout << "Switch project to '" << strProj << "' succeeded!\n";
@@ -2448,7 +2436,7 @@ int CertGen(void)
     // First character is a hash? Ignore it
     if(strLine[0] == '#') continue;
     // Need title?
-    if(bGetTitle && isalnum(strLine[0]))
+    if(bGetTitle && StdIsAlnum(strLine[0]))
     { // Set name
       strFilename = strLine;
       // Set certificate being processed
@@ -2715,7 +2703,7 @@ int BuildLicenses(void)
       strLineTop
     };
     // Line length
-    size_t stLine = string::npos;
+    size_t stLine = StdNPos;
     // Until we've processed all the compressed file
     for(size_t stIndex = 0; stIndex < bCompressed.MemSize(); ++stIndex)
     { // Read character as integer
@@ -2892,15 +2880,15 @@ const string GetFiles(const string &strExt, const string &strDir="")
   string strOut; strOut.reserve(4096);
   // Make output directory
   const string strDirNew{ strDir.empty() ? strDir : StrAppend(strDir, "/") };
-  const bool bHasSpace = strDirNew.find(' ') != string::npos;
+  const bool bHasSpace = strDirNew.find(' ') != StdNPos;
   // Get first item
   DirEntMapConstIt demciIt{ dEntries.GetFilesBegin() };
-  if(!bHasSpace && demciIt->first.find(' ') == string::npos)
+  if(!bHasSpace && demciIt->first.find(' ') == StdNPos)
     strOut = StrAppend(strDirNew, demciIt->first);
   else strOut = StrAppend("\"", strDirNew, demciIt->first, "\"");
   // Build output
   for(++demciIt; demciIt != dEntries.GetFilesEnd(); ++demciIt)
-    if(!bHasSpace && demciIt->first.find(' ') == string::npos)
+    if(!bHasSpace && demciIt->first.find(' ') == StdNPos)
       strOut += StrAppend(' ', strDirNew, demciIt->first);
     else strOut = StrAppend(" \"", strDirNew, demciIt->first, "\"");
   // Reduce memory
@@ -2923,7 +2911,7 @@ void SetupZipRepo(const string &strLibPath, const string &strTmp,
 void SetupTarRepoNSD(const string &strLibPath, const string &strTmp,
   const string &strPSFile)
 { // Must have .tar. in filename
-  if(strLibPath.find(".tar.") == string::npos)
+  if(strLibPath.find(".tar.") == StdNPos)
     throw runtime_error{
       StrFormat("Archive '$' must contain '.tar.'!", strLibPath).c_str() };
   // Make .tar file name
@@ -3105,7 +3093,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       "no-makedepend no-md4 no-nextprotoneg no-ocb no-psk no-rc2 no-rc4 "
       "no-rc5 no-seed no-shared no-sm4 no-srp no-srp no-srtp no-srtp no-ssl "
       "no-ssl3 no-stdio no-tests no-tls1 no-tls1_1 no-ts no-ui-console "
-      "no-unit-test no-weak-ssl-ciphers no-whirlpool no-zlib" },
+      "no-unit-test no-weak-ssl-ciphers no-whirlpool no-zlib "
+      "disable-capieng" },
     strPerl64{ StrAppend(envActive.cpPerl, // 64-bit XP minimum
       " configure VC-WIN64A -D_WIN32_WINNT=0x0502 ", strPerlOpts) },
     strPerl64Rel{ StrAppend(strPerl64, " no-filenames") },
@@ -3677,7 +3666,7 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
   } // = LIBNSGIF SCRIPT ======================================================
   else if(strLib.length() >= 9 && strLib.substr(0, 9) == "libnsgif-")
   { // Make sure it doesnt suffix in -src
-    if(strLib.find("-src.") != string::npos)
+    if(strLib.find("-src.") != StdNPos)
       throw runtime_error{ "Remove -src suffix from filename please!" };
     // Setup second archive first then the first archive
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
@@ -4210,7 +4199,7 @@ int Compile(const bool bSelf)
     else if(uiFlags & PF_X86) strX += "32.";
 #endif
     // Add lib if it contains specified string
-    if(demciIt->first.find(strX) != string::npos)
+    if(demciIt->first.find(strX) != StdNPos)
       strCmdLD += StrFormat("$/$ ", LIBDIR, demciIt->first);
   } // Add default libs
   if(*envActive.cpLDL) strCmdLD += StrAppend(envActive.cpLDL, ' ');
@@ -4521,14 +4510,14 @@ int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
   INITSS(CmdLine,iArgC,saArgV,saEnv);  // cppcheck-suppress danglingLifetime
   INITSS(Log);                         // cppcheck-suppress danglingLifetime
   // Dependencies required only in this scope
-  using namespace IArchive::P;         using namespace IArgs;
+  using namespace IArchive::P;         using namespace IArgs::P;
   using namespace IAsset::P;           using namespace ICmdLine::P;
   using namespace IClock::P;           using namespace ICrypt::P;
   using namespace IEvtMain::P;         using namespace IFile::P;
   using namespace ILuaFunc::P;         using namespace IMemory::P;
   using namespace IParser::P;          using namespace IStat::P;
   using namespace IThread::P;          using namespace IUtil::P;
-  using namespace IUtf;
+  using namespace IUtf::P;
   // Initialise other systems. The order is important!
   INITSS(Stats);                   // cppcheck-suppress danglingLifetime
   INITSS(Threads);                 // cppcheck-suppress danglingLifetime

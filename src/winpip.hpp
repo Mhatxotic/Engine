@@ -151,7 +151,7 @@ class SysPipe :                        // Members initially private
       if(!ResumeThread(hThread))
         XCS("Failed to resume main thread!", "Executable", IdentGet());
     } // Error occured so terminate process and close handles
-    catch(const exception &)
+    catch(const exception&)
     { // Forcibly close handles
       Finish();
       // Throw exception
@@ -256,7 +256,5 @@ class SysPipe :                        // Members initially private
     { }
   /* -- Destructor --------------------------------------------------------- */
   ~SysPipe(void) { DeInit(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysPipe)             // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

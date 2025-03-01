@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaRef {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ILuaUtil::P;
+using namespace ILuaUtil::P;           using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -108,9 +108,10 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
   /* -- Constructor that does nothing but pre-initialise references -------- */
   LuaRef(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    lsState(nullptr)                   // State not initialised yet
-    /* -- Uninitialised lua reverences ------------------------------------- */
-    { aReferences.fill(LUA_REFNIL); }
+    lsState(nullptr),                  // State not initialised yet
+    aReferences{ UtilMkFilledContainer<References>(LUA_REFNIL) }
+    /* -- No code ---------------------------------------------------------- */
+    { }
   /* -- Destructor, delete the reference if set----------------------------- */
   ~LuaRef(void)
   { // If theres a state? Delete references back to front
@@ -120,8 +121,6 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
                              ++rcriIt)
         LuaRefDoDeInit(*rcriIt);
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(LuaRef)              // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

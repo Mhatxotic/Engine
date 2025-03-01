@@ -15,7 +15,8 @@ using namespace ICodec::P;             using namespace ICollector::P;
 using namespace ICVarDef::P;           using namespace IDir::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IIdent::P;             using namespace IFlags;
-using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
@@ -32,20 +33,20 @@ enum FSOverrideType
 BUILD_FLAGS(Asset,                     // Asset loading flags
   /* -- Commands ----------------------------------------------------------- */
   // Leave the file loaded as is?      Decode the specified block?
-  CD_NONE                   {Flag[0]}, CD_DECODE                 {Flag[1]},
+  CD_NONE                   {Flag(0)}, CD_DECODE                 {Flag(1)},
   // Copy the specified block?         Encrypt the specified block?
-  CD_ENCODE_RAW             {Flag[2]}, CD_ENCODE_AES             {Flag[3]},
+  CD_ENCODE_RAW             {Flag(2)}, CD_ENCODE_AES             {Flag(3)},
   // Deflate the specified block?      Compress the specified block?
-  CD_ENCODE_ZLIB            {Flag[4]}, CD_ENCODE_LZMA            {Flag[5]},
+  CD_ENCODE_ZLIB            {Flag(4)}, CD_ENCODE_LZMA            {Flag(5)},
   // Deflate+encrypt specified block?  Compress+encrypt specified block?
-  CD_ENCODE_ZLIBAES         {Flag[6]}, CD_ENCODE_LZMAAES         {Flag[7]},
+  CD_ENCODE_ZLIBAES         {Flag(6)}, CD_ENCODE_LZMAAES         {Flag(7)},
   /* -- Options ------------------------------------------------------------ */
   // Fastest compression (less mem)?   Fast compression?
-  CD_LEVEL_FASTEST         {Flag[60]}, CD_LEVEL_FAST            {Flag[61]},
+  CD_LEVEL_FASTEST         {Flag(60)}, CD_LEVEL_FAST            {Flag(61)},
   // Medium compression?               Good compression?
-  CD_LEVEL_MODERATE        {Flag[62]}, CD_LEVEL_SLOW            {Flag[63]},
+  CD_LEVEL_MODERATE        {Flag(62)}, CD_LEVEL_SLOW            {Flag(63)},
   // Maximum compression (more mem)?
-  CD_LEVEL_SLOWEST         {Flag[64]},
+  CD_LEVEL_SLOWEST         {Flag(64)},
   /* -- All options -------------------------------------------------------- */
   CD_MASK{ CD_DECODE|CD_ENCODE_RAW|CD_ENCODE_AES|CD_ENCODE_ZLIB|CD_ENCODE_LZMA|
            CD_ENCODE_ZLIBAES|CD_ENCODE_LZMAAES|CD_LEVEL_FASTEST|CD_LEVEL_FAST|
@@ -260,8 +261,6 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     { }
   /* -- Destructor --------------------------------------------------------- */
   ~Asset(void) { AsyncCancel(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Asset)               // Suppress default functions for safety
 };/* ======================================================================= */
 CTOR_END_ASYNC_NOFUNCS(Assets, Asset, ASSET, ASSET, fsotOverride(FO_EXTONLY));
 /* -- Class to help enumerate files ---------------------------------------- */

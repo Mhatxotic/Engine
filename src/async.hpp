@@ -295,9 +295,9 @@ template<class MemberType, class ColType>class AsyncLoader :
       } // Return success to thread manager
       return 1;
     } // exception occured?
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Prepend the reason incase there are nested exceptions
-      AsyncDoAddStackMessage(E.what());
+      AsyncDoAddStackMessage(eReason.what());
       // Signal completion
       AsyncCompletionDispatch(AR_ERROR);
       // Report error in log
@@ -625,8 +625,6 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Wait for the thread to stop
     AsyncStop();
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(AsyncLoader)         // Suppress default functions for safety
 };/* -- Function to wait for async of all members in a collector ----------- */
 template<class MemberType,
          class LockType,
@@ -656,8 +654,6 @@ class CLHelperAsync :
     lemAsync{ emcCmd }                 // Initialise event name
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CLHelperAsync)       // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

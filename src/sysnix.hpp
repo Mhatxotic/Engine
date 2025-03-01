@@ -13,6 +13,7 @@
 #include "pixmod.hpp"                  // Module information class
 #include "pixmap.hpp"                  // File mapping class
 #include "pixpip.hpp"                  // Process output piping class
+/* -- Includes ------------------------------------------------------------- */
 /* == System intialisation helper ========================================== **
 ** ######################################################################### **
 ** ## Because we want to try and statically init const data as much as    ## **
@@ -66,8 +67,6 @@ class SysProcess                       // Need this before of System init order
     vpThreadId(pthread_self())         // Get native thread id
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysProcess)          // Suppress default functions for safety
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
@@ -85,7 +84,7 @@ class SysCore :
       if(!strStat.empty())
       { // Find line feed
         const size_t stLF = strStat.find('\n');
-        if(stLF != string::npos)
+        if(stLF != StdNPos)
         { // Truncate the end of string. We only care about the top line.
           strStat.resize(stLF);
           // Grab tokens and if we have enough?
@@ -164,7 +163,7 @@ class SysCore :
       if(!strStat.empty())
       { // Find line feed
         const size_t stLF = strStat.find('\n');
-        if(stLF != string::npos)
+        if(stLF != StdNPos)
         { // Truncate the end of string. We only care about the top line.
           strStat.resize(stLF);
           // First item must be cpu and second should be empty. We created the
@@ -332,7 +331,8 @@ class SysCore :
   /* -- Enum modules ------------------------------------------------------- */
   SysModMap EnumModules(void)
   { // Make verison string
-    string strVersion{ StrAppend(sizeof(void*)*8, "-bit version") };
+    string strVersion{ StrAppend(numeric_limits<void*>::digits,
+      "-bit version") };
     // Mod list
     SysModMap smmMap;
     smmMap.emplace(make_pair(0UL, SysModule{ GetExeName(), VER_MAJOR,
@@ -353,15 +353,15 @@ class SysCore :
     if(strCode.size() != 5)
     { // Get LANG code and set default if not found
       strCode = cCmdLine->GetEnv("LANG");
-      if(strCode.size() < 5) strCode = "en-GB";
-      // Language code was found?
-      else
-      { // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
-        const size_t stPeriod = strCode.find('.');
-        if(stPeriod != string::npos) strCode = strCode.substr(0, stPeriod);
-      }
-    } // Replace underscore with dash to be consistent with Windows
+      if(strCode.size() < 5) strCode = "en_GB.UTF8";
+    } // Set global locale and show error if failed
+    if(!setlocale(LC_ALL, strCode.c_str()))
+      XCL("Failed to initialise default locale!", "Locale", strCode);
+    // Replace underscore with dash to be consistent with Windows
     if(strCode[2] == '_') strCode[2] = '-';
+    // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
+    const size_t stPeriod = strCode.find('.');
+    if(stPeriod != StdNPos) strCode = strCode.substr(0, stPeriod);
     // Return operating system info
     return { utsnData.sysname, cCommon->Blank(),
       tVersion.empty()    ? 0 : StrToNum<unsigned int>(tVersion[0]),
@@ -477,7 +477,5 @@ class SysCore :
     bWindowInitialised(false)
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysCore)             // Suppress default functions for safety
 }; /* ---------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

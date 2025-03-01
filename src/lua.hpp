@@ -20,10 +20,10 @@ using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFlags;                using namespace ILog::P;
 using namespace ILuaDef;               using namespace ILuaCode::P;
 using namespace ILuaFunc::P;           using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace ISql::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITimer::P;             using namespace IUtil::P;
+using namespace ILuaUtil::P;           using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITimer::P;
+using namespace IUtil::P;              using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Lua class ============================================================ */
@@ -195,8 +195,6 @@ static class Lua final :
     LuaUtilGCSet(GetState(), LUA_GCINC, iGCPause, iGCStep);
     cLog->LogDebugExSafe("Lua initialised incremental gc to $:$.",
       iGCPause, iGCStep);
-    // Clear class references
-    llcirAPI.fill(LUA_REFNIL);
     // Log progress
     cLog->LogDebugSafe("Lua registering engine namespaces...");
     // Counters for logging stats
@@ -411,6 +409,8 @@ static class Lua final :
     LuaFuncDeInitRef();
     // Close state and reset var
     lsState.reset();
+    // Clear API class references
+    llcirAPI.fill(LUA_REFNIL);
     // No longer paused or exited
     uiLuaPaused = 0;
     bExiting = false;
@@ -504,8 +504,6 @@ static class Lua final :
     { }                                // No code
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Lua, DeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Lua)                 // Suppress default functions for safety
   /* -- When operations count have changed --------------------------------- */
   CVarReturn SetOpsInterval(const int iCount)
     { return CVarSimpleSetIntNL(iOperations, iCount, 1); }

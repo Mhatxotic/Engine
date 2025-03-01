@@ -12,13 +12,14 @@
 namespace ICVar {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace ICodec::P;
-using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IDir::P;
-using namespace IError::P;             using namespace IJson::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IHelper::P;            using namespace IJson::P;
 using namespace ILog::P;               using namespace IPSplit::P;
 using namespace ISql::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace Lib::Sqlite;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -32,7 +33,7 @@ enum CVarDefaults : unsigned int       // Flags when loaded from DB
 }; /* ---------------------------------------------------------------------- */
 static struct CVars final :            // Start of vars class
   /* -- Base classes ------------------------------------------------------- */
-  private IHelper                      // Initialisation helper
+  private InitHelper                   // Initialisation helper
 { /* -- Settings ----------------------------------------------------------- */
   constexpr static const size_t        // Some internal settings
     stCVarConfigSizeMinimum = 2,       // Minimum config file size
@@ -44,9 +45,9 @@ static struct CVars final :            // Start of vars class
   typedef array<CVarMapIt, CVAR_MAX> ArrayVars;
   /* -- Private variables -------------------------------------------------- */
   size_t           stMaxInactiveCount; // Maximum Initial CVars allowed
-  CVarMap          cvmPending;         // CVars inactive list
+  CVarMap          cvmPending,         // CVars inactive list
+                   cvmActive;          // CVars active list
   ArrayVars        avInternal;         // Quick lookup to internal vars
-  CVarMap          cvmActive;          // CVars active list
   string           strCBError;         // Callback error message
   /* ----------------------------------------------------------------------- */
   struct CVarMapNameStruct             // Join initial with cvars
@@ -106,7 +107,7 @@ static struct CVars final :            // Start of vars class
         // Skip underscore and keep comparing with new conditions. The
         // underscore is now allowed normally.
         while(++ucpPtr < ucpPtrEnd)
-          if(!isalnum(*ucpPtr) && *ucpPtr != '_')
+          if(StdIsNotAlnum(*ucpPtr) && *ucpPtr != '_')
             return false;
         // Success!
         return true;
@@ -297,7 +298,7 @@ static struct CVars final :            // Start of vars class
         cvmiIt->second.SetValue(strValue, cvfcFlags|PANY,
           cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR, strCBError);
       } // Exception occured?
-      catch(const exception &)
+      catch(const exception&)
       { // Unregister the variable that was created to not cause problems when
         // for example, resetting LUA.
         cvmActive.erase(cvmiIt);
@@ -326,7 +327,7 @@ static struct CVars final :            // Start of vars class
       // Return iterator
       return cvmiIt;
     } // exception occured
-    catch(const exception &)
+    catch(const exception&)
     { // Remove the item. We won't put it back in the initial list because we
       // might have corrupted the data.
       cvmActive.erase(cvmiIt);
@@ -395,7 +396,7 @@ static struct CVars final :            // Start of vars class
   size_t Save(void)
   { // Done if sqlite database is not opened or vars table is not availabe
     if(!cSql->IsOpened() || cSql->CVarCreateTable() == Sql::CTR_FAIL)
-      return string::npos;
+      return StdNPos;
     // Begin transaction
     cSql->Begin();
     // Total number of commits attempted which may need to be read and
@@ -562,11 +563,11 @@ static struct CVars final :            // Start of vars class
         { // Decrypt the value and get the result, and if that call fails?
           strNewValue = Block<CoDecoder>{ sdValueRef }.MemToStringSafe();
         } // exception occured?
-        catch(const exception &e)
+        catch(const exception &eReason)
         { // Log failure and try to reset the initial var so this does not
           // happen again and goto next record
           return cLog->LogErrorExSafe(
-            "CVars variable '$' decrypt exception: $", strVar, e.what());
+            "CVars variable '$' decrypt exception: $", strVar, eReason);
         }
         // Set the variable or place it in the initials list if cvar not not
         // registered. The access will be user mode only and assignments
@@ -650,18 +651,17 @@ static struct CVars final :            // Start of vars class
   /* -- Default constructor ------------------------------------------------ */
   explicit CVars(const CVarItemStaticList &cvislDef) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Set function name for init helper
+    InitHelper{ __FUNCTION__ },        // Set function name for init helper
     stMaxInactiveCount(CVAR_MAX),      // Initially set to max cvar count
+    avInternal{ UtilMkFilledContainer<ArrayVars>(cvmActive.end()) },
     cvmnsaList{{                       // Set combined lists
       { cvmPending, "unregistered" },  // Inactive cvars list
       { cvmActive,  "registered" } }}, // Active cvars list
     cvislList{ cvislDef }              // Default engine cvars list
-    /* -- Fill all the iterators to internal cvars ------------------------- */
-    { GetInternalList().fill(cvmActive.end()); }
+    /* -- No code ---------------------------------------------------------- */
+    { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~CVars, DeInit())         // Save and clean-up all variables
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CVars)               // Suppress default functions for safety
   /* ----------------------------------------------------------------------- */
   CVarReturn SetDefaults(const CVarDefaults cvdVal)
   { // Compare defaults setting

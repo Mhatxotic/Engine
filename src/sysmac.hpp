@@ -47,8 +47,6 @@ class SysProcess                       // Need this before of System init order
     mptTask(mach_task_self())          // Initialise self task
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysProcess)          // Suppress default functions for safety
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Dependency classes ------------------------------------------------- */
@@ -484,7 +482,7 @@ class SysCore :
       // Find dot and ignore if not found? It's a frame work so the full name
       // will be the id.
       const size_t stDot = strBaseName.find_last_of('.');
-      if(stDot == string::npos) strPathName = StdMove(strBaseName);
+      if(stDot == StdNPos) strPathName = StdMove(strBaseName);
       // Have extension? If it ends in 'dylib' and it starts with 'lib'? Grab
       // first part before dot and after the lib part
       else if(StrToLowCase(strBaseName.substr(stDot+1)) == "dylib" &&
@@ -560,19 +558,52 @@ class SysCore :
     osS << uiMajor << '.' << uiMinor;
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
-    // Get LANGUAGE code and set default if not found
-    string strCode{ cCmdLine->GetEnv("LANGUAGE") };
+    // Get LANGUAGE code and set default if not 5 bytes long?
+    string strCode{ cCmdLine->GetEnv("LANGUAGE") } ;
     if(strCode.size() != 5)
     { // Get LANG code and set default if not found
       strCode = cCmdLine->GetEnv("LANG");
-      if(strCode.size() < 5) strCode = "en-GB";
-      // Language code was found?
-      else
+      if(strCode.size() >= 5)
       { // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
         const size_t stPeriod = strCode.find('.');
-        if(stPeriod != string::npos) strCode.resize(stPeriod);
-      }
-    } // Replace underscore with dash to be consistent with Windows
+        if(stPeriod != StdNPos) strCode.resize(stPeriod);
+      } // Clear code
+      else strCode.clear();
+    } // Clear code
+    else strCode.clear();
+    // Couldn't find code? (true if running from bundle)
+    if(strCode.empty())
+    { // Resize buffer for storage
+      strCode.resize(256);
+      // Create autorelease storage for locale, ask OS for it and if success?
+      typedef unique_ptr<const void,
+        function<decltype(CFRelease)>> CFAutoRelPtr;
+      if(const CFAutoRelPtr cfLocale{ reinterpret_cast<const void*>
+        (CFLocaleCopyCurrent()), CFRelease })
+      { // Get reference to string
+        const CFStringRef csrRef =
+          CFLocaleGetIdentifier(reinterpret_cast<const CFLocaleRef>
+            (cfLocale.get()));
+        // Copy the string into our STL string and if successful?
+        if(CFStringGetCString(csrRef, const_cast<char*>(strCode.data()),
+            static_cast<CFIndex>(strCode.capacity()), kCFStringEncodingUTF8))
+        { // Get length and truncate the string to proper number of bytes
+          const size_t stLength =
+            static_cast<size_t>(CFStringGetLength(csrRef));
+          strCode.resize(stLength);
+          // It must be 5 bytes
+          if(stLength < 5)
+            XC("Region code too short!", "Code", strCode, "Length", stLength);
+        } // Failed
+        else XC("Could not get region code!");
+      } // This should never happen but just incase?
+      else XC("Could not detect region code!");
+      // Update and set global locale
+      cCommon->SetLocale(strCode);
+    } // Set global locale and show error if failed
+    if(!setlocale(LC_ALL, strCode.c_str()))
+      XCL("Failed to initialise default locale!", "Locale", strCode);
+    // Replace underscore with dash to be consistent with Windows
     if(strCode[2] == '_') strCode[2] = '-';
     // Get operating system kernel name
     string strExtra;
@@ -586,7 +617,7 @@ class SysCore :
       uiMajor,                         // Major OS version
       uiMinor,                         // Minor OS version
       uiBuild,                         // OS build version
-      sizeof(void*)*8,                 // 32 or 64 OS arch
+      numeric_limits<void*>::digits,   // 32 or 64 OS arch
       StdMove(strCode),                // Get locale
       DetectElevation(),               // Elevated?
       false                            // Wine or Old OS?
@@ -596,9 +627,14 @@ class SysCore :
   ExeData GetExecutableData(void)
   { // Suffix to test against
     const string strMacSig{ ".app/Contents/MacOS/" };
+    // Get engine directory
+    const string &strLoc = ENGLoc();
+    // Engine location length and Mac app signature length
+    const size_t stEngLength = strLoc.length(),
+                 stMacSigLength = strMacSig.length();
     // If executable directory matches this
-    bool bIsBundled = ENGLoc().length() > strMacSig.length() &&
-      ENGLoc().substr(ENGLoc().length() - strMacSig.length()) == strMacSig;
+    bool bIsBundled = stEngLength > stMacSigLength &&
+      strLoc.substr(stEngLength - stMacSigLength) == strMacSig;
     // Return result
     return { 0, 0, false, bIsBundled };
   }
@@ -621,8 +657,8 @@ class SysCore :
     const UIntPair uipM1{ { 2064, 3228 } }, // Apple M1
                    uipM2{ { 2420, 3480 } }, // Apple M2
                    uipM3{ { 2748, 4056 } }, // Apple M3
-                   uipM4{ { 2896, 4464 } }; // Apple M4
-    //             uipM5{ { 3000, 5000 } }; // Apple M5 (Guess)
+                   uipM4{ { 2896, 4464 } }, // Apple M4
+                   uipM5{ { 3000, 5000 } }; // Apple M5 (Guess)
     // Processor table with speeds. This is because there is no API to get
     // the speed of Apple branded processors.
     typedef pair<const string, const UIntPair &> MacCpuListMapPair;
@@ -638,8 +674,8 @@ class SysCore :
       { "Apple M3 Max",   uipM3 }, { "Apple M3 Ultra", uipM3 },
       { "Apple M4",       uipM4 }, { "Apple M4 Pro",   uipM4 },
       { "Apple M4 Max",   uipM4 }, { "Apple M4 Ultra", uipM4 },
-    // { "Apple M5",       uipM5 }, { "Apple M5 Pro",   uipM5 },
-    // { "Apple M5 Max",   uipM5 }, { "Apple M5 Ultra", uipM5 }
+      { "Apple M5",       uipM5 }, { "Apple M5 Pro",   uipM5 },
+      { "Apple M5 Max",   uipM5 }, { "Apple M5 Ultra", uipM5 }
     };
     // Find processor name to speed table and if we found it? Then copy the
     // value from the table as the actual speed.
@@ -686,7 +722,7 @@ class SysCore :
   }
   /* -- Get process affinity masks ----------------------------------------- */
   uint64_t GetAffinity(const bool) const
-    { return UtilBitsToMask<uint64_t>(thread::hardware_concurrency()); }
+    { return Flag(thread::hardware_concurrency()); }
   /* ----------------------------------------------------------------------- */
   int GetPriority(void) const
   { // Get priority value and throw if failed
@@ -723,7 +759,5 @@ class SysCore :
                GetOperatingSystemData(),
                GetProcessorData() },
     bWindowInitialised(false) { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysCore)             // Suppress default functions for safety
 }; /* ---------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

@@ -8,9 +8,8 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IFboItem {                   // Start of private module namespace
-/* -- Outside types used --------------------------------------------------- */
-using Lib::OS::GlFW::GLfloat;          using Lib::OS::GlFW::GLsizei;
-using Lib::OS::GlFW::GLvoid;
+/* -- Dependencies --------------------------------------------------------- */
+using namespace Lib::OS::GlFW::Types;
 /* -- Outside functions used ----------------------------------------------- */
 using IUtil::P::UtilNormaliseEx;
 /* -- Outside variables used ----------------------------------------------- */
@@ -292,8 +291,6 @@ struct FboItem
     FboItem{}                          // Initialise default values
     /* -- Initialise colour ------------------------------------------------ */
     { FboItemSetQuadRGBAInt(uiColour); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FboItem)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

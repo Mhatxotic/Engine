@@ -30,7 +30,7 @@ namespace LLStream {                   // Stream namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IStd::P;
 using namespace IStream::P;            using namespace Common;
-using namespace Lib::Ogg;
+using namespace Lib::Ogg::Types;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Stream common helper classes                                        ## **
@@ -44,7 +44,6 @@ struct AcStream : public ArClass<Stream> {
   explicit AcStream(lua_State*const lS) :
     ArClass{*LuaUtilClassCreate<Stream>(lS, *cStreams)}{} };
 /* -- Read duration value -------------------------------------------------- */
-using Lib::OpenAL::ALdouble;
 struct AgDuration : public AgNumberLG<ALdouble> {
   explicit AgDuration(lua_State*const lS, const int iArg, Stream &sCref):
     AgNumberLG{lS, iArg, 0, sCref.GetDurationSafe()}{} };

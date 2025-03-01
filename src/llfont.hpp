@@ -17,11 +17,11 @@
 /* ========================================================================= */
 namespace LLFont {                     // Font namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IConsole::P;           using namespace IFont::P;
-using namespace IFtf::P;               using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IJson::P;
-using namespace IOgl::P;               using namespace ITexture::P;
-using namespace Common;
+using namespace IConGraph::P;          using namespace IConsole::P;
+using namespace IFont::P;              using namespace IFtf::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IJson::P;              using namespace IOgl::P;
+using namespace ITexture::P;           using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Font common helper classes                                          ## **
@@ -50,7 +50,6 @@ template<class VectorValueType, class VectorType = vector<VectorValueType>>
   explicit AgNumberVector(lua_State*const lS, const int iArg) :
     VectorType{ LuaUtilToNumVector<VectorType>(lS, iArg)}{} };
 /* -- Other types ---------------------------------------------------------- */
-using Lib::OS::GlFW::GLubyte;
 typedef AgCString<GLubyte> AgGLString;
 typedef AgIntegerLG<GLuint> AgGLuintLG;
 /* ========================================================================= **

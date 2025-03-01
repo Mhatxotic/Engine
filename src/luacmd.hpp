@@ -9,10 +9,11 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaCommand {                // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IArgs;                 using namespace ICollector::P;
+using namespace IArgs::P;              using namespace ICollector::P;
 using namespace IConsole::P;           using namespace IError::P;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaFunc::P;           using namespace ILuaLib::P;
+using namespace IIdent::P;             using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaFunc::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace ILua::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;
@@ -61,7 +62,7 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     // For each character in cvar name until end of string...
     for(const unsigned char*const ucpPtrEnd = ucpPtr + strName.length();
                                    ++ucpPtr < ucpPtrEnd;)
-      if(!isalnum(*ucpPtr) && *ucpPtr != '_') return false;
+      if(StdIsNotAlnum(*ucpPtr) && *ucpPtr != '_') return false;
     // Success!
     return true;
   }
@@ -116,8 +117,6 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     lcmiIt{ GetLuaCmdsListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Command)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Commands, Command, COMMAND) // Finish global Files collector
 /* -- Build a command list (for conlib) ------------------------------------ */

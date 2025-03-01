@@ -11,49 +11,48 @@
 /* ------------------------------------------------------------------------- */
 namespace IConsole {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IArgs;                 using namespace IClock::P;
-using namespace ICollector::P;         using namespace IConDef::P;
-using namespace IConLib::P;            using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags;                using namespace IGlFW::P;
+using namespace IArgs::P;              using namespace IClock::P;
+using namespace IConDef::P;            using namespace IConLib::P;
+using namespace ICVar::P;              using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFlags;
+using namespace IGlFW::P;              using namespace IHelper::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISocket::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace ITimer::P;             using namespace IToken::P;
-using namespace IUtf;                  using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace IUtf::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Typedefs ============================================================= */
 BUILD_FLAGS(Console,                   // Console flags classes
   /* --------------------------------------------------------------------- */
   // No settings?                      Can't disable console? (temporary)
-  CF_NONE                   {Flag[0]}, CF_CANTDISABLE            {Flag[1]},
+  CF_NONE                   {Flag(0)}, CF_CANTDISABLE            {Flag(1)},
   // Ignore first key on show console? Autoscroll on message?
-  CF_IGNOREKEY              {Flag[2]}, CF_AUTOSCROLL             {Flag[3]},
+  CF_IGNOREKEY              {Flag(2)}, CF_AUTOSCROLL             {Flag(3)},
   // Automatically copy cvar on check? Character insert mode?
-  CF_AUTOCOPYCVAR           {Flag[4]}, CF_INSERT                 {Flag[5]},
+  CF_AUTOCOPYCVAR           {Flag(4)}, CF_INSERT                 {Flag(5)},
   // Console displayed?                Ignore escape key?
-  CF_ENABLED                {Flag[6]}, CF_IGNOREESC              {Flag[7]},
+  CF_ENABLED                {Flag(6)}, CF_IGNOREESC              {Flag(7)},
   // Can't disable console?            Block output position update?
-  CF_CANTDISABLEGLOBAL      {Flag[8]}, CF_BLOCKOUTPUTUPDATE      {Flag[9]}
+  CF_CANTDISABLEGLOBAL      {Flag(8)}, CF_BLOCKOUTPUTUPDATE      {Flag(9)}
 );/* ======================================================================= */
 BUILD_FLAGS(AutoComplete,              // Autocomplete flags classes
   /* ----------------------------------------------------------------------- */
   // No autocompletion?                Autocomplete command names?
-  AC_NONE                   {Flag[0]}, AC_COMMANDS               {Flag[1]},
+  AC_NONE                   {Flag(0)}, AC_COMMANDS               {Flag(1)},
   // Autocomplete cvar names?
-  AC_CVARS                  {Flag[2]},
+  AC_CVARS                  {Flag(2)},
   /* ----------------------------------------------------------------------- */
   AC_MASK{ AC_COMMANDS|AC_CVARS }      // All flags
 );/* ======================================================================= */
 BUILD_FLAGS(Redraw,                    // Redraw terminal or graphical console
   /* ----------------------------------------------------------------------- */
   // Redraw nothing                    Redraw text console
-  RD_NONE                   {Flag[0]}, RD_TEXT                   {Flag[1]},
+  RD_NONE                   {Flag(0)}, RD_TEXT                   {Flag(1)},
   // Redraw graphical console
-  RD_GRAPHICS               {Flag[2]},
+  RD_GRAPHICS               {Flag(2)},
   /* ----------------------------------------------------------------------- */
   RD_BOTH{ RD_TEXT|RD_GRAPHICS }       // All flags
 );/* ----------------------------------------------------------------------- */
@@ -64,7 +63,7 @@ static class Console final :           // Members initially private
   public ConLines,                     // Console text lines list
   private ConLinesConstIt,             // Text lines forward iterator
   private ConLinesConstRevIt,          // Text lines reverse iterator
-  private IHelper,                     // Initialisation helper
+  private InitHelper,                  // Initialisation helper
   public ConsoleFlags                  // Console flags
 { /* -- Private typedefs --------------------------------------------------- */
   typedef queue<ConLine> ConLineQueue; // Pending console lines
@@ -172,10 +171,10 @@ static class Console final :           // Members initially private
     const string &strKey = ciItem->first;
     if(strKey.compare(0, strWhat.size(), strWhat)) return false;
     // We found the word so now we need to replace it with the actual command.
-    if(stBPos == string::npos) strConsoleBegin = strKey;
+    if(stBPos == StdNPos) strConsoleBegin = strKey;
     else strConsoleBegin =
       StrAppend(strConsoleBegin.substr(0, stBPos+1), strKey);
-    if(stEPos == string::npos) strConsoleEnd.clear();
+    if(stEPos == StdNPos) strConsoleEnd.clear();
     else strConsoleEnd = strConsoleEnd.substr(stEPos);
     // Redraw the console because we changed the input field
     SetRedraw();
@@ -191,9 +190,9 @@ static class Console final :           // Members initially private
     const size_t stBPos = strConsoleBegin.find_last_of(' '),
                  stEPos = strConsoleEnd.find(' ');
     // Grab word to autocomplete and return if it is empty
-    const string strWhat{ (stBPos == string::npos
+    const string strWhat{ (stBPos == StdNPos
       ? strConsoleBegin : strConsoleBegin.substr(stBPos + 1)) +
-                          (stEPos == string::npos
+                          (stEPos == StdNPos
       ? strConsoleEnd : strConsoleEnd.substr(0, stEPos)) };
     // Return failure if word is empty... or
     if(strWhat.empty()) return false;
@@ -307,7 +306,7 @@ static class Console final :           // Members initially private
     const ConLinesConstRevIt clcriIt{
       StdFindIf(seq, next(clriPosition, 1), crend(),
         [&strWhat](const ConLine &clLine)->bool
-          { return clLine.strLine.find(strWhat) != string::npos; }) };
+          { return clLine.strLine.find(strWhat) != StdNPos; }) };
     if(clcriIt == crend()) return false;
     // Set position where we found it
     clriPosition = clcriIt;
@@ -491,9 +490,9 @@ static class Console final :           // Members initially private
             cGlFW->WinSetClipboardString(StrFormat("$ \"$\"",
               strVarOrCmd, cCVars->GetStr(cvmMapIt)));
         } // Else set item and get return value
-        else switch(const CVarSetEnums cvseResult =
-          aList[1] == "~" ? cCVars->Reset(cvmMapIt, PUSR, CCF_NOTHING) :
-            cCVars->Set(cvmMapIt, aList[1], PUSR, CCF_NOTHING))
+        else switch(aList[1] == "~" ?
+          cCVars->Reset(cvmMapIt, PUSR, CCF_NOTHING) :
+          cCVars->Set(cvmMapIt, aList[1], PUSR, CCF_NOTHING))
         { // Success. Show result
           case CVS_OK:
             osS << "is now " << cCVars->Protect(cvmMapIt) << '!'; break;
@@ -566,9 +565,9 @@ static class Console final :           // Members initially private
       // Enough parameters so capture exceptions so we can't halt execution
       else try { clData.ccbFunc(aList); }
       // exception did occur
-      catch(const exception &E)
+      catch(const exception &eReason)
       { // Print the output in the console
-        AddLineA("Console CB failed! > ", E.what());
+        AddLineA("Console CB failed! > ", eReason);
         // Force the console to be shown because the callback might have
         // hidden the console
         DoSetVisible(true);
@@ -881,7 +880,7 @@ static class Console final :           // Members initially private
   /* -- Constructor -------------------------------------------------------- */
   explicit Console(const ConCmdStaticList &ccslDef) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Init helper function name
+    InitHelper{ __FUNCTION__ },        // Init helper function name
     Flags{ CF_NONE },                  // No initial flags
     clriPosition{ rbegin() },          // Input position at beginning
     slriInputPosition{                 // Init log position...
@@ -906,8 +905,6 @@ static class Console final :           // Members initially private
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Console, DeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Console)             // Suppress default functions for safety
   /* -- Set page move count ------------------------------------------------ */
   CVarReturn SetPageMoveCount(const ssize_t sstAmount)
   { // Deny if invalid value

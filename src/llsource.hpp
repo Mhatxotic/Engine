@@ -18,8 +18,7 @@
 /* ========================================================================= */
 namespace LLSource {                   // Stream namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ISource::P;            using namespace Lib::OpenAL;
-using namespace Common;
+using namespace ISource::P;            using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Source common helper classes                                        ## **

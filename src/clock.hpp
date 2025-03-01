@@ -18,18 +18,18 @@ using namespace IUtil::P;
 namespace P {                          // Start of public module namespace
 /* -- Get count from a duration -------------------------------------------- */
 template<typename DurType>
-  static auto ClockGetCount(const ClkDuration cdDuration)
+  static auto ClockGetCount(const ClkDuration &cdDuration)
     { return duration_cast<DurType>(cdDuration).count(); }
 /* -- Convert duration to double ------------------------------------------- */
-static double ClockDurationToDouble(const ClkDuration cdDuration)
+static double ClockDurationToDouble(const ClkDuration &cdDuration)
   { return ClockGetCount<duration<double>>(cdDuration); }
 /* -- Subtract one timepoint from the other and return as double ----------- */
 static double ClockTimePointRangeToDouble
-  (const ClkTimePoint &ctpEnd, const ClkTimePoint ctpStart)
+  (const ClkTimePoint &ctpEnd, const ClkTimePoint &ctpStart)
     { return ClockDurationToDouble(ctpEnd - ctpStart); }
 /* -- Subtract one timepoint from the other and return as clamped double --- */
 static double ClockTimePointRangeToClampedDouble
-  (const ClkTimePoint ctpEnd, const ClkTimePoint ctpStart)
+  (const ClkTimePoint &ctpEnd, const ClkTimePoint &ctpStart)
     { return UtilMaximum(ClockTimePointRangeToDouble(ctpEnd, ctpStart), 0); }
 /* -- Clock manager -------------------------------------------------------- */
 template<class ClockType = CoreClock>struct ClockManager
@@ -58,17 +58,17 @@ template<class ClockType = CoreClock>struct ClockManager
   template<typename Type=uint64_t>const Type GetTimeNS(void) const
     { return GetTimeEx<nanoseconds,Type>(); }
   /* -- Get offset time ---------------------------------------------------- */
-  const ClkDuration GetDuration(const ClkTimePoint ctpCurrent) const
+  const ClkDuration GetDuration(const ClkTimePoint &ctpCurrent) const
     { return GetTime() - ctpCurrent; }
   /* -- Get timepoint count ------------------------------------------------ */
   template<typename Type>
-    auto GetDurationCount(const ClkTimePoint ctpCurrent) const
+    auto GetDurationCount(const ClkTimePoint &ctpCurrent) const
       { return ClockGetCount<Type>(GetDuration(ctpCurrent)); }
   /* -- Convert timepoint to double ---------------------------------------- */
-  double TimePointToDouble(const ClkTimePoint ctpTime) const
+  double TimePointToDouble(const ClkTimePoint &ctpTime) const
     { return ClockDurationToDouble(GetDuration(ctpTime)); }
   /* -- Convert clamped timepoint to double -------------------------------- */
-  double TimePointToClampedDouble(const ClkTimePoint ctpTime) const
+  double TimePointToClampedDouble(const ClkTimePoint &ctpTime) const
     { return UtilMaximum(TimePointToDouble(ctpTime), 0); }
   /* -- Convert local time to string --------------------------------------- */
   const string FormatTime(const char*const cpFormat = cpTimeFormat)
@@ -87,7 +87,7 @@ template<class ClockType = CoreClock>struct ClockManager
   const string ToDurationLongString(unsigned int uiCompMax = StdMaxUInt) const
     { return ToDurationRel(0, uiCompMax); }
   /* -- Unused constructor ------------------------------------------------- */
-  ClockManager(void) { }
+  ClockManager(void) = default;
 };/* -- Global functors / System time clock functor ------------------------ */
 static const ClockManager<system_clock> cmSys;
 /* -- High resolution clock functor ---------------------------------------- */
@@ -102,10 +102,10 @@ class ClockInterval :                  // Members initially private
   ClkDuration      cdLimit;            // Time delay before trigger
   ClkTimePoint     ctpNext;            // Next trigger
   /* -- Returns if time + this duration not elapsed yet ------------ */ public:
-  bool CIIsNotTriggered(const ClkDuration cdT) const
+  bool CIIsNotTriggered(const ClkDuration &cdT) const
     { return this->GetTime() + cdT < ctpNext; }
   /* -- Returns if timepoint not elapsed yet ------------------------------- */
-  bool CIIsNotTriggered(const ClkTimePoint ctpT) const
+  bool CIIsNotTriggered(const ClkTimePoint &ctpT) const
     { return ctpT < ctpNext; }
   /* -- Returns if current timepoint not elapsed yet ----------------------- */
   bool CIIsNotTriggered(void) const
@@ -141,7 +141,7 @@ class ClockInterval :                  // Members initially private
   /* -- Sync now ----------------------------------------------------------- */
   void CISync(void) { ctpNext = this->GetTime(); }
   /* -- Update limit and time now do a duration object --------------------- */
-  void CISetLimit(const ClkDuration duL) { cdLimit = duL; CISync(); }
+  void CISetLimit(const ClkDuration &duL) { cdLimit = duL; CISync(); }
   /* -- Update limit and time now to a double ------------------------------ */
   void CISetLimit(const double dL)
     { CISetLimit(duration_cast<ClkDuration>(duration<double>(dL))); }
@@ -153,7 +153,7 @@ class ClockInterval :                  // Members initially private
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Constructor (set limit by lvalue) ---------------------------------- */
-  explicit ClockInterval(const ClkDuration duL) :
+  explicit ClockInterval(const ClkDuration &duL) :
     /* -- Initialisers ----------------------------------------------------- */
     cdLimit{ duL },                    // Copy limit from other class
     ctpNext{ this->GetTime() }         // Will trigger next check
@@ -169,10 +169,10 @@ class ClockChrono :                    // Members intially private
 { /* -- Private variables -------------------------------------------------- */
   ClkTimePoint ctpStart;               // Don't make this a base class
   /* -- Subtract specified time from the stored time and return as - */ public:
-  double CCDeltaRangeToDouble(const ClkTimePoint ctpEnd) const
+  double CCDeltaRangeToDouble(const ClkTimePoint &ctpEnd) const
     { return ClockDurationToDouble(ctpEnd - ctpStart); }
   /* -- Same as above but clamps to zero so there is no negative time ------ */
-  double CCDeltaToClampedDouble(const ClkTimePoint ctpEnd) const
+  double CCDeltaToClampedDouble(const ClkTimePoint &ctpEnd) const
     { return UtilMaximum(CCDeltaRangeToDouble(ctpEnd), 0); }
   /* -- Return uptime as milliseconds in a 64-bit uint --------------------- */
   uint64_t CCDeltaMS(void) const
@@ -197,8 +197,7 @@ class ClockChrono :                    // Members intially private
     ctpStart{ this->GetTime() }        // Set start time
     /* -- No code ---------------------------------------------------------- */
     { }
-};
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

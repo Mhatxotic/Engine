@@ -10,13 +10,14 @@
 namespace IAtlas {                     // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IBin::P;               using namespace ICollector::P;
-using namespace IDim;                  using namespace IError::P;
-using namespace IFboDef::P;            using namespace IImageDef::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace IError::P;             using namespace IFboDef::P;
+using namespace IImageDef::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace ITexture::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IRectangle::P;         using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace ITexture::P;           using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Atlas collector class for collector data and custom variables ======== */
@@ -32,7 +33,6 @@ class AtlasBase :                      // Members initially private
 { /* -- Protected typedefs -------------------------------------- */ protected:
   typedef Pack<GLint> IntPack;         // Bin pack using GLint
   typedef IntPack::Rect IntPackRect;   // Bin pack rectangle
-  typedef Rectangle<GLuint> RectUint;  // Reload glyph size
   /* -- Protected variables ------------------------------------------------ */
   OglFilterEnum    ofeFilter;          // Selected texture filter
   GLuint           uiPadding;          // Padding after each glyph
@@ -53,8 +53,6 @@ class AtlasBase :                      // Members initially private
       0, 0 }                           // Lowest possible
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(AtlasBase)           // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Atlas Class (which inherits a Texture) =============================== */
 CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
@@ -186,7 +184,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     /* -- Initialse memory area of image ----------------------------------- */
     void Init(Memory &mPixels) { mPixels.MemFill(uqInitVal); }
     /* -- Constructor that does nothing ------------------------------------ */
-    inline ImageTypeGrayAlpha(void) { }
+    ImageTypeGrayAlpha(void) = default;
   };/* --------------------------------------------------------------------- */
   /* -- Render texture data to memory -------------------------------------- */
   template<class ImageType>
@@ -404,8 +402,6 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     AtlasBase{ ifcPurpose }            // Initialise purpose of atlas
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Atlas)               // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Atlases, Atlas, ATLAS) // End of collector class
 /* ------------------------------------------------------------------------- */

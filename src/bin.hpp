@@ -10,16 +10,17 @@
 /* ------------------------------------------------------------------------- */
 namespace IBin {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IDim;
-using namespace IIdent::P;             using namespace ILuaLib::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IUtil::P;
+using namespace ICollector::P;         using namespace IDim::P;
+using namespace IDimCoord::P;          using namespace IIdent::P;
+using namespace ILockable::P;          using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 template<typename IntType=int,         // Unsigned type not allowed!
-         typename Int=typename make_signed<IntType>::type,
-         typename UInt=typename make_unsigned<IntType>::type,
+         typename Int=make_signed_t<IntType>,
+         typename UInt=make_unsigned_t<IntType>,
          class DimClass=Dimensions<Int>>
 class Pack :
   /* -- Initialisers ------------------------------------------------------- */

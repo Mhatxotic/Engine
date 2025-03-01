@@ -72,8 +72,6 @@ class FileParts                        // Contains parts of a filename
     strLoc{ StdMove(pspOther.strLoc) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FileParts)           // Suppress default functions for safety
 };/* -- PathSplit class ---------------------------------------------------- */
 class PathSplit :
   /* -- Base classes ------------------------------------------------------- */
@@ -158,11 +156,11 @@ class PathSplit :
     // Prepare extension and save extension and if found?
     const size_t stSlashPos = strFile.find_last_of(cCommon->CFSlash()),
     stDotPos = StrFindCharBackwards(strFile, strFile.length() - 1,
-      stSlashPos != string::npos ? (stSlashPos + 1) : 0, '.');
-    if(stDotPos != string::npos)
+      stSlashPos != StdNPos ? (stSlashPos + 1) : 0, '.');
+    if(stDotPos != StdNPos)
     { // Update filename
       strExt.assign(strFile.substr(stDotPos));
-      strFile.assign(strFile.substr(stSlashPos != string::npos ?
+      strFile.assign(strFile.substr(stSlashPos != StdNPos ?
         stSlashPos : 0, stDotPos));
     } // No extension so clear memory
     else strExt.clear();
@@ -186,8 +184,6 @@ class PathSplit :
     FileParts{ StdMove(psOther) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(PathSplit)           // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

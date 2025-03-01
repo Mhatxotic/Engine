@@ -37,7 +37,7 @@ class SysModule :                      // Members initially private
       uiBuild = UtilHighWord(rFfi.dwFileVersionLS);
       uiRevision = UtilLowWord(rFfi.dwFileVersionLS);
     }
-    /* -- VersionNumbers::End ---------------------------------------------- */
+    /* --------------------------------------------------------------------- */
   };                                   // End of VersionNumbers class
   /* -- Get and store string data ------------------------------------------ */
   struct VersionStrings                // Members initially public
@@ -100,7 +100,7 @@ class SysModule :                      // Members initially private
 #undef GSV
       }
     }
-    /* -- VersionStrings::End ---------------------------------------------- */
+    /* --------------------------------------------------------------------- */
   };                                   // End of VersionStrings class
   /* -- Get executable version information size ---------------------------- */
   DWORD ReadSize(const string &strModule)
