@@ -3105,7 +3105,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       "no-makedepend no-md4 no-nextprotoneg no-ocb no-psk no-rc2 no-rc4 "
       "no-rc5 no-seed no-shared no-sm4 no-srp no-srp no-srtp no-srtp no-ssl "
       "no-ssl3 no-stdio no-tests no-tls1 no-tls1_1 no-ts no-ui-console "
-      "no-unit-test no-weak-ssl-ciphers no-whirlpool no-zlib" },
+      "no-unit-test no-weak-ssl-ciphers no-whirlpool no-zlib "
+      "disable-capieng" },
     strPerl64{ StrAppend(envActive.cpPerl, // 64-bit XP minimum
       " configure VC-WIN64A -D_WIN32_WINNT=0x0502 ", strPerlOpts) },
     strPerl64Rel{ StrAppend(strPerl64, " no-filenames") },

@@ -353,8 +353,8 @@ class EvtCore :                        // Start of common event system class
   void UnregisterEx(const RegVec &rvEvents)
     { for(const RegPair &rpItem : rvEvents) Unregister(rpItem.first); }
   /* -- Event data, all empty functions ------------------------------------ */
-  EvtCore(string &&strName, ISList &&islStrings) :
-    Ident{ StdMove(strName) }, islEventStrings{ StdMove(islStrings) }
+  EvtCore(string &&strCName, ISList &&islStrings) :
+    Ident{ StdMove(strCName) }, islEventStrings{ StdMove(islStrings) }
       { fFuncs.fill(bind(&EvtCore::WarningFunction, this, _1)); }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(EvtCore)             // Suppress default functions for safety
