@@ -34,8 +34,9 @@ local iHotSpotIdLoadOnly,              -- Hot spot id (Load only)
       iKeyBankIdNoLoadSave,            -- Key bank id (No load/save)
       iKeyBankIdSaveOnly,              -- Key bank id (Save only)
       iSClick, iSSelect,               -- Sound effect ids
-      iSelected,                       -- File selected
-      sMsg,                            -- Title text
+      iSelected;                       -- File selected
+local sEmptyString<const> = "";        -- An empty string
+local sMsg,                            -- Title text
       texFile, texZmtc;                -- File screen and zmtc texture
 -- Match text -------------------------------------------------------------- --
 local sFileMatchText<const> =
@@ -71,7 +72,7 @@ local function LoadSaveData()
   -- Data to return
   local aFileData<const>, aNameData<const> = { }, { };
   -- Get game data CVars
-  for iIndex = 1, 4 do
+  for iIndex = 1, #aSaveSlot do
     -- Get CVar and if not empty
     local sData<const> = aSaveSlot[iIndex]:Get();
     if #sData > 0 then
@@ -131,11 +132,11 @@ local function RenderFile()
   fontSpeech:SetCRGB(0, 0, 0.25);
   PrintC(fontSpeech, 160, 31, sMsg);
   -- Render file names
-  for iFileId = 1, 4 do
+  for iFileId = 1, #aSaveSlot do
     -- File selected? Draw selection box!
     if iSelected == iFileId then
       local nTime<const> = CoreTime();
-      RenderFade(0.5+(sin(nTime)*cos(nTime)*0.25),
+      RenderFade(0.5 + (sin(nTime) * cos(nTime) * 0.25),
         35, 47 + (iFileId * 13), 285, 60 + (iFileId * 13));
     end
     -- Print name of file
@@ -169,17 +170,27 @@ local function Select(iId)
   iSelected = iId;
   -- Set message to selected file
   sMsg = aNameData[iSelected];
-  -- If new game?
-  if not aGlobalData.gSelectedRace or aGlobalData.gNewGame then
-    -- We can't save yet but can load
-    SetKeys(true, iKeyBankIdLoadOnly);
-    SetHotSpot(iHotSpotIdLoadOnly);
+  -- Key bank and hot spot selected
+  local iKeyBankIdSelected, iHotSpotIdSelected;
+  -- If not empty slot?
+  if aFileData[iSelected] then
+    -- If new game?
+    if not aGlobalData.gSelectedRace or aGlobalData.gNewGame then
+      iKeyBankIdSelected, iHotSpotIdSelected =
+        iKeyBankIdLoadOnly, iHotSpotIdLoadOnly;
+    -- Continuation game?
+    else iKeyBankIdSelected, iHotSpotIdSelected =
+      iKeyBankIdLoadSave, iHotSpotIdLoadSave end;
+  -- Empty slot so if new game?
+  elseif not aGlobalData.gSelectedRace or aGlobalData.gNewGame then
+    iKeyBankIdSelected, iHotSpotIdSelected =
+      iKeyBankIdNoLoadSave, iHotSpotIdNoLoadSave;
   -- Continuation game?
-  else
-    -- We can save or load
-    SetKeys(true, iKeyBankIdLoadSave);
-    SetHotSpot(iHotSpotIdLoadSave);
-  end
+  else iKeyBankIdSelected, iHotSpotIdSelected =
+    iKeyBankIdSaveOnly, iHotSpotIdSaveOnly end;
+  -- Set specified key bank and hot spot
+  SetKeys(true, iKeyBankIdSelected);
+  SetHotSpot(iHotSpotIdSelected);
 end
 -- Delete file ------------------------------------------------------------- --
 local function GoDelete()
@@ -188,24 +199,25 @@ local function GoDelete()
   -- Play sound
   PlayStaticSound(iSSelect);
   -- Write data
-  aSaveSlot[iSelected]:Reset("");
+  aSaveSlot[iSelected]:Clear();
   -- Set message
   sMsg = "FILE "..iSelected.." DELETED SUCCESSFULLY!";
   -- Commit CVars on the game engine to persistent storage
   VariableSave();
   -- Refresh data
   aFileData, aNameData = LoadSaveData();
+  -- Key bank and hot spot selected
+  local iKeyBankIdSelected, iHotSpotIdSelected;
   -- If new game?
   if not aGlobalData.gSelectedRace or aGlobalData.gNewGame then
-    -- We can't save or load now
-    SetKeys(true, iKeyBankIdNoLoadSave);
-    SetHotSpot(iHotSpotIdNoLoadSave);
+    iKeyBankIdSelected, iHotSpotIdSelected =
+      iKeyBankIdNoLoadSave, iHotSpotIdNoLoadSave;
   -- Continuation game?
-  else
-    -- We can save again
-    SetKeys(true, iKeyBankIdSaveOnly);
-    SetHotSpot(iHotSpotIdSaveOnly);
-  end
+  else iKeyBankIdSelected, iHotSpotIdSelected =
+    iKeyBankIdSaveOnly, iHotSpotIdSaveOnly end;
+  -- Set specified key bank and hot spot
+  SetKeys(true, iKeyBankIdSelected);
+  SetHotSpot(iHotSpotIdSelected);
 end
 -- Load file --------------------------------------------------------------- --
 local function GoLoad()
@@ -241,14 +253,15 @@ local function GoLoad()
   SetKeys(true, iKeyBankIdLoadSave);
   SetHotSpot(iHotSpotIdLoadSave);
 end
--- Save file
+-- Save file --------------------------------------------------------------- --
 local function GoSave()
   -- Number of levels and levels completed
-  local NL, LC = 0, "";
+  local iZonesCompleted, sLevelsCompleted = 0, sEmptyString;
   -- For each level completed
-  for I in pairs(aGlobalData.gLevelsCompleted) do
-    if NL == 0 then LC = LC..I else LC = LC.." "..I end;
-    NL = NL + 1;
+  for iZoneId in pairs(aGlobalData.gLevelsCompleted) do
+    if iZonesCompleted == 0 then sLevelsCompleted = sLevelsCompleted..iZoneId;
+    else sLevelsCompleted = sLevelsCompleted.." "..iZoneId end;
+    iZonesCompleted = iZonesCompleted + 1;
   end
   -- Play sound
   PlayStaticSound(iSSelect);
@@ -262,7 +275,7 @@ local function GoSave()
       aGlobalData.gTotalDeaths, aGlobalData.gTotalGemsSold,
       aGlobalData.gTotalGemsFound, aGlobalData.gTotalIncome,
       aGlobalData.gTotalDug, aGlobalData.gTotalEnemyKills,
-      aGlobalData.gTotalPurchases, NL, LC));
+      aGlobalData.gTotalPurchases, iZonesCompleted, sLevelsCompleted));
   -- Set message
   sMsg = "FILE "..iSelected.." SAVED SUCCESSFULLY!";
   -- Can exit to title
@@ -271,6 +284,9 @@ local function GoSave()
   VariableSave();
   -- Refresh data
   aFileData, aNameData = LoadSaveData();
+  -- Set key bank and hot spot to load and save
+  SetKeys(true, iKeyBankIdLoadSave);
+  SetHotSpot(iHotSpotIdLoadSave);
 end
 -- Action functions -------------------------------------------------------- --
 local function GoFile1() Select(1) end;
@@ -311,19 +327,20 @@ local function InitFile() LoadResources("File", aAssets, OnAssetsLoaded) end;
 -- Scripts have been loaded ------------------------------------------------ --
 local function OnScriptLoaded(GetAPI)
   -- Functions and variables used in this scope only
-  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData;
+  local RegisterHotSpot, RegisterKeys, aAssetsData, aCursorIdData, aSfxData,
+    fcbEmpty;
   -- Grab imports
   BlitLT, Fade, InitCon, LoadResources, PlayStaticSound, PrintC,
     RegisterHotSpot, RegisterKeys, RenderFade, RenderShadow, RenderTipShadow,
     SetCallbacks, SetHotSpot, SetKeys, SetTip, aAssetsData, aCursorIdData,
-    aLevelsData, aObjectData, aObjectTypes, aSaveSlot[1], aSaveSlot[2],
-    aSaveSlot[3], aSaveSlot[4], aSfxData, fontSpeech, texSpr =
+    aLevelsData, aObjectData, aObjectTypes, aSfxData, fcbEmpty, fontSpeech,
+    texSpr =
       GetAPI("BlitLT", "Fade", "InitCon", "LoadResources", "PlayStaticSound",
         "PrintC", "RegisterHotSpot", "RegisterKeys", "RenderFade",
         "RenderShadow", "RenderTipShadow", "SetCallbacks", "SetHotSpot",
         "SetKeys", "SetTip", "aAssetsData", "aCursorIdData", "aLevelsData",
-        "aObjectData", "aObjectTypes", "cvData1", "cvData2", "cvData3",
-        "cvData4", "aSfxData", "fontSpeech", "texSpr");
+        "aObjectData", "aObjectTypes", "aSfxData", "fcbEmpty", "fontSpeech",
+        "texSpr");
   -- Set assets data
   aAssets = { aAssetsData.file, aAssetsData.zmtc };
   -- Set sound effect ids
@@ -372,6 +389,17 @@ local function OnScriptLoaded(GetAPI)
     aHSSave, aHS1, aHS2, aHS3, aHS4, aHSFile, aHSCntrl });
   iHotSpotIdNoLoadSave = RegisterHotSpot({
     aHS1, aHS2, aHS3, aHS4, aHSFile, aHSCntrl });
+  -- Register file data CVar
+  local aCVF<const> = Variable.Flags;
+  -- Default CVar flags for string storage
+  local iCFR<const> = aCVF.STRINGSAVE|aCVF.TRIM|aCVF.PROTECTED|aCVF.DEFLATE;
+  -- Variable register function
+  local VariableRegister<const> = Variable.Register;
+  -- Four save slots so four save variables required
+  for iSlotId = 1, 4 do
+    aSaveSlot[iSlotId] =
+      VariableRegister("gam_data"..iSlotId, sEmptyString, iCFR, fcbEmpty);
+  end
 end
 -- Exports and imports ----------------------------------------------------- --
 return { F = OnScriptLoaded, A = { InitFile = InitFile,
