@@ -104,20 +104,20 @@ using namespace IUuId::P;              using namespace IParser::P;
 struct Environment                     // Preconfigured environment settings
 { /* ------------------------------------------------------------ */ const char
   *const cpPerl,     *const cpCMake,    *const cpCppCheck, *const cpCppChkM,
-  *const cpCppChk32, *const cpCppChk64, *const cpCompress, *const cpDBG,
-  *const cp7z,       *const cpAC4,      *const cpAC8,      *const cpACM,
-  *const cpACA,      *const cpACB,      *const cpCCX,      *const cpCCM,
-  *const cpCCMX,     *const cpCCLIB,    *const cpCCIncDBG, *const cpCCASM,
-  *const cpCCAnal,   *const cpCCAA,     *const cpCCAB,     *const cpCCAR,
-  *const cpCCPP,     *const cpCC4,      *const cpCC8,      *const cpCCOBJ,
-  *const cpCCRES,    *const cpRCX,      *const cpRCM,      *const cpRCAA,
-  *const cpRCAB,     *const cpRCAR,     *const cpRC4,      *const cpRC8,
-  *const cpLDX4,     *const cpLDX8,     *const cpLDM,      *const cpLDAA,
-  *const cpLDAB,     *const cpLDAR,     *const cpLDE4,     *const cpLDE8,
-  *const cpLDB4,     *const cpLDB8,     *const cpLD4,      *const cpLD8,
-  *const cpLDL,      *const cpLDMAP,    *const cpLIB,      *const cpOBJ,
-  *const cpASM,      *const cpPDB,      *const cpLDEXE,    *const cpMAP,
-  *const cpEXE,      *const cpDBGSUF;
+  *const cpCppChk32, *const cpCppChk64, *const cpDBG,      *const cp7z,
+  *const cpAC4,      *const cpAC8,      *const cpACM,      *const cpACA,
+  *const cpACB,      *const cpCCX,      *const cpCCM,      *const cpCCMX,
+  *const cpCCLIB,    *const cpCCIncDBG, *const cpCCASM,    *const cpCCAnal,
+  *const cpCCAA,     *const cpCCAB,     *const cpCCAR,     *const cpCCPP,
+  *const cpCC4,      *const cpCC8,      *const cpCCOBJ,    *const cpCCRES,
+  *const cpRCX,      *const cpRCM,      *const cpRCAA,     *const cpRCAB,
+  *const cpRCAR,     *const cpRC4,      *const cpRC8,      *const cpLDX4,
+  *const cpLDX8,     *const cpLDM,      *const cpLDAA,     *const cpLDAB,
+  *const cpLDAR,     *const cpLDE4,     *const cpLDE8,     *const cpLDB4,
+  *const cpLDB8,     *const cpLD4,      *const cpLD8,      *const cpLDL,
+  *const cpLDMAP,    *const cpLIB,      *const cpOBJ,      *const cpASM,
+  *const cpPDB,      *const cpLDEXE,    *const cpMAP,      *const cpEXE,
+  *const cpDBGSUF;
 } /* ----------------------------------------------------------------------- */
 envWindowsMSVC =                       // Microsoft Visual C++ environment
 { /* ----------------------------------------------------------------------- */
@@ -128,7 +128,6 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
   /* CPPCHKP32  */ "-DX86 -D_M_IX86 -D_M_X86 -D_X86_ -D__i386__ "
                    "--platform=win32W",
   /* CPPCHKP64  */ "-DX64 -D__x86_64__ -D_WIN64 --platform=win64",
-  /* COMPRESS   */ UTLDIR "/UPX.EXE --best --crp-ms=999999",
   /* DEBUGGER   */ "D:\\Apps\\Dbg\\X96DBG.EXE \"$/$$$\"",
   /* 7Z         */ UTLDIR "/7Z.EXE",
   /* AC4        */ "ML.EXE -coff",
@@ -191,7 +190,6 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* CPPCHKP    */ envWindowsMSVC.cpCppChkM,
   /* CPPCHKP32  */ envWindowsMSVC.cpCppChk32,
   /* CPPCHKP64  */ envWindowsMSVC.cpCppChk64,
-  /* COMPRESS   */ envWindowsMSVC.cpCompress,
   /* DEBUGGER   */ envWindowsMSVC.cpDBG,
   /* 7Z         */ envWindowsMSVC.cp7z,
   /* AC4        */ envWindowsMSVC.cpAC4,
@@ -258,7 +256,6 @@ envWindowsLLVM =                       // LLVM on Windows
   /* CPPCHKP    */ envWindowsMSVC.cpCppChkM,
   /* CPPCHKP32  */ envWindowsMSVC.cpCppChk32,
   /* CPPCHKP64  */ envWindowsMSVC.cpCppChk64,
-  /* COMPRESS   */ envWindowsMSVC.cpCompress,
   /* DEBUGGER   */ envWindowsMSVC.cpDBG,
   /* 7Z         */ envWindowsMSVC.cp7z,
   /* AC4        */ envWindowsMSVC.cpAC4,
@@ -330,7 +327,6 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
                    "-DTARGET_OS_MAC --check-level=exhaustive",
   /* CPPCHKP32  */ "-DX86 -D__x86_64__ -DTARGET_CPU_X86_64 --platform=unix32",
   /* CPPCHKP64  */ "-DX64 -D__arm64__ -DTARGET_CPU_ARM64 --platform=unix64",
-  /* COMPRESS   */ "",
   /* DEBUGGER   */ "/usr/bin/lldb -- \"$/$$$\" app_basedir=\"$\" "
                    "sql_db=\"$/$\"",
   /* 7Z         */ "7zz",
@@ -411,7 +407,6 @@ envLinuxGCC =                          // GCC on Linux
                    "-D__GNUC_PATCHLEVEL__=" STR(__GNUC_PATCHLEVEL__),
   /* CPPCHKP32  */ envMacOSLLVM.cpCppChk32,
   /* CPPCHKP64  */ envMacOSLLVM.cpCppChk64,
-  /* COMPRESS   */ UTLDIR "/upx.elf --best --crp-ms=999999",
   /* DEBUGGER   */ "/usr/bin/gdb --args \"$/$$$\" app_basedir=\"$\" "
                    "sql_db=\"$/$\"",
   /* 7Z         */ "7za",
@@ -2203,9 +2198,6 @@ void BuildExecutable(const string &strTmp, const string &strOS,
 #if defined(WINDOWS)
   // Patch icon if on windows
   PatchIcon(StrFormat("$/$.ico", strName, strName), strOutTmp);
-  // Compress the executable. Upx requires executable bit
-  SystemF("chmod -v 755 \"$\"", strOutTmp);
-  SystemF("$ \"$\"", envActive.cpCompress, strOutTmp);
 #endif
   // Upx resets the attribute, let us reset it or cat won't append properly
   SystemF("chmod -v 755 \"$\"", strOutTmp);
