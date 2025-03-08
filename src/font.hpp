@@ -227,6 +227,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     dfFont.DimSet(ftfData);
     // Set default scaled font size and line spacing adjust
     SetSize(1.0f);
+    fLineSpacingHeight = ftfData.DimGetHeight();
     // Update tile size as GLfloat for opengl
     dfTile.DimSet(GetTileWidth<GLfloat>(), GetTileHeight<GLfloat>());
     // Make enough space for initial tex coords set
@@ -306,8 +307,9 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     CoordListIt cliItRightBegin{ clFirst.begin() };
     advance(cliItRightBegin, stCharEnd);
     StdFill(par_unseq, cliItRightBegin, clFirst.end(), cdRef);
-    // Initialise default font scale
+    // Initialise default font scale and line spacing to height
     SetSize(1.0f);
+    fLineSpacingHeight = fH;
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded from bitmap (T:$x$;F:$).",
       IdentGet(), uiTWidth, uiTHeight, ofeFilter);
@@ -417,8 +419,10 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     CoordListIt cliItRightBegin{ clFirst.begin() };
     advance(cliItRightBegin, stCharEnd);
     StdFill(par_unseq, cliItRightBegin, clFirst.end(), cdRef);
-    // Initialise default font scale
+    // Initialise default font scale, line and letter spacing
     SetSize(static_cast<GLfloat>(jsDoc.GetNumber("InitialScale")));
+    SetLineSpacing(static_cast<GLfloat>(jsDoc.GetNumber("LineSpacing")));
+    SetCharSpacing(static_cast<GLfloat>(jsDoc.GetNumber("LetterSpacing")));
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded from bitmap (T:$x$;F:$).",
       IdentGet(), uiTW, uiTH, ofeFilter);
