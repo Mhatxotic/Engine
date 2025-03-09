@@ -152,8 +152,7 @@ template<class StrokerFuncType>
   cFreeType->CheckError(FT_Get_Glyph(ftgsRef, &gData),
     "Failed to get glyph!", "Identifier", IdentGet(), "Glyph", stChar);
   // Put in autorelease ptr to autorelease
-  typedef unique_ptr<FT_GlyphRec_,
-    function<decltype(FT_Done_Glyph)>> GlyphPtr;
+  typedef unique_ptr<FT_GlyphRec_, function<decltype(FT_Done_Glyph)>> GlyphPtr;
   if(GlyphPtr gPtr{ gData, FT_Done_Glyph })
   { // Apply glyph border if requested
     cFreeType->CheckError(

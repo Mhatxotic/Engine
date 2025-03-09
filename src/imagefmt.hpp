@@ -102,7 +102,7 @@ struct CodecDDS final :                // Members initially public
                                  DDSCAPS2_CUBEMAP_NEGATIVEZ|DDSCAPS2_VOLUME
   };
   /* ----------------------------------------------------------------------- */
-  static bool Load(FileMap &fmData, ImageData &idData)
+  bool Load(FileMap &fmData, ImageData &idData)
   { // Get file size
     const size_t stSize = fmData.MemSize();
     // Quick check header which should be at least 128 bytes
@@ -341,7 +341,8 @@ struct CodecDDS final :                // Members initially public
   /* -- Constructor -------------------------------------------------------- */
   CodecDDS(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    ImageLib{ IFMT_DDS, "DirectDraw Surface", "DDS", Load }
+    ImageLib{ IFMT_DDS, "DirectDraw Surface", "DDS",
+      bind(&CodecDDS::Load, this, _1, _2) }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */
@@ -381,7 +382,7 @@ class CodecGIF final :                 // Members initially private
     void*const vpBuffer)            // cppcheck-suppress constParameterCallback
       { if(!vpBuffer) throw runtime_error{ "Modified data null pointer" }; }
   /* --------------------------------------------------------------- */ public:
-  static bool Load(FileMap &fmData, ImageData &idData)
+  bool Load(FileMap &fmData, ImageData &idData)
   { // Must have at least 10 bytes for header 'GIF9' and ending footer.
     if(fmData.MemSize() < 10 || fmData.FileMapReadVar32LE() != 0x38464947)
       return false;
@@ -480,7 +481,8 @@ class CodecGIF final :                 // Members initially private
   /* -- Constructor -------------------------------------------------------- */
   CodecGIF(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    ImageLib{ IFMT_GIF, "Graphics Interchange Format", "GIF", Load }
+    ImageLib{ IFMT_GIF, "Graphics Interchange Format", "GIF",
+      bind(&CodecGIF::Load, this, _1, _2) }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */
@@ -512,7 +514,7 @@ class CodecPNG final :                 // Members initially private
       stRead, stC).c_str());
   }
   /* -- Save png file ---------------------------------------------- */ public:
-  static bool Save(const FStream &fmData, const ImageData &idData,
+  bool Save(const FStream &fmData, const ImageData &idData,
     const ImageSlot &isData)
   { // Check that dimensions are set
     if(isData.DimIsNotSet())
@@ -651,7 +653,7 @@ class CodecPNG final :                 // Members initially private
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  static bool Load(FileMap &fmData, ImageData &idData)
+  bool Load(FileMap &fmData, ImageData &idData)
   { // Not a PNG file if not at least 8 bytes or header is incorrect
     if(fmData.MemSize() < 8 ||
        !png_check_sig(fmData.FileMapReadPtr<png_byte>(8), 8))
@@ -877,7 +879,9 @@ class CodecPNG final :                 // Members initially private
   /* -- Constructor -------------------------------------------------------- */
   CodecPNG(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    ImageLib{ IFMT_PNG, "Portable Network Graphics", "PNG", Load, Save }
+    ImageLib{ IFMT_PNG, "Portable Network Graphics", "PNG",
+      bind(&CodecPNG::Load, this, _1, _2),
+      bind(&CodecPNG::Save, this, _1, _2, _3) }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */
@@ -915,7 +919,7 @@ class CodecJPG final :                 // Members initially private
     throw runtime_error{ strMsg.c_str() };
   }
   /* --------------------------------------------------------------- */ public:
-  static bool Save(const FStream &fmData, const ImageData &idData,
+  bool Save(const FStream &fmData, const ImageData &idData,
                    const ImageSlot &isData)
   { // Only support 24-bit per pixel images
     if(idData.GetBitsPerPixel() != BD_RGB)
@@ -976,7 +980,7 @@ class CodecJPG final :                 // Members initially private
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  static bool Load(FileMap &fmData, ImageData &idData)
+  bool Load(FileMap &fmData, ImageData &idData)
   { // Make sure we have at least 12 bytes and the correct first 2 bytes
     if(fmData.MemSize() < 12 ||
        fmData.FileMapReadVar16LE() != 0xD8FF) return false;
@@ -1056,7 +1060,9 @@ class CodecJPG final :                 // Members initially private
   /* -- Constructor -------------------------------------------------------- */
   CodecJPG(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    ImageLib{ IFMT_JPG, "Joint Photographic Experts Group", "JPG", Load, Save }
+    ImageLib{ IFMT_JPG, "Joint Photographic Experts Group", "JPG",
+      bind(&CodecJPG::Load, this, _1, _2),
+      bind(&CodecJPG::Save, this, _1, _2, _3) }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */

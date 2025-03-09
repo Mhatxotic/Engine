@@ -56,7 +56,7 @@ class CodecWAV final :
     HL_U32LE_CNKT_DATA =   0x61746164, // Pcm data chunk ('data')
   };
   /* -- Loader for WAV files ----------------------------------------------- */
-  static bool Load(FileMap &fmData, PcmData &pdData)
+  bool Load(FileMap &fmData, PcmData &pdData)
   { // Must be at least 20 bytes and test RIFF header magic
     if(fmData.MemSize() < HL_MINIMUM ||
        fmData.FileMapReadVar32LE() != HL_U32LE_V_RIFF)
@@ -173,7 +173,8 @@ class CodecWAV final :
   /* -- Constructor ------------------------------------------------ */ public:
   CodecWAV(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    PcmLib{ PFMT_WAV, "Windows Wave Audio", "WAV", Load }
+    PcmLib{ PFMT_WAV, "Windows Wave Audio", "WAV",
+      bind(&CodecWAV::Load, this, _1, _2), }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */
@@ -213,7 +214,7 @@ class CodecCAF final :
     HL_U32LE_V_DATA      = 0x61746164, // 'data' chunk id
   };
   /* -- Loader for CAF files ----------------------------------------------- */
-  static bool Load(FileMap &fmData, PcmData &pdData)
+  bool Load(FileMap &fmData, PcmData &pdData)
   { // CAF data endian types
     BUILD_FLAGS(Header, HF_NONE{0}, HF_ISFLOAT{1}, HF_ISPCMLE{2});
     // Check size at least 44 bytes for a file header, and 'desc' chunk and
@@ -343,7 +344,8 @@ class CodecCAF final :
   /* -- Constructor ------------------------------------------------ */ public:
   CodecCAF(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    PcmLib{ PFMT_CAF, "CoreAudio Format", "CAF", Load }
+    PcmLib{ PFMT_CAF, "CoreAudio Format", "CAF",
+      bind(&CodecCAF::Load, this, _1, _2) }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */
@@ -358,7 +360,7 @@ class CodecOGG final :
   /* -- Base classes ------------------------------------------------------- */
   private PcmLib                       // Pcm format helper class
 { /* -- Loader for WAV files --------------------------------------- */ public:
-  static bool Load(FileMap &fmData, PcmData &pdData)
+  bool Load(FileMap &fmData, PcmData &pdData)
   { // Check magic and that the file has the OggS string header
     if(fmData.MemSize() < 4 || fmData.FileMapReadVar32LE() != 0x5367674FUL)
       return false;
@@ -419,7 +421,8 @@ class CodecOGG final :
   /* -- Constructor -------------------------------------------------------- */
   CodecOGG(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    PcmLib{ PFMT_OGG, "Xiph.Org OGG Audio", "OGG", Load }
+    PcmLib{ PFMT_OGG, "Xiph.Org OGG Audio", "OGG",
+      bind(&CodecOGG::Load, this, _1, _2) }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */
@@ -434,70 +437,70 @@ class CodecMP3 final :
   /* -- Base classes ------------------------------------------------------- */
   private PcmLib                       // Pcm format helper class
 { /* -- Loader for MP3 files ----------------------------------------------- */
-  static bool Load(FileMap &fmData, PcmData &pdData)
+  bool Load(FileMap &fmData, PcmData &pdData)
   { // Check size of file
     const size_t stTotal = fmData.MemSize();
     if(UtilIntWillOverflow<int>(stTotal))
       XC("Pcm data size is not valid to fit in an integer!",
          "Maximum", numeric_limits<int>::max());
-    // Create mp3 decoder context (ONCE!) and throw exception if not available.
-    // This is not an 'instance' per-se. It is just to allocate, build and
-    // calculate read-only look-up tables for the decoder to be able to use.
-    typedef unique_ptr<void, function<decltype(mp3_done)>> Mp3Ptr;
-    static const Mp3Ptr mpData{ mp3_create(), mp3_done };
-    if(!mpData) XC("Failed to initialise MP3 decoder!");
-    // Calculate memory size maximum for a frame
-    const size_t stFrame = MP3_MAX_SAMPLES_PER_FRAME * 8;
-    // Number of bytes to read from input
-    const size_t stLen = 65536;
-    // Prepare PCM output buffer. We will increment this in 1MB chunks.
-    const size_t stBufferIncrement = 1048576;
-    pdData.aPcmL.MemInitBlank(stBufferIncrement);
-    // Current position and bytes read
-    size_t stPos = 0, stRead = 0;
-    // Frame informations struct
-    mp3_info_t mpInfo{};
-    // How much data do we have left to read? Break if not
-    while(const size_t stRemain = UtilMinimum(stLen, stTotal - stRead))
-    { // Try to decode more data and break if we could not
-      const int iBytes =
-        mp3_decode(mpData.get(),                    // Context
-          fmData.FileMapReadPtrFrom<void>(stRead, stRemain), // Input data
-          static_cast<int>(stRemain),               // Size of input
-          pdData.aPcmL.MemRead<short>(stPos, stFrame), // Output pcm data
-          &mpInfo);                                 // Frame data
-      if(iBytes <= 0) break;
-      // PCM bytes are available?
-      if(mpInfo.audio_bytes != -1)
-      { // Append to PCM buffer and increment PCM buffer position
-        stPos += static_cast<size_t>(mpInfo.audio_bytes);
-        // Increase memory if we're expected to overrun again
-        if(stPos + stFrame > pdData.aPcmL.MemSize())
-          pdData.aPcmL.MemResizeUp(pdData.aPcmL.MemSize() +
-            stBufferIncrement);
-      } // If we didn't move, it's probably not a mp3 file
-      else if(!stPos) return false;
-      // Add to bytes read
-      stRead += static_cast<size_t>(iBytes);
-    } // Check if valid MP3 and return as not mp3 file if not.
-    if(!pdData.SetChannelsSafe(static_cast<PcmChannelType>(mpInfo.channels)))
-      return false;
-    // Shrink memory block to fit
-    pdData.aPcmL.MemResize(stPos);
-    // Set sample rate and bitrate (always 16-bit).
-    pdData.SetRate(static_cast<unsigned int>(mpInfo.sample_rate));
-    pdData.SetBits(PBI_SHORT);
-    // Check that format is supported in OpenAL
-    if(!pdData.ParseOALFormat())
-      XC("MP3 pcm data not supported by AL!",
-         "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
-    // Successfully decoded
-    return true;
+    // Initialise context
+    typedef unique_ptr<void, function<decltype(mp3_done)>> Context;
+    if(const Context cContext{ mp3_create(), mp3_done })
+    { // Calculate memory size maximum for a frame
+      const size_t stFrame = MP3_MAX_SAMPLES_PER_FRAME * 8;
+      // Number of bytes to read from input
+      const size_t stLen = 65536;
+      // Prepare PCM output buffer. We will increment this in 1MB chunks.
+      const size_t stBufferIncrement = 1048576;
+      pdData.aPcmL.MemInitBlank(stBufferIncrement);
+      // Current position and bytes read
+      size_t stPos = 0, stRead = 0;
+      // Frame informations struct
+      mp3_info_t mpInfo{};
+      // How much data do we have left to read? Break if not
+      while(const size_t stRemain = UtilMinimum(stLen, stTotal - stRead))
+      { // Try to decode more data and break if we could not
+        const int iBytes =
+          mp3_decode(cContext.get(),                  // Context
+            fmData.FileMapReadPtrFrom<void>(stRead, stRemain), // Input data
+            static_cast<int>(stRemain),               // Size of input
+            pdData.aPcmL.MemRead<short>(stPos, stFrame), // Output pcm data
+            &mpInfo);                                 // Frame data
+        if(iBytes <= 0) break;
+        // PCM bytes are available?
+        if(mpInfo.audio_bytes != -1)
+        { // Append to PCM buffer and increment PCM buffer position
+          stPos += static_cast<size_t>(mpInfo.audio_bytes);
+          // Increase memory if we're expected to overrun again
+          if(stPos + stFrame > pdData.aPcmL.MemSize())
+            pdData.aPcmL.MemResizeUp(pdData.aPcmL.MemSize() +
+              stBufferIncrement);
+        } // If we didn't move, it's probably not a mp3 file
+        else if(!stPos) return false;
+        // Add to bytes read
+        stRead += static_cast<size_t>(iBytes);
+      } // Check if valid MP3 and return as not mp3 file if not.
+      if(!pdData.SetChannelsSafe(static_cast<PcmChannelType>(mpInfo.channels)))
+        return false;
+      // Shrink memory block to fit
+      pdData.aPcmL.MemResize(stPos);
+      // Set sample rate and bitrate (always 16-bit).
+      pdData.SetRate(static_cast<unsigned int>(mpInfo.sample_rate));
+      pdData.SetBits(PBI_SHORT);
+      // Check that format is supported in OpenAL
+      if(!pdData.ParseOALFormat())
+        XC("MP3 pcm data not supported by AL!",
+           "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
+      // Successfully decoded
+      return true;
+    } // Failed to allocate context
+    XC("Failed to initialise MP3 decoder!");
   }
   /* -- Constructor ------------------------------------------------ */ public:
   CodecMP3(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    PcmLib{ PFMT_MP3, "Motion Picture Experts Group layer-III", "MP3", Load }
+    PcmLib{ PFMT_MP3, "Motion Picture Experts Group layer-III", "MP3",
+      bind(&CodecMP3::Load, this, _1, _2) }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */

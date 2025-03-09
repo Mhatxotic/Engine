@@ -12,8 +12,9 @@
 /* ------------------------------------------------------------------------- */
 namespace IImageLib {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IDir::P;
-using namespace IError::P;             using namespace IFileMap::P;
+using namespace ICollector::P;         using namespace IDataFormat::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IFileMap::P;           using namespace IFlags;
 using namespace IFStream::P;           using namespace IIdent::P;
 using namespace IImageDef::P;          using namespace ILog::P;
 using namespace ILuaLib::P;            using namespace IStd::P;
@@ -23,54 +24,51 @@ namespace P {                          // Start of public module namespace
 /* -- Image libraries collector class as a vector for direct access -------- */
 CTOR_BEGIN_CUSTCTR(ImageLibs, ImageLib, vector, CLHelperUnsafe)
 /* -- Image libraries format object class ---------------------------------- */
-CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe)
-{ /* -- Typedefs -------------------------------------------------- */ private:
-  typedef bool (&CBLFunc)(FileMap&, ImageData&);
-  typedef bool (&CBSFunc)(const FStream&, const ImageData&, const ImageSlot&);
-  /* -- Variables ---------------------------------------------------------- */
-  const string_view strvName,          // Name of plugin
-                    strvExt;           // Default extension of plugin type
-  CBLFunc           cblfFunc;          // Loader callback
-  CBSFunc           cbsfFunc;          // Saver callback
-  const ImageFormat ifId;              // Image format id
-  /* -- Check id number ---------------------------------------------------- */
-  ImageFormat CheckId(const ImageFormat ifNId)
-  { // The id should match the collector count
-    const size_t stExpect = cParent->size() - 1;
-    if(ifNId == stExpect) return ifNId;
-    // Make sure the ImageFormats match the codec construction order!
-    XC("Internal error: Image format id mismatch!",
-       "Id",     ifNId,    "Expect",    stExpect,
-       "Filter", strvName, "Extension", strvExt);
-  }
-  /* -- Unsupported callbacks----------------------------------------------- */
-  static bool NoLoader(FileMap&, ImageData&) { return false; }
-  static bool NoSaver(const FStream&, const ImageData&, const ImageSlot&)
-    { return false; }
-  /* -- Get members ------------------------------------------------ */ public:
-  CBLFunc GetLoader(void) const { return cblfFunc; }
-  CBSFunc GetSaver(void) const { return cbsfFunc; }
-  const string_view &GetName(void) const { return strvName; }
-  const string_view &GetExt(void) const { return strvExt; }
-  bool HaveLoader(void) const { return cblfFunc != NoLoader; }
-  bool HaveSaver(void) const { return cbsfFunc != NoSaver; }
-  /* -- Constructor -------------------------------------------------------- */
+CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
+  /* -- Base classes ------------------------------------------------------- */
+  public DataFormat<ImageData, ImageFormat, ImageSlot>
+{ /* -- Constructor with loader function only ---------------------- */ public:
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    CBLFunc &cblfNFunc=NoLoader,       // Function to call when loading
-    CBSFunc &cbsfNFunc=NoSaver         // Function to call when saving
+    const CbFuncLoad &cflNFunc         // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    strvName(strvNName),               // Set name for filter
-    strvExt(strvNExt),                 // Set extension for filter
-    cblfFunc(cblfNFunc),               // Set loader function
-    cbsfFunc(cbsfNFunc),               // Set saver function
-    ifId(CheckId(ifNId))               // Set unique id for this filter
+    DataFormat{ ifNId, strvNName, strvNExt, cflNFunc, cParent->size() }
+    /* -- No code ---------------------------------------------------------- */
+    { }
+  /* -- Constructor with saver function only ------------------------------- */
+  explicit ImageLib(
+    /* -- Required arguments ----------------------------------------------- */
+    const ImageFormat ifNId,           // The IFMT_* id
+    const string_view &strvNName,      // The name of the codec
+    const string_view &strvNExt,       // The default extension for the codec
+    const CbFuncSave &cfsNFunc         // Function to call when saving
+    ): /* -- Initialisers -------------------------------------------------- */
+    ICHelperImageLib{ cImageLibs,      // Register filter in filter list
+      this },                          // Initialise filter parent
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    DataFormat{ ifNId, strvNName, strvNExt, cfsNFunc, cParent->size() }
+    /* -- No code ---------------------------------------------------------- */
+    { }
+  /* -- Constructor with both loader and saver functions ------------------- */
+  explicit ImageLib(
+    /* -- Required arguments ----------------------------------------------- */
+    const ImageFormat ifNId,           // The IFMT_* id
+    const string_view &strvNName,      // The name of the codec
+    const string_view &strvNExt,       // The default extension for the codec
+    const CbFuncLoad &cflNFunc,        // Function to call when loading
+    const CbFuncSave &cfsNFunc         // Function to call when saving
+    ): /* -- Initialisers -------------------------------------------------- */
+    ICHelperImageLib{ cImageLibs,      // Register filter in filter list
+      this },                          // Initialise filter parent
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    DataFormat{ ifNId, strvNName, strvNExt, cflNFunc, cfsNFunc,
+      cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */

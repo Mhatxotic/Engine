@@ -23,7 +23,7 @@ CTOR_BEGIN(Threads, Thread, CLHelperSafe,
   SafeSizeT        stRunning;          // Number of threads running
 )/* ------------------------------------------------------------------------ */
 class ThreadBase                       // Thread variables class
-{ /* -- Private typedefs ---------------------------------------- */ protected:
+{ /* -- Protected typedefs -------------------------------------- */ protected:
   typedef int (CbThFuncT)(Thread&);    // Thread callback function
   /* -- Public typedefs -------------------------------------------- */ public:
   typedef function<CbThFuncT> CBFunc;  // Wrapped inside a function class

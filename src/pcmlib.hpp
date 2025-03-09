@@ -10,8 +10,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IPcmLib {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IError::P;
-using namespace IFileMap::P;           using namespace IFStream::P;
+using namespace ICollector::P;         using namespace IDataFormat::P;
+using namespace IError::P;             using namespace IFileMap::P;
 using namespace IIdent::P;             using namespace ILog::P;
 using namespace ILuaLib::P;            using namespace IPcmLib::P;
 using namespace IString::P;            using namespace ISysUtil::P;
@@ -21,52 +21,48 @@ namespace P {                          // Start of public module namespace
 /* -- Pcm formats collector class as a vector for direct access ------------ */
 CTOR_BEGIN_CUSTCTR(PcmLibs, PcmLib, vector, CLHelperUnsafe)
 /* -- Pcm format object class ---------------------------------------------- */
-CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe)
-{ /* -- Typedefs -------------------------------------------------- */ private:
-  typedef bool (&CBLFunc)(FileMap&, PcmData&);
-  typedef bool (&CBSFunc)(const FStream&, const PcmData&);
-  /* -- Variables ---------------------------------------------------------- */
-  const string_view strvName,          // Name of plugin
-                    strvExt;           // Default extension of plugin type
-  CBLFunc           cblfFunc;          // Loader callback
-  CBSFunc           cbsfFunc;          // Saver callback
-  const PcmFormat   pfId;              // Image format id
-  /* -- Check id number ---------------------------------------------------- */
-  PcmFormat CheckId(const PcmFormat pfNId)
-  { // The id should match the collector count
-    const size_t stExpect = cParent->size() - 1;
-    if(pfNId == stExpect) return pfNId;
-    // Make sure the ImageFormats match the codec construction order!
-    XC("Internal error: PCM format id mismatch!",
-       "Id",     pfNId,    "Expect",    stExpect,
-       "Filter", strvName, "Extension", strvExt);
-  }
-  /* -- Unsupported callbacks ---------------------------------------------- */
-  static bool NoLoader(FileMap&, PcmData&) { return false; }
-  static bool NoSaver(const FStream&, const PcmData&) { return false; }
-  /* -- Get members ------------------------------------------------ */ public:
-  CBLFunc GetLoader(void) const { return cblfFunc; }
-  CBSFunc GetSaver(void) const { return cbsfFunc; }
-  const string_view &GetName(void) const { return strvName; }
-  const string_view &GetExt(void) const { return strvExt; }
-  bool HaveLoader(void) const { return cblfFunc != NoLoader; }
-  bool HaveSaver(void) const { return cbsfFunc != NoSaver; }
-  /* -- Constructor -------------------------------------------------------- */
-  explicit PcmLib(                     // Constructor to initialise plugin
+CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
+  /* -- Base classes ------------------------------------------------------- */
+  public DataFormat<PcmData, PcmFormat>
+{ /* -- Constructor with loader function only ---------------------- */ public:
+  explicit PcmLib(
     /* -- Required arguments ----------------------------------------------- */
-    const PcmFormat pfNId,             // The unique PCM codec id
-    const string_view &strvNName,      // Name of plugin
-    const string_view &strvNExt,       // Default extension
-    CBLFunc cblfNFunc=NoLoader,        // Loader function (static)
-    CBSFunc cbsfNFunc=NoSaver          // Saver function (static)
+    const PcmFormat pfNId,             // The PFMT_* id
+    const string_view &strvNName,      // The name of the codec
+    const string_view &strvNExt,       // The default extension for the codec
+    const CbFuncLoad &cflNFunc         // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
-    ICHelperPcmLib{ cPcmLibs, this },  // Register pcm format in collector
+    ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    strvName(strvNName),               // Set name of plugin
-    strvExt(strvNExt),                 // Set default extension of plugin
-    cblfFunc(cblfNFunc),               // Set loader function
-    cbsfFunc(cbsfNFunc),               // Set saver function
-    pfId(CheckId(pfNId))               // Set unique id for this codec
+    DataFormat{ pfNId, strvNName, strvNExt, cflNFunc, cParent->size() }
+    /* -- No code ---------------------------------------------------------- */
+    { }
+  /* -- Constructor with saver function only ------------------------------- */
+  explicit PcmLib(
+    /* -- Required arguments ----------------------------------------------- */
+    const PcmFormat pfNId,             // The PFMT_* id
+    const string_view &strvNName,      // The name of the codec
+    const string_view &strvNExt,       // The default extension for the codec
+    const CbFuncSave &cfsNFunc         // Function to call when saving
+    ): /* -- Initialisers -------------------------------------------------- */
+    ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    DataFormat{ pfNId, strvNName, strvNExt, cfsNFunc, cParent->size() }
+    /* -- No code ---------------------------------------------------------- */
+    { }
+  /* -- Constructor with both loader and saver functions ------------------- */
+  explicit PcmLib(
+    /* -- Required arguments ----------------------------------------------- */
+    const PcmFormat pfNId,             // The PFMT_* id
+    const string_view &strvNName,      // The name of the codec
+    const string_view &strvNExt,       // The default extension for the codec
+    const CbFuncLoad &cflNFunc,        // Function to call when loading
+    const CbFuncSave &cfsNFunc         // Function to call when saving
+    ): /* -- Initialisers -------------------------------------------------- */
+    ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    DataFormat{ pfNId, strvNName, strvNExt, cflNFunc, cfsNFunc,
+      cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */

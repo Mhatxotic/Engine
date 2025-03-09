@@ -77,6 +77,7 @@ namespace E {                          // Start of engine namespace
 #include "console.hpp"                 // Console handling header
 #include "oal.hpp"                     // OpenAL audio header
 #include "pcmdef.hpp"                  // Pcm definitions header
+#include "dformat.hpp"                 // Data format helper header
 #include "pcmlib.hpp"                  // Pcm codecs handling header
 #include "pcmfmt.hpp"                  // Pcm format support plugins header
 #include "pcm.hpp"                     // Pcm loader class header
