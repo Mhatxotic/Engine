@@ -560,19 +560,52 @@ class SysCore :
     osS << uiMajor << '.' << uiMinor;
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
-    // Get LANGUAGE code and set default if not found
-    string strCode{ cCmdLine->GetEnv("LANGUAGE") };
+    // Get LANGUAGE code and set default if not 5 bytes long?
+    string strCode{ cCmdLine->GetEnv("LANGUAGE") } ;
     if(strCode.size() != 5)
     { // Get LANG code and set default if not found
       strCode = cCmdLine->GetEnv("LANG");
-      if(strCode.size() < 5) strCode = "en-GB";
-      // Language code was found?
-      else
+      if(strCode.size() >= 5)
       { // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
         const size_t stPeriod = strCode.find('.');
         if(stPeriod != string::npos) strCode.resize(stPeriod);
-      }
-    } // Replace underscore with dash to be consistent with Windows
+      } // Clear code
+      else strCode.clear();
+    } // Clear code
+    else strCode.clear();
+    // Couldn't find code? (true if running from bundle)
+    if(strCode.empty())
+    { // Resize buffer for storage
+      strCode.resize(256);
+      // Create autorelease storage for locale, ask OS for it and if success?
+      typedef unique_ptr<const void,
+        function<decltype(CFRelease)>> CFAutoRelPtr;
+      if(const CFAutoRelPtr cfLocale{ reinterpret_cast<const void*>
+        (CFLocaleCopyCurrent()), CFRelease })
+      { // Get reference to string
+        const CFStringRef csrRef =
+          CFLocaleGetIdentifier(reinterpret_cast<const CFLocaleRef>
+            (cfLocale.get()));
+        // Copy the string into our STL string and if successful?
+        if(CFStringGetCString(csrRef, const_cast<char*>(strCode.data()),
+            static_cast<CFIndex>(strCode.capacity()), kCFStringEncodingUTF8))
+        { // Get length and truncate the string to proper number of bytes
+          const size_t stLength =
+            static_cast<size_t>(CFStringGetLength(csrRef));
+          strCode.resize(stLength);
+          // It must be 5 bytes
+          if(stLength < 5)
+            XC("Region code too short!", "Code", strCode, "Length", stLength);
+        } // Failed
+        else XC("Could not get region code!");
+      } // This should never happen but just incase?
+      else XC("Could not detect region code!");
+      // Update and set global locale
+      cCommon->SetLocale(strCode);
+    } // Set global locale and show error if failed
+    if(!setlocale(LC_ALL, strCode.c_str()))
+      XCL("Failed to initialise default locale!", "Locale", strCode);
+    // Replace underscore with dash to be consistent with Windows
     if(strCode[2] == '_') strCode[2] = '-';
     // Get operating system kernel name
     string strExtra;

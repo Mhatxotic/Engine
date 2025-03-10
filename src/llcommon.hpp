@@ -139,6 +139,7 @@ typedef AgInteger<uint64_t> AgUInt64;
 typedef AgInteger<uint8_t> AgUInt8;
 typedef AgInteger<unsigned int> AgUInt;
 typedef AgIntegerL<int> AgIntL;
+typedef AgIntegerL<lua_Integer> AgLuaIntegerL;
 typedef AgIntegerL<size_t> AgSizeTL;
 typedef AgIntegerLG<size_t> AgSizeTLG;
 typedef AgIntegerLG<ssize_t> AgSSizeTLG;

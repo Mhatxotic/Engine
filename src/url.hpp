@@ -43,6 +43,8 @@ struct Url                             // Members initially public
                    strBookmark;        // Bookmark
   unsigned int     uiPort;             // Port number (1-65535)
   bool             bSecure;            // Connection would require SSL?
+  /* -- Code setter and returner ------------------------------------------- */
+  void SetCode(const Result rNResult) { rResult = rNResult; }
   /* -- Return data ------------------------------------------------ */ public:
   Result GetResult(void) const { return rResult; }
   const string &GetScheme(void) const { return strScheme; }
@@ -55,92 +57,78 @@ struct Url                             // Members initially public
   bool GetSecure(void) const { return bSecure; }
   /* -- Constructor -------------------------------------------------------- */
   explicit Url(const string &strUrl)
-  { // Error if url is empty
-    if(strUrl.empty()) { rResult = R_EMURL; return; }
-    // Error if url is too long
-    if(strUrl.size() > 2048) { rResult = R_TOOLONG; return; }
-    // Find scheme and throw if error
-    const size_t stSchemePos = strUrl.find(':');
-    if(stSchemePos == string::npos) { rResult = R_NOSCHEME; return; }
-    for(size_t stPos = stSchemePos + 1, stPosEnd = stPos + 1;
-               stPos < stPosEnd;
-             ++stPos)
-      if(strUrl[stPos] != cCommon->CFSlash())
-        { rResult = R_INVSCHEME; return; }
-    // Copy the scheme part and throw error if empty string
-    strScheme = strUrl.substr(0, stSchemePos);
-    if(strScheme.empty()) { rResult = R_EMSCHEME; return; }
-    // Find hostname and if we couldn't find it?
-    const size_t stLocStartPos = stSchemePos + 3,
-                 stHostPos = strUrl.find(cCommon->CFSlash(), stLocStartPos);
-    if(stHostPos == string::npos)
-    { // Set default resource to root
-      strResource = cCommon->CFSlash();
-      // Finalise hostname
-      strHost = strUrl.substr(stLocStartPos);
-    } // Request not found
-    else
-    { // Copy request part of url
-      strResource = strUrl.substr(stHostPos);
-      // Copy host part of url
-      strHost = strUrl.substr(stLocStartPos, stHostPos-stLocStartPos);
-    } // Check hostname not empty
-    if(strHost.empty()) { rResult = R_EMHOSTUSERPASSPORT; return; }
-    // Find username and password in hostname
-    const size_t stUserPos = strHost.find('@');
-    if(stUserPos != string::npos)
-    { // Get username and password and error if empty
-      strUsername = strHost.substr(0, stUserPos);
-      if(strUsername.empty()) { rResult = R_EMUSERPASS; return; }
-      // Look for password delimiter and if specified?
-      const size_t stPassPos = strUsername.find(':');
-      if(stPassPos != string::npos)
-      { // Extract password
-        strPassword = strUsername.substr(stPassPos + 1);
-        if(strPassword.empty()) { rResult = R_EMPASS; return; }
-        // Truncate password from username
-        strUsername.resize(stPassPos);
-      } // Check that username is valid
-      if(strUsername.empty()) { rResult = R_EMUSER; return; }
-      // Truncate username and password from hostname and make sure not empty
-      strHost.erase(strHost.begin(), strHost.begin() +
-        static_cast<ssize_t>(stUserPos) + 1);
-      if(strHost.empty()) { rResult = R_EMHOSTPORT; return; }
-    } // Find port in hostname
-    const size_t stPortPos = strHost.find(':');
-    if(stPortPos != string::npos)
-    { // Get port part of string and throw error if empty string
-      const string strPort{ strHost.substr(stPortPos + 1) };
-      if(strPort.empty()) { rResult = R_EMPORT; return; }
-      // Convert port to number and throw error if invalid
+  { // Error if string is empty
+    if(strUrl.empty()) { SetCode(R_EMURL); return; }
+    // Error if URL is too long
+    if(strUrl.size() > 2048) { SetCode(R_TOOLONG); return; }
+    // Error if no scheme
+    size_t stStart = 0, stEnd = strUrl.find(':');
+    if(stEnd == string::npos) { SetCode(R_NOSCHEME); return; }
+    // Set scheme and error if empty
+    strScheme = strUrl.substr(stStart, stEnd);
+    if(strScheme.empty()) { SetCode(R_EMSCHEME); return; }
+    // Error if scheme is invalid
+    stStart = stEnd + 1;
+    if(strUrl.substr(stStart, 2) != "//") { SetCode(R_INVSCHEME); return; }
+    // Move past scheme and find the resource part
+    stStart += 2;
+    stEnd = strUrl.find('/', stStart);
+    if(stEnd == std::string::npos)
+    { // Couldn't find it so the resource wasn't specified so assume the root
+      stEnd = strUrl.size();
+      strResource = "/";
+    } // We got the resource
+    else strResource = strUrl.substr(stEnd);
+    // Extract entire part of authority, hostname and port
+    string strAHP{ strUrl.substr(stStart, stEnd - stStart) };
+    // Find authority delimiter and if we find it?
+    size_t stAtPos = strAHP.find('@');
+    if(stAtPos != string::npos)
+    { // Extract username and password
+      const string strUserInfo{ strAHP.substr(0, stAtPos) };
+      // Find username and password delimiter and if we find it?
+      size_t stColonPos = strUserInfo.find(':');
+      if(stColonPos != string::npos)
+      { // We have the username and password
+        strUsername = strUserInfo.substr(0, stColonPos);
+        strPassword = strUserInfo.substr(stColonPos + 1);
+        // Error if password not specified
+        if(strPassword.empty()) { SetCode(R_EMPASS); return; }
+      } // Username and password delimiter not specified so just username
+      else strUsername = strUserInfo;
+      // Error if username not specified
+      if(strUsername.empty()) { SetCode(R_EMUSER); return; }
+      // We have the authority
+      strAHP = strAHP.substr(stAtPos + 1);
+    } // Find port delimiter in hostname and if we have it?
+    size_t stColonPos = strAHP.find(':');
+    if(stColonPos != string::npos)
+    { // We have the hostname
+      strHost = strAHP.substr(0, stColonPos);
+      // Extract the port number and error if empty
+      const string strPort{ strAHP.substr(stColonPos + 1) };
+      if(strPort.empty()) { SetCode(R_EMPORT); return; }
+      // Convert to number and error if out of range
       uiPort = StrToNum<unsigned int>(strPort);
-      if(!uiPort || uiPort > 65535) { rResult = R_INVPORT; return; }
-      // We have to find the port so set insecure port 80 if scheme is http
-      if(strScheme == "http") bSecure = false;
-      // Set 443 if scheme is secure https
-      else if(strScheme == "https") bSecure = true;
-      // We don't know what the port is
-      else { rResult = R_UNKSCHEME; return; }
-      // Copy host part without port
-      strHost.resize(stPortPos);
-      if(strHost.empty()) { rResult = R_EMHOST; return; }
-    } // Port number not found?
+      if(uiPort == 0 || uiPort > 65535) { SetCode(R_INVPORT); return; }
+    } // Port delimiter not found
     else
-    { // We have to find the port so set insecure port 80 if scheme is http
+    { // We have the host
+      strHost = strAHP;
+      // But we need to guess the port
       if(strScheme == "http") { uiPort = 80; bSecure = false; }
-      // Set 443 if scheme is secure https
       else if(strScheme == "https") { uiPort = 443; bSecure = true; }
-      // We don't know what the port is
-      else { rResult = R_UNKSCHEME; return; }
-    } // Find bookmark and if there is one?
-    const size_t stBookmarkPos = strResource.find('#');
-    if(stBookmarkPos != string::npos)
-    { // Copy in bookmark string
-      strBookmark = strResource.substr(stBookmarkPos + 1);
-      // Trim resource
-      strResource.resize(stBookmarkPos);
-    } // Good result
-    rResult = R_GOOD;
+      else { SetCode(R_UNKSCHEME); return; }
+    } // Error if the host is not empty
+    if(strHost.empty()) { SetCode(R_EMHOST); return; }
+    // Find the bookmark delimiter and if we have it?
+    size_t stHashPos = strResource.find('#');
+    if(stHashPos != std::string::npos)
+    { // Extract the bookmark and truncate the resource string
+      strBookmark = strResource.substr(stHashPos + 1);
+      strResource.resize(stHashPos);
+    } // Perfect
+    SetCode(R_GOOD);
   }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

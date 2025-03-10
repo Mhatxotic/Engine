@@ -16,7 +16,7 @@ using namespace IFlags;                using namespace IFStream::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Functions available flags -------------------------------------------- */
-BUILD_FLAGS(DataFormat, FR_LOAD{Flag[1]}, FR_SAVE{Flag[2]});
+BUILD_FLAGS(DataFormat, DF_LOAD{Flag[1]}, DF_SAVE{Flag[2]});
 /* -- Image libraries format object class ---------------------------------- */
 template<class DataType,               // Data storage type
          typename FormatType,          // Data type id
@@ -25,23 +25,22 @@ class DataFormat
 { /* -- Protected typedefs -------------------------------------- */ protected:
   typedef bool (CbFuncLoadT)(FileMap&, DataType&);
   typedef bool (CbFuncSaveT)(const FStream&, const DataType&, const SlotType&);
-  /* -- Private typedefs ------------------------------------------- */ public:
+  /* -- Public typedefs -------------------------------------------- */ public:
   typedef function<CbFuncLoadT> CbFuncLoad;
   typedef function<CbFuncSaveT> CbFuncSave;
-  /* -- Variables ------------------------------------------------- */ private:
+  /* -- Private variables ----------------------------------------- */ private:
   const string_view strvName,          // Name of plugin
                     strvExt;           // Default extension of plugin type
   const DataFormatFlagsConst dffcCaps; // Capabilities
-  const CbFuncLoad  cflFunc;           // Loader callback
-  const CbFuncSave  cfsFunc;           // Saver callback
-  const FormatType  ftId;              // Image format id
+  const CbFuncLoad  cflFunc;           // Loader function
+  const CbFuncSave  cfsFunc;           // Saver function
+  const FormatType  ftId;              // Data format id
   /* -- Check id number ---------------------------------------------------- */
   FormatType CheckId(const FormatType ftNId, const size_t stSize)
-  { // The id should match the collector count
+  { // The id should match the collector count so return value if it is
     const size_t stExpect = stSize - 1;
     if(ftNId == stExpect) return ftNId;
-    // Make sure the ImageFormats match the codec construction order!
-    XC("Internal error: DataFormat id mismatch!",
+    XC("Internal error: Data format id mismatch!",
        "Id",     ftNId,    "Expect",    stExpect,
        "Filter", strvName, "Extension", strvExt);
   }
@@ -54,8 +53,8 @@ class DataFormat
   const CbFuncSave &GetSaver(void) const { return cfsFunc; }
   const string_view &GetName(void) const { return strvName; }
   const string_view &GetExt(void) const { return strvExt; }
-  bool HaveLoader(void) const { return dffcCaps.FlagIsSet(FR_LOAD); }
-  bool HaveSaver(void) const { return dffcCaps.FlagIsSet(FR_SAVE); }
+  bool HaveLoader(void) const { return dffcCaps.FlagIsSet(DF_LOAD); }
+  bool HaveSaver(void) const { return dffcCaps.FlagIsSet(DF_SAVE); }
   /* -- Constructor with loader function only ------------------- */ protected:
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
@@ -67,7 +66,7 @@ class DataFormat
     ): /* -- Initialisers -------------------------------------------------- */
     strvName{ strvNName },             // Set name for filter
     strvExt{ strvNExt },               // Set extension for filter
-    dffcCaps{ FR_LOAD },               // Set load only capability
+    dffcCaps{ DF_LOAD },               // Set load only capability
     cflFunc{ cflNFunc },               // Set loader function
     cfsFunc{ NoSaver },                // Set no saver function
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter
@@ -84,7 +83,7 @@ class DataFormat
     ): /* -- Initialisers -------------------------------------------------- */
     strvName{ strvNName },             // Set name for filter
     strvExt{ strvNExt },               // Set extension for filter
-    dffcCaps{ FR_SAVE },               // Set save only capability
+    dffcCaps{ DF_SAVE },               // Set save only capability
     cflFunc{ NoLoader },               // Set no loader function
     cfsFunc{ cfsNFunc },               // Set saver function
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter
@@ -102,7 +101,7 @@ class DataFormat
     ): /* -- Initialisers -------------------------------------------------- */
     strvName{ strvNName },             // Set name for filter
     strvExt{ strvNExt },               // Set extension for filter
-    dffcCaps{ FR_LOAD|FR_SAVE },       // Set load and save capabilities
+    dffcCaps{ DF_LOAD|DF_SAVE },       // Set load and save capabilities
     cflFunc{ cflNFunc },               // Set loader function
     cfsFunc{ cfsNFunc },               // Set saver function
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter

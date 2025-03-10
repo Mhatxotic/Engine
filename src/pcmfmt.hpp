@@ -252,7 +252,7 @@ class CodecCAF final :
           // Get sample rate as double convert from big-endian.
           const double dV =
             UtilCastInt64ToDouble(fmData.FileMapReadVar64BE());
-          if(dV < 1 || dV > 5644800)
+          if(dV < 1.0 || dV > 5644800.0)
             XC("CAF sample rate invalid!", "Rate", dV);
           pdData.SetRate(static_cast<ALuint>(dV));
           // Check that FormatType(4) is 'lpcm'.
@@ -337,7 +337,7 @@ class CodecCAF final :
         break;
       // Not supported
       default: XC("Pcm bit count not supported for endian conversion!",
-                  "Bits", pdData.GetBits());
+                  "Bits", pdData.GetBits(), "Type", cpConversion);
     } // Done
     return true;
   }

@@ -300,6 +300,11 @@ static int StdGetError(void) { return errno; }
 static bool StdIsError(const int iValue) { return StdGetError() == iValue; }
 /* -- Is error number not equal to ----------------------------------------- */
 static bool StdIsNotError(const int iValue) { return !StdIsError(iValue); }
+/* -- Wrapper for ToUpper/ToLower ------------------------------------------ */
+template<typename IntType>static char StdToUpper(const IntType itC)
+  { return static_cast<char>(toupper(static_cast<int>(itC))); }
+template<typename IntType>static char StdToLower(const IntType itC)
+  { return static_cast<char>(tolower(static_cast<int>(itC))); }
 /* -- Return absolute number ----------------------------------------------- */
 template<typename IntType=int64_t>
   static IntType StdAbsolute(const IntType itVal)

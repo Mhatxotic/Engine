@@ -662,10 +662,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       char*const cpStr = mStr.MemPtr<char>();
       // Is the cipher available?
       if(SSL_CIPHER_description(SSL_get_current_cipher(sslPtr), cpStr, iLen))
-      { // Synchronise access to cpStr
+      { // Synchronise access to cipher string
         const LockGuard lgSetCipher{ mMutex };
-        // Set cipher
+        // Set cipher and remove spaces, carriage returns and linefeeds
         strCipher = cpStr;
+        StrCompactRef(strCipher);
+        StrChop(strCipher);
         // Print encryption info. Don't need to lock twice
         SocketLogUnsafe(LH_DEBUG, "Cipher is $", strCipher);
       } // Get cipher failed? Log failure

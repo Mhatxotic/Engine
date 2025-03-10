@@ -360,7 +360,10 @@ class SysCore :
         const size_t stPeriod = strCode.find('.');
         if(stPeriod != string::npos) strCode = strCode.substr(0, stPeriod);
       }
-    } // Replace underscore with dash to be consistent with Windows
+    } // Set global locale and show error if failed
+    if(!setlocale(LC_ALL, strCode.c_str()))
+      XCL("Failed to initialise default locale!", "Locale", strCode);
+    // Replace underscore with dash to be consistent with Windows
     if(strCode[2] == '_') strCode[2] = '-';
     // Return operating system info
     return { utsnData.sysname, cCommon->Blank(),

@@ -330,14 +330,14 @@ LLFUNC(FormatTimeUTC, 1,
   LuaUtilPushVar(lS, StrFromTimeTTUTC(aTimestamp, aFormat)))
 /* ========================================================================= */
 // $ Util.GetRatio
-// > Width:integer=The width number.
-// > Height:integer=The height number
+// > Width:integer=The width integer.
+// > Height:integer=The height integer.
 // < Result:string=The ratio between the two numbers.
 // ? Caclulates the ratio between the two numbers and returns a string in the
 // ? format of "n:n".
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetRatio, 1, const AgDoubleL aWidth{lS, 1, 1.0}, aHeight{lS, 2, 1.0};
-  LuaUtilPushVar(lS, StrFromRatio(aWidth, aHeight)))
+LLFUNC(GetRatio, 1, const AgLuaIntegerL aWidth{lS, 1, 1}, aHeight{lS, 2, 1};
+  LuaUtilPushVar(lS, StrFromRatio(aWidth(), aHeight())))
 /* ========================================================================= */
 // $ Util.Grouped
 // > Count:integer=The number to convert.

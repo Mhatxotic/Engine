@@ -165,12 +165,9 @@ template<typename IntType>static IntType UtilToI64BE(const IntType itV)
     return static_cast<IntType>(STRICT_U64BE(itV)); }
 /* -- Convert bit count to bitmask ----------------------------------------- */
 template<typename IntType>static IntType UtilBitsToMask(size_t stCount)
-{ // Initial value
-  IntType itValue = 0;
-  // Build mask for bit count
-  while(--stCount != StdMaxSizeT) itValue |= 1 << stCount;
-  // Return generated value
-  return itValue;
+{ // Ensure the type is an integer type else calculate the bitmask
+  static_assert(is_integral_v<IntType>, "IntType must be an integral type");
+  return stCount ? (static_cast<IntType>(1) << stCount) - 1 : 0;
 }
 /* -- Swap class functors -------------------------------------------------- */
 struct UtilSwap32LEFunctor             // Swap 32-bit little <-> big integer
@@ -191,7 +188,17 @@ template<typename Type>static Type &UtilToNonConst(const Type &tSrc)
 /* -- Brute cast one type to another --------------------------------------- */
 template<typename TypeDst, typename TypeSrc>
   static TypeDst UtilBruteCast(const TypeSrc tsV)
-    { union U{ TypeSrc ts; TypeDst td; }; return U{ tsV }.td; }
+{ // Make sure sizes are the same
+  static_assert(sizeof(TypeDst) == sizeof(TypeSrc),
+    "Size of source and destination types must be equal");
+  // Make sure we can copy both
+  static_assert(is_trivially_copyable_v<TypeSrc>,
+    "Source type must be trivially copyable");
+  static_assert(is_trivially_copyable_v<TypeDst>,
+    "Destination type must be trivially copyable");
+  // Now cast it to the requested type
+  return bit_cast<TypeDst>(tsV);
+}
 /* -- Brute cast a 32-bit float to 32-bit integer -------------------------- */
 static uint32_t UtilCastFloatToInt32(const float fV)
   { return UtilBruteCast<uint32_t>(fV); }

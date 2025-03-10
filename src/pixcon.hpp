@@ -696,10 +696,6 @@ class SysCon :                         // All members initially private
     if(IsInBackground())
       XC("Terminal NCurses mode cannot operate in the background so "
          "please try again running the process in the foreground instead!");
-    // Set locale
-    if(const char*const cpLocale = setlocale(LC_ALL, cCommon->CBlank()))
-      { cLog->LogDebugExSafe("SysCon initialised locale to $.", cpLocale); }
-    else XCL("Failed to initialse default locale!");
     // Init ncurses
     if(!initscr()) XC("Failed to initialise terminal window!");
     // No newlines on writing output

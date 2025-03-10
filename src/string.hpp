@@ -13,7 +13,7 @@ using namespace IStd::P;               using namespace IUtf;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Common class with common objects ------------------------------------- */
-static const class Common final        // Members initially private
+static class Common final              // Members initially private
 { /* -- Private variables -------------------------------------------------- */
   const string     strTrue,            // C++ string as "true"
                    strFalse,           // C++ string as "false"
@@ -37,9 +37,11 @@ static const class Common final        // Members initially private
                    strLuaName;         // C++ string as "__name"
   const char       cFSlash;            // Forward slash character
   const char*const cpBlank;            // Blank C-String
-  const locale     lLocaleCurrent;     // Current locale
+  locale           lLocaleCurrent;     // Current locale
   /* --------------------------------------------------------------- */ public:
   const locale &Locale(void) const { return lLocaleCurrent; }
+  void SetLocale(const string &strLocale)
+    { lLocaleCurrent = locale(strLocale); }
   /* ----------------------------------------------------------------------- */
   const string &Blank(void) const { return strBlank; }
   const char *CBlank(void) const { return cpBlank; }
@@ -356,9 +358,8 @@ static StdTimeT StrParseTime(const string &strS,
 static string &StrToUpCaseRef(string &strStr)
 { // If string is not empty
   if(!strStr.empty())
-    StdTransform(par_unseq, strStr.begin(), strStr.end(),
-      strStr.begin(), [](char cChar)->char
-        { return static_cast<char>(toupper(static_cast<int>(cChar))); });
+    StdTransform(par_unseq, strStr.begin(), strStr.end(), strStr.begin(),
+      [](unsigned char ucChar) { return StdToUpper(ucChar); });
   // Return output
   return strStr;
 }
@@ -366,11 +367,32 @@ static string &StrToUpCaseRef(string &strStr)
 static string &StrToLowCaseRef(string &strStr)
 { // If string is not empty
   if(!strStr.empty())
-    StdTransform(par_unseq, strStr.begin(), strStr.end(),
-      strStr.begin(), [](char cChar)->char
-        { return static_cast<char>(tolower(static_cast<int>(cChar))); });
+    StdTransform(par_unseq, strStr.begin(), strStr.end(), strStr.begin(),
+      [](unsigned char ucChar) { return StdToLower(ucChar); });
   // Return output
   return strStr;
+}
+/* -- Convert string to upper case ----------------------------------------- */
+static const string StrToUpCase[[maybe_unused]](const string &strSrc)
+{ // String empty? Return a blank one
+  if(strSrc.empty()) return {};
+  // Create memory for destination string and copy the string over
+  string strDst; strDst.reserve(strSrc.size());
+  transform(strSrc.begin(), strSrc.end(), back_inserter(strDst),
+    [](unsigned char ucChar) { return StdToUpper(ucChar); });
+  // Return result
+  return strDst;
+}
+/* -- Convert string to lower case ----------------------------------------- */
+static const string StrToLowCase[[maybe_unused]](const string &strSrc)
+{ // String empty? Return a blank one
+  if(strSrc.empty()) return {};
+  // Prepare destination string and run a transform to lowercase each char
+  string strDst; strDst.reserve(strSrc.size());
+  transform(strSrc.begin(), strSrc.end(), back_inserter(strDst),
+    [](unsigned char ucChar) { return StdToLower(ucChar); });
+  // Return result
+  return strDst;
 }
 /* -- Basic multiple replace of text in string ----------------------------- */
 template<class ListType=StrPairList>
@@ -578,7 +600,7 @@ static const string StrShortFromDuration(const double dDuration,
   osS << fixed << setfill('0') << setprecision(0);
   // Have days?
   if(dInt >= 86400)
-    osS <<            floor(dInt/86400)          << ':'
+    osS <<                 floor(dInt/86400)     << ':'
         << setw(2) << fmod(floor(dInt/3600), 24) << ':'
         << setw(2) << fmod(floor(dInt/60),   60) << ':' << setw(2);
   // No days, but hours?
@@ -966,10 +988,12 @@ static const string StrFromTimeTT(const StdTimeT ttTimestamp,
 }
 /* -- Remove suffixing carriage return and line feed ----------------------- */
 static string &StrChop(string &strStr)
-{ // Error message should have a carriage return/line feed so remove it
-  while(!strStr.empty() && (strStr.back() == '\r' || strStr.back() == '\n'))
-    strStr.pop_back();
-  // Return string
+{ // Find the pos of the last char that is not a carriage return or line feed
+  const size_t stEndPos = strStr.find_last_not_of("\r\n");
+  // If all characters are removed, set the string to empty else erase the part
+  if(stEndPos == string::npos) strStr.clear();
+  else strStr.erase(stEndPos + 1);
+  // Return the modified string
   return strStr;
 }
 /* -- Convert specified timestamp to string (UTC) -------------------------- */
@@ -981,27 +1005,24 @@ static const string StrFromTimeTTUTC(const StdTimeT ttTimestamp,
   return StrFromTimeTM(tmData, cpFormat);
 }
 /* ------------------------------------------------------------------------- */
-template<typename FloatType>
-  static const string StrFromRatio(const FloatType ftAntecedent,
-    const FloatType ftConsequent)
-{ // Convert to double if neccesary
-  const double dAntecedent = static_cast<double>(ftAntecedent),
-               dConsequent = static_cast<double>(ftConsequent);
-  // Return if invalid number or the below loop can infinitely enumerate
-  if(dAntecedent <= 0.0 || dConsequent <= 0.0) return "N/A";
-  // Divisor to use
-  double dDivisor;
-  // Loop until common denominator found
-  for(double dNumerator = dAntecedent, dDenominator = dConsequent; ; )
-  { // Find the lowest numerator and break if we find it
-    dNumerator = fmod(dNumerator, dDenominator);
-    if(dNumerator == 0.0) { dDivisor = dDenominator; break; }
-    // Find the lowest denominator and break if we find it
-    dDenominator = fmod(dDenominator, dNumerator);
-    if(dDenominator == 0.0) { dDivisor = dNumerator; break; }
-  } // Return lowest numerator and denominator
-  return StrAppend(fixed, setprecision(0), ceil(dAntecedent / dDivisor), ':',
-    ceil(dConsequent / dDivisor));
+template<typename IntType>
+  string StrFromRatio(const IntType itAntecedent, const IntType itConsequent)
+{ // Return failure if parameters negative or zero
+  if(itAntecedent <= 0 || itConsequent <= 0) return "N/A";
+  // If we're a number, we need to convert it to an integer or std::gcd fails
+  if constexpr(is_floating_point_v<IntType>)
+    return StrFromRatio(static_cast<unsigned int>(itAntecedent),
+                        static_cast<unsigned int>(itConsequent));
+  // Integral?
+  else
+  { // Calculate the greatest common divisor
+    IntType itGCD = std::gcd(itAntecedent, itConsequent),
+    // Calculate the simplified ratio
+            itNum = itAntecedent / itGCD,
+            itDen = itConsequent / itGCD;
+    // Return the ratio as a string
+    return StrAppend(itNum, ':', itDen);
+  }
 }
 /* -- Convert list to exploded string -------------------------------------- */
 template<class ListType>
@@ -1033,40 +1054,32 @@ template<class ListType>
   } // Return the compacted string
   return ossOut.str();
 }
-/* -- Convert string to lower case ----------------------------------------- */
-static const string StrToLowCase[[maybe_unused]](const string &strSrc)
-{ // Create memory for destination string and copy the string over
-  string strDst; strDst.resize(strSrc.length());
-  for(size_t stI = 0; stI < strSrc.size(); ++stI)
-    strDst[stI] = static_cast<char>(tolower(static_cast<int>(strSrc[stI])));
-  // Return copied string
-  return strDst;
-}
-/* -- Convert string to upper case ----------------------------------------- */
-static const string StrToUpCase[[maybe_unused]](const string &strSrc)
-{ // Create memory for destination string and copy the string over
-  string strDst; strDst.resize(strSrc.length());
-  for(size_t stIndex = 0; stIndex < strSrc.size(); ++stIndex)
-    strDst[stIndex] =
-      static_cast<char>(toupper(static_cast<int>(strSrc[stIndex])));
-  // Return copied string
-  return strDst;
-}
 /* -- Compact a string removing leading, trailing and duplicate spaces ----- */
 static string &StrCompactRef(string &strStr, const char cToken=' ')
-{ // Enumerate every whitespace character until end-of-string
-  for(string::iterator siCharIt{ strStr.begin() }; siCharIt != strStr.end(); )
-  { // Not a whitespace?
-    if(*siCharIt != cToken)
-    { // Skip non-whitespace characters until end of string
-      while(++siCharIt != strStr.end())
-        // If is a whitespace go forward again and go back to for loop
-        if(*siCharIt == cToken) { ++siCharIt; break; }
-    } // Erase whitespace
-    else siCharIt = strStr.erase(siCharIt);
-  } // Remove trailing whitespace if there is one
-  if(!strStr.empty() && strStr.back() == cToken) strStr.pop_back();
-  // Return string
+{ // Return if string is empty
+  if(strStr.empty()) return strStr;
+  // Position to write at
+  size_t stWriteIndex = 0;
+  // In specified token?
+  bool bInToken = false;
+  // Enumerate the original string
+  for(size_t stReadIndex = 0; stReadIndex < strStr.size(); ++stReadIndex)
+  { // If it's the token we don't want?
+    if(strStr[stReadIndex] != cToken)
+    { // We're in the specified token and write position isn't at the start?
+      if(bInToken && stWriteIndex > 0)
+        // Overwrite with specified token
+        strStr[stWriteIndex++] = cToken;
+      // Overwrite with original character
+      strStr[stWriteIndex++] = strStr[stReadIndex];
+      // Not in token anymore
+      bInToken = false;
+    } // Not in token anymore
+    else bInToken = true;
+  } // Resize the string to remove trailing spaces
+  if (stWriteIndex > 0 && strStr[stWriteIndex - 1] == cToken) --stWriteIndex;
+  strStr.resize(stWriteIndex);
+  // Return the string
   return strStr;
 }
 /* -- Compact a c-string removing duplicate spaces ------------------------- */

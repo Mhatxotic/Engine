@@ -19,11 +19,12 @@ using ::std::wstring;
 using ::std::exception;                using ::std::runtime_error;
 /* -- Other ---------------------------------------------------------------- */
 using ::std::addressof;                using ::std::bind;
-using ::std::function;                 using ::std::locale;
-using ::std::make_pair;                using ::std::make_signed;
-using ::std::make_unsigned;            using ::std::nothrow;
-using ::std::numeric_limits;           using ::std::remove_const;
-using ::std::remove_pointer;           using ::std::swap;
+using ::std::bit_cast;                 using ::std::function;
+using ::std::locale;                   using ::std::make_pair;
+using ::std::make_signed;              using ::std::make_unsigned;
+using ::std::nothrow;                  using ::std::numeric_limits;
+using ::std::remove_const;             using ::std::remove_pointer;
+using ::std::swap;
 /* -- Iteratations --------------------------------------------------------- */
 using ::std::accumulate;               using ::std::advance;
 using ::std::any_of;                   using ::std::back_inserter;
@@ -43,7 +44,8 @@ using ::std::uppercase;
 using ::std::is_class_v;               using ::std::is_floating_point_v;
 using ::std::is_integral_v;            using ::std::is_pointer_v;
 using ::std::is_signed_v;              using ::std::is_enum_v;
-using ::std::is_same_v;                using ::std::underlying_type_t;
+using ::std::is_same_v;                using ::std::is_trivially_copyable_v;
+using ::std::underlying_type_t;
 /* -- Bind class function argument namespaces ------------------------------ */
 using ::std::placeholders::_1;         using ::std::placeholders::_2;
 using ::std::placeholders::_3;

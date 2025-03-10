@@ -503,9 +503,8 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     FboCommitWrap();
     // Say we've initialised the frame buffer
     cLog->LogDebugExSafe("Fbo initialised '$' at $ (S=$x$;A=$;T=$;F=$).",
-      IdentGet(), uiFBO, DimGetWidth(), DimGetHeight(),
-      StrFromRatio(GetCoRight(), GetCoBottom()), uiFBOtex,
-      cOgl->GetPixelFormat(iPixFormat));
+      IdentGet(), uiFBO, DimGetWidth(), DimGetHeight(), StrFromRatio(siW, siH),
+      uiFBOtex, cOgl->GetPixelFormat(iPixFormat));
   }
   /* -- Constructor -------------------------------------------------------- */
   Fbo(void) :                          // No parameters

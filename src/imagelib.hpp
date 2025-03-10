@@ -14,11 +14,11 @@ namespace IImageLib {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IDataFormat::P;
 using namespace IDir::P;               using namespace IError::P;
-using namespace IFileMap::P;           using namespace IFlags;
-using namespace IFStream::P;           using namespace IIdent::P;
-using namespace IImageDef::P;          using namespace ILog::P;
-using namespace ILuaLib::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IFileMap::P;           using namespace IFStream::P;
+using namespace IIdent::P;             using namespace IImageDef::P;
+using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Image libraries collector class as a vector for direct access -------- */
@@ -140,9 +140,9 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
 /* -- Load a image and automatically detect type --------------------------- */
 static void ImageLoad(FileMap &fmData, ImageData &idData)
 { // For each plugin registered
-  for(ImageLib*const ilPtr : *cImageLibs)
+  for(const ImageLib*const ilPtr : *cImageLibs)
   { // Get reference to plugin
-    ImageLib &ilRef = *ilPtr;
+    const ImageLib &ilRef = *ilPtr;
     // Capture exceptions
     try
     { // Load the image, log and return if we loaded successfully

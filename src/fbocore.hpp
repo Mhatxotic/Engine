@@ -221,7 +221,7 @@ static class FboCore final :           // The main fbo operations manager
       cLog->LogDebugExSafe("Fbo main matrix reinitialised as $x$ [$] "
         "(D=$x$,A=$<$-$>,AW=$,S=$:$:$:$).",
         fboMain.GetCoRight(), fboMain.GetCoBottom(),
-        StrFromRatio(fboMain.GetCoRight(), fboMain.GetCoBottom()),
+        StrFromRatio(siFBOWidth, siFBOHeight),
           fWidth, fHeight, fAspect, fAspectMin, fAspectMax, fAddWidth,
           fLeft, fTop, fRight, fBottom);
       // Everything changed
