@@ -178,30 +178,31 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     // Set shader source code
     GL(cOgl->ShaderSource(scItem.GetHandle(), scItem.GetCodeCStr()),
       "Failed to set shader source code!",
-        "Identifier", scItem.IdentGet(),  "Type",   scItem.GetType(),
-        "Shader",     scItem.GetHandle(), "Source", scItem.GetCode());
+      "Identifier", scItem.IdentGet(),  "Type",   scItem.GetType(),
+      "Shader",     scItem.GetHandle(), "Source", scItem.GetCode());
     // Compile the shader source code
     GL(cOgl->CompileShader(scItem.GetHandle()),
       "Failed to compile shader source code!",
-        "Type", eT, "Shader", scItem.GetHandle(), "Source", scItem.GetCode());
+      "Type", eT, "Shader", scItem.GetHandle(), "Source", scItem.GetCode());
     // Get compiler result and show reason if failed
     if(cOgl->GetCompileStatus(scItem.GetHandle()) == GL_FALSE)
       XC("Shader compilation failed!",
-        "Identifier", scItem.IdentGet(), "Program", uiProgram,
-        "Type",       scItem.GetType(),  "Shader",  scItem.GetHandle(),
-        "Reason",     cOgl->GetCompileFailureReason(scItem.GetHandle()));
+         "Identifier", scItem.IdentGet(), "Program", uiProgram,
+         "Type",       scItem.GetType(),  "Shader",  scItem.GetHandle(),
+         "Reason",     cOgl->GetCompileFailureReason(scItem.GetHandle()));
     // If the program hasn't been setup yet?
     if(!uiProgram)
     { // Create the shader program, and if failed? We should bail out.
       uiProgram = cOgl->CreateProgram();
-      if(!uiProgram) XC("Failed to create shader program!",
-        "Identifier", scItem.IdentGet(),
-        "Type",       scItem.GetType(), "Shader", scItem.GetHandle());
+      if(!uiProgram)
+        XC("Failed to create shader program!",
+           "Identifier", scItem.IdentGet(),
+           "Type",       scItem.GetType(), "Shader", scItem.GetHandle());
     } // Attach the shader to the program
     GL(cOgl->AttachShader(uiProgram, scItem.GetHandle()),
       "Failed to attach shader to program!",
-        "Identifier", scItem.IdentGet(), "Program", uiProgram,
-        "Type",       scItem.GetType(),  "Shader",  scItem.GetHandle());
+      "Identifier", scItem.IdentGet(), "Program", uiProgram,
+      "Type",       scItem.GetType(),  "Shader",  scItem.GetHandle());
     // Shader compiled
     cLog->LogDebugExSafe("Shader '$'($) compiled at index $ on program $.",
       scItem.IdentGet(), scItem.GetHandle(), stIndex, uiProgram);

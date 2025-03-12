@@ -16,24 +16,26 @@ using namespace IFlags;                using namespace IFStream::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Functions available flags -------------------------------------------- */
-BUILD_FLAGS(DataFormat, DF_LOAD{Flag[1]}, DF_SAVE{Flag[2]});
-/* -- Image libraries format object class ---------------------------------- */
+BUILD_FLAGS(DataFormat, DF_DECODE{Flag[1]}, DF_ENCODE{Flag[2]});
+/* ------------------------------------------------------------------------- */
 template<class DataType,               // Data storage type
          typename FormatType,          // Data type id
          typename SlotType=bool>       // Slot type (save only)
-class DataFormat
+/* ------------------------------------------------------------------------- */
+class DataFormat                       // Image libraries format object class
 { /* -- Protected typedefs -------------------------------------- */ protected:
-  typedef bool (CbFuncLoadT)(FileMap&, DataType&);
-  typedef bool (CbFuncSaveT)(const FStream&, const DataType&, const SlotType&);
+  typedef bool (CbFuncDecoderT)(FileMap&, DataType&);
+  typedef bool (CbFuncEncoderT)(const FStream&, const DataType&,
+    const SlotType&);
   /* -- Public typedefs -------------------------------------------- */ public:
-  typedef function<CbFuncLoadT> CbFuncLoad;
-  typedef function<CbFuncSaveT> CbFuncSave;
+  typedef function<CbFuncDecoderT> CbFuncDecoder;
+  typedef function<CbFuncEncoderT> CbFuncEncoder;
   /* -- Private variables ----------------------------------------- */ private:
   const string_view strvName,          // Name of plugin
                     strvExt;           // Default extension of plugin type
   const DataFormatFlagsConst dffcCaps; // Capabilities
-  const CbFuncLoad  cflFunc;           // Loader function
-  const CbFuncSave  cfsFunc;           // Saver function
+  const CbFuncDecoder cfdFunc;         // Loader function
+  const CbFuncEncoder cfeFunc;         // Saver function
   const FormatType  ftId;              // Data format id
   /* -- Check id number ---------------------------------------------------- */
   FormatType CheckId(const FormatType ftNId, const size_t stSize)
@@ -45,30 +47,30 @@ class DataFormat
        "Filter", strvName, "Extension", strvExt);
   }
   /* -- Unsupported callbacks----------------------------------------------- */
-  static bool NoLoader(FileMap&, DataType&) { return false; }
-  static bool NoSaver(const FStream&, const DataType&, const SlotType&)
+  static bool NoDecoder(FileMap&, DataType&) { return false; }
+  static bool NoEncoder(const FStream&, const DataType&, const SlotType&)
     { return false; }
   /* -- Get members ------------------------------------------------ */ public:
-  const CbFuncLoad &GetLoader(void) const { return cflFunc; }
-  const CbFuncSave &GetSaver(void) const { return cfsFunc; }
+  const CbFuncDecoder &GetDecoder(void) const { return cfdFunc; }
+  const CbFuncEncoder &GetEncoder(void) const { return cfeFunc; }
   const string_view &GetName(void) const { return strvName; }
   const string_view &GetExt(void) const { return strvExt; }
-  bool HaveLoader(void) const { return dffcCaps.FlagIsSet(DF_LOAD); }
-  bool HaveSaver(void) const { return dffcCaps.FlagIsSet(DF_SAVE); }
+  bool HaveDecoder(void) const { return dffcCaps.FlagIsSet(DF_DECODE); }
+  bool HaveEncoder(void) const { return dffcCaps.FlagIsSet(DF_ENCODE); }
   /* -- Constructor with loader function only ------------------- */ protected:
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
     const FormatType ftNId,            // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncLoad &cflNFunc,        // Function to call when loading
+    const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const size_t stSize                // Size of collector to id
     ): /* -- Initialisers -------------------------------------------------- */
     strvName{ strvNName },             // Set name for filter
     strvExt{ strvNExt },               // Set extension for filter
-    dffcCaps{ DF_LOAD },               // Set load only capability
-    cflFunc{ cflNFunc },               // Set loader function
-    cfsFunc{ NoSaver },                // Set no saver function
+    dffcCaps{ DF_DECODE },             // Set load only capability
+    cfdFunc{ cfdNFunc },               // Set loader function
+    cfeFunc{ NoEncoder },              // Set no saver function
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter
     /* -- No code ---------------------------------------------------------- */
     { }
@@ -78,14 +80,14 @@ class DataFormat
     const FormatType ftNId,            // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncSave &cfsNFunc,        // Function to call when saving
+    const CbFuncEncoder &cfeNFunc,     // Function to call when saving
     const size_t stSize                // Size of collector to id
     ): /* -- Initialisers -------------------------------------------------- */
     strvName{ strvNName },             // Set name for filter
     strvExt{ strvNExt },               // Set extension for filter
-    dffcCaps{ DF_SAVE },               // Set save only capability
-    cflFunc{ NoLoader },               // Set no loader function
-    cfsFunc{ cfsNFunc },               // Set saver function
+    dffcCaps{ DF_ENCODE },             // Set save only capability
+    cfdFunc{ NoDecoder },              // Set no loader function
+    cfeFunc{ cfeNFunc },               // Set saver function
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter
     /* -- No code ---------------------------------------------------------- */
     { }
@@ -95,22 +97,21 @@ class DataFormat
     const FormatType ftNId,            // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncLoad &cflNFunc,        // Function to call when loading
-    const CbFuncSave &cfsNFunc,        // Function to call when saving
+    const CbFuncDecoder &cfdNFunc,     // Function to call when loading
+    const CbFuncEncoder &cfeNFunc,     // Function to call when saving
     const size_t stSize                // Size of collector to id
     ): /* -- Initialisers -------------------------------------------------- */
     strvName{ strvNName },             // Set name for filter
     strvExt{ strvNExt },               // Set extension for filter
-    dffcCaps{ DF_LOAD|DF_SAVE },       // Set load and save capabilities
-    cflFunc{ cflNFunc },               // Set loader function
-    cfsFunc{ cfsNFunc },               // Set saver function
+    dffcCaps{ DF_DECODE|DF_ENCODE },   // Set load and save capabilities
+    cfdFunc{ cfdNFunc },               // Set loader function
+    cfeFunc{ cfeNFunc },               // Set saver function
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(DataFormat)          // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
-/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

@@ -718,7 +718,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return strReq;
   }
   /* -- String is binary? Returns location of binary ----------------------- */
-  bool ValidHeaderPacket(const string &strStr)
+  bool ValidHeaderPacket(const string_view &strStr)
   { // For each character in response, if the character is valid printable
     // ASCII character then goto next
     return !any_of(strStr.cbegin(), strStr.cend(), [](const unsigned char &ucC)
@@ -740,16 +740,15 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         strReq{ StdMove(GetRegistry(cParent->strRegVarREQ)) },
         strBody{ StdMove(GetRegistry(cParent->strRegVarBODY)) },
         strHdrs{ StdMove(pRegistry.ParserImplodeEx(": ", cCommon->CrLf())) },
-        strPkt{ StdMove(StrAppend(strReq,
-          strHdrs, cCommon->CrLf(), strBody)) };
+        strPk{ StdMove(StrAppend(strReq, strHdrs, cCommon->CrLf(), strBody)) };
       // Write the full request to the server and return if failed
-      if(SockWrite(strPkt) == StdMaxUInt) return -1;
+      if(SockWrite(strPk) == StdMaxUInt) return -1;
     } // Set sent request status event
     AddStatus(SS_REPLYWAIT);
     // Content read and content-length
     size_t stContentRead = 0, stContentLength = 0;
-    // Response headers
-    string strHeaders;
+    // Reserve memory for response headers
+    string strHeaders; strHeaders.reserve(1024);
     // Allocate memory for read buffer
     Memory mDest{ cParent->stBufferSize };
     // Expecting reponse headers? and connection closed status
@@ -792,35 +791,34 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           return 1;
         } // Wait for next packet, thread abort or server disconnect.
         continue;
-      } // Make string from response. There could be binary characters in this
-      // but it does not matter
-      string strResp{ mDest.MemPtr<char>(), uiBX };
+      } // Make string view of response which could contain binary chars
+      string_view strvResp{ mDest.MemPtr<char>(), uiBX };
       // Find end of headers marker and if we do not have it yet?
-      const size_t stEnd = strResp.find(cCommon->CrLf2());
+      const size_t stEnd = strvResp.find(cCommon->CrLf2());
       if(stEnd == string::npos)
       { // Check for binary data and if we found binary data? Bail out!
-        if(!ValidHeaderPacket(strResp))
+        if(!ValidHeaderPacket(strvResp))
           return SetErrorStaticSafe("Binary code in headers");
         // Add to full headers string
-        strHeaders += strResp;
+        strHeaders += strvResp;
         // Wait for next packet
         continue;
       } // Ok we got the headers. Collect data.
       bHeaders = false;
       // Get cut off point between headers to data and if we got it?
-      const size_t stInitial = strResp.length() - (stEnd + 4);
+      const size_t stInitial = strvResp.length() - (stEnd + 4);
       if(stInitial > 0)
       { // Push data into RX list
         PushDataSafe(plRX, stRX, mDest.MemRead(stEnd+4), stInitial);
         // Increment content read
         stContentRead += stInitial;
         // Truncate extra bytes
-        strResp.resize(stEnd);
+        strvResp = { mDest.MemPtr<char>(), stEnd };
       } // Check for binary code in the last packet returned? Bail out!
-      if(!ValidHeaderPacket(strResp))
+      if(!ValidHeaderPacket(strvResp))
         return SetErrorStaticSafe("Binary code in headers");
       // Add rest of response to headers
-      strHeaders += strResp;
+      strHeaders += strvResp;
       // Build output headers list by exploding header string
       pRegistry.ParserReInit(strHeaders, cCommon->CrLf(), ':');
       if(pRegistry.empty()) return SetErrorStaticSafe("No response");
@@ -835,11 +833,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       const Token tWords{ vlR->second, cCommon->Space() };
       if(tWords.size() < 3) return SetErrorStaticSafe("Unknown response");
       // Get protocol and if it is not valid?
-      const string strProtoRecv{ tWords.front() };
+      const string &strProtoRecv = tWords.front();
       if(strProtoRecv != "HTTP/1.0" && strProtoRecv != "HTTP/1.1")
         return SetErrorStaticSafe(StrFormat("Bad protocol '$'", strProtoRecv));
       // Get http status code string and if not a valid number?
-      const string strStatus{ tWords[1] };
+      const string &strStatus = tWords[1];
       if(!StrIsInt(strStatus))
         return SetErrorStaticSafe(StrFormat("Bad status '$'", strStatus));
       // Convert to integer and if valid?
@@ -854,10 +852,19 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // without having to perform any special string operations
       pRegistry.ParserPushOrUpdatePair(cParent->strRegVarPROTO, strProtoRecv);
       pRegistry.ParserPushOrUpdatePair(cParent->strRegVarCODE, strStatus);
-      // For each response var. Push key/value pair to TX registry
-      for(const StrNCStrMapPair &sncsmpPair : pRegistry)
-        PushTXPairSafe(sncsmpPair.first, sncsmpPair.second);
-      // If we got a content type?
+      { // We have to lock the TX list since a LUA function can read this
+        const LockGuard lgSocketSync{ mMutex };
+        for(const StrNCStrMapPair &sncsmpPair : pRegistry)
+        { // Get items and push into TX since we're not using it anymore. Make
+          // sure to include the null-terminator so we can use string_view for
+          // when LUA grabs the list.
+          PushData(plTX, stTX,
+            StrToLowCaseRef(UtilToNonConst(sncsmpPair.first)).c_str(),
+            sncsmpPair.first.size()+1);
+          PushData(plTX, stTX, sncsmpPair.second.c_str(),
+            sncsmpPair.second.size()+1);
+        }
+      } // If we got a content type?
       const StrNCStrMapConstIt sncsmciType{ pRegistry.find("content-type") };
       if(sncsmciType != pRegistry.cend())
         SocketLogSafe(LH_DEBUG, "Type is $", sncsmciType->second);
@@ -1209,34 +1216,33 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Set the event
     AddStatus(ssNS);
   }
-  /* -- Directly convert a socket's send queue to a table ------------------ */
-  void ToLuaTable(lua_State*const lS)
-  { // Lock access to packet list
+  /* -- Convert socket headers list to a table ----------------------------- */
+  void HeadersToTable(lua_State*const lS)
+  { // This function can only be called if we don't have a write thread
+    if(tWriter.ThreadIsJoinable()) return;
+    // Lock access to packet list
     const LockGuard lgSocketSync{ mMutex };
-    // Get transferred bytes count and if gt zero and divisble by 2?
+    // Return if there are packets and divisble by 2
     const size_t stCount = GetTXQCount();
-    if(stCount > 0 && stCount % 2 == 0)
-    { // Create the table, we're creating non-indexed key/value pairs
-      LuaUtilPushTable(lS, 0, stCount / 2);
-      // Generated string
-      string strVar;
-      // Repeat...
-      do
-      { // Get packet data in send qeue
-        Memory mbPacket;
-        GetPacket(mbPacket, plTX, stTX);
-        // If we haven't set the key name
-        if(strVar.empty()) { strVar = mbPacket.MemToStringSafe(); continue; }
-        // Get value string from packet and store entry
-        const string strVal{ mbPacket.MemToStringSafe() };
-        LuaUtilPushStr(lS, strVal);
-        LuaUtilSetField(lS, -2, strVar.c_str());
-        // Clear string
-        strVar.clear();
-      } // ...until there are no more packets to process
-      while(GetTXQCount() > 0);
-    } // Create the empty table
-    else LuaUtilPushTable(lS);
+    if(!stCount || stCount % 2) return LuaUtilPushTable(lS);
+    // Create the table, we're creating non-indexed key/value pairs
+    LuaUtilPushTable(lS, 0, stCount / 2);
+    // Currently selected variable
+    const char *cpVar = nullptr;
+    // For each packet
+    for(const Packet &pData : plTX)
+    { // Get variable or value (both are already safely null-terminated)
+      const Memory &mbPacket = pData.mData;
+      // Set the variable and continue if we haven't set it yet
+      if(!cpVar) { cpVar = mbPacket.MemPtr<char>(); continue; }
+      // Push value and set it as the variable
+      LuaUtilPushStrView(lS, mbPacket.MemToStringView());
+      LuaUtilSetField(lS, -2, cpVar);
+      // Done with variable
+      cpVar = nullptr;
+    } // Clear data and memory usage in queue
+    plTX.clear();
+    stTX = 0;
   }
   /* -- Send request to disconnect ----------------------------------------- */
   bool SendDisconnect(void)
@@ -1266,15 +1272,6 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       tReader.ThreadSetExit();
     // Closing
     return true;
-  }
-  /* -- Push key value pair ------------------------------------------------ */
-  void PushTXPairSafe(const string &strVar, const string &strVal)
-  { // Thread safety
-    const LockGuard lgSocketSync{ mMutex };
-    // Get items and push into TX
-    PushData(plTX, stTX, StrToLowCaseRef(UtilToNonConst(strVar)).data(),
-      strVar.size());
-    PushData(plTX, stTX, strVal.data(), strVal.size());
   }
   /* -- Valid Hostname checker --------------------------------------------- */
   static bool ValidAddress(const string &strA)

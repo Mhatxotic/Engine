@@ -460,6 +460,20 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #undef GLFW_EXPOSE_NATIVE_X11          // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_WAYLAND      // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_COCOA        // Done with this macro
+    /* --------------------------------------------------------------------- */
+    namespace MiniMP3                  // MINIMP3 API FUNCTIONS
+    { /* ------------------------------------------------------------------- */
+#define MINIMP3_IMPLEMENTATION         // Using MINIMP3 implementation
+#define MINIMP3_NO_STDIO               // No stdio routines
+#if defined(WINDOWS)                   // Using Windows
+# pragma warning(disable:4244 4267 4456 4706)
+#endif                                 // Using Windows
+#include <mp3/minimp3.h>               // Main decoder
+#include <mp3/minimp3_ex.h>            // Decoder utilities
+#if defined(WINDOWS)                   // Using Windows
+# pragma warning(default:4244 4267 4456 4706)
+#endif                                 // Using Windows
+    }
   };/* --------------------------------------------------------------------- */
   namespace NSGif                      // LIBNSGIF API FUNCTIONS
   { /* --------------------------------------------------------------------- */
@@ -495,11 +509,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #define AL_ALEXT_PROTOTYPES            // So can get alcResetDevice
 #include <al/alext.h>                  // Main header
 #undef AL_ALEXT_PROTOTYPES             // Extra functions check
-  };/* --------------------------------------------------------------------- */
-  namespace MiniMP3                    // MINIMP3 API FUNCTIONS
-  { /* --------------------------------------------------------------------- */
-#include <mp3/minimp3.h>               // Main header
-  } /* -- Ogg Includes ----------------------------------------------------- */
+  };/* -- Ogg Includes ----------------------------------------------------- */
   namespace Ogg                        // OGGVORBIS API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define OV_EXCLUDE_STATIC_CALLBACKS    // We don't need these callbacks

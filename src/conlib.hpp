@@ -220,7 +220,7 @@ for(const Certs::X509Pair &xPair : cSockets->GetCertList())
   sTable.Data(iC == pSubject.cend() ? "--" : CryptURLDecode(iC->second))
         .Data(iCN == pSubject.cend() ?
           cCommon->Unspec() : CryptURLDecode(iCN->second));
-} // Print output and number of shaders listed
+} // Print output and number of root certificates listed
 cConsole->AddLineA(sTable.Finish(),
   StrCPluraliseNum(cSockets->GetCertListSize(),
     "root certificate.", "root certificates."));
@@ -876,7 +876,7 @@ for(const ImageLib*const ilPtr : *cImageLibs)
 { // Get reference to class and write its data to the table
   const ImageLib &ilRef = *ilPtr;
   sTable.DataN(ilRef.CtrGet()).Data(StrFromEvalTokens({
-    { ilRef.HaveLoader(), 'L' }, { ilRef.HaveSaver(),  'S' }
+    { ilRef.HaveDecoder(), 'L' }, { ilRef.HaveEncoder(),  'S' }
   })).Data(ilRef.GetExt()).Data(ilRef.GetName());
 } // Log total plugins
 cConsole->AddLineA(sTable.Finish(),
@@ -1481,7 +1481,7 @@ for(const PcmLib*const plPtr : *cPcmLibs)
 { // Get reference to class and write its data to the table
   const PcmLib &plRef = *plPtr;
   sTable.DataN(plRef.CtrGet()).Data(StrFromEvalTokens({
-    { plRef.HaveLoader(), 'L' }, { plRef.HaveSaver(),  'S' }
+    { plRef.HaveDecoder(), 'L' }, { plRef.HaveEncoder(),  'S' }
   })).Data(plRef.GetExt()).Data(plRef.GetName());
 } // Log total plugins
 cConsole->AddLineA(sTable.Finish(),
@@ -2111,9 +2111,10 @@ for(const Video*const vPtr : *cVideos)
   const Video &vRef = *vPtr;
   sTable.DataN(vRef.CtrGet())
     .Data(StrFromEvalTokens({
-      { vRef.LuaRefIsSet(),       'L' }, { vRef.IsSourceAvailable(), 'A' },
+      { vRef.Get709(),            '7' }, { vRef.IsSourceAvailable(), 'A' },
       { vRef.FlagIsSet(FL_FILTER),'F' }, { vRef.GetKeyed(),          'K' },
-      { vRef.FlagIsSet(FL_PLAY),  'P' }, { vRef.FlagIsSet(FL_STOP),  'S' },
+      { vRef.LuaRefIsSet(),       'L' }, { vRef.FlagIsSet(FL_PLAY),  'P' },
+      { vRef.GetFDR(),            'R' }, { vRef.FlagIsSet(FL_STOP),  'S' },
       { vRef.FlagIsSet(FL_THEORA),'T' }, { vRef.FlagIsSet(FL_VORBIS),'V' },
     }))
     .Data(vRef.GetFormatAsIdentifier()).DataH(vRef.GetPixelFormat(),4)

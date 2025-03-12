@@ -17,6 +17,8 @@ static class Common final              // Members initially private
 { /* -- Private variables -------------------------------------------------- */
   const string     strTrue,            // C++ string as "true"
                    strFalse,           // C++ string as "false"
+                   strY,               // C++ string as "Y"
+                   strN,               // C++ string as "N"
                    strEquals,          // C++ string as "="
                    strNOne,            // C++ string as "-1"
                    strZero,            // C++ string as "0"
@@ -45,50 +47,33 @@ static class Common final              // Members initially private
   /* ----------------------------------------------------------------------- */
   const string &Blank(void) const { return strBlank; }
   const char *CBlank(void) const { return cpBlank; }
-  /* ----------------------------------------------------------------------- */
   const string &Tru(void) const { return strTrue; }
-  /* ----------------------------------------------------------------------- */
   const string &Fals(void) const { return strFalse; }
-  /* ----------------------------------------------------------------------- */
+  const string &Y(void) const { return strY; }
+  const string &N(void) const { return strN; }
   const string &Equals(void) const { return strEquals; }
-  /* ----------------------------------------------------------------------- */
   const string &NOne(void) const { return strNOne; }
-  /* ----------------------------------------------------------------------- */
   const string &Zero(void) const { return strZero; }
-  /* ----------------------------------------------------------------------- */
   const string &One(void) const { return strOne; }
-  /* ----------------------------------------------------------------------- */
   const string &Cr(void) const { return strCr; }
-  /* ----------------------------------------------------------------------- */
   const string &Lf(void) const { return strLf; }
-  /* ----------------------------------------------------------------------- */
   const string &CrLf(void) const { return strCrLf; }
-  /* ----------------------------------------------------------------------- */
   const string &CrLf2(void) const { return strCrLf2; }
-  /* ----------------------------------------------------------------------- */
   const string &LfCr(void) const { return strLfCr; }
-  /* ----------------------------------------------------------------------- */
   const string &Space(void) const { return strSpace; }
-  /* ----------------------------------------------------------------------- */
   const string &Ellipsis(void) const { return strEllipsis; }
-  /* ----------------------------------------------------------------------- */
   const string &FSlash(void) const { return strFSlash; }
-  /* ----------------------------------------------------------------------- */
   char CFSlash(void) const { return cFSlash; }
-  /* ----------------------------------------------------------------------- */
   const string &Unspec(void) const { return strUnspec; }
-  /* ----------------------------------------------------------------------- */
   const string &Null(void) const { return strNull; }
-  /* ----------------------------------------------------------------------- */
   const string &Period(void) const { return strPeriod; }
-  /* ----------------------------------------------------------------------- */
   const string &TwoPeriod(void) const { return strTwoPeriod; }
-  /* ----------------------------------------------------------------------- */
   const string &LuaName(void) const { return strLuaName; }
   /* -- Default Constructor ------------------------------------------------ */
   Common(void) :                       // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     strTrue{ "true" },                 strFalse{ "false" },
+    strY{ "Y" },                       strN{ "N" },
     strEquals{ "=" },                  strNOne{ "-1" },
     strZero{ "0" },                    strOne{ "1" },
     strSpace{ " " },                   strEllipsis{ "..." },
@@ -625,8 +610,8 @@ static const string StrShortFromDuration(const double dDuration,
 /* -- Return true of false ------------------------------------------------- */
 static const string &StrFromBoolTF(const bool bCondition)
   { return bCondition ? cCommon->Tru() : cCommon->Fals(); }
-static const char *StrFromBoolYN(const bool bCondition)
-  { return bCondition ? "X" : "-"; }
+static const string &StrFromBoolYN(const bool bCondition)
+  { return bCondition ? cCommon->Y() : cCommon->N(); }
 /* -- Count occurence of string -------------------------------------------- */
 static size_t StrCountOccurences(const string &strStr, const string &strWhat)
 { // Zero if string is empty

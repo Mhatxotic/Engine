@@ -33,12 +33,12 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     const ImageFormat ifNId,           // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncLoad &cflNFunc         // Function to call when loading
+    const CbFuncDecoder &cfdNFunc         // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    DataFormat{ ifNId, strvNName, strvNExt, cflNFunc, cParent->size() }
+    DataFormat{ ifNId, strvNName, strvNExt, cfdNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Constructor with saver function only ------------------------------- */
@@ -47,12 +47,12 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     const ImageFormat ifNId,           // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncSave &cfsNFunc         // Function to call when saving
+    const CbFuncEncoder &cfeNFunc         // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    DataFormat{ ifNId, strvNName, strvNExt, cfsNFunc, cParent->size() }
+    DataFormat{ ifNId, strvNName, strvNExt, cfeNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Constructor with both loader and saver functions ------------------- */
@@ -61,13 +61,13 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     const ImageFormat ifNId,           // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncLoad &cflNFunc,        // Function to call when loading
-    const CbFuncSave &cfsNFunc         // Function to call when saving
+    const CbFuncDecoder &cfdNFunc,        // Function to call when loading
+    const CbFuncEncoder &cfeNFunc         // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    DataFormat{ ifNId, strvNName, strvNExt, cflNFunc, cfsNFunc,
+    DataFormat{ ifNId, strvNName, strvNExt, cfdNFunc, cfeNFunc,
       cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     { }
@@ -93,7 +93,7 @@ static void ImageSave(const ImageFormat ifId, const string &strFile,
     { // Created file
       bCreated = true;
       // Save the image and log the result if succeeded?
-      if(ilRef.GetSaver()(fsData, idData, isData))
+      if(ilRef.GetEncoder()(fsData, idData, isData))
       { // Log that we saved the image successfully and return
         cLog->LogInfoExSafe("Image saved '$' as $<$>! ($x$x$)",
           strFileNX, ilRef.GetExt(), ifId, isData.DimGetWidth(),
@@ -121,7 +121,7 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
   // Capture exceptions
   try
   { // Load the image, log and return and if succeeded
-    if(ilRef.GetLoader()(fmData, idData))
+    if(ilRef.GetDecoder()(fmData, idData))
       return cLog->LogInfoExSafe("Image loaded '$' directly as $<$>! ($x$x$)",
         fmData.IdentGet(), ilRef.GetExt(), ifId, idData.DimGetWidth(),
         idData.DimGetHeight(), idData.GetBitsPerPixel());
@@ -146,7 +146,7 @@ static void ImageLoad(FileMap &fmData, ImageData &idData)
     // Capture exceptions
     try
     { // Load the image, log and return if we loaded successfully
-      if(ilRef.GetLoader()(fmData, idData))
+      if(ilRef.GetDecoder()(fmData, idData))
         return cLog->LogInfoExSafe("Image loaded '$' ($x$x$) as $!",
           fmData.IdentGet(), idData.DimGetWidth(), idData.DimGetHeight(),
           idData.GetBitsPerPixel(), ilRef.GetExt());

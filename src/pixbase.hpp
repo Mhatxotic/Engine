@@ -39,7 +39,7 @@ class SysBase :                        // Safe exception handler namespace
           default:
           { // Report read string to log
             cLog->LogWarningExSafe("$<$>: $",
-              IdentGet(), stRead, MemToStringView(stRead));
+              IdentGet(), stRead, MemToStringViewSafe(stRead));
             // Fallthrough to break
             [[fallthrough]];
           } // Handle was closed? Terminate the thread

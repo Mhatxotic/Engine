@@ -299,6 +299,9 @@ template<typename ...VarArgs, typename AnyType>
     const VarArgs &...vaVars)
 { // Type is std::string?
   if constexpr(is_same_v<AnyType, string>) LuaUtilPushStr(lS, atVal);
+  // Type is std::string_view?
+  else if constexpr(is_same_v<AnyType, string_view>)
+    LuaUtilPushStrView(lS, atVal);
   // Type is boolean?
   else if constexpr(is_same_v<AnyType, bool>) LuaUtilPushBool(lS, atVal);
   // Type is any pointer type (assuming char*, don't send anything else)

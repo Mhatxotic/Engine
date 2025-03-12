@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.2.28.1 -->
-<!-- Automatically built at Sat Mar 01 00:33:27 2025 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.2.28.1 -->
+<!-- Reference for the Mhatxotic Engine API version 25.3.11.23 -->
+<!-- Automatically built at Tue Mar 11 14:42:13 2025 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.3.11.23 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.2.28.1">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.3.11.23">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.2.28.1">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.3.11.23">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.2.28.1">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.3.11.23">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.2.28.1 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.3.11.23 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.2.28.1 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.3.11.23 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.2.28.1 API reference</H1>
+	<H1>Mhatxotic Engine 25.3.11.23 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 842 functions (402 members, 440 methods) and 27 consts in 30 namespaces with 83 commands and 210 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 844 functions (402 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 210 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1635,7 +1635,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(37 methods)</I>
+								<B>Methods</B> <I>(39 methods)</I>
 								<OL>
 									<LI><A href="#Video:Advance">Advance</A></LI>
 									<LI><A href="#Video:Awaken">Awaken</A></LI>
@@ -1661,10 +1661,12 @@
 									<LI><A href="#Video:Rewind">Rewind</A></LI>
 									<LI><A href="#Video:SetCRGBA">SetCRGBA</A></LI>
 									<LI><A href="#Video:SetCX">SetCX</A></LI>
+									<LI><A href="#Video:SetFDR">SetFDR</A></LI>
 									<LI><A href="#Video:SetFilter">SetFilter</A></LI>
 									<LI><A href="#Video:SetKeyColour">SetKeyColour</A></LI>
 									<LI><A href="#Video:SetKeyed">SetKeyed</A></LI>
 									<LI><A href="#Video:SetLoop">SetLoop</A></LI>
+									<LI><A href="#Video:SetRec709">SetRec709</A></LI>
 									<LI><A href="#Video:SetTCLTRB">SetTCLTRB</A></LI>
 									<LI><A href="#Video:SetTCLTWH">SetTCLTWH</A></LI>
 									<LI><A href="#Video:SetTCX">SetTCX</A></LI>
@@ -9613,7 +9615,7 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Result</U> = Util.GetRatio(<I><U>Width</U>, <U>Height</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Width</U> <I>(integer)</I> = The width number.<BR><U>Height</U> <I>(integer)</I> = The height number<BR></PRE>
+		<PRE><U>Width</U> <I>(integer)</I> = The width integer.<BR><U>Height</U> <I>(integer)</I> = The height integer.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Result</U> <I>(string)</I> = The ratio between the two numbers.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -10890,6 +10892,16 @@
 		<PRE>Stores the specified colour intensities on each vertex for the Video&#x3a;Blit&#x28;&#x29; function&#x2e;<BR></PRE>
 		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Video:SetFDR" style="display:none">
+		<H3>Video:SetFDR</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Enabled</U> = Video:SetFDR()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Enabled</U> <I>(boolean)</I> = Video should be full dynamic range?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Enabling this changes the shader to adjust for full&#x2d;dynamic range else uses the defaul partial dynamic range&#x2e;<BR></PRE>
+		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Video:SetFilter" style="display:none">
 		<H3>Video:SetFilter</H3>
 		<H4>Syntax:-</H4>
@@ -10928,6 +10940,16 @@
 		<PRE><U>Count</U> <I>(integer)</I> = New playback loop count (-1 = infinity).<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Sets the new playback loop count&#x2e;<BR></PRE>
+		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Video:SetRec709" style="display:none">
+		<H3>Video:SetRec709</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Enabled</U> = Video:SetRec709()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Enabled</U> <I>(boolean)</I> = Video should be Rec.709?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Enabling this changes the shader to use Rec&#x2e;709 calculations if true else uses Rec&#x2e;601 calculations if false&#x2e;<BR></PRE>
 		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Video:SetTCLTRB" style="display:none">
@@ -12496,6 +12518,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sat Mar 01 00:33:27 2025 +0000</ADDRESS>
+	This document was generated at Tue Mar 11 14:42:13 2025 +0000</ADDRESS>
 </BODY>
 </HTML>

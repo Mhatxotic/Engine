@@ -48,6 +48,15 @@ class MemConst                         // Start of const MemBase Block Class
       { XC(cpAddr, "Position",  stPos,     "Amount",  stBytes,
                    "Maximum",   stSize,    "AddrPos", MemDoRead<void*>(stPos),
                    "AddrStart", MemPtr(),  "AddrMax", MemPtrEnd()); }
+  /* -- Find a NULL character in the memory -------------------------------- */
+  size_t MemFindNull(void) const
+  { // If memory is not empty, find a null character and resize up to it
+    if(const char*const cpLocPtr =
+         reinterpret_cast<char*>(memchr(MemPtr<char>(), '\0', MemSize())))
+      return static_cast<size_t>(cpLocPtr-MemPtr<char>());
+    // Not found
+    return StdMaxSizeT;
+  }
   /* -- Set size ----------------------------------------------------------- */
   void MemSetPtr(char*const cpNPtr = nullptr) { cpPtr = cpNPtr; }
   void MemSetSize(const size_t stBytes = 0) { stSize = stBytes; }
@@ -147,8 +156,8 @@ class MemConst                         // Start of const MemBase Block Class
     // Return the tested bit
     return UtilBitTest(MemPtr<char>(), stPos);
   }
-  /* -- Stringview'ify the memory and check for null-terminator ------------ */
-  const string_view MemToStringView(const size_t stBytes) const
+  /* -- Stringview'ify the memory ------------------------------------------ */
+  const string_view MemToStringViewSafe(const size_t stBytes) const
   { // Return empty string if no size
     if(MemIsEmpty()) return { };
     // Check position
@@ -158,20 +167,26 @@ class MemConst                         // Start of const MemBase Block Class
     // There is no null character so we have to limit the size
     return { MemPtr<char>(), stBytes };
   }
+  /* -- Stringview'ify the memory with the current size -------------------- */
+  const string_view MemToStringViewSafe(void) const
+    { return MemToStringViewSafe(MemSize()); }
+  /* -- Stringviewify the memory (already assumes last char is '\0') ------- */
+  const string_view MemToStringView(void) const
+    { return { MemPtr<char>(), MemSize()-1 }; }
   /* -- Stringview'ify the memory ------------------------------------------ */
   const string MemToString(void) const
     { return { MemPtr<char>(), MemSize() }; }
   /* -- Stringify the memory ----------------------------------------------- */
   const string MemToStringSafe(void) const
-  { // Return empty string if no size
-    if(MemIsEmpty()) return { };
-    // Find a null character and if we found it? We know what the size is!
-    if(const char*const cpLocPtr =
-      reinterpret_cast<char*>(memchr(MemPtr<char>(), '\0', MemSize())))
-        return { MemPtr<char>(),
-          static_cast<size_t>(cpLocPtr-MemPtr<char>()) };
-    // There is no null character so we have to limit the size
-    return { MemPtr<char>(), MemSize() };
+  { // Return empty string if no memory
+    if(MemIsEmpty()) return {};
+    // Find the null character and if we find it?
+    switch(const size_t stPos = MemFindNull())
+    { // Not found? Return full string
+      case StdMaxSizeT: return MemToString();
+      // Anything else?
+      default: return { MemPtr<char>(), stPos };
+    }
   }
   /* -- Return if current size would overflow specified type --------------- */
   template<typename Type=size_t>bool MemIsSizeOverflow(void) const
@@ -398,6 +413,18 @@ class Memory :
   /* -- Resize memory upwards never downwards ------------------------------ */
   void MemResizeUp(const size_t stBytes)
     { if(stBytes > MemSize()) MemDoResize(stBytes); }
+  /* -- Resize up to the NULL terminator ----------------------------------- */
+  void MemResizeToNull(void)
+  { // Return if no memory
+    if(MemIsEmpty()) return;
+    // Find the null character and if we find it?
+    switch(const size_t stPos = MemFindNull())
+    { // Not found? Nothing to do
+      case StdMaxSizeT: break;
+      // Anything else? Do the resize INCLUDING the null character
+      default: MemResize(stPos + 1); break;
+    }
+  }
   /* -- Append the specified amount of memory ------------------------------ */
   void MemAppend(const void*const vpSrc, const size_t stBytes)
   { // Bail out if the pointer is invalid

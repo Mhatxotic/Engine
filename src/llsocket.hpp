@@ -191,7 +191,7 @@ LLFUNC(PopSendQ, 2,
 // ? Removes all data from the pending write queue. If used as a HTTP socket
 // ? then this may contain return header information (use PopSendQT() instead).
 /* ------------------------------------------------------------------------- */
-LLFUNC(PopSendQT, 1, AgSocket{lS, 1}().ToLuaTable(lS))
+LLFUNC(PopSendQT, 1, AgSocket{lS, 1}().HeadersToTable(lS))
 /* ========================================================================= */
 // $ Socket:RecvQCount
 // < Count:integer=The current number of packets waiting to be processed.

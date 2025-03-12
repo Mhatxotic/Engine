@@ -49,15 +49,15 @@ FILETYPE           VFT_APP
   {
     BLOCK "08091252"
     {
-      VALUE "CompanyName",      "MhatXotic Design"
-      VALUE "FileDescription",  "MhatXotic Engine"
+      VALUE "CompanyName",      "Mhatxotic Design"
+      VALUE "FileDescription",  "Mhatxotic Engine"
       VALUE "FileVersion",      VER_STR
-      VALUE "LegalCopyright",   "© MhatXotic Design. All Rights Reserved."
+      VALUE "LegalCopyright",   "© Mhatxotic Design. All Rights Reserved."
       VALUE "OriginalFilename", EXE
       VALUE "InternalName",     EXE
-      VALUE "ProductName",      "MhatXotic Engine"
+      VALUE "ProductName",      "Mhatxotic Engine"
       VALUE "ProductVersion",   VER_STR STATE BITS
-      VALUE "LegalTrademarks",  "©, ® and ™ of MhatXotic Design."
+      VALUE "LegalTrademarks",  "©, ® and ™ of Mhatxotic Design."
       VALUE "Comments",         VER_DATE
     }
   }

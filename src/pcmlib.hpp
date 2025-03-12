@@ -30,11 +30,11 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     const PcmFormat pfNId,             // The PFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncLoad &cflNFunc         // Function to call when loading
+    const CbFuncDecoder &cfdNFunc         // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    DataFormat{ pfNId, strvNName, strvNExt, cflNFunc, cParent->size() }
+    DataFormat{ pfNId, strvNName, strvNExt, cfdNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Constructor with saver function only ------------------------------- */
@@ -43,11 +43,11 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     const PcmFormat pfNId,             // The PFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncSave &cfsNFunc         // Function to call when saving
+    const CbFuncEncoder &cfeNFunc         // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    DataFormat{ pfNId, strvNName, strvNExt, cfsNFunc, cParent->size() }
+    DataFormat{ pfNId, strvNName, strvNExt, cfeNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Constructor with both loader and saver functions ------------------- */
@@ -56,12 +56,12 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     const PcmFormat pfNId,             // The PFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncLoad &cflNFunc,        // Function to call when loading
-    const CbFuncSave &cfsNFunc         // Function to call when saving
+    const CbFuncDecoder &cfdNFunc,        // Function to call when loading
+    const CbFuncEncoder &cfeNFunc         // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    DataFormat{ pfNId, strvNName, strvNExt, cflNFunc, cfsNFunc,
+    DataFormat{ pfNId, strvNName, strvNExt, cfdNFunc, cfeNFunc,
       cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     { }
@@ -77,7 +77,7 @@ static void PcmLoadFile(const PcmFormat pfId, FileMap &fmData, PcmData &pdData)
   // Capture exceptions
   try
   { // Load the image, log and return if loaded successfully
-    if(plRef.GetLoader()(fmData, pdData))
+    if(plRef.GetDecoder()(fmData, pdData))
       return cLog->LogInfoExSafe(
         "Pcm loaded '$' directly as $<$>! ($;$;$;$$;$;$;$$)",
         fmData.IdentGet(), plRef.GetExt(), pfId, pdData.GetRate(),
@@ -105,7 +105,7 @@ static void PcmLoadFile(FileMap &fmData, PcmData &pdData)
     // Capture exceptions
     try
     { // Load the bitmap, log and return if we loaded successfully
-      if(plRef.GetLoader()(fmData, pdData))
+      if(plRef.GetDecoder()(fmData, pdData))
         return cLog->LogInfoExSafe("Pcm loaded '$' as $! ($;$;$;$$;$;$;$$)",
           fmData.IdentGet(), plRef.GetExt(), pdData.GetRate(),
           pdData.GetChannels(), pdData.GetBits(), hex, pdData.GetFormat(),
