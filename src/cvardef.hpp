@@ -192,8 +192,8 @@ enum CVarEnums : size_t
   /* -- Fmv cvars ---------------------------------------------------------- */
   FMV_ABUFFER,      FMV_IOBUFFER,      FMV_MAXDRIFT,
   /* -- Input cvars -------------------------------------------------------- */
-  INP_CLAMPMOUSE,    INP_JOYDEFFDZ,    INP_JOYDEFRDZ,       INP_FSTOGGLER,
-  INP_NOFOCUSIGNORE, INP_RAWMOUSE,     INP_STICKYKEY,       INP_STICKYMOUSE,
+  INP_CLAMPMOUSE,   INP_JOYDEFFDZ,     INP_JOYDEFRDZ,       INP_FSTOGGLER,
+  INP_RAWMOUSE,     INP_STICKYKEY,     INP_STICKYMOUSE,
   /* -- Network cvars ------------------------------------------------------ */
   NET_CBPFLAG1,     NET_CBPFLAG2,      NET_BUFFER,          NET_RTIMEOUT,
   NET_STIMEOUT,     NET_CIPHERTLSv1,   NET_CIPHERTLSv13,    NET_CASTORE,

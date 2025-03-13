@@ -18,14 +18,14 @@ using namespace IIdent::P;             using namespace ILog::P;
 using namespace ILuaEvt::P;            using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IMemory::P;
 using namespace IOal::P;               using namespace IOgl::P;
-using namespace IPcmLib::P;            using namespace IShader::P;
-using namespace IShaders::P;           using namespace ISource::P;
-using namespace IStd::P;               using namespace IStream::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IThread::P;            using namespace ITimer::P;
-using namespace IUtil::P;              using namespace Lib::Ogg;
-using namespace Lib::Ogg::Theora;      using namespace Lib::OpenAL;
-using namespace Lib::OS::GlFW;
+using namespace IPcmFormat::P;         using namespace IPcmLib::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace ISource::P;            using namespace IStd::P;
+using namespace IStream::P;            using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace ITimer::P;             using namespace IUtil::P;
+using namespace Lib::Ogg;              using namespace Lib::Ogg::Theora;
+using namespace Lib::OpenAL;           using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */
@@ -237,7 +237,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         if(cOal->Have32FPPB())
         { // Allocate required memory and do the conversion
           MemResizeUp(stFrameSize);
-          PcmF32FromVorbisFrames(fpPCM, stFrames, stChannels,
+          cCodecOGG->F32FromVorbisFrames(fpPCM, stFrames, stChannels,
             MemPtr<ALfloat>());
         } // If the hardware only supports 16-bit (2b) integer playback?
         else
@@ -247,7 +247,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           // of CPU time to keep reallocating it hence the MemResizeUp().
           stFrameSize >>= 1;
           MemResizeUp(stFrameSize);
-          PcmI16FromVorbisFrames(fpPCM, stFrames, stChannels,
+          cCodecOGG->I16FromVorbisFrames(fpPCM, stFrames, stChannels,
             MemPtr<ALshort>());
         } // Generate a buffer for the pcm data and if succeeded?
         const ALuint uiBuffer = cOal->CreateBuffer();
@@ -719,7 +719,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(FlagIsSet(FL_THEORA))
     { // Parse the comments and then free the strings
       ssThMetaData =
-        StdMove(PcmVorbisParseComments(tcData.user_comments, tcData.comments));
+        StdMove(cCodecOGG->VorbisParseComments(tcData.user_comments,
+          tcData.comments));
       th_comment_clear(&tcData);
       // Allocate a new one and throw error if not allocated
       tdcPtr = th_decode_alloc(&tiData, tsiPtr);
@@ -772,7 +773,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(FlagIsSet(FL_VORBIS))
     { // Parse the comments and then free the strings
       ssVoMetaData =
-        StdMove(PcmVorbisParseComments(vcData.user_comments, vcData.comments));
+        StdMove(cCodecOGG->VorbisParseComments(vcData.user_comments,
+          vcData.comments));
       vorbis_comment_clear(&vcData);
       // Make sure rate is sane
       if(GetSampleRate() < 1 || GetSampleRate() > 192000)

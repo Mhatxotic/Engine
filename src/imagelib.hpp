@@ -15,7 +15,7 @@ namespace IImageLib {                  // Start of private module namespace
 using namespace ICollector::P;         using namespace IDataFormat::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IFileMap::P;           using namespace IFStream::P;
-using namespace IIdent::P;             using namespace IImageDef::P;
+using namespace IImageDef::P;          using namespace IIdent::P;
 using namespace ILog::P;               using namespace ILuaLib::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;
@@ -33,7 +33,7 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     const ImageFormat ifNId,           // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncDecoder &cfdNFunc         // Function to call when loading
+    const CbFuncDecoder &cfdNFunc      // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
@@ -47,7 +47,7 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     const ImageFormat ifNId,           // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncEncoder &cfeNFunc         // Function to call when saving
+    const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
@@ -61,8 +61,8 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     const ImageFormat ifNId,           // The IFMT_* id
     const string_view &strvNName,      // The name of the codec
     const string_view &strvNExt,       // The default extension for the codec
-    const CbFuncDecoder &cfdNFunc,        // Function to call when loading
-    const CbFuncEncoder &cfeNFunc         // Function to call when saving
+    const CbFuncDecoder &cfdNFunc,     // Function to call when loading
+    const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent

@@ -30,7 +30,7 @@ namespace LLStream {                   // Stream namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IStd::P;
 using namespace IStream::P;            using namespace Common;
-using namespace Lib::Ogg;
+using Lib::Ogg::ogg_int64_t;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Stream common helper classes                                        ## **

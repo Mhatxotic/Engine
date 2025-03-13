@@ -11,19 +11,21 @@
 namespace IPcmFormat {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IFlags;                using namespace ILog::P;
-using namespace IMemory::P;            using namespace IOal::P;
+using namespace IIdent::P;             using namespace IFlags;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IOal::P;               using namespace IPcmDef::P;
 using namespace IPcmLib::P;            using namespace IStd::P;
-using namespace IUtil::P;              using namespace Lib::OS::MiniMP3;
-using namespace Lib::Ogg;              using namespace Lib::OpenAL;
+using namespace IString::P;            using namespace IUtil::P;
+using namespace Lib::OS::MiniMP3;      using namespace Lib::Ogg;
+using namespace Lib::OpenAL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Windows WAVE format                                             WAV ## **
 ** ######################################################################### **
-** -- WAV Codec Object ----------------------------------------------------- */
-class CodecWAV final :
+** ------------------------------------------------------------------------- */
+static class CodecWAV final :          // WAV codec object
   /* -- Base classes ------------------------------------------------------- */
   private PcmLib                       // Pcm format helper class
 { /* -- WAV header layout -------------------------------------------------- */
@@ -179,13 +181,14 @@ class CodecWAV final :
     { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CodecWAV)            // Suppress default functions for safety
-};/* -- End ---------------------------------------------------------------- */
+  /* -- End ---------------------------------------------------------------- */
+} *cCodecWAV = nullptr;                // Codec pointer
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Core Audio Format                                               CAF ## **
 ** ######################################################################### **
-** -- CAF Codec Object ----------------------------------------------------- */
-class CodecCAF final :
+** ------------------------------------------------------------------------- */
+static class CodecCAF final :          // CAF codec object
   /* -- Base classes ------------------------------------------------------- */
   private PcmLib                       // Pcm format helper class
 { /* -- CAF header layout -------------------------------------------------- */
@@ -350,16 +353,74 @@ class CodecCAF final :
     { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CodecCAF)            // Suppress default functions for safety
-};/* -- End ---------------------------------------------------------------- */
+  /* -- End ---------------------------------------------------------------- */
+} *cCodecCAF = nullptr;                // Codec pointer
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Ogg Vorbis                                                      OGG ## **
 ** ######################################################################### **
-** -- OGG Codec Object ----------------------------------------------------- */
-class CodecOGG final :
+** ------------------------------------------------------------------------- */
+static class CodecOGG final :          // OGG codec object
   /* -- Base classes ------------------------------------------------------- */
-  private PcmLib                       // Pcm format helper class
-{ /* -- Loader for WAV files --------------------------------------- */ public:
+  private PcmLib,                      // Pcm format helper class
+  private IdMap<>                      // Ogg error codes
+{ /* -- Private variables ------------------------------------------ */ public:
+  const ov_callbacks ovcCallbacks;     // Vorbis callbacks
+  /* -- Vorbis read callback --------------------------------------- */ public:
+  static size_t VorbisRead(void*const vpPtr,
+    size_t stSize, size_t stCount, void*const vFmClassPtr)
+      { return reinterpret_cast<FileMap*>(vFmClassPtr)->
+          FileMapReadToAddr(vpPtr, stSize * stCount); }
+  /* -- Vorbis seek callback ----------------------------------------------- */
+  static int VorbisSeek(void*const vFmClassPtr, ogg_int64_t qOffset, int iLoc)
+    { return static_cast<int>(reinterpret_cast<FileMap*>(vFmClassPtr)->
+        FileMapSeek(static_cast<size_t>(qOffset), iLoc)); }
+  /* -- Vorbis close callback ---------------------------------------------- */
+  static int VorbisClose(void*const) { return 1; }
+  /* -- Vorbis tell callback ----------------------------------------------- */
+  static long VorbisTell(void*const vFmClassPtr)
+    { return static_cast<long>(reinterpret_cast<FileMap*>(vFmClassPtr)->
+        FileMapTell()); }
+  /* -- Return generic ogg callback functions ------------------------------ */
+  const ov_callbacks &GetCallbacks(void) { return ovcCallbacks; }
+  /* -- Convert vorbis encoded frames to 32-bit floating point PCM audio ----- */
+  void F32FromVorbisFrames(const ALfloat*const*const fpFramesIn,
+    const size_t stFrames, const size_t stChannels, ALfloat *fpPCMOut)
+  { // Convert ogg frames data to native PCM float 32-bit audio
+    for(size_t stFrameIndex = 0; stFrameIndex < stFrames; ++stFrameIndex)
+      for(size_t stChanIndex = 0; stChanIndex < stChannels; ++stChanIndex)
+        *(fpPCMOut++) = fpFramesIn[stChanIndex][stFrameIndex];
+  }
+  /* -- Convert vorbis encoded frames to 16-bit integer PCM audio ------------ */
+  void I16FromVorbisFrames(const ALfloat*const*const fpFramesIn,
+    const size_t stFrames, const size_t stChannels, ALshort *wPCMOut)
+  { // Convert ogg frames data to native PCM integer 16-bit audio
+    for(size_t stFrameIndex = 0; stFrameIndex < stFrames; ++stFrameIndex)
+      for(size_t stChanIndex = 0; stChanIndex < stChannels; ++stChanIndex)
+        *(wPCMOut++) = UtilClamp(static_cast<ALshort>
+          (rint(fpFramesIn[stChanIndex][stFrameIndex]*32767.f)),
+          -32767, 32767);
+  }
+  /* -- Parse vorbis comments block ------------------------------------------ */
+  StrNCStrMap VorbisParseComments(char **const clpPtr, const int iCount)
+  { // Metadata to return
+    StrNCStrMap ssMetaData;
+    // Enumerate all the strings...
+    StdForEach(seq, clpPtr, clpPtr+iCount, [&ssMetaData](char*const cpStr)
+    { // Find equals delimiter and if we find it?
+      if(char*const cpPtr = strchr(cpStr, '='))
+      { // Remove separator (safe), add key/value pair and readd separator
+        *cpPtr = '\0';
+        ssMetaData.insert(ssMetaData.cend(), { cpStr, cpPtr+1 });
+      } // We at least have a string so add it as key with empty value
+      else ssMetaData.insert(ssMetaData.cend(), { cpStr, cCommon->CBlank() });
+    }); // Return built metadata
+    return ssMetaData;
+  }
+  template<typename IntType>
+    const string_view &GetOggErr(const IntType itCode) const
+      { return Get(static_cast<unsigned int>(itCode)); }
+  /* -- Loader for WAV files ----------------------------------------------- */
   bool Decode(FileMap &fmData, PcmData &pdData)
   { // Check magic and that the file has the OggS string header
     if(fmData.MemSize() < 4 || fmData.FileMapReadVar32LE() != 0x5367674FUL)
@@ -370,9 +431,9 @@ class CodecOGG final :
     OggVorbis_File vorbisFile;
     // Open ogg file and pass callbacks and if failed? Throw error
     if(const int iR = ov_open_callbacks(&fmData, &vorbisFile, nullptr, 0,
-      PcmGetOggCallbacks()))
+      GetCallbacks()))
         XC("OGG init context failed!",
-           "Code", iR, "Reason", cOal->GetOggErr(iR));
+           "Code", iR, "Reason", GetOggErr(iR));
     // Put in a unique ptr
     typedef unique_ptr<OggVorbis_File, function<decltype(ov_clear)>>
       OggFilePtr;
@@ -405,7 +466,7 @@ class CodecOGG final :
       { // Error occured? Bail out
         if(lBytesRead < 0)
           XC("OGG decode failed!",
-             "Error", lBytesRead, "Reason", cOal->GetOggErr(lBytesRead));
+             "Error", lBytesRead, "Reason", GetOggErr(lBytesRead));
         // Move position onwards
         qwPos += lBytesRead;
       } // End of file so break;
@@ -422,35 +483,54 @@ class CodecOGG final :
   CodecOGG(void) :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_OGG, "Xiph.Org OGG Audio", "OGG",
-      bind(&CodecOGG::Decode, this, _1, _2) }
+      bind(&CodecOGG::Decode, this, _1, _2) },
+    IdMap{{                            // Ogg error codes
+      IDMAPSTR(OV_EOF),                IDMAPSTR(OV_HOLE),
+      IDMAPSTR(OV_FALSE),              IDMAPSTR(OV_EREAD),
+      IDMAPSTR(OV_EFAULT),             IDMAPSTR(OV_EIMPL),
+      IDMAPSTR(OV_EINVAL),             IDMAPSTR(OV_ENOTVORBIS),
+      IDMAPSTR(OV_EBADHEADER),         IDMAPSTR(OV_EVERSION),
+      IDMAPSTR(OV_ENOTAUDIO),          IDMAPSTR(OV_EBADPACKET),
+      IDMAPSTR(OV_EBADLINK),           IDMAPSTR(OV_ENOSEEK)
+    }, "OV_UNKNOWN" },
+    ovcCallbacks{ VorbisRead, VorbisSeek, VorbisClose, VorbisTell }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CodecOGG)            // Suppress default functions for safety
-};/* -- End ---------------------------------------------------------------- */
+  /* -- End ---------------------------------------------------------------- */
+} *cCodecOGG = nullptr;                // Codec pointer
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## MPEG Layer-3                                                    MP3 ## **
 ** ######################################################################### **
-** -- MP3 codec object ----------------------------------------------------- */
-class CodecMP3 final :
+** ------------------------------------------------------------------------- */
+static class CodecMP3 final :          // MP3 codec object
   /* -- Base classes ------------------------------------------------------- */
-  private PcmLib                       // Pcm format helper class
+  private PcmLib,                      // Pcm format helper class
+  private IdMap<int>                   // MiniMP3 error codes
 { /* -- Loader for MP3 files ----------------------------------------------- */
   bool Decode(FileMap &fmData, PcmData &pdData)
-  { // See if it's an MP3 first and return if it is not
-    if(mp3dec_detect_buf(fmData.MemPtr<uint8_t>(), fmData.MemSize()))
-      return false;
+  { // Limit specified file size as 'int' and limit it to 2GB because the
+    // original Minimp3 headers are littered with unsafe type conversions so
+    // we changed all references of 'size_t', 'uint64_t', 'unsigned' to 'int'
+    // to here to make the call safe and optimal.
+    const int iSize = UtilIntOrMax<int>(fmData.MemSize());
+    // See if it's an MP3 first and return if it is not
+    if(mp3dec_detect_buf(fmData.MemPtr<uint8_t>(), iSize)) return false;
     // Initialise per-thread context and file data
     mp3dec_t mpdContext;
     mp3dec_init(&mpdContext);
     mp3dec_file_info_t mfiData;
     // Initialise context
     if(const int iResult = mp3dec_load_buf(&mpdContext,
-      fmData.MemPtr<uint8_t>(), fmData.MemSize(), &mfiData, nullptr, nullptr))
-        XC("Failure decoding MPEG data!", "Result", iResult);
+      fmData.MemPtr<uint8_t>(), iSize, &mfiData, nullptr, nullptr))
+        XC("Failure decoding MPEG data!",
+            "Code", iResult, "Reason", Get(iResult));
     // This decoder doesn't track the buffer it allocated so we'll just take it
-    pdData.aPcmL = { mfiData.samples*sizeof(mp3d_sample_t), mfiData.buffer };
+    pdData.aPcmL =
+      { static_cast<size_t>(mfiData.samples)*sizeof(mp3d_sample_t),
+        mfiData.buffer };
     // Error if invalid channels
     if(!pdData.SetChannelsSafe(static_cast<PcmChannelType>(mfiData.channels)))
       XC("Invalid MPEG channel count!", "Channels", mfiData.channels);
@@ -468,12 +548,19 @@ class CodecMP3 final :
   CodecMP3(void) :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_MP3, "MPEG Layer 1-3 Audio", "MP3",
-      bind(&CodecMP3::Decode, this, _1, _2) }
+      bind(&CodecMP3::Decode, this, _1, _2) },
+    IdMap{{                            // Mp3 error codes
+      IDMAPSTR(MP3D_E_PARAM),          IDMAPSTR(MP3D_E_MEMORY),
+      IDMAPSTR(MP3D_E_IOERROR),        IDMAPSTR(MP3D_E_USER),
+      IDMAPSTR(MP3D_E_DECODE)
+    }, "MP3D_E_UNKNOWN" }
     /* -- No code ---------------------------------------------------------- */
     {  }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CodecMP3)            // Suppress default functions for safety
-};/* ----------------------------------------------------------------------- */
+  /* -- End ---------------------------------------------------------------- */
+} *cCodecMP3 = nullptr;                // Codec pointer
+/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

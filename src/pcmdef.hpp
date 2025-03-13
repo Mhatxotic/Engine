@@ -7,7 +7,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IPcmLib {                    // Start of private module namespace
+namespace IPcmDef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IFlags;                using namespace IMemory::P;
 using namespace IOal::P;               using namespace IStd::P;

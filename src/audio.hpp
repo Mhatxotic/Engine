@@ -49,10 +49,10 @@ static class Audio final :             // Audio manager class
       // De-Init thread
       DeInitThread();
       // Unload all buffers for streams and samples and destroy all sources
+      SourceDeInit();
+      VideoDeInit();
       StreamDeInit();
       SampleDeInit();
-      VideoDeInit();
-      cSources->CollectorDestroyUnsafe();
       // Deinit and reinit context
       DeInitContext();
       InitContext();
@@ -62,9 +62,10 @@ static class Audio final :             // Audio manager class
       StreamSetVolume(cSources->fMVolume);
       VideoSetVolume(cSources->fVVolume);
       // Re-create all buffers for streams and samples
-      VideoReInit();
       SampleReInit();
       StreamReInit();
+      VideoReInit();
+      SourceReInit();
       // Init monitoring thread
       InitThread();
       // Log status
@@ -386,7 +387,10 @@ static class Audio final :             // Audio manager class
     cLog->LogDebugSafe("Audio class shutting down...");
     // DeInit thread
     DeInitThread();
-    // Unload all Stream, Sample and Source classes
+    // Unload all Video, Stream, Sample and Source classes. All these should
+    // already by zero size at this point but they all rely on this class so we
+    // should make sure they're all loaded just incase.
+    cVideos->CollectorDestroyUnsafe();
     cStreams->CollectorDestroyUnsafe();
     cSamples->CollectorDestroyUnsafe();
     cSources->CollectorDestroyUnsafe();

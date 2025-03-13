@@ -126,7 +126,7 @@ class EvtCore :                        // Start of common event system class
   mutex            mMutex;             // Primary events list mutex
   Queue            qlEvents;           // Primary events list
   /* -- Generic event that does absolutely nothing ------------------------- */
-  void NullOpFunction(const Event &) { }
+  void NullOpFunction(const Event&) { }
   /* -- Generic event that reports use as warning -------------------------- */
   void WarningFunction(const Event &eEvent)
   { // Log the error
@@ -328,18 +328,6 @@ class EvtCore :                        // Start of common event system class
   void RegisterEx(const RegVec &rvEvents)
     { for(const RegPair &rpItem : rvEvents)
         Register(rpItem.first, rpItem.second); }
-  /* -- NullOp single event ------------------------------------------------ */
-  void NullOp(const Cmd cCmd)
-  { // Bail if invalid command
-    if(cCmd >= fFuncs.size())
-      XC("Invalid null-op command!", "System",
-        IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd);
-    // NullOp the callback function
-    fFuncs[cCmd] = bind(&EvtCore::NullOpFunction, this, _1);
-  }
-  /* -- NullOp multiple events --------------------------------------------- */
-  void NullOpEx(const RegVec &rvEvents)
-    { for(const RegPair &rpItem : rvEvents) NullOp(rpItem.first); }
   /* -- Unregister single  event ------------------------------------------- */
   void Unregister(const Cmd cCmd)
   { // Bail if invalid command
@@ -354,8 +342,11 @@ class EvtCore :                        // Start of common event system class
     { for(const RegPair &rpItem : rvEvents) Unregister(rpItem.first); }
   /* -- Event data, all empty functions ------------------------------------ */
   EvtCore(string &&strCName, ISList &&islStrings) :
-    Ident{ StdMove(strCName) }, islEventStrings{ StdMove(islStrings) }
-      { fFuncs.fill(bind(&EvtCore::WarningFunction, this, _1)); }
+    /* -- Initialisers ----------------------------------------------------- */
+    Ident{ StdMove(strCName) },            // Initialise event system name
+    islEventStrings{ StdMove(islStrings) } // Initialise event id names
+    /* -- Full all functions with warning function ------------------------- */
+    { fFuncs.fill(bind(&EvtCore::WarningFunction, this, _1)); }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(EvtCore)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */

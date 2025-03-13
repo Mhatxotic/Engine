@@ -56,7 +56,6 @@ static class Oal final :
   /* ----------------------------------------------------------------------- */
   const IdMap<ALenum> imOALCodes,      // OpenAL codes
                    imFormatCodes;      // OpenAL format codes
-  const IdMap<>    imOGGCodes;         // Ogg codes
   /* ----------------------------------------------------------------------- */
   ALuint           uiMaxStereoSources, // Maximum number of stereo sources
                    uiMaxMonoSources;   // Maximum number of mono sources
@@ -353,10 +352,6 @@ static class Oal final :
   }
   /* --------------------------------------------------------------- */ public:
   template<typename IntType>
-    const string_view &GetOggErr(const IntType itCode) const
-      { return imOGGCodes.Get(static_cast<unsigned int>(itCode)); }
-  /* ----------------------------------------------------------------------- */
-  template<typename IntType>
     const string_view &GetALErr(const IntType itCode) const
       { return imOALCodes.Get(static_cast<ALenum>(itCode)); }
   /* -- AL is initialised? ------------------------------------------------- */
@@ -521,15 +516,6 @@ static class Oal final :
       { AL_FORMAT_MONO16,         "MI16" }, { AL_FORMAT_STEREO16,     "SI16" },
       { AL_FORMAT_MONO8,          "MI08" }, { AL_FORMAT_STEREO8,      "SI08" }
     }, "????" },
-    imOGGCodes{{                       // Ogg error codes
-      IDMAPSTR(OV_EOF),                IDMAPSTR(OV_HOLE),
-      IDMAPSTR(OV_FALSE),              IDMAPSTR(OV_EREAD),
-      IDMAPSTR(OV_EFAULT),             IDMAPSTR(OV_EIMPL),
-      IDMAPSTR(OV_EINVAL),             IDMAPSTR(OV_ENOTVORBIS),
-      IDMAPSTR(OV_EBADHEADER),         IDMAPSTR(OV_EVERSION),
-      IDMAPSTR(OV_ENOTAUDIO),          IDMAPSTR(OV_EBADPACKET),
-      IDMAPSTR(OV_EBADLINK),           IDMAPSTR(OV_ENOSEEK)
-    }, "OV_UNKNOWN" },
     /* -- Initialisers ----------------------------------------------------- */
     uiMaxStereoSources(0),             // Stereo sources initialised later
     uiMaxMonoSources(0),               // Mono sources initialised later

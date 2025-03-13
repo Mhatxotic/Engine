@@ -30,28 +30,18 @@ BUILD_FLAGS(Input,
   IF_FSTOGGLER              {Flag[2]}, IF_MOUSEFOCUS             {Flag[3]},
   // Send events at startup?           Do joystick polling?
   IF_INITEVENTS             {Flag[4]}, IF_POLLJOYSTICKS          {Flag[5]},
-  // Ignore input on focus loss?       Input events were modified?
-  IF_NOINPUTONFOCUSLOSS     {Flag[6]}, IF_RESTORE                {Flag[7]},
-  // Clamp mouse cursor? (MacOS only)
-  IF_CLAMPMOUSE             {Flag[8]}
+  // Ignore input on focus loss?       Clamp mouse cursor? (MacOS only)
+  IF_RESTORE                {Flag[6]}, IF_CLAMPMOUSE             {Flag[7]}
 );/* == Input class ======================================================== */
 static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Base classes ------------------------------------------------------- */
   private IHelper,                     // Initialsation helper
   public InputFlags,                   // Input configuration settings
   private EvtMainRegVec,               // Events list to register
-  private DimCoords<int, double>,      // Window width and cursor position
+  private Dimensions<int>,             // Window width
   public Joystick                      // Joystick class
 { /* -- Console ------------------------------------------------------------ */
   int              iConKey1, iConKey2; // Primary and secondary console keys
-  /* -- Alternative mouse movement functions ------------------------------- */
-#if defined(MACOS)                     // Compiling MacOS version?
-  EvtMain::CbEcFunc fnMouseFocus,      // OnMouseFocus event
-                    fnMoveUnfocused,   // OnMouseMove event on unfocused window
-                    fnMoveClamped;     // OnMouseMove event for clamping mouse
-#else                                  // Compiling Windows or linux version?
-  EvtMain::CbEcFunc fnMouseFocus;      // OnMouseFocus event
-#endif                                 // #if defined(MACOS)
   /* -- Events ----------------------------------------------------- */ public:
   LuaFunc          lfOnMouseClick,     // Mouse button clicked
                    lfOnMouseMove,      // Mouse cursor moved
@@ -69,59 +59,38 @@ static class Input final :             // Handles keyboard, mouse & controllers
     // Else send the key to lua callbacks
     lfOnChar.LuaFuncDispatch(uiKey);
   }
-  /* -- Clamp mouse to window for guest (MacOS only) ----------------------- */
-#if defined(MACOS)                     // To mimic Windows cursor functionality
-  bool ClampToWindow(void)
-  { // Return if disabled or mouse is in bounds
-    if(FlagIsClear(IF_CLAMPMOUSE) ||
-       (CoordGetX() >= 0.0 && CoordGetY() >= 0.0 &&
-        CoordGetX() < GetWindowWidth() && CoordGetY() < GetWindowHeight()))
-      return false;
-    // Dispatch event to guest with mouse cursor clamped to window edge to
-    // mimic Windows and Linux functionality.
-    lfOnMouseMove.LuaFuncDispatch(
-      UtilClamp(UtilScaleValue(CoordGetX(), GetWindowWidth(),
-        cFboCore->fboMain.ffcStage.GetCoLeft(),
-        cFboCore->fboMain.GetCoRight()),
-        cFboCore->fboMain.ffcStage.GetCoLeft(),
-        cFboCore->fboMain.ffcStage.GetCoRight() - 1.0f),
-      UtilClamp(UtilScaleValue(CoordGetY(), GetWindowHeight(),
-        cFboCore->fboMain.ffcStage.GetCoTop(),
-        cFboCore->fboMain.GetCoBottom()),
-        cFboCore->fboMain.ffcStage.GetCoTop(),
-        cFboCore->fboMain.ffcStage.GetCoBottom() - 1.0f));
-    // We clamped the cursor
-    return true;
-  }
-  /* -- Mouse moved while window unfocused --------------------------------- */
-  void OnMouseMoveUnfocused(const EvtMainEvent &emeEvent)
+  /* -- Mouse moved -------------------------------------------------------- */
+  void OnMouseMove(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.aArgs;
-    // Store cursor position for use in other events
-    CoordSet(emaArgs[1].d, emaArgs[2].d);
-    // Tell guest we clamped position if mouse is out of bounds
-    ClampToWindow();
-    // Disable further mouse input
-    cEvtMain->NullOp(EMC_INP_MOUSE_MOVE);
-  }
-  /* -- Mouse moved but keeping it clamped --------------------------------- */
-  void OnMouseMoveClamped(const EvtMainEvent &emeEvent)
-  { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
-    // Store cursor position for use in other events
-    CoordSet(emaArgs[1].d, emaArgs[2].d);
-    // Keep the mouse clamped to the window and return if we did clamp it
-    if(ClampToWindow()) return;
-    // Or process normal mouse movement
+    // Do not process this event if input disabled on lack of mouse focus
+#if defined(MACOS)
+    // Get mouse position. We might need to clamp it
+    double dX = emaArgs[1].d, dY = emaArgs[2].d;
+    // If mouse clamp enabled?
+    if(FlagIsSet(IF_CLAMPMOUSE))
+    { // Return if mouse out of focus
+      if(FlagIsClear(IF_MOUSEFOCUS)) return;
+      // Clamp mouse co-ordinates if out of the window?
+      if(dX < 0.0) dX = 0.0;
+      else if(dX >= GetWindowWidth()) dX = GetWindowWidth()-1;
+      if(dY < 0.0) dY = 0.0;
+      else if(dY >= GetWindowHeight()) dY = GetWindowHeight()-1;
+    }
+#else
+    // Get mouse position
+    const double dX = emaArgs[1].d, dY = emaArgs[2].d;
+#endif
+    // Recalculate cursor position based on framebuffer size and send the new
+    // co-ordinates to the lua callback handler
     lfOnMouseMove.LuaFuncDispatch(
-      UtilScaleValue(CoordGetX(), GetWindowWidth(),
+      UtilScaleValue(dX, GetWindowWidth(),
         cFboCore->fboMain.ffcStage.GetCoLeft(),
         cFboCore->fboMain.GetCoRight()),
-      UtilScaleValue(CoordGetY(), GetWindowHeight(),
+      UtilScaleValue(dY, GetWindowHeight(),
         cFboCore->fboMain.ffcStage.GetCoTop(),
         cFboCore->fboMain.GetCoBottom()));
   }
-#endif                                 // End of MacOS specific code
   /* -- Mouse went inside the window --------------------------------------- */
   void OnMouseFocus(const EvtMainEvent &emeEvent)
   { // Get and check state
@@ -129,50 +98,18 @@ static class Input final :             // Handles keyboard, mouse & controllers
     switch(iState)
     { // Mouse is in the window? Set mouse in window flag
       case GLFW_TRUE:
-        // If mouse is not focused?
-        if(FlagIsClear(IF_MOUSEFOCUS))
-        { // If we're to restore events?
-          if(FlagIsSet(IF_RESTORE))
-          { // Clear the flag and re-enable input events on MacOS
-            FlagClear(IF_RESTORE);
-            EnableInputEvents();
-          } // Set mouse is focused
-          FlagSet(IF_MOUSEFOCUS);
-        } // No event needs to be sent
-        else return;
-        // Done
+        // Return if mouse is already focused
+        if(FlagIsSet(IF_MOUSEFOCUS)) return;
+        // Set mouse in window
+        FlagSet(IF_MOUSEFOCUS);
+        // Done, send lua event
         break;
       // Mouse is not in the window? Clear mouse in window flag
       case GLFW_FALSE:
-        // If mouse is focused?
-        if(FlagIsSet(IF_MOUSEFOCUS))
-        { // Setting is enable to ignore input?
-          if(FlagIsSet(IF_NOINPUTONFOCUSLOSS))
-          { // Disable all input events (except this one)
-            cEvtMain->NullOpEx(*this);
-            cEvtMain->Register(EMC_INP_MOUSE_FOCUS, fnMouseFocus);
-            // If using MacOS
-#if defined(MACOS)
-            // Set function to clamp any further mouse events and block more
-            cEvtMain->Register(EMC_INP_MOUSE_MOVE, fnMoveUnfocused);
-            // Tell guest we clamped position if mouse is out of bounds
-            ClampToWindow();
-#endif
-            // This indicates when focus is true to restore the events
-            FlagSet(IF_RESTORE);
-          } // If using MacOS?
-#if defined(MACOS)
-          else
-          { // Set function to clamp mouse cursor but still send event to Lua
-            cEvtMain->Register(EMC_INP_MOUSE_MOVE, fnMoveClamped);
-            // Tell guest we clamped position if mouse is out of bounds
-            ClampToWindow();
-          }
-#endif
-          // Set mouse is out of window
-          FlagClear(IF_MOUSEFOCUS);
-        } // No event needs to be sent
-        else return;
+        // Return if mouse is not focused already?
+        if(FlagIsClear(IF_MOUSEFOCUS)) return;
+        // Set mouse is out of window
+        FlagClear(IF_MOUSEFOCUS);
         // Done
         break;
       // Unknown state?
@@ -202,19 +139,6 @@ static class Input final :             // Handles keyboard, mouse & controllers
     const EvtMainArgs &emaArgs = emeEvent.aArgs;
     // Set event to lua callbacks
     lfOnMouseClick.LuaFuncDispatch(emaArgs[1].i, emaArgs[2].i, emaArgs[3].i);
-  }
-  /* -- Mouse moved -------------------------------------------------------- */
-  void OnMouseMove(const EvtMainEvent &emeEvent)
-  { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
-    // Store cursor position for use in other events
-    CoordSet(emaArgs[1].d, emaArgs[2].d);
-    // Recalculate cursor position based on framebuffer size and send the
-    // new co-ordinates to the lua callback handler
-    lfOnMouseMove.LuaFuncDispatch(UtilScaleValue(CoordGetX(), GetWindowWidth(),
-      cFboCore->fboMain.ffcStage.GetCoLeft(), cFboCore->fboMain.GetCoRight()),
-                      UtilScaleValue(CoordGetY(), GetWindowHeight(),
-      cFboCore->fboMain.ffcStage.GetCoTop(), cFboCore->fboMain.GetCoBottom()));
   }
   /* -- Unfiltered key pressed --------------------------------------------- */
   void OnKeyPress(const EvtMainEvent &emeEvent)
@@ -313,8 +237,8 @@ static class Input final :             // Handles keyboard, mouse & controllers
   int GetWindowWidth(void) const { return DimGetWidth(); }
   int GetWindowHeight(void) const { return DimGetHeight(); }
   /* -- Update window size from actual glfw window ------------------------- */
-  void UpdateWindowSize(void) { cGlFW->WinGetSize(DimGetWidthRef(),
-                                                  DimGetHeightRef()); }
+  void UpdateWindowSize(void)
+    { cGlFW->WinGetSize(DimGetWidthRef(), DimGetHeightRef()); }
   /* -- Update window size (from display) ---------------------------------- */
   void SetWindowSize(const int iX, const int iY) { DimSet(iX, iY); }
   /* -- Request input state ------------------------------------------------ */
@@ -406,11 +330,6 @@ static class Input final :             // Handles keyboard, mouse & controllers
     /* -- More initialisers ------------------------------------------------ */
     iConKey1(GLFW_KEY_UNKNOWN),        // Init primary console key
     iConKey2(iConKey1),                // Init secondary console key
-    fnMouseFocus{ bind(&Input::OnMouseFocus, this, _1) },
-#if defined(MACOS)                     // Is compiling MacOS version?
-    fnMoveUnfocused{ bind(&Input::OnMouseMoveUnfocused, this, _1) },
-    fnMoveClamped{ bind(&Input::OnMouseMoveClamped, this, _1) },
-#endif                                 // #if defined(MACOS)
     lfOnMouseClick{ "OnMouseClick" },  // Init mouse click lua event
     lfOnMouseMove{ "OnMouseMove" },    // Init mouse movement lua event
     lfOnMouseScroll{ "OnMouseScroll" },// Init mouse wheel lua event
@@ -457,9 +376,6 @@ static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Set full screen toggler -------------------------------------------- */
   CVarReturn SetFSTogglerEnabled(const bool bState)
     { FlagSetOrClear(IF_FSTOGGLER, bState); return ACCEPT; }
-  /* -- Set no input on focus loss ----------------------------------------- */
-  CVarReturn SetNoInputOnFocusLoss(const bool bState)
-    { FlagSetOrClear(IF_NOINPUTONFOCUSLOSS, bState); return ACCEPT; }
   /* -- Set clamp mouse cursor --------------------------------------------- */
   CVarReturn SetClampMouse(const bool bState)
     { FlagSetOrClear(IF_CLAMPMOUSE, bState); return ACCEPT; }

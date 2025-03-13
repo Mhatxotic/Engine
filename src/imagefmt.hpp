@@ -26,8 +26,8 @@ namespace P {                          // Start of public module namespace
 ** ######################################################################### **
 ** ## DirectDraw Surface                                              DDS ## **
 ** ######################################################################### **
-** -- DDS Codec Object ----------------------------------------------------- */
-struct CodecDDS final :                // Members initially public
+** ------------------------------------------------------------------------- */
+static class CodecDDS final :          // DDS codec object
   /* -- Base classes ------------------------------------------------------- */
   private ImageLib                     // Image format helper class
 { /* ----------------------------------------------------------------------- */
@@ -338,7 +338,7 @@ struct CodecDDS final :                // Members initially public
     } // Succeeded
     return true;
   }
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Constructor ------------------------------------------------ */ public:
   CodecDDS(void) :
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_DDS, "DirectDraw Surface", "DDS",
@@ -347,13 +347,14 @@ struct CodecDDS final :                // Members initially public
     { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CodecDDS)            // Suppress default functions for safety
-};/* -- End ---------------------------------------------------------------- */
+  /* -- End ---------------------------------------------------------------- */
+} *cCodecDDS = nullptr;                // Codec pointer
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Graphics Interchange Format                                     GIF ## **
 ** ######################################################################### **
-** -- GIF Codec Object ----------------------------------------------------- */
-class CodecGIF final :                 // Members initially private
+** ------------------------------------------------------------------------- */
+static class CodecGIF final :          // GIF codec object
   /* -- Base classes ------------------------------------------------------- */
   private ImageLib                     // Image format helper class
 { /* -- Allocate memory ---------------------------------------------------- */
@@ -487,13 +488,14 @@ class CodecGIF final :                 // Members initially private
     { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CodecGIF)            // Suppress default functions for safety
-};/* -- End ---------------------------------------------------------------- */
+  /* -- End ---------------------------------------------------------------- */
+} *cCodecGIF = nullptr;                // Codec pointer
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Portable Network Graphics                                       PNG ## **
 ** ######################################################################### **
-** -- PNG Codec Object ----------------------------------------------------- */
-class CodecPNG final :                 // Members initially private
+** ------------------------------------------------------------------------- */
+static class CodecPNG final :          // PNG codec object
   /* -- Base classes ------------------------------------------------------- */
   private ImageLib                     // Image format helper class
 { /* -- Private typedefs --------------------------------------------------- */
@@ -886,13 +888,14 @@ class CodecPNG final :                 // Members initially private
     { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CodecPNG)            // Suppress default functions for safety
-};/* -- End ---------------------------------------------------------------- */
+  /* -- End ---------------------------------------------------------------- */
+} *cCodecPNG = nullptr;                // Codec pointer
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## JPEG format                                                    JPEG ## **
 ** ######################################################################### **
-** -- JPEG Codec Object ---------------------------------------------------- */
-class CodecJPG final :                 // Members initially private
+** ------------------------------------------------------------------------- */
+static class CodecJPG final :          // JPEG codec object
   /* -- Base classes ------------------------------------------------------- */
   private ImageLib                     // Image format helper class
 { /* -- JPEG callbacks ----------------------------------------------------- */
@@ -1067,7 +1070,9 @@ class CodecJPG final :                 // Members initially private
     { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CodecJPG)            // Suppress default functions for safety
-};/* ----------------------------------------------------------------------- */
+  /* -- End ---------------------------------------------------------------- */
+} *cCodecJPG = nullptr;                // Codec pointer
+/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

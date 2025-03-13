@@ -466,12 +466,10 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #define MINIMP3_IMPLEMENTATION         // Using MINIMP3 implementation
 #define MINIMP3_NO_STDIO               // No stdio routines
 #if defined(WINDOWS)                   // Using Windows
-# pragma warning(disable:4244 4267 4456 4706)
 #endif                                 // Using Windows
 #include <mp3/minimp3.h>               // Main decoder
 #include <mp3/minimp3_ex.h>            // Decoder utilities
 #if defined(WINDOWS)                   // Using Windows
-# pragma warning(default:4244 4267 4456 4706)
 #endif                                 // Using Windows
     }
   };/* --------------------------------------------------------------------- */

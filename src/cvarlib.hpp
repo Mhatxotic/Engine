@@ -14,7 +14,11 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Built-in CVar definition struct ====================================== */
+/* == Required types ======================================================= */
+using Lib::OpenAL::ALuint;             using Lib::OpenAL::ALfloat;
+using Lib::OpenAL::ALenum;             using Lib::OS::GlFW::GLfloat;
+using Lib::Sqlite::sqlite3_int64;
+/* -- Built-in CVar definition struct -------------------------------------- */
 const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 /* -- Use this when cvar is an integer ------------------------------------- */
 #define CB(f,t) [](CVarItem&, const string &strV)->CVarReturn \
@@ -1117,13 +1121,6 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_fstoggler", cCommon->One(),
   CB(cInput->SetFSTogglerEnabled, bool), TBOOLEANSAVE|PANY },
-/* ------------------------------------------------------------------------- */
-// ! INP_NOFOCUSIGNORE
-// ? When enabled (default) all input is ignored when the window does not have
-// ? mouse focus.
-/* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_nfignore", cCommon->One(),
-  CB(cInput->SetNoInputOnFocusLoss, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_RAWMOUSE
 // ? Enables raw mouse input if available.

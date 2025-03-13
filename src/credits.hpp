@@ -144,7 +144,7 @@ static const class Credits final :     // Members initially private
       LD("LUA", LUA_VDIR "." LUA_VERSION_RELEASE, "Lua.org, PUC-Rio", true,
         LUA),
       LD("LZMA", MY_VERSION, "Igor Pavlov", false, 7ZIP),
-      LD("MiniMP3", "21.11.30", "Lieff/Lion", false, MINIMP3),
+      LD("MiniMP3", "25.3.12", "Lieff/Lion", false, MINIMP3),
 #if !defined(WINDOWS)
       LD("NCurses", NCURSES_VERSION, "Free Software Foundation", true,
         NCURSES),

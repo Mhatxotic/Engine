@@ -635,13 +635,10 @@ class Core final :                     // Members initially private
       using namespace IImageLib::P;    using namespace ILuaCommand::P;
       using namespace ILuaFunc::P;     using namespace IMask::P;
       using namespace IMemory::P;      using namespace IOal::P;
-      using namespace IParser::P;      using namespace IPcmFormat::P;
-      using namespace IPcmLib::P;      using namespace ISample::P;
-      using namespace IShader::P;      using namespace ISocket::P;
-      using namespace ISShot::P;       using namespace IStat::P;
-      using namespace IUtil::P;        using namespace IUtf;
-      using namespace Lib::OpenAL;     using namespace Lib::OS::GlFW;
-      using namespace Lib::Sqlite;
+      using namespace IPcmFormat::P;   using namespace IPcmLib::P;
+      using namespace ISample::P;      using namespace IShader::P;
+      using namespace ISocket::P;      using namespace ISShot::P;
+      using namespace IStat::P;        using namespace IUtil::P;
       // Initialise other systems. The order is important!
       INITSS(Stats);                   // cppcheck-suppress danglingLifetime
       INITSS(Threads);                 // cppcheck-suppress danglingLifetime
@@ -694,20 +691,18 @@ class Core final :                     // Members initially private
       INITSS(Variables);               // cppcheck-suppress danglingLifetime
       INITSS(Commands);                // cppcheck-suppress danglingLifetime
       INITSS(Lua);                     // cppcheck-suppress danglingLifetime
+      // Init image codecs that must match the enum order in 'imagedef.hpp'.
+      INITSS(CodecPNG); /* 0 */        // cppcheck-suppress danglingLifetime
+      INITSS(CodecJPG); /* 1 */        // cppcheck-suppress danglingLifetime
+      INITSS(CodecGIF); /* 2 */        // cppcheck-suppress danglingLifetime
+      INITSS(CodecDDS); /* 3 */        // cppcheck-suppress danglingLifetime
+      // Init audio codecs that must match the enum order in 'pcmdef.hpp'.
+      INITSS(CodecWAV); /* 0 */        // cppcheck-suppress danglingLifetime
+      INITSS(CodecCAF); /* 1 */        // cppcheck-suppress danglingLifetime
+      INITSS(CodecOGG); /* 2 */        // cppcheck-suppress danglingLifetime
+      INITSS(CodecMP3); /* 3 */        // cppcheck-suppress danglingLifetime
       // Done with this macro
 #undef INITSS
-      // Codec helper macro. Do not change the order or you will have to update
-      // the index and order in Image::LoadFlags or Pcm::LoadFlags
-      // respectively.
-#define INITCODEC(x) const Codec ## x engCodec ## x
-      // This must match the exact order of the values in 'ImageFormat' enums
-      INITCODEC(PNG); /* 0 */ INITCODEC(JPG); /* 1 */ INITCODEC(GIF); /* 2 */
-      INITCODEC(DDS); /* 3 */
-      // This must match the exact order of the values in 'PcmFormat' enums
-      INITCODEC(WAV); /* 0 */ INITCODEC(CAF); /* 1 */ INITCODEC(OGG); /* 2 */
-      INITCODEC(MP3); /* 3 */
-      // Done with this macro
-#undef INITCODEC
       // Register default cvars and pass over the current gui mode by ref. All
       // the core parts of the engine are initialised from cvar callbacks.
       cCVars->Init();

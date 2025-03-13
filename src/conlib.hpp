@@ -84,14 +84,13 @@ for(const Asset *aPtr : *cAssets)
   // Show first sixteen bytes
   for(size_t stIndex = 0; stIndex < stMax; ++stIndex)
   { // Get character
-    const unsigned int uiChar =
-      static_cast<unsigned int>(aRef.MemReadInt<uint8_t>(stIndex));
+    const uint8_t ucChar = aRef.MemReadInt<uint8_t>(stIndex);
     // Add hex of block
-    strHex += StrHexFromInt(uiChar, 2) + ' ';
+    strHex += StrHexFromInt(ucChar, 2) + ' ';
     // Put a dot if character is invalid
-    if(uiChar < ' ') { strAscii += '.'; continue; }
+    if(ucChar < ' ') { strAscii += '.'; continue; }
     // Encode the character
-    UtfAppend(uiChar, strAscii);
+    strAscii += static_cast<char>(ucChar);
   } // Add padding for characters that don't exist
   for(size_t stIndex = stMax; stIndex < stCount; ++stIndex)
     { strHex += ".. "; strAscii += ' '; }
@@ -203,6 +202,8 @@ cConsole->AddLineA(sTable.Finish(),
 /* ------------------------------------------------------------------------- */
 { "certs", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
+// Required parser class
+using namespace IParser::P;
 // Make a table to automatically format our data neatly
 Statistic sTable;
 sTable.Header("X").Header("FILE", false).Header("C", false)
@@ -1494,6 +1495,8 @@ cConsole->AddLineA(sTable.Finish(),
 /* ========================================================================= */
 { "pcms", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
+// Required pcm definition namespace
+using namespace IPcmDef::P;
 // Get reference to pcms collector class and lock it so it's not changed
 const LockGuard lgPcmsSync{ cPcms->CollectorGetMutex() };
 // Text table class to help us write neat output
@@ -1769,12 +1772,13 @@ for(const Source*const sPtr : *cSources)
   // Add data to text table
   sTable.DataN(sRef.CtrGet()).DataN(sRef.GetSource())
         .Data(StrFromEvalTokens({
-          { sRef.LockIsSet(),    'L' }, { sRef.GetExternal(),   'X' },
+          { sRef.GetClass(),     'C' }, { sRef.LockIsSet(),     'L' },
           { !!sRef.GetLooping(), 'O' }, { !!sRef.GetRelative(), 'R' },
+          { sRef.GetExternal(),  'X' }
         }))
         .DataC(alState == AL_INITIAL ? 'I' : (alState == AL_PLAYING ? 'P' :
               (alState == AL_PAUSED  ? 'H' : (alState == AL_STOPPED ? 'S' :
-                                      '?'))))
+                                       '?'))))
         .DataC(uiType == AL_UNDETERMINED ? 'U' : (uiType == AL_STATIC ? 'T' :
               (uiType == AL_STREAMING    ? 'S' : '?')))
         .DataN(sRef.GetBuffersQueued()).DataN(sRef.GetBuffersProcessed())
