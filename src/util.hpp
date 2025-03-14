@@ -129,14 +129,12 @@ template<class ListType>
   return true;
 }
 /* -- Reverse a byte ------------------------------------------------------- */
-static uint8_t UtilReverseByte(const uint8_t ucByte)
+static uint8_t UtilReverseByte(int iByte)
 { // We shall use a lookup table for this as it is faster
-  static const array<const uint8_t,16> ucaLookup{
-    0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,   // Index 1 == 0b0001 => 0b1000
-    0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf }; // Index 7 == 0b0111 => 0b1110
-  // Reverse the top and bottom nibble then swap them.
-  return static_cast<uint8_t>((ucaLookup[ucByte & 0b1111] << 4) |
-    ucaLookup[ucByte >> 4]);
+  iByte = ((iByte & 0x55) << 1) | ((iByte & 0xAA) >> 1);
+  iByte = ((iByte & 0x33) << 2) | ((iByte & 0xCC) >> 2);
+  iByte = ((iByte & 0x0F) << 4) | ((iByte & 0xF0) >> 4);
+  return static_cast<uint8_t>(iByte);
 }
 /* -- Helper functions to force integer byte ordering ---------------------- */
 template<typename IntType>static IntType UtilToI16LE(const IntType itV)
@@ -220,31 +218,34 @@ static double UtilToF64LE(const double dV)
   { return UtilCastInt64ToDouble(UtilToI64LE(UtilCastDoubleToInt64(dV))); }
 static double UtilToF64BE(const double dV)
   { return UtilCastInt64ToDouble(UtilToI64BE(UtilCastDoubleToInt64(dV))); }
-/* -- More helper functions for byte ordering ------------------------------ */
-static int16_t UtilToLittleEndian(const int16_t wV)
-  { return UtilToI16LE(wV); }
-static int16_t UtilToBigEndian(const int16_t wV)
-  { return UtilToI16BE(wV); }
-static uint16_t UtilToLittleEndian(const uint16_t wV)
-  { return UtilToI16LE(wV); }
-static uint16_t UtilToBigEndian(const uint16_t wV)
-  { return UtilToI16BE(wV); }
-static int32_t UtilToLittleEndian(const int32_t dwV)
-  { return UtilToI32LE(dwV); }
-static int32_t UtilToBigEndian(const int32_t dwV)
-  { return UtilToI32BE(dwV); }
-static uint32_t UtilToLittleEndian(const uint32_t dwV)
-  { return UtilToI32LE(dwV); }
-static uint32_t UtilToBigEndian(const uint32_t dwV)
-  { return UtilToI32BE(dwV); }
-static int64_t UtilToLittleEndian(const int64_t qwV)
-  { return UtilToI64LE(qwV); }
-static int64_t UtilToBigEndian(const int64_t qwV)
-  { return UtilToI64BE(qwV); }
-static uint64_t UtilToLittleEndian(const uint64_t qwV)
-  { return UtilToI64LE(qwV); }
-static uint64_t UtilToBigEndian(const uint64_t qwV)
-  { return UtilToI64BE(qwV); }
+/* -- Convert to little endian integer ------------------------------------- */
+template<typename IntType>IntType UtilToLittleEndian(const IntType itValue)
+{ // Convert 16-bit big-endian integer to little-endian
+  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+    return UtilToI16LE<IntType>(itValue);
+  // Convert 32-bit big-endian integer to little-endian
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
+    return UtilToI32LE<IntType>(itValue);
+  // Convert 64-bit big-endian integer to little-endian
+  else if constexpr(sizeof(IntType) == sizeof(uint64_t))
+    return UtilToI64LE<IntType>(itValue);
+  // Don't convert anything else
+  else return itValue;
+}
+/* -- Convert to big endian integer ---------------------------------------- */
+template<typename IntType>IntType UtilToBigEndian(const IntType itValue)
+{ // Convert 16-bit big-endian integer to big-endian
+  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+    return UtilToI16BE<IntType>(itValue);
+  // Convert 32-bit big-endian integer to big-endian
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
+    return UtilToI32BE<IntType>(itValue);
+  // Convert 64-bit big-endian integer to big-endian
+  else if constexpr(sizeof(IntType) == sizeof(uint64_t))
+    return UtilToI64BE<IntType>(itValue);
+  // Don't convert anything else
+  else return itValue;
+}
 /* -- Convert float normal back to integer --------------------------------- */
 template<typename IntTypeRet,
          typename IntTypeInternal=uint8_t,
@@ -309,26 +310,28 @@ DestIntType UtilScaleValue(const DestIntType itV, const PhysIntType itPMax,
   { return static_cast<DestIntType>(itVMin) +
       ((itV / itPMax) * static_cast<DestIntType>(itVMax)); }
 /* -- Returns if specified integer would overflow specified type ----------- */
-template<typename TestIntType, typename ParamIntType>
-  static bool UtilIntWillOverflow(const ParamIntType pitVal)
-{ // Automatically false if both types are the same
-  if(is_same_v<TestIntType, ParamIntType>) return false;
-  // Is signed (can be negative?). Return if out of bounds
-  if(numeric_limits<TestIntType>::is_signed)
-  { // If input type is unsigned then return true if it overflows.
-    if(!numeric_limits<ParamIntType>::is_signed)
-      if(static_cast<uintmax_t>(pitVal) > static_cast<uintmax_t>(INTMAX_MAX))
-        return true;
-    // Return if overflows
-    const intmax_t iVal = static_cast<intmax_t>(pitVal);
-    return iVal < static_cast<intmax_t>(numeric_limits<TestIntType>::min()) ||
-           iVal > static_cast<intmax_t>(numeric_limits<TestIntType>::max());
-  } // Unsigned so it would overflow is param value is signed and negative
-  if constexpr(numeric_limits<ParamIntType>::is_signed)
-    if(pitVal < 0) return true;
-  // Unsigned so not as much checking needed. Return if out of bounds
-  return static_cast<uintmax_t>(pitVal) >
-         static_cast<uintmax_t>(numeric_limits<TestIntType>::max());
+template<typename IntTypeTarget,       // Target requested type
+         typename IntTypeSource>       // Source type (function parameter)
+constexpr bool UtilIntWillOverflow(const IntTypeSource itsValue) {
+  // If both types are signed?
+  if constexpr(is_signed_v<IntTypeSource> == is_signed_v<IntTypeTarget>)
+  { // Both are signed so no overflow possible if source size less
+    if constexpr(sizeof(IntTypeSource) <= sizeof(IntTypeTarget))
+      return false;
+    // Return true if overflowed, false if not
+    else return itsValue < static_cast<IntTypeSource>
+        (numeric_limits<IntTypeTarget>::lowest()) ||
+      itsValue > static_cast<IntTypeSource>
+        (numeric_limits<IntTypeTarget>::max());
+  } // Both types aren't signed so if source is signed?
+  else if constexpr(is_signed_v<IntTypeSource>)
+    // Source is signed, target is unsigned so return if negative or overflow
+    return itsValue < 0 ||
+           static_cast<make_unsigned_t<IntTypeSource>>(itsValue) >
+             numeric_limits<IntTypeTarget>::max();
+  // Source is unsigned, target is signed so return if overflow
+  else return itsValue > static_cast<make_unsigned_t<IntTypeTarget>>
+    (numeric_limits<IntTypeTarget>::max());
 }
 /* -- Join two integers to make a bigger integer --------------------------- */
 template<typename IntTypeHigh,typename IntTypeLow>
@@ -411,9 +414,26 @@ template<typename FloatType>
 template<typename FloatType>
   static bool UtilIsFloatNotEqual(const FloatType f1, const FloatType f2)
     { return ((f1 < f2) || (f1 > f2)); }
-/* -- Clear any static data of any size ------------------------------------ */
-template<typename StaticType>void UtilClearStatic(StaticType &stData)
-  { memset(&stData, '\0', sizeof(stData)); }
+/* -- Initialise an array of the specified value --------------------------- */
+namespace MakeFilledContainer
+{ /* -- Fill with specified value ------------------------------------------ */
+  template<typename ItemType>
+  constexpr ItemType Value(const size_t, const ItemType &itValue)
+    { return itValue; }
+  /* -- Select indices ----------------------------------------------------- */
+  template<typename ItemType, size_t stNumItems,
+    size_t... Is, class ContainerType = array<ItemType, stNumItems>>
+  constexpr ContainerType Select(const ItemType &itValue,
+    std::index_sequence<Is...>)
+      { return { Value<ItemType>(Is, itValue)... }; }
+  /* -- Entry function ----------------------------------------------------- */
+  template<typename ItemType, size_t stNumItems,
+    class ContainerType = array<ItemType, stNumItems>>
+  constexpr ContainerType UtilMkFilledContainer(const ItemType &itValue)
+    { return Select<ItemType, stNumItems>
+        (itValue, std::make_index_sequence<stNumItems>{}); }
+};/* ----------------------------------------------------------------------- */
+using MakeFilledContainer::UtilMkFilledContainer;
 /* -- Bits handling functions ---------------------------------------------- */
 template<typename IntType>
   static IntType UtilBitSwap4(const IntType itValue)
@@ -430,19 +450,19 @@ template<typename RetType,typename IntType>
 template<typename PtrType,typename IntType>
   static void UtilBitSet(PtrType*const ptDst, const IntType itPos)
     { ptDst[UtilBitToByte(itPos)] |=
-        UtilBitMask<typename remove_pointer<PtrType>::type,IntType>(itPos); }
+        UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos); }
 template<typename PtrType,typename IntType>
   static bool UtilBitTest(PtrType*const ptDst, const IntType itPos)
     { return !!(ptDst[UtilBitToByte(itPos)] &
-        UtilBitMask<typename remove_pointer<PtrType>::type,IntType>(itPos)); }
+        UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos)); }
 template<typename PtrType,typename IntType>
   static void UtilBitClear(PtrType*const ptDst, const IntType itPos)
     { ptDst[UtilBitToByte(itPos)] &=
-        ~UtilBitMask<typename remove_pointer<PtrType>::type,IntType>(itPos); }
+        ~UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos); }
 template<typename PtrType,typename IntType>
   static void UtilBitFlip(PtrType*const ptDst, const IntType itPos)
     { ptDst[UtilBitToByte(itPos)] ^=
-        UtilBitMask<typename remove_pointer<PtrType>::type,IntType>(itPos); }
+        UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos); }
 /* -- Bits handling functions copying from another bit buffer -------------- */
 template<typename PtrType,typename IntType>
   static void UtilBitSet2(PtrType*const ptDst, const IntType itDstPos,

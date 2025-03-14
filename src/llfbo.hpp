@@ -18,11 +18,11 @@
 /* ========================================================================= */
 namespace LLFbo {                      // Fbo namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IConsole::P;           using namespace IFboDef::P;
-using namespace IFbo::P;               using namespace IFboCore::P;
-using namespace ILua::P;               using namespace IOgl::P;
-using namespace ISShot::P;             using namespace IString::P;
-using namespace Common;
+using namespace IConGraph::P;          using namespace IConsole::P;
+using namespace IFboDef::P;            using namespace IFbo::P;
+using namespace IFboCore::P;           using namespace ILua::P;
+using namespace IOgl::P;               using namespace ISShot::P;
+using namespace IString::P;            using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Fbo common helper classes                                           ## **

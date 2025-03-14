@@ -15,7 +15,8 @@ namespace IClipboard {                 // Start of private module namespace
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IGlFW::P;              using namespace IIdent::P;
-using namespace ILuaEvt::P;            using namespace ILuaLib::P;
+using namespace ILockable::P;          using namespace ILuaEvt::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IStd::P;
 using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */

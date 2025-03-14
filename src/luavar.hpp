@@ -12,6 +12,7 @@ namespace ILuaVariable {               // Start of private module namespace
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace ICVar::P;              using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IIdent::P;
+using namespace ILockable::P;          using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
 using namespace ILuaFunc::P;           using namespace ILua::P;
 using namespace IString::P;            using namespace IStat::P;

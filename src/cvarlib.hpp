@@ -15,9 +15,8 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* == Required types ======================================================= */
-using Lib::OpenAL::ALuint;             using Lib::OpenAL::ALfloat;
-using Lib::OpenAL::ALenum;             using Lib::OS::GlFW::GLfloat;
-using Lib::Sqlite::sqlite3_int64;
+using namespace Lib::OpenAL::Types;    using namespace Lib::OS::GlFW::Types;
+using namespace Lib::Sqlite::Types;
 /* -- Built-in CVar definition struct -------------------------------------- */
 const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 /* -- Use this when cvar is an integer ------------------------------------- */

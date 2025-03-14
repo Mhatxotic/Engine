@@ -11,6 +11,7 @@ namespace IEvtCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IIdent::P;
 using namespace ILog::P;               using namespace IStd::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public public namespace
 /* ------------------------------------------------------------------------- */
@@ -343,10 +344,12 @@ class EvtCore :                        // Start of common event system class
   /* -- Event data, all empty functions ------------------------------------ */
   EvtCore(string &&strCName, ISList &&islStrings) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(strCName) },            // Initialise event system name
-    islEventStrings{ StdMove(islStrings) } // Initialise event id names
-    /* -- Full all functions with warning function ------------------------- */
-    { fFuncs.fill(bind(&EvtCore::WarningFunction, this, _1)); }
+    Ident{ StdMove(strCName) },             // Initialise event system name
+    islEventStrings{ StdMove(islStrings) }, // Initialise event id names
+    fFuncs{ UtilMkFilledContainer<CbEcFunc,EvtMaxEvents>
+      (bind(&EvtCore::WarningFunction, this, _1)) }
+    /* -- No code ---------------------------------------------------------- */
+    { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(EvtCore)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */

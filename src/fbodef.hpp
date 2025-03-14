@@ -10,7 +10,7 @@
 namespace IFboDef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IDim;                  using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Defines -------------------------------------------------------------- */

@@ -12,7 +12,8 @@
 namespace IStat {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
-using namespace IIdent::P;             using namespace ILuaLib::P;
+using namespace IIdent::P;             using namespace ILockable::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IUtf;
 using namespace IUtil::P;

@@ -9,8 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaUtil {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IDir::P;
-using namespace IError::P;             using namespace IMemory::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace ILuaIdent::P;          using namespace IMemory::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace IToken::P;             using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
@@ -738,7 +738,7 @@ template<class ClassType>
   static_assert(is_class_v<ClassType>, "Not a class!");
   if(LuaUtilClass*const lucPtr =
     reinterpret_cast<LuaUtilClass*>(
-      luaL_checkudata(lS, iParam, liParent.CStr())))
+      luaL_checkudata(lS, iParam, liParent.LuaIdentCStr())))
   { // Get address to the C++ class and if that is valid?
     if(ClassType*const ctPtr = reinterpret_cast<ClassType*>(lucPtr->vpPtr))
     { // Clear the pointer to the C++ class and destroy it if not locked
@@ -757,7 +757,7 @@ static LuaUtilClass *LuaUtilClassPrepNew(lua_State*const lS,
   LuaUtilClass*const lucPtr =
     reinterpret_cast<LuaUtilClass*>(lua_newuserdata(lS, sizeof(LuaUtilClass)));
   // Get metadata table reference from collector class
-  LuaUtilGetRef(lS, liParent.iRef);
+  LuaUtilGetRef(lS, liParent.LuaIdentGetRef());
   // Done setting metamethods, set the table
   LuaUtilSetMetaTable(lS, -2);
   // Return pointer to new class allocated by Lua
@@ -787,7 +787,7 @@ template<typename ClassType>
     return reinterpret_cast<ClassType*>(vpPtr);
   // Error occured so just throw exception
   XC("Failed to allocate memory for class structure!",
-     "Type", liParent.Str(), "Size", sizeof(ClassType));
+     "Type", liParent.LuaIdentStr(), "Size", sizeof(ClassType));
 }
 /* -- Creates a pointer to a class that LUA CAN'T deallocate --------------- */
 template<typename ClassType>
@@ -798,7 +798,7 @@ template<typename ClassType>
   LuaUtilClass*const lucPtr =
     reinterpret_cast<LuaUtilClass*>(lua_newuserdata(lS, sizeof(LuaUtilClass)));
   // Get table data from collector reference and set it as class metatable
-  LuaUtilGetRef(lS, liParent.iRef);
+  LuaUtilGetRef(lS, liParent.LuaIdentGetRef());
   LuaUtilSetMetaTable(lS, -2);
   // Set pointer to class
   lucPtr->vpPtr = reinterpret_cast<void*>(ctPtr);
@@ -813,16 +813,16 @@ template<typename ClassType>
   static_assert(is_class_v<ClassType>, "Not a class!");
   if(const LuaUtilClass*const lucPtr =
     reinterpret_cast<LuaUtilClass*>(
-      luaL_checkudata(lS, iParam, liParent.CStr())))
+      luaL_checkudata(lS, iParam, liParent.LuaIdentCStr())))
   { // Get reference to class and return pointer if valid
     const LuaUtilClass &lcR = *lucPtr;
     if(lcR.vpPtr) return reinterpret_cast<ClassType*>(lcR.vpPtr);
     // Actual class pointer has already been freed so error occured
     XC("Unallocated class parameter!",
-       "Parameter", iParam, "Type", liParent.Str());
+       "Parameter", iParam, "Type", liParent.LuaIdentStr());
   } // lua data class not valid
   XC("Null class parameter!",
-     "Parameter", iParam, "Type", liParent.Str());
+     "Parameter", iParam, "Type", liParent.LuaIdentStr());
 }
 /* -- Check that a class isn't locked (i.e. a built-in class) -------------- */
 template<class ClassType>

@@ -17,7 +17,7 @@ using namespace IOal::P;               using namespace IPcmDef::P;
 using namespace IPcmLib::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace IUtil::P;
 using namespace Lib::OS::MiniMP3;      using namespace Lib::Ogg;
-using namespace Lib::OpenAL;
+using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= **
@@ -383,7 +383,7 @@ static class CodecOGG final :          // OGG codec object
         FileMapTell()); }
   /* -- Return generic ogg callback functions ------------------------------ */
   const ov_callbacks &GetCallbacks(void) { return ovcCallbacks; }
-  /* -- Convert vorbis encoded frames to 32-bit floating point PCM audio ----- */
+  /* -- Convert vorbis encoded frames to 32-bit floating point PCM audio --- */
   void F32FromVorbisFrames(const ALfloat*const*const fpFramesIn,
     const size_t stFrames, const size_t stChannels, ALfloat *fpPCMOut)
   { // Convert ogg frames data to native PCM float 32-bit audio
@@ -391,7 +391,7 @@ static class CodecOGG final :          // OGG codec object
       for(size_t stChanIndex = 0; stChanIndex < stChannels; ++stChanIndex)
         *(fpPCMOut++) = fpFramesIn[stChanIndex][stFrameIndex];
   }
-  /* -- Convert vorbis encoded frames to 16-bit integer PCM audio ------------ */
+  /* -- Convert vorbis encoded frames to 16-bit integer PCM audio ---------- */
   void I16FromVorbisFrames(const ALfloat*const*const fpFramesIn,
     const size_t stFrames, const size_t stChannels, ALshort *wPCMOut)
   { // Convert ogg frames data to native PCM integer 16-bit audio
@@ -401,7 +401,7 @@ static class CodecOGG final :          // OGG codec object
           (rint(fpFramesIn[stChanIndex][stFrameIndex]*32767.f)),
           -32767, 32767);
   }
-  /* -- Parse vorbis comments block ------------------------------------------ */
+  /* -- Parse vorbis comments block ---------------------------------------- */
   StrNCStrMap VorbisParseComments(char **const clpPtr, const int iCount)
   { // Metadata to return
     StrNCStrMap ssMetaData;

@@ -8,24 +8,25 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IConsole {                   // Start of private module namespace
+namespace IConGraph {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IArgs;                 using namespace IConsole::P;
-using namespace IError::P;             using namespace IFbo::P;
-using namespace IFboCore::P;           using namespace IFont::P;
-using namespace IFtf::P;               using namespace IGlFW::P;
+using namespace ICVar::P;              using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace IConDef::P;
+using namespace IConsole::P;           using namespace IEvtMain::P;
+using namespace IFbo::P;               using namespace IFboCore::P;
+using namespace IFont::P;              using namespace IFtf::P;
+using namespace IGlFW::P;              using namespace IHelper::P;
 using namespace IImage::P;             using namespace IImageDef::P;
-using namespace ILog::P;               using namespace ILua::P;
-using namespace IOgl::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITexture::P;
-using namespace Lib::OS::GlFW;
+using namespace ILog::P;               using namespace IOgl::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITexture::P;           using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ========================================================================= */
 static class ConGraphics final :       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private IHelper                      // Initialisation helper
+  private InitHelper                   // Initialisation helper
 { /* -- Private variables -------------------------------------------------- */
   const uint32_t   ulFgColour;         // Console input text colour
   uint32_t         ulBgColour;         // Console background texture colour
@@ -345,7 +346,7 @@ static class ConGraphics final :       // Members initially private
   /* -- Constructor -------------------------------------------------------- */
   explicit ConGraphics(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Init helper function name
+    InitHelper{ __FUNCTION__ },        // Init helper function name
     ulFgColour(                        // Set input text colour
       uiNDXtoRGB[COLOUR_YELLOW] |      // - Lookup RGB value for yellow
       0xFF000000),                     // - Force opaqueness

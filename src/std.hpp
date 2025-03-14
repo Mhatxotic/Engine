@@ -86,7 +86,7 @@ typedef struct __stat64 StdFStatStruct; // Different on Windows
 typedef struct tm       StdTMStruct;    // Different on Windows
 typedef __time64_t      StdTimeT;       // Different on Windows
 /* -- Typedefs for types not in Windows ------------------------------------ */
-typedef ::std::make_signed<size_t>::type ssize_t; // Not in MSVC
+typedef make_signed_t<size_t> ssize_t;  // Not in MSVC
 /* -- Convert any widestring pointer type to utf8 class string ------------- */
 inline const string S16toUTF(const wchar_t*const wcpStr)
   { return UtfFromWide(wcpStr); }

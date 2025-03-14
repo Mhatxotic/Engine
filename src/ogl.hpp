@@ -9,12 +9,12 @@
 /* ------------------------------------------------------------------------- */
 namespace IOgl {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICollector::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IEvtWin::P;            using namespace IFboDef::P;
-using namespace IFlags;                using namespace IGlFW::P;
-using namespace IGlFWUtil::P;          using namespace IIdent::P;
+using namespace IClock::P;             using namespace ICVar::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IError::P;             using namespace IEvtWin::P;
+using namespace IFboDef::P;            using namespace IFlags;
+using namespace IGlFW::P;              using namespace IGlFWUtil::P;
+using namespace IHelper::P;            using namespace IIdent::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
@@ -61,7 +61,7 @@ typedef vector<GLfloat> GLFloatVector; // Vector of GLfloats
 /* -- OpenGL manager class ------------------------------------------------- */
 static class Ogl final :               // OGL class for OpenGL use simplicity
   /* -- Sub-classes -------------------------------------------------------- */
-  private IHelper,                     // Initialisation helper
+  private InitHelper,                  // Initialisation helper
   public FboColour,                    // OpenGL colour
   public FboBlend,                     // OpenGL blend
   public OglFlags                      // OpenGL init flags
@@ -1232,7 +1232,7 @@ static class Ogl final :               // OGL class for OpenGL use simplicity
   /* -- Constructor -------------------------------------------------------- */
   Ogl(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Send name to InitHelper
+    InitHelper{ __FUNCTION__ },        // Send name to InitHelper
     OglFlags{ GFL_NONE },              // Set no flags
     /* -- Const members ---------------------------------------------------- */
     idExtensions{{                     // Init GL extension names

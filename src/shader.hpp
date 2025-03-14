@@ -12,10 +12,11 @@ namespace IShader {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IFboDef::P;            using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IOgl::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */

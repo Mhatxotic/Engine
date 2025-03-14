@@ -40,6 +40,9 @@ namespace E {                          // Start of engine namespace
 #include "fstream.hpp"                 // File IO utility header
 #include "log.hpp"                     // Logging helper class header
 #include "luadef.hpp"                  // Lua definitions header
+#include "luaident.hpp"                // Lua ident class header
+#include "ihelper.hpp"                 // Init helper class header
+#include "lockable.hpp"                // Lockable class header
 #include "collect.hpp"                 // Class collector utility header
 #include "stat.hpp"                    // Statistic utility class header
 #include "thread.hpp"                  // Thread helper class header
@@ -104,6 +107,9 @@ namespace E {                          // Start of engine namespace
 #include "file.hpp"                    // FStream+FileMap class header
 #include "clip.hpp"                    // Clipboard class header
 #include "congraph.hpp"                // Console rendering class header
+#include "joyaxis.hpp"                 // Joystick axis class header
+#include "joybutton.hpp"               // Joystick button class header
+#include "joyinfo.hpp"                 // Joystick info class header
 #include "joystick.hpp"                // Joystick structure class header
 #include "input.hpp"                   // Input handling class header
 #include "display.hpp"                 // Window handling class header

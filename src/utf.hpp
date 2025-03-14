@@ -12,7 +12,7 @@
 namespace IUtf {                       // Start of module namespace
 /* -- Remove const from a pointer ------------------------------------------ */
 template<typename TypeTo, typename TypeFrom, typename TypeNonConst =
-  typename remove_const<typename remove_pointer<TypeFrom>::type>::type*>
+  remove_const_t<remove_pointer_t<TypeFrom>>*>
 static TypeTo UtfToNonConstCast(TypeFrom tfV)
 { // Check that type has a pointer
   static_assert(is_pointer_v<TypeFrom>, "Input type must have pointer!");

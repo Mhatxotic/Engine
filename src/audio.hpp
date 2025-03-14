@@ -9,16 +9,16 @@
 /* ------------------------------------------------------------------------- */
 namespace IAudio {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICollector::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFlags;
+using namespace IClock::P;             using namespace ICVar::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFlags;                using namespace IHelper::P;
 using namespace ILog::P;               using namespace IOal::P;
 using namespace ISample::P;            using namespace ISource::P;
 using namespace IStd::P;               using namespace IStream::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace IThread::P;            using namespace ITimer::P;
-using namespace IVideo::P;             using namespace Lib::OpenAL;
+using namespace IVideo::P;             using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Typedefs ============================================================= */
@@ -29,7 +29,7 @@ BUILD_FLAGS(Audio,                     // Audio flags classes
 );/* ======================================================================= */
 static class Audio final :             // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
-  private IHelper,                     // Initialisation helper class
+  private InitHelper,                  // Initialisation helper class
   public AudioFlags,                   // Audio flags
   private Thread                       // Audio monitoring thread
 { /* -- Monitoring thread timers ---------------------------------- */ private:
@@ -418,7 +418,7 @@ static class Audio final :             // Audio manager class
   /* -- Default constructor ------------------------------------------------ */
   Audio(void) :                        // No parameters
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Initialise class name
+    InitHelper{ __FUNCTION__ },        // Initialise class name
     AudioFlags{ AF_NONE },             // Initialise no audio flags
     Thread{ "audio", STP_AUDIO,        // Initialise high perf audio thread
       bind(&Audio::AudioThreadMain,    // " with reference to callback

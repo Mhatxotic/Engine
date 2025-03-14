@@ -1016,14 +1016,14 @@ LLFUNC(UTF8Char, 1, LuaUtilPushVar(lS, UtfDecodeNum(AgUInt32{lS, 1})))
 // < Text:string=The URL decoded string.
 // ? URL decodes the specified string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UrlDecode, 1, LuaUtilPushVar(lS, CryptURLDecode(AgCStringChar{lS, 1})))
+LLFUNC(UrlDecode, 1, LuaUtilPushVar(lS, CryptURLDecode(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.UrlEncode
 // > Text:string=The URL string to encode.
 // < Text:string=The URL encoded string.
 // ? URL encodes the specified string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UrlEncode, 1, LuaUtilPushVar(lS, CryptURLEncode(AgCStringChar{lS, 1})))
+LLFUNC(UrlEncode, 1, LuaUtilPushVar(lS, CryptURLEncode(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Util.WordWrap
 // > Text:string=The text to word wrap

@@ -19,7 +19,7 @@ using namespace ILog::P;               using namespace IOgl::P;
 using namespace IShader::P;            using namespace IShaders::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace ITimer::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Main fbo class ======================================================= */

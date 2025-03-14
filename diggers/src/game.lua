@@ -4356,7 +4356,8 @@ local function LoadLevel(iLId, sMusic, iKB, iRace1, bAI1, iRace2, bAI2,
                    else iSlowDown = 1 end;
         -- Set specified keybank
         SetKeys(true, iKB);
-      end
+      -- No slow down
+      else iSlowDown = 1 end;
       -- Set specified hot spot
       SetHotSpot(iNHotSpotId);
       -- Set requested callbacks

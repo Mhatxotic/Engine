@@ -890,8 +890,9 @@ cConsole->AddLineA(sTable.Finish(),
 /* ========================================================================= */
 { "input", 1, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-// Required joystick namespace
-using namespace IJoystick::P;
+// Required joystick namespaces
+using namespace IJoyAxis::P;           using namespace IJoyButton::P;
+using namespace IJoyInfo::P;           using namespace IJoystick::P;
 // If argument specified
 if(aArgs.size() > 1)
 { // Convert parmeter to number

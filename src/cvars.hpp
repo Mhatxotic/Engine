@@ -12,13 +12,14 @@
 namespace ICVar {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace ICodec::P;
-using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IDir::P;
-using namespace IError::P;             using namespace IJson::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IHelper::P;            using namespace IJson::P;
 using namespace ILog::P;               using namespace IPSplit::P;
 using namespace ISql::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace Lib::Sqlite;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -32,7 +33,7 @@ enum CVarDefaults : unsigned int       // Flags when loaded from DB
 }; /* ---------------------------------------------------------------------- */
 static struct CVars final :            // Start of vars class
   /* -- Base classes ------------------------------------------------------- */
-  private IHelper                      // Initialisation helper
+  private InitHelper                   // Initialisation helper
 { /* -- Settings ----------------------------------------------------------- */
   constexpr static const size_t        // Some internal settings
     stCVarConfigSizeMinimum = 2,       // Minimum config file size
@@ -44,9 +45,9 @@ static struct CVars final :            // Start of vars class
   typedef array<CVarMapIt, CVAR_MAX> ArrayVars;
   /* -- Private variables -------------------------------------------------- */
   size_t           stMaxInactiveCount; // Maximum Initial CVars allowed
-  CVarMap          cvmPending;         // CVars inactive list
+  CVarMap          cvmPending,         // CVars inactive list
+                   cvmActive;          // CVars active list
   ArrayVars        avInternal;         // Quick lookup to internal vars
-  CVarMap          cvmActive;          // CVars active list
   string           strCBError;         // Callback error message
   /* ----------------------------------------------------------------------- */
   struct CVarMapNameStruct             // Join initial with cvars
@@ -650,14 +651,15 @@ static struct CVars final :            // Start of vars class
   /* -- Default constructor ------------------------------------------------ */
   explicit CVars(const CVarItemStaticList &cvislDef) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Set function name for init helper
+    InitHelper{ __FUNCTION__ },        // Set function name for init helper
     stMaxInactiveCount(CVAR_MAX),      // Initially set to max cvar count
+    avInternal{ UtilMkFilledContainer<CVarMapIt, CVAR_MAX>(cvmActive.end()) },
     cvmnsaList{{                       // Set combined lists
       { cvmPending, "unregistered" },  // Inactive cvars list
       { cvmActive,  "registered" } }}, // Active cvars list
     cvislList{ cvislDef }              // Default engine cvars list
-    /* -- Fill all the iterators to internal cvars ------------------------- */
-    { GetInternalList().fill(cvmActive.end()); }
+    /* -- No code ---------------------------------------------------------- */
+    { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~CVars, DeInit())         // Save and clean-up all variables
   /* ----------------------------------------------------------------------- */

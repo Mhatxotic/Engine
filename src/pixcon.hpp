@@ -25,7 +25,7 @@ class SysCon :                         // All members initially private
   /* -- Base classes ------------------------------------------------------- */
   public SysBase,                      // Defined in 'sys(nix/mac).hpp'
   public SysConBase,                   // Defined in 'syscore.hpp'
-  private IHelper,                     // Allow access to windows console
+  private InitHelper,                  // Allow access to windows console
   private DimCoInt                     // Console drawing position & dimensions
 {  /* -- Typedefs ---------------------------------------------------------- */
   typedef ICurses::attr_t attr_t;      // NCurses alias
@@ -796,7 +796,7 @@ class SysCon :                         // All members initially private
   SysCon(SysModMap &&smmMap, const size_t stI) : // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     SysBase{ StdMove(smmMap), stI },   // Initialise base with module info
-    IHelper{ __FUNCTION__ },           // Initialise init helper
+    InitHelper{ __FUNCTION__ },        // Initialise init helper
     aColour(0),                        // Black colour
     aColourSaved(0),                   // Black saved colour
     stPalette(0),                      // No palette colours

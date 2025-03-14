@@ -12,9 +12,9 @@ namespace ILuaFunc {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaLib::P;            using namespace ILuaRef::P;
-using namespace ILuaUtil::P;           using namespace IStd::P;
-using namespace ISysUtil::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaRef::P;            using namespace ILuaUtil::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- LuaFunc ollector class for collector data and custom variables ------- */

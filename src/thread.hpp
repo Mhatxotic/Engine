@@ -12,9 +12,9 @@ namespace IThread {                    // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICollector::P;
 using namespace IError::P;             using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Thread collector class with global thread id counter ================= */

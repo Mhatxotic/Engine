@@ -15,17 +15,18 @@ using namespace ICVarDef::P;           using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFbo::P;
 using namespace IFileMap::P;           using namespace IFlags;
 using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaEvt::P;            using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IOal::P;               using namespace IOgl::P;
-using namespace IPcmFormat::P;         using namespace IPcmLib::P;
-using namespace IShader::P;            using namespace IShaders::P;
-using namespace ISource::P;            using namespace IStd::P;
-using namespace IStream::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace ITimer::P;             using namespace IUtil::P;
-using namespace Lib::Ogg;              using namespace Lib::Ogg::Theora;
-using namespace Lib::OpenAL;           using namespace Lib::OS::GlFW;
+using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IOal::P;
+using namespace IOgl::P;               using namespace IPcmFormat::P;
+using namespace IPcmLib::P;            using namespace IShader::P;
+using namespace IShaders::P;           using namespace ISource::P;
+using namespace IStd::P;               using namespace IStream::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IThread::P;            using namespace ITimer::P;
+using namespace IUtil::P;              using namespace Lib::Ogg;
+using namespace Lib::Ogg::Theora;      using namespace Lib::OpenAL::Types;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */

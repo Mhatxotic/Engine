@@ -12,7 +12,7 @@ namespace IImageDef {                  // Start of private module namespace
 using namespace IDim;                  using namespace IFlags;
 using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ITexDef::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

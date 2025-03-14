@@ -11,7 +11,7 @@ namespace IPcmDef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IFlags;                using namespace IMemory::P;
 using namespace IOal::P;               using namespace IStd::P;
-using namespace Lib::OpenAL;
+using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

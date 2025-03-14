@@ -16,9 +16,9 @@ using namespace ICollector::P;         using namespace IDataFormat::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IFileMap::P;           using namespace IFStream::P;
 using namespace IImageDef::P;          using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Image libraries collector class as a vector for direct access -------- */

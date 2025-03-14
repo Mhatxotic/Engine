@@ -9,16 +9,17 @@
 /* ------------------------------------------------------------------------- */
 namespace IInput {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IConsole::P;
+using namespace IConGraph::P;          using namespace IConsole::P;
 using namespace ICVar::P;              using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDim;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IFboCore::P;           using namespace IFlags;
 using namespace IGlFW::P;              using namespace IGlFWUtil::P;
-using namespace IJoystick::P;          using namespace ILog::P;
-using namespace ILuaFunc::P;           using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IHelper::P;            using namespace IJoystick::P;
+using namespace ILog::P;               using namespace ILuaFunc::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Input flags ========================================================== */
@@ -35,7 +36,7 @@ BUILD_FLAGS(Input,
 );/* == Input class ======================================================== */
 static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Base classes ------------------------------------------------------- */
-  private IHelper,                     // Initialsation helper
+  private InitHelper,                  // Initialsation helper
   public InputFlags,                   // Input configuration settings
   private EvtMainRegVec,               // Events list to register
   private Dimensions<int>,             // Window width
@@ -313,7 +314,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Constructor -------------------------------------------------------- */
   Input(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Init initialisation helper class
+    InitHelper{ __FUNCTION__ },        // Init initialisation helper class
     InputFlags{ IF_NONE },             // No flags set initially
     /* -- Init events for event manager ------------------------------------ */
     EvtMainRegVec{                     // Events list to register

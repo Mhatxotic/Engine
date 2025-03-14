@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IDisplay {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IConsole::P;
+using namespace IConGraph::P;          using namespace IConsole::P;
 using namespace ICVar::P;              using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDim;
 using namespace IDir::P;               using namespace IEvtMain::P;
@@ -18,14 +18,14 @@ using namespace IEvtWin::P;            using namespace IFboCore::P;
 using namespace IFlags;                using namespace IFont::P;
 using namespace IGlFW::P;              using namespace IGlFWCursor::P;
 using namespace IGlFWMonitor::P;       using namespace IGlFWUtil::P;
-using namespace IIdent::P;             using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IInput::P;
-using namespace ILog::P;               using namespace ILuaFunc::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITexture::P;           using namespace IToken::P;
-using namespace IUtf;                  using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace IHelper::P;            using namespace IIdent::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IInput::P;             using namespace ILog::P;
+using namespace ILuaFunc::P;           using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITexture::P;
+using namespace IToken::P;             using namespace IUtf;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -60,7 +60,7 @@ BUILD_FLAGS(Display,
 /* == Display class ======================================================== */
 static class Display final :
   /* -- Base classes ------------------------------------------------------- */
-  private IHelper,                     // Initialisation helper
+  private InitHelper,                  // Initialisation helper
   public  DisplayFlags,                // Display settings
   private EvtMainRegVec,               // Main events list to register
   private EvtWinRegVec,                // Window events list to register
@@ -982,7 +982,7 @@ static class Display final :
     // Register monitor removal event. We can't use our events system for this
     // because once the event callback is over, the data for the monitor is
     // freed.
-    glfwSetMonitorCallback(OnMonitorStatic);
+    GlFWSetMonitorCallback(OnMonitorStatic);
     // Update icons if there are some loaded by the cvars callbacks
     UpdateIcons();
     // Set default gamma for selected monitor
@@ -1000,7 +1000,7 @@ static class Display final :
     // Log progress
     cLog->LogDebugSafe("Display class deinitialising...");
     // Remove events we personally handle
-    glfwSetMonitorCallback(nullptr);
+    GlFWSetMonitorCallback(nullptr);
     // Remove invalidated active flags
     FlagClear(DF_FOCUSED|DF_EXCLUSIVE|DF_INFULLSCREEN|DF_NATIVEFS);
     // Window type deinitialised
@@ -1037,7 +1037,7 @@ static class Display final :
   /* -- Constructor -------------------------------------------------------- */
   Display(void) :
     /* --------------------------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Send name to init helper
+    InitHelper{ __FUNCTION__ },        // Send name to init helper
     DisplayFlags{ DF_NONE },           // No display flags set
     EvtMainRegVec{                     // Register main events
       { EMC_VID_FB_REINIT,     bind(&Display::OnFBReset,     this, _1) },

@@ -16,10 +16,11 @@ namespace ISource {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IFlags;                using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IOal::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::OpenAL;
+using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Source flags --------------------------------------------------------- */

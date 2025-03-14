@@ -13,11 +13,11 @@
 namespace ISystem {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs;                 using namespace IClock::P;
-using namespace ICmdLine::P;           using namespace ICollector::P;
-using namespace IConDef::P;            using namespace ICVarDef::P;
-using namespace IDim;                  using namespace IDir::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags;                using namespace IFStream::P;
+using namespace ICmdLine::P;           using namespace IConDef::P;
+using namespace ICVarDef::P;           using namespace IDim;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFlags;
+using namespace IFStream::P;           using namespace IHelper::P;
 using namespace IIdent::P;             using namespace ILog::P;
 using namespace IMemory::P;            using namespace IParser::P;
 using namespace IPSplit::P;            using namespace IStat::P;

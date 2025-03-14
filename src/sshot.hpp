@@ -14,12 +14,12 @@ using namespace ICVarDef::P;           using namespace IFbo::P;
 using namespace IFboCore::P;           using namespace IIdent::P;
 using namespace IImage::P;             using namespace IImageDef::P;
 using namespace IImageFormat::P;       using namespace IImageLib::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IThread::P;
-using namespace Lib::OS::GlFW;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IThread::P;            using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Begin collector class ------------------------------------------------ */

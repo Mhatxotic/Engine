@@ -15,12 +15,13 @@ namespace IFbo {                       // Start of private module namespace
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFboDef::P;
 using namespace IFboItem::P;           using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IOgl::P;               using namespace IShader::P;
 using namespace IShaders::P;           using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace ITimer::P;             using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo collector class for collector data and custom variables ========== */

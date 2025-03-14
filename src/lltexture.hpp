@@ -17,9 +17,10 @@
 /* ========================================================================= */
 namespace LLTexture {                  // Texture namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IConsole::P;           using namespace IFbo::P;
-using namespace IImage::P;             using namespace IOgl::P;
-using namespace ITexture::P;           using namespace Common;
+using namespace IConGraph::P;          using namespace IConsole::P;
+using namespace IFbo::P;               using namespace IImage::P;
+using namespace IOgl::P;               using namespace ITexture::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Texture common helper classes                                       ## **
@@ -33,7 +34,6 @@ struct AgTileId : public AgIntegerLGE<size_t> {
   explicit AgTileId(lua_State*const lS, const int iArg, const Texture &tCref) :
     AgIntegerLGE{lS, iArg, 0, tCref.GetTileCount()}{} };
 /* -- Other types ---------------------------------------------------------- */
-using Lib::OS::GlFW::GLint;
 typedef AgInteger<GLint> AgGLint;
 /* -- Read vector of the specified integer type ---------------------------- */
 template<class VectorValueType, class VectorType = vector<VectorValueType>>

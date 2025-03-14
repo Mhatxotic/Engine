@@ -11,33 +11,12 @@
 /* ------------------------------------------------------------------------- */
 namespace ICollector {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICVarDef::P;
-using namespace IError::P;             using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace ICVarDef::P;           using namespace IError::P;
+using namespace IHelper::P;            using namespace IIdent::P;
+using namespace ILog::P;               using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Class for collector class name in LUA -------------------------------- */
-class LuaIdent {
-  /* -- Private variables -------------------------------------------------- */
-  const string_view svName;            // Name of class
-  /* -- Public variables ------------------------------------------- */ public:
-  int             &iRef;               // Reference to namespace in Lua
-  /* -- Get name of class -------------------------------------------------- */
-  const char* CStr(void) const { return svName.data(); }
-  /* -- Get string view name of class -------------------------------------- */
-  const string_view &Str(void) const { return svName; }
-  /* -- Constructor -------------------------------------------------------- */
-  explicit LuaIdent(const string_view svNName, const LuaClassId lciId) :
-    /* --------------------------------------------------------------------- */
-    svName{svNName},                   // Set name of class
-    iRef(llcirAPI[lciId])              // Alias Lua class reference storage
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(LuaIdent)            // Suppress default functions for safety
-};/* -- Collector header --------------------------------------------------- */
+/* -- Collector header ----------------------------------------------------- */
 #define CTOR_HDR_BEGIN(p,              /* The parent (collector) class type */\
                        m,              /* The member class type             */\
                        l,              /* The parent container type typedef */\
@@ -150,58 +129,6 @@ class LuaIdent {
 #define CTOR_BEGIN_ASYNC_DUO(p,m,h,s) \
   CTOR_BEGIN_ASYNC(p,m,h,,)            /* Start building collector class    */\
   CTOR_MEM_BEGIN_ASYNC_CSLAVE(p,m,s)   /* Start building member class        */
-/* == Init Helper Class ==================================================== **
-** ######################################################################### **
-** ## This class holds the name of a class and if it has been             ## **
-** ## initialised. It stops classes being accidentally double             ## **
-** ## initialised due to programming errors.                              ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-class IHelper :                        // The Init Helper class
-  /* -- Base classes ------------------------------------------------------- */
-  public IdentConst                    // Holds the identifier
-{ /* -- Private variables -------------------------------------------------- */
-  ClkTimePoint     ctInitialised,      // Time class was initialised
-                   ctDeinitialised;    // Time class was deinitialised
-  /* ----------------------------------------------------------------------- */
-  void IHSetInitialised(void) { ctInitialised = cmHiRes.GetTime(); }
-  void IHSetDeInitialised(void) { ctDeinitialised = cmHiRes.GetTime(); }
-  /* --------------------------------------------------------------- */ public:
-  bool IHIsInitialised(void) const { return ctInitialised > ctDeinitialised; }
-  bool IHIsNotInitialised(void) const { return !IHIsInitialised(); }
-  /* ----------------------------------------------------------------------- */
-  void IHInitialise(void)
-  { // Raise exception if object already initialised
-    if(IHIsInitialised())
-      XC("Object already initialised!",
-         "Identifier", IdentGet(),
-         "Age", StrShortFromDuration(cmHiRes.
-                  TimePointToClampedDouble(ctInitialised)));
-    // Class now initialised
-    IHSetInitialised();
-  }
-  /* ----------------------------------------------------------------------- */
-  bool IHDeInitialise(void)
-  { // Return if class already initialised
-    if(IHIsNotInitialised()) return false;
-    // Class now de-initialised
-    IHSetDeInitialised();
-    // Success
-    return true;
-  }
-  /* ----------------------------------------------------------------------- */
-  bool IHNotDeInitialise(void) { return !IHDeInitialise(); }
-  /* -- Constructors -------------------------------------------- */ protected:
-  explicit IHelper(const string_view &strvName) :
-    /* -- Initialisers ----------------------------------------------------- */
-    IdentConst{strvName},              // Initialise name
-    ctInitialised{seconds{0}},         // Clear initialised time
-    ctDeinitialised{cmHiRes.GetTime()} // Set deinitialised time
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Default suppressions ----------------------------------------------- */
-  DELETECOPYCTORS(IHelper)             // Suppress default functions for safety
-};/* ----------------------------------------------------------------------- */
 /* == Collector class helper =============================================== **
 ** ######################################################################### **
 ** ## Derive this class into the main class to allow collection of child  ## **
@@ -213,7 +140,7 @@ class CLHelperBase :
   /* -- Base classes ------------------------------------------------------- */
   public IdentCMaster<>,               // Counter master class
   public ListType,                     // The list of members
-  public IHelper                       // Initialisation helper
+  public InitHelper                    // Initialisation helper
 { /* -- Private variables -------------------------------------------------- */
   size_t           stMaximum;          // Maximum children allowed
   /* -- Return last item in the list ------------------------------- */ public:
@@ -254,7 +181,7 @@ class CLHelperBase :
   /* -- Constructor -------------------------------------------------------- */
   explicit CLHelperBase(const string_view &strvName) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ strvName },               // Set initialisation helper name
+    InitHelper{ strvName },            // Set initialisation helper name
     stMaximum(StdMaxSizeT)             // Initialise maximum objects
     /* -- No code ---------------------------------------------------------- */
     { }
@@ -600,37 +527,6 @@ struct ICHelper :                      // Members initially public
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(ICHelper)            // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
-/* == Lua userdata helper ================================================== **
-** ######################################################################### **
-** ## This class stores pointers to classes which are used by LUA and can ## **
-** ## locked by the engine so LUA cannot automatically delete them during ## **
-** ## garbage collection.                                                 ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-class Lockable                         // Members initially private
-{ /* -- Private variables -------------------------------------------------- */
-  bool             bLocked;            // Class is locked from being dealloced
-  /* -- Set locked status -------------------------------------------------- */
-  void LockSet(const bool bState) { bLocked = bState; }
-  /* -- Return true if lock is (not) set --------------------------- */ public:
-  bool LockIsSet(void) const { return bLocked; }
-  bool LockIsNotSet(void) const { return !LockIsSet(); }
-  /* -- Set/clear locked status -------------------------------------------- */
-  void LockSet(void) { LockSet(true); }
-  void LockClear(void) { LockSet(false); }
-  /* -- Swap lock status with another class -------------------------------- */
-  void LockSwap(Lockable &lOther) { swap(bLocked, lOther.bLocked); }
-  /* -- Constuctor --------------------------------------------------------- */
-  explicit Lockable(                   // Initialise with lock (def: false)
-    /* -- Parameters ------------------------------------------------------- */
-    const bool bState=false            // The user requested lock state
-    ): /* -- Initialisers -------------------------------------------------- */
-    bLocked(bState)                    // Set the initial lock state
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Lockable)            // Suppress default functions for safety
-};/* -- End ---------------------------------------------------------------- */
 };                                     // End of private module namespace
 /* ------------------------------------------------------------------------- */
 };                                     // End of public module namespace

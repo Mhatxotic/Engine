@@ -12,27 +12,28 @@ namespace ICore {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArchive::P;           using namespace IAsset::P;
 using namespace IAudio::P;             using namespace ICmdLine::P;
-using namespace IConDef::P;            using namespace IConsole::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IDir::P;
-using namespace IDisplay::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IEvtWin::P;
-using namespace IFbo::P;               using namespace IFboCore::P;
-using namespace IJson::P;              using namespace IFont::P;
-using namespace IFreeType::P;          using namespace IFtf::P;
-using namespace IGlFW::P;              using namespace IGlFWUtil::P;
-using namespace IImage::P;             using namespace IInput::P;
-using namespace ILog::P;               using namespace ILua::P;
-using namespace ILuaCode::P;           using namespace ILuaUtil::P;
-using namespace ILuaVariable::P;       using namespace IOgl::P;
-using namespace IPalette::P;           using namespace IPcm::P;
-using namespace IPSplit::P;            using namespace IShaders::P;
-using namespace ISql::P;               using namespace ISource::P;
-using namespace IStd::P;               using namespace IStream::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITexture::P;
-using namespace IThread::P;            using namespace ITimer::P;
-using namespace IToken::P;             using namespace IVideo::P;
+using namespace IConDef::P;            using namespace IConGraph::P;
+using namespace IConsole::P;           using namespace ICVar::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IDir::P;               using namespace IDisplay::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IEvtWin::P;            using namespace IFbo::P;
+using namespace IFboCore::P;           using namespace IJson::P;
+using namespace IFont::P;              using namespace IFreeType::P;
+using namespace IFtf::P;               using namespace IGlFW::P;
+using namespace IGlFWUtil::P;          using namespace IImage::P;
+using namespace IInput::P;             using namespace ILog::P;
+using namespace ILua::P;               using namespace ILuaCode::P;
+using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
+using namespace IOgl::P;               using namespace IPalette::P;
+using namespace IPcm::P;               using namespace IPSplit::P;
+using namespace IShaders::P;           using namespace ISql::P;
+using namespace ISource::P;            using namespace IStd::P;
+using namespace IStream::P;            using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITexture::P;           using namespace IThread::P;
+using namespace ITimer::P;             using namespace IToken::P;
+using namespace IVideo::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Prototype ------------------------------------------------------------ */

@@ -15,7 +15,8 @@ using namespace ICodec::P;             using namespace ICollector::P;
 using namespace ICVarDef::P;           using namespace IDir::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IIdent::P;             using namespace IFlags;
-using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */

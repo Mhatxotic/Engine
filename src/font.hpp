@@ -18,12 +18,13 @@ using namespace ICollector::P;         using namespace IDim;
 using namespace IError::P;             using namespace IFileMap::P;
 using namespace IFreeType::P;          using namespace IFtf::P;
 using namespace IImageDef::P;          using namespace IJson::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace ITexture::P;
-using namespace IUtf;                  using namespace IUtil::P;
-using namespace Lib::FreeType;         using namespace Lib::OS::GlFW;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace ITexture::P;           using namespace IUtf;
+using namespace IUtil::P;              using namespace Lib::FreeType;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Font collector class for collector data and custom variables ========= */

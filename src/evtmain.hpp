@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IEvtMain {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IEvtCore::P;
+using namespace IEvtCore::P;           using namespace IHelper::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
@@ -87,7 +87,7 @@ enum EvtMainCmd : size_t               // Engine thread event commands
 };/* -- Remember to update the id strings at EvtMain constructor ----------- */
 static class EvtMain final :           // Event list for render thread
   /* -- Dependencies ------------------------------------------------------- */
-  private IHelper,                     // Initialisation helper
+  private InitHelper,                  // Initialisation helper
   public EvtCore                       // Events common class
    <EvtMainCmd,                        // The enum list of events supported
     EMC_MAX,                           // Maximum events allowed
@@ -220,7 +220,7 @@ static class EvtMain final :           // Event list for render thread
   /* -- Constructor -------------------------------------------------------- */
   EvtMain(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Initialise helper
+    InitHelper{ __FUNCTION__ },        // Initialise helper
     EvtCore{ "EventMain", ISList{{     // Set name of this object
       /* ------------------------------------------------------------------- */
 #define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings

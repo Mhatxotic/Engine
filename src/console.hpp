@@ -12,17 +12,16 @@
 namespace IConsole {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs;                 using namespace IClock::P;
-using namespace ICollector::P;         using namespace IConDef::P;
-using namespace IConLib::P;            using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags;                using namespace IGlFW::P;
+using namespace IConDef::P;            using namespace IConLib::P;
+using namespace ICVar::P;              using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFlags;
+using namespace IGlFW::P;              using namespace IHelper::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISocket::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace ITimer::P;             using namespace IToken::P;
 using namespace IUtf;                  using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Typedefs ============================================================= */
@@ -64,7 +63,7 @@ static class Console final :           // Members initially private
   public ConLines,                     // Console text lines list
   private ConLinesConstIt,             // Text lines forward iterator
   private ConLinesConstRevIt,          // Text lines reverse iterator
-  private IHelper,                     // Initialisation helper
+  private InitHelper,                  // Initialisation helper
   public ConsoleFlags                  // Console flags
 { /* -- Private typedefs --------------------------------------------------- */
   typedef queue<ConLine> ConLineQueue; // Pending console lines
@@ -881,7 +880,7 @@ static class Console final :           // Members initially private
   /* -- Constructor -------------------------------------------------------- */
   explicit Console(const ConCmdStaticList &ccslDef) :
     /* -- Initialisers ----------------------------------------------------- */
-    IHelper{ __FUNCTION__ },           // Init helper function name
+    InitHelper{ __FUNCTION__ },        // Init helper function name
     Flags{ CF_NONE },                  // No initial flags
     clriPosition{ rbegin() },          // Input position at beginning
     slriInputPosition{                 // Init log position...

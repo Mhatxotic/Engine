@@ -12,11 +12,12 @@ namespace IAtlas {                     // Start of private namespace
 using namespace IBin::P;               using namespace ICollector::P;
 using namespace IDim;                  using namespace IError::P;
 using namespace IFboDef::P;            using namespace IImageDef::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace ITexture::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace ITexture::P;           using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Atlas collector class for collector data and custom variables ======== */
