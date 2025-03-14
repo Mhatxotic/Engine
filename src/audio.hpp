@@ -33,10 +33,11 @@ static class Audio final :             // Audio manager class
   public AudioFlags,                   // Audio flags
   private Thread                       // Audio monitoring thread
 { /* -- Monitoring thread timers ---------------------------------- */ private:
-  ClkTimePoint     tpNextCheck;        // Next check for hardware changes
-  SafeClkDuration  cdCheckRate,        // Check rate
-                   cdThreadDelay;      // Thread sleep time
-  const ClkDuration cdDiscWait;        // Sleep time waiting for main thread
+  const EvtMainRegVec emrvEvents;      // Frequently used events
+  ClkTimePoint        tpNextCheck;     // Next check for hardware changes
+  SafeClkDuration     cdCheckRate,     // Check rate
+                      cdThreadDelay;   // Thread sleep time
+  const ClkDuration   cdDiscWait;      // Sleep time waiting for main thread
   /* -- Devices ------------------------------------------------------------ */
   StrVector        dlPBDevices,        // list of playback devices
                    dlCTDevices;        // list of capture devices
@@ -71,9 +72,9 @@ static class Audio final :             // Audio manager class
       // Log status
       cLog->LogInfoSafe("Audio class re-initialised successfully.");
     } // We don't want LUA to hard break really.
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Log the exception first
-      cLog->LogErrorExSafe("Audio re-init exception: $", E.what());
+      cLog->LogErrorExSafe("Audio re-init exception: $", eReason);
       // Reset next thread check time
       ResetCheckTime();
     } // Remove re-initialisation flag
@@ -101,9 +102,9 @@ static class Audio final :             // Audio manager class
     } // Terminate thread
     return 1;
   } // exception occured in this thread
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Report error
-    cLog->LogErrorExSafe("(AUDIO THREAD EXCEPTION) $", E.what());
+    cLog->LogErrorExSafe("(AUDIO THREAD EXCEPTION) $", eReason);
     // Restart the thread
     return 0;
   }
@@ -232,7 +233,7 @@ static class Audio final :             // Audio manager class
     // Allocate sources data
     SourceAlloc(cCVars->GetInternal<ALuint>(AUD_NUMSOURCES));
     // Register engine events
-    cEvtMain->Register(EMC_AUD_REINIT, bind(&Audio::OnReInit, this, _1));
+    cEvtMain->RegisterEx(emrvEvents);
     // Set parameters and check for errors
     SetDistanceModel(AL_NONE);
     SetPosition(0, 0, 0);
@@ -244,7 +245,7 @@ static class Audio final :             // Audio manager class
   { // Clear openAL context
     cOal->DeInit();
     // Unregister engine events
-    cEvtMain->Unregister(EMC_AUD_REINIT);
+    cEvtMain->UnregisterEx(emrvEvents);
   }
   /* -- Enumerate capture devices ------------------------------------------ */
   void EnumerateCaptureDevices(void)
@@ -423,6 +424,7 @@ static class Audio final :             // Audio manager class
     Thread{ "audio", STP_AUDIO,        // Initialise high perf audio thread
       bind(&Audio::AudioThreadMain,    // " with reference to callback
         this, _1) },                   // " function
+    emrvEvents{ { EMC_AUD_REINIT, bind(&Audio::OnReInit, this, _1) } },
     cdCheckRate{ seconds{ 0 } },       // Initialise thread check time
     cdDiscWait{ milliseconds{ 100 } }  // Initialise discrepency sleep time
     /* --------------------------------------------------------------------- */

@@ -10,11 +10,11 @@
 /* ------------------------------------------------------------------------- */
 namespace IBin {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IDim;
-using namespace IIdent::P;             using namespace ILockable::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IUtil::P;
+using namespace ICollector::P;         using namespace IDim::P;
+using namespace IDimCoord::P;          using namespace IIdent::P;
+using namespace ILockable::P;          using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

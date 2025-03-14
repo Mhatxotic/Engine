@@ -741,7 +741,7 @@ for(const Ftf*const fPtr : *cFtfs)
   const Ftf &fRef = *fPtr;
   sTable.DataN(fRef.CtrGet()).DataN(fRef.GetGlyphCount())
         .DataN(fRef.DimGetWidth(),0).DataN(fRef.DimGetHeight(),0)
-        .DataN(fRef.diDPI.DimGetWidth()).DataN(fRef.diDPI.DimGetHeight())
+        .DataN(fRef.duDPI.DimGetWidth()).DataN(fRef.duDPI.DimGetHeight())
         .Data(fRef.GetStyle()).Data(fRef.GetFamily())
         .Data(fRef.IdentGet());
 } // Log counts

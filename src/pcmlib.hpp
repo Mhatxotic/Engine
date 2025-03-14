@@ -87,13 +87,13 @@ static void PcmLoadFile(const PcmFormat pfId, FileMap &fmData, PcmData &pdData)
     // Could not detect format so throw error
     throw runtime_error{ "Unable to load sound!" };
   } // Error occured. Error used as title
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Throw an error with the specified reason
-    XC(E.what(), "Identifier", fmData.IdentGet(),
-                 "Size",       fmData.MemSize(),
-                 "Position",   fmData.FileMapTell(),
-                 "FormatId",   pfId,
-                 "Plugin",     plRef.GetName());
+    XC(eReason, "Identifier", fmData.IdentGet(),
+                "Size",       fmData.MemSize(),
+                "Position",   fmData.FileMapTell(),
+                "FormatId",   pfId,
+                "Plugin",     plRef.GetName());
   }
 }
 /* -- Load a bitmap and automatically detect type -------------------------- */
@@ -112,12 +112,12 @@ static void PcmLoadFile(FileMap &fmData, PcmData &pdData)
           pdData.GetSFormat(), StrFromBoolTF(pdData.IsDynamic()), dec,
           pdData.GetAlloc());
     } // Error occured. Error used as title
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Throw an error with the specified reason
-      XC(E.what(), "Identifier", fmData.IdentGet(),
-                   "Size",       fmData.MemSize(),
-                   "Position",   fmData.FileMapTell(),
-                   "Plugin",     plRef.GetName());
+      XC(eReason, "Identifier", fmData.IdentGet(),
+                  "Size",       fmData.MemSize(),
+                  "Position",   fmData.FileMapTell(),
+                  "Plugin",     plRef.GetName());
     } // Rewind stream position and reset all pcm data read to load again
     fmData.FileMapRewind();
     pdData.ResetAllData();

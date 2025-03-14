@@ -14,7 +14,8 @@ namespace ISystem {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs;                 using namespace IClock::P;
 using namespace ICmdLine::P;           using namespace IConDef::P;
-using namespace ICVarDef::P;           using namespace IDim;
+using namespace ICoord::P;             using namespace ICVarDef::P;
+using namespace IDim::P;               using namespace IDimCoord::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFlags;
 using namespace IFStream::P;           using namespace IHelper::P;
@@ -594,11 +595,11 @@ static class System final :            // The main system class
         // Try to allocate the memory and if succeeded
         try { mbData.MemInitBlank(stActualMemory); }
         // Allocation failed?
-        catch(const exception &e)
+        catch(const exception &eReason)
         { // Throw memory error
           XC("There is not enough system memory available. Close any "
             "running applications consuming it and try running again!",
-            "Error",   e,          "Available", RAMFree(),
+            "Error",   eReason,    "Available", RAMFree(),
             "Total",   RAMTotal(), "Required",  stMemory,
             "Percent", UtilMakePercentage(RAMFree(), RAMTotal()),
             "Needed",  stMemory - RAMFree());

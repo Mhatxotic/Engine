@@ -44,7 +44,7 @@ template<class StringType>             // STL string type to use
     /* -- Noi code --------------------------------------------------------- */
     { }
   /* -- Standby constructor ------------------------------------------------ */
-  IdentBase(void) { }
+  IdentBase(void) = default;
   /* -- Default suppressions ----------------------------------------------- */
   DELETECOPYCTORS(IdentBase)           // Suppress default functions for safety
 };/* -- Identifier class --------------------------------------------------- */

@@ -109,7 +109,7 @@ class SysBase :                        // Members initially private
     } // Return formatted data
     tD.Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &e) { osS << e.what(); }
+  catch(const exception &eReason) { osS << eReason.what(); }
   /* == Get memory information ============================================= */
   void SEHDumpMemoryStatus(void) try
   { // Get process memory info
@@ -153,7 +153,7 @@ class SysBase :                        // Members initially private
       .DataB(mD.ullAvailExtendedVirtual, 2)
       .DataN(int(mD.dwMemoryLoad) + '%').Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &e) { osS << e.what(); }
+  catch(const exception &eReason) { osS << eReason.what(); }
   /* == Get executable filename ============================================ */
   const wstring SEHGetExecutableFileNameWithoutExtension(void)
   { // Storage for executable and crash log file name
@@ -226,7 +226,7 @@ class SysBase :                        // Members initially private
             << '!';
     }
   } // Shouldn't happen but just incase
-  catch(const exception &e) { osS << e.what(); }
+  catch(const exception &eReason) { osS << eReason.what(); }
   /* == Dump registers to string =========================================== */
   void SEHDumpRegisters(const CONTEXT *pcData) try
   { // Invalid context?
@@ -353,7 +353,7 @@ class SysBase :                        // Members initially private
 #undef D64
 #undef PUSHINT
   } // Shouldn't happen but just incase
-  catch(const exception &e) { osS << e.what(); }
+  catch(const exception &eReason) { osS << eReason.what(); }
   /* == Perform process dump =============================================== */
   void SEHProcessDump(void) try
   { // Prepare formatted data
@@ -419,7 +419,7 @@ class SysBase :                        // Members initially private
           // Done with process handle
           CloseHandle(hProcess);
         } // exception occured?
-        catch(const exception &)
+        catch(const exception&)
         { // Close the process handle
           CloseHandle(hProcess);
           // Rethrow the exception
@@ -430,7 +430,7 @@ class SysBase :                        // Members initially private
       // Done with snapshot
       CloseHandle(hSnapshot);
     } // exception occured?
-    catch(const exception &)
+    catch(const exception&)
     { // Close the snapshot handle
       CloseHandle(hSnapshot);
       // Rethrow the exception
@@ -438,7 +438,7 @@ class SysBase :                        // Members initially private
     } // Build output into string stream
     tData.Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &e) { osS << e.what(); }
+  catch(const exception &eReason) { osS << eReason.what(); }
   /* == Perform module dump ================================================ */
   void SEHModuleDump(void) try
   { // Prepare formatted data
@@ -474,7 +474,7 @@ class SysBase :                        // Members initially private
     } // Build output into string stream
     tD.Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &e) { osS << e.what(); }
+  catch(const exception &eReason) { osS << eReason.what(); }
   /* == Perform stack dump ================================================= */
   void SEHStackDump(const HANDLE hProcess, const HANDLE hThread,
     const CONTEXT*const pcData) try
@@ -580,7 +580,7 @@ class SysBase :                        // Members initially private
 #undef ADDR_FRAME
 #undef IMAGE_FILE_MACHINE
   } // Shouldn't happen but just incase
-  catch(const exception &e) { osS << e.what(); }
+  catch(const exception &eReason) { osS << eReason.what(); }
   /* == Dump summary to file =============================================== */
   DWORD SEHWrite(const HANDLE hH, const string &strS)
   { // Bytes out
@@ -615,7 +615,7 @@ class SysBase :                        // Members initially private
            "Arguments: " << S16toUTF(GetCommandLine()) << ".\r\n"
            "\r\n";
   } // Shouldn't happen but just incase
-  catch(const exception &e) { osS << e.what(); }
+  catch(const exception &eReason) { osS << eReason.what(); }
   /* == Dump string to file ================================================ */
   void SEHDumpLog(const CONTEXT *cData, const string &strDialog) try
   { // Get filename
@@ -643,14 +643,14 @@ class SysBase :                        // Members initially private
       // Close handle
       CloseHandle(hFile);
     } // If exception occured?
-    catch(const exception &)
+    catch(const exception&)
     { // Close handle
       CloseHandle(hFile);
       // Rethrow
       throw;
     }
   } // Shouldn't happen but just incase
-  catch(const exception &) { }
+  catch(const exception&) { }
   /* == Build summary ====================================================== */
   const string SEHGetSummary(const EXCEPTION_POINTERS &epData) try
   { // Get exception record
@@ -687,7 +687,7 @@ class SysBase :                        // Members initially private
     // Return string
     return osS.str();
   } // Shouldn't happen but just incase
-  catch(const exception &e) { return e.what(); }
+  catch(const exception &eReason) { return eReason.what(); }
   /* == Method for exception handler ======================================= */
   static LONG WINAPI HandleExceptionStatic(LPEXCEPTION_POINTERS);
   LONG HandleException(const EXCEPTION_POINTERS &epData) try
@@ -709,9 +709,9 @@ class SysBase :                        // Members initially private
     // We handled the exception
     return EXCEPTION_EXECUTE_HANDLER;
   } // This shouldn't happen but just incase
-  catch(const exception &e)
+  catch(const exception &eReason)
   { // Show message box
-    MessageBox(hwndWindow, UTFtoS16(e.what()).c_str(),
+    MessageBox(hwndWindow, UTFtoS16(eReason.what()).c_str(),
       L"exception in unhandled exception", MB_ICONSTOP);
     // We handled the exception
     return EXCEPTION_EXECUTE_HANDLER;

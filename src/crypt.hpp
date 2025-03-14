@@ -20,17 +20,17 @@ using namespace Lib::OS::OpenSSL;      using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */
-static char CryptHex2Char(const uint8_t ucChar)
+template<int iFailCode>static int CryptHex2Char(unsigned char ucChar)
 { // Is a digit?
   if(ucChar >= '0' && ucChar <= '9') return ucChar - '0';
   // Is a upper-case letter?
-  else if(ucChar >= 'A' && ucChar <= 'F') return ucChar - 'A' + 10;
+  if(ucChar >= 'A' && ucChar <= 'F') return ucChar - 'A' + 10;
   // Is a lower-case letter?
-  else if(ucChar >= 'a' && ucChar <= 'f') return ucChar - 'a' + 10;
+  if(ucChar >= 'a' && ucChar <= 'f') return ucChar - 'a' + 10;
   // Is invalid? Just return zero
-  else return 0;
+  return iFailCode;
 }
-/* -- Convert the specified hexadecimal string to 8-bit array ------------- */
+/* -- Convert the specified hexadecimal string to 8-bit array -------------- */
 static void CryptHexDecodePtr(const char* const cpSrc, const size_t stSrcLen,
   char* const cpDst)
 { // Walk the string
@@ -39,8 +39,8 @@ static void CryptHexDecodePtr(const char* const cpSrc, const size_t stSrcLen,
              stInPos += 2, ++stOutPos)
     // Decode the hexadecimal value
     cpDst[stOutPos] = static_cast<char>(
-      (CryptHex2Char(static_cast<uint8_t>(cpSrc[stInPos])) << 4) +
-       CryptHex2Char(static_cast<uint8_t>(cpSrc[stInPos + 1])));
+      (CryptHex2Char<0>(static_cast<unsigned char>(cpSrc[stInPos])) << 4) +
+       CryptHex2Char<0>(static_cast<unsigned char>(cpSrc[stInPos + 1])));
 }
 /* -- Convert the specified hexadecimanl string to 8-bit array ------------- */
 static Memory CryptHexDecodeA(const string &strSrc)
@@ -529,17 +529,6 @@ static unsigned int CryptToCRC32(const string &strIn)
 /* -- Create CRC32 hash of specified memory block using LZMA API ----------- */
 static unsigned int CryptToCRC32(const MemConst &mcSrc)
   { return CrcCalc(mcSrc.MemPtr<void>(), mcSrc.MemSize()); }
-/* -- Convert hexadecimal character to value ------------------------------- */
-static int CryptHexCharToValue(unsigned char ucChar)
-{ // Is a digit?
-  if(ucChar >= '0' && ucChar <= '9') return ucChar - '0';
-  // Is an uppercase letter?
-  if(ucChar >= 'A' && ucChar <= 'F') return ucChar - 'A' + 10;
-  // Is a lowercase letter?
-  if(ucChar >= 'a' && ucChar <= 'f') return ucChar - 'a' + 10;
-  // Invalid hexadecimal character
-  return -1;
-}
 /* -- URL decode the specified c-string ------------------------------------ */
 static string CryptURLDecode(const string &strS)
 { // Bail if passed string is invalid
@@ -554,12 +543,12 @@ static string CryptURLDecode(const string &strS)
     { // Convert hex to number and if not at end of string?
       if(const unsigned char uc1 = static_cast<unsigned char>(*(++cpPtr)))
       { // Get the hexadecimal value and goto next character if not valid
-        int iVal1 = CryptHexCharToValue(uc1);
+        const int iVal1 = CryptHex2Char<-1>(uc1);
         if(iVal1 == -1) continue;
         // Get second hex character and if not at end of string?
         if(const unsigned char uc2 = static_cast<unsigned char>(*(++cpPtr)))
         { // Get the hexadecimal value and goto next character if not valid
-          int iVal2 = CryptHexCharToValue(uc2);
+          const int iVal2 = CryptHex2Char<-1>(uc2);
           if(iVal2 == -1) continue;
           // Set new character
           ucC = static_cast<unsigned char>(16 * iVal1 + iVal2);

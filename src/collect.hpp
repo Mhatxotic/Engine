@@ -226,8 +226,6 @@ class CLHelperSafe :
     BaseType{ cpT }                    // Initialise base type with name
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* -- Destructor --------------------------------------------------------- */
-  ~CLHelperSafe(void) { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CLHelperSafe)        // Suppress default functions for safety
   /* -- Return the mutex ------------------------------------------- */ public:
@@ -262,8 +260,6 @@ class CLHelperUnsafe :                 // Members initially private
     BaseType{ cpT }                    // Initialise base type with name
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* -- Destructor --------------------------------------------------------- */
-  ~CLHelperUnsafe(void) { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(CLHelperUnsafe)      // Suppress default functions for safety
   /* -- Set maximum objects ------------------------------------------------ */
@@ -396,8 +392,6 @@ struct ICHelperBase                    // Members initially public
     cIterator{ StdMove(itObj) }        // Initialise iterator
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  ~ICHelperBase(void) { }
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(ICHelperBase)        // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */

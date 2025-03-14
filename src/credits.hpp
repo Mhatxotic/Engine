@@ -99,10 +99,11 @@ static const class Credits final :     // Members initially private
     using namespace ICodec;
     return Block<CoDecoder>{ libItem }.MemToStringSafe();
   } // exception occured?
-  catch(const exception &e)
+  catch(const exception &eReason)
   { // Log failure and try to reset the initial var so this does not
     XC("Failed to decode license text!",
-       "Name", libItem.GetName(), "Reason", e, "Length", libItem.MemSize());
+       "Name",   libItem.GetName(), "Reason", eReason,
+       "Length", libItem.MemSize());
   }
   /* -- Decompress a credit ------------------------------------------------ */
   const string CreditGetItemText(const CreditEnums ceIndex) const

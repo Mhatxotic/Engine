@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IMask {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IDim;
+using namespace ICollector::P;         using namespace IDim::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IIdent::P;             using namespace IImage::P;
 using namespace IImageDef::P;          using namespace ILockable::P;
@@ -25,7 +25,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
   public MemoryVector,                 // Slots for each mask
   public Lockable,                     // Lua garbage collector instruction
   public Ident,                        // Name of mask object
-  public Dimensions<int>               // Size of mask image
+  public DimInt                        // Size of mask image
 { /* -- Variables ---------------------------------------------------------- */
   size_t           stAlloc;            // Size of all mask bitmaps in array
   /* -- Two masks overlap? ----------------------------------------- */ public:
@@ -251,7 +251,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     { // Save bitmap to PNG
       imOut.SaveFile(imOut.IdentGet(), 0, IFMT_PNG);
     } // exception occured?
-    catch(const exception &)
+    catch(const exception&)
     { // Close the file and delete it
       DirFileUnlink(imOut.IdentGet());
       // Throw original error

@@ -264,7 +264,7 @@ class DirFile                          // Files container class
   bool IsFilesEmpty(void) const { return GetFiles().empty(); }
   bool IsFilesNotEmpty(void) const { return !IsFilesEmpty(); }
   /* -- Default constructor ------------------------------------------------ */
-  DirFile(void) { }
+  DirFile(void) = default;
   /* -- Move constructor --------------------------------------------------- */
   DirFile(DirEntMap &&demNDirs, DirEntMap &&demNFiles) :
     /* -- Initialisers ----------------------------------------------------- */

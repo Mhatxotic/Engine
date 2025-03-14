@@ -22,7 +22,7 @@
 namespace IFtf {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IASync::P;
-using namespace ICollector::P;         using namespace IDim;
+using namespace ICollector::P;         using namespace IDim::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFileMap::P;           using namespace IFreeType::P;
 using namespace IIdent::P;             using namespace ILockable::P;
@@ -38,14 +38,14 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public AsyncLoaderFtf,               // Asyncronous loading of data
   public Lockable,                     // Lua garbage collector instruction
-  public Dimensions<GLfloat>,          // Requested font width/height
+  public DimGLFloat,                   // Requested font width/height
   public FileMap                       // FT ttf file data (persistant)
 { /* -- Private variables -------------------------------------------------- */
   GLfloat          fOutline;           // FT outline size
   FT_Face          ftfFace;            // FT Char handle
   FT_Stroker       ftsStroker;         // FT Outline handle
   /* --------------------------------------------------------------- */ public:
-  Dimensions<>     diDPI;              // FT DPI width and height
+  DimUInt          duDPI;              // FT DPI width and height
   /* -------------------------------------------------------------- */ private:
   void DoDeInit(void)
   { // Clear freetype handles if created
@@ -56,8 +56,8 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   bool IsLoaded(void) const { return !!ftfFace; }
   bool IsStrokerLoaded(void) const { return !!ftsStroker; }
   FT_Stroker GetStroker(void) const { return ftsStroker; }
-  unsigned int GetDPIWidth(void) const { return diDPI.DimGetWidth(); }
-  unsigned int GetDPIHeight(void) const { return diDPI.DimGetHeight(); }
+  unsigned int GetDPIWidth(void) const { return duDPI.DimGetWidth(); }
+  unsigned int GetDPIHeight(void) const { return duDPI.DimGetHeight(); }
   GLfloat GetOutline(void) const { return fOutline; }
   bool IsOutline(void) const { return GetOutline() > 0.0f; }
   FT_GlyphSlot GetGlyphData(void) const { return ftfFace->glyph; }
@@ -72,11 +72,11 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     cFreeType->CheckError(FT_Set_Char_Size(ftfFace,
       static_cast<FT_F26Dot6>(DimGetWidth() * 64.0f),
       static_cast<FT_F26Dot6>(DimGetHeight() * 64.0f),
-      diDPI.DimGetWidth<FT_UInt>(), diDPI.DimGetHeight<FT_UInt>()),
+      duDPI.DimGetWidth<FT_UInt>(), duDPI.DimGetHeight<FT_UInt>()),
       "Failed to set character size!",
       "Identifier", IdentGet(),     "Width",    DimGetWidth(),
-      "Height",     DimGetHeight(), "DPIWidth", diDPI.DimGetWidth(),
-      "DPIHeight",  diDPI.DimGetHeight());
+      "Height",     DimGetHeight(), "DPIWidth", duDPI.DimGetWidth(),
+      "DPIHeight",  duDPI.DimGetHeight());
   }
   /* -- Convert character to glyph index --------------------------- */ public:
   FT_UInt CharToGlyph(const FT_ULong dwChar)
@@ -121,7 +121,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   { // Set width and height
     DimSet(fWidth, fHeight);
     // Set DPI width and height
-    diDPI.DimSet(uiDpiWidth, uiDpiHeight);
+    duDPI.DimSet(uiDpiWidth, uiDpiHeight);
     // Set outline
     fOutline = fNOutline;
   }
@@ -168,7 +168,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   void SwapFtf(Ftf &ftfOther)
   { // Copy variables over from source class
     DimSwap(ftfOther);
-    diDPI.DimSwap(ftfOther.diDPI);
+    duDPI.DimSwap(ftfOther.duDPI);
     swap(fOutline, ftfOther.fOutline);
     swap(ftfFace, ftfOther.ftfFace);
     swap(ftsStroker, ftfOther.ftsStroker);

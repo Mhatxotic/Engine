@@ -565,9 +565,9 @@ static class Console final :           // Members initially private
       // Enough parameters so capture exceptions so we can't halt execution
       else try { clData.ccbFunc(aList); }
       // exception did occur
-      catch(const exception &E)
+      catch(const exception &eReason)
       { // Print the output in the console
-        AddLineA("Console CB failed! > ", E.what());
+        AddLineA("Console CB failed! > ", eReason);
         // Force the console to be shown because the callback might have
         // hidden the console
         DoSetVisible(true);

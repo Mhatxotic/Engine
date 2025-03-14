@@ -15,14 +15,14 @@
 namespace IStream {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IASync::P;
-using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFileMap::P;           using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILockable::P;
-using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IOal::P;
-using namespace IPcmFormat::P;         using namespace ISource::P;
+using namespace ICodecOGG::P;          using namespace ICollector::P;
+using namespace ICVarDef::P;           using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFileMap::P;
+using namespace IIdent::P;             using namespace ILog::P;
+using namespace ILockable::P;          using namespace ILuaEvt::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IOal::P;               using namespace ISource::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IUtil::P;
 using namespace Lib::Ogg;              using namespace Lib::OpenAL::Types;

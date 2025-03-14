@@ -50,11 +50,11 @@ static const string SysError(const int iError)
                       return strOut;
     }
   } // exception occured
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Free the string if allocated
     if(lpszError) LocalFree(lpszError);
     // Assign the exception message as the error
-    return StrFormat("SE#$($)", dwError, E.what());
+    return StrFormat("SE#$($)", dwError, eReason);
   }
 }
 /* -- System error code ---------------------------------------------------- */

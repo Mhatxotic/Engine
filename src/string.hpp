@@ -90,84 +90,120 @@ static class Common final              // Members initially private
 *cCommon;                              // Assigned in main function
 /* -- Some helpful globals so not to repeat anything ----------------------- */
 static const char*const cpTimeFormat = "%a %b %d %H:%M:%S %Y %z";
-/* -- Append final parameter (uses copy elision) --------------------------- */
-static void StrAppendHelper(ostringstream&) { }
-/* -- Append a parameter (uses copy elision) ------------------------------- */
-template<typename AnyType, typename ...VarArgs>
-  static void StrAppendHelper(ostringstream &osS, const AnyType &atVal,
-    const VarArgs &...vatArgs)
-      { osS << atVal; StrAppendHelper(osS, vatArgs...); }
-/* -- Append main function ------------------------------------------------- */
-template<typename ...VarArgs>
-  static const string StrAppend(const VarArgs &...vaVars)
-{ // Theres no need to call this if theres no parameters
-  static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-  // Stream to write to
-  ostringstream osS;
-  // Build string
-  StrAppendHelper(osS, vaVars...);
-  // Return string
-  return osS.str();
-}
-/* -- Append with formatted numbers ---------------------------------------- */
-template<typename ...VarArgs>
-  static const string StrAppendImbue(const VarArgs &...vaVars)
-{ // Theres no need to call this if theres no parameters
-  static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-  // Stream to write to
-  ostringstream osS;
-  // Imbue current locale
-  osS.imbue(cCommon->Locale());
-  // Build string
-  StrAppendHelper(osS, vaVars...);
-  // Return appended string
-  return osS.str();
-}
-/* -- Append final parameter (uses copy elision) --------------------------- */
-static void StrFormatHelper(ostringstream &osS, const char *cpPos)
-  { if(*cpPos) osS << cpPos; }
-/* -- Process any value ------------------------------------------------- -- */
-template<typename AnyType, typename ...VarArgs>
-  static void StrFormatHelper(ostringstream &osS, const char *cpPos,
-    const AnyType &atVal, const VarArgs &...vaVars)
-{ // Find the mark that will be replaced by this parameter and if we
-  // find the character?
-  if(const char*const cpNewPos = strchr(cpPos, '$'))
-  { // How far did we find the new position
-    switch(const size_t stNum = static_cast<size_t>(cpNewPos - cpPos))
-    { // One character? Just copy one character and move ahead two to skip
-      // over the '$' we just processed.
-      case 1: osS << *cpPos; cpPos += 2; break;
-      // More than one character? Copy characters and stride over the '$'
-      // we just processed. Better than storing single characters.
-      default: osS << StdMove(string{ cpPos, stNum });
-               cpPos += stNum + 1;
-               break;
-      // Did not move? This can happen at the start of the string. Just
-      // move over the first '$'.
-      case 0: ++cpPos; break;
-    } // Push the value we are supposed to replace the matched '$' with.
-    osS << atVal;
-    // Process more parameters if we can.
-    StrFormatHelper(osS, cpPos, vaVars...);
-  } // Return the rest of the string.
-  else StrFormatHelper(osS, cpPos);
-}
-/* -- Prepare message from c-string format --------------------------------- */
-template<typename ...VarArgs>
-  static const string StrFormat(const char*const cpFmt,
-    const VarArgs &...vaVars)
-{ // Theres no need to call this if theres no parameters
-  static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-  // Return if string empty of invalid
-  if(UtfIsCStringNotValid(cpFmt)) return {};
-  // Stream to write to
-  ostringstream osS;
-  // Format the text
-  StrFormatHelper(osS, cpFmt, vaVars...);
-  // Return formated text
-  return osS.str();
-}
+/* -- Functions for StrAppend, StrAppendImbue and StrFormat ---------------- */
+namespace H                            // Private functions
+{ /* -- Process any value -------------------------------------------------- */
+  template<typename AnyType>
+    static void Value(ostringstream &osS, const AnyType &atVal)
+  { // If is an exception object? Push the string of it
+    if constexpr(is_same_v<AnyType, exception>) osS << atVal.what();
+    // Let ostringstream handle the value
+    else osS << atVal;
+  }
+  /* -- Append functions --------------------------------------------------- */
+  namespace Append                     // Private functions
+  { /* -- Append final parameter ------------------------------------------- */
+    static void Param(ostringstream&) { }
+    /* -- Append a parameter ----------------------------------------------- */
+    template<typename AnyType, typename ...VarArgs>
+      static void Param(ostringstream &osS, const AnyType &atVal,
+        const VarArgs &...vatArgs)
+    { // Push the specified value
+      Value(osS, atVal);
+      // Process next argument
+      Param(osS, vatArgs...);
+    }
+    /* -- Append main function --------------------------------------------- */
+    template<typename ...VarArgs>
+      static const string StrAppend(const VarArgs &...vaVars)
+    { // Theres no need to call this if theres no parameters
+      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
+      // Stream to write to
+      ostringstream osS;
+      // Build string
+      Param(osS, vaVars...);
+      // Return string
+      return osS.str();
+    }
+    /* -- Append with formatted numbers ------------------------------------ */
+    template<typename ...VarArgs>
+      static const string StrAppendImbue(const VarArgs &...vaVars)
+    { // Theres no need to call this if theres no parameters
+      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
+      // Stream to write to
+      ostringstream osS;
+      // Imbue current locale
+      osS.imbue(cCommon->Locale());
+      // Build string
+      Param(osS, vaVars...);
+      // Return appended string
+      return osS.str();
+    }
+  } /* -- Format functions ------------------------------------------------- */
+  namespace Format                     // Private functions
+  { /* -- Append final parameter (uses copy elision) ----------------------- */
+    static void Param(ostringstream &osS, const char *cpPos)
+      { if(*cpPos) osS << cpPos; }
+    /* -- Process any value ------------------------------------------------ */
+    template<typename AnyType, typename ...VarArgs>
+      static void Param(ostringstream &osS, const char *cpPos,
+        const AnyType &atVal, const VarArgs &...vaVars)
+    { // Find the mark that will be replaced by this parameter and if we
+      // find the character?
+      if(const char*const cpNewPos = strchr(cpPos, '$'))
+      { // How far did we find the new position
+        switch(const size_t stNum = static_cast<size_t>(cpNewPos - cpPos))
+        { // One character? Just copy one character and move ahead two to skip
+          // over the '$' we just processed.
+          case 1: osS << *cpPos; cpPos += 2; break;
+          // More than one character? Copy characters and stride over the '$'
+          // we just processed. Better than storing single characters.
+          default: osS << StdMove(string{ cpPos, stNum });
+                   cpPos += stNum + 1;
+                   break;
+          // Did not move? This can happen at the start of the string. Just
+          // move over the first '$'.
+          case 0: ++cpPos; break;
+        } // Push the value we are supposed to replace the matched '$' with.
+        Value(osS, atVal);
+        // Process more parameters if we can.
+        Param(osS, cpPos, vaVars...);
+      } // Return the rest of the string.
+      else Param(osS, cpPos);
+    }
+    /* -- Prepare message from c-string format ----------------------------- */
+    template<typename ...VarArgs>
+      static const string StrFormat(const char*const cpFmt,
+        const VarArgs &...vaVars)
+    { // Theres no need to call this if theres no parameters
+      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
+      // Return if string empty of invalid
+      if(UtfIsCStringNotValid(cpFmt)) return {};
+      // Stream to write to
+      ostringstream osS;
+      // Format the text
+      Param(osS, cpFmt, vaVars...);
+      // Return formated text
+      return osS.str();
+    }
+    /* -- Prepare message from string format ------------------------------- */
+    template<typename ...VarArgs>
+      static const string StrFormat[[maybe_unused]](const string &strS,
+        const VarArgs &...vaVars)
+    { // Return if string empty of invalid
+      if(strS.empty()) return {};
+      // Stream to write to
+      ostringstream osS;
+      // StrFormat the text
+      Param(osS, strS.c_str(), vaVars...);
+      // Return formated text
+      return osS.str();
+    }
+  }
+} /* ----------------------------------------------------------------------- */
+using H::Append::StrAppend;            // Alias 'StrAppend' here
+using H::Append::StrAppendImbue;       // Alias 'StrAppendImbue' here
+using H::Format::StrFormat;            // Alias 'StrFormat' here
 /* == Format a number ====================================================== */
 template<typename IntType>
   static const string StrReadableFromNum(const IntType itVal,

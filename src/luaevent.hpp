@@ -88,7 +88,7 @@ class LuaEvts :
     }
   }
   /* -- Constructor -------------------------------------------------------- */
-  LuaEvts(void) { }
+  LuaEvts(void) = default;
   /* -- Destructor --------------------------------------------------------- */
   ~LuaEvts(void) { LuaEvtsDeInit(); }
   /* ----------------------------------------------------------------------- */
@@ -115,7 +115,7 @@ template<class MemberType>struct LuaEvtTypeParam
         emeEvent.cCmd, emaArgs.size());
   }
   /* -- Constructor (not interested) --------------------------------------- */
-  LuaEvtTypeParam(void) { }
+  LuaEvtTypeParam(void) = default;
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(LuaEvtTypeParam)     // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
@@ -141,7 +141,7 @@ template<class MemberType>struct LuaEvtTypeAsync // Used in async class
         emeEvent.cCmd, emaArgs.size());
   }
   /* -- Constructor (not interested) --------------------------------------- */
-  LuaEvtTypeAsync(void) { }
+  LuaEvtTypeAsync(void) = default;
   /* -- Delete defaults ---------------------------------------------------- */
   DELETECOPYCTORS(LuaEvtTypeAsync)     // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */

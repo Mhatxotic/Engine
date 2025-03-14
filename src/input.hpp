@@ -11,7 +11,7 @@ namespace IInput {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IConGraph::P;          using namespace IConsole::P;
 using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IDim;
+using namespace ICVarLib::P;           using namespace IDim::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IFboCore::P;           using namespace IFlags;
 using namespace IGlFW::P;              using namespace IGlFWUtil::P;
@@ -39,7 +39,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
   private InitHelper,                  // Initialsation helper
   public InputFlags,                   // Input configuration settings
   private EvtMainRegVec,               // Events list to register
-  private Dimensions<int>,             // Window width
+  private DimInt,                      // Window dimensions
   public Joystick                      // Joystick class
 { /* -- Console ------------------------------------------------------------ */
   int              iConKey1, iConKey2; // Primary and secondary console keys

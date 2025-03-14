@@ -358,7 +358,7 @@ class Statistic
   /* -- Add data by pointer ------------------------------------------------ */
   Statistic &DataV(const void*const vpAddr) { return Data(StrAppend(vpAddr)); }
   /* -- Constructor that does nothing -------------------------------------- */
-  Statistic(void) { }
+  Statistic(void) = default;
 };/* ----------------------------------------------------------------------- */
 /* == Stat object collector and object class =============================== */
 CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),

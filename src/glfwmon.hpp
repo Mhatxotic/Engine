@@ -9,10 +9,11 @@
 /* ------------------------------------------------------------------------- */
 namespace IGlFWMonitor {               // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IDim;                  using namespace IError::P;
-using namespace IGlFWUtil::P;          using namespace ILog::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IDim::P;               using namespace IDimCoord::P;
+using namespace IError::P;             using namespace IGlFWUtil::P;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace IUtil::P;
+using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -59,9 +60,7 @@ class GlFWMonitor :                    // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public GlFWResList,                  // Resolutions list
   public DimCoInt                      // Position and physical size
-{ /* -- Private typedefs --------------------------------------------------- */
-  typedef Dimensions<double> DimDouble;
-  /* -- Private variables -------------------------------------------------- */
+{ /* -- Private variables -------------------------------------------------- */
   const int      iIndex;               // Monitor index
   GLFWmonitor   *mContext;             // Monitor context
   const GlFWRes *rPrimary;             // Monitor primary resolution

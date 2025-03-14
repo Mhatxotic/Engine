@@ -143,7 +143,7 @@ template<class ParserMapType>class ParserBase :
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Constructor -------------------------------------------------------- */
-  ParserBase(void) { }
+  ParserBase(void) = default;
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(ParserBase)          // Suppress default functions for safety
 }; /* -- A Parser class where the values can be modified ------------------- */
@@ -192,7 +192,7 @@ template<class ParserBaseType = ParserBase<StrNCStrMap>>struct Parser :
     // Return the value
     return strOut;
   } /* -- Constructor ------------------------------------------------------ */
-  Parser(void) { }
+  Parser(void) = default;
   /* -- MOVE assignment constructor ---------------------------------------- */
   Parser(Parser &&pOther) :            // Other Parser class to move from
     /* -- Initialisers ----------------------------------------------------- */
@@ -217,7 +217,7 @@ template<class ParserBaseType = const ParserBase<const StrStrMap>>
   /* -- Base classes ------------------------------------------------------- */
   public ParserBaseType                // The base map type
 { /* -- Constructor -------------------------------------------------------- */
-  ParserConst(void) { }
+  ParserConst(void) = default;
   /* -- MOVE assignment constructor ---------------------------------------- */
   ParserConst(ParserConst &&pcOther) : // Other vars
     /* -- Initialisers ----------------------------------------------------- */

@@ -298,7 +298,7 @@ static struct CVars final :            // Start of vars class
         cvmiIt->second.SetValue(strValue, cvfcFlags|PANY,
           cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR, strCBError);
       } // Exception occured?
-      catch(const exception &)
+      catch(const exception&)
       { // Unregister the variable that was created to not cause problems when
         // for example, resetting LUA.
         cvmActive.erase(cvmiIt);
@@ -327,7 +327,7 @@ static struct CVars final :            // Start of vars class
       // Return iterator
       return cvmiIt;
     } // exception occured
-    catch(const exception &)
+    catch(const exception&)
     { // Remove the item. We won't put it back in the initial list because we
       // might have corrupted the data.
       cvmActive.erase(cvmiIt);
@@ -563,11 +563,11 @@ static struct CVars final :            // Start of vars class
         { // Decrypt the value and get the result, and if that call fails?
           strNewValue = Block<CoDecoder>{ sdValueRef }.MemToStringSafe();
         } // exception occured?
-        catch(const exception &e)
+        catch(const exception &eReason)
         { // Log failure and try to reset the initial var so this does not
           // happen again and goto next record
           return cLog->LogErrorExSafe(
-            "CVars variable '$' decrypt exception: $", strVar, e.what());
+            "CVars variable '$' decrypt exception: $", strVar, eReason);
         }
         // Set the variable or place it in the initials list if cvar not not
         // registered. The access will be user mode only and assignments

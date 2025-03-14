@@ -35,6 +35,7 @@ namespace E {                          // Put everything in engine namespace
 #include "sysutil.hpp"                 // System utilities header
 #include "cvardef.hpp"                 // CVar definitions header
 #include "clock.hpp"                   // Clock utilities header
+#include "ihelper.hpp"                 // Init helper utility header
 #include "args.hpp"                    // Arguments handling header
 #include "cmdline.hpp"                 // Command-line class header
 #include "memory.hpp"                  // Memory management utilities header
@@ -42,12 +43,17 @@ namespace E {                          // Put everything in engine namespace
 #include "log.hpp"                     // Logging helper class header
 #include "luadef.hpp"                  // Lua definitions header
 #include "collect.hpp"                 // Class collector utility header
+#include "lockable.hpp"                // Lockable collector utility header
+#include "luaident.hpp"                // Lua ident helper class header
 #include "stat.hpp"                    // Statistic utility class header
 #include "thread.hpp"                  // Thread helper class header
 #include "evtcore.hpp"                 // Thread-safe event system core header
 #include "evtmain.hpp"                 // Main engine events system header
-#include "dim.hpp"                     // Data grouping classes header
 #include "condef.hpp"                  // Console definitions header
+#include "intpair.hpp"                 // IntPair class header
+#include "coord.hpp"                   // Coord class header
+#include "dim.hpp"                     // Dimension class header
+#include "dimcoord.hpp"                // DimensionCoord class header
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
 #include "luautil.hpp"                 // Lua utility functions header
@@ -71,8 +77,10 @@ namespace E {                          // Put everything in engine namespace
 using namespace IClock::P;             using namespace ICmdLine::P;
 using namespace ICrypt::P;             using namespace ICodec::P;
 using namespace IDir::P;               using namespace IError::P;
-using namespace IFStream::P;           using namespace IJson::P;
-using namespace ILog::P;               using namespace ILuaLib::P;
+using namespace IFStream::P;           using namespace IHelper::P;
+using namespace IJson::P;              using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IPSplit::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
@@ -1958,18 +1966,6 @@ int SpecialExecute2(const string &strCmd, const bool bOverride=true)
         "CmdLine", strCmd, "Directory", DirGetCWD(), "Exit", iR);
   } // Return status
   else return iR;
-}
-/* -- Prepare message from c-string format --------------------------------- */
-template<typename ...V>
-  static const string StrFormat(const string &strS, const V &...vV)
-{ // Return if string empty of invalid
-  if(strS.empty()) return {};
-  // Stream to write to
-  ostringstream osS;
-  // StrFormat the text
-  StrFormatHelper(osS, strS.c_str(), vV...);
-  // Return formated text
-  return osS.str();
 }
 /* ------------------------------------------------------ StrFormat a string -- */
 #define System(...) SpecialExecute2(__VA_ARGS__, true)

@@ -295,9 +295,9 @@ template<class MemberType, class ColType>class AsyncLoader :
       } // Return success to thread manager
       return 1;
     } // exception occured?
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Prepend the reason incase there are nested exceptions
-      AsyncDoAddStackMessage(E.what());
+      AsyncDoAddStackMessage(eReason.what());
       // Signal completion
       AsyncCompletionDispatch(AR_ERROR);
       // Report error in log

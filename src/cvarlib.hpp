@@ -614,7 +614,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
   "2",
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreErrorBehaviourModified, CoreErrorFlags), TUINTEGER|PSYSTEM },
+  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! ERR_LMRESETLIMIT
 // ? When ERR_LUAMODE is set to 1, this specifies the number of LUA script

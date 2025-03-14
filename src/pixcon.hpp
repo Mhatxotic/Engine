@@ -29,8 +29,6 @@ class SysCon :                         // All members initially private
   private DimCoInt                     // Console drawing position & dimensions
 {  /* -- Typedefs ---------------------------------------------------------- */
   typedef ICurses::attr_t attr_t;      // NCurses alias
-  typedef Coordinates<int> CoordInt;   // Cordinates typedef
-  typedef Dimensions<int> DimInt;      // Dimension typedef
   /* -- Console data ------------------------------------------------------- */
   attr_t           aColour;            // Current colour
   attr_t           aColourSaved;       // Saved colour

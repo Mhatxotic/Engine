@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IImageDef {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IDim;                  using namespace IFlags;
+using namespace IDim::P;               using namespace IFlags;
 using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ITexDef::P;
 using namespace Lib::OS::GlFW::Types;
@@ -88,12 +88,12 @@ BUILD_FLAGS(Image,
 struct ImageSlot :                     // Members initially public
   /* -- Initialisers ------------------------------------------------------- */
   public Memory,                       // Memory data
-  public Dimensions<>                  // Dimensions of data
+  public DimUInt                       // Bitmap dimensions
 { /* -- Init constructor --------------------------------------------------- */
   ImageSlot(Memory &&mData, const unsigned int uiW, const unsigned int uiH) :
     /* -- Initialisers ----------------------------------------------------- */
-    Memory{ StdMove(mData) },             // Move memory in place
-    Dimensions<>{ uiW, uiH }           // Set dimensions
+    Memory{ StdMove(mData) },          // Move memory in place
+    DimUInt{ uiW, uiH }                // Set dimensions
     /* -- No code ---------------------------------------------------------- */
     { }
 };/* ----------------------------------------------------------------------- */
@@ -111,7 +111,7 @@ enum BitDepth : unsigned int           // Human readable bit-depths
 class ImageData :                      // Members initially private
   /* ----------------------------------------------------------------------- */
   public ImageFlags,                   // Shared with 'Image' class if needed
-  public Dimensions<>                  // Image dimensions
+  public DimUInt                       // Bitmap dimensions
 { /* ----------------------------------------------------------------------- */
   BitDepth         bdDepth;            // Image bits per pixel
   ByteDepth        byDepth;            // Image bytes per pixel
@@ -120,7 +120,7 @@ class ImageData :                      // Members initially private
   /* ------------------------------------------------------------ */ protected:
   SlotList         slSlots;            // Image data
   /* --------------------------------------------------------------- */ public:
-  Dimensions<>     duTileOR;           // Override tile size if desired
+  DimUInt          duTileOR;           // Override tile size if desired
   size_t           stTiles;            // Override number of tiles
   /* ----------------------------------------------------------------------- */
   void ImageDataSwap(ImageData &imdRef)

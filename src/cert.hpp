@@ -105,11 +105,11 @@ class Certs                            // Certificates store
         "Certs rejected '$' as unable to get purpose!", fmCert.IdentGet());
     } // Release the certificate (caCert)
   } // In the rare occurence that an exception occurs we should skip the cert
-  catch(const exception &e)
+  catch(const exception &eReason)
   { // Show the exception and try the next certificate
     cLog->LogErrorExSafe(
       "Certs rejected certificate '$/$' due to exception: $",
-      strD, strF, e.what());
+      strD, strF, eReason);
   }
   /* -- Unload open ssl certificate store ---------------------------------- */
   void CertsUnload(void)

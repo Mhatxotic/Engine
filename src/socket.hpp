@@ -913,11 +913,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Capture exceptions and switch to thiscall
     try { iReturn = HTTPMain(); }
     // exception occured?
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Report error
-      cLog->LogErrorExSafe("(SOCKET HTTP THREAD EXCEPTION) $", E.what());
+      cLog->LogErrorExSafe("(SOCKET HTTP THREAD EXCEPTION) $", eReason);
       // Set error message
-      iReturn = SetErrorStaticSafe(E.what());
+      iReturn = SetErrorStaticSafe(eReason.what());
     } // Send disconnection and clear
     SendDisconnect();
     FinishDisconnect();
@@ -963,11 +963,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Capture exceptions and execute the manager
     try { iReturn = SockWriteManager(); }
     // exception occured?
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Report error
-      cLog->LogErrorExSafe("(SOCKET WRITE THREAD EXCEPTION) $", E.what());
+      cLog->LogErrorExSafe("(SOCKET WRITE THREAD EXCEPTION) $", eReason);
       // Set error message
-      iReturn = SetErrorStaticSafe(E.what());
+      iReturn = SetErrorStaticSafe(eReason.what());
     } // Force close the socket if the reader thread isn't already exiting
     SendDisconnect();
     // Required to stop memory leak
@@ -1012,11 +1012,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Capture exceptions
     try { iReturn = SockReadManager(); }
     // exception occured?
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Report error
-      cLog->LogErrorExSafe("(SOCKET THREAD EXCEPTION) $", E.what());
+      cLog->LogErrorExSafe("(SOCKET THREAD EXCEPTION) $", eReason);
       // Set error message
-      iReturn = SetErrorStaticSafe(E.what());
+      iReturn = SetErrorStaticSafe(eReason.what());
     } // Have writer thread?
     if(tWriter.ThreadIsNotCurrent() && tWriter.ThreadIsJoinable())
     { // Call for writer thread to terminate

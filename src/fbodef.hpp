@@ -9,8 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IFboDef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IDim;                  using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace ICoord::P;             using namespace IDim::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Defines -------------------------------------------------------------- */
@@ -384,14 +384,13 @@ template<typename Type1 = GLfloat, typename Type2 = Type1>class FboCoords
     { }                                // Do nothing else
 };/* ----------------------------------------------------------------------- */
 typedef FboCoords<GLfloat>       FboFloatCoords; // Coords made of floats
-typedef Dimensions<GLsizei>      DimGLInt;       // Dimension of GLints
 /* == Data required to complete a render of an fbo ========================= */
 struct FboRenderItem :                 // Rendering item data class
   /* -- Base classes ------------------------------------------------------- */
   public FboColour,                    // Clear colour of the fbo
   public FboBlend,                     // Blend mode of the fbo
   public FboFloatCoords,               // Matrix co-ordinates of the fbo
-  public DimGLInt                      // Fbo dimensions
+  public DimGLSizei                    // Fbo dimensions
 { /* ----------------------------------------------------------------------- */
   GLuint           uiFBO;              // Fbo name
   bool             bClear;             // Clear the fbo?

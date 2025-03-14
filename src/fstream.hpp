@@ -370,8 +370,6 @@ class FStream :                        // Main file stream class
   public FStreamBase                   // Contains fstream base class
 { /* -- Direct access using class variable name which returns opened */ public:
   operator bool(void) const { return FStreamOpened(); }
-  /* -- Basic constructor with no init ------------------------------------- */
-  FStream(void) : FStreamBase{} { }
   /* -- Constructor with optional checking --------------------------------- */
   FStream(const string &strF, const FStreamMode fsmMode) :
     FStreamBase(strF, fsmMode) { }
@@ -381,6 +379,8 @@ class FStream :                        // Main file stream class
   explicit FStream(const string &strF) : FStreamBase{ strF } { }
   /* -- MOVE assignment constructor ---------------------------------------- */
   FStream(FStream &&fsOther) : FStreamBase{ StdMove(fsOther) } { }
+  /* -- Basic constructor with no init ------------------------------------- */
+  FStream(void) = default;
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(FStream)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */

@@ -263,7 +263,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         // Done
         return fmFile;
       } // exception occured
-      catch(const exception &)
+      catch(const exception&)
       { // Clean up look to read
         CleanupLookToRead(cltrData2);
         // Free memory

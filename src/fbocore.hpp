@@ -13,13 +13,14 @@ namespace IFboCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IEvtMain::P;           using namespace IFboDef::P;
-using namespace IFbo::P;               using namespace IGlFW::P;
-using namespace ILog::P;               using namespace IOgl::P;
-using namespace IShader::P;            using namespace IShaders::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace ITimer::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
+using namespace IDim::P;               using namespace IEvtMain::P;
+using namespace IFboDef::P;            using namespace IFbo::P;
+using namespace IGlFW::P;              using namespace ILog::P;
+using namespace IOgl::P;               using namespace IShader::P;
+using namespace IShaders::P;           using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace ITimer::P;             using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Main fbo class ======================================================= */
@@ -27,7 +28,7 @@ static class FboCore final :           // The main fbo operations manager
   /* -- Base classes ------------------------------------------------------- */
   public FboColour,                    // Backbuffer clear colour
   public FboBlend,                     // Default blending mode
-  public DimGLInt                      // Fbo dimensions
+  public DimGLSizei                    // Fbo dimensions
 { /* -- Private variables ----------------------------------------- */ private:
   GLfloat          fAspectMin,         // Minimum orthangal matrix ratio
                    fAspectMax,         // Maximum orthangal matrix ratio

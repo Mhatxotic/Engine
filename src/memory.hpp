@@ -384,7 +384,7 @@ class MemBase :
   MemBase(const size_t stBytes, const void*const vpSrc) :
     MemConst{ stBytes, vpSrc } { }
   /* -- Uninitialised constructor -- pointer ------------------------------- */
-  MemBase(void) { }
+  MemBase(void) = default;
   /* ----------------------------------------------------------------------- */
   DELETECOPYCTORS(MemBase)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
@@ -605,7 +605,7 @@ class Memory :
     /* -- Code to initialise pointer --------------------------------------- */
     { if(vpSrc) MemDoWrite(0, vpSrc, stBytes); }
   /* -- Standby constructor ------------------------------------------------ */
-  Memory(void) { }
+  Memory(void) = default;
   /* -- Destructor (just a free() needed) ---------------------------------- */
   ~Memory(void) { MemFreePtrIfSet(); }
   /* ----------------------------------------------------------------------- */

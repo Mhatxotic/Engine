@@ -20,8 +20,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IError {                     // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IString::P;
-using namespace IUtf;
+using namespace IString::P;            using namespace IUtf;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -38,7 +37,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   void Init(const char*const cpName, const char*const cpType)
     { osS << "\n+ " << cpName << '<' << cpType << "> = "; }
   /* -- Last parameter processed ------------------------------------------- */
-  void Param(void) { const Plugin pPlugin(osS); assign(osS.str()); }
+  void Param(void) { const Plugin pPlugin{ osS }; assign(osS.str()); }
   /* -- Show integer ------------------------------------------------------- */
   template<typename Type,typename UnsignedType=Type>
     void Int(const char*const cpName, const char*const cpType, const Type tVal)
@@ -246,6 +245,10 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   template<typename ...VarArgs>
     Error(const char*const cpErr, const VarArgs &...vaVars)
       { osS << cpErr; Param(vaVars...); }
+  /* -- Prepare error message constructor with exception object ------------ */
+  template<typename ...VarArgs>
+    Error(const exception &eReason, const VarArgs &...vaVars) :
+      Error(eReason.what(), vaVars...) { }
   /* -- Prepare error message constructor with STL string ------------------ */
   template<typename ...VarArgs>
     Error(const string &strErr, const VarArgs &...vaVars)

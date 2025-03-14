@@ -123,6 +123,7 @@ class EvtCore :                        // Start of common event system class
     /* --------------------------------------------------------------------- */
     DELETECOPYCTORS(Event)             // Suppress default functions for safety
   };/* -- Private variables --------------------------------------- */ private:
+  const CbEcFunc   cefEmpty;           // Empty function
   Funcs            fFuncs;             // Event callback storage
   mutex            mMutex;             // Primary events list mutex
   Queue            qlEvents;           // Primary events list
@@ -142,7 +143,7 @@ class EvtCore :                        // Start of common event system class
     cLog->LogWarningExSafe("$ accessed an invalid event! ($>$).",
       IdentGet(), cCmd, fFuncs.size());
     // Return a blank function
-    return bind(&EvtCore::WarningFunction, this, _1);
+    return cefEmpty;
   }
   /* -- Execute specified event NOW (finisher) ----------------------------- */
   void ExecuteParam(const Cmd cCmd, Args &aArgs)
@@ -336,7 +337,7 @@ class EvtCore :                        // Start of common event system class
       XC("Invalid de-registration command!", "System",
         IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd);
     // Unassign callback function
-    fFuncs[cCmd] = bind(&EvtCore::WarningFunction, this, _1);
+    fFuncs[cCmd] = cefEmpty;
   }
   /* -- Unregister multiple events ----------------------------------------- */
   void UnregisterEx(const RegVec &rvEvents)
@@ -346,8 +347,8 @@ class EvtCore :                        // Start of common event system class
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ StdMove(strCName) },             // Initialise event system name
     islEventStrings{ StdMove(islStrings) }, // Initialise event id names
-    fFuncs{ UtilMkFilledContainer<CbEcFunc,EvtMaxEvents>
-      (bind(&EvtCore::WarningFunction, this, _1)) }
+    cefEmpty{ bind(&EvtCore::WarningFunction, this, _1) },
+    fFuncs{ UtilMkFilledContainer<CbEcFunc,EvtMaxEvents>(cefEmpty) }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */

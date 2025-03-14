@@ -173,9 +173,9 @@ static struct ShaderCore final
       "uniform sampler2D texCb;"       // MultiTex unit 1 for Cb component data
       "uniform sampler2D texCr;"       // MultiTex unit 2 for Cr component data
       "void main(void){"               // Entry point
-        "mediump vec3 ycbcr;"          // Y, Cb and Cr components
+        "vec3 ycbcr;"                  // Y, Cb and Cr components
         "$"                            // Dynamic range modification code
-        "lowp vec3 rgb=mat3($)*ycbcr;" // Convert YCbCr to RGB matrix code
+        "vec3 rgb=mat3($)*ycbcr;"      // Convert YCbCr to RGB matrix code
         "pixel=vec4(rgb,$);"           // Output the desired pixel color code
       "}", svRangeCode, svMatrixCode, svKeyCode);
     shDest.Link();

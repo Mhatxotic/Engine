@@ -11,9 +11,9 @@
 /* ------------------------------------------------------------------------- */
 namespace ITexture {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IDim;
-using namespace IError::P;             using namespace IFboDef::P;
-using namespace IFbo::P;               using namespace IFboItem::P;
+using namespace ICollector::P;         using namespace IDim::P;
+using namespace IError::P;             using namespace IFbo::P;
+using namespace IFboDef::P;            using namespace IFboItem::P;
 using namespace IImage::P;             using namespace IImageDef::P;
 using namespace IJson::P;              using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
@@ -24,9 +24,6 @@ using namespace ITexDef::P;            using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-typedef Dimensions<GLfloat> DimFloat;  // Dimension using GLfloats
-typedef Dimensions<GLuint>  DimUInt;   // Dimension of GLuint's
 /* -- Texture collector class for collector data and custom variables ------ */
 CTOR_BEGIN_NOBB(Textures, Texture, CLHelperUnsafe)
 /* ------------------------------------------------------------------------- */
@@ -42,7 +39,7 @@ class TextureBase :                    // All members initially private
   /* -- Tile co-ordinates class ------------------------------------ */ public:
   struct CoordData :                   // All members are public
     /* -- Initialisers ----------------------------------------------------- */
-    public DimFloat,                   // Dimensions of texture
+    public DimGLFloat,                 // Dimensions of texture
     public QuadCoordData               // GL quad co-ords of two triangles
   { /* -- 2D tex-coord quad initialisation constructor --------------------- */
     CoordData(const GLfloat fWidth,    // Pixel width of tile   |---Y1---| ^
@@ -52,7 +49,7 @@ class TextureBase :                    // All members initially private
               const GLfloat fRight,    // Normal X2 coord (0-1) |---Y2---| v
               const GLfloat fBottom) : // Normal Y2 coord (0-1) <----W--->
       /* -- Initialisers --------------------------------------------------- */
-      DimFloat{ fWidth, fHeight },     // Initialise tile pixel dimensions
+      DimGLFloat{ fWidth, fHeight },   // Initialise tile pixel dimensions
       QuadCoordData{ {                 // Initialise two GL triangle tex coords
         { fLeft,  fTop,                // [0][0-1] T1 @ XY1    XY1--XY2 XY3
           fRight, fTop,                // [0][2-3] T1 @ XY2     |.../   /|
@@ -80,8 +77,8 @@ class TextureBase :                    // All members initially private
   CoordsList       clTiles;            // Texture coordinates for tiles
   GLUIntVector     uivTexture;         // OpenGL texture handle list
   Shader          *shProgram;          // Default shader program to use
-  DimUInt          duiTile;            // Texture tile width and height
-  DimFloat         dfPad,              // Texture tile padding (GL)
+  DimGLUInt        duiTile;            // Texture tile width and height
+  DimGLFloat       dfPad,              // Texture tile padding (GL)
                    dfImage,            // Texture image width and height (GL)
                    dfTile;             // Same as duiTile but as a GLfloat
   /* -- Constructor -------------------------------------------------------- */

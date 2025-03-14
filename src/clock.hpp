@@ -87,7 +87,7 @@ template<class ClockType = CoreClock>struct ClockManager
   const string ToDurationLongString(unsigned int uiCompMax = StdMaxUInt) const
     { return ToDurationRel(0, uiCompMax); }
   /* -- Unused constructor ------------------------------------------------- */
-  ClockManager(void) { }
+  ClockManager(void) = default;
 };/* -- Global functors / System time clock functor ------------------------ */
 static const ClockManager<system_clock> cmSys;
 /* -- High resolution clock functor ---------------------------------------- */

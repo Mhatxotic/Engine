@@ -104,13 +104,13 @@ static void ImageSave(const ImageFormat ifId, const string &strFile,
     } // Failed to create file
     XCL("Failed to create file!", "File", strFileNX);
   } // Error occured. Error used as title
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Remove file if created
     if(bCreated) DirFileUnlink(strFileNX);
     // Throw an error with the specified reason
-    XC(E.what(), "Identifier", strFileNX,
-                 "FormatId",   ifId,
-                 "Plugin",     ilRef.GetName());
+    XC(eReason, "Identifier", strFileNX,
+                "FormatId",   ifId,
+                "Plugin",     ilRef.GetName());
   }
 }
 /* -- Load a image using a specific type ----------------------------------- */
@@ -128,13 +128,13 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
     // Could not detect format so throw error
     throw runtime_error{ "Unable to load image!" };
   } // Error occured. Error used as title
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Throw an error with the specified reason
-    XC(E.what(), "Identifier", fmData.IdentGet(),
-                 "Size",       fmData.MemSize(),
-                 "Position",   fmData.FileMapTell(),
-                 "FormatId",   ifId,
-                 "Plugin",     ilRef.GetName());
+    XC(eReason, "Identifier", fmData.IdentGet(),
+                "Size",       fmData.MemSize(),
+                "Position",   fmData.FileMapTell(),
+                "FormatId",   ifId,
+                "Plugin",     ilRef.GetName());
   }
 }
 /* -- Load a image and automatically detect type --------------------------- */
@@ -151,12 +151,12 @@ static void ImageLoad(FileMap &fmData, ImageData &idData)
           fmData.IdentGet(), idData.DimGetWidth(), idData.DimGetHeight(),
           idData.GetBitsPerPixel(), ilRef.GetExt());
     } // Error occured. Error used as title
-    catch(const exception &E)
+    catch(const exception &eReason)
     { // Throw an error with the specified reason
-      XC(E.what(), "Identifier", fmData.IdentGet(),
-                   "Size",       fmData.MemSize(),
-                   "Position",   fmData.FileMapTell(),
-                   "Plugin",     ilRef.GetName());
+      XC(eReason, "Identifier", fmData.IdentGet(),
+                  "Size",       fmData.MemSize(),
+                  "Position",   fmData.FileMapTell(),
+                  "Plugin",     ilRef.GetName());
     } // Rewind stream position
     fmData.FileMapRewind();
     // Reset other members to try next filter

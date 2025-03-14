@@ -10,15 +10,15 @@
 namespace IVideo {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IASync::P;
-using namespace IClock::P;             using namespace ICollector::P;
-using namespace ICVarDef::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFbo::P;
-using namespace IFileMap::P;           using namespace IFlags;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IOal::P;
-using namespace IOgl::P;               using namespace IPcmFormat::P;
+using namespace IClock::P;             using namespace ICodecOGG::P;
+using namespace ICollector::P;         using namespace ICVarDef::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFbo::P;               using namespace IFileMap::P;
+using namespace IFlags;                using namespace IIdent::P;
+using namespace ILog::P;               using namespace ILuaEvt::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IOal::P;               using namespace IOgl::P;
 using namespace IPcmLib::P;            using namespace IShader::P;
 using namespace IShaders::P;           using namespace ISource::P;
 using namespace IStd::P;               using namespace IStream::P;
@@ -562,9 +562,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     } // Exit thread cleanly with specified reason
     return 1;
   } // exception occured?
-  catch(const exception &E)
+  catch(const exception &eReason)
   { // Report it to log
-    cLog->LogErrorExSafe("(VIDEO THREAD EXCEPTION) $", E.what());
+    cLog->LogErrorExSafe("(VIDEO THREAD EXCEPTION) $", eReason);
     // Failure exit code
     return -1;
   }
