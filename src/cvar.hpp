@@ -20,9 +20,9 @@ namespace P {                          // Start of public module namespace
 BUILD_FLAGS(CVarShow,
   /* ----------------------------------------------------------------------- */
   // Show no confidential cvars        Show private cvars
-  CSF_NONE                  {Flag[0]}, CSF_CONFIDENTIAL              {Flag[1]},
+  CSF_NONE                  {Flag(0)}, CSF_CONFIDENTIAL              {Flag(1)},
   // Show protected cvars
-  CSF_PROTECTED             {Flag[2]},
+  CSF_PROTECTED             {Flag(2)},
   /* ----------------------------------------------------------------------- */
   CSF_MASK { CSF_CONFIDENTIAL|CSF_PROTECTED }
 );/* ----------------------------------------------------------------------- */
@@ -61,13 +61,13 @@ enum CVarSetEnums : unsigned int       // Cvar set return codes
 BUILD_FLAGS(CVarCondition,             // For Set() functions
   /* ----------------------------------------------------------------------- */
   // No flags specified?               Do not mark as commit?
-  CCF_NOTHING               {Flag[0]}, CCF_NOMARKCOMMIT          {Flag[1]},
+  CCF_NOTHING               {Flag(0)}, CCF_NOMARKCOMMIT          {Flag(1)},
   // Don't throw if var missing?       Throw if there is an error?
-  CCF_IGNOREIFMISSING       {Flag[2]}, CCF_THROWONERROR          {Flag[3]},
+  CCF_IGNOREIFMISSING       {Flag(2)}, CCF_THROWONERROR          {Flag(3)},
   // Variable was just registered?     Do not override existing initial var?
-  CCF_NEWCVAR               {Flag[4]}, CCF_NOIOVERRIDE           {Flag[5]},
+  CCF_NEWCVAR               {Flag(4)}, CCF_NOIOVERRIDE           {Flag(5)},
   // The variable was decrypted?       The variable was not encrypted?
-  CCF_DECRYPTED             {Flag[6]}, CCF_NOTDECRYPTED          {Flag[7]}
+  CCF_DECRYPTED             {Flag(6)}, CCF_NOTDECRYPTED          {Flag(7)}
 );/* -- Cvar item class ---------------------------------------------------- */
 class CVarItem :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
@@ -523,8 +523,6 @@ class CVarItem :                       // Members initially private
     cfTrigger{ cfCb }                  // Initialise trigger function
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* -- Other -------------------------------------------------------------- */
-  DELETECOPYCTORS(CVarItem)            // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -199,8 +199,7 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
     /* -- Code  ------------------------------------------------------------ */
     { }                                // No code
 };/* ----------------------------------------------------------------------- */
-CTOR_END(Palettes, Palette, PALETTE,,,,
-  palDefault{{{ // Init default palette to VGA
+CTOR_END(Palettes, Palette, PALETTE,,,,palDefault{{{ // Init default pal to VGA
 /* -- 0-15 ----------------------------------------------------------------- */
 {.0f,.0f,.0f,.0f}, {   0,   2, 170 }, {  20, 170,   0 }, {   0, 170, 170 },
 { 170,   0,   3 }, { 170,   0, 170 }, { 170,  85,   0 }, { 170, 170, 170 },

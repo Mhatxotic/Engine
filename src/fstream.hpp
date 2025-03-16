@@ -362,8 +362,6 @@ class FStreamBase :                    // File stream base class
   /* -- Destructor (Close the file if opened) ------------------------------ */
   ~FStreamBase(void)
     { if(FStreamOpened() && FStreamIsHandleNotStd()) FStreamDoClose(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FStreamBase)         // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 class FStream :                        // Main file stream class
   /* -- Base classes ------------------------------------------------------- */
@@ -381,8 +379,6 @@ class FStream :                        // Main file stream class
   FStream(FStream &&fsOther) : FStreamBase{ StdMove(fsOther) } { }
   /* -- Basic constructor with no init ------------------------------------- */
   FStream(void) = default;
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FStream)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

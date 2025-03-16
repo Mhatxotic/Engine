@@ -200,8 +200,6 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     { SwapFtf(ftfOther); }             // Do the swap
   /* -- Destructor --------------------------------------------------------- */
   ~Ftf(void) { AsyncCancel(); DoDeInit(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Ftf)                 // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Ftfs, Ftf, FTF, FONT) // Finish collector class
 /* ------------------------------------------------------------------------- */

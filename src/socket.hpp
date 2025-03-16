@@ -22,7 +22,7 @@ using namespace IParser::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
 using namespace IToken::P;             using namespace IUtil::P;
-using namespace IUtf;                  using namespace Lib::OS::OpenSSL;
+using namespace IUtf::P;               using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
@@ -1278,9 +1278,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   static bool ValidAddress(const string &strA)
   { // Walk and check valid hostname/ip characters until end of string
     return !any_of(strA.cbegin(), strA.cend(), [](const char cChar){
-      return !isalpha(static_cast<unsigned char>(cChar)) &&
-             !isdigit(static_cast<unsigned char>(cChar)) &&
-             cChar != '.' && cChar != '-';
+      return StdIsNotAlpha(cChar) && StdIsNotDigit(cChar) &&
+        cChar != '.' && cChar != '-';
     });
   }
   /* -- Setup Cipher ------------------------------------------------------- */
@@ -1433,8 +1432,6 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Cleanup the disconnect
     FinishDisconnect();
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Socket)              // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 static void DestroyAllSockets(void)
 { // No sockets? Ignore

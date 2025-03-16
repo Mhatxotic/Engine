@@ -364,8 +364,6 @@ static class ConGraphics final :       // Members initially private
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~ConGraphics, DeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ConGraphics)         // Suppress default functions for safety
   /* -- Set console background colour -------------------------------------- */
   CVarReturn TextBackgroundColourModified(const uint32_t ulNewColour)
     { return CVarSimpleSetInt(ulBgColour, ulNewColour); }

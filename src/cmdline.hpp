@@ -206,8 +206,6 @@ static struct CmdLine final            // Members initially public
       break;
   } // Parent process should be exiting cleanly after returning here
   DTORHELPEREND(~CmdLine)
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CmdLine)             // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cCmdLine = nullptr;                 // Pointer to static class
 /* ------------------------------------------------------------------------- */

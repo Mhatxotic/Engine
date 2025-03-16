@@ -47,8 +47,6 @@ class SysProcess                       // Need this before of System init order
     mptTask(mach_task_self())          // Initialise self task
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysProcess)          // Suppress default functions for safety
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Dependency classes ------------------------------------------------- */
@@ -756,7 +754,5 @@ class SysCore :
                GetOperatingSystemData(),
                GetProcessorData() },
     bWindowInitialised(false) { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysCore)             // Suppress default functions for safety
 }; /* ---------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

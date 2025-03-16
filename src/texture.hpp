@@ -92,8 +92,6 @@ class TextureBase :                    // All members initially private
     shProgram(nullptr)                 // No shader programme yet
     /* -- Code ------------------------------------------------------------- */
     { }                                // No code
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(TextureBase)         // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   /* -- Base classes ------------------------------------------------------- */
@@ -932,8 +930,6 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     { }                                // Do nothing else
   /* -- Destructor (Unregistration then deinitialisation) ------------------ */
   ~Texture(void) { DeInit(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Texture)             // Suppress default functions for safety
 };/* -- Finish the collector ----------------------------------------------- */
 CTOR_END_NOINITS(Textures, Texture, TEXTURE)
 /* -- DeInit Textures ------------------------------------------------------ */

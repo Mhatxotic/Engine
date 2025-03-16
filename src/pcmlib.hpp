@@ -65,8 +65,6 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
       cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(PcmLib)              // Suppress default functions for safety
 };/* -- End of objects collector (reserve and set limit for formats) ------- */
 CTOR_END(PcmLibs, PcmLib, PCMLIB,
   reserve(PFMT_MAX); CollectorSetLimit(PFMT_MAX),)

@@ -37,8 +37,6 @@ class Certs                            // Certificates store
     void UnlockFunction(void) { }      // Unlock function not used
     /* -- Destructor/Constructor ------------------------------------------- */
     LoadSerialised(void) { }           // Constructor not used
-    /* --------------------------------------------------------------------- */
-    DELETECOPYCTORS(LoadSerialised)    // Suppress default functions for safety
   };/* -- Class to load certificates in parallel --------------------------- */
   class LoadParallel                   // Parallel certificate installation
   { /* --------------------------------------------------------------------- */
@@ -50,8 +48,6 @@ class Certs                            // Certificates store
     /* -- Destructor/Constructor ------------------------------------------- */
     ~LoadParallel(void) { if(bLocked) UnlockFunction(); }
     LoadParallel(void) : bLocked(false) { }
-    /* --------------------------------------------------------------------- */
-    DELETECOPYCTORS(LoadParallel)      // Suppress default functions for safety
   };/* -- Variables -------------------------------------------------------- */
   SSL_CTX           *scStore;          // Context used for cerificate store
   X509_STORE        *xsCerts;          // Certificate store inside OpenSSL
@@ -303,8 +299,6 @@ class Certs                            // Certificates store
   { }
   /* -- Destructor that unloads all x509 certificates ---------------------- */
   ~Certs(void) { CertsEmpty(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Certs)               // Suppress default functions for safety
   /* --------------------------------------------------------------- */ public:
   CVarReturn CertsSetBypassFlags1(const uint64_t uiFlags)
     { return CVarSimpleSetInt(qCertBypass.front(), uiFlags); }

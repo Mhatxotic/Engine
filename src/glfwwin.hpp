@@ -12,7 +12,7 @@ namespace IGlFWWindow {                // Start of private module namespace
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IGlFWUtil::P;
 using namespace ILog::P;               using namespace IString::P;
-using namespace IUtf;                  using namespace Lib::OS::GlFW;
+using namespace IUtf::P;               using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -429,8 +429,6 @@ class GlFWWindow :                     // GLFW window class
     wClass{ nullptr }                  // Uninitialised window context
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(GlFWWindow)          // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

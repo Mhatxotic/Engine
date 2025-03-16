@@ -26,9 +26,9 @@ namespace P {                          // Start of public module namespace
 /* -- Source flags --------------------------------------------------------- */
 BUILD_FLAGS(Source,
   // No flags                          // Source is managed externally
-  SF_NONE{Flag[0]},                    SF_EXTERNAL{Flag[1]},
+  SF_NONE{Flag(0)},                    SF_EXTERNAL{Flag(1)},
   // Source is managed by LUA
-  SF_CLASS{Flag[2]}
+  SF_CLASS{Flag(2)}
 );/* -- Source collector class for collector data and custom variables ----- */
 CTOR_BEGIN(Sources, Source, CLHelperSafe,
 /* ------------------------------------------------------------------------- */
@@ -310,8 +310,6 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   { // Delete the sourcess if id allocated
     if(uiId) ALL(cOal->DeleteSource(uiId), "Source failed to delete $!", uiId);
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Source)              // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END(Sources, Source, SOURCE,,,,
   fGVolume(0.0f), fMVolume(0.0f), fVVolume(0.0f), fSVolume(0.0f))

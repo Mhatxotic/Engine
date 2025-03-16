@@ -614,8 +614,6 @@ class SysBase :                        // Safe exception handler namespace
     // Delete global mutex
     DeleteGlobalMutex();
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysBase)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
   void SysBase::HandleSignalStatic(int iSignal) \

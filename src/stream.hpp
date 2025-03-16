@@ -604,8 +604,6 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     // Log that the stream was unloaded
     cLog->LogDebugExSafe("Stream unloaded '$'!", IdentGet());
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Stream)              // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
   /* -- Initialisers ------------------------------------------------------- */

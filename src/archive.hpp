@@ -20,7 +20,7 @@ using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IPSplit::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IUtf;
+using namespace ISysUtil::P;           using namespace IUtf::P;
 using namespace IUtil::P;              using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -40,9 +40,9 @@ CTOR_BEGIN_ASYNC(Archives, Archive, CLHelperSafe,
 BUILD_FLAGS(Archive,
   /* ----------------------------------------------------------------------- */
   // Archive on standby?             Archive file handle opened?
-  AE_STANDBY              {Flag[0]}, AE_FILEOPENED           {Flag[1]},
+  AE_STANDBY              {Flag(0)}, AE_FILEOPENED           {Flag(1)},
   // Allocated look2read structs?    Allocated archive structs?
-  AE_SETUPL2R             {Flag[2]}, AE_ARCHIVEINIT          {Flag[3]}
+  AE_SETUPL2R             {Flag(2)}, AE_ARCHIVEINIT          {Flag(3)}
 );/* == Archive object class =============================================== */
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
@@ -416,8 +416,6 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // Log shutdown
     cLog->LogInfoExSafe("Archive unloaded '$' successfully.", IdentGet());
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Archive)             // Suppress default functions for safety
   /* -- Done with these defines -------------------------------------------- */
 #undef LZMAGetHandle                   // Done with this macro
 #undef LZMAOpen                        // Done with this macro

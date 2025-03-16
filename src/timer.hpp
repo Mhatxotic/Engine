@@ -42,7 +42,7 @@ static class Timer final               // Members initially private
     { cdDelay = milliseconds{ uiNewDelay }; }
   /* -- Forces a delay internally if delay is disabled --------------------- */
   void TimerSetDelayIfZero(void)
-    { if(cdDelay != seconds{0}) TimerUpdateDelay(1); }
+    { if(cdDelay != seconds{ 0 }) TimerUpdateDelay(1); }
   /* -- Restore saved persistent delay timer ------------------------------- */
   void TimerRestoreDelay(void) { cdDelay = cdDelayPst; }
   /* -- Get start time ----------------------------------------------------- */
@@ -63,14 +63,14 @@ static class Timer final               // Members initially private
     { ::std::this_thread::sleep_for(cdAmount); }
   /* -- Thread suspense by integer ----------------------------------------- */
   void TimerSuspend(const unsigned int uiMilliseconds) const
-    { TimerSuspend(milliseconds(uiMilliseconds)); }
+    { TimerSuspend(milliseconds{ uiMilliseconds }); }
   /* -- Thread suspense by one millisecond --------------------------------- */
   void TimerSuspend(void) const { TimerSuspend(1); }
   /* -- Thread suspense by requested duration ------------------------------ */
   void TimerSuspendRequested(void) const { TimerSuspend(cdDelay); }
   /* -- Force wait if delay is disabled (cFboCore->Render()) --------------- */
   void TimerForceWait(void)
-    { if(cdDelay == seconds(0)) bWait = true; }
+    { if(cdDelay == seconds{ 0 }) bWait = true; }
   /* -- Calculate time elapsed since c++ ----------------------------------- */
   void TimerUpdateBot(void)
   { // Sleep if theres a delay
@@ -164,10 +164,10 @@ static class Timer final               // Members initially private
   /* -- Default constructors ----------------------------------------------- */
   Timer(void) :                        // No parameters
     /* --------------------------------------------------------------------- */
-    ctpStart{ milliseconds{0} },       // Init start of frame time
+    ctpStart{ milliseconds{ 0 } },     // Init start of frame time
     ctpTimeOut{ ctpStart },            // Init time script times out
     ctpEnd{ ctpStart },                // Init end of frame time
-    cdLoop{ milliseconds{0} },         // Init loop duration
+    cdLoop{ milliseconds{ 0 } },       // Init loop duration
     cdFrame{ cdLoop },                 // Init frame duration
     cdAcc{ cdLoop },                   // Init accumulator duration
     cdLimit{ cdLoop },                 // Init frame limit
@@ -179,8 +179,6 @@ static class Timer final               // Members initially private
     bWait(false)                       // Init force wait?
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Timer)               // Suppress default functions for safety
   /* -- TimerSetDelay ------------------------------------------------------ */
   CVarReturn TimerSetTimeOut(const unsigned int uiTimeOut)
     { return CVarSimpleSetIntNL(cdTimeOut,

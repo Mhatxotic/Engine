@@ -14,8 +14,9 @@ using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IError::P;             using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IOal::P;
-using namespace IPcm::P;               using namespace IStd::P;
-using namespace ISource::P;            using namespace ISysUtil::P;
+using namespace IPcmDef::P;            using namespace IPcm::P;
+using namespace IStd::P;               using namespace ISource::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -49,8 +50,8 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
   ALsizei GetALSize(void) const
     { return GetBufferInt<ALsizei>(AL_SIZE); }
   ALdouble GetDuration(void) const
-    { return (static_cast<ALdouble>(GetALSize()) * 8 /
-        (GetALChannels() * GetALBits())) / GetALFrequency(); }
+    { return static_cast<ALdouble>(GetALSize()) * 8 /
+        GetALChannels() / GetALBits() / GetALFrequency(); }
   /* -- Unload buffers ----------------------------------------------------- */
   void UnloadBuffer(void)
   { // Bail if buffers not allocated
@@ -219,26 +220,26 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
         "Identifier", pcmSrc.IdentGet(),  "Buffer",  uivNames.front(),
         "Format",     pcmSrc.GetFormat(), "MFormat", pcmSrc.GetSFormat(),
         "Rate",       pcmSrc.GetRate(),   "Size",    pcmSrc.aPcmL.MemSize());
-    // Stereo sample?
-    if(uivNames.size() > 1)
-    { // Buffer the right stereo channel
-      AL(cOal->BufferData(uivNames[1], pcmSrc.GetSFormat(),
-        pcmSrc.aPcmR, static_cast<ALsizei>(pcmSrc.GetRate())),
-          "Error buffering right/stereo channel PCM audio data!",
-          "Identifier", pcmSrc.IdentGet(),  "Buffer",  uivNames[1],
-          "Format",     pcmSrc.GetFormat(), "MFormat", pcmSrc.GetSFormat(),
-          "Rate",       pcmSrc.GetRate(),   "Size",    pcmSrc.aPcmR.MemSize());
-      // Log progress
-      cLog->LogDebugExSafe(
-        "Sample '$' uploaded as L:$[$] and R:$[$] at $Hz as format 0x$$.",
+    // Log and return if mono sample
+    if(pcmSrc.GetChannels() == PCT_MONO)
+      return cLog->LogDebugExSafe(
+        "Sample '$' uploaded as $[$] at $Hz as $.",
         pcmSrc.IdentGet(), uivNames.front(), pcmSrc.aPcmL.MemSize(),
-        uivNames[1], pcmSrc.aPcmR.MemSize(), pcmSrc.GetRate(), hex,
-        pcmSrc.GetFormat());
-    } // Log progress
-    else cLog->LogDebugExSafe(
-      "Sample '$' uploaded as $[$] at $Hz as format 0x$$.",
+        StrToGrouped(pcmSrc.GetRate(), 1),
+        cOal->GetALFormat(pcmSrc.GetFormat()));
+    // Buffer the right stereo channel
+    AL(cOal->BufferData(uivNames[1], pcmSrc.GetSFormat(),
+      pcmSrc.aPcmR, static_cast<ALsizei>(pcmSrc.GetRate())),
+        "Error buffering right/stereo channel PCM audio data!",
+        "Identifier", pcmSrc.IdentGet(),  "Buffer",  uivNames[1],
+        "Format",     pcmSrc.GetFormat(), "MFormat", pcmSrc.GetSFormat(),
+        "Rate",       pcmSrc.GetRate(),   "Size",    pcmSrc.aPcmR.MemSize());
+    // Log progress
+    cLog->LogDebugExSafe(
+      "Sample '$' uploaded as L:$[$] and R:$[$] at $Hz as $.",
       pcmSrc.IdentGet(), uivNames.front(), pcmSrc.aPcmL.MemSize(),
-      pcmSrc.GetRate(), hex, pcmSrc.GetFormat());
+      uivNames[1], pcmSrc.aPcmR.MemSize(), StrToGrouped(pcmSrc.GetRate(), 1),
+      cOal->GetALFormat(pcmSrc.GetFormat()));
   }
   /* -- Load a single buffer ----------------------------------------------- */
   void ReloadSample(void)
@@ -285,8 +286,6 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     { }
   /* -- Destructor --------------------------------------------------------- */
   ~Sample(void) { UnloadBuffer(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Sample)              // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_NOINITS(Samples, Sample, SAMPLE) // Finish collector class
 /* ========================================================================= */

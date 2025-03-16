@@ -53,8 +53,6 @@ class AtlasBase :                      // Members initially private
       0, 0 }                           // Lowest possible
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(AtlasBase)           // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Atlas Class (which inherits a Texture) =============================== */
 CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
@@ -404,8 +402,6 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     AtlasBase{ ifcPurpose }            // Initialise purpose of atlas
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Atlas)               // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Atlases, Atlas, ATLAS) // End of collector class
 /* ------------------------------------------------------------------------- */

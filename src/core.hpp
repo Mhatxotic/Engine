@@ -627,7 +627,7 @@ class Core final                       // Members initially private
     // Capture exceptions so we can log any errors
     try
     { // Dependencies required only in this scope
-      using namespace IArgs;           using namespace IAtlas::P;
+      using namespace IArgs::P;        using namespace IAtlas::P;
       using namespace IBin::P;         using namespace ICert::P;
       using namespace IClipboard::P;   using namespace ICmdLine::P;
       using namespace IClock::P;       using namespace ICodecCAF::P;
@@ -819,8 +819,6 @@ class Core final                       // Members initially private
     { cCore = this; }
   /* -- Destructor that clears the core pointer ---------------------------- */
   DTORHELPER(~Core, cCore = nullptr)
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Core)                // Suppress default functions for safety
   /* -- Set lua error mode behaviour --------------------------------------- */
   CVarReturn CoreErrorBehaviourModified(const CoreErrorReason cefNMode)
     { return CVarSimpleSetIntNGE(cerMode, cefNMode, CER_MAX); }

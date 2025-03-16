@@ -379,7 +379,7 @@ Statistic sTable;
 sTable.Header("ID").Header("NAME", false).Header("VERSION")
       .Header("AUTHOR", false).Reserve(cCredits->CreditGetItemCount());
 // For each item, show library information
-for(const CreditLib &clRef : *cCredits)
+for(const CreditLib &clRef : cCredits->CreditGetLibList())
   sTable.DataN(clRef.GetID()).Data(clRef.GetName()).Data(clRef.GetVersion())
         .DataA(clRef.IsCopyright() ?
     "\xC2\xA9 " : cCommon->Blank(), clRef.GetAuthor());

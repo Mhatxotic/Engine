@@ -291,8 +291,6 @@ struct FboItem
     FboItem{}                          // Initialise default values
     /* -- Initialise colour ------------------------------------------------ */
     { FboItemSetQuadRGBAInt(uiColour); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FboItem)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

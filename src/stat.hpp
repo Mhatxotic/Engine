@@ -15,7 +15,7 @@ using namespace ICollector::P;         using namespace IError::P;
 using namespace IIdent::P;             using namespace ILockable::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtf;
+using namespace ISysUtil::P;           using namespace IUtf::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -373,8 +373,6 @@ CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
     IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Stat)                // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Stats, Stat, STAT)    // End of stat objects collector
 /* ------------------------------------------------------------------------- */

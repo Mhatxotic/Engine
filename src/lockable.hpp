@@ -32,8 +32,6 @@ class Lockable                         // Lua lock class
     bLocked(bState)                    // Set the initial lock state
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Lockable)            // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 };                                     // End of private module namespace
 /* ------------------------------------------------------------------------- */

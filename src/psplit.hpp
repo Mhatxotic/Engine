@@ -72,8 +72,6 @@ class FileParts                        // Contains parts of a filename
     strLoc{ StdMove(pspOther.strLoc) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FileParts)           // Suppress default functions for safety
 };/* -- PathSplit class ---------------------------------------------------- */
 class PathSplit :
   /* -- Base classes ------------------------------------------------------- */
@@ -186,8 +184,6 @@ class PathSplit :
     FileParts{ StdMove(psOther) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(PathSplit)           // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

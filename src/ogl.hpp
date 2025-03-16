@@ -18,7 +18,7 @@ using namespace IHelper::P;            using namespace IIdent::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IUtf;                  using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -31,11 +31,11 @@ namespace P {                          // Start of public module namespace
 BUILD_FLAGS(Ogl,
   /* ----------------------------------------------------------------------- */
   // No flags                          OpenGL context initialised?
-  GFL_NONE                  {Flag[0]}, GFL_INITIALISED           {Flag[1]},
+  GFL_NONE                  {Flag(0)}, GFL_INITIALISED           {Flag(1)},
   // Either of the below commands?     Have nVidia memory information?
-  GFL_HAVEMEM               {Flag[2]}, GFL_HAVENVMEM             {Flag[3]},
+  GFL_HAVEMEM               {Flag(2)}, GFL_HAVENVMEM             {Flag(3)},
   // Have ATI memory avail info?       Devices shares memory with system
-  GFL_HAVEATIMEM            {Flag[4]}, GFL_SHARERAM              {Flag[5]}
+  GFL_HAVEATIMEM            {Flag(4)}, GFL_SHARERAM              {Flag(5)}
 );/* ----------------------------------------------------------------------- */
 enum OglFilterEnum : size_t            // Available filter combinations
 { /* ----------------------------------------------------------------------- */
@@ -71,8 +71,6 @@ static class Ogl final :               // OGL class for OpenGL use simplicity
                       idHintModes,     // Hint mode values (log detail)
                       idFormatModes,   // Pixel format modes (log detail)
                       idOGLCodes;      // OpenGL codes
-  /* -- Macros ------------------------------------------------------------- */
-  DELETECOPYCTORS(Ogl)                 // Suppress default functions for safety
   /* -- Defines ------------------------------------------------------------ */
 #define IGLL(F,M,...) GLEX(CheckLogError, F, M, ## __VA_ARGS__)
 #define IGL(F,M,...)  GLEX(CheckExceptError, F, M, ## __VA_ARGS__)

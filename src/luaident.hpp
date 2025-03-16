@@ -35,8 +35,6 @@ class LuaIdent {
     iRef(llcirAPI[lciId])              // Alias Lua class reference storage
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(LuaIdent)            // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 };                                     // End of private module namespace
 /* ------------------------------------------------------------------------- */

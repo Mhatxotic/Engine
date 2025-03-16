@@ -844,8 +844,6 @@ class SysBase :                        // Members initially private
     }}
   /* -- Install unhandled exception filter --------------------------------- */
   { SetUnhandledExceptionFilter(HandleExceptionStatic); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysBase)             // Suppress default functions for safety
 };/* ======================================================================= */
 #define ENGINE_SYSBASE_CALLBACKS() \
   LONG WINAPI SysBase::HandleExceptionStatic(LPEXCEPTION_POINTERS \

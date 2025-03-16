@@ -29,8 +29,6 @@ CTOR_BEGIN_DUO(Files, File, CLHelperUnsafe, ICHelperUnsafe),
     IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* --------------------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(File)                // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Files, File, FILE)    // Finish global Files collector
 /* -- Read string to file in one go ---------------------------------------- */

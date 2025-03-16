@@ -417,23 +417,49 @@ template<typename FloatType>
 /* -- Initialise an array of the specified value --------------------------- */
 namespace MakeFilledContainer
 { /* -- Fill with specified value ------------------------------------------ */
-  template<typename ItemType>
+  template<typename ItemType>          // Container element type
   constexpr ItemType Value(const size_t, const ItemType &itValue)
     { return itValue; }
   /* -- Select indices ----------------------------------------------------- */
-  template<typename ItemType, size_t stNumItems,
-    size_t... Is, class ContainerType = array<ItemType, stNumItems>>
+  template<class ContainerType,        // Container type (i.e. array<>)
+           typename ItemType,          // Container element type
+           size_t stNumItems,          // Container maximum elements
+           size_t... Is>               // Parameter id
   constexpr ContainerType Select(const ItemType &itValue,
-    std::index_sequence<Is...>)
+    index_sequence<Is...>)
       { return { Value<ItemType>(Is, itValue)... }; }
   /* -- Entry function ----------------------------------------------------- */
-  template<typename ItemType, size_t stNumItems,
-    class ContainerType = array<ItemType, stNumItems>>
+  template<typename ContainerType,
+           class ItemType = ContainerType::value_type,
+           size_t stNumItems = tuple_size_v<ContainerType>>
   constexpr ContainerType UtilMkFilledContainer(const ItemType &itValue)
-    { return Select<ItemType, stNumItems>
-        (itValue, std::make_index_sequence<stNumItems>{}); }
+    { return Select<ContainerType, ItemType, stNumItems>
+        (itValue, make_index_sequence<stNumItems>{}); }
 };/* ----------------------------------------------------------------------- */
 using MakeFilledContainer::UtilMkFilledContainer;
+/* -- Initialise an array of the specified value --------------------------- */
+namespace MakeFilledClassContainer
+{ /* -- Fill with specified value ------------------------------------------ */
+  template<class ClassType,
+           typename ArgType>
+  constexpr ClassType Value(const size_t, ArgType &atValue)
+    { return ClassType{ atValue++ }; }
+  /* -- Select indices ----------------------------------------------------- */
+  template<class ContainerType,
+           typename ArgType,
+           class ClassType = ContainerType::value_type,
+           size_t... Is>
+  constexpr ContainerType Select(ArgType &atValue, index_sequence<Is...>)
+    { return { Value<ClassType, ArgType>(Is, atValue)... }; }
+  /* -- Entry function ----------------------------------------------------- */
+  template<class ContainerType,
+           typename ArgType,
+           size_t stNumItems = tuple_size_v<ContainerType>>
+  constexpr ContainerType UtilMkFilledClassContainer(ArgType atValue=0)
+    { return Select<ContainerType, ArgType>
+        (atValue, make_index_sequence<stNumItems>{}); }
+};/* ----------------------------------------------------------------------- */
+using MakeFilledClassContainer::UtilMkFilledClassContainer;
 /* -- Bits handling functions ---------------------------------------------- */
 template<typename IntType>
   static IntType UtilBitSwap4(const IntType itValue)

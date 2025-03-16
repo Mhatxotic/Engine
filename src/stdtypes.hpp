@@ -20,11 +20,12 @@ using ::std::exception;                using ::std::runtime_error;
 /* -- Other ---------------------------------------------------------------- */
 using ::std::addressof;                using ::std::bind;
 using ::std::bit_cast;                 using ::std::function;
-using ::std::locale;                   using ::std::make_pair;
+using ::std::index_sequence;           using ::std::locale;
+using ::std::make_index_sequence;      using ::std::make_pair;
 using ::std::make_signed_t;            using ::std::make_unsigned_t;
 using ::std::nothrow;                  using ::std::numeric_limits;
 using ::std::remove_const_t;           using ::std::remove_pointer_t;
-using ::std::swap;
+using ::std::swap;                     using ::std::tuple_size_v;
 /* -- Iteratations --------------------------------------------------------- */
 using ::std::accumulate;               using ::std::advance;
 using ::std::any_of;                   using ::std::back_inserter;

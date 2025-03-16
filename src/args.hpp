@@ -9,6 +9,10 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IArgs {                      // Start of module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IStd::P;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 struct Args :                          // Arguments list class
   /* -- Base classes ------------------------------------------------------- */
@@ -36,7 +40,7 @@ struct Args :                          // Arguments list class
     for(size_t stPos = 0; stPos < stLength; ++stPos)
     { // Get character from string and if its a space and not in quotes?
       const char cChar = strTrimmed[stPos];
-      if(std::isspace(cChar) && !bInQuotes)
+      if(StdIsSpace(cChar) && !bInQuotes)
       { // If were not at the start of the argument? Extract/add the argument
         if(stStart != stPos)
           emplace_back(strTrimmed.substr(stStart, stPos - stStart));
@@ -75,10 +79,11 @@ struct Args :                          // Arguments list class
   Args(void) = default;
   /* -- Return if list is empty -------------------------------------------- */
   operator bool(void) const { return !empty(); }
-};/* ----------------------------------------------------------------------- */
-/* -- Build an array of arguments from a string ---------------------------- */
+};/* -- Build an array of arguments from a string -------------------------- */
 static const Args ArgsBuildSafe(const string &strArgs)
   { return strArgs.empty() ? Args{} : Args{ strArgs }; }
+/* ------------------------------------------------------------------------- */
+}                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of module namespace
 /* == EoF =========================================================== EoF == */

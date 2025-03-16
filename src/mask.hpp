@@ -391,8 +391,6 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     stAlloc(0)                         // Uninitialised allocated size
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Mask)                // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Masks, Mask, MASK)    // Finish collector class
 /* ------------------------------------------------------------------------- */

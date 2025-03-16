@@ -98,8 +98,6 @@ class FboBase :                        // Fbo base class
     stFinishCounter(0),                uiFBOtex(0)
     /* --------------------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FboBase)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Fbo object class ===================================================== */
 CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
@@ -526,8 +524,6 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     { }                                // Do nothing else
   /* -- Destructor --------------------------------------------------------- */
   ~Fbo(void) { FboDeInit(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Fbo)                 // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END(Fbos, Fbo, FBO,,,, fboActive(nullptr), fboMain(nullptr))
 /* ========================================================================= */

@@ -23,7 +23,7 @@ static class CodecOGG final :          // OGG codec object
   /* -- Base classes ------------------------------------------------------- */
   private PcmLib,                      // Pcm format helper class
   private IdMap<>                      // Ogg error codes
-{ /* -- Private variables ------------------------------------------ */ public:
+{ /* -- Private variables -------------------------------------------------- */
   const ov_callbacks ovcCallbacks;     // Vorbis callbacks
   /* -- Vorbis read callback --------------------------------------- */ public:
   static size_t VorbisRead(void*const vpPtr,
@@ -155,8 +155,6 @@ static class CodecOGG final :          // OGG codec object
     ovcCallbacks{ VorbisRead, VorbisSeek, VorbisClose, VorbisTell }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CodecOGG)            // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cCodecOGG = nullptr;                // Codec pointer
 /* ------------------------------------------------------------------------- */

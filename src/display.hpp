@@ -24,7 +24,7 @@ using namespace IImageDef::P;          using namespace IInput::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IUtf;
+using namespace IToken::P;             using namespace IUtf::P;
 using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -32,30 +32,30 @@ namespace P {                          // Start of public module namespace
 BUILD_FLAGS(Display,
   /* -- Active flags ------------------------------------------------------- */
   // No display flags                  Window is focused?
-  DF_NONE                   {Flag[0]}, DF_FOCUSED                {Flag[1]},
+  DF_NONE                   {Flag(0)}, DF_FOCUSED                {Flag(1)},
   // Exclusive mode full-screen?       Full-screen locked?
-  DF_EXCLUSIVE              {Flag[2]}, DF_NATIVEFS               {Flag[3]},
+  DF_EXCLUSIVE              {Flag(2)}, DF_NATIVEFS               {Flag(3)},
   // Window is actually in fullscreen?
-  DF_INFULLSCREEN           {Flag[4]},
+  DF_INFULLSCREEN           {Flag(4)},
   /* -- End-user configuration flags --------------------------------------- */
   // Use forward compatible context?   Use double-buffering?
-  DF_FORWARD               {Flag[47]}, DF_DOUBLEBUFFER          {Flag[48]},
+  DF_FORWARD               {Flag(47)}, DF_DOUBLEBUFFER          {Flag(48)},
   // Automatic minimise?               Focus on show?
-  DF_AUTOICONIFY           {Flag[49]}, DF_AUTOFOCUS             {Flag[50]},
+  DF_AUTOICONIFY           {Flag(49)}, DF_AUTOFOCUS             {Flag(50)},
   // Window is resizable?              Always on top?
-  DF_SIZABLE               {Flag[51]}, DF_FLOATING              {Flag[52]},
+  DF_SIZABLE               {Flag(51)}, DF_FLOATING              {Flag(52)},
   // Window has a border?              Minimize on lose focus?
-  DF_BORDER                {Flag[53]}, DF_MINFOCUS              {Flag[54]},
+  DF_BORDER                {Flag(53)}, DF_MINFOCUS              {Flag(54)},
   // HiDPI is enabled?                 SRGB namespace is enabled?
-  DF_HIDPI                 {Flag[55]}, DF_SRGB                  {Flag[56]},
+  DF_HIDPI                 {Flag(55)}, DF_SRGB                  {Flag(56)},
   // Graphics switching enabled?       Full-screen mode set?
-  DF_GASWITCH              {Flag[57]}, DF_FULLSCREEN            {Flag[58]},
+  DF_GASWITCH              {Flag(57)}, DF_FULLSCREEN            {Flag(58)},
   // Window is closable?               Stereo mode enabled?
-  DF_CLOSEABLE             {Flag[59]}, DF_STEREO                {Flag[60]},
+  DF_CLOSEABLE             {Flag(59)}, DF_STEREO                {Flag(60)},
   // OpenGL debug context?             Window transparency enabled?
-  DF_DEBUG                 {Flag[61]}, DF_TRANSPARENT           {Flag[62]},
+  DF_DEBUG                 {Flag(61)}, DF_TRANSPARENT           {Flag(62)},
   // No opengl errors?                 Window maximised at start?
-  DF_NOERRORS              {Flag[63]}, DF_MAXIMISED             {Flag[64]}
+  DF_NOERRORS              {Flag(63)}, DF_MAXIMISED             {Flag(64)}
 );
 /* == Display class ======================================================== */
 static class Display final :
@@ -1105,8 +1105,6 @@ static class Display final :
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Display, DeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Display)             // Suppress default functions for safety
   /* -- Helper macro for boolean based CVars based on OS ------------------- */
 #define CBCVARFLAG(n, f) CVarReturn n(const bool bState) \
     { FlagSetOrClear(f, bState); return ACCEPT; }

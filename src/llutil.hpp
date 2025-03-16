@@ -17,11 +17,11 @@
 /* ========================================================================= */
 namespace LLUtil {                     // Util namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IArgs;                 using namespace IAsset::P;
+using namespace IArgs::P;              using namespace IAsset::P;
 using namespace IClock::P;             using namespace ICrypt::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace IUrl::P;
-using namespace IUtf;                  using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 using namespace IUuId::P;              using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **

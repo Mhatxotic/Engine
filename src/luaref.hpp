@@ -109,7 +109,7 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
   LuaRef(void) :
     /* -- Initialisers ----------------------------------------------------- */
     lsState(nullptr),                  // State not initialised yet
-    aReferences{ UtilMkFilledContainer<int, Refs>(LUA_REFNIL) }
+    aReferences{ UtilMkFilledContainer<References>(LUA_REFNIL) }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Destructor, delete the reference if set----------------------------- */
@@ -121,8 +121,6 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
                              ++rcriIt)
         LuaRefDoDeInit(*rcriIt);
   }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(LuaRef)              // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

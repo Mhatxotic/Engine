@@ -189,8 +189,6 @@ static class CodecJPG final :          // JPEG codec object
       bind(&CodecJPG::Encode, this, _1, _2, _3) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CodecJPG)            // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cCodecJPG = nullptr;                // Codec pointer
 /* ------------------------------------------------------------------------- */

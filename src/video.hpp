@@ -45,17 +45,17 @@ private LuaEvtMaster<Video, LuaEvtTypeParam<Video>>); // Lua event
 BUILD_FLAGS(Video,
   /* ----------------------------------------------------------------------- */
   // No flags set?                     Have a theora stream?
-  FL_NONE                   {Flag[0]}, FL_THEORA                 {Flag[1]},
+  FL_NONE                   {Flag(0)}, FL_THEORA                 {Flag(1)},
   // Have a vorbis stream?             Video output initialised?
-  FL_VORBIS                 {Flag[2]}, FL_GLINIT                 {Flag[3]},
+  FL_VORBIS                 {Flag(2)}, FL_GLINIT                 {Flag(3)},
   // Video is keyed?                   Video is full dynamic range?
-  FL_KEYED                  {Flag[4]}, FL_FDR                    {Flag[5]},
+  FL_KEYED                  {Flag(4)}, FL_FDR                    {Flag(5)},
   // Video is Rec.709 colour space?    Filtering is enabled?
-  FL_REC709                 {Flag[6]}, FL_FILTER                 {Flag[7]},
+  FL_REC709                 {Flag(6)}, FL_FILTER                 {Flag(7)},
   // Hard stopped?                     Video is playing?
-  FL_STOP                   {Flag[8]}, FL_PLAY                   {Flag[9]},
+  FL_STOP                   {Flag(8)}, FL_PLAY                   {Flag(9)},
   // Play after re-init?
-  FL_RESUME                {Flag[10]}
+  FL_RESUME                {Flag(10)}
 );/* ======================================================================= */
 CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Base classes ------------------------------------------------------- */

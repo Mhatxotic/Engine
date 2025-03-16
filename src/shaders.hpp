@@ -311,8 +311,6 @@ static struct ShaderCore final
     }}                                 // End of rounding strings list
     /* -- Code ------------------------------------------------------------- */
     { }                                // No code
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ShaderCore)          // Suppress default functions for safety
   /* -- Set rounding method for the shader --------------------------------- */
   CVarReturn SetSPRoundingMethod(const size_t stMethod)
   { // Return if specified value is outrageous!

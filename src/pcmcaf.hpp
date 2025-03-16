@@ -180,8 +180,6 @@ static class CodecCAF final :          // CAF codec object
       bind(&CodecCAF::Decode, this, _1, _2) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CodecCAF)            // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cCodecCAF = nullptr;                // Codec pointer
 /* ------------------------------------------------------------------------- */

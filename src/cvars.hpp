@@ -107,7 +107,7 @@ static struct CVars final :            // Start of vars class
         // Skip underscore and keep comparing with new conditions. The
         // underscore is now allowed normally.
         while(++ucpPtr < ucpPtrEnd)
-          if(!isalnum(*ucpPtr) && *ucpPtr != '_')
+          if(StdIsNotAlnum(*ucpPtr) && *ucpPtr != '_')
             return false;
         // Success!
         return true;
@@ -653,7 +653,7 @@ static struct CVars final :            // Start of vars class
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Set function name for init helper
     stMaxInactiveCount(CVAR_MAX),      // Initially set to max cvar count
-    avInternal{ UtilMkFilledContainer<CVarMapIt, CVAR_MAX>(cvmActive.end()) },
+    avInternal{ UtilMkFilledContainer<ArrayVars>(cvmActive.end()) },
     cvmnsaList{{                       // Set combined lists
       { cvmPending, "unregistered" },  // Inactive cvars list
       { cvmActive,  "registered" } }}, // Active cvars list
@@ -662,8 +662,6 @@ static struct CVars final :            // Start of vars class
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~CVars, DeInit())         // Save and clean-up all variables
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CVars)               // Suppress default functions for safety
   /* ----------------------------------------------------------------------- */
   CVarReturn SetDefaults(const CVarDefaults cvdVal)
   { // Compare defaults setting

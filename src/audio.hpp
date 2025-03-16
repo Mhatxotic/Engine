@@ -25,7 +25,7 @@ namespace P {                          // Start of public module namespace
 BUILD_FLAGS(Audio,                     // Audio flags classes
   /* ----------------------------------------------------------------------- */
   // No settings?                      Audio system is resetting?
-  AF_NONE                   {Flag[0]}, AF_REINIT                 {Flag[1]}
+  AF_NONE                   {Flag(0)}, AF_REINIT                 {Flag(1)}
 );/* ======================================================================= */
 static class Audio final :             // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
@@ -431,8 +431,6 @@ static class Audio final :             // Audio manager class
     { }                                // Do nothing else
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Audio, DeInit())         // Destructor helper
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Audio)               // Suppress default functions for safety
   /* ----------------------------------------------------------------------- */
   CVarReturn SetAudCheckRate(const unsigned int uiTime)
     { return CVarSimpleSetIntNLG(cdCheckRate,

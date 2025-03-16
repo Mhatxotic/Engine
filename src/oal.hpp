@@ -32,16 +32,16 @@ typedef vector<ALuint>   ALUIntVector; // A vector of ALuint's
 BUILD_FLAGS(Oal,
   /* --------------------------------------------------------------------- */
   // No flags                          Device has been initialised?
-  AFL_NONE                  {Flag[0]}, AFL_INITDEVICE            {Flag[3]},
+  AFL_NONE                  {Flag(0)}, AFL_INITDEVICE            {Flag(3)},
   // Context has been initialised?     Have infinite sources?
-  AFL_INITCONTEXT           {Flag[4]}, AFL_INFINITESOURCES       {Flag[5]},
+  AFL_INITCONTEXT           {Flag(4)}, AFL_INFINITESOURCES       {Flag(5)},
   // Context has been made current?    OpenAL fully initialised
-  AFL_CONTEXTCURRENT        {Flag[6]}, AFL_INITIALISED           {Flag[7]},
+  AFL_CONTEXTCURRENT        {Flag(6)}, AFL_INITIALISED           {Flag(7)},
   // Can play 32-bit float audio?      Have ALC_ENUMERATE_ALL_EXT?
-  AFL_HAVE32FPPB            {Flag[8]}, AFL_HAVEENUMEXT           {Flag[9]},
+  AFL_HAVE32FPPB            {Flag(8)}, AFL_HAVEENUMEXT           {Flag(9)},
   /* -- Persistent across initialisations ---------------------------------- */
   // HRTF is enabled?
-  AFL_HRTF                 {Flag[64]},
+  AFL_HRTF                 {Flag(64)},
   /* -- Masks -------------------------------------------------------------- */
   AFL_VOLATILE{ AFL_INITDEVICE|AFL_INITCONTEXT|AFL_INFINITESOURCES|
                 AFL_CONTEXTCURRENT|AFL_INITIALISED|AFL_HAVE32FPPB|
@@ -526,8 +526,6 @@ static class Oal final :
     eQuery(AL_NONE)                    // Query method not initialised yet
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Oal)                 // Suppress default functions for safety
   /* -- Undefines ---------------------------------------------------------- */
 #undef IAL                             // Done with this macro
 #undef IALC                            //   "

@@ -176,8 +176,6 @@ static class CodecWAV final :          // WAV codec object
       bind(&CodecWAV::Decode, this, _1, _2), }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CodecWAV)            // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cCodecWAV = nullptr;                // Codec pointer
 /* ------------------------------------------------------------------------- */

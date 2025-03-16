@@ -13,7 +13,7 @@
 namespace IMemory {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 using namespace IError::P;             using namespace IIdent::P;
-using namespace IStd::P;               using namespace IUtf;
+using namespace IStd::P;               using namespace IUtf::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -230,8 +230,6 @@ class MemConst                         // Start of const MemBase Block Class
   /* -- Cast const void pointer to const char ------------------------------ */
   MemConst(const size_t stBytes, const void*const vpSrc) :
     MemConst(stBytes, const_cast<void*>(vpSrc)) { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(MemConst)            // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Read and write data class ============================================ */
 class MemBase :
@@ -385,8 +383,6 @@ class MemBase :
     MemConst{ stBytes, vpSrc } { }
   /* -- Uninitialised constructor -- pointer ------------------------------- */
   MemBase(void) = default;
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(MemBase)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Read, write and allocation data class ================================ */
 class Memory :
@@ -608,8 +604,6 @@ class Memory :
   Memory(void) = default;
   /* -- Destructor (just a free() needed) ---------------------------------- */
   ~Memory(void) { MemFreePtrIfSet(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Memory)              // Suppress default functions for safety
 };/* -- Useful types ------------------------------------------------------- */
 typedef list<Memory> MemoryList;       // List of memory blocks
 typedef vector<Memory> MemoryVector;   // A vector of memory classes

@@ -58,8 +58,6 @@ class InitHelper :                     // The Init Helper class
     ctDeinitialised{cmHiRes.GetTime()} // Set deinitialised time
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* -- Default suppressions ----------------------------------------------- */
-  DELETECOPYCTORS(InitHelper)          // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 };                                     // End of private module namespace
 /* ------------------------------------------------------------------------- */

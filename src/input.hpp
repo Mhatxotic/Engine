@@ -18,21 +18,21 @@ using namespace IGlFW::P;              using namespace IGlFWUtil::P;
 using namespace IHelper::P;            using namespace IJoystick::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace ISysUtil::P;           using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Input flags ========================================================== */
 BUILD_FLAGS(Input,
   /* ----------------------------------------------------------------------- */
   // No flags                          Mouse cursor is enabled?
-  IF_NONE                   {Flag[0]}, IF_CURSOR                 {Flag[1]},
+  IF_NONE                   {Flag(0)}, IF_CURSOR                 {Flag(1)},
   // Full-screen toggler enabled?      Mouse cursor has focus?
-  IF_FSTOGGLER              {Flag[2]}, IF_MOUSEFOCUS             {Flag[3]},
+  IF_FSTOGGLER              {Flag(2)}, IF_MOUSEFOCUS             {Flag(3)},
   // Send events at startup?           Do joystick polling?
-  IF_INITEVENTS             {Flag[4]}, IF_POLLJOYSTICKS          {Flag[5]},
+  IF_INITEVENTS             {Flag(4)}, IF_POLLJOYSTICKS          {Flag(5)},
   // Ignore input on focus loss?       Clamp mouse cursor? (MacOS only)
-  IF_RESTORE                {Flag[6]}, IF_CLAMPMOUSE             {Flag[7]}
+  IF_RESTORE                {Flag(6)}, IF_CLAMPMOUSE             {Flag(7)}
 );/* == Input class ======================================================== */
 static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Base classes ------------------------------------------------------- */
@@ -209,7 +209,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Window past event--------------------------------------------------- */
   void OnWindowPaste(const EvtMainEvent&)
   { // Get text in clipboard
-    IUtf::UtfDecoder utfString{ cGlFW->WinGetClipboard() };
+    UtfDecoder utfString{ cGlFW->WinGetClipboard() };
     // For each character, ddd the character to queue if valid
     while(const unsigned int uiChar = utfString.Next())
       if(uiChar >= 32) cConsole->OnCharPress(uiChar);
@@ -342,8 +342,6 @@ static class Input final :             // Handles keyboard, mouse & controllers
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Input, DeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Input)               // Suppress default functions for safety
   // -- CVar callback to toggle raw mouse ---------------------------------- */
   CVarReturn SetRawMouseEnabled(const bool bState)
   { // Send request to set raw mouse motion state if enabled

@@ -47,14 +47,14 @@ enum PcmChannelType : unsigned int     // PCM channels type
 BUILD_FLAGS(Pcm,
   /* -- Commands (Only used in 'Pcm' class) -------------------------------- */
   // No loading flags                  Force load as WAV
-  PL_NONE                   {Flag[0]}, PL_FCE_WAV                {Flag[1]},
+  PL_NONE                   {Flag(0)}, PL_FCE_WAV                {Flag(1)},
   // Force load as CAF                 Force load as OGG
-  PL_FCE_CAF                {Flag[2]}, PL_FCE_OGG                {Flag[3]},
+  PL_FCE_CAF                {Flag(2)}, PL_FCE_OGG                {Flag(3)},
   // Force load as MP3
-  PL_FCE_MP3                {Flag[4]},
+  PL_FCE_MP3                {Flag(4)},
   /* -- Private flags (Only used in 'PcmData' class) ----------------------- */
   // Bitmap is dynamically created
-  PL_DYNAMIC                {Flag[5]},
+  PL_DYNAMIC                {Flag(5)},
   /* -- Mask bits ---------------------------------------------------------- */
   PL_MASK{ PL_FCE_WAV|PL_FCE_CAF|PL_FCE_OGG|PL_FCE_MP3 }
 );/* -- Variables ---------------------------------------------------------- */

@@ -259,8 +259,6 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     { }
   /* -- Destructor --------------------------------------------------------- */
   ~Shader(void) { DeInitShaders(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Shader)              // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Shaders, Shader, SHADER) // Finish shaders collector
 /* ------------------------------------------------------------------------- */

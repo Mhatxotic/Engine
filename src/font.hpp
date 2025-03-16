@@ -23,7 +23,7 @@ using namespace ILuaLib::P;            using namespace IMemory::P;
 using namespace IOgl::P;               using namespace IRectangle::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace ITexDef::P;            using namespace ITexture::P;
-using namespace IUtf;                  using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 using namespace Lib::FreeType;         using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
@@ -108,8 +108,6 @@ class FontBase :                       // Members initially private
     ulDefaultChar('?')
     /* --------------------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FontBase)            // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Font Class (which inherits an Atlas) ==========-====================== */
 CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
@@ -437,8 +435,6 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     FontBase{ ifcPurpose }             // Set purpose
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Font)                // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Fonts, Font, FONT)    // End of collector class
 /* -- DeInit Font Textures ------------------------------------------------- */

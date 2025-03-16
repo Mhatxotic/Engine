@@ -60,8 +60,6 @@ struct TokenListNC :
     CStrVector{ StdMove(tlOther) }     // Move vector of C-Strings over
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(TokenListNC)         // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 struct TokenList :                     // Token class with line limit
   /* -- Base classes ------------------------------------------------------- */
@@ -110,8 +108,6 @@ struct TokenList :                     // Token class with line limit
     StrList{ StdMove(tlOther) }            // Move list of strings over
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(TokenList)           // Suppress default functions for safety
 }; /* ---------------------------------------------------------------------- */
 struct Token :                         // Tokeniser class
   /* -- Base classes ------------------------------------------------------- */
@@ -169,8 +165,6 @@ struct Token :                         // Tokeniser class
     StrVector{ StdMove(tlOther) }      // Move vector of strings over
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Token)               // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

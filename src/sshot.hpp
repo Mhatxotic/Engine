@@ -110,8 +110,6 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
         this, _1) }                    // Send this class pointer
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SShot)               // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 CTOR_END(SShots, SShot, SSHOT,,,, ifFormatId(IFMT_MAX)) // Initialised by cvars
 /* -- Set screenshot format flags ------------------------------------------ */

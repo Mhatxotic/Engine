@@ -37,11 +37,11 @@ class ThreadBase                       // Thread variables class
   /* -- Constructor -------------------------------------------------------- */
   ThreadBase(const SysThread stNPerf,  // Thread is high performance?
              void*const vpNParam,      // Thread user parameter
-             const CbThFunc &cbfNFunc) : // Thread callback function
+             const CbThFunc &ctfNFunc) : // Thread callback function
     /* -- Initialisers ----------------------------------------------------- */
     siExitCode(0),                     // Set exit code to standby
     vpParam(vpNParam),                 // Set user thread parameter
-    ctfFunc{ cbfNFunc },               // Set thread callback function
+    ctfFunc{ ctfNFunc },               // Set thread callback function
     sbShouldExit(false),               // Should never exit at first
     scdStart{ seconds{ 0 } },          // Never started time
     scdEnd{ seconds{ 0 } },            // Never finished time
@@ -65,7 +65,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     cLog->LogDebugExSafe("Thread $<$> started.", CtrGet(), IdentGet());
     // Set the start time and initialise the end time
     scdStart = cmHiRes.GetEpochTime();
-    scdEnd = seconds(0);
+    scdEnd = seconds{ 0 };
     // Loop forever until thread should exit
     while(ThreadShouldNotExit())
     { // Set exit code to -1 as a reference that execution is proceeding
@@ -245,7 +245,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* -- Full initialise and execute constructor ---------------------------- */
   Thread(const string &strN,           // Requested Thread name
          const SysThread sP,           // Thread needs high performance?
-         const CbThFunc &cbfC,           // Requested callback function
+         const CbThFunc &cbfC,         // Requested callback function
          void*const vpPtr) :           // User parameter to store
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
@@ -258,7 +258,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* -- Standby constructor (set everything except user parameter) --------- */
   Thread(const string &strN,           // Requested Thread name
          const SysThread sP,           // Thread needs high performance?
-         const CbThFunc &cbfC) :         // Requested callback function
+         const CbThFunc &cbfC) :       // Requested callback function
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
@@ -284,8 +284,6 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     ThreadBase{ sP, nullptr, nullptr } // Initialise only thread priority
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Thread)              // Suppress default functions for safety
 };/* ======================================================================= */
 CTOR_END(Threads, Thread, THREAD,,,, stRunning{0});
 /* -- Thread sync helper --------------------------------------------------- */
@@ -375,8 +373,6 @@ template<class Callbacks>class ThreadSyncHelper : private Callbacks
     bBToA(false)                       // Not sending msg from Thread B to A
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ThreadSyncHelper)    // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 static size_t ThreadGetRunning(void) { return cThreads->stRunning; }
 /* ------------------------------------------------------------------------- */

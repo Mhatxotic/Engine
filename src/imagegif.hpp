@@ -148,8 +148,6 @@ static class CodecGIF final :          // GIF codec object
       bind(&CodecGIF::Decode, this, _1, _2) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CodecGIF)            // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cCodecGIF = nullptr;                // Codec pointer
 /* ------------------------------------------------------------------------- */

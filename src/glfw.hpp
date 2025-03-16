@@ -204,8 +204,6 @@ static class GlFW final :              // Root engine class
     /* -- No code ---------------------------------------------------------- */
     { }
   /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(GlFW)                // Suppress default functions for safety
-  /* ----------------------------------------------------------------------- */
 } *cGlFW = nullptr;                    // Pointer to static class
 /* == Process a glfw error ================================================= */
 void GlFW::ErrorHandler(int iCode, const char*const cpDesc)

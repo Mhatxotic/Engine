@@ -806,8 +806,6 @@ class SysCon :                         // All members initially private
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~SysCon, SysConDeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysCon)              // Suppress default functions for safety
   /* -- Set maximum console line length ---------------------------- */ public:
   CVarReturn RowsModified(const size_t stRows)
   { // Deny if out of range. The maximum value is a SHORT from Win32 API.

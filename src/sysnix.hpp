@@ -66,8 +66,6 @@ class SysProcess                       // Need this before of System init order
     vpThreadId(pthread_self())         // Get native thread id
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysProcess)          // Suppress default functions for safety
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
@@ -480,7 +478,5 @@ class SysCore :
     bWindowInitialised(false)
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysCore)             // Suppress default functions for safety
 }; /* ---------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

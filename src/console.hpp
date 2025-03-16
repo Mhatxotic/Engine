@@ -11,7 +11,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IConsole {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IArgs;                 using namespace IClock::P;
+using namespace IArgs::P;              using namespace IClock::P;
 using namespace IConDef::P;            using namespace IConLib::P;
 using namespace ICVar::P;              using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IError::P;
@@ -21,38 +21,38 @@ using namespace ILog::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISocket::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace ITimer::P;             using namespace IToken::P;
-using namespace IUtf;                  using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Typedefs ============================================================= */
 BUILD_FLAGS(Console,                   // Console flags classes
   /* --------------------------------------------------------------------- */
   // No settings?                      Can't disable console? (temporary)
-  CF_NONE                   {Flag[0]}, CF_CANTDISABLE            {Flag[1]},
+  CF_NONE                   {Flag(0)}, CF_CANTDISABLE            {Flag(1)},
   // Ignore first key on show console? Autoscroll on message?
-  CF_IGNOREKEY              {Flag[2]}, CF_AUTOSCROLL             {Flag[3]},
+  CF_IGNOREKEY              {Flag(2)}, CF_AUTOSCROLL             {Flag(3)},
   // Automatically copy cvar on check? Character insert mode?
-  CF_AUTOCOPYCVAR           {Flag[4]}, CF_INSERT                 {Flag[5]},
+  CF_AUTOCOPYCVAR           {Flag(4)}, CF_INSERT                 {Flag(5)},
   // Console displayed?                Ignore escape key?
-  CF_ENABLED                {Flag[6]}, CF_IGNOREESC              {Flag[7]},
+  CF_ENABLED                {Flag(6)}, CF_IGNOREESC              {Flag(7)},
   // Can't disable console?            Block output position update?
-  CF_CANTDISABLEGLOBAL      {Flag[8]}, CF_BLOCKOUTPUTUPDATE      {Flag[9]}
+  CF_CANTDISABLEGLOBAL      {Flag(8)}, CF_BLOCKOUTPUTUPDATE      {Flag(9)}
 );/* ======================================================================= */
 BUILD_FLAGS(AutoComplete,              // Autocomplete flags classes
   /* ----------------------------------------------------------------------- */
   // No autocompletion?                Autocomplete command names?
-  AC_NONE                   {Flag[0]}, AC_COMMANDS               {Flag[1]},
+  AC_NONE                   {Flag(0)}, AC_COMMANDS               {Flag(1)},
   // Autocomplete cvar names?
-  AC_CVARS                  {Flag[2]},
+  AC_CVARS                  {Flag(2)},
   /* ----------------------------------------------------------------------- */
   AC_MASK{ AC_COMMANDS|AC_CVARS }      // All flags
 );/* ======================================================================= */
 BUILD_FLAGS(Redraw,                    // Redraw terminal or graphical console
   /* ----------------------------------------------------------------------- */
   // Redraw nothing                    Redraw text console
-  RD_NONE                   {Flag[0]}, RD_TEXT                   {Flag[1]},
+  RD_NONE                   {Flag(0)}, RD_TEXT                   {Flag(1)},
   // Redraw graphical console
-  RD_GRAPHICS               {Flag[2]},
+  RD_GRAPHICS               {Flag(2)},
   /* ----------------------------------------------------------------------- */
   RD_BOTH{ RD_TEXT|RD_GRAPHICS }       // All flags
 );/* ----------------------------------------------------------------------- */
@@ -905,8 +905,6 @@ static class Console final :           // Members initially private
     { }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Console, DeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Console)             // Suppress default functions for safety
   /* -- Set page move count ------------------------------------------------ */
   CVarReturn SetPageMoveCount(const ssize_t sstAmount)
   { // Deny if invalid value

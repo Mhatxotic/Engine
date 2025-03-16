@@ -235,8 +235,6 @@ class FileMap :
   /* -- Free memory if we allocated it and it's not a map ------------------ */
   ~FileMap(void) { if(MemIsPtrSet() && MemPtr() != SysMapGetMemory())
                      MemFreePtr(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(FileMap)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

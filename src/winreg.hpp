@@ -97,7 +97,5 @@ class SysReg                           // Members initially private
     { }
   /* -- Destructor --------------------------------------------------------- */
   ~SysReg(void) { if(Opened()) RegCloseKey(GetHandle()); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysReg)              // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

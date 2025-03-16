@@ -10,6 +10,7 @@
 namespace IJoyAxis {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 using namespace IGlFWUtil::P;          using namespace IStd::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -72,8 +73,6 @@ class JoyAxisInfo                      // Axis class
     iBuffered(GLFW_RELEASE)            // Set default state
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(JoyAxisInfo)         // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 template<class Container = array<JoyAxisInfo, 8>,
          class Iterator = typename Container::const_iterator>
@@ -138,25 +137,11 @@ class JoyAxisList :                    // Axis data list type
     { return this->cbegin() + JoyAxisListSizeCountClamped(); }
   /* -- Default constructor ------------------------------------- */ protected:
   JoyAxisList(void) :
-    /* -- Initialise joystick buttons -------------------------------------- */
-#define JAIX(x) JoyAxisInfo{ x }
-#define JAI(x) JAIX(GLFW_GAMEPAD_AXIS_ ## x)
-    /* --------------------------------------------------------------------- */
-    Container{{                        // Initialise joystick axes ids
-      /* ------------------------------------------------------------------- */
-      JAI(LEFT_X),       JAI(LEFT_Y),        JAI(RIGHT_X),   JAI(RIGHT_Y),
-      JAI(LEFT_TRIGGER), JAI(RIGHT_TRIGGER), JAIX(6),        JAIX(7)
-      /* ------------------------------------------------------------------- */
-    }},                                // End of joystick axes ids init
-    /* --------------------------------------------------------------------- */
-#undef JAI                             // Done with this macro
-#undef JAIX                            // Done with this macro
-    /* --------------------------------------------------------------------- */
+    /* -- Initialisers ----------------------------------------------------- */
+    Container{ UtilMkFilledClassContainer<Container,int>() },
     iAxes(0)                           // Initialise axes count
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(JoyAxisList)         // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

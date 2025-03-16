@@ -20,7 +20,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IError {                     // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IString::P;            using namespace IUtf;
+using namespace IString::P;            using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

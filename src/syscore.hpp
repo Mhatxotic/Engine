@@ -12,7 +12,7 @@
 /* ------------------------------------------------------------------------- */
 namespace ISystem {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IArgs;                 using namespace IClock::P;
+using namespace IArgs::P;              using namespace IClock::P;
 using namespace ICmdLine::P;           using namespace IConDef::P;
 using namespace ICoord::P;             using namespace ICVarDef::P;
 using namespace IDim::P;               using namespace IDimCoord::P;
@@ -24,7 +24,7 @@ using namespace IMemory::P;            using namespace IParser::P;
 using namespace IPSplit::P;            using namespace IStat::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IThread::P;            using namespace IUtf;
+using namespace IThread::P;            using namespace IUtf::P;
 using namespace IUtil::P;              using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -99,8 +99,6 @@ class SysModuleData :                  // Members initially private
     uiRevision(0)                      // Revision not initialised yet
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysModuleData)       // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == System modules ======================================================= **
 ** ######################################################################### **
@@ -124,9 +122,7 @@ struct SysModules :
     SysModMap{ StdMove(smlOther) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* --------------------------------------------------------------- */ public:
-  DELETECOPYCTORS(SysModules)          // Suppress default functions for safety
-  /* -- Dump module list --------------------------------------------------- */
+  /* -- Dump module list ------------------------------------------- */ public:
   CVarReturn DumpModuleList(const unsigned int uiShow)
   { // No modules? Return okay
     if(!uiShow || empty()) return ACCEPT;
@@ -156,9 +152,7 @@ class SysVersion :
   public SysModules                    // System modules
 { /* ----------------------------------------------------------------------- */
   const SysModuleData &smdEng;         // Engine executable information
-  /* --------------------------------------------------------------- */ public:
-  DELETECOPYCTORS(SysVersion)          // Suppress default functions for safety
-  /* -- Access to engine version data -------------------------------------- */
+  /* -- Access to engine version data ------------------------------ */ public:
   const char *ENGBuildType(void) const { return BUILD_TYPE_LABEL; }
   const char *ENGCompVer(void) const { return COMPILER_VERSION; }
   const char *ENGCompiled(void) const { return VER_DATE; }
@@ -326,8 +320,6 @@ class SysCommon                        // Common system structs and funcs
   double RAMProcUseMegs(void) const
     { return static_cast<double>(RAMProcUse()) / 1048576; }
   size_t RAMProcPeak(void) const { return memData.stMProcPeak; }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysCommon)           // Suppress default functions for safety
   /* -- Constructor --------------------------------------------- */ protected:
   SysCommon(ExeData &&edExe, OSData &&osdOS, CPUData &&cpudCPU) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -367,9 +359,9 @@ class SysPipeBase :
 BUILD_FLAGS(SysCon,                    // Console flags classes
   /* ----------------------------------------------------------------------- */
   // No settings?                      Cursor is visible?
-  SCO_NONE                  {Flag[0]}, SCO_CURVISIBLE            {Flag[1]},
+  SCO_NONE                  {Flag(0)}, SCO_CURVISIBLE            {Flag(1)},
   // Cursor is in insert mode?         Exit requested?
-  SCO_CURINSERT             {Flag[2]}, SCO_EXIT                  {Flag[3]}
+  SCO_CURINSERT             {Flag(2)}, SCO_EXIT                  {Flag(3)}
 );/* ----------------------------------------------------------------------- */
 class SysConBase :
   /* -- Base classes ------------------------------------------------------- */
@@ -561,8 +553,6 @@ static class System final :            // The main system class
   }
   /* -- Restore old unexpected and termination handlers -------------------- */
   DTORHELPER(~System, set_terminate(thHandler))
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(System)              // Suppress default functions for safety
   /* -- CVar callbacks to update guest descriptor strings ------------------ */
   CVarReturn SetGuestTitle(const string&, const string &strV)
     { strvTitle = strV; return ACCEPT; }

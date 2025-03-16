@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IStd {                       // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IUtf;
+using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -300,11 +300,40 @@ static int StdGetError(void) { return errno; }
 static bool StdIsError(const int iValue) { return StdGetError() == iValue; }
 /* -- Is error number not equal to ----------------------------------------- */
 static bool StdIsNotError(const int iValue) { return !StdIsError(iValue); }
-/* -- Wrapper for ToUpper/ToLower ------------------------------------------ */
+/* -- Uppercases the specified character ----------------------------------- */
 template<typename IntType>static char StdToUpper(const IntType itC)
   { return static_cast<char>(toupper(static_cast<int>(itC))); }
+/* -- Lowercases the specified character ----------------------------------- */
 template<typename IntType>static char StdToLower(const IntType itC)
   { return static_cast<char>(tolower(static_cast<int>(itC))); }
+/* -- Returns if character is a whitespace --------------------------------- */
+template<typename IntType>
+  constexpr static bool StdIsSpace(const IntType itChar)
+    { return ::std::isspace(static_cast<int>(itChar)); }
+/* -- Returns if character is a digit (0-9) -------------------------------- */
+template<typename IntType>
+  constexpr static bool StdIsDigit(const IntType itChar)
+    { return ::std::isdigit(static_cast<int>(itChar)); }
+/* -- Returns if character is NOT a digit (0-9) ---------------------------- */
+template<typename IntType>
+  constexpr static bool StdIsNotDigit(const IntType itChar)
+    { return !StdIsDigit(itChar); }
+/* -- Returns if character is alphanumeric (A-Za-z) ------------------------ */
+template<typename IntType>
+  constexpr static bool StdIsAlpha(const IntType itChar)
+    { return ::std::isalpha(static_cast<int>(itChar)); }
+/* -- Returns if character is NOT alphanumeric (A-Za-z) -------------------- */
+template<typename IntType>
+  constexpr static bool StdIsNotAlpha(const IntType itChar)
+    { return !StdIsAlpha(itChar); }
+/* -- Returns if character is alphanumeric or numeric (0-9A-Za-z) ---------- */
+template<typename IntType>
+  constexpr static bool StdIsAlnum(const IntType itChar)
+    { return ::std::isalnum(static_cast<int>(itChar)); }
+/* -- Returns if character is NOT alphanumeric or numeric (0-9A-Za-z) ------ */
+template<typename IntType>
+  constexpr static bool StdIsNotAlnum(const IntType itChar)
+    { return !StdIsAlnum(itChar); }
 /* -- Return absolute number ----------------------------------------------- */
 template<typename IntType=int64_t>
   static IntType StdAbsolute(const IntType itVal)
@@ -328,15 +357,6 @@ template<class AnyType>
   constexpr static std::remove_reference_t<AnyType>
     &&StdMove(AnyType &&atVar) noexcept
       { return ::std::move(atVar); }
-/* == Omission macros ====================================================== **
-** ######################################################################### **
-** ## These allow us to delete the assignment operator and assignment     ## **
-** ## copy constructor in a class so we don't accidently perform copies   ## **
-** ## instead of StdMove()'s.                                             ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-#define DELETECOPYCTORS(x) \
-  x(const x&) = delete; const x &operator=(const x&) = delete;
 /* == Static class try/catch helpers ======================================= **
 ** ######################################################################### **
 ** ## Don't put try/catch on func level. (C++ ISO/IEC JTC 1/SC 22 N 4411) ## **

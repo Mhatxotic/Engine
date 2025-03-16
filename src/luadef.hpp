@@ -44,7 +44,7 @@ enum LuaClassId : size_t {
 };/* -- LUA class reference ids (ref'd in luaident.hpp, lua.hpp) ----------- */
 typedef array<int, LMT_CLASSES> LuaLibClassIdReferences;
 static LuaLibClassIdReferences llcirAPI
-  { UtilMkFilledContainer<int, LMT_CLASSES>(LUA_REFNIL) };
+  { UtilMkFilledContainer<LuaLibClassIdReferences>(LUA_REFNIL) };
 /* -- Information about a LUA API namespace -------------------------------- */
 struct LuaLibStatic
 { /* ----------------------------------------------------------------------- */

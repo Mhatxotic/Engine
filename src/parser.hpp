@@ -144,8 +144,6 @@ template<class ParserMapType>class ParserBase :
     { }
   /* -- Constructor -------------------------------------------------------- */
   ParserBase(void) = default;
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ParserBase)          // Suppress default functions for safety
 }; /* -- A Parser class where the values can be modified ------------------- */
 template<class ParserBaseType = ParserBase<StrNCStrMap>>struct Parser :
   /* -- Base classes ------------------------------------------------------- */
@@ -209,8 +207,6 @@ template<class ParserBaseType = ParserBase<StrNCStrMap>>struct Parser :
                     cDelimiter }       // Initialise key/value separator
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Parser)              // Suppress default functions for safety
 };/* -- A Parser class thats values cannot be modified at all -------------- */
 template<class ParserBaseType = const ParserBase<const StrStrMap>>
   struct ParserConst :
@@ -234,8 +230,6 @@ template<class ParserBaseType = const ParserBase<const StrStrMap>>
                     cDelimiter }       // Initialise key/value separator
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ParserConst)         // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

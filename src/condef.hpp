@@ -50,7 +50,7 @@ typedef ConLines::const_reverse_iterator ConLinesConstRevIt; // " const
 /* ========================================================================= */
 namespace IConLib {                    // Console library namespace
 /* ------------------------------------------------------------------------- */
-using namespace IArgs;                 using namespace IConDef::P;
+using namespace IArgs::P;              using namespace IConDef::P;
 using namespace ICVarDef::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace

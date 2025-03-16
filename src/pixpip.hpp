@@ -268,7 +268,5 @@ class SysPipe :
     { Init(strF); }
   /* -- Destructor to kill and wait for process to exit -------------------- */
   ~SysPipe(void) { DeInit(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SysPipe)             // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

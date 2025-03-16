@@ -120,8 +120,6 @@ class EvtCore :                        // Start of common event system class
       aArgs{ StdMove(cOther.aArgs) }      // Move other parameters
       /* -- No code -------------------------------------------------------- */
       { }
-    /* --------------------------------------------------------------------- */
-    DELETECOPYCTORS(Event)             // Suppress default functions for safety
   };/* -- Private variables --------------------------------------- */ private:
   const CbEcFunc   cefEmpty;           // Empty function
   Funcs            fFuncs;             // Event callback storage
@@ -348,11 +346,9 @@ class EvtCore :                        // Start of common event system class
     Ident{ StdMove(strCName) },             // Initialise event system name
     islEventStrings{ StdMove(islStrings) }, // Initialise event id names
     cefEmpty{ bind(&EvtCore::WarningFunction, this, _1) },
-    fFuncs{ UtilMkFilledContainer<CbEcFunc,EvtMaxEvents>(cefEmpty) }
+    fFuncs{ UtilMkFilledContainer<Funcs>(cefEmpty) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(EvtCore)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */

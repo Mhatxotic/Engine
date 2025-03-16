@@ -15,7 +15,7 @@ using namespace IFStream::P;           using namespace IImageDef::P;
 using namespace IImageLib::P;          using namespace ILog::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ITexDef::P;
-using namespace IUtf;                  using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 using namespace Lib::Png;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -411,8 +411,6 @@ static class CodecPNG final :          // PNG codec object
       bind(&CodecPNG::Encode, this, _1, _2, _3) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CodecPNG)            // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cCodecPNG = nullptr;                // Codec pointer
 /* ------------------------------------------------------------------------- */

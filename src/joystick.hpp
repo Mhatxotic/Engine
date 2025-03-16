@@ -13,18 +13,19 @@ using namespace ICVarDef::P;           using namespace IEvtMain::P;
 using namespace IEvtWin::P;            using namespace IFlags;
 using namespace IGlFWUtil::P;          using namespace IJoyInfo::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
-using namespace IStd::P;               using namespace Lib::OS::GlFW::Types;
+using namespace IStd::P;               using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Input flags ========================================================== */
 BUILD_FLAGS(Input,
   /* ----------------------------------------------------------------------- */
   // No flags                          Mouse cursor is enabled?
-  IF_NONE                   {Flag[0]}, IF_CURSOR                 {Flag[1]},
+  IF_NONE                   {Flag(0)}, IF_CURSOR                 {Flag(1)},
   // Full-screen toggler enabled?      Mouse cursor has focus?
-  IF_FSTOGGLER              {Flag[2]}, IF_MOUSEFOCUS             {Flag[3]},
+  IF_FSTOGGLER              {Flag(2)}, IF_MOUSEFOCUS             {Flag(3)},
   // Send events at startup            Do joystick polling?
-  IF_INITEVENTS             {Flag[4]}, IF_POLLJOYSTICKS          {Flag[5]}
+  IF_INITEVENTS             {Flag(4)}, IF_POLLJOYSTICKS          {Flag(5)}
 );
 /* ------------------------------------------------------------------------- */
 class Joystick :
@@ -167,16 +168,8 @@ class Joystick :
   void JoyDeInit(void) const { GlFWSetJoystickCallback(nullptr); }
   /* -- Constructor --------------------------------------------- */ protected:
   Joystick(void) :
-    /* -- Init joystick ids ------------------------------------------------ */
-    JoyList{{ JoyInfo{ GLFW_JOYSTICK_1  }, JoyInfo{ GLFW_JOYSTICK_2 },
-              JoyInfo{ GLFW_JOYSTICK_3  }, JoyInfo{ GLFW_JOYSTICK_4 },
-              JoyInfo{ GLFW_JOYSTICK_5  }, JoyInfo{ GLFW_JOYSTICK_6 },
-              JoyInfo{ GLFW_JOYSTICK_7  }, JoyInfo{ GLFW_JOYSTICK_8 },
-              JoyInfo{ GLFW_JOYSTICK_9  }, JoyInfo{ GLFW_JOYSTICK_10 },
-              JoyInfo{ GLFW_JOYSTICK_11 }, JoyInfo{ GLFW_JOYSTICK_12 },
-              JoyInfo{ GLFW_JOYSTICK_13 }, JoyInfo{ GLFW_JOYSTICK_14 },
-              JoyInfo{ GLFW_JOYSTICK_15 }, JoyInfo{ GLFW_JOYSTICK_16 } }},
-    /* -- More initialisers ------------------------------------------------ */
+    /* -- Initialisers ----------------------------------------------------- */
+    JoyList{ UtilMkFilledClassContainer<JoyList,int>() },
     bPoll(false),                      // Init disabled polling
     lfOnJoyState{ "OnJoyState" },      // Init joy state lua event
     stConnected(0)                     // Init joystick count to zero
@@ -184,8 +177,6 @@ class Joystick :
     { }
   /* -- Destructor --------------------------------------------------------- */
   ~Joystick(void) { JoyDeInit(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Joystick)            // Suppress default functions for safety
   /* -- Handle a deadzone change ----------------------------------- */ public:
   CVarReturn SetDefaultJoyDZ(const float fDZ,
     const function<void(JoyInfo&)> &fcbCallBack)

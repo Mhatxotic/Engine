@@ -15,7 +15,7 @@ using namespace IHelper::P;            using namespace ILog::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf;                  using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 using namespace Lib::OS::OpenSSL;      using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -162,7 +162,7 @@ static const string CryptURLEncode(const string &strS)
   { // Get character
     const uint8_t ucC = static_cast<uint8_t>(*cpPtr);
     // Normal character? Append to string
-    if(isalnum(ucC) || ucC == '-' || ucC == '.' || ucC == '_' || ucC == '~')
+    if(StdIsAlnum(ucC) || ucC == '-' || ucC == '.' || ucC == '_' || ucC == '~')
       strURL += static_cast<char>(ucC);
     else
     { // Create storage for buffer and put the hexadecimal inside it
@@ -703,9 +703,8 @@ static class Crypt final :
           uiVal = StrHexToInt<unsigned int>
             (strT.substr(2, string::npos));
         // Not hex but is a number? Normal number
-        else if(isdigit(static_cast<unsigned char>(strT[1])))
-          uiVal = StrToNum<unsigned int>
-            (strT.substr(1, string::npos));
+        else if(StdIsDigit(strT[1]))
+          uiVal = StrToNum<unsigned int>(strT.substr(1, string::npos));
         // Shouldn't be anything else. Ignore insertations, goto next entity
         else continue;
         // Encoder character
@@ -879,8 +878,6 @@ static class Crypt final :
   SetDefaultPrivateKey();
   // Done
   DTORHELPEREND(~Crypt)
-  /* -- Macros ---------------------------------------------------- */ private:
-  DELETECOPYCTORS(Crypt)               // Suppress default functions for safety
   /* ----------------------------------------------------------------------- */
 } *cCrypt = nullptr;                   // Pointer to static class
 /* ------------------------------------------------------------------------- */

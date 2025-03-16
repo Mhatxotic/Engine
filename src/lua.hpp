@@ -504,8 +504,6 @@ static class Lua final :
     { }                                // No code
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Lua, DeInit())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Lua)                 // Suppress default functions for safety
   /* -- When operations count have changed --------------------------------- */
   CVarReturn SetOpsInterval(const int iCount)
     { return CVarSimpleSetIntNL(iOperations, iCount, 1); }

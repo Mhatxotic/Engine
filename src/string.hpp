@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IString {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IStd::P;               using namespace IUtf;
+using namespace IStd::P;               using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Common class with common objects ------------------------------------- */
@@ -281,7 +281,8 @@ static bool StrIsAlpha(const string &strValue)
 /* -- Return if specified string has numbers ------------------------------- */
 static bool StrIsAlphaNum(const string &strValue)
   { return StdAllOf(par_unseq, strValue.cbegin(), strValue.cend(),
-      [](const char cValue) { return isalnum(static_cast<int>(cValue)); }); }
+      [](const char cValue)
+        { return StdIsAlnum(static_cast<int>(cValue)); }); }
 /* -- Return if specified string is a valid integer ------------------------ */
 template<typename IntType=int64_t>static bool StrIsInt(const string &strValue)
 { // Get string stream
@@ -587,7 +588,7 @@ static const string StrCapitalise(const string &strStr)
   if(strStr.empty()) return strStr;
   // Duplicate the string anad uppercase the first character
   string strNew{ strStr };
-  strNew[0] = static_cast<char>(toupper(strStr.front()));
+  strNew[0] = StdToUpper<char>(strStr.front());
   // Return provided string
   return strNew;
 }

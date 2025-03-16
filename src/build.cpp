@@ -80,13 +80,13 @@ using namespace IDir::P;               using namespace IError::P;
 using namespace IFStream::P;           using namespace IHelper::P;
 using namespace IJson::P;              using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IPSplit::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITimer::P;             using namespace IToken::P;
-using namespace IUtf;                  using namespace IUtil::P;
-using namespace IUuId::P;              using namespace IParser::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IPSplit::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITimer::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;              using namespace IUuId::P;
+using namespace IParser::P;
 /* ========================================================================= */
 #define STANDARD   "c++20"             // Current compilation standard used
 #define ENGINENAME "engine"            // Name of engine 'engine'
@@ -670,7 +670,7 @@ int CheckSources(void)
                 break;
               }
             } // Is alpha?
-            else if(isalnum(strLine[stPos])) bGotAlpha = true;
+            else if(StdIsAlnum(strLine[stPos])) bGotAlpha = true;
           } // exception occured
           catch(const exception &e)
           { // Print row number, column and error
@@ -856,7 +856,7 @@ int GenDoc(void)
           // Set the new function name
           strFunc = strNewFunc.substr(stPos+1);
           for(char cChar : strFunc)
-            if(!isalnum(static_cast<int>(cChar)) &&
+            if(StdIsNotAlnum(static_cast<int>(cChar)) &&
               cChar != ':' && cChar != '.')
                 throw runtime_error{ "Invalid class name" };
           // New function
@@ -908,7 +908,7 @@ int GenDoc(void)
           // Set the new function name
           strFunc = strNewFunc.substr(stPos+1);
           for(char cChar : strFunc)
-            if(!isalnum(static_cast<int>(cChar)) &&
+            if(StdIsNotAlnum(static_cast<int>(cChar)) &&
               cChar != ':' && cChar != '.')
                 throw runtime_error{ "Invalid function name" };
           // New function
@@ -2436,7 +2436,7 @@ int CertGen(void)
     // First character is a hash? Ignore it
     if(strLine[0] == '#') continue;
     // Need title?
-    if(bGetTitle && isalnum(strLine[0]))
+    if(bGetTitle && StdIsAlnum(strLine[0]))
     { // Set name
       strFilename = strLine;
       // Set certificate being processed
@@ -4510,14 +4510,14 @@ int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
   INITSS(CmdLine,iArgC,saArgV,saEnv);  // cppcheck-suppress danglingLifetime
   INITSS(Log);                         // cppcheck-suppress danglingLifetime
   // Dependencies required only in this scope
-  using namespace IArchive::P;         using namespace IArgs;
+  using namespace IArchive::P;         using namespace IArgs::P;
   using namespace IAsset::P;           using namespace ICmdLine::P;
   using namespace IClock::P;           using namespace ICrypt::P;
   using namespace IEvtMain::P;         using namespace IFile::P;
   using namespace ILuaFunc::P;         using namespace IMemory::P;
   using namespace IParser::P;          using namespace IStat::P;
   using namespace IThread::P;          using namespace IUtil::P;
-  using namespace IUtf;
+  using namespace IUtf::P;
   // Initialise other systems. The order is important!
   INITSS(Stats);                   // cppcheck-suppress danglingLifetime
   INITSS(Threads);                 // cppcheck-suppress danglingLifetime

@@ -29,14 +29,14 @@ namespace P {                          // Start of public module namespace
 BUILD_FLAGS(SqlCVarData,
   /* -- (Note: Don't ever change these around) ----------------------------- */
   // No flags for this cvar in db?     The data value was encrypted?
-  SD_NONE                   {Flag[0]}, SD_ENCRYPTED              {Flag[1]}
+  SD_NONE                   {Flag(0)}, SD_ENCRYPTED              {Flag(1)}
 );/* -- Sql flags ---------------------------------------------------------- */
 BUILD_FLAGS(Sql,                       // Sql flags classes
   /* ----------------------------------------------------------------------- */
   // No settings?                      Is temporary database?
-  SF_NONE                   {Flag[0]}, SF_ISTEMPDB               {Flag[1]},
+  SF_NONE                   {Flag(0)}, SF_ISTEMPDB               {Flag(1)},
   // Delete empty databases?           Debug sql executions?
-  SF_DELETEEMPTYDB          {Flag[2]}
+  SF_DELETEEMPTYDB          {Flag(2)}
 );/* ----------------------------------------------------------------------- */
 class SqlData :                        // Query response data item class
   /* -- Base classes ------------------------------------------------------- */
@@ -60,8 +60,6 @@ class SqlData :                        // Query response data item class
     SqlData{ StdMove(sdOther), sdOther.iType }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(SqlData)             // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(SqlRecords, const string, SqlData);
 typedef list<SqlRecordsMap> SqlResult; // vector of key/raw data blocks
@@ -1355,8 +1353,6 @@ static struct Sql final :              // Members initially public
   }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Sql, DeInit(); sqlite3_shutdown())
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Sql)                 // Suppress default functions for safety
   /* -- Set a pragma on or off (used only with cvar callbacks) ---- CVARS -- */
   CVarReturn PragmaOnOff(const string &strVar, const bool bState)
     { Pragma(strVar, bState ? strvOn : strvOff); return ACCEPT; }

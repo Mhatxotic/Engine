@@ -37,8 +37,7 @@ namespace P {                          // Start of public module namespace
     public LuaIdent,                   /* Name of object for Lua            */\
     public hn                          /* Derived by our collector class    */\
     __VA_ARGS__                        /* Any other custom class derives    */\
-  { DELETECOPYCTORS(p)                 /* Suppress copy constructor         */\
-    p(void);                           /* Constructor prototype             */\
+  { p(void);                           /* Constructor prototype             */\
     ~p(void) noexcept(false);          /* Destructor prototype              */\
     x                                  /* Any extra variables? (no comma!)  */
 /* -- Collector header that lets you use a custom container ---------------- */
@@ -185,8 +184,6 @@ class CLHelperBase :
     stMaximum(StdMaxSizeT)             // Initialise maximum objects
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CLHelperBase)        // Suppress default functions for safety
   /* -- Set limit ---------------------------------------------------------- */
   CVarReturn CLBaseSetLimitUnsafe(const size_t stLimit)
     { return CVarSimpleSetInt(stMaximum, stLimit); }
@@ -226,8 +223,6 @@ class CLHelperSafe :
     BaseType{ cpT }                    // Initialise base type with name
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CLHelperSafe)        // Suppress default functions for safety
   /* -- Return the mutex ------------------------------------------- */ public:
   mutex &CollectorGetMutex(void) { return *this; }
   /* -- Lock the mutex and return the removed iterator --------------------- */
@@ -260,8 +255,6 @@ class CLHelperUnsafe :                 // Members initially private
     BaseType{ cpT }                    // Initialise base type with name
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CLHelperUnsafe)      // Suppress default functions for safety
   /* -- Set maximum objects ------------------------------------------------ */
   CVarReturn CLSetLimit(const size_t stLimit)
     { return this->CLBaseSetLimitUnsafe(stLimit); }
@@ -305,8 +298,6 @@ struct CLHelper :                      // Members initially public
     { }
   /* -- Destructor --------------------------------------------------------- */
   ~CLHelper(void) { this->CLBaseCheckAndDestroyUnsafe(); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CLHelper)            // Suppress default functions for safety
   /* -- Set maximum objects ------------------------------------------------ */
   CVarReturn CollectorSetLimit(const size_t stLimit)
     { return this->CLSetLimit(stLimit); }
@@ -392,8 +383,6 @@ struct ICHelperBase                    // Members initially public
     cIterator{ StdMove(itObj) }        // Initialise iterator
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ICHelperBase)        // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Collector class helper WITH locks ==================================== **
 ** ######################################################################### **
@@ -432,8 +421,6 @@ class ICHelperSafe :                   // Members initially private
     BaseType(ctPtr, StdMove(ICHelperInit(ctPtr))) { }
   explicit ICHelperSafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
     BaseType(ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr))) { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ICHelperSafe)        // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Collector class helper without locks ================================= **
 ** ######################################################################### **
@@ -472,8 +459,6 @@ class ICHelperUnsafe :                 // Members initially private
     BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr)) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ICHelperUnsafe)      // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 /* == Collector class ====================================================== **
 ** ######################################################################### **
@@ -518,8 +503,6 @@ struct ICHelper :                      // Members initially public
     LockType{ ctPtr, mtPtr }           // Initialise lock type
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(ICHelper)            // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 };                                     // End of private module namespace
 /* ------------------------------------------------------------------------- */

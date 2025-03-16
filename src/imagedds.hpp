@@ -334,8 +334,6 @@ static class CodecDDS final :          // DDS codec object
       bind(&CodecDDS::Decode, this, _1, _2) }
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(CodecDDS)            // Suppress default functions for safety
   /* -- End ---------------------------------------------------------------- */
 } *cCodecDDS = nullptr;                // Codec pointer
 /* ------------------------------------------------------------------------- */

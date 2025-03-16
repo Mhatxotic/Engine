@@ -392,8 +392,6 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     Json{}                             // Use default initialisers
     /* -- Initialise from file --------------------------------------------- */
     { SyncInitFileSafe(strFile); }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(Json)                // Suppress default functions for safety
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Jsons, Json, JSON, JSON) // Finish collector class
 /* ------------------------------------------------------------------------- */

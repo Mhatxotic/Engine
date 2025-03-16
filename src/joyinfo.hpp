@@ -19,9 +19,9 @@ namespace P {                          // Start of public module namespace
 BUILD_FLAGS(Joy,
   /* ----------------------------------------------------------------------- */
   // No flags                          Joystick is connnected?
-  JF_NONE                   {Flag[0]}, JF_CONNECTED              {Flag[1]},
+  JF_NONE                   {Flag(0)}, JF_CONNECTED              {Flag(1)},
   // Joystick is actually a gamepad
-  JF_GAMEPAD                {Flag[2]}
+  JF_GAMEPAD                {Flag(2)}
 );
 /* ------------------------------------------------------------------------- */
 class JoyInfo :                        // Joystick class

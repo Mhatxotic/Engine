@@ -16,7 +16,7 @@ using namespace IFlags;                using namespace IFStream::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Functions available flags -------------------------------------------- */
-BUILD_FLAGS(DataFormat, DF_DECODE{Flag[1]}, DF_ENCODE{Flag[2]});
+BUILD_FLAGS(DataFormat, DF_DECODE{Flag(1)}, DF_ENCODE{Flag(2)});
 /* ------------------------------------------------------------------------- */
 template<class DataType,               // Data storage type
          typename FormatType,          // Data type id
@@ -109,8 +109,6 @@ class DataFormat                       // Image libraries format object class
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
-  DELETECOPYCTORS(DataFormat)          // Suppress default functions for safety
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
