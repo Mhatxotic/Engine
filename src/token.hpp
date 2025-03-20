@@ -38,7 +38,7 @@ struct TokenListNC :
         // Until there are no more occurences of separator or maximum reached
         // Move the tokenised part into a new list item
         for(size_t stLoc;
-            (stLoc = strStr.find(strSep, stStart)) != string::npos &&
+            (stLoc = strStr.find(strSep, stStart)) != StdNPos &&
               size() < stMaxM1;
             stStart += stLoc - stStart + stSepLen)
         { // Zero the character
@@ -82,8 +82,8 @@ struct TokenList :                     // Token class with line limit
         size_t stStart = strStr.size() - 1;
         // Until there are no more occurences of separator
         for(size_t stLoc;
-             stStart != string::npos &&
-               (stLoc = strStr.find_last_of(strSep, stStart)) != string::npos;
+             stStart != StdNPos &&
+               (stLoc = strStr.find_last_of(strSep, stStart)) != StdNPos;
             stStart = stLoc - 1)
         { // Get location plus length
           const size_t stLocPlusLength = stLoc + stSepLen;
@@ -93,7 +93,7 @@ struct TokenList :                     // Token class with line limit
           // If we're over the limit
           if(size() >= stMax) return;
         } // Push remainder of string if there is a remainder
-        if(stStart != string::npos)
+        if(stStart != StdNPos)
           emplace_front(strStr.substr(0, stStart + 1));
         // Done
         return;
@@ -132,7 +132,7 @@ struct Token :                         // Tokeniser class
         size_t stStart = 0;
         // Enumerate the string through each separator and extract each string
         for(size_t stLoc;
-            (stLoc = strStr.find(strSep, stStart)) != string::npos &&
+            (stLoc = strStr.find(strSep, stStart)) != StdNPos &&
               size() < stMaxM1;
             stStart = stLoc + stSepLen)
           emplace_back(strStr.substr(stStart, stLoc - stStart));
@@ -151,7 +151,7 @@ struct Token :                         // Tokeniser class
     const size_t stSepLen = strSep.length();
     size_t stStart = 0;
     // Extract each word and emplace it into our vector of strings
-    for(size_t stLoc; (stLoc = strStr.find(strSep, stStart)) != string::npos;
+    for(size_t stLoc; (stLoc = strStr.find(strSep, stStart)) != StdNPos;
           stStart = stLoc + stSepLen)
       emplace_back(strStr.substr(stStart, stLoc - stStart));
     // Theres one left? Make sure it's inserted

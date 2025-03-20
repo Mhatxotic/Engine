@@ -31,7 +31,7 @@ template<class ParserMapType>class ParserBase :
     size_t stStart = 0;
     // Until eof, push each item split into list
     for(size_t stLoc;
-              (stLoc = strSep.find(strLineSep, stStart)) != string::npos;
+              (stLoc = strSep.find(strLineSep, stStart)) != StdNPos;
                stStart = stLoc + strLineSep.length())
       ParserPushLine(strSep, stStart, stLoc, cDelimiter);
     // Push remainder of string if available
@@ -101,23 +101,23 @@ template<class ParserMapType>class ParserBase :
   { // Look for separator and if found?
     const size_t stSepLoc =
       StrFindCharForwards(strSep, stSegStart, stSegEnd, cDelimiter);
-    if(stSepLoc != string::npos)
+    if(stSepLoc != StdNPos)
     { // Find start of keyname and if found?
       const size_t stKeyStart =
         StrFindCharNotForwards(strSep, stSegStart, stSepLoc);
-      if(stKeyStart != string::npos)
+      if(stKeyStart != StdNPos)
       { // Find end of keyname and if found?
         const size_t stKeyEnd =
           StrFindCharNotBackwards(strSep, stSepLoc-1, stSegStart);
-        if(stKeyEnd != string::npos)
+        if(stKeyEnd != StdNPos)
         { // Find start of value name and if found?
           const size_t stValStart =
             StrFindCharNotForwards(strSep, stSepLoc+1, stSegEnd);
-          if(stValStart != string::npos)
+          if(stValStart != StdNPos)
           { // Find end of value name and if found? We can grab key/value
             const size_t stValEnd =
               StrFindCharNotBackwards(strSep, stSegEnd-1, stValStart);
-            if(stValEnd != string::npos)
+            if(stValEnd != StdNPos)
               return ParserPushPair(
                 StdMove(strSep.substr(stKeyStart, stKeyEnd-stKeyStart+1)),
                 StdMove(strSep.substr(stValStart, stValEnd-stValStart+1)));

@@ -247,7 +247,7 @@ static int CryptGetError(string &strError)
       strError = CryptGetErrorReason(ulErr);
       // If theres a colon in it, delete everything up to that colon
       const size_t stColon = strError.find_last_of(':');
-      if(stColon != string::npos)
+      if(stColon != StdNPos)
         strError = StrCapitalise(strError.substr(stColon + 1));
     }
   } // Free unused memory since the logevity of this value can be a while
@@ -683,11 +683,11 @@ static class Crypt final :
     if(strS.empty()) return {};
     // Loop until we don't find anymore entities to decode
     for(size_t stAPos = strS.find('&');
-               stAPos != string::npos;
+               stAPos != StdNPos;
                stAPos = strS.find('&', stAPos))
     { // Get semi-colon position, break if not found
       const size_t stSPos = strS.find(';', stAPos+1);
-      if(stSPos == string::npos) break;
+      if(stSPos == StdNPos) break;
       // Copy out the entity
       const string strT{ strS.substr(stAPos+1, stSPos-stAPos-1) };
       // Cut out the entity
@@ -701,10 +701,10 @@ static class Crypt final :
         // Have more than 2 characters and hex character specified?
         if(strT.length() > 2 && (strT[1] == 'x' || strT[1] == 'X'))
           uiVal = StrHexToInt<unsigned int>
-            (strT.substr(2, string::npos));
+            (strT.substr(2, StdNPos));
         // Not hex but is a number? Normal number
         else if(StdIsDigit(strT[1]))
-          uiVal = StrToNum<unsigned int>(strT.substr(1, string::npos));
+          uiVal = StrToNum<unsigned int>(strT.substr(1, StdNPos));
         // Shouldn't be anything else. Ignore insertations, goto next entity
         else continue;
         // Encoder character

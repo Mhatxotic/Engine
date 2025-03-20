@@ -292,6 +292,7 @@ static void StdSRand(const unsigned int uiSeed) { srandom(uiSeed); }
 constexpr const unsigned int StdMaxUInt = numeric_limits<unsigned int>::max();
 constexpr const uint64_t StdMaxUInt64 = numeric_limits<uint64_t>::max();
 constexpr const size_t StdMaxSizeT = numeric_limits<size_t>::max();
+constexpr const size_t StdNPos = string::npos;
 /* -- Set error number ----------------------------------------------------- */
 static void StdSetError(const int iValue) { errno = iValue; }
 /* -- Get error number ----------------------------------------------------- */
@@ -310,6 +311,10 @@ template<typename IntType>static char StdToLower(const IntType itC)
 template<typename IntType>
   constexpr static bool StdIsSpace(const IntType itChar)
     { return ::std::isspace(static_cast<int>(itChar)); }
+/* -- Returns if character is NOT a whitespace ----------------------------- */
+template<typename IntType>
+  constexpr static bool StdIsNotSpace(const IntType itChar)
+    { return !StdIsSpace(itChar); }
 /* -- Returns if character is a digit (0-9) -------------------------------- */
 template<typename IntType>
   constexpr static bool StdIsDigit(const IntType itChar)
@@ -345,6 +350,10 @@ template<typename IntType=int64_t>
 /* -- Returns if the specified number is a power of two -------------------- */
 template<typename IntType=int64_t>static bool StdIntIsPOW2(const IntType itVal)
   { return !((itVal & (itVal - 1)) && itVal); }
+/* -- Get the distance between two opposing corners ------------------------ */
+template<typename IntType>static double StdHypot(const IntType itWidth,
+  const IntType itHeight)
+    { return ::std::hypot(itWidth, itHeight); }
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## Because some compilers may not allow me to alias ::std::move        ## **

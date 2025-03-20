@@ -396,7 +396,7 @@ static struct CVars final :            // Start of vars class
   size_t Save(void)
   { // Done if sqlite database is not opened or vars table is not availabe
     if(!cSql->IsOpened() || cSql->CVarCreateTable() == Sql::CTR_FAIL)
-      return string::npos;
+      return StdNPos;
     // Begin transaction
     cSql->Begin();
     // Total number of commits attempted which may need to be read and

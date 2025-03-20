@@ -63,7 +63,7 @@ struct Url                             // Members initially public
     if(strUrl.size() > 2048) { SetCode(R_TOOLONG); return; }
     // Error if no scheme
     size_t stStart = 0, stEnd = strUrl.find(':');
-    if(stEnd == string::npos) { SetCode(R_NOSCHEME); return; }
+    if(stEnd == StdNPos) { SetCode(R_NOSCHEME); return; }
     // Set scheme and error if empty
     strScheme = strUrl.substr(stStart, stEnd);
     if(strScheme.empty()) { SetCode(R_EMSCHEME); return; }
@@ -73,7 +73,7 @@ struct Url                             // Members initially public
     // Move past scheme and find the resource part
     stStart += 2;
     stEnd = strUrl.find('/', stStart);
-    if(stEnd == std::string::npos)
+    if(stEnd == StdNPos)
     { // Couldn't find it so the resource wasn't specified so assume the root
       stEnd = strUrl.size();
       strResource = "/";
@@ -83,12 +83,12 @@ struct Url                             // Members initially public
     string strAHP{ strUrl.substr(stStart, stEnd - stStart) };
     // Find authority delimiter and if we find it?
     size_t stAtPos = strAHP.find('@');
-    if(stAtPos != string::npos)
+    if(stAtPos != StdNPos)
     { // Extract username and password
       const string strUserInfo{ strAHP.substr(0, stAtPos) };
       // Find username and password delimiter and if we find it?
       size_t stColonPos = strUserInfo.find(':');
-      if(stColonPos != string::npos)
+      if(stColonPos != StdNPos)
       { // We have the username and password
         strUsername = strUserInfo.substr(0, stColonPos);
         strPassword = strUserInfo.substr(stColonPos + 1);
@@ -102,7 +102,7 @@ struct Url                             // Members initially public
       strAHP = strAHP.substr(stAtPos + 1);
     } // Find port delimiter in hostname and if we have it?
     size_t stColonPos = strAHP.find(':');
-    if(stColonPos != string::npos)
+    if(stColonPos != StdNPos)
     { // We have the hostname
       strHost = strAHP.substr(0, stColonPos);
       // Extract the port number and error if empty
@@ -123,7 +123,7 @@ struct Url                             // Members initially public
     if(strHost.empty()) { SetCode(R_EMHOST); return; }
     // Find the bookmark delimiter and if we have it?
     size_t stHashPos = strResource.find('#');
-    if(stHashPos != std::string::npos)
+    if(stHashPos != StdNPos)
     { // Extract the bookmark and truncate the resource string
       strBookmark = strResource.substr(stHashPos + 1);
       strResource.resize(stHashPos);

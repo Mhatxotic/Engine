@@ -99,8 +99,11 @@ class SysCon :                         // All members initially private
 #endif
     if(iNewW == DimGetWidth() && iNewH == DimGetHeight()) return;
     // Log the new size
-    cLog->LogDebugExSafe("SysCon resized from $x$ to $x$.",
-      iNewW, iNewH, DimGetWidth(), DimGetHeight());
+    if(DimIsSet())
+      cLog->LogDebugExSafe("SysCon resizing from $x$ to $x$.",
+        DimGetWidth(), DimGetHeight(), iNewW, iNewH);
+    else cLog->LogDebugExSafe("SysCon initialised to $x$.",
+      DimGetWidth(), DimGetHeight());
     // Update size
     DimSet(iNewW, iNewH);
     diSizeM1.DimSet(DimGetWidth() - 1, DimGetHeight() - 1);

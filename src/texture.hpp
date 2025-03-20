@@ -803,30 +803,32 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     clTiles.resize(1);
     CoordList &clFirst = clTiles.front();
     clFirst.reserve(gluvTiles.size() / 4);
+    // Shortcut to GLUIntVector const iterator
+    typedef GLUIntVector::const_iterator GLUIntVectorItConst;
     // Are image pixels reversed?
     if(IsReversed())
       // Until there are no more values to parse
-      for(GLUIntVector::const_iterator gluvciIt{ gluvTiles.cbegin() };
-                                       gluvciIt != gluvTiles.cend();
-                                     ++gluvciIt)
+      for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
+                              gluvicIt != gluvTiles.cend();
+                            ++gluvicIt)
       { // Add the user specified tile
-        const GLfloat fX      = static_cast<GLfloat>(*gluvciIt),
-                      fY      = static_cast<GLfloat>(*(++gluvciIt)),
-                      fWidth  = static_cast<GLfloat>(*(++gluvciIt)),
-                      fHeight = static_cast<GLfloat>(*(++gluvciIt));
+        const GLfloat fX      = static_cast<GLfloat>(*gluvicIt),
+                      fY      = static_cast<GLfloat>(*(++gluvicIt)),
+                      fWidth  = static_cast<GLfloat>(*(++gluvicIt)),
+                      fHeight = static_cast<GLfloat>(*(++gluvicIt));
         AddTileRWH(0, fX, fY, fWidth, fHeight);
       }
     // Image pixels are not reversed?
     else
       // Until there are no more values to parse
-      for(GLUIntVector::const_iterator gluvciIt{ gluvTiles.cbegin() };
-                                       gluvciIt != gluvTiles.cend();
-                                     ++gluvciIt)
+      for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
+                              gluvicIt != gluvTiles.cend();
+                            ++gluvicIt)
       { // Add the user specified tile
-        const GLfloat fX      = static_cast<GLfloat>(*gluvciIt),
-                      fY      = static_cast<GLfloat>(*(++gluvciIt)),
-                      fWidth  = static_cast<GLfloat>(*(++gluvciIt)),
-                      fHeight = static_cast<GLfloat>(*(++gluvciIt));
+        const GLfloat fX      = static_cast<GLfloat>(*gluvicIt),
+                      fY      = static_cast<GLfloat>(*(++gluvicIt)),
+                      fWidth  = static_cast<GLfloat>(*(++gluvicIt)),
+                      fHeight = static_cast<GLfloat>(*(++gluvicIt));
         AddTileWH(0, fX, fY, fWidth, fHeight);
       }
   }

@@ -158,7 +158,7 @@ namespace H                            // Private functions
           case 1: osS << *cpPos; cpPos += 2; break;
           // More than one character? Copy characters and stride over the '$'
           // we just processed. Better than storing single characters.
-          default: osS << StdMove(string{ cpPos, stNum });
+          default: osS << string{ cpPos, stNum };
                    cpPos += stNum + 1;
                    break;
           // Did not move? This can happen at the start of the string. Just
@@ -208,7 +208,7 @@ using H::Format::StrFormat;            // Alias 'StrFormat' here
 template<typename IntType>
   static const string StrReadableFromNum(const IntType itVal,
     const int iPrec=0)
-      { return StdMove(StrAppendImbue(fixed, setprecision(iPrec), itVal)); }
+      { return StrAppendImbue(fixed, setprecision(iPrec), itVal); }
 /* -- Trim specified characters from end of string ------------------------- */
 static const string StrTrimSuffix(const string &strStr, const char cChar)
 { // Return empty string if source string is empty or calculate ending
@@ -222,15 +222,14 @@ static const string StrTrim(const string &strStr, const char cChar)
   if(strStr.empty()) return strStr;
   // Calculate starting misoccurance of character. Return original if not found
   const size_t stBegin = strStr.find_first_not_of(cChar);
-  if(stBegin == string::npos) return strStr;
+  if(stBegin == StdNPos) return strStr;
   // Calculate ending misoccurance of character then copy and return the string
   return strStr.substr(stBegin, strStr.find_last_not_of(cChar) - stBegin + 1);
 }
 /* -- Convert integer to string with padding and precision ----------------- */
 template<typename IntType>static const string StrFromNum(const IntType itV,
   const int iW=0, const int iPrecision=numeric_limits<IntType>::digits10)
-    { return StdMove(StrAppend(setw(iW), fixed,
-        setprecision(iPrecision), itV)); }
+    { return StrAppend(setw(iW), fixed, setprecision(iPrecision), itV); }
 /* -- Quickly convert numbered string to integer --------------------------- */
 template<typename IntType=int64_t>
   static const IntType StrToNum(const string &strValue)
@@ -269,11 +268,10 @@ template<typename IntType=int64_t>
 /* -- Convert hex to string with zero padding ------------------------------ */
 template<typename IntType>
   static const string StrHexFromInt(const IntType itVal, const int iPrec=0)
-    { return StdMove(StrAppend(setfill('0'), hex, setw(iPrec), itVal)); }
+    { return StrAppend(setfill('0'), hex, setw(iPrec), itVal); }
 template<typename IntType>
   static const string StrHexUFromInt(const IntType itVal, const int iPrec=0)
-    { return StdMove(StrAppend(setfill('0'), hex, setw(iPrec), uppercase,
-        itVal)); }
+    { return StrAppend(setfill('0'), hex, setw(iPrec), uppercase, itVal); }
 /* -- Return if specified string has numbers ------------------------------- */
 static bool StrIsAlpha(const string &strValue)
   { return StdAllOf(par_unseq, strValue.cbegin(), strValue.cend(),
@@ -457,7 +455,7 @@ static string &StrReplace(string &strStr, const char cWhat, const char cWith)
   if(strStr.empty()) return strStr;
   // For each occurence of 'strWhat' with 'strWith'.
   for(size_t stPos  = strStr.find(cWhat, 0);
-             stPos != string::npos;
+             stPos != StdNPos;
              stPos  = strStr.find(cWhat, stPos)) strStr[stPos++] = cWith;
   // Return string
   return strStr;
@@ -473,7 +471,7 @@ static string &StrReplace(string &strDest, const string &strWhat,
   if(strDest.empty()) return strDest;
   // For each occurence of 'strWhat' with 'strWith'.
   for(size_t stPos  = strDest.find(strWhat,0);
-             stPos != string::npos;
+             stPos != StdNPos;
              stPos  = strDest.find(strWhat, stPos))
   { // Replace occurence
     strDest.replace(stPos, strWhat.length(), strWith);
@@ -657,7 +655,7 @@ static size_t StrCountOccurences(const string &strStr, const string &strWhat)
   size_t stCount = 0;
   // Find occurences
   for(size_t stIndex = strStr.find(strWhat);
-             stIndex != string::npos;
+             stIndex != StdNPos;
              stIndex = strStr.find(strWhat, stIndex + 1)) ++stCount;
   // Return occurences
   return stCount;
@@ -696,8 +694,8 @@ static const string ImplodeMap(const StrNCStrMap &ssmSrc,
   StrVector svRet; svRet.reserve(ssmSrc.size());
   transform(ssmSrc.cbegin(), ssmSrc.cend(), back_inserter(svRet),
     [&strKeyValSep, &strValEncaps](const StrNCStrMapPair &sncsmpPair)
-      { return StdMove(StrAppend(sncsmpPair.first, strKeyValSep,
-          strValEncaps, sncsmpPair.second, strValEncaps)); });
+      { return StrAppend(sncsmpPair.first, strKeyValSep,
+          strValEncaps, sncsmpPair.second, strValEncaps); });
   // Return vector imploded into a string
   return StrImplode(svRet, 0, strLineSep);
 }
@@ -705,14 +703,13 @@ static const string ImplodeMap(const StrNCStrMap &ssmSrc,
 template<typename AnyType>
   static const string StrPrefixPosNeg(const AnyType atVal,
     const int iPrecision)
-      { return StdMove(StrAppend(showpos, fixed, setprecision(iPrecision),
-          atVal)); }
+      { return StrAppend(showpos, fixed, setprecision(iPrecision), atVal); }
 /* ------------------------------------------------------------------------- */
 template<typename AnyType>
   static const string StrPrefixPosNegReadable(const AnyType atVal,
     const int iPrecision)
-      { return StdMove(StrAppendImbue(showpos, fixed, setprecision(iPrecision),
-          atVal)); }
+      { return StrAppendImbue(showpos, fixed, setprecision(iPrecision),
+          atVal); }
 /* ------------------------------------------------------------------------- */
 template<typename OutType, typename InType, class SuffixClass>
   static OutType StrToReadableSuffix(const InType itValue,
@@ -769,7 +766,7 @@ template<typename IntType>
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // If input value is 32-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint32_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer
     static const array<const ByteValue,3> bvLookup{ {
       { 0x40000000, "GB" }, { 0x00100000, "MB" }, { 0x00000400, "KB" }
@@ -778,7 +775,7 @@ template<typename IntType>
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // If input value is 16-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer
     static const array<const ByteValue,1> bvLookup{ { { 0x0400, "KB" } } };
     // Return result
@@ -829,7 +826,7 @@ template<typename IntType>
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
   } // If input value is 32-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint32_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer.
     static const array<const BitValue,3> bvLookup{ {
       { 1000000000, "Gb" }, { 1000000, "Mb" }, { 1000, "Kb" },
@@ -838,7 +835,7 @@ template<typename IntType>
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
   } // If input value is 16-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer.
     static const array<const BitValue,6> bvLookup{ { { 1000, "Kb" } } };
     // Return result
@@ -886,7 +883,7 @@ template<typename IntType>
     // Return result
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   } // If input value is 32-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint32_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
     static const array<const Value,3> vLookup{ {
       { 1000000000, "B" }, { 1000000, "M" }, { 1000, "K" }
@@ -894,7 +891,7 @@ template<typename IntType>
     // Return result
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   } // If input value is 16-bit?
-  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+  else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
     static const array<const Value,1> vLookup{ { { 1000, "K" } } };
     // Return result
@@ -929,73 +926,73 @@ template<typename IntType>
 static size_t StrFindCharForwards(const string &strS, size_t stStart,
   const size_t stEnd, const char cpChar)
 { // Until we've reached the limit
-  while(stStart < stEnd && stStart != string::npos)
+  while(stStart < stEnd && stStart != StdNPos)
   { // Return position if we find the character
     if(strS[stStart] == cpChar) return stStart;
     // Goto next index and try again
     ++stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharBackwards[[maybe_unused]](const string &strS,
   size_t stStart, const size_t stEnd, const char cpChar)
 { // Until we've reached the limit
-  while(stStart >= stEnd && stStart != string::npos)
+  while(stStart >= stEnd && stStart != StdNPos)
   { // Return position if we find the character
     if(strS[stStart] == cpChar) return stStart;
     // Goto next index and try again
     --stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharNotForwards[[maybe_unused]](const string &strS,
   size_t stStart, const size_t stEnd, const char cpChar)
 { // Until we've reached the limit
-  while(stStart < stEnd && stStart != string::npos)
+  while(stStart < stEnd && stStart != StdNPos)
   { // Return position if we find the character
     if(strS[stStart] != cpChar) return stStart;
     // Goto next index and try again
     ++stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharNotForwards(const string &strS, size_t stStart,
   const size_t stEnd)
 { // Until we've reached the limit
-  while(stStart < stEnd && stStart != string::npos)
+  while(stStart < stEnd && stStart != StdNPos)
   { // Return position if we find a non-control character
     if(strS[stStart] > ' ') return stStart;
     // We could not match any character
     ++stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharNotBackwards[[maybe_unused]](const string &strS,
   size_t stStart, const size_t stEnd, const char cpChar)
 { // Until we've reached the limit
-  while(stStart >= stEnd && stStart != string::npos)
+  while(stStart >= stEnd && stStart != StdNPos)
   { // Return position if we find the character
     if(strS[stStart] != cpChar) return stStart;
     // Goto next index and try again
     --stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharNotBackwards(const string &strS, size_t stStart,
   const size_t stEnd)
 { // Until we've reached the limit
-  while(stStart >= stEnd && stStart != string::npos)
+  while(stStart >= stEnd && stStart != StdNPos)
   { // Return position if we find a non-control character
     if(strS[stStart] > ' ') return stStart;
     // We could not match any character
     --stStart;
   } // Failed so return so
-  return string::npos;
+  return StdNPos;
 }
 /* -- Do convert the specified structure to string ------------------------= */
 static const string StrFromTimeTM(const StdTMStruct &tmData,
@@ -1013,7 +1010,7 @@ static string &StrChop(string &strStr)
 { // Find the pos of the last char that is not a carriage return or line feed
   const size_t stEndPos = strStr.find_last_not_of("\r\n");
   // If all characters are removed, set the string to empty else erase the part
-  if(stEndPos == string::npos) strStr.clear();
+  if(stEndPos == StdNPos) strStr.clear();
   else strStr.erase(stEndPos + 1);
   // Return the modified string
   return strStr;
@@ -1077,31 +1074,34 @@ template<class ListType>
   return ossOut.str();
 }
 /* -- Compact a string removing leading, trailing and duplicate spaces ----- */
-static string &StrCompactRef(string &strStr, const char cToken=' ')
+static string &StrCompactRef(string &strStr)
 { // Return if string is empty
   if(strStr.empty()) return strStr;
-  // Position to write at
+  // Return string if no whitespace found
+  const size_t stStart = strStr.find_first_not_of(' ');
+  if (stStart == StdNPos) { strStr.clear(); return strStr; }
+  // Trim trailing spaces
+  const size_t stEnd = strStr.find_last_not_of(' ');
+  strStr = strStr.substr(stStart, stEnd - stStart + 1);
+  // Enumerate through spaces
   size_t stWriteIndex = 0;
-  // In specified token?
   bool bInToken = false;
-  // Enumerate the original string
   for(size_t stReadIndex = 0; stReadIndex < strStr.size(); ++stReadIndex)
-  { // If it's the token we don't want?
-    if(strStr[stReadIndex] != cToken)
-    { // We're in the specified token and write position isn't at the start?
-      if(bInToken && stWriteIndex > 0)
-        // Overwrite with specified token
-        strStr[stWriteIndex++] = cToken;
-      // Overwrite with original character
+  { // Is character not a whitespace?
+    if(StdIsNotSpace(strStr[stReadIndex]))
+    { // Write space and increment position if in a space and not writing at
+      // a different position.
+      if(bInToken && stWriteIndex > 0) strStr[stWriteIndex++] = ' ';
+      // Write the character
       strStr[stWriteIndex++] = strStr[stReadIndex];
-      // Not in token anymore
+      // No longer in a whitespace
       bInToken = false;
-    } // Not in token anymore
+    } // Now in a whitespace block
     else bInToken = true;
-  } // Resize the string to remove trailing spaces
-  if (stWriteIndex > 0 && strStr[stWriteIndex - 1] == cToken) --stWriteIndex;
+  } // Resize the string to remove trailing spaces (if any)
+  if(stWriteIndex > 0 && StdIsSpace(strStr[stWriteIndex - 1])) --stWriteIndex;
+  // Truncate unused characters and the string
   strStr.resize(stWriteIndex);
-  // Return the string
   return strStr;
 }
 /* -- Compact a c-string removing duplicate spaces ------------------------- */

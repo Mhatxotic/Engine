@@ -1369,7 +1369,7 @@ static struct Sql final :              // Members initially public
   /* -- sql_temp_store cvar was modified ----------------------------------- */
   CVarReturn TempStoreModified(const string &strFile, string&)
   { // Prevent manipulating the query
-    if(strFile.find(' ') != string::npos || strFile.find(';') != string::npos)
+    if(strFile.find(' ') != StdNPos || strFile.find(';') != StdNPos)
       return DENY;
     // Do the query
     Pragma("temp_store", strFile);

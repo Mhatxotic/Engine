@@ -14,14 +14,6 @@ namespace IUtil {                      // Start of private module namespace
 using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Check that uint32 and float are the same size ------------------------ */
-static_assert(sizeof(float) == sizeof(uint32_t) &&
-              sizeof(float) == sizeof(int32_t),
-  "Size of 'float' and '(u)int32_t' are not equal!");
-/* -- Check that uint64 and double are the same size ----------------------- */
-static_assert(sizeof(double) == sizeof(uint64_t) &&
-              sizeof(double) == sizeof(int64_t),
-  "Size of 'double' and '(u)int64_t' are not equal!");
 /* -- Manual memory allocation --------------------------------------------- */
 template<typename AnyType,typename IntType>
   static AnyType *UtilMemAlloc(const IntType itBytes)
@@ -161,12 +153,6 @@ template<typename IntType>static IntType UtilToI64BE(const IntType itV)
   { static_assert(sizeof(IntType) == sizeof(uint64_t) &&
       is_integral_v<IntType>, "Not a 64-bit integer!");
     return static_cast<IntType>(STRICT_U64BE(itV)); }
-/* -- Convert bit count to bitmask ----------------------------------------- */
-template<typename IntType>static IntType UtilBitsToMask(size_t stCount)
-{ // Ensure the type is an integer type else calculate the bitmask
-  static_assert(is_integral_v<IntType>, "IntType must be an integral type");
-  return stCount ? (static_cast<IntType>(1) << stCount) - 1 : 0;
-}
 /* -- Swap class functors -------------------------------------------------- */
 struct UtilSwap32LEFunctor             // Swap 32-bit little <-> big integer
   { uint32_t v;                        // Output value (32-bit)
@@ -307,8 +293,8 @@ static IntTypeRet UtilNormaliseEx(const unsigned int uiV)
 template<typename DestIntType, typename PhysIntType, typename VirtIntType>
 DestIntType UtilScaleValue(const DestIntType itV, const PhysIntType itPMax,
                            const VirtIntType itVMin, const VirtIntType itVMax)
-  { return static_cast<DestIntType>(itVMin) +
-      ((itV / itPMax) * static_cast<DestIntType>(itVMax)); }
+  { return static_cast<DestIntType>(itVMin) + itV /
+      itPMax * static_cast<DestIntType>(itVMax); }
 /* -- Returns if specified integer would overflow specified type ----------- */
 template<typename IntTypeTarget,       // Target requested type
          typename IntTypeSource>       // Source type (function parameter)
@@ -336,7 +322,7 @@ constexpr bool UtilIntWillOverflow(const IntTypeSource itsValue) {
 /* -- Join two integers to make a bigger integer --------------------------- */
 template<typename IntTypeHigh,typename IntTypeLow>
   static uint16_t UtilMakeWord(const IntTypeHigh ithV, const IntTypeLow itlV)
-    { return static_cast<uint16_t>((static_cast<uint16_t>(ithV) <<  8) |
+    { return static_cast<uint16_t>((static_cast<uint16_t>(ithV) << 8) |
         (static_cast<uint16_t>(itlV) & 0xff)); }
 template<typename IntTypeHigh,typename IntTypeLow>
   static uint32_t UtilMakeDWord(const IntTypeHigh ithV, const IntTypeLow itlV)
@@ -364,11 +350,11 @@ template<typename IntType>static uint32_t UtilHighDWord(const IntType itVal)
 /* -- Return lowest or highest number out of two --------------------------- */
 template<typename IntType1,typename IntType2>
   static IntType1 UtilMinimum(const IntType1 itOne, const IntType2 itTwo)
-    { return (itOne < static_cast<IntType1>(itTwo)) ?
+    { return itOne < static_cast<IntType1>(itTwo) ?
         itOne : static_cast<IntType1>(itTwo); }
 template<typename IntType1,typename IntType2>
   static IntType1 UtilMaximum(const IntType1 itOne, const IntType2 itTwo)
-    { return (itOne > static_cast<IntType1>(itTwo)) ?
+    { return itOne > static_cast<IntType1>(itTwo) ?
         itOne : static_cast<IntType1>(itTwo); }
 /* -- Clamp a number between two values ------------------------------------ */
 template<typename TVAL, typename TMIN, typename TMAX>
@@ -387,11 +373,11 @@ template<typename AnyType>
 /* -- Round to nearest value ----------------------------------------------- */
 template<typename IntType>
   static IntType UtilNearest(const IntType itValue, const IntType itMultiple)
-    { return (itValue + (itMultiple / 2)) / itMultiple * itMultiple; }
+    { return (itValue + itMultiple / 2) / itMultiple * itMultiple; }
 /* -- Returns the nearest power of two to specified number ----------------- */
 template<typename RetType, typename IntType>
   static const RetType UtilNearestPow2(const IntType itValue)
-    { return static_cast<RetType>(pow(2, ceil(log(itValue) / log(2)))); }
+    { return static_cast<RetType>(pow(2, ceil(log2(itValue)))); }
 /* -- If variable would overflow another type then return its maximum ------ */
 template<typename RetType, typename IntType>
   static RetType UtilIntOrMax(const IntType itValue)
@@ -401,19 +387,14 @@ template<typename RetType, typename IntType>
 template<typename IntType>
   static double UtilMillimetresToInches(const IntType itValue)
     { return static_cast<double>(itValue) * 0.0393700787; }
-/* -- Get the distance between two opposing corners ------------------------ */
-template<typename IntType>
-  static double UtilGetDiagLength(const IntType itWidth,
-    const IntType itHeight)
-      { return sqrt(pow(itWidth, 2) + pow(itHeight, 2)); }
 /* -- Returns true if two numbers are equal (Omit != and == warnings) ------ */
 template<typename FloatType>
   static bool UtilIsFloatEqual(const FloatType f1, const FloatType f2)
-    { return ((f1 >= f2) && (f1 <= f2)); }
+    { return f1 >= f2 && f1 <= f2; }
 /* -- Returns true if two numbers are NOT equal (Omit != and == warnings) -- */
 template<typename FloatType>
   static bool UtilIsFloatNotEqual(const FloatType f1, const FloatType f2)
-    { return ((f1 < f2) || (f1 > f2)); }
+    { return f1 < f2 || f1 > f2; }
 /* -- Initialise an array of the specified value --------------------------- */
 namespace MakeFilledContainer
 { /* -- Fill with specified value ------------------------------------------ */
@@ -472,7 +453,7 @@ template<typename IntType>
     { return itPos * CHAR_BIT; }
 template<typename RetType,typename IntType>
   static RetType UtilBitMask(const IntType itPos)
-    { return static_cast<RetType>(1 << (itPos % CHAR_BIT)); }
+    { return static_cast<RetType>(1 << itPos % CHAR_BIT); }
 template<typename PtrType,typename IntType>
   static void UtilBitSet(PtrType*const ptDst, const IntType itPos)
     { ptDst[UtilBitToByte(itPos)] |=

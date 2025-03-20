@@ -199,7 +199,7 @@ static class Audio final :             // Audio manager class
     // Holding current device name
     string strDevice;
     // If -1 is not set (use specific device)
-    if(stDevice != string::npos)
+    if(stDevice != StdNPos)
     { // Invalid device? Use default device!
       if(stDevice >= dlPBDevices.size())
       { // Log that the device id is invalid

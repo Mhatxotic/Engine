@@ -164,10 +164,10 @@ static class Timer final               // Members initially private
   /* -- Default constructors ----------------------------------------------- */
   Timer(void) :                        // No parameters
     /* --------------------------------------------------------------------- */
-    ctpStart{ milliseconds{ 0 } },     // Init start of frame time
+    ctpStart{ seconds{ 0 } },          // Init start of frame time
     ctpTimeOut{ ctpStart },            // Init time script times out
     ctpEnd{ ctpStart },                // Init end of frame time
-    cdLoop{ milliseconds{ 0 } },       // Init loop duration
+    cdLoop{ seconds{ 0 } },            // Init loop duration
     cdFrame{ cdLoop },                 // Init frame duration
     cdAcc{ cdLoop },                   // Init accumulator duration
     cdLimit{ cdLoop },                 // Init frame limit

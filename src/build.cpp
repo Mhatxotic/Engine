@@ -843,10 +843,10 @@ int GenDoc(void)
           // Find colon and if we didn't find it?
           eType = TYP_CONST;
           size_t stPos = strNewFunc.find(':');
-          if(stPos == string::npos)
+          if(stPos == StdNPos)
           { // Find period and if we didn't find it? Parse error
             stPos = strNewFunc.find('.');
-            if(stPos == string::npos)
+            if(stPos == StdNPos)
               throw runtime_error{ "Period not found for new api func" };
           } // Is a member function
           else throw runtime_error{ "Method not allowed in const" };
@@ -893,10 +893,10 @@ int GenDoc(void)
           const string strNewFunc{ strLine.substr(5) };
           // Find colon and if we didn't find it?
           size_t stPos = strNewFunc.find(':');
-          if(stPos == string::npos)
+          if(stPos == StdNPos)
           { // Find period and if we didn't find it? Parse error
             stPos = strNewFunc.find('.');
-            if(stPos == string::npos)
+            if(stPos == StdNPos)
               throw runtime_error{ "Period not found for new api func" };
             // Is not a member function
             else eType = TYP_MEMBER;
@@ -933,7 +933,7 @@ int GenDoc(void)
           sParams.strName = strLine.substr(5);
           // Find colon and if not found? Parse error
           size_t stPos = sParams.strName.find(':');
-          if(stPos == string::npos)
+          if(stPos == StdNPos)
             throw runtime_error{ "Colon not found for in/out param" };
           // Set rest of string and name of parameter
           sParams.strType = sParams.strName.substr(stPos + 1);
@@ -941,7 +941,7 @@ int GenDoc(void)
           // Find equals
           stPos = sParams.strType.find('=');
           // Not found? Parse error
-          if(stPos == string::npos)
+          if(stPos == StdNPos)
             throw runtime_error{ "Equals not found for in/out param" };
           // Set rest of string and name of parameter
           sParams.strDesc = sParams.strType.substr(stPos + 1);
@@ -1958,7 +1958,7 @@ int SpecialExecute(const string strCmd, const size_t stML,
 int SpecialExecute2(const string &strCmd, const bool bOverride=true)
 { // Execute command line and throw error if it failed
   if(const int iR = SpecialExecute(strCmd,
-    uiFlags & PF_SYSOUT ? string::npos : 0, bOverride))
+    uiFlags & PF_SYSOUT ? StdNPos : 0, bOverride))
   { // Carriage return
     cout << '\n';
     // Throw error
@@ -2384,7 +2384,7 @@ int ChangeProject(const string &strProj)
   const string strVerFile{ StrFormat("$/$.ver", ETCDIR, ENGINENAME) };
   if(FStream{ strVerFile, FM_W_B }.
     FStreamWriteStringEx("$ $ $ $ $", uiVer[0], uiVer[1],
-      uiVer[2], uiVer[3], strProj) == string::npos)
+      uiVer[2], uiVer[3], strProj) == StdNPos)
         XCL("Failed to write version file!", "File", strVerFile);
   // Show success
   cout << "Switch project to '" << strProj << "' succeeded!\n";
@@ -2703,7 +2703,7 @@ int BuildLicenses(void)
       strLineTop
     };
     // Line length
-    size_t stLine = string::npos;
+    size_t stLine = StdNPos;
     // Until we've processed all the compressed file
     for(size_t stIndex = 0; stIndex < bCompressed.MemSize(); ++stIndex)
     { // Read character as integer
@@ -2880,15 +2880,15 @@ const string GetFiles(const string &strExt, const string &strDir="")
   string strOut; strOut.reserve(4096);
   // Make output directory
   const string strDirNew{ strDir.empty() ? strDir : StrAppend(strDir, "/") };
-  const bool bHasSpace = strDirNew.find(' ') != string::npos;
+  const bool bHasSpace = strDirNew.find(' ') != StdNPos;
   // Get first item
   DirEntMapConstIt demciIt{ dEntries.GetFilesBegin() };
-  if(!bHasSpace && demciIt->first.find(' ') == string::npos)
+  if(!bHasSpace && demciIt->first.find(' ') == StdNPos)
     strOut = StrAppend(strDirNew, demciIt->first);
   else strOut = StrAppend("\"", strDirNew, demciIt->first, "\"");
   // Build output
   for(++demciIt; demciIt != dEntries.GetFilesEnd(); ++demciIt)
-    if(!bHasSpace && demciIt->first.find(' ') == string::npos)
+    if(!bHasSpace && demciIt->first.find(' ') == StdNPos)
       strOut += StrAppend(' ', strDirNew, demciIt->first);
     else strOut = StrAppend(" \"", strDirNew, demciIt->first, "\"");
   // Reduce memory
@@ -2911,7 +2911,7 @@ void SetupZipRepo(const string &strLibPath, const string &strTmp,
 void SetupTarRepoNSD(const string &strLibPath, const string &strTmp,
   const string &strPSFile)
 { // Must have .tar. in filename
-  if(strLibPath.find(".tar.") == string::npos)
+  if(strLibPath.find(".tar.") == StdNPos)
     throw runtime_error{
       StrFormat("Archive '$' must contain '.tar.'!", strLibPath).c_str() };
   // Make .tar file name
@@ -3666,7 +3666,7 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
   } // = LIBNSGIF SCRIPT ======================================================
   else if(strLib.length() >= 9 && strLib.substr(0, 9) == "libnsgif-")
   { // Make sure it doesnt suffix in -src
-    if(strLib.find("-src.") != string::npos)
+    if(strLib.find("-src.") != StdNPos)
       throw runtime_error{ "Remove -src suffix from filename please!" };
     // Setup second archive first then the first archive
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
@@ -4199,7 +4199,7 @@ int Compile(const bool bSelf)
     else if(uiFlags & PF_X86) strX += "32.";
 #endif
     // Add lib if it contains specified string
-    if(demciIt->first.find(strX) != string::npos)
+    if(demciIt->first.find(strX) != StdNPos)
       strCmdLD += StrFormat("$/$ ", LIBDIR, demciIt->first);
   } // Add default libs
   if(*envActive.cpLDL) strCmdLD += StrAppend(envActive.cpLDL, ' ');

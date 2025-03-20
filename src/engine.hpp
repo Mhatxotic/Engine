@@ -13,8 +13,8 @@
 #define VER_MAJOR   25                                // Version major (year)
 #define VER_MINOR   3                                 // Version minor (month)
 #define VER_BUILD   16                                // Version build (day)
-#define VER_REV     19                                // Version rev (build#)
-#define VER_STR_NQ  25,3,16,19                        // Version as literal
-#define VER_STR     "25.3.16.19"                      // Version as string
-#define VER_DATE    "Sun Mar 16 00:37:16 2025 +0000"  // Compilation date
+#define VER_REV     73                                // Version rev (build#)
+#define VER_STR_NQ  25,3,16,73                        // Version as literal
+#define VER_STR     "25.3.16.73"                      // Version as string
+#define VER_DATE    "Sun Mar 16 21:19:12 2025 +0000"  // Compilation date
 /* == EoF =========================================================== EoF == */

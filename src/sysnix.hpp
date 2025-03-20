@@ -83,7 +83,7 @@ class SysCore :
       if(!strStat.empty())
       { // Find line feed
         const size_t stLF = strStat.find('\n');
-        if(stLF != string::npos)
+        if(stLF != StdNPos)
         { // Truncate the end of string. We only care about the top line.
           strStat.resize(stLF);
           // Grab tokens and if we have enough?
@@ -162,7 +162,7 @@ class SysCore :
       if(!strStat.empty())
       { // Find line feed
         const size_t stLF = strStat.find('\n');
-        if(stLF != string::npos)
+        if(stLF != StdNPos)
         { // Truncate the end of string. We only care about the top line.
           strStat.resize(stLF);
           // First item must be cpu and second should be empty. We created the
@@ -330,7 +330,8 @@ class SysCore :
   /* -- Enum modules ------------------------------------------------------- */
   SysModMap EnumModules(void)
   { // Make verison string
-    string strVersion{ StrAppend(sizeof(void*)*8, "-bit version") };
+    string strVersion{ StrAppend(numeric_limits<void*>::digits,
+      "-bit version") };
     // Mod list
     SysModMap smmMap;
     smmMap.emplace(make_pair(0UL, SysModule{ GetExeName(), VER_MAJOR,
@@ -356,7 +357,7 @@ class SysCore :
       else
       { // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
         const size_t stPeriod = strCode.find('.');
-        if(stPeriod != string::npos) strCode = strCode.substr(0, stPeriod);
+        if(stPeriod != StdNPos) strCode = strCode.substr(0, stPeriod);
       }
     } // Set global locale and show error if failed
     if(!setlocale(LC_ALL, strCode.c_str()))
@@ -457,7 +458,7 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   void *GetWindowHandle(void) const { return nullptr; }
   /* -- A window was created ----------------------------------------------- */
-  void WindowInitialised(GlFW::GLFWwindow*const gwWindow)
+  void WindowInitialised(GLFWwindow*const gwWindow)
     { bWindowInitialised = !!gwWindow; }
   /* -- Window was destroyed, nullify handles ------------------------------ */
   void SetWindowDestroyed(void) { bWindowInitialised = false; }

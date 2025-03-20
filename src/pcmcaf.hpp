@@ -48,7 +48,9 @@ static class CodecCAF final :          // CAF codec object
   /* -- Loader for CAF files ----------------------------------------------- */
   bool Decode(FileMap &fmData, PcmData &pdData)
   { // CAF data endian types
-    BUILD_FLAGS(Header, HF_NONE{0}, HF_ISFLOAT{1}, HF_ISPCMLE{2});
+    BUILD_FLAGS(Header,
+      HF_NONE{ Flag(0) }, HF_ISFLOAT{ Flag(1) }, HF_ISPCMLE{ Flag(2) });
+    static_cast<void>(HF_ISFLOAT); // Unused
     // Check size at least 44 bytes for a file header, and 'desc' chunk and
     // a 'data' chunk of 0 bytes
     if(fmData.MemSize() < HL_MINIMUM ||

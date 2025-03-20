@@ -152,12 +152,18 @@ class SysVersion :
   public SysModules                    // System modules
 { /* ----------------------------------------------------------------------- */
   const SysModuleData &smdEng;         // Engine executable information
+  /* ----------------------------------------------------------------------- */
+  const string_view strvBuildType,     // Build type
+                    strvCompVer,       // Compiler version
+                    strvCompiled,      // Compilation date
+                    strvCompiler,      // Compiler name
+                    strvBuildTarget;   // Target architechture
   /* -- Access to engine version data ------------------------------ */ public:
-  const char *ENGBuildType(void) const { return BUILD_TYPE_LABEL; }
-  const char *ENGCompVer(void) const { return COMPILER_VERSION; }
-  const char *ENGCompiled(void) const { return VER_DATE; }
-  const char *ENGCompiler(void) const { return COMPILER_NAME; }
-  const char *ENGTarget(void) const { return BUILD_TARGET; }
+  const string_view &ENGBuildType(void) const { return strvBuildType; }
+  const string_view &ENGCompVer(void) const { return strvCompVer; }
+  const string_view &ENGCompiled(void) const { return strvCompiled; }
+  const string_view &ENGCompiler(void) const { return strvCompiler; }
+  const string_view &ENGTarget(void) const { return strvBuildTarget; }
   const string &ENGAuthor(void) const { return smdEng.GetVendor(); }
   const string &ENGComments(void) const { return smdEng.GetComments(); }
   const string &ENGDir(void) const { return smdEng.GetDir(); }
@@ -169,7 +175,7 @@ class SysVersion :
   const string &ENGLoc(void) const { return smdEng.GetLoc(); }
   const string &ENGName(void) const { return smdEng.GetDesc(); }
   const string &ENGVersion(void) const { return smdEng.GetVersion(); }
-  unsigned int ENGBits(void) const { return (sizeof(void*)*8); }
+  unsigned int ENGBits(void) const { return numeric_limits<void*>::digits; }
   unsigned int ENGBuild(void) const { return smdEng.GetBuild(); }
   unsigned int ENGMajor(void) const { return smdEng.GetMajor(); }
   unsigned int ENGMinor(void) const { return smdEng.GetMinor(); }
@@ -185,18 +191,16 @@ class SysVersion :
     // Return version data
     return smmciIt->second;
   }
-  /* -- Move constructor r ------------------------------------------------- */
-  SysVersion(SysVersion &&svOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    SysModules{ StdMove(svOther) },    // Move other version information
-    smdEng{ StdMove(svOther.smdEng) }  // Move engine exetuable information
-    /* -- No code ---------------------------------------------------------- */
-    { }
   /* -- Init from SysModMap ----------------------------------------------- */
   SysVersion(SysModMap &&smlOther, const size_t stI) :
     /* -- Initialisers ----------------------------------------------------- */
-    SysModules{ StdMove(smlOther) },           // Move system modules list
-    smdEng{ StdMove(FindBaseModuleInfo(stI)) } // Move engine executable info
+    SysModules{ StdMove(smlOther) },            // Move system modules list
+    smdEng{ StdMove(FindBaseModuleInfo(stI)) }, // Move engine executable info
+    strvBuildType{ BUILD_TYPE_LABEL },          // Build type
+    strvCompVer{ COMPILER_VERSION },            // Compiler version
+    strvCompiled{ VER_DATE },                   // Compilation date
+    strvCompiler{ COMPILER_NAME },              // Compiler name
+    strvBuildTarget{ BUILD_TARGET }             // Target architechture
     /* -- No code ---------------------------------------------------------- */
     { }
 };/* ----------------------------------------------------------------------- */
@@ -210,24 +214,24 @@ class SysCommon                        // Common system structs and funcs
 { /* -- Typedefs ------------------------------------------------ */ protected:
   const struct ExeData                 // Executable data
   { /* --------------------------------------------------------------------- */
-    const unsigned int ulHeaderSum;    // Executable checksum in header
-    const unsigned int ulCheckSum;     // Executable actual checksum
-    const bool         bExeIsModified; // True if executable is modified
-    const bool         bExeIsBundled;  // True if executable is bundled
+    const unsigned int ulHeaderSum,    // Executable checksum in header
+                       ulCheckSum;     // Executable actual checksum
+    const bool         bExeIsModified, // True if executable is modified
+                       bExeIsBundled;  // True if executable is bundled
   } /* --------------------------------------------------------------------- */
   exeData;                             // Physical executable data
   /* ----------------------------------------------------------------------- */
   const struct OSData                  // Operating system data
   { /* --------------------------------------------------------------------- */
-    const string       strName;        // Os name (e.g. Windows)
-    const string       strNameEx;      // Os host (e.g. Wine)
-    const unsigned int uiMajor;        // Os major version
-    const unsigned int uiMinor;        // Os minor version
-    const unsigned int uiBuild;        // Os build number
-    const unsigned int uiBits;         // Os bit version
+    const string       strName,        // Os name (e.g. Windows)
+                       strNameEx;      // Os host (e.g. Wine)
+    const unsigned int uiMajor,        // Os major version
+                       uiMinor,        // Os minor version
+                       uiBuild,        // Os build number
+                       uiBits;         // Os bit version
     const string       strLocale;      // Os locale
-    const bool         bIsAdmin;       // Os user has elevated privileges
-    const bool         bIsAdminDef;    // Os uses admin accounts by default
+    const bool         bIsAdmin,       // Os user has elevated privileges
+                       bIsAdminDef;    // Os uses admin accounts by default
   } /* --------------------------------------------------------------------- */
   osData;                              // Operating system data
   /* ----------------------------------------------------------------------- */
@@ -518,13 +522,13 @@ static class System final :            // The main system class
 #if !defined(MACOS)
        "+ Priority is $<0x$$$> with affinity $<0x$$$> and mask $<0x$$$>.\n"
 #endif
-       "+ Processor is $ <$x$MHz;FMS:$,$,$>.\n"
+       "+ Processor is $<$x$MHz;FMS:$,$,$>.\n"
        "+ Memory has $ with $ free and $ initial.\n"
        "+ System is $ v$.$.$ ($-bit) in $$.\n"
        "+ Uptime is $.\n"
        "+ Clock is $.\n"
        "+ UTC clock is $.\n"
-       "+ Admin is $ and Bundled is $.",
+       "+ Admin is $ and bundled is $.",
       ENGName(), ENGMajor(), ENGMinor(), ENGBuild(), ENGRevision(),
         ENGBuildType(), ENGTarget(),
       ENGFull(), ENGCompiled(), ENGCompiler(), ENGCompVer(),

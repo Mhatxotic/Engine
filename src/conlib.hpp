@@ -491,7 +491,7 @@ for(const Archive*const aPtr : *cArchives)
     // Get filename, and continue again if it is a sub-directory/file
     string strName{ StrTrim(
       suimpPair.first.substr(strDir.length()), cCommon->CFSlash()) };
-    if(strName.find(cCommon->CFSlash()) != string::npos) continue;
+    if(strName.find(cCommon->CFSlash()) != StdNPos) continue;
     // Add to directory list and increment directory count
     silDirs.insert({ StdMove(strName),
       { StdMaxUInt64, suimpPair.second, aRef.IdentGet() } });
@@ -503,7 +503,7 @@ for(const Archive*const aPtr : *cArchives)
     // Get filename, and continue again if it is a sub-directory/file
     string strName{ StrTrim(
       suimpPair.first.substr(strDir.length()), cCommon->CFSlash()) };
-    if(strName.find(cCommon->CFSlash()) != string::npos) continue;
+    if(strName.find(cCommon->CFSlash()) != StdNPos) continue;
     // Add to file list and increment total bytes and file count
     const uint64_t uqSize = aRef.GetSize(suimpPair.second);
     silFiles.insert({ StdMove(strName),

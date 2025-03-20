@@ -29,20 +29,20 @@ namespace P {                          // Start of public module namespace
 BUILD_SECURE_FLAGS(Socket,
   /* ----------------------------------------------------------------------- */
   // No flags                          Socket is initialising?
-  SS_NONE                {0x00000000}, SS_INITIALISING        {0x00000001},
+  SS_NONE                   {Flag(0)}, SS_INITIALISING           {Flag(1)},
   // Socket is set to use encryption?  Socket is connecting
-  SS_ENCRYPTION          {0x00000002}, SS_CONNECTING          {0x00000004},
+  SS_ENCRYPTION             {Flag(2)}, SS_CONNECTING             {Flag(3)},
   // Socket is connected               Socket is sending request (HTTP)
-  SS_CONNECTED           {0x00000008}, SS_SENDREQUEST         {0x00000010},
+  SS_CONNECTED              {Flag(4)}, SS_SENDREQUEST            {Flag(5)},
   // Socket waiting for reply? (HTTP)? Socket is downloading (HTTP)
-  SS_REPLYWAIT           {0x00000020}, SS_DOWNLOADING         {0x00000040},
+  SS_REPLYWAIT              {Flag(6)}, SS_DOWNLOADING            {Flag(7)},
   // Socket was closed by server?      Socket was closed by server?
-  SS_CLOSEDBYSERVER      {0x00000080}, SS_CLOSEDBYCLIENT      {0x00000100},
+  SS_CLOSEDBYSERVER         {Flag(7)}, SS_CLOSEDBYCLIENT         {Flag(8)},
   // Socket is disconnecting?          Socket on standby (disconnected)
-  SS_DISCONNECTING       {0x00000200}, SS_STANDBY             {0x00000400},
+  SS_DISCONNECTING          {Flag(9)}, SS_STANDBY               {Flag(10)},
   /* ----------------------------------------------------------------------- */
   // Set if error with event callback? Socket read a packet (not ever set)
-  SS_EVENTERROR          {0x40000000}, SS_READPACKET          {0x80000000}
+  SS_EVENTERROR            {Flag(11)}, SS_READPACKET            {Flag(12)}
 );/* == Socket collector class for collector data and custom variables ===== */
 CTOR_BEGIN(Sockets, Socket, CLHelperUnsafe,
 /* -- Internal registry values for http data ------------------------------- **
@@ -796,7 +796,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       string_view strvResp{ mDest.MemPtr<char>(), uiBX };
       // Find end of headers marker and if we do not have it yet?
       const size_t stEnd = strvResp.find(cCommon->CrLf2());
-      if(stEnd == string::npos)
+      if(stEnd == StdNPos)
       { // Check for binary data and if we found binary data? Bail out!
         if(!ValidHeaderPacket(strvResp))
           return SetErrorStaticSafe("Binary code in headers");
@@ -1380,7 +1380,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Push the formulated request line. Remove the right hand fragment from
       // the URL if neccesary.
       { cParent->strRegVarREQ, StrAppend(strS, ' ',
-          (StrUrlEncodeSpaces(stFrag == string::npos ?
+          (StrUrlEncodeSpaces(stFrag == StdNPos ?
             strR : strR.substr(0, stFrag))), " HTTP/1.0\r\n") },
       // Push method because we need to check if this is a HEAD request and
       // thus to know when to expect no output.
@@ -1539,7 +1539,7 @@ static CVarReturn SocketAgentModified(const string &strN, string &strV)
   return ACCEPT_HANDLED;
 }
 /* -- Find socket (Lock the mutex before using) ---------------------------- */
-static const Sockets::const_iterator SocketFind(const unsigned int uiId)
+static const SocketsItConst SocketFind(const unsigned int uiId)
   { return StdFindIf(par_unseq, cSockets->cbegin(), cSockets->cend(),
       [uiId](const Socket*const sCptr)
         { return sCptr->CtrGet() == uiId; }); }

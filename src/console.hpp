@@ -171,10 +171,10 @@ static class Console final :           // Members initially private
     const string &strKey = ciItem->first;
     if(strKey.compare(0, strWhat.size(), strWhat)) return false;
     // We found the word so now we need to replace it with the actual command.
-    if(stBPos == string::npos) strConsoleBegin = strKey;
+    if(stBPos == StdNPos) strConsoleBegin = strKey;
     else strConsoleBegin =
       StrAppend(strConsoleBegin.substr(0, stBPos+1), strKey);
-    if(stEPos == string::npos) strConsoleEnd.clear();
+    if(stEPos == StdNPos) strConsoleEnd.clear();
     else strConsoleEnd = strConsoleEnd.substr(stEPos);
     // Redraw the console because we changed the input field
     SetRedraw();
@@ -190,9 +190,9 @@ static class Console final :           // Members initially private
     const size_t stBPos = strConsoleBegin.find_last_of(' '),
                  stEPos = strConsoleEnd.find(' ');
     // Grab word to autocomplete and return if it is empty
-    const string strWhat{ (stBPos == string::npos
+    const string strWhat{ (stBPos == StdNPos
       ? strConsoleBegin : strConsoleBegin.substr(stBPos + 1)) +
-                          (stEPos == string::npos
+                          (stEPos == StdNPos
       ? strConsoleEnd : strConsoleEnd.substr(0, stEPos)) };
     // Return failure if word is empty... or
     if(strWhat.empty()) return false;
@@ -306,7 +306,7 @@ static class Console final :           // Members initially private
     const ConLinesConstRevIt clcriIt{
       StdFindIf(seq, next(clriPosition, 1), crend(),
         [&strWhat](const ConLine &clLine)->bool
-          { return clLine.strLine.find(strWhat) != string::npos; }) };
+          { return clLine.strLine.find(strWhat) != StdNPos; }) };
     if(clcriIt == crend()) return false;
     // Set position where we found it
     clriPosition = clcriIt;

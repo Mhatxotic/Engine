@@ -536,7 +536,7 @@ static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
   { // Ignore if folder name does not match or a forward-slash found after
     if(strDir != suimpRef.first.substr(0, strDir.length()) ||
       suimpRef.first.find(cCommon->CFSlash(),
-        strDir.length() + 1) != string::npos) return;
+        strDir.length() + 1) != StdNPos) return;
     // Split file path
     const PathSplit psParts{ suimpRef.first };
     // Lock access to archives list
@@ -574,7 +574,7 @@ static const StrSet &ArchiveEnumerate(const string &strDir,
       { // Ignore if folder name does not match or a forward-slash found after
         if(strDir != suimpRef.first.substr(0, strDir.length()) ||
           suimpRef.first.find(cCommon->CFSlash(),
-            strDir.length() + 1) != string::npos) return;
+            strDir.length() + 1) != StdNPos) return;
         // Split path parts, and ignore if extension does not match
         const PathSplit psParts{ suimpRef.first };
         if(psParts.strExt != strExt) return;

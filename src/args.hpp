@@ -21,7 +21,7 @@ struct Args :                          // Arguments list class
   explicit Args(const string &strArgs)
   { // Get beginning position of usable character and return if not found
     const size_t stFirst = strArgs.find_first_not_of(' ');
-    if(stFirst == string::npos) return;
+    if(stFirst == StdNPos) return;
     // Get ending position of usable character and extract trimmed string
     const size_t stLast = strArgs.find_last_not_of(' ');
     const string strTrimmed{ strArgs.substr(stFirst, stLast - stFirst + 1) };

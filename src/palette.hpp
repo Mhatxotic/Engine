@@ -128,22 +128,17 @@ class Pal :                            // Members initially public
     const PalDataIt pdiStart{ begin() + stIndex };
     StdFill(par_unseq, pdiStart, pdiStart + stCount,
       FboColour{ fRed, fGreen, fBlue, fAlpha }); }
-  /* ----------------------------------------------------------------------- */
-  Pal(void) :                          // No parameters
-    /* -- Initialisers ----------------------------------------------------- */
-    PalData{}                          // Blank palette
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // Do nothing else
   /* -- Copy constructor from other palette data --------------------------- */
   explicit Pal(const PalData &pdOther) :
     /* -- Initialisers ----------------------------------------------------- */
     PalData{ pdOther }                 // Copy palette data
     /* -- Code ------------------------------------------------------------- */
     { }                                // Do nothing else
-};/* ----------------------------------------------------------------------- */
-CTOR_BEGIN(Palettes, Palette, CLHelperUnsafe,
-  const Pal palDefault;                // Default palette
-) /* ----------------------------------------------------------------------- */
+  /* -- Default constructor that does nothing ------------------------------ */
+  Pal(void) = default;                 // No parameters
+};/* -- Init collector with default palette array -------------------------- */
+CTOR_BEGIN(Palettes, Palette, CLHelperUnsafe, const Pal palDefault;)
+/* ------------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable,                     // Lua garbage collector instruction
