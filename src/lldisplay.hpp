@@ -100,7 +100,7 @@ LLFUNC(GetPos, 2,
 // ? Resets the current size of the window.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetSize, 2,
-  LuaUtilPushVar(lS, cInput->GetWindowWidth(), cInput->GetWindowHeight()))
+  LuaUtilPushVar(lS, cInput->DimGetWidth(), cInput->DimGetHeight()))
 /* ========================================================================= */
 // $ Display.GPU
 // < Vendor:string=GL vendor string.

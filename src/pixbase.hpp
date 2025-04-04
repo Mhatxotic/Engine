@@ -505,6 +505,8 @@ class SysBase :                        // Safe exception handler namespace
       case ES_UNSAFE: DoDeleteGlobalMutex(); exit(-1);
       // Exit unsafely and immediately? Delete mutex and shutdown now!
       case ES_CRITICAL: DoDeleteGlobalMutex(); _exit(-2);
+      // Invalid command? (To prevent compiler warning)
+      default: DoDeleteGlobalMutex(); _exit(-3);
     }
   } // Exception occured so just exit now
   catch(const exception&) { _exit(-3); }

@@ -458,7 +458,7 @@ LLFUNC(StatusRight, 0, cConsole->SetStatusRight(AgString{lS, 1}))
 // ? Delays the engine thread for this amount of time.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Suspend, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
-  cTimer->TimerSuspend(aMilliseconds))
+  StdSuspend(milliseconds{ aMilliseconds }))
 /* ========================================================================= */
 // $ Core.Ticks
 // < Ticks:integer=Number of ticks.
@@ -479,8 +479,8 @@ LLFUNC(Time, 1, LuaUtilPushVar(lS, cmHiRes.GetTimeDouble()))
 // < Ticks:number=Uptime in seconds
 // ? Returns the total number of seconds elapsed since the start of the engine
 // ? this call maybe a little more expensive than Glfw.Time() but you have no
-// ? choice to use this if you are using terminal mode. This uses std::chrono
-// ? to retrieve this value.
+// ? choice to use this if you are using terminal mode. This uses the STL
+// ? chrono class to retrieve this value.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Uptime, 1, LuaUtilPushVar(lS, cLog->CCDeltaToDouble()))
 /* ========================================================================= */

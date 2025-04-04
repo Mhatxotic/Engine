@@ -125,8 +125,6 @@ class EvtCore :                        // Start of common event system class
   Funcs            fFuncs;             // Event callback storage
   mutex            mMutex;             // Primary events list mutex
   Queue            qlEvents;           // Primary events list
-  /* -- Generic event that does absolutely nothing ------------------------- */
-  void NullOpFunction(const Event&) { }
   /* -- Generic event that reports use as warning -------------------------- */
   void WarningFunction(const Event &eEvent)
   { // Log the error

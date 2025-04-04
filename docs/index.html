@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.4.3.17 -->
-<!-- Automatically built at Thu Apr 03 18:25:55 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.4.3.17 -->
+<!-- Reference for the Mhatxotic Engine API version 25.6.1.34 -->
+<!-- Automatically built at Sun Jun 01 15:08:16 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.6.1.34 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.4.3.17">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.6.1.34">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.4.3.17">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.6.1.34">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.4.3.17">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.6.1.34">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.4.3.17 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.6.1.34 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.4.3.17 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.6.1.34 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.4.3.17 API reference</H1>
+	<H1>Mhatxotic Engine 25.6.1.34 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 844 functions (402 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 209 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 847 functions (405 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 209 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -285,14 +285,16 @@
 						<OL>
 							<LI><P>The audio class allows control of audio subsystem.</P></LI>
 							<LI>
-								<B>Members</B> <I>(14 members)</I>
+								<B>Members</B> <I>(16 members)</I>
 								<OL>
 									<LI><A href="#Audio.GetGlobalVolume">GetGlobalVolume</A></LI>
 									<LI><A href="#Audio.GetNumPBDevices">GetNumPBDevices</A></LI>
+									<LI><A href="#Audio.GetPBActiveDeviceName">GetPBActiveDeviceName</A></LI>
 									<LI><A href="#Audio.GetPBDeviceName">GetPBDeviceName</A></LI>
 									<LI><A href="#Audio.GetSampleVolume">GetSampleVolume</A></LI>
 									<LI><A href="#Audio.GetStreamVolume">GetStreamVolume</A></LI>
 									<LI><A href="#Audio.GetVideoVolume">GetVideoVolume</A></LI>
+									<LI><A href="#Audio.OnUpdate">OnUpdate</A></LI>
 									<LI><A href="#Audio.Reset">Reset</A></LI>
 									<LI><A href="#Audio.SetGlobalVolume">SetGlobalVolume</A></LI>
 									<LI><A href="#Audio.SetOrientation">SetOrientation</A></LI>
@@ -1465,7 +1467,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(95 members)</I>
+								<B>Members</B> <I>(96 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1481,6 +1483,7 @@
 									<LI><A href="#Util.CRC">CRC</A></LI>
 									<LI><A href="#Util.CRCA">CRCA</A></LI>
 									<LI><A href="#Util.Capitalise">Capitalise</A></LI>
+									<LI><A href="#Util.Chop">Chop</A></LI>
 									<LI><A href="#Util.Clamp">Clamp</A></LI>
 									<LI><A href="#Util.ClampInt">ClampInt</A></LI>
 									<LI><A href="#Util.Compact">Compact</A></LI>
@@ -2689,6 +2692,16 @@
 		<PRE>Returns the number of audio playback devices detected by OpenAL&#x2e;<BR></PRE>
 		<H4><A href="#idx:Audio">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Audio.GetPBActiveDeviceName" style="display:none">
+		<H3>Audio.GetPBActiveDeviceName</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Name</U> = Audio.GetPBActiveDeviceName()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Name</U> <I>(string)</I> = The name of the active audio playback device.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the name of the currently active playback audio device&#x2e;<BR></PRE>
+		<H4><A href="#idx:Audio">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Audio.GetPBDeviceName" style="display:none">
 		<H3>Audio.GetPBDeviceName</H3>
 		<H4>Syntax:-</H4>
@@ -2729,6 +2742,16 @@
 		<PRE><U>Volume</U> <I>(number)</I> = Current samples volume (0 to 1).<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns master volume of all video classes&#x2e;<BR></PRE>
+		<H4><A href="#idx:Audio">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Audio.OnUpdate" style="display:none">
+		<H3>Audio.OnUpdate</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Audio.OnUpdate(<I><U>Func</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Func</U> <I>(function)</I> = The callback function to use<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Fires when the audio device updates&#x2e;<BR></PRE>
 		<H4><A href="#idx:Audio">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Audio.Reset" style="display:none">
@@ -3596,7 +3619,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Ticks</U> <I>(number)</I> = Uptime in seconds<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the total number of seconds elapsed since the start of the engine this call maybe a little more expensive than Glfw&#x2e;Time&#x28;&#x29; but you have no choice to use this if you are using terminal mode&#x2e; This uses std&#x3a;&#x3a;chrono to retrieve this value&#x2e;<BR></PRE>
+		<PRE>Returns the total number of seconds elapsed since the start of the engine this call maybe a little more expensive than Glfw&#x2e;Time&#x28;&#x29; but you have no choice to use this if you are using terminal mode&#x2e; This uses the STL chrono class to retrieve this value&#x2e;<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.WaitAsync" style="display:none">
@@ -9405,6 +9428,18 @@
 		<PRE>Returns the same string capitalised </PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.Chop" style="display:none">
+		<H3>Util.Chop</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.Chop(<I><U>String</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>String</U> <I>(string)</I> = The string to modify<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The chopped string<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Removes carriage returns from the beginning and end of the string&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.Clamp" style="display:none">
 		<H3>Util.Clamp</H3>
 		<H4>Syntax:-</H4>
@@ -12512,6 +12547,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Thu Apr 03 18:25:55 2025 +0100</ADDRESS>
+	This document was generated at Sun Jun 01 15:08:16 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

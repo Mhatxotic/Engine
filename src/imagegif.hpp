@@ -11,8 +11,8 @@ namespace ICodecGIF {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
 using namespace IImageDef::P;          using namespace IImageLib::P;
-using namespace IMemory::P;            using namespace ITexDef::P;
-using namespace IUtil::P;              using namespace Lib::NSGif;
+using namespace IMemory::P;            using namespace IStd::P;
+using namespace ITexDef::P;            using namespace Lib::NSGif;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -21,12 +21,11 @@ static class CodecGIF final :          // GIF codec object
   private ImageLib                     // Image format helper class
 { /* -- Allocate memory ---------------------------------------------------- */
   static void *GIFCreate(int iW, int iH)
-    { return UtilMemAlloc<void>
-        (static_cast<unsigned int>(iW * iH) * BY_RGBA); }
+    { return StdAlloc<void>(static_cast<unsigned int>(iW * iH) * BY_RGBA); }
   /* -- Free memory -------------------------------------------------------- */
   static void GIFDestroy(void*const vpBuffer)
     { if(!vpBuffer) throw runtime_error{ "Free buffer null pointer" };
-      UtilMemFree(vpBuffer); }
+      StdFree(vpBuffer); }
   /* -- Return ptr to pixel data in image ---------------------------------- */
   static unsigned char *GIFRead(void*const vpBuffer)
     { if(!vpBuffer) throw runtime_error{ "Get buffer null pointer" };

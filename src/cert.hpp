@@ -163,7 +163,7 @@ class Certs                            // Certificates store
     // Log that we're loading certificates in parallel
     cLog->LogDebugExSafe("Certs store initialised. Loading $ certificates...",
       aList.size());
-    // Apple compiler does not support std::execution yet :(.
+    // Apple compiler does not support STL execution policy yet :(.
 #if defined(MACOS)
     // Create sync method class
     LoadSerialised ccaSync;

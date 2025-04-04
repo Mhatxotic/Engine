@@ -51,13 +51,13 @@ namespace E {                          // Start of engine namespace
 #include "glfwutil.hpp"                // GLFW utility class header
 #include "evtwin.hpp"                  // Window thread events system header
 #include "glfwcrsr.hpp"                // GLFW cursor class header
-#include "glfwwin.hpp"                 // GLFW window class header
-#include "glfw.hpp"                    // GLFW utilities header
 #include "intpair.hpp"                 // Integer pair class header
 #include "coord.hpp"                   // Co-oridinates class header
 #include "rectangl.hpp"                // Rectangle class header
 #include "dim.hpp"                     // Dimensions class header
 #include "dimcoord.hpp"                // Joined dim/coord class header
+#include "glfwwin.hpp"                 // GLFW window class header
+#include "glfw.hpp"                    // GLFW utilities header
 #include "glfwmon.hpp"                 // GLFW monitor class header
 #include "condef.hpp"                  // Console definitions header
 #include "syscore.hpp"                 // Operating system interface header

@@ -1028,17 +1028,17 @@ template<typename IntType>
   string StrFromRatio(const IntType itAntecedent, const IntType itConsequent)
 { // Return failure if parameters negative or zero
   if(itAntecedent <= 0 || itConsequent <= 0) return "N/A";
-  // If we're a number, we need to convert it to an integer or std::gcd fails
+  // If we're a number, we need to convert it to an integer or gcd() fails
   if constexpr(is_floating_point_v<IntType>)
     return StrFromRatio(static_cast<unsigned int>(itAntecedent),
                         static_cast<unsigned int>(itConsequent));
   // Integral?
   else
   { // Calculate the greatest common divisor
-    IntType itGCD = std::gcd(itAntecedent, itConsequent),
+    const IntType itGCD = gcd(itAntecedent, itConsequent),
     // Calculate the simplified ratio
-            itNum = itAntecedent / itGCD,
-            itDen = itConsequent / itGCD;
+                  itNum = itAntecedent / itGCD,
+                  itDen = itConsequent / itGCD;
     // Return the ratio as a string
     return StrAppend(itNum, ':', itDen);
   }

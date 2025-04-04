@@ -426,7 +426,7 @@ static class System final :            // The main system class
   terminate_handler thHandler;         // Old C++ termination handler
   /* ----------------------------------------------------------------------- */
   const string     strRoamingDir;      // Roaming directory
-  /* -- Default handler for std::unexpected -------------------------------- */
+  /* -- Callback for set_terminate() defined later ------------------------- */
   static void TerminateHandler[[noreturn]](void);
   /* -- Return readable process and thread id ---------------------- */ public:
   size_t GetReadablePid(void) const { return stProcessId; }
@@ -696,7 +696,7 @@ static class System final :            // The main system class
   }
   /* ----------------------------------------------------------------------- */
 } *cSystem = nullptr;                  // Pointer to static class
-/* -- Default handler for std::terminate ----------------------------------- */
+/* -- Callback for set_terminate() ----------------------------------------- */
 void System::TerminateHandler(void)
 { // Show message box to user
   cSystem->SysMsgEx("Abnormal program termination!",

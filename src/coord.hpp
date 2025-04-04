@@ -38,6 +38,9 @@ struct Coordinates :                   // Members initially public
   /* -- Increment ---------------------------------------------------------- */
   void CoordIncX(const Int iV = Base::iD1) { this->IPIncOne(iV); }
   void CoordIncY(const Int iV = Base::iD1) { this->IPIncTwo(iV); }
+  void CoordInc(const Int iX = Base::iD1, const Int iY = Base::iD1)
+    { this->IPIncOne(iX); this->IPIncTwo(iY);}
+  void CoordInc(const Coordinates &cOther) { this->IPInc(cOther); }
   /* -- Decrement ---------------------------------------------------------- */
   void CoordDecX(const Int iV = Base::iD1) { this->IPDecOne(iV); }
   void CoordDecY(const Int iV = Base::iD1) { this->IPDecTwo(iV); }
@@ -48,10 +51,21 @@ struct Coordinates :                   // Members initially public
   bool CoordIsNotYSet(void) const { return this->IPIsNotTwoSet(); }
   bool CoordIsSet(void) const { return this->IPIsSet(); }
   bool CoordIsNotSet(void) const { return this->IPIsNotSet(); }
+  bool CoordIsEqual(const Coordinates &cOther) const
+    { return this->IPIsEqual(cOther); }
+  bool CoordIsNotEqual(const Coordinates &cOther) const
+    { return this->IPIsNotEqual(cOther); }
   /* -- Test operator ------------------------------------------------------ */
   operator bool(void) const { return CoordIsSet(); }
-  /* -- Initialisation constructor ----------------------------------------- */
-  Coordinates(const Int itX, const Int itY) :
+  /* -- Initialisation of one value constructor ---------------------------- */
+  explicit Coordinates(const Int itV) : // Specified value to initialise to
+    /* -- Initialisers ----------------------------------------------------- */
+    Base{ itV }                        // Initialise specified values
+    /* -- No code ---------------------------------------------------------- */
+    { }
+  /* -- Initialisation of both values constructor -------------------------- */
+  Coordinates(const Int itX,           // Specified X coord to initialise to
+              const Int itY) :         // Specified Y coord to initialise to
     /* -- Initialisers ----------------------------------------------------- */
     Base{ itX, itY }                   // Initialise specified values
     /* -- No code ---------------------------------------------------------- */

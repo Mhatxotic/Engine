@@ -170,16 +170,16 @@ static const char *CodecGetLzmaErrString(const int iCode)
 { // Helpful temporary defines
 #define SZERR "SZ_ERROR_"
 #define CASE(n) case SZ_ERROR_ ## n: return SZERR STR(n)
-  // Which code
+  // Which code?
   switch(iCode)
-  { CASE(DATA);        CASE(MEM);        CASE(CRC);
-    CASE(UNSUPPORTED); CASE(PARAM);      CASE(INPUT_EOF);
-    CASE(OUTPUT_EOF);  CASE(READ);       CASE(WRITE);
-    CASE(PROGRESS);    CASE(FAIL);       CASE(THREAD);
-    CASE(ARCHIVE);     CASE(NO_ARCHIVE);
-  } // Unknown error
-  return SZERR "UNKNOWN";
-  // Done with these defines
+  { // Supported codes
+    CASE(DATA);    CASE(MEM);        CASE(CRC);        CASE(UNSUPPORTED);
+    CASE(PARAM);   CASE(INPUT_EOF);  CASE(OUTPUT_EOF); CASE(READ);
+    CASE(WRITE);   CASE(PROGRESS);   CASE(FAIL);       CASE(THREAD);
+    CASE(ARCHIVE); CASE(NO_ARCHIVE);
+    // Unknown code
+    default: return SZERR "UNKNOWN";
+  } // Done with these defines
 #undef CASE
 #undef SZERR
 }
@@ -190,12 +190,13 @@ static const char *CodecGetZLIBErrString(const int iCode)
 #define CASE(n) case Z_ ## n: return ZERR STR(n)
   // Check zlib code
   switch(iCode)
-  { CASE(OK);        CASE(STREAM_END);   CASE(NEED_DICT);
+  { // Supported codes
+    CASE(OK);        CASE(STREAM_END);   CASE(NEED_DICT);
     CASE(ERRNO);     CASE(STREAM_ERROR); CASE(DATA_ERROR);
     CASE(MEM_ERROR); CASE(BUF_ERROR);    CASE(VERSION_ERROR);
-  } // Unknown error
-  return ZERR "UNKNOWN";
-  // Done with these defines
+    // Unknown code
+    default: return ZERR "UNKNOWN";
+  } // Done with these defines
 #undef CASE
 #undef ZERR
 }

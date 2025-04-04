@@ -246,6 +246,8 @@ static class Console final :           // Members initially private
 #if defined(MACOS) // Because MacOS keyboards don't have an 'insert' key.
       case GLFW_KEY_DELETE    : ToggleCursorMode(); break;
 #endif
+      // Unknown key (ignore)
+      default: break;
     } // Normal key, which key?
     else switch(iKey)
     { // Test keys with no modifiers held
@@ -263,6 +265,8 @@ static class Console final :           // Members initially private
       case GLFW_KEY_ENTER     : Execute(); break;
       case GLFW_KEY_TAB       : AutoComplete(); break;
       case GLFW_KEY_INSERT    : ToggleCursorMode(); break;
+      // Unknown key (ignore)
+      default: break;
     }
   }
   /* -- Pop the back of the before cursor string --------------------------- */
@@ -532,6 +536,8 @@ static class Console final :           // Members initially private
           case CVS_ZERO: osS << "must not be zero!"; break;
           // No type is set
           case CVS_NOTYPESET: osS << "not set due to unknown type!"; break;
+          // Unknown error
+          default: osS << "not set due to unknown error!"; break;
         }
       } // Try to set initial var if it exists
       else if(cCVars->InitialVarExists(strVarOrCmd))
@@ -692,6 +698,8 @@ static class Console final :           // Members initially private
           rfFlags.FlagSet(RD_TEXT);
           // Break the for loop
           goto Done;
+        // Unknown command (ignore)
+        default: break;
       } // Only clean way to double-break without extra vars or functions
       Done:;
     } // Status update elapsed?

@@ -25,6 +25,8 @@ struct Dimensions :                    // Members initially public
     { return this->template IPGetOne<RInt>(); }
   template<typename RInt=Int>RInt DimGetHeight(void) const
     { return this->template IPGetTwo<RInt>(); }
+  template<typename RInt,class RBase=Dimensions<RInt>>RBase DimGet(void) const
+    { return this->template IPGet<RInt,RBase>(); }
   template<typename RInt=Int>RInt DimDefGet(void) const
     { return this->template IPDefGet<RInt>(); }
   /* -- Get reference ------------------------------------------------------ */
@@ -51,7 +53,17 @@ struct Dimensions :                    // Members initially public
   bool DimIsNotHeightSet(void)const { return this->IPIsNotTwoSet(); }
   bool DimIsSet(void) const { return this->IPIsSet(); }
   bool DimIsNotSet(void) const { return this->IPIsNotSet(); }
-  /* -- Initialisation constructor ----------------------------------------- */
+  bool DimIsEqual(const Dimensions &dOther) const
+    { return this->IPIsEqual(dOther); }
+  bool DimIsNotEqual(const Dimensions &dOther) const
+    { return this->IPIsNotEqual(dOther); }
+  /* -- Initialisation of one value constructor ---------------------------- */
+  explicit Dimensions(const Int itV) : // Specified value to initialise to
+    /* -- Initialisers ----------------------------------------------------- */
+    Base{ itV }                        // Initialise specified values
+    /* -- No code ---------------------------------------------------------- */
+    { }
+  /* -- Initialisation of both values constructor -------------------------- */
   Dimensions(const Int itW,            // Specified width to initialise to
              const Int itH) :          // Specified height to initialise to
     /* -- Initialisers ----------------------------------------------------- */
@@ -65,6 +77,7 @@ typedef Dimensions<GLfloat>      DimGLFloat; // Dimension of GLfloats
 typedef Dimensions<GLsizei>      DimGLSizei; // Dimension of GLsizeis
 typedef Dimensions<GLuint>       DimGLUInt;  // Dimension of GLuints
 typedef Dimensions<double>       DimDouble;  // Dimension of doubles
+typedef Dimensions<float>        DimFloat;   // Dimension of floats
 typedef Dimensions<int>          DimInt;     // Dimension of ints
 typedef Dimensions<unsigned int> DimUInt;    // Dimension of unsigned ints
 /* ------------------------------------------------------------------------- */

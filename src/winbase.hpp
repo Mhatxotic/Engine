@@ -48,7 +48,7 @@ class SysBase :                        // Members initially private
     // and requested window title's contents do not match? Ignore this window!
     const wstring &wstrN = *reinterpret_cast<wstring*>(lP);
     if(wstrT.length() < wstrN.length() ||
-      memcmp(wstrN.data(), wstrT.data(), wstrN.length()*sizeof(wchar_t)))
+      StdCompare(wstrN.data(), wstrT.data(), wstrN.length()*sizeof(wchar_t)))
         return TRUE;
     // We found the window
     cLog->LogDebugExSafe("- Found window handle at $$.\n"

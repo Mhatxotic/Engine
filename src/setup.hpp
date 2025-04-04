@@ -186,6 +186,7 @@
 #define UDB_EXTENSION            "udb" // Default database file extension
 #define JSON_EXTENSION          "json" // Default json file extension
 #define CER_EXTENSION            "cer" // Default certificate file extension
+#define MAX_PIPE_BUFFER           4096 // Maximum size of a pipe buffer
 /* == Base STL includes ==================================================== */
 #include <algorithm>                   // Searching, sorting, counting, etc.
 #include <array>                       // Static arrays
@@ -524,6 +525,11 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     /* --------------------------------------------------------------------- */
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
+      using OpenAL::ALCEVENTPROCTYPESOFT; // AL specific system event callback
+      using OpenAL::ALCchar;           // AL specific context char type
+      using OpenAL::ALCdevice;         // AL specific device context
+      using OpenAL::ALCenum;           // AL specific context enum type
+      using OpenAL::ALCsizei;          // AL specific context sizei type
       using OpenAL::ALdouble;          // AL specific double type
       using OpenAL::ALenum;            // AL specific enum type
       using OpenAL::ALfloat;           // AL specific float type

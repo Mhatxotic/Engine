@@ -60,7 +60,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ! AST_PIPEBUFFER
 // ? Specifies the size of the pipe buffer.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_pipebuffer", "4096",
+{ CFL_NONE, "ast_pipebuffer", STR(MAX_PIPE_BUFFER),
   CB(AssetSetPipeBufferSize, size_t), TUINTEGER|CPOW2|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AST_FSOVERRIDE

@@ -148,7 +148,6 @@ class ClockInterval :                  // Members initially private
   /* -- Constructor -------------------------------------------------------- */
   ClockInterval(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    cdLimit{ seconds{ 0 } },           // Set limit to instant
     ctpNext{ this->GetTime() }         // Will trigger next check
     /* -- No code ---------------------------------------------------------- */
     { }

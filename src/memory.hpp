@@ -52,8 +52,8 @@ class MemConst                         // Start of const MemBase Block Class
   size_t MemFindNull(void) const
   { // If memory is not empty, find a null character and resize up to it
     if(const char*const cpLocPtr =
-         reinterpret_cast<char*>(memchr(MemPtr<char>(), '\0', MemSize())))
-      return static_cast<size_t>(cpLocPtr-MemPtr<char>());
+      StdFindChar(MemPtr<char>(), '\0', MemSize()))
+        return static_cast<size_t>(cpLocPtr - MemPtr<char>());
     // Not found
     return StdMaxSizeT;
   }
@@ -63,7 +63,7 @@ class MemConst                         // Start of const MemBase Block Class
   void MemSetPtrSize(char*const cpNPtr, const size_t stBytes)
     { MemSetPtr(cpNPtr); MemSetSize(stBytes); }
   /* -- Free the pointer --------------------------------------------------- */
-  void MemFreePtr(void) { UtilMemFree(MemPtr()); }
+  void MemFreePtr(void) { StdFree(MemPtr()); }
   void MemFreePtrIfSet(void) { if(MemIsPtrSet()) MemFreePtr(); }
   /* -- Return memory at the allocated address --------------------- */ public:
   template<typename Type=void>
@@ -101,17 +101,17 @@ class MemConst                         // Start of const MemBase Block Class
     // Position
     size_t stIndex;
     // Until end of string
-    while(const char*const cpLoc = reinterpret_cast<char*>
-      (memchr(MemDoRead(stPos), strWhat.front(), MemSize()-stPos)))
+    while(const char*const cpLoc =
+      StdFindChar(MemDoRead(stPos), strWhat.front(), MemSize() - stPos))
     { // Calculate index
-      stPos = static_cast<size_t>(MemPtr<char>()-cpLoc);
+      stPos = static_cast<size_t>(MemPtr<char>() - cpLoc);
       // Walk data until one of three things happen
       // - End of match string
       // - Character mismatch
       // - End of memory block
       for(stIndex = 0;
           stIndex < strWhat.length() &&
-          strWhat[stIndex] == cpPtr[stPos+stIndex] &&
+          strWhat[stIndex] == cpPtr[stPos + stIndex] &&
           stPos+stIndex < stSize;
         ++stIndex);
       // If we read all of the string match then we succeeded
@@ -172,7 +172,7 @@ class MemConst                         // Start of const MemBase Block Class
     { return MemToStringViewSafe(MemSize()); }
   /* -- Stringviewify the memory (already assumes last char is '\0') ------- */
   const string_view MemToStringView(void) const
-    { return { MemPtr<char>(), MemSize()-1 }; }
+    { return { MemPtr<char>(), MemSize() - 1 }; }
   /* -- Stringview'ify the memory ------------------------------------------ */
   const string MemToString(void) const
     { return { MemPtr<char>(), MemSize() }; }
@@ -392,7 +392,7 @@ class Memory :
   void MemDoResize(const size_t stBytes)
   { // Realloc new amount of memory and if succeeded? Set new block and size
     if(char*const cpNew =
-      UtilMemReAlloc(MemPtr<char>(), UtilMaximum(stBytes, 1)))
+      StdReAlloc(MemPtr<char>(), UtilMaximum(stBytes, 1)))
         MemSetPtrSize(cpNew, stBytes);
     // Failed so throw error
     else XC("Re-alloc failed!", "OldSize", MemSize(), "NewSize", stBytes);
@@ -527,7 +527,7 @@ class Memory :
   { // If allocated memory already exists? Free it!
     MemFreePtrIfSet();
     // Allocate memory forcing zero bytes to 1 byte for compatibility.
-    if(char*const cpNew = UtilMemAlloc<char>(UtilMaximum(stBytesRequested, 1)))
+    if(char*const cpNew = StdAlloc<char>(UtilMaximum(stBytesRequested, 1)))
       return MemSetPtrSize(cpNew, stBytesRequested);
     // The memory was freed so this memory is no longer available.
     MemSetSize();
@@ -584,7 +584,7 @@ class Memory :
   explicit Memory(const size_t stBytes) :
     /* -- Initialisers ----------------------------------------------------- */
     MemBase{ stBytes,                  // Initialise data base class
-      UtilMemAlloc<void>               // Allocate memory (checked by CTOR)
+      StdAlloc<void>                   // Allocate memory (checked by CTOR)
         (UtilMaximum(stBytes, 1)) }    // Allocate requested size
     /* -- No code ---------------------------------------------------------- */
     { }

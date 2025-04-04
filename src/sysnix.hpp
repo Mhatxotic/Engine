@@ -13,7 +13,6 @@
 #include "pixmod.hpp"                  // Module information class
 #include "pixmap.hpp"                  // File mapping class
 #include "pixpip.hpp"                  // Process output piping class
-/* -- Includes ------------------------------------------------------------- */
 /* == System intialisation helper ========================================== **
 ** ######################################################################### **
 ** ## Because we want to try and statically init const data as much as    ## **
@@ -75,6 +74,7 @@ class SysCore :
   public SysCommon                     // Common system object
 { /* -- Variables ---------------------------------------------------------- */
   bool             bWindowInitialised; // Is window initialised?
+  const bool       bIsWayland;         // Is using wayland
   /* --------------------------------------------------------------- */ public:
   void UpdateMemoryUsageData(void)
   { // If the stat file is opened
@@ -219,7 +219,7 @@ class SysCore :
                            (tmsData.tms_utime - ctProcUser);
       // Divide by total cpu time
       cpuUData.dProcess /= (cProcNow - ctProc);
-      cpuUData.dProcess /= thread::hardware_concurrency();
+      cpuUData.dProcess /= StdThreadMax();
       cpuUData.dProcess *= 100;
       // Update times
       ctProc = cProcNow, ctProcSys = tmsData.tms_stime,
@@ -404,7 +404,7 @@ class SysCore :
           if(strStepping.empty()) strStepping = cCommon->Zero();
           // Make processor id so it is consistent with the other platforms
           // Return strings
-          return { thread::hardware_concurrency(),
+          return { StdThreadMax(),
                    StrToNum<unsigned int>(strSpeed),
                    StrToNum<unsigned int>(strFamily),
                    StrToNum<unsigned int>(strModel),
@@ -419,7 +419,7 @@ class SysCore :
     else cLog->LogWarningExSafe("Could not open cpu information file: $!",
       StrFromErrNo());
     // Return default data we could not read
-    return { thread::hardware_concurrency(), 0, 0, 0, 0, cCommon->Unspec() };
+    return { StdThreadMax(), 0, 0, 0, 0, cCommon->Unspec() };
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning(void) const { return false; }
@@ -464,6 +464,8 @@ class SysCore :
   const char *HeapCheck(void) const { return "Not implemented!"; }
   /* ----------------------------------------------------------------------- */
   int LastSocketOrSysError(void) const { return StdGetError(); }
+  /* -- Returns if using wayland ------------------------------------------- */
+  bool IsWayland(void) const { return bIsWayland; }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir(void) const
     { return cCmdLine->MakeEnvPath("HOME", "/.local"); }
@@ -474,7 +476,8 @@ class SysCore :
     SysCommon{ GetExecutableData(),
                GetOperatingSystememData(),
                GetProcessorData() },
-    bWindowInitialised(false)
+    bWindowInitialised(false),
+    bIsWayland(!cCmdLine->GetEnv("WAYLAND_DISPLAY").empty())
     /* -- No code ---------------------------------------------------------- */
     { }
 }; /* ---------------------------------------------------------------------- */

@@ -218,7 +218,17 @@ class Core final                       // Members initially private
         }
       } // Graphical mode requested?
       else if(cSystem->IsGraphicalMode())
-      { // Initialise accumulator for first time
+      { // On linux?
+#if defined(LINUX)
+        // We need to fix wayland?
+        if(cDisplay->FlagIsSet(DF_WAYLANDFIX))
+        { // Restart the thread if actually using wayland
+          if(cSystem->IsWayland()) cEvtMain->RequestQuitThread();
+          // Won't ever need to trigger this again
+          cDisplay->FlagClear(DF_WAYLANDFIX);
+        }
+#endif
+        // Initialise accumulator for first time
         cTimer->TimerUpdateInteractive();
         // Loop until event manager says we should break
         while(cEvtMain->HandleSafe()) CoreTick();

@@ -65,9 +65,9 @@ The engine does not allow the use of `..` (*parent*), the use of a `/` (*root*) 
 See this [automatically generated document](https://Mhatxotic.github.io/Engine) for a complete rundown of all configuration variables and scripting functions. LUA core reference manual is [here](https://www.lua.org/manual/5.4/).
 
 ## Examples…
-A remake of the classic [Amiga](https://en.wikipedia.org/wiki/Amiga) and [DOS](https://en.wikipedia.org/wiki/DOS) game [Diggers](diggers) was made with this engine and available to play. The contents of the self-contained and portable executable are available in the [diggers](diggers) sub-directory.
+A remake of the classic [Amiga](https://en.wikipedia.org/wiki/Amiga) and [DOS](https://en.wikipedia.org/wiki/DOS) game [Diggers](https://github.com/Mhatxotic/Diggers) was made with this engine and available to play. The contents of the self-contained and portable executable are available in the [diggers](diggers) sub-directory.
 
-[This YouTube video](https://www.youtube.com/watch?v=ueCBQibHZXk) is a preview of a private (quick and messy) script I made that dynamically builds a fifteen minute video carousel which takes advantage of framebuffer-objects, True-type fonts, triangle rotations, dynamic texture coordinate manipulations, Vorbis audio and Theora video streams, and Lua's incredibly versatile ability to build event and animation systems.
+[This YouTube video](https://www.youtube.com/watch?v=ccePNvBzsWg) is a preview of a private (quick and messy) script I made that dynamically builds a carousel which takes advantage of framebuffer-objects, True-type fonts, triangle rotations, dynamic texture coordinate manipulations, Vorbis audio and Theora video streams, and Lua's incredibly versatile ability to build event and animation systems.
 
 ## Credits…
 This engine makes use of the following [open-source](https://en.wikipedia.org/wiki/Open_source) and commercially distributable components that are always updated to the latest versions...

@@ -39,7 +39,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
   private InitHelper,                  // Initialsation helper
   public InputFlags,                   // Input configuration settings
   private EvtMainRegVec,               // Events list to register
-  private DimInt,                      // Window dimensions
+  public DimInt,                       // Window dimensions
   public Joystick                      // Joystick class
 { /* -- Console ------------------------------------------------------------ */
   int              iConKey1, iConKey2; // Primary and secondary console keys
@@ -74,9 +74,9 @@ static class Input final :             // Handles keyboard, mouse & controllers
       if(FlagIsClear(IF_MOUSEFOCUS)) return;
       // Clamp mouse co-ordinates if out of the window?
       if(dX < 0.0) dX = 0.0;
-      else if(dX >= GetWindowWidth()) dX = GetWindowWidth()-1;
+      else if(dX >= DimGetWidth()) dX = DimGetWidth()-1;
       if(dY < 0.0) dY = 0.0;
-      else if(dY >= GetWindowHeight()) dY = GetWindowHeight()-1;
+      else if(dY >= DimGetHeight()) dY = DimGetHeight()-1;
     }
 #else
     // Get mouse position
@@ -85,10 +85,10 @@ static class Input final :             // Handles keyboard, mouse & controllers
     // Recalculate cursor position based on framebuffer size and send the new
     // co-ordinates to the lua callback handler
     lfOnMouseMove.LuaFuncDispatch(
-      UtilScaleValue(dX, GetWindowWidth(),
+      UtilScaleValue(dX, DimGetWidth(),
         cFboCore->fboMain.ffcStage.GetCoLeft(),
         cFboCore->fboMain.GetCoRight()),
-      UtilScaleValue(dY, GetWindowHeight(),
+      UtilScaleValue(dY, DimGetHeight(),
         cFboCore->fboMain.ffcStage.GetCoTop(),
         cFboCore->fboMain.GetCoBottom()));
   }
@@ -234,14 +234,8 @@ static class Input final :             // Handles keyboard, mouse & controllers
     // Reset joystick environment
     JoyReset();
   }
-  /* -- Get window size ---------------------------------------------------- */
-  int GetWindowWidth(void) const { return DimGetWidth(); }
-  int GetWindowHeight(void) const { return DimGetHeight(); }
   /* -- Update window size from actual glfw window ------------------------- */
-  void UpdateWindowSize(void)
-    { cGlFW->WinGetSize(DimGetWidthRef(), DimGetHeightRef()); }
-  /* -- Update window size (from display) ---------------------------------- */
-  void SetWindowSize(const int iX, const int iY) { DimSet(iX, iY); }
+  void UpdateWindowSize(void) { DimSet(cGlFW->WinGetSize()); }
   /* -- Request input state ------------------------------------------------ */
   void RequestMousePosition(void) const
     { cEvtWin->AddUnblock(EWC_WIN_CURPOSGET); }
@@ -250,12 +244,12 @@ static class Input final :             // Handles keyboard, mouse & controllers
   { // Expand the stage co-ordinates to actual desktop window co-ordinates
     const GLfloat
       fAdjX = (fX + -cFboCore->fboMain.ffcStage.GetCoLeft()) /
-        cFboCore->fboMain.GetCoRight() * GetWindowWidth(),
+        cFboCore->fboMain.GetCoRight() * DimGetWidth(),
       fAdjY = (fY + -cFboCore->fboMain.ffcStage.GetCoTop()) /
-        cFboCore->fboMain.GetCoBottom() * GetWindowHeight(),
+        cFboCore->fboMain.GetCoBottom() * DimGetHeight(),
       // Clamp the new position to the window bounds.
-      fNewX = UtilClamp(fAdjX, 0.0f, GetWindowWidth() - 1.0f),
-      fNewY = UtilClamp(fAdjY, 0.0f, GetWindowHeight() - 1.0f);
+      fNewX = UtilClamp(fAdjX, 0.0f, DimGetWidth() - 1.0f),
+      fNewY = UtilClamp(fAdjY, 0.0f, DimGetHeight() - 1.0f);
     // Dispatch the request to set the cursor
     cEvtWin->AddUnblock(EWC_WIN_CURPOSSET,
       static_cast<double>(fNewX), static_cast<double>(fNewY));

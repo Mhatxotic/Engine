@@ -44,7 +44,7 @@ namespace P {                          // Start of public module namespace
 #define CTOR_HDR_CUSTCTR(p,m,l,h,s,x,...) \
   CTOR_HDR_BEGIN(p,m,l,p ## Ctr,p ## It,p ## ItConst,h,p ## Helper,\
     s,x,## __VA_ARGS__)
-/* -- Collector header that assumes std::list for the container type ------- */
+/* -- Collector header that assumes STL list for the container type -------- */
 #define CTOR_HDR_DEFCTR(p,m,h,s,x,...) \
   CTOR_HDR_CUSTCTR(p,m,list,h,s,x,## __VA_ARGS__)
 /* -- Collector footer that creates the global class pointer init in core -- */

@@ -446,7 +446,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(IsSourceAvailable()) ProcessExhaustedAudioBuffers();
     // If enough audio buffered and time is moving? Thread can breathe a little
     if(dAudioBuffer >= dAudBufMax && GetAudioTime() >= 0.0)
-      cTimer->TimerSuspend(10);
+      StdSuspend(milliseconds{ 10 });
     // Parse and render more vorbis data and if we didn't?
     else if(!ParseAndRenderVorbisData())
     { // Try to load more raw data and return if we're at the end of file
@@ -462,7 +462,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // If it is not time to process a frame yet?
     if(CIIsNotTriggered())
     { // Wait a little bit if we can
-      if(CIIsNotTriggered(milliseconds{1})) cTimer->TimerSuspend(1);
+      if(CIIsNotTriggered(milliseconds{1})) StdSuspend();
     } // Decode and render new Theora data and if we did? Set new video time
     else if(ParseAndRenderTheoraData())
       dVideoTime = th_granule_time(tdcPtr, iVideoGranulePos);
@@ -503,7 +503,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           dDrift = GetAudioTime() > 0.0 ?
             GetVideoTime() - GetAudioTime() : 0.0;
         // Wait a little bit if we can
-        else if(CIIsNotTriggered(milliseconds{1})) cTimer->TimerSuspend(1);
+        else if(CIIsNotTriggered(milliseconds{1})) StdSuspend();
         // Done, keep thread alive
         return true;
       } // Time to check for new packets? Repeat...
@@ -542,7 +542,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     cLog->LogDebugExSafe("Video '$' main loop exit with reason $!",
       IdentGet(), ubReason.load());
     // Why did the video manager terminate?
-    switch(ubReason.load())
+    switch(const Unblock ubCode = ubReason.load())
     { // The thread was in standby? Shouldn't happen! Restart the thread
       case UB_STANDBY: [[fallthrough]];
       // The thread was blocking? Shouldn't happen! Restart the thread
@@ -559,6 +559,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       case UB_STOP: LuaEvtDispatch(VE_STOP); break;
       // The video was paused? Send pause event to guest
       case UB_PAUSE: LuaEvtDispatch(VE_PAUSE); break;
+      // Unknown code
+      default: XC("Internal error: Unknown unblock reason code!",
+                  "Code", ubCode);
     } // Exit thread cleanly with specified reason
     return 1;
   } // exception occured?

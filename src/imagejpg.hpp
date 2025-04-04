@@ -142,13 +142,17 @@ static class CodecJPG final :          // JPEG codec object
     jsmData.next_input_byte = fmData.MemPtr<JOCTET>();
     jsmData.bytes_in_buffer = fmData.MemSize();
     // Read the header
-    switch(jpeg_read_header(&ciData, static_cast<boolean>(true)))
+    switch(const int iResult =
+      jpeg_read_header(&ciData, static_cast<boolean>(true)))
     { // if SOS marker is reached?
       case JPEG_HEADER_OK: break;
       // For an abbreviated input image, if EOI is reached?
       case JPEG_HEADER_TABLES_ONLY: XC("Jpeg unexpected end of image!");
       // If data source module requests suspension of the decompressor?
       case JPEG_SUSPENDED: XC("Jpeg suspension requested!");
+      // Unknown result
+      default: XC("Internal error: Jpeg read header unknown result!",
+                  "Code", iResult);
     } // Start decompressing before we can read main image information
     if(!jpeg_start_decompress(&ciData))
       XC("Jpeg start decompression failed!");

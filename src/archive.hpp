@@ -32,10 +32,10 @@ CTOR_BEGIN_ASYNC(Archives, Archive, CLHelperSafe,
   ISzAlloc         isaData;            // Allocator functions
   /* -- Alloc function for lzma -------------------------------------------- */
   static void *Alloc(ISzAllocPtr, size_t stBytes)
-    { return UtilMemAlloc<void>(stBytes); }
+    { return StdAlloc<void>(stBytes); }
   /* -- Free function for lzma --------------------------------------------- */
   static void Free(ISzAllocPtr, void*const vpAddress)
-    { UtilMemFree(vpAddress); }
+    { StdFree(vpAddress); }
 );/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(Archive,
   /* ----------------------------------------------------------------------- */

@@ -291,7 +291,9 @@ template<class MemberType, class ColType>class AsyncLoader :
           AsyncParseMemory();
           AsyncCompletion();
           break;
-        }
+        } // Unknown asset load type
+        default: XC("Internal error: Unknown asset load type!",
+                    "Type", asctAsyncType);
       } // Return success to thread manager
       return 1;
     } // exception occured?

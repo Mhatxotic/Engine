@@ -110,7 +110,7 @@ static void UtfDecode(unsigned int &uiState, unsigned int &uiCode,
   else uiState = 12;
 }
 /* -- Pop UTF character from start of string-------------------------------- */
-static bool UtfPopFront(std::string &strStr)
+static bool UtfPopFront(string &strStr)
 { // String is not empty?
   if(!strStr.empty())
   { // Get buffer as unsigned char

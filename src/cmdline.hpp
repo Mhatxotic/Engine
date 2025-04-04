@@ -204,6 +204,8 @@ static struct CmdLine final            // Members initially public
           "Process", *lArgV, "Code", iCode, "Parameters", iArgC);
       } // Done
       break;
+    // Anything else? (Impossible but needed to prevent compiler warning)
+    default: XC("Internal error: Invalid exit command!", "Command", eoExit);
   } // Parent process should be exiting cleanly after returning here
   DTORHELPEREND(~CmdLine)
   /* -- End ---------------------------------------------------------------- */

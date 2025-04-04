@@ -9,14 +9,40 @@ BIN=/bin
 BINCHMOD=$BIN/chmod
 BINECHO=$BIN/echo
 USRBIN=/usr/bin
+BINREALPATH=$BIN/realpath
 USRBINBASENAME=$USRBIN/basename
 USRBINDIRNAME=$USRBIN/dirname
+USRBINREADLINK=$USRBIN/readlink
 USRBINGDB=$USRBIN/gdb
 USRBINLLDB=lldb
 #USRBINLLDB=$USRBIN/lldb
 USRBINTR=$USRBIN/tr
 USRBINUNANE=$USRBIN/uname
 USRBINVALGRIND=$USRBIN/valgrind
+ENGBIN=../bin
+
+# If this script was symbolically linked?
+if [ -L "$0" ]; then
+  # Get target of link
+  TARGET="$($USRBINREADLINK "$0")"
+  if [ ! $? -eq 0 ]; then
+    $BINECHO Could not read link target for '$0'.
+    exit 1
+  fi
+  # Get real directory of scripts
+  SCRIPTDIR="$($USRBINDIRNAME "$TARGET")"
+  if [ ! $? -eq 0 ]; then
+    $BINECHO Could not dirname '$TARGET'.
+    exit 2
+  fi
+  # Get directory where engine executables are
+  ENGBINREL="$SCRIPTDIR/$ENGBIN"
+  ENGBIN="$($BINREALPATH "$ENGBINREL")"
+  if [ ! $? -eq 0 ]; then
+    $BINECHO Could not realpath '$ENGBINREL'.
+    exit 3
+  fi
+fi
 
 # Check for debug flag
 if [ ! -z $1 ]; then
@@ -59,30 +85,30 @@ case "$UNAME" in
     ;;
   *)
     $BINECHO "Environment '$UNAME' is un-supported!"
-    exit 1
+    exit 4
 esac
 
 # Move to correct directory
 WORK=`$USRBINDIRNAME "$0"`
 cd "$WORK"
 if [ ! $? -eq 0 ]; then
-  exit 3
+  exit 5
 fi
 
 # Check calling name
 BASE=`$USRBINBASENAME "$0" | $USRBINTR '[:upper:]' '[:lower:]'`
 if [ $BASE = "engine.sh" ]; then
   $BINECHO "This script is not meant to be run directly."
-  exit 2
+  exit 6
 elif [ $BASE = "build" ]; then
   EXE=bin/build.$EXT
   EXEPARAMS=""
 else
   SUFFIX=`echo $BASE | tail -c 3`
   if [ $SUFFIX = "32" ]; then
-    EXE=../bin/engine32.$EXT
+    EXE=$ENGBIN/engine32.$EXT
   else
-    EXE=../bin/engine64.$EXT
+    EXE=$ENGBIN/engine64.$EXT
   fi
   EXEPARAMS=" ast_basedir=$PWD sql_db=$BASE"
 fi
@@ -91,13 +117,13 @@ fi
 if [ ! -x "$EXE" ]; then
   if [ ! -f "$EXE" ]; then
     $BINECHO "The file '$EXE' does not exist!"
-    exit 4
+    exit 7
   fi
   $BINECHO "The file '$EXE' is not executable!";
   $BINCHMOD -v 700 "$EXE"
   if [ ! $? -eq 0 ]; then
     $BINECHO "The file '$EXE' could not be made executable!"
-    exit 5
+    exit 8
   fi
 fi
 

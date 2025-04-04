@@ -144,7 +144,7 @@ static struct Sql final :              // Members initially public
     { // Keep trying to clean up if we can (this shouldn't really happen).
       Finalise();
       // Don't whore the CPU usage while waiting for async ops.
-      cTimer->TimerSuspend();
+      StdSuspend();
     } // Database handle no longer valid
     sqlDB = nullptr;
     // Say we closed the database
@@ -184,7 +184,7 @@ static struct Sql final :              // Members initially public
         case SQLITE_BUSY:
           // Wait a little and try again if busy until we've retried enough
           if(++uiRetries < uiQueryRetries || uiQueryRetries == StdMaxUInt)
-            { cTimer->TimerSuspend(cdRetry); continue; }
+            { StdSuspend(cdRetry); continue; }
           // Return failure
           [[fallthrough]];
         // Complete and utter failure

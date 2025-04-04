@@ -43,8 +43,6 @@ class ThreadBase                       // Thread variables class
     vpParam(vpNParam),                 // Set user thread parameter
     ctfFunc{ ctfNFunc },               // Set thread callback function
     sbShouldExit(false),               // Should never exit at first
-    scdStart{ seconds{ 0 } },          // Never started time
-    scdEnd{ seconds{ 0 } },            // Never finished time
     stPerf(stNPerf)                    // Set thread high performance
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
@@ -183,8 +181,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     ThreadStopNoCheck();
   }
   /* ----------------------------------------------------------------------- */
-  bool ThreadIsCurrent(void) const
-    { return ::std::this_thread::get_id() == get_id(); }
+  bool ThreadIsCurrent(void) const { return StdThreadId() == get_id(); }
   bool ThreadIsNotCurrent(void) const { return !ThreadIsCurrent(); }
   /* ----------------------------------------------------------------------- */
   unsigned int ThreadGetPerf(void) const

@@ -68,7 +68,6 @@ namespace E {                          // Put everything in engine namespace
 #include "asset.hpp"                   // Asset handling class header
 #include "json.hpp"                    // Json handling class header
 #include "file.hpp"                    // FStream+FileMap class header
-#include "timer.hpp"                   // Timer class header
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // If using Windows?
 # pragma warning(disable: 4505)        // Disable unreferenced function (lots!)
@@ -83,10 +82,9 @@ using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IMemory::P;
 using namespace IPSplit::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITimer::P;
-using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;              using namespace IUuId::P;
-using namespace IParser::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IUuId::P;              using namespace IParser::P;
 /* ========================================================================= */
 #define STANDARD   "c++20"             // Current compilation standard used
 #define ENGINENAME "engine"            // Name of engine 'engine'
@@ -2550,7 +2548,7 @@ int RebuildAssets(const bool bClear)
   SystemF("$ -t7z -ms=off -mx9 -myx9 -m0=LZMA2:d64m:fb273 -mhe=on -mmt=8 -mqs "
     "-slp -ssw -sse -r u \"$\" \"-x!$32.exe\" \"-x!$.exe\" \"-x!$32\" "
     "\"-x!$\" \"-x!$32" UDB_EXTENSION "\" \"-x!$64" UDB_EXTENSION "\" "
-    "\"-x!readme.md\" \"-x!*.crt\" \"-x!*.ico\" \"-x!*.dbg\" "
+    "\"-x!docs\" \"-x!*.md\" \"-x!*.crt\" \"-x!*.ico\" \"-x!*.dbg\" "
     "\"-x!.*\" \"-x!prv\" \"-x!*.psd\" \"-x!*." LOG_EXTENSION "\" "
     "\"-x!*." ARCHIVE_EXTENSION "\" \"-x!*." UDB_EXTENSION "\" "
     ".",
@@ -3367,6 +3365,12 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
   else if(strLib.length() >= 12 && strLib.substr(0, 12) == "openal-soft-")
   { // Setup the repository
     SetupZipRepo(strLibPath, strTmp, PSLib.strFile);
+    // Get fmt directory version
+    string strFmtDir;
+    { const Dir dFiles;
+      for(const DirEntMapPair &dempPair : dFiles.GetDirs())
+        if(dempPair.first.substr(0, 4) == "fmt-")
+          strFmtDir = StdMove(dempPair.first); }
     // We need to activate cmake once to build openal config and other things
     System("rm -rf CMakeFiles *.cmake CMakeCache.txt");
     // One time only build
@@ -3390,7 +3394,10 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
               "-DALSOFT_UTILS=FALSE "
               "-DSDL2_CORE_LIBRARY=FALSE "
               "-DSDL2_INCLUDE_DIR=FALSE .", strCMakeBase);
-    // Apply header patches to conquer PURE EVIL forcing of DLL exports
+    // Apply header patches to conquer forcing of DLL exports
+    ReplaceText(strFmtDir + "/include/fmt/base.h",
+      "#    define FMT_API __declspec(dllimport)",
+      "#    define FMT_API extern");
     ReplaceText("include/al/al.h", "#define AL_API __declspec(dllimport)",
                                    "#define AL_API extern");
     ReplaceText("include/al/alc.h", "#define ALC_API __declspec(dllimport)",
@@ -3416,7 +3423,7 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     System("if exist alc/alc_* rm -rfv alc/alc_*");
     System("if exist al/effects/al_effect_* rm -rfv al/effects/al_effect_*");
     System("if exist alc/effects/alc_effect_* "
-             "rm -rfv alc/effects/alc_effect_*");
+           "rm -rfv alc/effects/alc_effect_*");
     // We need to rename files to prevent .obj's overwriting each other
     { const Dir dALEffects("al/effects", ".cpp");
       for(const DirEntMapPair &dempPair : dALEffects.GetFiles())
@@ -3440,7 +3447,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       "-DAL_ALEXT_PROTOTYPES -DAL_BUILD_LIBRARY -DAL_LIBTYPE_STATIC "
       "-DHAVE_STRUCT_TIMESPEC -DNOMINMAX -DRESTRICT=__restrict "
       "-Dstrcasecmp=_stricmp -Dstrncasecmp=_strnicmp -DWIN32 -EHsc -I. -Ialc "
-      "-Icommon -Ihrtf -Iinclude -Iopenal32/include "
+      "-Icommon -Ihrtf -Iinclude -Iopenal32/include -I" +
+      strFmtDir + "/include "
       // Files to compile
       "al/*.cpp "
       "al/eax/*.cpp "
@@ -3457,7 +3465,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       "common/*.cpp "
       "core/*.cpp "
       "core/filters/*.cpp "
-      "core/mixer/*.cpp" };
+      "core/mixer/*.cpp " +
+      strFmtDir + "/src/*.cc" };
     strRelFlags64 += "-D_WIN32_WINNT=0x0502 " + strALSpecific;
     strRelFlags32 += "-D_WIN32_WINNT=0x0501 " + strALSpecific;
     // Compile 64-bit version
@@ -3894,8 +3903,7 @@ int CppCheck(void)
 #if defined(WINDOWS)
 void GotNewBuildExecutable(const string &strOldExe, const string &strNewExe)
 { // Wait for the compiled file to be readable and writable just incase
-  while(!DirCheckFileAccess(strNewExe, 6))
-    cTimer->TimerSuspend(milliseconds{ 100 });
+  while(!DirCheckFileAccess(strNewExe, 6)) StdSuspend(milliseconds{ 100 });
   // Open the new executable and if succeeded?
   if(FStream fsNewExe{ strNewExe, FM_R_B })
   { // Read the new executable and its checksum
@@ -3933,10 +3941,10 @@ void GotNewBuildExecutable(const string &strOldExe, const string &strNewExe)
       if(cSystem->ENGExt() == ".x")
       { // Unlink the new executable
         while(!DirFileUnlink(strOldExe))
-          cTimer->TimerSuspend(milliseconds{ 100 });
+          StdSuspend(milliseconds{ 100 });
         // Move the executable over
         while(!DirFileRename(strNewExe, strOldExe))
-          cTimer->TimerSuspend(milliseconds{ 100 });
+          StdSuspend(milliseconds{ 100 });
         // Exit as normal if we were asked to or just return
         if(cCmdLine->GetTotalCArgs() >= 2 &&
           !wcscmp(cCmdLine->GetCArgs()[1], L"!")) exit(0);

@@ -27,19 +27,18 @@ static class GlFW final :              // Root engine class
   private CursorStandard               // Standard cursors list
 { /* -- Private variables and functions ------------------------------------ */
   unsigned int     uiErrorLevel;       // Ignore further glfw errors
-  const string     strIntVersion;      // Internal (headers) version number
+  const string_view strvIntVersion;    // Internal (headers) version number
   string           strExtVersion;      // External (library) version number
   StrSet           ssFeatures;         // Features included
   bool             bRawMouseSupported; // Is raw mouse motion supported
   /* -- Custom allocator --------------------------------------------------- */
   static void *GlFWAlloc(size_t stSize, void*const)
-    { return UtilMemAlloc<void>(stSize); }
+    { return StdAlloc<void>(stSize); }
   /* -- Custom reallocator ------------------------------------------------- */
   static void *GlFWReAlloc(void*const vpPtr, size_t stSize, void*const)
-    { return UtilMemReAlloc(vpPtr, stSize); }
+    { return StdReAlloc(vpPtr, stSize); }
   /* -- Custom free -------------------------------------------------------- */
-  static void GlFWFree(void*const vpPtr, void*const)
-    { UtilMemFree(vpPtr); }
+  static void GlFWFree(void*const vpPtr, void*const) { StdFree(vpPtr); }
   /* -- Error handler prototype (full body at bottom) ---------------------- */
   static void ErrorHandler(int, const char*const);
   /* -- Error handler converted to thiscall -------------------------------- */
@@ -64,7 +63,7 @@ static class GlFW final :              // Root engine class
     }
   }
   /* --------------------------------------------------------------- */ public:
-  const string &GetInternalVersion(void) const { return strIntVersion; }
+  const string_view &GetInternalVersion(void) const { return strvIntVersion; }
   /* -- DeInitialiser ------------------------------------------------------ */
   void DeInit(void)
   { // Ignore if class not initialised
@@ -194,7 +193,7 @@ static class GlFW final :              // Root engine class
 #undef CURSOR                          // Done with this macro
     /* --------------------------------------------------------------------- */
     uiErrorLevel(0),                   // No errors occured
-    strIntVersion{                     // Init internal version number
+    strvIntVersion{                    // Init internal version number
       STR(GLFW_VERSION_MAJOR) "."      // (?.x.x) Major
       STR(GLFW_VERSION_MINOR) "."      // (x.?.x) Minor
       STR(GLFW_VERSION_REVISION)       // (x.x.?) Revision

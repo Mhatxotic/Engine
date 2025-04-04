@@ -22,12 +22,21 @@ struct DimCoords :                     // Members initially public
   public CClass,                       // Co-ordinates class
   public DClass                        // Dimensions class
 { /* -- Set co-ordinates and dimensions ------------------------------------ */
-  void DimCoSet(const CInt ciX, const CInt ciY, const DInt diW,
-    const DInt diH)
-  { this->CoordSet(ciX, ciY); this->DimSet(diW, diH); }
+  void DimCoSet(const CInt ciX, const CInt ciY, const DInt diW, const DInt diH)
+    { this->CoordSet(ciX, ciY); this->DimSet(diW, diH); }
   /* -- Constructor to fill all parameters --------------------------------- */
-  DimCoords(const CInt ciX, const CInt ciY, const DInt diW,
-    const DInt diH) :
+  DimCoords(const CClass &ciOther,     // Specified co-ordinates
+            const DClass &diOther) :   // Specified dimensions
+    /* -- Initialisers ----------------------------------------------------- */
+    CClass{ ciOther },                 // Initialise co-ordinates
+    DClass{ diOther }                  // Initialise dimensions
+    /* -- No code ---------------------------------------------------------- */
+    { }
+  /* -- Constructor to fill all parameters --------------------------------- */
+  DimCoords(const CInt ciX,            // Specified X co-ordinate
+            const CInt ciY,            // Specified Y co-ordinate
+            const DInt diW,            // Specified width dimension
+            const DInt diH) :          // Specified height dimension
     /* -- Initialisers ----------------------------------------------------- */
     CClass{ ciX, ciY },                // Initialise co-ordinates
     DClass{ diW, diH }                 // Initialise dimensions

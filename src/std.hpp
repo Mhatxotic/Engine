@@ -2,7 +2,9 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This module contains common functions to target specific functions. ## **
+** ## This module describes proxy functions to target functions from the  ## **
+** ## standard C or C++ library. Of course these functions differ between ## **
+** ## different targets which is handled properly too.                    ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
@@ -354,6 +356,39 @@ template<typename IntType=int64_t>static bool StdIntIsPOW2(const IntType itVal)
 template<typename IntType>static double StdHypot(const IntType itWidth,
   const IntType itHeight)
     { return ::std::hypot(itWidth, itHeight); }
+/* -- Allocate memory ------------------------------------------------------ */
+template<typename AnyType,typename IntType>
+  static AnyType *StdAlloc(const IntType itBytes)
+    { return reinterpret_cast<AnyType*>
+        (::std::malloc(static_cast<size_t>(itBytes))); }
+/* -- Re-allocate memory --------------------------------------------------- */
+template<typename AnyType,typename IntType>
+  static AnyType *StdReAlloc(AnyType*const atPtr, const IntType itBytes)
+    { return reinterpret_cast<AnyType*>
+        (::std::realloc(reinterpret_cast<void*>(atPtr),
+           static_cast<size_t>(itBytes))); }
+/* -- Release allocated memory --------------------------------------------- */
+template<typename AnyType>
+  static void StdFree(AnyType*const atPtr)
+    { ::std::free(reinterpret_cast<void*>(atPtr)); }
+/* -- Compare memory ------------------------------------------------------- */
+static int StdCompare(const void*const vpA, const void*const vpB,
+  const size_t stSize)
+    { return ::std::memcmp(vpA, vpB, stSize); }
+/* -- Scan memory for character -------------------------------------------- */
+template<typename PtrType=void*>
+  static PtrType *StdFindChar(PtrType*const ptPtr, const int iC,
+    const size_t stSize)
+      { return reinterpret_cast<PtrType*>(::std::memchr(ptPtr, iC, stSize)); }
+/* -- Returns number of threads supported by CPU --------------------------- */
+static unsigned int StdThreadMax(void)
+  { return ::std::thread::hardware_concurrency(); }
+/* -- Returns current thread id -------------------------------------------- */
+static auto StdThreadId(void) { return ::std::this_thread::get_id(); }
+/* -- Returns current thread id -------------------------------------------- */
+static void StdSuspend(const auto &aTime)
+  { ::std::this_thread::sleep_for(aTime); }
+static void StdSuspend(void) { StdSuspend(milliseconds{ 1 }); }
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## Because some compilers may not allow me to alias ::std::move        ## **
@@ -383,7 +418,8 @@ template<class AnyType>
 ** ## n ## Name of the class. The variable is called this too prefix 'c'. ## **
 ** ## i ## The function to execute straight away.                         ## **
 ** ## d ## The function to execute when leaving the scope.                ## **
-** ######################################################################### */
+** ######################################################################### **
+** ------------------------------------------------------------------------- */
 #define INITHELPER(n,i,d) class n{public:n(void){i;}\
                                ~n(void) noexcept(false){d;}} c ## n
 #define DEINITHELPER(n,d) INITHELPER(n,,d)

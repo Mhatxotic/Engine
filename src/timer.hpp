@@ -10,6 +10,7 @@
 namespace ITimer {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICVarDef::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -58,19 +59,10 @@ static class Timer final               // Members initially private
     // Set new timeout time
     ctpTimeOut = ctpEnd + cdTimeOut;
   }
-  /* -- Thread suspense by duration ---------------------------------------- */
-  void TimerSuspend(const ClkDuration cdAmount) const
-    { ::std::this_thread::sleep_for(cdAmount); }
-  /* -- Thread suspense by integer ----------------------------------------- */
-  void TimerSuspend(const unsigned int uiMilliseconds) const
-    { TimerSuspend(milliseconds{ uiMilliseconds }); }
-  /* -- Thread suspense by one millisecond --------------------------------- */
-  void TimerSuspend(void) const { TimerSuspend(1); }
   /* -- Thread suspense by requested duration ------------------------------ */
-  void TimerSuspendRequested(void) const { TimerSuspend(cdDelay); }
+  void TimerSuspendRequested(void) const { StdSuspend(cdDelay); }
   /* -- Force wait if delay is disabled (cFboCore->Render()) --------------- */
-  void TimerForceWait(void)
-    { if(cdDelay == seconds{ 0 }) bWait = true; }
+  void TimerForceWait(void) { if(cdDelay == seconds{ 0 }) bWait = true; }
   /* -- Calculate time elapsed since c++ ----------------------------------- */
   void TimerUpdateBot(void)
   { // Sleep if theres a delay
@@ -101,7 +93,7 @@ static class Timer final               // Members initially private
   { // Frame limit not reached?
     if(cdAcc < cdLimit)
     { // Force if we're forced to wait
-      if(bWait) TimerSuspend();
+      if(bWait) StdSuspend();
       // Or wait a little bit if we can
       else TimerSuspendRequested();
       // Suspend engine thread for the requested delay
@@ -164,16 +156,6 @@ static class Timer final               // Members initially private
   /* -- Default constructors ----------------------------------------------- */
   Timer(void) :                        // No parameters
     /* --------------------------------------------------------------------- */
-    ctpStart{ seconds{ 0 } },          // Init start of frame time
-    ctpTimeOut{ ctpStart },            // Init time script times out
-    ctpEnd{ ctpStart },                // Init end of frame time
-    cdLoop{ seconds{ 0 } },            // Init loop duration
-    cdFrame{ cdLoop },                 // Init frame duration
-    cdAcc{ cdLoop },                   // Init accumulator duration
-    cdLimit{ cdLoop },                 // Init frame limit
-    cdDelay{ cdLoop },                 // Init delay duration
-    cdDelayPst{ cdLoop },              // Init persistent delay duration
-    cdTimeOut{ cdLoop },               // Init frame timeout duration
     uqTriggers(0),                     // Init number of frame timeout checks
     uqTicks(0),                        // Init no. of ticks processed this sec
     bWait(false)                       // Init force wait?

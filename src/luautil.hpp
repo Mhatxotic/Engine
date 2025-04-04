@@ -297,9 +297,9 @@ static void LuaUtilPushVar(lua_State*const) { }
 template<typename ...VarArgs, typename AnyType>
   static void LuaUtilPushVar(lua_State*const lS, const AnyType &atVal,
     const VarArgs &...vaVars)
-{ // Type is std::string?
+{ // Type is STL string?
   if constexpr(is_same_v<AnyType, string>) LuaUtilPushStr(lS, atVal);
-  // Type is std::string_view?
+  // Type is STL string_view?
   else if constexpr(is_same_v<AnyType, string_view>)
     LuaUtilPushStrView(lS, atVal);
   // Type is boolean?
