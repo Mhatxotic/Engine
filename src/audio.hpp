@@ -50,9 +50,9 @@ static class Audio final :             // Audio manager class
       // De-Init thread
       DeInitThread();
       // Unload all buffers for streams and samples and destroy all sources
-      SourceDeInit();
       VideoDeInit();
       StreamDeInit();
+      SourceDeInit();
       SampleDeInit();
       // Deinit and reinit context
       DeInitContext();
@@ -64,9 +64,9 @@ static class Audio final :             // Audio manager class
       VideoSetVolume(cSources->fVVolume);
       // Re-create all buffers for streams and samples
       SampleReInit();
+      SourceReInit();
       StreamReInit();
       VideoReInit();
-      SourceReInit();
       // Init monitoring thread
       InitThread();
       // Log status
