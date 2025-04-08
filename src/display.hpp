@@ -11,21 +11,22 @@
 namespace IDisplay {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IConGraph::P;          using namespace IConsole::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IDim::P;
-using namespace IDimCoord::P;          using namespace IDir::P;
-using namespace IEvtMain::P;           using namespace IEvtWin::P;
-using namespace IFboCore::P;           using namespace IFlags;
-using namespace IFont::P;              using namespace IGlFW::P;
-using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
-using namespace IGlFWUtil::P;          using namespace IHelper::P;
-using namespace IIdent::P;             using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IInput::P;
-using namespace ILog::P;               using namespace ILuaFunc::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
+using namespace ICoord::P;             using namespace ICVar::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IDim::P;               using namespace IDimCoord::P;
+using namespace IDir::P;               using namespace IEvtMain::P;
+using namespace IEvtWin::P;            using namespace IFboCore::P;
+using namespace IFlags;                using namespace IFont::P;
+using namespace IGlFW::P;              using namespace IGlFWCursor::P;
+using namespace IGlFWMonitor::P;       using namespace IGlFWUtil::P;
+using namespace IHelper::P;            using namespace IIdent::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IInput::P;             using namespace ILog::P;
+using namespace ILuaFunc::P;           using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -35,8 +36,10 @@ BUILD_FLAGS(Display,
   DF_NONE                   {Flag(0)}, DF_FOCUSED                {Flag(1)},
   // Exclusive mode full-screen?       Full-screen locked?
   DF_EXCLUSIVE              {Flag(2)}, DF_NATIVEFS               {Flag(3)},
-  // Window is actually in fullscreen?
-  DF_INFULLSCREEN           {Flag(4)},
+  // Window is actually in fullscreen? Bad position was specified?
+  DF_INFULLSCREEN           {Flag(4)}, DF_BADPOS                 {Flag(5)},
+  // Bad size was specified?
+  DF_BADSIZE                {Flag(6)},
   /* -- End-user configuration flags --------------------------------------- */
   // Use forward compatible context?   Use double-buffering?
   DF_FORWARD               {Flag(47)}, DF_DOUBLEBUFFER          {Flag(48)},
@@ -66,15 +69,16 @@ static class Display final :
 { /* -- Variables ---------------------------------------------------------- */
   const EvtMainRegVec emrvEvents;      // Main events list to register
   const EvtWinRegVec  ewrvEvents;      // Window events list to register
-  GlFWMonitors        mlData;             // Monitor list data
-  const GlFWMonitor *moSelected;       // Monitor selected
-  const GlFWRes   *rSelected;          // Monitor resolution selected
+  GlFWMonitors        mlData;          // Monitor list data
+  const GlFWMonitor  *moSelected;      // Monitor selected
+  const GlFWRes      *rSelected;       // Monitor resolution selected
   size_t           stMRequested,       // Monitor id request
                    stVRequested;       // Video mode requested
   DimGLFloat       dfMatrix,           // Currently selected frame-buffer dims
                    dfMatrixReq,        // Requested frame-buffer dimensions
                    dfWinScale;         // Window scale dimensions
   GLfloat          fGamma;             // Monitor gamma setting
+  CoordInt         ciPosition;         // Window position
   int              iApi,               // Selected API from GLFW
                    iProfile,           // Selected profile for the context
                    iCtxMajor,          // Selected context major version
@@ -85,7 +89,6 @@ static class Display final :
                    iFBDepthG,          // Selected green bit depth mode
                    iFBDepthB,          // Selected blue bit depth mode
                    iFBDepthA,          // Selected alpha bit depth mode
-                   iWinPosX, iWinPosY, // Window position
                    iAuxBuffers,        // Auxilliary buffers to use
                    iSamples;           // FSAA setting to use
   string           strClipboard;       // Clipboard string to copy or grab
@@ -114,15 +117,14 @@ static class Display final :
   /* -- Check if window moved ------------------------------------- */ private:
   void CheckWindowMoved(const int iNewX, const int iNewY)
   { // If position not changed? Report event and return
-    if(iWinPosX == iNewX && iWinPosY == iNewY)
+    if(ciPosition.CoordGetX() == iNewX && ciPosition.CoordGetY() == iNewY)
       return cLog->LogDebugExSafe("Display received window position of $x$.",
         iNewX, iNewY);
     // Report change
-    cLog->LogInfoExSafe("Display changed window position from $x$ to $x$.",
-      iWinPosX, iWinPosY, iNewX, iNewY);
+    cLog->LogDebugExSafe("Display changed window position from $x$ to $x$.",
+      ciPosition.CoordGetX(), ciPosition.CoordGetY(), iNewX, iNewY);
     // Update position
-    iWinPosX = iNewX;
-    iWinPosY = iNewY;
+    ciPosition.CoordSet(iNewX, iNewY);
   }
   /* -- Window moved request ----------------------------------------------- */
   void OnMoved(const EvtMainEvent &emeEvent)
@@ -266,15 +268,15 @@ static class Display final :
   /* == Check if window resized ============================================ */
   void CheckWindowResized(const int iWidth, const int iHeight) const
   { // If position not changed? Report event and return
-    if(cInput->GetWindowWidth() == iWidth &&
-       cInput->GetWindowHeight() == iHeight)
+    if(cInput->DimGetWidth() == iWidth &&
+       cInput->DimGetHeight() == iHeight)
       return cLog->LogDebugExSafe("Display received window size of $x$.",
         iWidth, iHeight);
     // Report change
-    cLog->LogInfoExSafe("Display changed window size from $x$ to $x$.",
-      cInput->GetWindowWidth(), cInput->GetWindowHeight(), iWidth, iHeight);
+    cLog->LogDebugExSafe("Display changed window size from $x$ to $x$.",
+      cInput->DimGetWidth(), cInput->DimGetHeight(), iWidth, iHeight);
     // Update position
-    cInput->SetWindowSize(iWidth, iHeight);
+    cInput->DimSet(iWidth, iHeight);
   }
   /* -- On window resized callback ----------------------------------------- */
   void OnResized(const EvtMainEvent &emeEvent)
@@ -518,40 +520,31 @@ static class Display final :
   }
   /* -- Window size requested ---------------------------------------------- */
   void OnReqResize(const EvtWinEvent &eweEvent)
-  { // Get reference to actual arguments vector
+  { // Get reference to actual arguments vector and send the new size to GLFW
     const EvtWinArgs &ewaArgs = eweEvent.aArgs;
-    // Send the new size to GLFW
-    cGlFW->WinSetSize(ewaArgs[0].i, ewaArgs[1].i);
+    cGlFW->WinSetSize({ ewaArgs[0].i, ewaArgs[1].i });
   }
   /* -- Window move requested ---------------------------------------------- */
   void OnReqMove(const EvtWinEvent &eweEvent)
-  { // Get reference to actual arguments vector
+  { // Get reference to actual arguments vector and send new position to GLFW
     const EvtWinArgs &ewaArgs = eweEvent.aArgs;
-    // Send the new position to GLFW
-    cGlFW->WinMove(ewaArgs[0].i, ewaArgs[1].i);
+    cGlFW->WinSetPos({ ewaArgs[0].i, ewaArgs[1].i });
   }
   /* -- Window centre request ---------------------------------------------- */
   void OnReqCentre(const EvtWinEvent&)
-  { // Get centre co-ordinates
-    int iX, iY; GetCentreCoords(iX, iY,
-      cInput->GetWindowWidth(), cInput->GetWindowHeight());
-    // Move the window
-    cGlFW->WinMove(iX, iY);
-  }
+    { cGlFW->WinSetPos(GetCentreCoords(*cInput)); }
   /* -- Window reset requested --------------------------------------------- */
   void OnReqReset(const EvtWinEvent&)
   { // If in full screen mode, don't resize or move anything
     if(FlagIsSet(DF_INFULLSCREEN)) return;
-    // Restore window state
+    // Restore window visibility state
     cGlFW->WinRestore();
-    // Translate user specified window size and set the size of hte window
-    int iX, iY; TranslateUserSize(iX, iY);
-    cGlFW->WinSetSize(iX, iY);
-    // Get new window size (Input won't have received it yet).
-    int iW, iH; cGlFW->WinGetSize(iW, iH);
-    TranslateUserCoords(iX, iY, iW, iH);
-    // Update window position
-    cGlFW->WinMove(iX, iY);
+    // Get optimal window dimensions based on desktop dimensions and Set the
+    // new window size and then use the coord translation function to calculate
+    // optimal co-ordinates and dimensions for window and update window position
+    const DimInt diSize{ TranslateUserSize() };
+    cGlFW->WinSetSize(diSize);
+    cGlFW->WinSetPos(TranslateUserCoords(diSize));
   }
   /* -- Toggle full-screen event (Engine thread) --------------------------- */
   void OnReqToggleFS(const EvtWinEvent &eweEvent)
@@ -572,51 +565,57 @@ static class Display final :
     cLog->LogDebugExSafe("Display set gamma to $$.", fixed, fGamma);
   }
   /* -- Translate user specified window dimensions ------------------------- */
-  void TranslateUserSize(int &iW, int &iH) const
-  { // Get window size specified by user
-    iW = DimGetWidth();
-    iH = DimGetHeight();
-    // If size is not valid? Report result and return
-    if(iW > 0 && iH > 0)
-      return cLog->LogDebugExSafe(
-        "Display using user specified dimensions of $x$.", iW, iH);
-    // Convert selected height to double as we need to use it twice
-    const double dHeight = static_cast<double>(rSelected->Height());
-    // Set the height to 80% of desktop height
-    iH = static_cast<int>(ceil(dHeight * 0.8));
-    // Now set the width based on desktop aspect ratio
-    iW = static_cast<int>(ceil(static_cast<double>(iH) *
-      (static_cast<double>(rSelected->Width()) / dHeight)));
-    // Report result
-    cLog->LogDebugExSafe("Display translated user size to $x$.", iW, iH);
+  DimInt TranslateUserSize(void) const
+  { // Get window size specified by user and if optimal size requested?
+    DimInt dOptimal{ *this };
+    if(dOptimal.DimGetWidth() <= 0 && dOptimal.DimGetHeight() <= 0)
+    { // Convert selected height to double as we need to use it twice
+      const double dHeight = static_cast<double>(rSelected->Height());
+      // Set the height to 80% of desktop height
+      dOptimal.DimSetHeight(static_cast<int>(ceil(dHeight * 0.8)));
+      // Now set the width based on desktop aspect ratio
+      dOptimal.DimSetWidth(static_cast<int>(
+        ceil(dOptimal.DimGetHeight<double>() *
+          (static_cast<double>(rSelected->Width()) / dHeight))));
+      // Report result
+      cLog->LogDebugExSafe("Display calculated an optimal window size of $x$.",
+        dOptimal.DimGetWidth(), dOptimal.DimGetHeight());
+    } // User requested dimensions?
+    else cLog->LogDebugExSafe(
+      "Display using user specified dimensions of $x$.",
+      dOptimal.DimGetWidth(), dOptimal.DimGetHeight());
+    // Return new dimensions
+    return dOptimal;
   }
   /* -- Get centre co-ordinates -------------------------------------------- */
-  void GetCentreCoords(int &iX, int &iY, const int iW, const int iH) const
-  { // Bail if not in full screen
-    if(FlagIsSet(DF_INFULLSCREEN)) { iX = iY = 0; return; }
-    // Must have current desktop information
-    if(!moSelected->Context())
-    { // Clear co-ordinates
-      iX = iY = 0;
-      // Put message in log and return
-      return cLog->LogWarningSafe(
+  CoordInt GetCentreCoords(const DimInt &diSize) const
+  { // If not in full-screen?
+    if(FlagIsClear(DF_INFULLSCREEN))
+    { // Return centre of screen if monitor selected
+      if(moSelected->Context())
+        return { (rSelected->Width() / 2) - (diSize.DimGetWidth() / 2),
+                 (rSelected->Height() / 2) - (diSize.DimGetHeight() / 2) };
+      // No monitor selected
+      else cLog->LogWarningSafe(
         "Display class cannot centre the window without monitor data.");
-    } // Get new co-ordinates
-    iX = (rSelected->Width() / 2) - (iW / 2);
-    iY = (rSelected->Height() / 2) - (iH / 2);
+    } // Return top-left of screen
+    return {};
   }
   /* -- Translate co-ordinates --------------------------------------------- */
-  void TranslateUserCoords(int &iX, int &iY, const int iW, const int iH) const
-  { // Put user values into window co-ordinates
-    iX = CoordGetX();
-    iY = CoordGetY();
-    // Centre window?
-    if(iX==-2 || iY==-2) GetCentreCoords(iX, iY, iW, iH);
+  CoordInt TranslateUserCoords(const DimInt &diSize) const
+  { // If the user requested to centre the window then return the window
+    // centered or return the user specified position
+    return CoordGetX() == -2 || CoordGetY() == -2 ?
+      GetCentreCoords(diSize) : static_cast<CoordInt>(*this);
   }
   /* -- Re-initialise window ----------------------------------------------- */
   void ReInitWindow(const bool bState)
-  { // Initial width and height of window
-    int iWidth, iHeight;
+  { // Update user requested values for window attributes
+    cGlFW->WinSetFloatingAttrib(FlagIsSet(DF_FLOATING));
+    cGlFW->WinSetAutoIconifyAttrib(FlagIsSet(DF_AUTOICONIFY));
+    cGlFW->WinSetFocusOnShowAttrib(FlagIsSet(DF_AUTOFOCUS));
+    // Initial width and height of window
+    DimInt diSize;
     // Full-screen selected?
     if(bState)
     { // Actually in full screen mode window
@@ -640,71 +639,116 @@ static class Display final :
         cGlFW->WinSetDecoratedAttribDisabled();
         cGlFW->WinSetResizableAttribDisabled();
       } // Position is top-left in full-screen
-      iWinPosX = iWinPosY = 0;
+      ciPosition.CoordSet();
       // Set initial window width and height
-      iWidth = rSelected->Width();
-      iHeight = rSelected->Height();
+      diSize.DimSet(rSelected->Width(), rSelected->Height());
+      // Log that we are switching to full-screen mode. Casting requested
+      // monitor and video mode to int so it displays as -1 and not max uint64.
+      cLog->LogInfoExSafe("Display setting a $x$ $ full-screen window...",
+        diSize.DimGetWidth(), diSize.DimGetHeight(), cpType);
       // Instruct glfw to set full-screen window
-      cGlFW->WinSetMonitor(mUsing, iWinPosX, iWinPosY,
-        iWidth, iHeight, rSelected->Refresh());
-      // Log that we switched to full-screen mode. Casting requested monitor
-      // and video mode to int so it displays as -1 and not max uint64.
-      cLog->LogInfoExSafe(
-        "Display switch to $ full-screen $x$ (M:$>$;V:$>$;R:$).",
-        cpType, iWidth, iHeight, static_cast<ssize_t>(stMRequested),
-        moSelected->Index(), static_cast<ssize_t>(stVRequested),
-        rSelected->Index(), rSelected->Refresh());
+      cGlFW->WinSetMonitor(mUsing, ciPosition, diSize, rSelected->Refresh());
     } // Window mode selected
     else
     { // Not in full-screen mode or native mode
       FlagClear(DF_INFULLSCREEN|DF_NATIVEFS);
       // Trnslate user specified window size
-      TranslateUserSize(iWidth, iHeight);
-      TranslateUserCoords(iWinPosX, iWinPosY, iWidth, iHeight);
+      diSize.DimSet(TranslateUserSize());
+      ciPosition.CoordSet(TranslateUserCoords(diSize));
       // Is a desktop mode window (Could change via OnFBReset())
       fsType = FST_WINDOW;
       // We need to adjust to the position of the currently selected monitor so
       // it actually appears on that monitor.
-      iWinPosX += moSelected->CoordGetX();
-      iWinPosY += moSelected->CoordGetY();
-      // Instruct glfw to change to window mode
-      cGlFW->WinSetMonitor(nullptr, iWinPosX, iWinPosY, iWidth, iHeight, 0);
+      ciPosition.CoordInc(*moSelected);
+      // Log that we switched to window mode
+      cLog->LogInfoExSafe("Display setting a $x$ desktop window at $x$...",
+        diSize.DimGetWidth(), diSize.DimGetHeight(), ciPosition.CoordGetX(),
+        ciPosition.CoordGetY());
       // Window mode so update users window border
       cGlFW->WinSetDecoratedAttrib(FlagIsSet(DF_BORDER));
       cGlFW->WinSetResizableAttrib(FlagIsSet(DF_SIZABLE));
-      // Log that we switched to window mode
-      cLog->LogInfoExSafe("Display switched to desktop window $x$ at $x$.",
-        iWidth, iHeight, iWinPosX, iWinPosY);
-    } // Update window attributes
-    cGlFW->WinSetFloatingAttrib(FlagIsSet(DF_FLOATING));
-    cGlFW->WinSetAutoIconifyAttrib(FlagIsSet(DF_AUTOICONIFY));
-    cGlFW->WinSetFocusOnShowAttrib(FlagIsSet(DF_AUTOFOCUS));
-    // Store current window position
-    cGlFW->WinGetPos(iWinPosX, iWinPosY);
+      // Instruct glfw to change to window mode
+      cGlFW->WinSetMonitor(nullptr, ciPosition, diSize, 0);
+    } // Get newly selected window co-ordinates and dimensions
+    const DimCoords dcNew{ cGlFW->WinGetPos(), cGlFW->WinGetSize() };
+    // If position is different from requested?
+    if(dcNew.CoordIsNotEqual(ciPosition))
+    { // Set bad coordinates flag
+      FlagSet(DF_BADPOS);
+      // If size is different from requested?
+      if(dcNew.DimIsNotEqual(diSize))
+      { // Set bad dimensions flag
+        FlagSet(DF_BADSIZE);
+        // Log warning to say the requested size and coords were not honoured
+        cLog->LogWarningExSafe(
+          "Display set a $x$ window at $x$ instead of $x$ at $x$!",
+          dcNew.DimGetWidth(), dcNew.DimGetHeight(), dcNew.CoordGetX(),
+          dcNew.CoordGetY(), diSize.DimGetWidth(), diSize.DimGetHeight(),
+          ciPosition.CoordGetX(), ciPosition.CoordGetY());
+        // Store new size
+        diSize.DimSet(dcNew);
+      } // Size is not as requested?
+      else
+      { // Clear bad dimensions flag
+        FlagClear(DF_BADSIZE);
+        // Log warning to say the requested coordinates were not honoured
+        cLog->LogWarningExSafe(
+          "Display set a $x$ window at $x$ instead of $x$!",
+          dcNew.DimGetWidth(), dcNew.DimGetHeight(), dcNew.CoordGetX(),
+          dcNew.CoordGetY(), diSize.DimGetWidth(), diSize.DimGetHeight());
+      } // Store new position
+      ciPosition.CoordSet(dcNew);
+    } // If position is same as requested?
+    else
+    { // Clear bad coordinates flag
+      FlagClear(DF_BADPOS);
+      // Size is different as requested?
+      if(dcNew.DimIsNotEqual(diSize))
+      { // Set bad dimensions flag
+        FlagSet(DF_BADSIZE);
+        // Log warning to say the requested size was not honoured
+        cLog->LogWarningExSafe(
+          "Display set a $x$ instead of a $x$ window at $x$!",
+          dcNew.DimGetWidth(), dcNew.DimGetHeight(), diSize.DimGetWidth(),
+          diSize.DimGetHeight(), dcNew.CoordGetX(), dcNew.CoordGetY());
+        // Store new size
+        diSize.DimSet(dcNew);
+      } // Size is not as requested?
+      else
+      { // Clear bad dimensions flag
+        FlagClear(DF_BADSIZE);
+        // Log warning to say the requested cnates were not honoured
+        cLog->LogInfoExSafe("Display set a $x$ window at $x$ successfully.",
+          dcNew.DimGetWidth(), dcNew.DimGetHeight(), dcNew.CoordGetX(),
+          dcNew.CoordGetY());
+      }
+    }
     // Store initial window size. This needs to be done because on Linux, the
     // window size isn't sent so we need to store the value.
-    cInput->SetWindowSize(iWidth, iHeight);
+    cInput->DimSet(diSize);
     // Get scale of window
-    cGlFW->WinGetScale(dfWinScale.DimGetWidthRef(),
-                       dfWinScale.DimGetHeightRef());
+    dfWinScale.DimSet(cGlFW->WinGetScale());
     // Need to fix a GLFW scaling bug with this :(
 #if defined(MACOS)
     // If hidpi not enabled? Update the main fbo viewport size without scale
-    if(FlagIsClear(DF_HIDPI))
-      return cFboCore->DimSet(static_cast<GLsizei>(cInput->GetWindowWidth()),
-                              static_cast<GLsizei>(cInput->GetWindowHeight()));
+    if(FlagIsClear(DF_HIDPI)) cFboCore->DimSet(cInput->DimGet<GLsizei>());
     // Update the main fbo viewport size with scale
-    cFboCore->DimSet(static_cast<GLsizei>(cInput->GetWindowWidth()) *
-                       dfWinScale.DimGetWidth<GLsizei>(),
-                     static_cast<GLsizei>(cInput->GetWindowHeight()) *
-                       dfWinScale.DimGetHeight<GLsizei>());
-    // Remove native flag since GLFW canno set or detect this directly.
+    else cFboCore->DimSet(
+      cInput->DimGetWidth<GLsizei>() * dfWinScale.DimGetWidth<GLsizei>(),
+      cInput->DimGetHeight<GLsizei>() * dfWinScale.DimGetHeight<GLsizei>());
+    // Remove native flag since GLFW cannot set or detect this directly.
     FlagClear(DF_NATIVEFS);
-    // Windows and linux doesn't need the scale
+    // Were any user specified parameters bad? GLFW has a bug where an invalid
+    // window dimensions in MacOS can mess up the frame buffer.
+    if(FlagIsAnyOfSet(DF_BADPOS|DF_BADSIZE))
+    { // Move window position by a pixel to force GLFW to fix the frame buffer
+      // and then move the window back to the original position.
+      cGlFW->WinSetPos({ ciPosition.CoordGetX() + 1, ciPosition.CoordGetY() });
+      RequestReposition();
+    } // Windows and linux?
 #else
     // Update the main fbo viewport size without scale
-    cFboCore->DimSet(static_cast<GLsizei>(cInput->GetWindowWidth()),
-                     static_cast<GLsizei>(cInput->GetWindowHeight()));
+    cFboCore->DimSet(cInput->DimGet<GLsizei>());
 #endif
     // Show the window
     cGlFW->WinShow();
@@ -716,8 +760,9 @@ static class Display final :
     cInput->CommitCursorNow();
     // If we're in Linux?
 #if defined(LINUX)
-    // Send a event to recalculate the matrix because it seems the fbo resize
-    // event isn't being sent on the GLFW that came with Ubuntu.
+    // The framebuffer isn't setup straight away on Wayland.
+    // Source: https://www.glfw.org/docs/3.3/group__window.html#
+    //           ga61be47917b72536a148300f46494fc66
     cEvtMain->Add(EMC_VID_MATRIX_REINIT);
 #endif
   }
@@ -926,8 +971,8 @@ static class Display final :
   const string_view &GetFSTypeString(void) const
     { return GetFSTypeString(fsType); }
   /* -- Get window position ------------------------------------------------ */
-  int GetWindowPosX(void) const { return iWinPosX; }
-  int GetWindowPosY(void) const { return iWinPosY; }
+  int GetWindowPosX(void) const { return ciPosition.CoordGetX(); }
+  int GetWindowPosY(void) const { return ciPosition.CoordGetY(); }
   float GetWindowScaleWidth(void) const { return dfWinScale.DimGetWidth(); }
   float GetWindowScaleHeight(void) const { return dfWinScale.DimGetHeight(); }
   /* -- Init --------------------------------------------------------------- */
@@ -973,7 +1018,7 @@ static class Display final :
     cGlFW->GlFWSetFrameName(cpTitle);
     // Initialise basic window. We will modify it after due to limitations in
     // this particular function. For example, this can't set the refresh rate.
-    cSystem->WindowInitialised(cGlFW->WinInit(1, 1, cpTitle, nullptr));
+    cSystem->WindowInitialised(cGlFW->WinInit(cpTitle, nullptr));
     // Re-adjust the window
     ReInitWindow(FlagIsSet(DF_FULLSCREEN));
     // Set forced aspect ratio
@@ -1077,10 +1122,9 @@ static class Display final :
     rSelected(nullptr),                // No video mode selected
     stMRequested(StdMaxSizeT),         // No monitor requested
     stVRequested(StdMaxSizeT),         // No video mode id requested
-    dfMatrix{ 0.0f, 0.0f },            // Selected matrix initialised later
-    dfMatrixReq{ dfMatrix },           // Requested matrix initialised later
     dfWinScale{ 1.0f, 1.0f },          // Window scale initialised later
     fGamma(0),                         // Gamma initialised by CVars
+    ciPosition{ GLFW_DONT_CARE },      // Window position
     iApi(GLFW_DONT_CARE),              // Api type set by cvars
     iProfile(GLFW_DONT_CARE),          // Profile type set by cvars
     iCtxMajor(GLFW_DONT_CARE),         // Context major version set by cvars
@@ -1091,8 +1135,6 @@ static class Display final :
     iFBDepthG(GLFW_DONT_CARE),         // Bit depth not selected yet
     iFBDepthB(GLFW_DONT_CARE),         // Bit depth not selected yet
     iFBDepthA(GLFW_DONT_CARE),         // Bit depth not selected yet
-    iWinPosX(GLFW_DONT_CARE),          // No initial window X position
-    iWinPosY(GLFW_DONT_CARE),          // No initial window Y position
     iAuxBuffers(GLFW_DONT_CARE),       // No auxiliary buffers specified
     iSamples(GLFW_DONT_CARE),          // No anti-aliasing samples specified
     lrFocused{ "OnFocused" },          // Set name for OnFocused lua event
@@ -1173,10 +1215,9 @@ static class Display final :
     static_cast<void>(stIndex); iRobustness = GLFW_NO_ROBUSTNESS;
 #else
     // Possible values
-    static const array<const int,3> aValues{
-      GLFW_NO_RESET_NOTIFICATION, GLFW_LOSE_CONTEXT_ON_RESET,
-      GLFW_NO_ROBUSTNESS
-    }; // Fail if invalid
+    static const array<const int,3> aValues{ GLFW_NO_RESET_NOTIFICATION,
+      GLFW_LOSE_CONTEXT_ON_RESET, GLFW_NO_ROBUSTNESS };
+    // Fail if invalid
     if(stIndex >= aValues.size()) return DENY;
     // Set the api
     iRobustness = aValues[stIndex];
@@ -1191,10 +1232,9 @@ static class Display final :
     static_cast<void>(stIndex); iRelease = GLFW_RELEASE_BEHAVIOR_NONE;
 #else
     // Possible values
-    static const array<const int,3> aValues{
-      GLFW_ANY_RELEASE_BEHAVIOR, GLFW_RELEASE_BEHAVIOR_FLUSH,
-      GLFW_RELEASE_BEHAVIOR_NONE
-    }; // Fail if invalid
+    static const array<const int,3> aValues{ GLFW_ANY_RELEASE_BEHAVIOR,
+      GLFW_RELEASE_BEHAVIOR_FLUSH, GLFW_RELEASE_BEHAVIOR_NONE };
+    // Fail if invalid
     if(stIndex >= aValues.size()) return DENY;
     // Set the api
     iRelease = aValues[stIndex];
@@ -1221,10 +1261,9 @@ static class Display final :
     static_cast<void>(stIndex); iProfile = GLFW_OPENGL_CORE_PROFILE;
 #else
     // Possible values
-    static const array<const int,3> aValues{
-      GLFW_OPENGL_CORE_PROFILE, GLFW_OPENGL_COMPAT_PROFILE,
-      GLFW_OPENGL_ANY_PROFILE
-    }; // Fail if invalid
+    static const array<const int,3> aValues{ GLFW_OPENGL_CORE_PROFILE,
+      GLFW_OPENGL_COMPAT_PROFILE, GLFW_OPENGL_ANY_PROFILE };
+    // Fail if invalid
     if(stIndex >= aValues.size()) return DENY;
     // Set the api
     iProfile = aValues[stIndex];

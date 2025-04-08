@@ -78,37 +78,47 @@ build()
     exit 8
   fi
 
+  find fmt-*/CMakeFiles/alsoft.fmt.dir/src -name *.o -print >> openalfiles.txt
+  if [ ! $? -eq 0 ]; then
+    exit 9
+  fi
+
   while read p; do
     nn=`echo $p | sed 's|CMakeFiles/OpenAL\.dir/||g'`
-    if [ ! $? -eq 0 ]; then
-      exit 9
-    fi
-
-    nn=`echo $nn | sed 's|/|-|g'`
     if [ ! $? -eq 0 ]; then
       exit 10
     fi
 
-    mv -fv "$p" "${nn}-${1}-${2}.o"
+    nn=`echo $p | sed 's|fmt\-[\d\.]+/CMakeFiles/alsoft\.fmt\.dir/src/||g'`
     if [ ! $? -eq 0 ]; then
       exit 11
+    fi
+
+    nn=`echo $nn | sed 's|/|-|g'`
+    if [ ! $? -eq 0 ]; then
+      exit 12
+    fi
+
+    mv -fv "$p" "${nn}-${1}-${2}.o"
+    if [ ! $? -eq 0 ]; then
+      exit 13
     fi
   done <openalfiles.txt
 
   rm -fv openalfiles.txt
   if [ ! $? -eq 0 ]; then
-    exit 11
+    exit 14
   fi
 
   rm -rfv "al64-${1}-${2}.a" 2>/dev/null
   ar rcs "al64-${1}-${2}.a" *.o
   if [ ! $? -eq 0 ]; then
-    exit 12
+    exit 15
   fi
 
   rm -rfv *.o
   if [ ! $? -eq 0 ]; then
-    exit 13
+    exit 16
   fi
 }
 
@@ -117,5 +127,5 @@ build arm64 apple-m1 11.0
 
 lipo al64-*.a -create -output "${LIB}/al64.ma"
 if [ ! $? -eq 0 ]; then
-  exit 15
+  exit 17
 fi

@@ -542,7 +542,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     cLog->LogDebugExSafe("Video '$' main loop exit with reason $!",
       IdentGet(), ubReason.load());
     // Why did the video manager terminate?
-    switch(ubReason.load())
+    switch(const Unblock ubCode = ubReason.load())
     { // The thread was in standby? Shouldn't happen! Restart the thread
       case UB_STANDBY: [[fallthrough]];
       // The thread was blocking? Shouldn't happen! Restart the thread
@@ -559,6 +559,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       case UB_STOP: LuaEvtDispatch(VE_STOP); break;
       // The video was paused? Send pause event to guest
       case UB_PAUSE: LuaEvtDispatch(VE_PAUSE); break;
+      // Unknown code
+      default: XC("Internal error: Unknown unblock reason code!",
+                  "Code", ubCode);
     } // Exit thread cleanly with specified reason
     return 1;
   } // exception occured?

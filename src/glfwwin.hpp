@@ -9,7 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IGlFWWindow {                // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IError::P;
+using namespace ICollector::P;         using namespace ICoord::P;
+using namespace IDim::P;               using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IGlFWUtil::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace IUtf::P;
@@ -25,9 +26,6 @@ class GlFWWindow :                     // GLFW window class
   StrVector        svFiles;            // Drag and drop file list
   /* -- Return the window handle ------------------------------------------- */
   GLFWwindow *WinGetHandle(void) const { return wClass; }
-  /* -- Get window data pointer -------------------------------------------- */
-  template<typename AnyCast=void*>AnyCast WinGetData(void) const
-    { return GlFWGetWindowUserPointer<AnyCast>(WinGetHandle()); }
   /* -- Set window data pointer -------------------------------------------- */
   template<typename AnyCast=void*const>void WinSetData(AnyCast acData) const
     { GlFWSetWindowUserPointer<AnyCast>(WinGetHandle(), acData); }
@@ -86,18 +84,18 @@ class GlFWWindow :                     // GLFW window class
     { // The user could use native full-screen and this is the only event we
       // get for it so we will send the window position and size to the event
       // callback can check if screen is actually full.
-      int iWX, iWY; wPtr->WinGetPos(iWX, iWY);
-      int iWW, iWH; wPtr->WinGetSize(iWW, iWH);
-      cEvtMain->Add(EMC_VID_FB_REINIT,
-        reinterpret_cast<void*>(wC), iW, iH, iWX, iWY, iWW, iWH);
+      const CoordInt ciPos{ wPtr->WinGetPos() };
+      const DimInt diSize{ wPtr->WinGetSize() };
+      cEvtMain->Add(EMC_VID_FB_REINIT, reinterpret_cast<void*>(wC), iW, iH,
+        ciPos.CoordGetX(), ciPos.CoordGetY(), diSize.DimGetWidth(),
+        diSize.DimGetHeight());
     } // Log null window class pointer
     else cLog->LogWarningExSafe("GlFW got a resize frame buffer event for $x$ "
       "with a NULL window context pointer!", iW, iH);
     // On Windows or Linux?
 #else
     // Just send new frame buffer dimensions
-    cEvtMain->Add(EMC_VID_FB_REINIT,
-      reinterpret_cast<void*>(wC), iW, iH);
+    cEvtMain->Add(EMC_VID_FB_REINIT, reinterpret_cast<void*>(wC), iW, iH);
 #endif
   }
   /* -- Event handler for 'glfwSetKeyCallback' ----------------------------- */
@@ -191,9 +189,11 @@ class GlFWWindow :                     // GLFW window class
   void WinSetIcon(const int iCount, const GLFWimage*const giImages) const
     { glfwSetWindowIcon(WinGetHandle(), iCount, giImages); }
   /* -- Update monitor ----------------------------------------------------- */
-  void WinSetMonitor(GLFWmonitor*const mM, const int iX, const int iY,
-    const int iW, const int iH, const int iR) const
-      { glfwSetWindowMonitor(WinGetHandle(), mM, iX, iY, iW, iH, iR); }
+  void WinSetMonitor(GLFWmonitor*const mM, const CoordInt &ciPosition,
+    const DimInt &diSize, const int iR) const
+      { glfwSetWindowMonitor(WinGetHandle(), mM, ciPosition.CoordGetX(),
+          ciPosition.CoordGetY(), diSize.DimGetWidth(), diSize.DimGetHeight(),
+          iR); }
   /* -- Tell GLFW if it should close the window ---------------------------- */
   void WinSetClose(const int iS) const
     { glfwSetWindowShouldClose(WinGetHandle(), iS); }
@@ -216,9 +216,6 @@ class GlFWWindow :                     // GLFW window class
   /* -- Hide a window and register events ---------------------------------- */
   void WinHide(void) const
     { WinUnregisterEvents(); glfwHideWindow(WinGetHandle()); }
-  /* -- Set window size ---------------------------------------------------- */
-  void WinSetSize(const int iW, const int iH) const
-    { glfwSetWindowSize(WinGetHandle(), iW, iH); }
   /* -- Send dummy mouse position ------------------------------------------ */
   void WinSendMousePosition(void) const
   { // Get current cursor position
@@ -227,11 +224,25 @@ class GlFWWindow :                     // GLFW window class
     WinOnMouseMove(WinGetHandle(), dX, dY);
   }
   /* -- Get window size ---------------------------------------------------- */
-  void WinGetSize(int &iW, int &iH) const
-    { glfwGetWindowSize(WinGetHandle(), &iW, &iH); }
+  DimInt WinGetSize(void) const
+  { // Put window dimensions inside the dimensions class and return it
+    DimInt diDimensions;
+    glfwGetWindowSize(WinGetHandle(), &diDimensions.DimGetWidthRef(),
+                                      &diDimensions.DimGetHeightRef());
+    return diDimensions;
+  }
+  /* -- Set window size ---------------------------------------------------- */
+  void WinSetSize(const DimInt diSize) const
+    { glfwSetWindowSize(WinGetHandle(), diSize.DimGetWidth(),
+                                        diSize.DimGetHeight()); }
   /* -- Get window DPI scale ----------------------------------------------- */
-  void WinGetScale(float &fW, float &fH) const
-    { glfwGetWindowContentScale(WinGetHandle(), &fW, &fH); }
+  DimFloat WinGetScale(void) const
+  { // Put window scale inside the dimensions class and return it
+    DimFloat dfScale;
+    glfwGetWindowContentScale(WinGetHandle(), &dfScale.DimGetWidthRef(),
+                                              &dfScale.DimGetHeightRef());
+    return dfScale;
+  }
   /* -- Get framebuffer size ----------------------------------------------- */
   void WinGetFBSize(int &iW, int &iH) const
     { glfwGetFramebufferSize(WinGetHandle(), &iW, &iH); }
@@ -302,12 +313,18 @@ class GlFWWindow :                     // GLFW window class
     } // Not valid so free the aspect ratio
     WinSetFreeAspectRatio();
   }
-  /* -- Move window -------------------------------------------------------- */
-  void WinMove(const int iX, const int iY) const
-    { glfwSetWindowPos(WinGetHandle(), iX, iY); }
+  /* -- Set window position ------------------------------------------------ */
+  void WinSetPos(const CoordInt ciPosition) const
+    { glfwSetWindowPos(WinGetHandle(), ciPosition.CoordGetX(),
+                                       ciPosition.CoordGetY()); }
   /* -- Get window size ---------------------------------------------------- */
-  void WinGetPos(int &iX, int &iY) const
-    { glfwGetWindowPos(WinGetHandle(), &iX, &iY); }
+  CoordInt WinGetPos(void) const
+  { // Put window position inside the coordinates class and return it
+    CoordInt ciCoordinates;
+    glfwGetWindowPos(WinGetHandle(), &ciCoordinates.CoordGetXRef(),
+                                     &ciCoordinates.CoordGetYRef());
+    return ciCoordinates;
+  }
   /* -- Swap GL buffers ---------------------------------------------------- */
   void WinSwapGLBuffers(void) const { glfwSwapBuffers(WinGetHandle()); }
   /* -- Set window attribute core functions -------------------------------- */
@@ -411,17 +428,14 @@ class GlFWWindow :                     // GLFW window class
     WinUnregisterEvents();
   }
   /* -- Create the window -------------------------------------------------- */
-  GLFWwindow *WinInit(const int iW, const int iH,
-    const char*const cpT, GLFWmonitor*const mM)
+  GLFWwindow *WinInit(const char*const cpT, GLFWmonitor*const mM)
   { // Bail if handle already set
     if(WinIsAvailable())
       XC("Window already created!",
-         "Class", WinGetHandle(), "Width",   iW, "Height", iH,
-         "Title", cpT,            "Monitor", mM);
+         "Class", WinGetHandle(), "Title", cpT, "Monitor", mM);
     // Set handle and create window, throw exception if failed
-    if(!WinSetHandleResult(glfwCreateWindow(iW, iH, cpT, mM, nullptr)))
-      XC("Failed to create window!",
-         "Width", iW, "Height", iH, "Title", cpT, "Monitor", mM);
+    if(!WinSetHandleResult(glfwCreateWindow(1, 1, cpT, mM, nullptr)))
+      XC("Failed to create window!", "Title", cpT, "Monitor", mM);
     // Set user pointer to this class
     WinSetData(this);
     // Return the class we created

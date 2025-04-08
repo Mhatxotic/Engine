@@ -21,6 +21,8 @@ template<typename Int>class IntPair
     { return static_cast<RInt>(i1); }
   template<typename RInt=Int>RInt IPGetTwo(void) const
     { return static_cast<RInt>(i2); }
+  template<typename RInt,class RBase=IntPair<RInt>>RBase IPGet(void) const
+    { return { IPGetOne<RInt>(), IPGetTwo<RInt>() }; };
   template<typename RInt=Int>RInt IPDefGet(void) const
     { return static_cast<RInt>(iD0); }
   /* -- Get reference ------------------------------------------------------ */
@@ -37,6 +39,8 @@ template<typename Int>class IntPair
   void IPIncOne(const Int iV = iD1) { IPSetOne(IPGetOne() + iV); }
   void IPIncTwo(const Int iV = iD1) { IPSetTwo(IPGetTwo() + iV); }
   void IPInc(const Int iV1 = iD1) { IPIncOne(iV1); IPIncTwo(iV1); }
+  void IPInc(const IntPair &ipOther) { IPIncOne(ipOther.IPGetOne());
+                                       IPIncTwo(ipOther.IPGetTwo()); }
   /* -- Decrement ---------------------------------------------------------- */
   void IPDecOne(const Int iV = iD1) { IPSetOne(IPGetOne() - iV); }
   void IPDecTwo(const Int iV = iD1) { IPSetTwo(IPGetTwo() - iV); }
@@ -48,14 +52,28 @@ template<typename Int>class IntPair
   bool IPIsNotTwoSet(void) const { return !IPIsTwoSet(); }
   bool IPIsSet(void) const { return IPIsOneSet() && IPIsTwoSet(); }
   bool IPIsNotSet(void) const { return !IPIsSet(); }
+  /* ----------------------------------------------------------------------- */
+  bool IPIsEqual(const IntPair &ipOther) const
+    { return IPGetOne() == ipOther.IPGetOne() &&
+             IPGetTwo() == ipOther.IPGetTwo(); }
+  bool IPIsNotEqual(const IntPair &ipOther) const
+    { return IPGetOne() != ipOther.IPGetOne() ||
+             IPGetTwo() != ipOther.IPGetTwo(); }
   /* -- Copy assignment ---------------------------------------------------- */
   IntPair& operator=(const IntPair &ipO) { IPSet(ipO); return *this; }
-  /* -- Initialisation constructor ----------------------------------------- */
+  /* -- Initialisation on both values with one value constructor ----------- */
+  explicit IntPair(const Int iV) :     // Specified value
+    /* -- Initialisers ----------------------------------------------------- */
+    i1(iV),                            // Initialise first value
+    i2(iV)                             // Initialise second value
+    /* -- No code ---------------------------------------------------------- */
+    { }
+  /* -- Initialisation on both values constructor -------------------------- */
   IntPair(const Int iV1,               // Specified first value
           const Int iV2) :             // Specified second value
     /* -- Initialisers ----------------------------------------------------- */
     i1(iV1),                           // Initialise first value
-    i2(iV2)                            // Initialise first value
+    i2(iV2)                            // Initialise second value
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Copy constructor --------------------------------------------------- */

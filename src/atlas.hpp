@@ -64,7 +64,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
                                  const size_t stWidth,
                                  const size_t stBytesPerColumn=1)
     { return ((stPosY * stWidth) + stPosX) * stBytesPerColumn; }
-  /* -- Check if texture reload required ------------------------ */ protected:
+  /* -- Check if texture reload required ----------------------------------- */
   void AtlasCheckReloadTexture(void)
   { // Check reload command
     switch(rtCmd)
@@ -106,7 +106,9 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
         rRedraw.RectSetBottomRight(0);
         // Done
         return;
-      }
+      } // Unknown reload command
+      default: XC("Internal error: Unknown reload command!",
+                  "Command", rtCmd);
     }
   }
   /* -- Gray-Alpha (16-bpp) bitmap enlarging support ----------------------- */

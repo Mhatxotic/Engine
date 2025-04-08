@@ -772,8 +772,8 @@ cConsole->AddLineF(
     StrFormat("Memory: $ mBytes ($ mBytes available).\n",
       cOgl->GetVRAMTotal() / 1048576, cOgl->GetVRAMFree() / 1048576) :
     cCommon->Blank(),
-  cInput->GetWindowWidth(), cInput->GetWindowHeight(),
-    StrFromRatio(cInput->GetWindowWidth(), cInput->GetWindowHeight()),
+  cInput->DimGetWidth(), cInput->DimGetHeight(),
+    StrFromRatio(cInput->DimGetWidth(), cInput->DimGetHeight()),
     cDisplay->GetWindowPosX(), cDisplay->GetWindowPosY(),
     cDisplay->GetWindowScaleWidth(), cDisplay->GetWindowScaleHeight(),
     hex, cDisplay->FlagGet(),
