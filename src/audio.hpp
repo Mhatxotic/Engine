@@ -25,7 +25,13 @@ namespace P {                          // Start of public module namespace
 BUILD_FLAGS(Audio,                     // Audio flags classes
   /* ----------------------------------------------------------------------- */
   // No settings?                      Audio system is resetting?
-  AF_NONE                   {Flag(0)}, AF_REINIT                 {Flag(1)}
+  AF_NONE                   {Flag(0)}, AF_REINIT                 {Flag(1)},
+  // Playback change def device event? Capture change default device event?
+  AF_HAVESEPBDDC            {Flag(2)}, AF_HAVESECADDC            {Flag(3)},
+  // Playback add device event?        Capture add device event?
+  AF_HAVESEPBDA             {Flag(4)}, AF_HAVESECADA             {Flag(5)},
+  // Playback remove device event?     Capture remove device event?
+  AF_HAVESEPBDR             {Flag(6)}, AF_HAVESECADR             {Flag(7)}
 );/* ======================================================================= */
 static class Audio final :             // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
@@ -38,9 +44,59 @@ static class Audio final :             // Audio manager class
   SafeClkDuration     cdCheckRate,     // Check rate
                       cdThreadDelay;   // Thread sleep time
   const ClkDuration   cdDiscWait;      // Sleep time waiting for main thread
+  const CbThFunc      ctfThSysEvts,    // Thread function to use
+                      ctfThNoSysEvts;  // Thread function to use
   /* -- Devices ------------------------------------------------------------ */
   StrVector        dlPBDevices,        // list of playback devices
                    dlCTDevices;        // list of capture devices
+  /* -- Set system event callback ------------------------------------------ */
+  void SetEventCallback(const ALCEVENTPROCTYPESOFT cbProc=nullptr,
+    void*const vpParam=nullptr)
+      { AL(cOal->SetEventCallback(cbProc, vpParam),
+          "Failed to set system event callback!",
+          "Callback", !!cbProc, "Param", !!vpParam); }
+  /* -- Enable or disable system events ------------------------------------ */
+  bool SetEventState(const ALCenum eEvent, const bool bEnabled)
+    { return cOal->SetEventState(eEvent, bEnabled ? AL_TRUE : AL_FALSE)
+        == AL_TRUE; }
+  /* -- Set event enabled or disabled -------------------------------------- */
+  bool SetEventEnabled(const ALCenum eEvent)
+    { return SetEventState(eEvent, true); }
+  bool SetEventDisabled(const ALCenum eEvent)
+    { return SetEventState(eEvent, false); }
+  /* -- Is system event supported ------------------------------------------ */
+  bool IsEventSupported(const ALenum eEventType, const ALenum eDeviceType)
+  { // Do the test and get result
+    switch(const ALenum eResult =
+      cOal->IsEventSupported(eEventType, eDeviceType))
+    { // Event is supported?
+      case ALC_EVENT_SUPPORTED_SOFT:
+        SetEventEnabled(eEventType); return true;
+      // Event is not supported?
+      case ALC_EVENT_NOT_SUPPORTED_SOFT:
+        SetEventDisabled(eEventType); return false;
+      // Invalid result
+      default: XC("Internal error: Invalid AL event query result!",
+                  "EventType", eEventType, "DeviceType", eDeviceType,
+                  "Result", eResult);
+    }
+  }
+  /* -- Is system playback event supported --------------------------------- */
+  bool IsPlaybackEventSupported(const ALenum eEventType)
+    { return IsEventSupported(eEventType, ALC_PLAYBACK_DEVICE_SOFT); }
+  /* -- Is system capture event supported ---------------------------------- */
+  bool IsCaptureEventSupported(const ALenum eEventType)
+    { return IsEventSupported(eEventType, ALC_CAPTURE_DEVICE_SOFT); }
+  /* -- Playback device list was updated ----------------------------------- */
+  void OnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
+  { // Update the device context, refresh device list and update the name
+    cOal->UpdateDevice(reinterpret_cast<ALCdevice*>(emeEvent.aArgs[0].vp));
+    EnumeratePlaybackDevices();
+    cOal->UpdatePlaybackDeviceName();
+  }
+  /* -- Capture device list was updated ------------------------------------ */
+  void OnCapDeviceUpdated(const EvtMainEvent&)
+    { EnumerateCaptureDevices(); }
   /* -- ReInit requested --------------------------------------------------- */
   void OnReInit(const EvtMainEvent&)
   { // Capture exceptions
@@ -83,28 +139,20 @@ static class Audio final :             // Audio manager class
   /* -- Reset timer interval ----------------------------------------------- */
   void ResetCheckTime(void)
     { tpNextCheck = cmHiRes.GetTime() + cdCheckRate.load(); }
-  /* -- Thread main function ----------------------------------------------- */
-  int AudioThreadMain(Thread &) try
-  { // Enumerate...
-    for(ResetCheckTime();              // Reset device list check time
-        ThreadShouldNotExit();         // Enumerate until thread exit signalled
-        cTimer->TimerSuspend(cdThreadDelay)) // Suspend thread pecified time
-    { // Manage all streams audio.
+  /* -- Thread main function with system events support ----------------- */
+  int AudioThreadMainSysEvents(Thread &) try
+  { // Loop forever until thread exit signalled.
+    while(ThreadShouldNotExit())
+    { // Manage stream classes
       StreamManage();
-      // Verify the hardware setup and reset if there are any descreprencies.
-      // If there were no descreprencies detected then loop again.
-      if(Verify()) continue;
-      // Put in infinite loop and wait for the reinit function to request
-      // termination of this thread
-      while(ThreadShouldNotExit()) cTimer->TimerSuspend(cdDiscWait);
-      // Thread terminate request recieved, now break the loop.
-      break;
+      // Suspend thread for the user requested time
+      cTimer->TimerSuspend(cdThreadDelay);
     } // Terminate thread
     return 1;
   } // exception occured in this thread
   catch(const exception &eReason)
   { // Report error
-    cLog->LogErrorExSafe("(AUDIO THREAD EXCEPTION) $", eReason);
+    cLog->LogErrorExSafe("(AUDIO SE THREAD EXCEPTION) $", eReason);
     // Restart the thread
     return 0;
   }
@@ -171,18 +219,85 @@ static class Audio final :             // Audio manager class
     // Audio context still valid, continue monitoring
     return true;
   }
+  /* -- Thread main function with no system events support ----------------- */
+  int AudioThreadMainNoSysEvents(Thread &) try
+  { // Enumerate...
+    for(ResetCheckTime();              // Reset device list check time
+        ThreadShouldNotExit();         // Enumerate until thread exit signalled
+        cTimer->TimerSuspend(cdThreadDelay)) // Suspend thread pecified time
+    { // Manage all streams audio.
+      StreamManage();
+      // Verify the hardware setup and reset if there are any descreprencies.
+      // If there were no descreprencies detected then loop again.
+      if(Verify()) continue;
+      // Put in infinite loop and wait for the reinit function to request
+      // termination of this thread
+      while(ThreadShouldNotExit()) cTimer->TimerSuspend(cdDiscWait);
+      // Thread terminate request recieved, now break the loop.
+      break;
+    } // Terminate thread
+    return 1;
+  } // exception occured in this thread
+  catch(const exception &eReason)
+  { // Report error
+    cLog->LogErrorExSafe("(AUDIO NSE THREAD EXCEPTION) $", eReason);
+    // Restart the thread
+    return 0;
+  }
   /* -- DeInit thread ------------------------------------------------------ */
   void DeInitThread(void)
   { // Stop and de-init the thread and log progress
     cLog->LogDebugSafe("Audio monitoring thread de-initialising...");
+    SetEventCallback();
     ThreadDeInit();
     cLog->LogDebugSafe("Audio monitoring thread de-initialised.");
   }
+  /* -- Event function (switch to this call) ------------------------------- */
+  static void OnEvent(const ALCenum eEventType, const ALCenum eDeviceType,
+    ALCdevice*const alcNDevice, const ALCsizei stLength,
+    const ALCchar*const cpMessage, void*const)
+  { // Create string view of message and log the event
+    const string_view strvMsg{ cpMessage, static_cast<size_t>(stLength) };
+    // Log event text to say we processed the event successfully.
+    cLog->LogDebugExSafe(
+      "Audio received system event $<0x$$> with device type $$<0x$$>...\n"
+      "- $.", eEventType, hex, eEventType, dec, eDeviceType, hex,
+              eDeviceType, strvMsg);
+    // Send event to process the event
+    switch(eDeviceType)
+    { // It was a playback device?
+      case ALC_PLAYBACK_DEVICE_SOFT:
+        // Send playback devices updated event and break
+        cEvtMain->Add(EMC_AUD_PDEVICE_UPDATED,
+          reinterpret_cast<void*>(alcNDevice));
+        break;
+      // It was a capture device?
+      case ALC_CAPTURE_DEVICE_SOFT:
+        // Send capture devices updated event and break
+        cEvtMain->Add(EMC_AUD_CDEVICE_UPDATED,
+          reinterpret_cast<void*>(alcNDevice));
+        break;
+      // Unknown device?
+      default: break;
+    }
+  }
   /* -- Init thread -------------------------------------------------------- */
   void InitThread(void)
-  { // Initialise and start thread and log progress
+  { // Log that the thread is starting
     cLog->LogDebugSafe("Audio monitoring thread initialising...");
-    ThreadStart(this);
+    // Have default device change system event notifications?
+    if(FlagIsSet(AF_HAVESEPBDDC))
+    { // Start the minimal thread
+      ThreadInit(ctfThSysEvts, this);
+      // Enable the audio device change event
+      SetEventCallback(reinterpret_cast<ALCEVENTPROCTYPESOFT>(OnEvent));
+    } // Not all system event notifications available?
+    else
+    { // Start the thread with manual audio checks
+      ThreadInit(ctfThNoSysEvts, this);
+      // Disable the audio device change event
+      SetEventCallback();
+    } // Log completion of thread startup
     cLog->LogDebugExSafe("Audio monitoring thread initialised (D:$;C:$)!",
       StrShortFromDuration(ClockDurationToDouble(cdThreadDelay)),
       StrShortFromDuration(ClockDurationToDouble(cdCheckRate)));
@@ -228,6 +343,20 @@ static class Audio final :             // Audio manager class
     if(!cOal->InitContext())
       XC("Failed to create al context!",
          "Identifier", strDevice, "Index", stDevice);
+    // Check playback system event capabilities
+    FlagSetOrClear(AF_HAVESEPBDDC,
+      IsPlaybackEventSupported(ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT));
+    FlagSetOrClear(AF_HAVESEPBDA,
+      IsPlaybackEventSupported(ALC_EVENT_TYPE_DEVICE_ADDED_SOFT));
+    FlagSetOrClear(AF_HAVESEPBDR,
+      IsPlaybackEventSupported(ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT));
+    // Check capture system event capabilities
+    FlagSetOrClear(AF_HAVESECADDC,
+      IsCaptureEventSupported(ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT));
+    FlagSetOrClear(AF_HAVESECADA,
+      IsCaptureEventSupported(ALC_EVENT_TYPE_DEVICE_ADDED_SOFT));
+    FlagSetOrClear(AF_HAVESECADR,
+      IsCaptureEventSupported(ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT));
     // Have the context
     cOal->Init();
     // Allocate sources data
@@ -421,12 +550,16 @@ static class Audio final :             // Audio manager class
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Initialise class name
     AudioFlags{ AF_NONE },             // Initialise no audio flags
-    Thread{ "audio", STP_AUDIO,        // Initialise high perf audio thread
-      bind(&Audio::AudioThreadMain,    // " with reference to callback
-        this, _1) },                   // " function
-    emrvEvents{ { EMC_AUD_REINIT, bind(&Audio::OnReInit, this, _1) } },
+    Thread{ "audio", STP_AUDIO },      // Initialise high perf audio thread
+    emrvEvents{
+      { EMC_AUD_REINIT,          bind(&Audio::OnReInit,  this, _1) },
+      { EMC_AUD_PDEVICE_UPDATED, bind(&Audio::OnPbkDeviceUpdated, this, _1) },
+      { EMC_AUD_CDEVICE_UPDATED, bind(&Audio::OnCapDeviceUpdated, this, _1) }
+    },
     cdCheckRate{ seconds{ 0 } },       // Initialise thread check time
-    cdDiscWait{ milliseconds{ 100 } }  // Initialise discrepency sleep time
+    cdDiscWait{ milliseconds{ 100 } }, // Initialise discrepency sleep time
+    ctfThSysEvts{ bind(&Audio::AudioThreadMainSysEvents, this, _1) },
+    ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) }
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
   /* -- Destructor --------------------------------------------------------- */

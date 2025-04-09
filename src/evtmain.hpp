@@ -45,39 +45,41 @@ enum EvtMainCmd : size_t               // Engine thread event commands
   EMC_VID_MATRIX_REINIT,               // 20: Reset matrix
   /* -- Audio events ------------------------------------------------------- */
   EMC_AUD_REINIT,                      // 21: Re-initialise audio
+  EMC_AUD_PDEVICE_UPDATED,             // 22: Playback devices updated
+  EMC_AUD_CDEVICE_UPDATED,             // 23: Capture devices updated
   /* -- Input events ------------------------------------------------------- */
-  EMC_INP_DRAG_DROP,                   // 22: Files dragged and dropped
-  EMC_INP_JOY_STATE,                   // 23: Joystick status changed
-  EMC_INP_MOUSE_FOCUS,                 // 24: Mouse moved (in|out)side window
-  EMC_INP_PASTE,                       // 25: Paste into input from clipboard
+  EMC_INP_DRAG_DROP,                   // 24: Files dragged and dropped
+  EMC_INP_JOY_STATE,                   // 25: Joystick status changed
+  EMC_INP_MOUSE_FOCUS,                 // 26: Mouse moved (in|out)side window
+  EMC_INP_PASTE,                       // 27: Paste into input from clipboard
   /* -- Unique async events ------------------------------------------------ */
-  EMC_CB_EVENT,                        // 26: Clipboard event occured
-  EMC_CUR_EVENT,                       // 27: Cursor event occured
-  EMC_STR_EVENT,                       // 28: Stream event occured
-  EMC_VID_EVENT,                       // 29: Video event occured
+  EMC_CB_EVENT,                        // 28: Clipboard event occured
+  EMC_CUR_EVENT,                       // 29: Cursor event occured
+  EMC_STR_EVENT,                       // 30: Stream event occured
+  EMC_VID_EVENT,                       // 31: Video event occured
   /* -- Console events------------------------------------------------------ */
-  EMC_CON_UPDATE,                      // 30: Force syscon display update
+  EMC_CON_UPDATE,                      // 32: Force syscon display update
   /* -- Input events ------------------------------------------------------- */
-  EMC_INP_CHAR,                        // 31: Filtered key pressed
-  EMC_INP_KEYPRESS,                    // 32: Unfiltered key pressed
-  EMC_INP_MOUSE_CLICK,                 // 33: Mouse button clicked
-  EMC_INP_MOUSE_MOVE,                  // 34: Mouse cursor moved
-  EMC_INP_MOUSE_SCROLL,                // 35: Mouse wheel scrolled
+  EMC_INP_CHAR,                        // 33: Filtered key pressed
+  EMC_INP_KEYPRESS,                    // 34: Unfiltered key pressed
+  EMC_INP_MOUSE_CLICK,                 // 35: Mouse button clicked
+  EMC_INP_MOUSE_MOVE,                  // 36: Mouse cursor moved
+  EMC_INP_MOUSE_SCROLL,                // 37: Mouse wheel scrolled
   /* -- Loading async events ----------------------------------------------- */
-  EMC_MP_ARCHIVE,                      // 36: Archive async event occured
-  EMC_MP_ASSET,                        // 37: Asset async event occured
-  EMC_MP_FONT,                         // 38: Char async event occured
-  EMC_MP_IMAGE,                        // 39: Image async event occured
-  EMC_MP_JSON,                         // 40: Json async event occured
-  EMC_MP_PCM,                          // 41: Pcm async event occured
-  EMC_MP_PROCESS,                      // 42: Process async event occured
-  EMC_MP_SOCKET,                       // 43: Socket async event occured
-  EMC_MP_STREAM,                       // 44: Stream async event occured
-  EMC_MP_VIDEO,                        // 45: Video async event occured
+  EMC_MP_ARCHIVE,                      // 38: Archive async event occured
+  EMC_MP_ASSET,                        // 39: Asset async event occured
+  EMC_MP_FONT,                         // 40: Char async event occured
+  EMC_MP_IMAGE,                        // 41: Image async event occured
+  EMC_MP_JSON,                         // 42: Json async event occured
+  EMC_MP_PCM,                          // 43: Pcm async event occured
+  EMC_MP_PROCESS,                      // 44: Process async event occured
+  EMC_MP_SOCKET,                       // 45: Socket async event occured
+  EMC_MP_STREAM,                       // 46: Stream async event occured
+  EMC_MP_VIDEO,                        // 47: Video async event occured
   /* ----------------------------------------------------------------------- */
-  EMC_MAX,                             // 46: Below are just codes
+  EMC_MAX,                             // 48: Below are just codes
   /* ----------------------------------------------------------------------- */
-  EMC_LUA_ERROR,                       // 47: Error in LUA exec (not an event)
+  EMC_LUA_ERROR,                       // 49: Error in LUA exec (not an event)
   /* ----------------------------------------------------------------------- */
 #if defined(ALPHA)                     // Compiling debug version?
   EMC_NOLOG = EMC_MAX                  // Log all events
@@ -240,7 +242,8 @@ static class EvtMain final :           // Event list for render thread
       /* ------------------------------------------------------------------- */
       EMC(VID_FB_REINIT),   EMC(VID_MATRIX_REINIT),
       /* ------------------------------------------------------------------- */
-      EMC(AUD_REINIT),
+      EMC(AUD_REINIT),      EMC(AUD_PDEVICE_UPDATED),
+      EMC(AUD_CDEVICE_UPDATED),
       /* ------------------------------------------------------------------- */
       EMC(INP_DRAG_DROP),   EMC(INP_JOY_STATE),    EMC(INP_MOUSE_FOCUS),
       EMC(INP_PASTE),

@@ -567,25 +567,25 @@ static class Display final :
   /* -- Translate user specified window dimensions ------------------------- */
   DimInt TranslateUserSize(void) const
   { // Get window size specified by user and if optimal size requested?
-    DimInt dOptimal{ *this };
-    if(dOptimal.DimGetWidth() <= 0 && dOptimal.DimGetHeight() <= 0)
+    DimInt diOptimal{ *this };
+    if(diOptimal.DimGetWidth() <= 0 && diOptimal.DimGetHeight() <= 0)
     { // Convert selected height to double as we need to use it twice
       const double dHeight = static_cast<double>(rSelected->Height());
       // Set the height to 80% of desktop height
-      dOptimal.DimSetHeight(static_cast<int>(ceil(dHeight * 0.8)));
+      diOptimal.DimSetHeight(static_cast<int>(ceil(dHeight * 0.8)));
       // Now set the width based on desktop aspect ratio
-      dOptimal.DimSetWidth(static_cast<int>(
-        ceil(dOptimal.DimGetHeight<double>() *
+      diOptimal.DimSetWidth(static_cast<int>(
+        ceil(diOptimal.DimGetHeight<double>() *
           (static_cast<double>(rSelected->Width()) / dHeight))));
       // Report result
       cLog->LogDebugExSafe("Display calculated an optimal window size of $x$.",
-        dOptimal.DimGetWidth(), dOptimal.DimGetHeight());
+        diOptimal.DimGetWidth(), diOptimal.DimGetHeight());
     } // User requested dimensions?
     else cLog->LogDebugExSafe(
       "Display using user specified dimensions of $x$.",
-      dOptimal.DimGetWidth(), dOptimal.DimGetHeight());
+      diOptimal.DimGetWidth(), diOptimal.DimGetHeight());
     // Return new dimensions
-    return dOptimal;
+    return diOptimal;
   }
   /* -- Get centre co-ordinates -------------------------------------------- */
   CoordInt GetCentreCoords(const DimInt &diSize) const

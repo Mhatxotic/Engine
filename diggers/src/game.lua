@@ -3160,7 +3160,7 @@ local function InitCreateObject()
         return AdjustPos(aObject, aPDItem[1], aPDItem[2]) end;
     end
     -- Blocked so we need to find a new direction to move in
-    local aDirections = { };
+    local aDirections<const> = { };
     -- Try every possible combination but the last
     local aPossibleDirections<const> = aDData[2];
     for iI = 1, #aPossibleDirections - 1 do
@@ -3191,8 +3191,6 @@ local function InitCreateObject()
   };
   -- Bigfoot AI ------------------------------------------------------------ --
   local function AIBigfoot(aObject)
-    -- Return if busy
-    if aObject.F & OFL.BUSY ~= 0 then return end;
     -- Return if object is busy
     if aObject.F & OFL.BUSY ~= 0 then return end;
     -- Jump if we can

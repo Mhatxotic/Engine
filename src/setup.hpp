@@ -524,6 +524,11 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     /* --------------------------------------------------------------------- */
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
+      using OpenAL::ALCEVENTPROCTYPESOFT; // AL specific system event callback
+      using OpenAL::ALCchar;           // AL specific context char type
+      using OpenAL::ALCdevice;         // AL specific device context
+      using OpenAL::ALCenum;           // AL specific context enum type
+      using OpenAL::ALCsizei;          // AL specific context sizei type
       using OpenAL::ALdouble;          // AL specific double type
       using OpenAL::ALenum;            // AL specific enum type
       using OpenAL::ALfloat;           // AL specific float type

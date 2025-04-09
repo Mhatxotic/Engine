@@ -3367,6 +3367,12 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
   else if(strLib.length() >= 12 && strLib.substr(0, 12) == "openal-soft-")
   { // Setup the repository
     SetupZipRepo(strLibPath, strTmp, PSLib.strFile);
+    // Get fmt directory version
+    string strFmtDir;
+    { const Dir dFiles;
+      for(const DirEntMapPair &dempPair : dFiles.GetDirs())
+        if(dempPair.first.substr(0, 4) == "fmt-")
+          strFmtDir = StdMove(dempPair.first); }
     // We need to activate cmake once to build openal config and other things
     System("rm -rf CMakeFiles *.cmake CMakeCache.txt");
     // One time only build
@@ -3390,7 +3396,10 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
               "-DALSOFT_UTILS=FALSE "
               "-DSDL2_CORE_LIBRARY=FALSE "
               "-DSDL2_INCLUDE_DIR=FALSE .", strCMakeBase);
-    // Apply header patches to conquer PURE EVIL forcing of DLL exports
+    // Apply header patches to conquer forcing of DLL exports
+    ReplaceText(strFmtDir + "/include/fmt/base.h",
+      "#    define FMT_API __declspec(dllimport)",
+      "#    define FMT_API extern");
     ReplaceText("include/al/al.h", "#define AL_API __declspec(dllimport)",
                                    "#define AL_API extern");
     ReplaceText("include/al/alc.h", "#define ALC_API __declspec(dllimport)",
@@ -3416,7 +3425,7 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     System("if exist alc/alc_* rm -rfv alc/alc_*");
     System("if exist al/effects/al_effect_* rm -rfv al/effects/al_effect_*");
     System("if exist alc/effects/alc_effect_* "
-             "rm -rfv alc/effects/alc_effect_*");
+           "rm -rfv alc/effects/alc_effect_*");
     // We need to rename files to prevent .obj's overwriting each other
     { const Dir dALEffects("al/effects", ".cpp");
       for(const DirEntMapPair &dempPair : dALEffects.GetFiles())
@@ -3440,7 +3449,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       "-DAL_ALEXT_PROTOTYPES -DAL_BUILD_LIBRARY -DAL_LIBTYPE_STATIC "
       "-DHAVE_STRUCT_TIMESPEC -DNOMINMAX -DRESTRICT=__restrict "
       "-Dstrcasecmp=_stricmp -Dstrncasecmp=_strnicmp -DWIN32 -EHsc -I. -Ialc "
-      "-Icommon -Ihrtf -Iinclude -Iopenal32/include "
+      "-Icommon -Ihrtf -Iinclude -Iopenal32/include -I" +
+      strFmtDir + "/include "
       // Files to compile
       "al/*.cpp "
       "al/eax/*.cpp "
@@ -3457,7 +3467,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       "common/*.cpp "
       "core/*.cpp "
       "core/filters/*.cpp "
-      "core/mixer/*.cpp" };
+      "core/mixer/*.cpp " +
+      strFmtDir + "/src/*.cc" };
     strRelFlags64 += "-D_WIN32_WINNT=0x0502 " + strALSpecific;
     strRelFlags32 += "-D_WIN32_WINNT=0x0501 " + strALSpecific;
     // Compile 64-bit version

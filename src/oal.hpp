@@ -350,7 +350,16 @@ static class Oal final :
     const array<const ALCint,3> alciAttrs{ ALC_HRTF_SOFT, alState, 0 };
     return alcResetDeviceSOFT(alcDevice, alciAttrs.data()) != AL_FALSE;
   }
-  /* --------------------------------------------------------------- */ public:
+  /* -- Set system event callback ------------------------------------------ */
+  void SetEventCallback(const ALCEVENTPROCTYPESOFT cbProc, void*const vpParam)
+    { alcEventCallbackSOFT(cbProc, vpParam); };
+  /* -- Enable or disable system events ------------------------------------ */
+  ALenum SetEventState(const ALCenum eEvent, const ALCboolean bEnabled)
+    { return alcEventControlSOFT(1, &eEvent, bEnabled); }
+  /* -- Is system event supported ------------------------------------------ */
+  ALenum IsEventSupported(const ALenum eEventType, const ALenum eDeviceType)
+    { return alcEventIsSupportedSOFT(eEventType, eDeviceType); }
+  /* ----------------------------------------------------------------------- */
   template<typename IntType>
     const string_view &GetALErr(const IntType itCode) const
       { return imOALCodes.Get(static_cast<ALenum>(itCode)); }
@@ -366,12 +375,18 @@ static class Oal final :
     // Return success
     return true;
   }
+  /* -- Update device ------------------------------------------------------ */
+  void UpdateDevice(ALCdevice*const alcNDevice) { alcDevice = alcNDevice; }
+  /* -- Update playback device name ---------------------------------------- */
+  void UpdatePlaybackDeviceName(void)
+    { strPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
+        ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER); }
   /* -- Initialise device -------------------------------------------------- */
   bool InitDevice(const char *cpDevice)
   { // Bail if already initialised
     if(alcDevice) return false;
     // Get the device and return failure if it fails
-    alcDevice = alcOpenDevice(cpDevice);
+    UpdateDevice(alcOpenDevice(cpDevice));
     if(!alcDevice) return false;
     FlagSet(AFL_INITDEVICE);
     // Succeeded
@@ -383,7 +398,7 @@ static class Oal final :
     if(!alcDevice) return false;
     // Close device and nullify handle
     alcCloseDevice(alcDevice);
-    alcDevice = nullptr;
+    UpdateDevice(nullptr);
     FlagClear(AFL_INITDEVICE);
     // Succeeded
     return true;
@@ -421,9 +436,9 @@ static class Oal final :
     IAL(alcMakeContextCurrent(alcContext),
       "Failed to make OpenAL context current!");
     FlagSet(AFL_CONTEXTCURRENT);
-    // Set playback device
-    strPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
-      ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER);
+    // Add
+    // Update playback device name
+    UpdatePlaybackDeviceName();
     // Prepare version information
     uiVersionMajor = GetInteger<decltype(uiVersionMajor)>(ALC_MAJOR_VERSION);
     uiVersionMinor = GetInteger<decltype(uiVersionMinor)>(ALC_MINOR_VERSION);
