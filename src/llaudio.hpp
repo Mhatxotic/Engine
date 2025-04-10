@@ -16,7 +16,8 @@
 /* ========================================================================= */
 namespace LLAudio {                    // Audio namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IAudio::P;             using namespace ISample::P;
+using namespace IAudio::P;             using namespace ILua::P;
+using namespace IOal::P;               using namespace ISample::P;
 using namespace ISource::P;            using namespace IStream::P;
 using namespace IVideo::P;             using namespace Common;
 /* ========================================================================= **
@@ -47,6 +48,12 @@ LLFUNC(GetSampleVolume, 1, LuaUtilPushVar(lS, cSources->fSVolume.load()))
 // ? Returns master volume of all video classes.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetVideoVolume, 1, LuaUtilPushVar(lS, cSources->fVVolume.load()))
+/* ========================================================================= */
+// $ Audio.OnUpdate
+// > Func:function=The callback function to use
+// ? Fires when the audio device updates.
+/* ------------------------------------------------------------------------- */
+LLFUNC(OnUpdate, 0, cLua->SetLuaRef(lS, cAudio->lfOnUpdate))
 /* ========================================================================= */
 // $ Audio.SetGlobalVolume
 // > Volume:number=New master volume (0 to 1).
@@ -113,6 +120,12 @@ LLFUNC(SetVelocity, 0,
   const AgALfloat aX{lS, 1}, aY{lS, 2}, aZ{lS, 3};
   cAudio->SetVelocity(aX, aY, aZ))
 /* ========================================================================= */
+// $ Audio.GetPBActiveDeviceName
+// < Name:string=The name of the active audio playback device.
+// ? Returns the name of the currently active playback audio device.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetPBActiveDeviceName, 1, LuaUtilPushVar(lS, cOal->GetPlaybackDevice()))
+/* ========================================================================= */
 // $ Audio.GetPBDeviceName
 // > Id:integer=The playback audio device id.
 // < Name:string=The name of the audio playback device.
@@ -142,8 +155,9 @@ LLFUNC(Reset, 1, LuaUtilPushVar(lS, cAudio->ReInit()))
 ** ========================================================================= */
 LLRSBEGIN                              // Audio.* namespace functions begin
   LLRSFUNC(GetGlobalVolume),           LLRSFUNC(GetNumPBDevices),
-  LLRSFUNC(GetPBDeviceName),           LLRSFUNC(GetSampleVolume),
-  LLRSFUNC(GetStreamVolume),           LLRSFUNC(GetVideoVolume),
+  LLRSFUNC(GetPBActiveDeviceName),     LLRSFUNC(GetPBDeviceName),
+  LLRSFUNC(GetSampleVolume),           LLRSFUNC(GetStreamVolume),
+  LLRSFUNC(GetVideoVolume),            LLRSFUNC(OnUpdate),
   LLRSFUNC(Reset),                     LLRSFUNC(SetGlobalVolume),
   LLRSFUNC(SetOrientation),            LLRSFUNC(SetPosition),
   LLRSFUNC(SetSampleVolume),           LLRSFUNC(SetVelocity),

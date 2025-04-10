@@ -12,8 +12,8 @@ namespace IAudio {                     // Start of private module namespace
 using namespace IClock::P;             using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags;                using namespace IHelper::P;
-using namespace ILog::P;               using namespace IOal::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace ILuaFunc::P;           using namespace IOal::P;
 using namespace ISample::P;            using namespace ISource::P;
 using namespace IStd::P;               using namespace IStream::P;
 using namespace IString::P;            using namespace ISysUtil::P;
@@ -21,22 +21,10 @@ using namespace IThread::P;            using namespace ITimer::P;
 using namespace IVideo::P;             using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == Typedefs ============================================================= */
-BUILD_FLAGS(Audio,                     // Audio flags classes
-  /* ----------------------------------------------------------------------- */
-  // No settings?                      Audio system is resetting?
-  AF_NONE                   {Flag(0)}, AF_REINIT                 {Flag(1)},
-  // Playback change def device event? Capture change default device event?
-  AF_HAVESEPBDDC            {Flag(2)}, AF_HAVESECADDC            {Flag(3)},
-  // Playback add device event?        Capture add device event?
-  AF_HAVESEPBDA             {Flag(4)}, AF_HAVESECADA             {Flag(5)},
-  // Playback remove device event?     Capture remove device event?
-  AF_HAVESEPBDR             {Flag(6)}, AF_HAVESECADR             {Flag(7)}
-);/* ======================================================================= */
+/* ========================================================================= */
 static class Audio final :             // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper class
-  public AudioFlags,                   // Audio flags
   private Thread                       // Audio monitoring thread
 { /* -- Monitoring thread timers ---------------------------------- */ private:
   const EvtMainRegVec emrvEvents;      // Frequently used events
@@ -47,56 +35,46 @@ static class Audio final :             // Audio manager class
   const CbThFunc      ctfThSysEvts,    // Thread function to use
                       ctfThNoSysEvts;  // Thread function to use
   /* -- Devices ------------------------------------------------------------ */
-  StrVector        dlPBDevices,        // list of playback devices
-                   dlCTDevices;        // list of capture devices
-  /* -- Set system event callback ------------------------------------------ */
-  void SetEventCallback(const ALCEVENTPROCTYPESOFT cbProc=nullptr,
-    void*const vpParam=nullptr)
-      { AL(cOal->SetEventCallback(cbProc, vpParam),
-          "Failed to set system event callback!",
-          "Callback", !!cbProc, "Param", !!vpParam); }
-  /* -- Enable or disable system events ------------------------------------ */
-  bool SetEventState(const ALCenum eEvent, const bool bEnabled)
-    { return cOal->SetEventState(eEvent, bEnabled ? AL_TRUE : AL_FALSE)
-        == AL_TRUE; }
-  /* -- Set event enabled or disabled -------------------------------------- */
-  bool SetEventEnabled(const ALCenum eEvent)
-    { return SetEventState(eEvent, true); }
-  bool SetEventDisabled(const ALCenum eEvent)
-    { return SetEventState(eEvent, false); }
-  /* -- Is system event supported ------------------------------------------ */
-  bool IsEventSupported(const ALenum eEventType, const ALenum eDeviceType)
-  { // Do the test and get result
-    switch(const ALenum eResult =
-      cOal->IsEventSupported(eEventType, eDeviceType))
-    { // Event is supported?
-      case ALC_EVENT_SUPPORTED_SOFT:
-        SetEventEnabled(eEventType); return true;
-      // Event is not supported?
-      case ALC_EVENT_NOT_SUPPORTED_SOFT:
-        SetEventDisabled(eEventType); return false;
-      // Invalid result
-      default: XC("Internal error: Invalid AL event query result!",
-                  "EventType", eEventType, "DeviceType", eDeviceType,
-                  "Result", eResult);
-    }
-  }
-  /* -- Is system playback event supported --------------------------------- */
-  bool IsPlaybackEventSupported(const ALenum eEventType)
-    { return IsEventSupported(eEventType, ALC_PLAYBACK_DEVICE_SOFT); }
-  /* -- Is system capture event supported ---------------------------------- */
-  bool IsCaptureEventSupported(const ALenum eEventType)
-    { return IsEventSupported(eEventType, ALC_CAPTURE_DEVICE_SOFT); }
+  StrVector        dlPBDevices,        // List of playback devices
+                   dlCTDevices;        // List of capture devices
+  /* -- References ------------------------------------------------- */ public:
+  LuaFunc          lfOnUpdate;         // Fire this when device updates
   /* -- Playback device list was updated ----------------------------------- */
   void OnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
-  { // Update the device context, refresh device list and update the name
+  { // Update the device context if supplied
     cOal->UpdateDevice(reinterpret_cast<ALCdevice*>(emeEvent.aArgs[0].vp));
+    // Refresh device list and update the name
     EnumeratePlaybackDevices();
     cOal->UpdatePlaybackDeviceName();
+    // Send lua event with isplaybackdevice set to true
+    lfOnUpdate.LuaFuncDispatch(true);
   }
   /* -- Capture device list was updated ------------------------------------ */
   void OnCapDeviceUpdated(const EvtMainEvent&)
-    { EnumerateCaptureDevices(); }
+  { // Re-enumerate capture devices
+    EnumerateCaptureDevices();
+    // Send lua event with isplaybackdevice set to true
+    lfOnUpdate.LuaFuncDispatch(false);
+  }
+  /* -- Init thread -------------------------------------------------------- */
+  void InitThread(void)
+  { // Log that the thread is starting
+    cLog->LogDebugSafe("Audio monitoring thread initialising...");
+    // Start the minimal thread
+    ThreadInit(cOal->FlagIsSet(AFL_HAVESEPBDDC) ?
+      ctfThSysEvts : ctfThNoSysEvts, this);
+    // Log completion of thread startup
+    cLog->LogDebugExSafe("Audio monitoring thread initialised (D:$;C:$)!",
+      StrShortFromDuration(ClockDurationToDouble(cdThreadDelay)),
+      StrShortFromDuration(ClockDurationToDouble(cdCheckRate)));
+  }
+  /* -- DeInit thread ------------------------------------------------------ */
+  void DeInitThread(void)
+  { // Stop and de-init the thread and log progress
+    cLog->LogDebugSafe("Audio monitoring thread de-initialising...");
+    ThreadDeInit();
+    cLog->LogDebugSafe("Audio monitoring thread de-initialised.");
+  }
   /* -- ReInit requested --------------------------------------------------- */
   void OnReInit(const EvtMainEvent&)
   { // Capture exceptions
@@ -125,6 +103,8 @@ static class Audio final :             // Audio manager class
       VideoReInit();
       // Init monitoring thread
       InitThread();
+      // Send lua event with the device type not set
+      lfOnUpdate.LuaFuncDispatch();
       // Log status
       cLog->LogInfoSafe("Audio class re-initialised successfully.");
     } // We don't want LUA to hard break really.
@@ -134,12 +114,12 @@ static class Audio final :             // Audio manager class
       // Reset next thread check time
       ResetCheckTime();
     } // Remove re-initialisation flag
-    FlagClear(AF_REINIT);
+    cOal->FlagClear(AFL_REINIT);
   }
   /* -- Reset timer interval ----------------------------------------------- */
   void ResetCheckTime(void)
     { tpNextCheck = cmHiRes.GetTime() + cdCheckRate.load(); }
-  /* -- Thread main function with system events support ----------------- */
+  /* -- Thread main function with system events support -------------------- */
   int AudioThreadMainSysEvents(Thread &) try
   { // Loop forever until thread exit signalled.
     while(ThreadShouldNotExit())
@@ -244,14 +224,6 @@ static class Audio final :             // Audio manager class
     // Restart the thread
     return 0;
   }
-  /* -- DeInit thread ------------------------------------------------------ */
-  void DeInitThread(void)
-  { // Stop and de-init the thread and log progress
-    cLog->LogDebugSafe("Audio monitoring thread de-initialising...");
-    SetEventCallback();
-    ThreadDeInit();
-    cLog->LogDebugSafe("Audio monitoring thread de-initialised.");
-  }
   /* -- Event function (switch to this call) ------------------------------- */
   static void OnEvent(const ALCenum eEventType, const ALCenum eDeviceType,
     ALCdevice*const alcNDevice, const ALCsizei stLength,
@@ -280,27 +252,6 @@ static class Audio final :             // Audio manager class
       // Unknown device?
       default: break;
     }
-  }
-  /* -- Init thread -------------------------------------------------------- */
-  void InitThread(void)
-  { // Log that the thread is starting
-    cLog->LogDebugSafe("Audio monitoring thread initialising...");
-    // Have default device change system event notifications?
-    if(FlagIsSet(AF_HAVESEPBDDC))
-    { // Start the minimal thread
-      ThreadInit(ctfThSysEvts, this);
-      // Enable the audio device change event
-      SetEventCallback(reinterpret_cast<ALCEVENTPROCTYPESOFT>(OnEvent));
-    } // Not all system event notifications available?
-    else
-    { // Start the thread with manual audio checks
-      ThreadInit(ctfThNoSysEvts, this);
-      // Disable the audio device change event
-      SetEventCallback();
-    } // Log completion of thread startup
-    cLog->LogDebugExSafe("Audio monitoring thread initialised (D:$;C:$)!",
-      StrShortFromDuration(ClockDurationToDouble(cdThreadDelay)),
-      StrShortFromDuration(ClockDurationToDouble(cdCheckRate)));
   }
   /* -- Init context ------------------------------------------------------- */
   void InitContext(void)
@@ -343,20 +294,6 @@ static class Audio final :             // Audio manager class
     if(!cOal->InitContext())
       XC("Failed to create al context!",
          "Identifier", strDevice, "Index", stDevice);
-    // Check playback system event capabilities
-    FlagSetOrClear(AF_HAVESEPBDDC,
-      IsPlaybackEventSupported(ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT));
-    FlagSetOrClear(AF_HAVESEPBDA,
-      IsPlaybackEventSupported(ALC_EVENT_TYPE_DEVICE_ADDED_SOFT));
-    FlagSetOrClear(AF_HAVESEPBDR,
-      IsPlaybackEventSupported(ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT));
-    // Check capture system event capabilities
-    FlagSetOrClear(AF_HAVESECADDC,
-      IsCaptureEventSupported(ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT));
-    FlagSetOrClear(AF_HAVESECADA,
-      IsCaptureEventSupported(ALC_EVENT_TYPE_DEVICE_ADDED_SOFT));
-    FlagSetOrClear(AF_HAVESECADR,
-      IsCaptureEventSupported(ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT));
     // Have the context
     cOal->Init();
     // Allocate sources data
@@ -408,7 +345,7 @@ static class Audio final :             // Audio manager class
       "Audio couldn't access capture devices list (0x$$).",
       hex, cOal->GetError());
     // Log enumerations
-    cLog->LogInfoExSafe("Audio found $ capture devices.",
+    cLog->LogDebugExSafe("Audio found $ capture devices.",
       GetNumCaptureDevices());
   }
   /* -- Enumerate playback devices ----------------------------------------- */
@@ -435,7 +372,7 @@ static class Audio final :             // Audio manager class
           cpList += strlen(cpList) + 1;
           // Until no more devices
         } // Log enumerations and return
-        cLog->LogInfoExSafe("Audio found $ playback devices.",
+        cLog->LogDebugExSafe("Audio found $ playback devices.",
           GetNumPlaybackDevices());
         return;
       } // Report that the attempt failed
@@ -499,9 +436,9 @@ static class Audio final :             // Audio manager class
   /* -- Send init signal --------------------------------------------------- */
   bool ReInit(void)
   { // Return if signal already set to re-initialise
-    if(FlagIsSet(AF_REINIT)) return false;
+    if(cOal->FlagIsSet(AFL_REINIT)) return false;
     // Set the signal to re-init (it will get unset when re-initialised)
-    FlagSet(AF_REINIT);
+    cOal->FlagSet(AFL_REINIT);
     // Send event to re-initialise audio
     cEvtMain->Add(EMC_AUD_REINIT);
     // Event sent
@@ -541,6 +478,10 @@ static class Audio final :             // Audio manager class
     cLog->LogDebugSafe("Audio class starting up...");
     // Init context and thread
     InitContext();
+    // Enable the audio device change event
+    AL(cOal->SetEventCallback(reinterpret_cast<ALCEVENTPROCTYPESOFT>(OnEvent),
+      this), "Failed to set system event callback!");
+    // Start the monitoring thread
     InitThread();
     // Log status
     cLog->LogDebugSafe("Audio class started successfully.");
@@ -549,7 +490,6 @@ static class Audio final :             // Audio manager class
   Audio(void) :                        // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Initialise class name
-    AudioFlags{ AF_NONE },             // Initialise no audio flags
     Thread{ "audio", STP_AUDIO },      // Initialise high perf audio thread
     emrvEvents{
       { EMC_AUD_REINIT,          bind(&Audio::OnReInit,  this, _1) },
@@ -559,7 +499,8 @@ static class Audio final :             // Audio manager class
     cdCheckRate{ seconds{ 0 } },       // Initialise thread check time
     cdDiscWait{ milliseconds{ 100 } }, // Initialise discrepency sleep time
     ctfThSysEvts{ bind(&Audio::AudioThreadMainSysEvents, this, _1) },
-    ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) }
+    ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) },
+    lfOnUpdate{ "OnUpdate" }           // On update event
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
   /* -- Destructor --------------------------------------------------------- */

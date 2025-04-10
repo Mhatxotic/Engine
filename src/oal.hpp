@@ -30,7 +30,7 @@ namespace P {                          // Start of public module namespace
 typedef vector<ALuint>   ALUIntVector; // A vector of ALuint's
 /* -- OpenAL flags---------------------------------------------------------- */
 BUILD_FLAGS(Oal,
-  /* --------------------------------------------------------------------- */
+  /* -- OAL specific flags ------------------------------------------------- */
   // No flags                          Device has been initialised?
   AFL_NONE                  {Flag(0)}, AFL_INITDEVICE            {Flag(3)},
   // Context has been initialised?     Have infinite sources?
@@ -39,9 +39,14 @@ BUILD_FLAGS(Oal,
   AFL_CONTEXTCURRENT        {Flag(6)}, AFL_INITIALISED           {Flag(7)},
   // Can play 32-bit float audio?      Have ALC_ENUMERATE_ALL_EXT?
   AFL_HAVE32FPPB            {Flag(8)}, AFL_HAVEENUMEXT           {Flag(9)},
-  /* -- Persistent across initialisations ---------------------------------- */
-  // HRTF is enabled?
-  AFL_HRTF                 {Flag(64)},
+  // Playback change def device event? Capture change default device event?
+  AFL_HAVESEPBDDC          {Flag(10)}, AFL_HAVESECADDC          {Flag(11)},
+  // Playback add device event?        Capture add device event?
+  AFL_HAVESEPBDA           {Flag(12)}, AFL_HAVESECADA           {Flag(13)},
+  // Playback remove device event?     Capture remove device event?
+  AFL_HAVESEPBDR           {Flag(14)}, AFL_HAVESECADR           {Flag(15)},
+  // Audio system is resetting?        HRTF is enabled?
+  AFL_REINIT               {Flag(16)}, AFL_HRTF                 {Flag(17)},
   /* -- Masks -------------------------------------------------------------- */
   AFL_VOLATILE{ AFL_INITDEVICE|AFL_INITCONTEXT|AFL_INFINITESOURCES|
                 AFL_CONTEXTCURRENT|AFL_INITIALISED|AFL_HAVE32FPPB|
@@ -468,7 +473,50 @@ static class Oal final :
     } // Zero stereo sources? Failed because no mono sources
     else if(!uiMaxStereoSources)
       XC("No stereo source support on this device!", "Device", strPlayback);
-    // Show change in state
+    // Check playback system event capabilities
+    struct EventCapItem { const ALenum eEventType, eDeviceType;
+                          const OalFlagsConst &ofcFlag; };
+    for(const EventCapItem &eciItem : array<EventCapItem, 6>{{
+      { ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT, ALC_PLAYBACK_DEVICE_SOFT,
+        AFL_HAVESEPBDDC },
+      { ALC_EVENT_TYPE_DEVICE_ADDED_SOFT,           ALC_PLAYBACK_DEVICE_SOFT,
+        AFL_HAVESEPBDA },
+      { ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT,         ALC_PLAYBACK_DEVICE_SOFT,
+        AFL_HAVESEPBDR },
+      { ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT, ALC_CAPTURE_DEVICE_SOFT,
+        AFL_HAVESECADDC },
+      { ALC_EVENT_TYPE_DEVICE_ADDED_SOFT,           ALC_CAPTURE_DEVICE_SOFT,
+        AFL_HAVESECADA },
+      { ALC_EVENT_TYPE_DEVICE_REMOVED_SOFT,         ALC_CAPTURE_DEVICE_SOFT,
+        AFL_HAVESECADR }
+    }})
+    { // Do the test and get result
+      switch(const ALenum eResult =
+        IsEventSupported(eciItem.eEventType, eciItem.eDeviceType))
+      { // Event is supported?
+        case ALC_EVENT_SUPPORTED_SOFT:
+          // Enable system event
+          SetEventState(eciItem.eEventType, AL_TRUE);
+          // Set capability
+          FlagSet(eciItem.ofcFlag);
+          // Done
+          break;
+        // Event is not supported?
+        case ALC_EVENT_NOT_SUPPORTED_SOFT:
+          // Disable system event
+          SetEventState(eciItem.eEventType, AL_FALSE);
+          // Clear capability
+          FlagClear(eciItem.ofcFlag);
+          // Done
+          break;
+        // Invalid result
+        default: XC("Internal error: Invalid AL event query result!",
+                    "Flag",       eciItem.ofcFlag,
+                    "EventType",  eciItem.eEventType,
+                    "DeviceType", eciItem.eDeviceType,
+                    "Result",     eResult);
+      }
+    } // Show change in state
     cLog->LogInfoExSafe(
       "OAL version $ initialised with capabilities 0x$$...\n"
       "- Device: $.",
@@ -492,10 +540,19 @@ static class Oal final :
       "- Maximum mono sources: $.\n"
       "- Maximum stereo sources: $.\n"
       "- Have ext.device enumerator: $.\n"
+      "- Playback events: !$ +$ -$.\n"
+      "- Capture events: !$ +$ -$.\n"
       "- Extensions count: $.",
       StrFromBoolTF(FlagIsSet(AFL_HRTF)), StrFromBoolTF(Have32FPPB()),
       uiMaxMonoSources, uiMaxStereoSources,
-      StrFromBoolTF(FlagIsSet(AFL_HAVEENUMEXT)), tlExtensions.size());
+      StrFromBoolTF(FlagIsSet(AFL_HAVEENUMEXT)),
+      StrFromBoolTF(FlagIsSet(AFL_HAVESEPBDDC)),
+      StrFromBoolTF(FlagIsSet(AFL_HAVESEPBDA)),
+      StrFromBoolTF(FlagIsSet(AFL_HAVESEPBDR)),
+      StrFromBoolTF(FlagIsSet(AFL_HAVESECADDC)),
+      StrFromBoolTF(FlagIsSet(AFL_HAVESECADA)),
+      StrFromBoolTF(FlagIsSet(AFL_HAVESECADR)),
+      tlExtensions.size());
     // Log extensions if debug is enabled
     for(const Pair &pExt : mExts)
       cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",

@@ -541,7 +541,7 @@ static class Display final :
     cGlFW->WinRestore();
     // Get optimal window dimensions based on desktop dimensions and Set the
     // new window size and then use the coord translation function to calculate
-    // optimal co-ordinates and dimensions for window and update window position
+    // optimal co-ordinates and dimensions for window and update window pos.
     const DimInt diSize{ TranslateUserSize() };
     cGlFW->WinSetSize(diSize);
     cGlFW->WinSetPos(TranslateUserCoords(diSize));

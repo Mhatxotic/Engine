@@ -13,7 +13,6 @@
 #include "pixmod.hpp"                  // Module information class
 #include "pixmap.hpp"                  // File mapping class
 #include "pixpip.hpp"                  // Process output piping class
-/* -- Includes ------------------------------------------------------------- */
 /* == System intialisation helper ========================================== **
 ** ######################################################################### **
 ** ## Because we want to try and statically init const data as much as    ## **
