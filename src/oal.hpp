@@ -357,7 +357,7 @@ static class Oal final :
   }
   /* -- Set system event callback ------------------------------------------ */
   void SetEventCallback(const ALCEVENTPROCTYPESOFT cbProc, void*const vpParam)
-    { alcEventCallbackSOFT(cbProc, vpParam); };
+    { alcEventCallbackSOFT(cbProc, vpParam); }
   /* -- Enable or disable system events ------------------------------------ */
   ALenum SetEventState(const ALCenum eEvent, const ALCboolean bEnabled)
     { return alcEventControlSOFT(1, &eEvent, bEnabled); }

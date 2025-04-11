@@ -14,19 +14,6 @@ namespace IUtil {                      // Start of private module namespace
 using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Manual memory allocation --------------------------------------------- */
-template<typename AnyType,typename IntType>
-  static AnyType *UtilMemAlloc(const IntType itBytes)
-    { return reinterpret_cast<AnyType*>
-        (malloc(static_cast<size_t>(itBytes))); }
-template<typename AnyType,typename IntType>
-  static AnyType *UtilMemReAlloc(AnyType*const atPtr, const IntType itBytes)
-    { return reinterpret_cast<AnyType*>
-        (realloc(reinterpret_cast<void*>(atPtr),
-                 static_cast<size_t>(itBytes))); }
-template<typename AnyType>
-  static void UtilMemFree(AnyType*const atPtr)
-    { free(reinterpret_cast<void*>(atPtr)); }
 /* == Number is divisible by specified number ============================== */
 static bool UtilIsDivisible(const double dNumber)
   { double dDummy; return modf(dNumber, &dDummy) == 0; }

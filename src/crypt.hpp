@@ -631,14 +631,14 @@ static class Crypt final :
   const StrVStrVMap svsvmEnt;          // Html entity decoding lookup table
   /* ----------------------------------------------------------------------- */
   static void *OSSLAlloc(size_t stSize, const char*const, const int)
-    { return UtilMemAlloc<void>(stSize); }
+    { return StdAlloc<void>(stSize); }
   /* ----------------------------------------------------------------------- */
   static void *OSSLReAlloc(void*const vpPtr, size_t stSize,
     const char*const, const int)
-      { return UtilMemReAlloc(vpPtr, stSize); }
+      { return StdReAlloc(vpPtr, stSize); }
   /* ----------------------------------------------------------------------- */
   static void OSSLFree(void*const vpPtr, const char*const, const int)
-    { UtilMemFree(vpPtr); }
+    { StdFree(vpPtr); }
   /* -- Private keys ----------------------------------------------- */ public:
   static constexpr const size_t
     stPkKeyCount   = 4,                // Number of quads in key (256bits)

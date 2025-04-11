@@ -218,7 +218,7 @@ class SysCore :
                            (tmsData.tms_utime - ctProcUser);
       // Divide by total cpu time
       cpuUData.dProcess /= (cProcNow - ctProc);
-      cpuUData.dProcess /= thread::hardware_concurrency();
+      cpuUData.dProcess /= StdThreadMax();
       cpuUData.dProcess *= 100;
       // Update times
       ctProc = cProcNow, ctProcSys = tmsData.tms_stime,
@@ -403,7 +403,7 @@ class SysCore :
           if(strStepping.empty()) strStepping = cCommon->Zero();
           // Make processor id so it is consistent with the other platforms
           // Return strings
-          return { thread::hardware_concurrency(),
+          return { StdThreadMax(),
                    StrToNum<unsigned int>(strSpeed),
                    StrToNum<unsigned int>(strFamily),
                    StrToNum<unsigned int>(strModel),
@@ -418,7 +418,7 @@ class SysCore :
     else cLog->LogWarningExSafe("Could not open cpu information file: $!",
       StrFromErrNo());
     // Return default data we could not read
-    return { thread::hardware_concurrency(), 0, 0, 0, 0, cCommon->Unspec() };
+    return { StdThreadMax(), 0, 0, 0, 0, cCommon->Unspec() };
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning(void) const { return false; }

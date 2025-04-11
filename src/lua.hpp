@@ -421,9 +421,9 @@ static class Lua final :
   static void *LuaDefaultAllocator(void*const, void*const vpAddr,
     size_t, size_t stSize)
   { // (Re)allocate if memory needed and return
-    if(stSize) return UtilMemReAlloc<void>(vpAddr, stSize);
+    if(stSize) return StdReAlloc<void>(vpAddr, stSize);
     // Zero for free memory
-    UtilMemFree(vpAddr);
+    StdFree(vpAddr);
     // Return nothing
     return nullptr;
   }

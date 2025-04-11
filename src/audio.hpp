@@ -17,8 +17,8 @@ using namespace ILuaFunc::P;           using namespace IOal::P;
 using namespace ISample::P;            using namespace ISource::P;
 using namespace IStd::P;               using namespace IStream::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IThread::P;            using namespace ITimer::P;
-using namespace IVideo::P;             using namespace Lib::OpenAL::Types;
+using namespace IThread::P;            using namespace IVideo::P;
+using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= */
@@ -75,6 +75,9 @@ static class Audio final :             // Audio manager class
     ThreadDeInit();
     cLog->LogDebugSafe("Audio monitoring thread de-initialised.");
   }
+  /* -- Reset timer interval ----------------------------------------------- */
+  void ResetCheckTime(void)
+    { tpNextCheck = cmHiRes.GetTime() + cdCheckRate.load(); }
   /* -- ReInit requested --------------------------------------------------- */
   void OnReInit(const EvtMainEvent&)
   { // Capture exceptions
@@ -116,9 +119,6 @@ static class Audio final :             // Audio manager class
     } // Remove re-initialisation flag
     cOal->FlagClear(AFL_REINIT);
   }
-  /* -- Reset timer interval ----------------------------------------------- */
-  void ResetCheckTime(void)
-    { tpNextCheck = cmHiRes.GetTime() + cdCheckRate.load(); }
   /* -- Thread main function with system events support -------------------- */
   int AudioThreadMainSysEvents(Thread &) try
   { // Loop forever until thread exit signalled.
@@ -126,7 +126,7 @@ static class Audio final :             // Audio manager class
     { // Manage stream classes
       StreamManage();
       // Suspend thread for the user requested time
-      cTimer->TimerSuspend(cdThreadDelay);
+      StdSuspend(cdThreadDelay);
     } // Terminate thread
     return 1;
   } // exception occured in this thread
@@ -204,7 +204,7 @@ static class Audio final :             // Audio manager class
   { // Enumerate...
     for(ResetCheckTime();              // Reset device list check time
         ThreadShouldNotExit();         // Enumerate until thread exit signalled
-        cTimer->TimerSuspend(cdThreadDelay)) // Suspend thread pecified time
+        StdSuspend(cdThreadDelay))     // Suspend thread pecified time
     { // Manage all streams audio.
       StreamManage();
       // Verify the hardware setup and reset if there are any descreprencies.
@@ -212,7 +212,7 @@ static class Audio final :             // Audio manager class
       if(Verify()) continue;
       // Put in infinite loop and wait for the reinit function to request
       // termination of this thread
-      while(ThreadShouldNotExit()) cTimer->TimerSuspend(cdDiscWait);
+      while(ThreadShouldNotExit()) StdSuspend(cdDiscWait);
       // Thread terminate request recieved, now break the loop.
       break;
     } // Terminate thread
@@ -322,7 +322,7 @@ static class Audio final :             // Audio manager class
     // Clear recording devices list
     dlCTDevices.clear();
     // Same rule applies, try 3 times...
-    for(size_t stIndex = 0; stIndex < 3; ++stIndex, cTimer->TimerSuspend())
+    for(size_t stIndex = 0; stIndex < 3; ++stIndex, StdSuspend())
     { // Grab list of capture devices and break if succeeded
       cpList = cOal->GetNCString(ALC_CAPTURE_DEVICE_SPECIFIER);
       if(cpList) break;
@@ -359,7 +359,7 @@ static class Audio final :             // Audio manager class
     // For some reason, this call is sometimes failing, probably because
     // another process is enumerating the list, so we'll do a retry loop.
     // Try to grab list of playback devices three times before failing.
-    for(size_t stIndex = 0; stIndex < 3; ++stIndex, cTimer->TimerSuspend())
+    for(size_t stIndex = 0; stIndex < 3; ++stIndex, StdSuspend())
     { // Get list of devices and break if succeeded
       if(const char *cpList = cOal->GetNCString(cOal->eQuery))
       { // For each playback device
@@ -381,7 +381,7 @@ static class Audio final :             // Audio manager class
     } // Problems, problems
     cLog->LogErrorSafe("Audio couldn't access playback devices list.");
   }
-  /* -- Set distance model ----------------------------------------- */ public:
+  /* -- Set distance model ------------------------------------------------- */
   void SetDistanceModel(const ALenum eModel) const
     { AL(cOal->SetDistanceModel(eModel),
         "Failed to set audio distance model!", "Model", eModel); }
@@ -496,7 +496,6 @@ static class Audio final :             // Audio manager class
       { EMC_AUD_PDEVICE_UPDATED, bind(&Audio::OnPbkDeviceUpdated, this, _1) },
       { EMC_AUD_CDEVICE_UPDATED, bind(&Audio::OnCapDeviceUpdated, this, _1) }
     },
-    cdCheckRate{ seconds{ 0 } },       // Initialise thread check time
     cdDiscWait{ milliseconds{ 100 } }, // Initialise discrepency sleep time
     ctfThSysEvts{ bind(&Audio::AudioThreadMainSysEvents, this, _1) },
     ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) },

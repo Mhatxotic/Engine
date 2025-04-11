@@ -704,8 +704,8 @@ class SysCore :
     // Check processor name is specified
     if(strProcessorName.empty()) strProcessorName = strVendorId;
     // Return default data we could not read
-    return { thread::hardware_concurrency(), uiSpeed, uiFamily, uiModel,
-               uiStepping, StdMove(strProcessorName) };
+    return { StdThreadMax(), uiSpeed, uiFamily, uiModel, uiStepping,
+      StdMove(strProcessorName) };
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning(void) const
@@ -721,8 +721,7 @@ class SysCore :
     return (kipInfo.kp_proc.p_flag & P_TRACED) != 0;
   }
   /* -- Get process affinity masks ----------------------------------------- */
-  uint64_t GetAffinity(const bool) const
-    { return Flag(thread::hardware_concurrency()); }
+  uint64_t GetAffinity(const bool) const { return Flag(StdThreadMax()); }
   /* ----------------------------------------------------------------------- */
   int GetPriority(void) const
   { // Get priority value and throw if failed

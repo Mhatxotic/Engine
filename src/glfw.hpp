@@ -33,13 +33,12 @@ static class GlFW final :              // Root engine class
   bool             bRawMouseSupported; // Is raw mouse motion supported
   /* -- Custom allocator --------------------------------------------------- */
   static void *GlFWAlloc(size_t stSize, void*const)
-    { return UtilMemAlloc<void>(stSize); }
+    { return StdAlloc<void>(stSize); }
   /* -- Custom reallocator ------------------------------------------------- */
   static void *GlFWReAlloc(void*const vpPtr, size_t stSize, void*const)
-    { return UtilMemReAlloc(vpPtr, stSize); }
+    { return StdReAlloc(vpPtr, stSize); }
   /* -- Custom free -------------------------------------------------------- */
-  static void GlFWFree(void*const vpPtr, void*const)
-    { UtilMemFree(vpPtr); }
+  static void GlFWFree(void*const vpPtr, void*const) { StdFree(vpPtr); }
   /* -- Error handler prototype (full body at bottom) ---------------------- */
   static void ErrorHandler(int, const char*const);
   /* -- Error handler converted to thiscall -------------------------------- */

@@ -231,17 +231,17 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
              << " [" << tString.length() << '/'
              << tString.capacity() << "].";
   }
-  /* -- Process std::string lvalue ----------------------------------------- */
+  /* -- Process STL string lvalue ------------------------------------------ */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const string &strV,
       const VarArgs &...vaVars)
         { Str(cpName, "Str", strV); Param(vaVars...); }
-  /* -- Process std::wstring lvalue ---------------------------------------- */
+  /* -- Process STL wstring lvalue ----------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const wstring &wstrV,
       const VarArgs &...vaVars)
         { Str(cpName, "WStr", wstrV); Param(vaVars...); }
-  /* -- Process std::string_view ------------------------------------------- */
+  /* -- Process STL string_view -------------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const string_view &strvV,
       const VarArgs &...vaVars)

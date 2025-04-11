@@ -94,11 +94,11 @@ static class FreeType final :          // Members initially private
   /* ----------------------------------------------------------------------- */
   FreeType(void) : ftlContext(nullptr), ftmrAlloc{ this,
     [](FT_Memory, long lBytes)->void*
-      { return UtilMemAlloc<void>(lBytes); },
+      { return StdAlloc<void>(lBytes); },
     [](FT_Memory, void*const vpAddress)
-      { UtilMemFree(vpAddress); },
+      { StdFree(vpAddress); },
     [](FT_Memory, long, long lBytes, void*const vpAddress)->void*
-      { return UtilMemReAlloc(vpAddress, lBytes); }
+      { return StdReAlloc(vpAddress, lBytes); }
   } { }
   /* ----------------------------------------------------------------------- */
   DTORHELPER(~FreeType, DoDeInit())

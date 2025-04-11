@@ -68,7 +68,6 @@ namespace E {                          // Put everything in engine namespace
 #include "asset.hpp"                   // Asset handling class header
 #include "json.hpp"                    // Json handling class header
 #include "file.hpp"                    // FStream+FileMap class header
-#include "timer.hpp"                   // Timer class header
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // If using Windows?
 # pragma warning(disable: 4505)        // Disable unreferenced function (lots!)
@@ -83,10 +82,9 @@ using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IMemory::P;
 using namespace IPSplit::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITimer::P;
-using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;              using namespace IUuId::P;
-using namespace IParser::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IUuId::P;              using namespace IParser::P;
 /* ========================================================================= */
 #define STANDARD   "c++20"             // Current compilation standard used
 #define ENGINENAME "engine"            // Name of engine 'engine'
@@ -3905,8 +3903,7 @@ int CppCheck(void)
 #if defined(WINDOWS)
 void GotNewBuildExecutable(const string &strOldExe, const string &strNewExe)
 { // Wait for the compiled file to be readable and writable just incase
-  while(!DirCheckFileAccess(strNewExe, 6))
-    cTimer->TimerSuspend(milliseconds{ 100 });
+  while(!DirCheckFileAccess(strNewExe, 6)) StdSuspend(milliseconds{ 100 });
   // Open the new executable and if succeeded?
   if(FStream fsNewExe{ strNewExe, FM_R_B })
   { // Read the new executable and its checksum
@@ -3944,10 +3941,10 @@ void GotNewBuildExecutable(const string &strOldExe, const string &strNewExe)
       if(cSystem->ENGExt() == ".x")
       { // Unlink the new executable
         while(!DirFileUnlink(strOldExe))
-          cTimer->TimerSuspend(milliseconds{ 100 });
+          StdSuspend(milliseconds{ 100 });
         // Move the executable over
         while(!DirFileRename(strNewExe, strOldExe))
-          cTimer->TimerSuspend(milliseconds{ 100 });
+          StdSuspend(milliseconds{ 100 });
         // Exit as normal if we were asked to or just return
         if(cCmdLine->GetTotalCArgs() >= 2 &&
           !wcscmp(cCmdLine->GetCArgs()[1], L"!")) exit(0);

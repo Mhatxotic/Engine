@@ -22,7 +22,7 @@ template<typename Int>class IntPair
   template<typename RInt=Int>RInt IPGetTwo(void) const
     { return static_cast<RInt>(i2); }
   template<typename RInt,class RBase=IntPair<RInt>>RBase IPGet(void) const
-    { return { IPGetOne<RInt>(), IPGetTwo<RInt>() }; };
+    { return { IPGetOne<RInt>(), IPGetTwo<RInt>() }; }
   template<typename RInt=Int>RInt IPDefGet(void) const
     { return static_cast<RInt>(iD0); }
   /* -- Get reference ------------------------------------------------------ */

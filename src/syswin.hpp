@@ -544,7 +544,7 @@ class SysCore :
     // Set process cpu usage
     cpuUData.dProcess =
       UtilMakePercentage(static_cast<double>(qcpuProcTot) / qcpuPTime,
-        ::std::thread::hardware_concurrency());
+        StdThreadMax());
   }
   /* -- Seek to position in specified handle ------------------------------- */
   template<typename IntType>
@@ -843,7 +843,7 @@ class SysCore :
         } // Invalid syntax
         else uiFamily = uiModel = uiStepping = 0;
         // Return data
-        return { thread::hardware_concurrency(), srSub.Query<DWORD>("~MHz"),
+        return { StdThreadMax(), srSub.Query<DWORD>("~MHz"),
                  uiFamily, uiModel, uiStepping, strName };
       } // Log that we couldn't open the subkey
       else cLog->LogWarningExSafe("System could not open registry key $ "
@@ -852,7 +852,7 @@ class SysCore :
     else cLog->LogWarningExSafe("System could not open registry key $! $",
       strK, SysError());
     // Return default data we could not read
-    return { thread::hardware_concurrency(), 0, 0, 0, 0, cCommon->Unspec() };
+    return { StdThreadMax(), 0, 0, 0, 0, cCommon->Unspec() };
   }
   /* ----------------------------------------------------------------------- */
   void UpdateMemoryUsageData(void)

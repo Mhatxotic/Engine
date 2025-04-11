@@ -44,7 +44,7 @@ class GlFWRes                          // Members initially private
   int Refresh(void) const { return vmData.refreshRate; }
   /* -- Are two resolutions the same? -------------------------------------- */
   bool Same(const GLFWvidmode &vmOther) const
-    { return !memcmp(&vmData, &vmOther, sizeof(vmData)); }
+    { return !StdCompare(&vmData, &vmOther, sizeof(vmData)); }
   /* -- Constructor -------------------------------------------------------- */
   GlFWRes(const int iId, const GLFWvidmode &vmD) :
     /* -- Initialisers ----------------------------------------------------- */

@@ -102,7 +102,7 @@ class Pack :
        rUsed.CoordGetY() >= iFreeV || iUsedV <= rFree.CoordGetY())
       return false;
     // DANGER! There must be at least four reserved vector nodes or a
-    // push_back() could trigger a realloc() being a std::vector and &rFree
+    // push_back() could trigger a realloc() being a STL vector and &rFree
     // would in succession point to freed memory and all havoc breaks lose in
     // the engine! So if there is not enough room for four more push_back()'s?
     if(rlFree.capacity() - rlFree.size() < 4)
