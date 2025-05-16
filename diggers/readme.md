@@ -59,14 +59,15 @@ Diggers is a completely playable game from start to finish but will always be a 
 You can always get the latest version of this project [here](https://github.com/Mhatxotic/Engine/releases).
 
 ## [Running](#running)…
+
 ### Windows version…
-Running the Windows version should be trivial.
+Running the Windows version should be trivial. Just double click on the executable file. All the files required for the game are stored inside the executable. Persistent data is stored in the directory where the executable is or if that directory is not writable then at `C:\Users\<Username>\AppData\Roaming\Mhatxotic Design\Diggers`.
 
 ### Linux version…
-The Linux version is linked against external packages that you need to install for the game to work. These packages can be installed with `sudo apt-get install libglfw3 libopenal1`.
+The Linux version is linked against an external package that you need to install for the game to work. These packages can be installed with `sudo apt-get install libglfw3 libopenal1`. You can read about the libraries in the [readme.md](readme.md) file. Simply run the game with `./Diggers`. All the files required for the game are stored inside the executable. Persistent data is stored in the directory where the executable is or if that directory is now writable then at `~/.local/Mhatxotic Design/Diggers`.
 
 ### MacOS version…
-The MacOS version is self-contained and only basic stdlibs are required to run which should already be included by default in any system. However, opening the disk image will require you to bypass Gatekeeper as I do not wish to sign it with personal information and have therefore used a self-signed certificate instead. To bypass Gatekeeper, simply run the `Terminal.app` and `chdir` to the directory where you downloaded the disk image with `chdir ~/Downloads` and then execute the following command to remove the quarantine flag from the disk image archive with `xattr -d com.apple.quarantine Diggers-R<x>-MacOS-Universal.dmg` where `<x>` is the version of this application. You should then be able to mount the disk image and run the game without any issue.
+Opening the `.dmg` file disk image will require you to bypass Gatekeeper. To bypass Gatekeeper, simply run the `Terminal.app` and `chdir` to the directory where you downloaded the disk image with `chdir ~/Downloads` and then execute the following command to remove the quarantine flag from the disk image archive with `xattr -d com.apple.quarantine Diggers-R<x>-MacOS-Universal.dmg` where `<x>` is the version of this application. You should then be able to mount the disk image and run the game without any issue. All the files required for the game are stored inside the `Diggers.app/Contents/Resources/diggers.adb` archive. Persistent data is stored at `~/Library/Application Support/Mhatxotic Design/Diggers`.
 
 ## [About](#about)…
 Diggers is a puzzle video game for the Amiga CD32 in which the player takes control of a mining team excavating a planet for precious minerals. It was later released for the Amiga 1200 and DOS. Diggers was bundled with the CD32 at launch, along with a 2D platformer entitled Oscar on the same CD. A sequel, Diggers 2: Extractors, was released for DOS in 1995.
