@@ -94,9 +94,8 @@ static FileMap AssetExtract(const string &strFile)
       // Load the file from archives
       if(FileMap fmFile{ ArchiveExtract(strFile) }) return fmFile;
       XCL("Failed to load resource on disk or archives!",
-        "File",     strFile,
-        "Count",    cArchives->CollectorCount(),
-        "Archives", ArchiveGetNames());
+        "File",  strFile,                     "Directory", DirGetCWD(),
+        "Count", cArchives->CollectorCount(), "Archives",  ArchiveGetNames());
     // Internal files from archives and then on disk files?
     case FO_INTEXT:
       // If we have archives?
@@ -105,18 +104,19 @@ static FileMap AssetExtract(const string &strFile)
         if(FileMap fmFile{ ArchiveExtract(strFile) }) return fmFile;
         // Load the file from disk if it exists try to load it
         if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
-        XC("Failed to find resource in archives or on disk!", "File", strFile);
+        XC("Failed to find resource in archives or on disk!",
+          "File", strFile, "Directory", DirGetCWD());
       } // Load the file from disk if it exists try to load it
       if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
       XCL("Failed to load resource in archives or on disk!",
-        "File",     strFile,
-        "Count",    cArchives->CollectorCount(),
-        "Archives", ArchiveGetNames());
+        "File",  strFile,                     "Directory", DirGetCWD(),
+        "Count", cArchives->CollectorCount(), "Archives",  ArchiveGetNames());
     // On disk files only?
     case FO_EXTONLY:
       // Load the file from disk if it exists else throw and exception
       if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
-      XC("Failed to find resource on disk!", "File", strFile);
+      XC("Failed to find resource on disk!",
+        "File", strFile, "Directory", DirGetCWD());
     // Anything else is a failure
     default: XC("No route to resource!", "File", strFile);
   }
