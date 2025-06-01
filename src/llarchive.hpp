@@ -66,21 +66,22 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroy<Archive>(lS, 1, *cArchives))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Dir, 2,
   const AgArchive aArchive{lS, 1};
-  const AgSizeTLGE aIndex{lS, 2, 0, aArchive().GetDirList().size()};
-  const StrUIntMapConstIt &suimciDir = aArchive().GetDir(aIndex);
+  const AgSizeTLGE aIndex{lS, 2, 0, aArchive().ArchiveGetDirList().size()};
+  const StrUIntMapConstIt &suimciDir = aArchive().ArchiveGetDir(aIndex);
   LuaUtilPushVar(lS, suimciDir->first, suimciDir->second))
 /* ========================================================================= */
 // $ Archive:Dirs
 // < Directories:integer=Total number of directories inside the archive
 // ? Returns total number of the directories inside the archive.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Dirs, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().GetDirList().size()))
+LLFUNC(Dirs, 1,
+  LuaUtilPushVar(lS, AgArchive{lS, 1}().ArchiveGetDirList().size()))
 /* ========================================================================= */
 // $ Archive:DirList
 // < Directories:Table=A list of directories inside the archive
 // ? Returns all the directories inside the archive.
 /* ------------------------------------------------------------------------- */
-LLFUNC(DirList, 1, LuaUtilToTable(lS, AgArchive{lS, 1}().GetDirList()))
+LLFUNC(DirList, 1, LuaUtilToTable(lS, AgArchive{lS, 1}().ArchiveGetDirList()))
 /* ========================================================================= */
 // $ Archive:File
 // < Total:integer=Zero-index id of the file
@@ -90,21 +91,23 @@ LLFUNC(DirList, 1, LuaUtilToTable(lS, AgArchive{lS, 1}().GetDirList()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(File, 2,
   const AgArchive aArchive{lS, 1};
-  const AgSizeTLGE aIndex{lS, 2, 0, aArchive().GetFileList().size()};
-  const StrUIntMapConstIt &suimciFile = aArchive().GetFile(aIndex);
+  const AgSizeTLGE aIndex{lS, 2, 0, aArchive().ArchiveGetFileList().size()};
+  const StrUIntMapConstIt &suimciFile = aArchive().ArchiveGetFile(aIndex);
   LuaUtilPushVar(lS, suimciFile->first, suimciFile->second))
 /* ========================================================================= */
 // $ Archive:Files
 // < Files:integer=Total number of files inside the archive
 // ? Returns total number of the files inside the archive.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Files, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().GetFileList().size()))
+LLFUNC(Files, 1,
+  LuaUtilPushVar(lS, AgArchive{lS, 1}().ArchiveGetFileList().size()))
 /* ========================================================================= */
 // $ Archive:FileList
 // < Directories:Table=A list of files inside the archive
 // ? Returns all the files inside the archive.
 /* ------------------------------------------------------------------------- */
-LLFUNC(FileList, 1, LuaUtilToTable(lS, AgArchive{lS, 1}().GetFileList()))
+LLFUNC(FileList, 1,
+  LuaUtilToTable(lS, AgArchive{lS, 1}().ArchiveGetFileList()))
 /* ========================================================================= */
 // $ Archive:Id
 // < Id:integer=The id number of the Archive object.
@@ -125,14 +128,14 @@ LLFUNC(Name, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().IdentGet()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Size, 1,
   const AgArchive aArchive{lS, 1};
-  const AgSizeTLGE aIndex{lS, 2, 0, aArchive().GetTotal()};
-  LuaUtilPushVar(lS, aArchive().GetSize(aIndex)))
+  const AgSizeTLGE aIndex{lS, 2, 0, aArchive().ArchiveGetTotal()};
+  LuaUtilPushVar(lS, aArchive().ArchiveGetSize(aIndex)))
 /* ========================================================================= */
 // $ Archive:Total
 // < Total:integer=Total number of files and directories in archive
 // ? Returns the total number of files and directories in archive
 /* ------------------------------------------------------------------------- */
-LLFUNC(Total, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().GetTotal()))
+LLFUNC(Total, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().ArchiveGetTotal()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Archive:* member functions structure                                ## **

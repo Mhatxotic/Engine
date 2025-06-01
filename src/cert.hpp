@@ -10,10 +10,10 @@
 namespace ICert {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IClock::P;
-using namespace ICVarDef::P;           using namespace IError::P;
-using namespace IFileMap::P;           using namespace ILog::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace Lib::OS::OpenSSL;
+using namespace ICommon::P;            using namespace ICVarDef::P;
+using namespace IError::P;             using namespace IFileMap::P;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -59,8 +59,7 @@ class Certs                            // Certificates store
   template<class SyncMethod>void CertsLoad(SyncMethod &smClass,
     const string &strD, const string &strF) try
   { // Load the certificate
-    const FileMap fmCert{
-      AssetExtract(StrAppend(strD, cCommon->CFSlash(), strF)) };
+    const FileMap fmCert{ AssetExtract(StrAppend(strD, '/', strF)) };
     // Get pointer
     const unsigned char*ucpPtr = fmCert.MemPtr<unsigned char>();
     // Load the raw certificate and ig it succeeded?

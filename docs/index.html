@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.6.1.34 -->
-<!-- Automatically built at Sun Jun 01 15:08:16 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.6.1.34 -->
+<!-- Reference for the Mhatxotic Engine API version 25.6.30.8 -->
+<!-- Automatically built at Tue Jul 01 16:31:34 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.6.30.8 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.6.1.34">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.6.30.8">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.6.1.34">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.6.30.8">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.6.1.34">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.6.30.8">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.6.1.34 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.6.30.8 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.6.1.34 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.6.30.8 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.6.1.34 API reference</H1>
+	<H1>Mhatxotic Engine 25.6.30.8 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 847 functions (405 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 209 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 847 functions (405 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 210 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1793,14 +1793,13 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(209 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(210 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
 								<OL>
 									<LI><A href="#cv.app_author">app_author</A></LI>
 									<LI><A href="#cv.app_cflags">app_cflags</A></LI>
-									<LI><A href="#cv.app_clearmutex">app_clearmutex</A></LI>
 									<LI><A href="#cv.app_cmdline">app_cmdline</A></LI>
 									<LI><A href="#cv.app_config">app_config</A></LI>
 									<LI><A href="#cv.app_copyright">app_copyright</A></LI>
@@ -1821,6 +1820,7 @@
 									<LI><A href="#cv.ast_lzmabuffer">ast_lzmabuffer</A></LI>
 									<LI><A href="#cv.ast_modbundle">ast_modbundle</A></LI>
 									<LI><A href="#cv.ast_pipebuffer">ast_pipebuffer</A></LI>
+									<LI><A href="#cv.ast_safetymode">ast_safetymode</A></LI>
 									<LI><A href="#cv.aud_check">aud_check</A></LI>
 									<LI><A href="#cv.aud_delay">aud_delay</A></LI>
 									<LI><A href="#cv.aud_fmvvol">aud_fmvvol</A></LI>
@@ -1832,6 +1832,7 @@
 									<LI><A href="#cv.aud_strbuffer">aud_strbuffer</A></LI>
 									<LI><A href="#cv.aud_strvol">aud_strvol</A></LI>
 									<LI><A href="#cv.aud_vol">aud_vol</A></LI>
+									<LI><A href="#cv.com_flags">com_flags</A></LI>
 									<LI><A href="#cv.con_autocomplete">con_autocomplete</A></LI>
 									<LI><A href="#cv.con_autocopycvar">con_autocopycvar</A></LI>
 									<LI><A href="#cv.con_autoscroll">con_autoscroll</A></LI>
@@ -10451,7 +10452,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Class</U> <I>(Variable)</I> = The Variable object created.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Registers the specified cvar name with the specified default value&#x2e; The default value is ignored if there is already a saved value in the Sql cvars database&#x2e; If the saved value is a corrupted encrypted value then the default is used&#x2e; If the cvar already exists then an exception is thrown so make sure you check for it first if do not expect this call to garauntee success&#x2e; Normally it is unless there is a memory allocation issue&#x2e; You can register an unlimited amount of variables&#x2e;<BR>See Variable&#x2e;Flags to see available flags&#x2e;<BR></PRE>
+		<PRE>Registers the specified cvar name with the specified default value&#x2e; The default value is ignored if there is already a saved value in the Sql cvars database&#x2e; If the saved value is a corrupted encrypted value then the default is used&#x2e; If the cvar already exists then an exception is thrown so make sure you check for it first if do not expect this call to garauntee success&#x2e; Normally it is unless there is a memory allocation issue&#x2e; The amount of cvars you can register is limited by the integral value of the &#x27;obj_cvarmax&#x27; cvar&#x2e; The syntax of the callback function is function&#x28;V&#x3a;string&#x29;&#x7b;return RR&#x3a;boolean&#x2c;RV&#x3a;string&#x7d; where &#x27;V&#x27; is the value string that was requested to be set&#x2e; If &#x27;RV&#x27; is not set then &#x27;RR&#x27; is whether to accept &#x28;true&#x29; or deny &#x28;false&#x29; the requested change to &#x27;V&#x27;&#x2c; otherwise&#x2c; if &#x27;RV&#x27; is set to a string then the actual cvar value is replaced by the &#x27;RV&#x27; string and &#x27;RR&#x27; refers to if the variable should be force committed to disk &#x28;true&#x29; or not &#x28;false&#x29;&#x2e; Note that variable values that are equal to the default value are not committed to the database&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Variable.ResetInt" style="display:none">
@@ -11148,167 +11149,167 @@
 	</DIV>
 	<DIV id="cc.con" style="display:none">
 		<H3>con</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Dump console information&#x2e; For reference only&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.conlog" style="display:none">
 		<H3>conlog</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Dumps the entire console backlog to log&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.cpu" style="display:none">
 		<H3>cpu</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Displays information about the processor and how the engine is using it&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.crash" style="display:none">
 		<H3>crash</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Simulates a crash by calling abort&#x28;&#x29; also creating a crash log&#x2e; Only used to test the crash handling routines&#x2e; All current unsaved changes will be permanently lost&#x2e; You have been warned&#x21; </PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.credits" style="display:none">
 		<H3>credits</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows information about all the contributing libraries to the engine&#x2e; Specifying the command without an id number shows the list of contributors&#x2e; Specify the id number to show information about that its accompanying license&#x2e; Id 0 is always information about the engine&#x2e; Data is statically stored and compressed using a &#x27;Codec&#x27; class object inside the executable&#x2e; The static compressed data is defined as code inside the &#x27;license&#x2e;hpp&#x27; header file and automatically generated by the Mhatxotic Engine Project Management Utility parsing all the &#x27;licenses&#x2f;&#x2a;&#x2e;txt&#x27; files&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.cvars" style="display:none">
 		<H3>cvars</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Disables all the user configurable variables&#x2e; You can add a &#x27;prefix&#x27; argument to match the first part of the variable&#x2e; Type the full variable name to show all the internal data about the variable&#x2e; Do be careful when using this command when sharing desktops as this reveal the value even if the variable is set to &#x27;confidential&#x27;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.cvclr" style="display:none">
 		<H3>cvclr</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Purges all currently unrecognised orphan cvars from the database&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.cvload" style="display:none">
 		<H3>cvload</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Replaces the current variable with values from the database&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.cvnpk" style="display:none">
 		<H3>cvnpk</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>This function creates a new private key for variables marked as encrypted using AES128&#x2e; This is not normally a destructive operation as all variables are marked to be recommited to the database so encrypted variables are re&#x2d;encrypted with the new private key on commit time&#x2e; If you use the private key for own purposes then all data using the old private key will 1destroy all encrypted data using it&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.cvpend" style="display:none">
 		<H3>cvpend</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Show pending variables&#x2e; These are variables that were committed to the database that have not been registered by LUA&#x2e; When a variable is unregistered then the variable is placed back in this pending list&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.cvsave" style="display:none">
 		<H3>cvsave</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Commit all unsaved variables to the SQLite database in volatile storage&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.dir" style="display:none">
 		<H3>dir</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all the files in the current or specified directory&#x2e; If the file is on disk then the file shows as &#x3c;DISK&#x3e; but if the file is from an archive that archive filename and its entry ID number is displayed instead&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.env" style="display:none">
 		<H3>env</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Show all operating system environment variables at process start&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.events" style="display:none">
 		<H3>events</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows the current event queue&#x2e; This should always be empty&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.fbos" style="display:none">
 		<H3>fbos</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created OpenGL frame buffer &#x27;Fbo&#x27; object classes created by LUA including classes used internally by the engine&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.files" style="display:none">
 		<H3>files</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;File&#x27; objects created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.find" style="display:none">
 		<H3>find</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Finds the specified text in the console log&#x2c; the log is scrolled to the position of the occurrence BEGINNING FROM the last log entry&#x2e; Repeat the same command to continue the search for the next occurrence&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.fonts" style="display:none">
 		<H3>fonts</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created OpenGL &#x27;Font&#x27; object classes created by LUA including classes internally used by the engine&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.ftfs" style="display:none">
 		<H3>ftfs</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created Freetype font &#x27;Ftf&#x27; object classes created by LUA including classes internally used by the engine&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.gpu" style="display:none">
 		<H3>gpu</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows live information about the OpenGL rendering context&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.images" style="display:none">
 		<H3>images</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;Image&#x27; object classes created by LUA including classes internally used by the engine&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.imgfmts" style="display:none">
 		<H3>imgfmts</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all the supported image codec formats supported by the engine&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.input" style="display:none">
 		<H3>input</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Displays live game controller information&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.jsons" style="display:none">
 		<H3>jsons</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;Json&#x27; object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lcalc" style="display:none">
 		<H3>lcalc</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Performs a simple calculation using LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lcmds" style="display:none">
 		<H3>lcmds</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;Command&#x27; object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lend" style="display:none">
 		<H3>lend</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Destroys the current sandbox and initialises a new one&#x2e; Note that there will be a delay if the &#x27;Core&#x2e;OnEnd&#x28;&#x29;&#x27; callback is used&#x2e; If the callback function used is blocking this command then using the command a second time will force destruction&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lexec" style="display:none">
 		<H3>lexec</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Executes the specified LUA command in the current sandbox&#x2e; You can also use the &#x27;return&#x27; prefix and the result will be shown when the command has finished executing&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lfuncs" style="display:none">
 		<H3>lfuncs</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;LuaFunc&#x27; object classes created by the engine&#x2e; These are for reference only and cannot be interacted with directly with LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lg" style="display:none">
 		<H3>lg</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Prints the entire listing of variables and functions in the LUA global registry index &#x28;otherwise known as the &#x27;_G&#x27; table&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lgc" style="display:none">
 		<H3>lgc</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Performs full garbage collection&#x2e; The amount of memory recovered is displayed in the command output&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.log" style="display:none">
 		<H3>log</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Dumps the entire engine log to console&#x2e; If the &#x27;log_file&#x27; cvar is changed then there will be no command output&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.logclr" style="display:none">
 		<H3>logclr</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Clears the entire backlog&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lpause" style="display:none">
@@ -11318,187 +11319,187 @@
 	</DIV>
 	<DIV id="cc.lreset" style="display:none">
 		<H3>lreset</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Performs an &#x27;lreset&#x27; destroying the current sandbox&#x2c; creates a new one and then re&#x2d;executes the starting script&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lresume" style="display:none">
 		<H3>lresume</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Resumes LUA sandbox execution after using &#x27;lpause&#x27; or after an error occurs&#x2e; Only errors from asynchronous events are usually recoverable&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lstack" style="display:none">
 		<H3>lstack</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all the variables and functions in the current LUA calling stack&#x2e;<BR>This should normally be empty and if it is not then there is an internal problem where it did not get cleaned up&#x2e; Please report this if so with reproduction steps if you can&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.lvars" style="display:none">
 		<H3>lvars</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;Variable&#x27; object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.masks" style="display:none">
 		<H3>masks</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;Mask&#x27; object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.mem" style="display:none">
 		<H3>mem</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows current memory information&#x2e; Memory used by LUA&#x2c; SQL&#x2c; the engine&#x2c; the GPU memory &#x28;with compatible nVidia or ATI&#x2f;AMD devices&#x29; and the operating system&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.mlist" style="display:none">
 		<H3>mlist</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all the detected monitors on the system&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.mods" style="display:none">
 		<H3>mods</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Show all the loaded modules by the engine and operating system at startup&#x2e; On Windows&#x2c; these are &#x27;&#x2e;dll&#x27; files&#x2c; &#x27;&#x2e;dylib&#x27; files on MacOS and &#x27;&#x2e;so&#x27; shared objects on Linux&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.objs" style="display:none">
 		<H3>objs</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows how many class objects are loaded into the engine&#x2e; You can use the &#x27;obj_&#x2a;&#x27; cvars to limit these values&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.oglext" style="display:none">
 		<H3>oglext</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Specify an OpenGL extension to test if that extension is supported by your rendering driver&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.oglfunc" style="display:none">
 		<H3>oglfunc</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Specify an OpenGL function to test if that function is supported by your rendering driver&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.palettes" style="display:none">
 		<H3>palettes</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;Palette&#x27; object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.pcmfmts" style="display:none">
 		<H3>pcmfmts</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all the supported audio codecs by the engine&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.pcms" style="display:none">
 		<H3>pcms</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;Pcm&#x27; audio PCM data object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.quit" style="display:none">
 		<H3>quit</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Performs an &#x27;lend&#x27; command and then asks the engine and process to terminate after sandbox destruction&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.restart" style="display:none">
 		<H3>restart</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Performs an &#x27;lend&#x27; command and then asks the engine and process to restart after sandbox destruction&#x2e; If you specify an argument &#x28;any argument&#x29; then the process is restarted WITHOUT the original command&#x2d;line arguments&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.samples" style="display:none">
 		<H3>samples</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;Sample&#x27; sound effect object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.shaders" style="display:none">
 		<H3>shaders</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created OpenGL &#x27;Shader&#x27; object classes internally used by the engine&#x2e; These are provided for reference only and never change&#x2c; nor can be interacted with by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.shot" style="display:none">
 		<H3>shot</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Takes a screenshot and saves it to disk&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.sockets" style="display:none">
 		<H3>sockets</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created network &#x27;Socket&#x27; object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.sockreset" style="display:none">
 		<H3>sockreset</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Tries to forcefully close all currently open socket connections&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.sources" style="display:none">
 		<H3>sources</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created audio &#x27;Source&#x27; object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.sqlcheck" style="display:none">
 		<H3>sqlcheck</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Checks the SQLite database to see if it is structured properly&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.sqldefrag" style="display:none">
 		<H3>sqldefrag</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Compacts the SQLite database reducing it&#x27;s size on disk&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.sqlend" style="display:none">
 		<H3>sqlend</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Ends the currently &#x27;in&#x2d;progress&#x27; SQL transaction&#x2e; Used only if for some reason SQL is stuck in one&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.sqlexec" style="display:none">
 		<H3>sqlexec</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Performs the desired SQL query on the SQLite database&#x2e; Theres is absolutely zero restriction to using this so use it at your own risk&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.stopall" style="display:none">
 		<H3>stopall</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Attempts to stop all currently playing &#x27;Sample&#x27; and &#x27;Stream&#x27; object classes&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.streams" style="display:none">
 		<H3>streams</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created audio &#x27;Stream&#x27; object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.system" style="display:none">
 		<H3>system</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Displays the currently detected operating system&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.textures" style="display:none">
 		<H3>textures</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created OpenGL &#x27;Texture&#x27; object classes created by LUA including classes internally used by the engine&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.threads" style="display:none">
 		<H3>threads</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created &#x27;Thread&#x27; object classes created by the engine&#x2e; These threads are not controllable by the guest and are here for reference only&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.time" style="display:none">
 		<H3>time</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Displays the current local and UTC time &#x28;if different&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.version" style="display:none">
 		<H3>version</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows the current engine version&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.videos" style="display:none">
 		<H3>videos</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all created motion &#x27;Video&#x27; object classes created by LUA&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.vmlist" style="display:none">
 		<H3>vmlist</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Shows all the supported desktop resolutions supported by the currently selected monitor&#x2e; You can specify an alternative monitor ID number to see which desktop resolutions ar suported by that monitor&#x2e; Use &#x27;mlist&#x27; to see the currently detected monitor list&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.vreset" style="display:none">
 		<H3>vreset</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Completely shuts down the rendering portion the engine and re&#x2d;initialises it&#x2e; There could be a short delay as textures are rebuilt and re&#x2d;uploaded to the OpenGL driver by the engine and the guest author &#x28;if used&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.wreset" style="display:none">
 		<H3>wreset</H3>
-		<PRE>No explanation yet&#x2e;<BR></PRE>
+		<PRE>Resets the window position and size to the specified values set by the currently set &#x27;win_width&#x27;&#x2c; &#x27;win_height&#x27;&#x2c; &#x27;win_posx&#x27; and &#x27;win_posy&#x27; cvars&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.app_author" style="display:none">
@@ -11509,11 +11510,6 @@
 	<DIV id="cv.app_cflags" style="display:none">
 		<H3>app_cflags</H3>
 		<PRE>Specifies how the host wants to be run with the following flags&#x2e;&#x2e;&#x2e;<BR>[0x1] CFL_TERMINAL &#x3d; Opens &#x28;Win32&#x29; or reuses &#x28;Unix&#x29; a console window&#x2e;<BR>[0x2] CFL_AUDIO    &#x3d; Initialises an OpenAL audio context and exposes API&#x2e;<BR>[0x4] CFL_VIDEO    &#x3d; Initialises an OpenGL context&#x2b;window and exposes API&#x2e;<BR></PRE>
-		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="cv.app_clearmutex" style="display:none">
-		<H3>app_clearmutex</H3>
-		<PRE>Asks the system to delete the global mutex in Linux and MacOS so the engine can startup&#x2e; You only need to do this if the engine crashes&#x2e; On Windows the mutex is freed on process termination so there is never any need to use this on Windows&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.app_cmdline" style="display:none">
@@ -11616,6 +11612,11 @@
 		<PRE>Specifies the size of the pipe buffer&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.ast_safetymode" style="display:none">
+		<H3>ast_safetymode</H3>
+		<PRE>Specifies the default file access safety mode&#x2e; Specify 0 to completely disable this feature&#x2c; 1 for very basic checks such as checking pathnames for invalid control characters&#x2c; too long pathnames&#x2c; or 2 &#x28;default&#x29; to fully check each path part which denies attempting to escape above the directory pointed by &#x27;ast_basedir&#x27;&#x2c; using directories &#x27;&#x2e;&#x27; and &#x27;&#x2e;&#x2e;&#x27;&#x2c; reserved Windows system device names and Windows drive letters are denied&#x2e;<BR>Note that &#x27;&#x2e;&#x27; is allowed with directory enumeration functions&#x2e; Non&#x2d;default settings are provided for troubleshooting purposes only&#x2e; If this setting is changed&#x2c; any file on the system that the calling user has access rights to can be accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.aud_check" style="display:none">
 		<H3>aud_check</H3>
 		<PRE>Specifies an interval &#x28;in number of milliseconds&#x29; of checking for audio device changes as OpenAL does not have an event interface for this&#x2e; This check is done in the audio manager thread&#x2e; If a change in the audio device list is detected then the audio is reset automatically&#x2c; as if the &#x27;areset&#x27; console command was used&#x2e;<BR></PRE>
@@ -11669,6 +11670,11 @@
 	<DIV id="cv.aud_vol" style="display:none">
 		<H3>aud_vol</H3>
 		<PRE>Specifies the global volume of all class types&#x2e; 0&#x2e;0 &#x28;mute&#x29; to 1&#x2e;0 &#x28;maximum volume&#x29;&#x2e; Setting a value too high may cause artifacts on older OS audio API&#x27;s&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.com_flags" style="display:none">
+		<H3>com_flags</H3>
+		<PRE>Specifies compatibility flags&#x2e; Great care is taken to make sure the engine works on any Ubuntu&#x2c; MacOS or Windows system&#x2c; when upgrading third&#x2d;party components&#x2c; problems may occur&#x2e; These work as temporary workarounds to make the engine work flawlessly on certain systems&#x2e; By default&#x2c; all flags are enabled by default but you can selectively disable them in order to to assist with troubleshooting&#x2e; The aim is to resolve all these issues so most of the time &#x27;com_flags&#x27; has no function whatsoever&#x2e;&#x2e;&#x2e;<BR>[Bit 1&#x2f;Linux] &#x3d; If Wayland is detected then the window and video system                 is restarted after creating it initially to fix a                 graphical corruption where you need to resize to fix it&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.con_autocomplete" style="display:none">
@@ -12547,6 +12553,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sun Jun 01 15:08:16 2025 +0100</ADDRESS>
+	This document was generated at Tue Jul 01 16:31:34 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

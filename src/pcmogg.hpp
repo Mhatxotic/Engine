@@ -9,17 +9,19 @@
 /* ------------------------------------------------------------------------- */
 namespace ICodecOGG {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IError::P;             using namespace IFileMap::P;
-using namespace IFlags;                using namespace IIdent::P;
-using namespace ILog::P;               using namespace IMemory::P;
-using namespace IPcmDef::P;            using namespace IPcmLib::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
-using namespace Lib::Ogg;
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IFileMap::P;           using namespace IFlags;
+using namespace IIdent::P;             using namespace ILog::P;
+using namespace IMemory::P;            using namespace IPcmDef::P;
+using namespace IPcmLib::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace IUtil::P;
+using namespace Lib::OpenAL::Types;    using namespace Lib::Ogg;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-static class CodecOGG final :          // OGG codec object
+class CodecOGG;                        // Class prototype
+static CodecOGG *cCodecOGG = nullptr;  // Pointer to global class
+class CodecOGG :                       // OGG codec object
   /* -- Base classes ------------------------------------------------------- */
   private PcmLib,                      // Pcm format helper class
   private IdMap<>                      // Ogg error codes
@@ -72,7 +74,8 @@ static class CodecOGG final :          // OGG codec object
         *cpPtr = '\0';
         ssMetaData.insert(ssMetaData.cend(), { cpStr, cpPtr+1 });
       } // We at least have a string so add it as key with empty value
-      else ssMetaData.insert(ssMetaData.cend(), { cpStr, cCommon->CBlank() });
+      else ssMetaData.insert(ssMetaData.cend(),
+        { cpStr, cCommon->CommonCBlank() });
     }); // Return built metadata
     return ssMetaData;
   }
@@ -138,7 +141,7 @@ static class CodecOGG final :          // OGG codec object
     // Success
     return true;
   }
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Constructor --------------------------------------------- */ protected:
   CodecOGG(void) :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_OGG, "Xiph.Org OGG Audio", "OGG",
@@ -153,11 +156,9 @@ static class CodecOGG final :          // OGG codec object
       IDMAPSTR(OV_EBADLINK),           IDMAPSTR(OV_ENOSEEK)
     }, "OV_UNKNOWN" },
     ovcCallbacks{ VorbisRead, VorbisSeek, VorbisClose, VorbisTell }
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- End ---------------------------------------------------------------- */
-} *cCodecOGG = nullptr;                // Codec pointer
-/* ------------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCodecOGG = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

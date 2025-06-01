@@ -9,14 +9,15 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaVariable {               // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace ICVar::P;              using namespace ICVarLib::P;
-using namespace IError::P;             using namespace IIdent::P;
-using namespace ILockable::P;          using namespace ILuaIdent::P;
+using namespace ICommon::P;            using namespace ICollector::P;
+using namespace ICVarDef::P;           using namespace ICVar::P;
+using namespace ICVarLib::P;           using namespace IError::P;
+using namespace IIdent::P;             using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
 using namespace ILuaFunc::P;           using namespace ILua::P;
 using namespace IString::P;            using namespace IStat::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 typedef IdMap<CVarFlagsType> IdMapCVarEnums;
 /* ------------------------------------------------------------------------- */
@@ -54,17 +55,21 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // has created the variable.
     const LuaCVarMapIt lcvmpIt{ cVariables->lcvmMap.find(cviVar.GetVar()) };
     if(lcvmpIt == cVariables->lcvmMap.cend()) return ACCEPT;
-    // Call the Lua callback assigned. We're expecting one return value
-    lcvmpIt->second.first.LuaFuncProtectedDispatch(1, strVal, cviVar.GetVar());
-    // Get result of the callback which means a boolean HAS to be returned or
-    // we will deny the cvar change by default.
-    const CVarReturn cvResult = BoolToCVarReturn(
-      LuaUtilIsBoolean(cLuaFuncs->LuaRefGetState(), -1) &&
-      LuaUtilIsBoolean(cLuaFuncs->LuaRefGetState(), -1));
-    // Remove whatever it was that was returned by the callback
-    LuaUtilRmStack(cLuaFuncs->LuaRefGetState());
-    // Return result to cvar set function
-    return cvResult;
+    // Save stack position and restore it on scope exit
+    const LuaStackSaver lSS{ cLuaFuncs->LuaRefGetState() };
+    // Call the Lua callback assigned. We're expecting one or two return values
+    lcvmpIt->second.first.LuaFuncProtectedDispatch(2, strVal, cviVar.GetVar());
+    // Get result of the callback which means a boolean HAS to be returned
+    const bool bResult = LuaUtilGetBool(cLuaFuncs->LuaRefGetState(), -2);
+    // Theres also an optional second string parameter. Return standard result
+    // of 'ACCEPT' if true or 'DENY' if false.
+    if(!LuaUtilIsString(cLuaFuncs->LuaRefGetState(), -1))
+      return BoolToCVarReturn(bResult);
+    // Replace the current value with the guest author specified value.
+    cviVar.GetModifyableValue() =
+      LuaUtilToCppString(cLuaFuncs->LuaRefGetState(), -1);
+    // Return result of how to handle the returned string
+    return bResult ? ACCEPT_HANDLED_FORCECOMMIT : ACCEPT_HANDLED;
   }
   /* -- Unregister the console command from lua -------------------- */ public:
   const string &Name(void) const { return lcvmiIt->first; }
@@ -82,9 +87,10 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   CVarSetEnums SetString(const string &strValue) const
     { return cCVars->Set(lcvmiIt->second.second, strValue); }
   CVarSetEnums Clear(void) const
-    { return SetString(cCommon->Blank()); }
+    { return SetString(cCommon->CommonBlank()); }
   CVarSetEnums SetBoolean(const bool bState) const
-    { return SetString(bState ? cCommon->One() : cCommon->Zero()); }
+    { return SetString(bState ?
+        cCommon->CommonOne() : cCommon->CommonZero()); }
   CVarSetEnums SetInteger(const lua_Integer liValue) const
     { return SetString(StrFromNum(liValue)); }
   CVarSetEnums SetNumber(const lua_Number lnValue) const
@@ -181,8 +187,8 @@ imcveSources{{                         // Load sources
 }, "NONE" },
 /* ------------------------------------------------------------------------- */
 imcveOther{{                           // Misc flags
-  IDMAPSTR(MTRIM),                     IDMAPSTR(OSAVEFORCE),
-  IDMAPSTR(LOCKED),                    IDMAPSTR(COMMIT),
+  IDMAPSTR(MTRIM),                     IDMAPSTR(LOCKED),
+  IDMAPSTR(COMMIT),                    IDMAPSTR(COMMITNOCHECK),
   IDMAPSTR(PURGE),                     IDMAPSTR(CONFIDENTIAL),
   IDMAPSTR(LOADED),
 }, "NONE" }
@@ -213,38 +219,38 @@ static void VariablesMakeInformationTokens(Statistic &sTable,
 { // Compare flags and return a character for each flag
   sTable.Data(StrFromEvalTokens({
     // Types
-    { true, cviVar.FlagIsSet(CFILENAME)  ? 'F' :
-           (cviVar.FlagIsSet(CTRUSTEDFN) ? 'T' :
-           (cviVar.FlagIsSet(TSTRING)    ? 'S' :
+    { true, cviVar.FlagIsSet(TBOOLEAN)   ? 'B' :
+           (cviVar.FlagIsSet(CFILENAME)  ? 'F' :
            (cviVar.FlagIsSet(TINTEGER)   ? 'I' :
            (cviVar.FlagIsSet(TFLOAT)     ? 'N' :
-           (cviVar.FlagIsSet(TBOOLEAN)   ? 'B' :
+           (cviVar.FlagIsSet(TSTRING)    ? 'S' :
+           (cviVar.FlagIsSet(CTRUSTEDFN) ? 'T' :
                                            '?'))))) },
     // Permissions
-    { cviVar.FlagIsSet(PBOOT),        '1' },
-    { cviVar.FlagIsSet(PSYSTEM),      '2' },
-    { cviVar.FlagIsSet(PUSR),         '3' },
+    { cviVar.FlagIsSet(PBOOT),         '1' },
+    { cviVar.FlagIsSet(PSYSTEM),       '2' },
+    { cviVar.FlagIsSet(PUSR),          '3' },
     // Sources
-    { cviVar.FlagIsSet(SENGINE),      '6' },
-    { cviVar.FlagIsSet(SCMDLINE),     '7' },
-    { cviVar.FlagIsSet(SAPPCFG),      '8' },
-    { cviVar.FlagIsSet(SUDB) ,        '9' },
+    { cviVar.FlagIsSet(SENGINE),       '6' },
+    { cviVar.FlagIsSet(SCMDLINE),      '7' },
+    { cviVar.FlagIsSet(SAPPCFG),       '8' },
+    { cviVar.FlagIsSet(SUDB) ,         '9' },
     // Conditions and operations
-    { cviVar.FlagIsSet(CUNSIGNED),    'U' },
-    { cviVar.FlagIsSet(TLUA),         'L' },
-    { cviVar.FlagIsSet(CONFIDENTIAL), 'C' },
-    { cviVar.FlagIsSet(CPROTECTED),   'P' },
-    { cviVar.FlagIsSet(CDEFLATE),     'D' },
-    { cviVar.FlagIsSet(COMMIT),       'M' },
-    { cviVar.FlagIsSet(LOADED),       'O' },
-    { cviVar.FlagIsSet(CSAVEABLE),    'V' },
-    { cviVar.FlagIsSet(OSAVEFORCE),   'Z' },
-    { cviVar.FlagIsSet(CPOW2),        'W' },
-    { cviVar.FlagIsSet(CNOTEMPTY),    'Y' },
-    { cviVar.FlagIsSet(MTRIM),        'R' },
-    { cviVar.IsTriggerSet(),          'K' }
+    { cviVar.FlagIsSet(CONFIDENTIAL),  'C' },
+    { cviVar.FlagIsSet(CDEFLATE),      'D' },
+    { cviVar.FlagIsSet(COMMITNOCHECK), 'H' },
+    { cviVar.IsTriggerSet(),           'K' },
+    { cviVar.FlagIsSet(TLUA),          'L' },
+    { cviVar.FlagIsSet(COMMIT),        'M' },
+    { cviVar.FlagIsSet(LOADED),        'O' },
+    { cviVar.FlagIsSet(CPROTECTED),    'P' },
+    { cviVar.FlagIsSet(MTRIM),         'R' },
+    { cviVar.FlagIsSet(CUNSIGNED),     'U' },
+    { cviVar.FlagIsSet(CSAVEABLE),     'V' },
+    { cviVar.FlagIsSet(CPOW2),         'W' },
+    { cviVar.FlagIsSet(CNOTEMPTY),     'Y' }
   // Name and value
-  })).Data(cviVar.GetVar()).Data(cviVar.Protect());
+  })).Data(cviVar.GetVar()).Data(cviVar.GetValueSafe());
 }
 /* -- Enumerate a list ----------------------------------------------------- */
 template<class MapType>

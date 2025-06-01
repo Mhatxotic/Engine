@@ -9,12 +9,12 @@
 /* ------------------------------------------------------------------------- */
 namespace IGlFWWindow {                // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ICollector::P;         using namespace ICoord::P;
-using namespace IDim::P;               using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IGlFWUtil::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace IUtf::P;
-using namespace Lib::OS::GlFW;
+using namespace ICollector::P;         using namespace ICommon::P;
+using namespace ICoord::P;             using namespace IDim::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IGlFWUtil::P;          using namespace ILog::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IUtf::P;               using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -270,7 +270,7 @@ class GlFWWindow :                     // GLFW window class
     if(const char*const cpData =
       glfwGetClipboardString(WinGetHandle())) return cpData;
     // Return empty string
-    return cCommon->CBlank();
+    return cCommon->CommonCBlank();
   }
   /* -- Get clipboard C++ string ------------------------------------------- */
   const string WinGetClipboardString(void) const
@@ -379,8 +379,7 @@ class GlFWWindow :                     // GLFW window class
   bool WinIsCurrentContext(void) const
     { return GlFWContext() == WinGetHandle(); }
   /* -- Make current context ----------------------------------------------- */
-  void WinSetContext(void) const
-    { glfwMakeContextCurrent(WinGetHandle()); }
+  void WinSetContext(void) const { GlFWSetContext(WinGetHandle()); }
   /* -- Set window size limits --------------------------------------------- */
   void WinSetLimits(const int iMinW, const int iMinH,
     const int iMaxW, const int iMaxH) const

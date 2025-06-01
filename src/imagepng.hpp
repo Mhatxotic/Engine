@@ -20,9 +20,11 @@ using namespace Lib::Png;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-static class CodecPNG final :          // PNG codec object
+class CodecPNG;                        // Class prototype
+static CodecPNG *cCodecPNG = nullptr;  // Pointer to global class
+class CodecPNG :                       // PNG codec object
   /* -- Base classes ------------------------------------------------------- */
-  private ImageLib                     // Image format helper class
+  protected ImageLib                   // Image format helper class
 { /* -- Private typedefs --------------------------------------------------- */
   typedef vector<png_bytep> PngPtrVec; // Png pointer vector
   /* -- PNG callbacks ------------------------------------------------------ */
@@ -403,17 +405,15 @@ static class CodecPNG final :          // PNG codec object
     // We are done!
     return true;
   }
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Default constructor ------------------------------------- */ protected:
   CodecPNG(void) :
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_PNG, "Portable Network Graphics", "PNG",
       bind(&CodecPNG::Decode, this, _1, _2),
       bind(&CodecPNG::Encode, this, _1, _2, _3) }
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- End ---------------------------------------------------------------- */
-} *cCodecPNG = nullptr;                // Codec pointer
-/* ------------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCodecPNG = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

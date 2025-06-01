@@ -9,17 +9,17 @@
 /* ------------------------------------------------------------------------- */
 namespace ISShot {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICollector::P;
-using namespace ICVarDef::P;           using namespace IFbo::P;
-using namespace IFboCore::P;           using namespace IIdent::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace IImageLib::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IThread::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace IClock::P;             using namespace ICommon::P;
+using namespace ICollector::P;         using namespace ICVarDef::P;
+using namespace IFbo::P;               using namespace IFboCore::P;
+using namespace IIdent::P;             using namespace IImage::P;
+using namespace IImageDef::P;          using namespace IImageLib::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IThread::P;            using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Begin collector class ------------------------------------------------ */
@@ -34,9 +34,9 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
   ImageFormat          ifFormatId;     // Screenshot type to save as
   Thread               tThread;        // Thread processing the request
   /* -- Fbo dumper thread callback ----------------------------------------- */
-  int DumpThread(const Thread &)
+  ThreadStatus DumpThread(const Thread &)
   { // Code to return
-    int iReturn;
+    ThreadStatus tsReturn;
     // Capture exceptions
     try
     { // Reverse pixels or they will be upside down
@@ -44,20 +44,20 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       // Save the image to disk
       SaveFile(IdentGet(), 0, ifFormatId);
       // Success
-      iReturn = 1;
+      tsReturn = TS_OK;
     } // exception occured?
     catch(const exception &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SCREENSHOT WRITER THREAD EXCEPTION) $", eReason);
       // Errored return code
-      iReturn = -1;
+      tsReturn = TS_ERROR;
     } // Free the memory created with the bitmap
     ResetAllData();
     // Return the code specified
-    return iReturn;
+    return tsReturn;
   }
   /* -- Capture screenshot from FBO -------------------------------- */ public:
-  bool DumpFBO(const Fbo &fboRef, const string &strFile=cCommon->Blank())
+  bool DumpFBO(const Fbo &fboRef, const string &strFile=cCommon->CommonBlank())
   { // Cancel if thread is still running
     if(tThread.ThreadIsJoinable()) return false;
     // DeInit old thread, we need to reuse it

@@ -112,7 +112,7 @@ class SysPipe :
       // Anything else and we need to throw an exception
       default: XC("Executable name is invalid!",
                   "Program", strApp, "Code", vrResult,
-                  "Reason",  cDirBase->VNRtoStr(vrResult));
+                  "Reason",  cDirBase->DirBaseVNRtoStr(vrResult));
     } // Make sure the executable exists
     if(!DirIsFileExecutable(strApp))
       XCS("Executable not valid!", "Program", strApp);
@@ -155,7 +155,7 @@ class SysPipe :
         haParentToChild.DupeReadFd(STDIN_FILENO);
         haParentToChild.CloseWriteFd();
         // Execute the program requested
-        execve(*cpaArgV, cpaArgV, cCmdLine->GetCEnv());
+        execve(*cpaArgV, cpaArgV, cCmdLine->CmdLineGetCEnv());
         // Error so exit process NOW or see uncontrolled fireworks.
         _exit(127);
       } // Success? This is the parent process routine
@@ -191,8 +191,11 @@ class SysPipe :
     haParentToChild.CloseHandles();
   }
   /* -- Constructor with init ---------------------------------------------- */
-  void Init(const string &strCmdLine, const ValidType vtId=VT_UNTRUSTED)
+  void Init(const string &strCmdLine, const ValidType vtId)
     { if(const Args aList{ strCmdLine }) InitArgs(strCmdLine, aList, vtId); }
+  /* -- Constructor with init with default safety mode --------------------- */
+  void Init(const string &strCmdLine)
+    { Init(strCmdLine, cDirBase->DirBaseGetSafetyMode()); }
   /* -- Finished sending --------------------------------------------------- */
   void SendFinish(void)
   { // Ignore if write handle already closed

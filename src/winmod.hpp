@@ -48,36 +48,43 @@ class SysModule :                      // Members initially private
       const wstring &wstrValue)
     { // Bail if no data
       if(wstrValue.empty() || wstrBlock.empty()) return {};
-      // Get size of string
+      // Get size of string. The actual string size is also returned in this.
       UINT uiStrSize = static_cast<UINT>(wstrBlock.length());
-      // Create substring and length containers
-      wchar_t *wcpTitle = nullptr;
-      // Retrieve file description for language and code page "i".
-      if(!VerQueryValueW(wstrValue.c_str(), wstrBlock.c_str(),
-        reinterpret_cast<LPVOID*>(&wcpTitle), &uiStrSize))
-          return cCommon->Unspec();
-      // Set string
-      return S16toUTF(wcpTitle);
+      // This is set to the resulting read string on success
+      wchar_t *wcpStr = nullptr;
+      // Return the result of the string resource lookup or return the system
+      // error code string instead.
+      return VerQueryValueW(wstrBlock.data(), wstrValue.c_str(),
+           reinterpret_cast<LPVOID*>(&wcpStr), &uiStrSize) ?
+        S16toUTF(wcpStr) : SysError();
+    }
+    /* -- Build path ------------------------------------------------------- */
+    const string GetStringValue(const LONG lLng, const wstring &wstrBlock,
+      const char*const cpValue)
+    { // Build path name
+      const string strValue{ StrFormat("\\StringFileInfo\\$$$$$\\$",
+        right, hex, setw(8), setfill('0'), lLng, cpValue) };
+      // Query the value from the resource
+      return GetStringValue(wstrBlock, UTFtoS16(strValue));
     }
     /* -- Constructor ---------------------------------------------- */ public:
-    explicit VersionStrings(const wstring &wstrValue)
+    explicit VersionStrings(const wstring &wstrBlock)
     { // Create language struct
       struct LANGANDCODEPAGE { WORD wLanguage, wCodePage; } *lcpData;
       // Length of version info part
       UINT uiLength = 0;
-      // Read translation information strings and if failed?
-      const wchar_t*const wcpLang = L"\\VarFileInfo\\Translation";
-      if(!VerQueryValueW(wstrValue.c_str(), wcpLang,
-        reinterpret_cast<LPVOID*>(&lcpData), &uiLength))
+      // Read translation information strings and if failed or the length is
+      // not big enough to fit the required structure?
+      if(!VerQueryValueW(wstrBlock.data(), L"\\VarFileInfo\\Translation",
+        reinterpret_cast<LPVOID*>(&lcpData), &uiLength) ||
+        uiLength < sizeof(struct LANGANDCODEPAGE))
       { // Put error into data
         strDescription = StrAppend("!E#", SysErrorCode());
-        strVendor = S16toUTF(wcpLang);
-        strCopyright = SysError();
+        strVendor = StrFromNum(uiLength);
+        strCopyright = cCommon->CommonUnspec();
         // Done
         return;
-      } // Bail if no data
-      if(uiLength < sizeof(struct LANGANDCODEPAGE)) return;
-      // Clamp the limit to the lowest zero for safety.
+      } // Clamp the limit to the lowest zero for safety.
       const size_t stLimit = static_cast<size_t>
         (floor(static_cast<double>(uiLength) /
           sizeof(struct LANGANDCODEPAGE)));
@@ -87,17 +94,10 @@ class SysModule :                      // Members initially private
         const LANGANDCODEPAGE &lacpData = lcpData[stIndex];
         const LONG lLng =
           UtilMakeDWord(lacpData.wLanguage, lacpData.wCodePage);
-        // To help with retreiving some values
-#define GSV(v,n) v = GetStringValue(UTFtoS16( \
-          StrFormat("\\StringFileInfo\\$$$$$\\" n, \
-            right, hex, setw(8), setfill('0'), lLng)), \
-              wstrValue);
         // Get version, vendor and comments strings from module
-        GSV(strDescription, "FileDescription");
-        GSV(strVendor, "CompanyName");
-        GSV(strCopyright, "Comments");
-        // Done with this define
-#undef GSV
+        strDescription = GetStringValue(lLng, wstrBlock, "FileDescription");
+        strVendor = GetStringValue(lLng, wstrBlock, "CompanyName");
+        strCopyright = GetStringValue(lLng, wstrBlock, "Comments");
       }
     }
     /* --------------------------------------------------------------------- */
@@ -177,5 +177,5 @@ class SysModule :                      // Members initially private
     SysModuleData{ Load(StdMove(strModule)) }
     /* -- No code ---------------------------------------------------------- */
     { }
-};/* -- End ---------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

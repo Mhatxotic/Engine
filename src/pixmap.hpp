@@ -52,14 +52,14 @@ class SysMap :
     if(SysMapGetSize())
     { // map the file in memory. This is automatically closed when stream is
       // closed
-      cpNewMem = reinterpret_cast<char*>(mmap(nullptr, SysMapGetSize(),
-        PROT_READ, MAP_PRIVATE, FStreamGetFdSafe(), 0));
+      cpNewMem = StdMMap<char>(nullptr, SysMapGetSize(),
+        PROT_READ, MAP_PRIVATE, FStreamGetFdSafe(), 0);
       if(cpNewMem == MAP_FAILED)
         XCS("Map view of file failed!", "File", IdentGet());
     } // File is empty
     else
     { // Set no data available
-      cpNewMem = const_cast<char*>(cCommon->CBlank());
+      cpNewMem = const_cast<char*>(cCommon->CommonCBlank());
       // Close the file. Whats the point in keeping it open?
       if(!FStreamClose())
         XCS("Failed to close empty file!", "File", IdentGet());
@@ -71,7 +71,7 @@ class SysMap :
   /* -- Get members ------------------------------------------------ */ public:
   template<typename RT=char>RT *SysMapGetMemory(void) const
     { return reinterpret_cast<RT*>(cpMem); }
-  bool SysMapIsEmpty(void) const { return cpMem == cCommon->CBlank(); }
+  bool SysMapIsEmpty(void) const { return cpMem == cCommon->CommonCBlank(); }
   bool SysMapIsNotEmpty(void) const { return !SysMapIsEmpty(); }
   bool SysMapIsAvailable(void) const { return !!SysMapGetMemory(); }
   bool SysMapIsNotAvailable(void) const { return !SysMapIsAvailable(); }

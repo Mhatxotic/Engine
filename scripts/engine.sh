@@ -5,43 +5,37 @@
 # *** All Rights Reserved Worldwide.
 
 # Binary locations
-BIN=/bin
-BINCHMOD=$BIN/chmod
-BINECHO=$BIN/echo
-USRBIN=/usr/bin
-BINREALPATH=$BIN/realpath
-USRBINBASENAME=$USRBIN/basename
-USRBINDIRNAME=$USRBIN/dirname
-USRBINREADLINK=$USRBIN/readlink
-USRBINGDB=$USRBIN/gdb
+ROOTBIN=/bin
+BINCHMOD=$ROOTBIN/chmod
+BINECHO=$ROOTBIN/echo
+ROOTUSRBIN=/usr/bin
+BINREALPATH=$ROOTBIN/realpath
+USRBINBASENAME=$ROOTUSRBIN/basename
+USRBINDIRNAME=$ROOTUSRBIN/dirname
+USRBINREADLINK=$ROOTUSRBIN/readlink
+USRBINGDB=$ROOTUSRBIN/gdb
 USRBINLLDB=lldb
-#USRBINLLDB=$USRBIN/lldb
-USRBINTR=$USRBIN/tr
-USRBINUNANE=$USRBIN/uname
-USRBINVALGRIND=$USRBIN/valgrind
+#USRBINLLDB=$ROOTUSRBIN/lldb
+USRBINTR=$ROOTUSRBIN/tr
+USRBINUNANE=$ROOTUSRBIN/uname
+USRBINVALGRIND=$ROOTUSRBIN/valgrind
 ENGBIN=../bin
 
 # If this script was symbolically linked?
 if [ -L "$0" ]; then
+  # Get base path of executable
+  BASEDIR="$($USRBINDIRNAME "$0")/"
+  if [ ! $? -eq 0 ]; then exit 1; fi
   # Get target of link
-  TARGET="$($USRBINREADLINK "$0")"
-  if [ ! $? -eq 0 ]; then
-    $BINECHO Could not read link target for '$0'.
-    exit 1
-  fi
+  LINKTARGET="$($USRBINREADLINK "$0")"
+  if [ ! $? -eq 0 ]; then exit 2; fi
   # Get real directory of scripts
-  SCRIPTDIR="$($USRBINDIRNAME "$TARGET")"
-  if [ ! $? -eq 0 ]; then
-    $BINECHO Could not dirname '$TARGET'.
-    exit 2
-  fi
+  SCRIPTDIR="$($USRBINDIRNAME "$BASEDIR$LINKTARGET")"
+  if [ ! $? -eq 0 ]; then exit 3; fi
   # Get directory where engine executables are
   ENGBINREL="$SCRIPTDIR/$ENGBIN"
   ENGBIN="$($BINREALPATH "$ENGBINREL")"
-  if [ ! $? -eq 0 ]; then
-    $BINECHO Could not realpath '$ENGBINREL'.
-    exit 3
-  fi
+  if [ ! $? -eq 0 ]; then exit 4; fi
 fi
 
 # Check for debug flag
@@ -61,6 +55,7 @@ UNAME=$($USRBINUNANE -s)
 case "$UNAME" in
   Linux*)
     if [ ! -z $DEBUG ]; then
+      export WAYLAND_DEBUG=1
       PREFIX="$USRBINGDB --args "
     fi
     if [ ! -z $VALGRIND ]; then

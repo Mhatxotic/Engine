@@ -8,14 +8,17 @@
 /* ------------------------------------------------------------------------- */
 namespace IShaders {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICVarDef::P;           using namespace IFboDef::P;
-using namespace ILog::P;               using namespace IOgl::P;
-using namespace IShader::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace Lib::OS::GlFW::Types;
+using namespace ICommon::P;            using namespace ICVarDef::P;
+using namespace IFboDef::P;            using namespace ILog::P;
+using namespace IOgl::P;               using namespace IShader::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Shader core class ==================================================== */
-static struct ShaderCore final
+struct ShaderCore;                     // Class prototype
+static ShaderCore *cShaderCore = nullptr; // Pointer to global class
+struct ShaderCore                      // Actual body
 { /* -- 3D shader references ----------------------------------------------- */
   array<Shader,9> sh3DBuiltIns;        // list of built-in 3D shaders
   Shader          &sh3D,               // Basic 3D transformation shader
@@ -63,7 +66,7 @@ static struct ShaderCore final
   }
   /* -- Add vertex shader with template ------------------------------------ */
   void AddVertexShaderWith3DTemplate(Shader &shS, const string &strName)
-    { AddVertexShaderWith3DTemplate(shS, strName, cCommon->CBlank()); }
+    { AddVertexShaderWith3DTemplate(shS, strName, cCommon->CommonCBlank()); }
   /* -- Add fragment shader with template ---------------------------------- */
   void AddFragmentShaderWithTemplate(Shader &shS, const string &strName,
     const char*const cpCode, const char*const cpHeader)
@@ -85,12 +88,13 @@ static struct ShaderCore final
   }
   /* -- Add fragment shader with template ---------------------------------- */
   void AddFragmentShaderWithTemplate(Shader &shS, const string &strName)
-    { AddFragmentShaderWithTemplate(shS, strName, cCommon->CBlank(),
-        cCommon->CBlank()); }
+    { AddFragmentShaderWithTemplate(shS, strName, cCommon->CommonCBlank(),
+        cCommon->CommonCBlank()); }
   /* -- Add fragment shader with template ---------------------------------- */
   void AddFragmentShaderWithTemplate(Shader &shS, const string &strName,
-    const char*const cpCode)
-  { AddFragmentShaderWithTemplate(shS, strName, cpCode, cCommon->CBlank()); }
+      const char*const cpCode)
+    { AddFragmentShaderWithTemplate(shS,
+        strName, cpCode, cCommon->CommonCBlank()); }
   /* -- Add vertex shader with template ------------------------------------ */
   void AddVertexShaderWith2DTemplate(Shader &shS, const string &strName,
     const char*const cpCode)
@@ -102,7 +106,7 @@ static struct ShaderCore final
   }
   /* -- Add vertex shader with template ------------------------------------ */
   void AddVertexShaderWith2DTemplate(Shader &shS, const string &strName)
-    { AddVertexShaderWith2DTemplate(shS, strName, cCommon->CBlank()); }
+    { AddVertexShaderWith2DTemplate(shS, strName, cCommon->CommonCBlank()); }
   /* ----------------------------------------------------------------------- */
   void Init3DShader(void)
   { // Add our basic 3D shader
@@ -291,7 +295,7 @@ static struct ShaderCore final
     cLog->LogInfoExSafe("ShaderCore de-initialised $ built-in shader objects.",
       sh3DBuiltIns.size() + sh2DBuiltIns.size());
   }
-  /* ----------------------------------------------------------------------- */
+  /* -- Default constructor ------------------------------------- */ protected:
   ShaderCore(void) :                   // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     sh3D{ sh3DBuiltIns[0] },           sh3DYCbCr601FR{ sh3DBuiltIns[1] },
@@ -303,15 +307,15 @@ static struct ShaderCore final
     sh2D8Pal{ sh2DBuiltIns[3] },       sh2D16{ sh2DBuiltIns[4] },
     /* -- Rounding list ---------------------------------------------------- */
     rList{{                            // Initialise rounding strings list
-      cCommon->Blank(),                // [0] No rounding
+      cCommon->CommonBlank(),          // [0] No rounding
       "floor",                         // [1] Floor rounding
       "ceil",                          // [2] Ceil rounding
       "round",                         // [3] Nearest whole number
       "roundEven"                      // [4] Nearest even number
     }}                                 // End of rounding strings list
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // No code
-  /* -- Set rounding method for the shader --------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cShaderCore = this; }
+  /* -- Set rounding method for the shader ------------------------- */ public:
   CVarReturn SetSPRoundingMethod(const size_t stMethod)
   { // Return if specified value is outrageous!
     if(stMethod >= rList.size()) return DENY;
@@ -319,9 +323,7 @@ static struct ShaderCore final
     // Success
     return ACCEPT;
   }
-  /* ----------------------------------------------------------------------- */
-} *cShaderCore = nullptr;              // Global access
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

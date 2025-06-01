@@ -14,11 +14,12 @@
 /* ------------------------------------------------------------------------- */
 namespace IOal {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IError::P;             using namespace IFlags;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace Lib::OpenAL;
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IFlags;                using namespace IIdent::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace Lib::OpenAL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
@@ -52,7 +53,9 @@ BUILD_FLAGS(Oal,
                 AFL_CONTEXTCURRENT|AFL_INITIALISED|AFL_HAVE32FPPB|
                 AFL_HAVEENUMEXT }
 );/* == Oal class ========================================================== */
-static class Oal final :
+class Oal;                             // Class prototype
+static Oal *cOal = nullptr;            // Pointer to global class
+class Oal :                            // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   public OalFlags                      // OpenAL flags
 { /* -- Defines ------------------------------------------------------------ */
@@ -74,7 +77,7 @@ static class Oal final :
   ALCcontext      *alcContext;         // OpenAL context
   /* -- Public Variables ------------------------------------------- */ public:
   ALenum           eQuery;             // Device query extension
-  /* -- Return error status ---------------------------------------- */ public:
+  /* -- Return error status ------------------------------------------------ */
   ALenum GetError(void) const { return alGetError(); }
   bool HaveError(void) const { return GetError() != AL_NO_ERROR; }
   bool HaveNoError(void) const { return !HaveError(); }
@@ -347,9 +350,9 @@ static class Oal final :
   ALuint GetMaxStereoSources(void) const { return uiMaxStereoSources; }
   /* -- Get current playback device ---------------------------------------- */
   const string &GetPlaybackDevice(void) const { return strPlayback; }
-  /* -- Return version information --------------------------------- */ public:
+  /* -- Return version information ----------------------------------------- */
   const string &GetVersion(void) const { return strVersion; }
-  /* -- Set new HRTF setting ---------------------------------------------- */
+  /* -- Set new HRTF setting ----------------------------------------------- */
   bool DoSetHRTF(const ALCint alState)
   { // Reset with HRTF disabled
     const array<const ALCint,3> alciAttrs{ ALC_HRTF_SOFT, alState, 0 };
@@ -542,7 +545,8 @@ static class Oal final :
     // Return if debug logging not enabled
     if(cLog->NotHasLevel(LH_DEBUG)) return;
     // Build extensions list
-    const Token tlExtensions{ LuaUtilGetStr(AL_EXTENSIONS), cCommon->Space() };
+    const Token tlExtensions{
+      LuaUtilGetStr(AL_EXTENSIONS), cCommon->CommonSpace() };
     // Build sorted list of extensions and log them all
     typedef pair<const string, const size_t> Pair;
     typedef map<Pair::first_type, Pair::second_type> Map;
@@ -589,7 +593,7 @@ static class Oal final :
   }
   /* -- Destructor that unloads context and device ------------------------- */
   DTORHELPER(~Oal, DeInitContext(); DeInitDevice())
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Constructor --------------------------------------------- */ protected:
   Oal(void) :
     /* -- Initialisers ----------------------------------------------------- */
     OalFlags{ AFL_HRTF },              // HRTF is enabled by default
@@ -612,14 +616,12 @@ static class Oal final :
     alcDevice(nullptr),                // Device not initialised yet
     alcContext(nullptr),               // Context not initialised yet
     eQuery(AL_NONE)                    // Query method not initialised yet
-    /* -- No code ---------------------------------------------------------- */
-    { }
+    /* -- Set global pointer to static class ------------------------------- */
+    { cOal = this; }
   /* -- Undefines ---------------------------------------------------------- */
 #undef IAL                             // Done with this macro
 #undef IALC                            //   "
-  /* ----------------------------------------------------------------------- */
-} *cOal = nullptr;                     // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

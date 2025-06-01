@@ -528,7 +528,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     return true;
   }
   /* -- Thread main function ----------------------------------------------- */
-  int VideoThreadMain(const Thread &tClass) try
+  ThreadStatus VideoThreadMain(const Thread &tClass) try
   { // Send playing event if we're not temporarily de-initialising
     if(ubReason != UB_REINIT) LuaEvtDispatch(VE_PLAY);
     // Loop until thread should exit
@@ -563,13 +563,13 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       default: XC("Internal error: Unknown unblock reason code!",
                   "Code", ubCode);
     } // Exit thread cleanly with specified reason
-    return 1;
+    return TS_OK;
   } // exception occured?
   catch(const exception &eReason)
   { // Report it to log
     cLog->LogErrorExSafe("(VIDEO THREAD EXCEPTION) $", eReason);
     // Failure exit code
-    return -1;
+    return TS_ERROR;
   }
   /* -- Convert colour space to name --------------------------------------- */
   const string_view &ColourSpaceToString(const th_colorspace csId) const

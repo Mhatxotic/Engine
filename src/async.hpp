@@ -259,7 +259,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     { FileMap fmData{ AssetExtract(idName.IdentGet()) };
       AsyncParseFileMap(fmData); }
   /* -- Async off-main thread function ------------------------------------- */
-  int AsyncThreadMain(Thread&)
+  ThreadStatus AsyncThreadMain(Thread&)
   { // Capture exceptions. Remember that after these operations the memory at
     // mAsyncLoadData should be de-initialised. So don't use it again.
     try
@@ -295,7 +295,7 @@ template<class MemberType, class ColType>class AsyncLoader :
         default: XC("Internal error: Unknown asset load type!",
                     "Type", asctAsyncType);
       } // Return success to thread manager
-      return 1;
+      return TS_OK;
     } // exception occured?
     catch(const exception &eReason)
     { // Prepend the reason incase there are nested exceptions
@@ -305,7 +305,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       // Report error in log
       cLog->LogErrorExSafe("(ASYNCLOADER THREAD EXCEPTION) $", strAsyncError);
       // Return failure to thread manager
-      return -1;
+      return TS_ERROR;
     }
   }
   /* ----------------------------------------------------------------------- */
@@ -344,7 +344,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     else cLog->LogErrorExSafe("AsyncLoader got invalid params in failure "
       "event $ for '$' with luastate($) and fref($) from $ params!",
       emeEvent.cCmd, idName.IdentGet(), lecAsync.LuaRefStateIsSet(),
-      lecAsync.LuaRefGetFunc(LR_ERROR), emeEvent.aArgs.size());
+      lecAsync.LuaRefGetFunc(LR_ERROR), emeEvent.eaArgs.size());
     // The memory for the error is no longer needed
     AsyncTidyUpVars();
   }
@@ -393,7 +393,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   void AsyncCancel(void)
   { // Wait for the thread to stop
     AsyncStop();
-    // Unreference the class
+    // Dereference the class
     lecAsync.LuaEvtDeInit();
   }
   /* -- The thread only calls LoadData() and thats it ---------------------- */
@@ -479,7 +479,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   void LuaEvtCallbackAsync(const EvtMainEvent &emeEvent) try
   { // Get reference to string vector and we need three parameters
     // [0]=Pointer to socket class, [1]=Event list id, [2]=Status
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Event result
     const AsyncResult uiAsyncResult =
       lecAsync.template LuaEvtsCheckParams<3>(emaArgs) ?

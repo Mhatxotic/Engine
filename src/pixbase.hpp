@@ -12,8 +12,7 @@
 /* ------------------------------------------------------------------------- */
 class SysBase :                        // Safe exception handler namespace
   /* -- Base classes ------------------------------------------------------- */
-  public SysVersion,                   // Version information class
-  public Ident                         // Mutex name
+  public SysVersion                    // Version information class
 { /* -- Class to rebuffer system generated output to log ------------------- */
 #if !defined(BUILD) && defined(MACOS)  // Not applicable on build or not MacOS
   class Redirect final :               // Linux: close() doesn't unblock read()
@@ -29,7 +28,7 @@ class SysBase :                        // Safe exception handler namespace
     int           &iRead,              // Read end of the pipe (iaPipes[0])
                   &iWrite;             // Write end of the pipe (iaPipes[1])
     /* -- Async off-main thread function ----------------------------------- */
-    int ThreadMain(Thread&)
+    ThreadStatus ThreadMain(Thread&)
     { // Until thread should exit or end of file
       while(ThreadShouldNotExit())
       { // Read some data and if we got some? Return how much we read
@@ -54,7 +53,7 @@ class SysBase :                        // Safe exception handler namespace
           }
         } // Don't get here
       } // Return success to thread manager
-      return 1;
+      return TS_OK;
     }
     /* --------------------------------------------------------------------- */
     void CloseRead(void) { if(iRead) close(iRead); }
@@ -129,58 +128,6 @@ class SysBase :                        // Safe exception handler namespace
   typedef pair<const int, void(*)(int)> SignalPair;
   typedef array<SignalPair, 14> SignalList;
   SignalList       slSignals;          // Signal list
-  /* -- SIGSEGV workaround when still in System() constructor -------------- */
-  bool             bSysBaseDataReady;  // Is the data ready?
-  /* --------------------------------------------------------------- */ public:
-  int DoDeleteGlobalMutex(const char*const cpName)
-    { return shm_unlink(cpName); }
-  /* ----------------------------------------------------------------------- */
-  int DoDeleteGlobalMutex(void)
-  { // Return if data not ready to prevent SIGSEGV during System() construction
-    if(!bSysBaseDataReady) return 0;
-    // Data no longer ready
-    bSysBaseDataReady = false;
-    // Return result of deleting the mutex
-    return DoDeleteGlobalMutex(IdentGet().c_str());
-  }
-  /* ----------------------------------------------------------------------- */
-  void DeleteGlobalMutex(const string_view &strvTitle)
-  { // Create the semaphore and if the creation failed? Put in log that another
-    // instance of this application is running
-    if(DoDeleteGlobalMutex(strvTitle.data()) == -1)
-      cLog->LogWarningExSafe("SysMutex could not delete old mutex '$': $",
-        strvTitle, SysError());
-    // Creation succeeded so put success in log
-    else cLog->LogWarningExSafe("SysMutex deleted old mutex '$'.", strvTitle);
-  }
-  /* ----------------------------------------------------------------------- */
-  void DeleteGlobalMutex(void) { DoDeleteGlobalMutex(IdentGet().data()); }
-  /* ----------------------------------------------------------------------- */
-  bool InitGlobalMutex(const string_view &strvTitle)
-  { // Ignore if semaphore already created
-    if(strvTitle.empty() || IdentIsSet()) return false;
-    // Set a flag to say that the mutex is ready because the function to
-    // delete the shared object can still be called when an signal is sent
-    // during System() construction. This makes sure that the shared object is
-    // not attempted to be deleted.
-    bSysBaseDataReady = true;
-    // Create the semaphore and if the creation failed?
-    if(shm_open(strvTitle.data(), O_CREAT | O_EXCL, 0) == -1)
-    { // If it was because it already exists?
-      if(StdIsError(EEXIST) || StdIsError(EACCES))
-      { // Put in log that another instance of this application is running
-        cLog->LogWarningSafe(
-         "System detected another instance of this application running.");
-        // Execution may not continue
-        return false;
-      } // Report error
-      cLog->LogWarningExSafe("System failed to setup global mutex: $!",
-        SysError());
-    } // Set mutex title
-    IdentSet(strvTitle);
-    // Execution can continue
-    return true;
-  }
   /* ----------------------------------------------------------------------- */
   void DebugFunction(Statistic &staData, const char*const cpStack,
     const void*const vpStack) const
@@ -188,34 +135,33 @@ class SysBase :                        // Safe exception handler namespace
     Dl_info diData;
     // Tokenise the stack after removing duplicate whitespaces. Note that objc
     // calls will have spaces in them.
-    const Token tokData{ StrCompact(cpStack), cCommon->Space() };
+    const Token tokData{ StrCompact(cpStack), cCommon->CommonSpace() };
     // Need some extra work on Apple
 #if defined(MACOS)
     // The last two tokens should always be a + and a number which we will
     // grab.
     switch(tokData.size())
     { // Not enough data?
-      case  0: staData.Data(cCommon->Unspec()).Data(cCommon->Unspec());
+      case  0: staData.Data(cCommon->CommonUnspec())
+                      .Data(cCommon->CommonUnspec());
                break;
-      case  1: staData.Data(tokData.front()).Data(cCommon->Unspec());
+      case  1: staData.Data(tokData.front()).Data(cCommon->CommonUnspec());
                break;
-      case  2: staData.Data(tokData[1]).Data(cCommon->Unspec());
+      case  2: staData.Data(tokData[1]).Data(cCommon->CommonUnspec());
                break;
       case  3: staData.Data(tokData[1]).Data(tokData[2]);
                break;
       case  4: staData.Data(tokData[1]).Data(tokData[3]);
                break;
-      case  5: staData.Data(tokData[1])
-                      .DataA(tokData[3], ' ', tokData[4]);
+      case  5: staData.Data(tokData[1]).DataA(tokData[3], ' ', tokData[4]);
                break;
       // Expected amount for a C/C++ call. Just show the + amount
-      default: staData.Data(tokData[1])
-                      .DataA(tokData[2], '+', tokData.back());
+      default: staData.Data(tokData[1]).DataA(tokData[2], '+', tokData.back());
                break;
     } // Get information about the item and if failed?
     if(!dladdr(vpStack, &diData))
     { // Just add unknown and try the next function level
-      staData.Data(cCommon->Unspec());
+      staData.Data(cCommon->CommonUnspec());
       return;
     } // Running on Linux?
 #else
@@ -317,7 +263,8 @@ class SysBase :                        // Safe exception handler namespace
   ExitState DebugMessage(const char*const cpSignal, const char*const cpExtra)
   { // Build filename
     const string strFileName{ cCmdLine ?
-      StrAppend(cCmdLine->GetCArgs()[0], ".dbg") : "/tmp/engine-crash.txt" };
+      StrAppend(cCmdLine->CmdLineGetCArgs()[0], ".dbg") :
+      "/tmp/engine-crash.txt" };
     // Begin message
     ostringstream osS;
     osS << "Received signal 'SIG" << cpSignal << "' at "
@@ -325,7 +272,7 @@ class SysBase :                        // Safe exception handler namespace
     // Dump the stack
     DumpStack(osS);
     // Add extra information if set
-    if(*cpExtra) osS << cCommon->Lf() << cpExtra << cCommon->Lf();
+    if(*cpExtra) osS << cCommon->CommonLf() << cpExtra << cCommon->CommonLf();
  // Not building the command line too?
 #if !defined(BUILD) && defined(MACOS)
     // Shut down the stderr monitoring thread
@@ -368,7 +315,7 @@ class SysBase :                        // Safe exception handler namespace
   }
   /* ----------------------------------------------------------------------- */
   ExitState DebugMessage(const char*const cpSignal)
-    { return DebugMessage(cpSignal, cCommon->CBlank()); }
+    { return DebugMessage(cpSignal, cCommon->CommonCBlank()); }
   /* ----------------------------------------------------------------------- */
   ExitState ConditionalExit(const string &strName, unsigned int &uiAttempts)
   { // If events system is available?
@@ -501,12 +448,12 @@ class SysBase :                        // Safe exception handler namespace
     switch(HandleSignalSafe(iSignal))
     { // Exit safely? Send shutdown to engine and do nothing else
       case ES_SAFE: cEvtMain->RequestQuit(); return;
-      // Exit unsafely? Delete mutex and send safe shutdown
-      case ES_UNSAFE: DoDeleteGlobalMutex(); exit(-1);
-      // Exit unsafely and immediately? Delete mutex and shutdown now!
-      case ES_CRITICAL: DoDeleteGlobalMutex(); _exit(-2);
+      // Exit unsafely? Send safe shutdown
+      case ES_UNSAFE: exit(-1);
+      // Exit unsafely and immediately? Shutdown now!
+      case ES_CRITICAL: _exit(-2);
       // Invalid command? (To prevent compiler warning)
-      default: DoDeleteGlobalMutex(); _exit(-3);
+      default: _exit(-3);
     }
   } // Exception occured so just exit now
   catch(const exception&) { _exit(-3); }
@@ -529,51 +476,13 @@ class SysBase :                        // Safe exception handler namespace
     const pid_t pTerminal = tcgetpgrp(STDOUT_FILENO), pParent = getpgrp();
     return pTerminal != pParent;
   }
-  /* ----------------------------------------------------------------------- */
-  void RestoreSignals(void)
+  /* ------------------------------------------------------------ */ protected:
+  ~SysBase(void) noexcept(true)
   { // Uninstall safe signals
     for(SignalPair &spPair : slSignals)
       if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)
         cLog->LogWarningExSafe("Failed to restore signal $ handler! $.",
           spPair.first, StrFromErrNo());
-  }
-  /* ----------------------------------------------------------------------- */
-  void SetupSignals(void)
-  { // Now install all those signal handlers
-    for(SignalPair &spPair : slSignals)
-    { // Set the signal and check for error
-      spPair.second = signal(spPair.first, HandleSignalStatic);
-      if(spPair.second == SIG_ERR)
-        XCL("Failed to install signal handler!", "Id", spPair.first);
-    }
-  }
-  /* ----------------------------------------------------------------------- */
-  void IncreaseResourceLimits(void)
-  { // Increase resource limits we can change so the engine can do more
-    for(ResourceLimitMapPair &rlmpPair : rlmLimits)
-    { // Get the limit for this resource
-      if(!getrlimit(rlmpPair.first, &rlmpPair.second))
-      { // Ignore if value doesn't need to change
-        if(rlmpPair.second.rlim_cur >= rlmpPair.second.rlim_max) continue;
-        // Set maximum allowed and if failed?
-        const rlim_t rtOld = rlmpPair.second.rlim_cur;
-        rlmpPair.second.rlim_cur = rlmpPair.second.rlim_max;
-        if(setrlimit(rlmpPair.first, &rlmpPair.second))
-        { // Restore original value
-          rlmpPair.second.rlim_cur = rtOld;
-          // Log a message
-          cLog->LogWarningExSafe(
-            "System failed to set resource limit $<0x$$$> from $<0x$$$> to "
-            "$<0x$$$>: $!",
-            rlmpPair.first, hex, rlmpPair.first, dec, rtOld, hex, rtOld, dec,
-            rlmpPair.second.rlim_max, hex, rlmpPair.second.rlim_max, dec,
-            SysError());
-        }
-      } // Failed to get limit so log the error and why
-      else cLog->LogWarningExSafe(
-        "System failed to get limit for resource $<0x$$$>: $!",
-        rlmpPair.first, hex, rlmpPair.first, dec, SysError());
-    }
   }
   /* ----------------------------------------------------------------------- */
   SysBase(SysModMap &&smmMap, const size_t stI) :
@@ -601,20 +510,39 @@ class SysBase :                        // Safe exception handler namespace
       { SIGINT,  nullptr }, { SIGPIPE, nullptr }, { SIGQUIT, nullptr },
       { SIGSEGV, nullptr }, { SIGSYS,  nullptr }, { SIGTERM, nullptr },
       { SIGTRAP, nullptr }, { SIGXCPU, nullptr }, { SIGXFSZ, nullptr },
-    }},
-    bSysBaseDataReady(false)           // Initially not ready
+    }}
     /* --------------------------------------------------------------------- */
-  { // Setup signals
-    SetupSignals();
-    // Increase resource limits we can change so the engine can do more
-    IncreaseResourceLimits();
-  }
-  /* ----------------------------------------------------------------------- */
-  ~SysBase(void) noexcept(true)
-  { // Uninstall safe signals
-    RestoreSignals();
-    // Delete global mutex
-    DeleteGlobalMutex();
+  { // Install all those signal handlers
+    for(SignalPair &spPair : slSignals)
+    { // Set the signal and check for error
+      spPair.second = signal(spPair.first, HandleSignalStatic);
+      if(spPair.second == SIG_ERR)
+        XCL("Failed to install signal handler!", "Id", spPair.first);
+    } // Increase resource limits we can change so the engine can do more
+    for(ResourceLimitMapPair &rlmpPair : rlmLimits)
+    { // Get the limit for this resource
+      if(!getrlimit(rlmpPair.first, &rlmpPair.second))
+      { // Ignore if value doesn't need to change
+        if(rlmpPair.second.rlim_cur >= rlmpPair.second.rlim_max) continue;
+        // Set maximum allowed and if failed?
+        const rlim_t rtOld = rlmpPair.second.rlim_cur;
+        rlmpPair.second.rlim_cur = rlmpPair.second.rlim_max;
+        if(setrlimit(rlmpPair.first, &rlmpPair.second))
+        { // Restore original value
+          rlmpPair.second.rlim_cur = rtOld;
+          // Log a message
+          cLog->LogWarningExSafe(
+            "System failed to set resource limit $<0x$$$> from $<0x$$$> to "
+            "$<0x$$$>: $!",
+            rlmpPair.first, hex, rlmpPair.first, dec, rtOld, hex, rtOld, dec,
+            rlmpPair.second.rlim_max, hex, rlmpPair.second.rlim_max, dec,
+            SysError());
+        }
+      } // Failed to get limit so log the error and why
+      else cLog->LogWarningExSafe(
+        "System failed to get limit for resource $<0x$$$>: $!",
+        rlmpPair.first, hex, rlmpPair.first, dec, SysError());
+    }
   }
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \

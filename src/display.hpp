@@ -10,23 +10,23 @@
 /* ------------------------------------------------------------------------- */
 namespace IDisplay {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IConGraph::P;          using namespace IConsole::P;
-using namespace ICoord::P;             using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IDim::P;               using namespace IDimCoord::P;
-using namespace IDir::P;               using namespace IEvtMain::P;
-using namespace IEvtWin::P;            using namespace IFboCore::P;
-using namespace IFlags;                using namespace IFont::P;
-using namespace IGlFW::P;              using namespace IGlFWCursor::P;
-using namespace IGlFWMonitor::P;       using namespace IGlFWUtil::P;
-using namespace IHelper::P;            using namespace IIdent::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace IInput::P;             using namespace ILog::P;
-using namespace ILuaFunc::P;           using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace ICommon::P;            using namespace IConGraph::P;
+using namespace IConsole::P;           using namespace ICoord::P;
+using namespace ICVar::P;              using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace IDim::P;
+using namespace IDimCoord::P;          using namespace IDir::P;
+using namespace IEvtMain::P;           using namespace IEvtWin::P;
+using namespace IFboCore::P;           using namespace IFlags;
+using namespace IFont::P;              using namespace IGlFW::P;
+using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
+using namespace IGlFWUtil::P;          using namespace IHelper::P;
+using namespace IIdent::P;             using namespace IImage::P;
+using namespace IImageDef::P;          using namespace IInput::P;
+using namespace ILog::P;               using namespace ILuaFunc::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -61,7 +61,9 @@ BUILD_FLAGS(Display,
   DF_NOERRORS              {Flag(63)}, DF_MAXIMISED             {Flag(64)}
 );
 /* == Display class ======================================================== */
-static class Display final :
+class Display;                         // Class prototype
+static Display *cDisplay = nullptr;    // Pointer to global class
+class Display :                        // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper
   public  DisplayFlags,                // Display settings
@@ -129,7 +131,7 @@ static class Display final :
   /* -- Window moved request ----------------------------------------------- */
   void OnMoved(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Check to see if the window moved
     CheckWindowMoved(emaArgs[1].i, emaArgs[2].i);
   }
@@ -138,7 +140,7 @@ static class Display final :
   /* -- Window set set cursor visibility ----------------------------------- */
   void OnReqSetCurVisib(const EvtWinEvent &eweEvent)
   { // Get requested state
-    const bool bState = eweEvent.aArgs.front().b;
+    const bool bState = eweEvent.eaArgs.front().b;
     // Set the new input if we can and log status
     cGlFW->WinSetCursor(bState);
     cLog->LogDebugExSafe("Input updated cursor visibility status to $.",
@@ -149,7 +151,7 @@ static class Display final :
   { // If raw mouse support is supported?
     if(cGlFW->IsNotRawMouseMotionSupported()) return;
     // Set the new input if we can and log status
-    cGlFW->WinSetRawMouseMotion(eweEvent.aArgs.front().b);
+    cGlFW->WinSetRawMouseMotion(eweEvent.eaArgs.front().b);
     cLog->LogDebugExSafe("Input updated raw mouse status to $.",
       StrFromBoolTF(cGlFW->WinGetRawMouseMotion()));
   }
@@ -166,37 +168,38 @@ static class Display final :
   /* -- Window set sticky keys request ------------------------------------- */
   void OnReqStickyKeys(const EvtWinEvent &eweEvent)
   { // Set the new input if we can and log status
-    cGlFW->WinSetStickyKeys(eweEvent.aArgs.front().b);
+    cGlFW->WinSetStickyKeys(eweEvent.eaArgs.front().b);
     cLog->LogDebugExSafe("Input updated sticky keys status to $.",
       StrFromBoolTF(cGlFW->WinGetStickyKeys()));
   }
   /* -- Window set sticky mouse request ------------------------------------ */
   void OnReqStickyMouse(const EvtWinEvent &eweEvent)
   { // Set the new input if we can and log status
-    cGlFW->WinSetStickyMouseButtons(eweEvent.aArgs.front().b);
+    cGlFW->WinSetStickyMouseButtons(eweEvent.eaArgs.front().b);
     cLog->LogDebugExSafe("Input updated sticky mouse status to $.",
       StrFromBoolTF(cGlFW->WinGetStickyMouseButtons()));
   }
-  /* -- Window was asked to be hidden -------------------------------------- */
+  /* -- Window was asked to be hidden or shown ----------------------------- */
   void OnReqHide(const EvtWinEvent&) { cGlFW->WinHide(); }
+  void OnReqShow(const EvtWinEvent&) { cGlFW->WinShow(); }
   /* -- Resend mouse position ---------------------------------------------- */
   void OnReqGetCursorPos(const EvtWinEvent&)
     { cGlFW->WinSendMousePosition(); }
   /* -- Set mouse position ------------------------------------------------- */
   void OnReqSetCursorPos(const EvtWinEvent &eweEvent)
-    { cGlFW->WinSetCursorPos(eweEvent.aArgs.front().d,
-                             eweEvent.aArgs.back().d); }
+    { cGlFW->WinSetCursorPos(eweEvent.eaArgs.front().d,
+                             eweEvent.eaArgs.back().d); }
   /* -- Window cursor request ---------------------------------------------- */
   void OnReqSetCursor(const EvtWinEvent &eweEvent)
     { cGlFW->SetCursor(static_cast<GlFWCursorType>
-        (eweEvent.aArgs.front().z)); }
+        (eweEvent.eaArgs.front().z)); }
   /* -- Window reset cursor request ---------------------------------------- */
   void OnReqResetCursor(const EvtWinEvent&)
     { cGlFW->WinSetCursorGraphic(); }
   /* -- Window scale change request ---------------------------------------- */
   void OnScale(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get new values
     const float fNewWidth = emaArgs[1].f,
                 fNewHeight = emaArgs[2].f;
@@ -215,7 +218,7 @@ static class Display final :
   /* -- Window limits change request --------------------------------------- */
   void OnReqSetLimits(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector
-    const EvtWinArgs &ewaArgs = eweEvent.aArgs;
+    const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
     // Get the new limits
     const int iMinW = ewaArgs[0].i, iMinH = ewaArgs[1].i,
               iMaxW = ewaArgs[2].i, iMaxH = ewaArgs[3].i;
@@ -225,7 +228,7 @@ static class Display final :
   /* -- Window focused ----------------------------------------------------- */
   void OnFocus(const EvtMainEvent &emeEvent)
   { // Get state and check it
-    const int iState = emeEvent.aArgs[1].i;
+    const int iState = emeEvent.eaArgs[1].i;
     switch(iState)
     { // Focus restored?
       case GLFW_TRUE:
@@ -281,7 +284,7 @@ static class Display final :
   /* -- On window resized callback ----------------------------------------- */
   void OnResized(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Check if the window resized
     CheckWindowResized(emaArgs[1].i, emaArgs[2].i);
   }
@@ -295,7 +298,7 @@ static class Display final :
   /* -- Window iconified --------------------------------------------------- */
   void OnIconify(const EvtMainEvent &emeEvent)
   { // Get state and check it
-    switch(const int iState = emeEvent.aArgs[1].i)
+    switch(const int iState = emeEvent.eaArgs[1].i)
     { // Minimized? Log that we minimised and return
       case GLFW_TRUE:
         return cLog->LogDebugSafe("Display window state minimised.");
@@ -333,7 +336,7 @@ static class Display final :
         cLog->LogDebugExSafe("-- Mode $: $x$x$<RGB$$$> @ $Hz$.",
           rData.Index(), rData.Width(), rData.Height(), rData.Depth(),
           rData.Red(), rData.Green(), rData.Blue(), rData.Refresh(),
-          &rData == mData.Primary() ? " (Active)" : cCommon->Blank());
+          &rData == mData.Primary() ? " (Active)" : cCommon->CommonBlank());
     } // Custom monitor selected (-2) and valid monitor? Set it
     static constexpr size_t stM2 = StdMaxSizeT - 1;
     moSelected = (stMRequested < stM2 && stMRequested < mlData.size()) ?
@@ -347,20 +350,10 @@ static class Display final :
     const GlFWMonitor &moPrimary = *mlData.Primary();
     const GlFWRes &rPrimary = *moPrimary.Primary();
     // Write to log the monitor we are using
-    cLog->LogInfoExSafe(
-      "Display finished enumerating $ displays...\n"
-      "- Primary monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
-      "- Primary mode $: $x$x$bpp(R$G$B$) @$hz.\n"
-      "- Selected monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
-      "- Selected mode $: $x$x$bpp(R$G$B$) @$hz.",
+    cLog->LogInfoExSafe("Display finished enumerating $ displays...\n"
+                        "- Selected monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
+                        "- Selected mode $: $x$x$bpp(R$G$B$) @$hz.",
       mlData.size(),
-      moPrimary.Index(), moPrimary.Name(), moPrimary.CoordGetX(),
-        moPrimary.CoordGetY(), fixed, setprecision(1),
-        moPrimary.WidthInch(), moPrimary.HeightInch(),
-        moPrimary.DiagonalInch(),
-      rPrimary.Index(), rPrimary.Width(), rPrimary.Height(),
-        rPrimary.Depth(), rPrimary.Red(), rPrimary.Green(),
-        rPrimary.Blue(), rPrimary.Refresh(),
       moSelected->Index(), moSelected->Name(), moSelected->CoordGetX(),
         moSelected->CoordGetY(), fixed, setprecision(1),
         moSelected->WidthInch(), moSelected->HeightInch(),
@@ -368,6 +361,13 @@ static class Display final :
       rSelected->Index(), rSelected->Width(), rSelected->Height(),
         rSelected->Depth(), rSelected->Red(), rSelected->Green(),
         rSelected->Blue(), rSelected->Refresh());
+    cLog->LogDebugExSafe("- Primary monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
+                         "- Primary mode $: $x$x$bpp(R$G$B$) @$hz.",
+      moPrimary.Index(), moPrimary.Name(), moPrimary.CoordGetX(),
+        moPrimary.CoordGetY(), fixed, setprecision(1), moPrimary.WidthInch(),
+        moPrimary.HeightInch(), moPrimary.DiagonalInch(),
+      rPrimary.Index(), rPrimary.Width(), rPrimary.Height(), rPrimary.Depth(),
+        rPrimary.Red(), rPrimary.Green(), rPrimary.Blue(), rPrimary.Refresh());
   }
   /* -- Monitor changed ---------------------------------------------------- */
   static void OnMonitorStatic(GLFWmonitor*const, const int);
@@ -465,7 +465,7 @@ static class Display final :
   /* == Framebuffer reset requested ======================================== */
   void OnFBReset(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get new frame buffer size
     const int iWidth = emaArgs[1].i, iHeight = emaArgs[2].i;
     // On Mac?
@@ -521,13 +521,13 @@ static class Display final :
   /* -- Window size requested ---------------------------------------------- */
   void OnReqResize(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector and send the new size to GLFW
-    const EvtWinArgs &ewaArgs = eweEvent.aArgs;
+    const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
     cGlFW->WinSetSize({ ewaArgs[0].i, ewaArgs[1].i });
   }
   /* -- Window move requested ---------------------------------------------- */
   void OnReqMove(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector and send new position to GLFW
-    const EvtWinArgs &ewaArgs = eweEvent.aArgs;
+    const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
     cGlFW->WinSetPos({ ewaArgs[0].i, ewaArgs[1].i });
   }
   /* -- Window centre request ---------------------------------------------- */
@@ -553,7 +553,7 @@ static class Display final :
     // Disable input events to prevent the full-screen toggler being repeated
     cInput->DisableInputEvents();
     // Use requested setting instead
-    SetFullScreen(eweEvent.aArgs.front().b);
+    SetFullScreen(eweEvent.eaArgs.front().b);
     // Re-enable input events
     cInput->EnableInputEvents();
   }
@@ -607,6 +607,72 @@ static class Display final :
     // centered or return the user specified position
     return CoordGetX() == -2 || CoordGetY() == -2 ?
       GetCentreCoords(diSize) : static_cast<CoordInt>(*this);
+  }
+  /* -- After the Window is adjusted --------------------------------------- */
+  template<bool bCheck>const DimCoords
+    PostInitWindow(const CoordInt &ciNPosition, const DimInt &diNSize,
+      DimInt &diSize)
+  { // Return if we're not checking the new position
+    if constexpr(!bCheck)
+    { // We're not using this parameter
+      static_cast<void>(diSize);
+      // Return original co-ords and size
+      return { ciNPosition, diNSize };
+    } // Get newly selected window co-ordinates and dimensions
+    const DimCoords dcNew{ ciNPosition, diNSize };
+    // If position is different from requested?
+    if(dcNew.CoordIsNotEqual(ciPosition))
+    { // Set bad coordinates flag
+      FlagSet(DF_BADPOS);
+      // If size is different from requested?
+      if(dcNew.DimIsNotEqual(diSize))
+      { // Set bad dimensions flag
+        FlagSet(DF_BADSIZE);
+        // Log warning to say the requested size and coords were not honoured
+        cLog->LogWarningExSafe(
+          "Display set a $x$ window at $x$ instead of $x$ at $x$!",
+          dcNew.DimGetWidth(), dcNew.DimGetHeight(), dcNew.CoordGetX(),
+          dcNew.CoordGetY(), diSize.DimGetWidth(), diSize.DimGetHeight(),
+          ciPosition.CoordGetX(), ciPosition.CoordGetY());
+        // Store new size
+        diSize.DimSet(dcNew);
+      } // Size is not as requested?
+      else
+      { // Clear bad dimensions flag
+        FlagClear(DF_BADSIZE);
+        // Log warning to say the requested coordinates were not honoured
+        cLog->LogWarningExSafe(
+          "Display set a $x$ window at $x$ instead of $x$!",
+          dcNew.DimGetWidth(), dcNew.DimGetHeight(), dcNew.CoordGetX(),
+          dcNew.CoordGetY(), diSize.DimGetWidth(), diSize.DimGetHeight());
+      } // Store new position
+      ciPosition.CoordSet(dcNew);
+    } // If position is same as requested?
+    else
+    { // Clear bad coordinates flag
+      FlagClear(DF_BADPOS);
+      // Size is different as requested?
+      if(dcNew.DimIsNotEqual(diSize))
+      { // Set bad dimensions flag
+        FlagSet(DF_BADSIZE);
+        // Log warning to say the requested size was not honoured
+        cLog->LogWarningExSafe(
+          "Display set a $x$ instead of a $x$ window at $x$!",
+          dcNew.DimGetWidth(), dcNew.DimGetHeight(), diSize.DimGetWidth(),
+          diSize.DimGetHeight(), dcNew.CoordGetX(), dcNew.CoordGetY());
+        // Store new size
+        diSize.DimSet(dcNew);
+      } // Size is not as requested?
+      else
+      { // Clear bad dimensions flag
+        FlagClear(DF_BADSIZE);
+        // Log warning to say the requested cnates were not honoured
+        cLog->LogInfoExSafe("Display set a $x$ window at $x$ successfully.",
+          dcNew.DimGetWidth(), dcNew.DimGetHeight(), dcNew.CoordGetX(),
+          dcNew.CoordGetY());
+      }
+    } // Return new co-ordinates
+    return dcNew;
   }
   /* -- Re-initialise window ----------------------------------------------- */
   void ReInitWindow(const bool bState)
@@ -669,60 +735,17 @@ static class Display final :
       cGlFW->WinSetResizableAttrib(FlagIsSet(DF_SIZABLE));
       // Instruct glfw to change to window mode
       cGlFW->WinSetMonitor(nullptr, ciPosition, diSize, 0);
-    } // Get newly selected window co-ordinates and dimensions
-    const DimCoords dcNew{ cGlFW->WinGetPos(), cGlFW->WinGetSize() };
-    // If position is different from requested?
-    if(dcNew.CoordIsNotEqual(ciPosition))
-    { // Set bad coordinates flag
-      FlagSet(DF_BADPOS);
-      // If size is different from requested?
-      if(dcNew.DimIsNotEqual(diSize))
-      { // Set bad dimensions flag
-        FlagSet(DF_BADSIZE);
-        // Log warning to say the requested size and coords were not honoured
-        cLog->LogWarningExSafe(
-          "Display set a $x$ window at $x$ instead of $x$ at $x$!",
-          dcNew.DimGetWidth(), dcNew.DimGetHeight(), dcNew.CoordGetX(),
-          dcNew.CoordGetY(), diSize.DimGetWidth(), diSize.DimGetHeight(),
-          ciPosition.CoordGetX(), ciPosition.CoordGetY());
-        // Store new size
-        diSize.DimSet(dcNew);
-      } // Size is not as requested?
-      else
-      { // Clear bad dimensions flag
-        FlagClear(DF_BADSIZE);
-        // Log warning to say the requested coordinates were not honoured
-        cLog->LogWarningExSafe(
-          "Display set a $x$ window at $x$ instead of $x$!",
-          dcNew.DimGetWidth(), dcNew.DimGetHeight(), dcNew.CoordGetX(),
-          dcNew.CoordGetY(), diSize.DimGetWidth(), diSize.DimGetHeight());
-      } // Store new position
-      ciPosition.CoordSet(dcNew);
-    } // If position is same as requested?
-    else
-    { // Clear bad coordinates flag
-      FlagClear(DF_BADPOS);
-      // Size is different as requested?
-      if(dcNew.DimIsNotEqual(diSize))
-      { // Set bad dimensions flag
-        FlagSet(DF_BADSIZE);
-        // Log warning to say the requested size was not honoured
-        cLog->LogWarningExSafe(
-          "Display set a $x$ instead of a $x$ window at $x$!",
-          dcNew.DimGetWidth(), dcNew.DimGetHeight(), diSize.DimGetWidth(),
-          diSize.DimGetHeight(), dcNew.CoordGetX(), dcNew.CoordGetY());
-        // Store new size
-        diSize.DimSet(dcNew);
-      } // Size is not as requested?
-      else
-      { // Clear bad dimensions flag
-        FlagClear(DF_BADSIZE);
-        // Log warning to say the requested cnates were not honoured
-        cLog->LogInfoExSafe("Display set a $x$ window at $x$ successfully.",
-          dcNew.DimGetWidth(), dcNew.DimGetHeight(), dcNew.CoordGetX(),
-          dcNew.CoordGetY());
-      }
-    }
+    } // Calculate new co-ordinates and size
+    const DimCoords dcNew{
+    // If compiling on Linux?
+#if defined(LINUX)
+      // Using Wayland? Getting position and size not available
+      cSystem->IsWayland() ?
+        PostInitWindow<false>(ciPosition, diSize, diSize) :
+#endif
+      // Get new position and size normally
+      PostInitWindow<true>(cGlFW->WinGetPos(), cGlFW->WinGetSize(), diSize),
+    };
     // Store initial window size. This needs to be done because on Linux, the
     // window size isn't sent so we need to store the value.
     cInput->DimSet(diSize);
@@ -750,14 +773,15 @@ static class Display final :
     // Update the main fbo viewport size without scale
     cFboCore->DimSet(cInput->DimGet<GLsizei>());
 #endif
-    // Show the window
-    cGlFW->WinShow();
     // Window has been focued if auto-focus is enabled
     if(FlagIsSet(DF_AUTOFOCUS)) FlagSet(DF_FOCUSED);
-    // Tell input to reset mouse in window focus
-    cInput->FlagSet(IF_MOUSEFOCUS);
-    // Update cursor visibility as OS or glfw can mess it up
-    cInput->CommitCursorNow();
+    // Check that cursor is in window
+    double dX; double dY; cGlFW->WinGetCursorPos(dX, dY);
+    cInput->FlagSetOrClear(IF_MOUSEFOCUS,
+      dX >= 0 &&
+      dY >= 0 &&
+      dX < dcNew.DimGetWidth<double>() &&
+      dY < dcNew.DimGetHeight<double>());
   }
   /* -- Get monitors list ------------------------------------------ */ public:
   const GlFWMonitors &GetMonitors(void) const { return mlData; }
@@ -782,18 +806,20 @@ static class Display final :
   void RequestCentre(void) { cEvtWin->AddUnblock(EWC_WIN_CENTRE); }
   /* -- Request from alternative thread to reposition the window ----------- */
   void RequestReposition(void) { cEvtWin->AddUnblock(EWC_WIN_RESET); }
+  /* -- Request to open window --------------------------------------------- */
+  void RequestOpen(void) { cEvtWin->AddUnblock(EWC_WIN_SHOW); }
   /* -- Request to close window -------------------------------------------- */
-  void RequestClose(void) { cEvtWin->Add(EWC_WIN_HIDE); }
+  void RequestClose(void) { cEvtWin->AddUnblock(EWC_WIN_HIDE); }
   /* -- Request to minimise window ----------------------------------------- */
-  void RequestMinimise(void) { cEvtWin->Add(EWC_WIN_MINIMISE); }
+  void RequestMinimise(void) { cEvtWin->AddUnblock(EWC_WIN_MINIMISE); }
   /* -- Request to maximise window ----------------------------------------- */
-  void RequestMaximise(void) { cEvtWin->Add(EWC_WIN_MAXIMISE); }
+  void RequestMaximise(void) { cEvtWin->AddUnblock(EWC_WIN_MAXIMISE); }
   /* -- Request to restore window ------------------------------------------ */
-  void RequestRestore(void) { cEvtWin->Add(EWC_WIN_RESTORE); }
+  void RequestRestore(void) { cEvtWin->AddUnblock(EWC_WIN_RESTORE); }
   /* -- Request to focus window -------------------------------------------- */
-  void RequestFocus(void) { cEvtWin->Add(EWC_WIN_FOCUS); }
+  void RequestFocus(void) { cEvtWin->AddUnblock(EWC_WIN_FOCUS); }
   /* -- Request for window attention --------------------------------------- */
-  void RequestAttention(void) { cEvtWin->Add(EWC_WIN_ATTENTION); }
+  void RequestAttention(void) { cEvtWin->AddUnblock(EWC_WIN_ATTENTION); }
   /* -- Request from alternative thread to fullscreen toggle without save -- */
   void RequestFSToggle(const bool bState)
     { cEvtWin->AddUnblock(EWC_WIN_TOGGLE_FS, bState); }
@@ -803,12 +829,12 @@ static class Display final :
     if(FlagIsEqualToBool(DF_INFULLSCREEN, bState)) return;
     // If using Linux?
 #if defined(LINUX)
-    // Here appears to be yet another issue with GLFW on Linux. Changing back
-    // to window mode from full-screen isn't working for some reason so I'm
-    // just going to work around that by just quitting the thread and doing a
-    // full re-initialisation until I can (ever?) figure out why this is
-    // happening on Linux and not on MacOS or Windows.
-    if(!bState) return cEvtMain->RequestQuitThread();
+    // Here appears to be yet another issue with GLFW and Wayland on Linux.
+    // Changing back to window mode from full-screen isn't working for some
+    // reason so I'm just going to work around that by just quitting the
+    // thread and doing a full re-initialisation until I can (ever?) figure
+    // out why this is happening on Linux and not on MacOS or Windows.
+    if(cSystem->IsWayland()) return cEvtMain->RequestQuitThread();
 #endif
     // Update new fullscreen setting and re-initialise if successful
     ReInitWindow(bState);
@@ -1024,6 +1050,8 @@ static class Display final :
     UpdateIcons();
     // Set default gamma for selected monitor
     ApplyGamma();
+    // Flush any existing window events
+    cEvtWin->Flush();
     // Register main and window thread events
     cEvtMain->RegisterEx(emrvEvents);
     cEvtWin->RegisterEx(ewrvEvents);
@@ -1071,15 +1099,13 @@ static class Display final :
     // Log progress
     cLog->LogInfoSafe("Display class deinitialised successfully.");
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Display, DeInit())
   /* -- Constructor -------------------------------------------------------- */
   Display(void) :
     /* --------------------------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Send name to init helper
-#if defined(LINUX)
-    DisplayFlags{ DF_WAYLANDFIX },     // Wayland fix required
-#else
     DisplayFlags{ DF_NONE },           // No display flags set
-#endif
     DimCoInt{ -1, -1, 0, 0 },          // Requested position and size
     emrvEvents{                        // Register main events
       { EMC_VID_FB_REINIT,     bind(&Display::OnFBReset,     this, _1) },
@@ -1113,6 +1139,7 @@ static class Display final :
       { EWC_WIN_SETRAWMOUSE, bind(&Display::OnReqSetRawMouse,  this, _1) },
       { EWC_WIN_SETSTKKEYS,  bind(&Display::OnReqStickyKeys,   this, _1) },
       { EWC_WIN_SETSTKMOUSE, bind(&Display::OnReqStickyMouse,  this, _1) },
+      { EWC_WIN_SHOW,        bind(&Display::OnReqShow,         this, _1) },
       { EWC_WIN_TOGGLE_FS,   bind(&Display::OnReqToggleFS,     this, _1) },
     },
     moSelected(nullptr),               // No monitor selected
@@ -1140,11 +1167,9 @@ static class Display final :
       STR(FST_STANDBY),    STR(FST_WINDOW), STR(FST_EXCLUSIVE),
       STR(FST_BORDERLESS), STR(FST_NATIVE)
     }, "FST_UNKNOWN"}                  // End of full-screen type strings list
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Display, DeInit())
-  /* -- Helper macro for boolean based CVars based on OS ------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cDisplay = this; }
+  /* -- Helper macro for boolean based CVars based on OS ----------- */ public:
 #define CBCVARFLAG(n, f) CVarReturn n(const bool bState) \
     { FlagSetOrClear(f, bState); return ACCEPT; }
 #define CBCVARFORCEFLAG(n, f, v) CVarReturn n(const bool) \
@@ -1317,8 +1342,7 @@ static class Display final :
   /* -- Icon filenames changed (allow blank strings) ------ Core::SetIcon -- */
   CVarReturn SetIcon(const string &strF, string&)
     { return BoolToCVarReturn(strF.empty() || SetIcon(strF)); }
-  /* ----------------------------------------------------------------------- */
-} *cDisplay = nullptr;                 // Pointer to static class
+};/* ----------------------------------------------------------------------- */
 /* -- Monitor changed static event ----------------------------------------- */
 void Display::OnMonitorStatic(GLFWmonitor*const mA, const int iA)
   { cDisplay->OnMonitor(mA, iA); }

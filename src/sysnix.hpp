@@ -22,7 +22,9 @@
 ** ## again - they are only for initialisation.                           ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-class SysProcess                       // Need this before of System init order
+class SysProcess :                     // Need this before of System init order
+  /* -- Dependency classes ------------------------------------------------- */
+  private Ident                        // Mutex identifier
 { /* -- Streams ------------------------------------------------- */ protected:
   FStream          fsDevRandom,        // Handle to dev/random (rng)
                    fsProcStat,         // Handle to proc/stat (cpu)
@@ -45,7 +47,32 @@ class SysProcess                       // Need this before of System init order
     { return static_cast<IntType>(ullProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid(void) const
     { return static_cast<IntType>(vpThreadId); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Initialise global mutex ------------------------------------ */ public:
+  bool InitGlobalMutex(const string_view &strvTitle)
+  { // Initialise mutex ident
+    IdentSet(strvTitle);
+    // Create the semaphore and if the creation failed?
+    if(shm_open(strvTitle.data(), O_CREAT | O_EXCL, 0) == -1)
+    { // If it was because it already exists?
+      if(StdIsError(EEXIST) || StdIsError(EACCES))
+      { // Execution may not continue
+        cLog->LogWarningSafe(
+         "System detected another instance of this application running.");
+        return false;
+      } // Report error
+      cLog->LogWarningExSafe("System failed to setup global mutex: $!",
+        SysError());
+    } // Execution may continue
+    return true;
+  }
+  /* -- Destructor --------------------------------------------------------- */
+  ~SysProcess(void)
+  { // Unlink the mutex and show warning in log if failed
+    if(IdentIsSet() && shm_unlink(IdentGetData()))
+      cLog->LogWarningExSafe("SysMutex could not delete old mutex '$': $",
+        IdentGet(), SysError());
+  }
+  /* -- Constructor -------------------------------------------------------- */
   SysProcess(void) :
     /* -- Initialisers ----------------------------------------------------- */
     fsDevRandom{ "/dev/random",        // Open dev random garbage stream
@@ -88,7 +115,7 @@ class SysCore :
         { // Truncate the end of string. We only care about the top line.
           strStat.resize(stLF);
           // Grab tokens and if we have enough?
-          const TokenListNC tStats{ strStat, cCommon->Space(), 8 };
+          const TokenListNC tStats{ strStat, cCommon->CommonSpace(), 8 };
           if(tStats.size() >= 3)
           { // We're only interested in the first value
             memData.stMProcUse = StrToNum<size_t>(tStats[1]) * stPageSize;
@@ -169,7 +196,7 @@ class SysCore :
           // First item must be cpu and second should be empty. We created the
           // string so this tokeniser class is allowed to modify it for
           // increased performance of processing it.
-          const TokenListNC tStats{ strStat, cCommon->Space(), 6 };
+          const TokenListNC tStats{ strStat, cCommon->CommonSpace(), 6 };
           if(tStats.size() >= 5)
           { // Get idle time
             const clock_t cUserNow = StrToNum<clock_t>(tStats[2]),
@@ -347,12 +374,12 @@ class SysCore :
     struct utsname utsnData;
     if(uname(&utsnData)) XCS("Failed to read operating system information!");
     // Tokenize version numbers
-    const Token tVersion{ utsnData.release, cCommon->Period() };
+    const Token tVersion{ utsnData.release, cCommon->CommonPeriod() };
     // Get LANGUAGE code and set default if not found
-    string strCode{ cCmdLine->GetEnv("LANGUAGE") };
+    string strCode{ cCmdLine->CmdLineGetEnv("LANGUAGE") };
     if(strCode.size() != 5)
     { // Get LANG code and set default if not found
-      strCode = cCmdLine->GetEnv("LANG");
+      strCode = cCmdLine->CmdLineGetEnv("LANG");
       if(strCode.size() < 5) strCode = "en_GB.UTF8";
     } // Set global locale and show error if failed
     if(!setlocale(LC_ALL, strCode.c_str()))
@@ -363,11 +390,11 @@ class SysCore :
     const size_t stPeriod = strCode.find('.');
     if(stPeriod != StdNPos) strCode = strCode.substr(0, stPeriod);
     // Return operating system info
-    return { utsnData.sysname, cCommon->Blank(),
+    return { utsnData.sysname, cCommon->CommonBlank(),
       tVersion.empty()    ? 0 : StrToNum<unsigned int>(tVersion[0]),
       tVersion.size() < 2 ? 0 : StrToNum<unsigned int>(tVersion[1]),
       tVersion.size() < 3 ? 0 : StrToNum<unsigned int>(tVersion[2]),
-      sizeof(void*)*8, StdMove(strCode), DetectElevation(), false };
+      sizeof(void*)<<3, StdMove(strCode), DetectElevation(), false };
   }
   /* ----------------------------------------------------------------------- */
   ExeData GetExecutableData(void) { return { 0, 0, false, false }; }
@@ -379,7 +406,7 @@ class SysCore :
       const string strFile{ fsCpuInfo.FStreamReadStringChunked() };
       if(!strFile.empty())
       { // Parse the variables and if we got some?
-        ParserConst<> pcParser{ strFile, cCommon->Lf(), ':' };
+        ParserConst<> pcParser{ strFile, cCommon->CommonLf(), ':' };
         if(!pcParser.empty())
         { // Move stirngs from loaded variables
           string strCpuId{ StdMove(pcParser.ParserGet("model name")) },
@@ -396,12 +423,12 @@ class SysCore :
           StrCompactRef(strModel);
           StrCompactRef(strStepping);
           // Fail-safe any empty strings
-          if(strSpeed.empty()) strSpeed = cCommon->Zero();
-          if(strVendor.empty()) strVendor = cCommon->Unspec();
+          if(strSpeed.empty()) strSpeed = cCommon->CommonZero();
+          if(strVendor.empty()) strVendor = cCommon->CommonUnspec();
           if(strCpuId.empty()) strCpuId = strVendor;
-          if(strFamily.empty()) strFamily = cCommon->Zero();
-          if(strModel.empty()) strModel = cCommon->Zero();
-          if(strStepping.empty()) strStepping = cCommon->Zero();
+          if(strFamily.empty()) strFamily = cCommon->CommonZero();
+          if(strModel.empty()) strModel = cCommon->CommonZero();
+          if(strStepping.empty()) strStepping = cCommon->CommonZero();
           // Make processor id so it is consistent with the other platforms
           // Return strings
           return { StdThreadMax(),
@@ -419,7 +446,7 @@ class SysCore :
     else cLog->LogWarningExSafe("Could not open cpu information file: $!",
       StrFromErrNo());
     // Return default data we could not read
-    return { StdThreadMax(), 0, 0, 0, 0, cCommon->Unspec() };
+    return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning(void) const { return false; }
@@ -468,7 +495,7 @@ class SysCore :
   bool IsWayland(void) const { return bIsWayland; }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir(void) const
-    { return cCmdLine->MakeEnvPath("HOME", "/.local"); }
+    { return cCmdLine->CmdLineMakeEnvPath("HOME", "/.local"); }
   /* -- Constructor -------------------------------------------------------- */
   SysCore(void) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -477,8 +504,8 @@ class SysCore :
                GetOperatingSystememData(),
                GetProcessorData() },
     bWindowInitialised(false),
-    bIsWayland(!cCmdLine->GetEnv("WAYLAND_DISPLAY").empty())
+    bIsWayland(!cCmdLine->CmdLineGetEnv("WAYLAND_DISPLAY").empty())
     /* -- No code ---------------------------------------------------------- */
     { }
-}; /* ---------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

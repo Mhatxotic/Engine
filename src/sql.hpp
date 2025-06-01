@@ -11,15 +11,16 @@
 namespace ISql {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IClock::P;
-using namespace ICmdLine::P;           using namespace ICrypt::P;
-using namespace ICVarDef::P;           using namespace IDir::P;
-using namespace IError::P;             using namespace IFlags;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaUtil::P;           using namespace IPSplit::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITimer::P;
-using namespace IUtil::P;              using namespace Lib::Sqlite;
+using namespace ICmdLine::P;           using namespace ICommon::P;
+using namespace ICrypt::P;             using namespace ICVarDef::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IFlags;                using namespace IIdent::P;
+using namespace ILog::P;               using namespace ILuaUtil::P;
+using namespace IPSplit::P;            using namespace IMemory::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITimer::P;             using namespace IUtil::P;
+using namespace Lib::Sqlite;
 /* -- Replacement for SQLITE_TRANSIENT which cases warnings ---------------- */
 static const sqlite3_destructor_type fcbSqLiteTransient =
   reinterpret_cast<sqlite3_destructor_type>(-1);
@@ -38,10 +39,10 @@ BUILD_FLAGS(Sql,                       // Sql flags classes
   // Delete empty databases?           Debug sql executions?
   SF_DELETEEMPTYDB          {Flag(2)}
 );/* ----------------------------------------------------------------------- */
-class SqlData :                        // Query response data item class
+struct SqlData :                        // Query response data item class
   /* -- Base classes ------------------------------------------------------- */
   public Memory                        // Memory block and type
-{ /* -- Sql type variable ------------------------------------------ */ public:
+{ /* -- Sql type variable -------------------------------------------------- */
   int              iType;              // Type of memory in block
   /* -- Move assignment operator ------------------------------------------- */
   SqlData &operator=(SqlData &&sdOther)
@@ -64,7 +65,9 @@ class SqlData :                        // Query response data item class
 MAPPACK_BUILD(SqlRecords, const string, SqlData);
 typedef list<SqlRecordsMap> SqlResult; // vector of key/raw data blocks
 /* -- Sql manager class ---------------------------------------------------- */
-static struct Sql final :              // Members initially public
+struct Sql;                            // Class prototype
+static Sql *cSql = nullptr;            // Pointer to global class
+struct Sql :                           // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public Ident,                        // Sql database filename
   private SqlFlags                     // Sql flags
@@ -836,7 +839,7 @@ static struct Sql final :              // Members initially public
     { return sqlite3_changes(sqlDB); }
   /* -- Process a count(*) requested --------------------------------------- */
   size_t GetRecordCount(const string_view &strvTable,
-                        const string_view &strvCondition=cCommon->CBlank())
+    const string_view &strvCondition=cCommon->CommonCBlank())
   { // Do a table count lookup. If succeeded and have records?
     if(ExecuteAndSuccess(StrFormat("SELECT count(*) FROM `$`$",
       strvTable, strvCondition)) && !srKeys.empty())
@@ -1304,6 +1307,8 @@ static struct Sql final :              // Members initially public
     cLog->LogInfoExSafe("Sql database '$' initialised.", IdentGet());
     return true;
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Sql, DeInit(); sqlite3_shutdown())
   /* -- Constructor -------------------------------------------------------- */
   Sql(void) :                          // No parameters
     /* -- Initialisers ----------------------------------------------------- */
@@ -1347,13 +1352,13 @@ static struct Sql final :              // Members initially public
     strvSValueColumn{ "V" },           // Init name of schema 'value' column
     strvSVersionKey{ "V" }             // Init name of version # key in schema
   /* -- Code --------------------------------------------------------------- */
-  { // Throw error if sqlite startup failed
+  { // Set global pointer to static class
+    cSql = this;
+    // Throw error if sqlite startup failed
     if(IsError()) XC("Failed to initialise SQLite!",
                      "Error", GetError(), "Reason", GetErrorAsIdString());
   }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Sql, DeInit(); sqlite3_shutdown())
-  /* -- Set a pragma on or off (used only with cvar callbacks) ---- CVARS -- */
+  /* -- Set a pragma on or off (used only with cvar callbacks) ----- */ public:
   CVarReturn PragmaOnOff(const string &strVar, const bool bState)
     { Pragma(strVar, bState ? strvOn : strvOff); return ACCEPT; }
   /* -- Set retry count ---------------------------------------------------- */
@@ -1406,7 +1411,7 @@ static struct Sql final :              // Members initially public
     // If the user specified something?
     else
     { // Switch to original startup directory
-      if(!DirSetCWD(cCmdLine->GetStartupCWD())) return DENY;
+      if(!DirSetCWD(cCmdLine->CmdLineGetStartupCWD())) return DENY;
       // Use theirs, but force UDB extension
       strVar = StrAppend(strFile, "." UDB_EXTENSION);
     } // Initialise the db and if succeeded?
@@ -1416,9 +1421,9 @@ static struct Sql final :              // Members initially public
       // Success
       return ACCEPT_HANDLED;
     } // If we have a persistant directory?
-    if(cCmdLine->IsHome())
+    if(cCmdLine->CmdLineIsHome())
     { // Set a new filename in the users home directory
-      strVar = cCmdLine->GetHome(PathSplit{ strVar }.strFileExt);
+      strVar = cCmdLine->CmdLineGetHome(PathSplit{ strVar }.strFileExt);
       // Try opening that and if succeeded then return success
       if(Init(strVar)) goto SqlInitOK;
     } // Use memory database instead
@@ -1426,9 +1431,7 @@ static struct Sql final :              // Members initially public
     // Now open the memory database which should ALWAYS succeed.
     return Init(strVar) ? ACCEPT_HANDLED : DENY;
   }
-  /* -- End ---------------------------------------------------------------- */
-} *cSql = nullptr;                     // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

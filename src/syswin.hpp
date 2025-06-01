@@ -23,7 +23,9 @@
 ** ## again - they are only for initialisation.                           ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-class SysProcess                       // Need this before of System init order
+class SysProcess :                     // Need this before of System init order
+  /* -- Dependency classes ------------------------------------------------- */
+  private Ident                        // Mutex identifier
 { /* ------------------------------------------------------------ */ protected:
   uint64_t         qwSKL,              // Kernel kernel time
                    qwSUL,              // Kernel user time
@@ -34,9 +36,52 @@ class SysProcess                       // Need this before of System init order
   const HMODULE    hKernel;            // Handle to kernel library
   const HANDLE     hProcess;           // Process handle
   const HINSTANCE  hInstance;          // Process instance
+  HANDLE           hMutex;             // Global mutex handle
   /* -- Return process and thread id ------------------------------ */ private:
   const DWORD      ulProcessId;        // Process id
   const DWORD      ulThreadId;         // Thread id (WinMain())
+  /* ----------------------------------------------------------------------- */
+  static BOOL WINAPI EnumWindowsProc(HWND hH, LPARAM lP)
+  { // Get title of window and cancel if empty
+    wstring wstrT(GetWindowTextLength(hH), 0);
+    if(!GetWindowText(hH, const_cast<LPWSTR>(wstrT.c_str()),
+      static_cast<DWORD>(wstrT.capacity())))
+        return TRUE;
+    // If there is not enough characters in this windows title or the title
+    // and requested window title's contents do not match? Ignore this window!
+    const wstring &wstrN = *reinterpret_cast<wstring*>(lP);
+    if(wstrT.length() < wstrN.length() ||
+      StdCompare(wstrN.data(), wstrT.data(), wstrN.length()*sizeof(wchar_t)))
+        return TRUE;
+    // We found the window
+    cLog->LogDebugExSafe("- Found window handle at $$.\n"
+                 "- Window name is '$'.",
+      hex, reinterpret_cast<void*>(hH), WS16toUTF(wstrT));
+    // First try showing the window and if successful? Log the successful
+    // command else if showing the window failed? Log the failure with reason
+    if(ShowWindow(hH, SW_RESTORE|SW_SHOWNORMAL))
+      cLog->LogDebugSafe("- Show window request was successful.");
+    else
+      cLog->LogWarningExSafe("- Show window request failed: $!", SysError());
+    // Then try setting it as a foreground window and if succeeded? Log the
+    // successful command else if setting the foreground window failed? Log the
+    // failure with reason.
+    if(SetForegroundWindow(hH))
+      cLog->LogDebugSafe("- Set fg window request was successful.");
+    else
+      cLog->LogWarningExSafe("- Set fg window request failed: $!", SysError());
+    // Then try setting the focus of the window and if succeeded? Log the
+    // successful command else if the setting focus failed? Log the failure
+    // with reason.
+    if(SetFocus(hH) || SysIsErrorCode())
+      cLog->LogDebugSafe("- Set focus request was successful.");
+    else
+      cLog->LogWarningExSafe("- Set focus request failed: $!", SysError());
+    // Reset error so it's not seen as the result
+    SetLastError(0);
+    // Don't look for any more windows
+    return FALSE;
+  }
   /* -- Return process and thread id ---------------------------- */ protected:
   template<typename IntType=decltype(ulProcessId)>IntType GetPid(void) const
     { return static_cast<IntType>(ulProcessId); }
@@ -194,7 +239,41 @@ class SysProcess                       // Need this before of System init order
   /* ----------------------------------------------------------------------- */
   template<typename T>T Test(const T tParam, const char*const cpStr)
     { if(!tParam) XCS(cpStr); return tParam; }
-  /* ----------------------------------------------------------------------- */
+  /* --------------------------------------------------------------- */ public:
+  bool InitGlobalMutex(const string_view &strvTitle)
+  { // Convert UTF title to wide string
+    const wstring wstrTitle{ UTFtoS16(strvTitle) };
+    // Create the global mutex handle with the specified name and check error
+    hMutex = CreateMutex(nullptr, FALSE, wstrTitle.c_str());
+    switch(const DWORD dwResult = SysErrorCode<DWORD>())
+    { // No error, continue
+      case 0: return true;
+      // Global mutex name already exists?
+      case ERROR_ALREADY_EXISTS:
+        // Log that another instance already exists
+        cLog->LogDebugSafe(
+          "System found existing mutex, scanning for original window...");
+        // Look for the specified window and if we activated it?
+        if(!EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&wstrTitle)))
+        { // If an error occured?
+          if(SysIsNotErrorCode())
+          { // Log the error and reason why it failed
+            cLog->LogErrorExSafe(
+              "System failed to find the window to activate! $!", SysError());
+          } // No window was found
+          else cLog->LogWarningSafe("System window enumeration successful!");
+        } // Could not find it?
+        else cLog->LogDebugSafe("System window enumeration unsuccessful!");
+        // Caller must terminate program
+        return false;
+      // Other error
+      default: XCS("Failed to create global mutex object!",
+        "Title",  strvTitle,
+        "Result", static_cast<unsigned int>(dwResult),
+        "mutex",  reinterpret_cast<void*>(hMutex));
+    } // Getting here is impossible
+  }
+  /* -- Constructor --------------------------------------------- */ protected:
   SysProcess(void) :
     /* -- Initialisers ----------------------------------------------------- */
     qwSKL(0),
@@ -205,6 +284,7 @@ class SysProcess                       // Need this before of System init order
     hKernel(Test(GetModuleHandle(L"KERNEL32"), "No kernel library handle!")),
     hProcess(Test(GetCurrentProcess(), "No engine process handle!")),
     hInstance(Test(GetModuleHandle(nullptr), "No engine instance handle!")),
+    hMutex(nullptr),
     ulProcessId(GetCurrentProcessId()),
     ulThreadId(GetCurrentThreadId())
     /* -- Code ------------------------------------------------------------- */
@@ -225,6 +305,10 @@ class SysProcess                       // Need this before of System init order
     _RTC_SetErrorFunc(nullptr);
     // Deinitialise COM
     CoUninitialize();
+    // If mutex initialised? Close the handle and log if failed
+    if(hMutex && !CloseHandle(hMutex))
+      cLog->LogWarningExSafe("System failed to close mutex handle '$'! $.",
+        IdentGet(), SysError());
   }
 };/* == Class ============================================================== */
 class SysCore :
@@ -828,12 +912,12 @@ class SysCore :
         StrCompactRef(strName);
         StrCompactRef(strIdent);
         // Fail-safe empty strings
-        if(strVendor.empty()) strVendor = cCommon->Unspec();
+        if(strVendor.empty()) strVendor = cCommon->CommonUnspec();
         if(strName.empty()) strName = strVendor;
-        if(strIdent.empty()) strIdent = cCommon->Unspec();
+        if(strIdent.empty()) strIdent = cCommon->CommonUnspec();
         // Detect family model and stepping from string (A F 0 M 0 S)
         unsigned int uiFamily, uiModel, uiStepping;
-        Token tTokens{ strIdent, cCommon->Space() };
+        Token tTokens{ strIdent, cCommon->CommonSpace() };
         if(tTokens.size() >= 7 && tTokens[1] == "Family" &&
           tTokens[3] == "Model" && tTokens[5] == "Stepping")
         { // Convert strings to numbers
@@ -852,7 +936,7 @@ class SysCore :
     else cLog->LogWarningExSafe("System could not open registry key $! $",
       strK, SysError());
     // Return default data we could not read
-    return { StdThreadMax(), 0, 0, 0, 0, cCommon->Unspec() };
+    return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
   }
   /* ----------------------------------------------------------------------- */
   void UpdateMemoryUsageData(void)
@@ -995,7 +1079,7 @@ class SysCore :
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir(void) const
-    { return cCmdLine->MakeEnvPath("APPDATA", ""); }
+    { return cCmdLine->CmdLineMakeEnvPath("APPDATA", cCommon->CommonBlank()); }
   /* -- Constructor (only derivable) --------------------------------------- */
   SysCore(void) :
     /* -- Initialisers ----------------------------------------------------- */

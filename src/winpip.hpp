@@ -68,7 +68,7 @@ class SysPipe :                        // Members initially private
       XC("Executable name is invalid!",
          "CmdLine", strCmdLine, "Program", strApp,
          "Code",    iVResult,
-         "Reason",  cDirBase->VNRtoStr(iVResult));
+         "Reason",  cDirBase->DirBaseVNRtoStr(iVResult));
     // De-init existing process
     Finish();
     // Show command and arguments
@@ -232,8 +232,11 @@ class SysPipe :                        // Members initially private
     return 0;
   }
   /* -- Constructor with init ---------------------------------------------- */
-  void Init(const string &strCmdLine, const ValidType vtId=VT_UNTRUSTED)
+  void Init(const string &strCmdLine, const ValidType vtId)
     { if(const Args aList{ strCmdLine }) InitArgs(strCmdLine, aList, vtId); }
+  /* -- Constructor with init with default safety mode --------------------- */
+  void Init(const string &strCmdLine)
+    { Init(strCmdLine, cDirBase->DirBaseGetSafetyMode()); }
   /* -- Return pid --------------------------------------------------------- */
   unsigned int GetPid(void) { return static_cast<unsigned int>(dwPid); }
   /* -- Constructor with init ---------------------------------------------- */
@@ -256,5 +259,5 @@ class SysPipe :                        // Members initially private
     { }
   /* -- Destructor --------------------------------------------------------- */
   ~SysPipe(void) { DeInit(); }
-};/* -- End ---------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

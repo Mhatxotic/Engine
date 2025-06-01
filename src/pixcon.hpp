@@ -793,6 +793,8 @@ class SysCon :                         // All members initially private
     // System console is initialised
     cLog->LogDebugSafe("SysCon initialised.");
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~SysCon, SysConDeInit())
   /* -- Constructor -------------------------------------------------------- */
   SysCon(SysModMap &&smmMap, const size_t stI) : // No parameters
     /* -- Initialisers ----------------------------------------------------- */
@@ -807,8 +809,6 @@ class SysCon :                         // All members initially private
     iCursor(-1)                        // Current cursor setting uninitialised
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~SysCon, SysConDeInit())
   /* -- Set maximum console line length ---------------------------- */ public:
   CVarReturn RowsModified(const size_t stRows)
   { // Deny if out of range. The maximum value is a SHORT from Win32 API.

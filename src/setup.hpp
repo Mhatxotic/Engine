@@ -30,6 +30,8 @@
 /* == Compiled type setup ================================================== */
 #if !defined(__cplusplus)              // Must be compiling in C++ mode
 # error Please use a C++ compiler such as GCC, CLANG or MSVC!
+#elif __cplusplus < 202002L            // Must be using a C++20 compiler
+# error Must use a C++ 20 or better compiler!
 #elif defined(_WIN32)                  // Only applies to MS compiler
 # define WINDOWS                       // Using windows
 # if defined(ALPHA)                    // Debugging?
@@ -38,13 +40,22 @@
 #  endif                               // _DEBUG define check
 #  define _CRTDBG_MAP_ALLOC            // >> Required by MSDN
 # elif defined(BETA)||defined(RELEASE) // Beta mode defined?
-#  define NDEBUG                       // No assertions
+#  ifndef NDEBUG                       // Clang-cl will define this
+#   define NDEBUG                      // No assertions
+#  endif                               // NDEBUG check
 #  define _NDEBUG                      // No assertions
 # endif                                // Debugging check
-# if defined(__clang__)                // Actually using CLang?
-#  if __cplusplus < 202002L            // Must be using a C++20 compiler
-#   error Must use a C++20 standards clang compiler!
-#  endif                               // C++ standards check
+# if defined(__MINGW64__)              // Using MINGW64 compiler?
+#  define COMPILER_NAME                "MingW"
+#  define COMPILER_VERSION             STR(__MINGW64_MAJOR_VERSION) "." \
+                                       STR(__MINGW64_MINOR_VERSION) "." \
+                                       STR(__MINGW64_PATCHLEVEL)
+# elif defined(__MINGW32__)            // Using MINGW32 compiler?
+#  define COMPILER_NAME                "MingW"
+#  define COMPILER_VERSION             STR(__MINGW32_MAJOR_VERSION) "." \
+                                       STR(__MINGW32_MINOR_VERSION) "." \
+                                       STR(__MINGW32_PATCHLEVEL)
+# elif defined(__clang__)              // Actually using CLang?
 #  define COMPILER_NAME                "CLang"
 #  define COMPILER_VERSION             STR(__clang_major__) "." \
                                        STR(__clang_minor__) "." \
@@ -56,9 +67,9 @@
 #  define COMPILER_NAME                "MSVisualC"
 #  define COMPILER_VERSION             STR(_MSC_VER)
 # else                                 // Unsupported compiler?
-#  error This compiler is not supported. Please use clang or msvc!
+#  error This compiler is not recognised. Please use clang or msvc!
 # endif                                // Check actual compiler
-# if defined(_M_AMD64)                 // Target is AMD architecture?
+# if defined(_M_AMD64)||defined(__MINGW64__) // 64-bit compilation?
 #  define WINVER                0x0502 // Target Windows XP 64-bit or higher
 #  define CISC                         // Using INTEL or AMD instruction set
 #  define X64                          // Using X64 architechture
@@ -69,7 +80,7 @@
 #  else                                // Generic AMD64?
 #   define BUILD_TARGET                "Win-X64-SSE2"
 #  endif                               // Floating point checks
-# elif defined(_M_IX86)                // Target is X86 architecture?
+# elif defined(_M_IX86)||defined(__MINGW32__) // 32-bit compilation?
 #  define WINVER                0x0501 // Target Windows XP 32-bit or higher
 #  define CISC                         // Using INTEL or AMD instruction set
 #  define X86                          // Using X86 architechture
@@ -133,8 +144,6 @@
                                        STR(__GNUC_PATCHLEVEL__)
 # define _DARWIN_USE_64_BIT_INODE      // For 64-bit size values
 # define _LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS // On in MSVC & GCC
-#elif __cplusplus < 202002L            // Must be using a C++20 compiler
-# error Must use a C++ 20 or better compiler!
 #elif defined(__linux__)               // Linux detected?
 # define LINUX                         // Using Linux
 # define COMPILER_NAME                 "GCC"
@@ -217,6 +226,7 @@
 #include <stdexcept>                   // Runtime errors
 #include <string>                      // String containers
 #include <thread>                      // Operating system threads
+#include <unordered_set>               // Unordered set
 #include <vector>                      // Dynamic arrays
 /* -- More checks ---------------------------------------------------------- */
 #if CHAR_BIT != 8                      // Sanity check bits-per-byte
@@ -351,51 +361,51 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 # undef PSAPI_VERSION                  // Don't need this anymore
 # undef GetObject                      // RapidJSon compatibility
 # define GLFW_EXPOSE_NATIVE_WIN32      // Expose Win32 specific funcs in GlfW
-#elif defined(LINUX)                   // Targeting Linux?
-# include <X11/Xlib.h>                 // Load X11 API
-# include <X11/extensions/Xrandr.h>    // Load X11 Xrandr API
-# include <wayland-client.h>           // Load WayLand API
-# include <elf.h>                      // Elf header file
-# include <link.h>                     // dlinfo() function
-# include <sys/ioctl.h>                // Gettingterminal size
-# include <sys/resource.h>             // Getting process memory info
-# include <sys/sysinfo.h>              // Getting system memory info
-# include <sys/time.h>                 // Getting time info
-# include <sys/times.h>                // Getting cpu usage info
-# include <sys/wait.h>                 // For waiting for pid
-# include <sys/mman.h>                 // Memory manager functions
-# include <sys/fcntl.h>                // File control macros
-# include <sys/types.h>                // Socket types
+#else                                  // Anything but Windows?
+# if defined(LINUX)                    // Targeting Linux?
+#  include <X11/Xlib.h>                // Load X11 API
+#  include <X11/extensions/Xrandr.h>   // Load X11 Xrandr API
+#  include <wayland-client.h>          // Load WayLand API
+#  include <elf.h>                     // Elf header file
+#  include <link.h>                    // dlinfo() function
+#  include <sys/ioctl.h>               // Gettingterminal size
+#  include <sys/resource.h>            // Getting process memory info
+#  include <sys/sysinfo.h>             // Getting system memory info
+#  include <sys/time.h>                // Getting time info
+#  include <sys/times.h>               // Getting cpu usage info
+#  include <sys/wait.h>                // For waiting for pid
+#  include <sys/fcntl.h>               // File control macros
+#  include <sys/types.h>               // Socket types
+#  undef Bool                          // Causes problem with FreeType
+#  define GLFW_EXPOSE_NATIVE_X11       // Expose X11 specific funcs in GLFW
+#  define GLFW_EXPOSE_NATIVE_WAYLAND   // Expose Wayland specific funcs in GLFW
+# elif defined(MACOS)                  // Targeting MacOS?
+#  include <ApplicationServices/ApplicationServices.h> // Load app services API
+#  include <objc/objc.h>               // Load ObjectiveC in C++ API
+#  include <sys/sysctl.h>              // Kernel info stuff
+#  include <mach/mach_init.h>          // For getting cpu and memory usage
+#  include <mach/mach_error.h>         // For getting cpu usage
+#  include <mach/mach_host.h>          // For getting cpu and memory usage
+#  include <mach/vm_map.h>             // For getting cpu usage
+#  include <mach/vm_statistics.h>      // For getting memory usage
+#  include <mach/mach_types.h>         // For getting memory usage
+#  include <mach/mach.h>               // For getting process memory usage
+#  include <mach/kern_return.h>        // For getting process memory usage
+#  include <mach/task_info.h>          // For getting process memory usage
+#  include <mach/mach_time.h>          // For getting system uptime
+#  include <mach-o/dyld.h>             // For enumerating shared objects
+#  include <mach-o/loader.h>           // For getting mach-o header format
+#  include <mach-o/fat.h>              // For getting mach-o fat header format
+#  include <fcntl.h>                   // File control macros
+#  include <termios.h>                 // For changing terminal settings
+#  include <libproc.h>                 // For getting program executable
+#  define _XOPEN_SOURCE_EXTENDED       // Unlock extended ncurses functionality
+     typedef void (*__sighandler_t)(int); // For signal() on MacOS
+#  define GLFW_EXPOSE_NATIVE_COCOA     // Expose Cocoa specific funcs in GLFW
+# endif                                // POSIX system check
+# include <semaphore.h>                // Semaphores
 # include <sys/socket.h>               // Socket header
-# undef Bool                           // Causes problem with FreeType
-# define GLFW_EXPOSE_NATIVE_X11        // Expose X11 specific funcs in GLFW
-# define GLFW_EXPOSE_NATIVE_WAYLAND    // Expose Wayland specific funcs in GLFW
-#elif defined(MACOS)                   // Targeting MacOS?
-# include <ApplicationServices/ApplicationServices.h> // Load app services API
-# include <objc/objc.h>                // Load ObjectiveC in C++ API
-# include <sys/sysctl.h>               // Kernel info stuff
-# include <mach/mach_init.h>           // For getting cpu and memory usage
-# include <mach/mach_error.h>          // For getting cpu usage
-# include <mach/mach_host.h>           // For getting cpu and memory usage
-# include <mach/vm_map.h>              // For getting cpu usage
-# include <mach/vm_statistics.h>       // For getting memory usage
-# include <mach/mach_types.h>          // For getting memory usage
-# include <mach/mach.h>                // For getting process memory usage
-# include <mach/kern_return.h>         // For getting process memory usage
-# include <mach/task_info.h>           // For getting process memory usage
-# include <mach/mach_time.h>           // For getting system uptime
-# include <mach-o/dyld.h>              // For enumerating shared objects
-# include <mach-o/loader.h>            // For getting mach-o header format
-# include <mach-o/fat.h>               // For getting mach-o fat header format
-# include <sys/mman.h>                 // For shm_* functions
-# include <fcntl.h>                    // File control macros
-# include <sys/socket.h>               // Socket functions and types
-# include <termios.h>                  // For changing terminal settings
-# include <libproc.h>                  // For getting program executable
-    /* --------------------------------------------------------------------- */
-# define _XOPEN_SOURCE_EXTENDED        // Unlock extended ncurses functionality
-    typedef void (*__sighandler_t)(int); // For signal() on MacOS
-# define GLFW_EXPOSE_NATIVE_COCOA      // Expose Cocoa specific funcs in GLFW
+# include <sys/mman.h>                 // Memory manager functions
 #endif                                 // Operating system check
     /* --------------------------------------------------------------------- */
     namespace OpenSSL                  // OPENSSL API FUNCTIONS
@@ -415,7 +425,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <openssl/x509v3.h>            // Certs header
 #include <openssl/httperr.h>           // HTTP client errors (ToDo)
 #include <openssl/http.h>              // HTTP client (ToDo)
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     namespace SevenZip                 // 7-ZIP API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #include <7z/CpuArch.h>                // CPU configuration
@@ -424,7 +434,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <7z/7zFile.h>                 // 7-zip file format
 #include <7z/7zVersion.h>              // 7-zip version information
 #include <7z/LzmaLib.h>                // For compression stuff
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     namespace JpegTurbo                // LIBJPEGTURBO API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
@@ -433,11 +443,11 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <jpeg/jpeglib.h>              // Our main header
 #include <jpeg/jerror.h>               // Our error handling
 #include <jpeg/jversion.h>             // Our version information
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     namespace ZLib                     // ZLIB API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #include <zlib/zlib.h>                 // Main header
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     namespace GlFW                     // GLFW API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #define GLFW_INCLUDE_GLCOREARB         // Include arbitrary OpenGL API
@@ -457,7 +467,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
         using GlFW::GLubyte;           // GL specific unsigned char type
         using GlFW::GLuint;            // GL specific unsigned int type
         using GlFW::GLvoid;            // GL specific void type
-      };/* ----------------------------------------------------------------- */
+      } /* ----------------------------------------------------------------- */
 #if defined(MACOS)                     // MacOS defined?
       /* ------------------------------------------------------------------- */
       // This namespace is required to workaround a major crash bug in MacOS
@@ -470,7 +480,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #endif                                 // End MacOS NSGL namespace
       /* ------------------------------------------------------------------- */
 #undef GLFW_INCLUDE_GLCOREARB          // Done with this macro
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
 #undef GLFW_EXPOSE_NATIVE_WIN32        // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_X11          // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_WAYLAND      // Done with this macro
@@ -487,15 +497,15 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #if defined(WINDOWS)                   // Using Windows
 #endif                                 // Using Windows
     }
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace NSGif                      // LIBNSGIF API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #include <gif/gif.h>                   // Main header
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace Png                        // LIBPNG API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #include <png/png.h>                   // Main header
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace RapidJson                  // RAPIDJSON API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define RAPIDJSON_NAMESPACE            Lib::RapidJson
@@ -516,7 +526,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #undef RAPIDJSON_NAMESPACE_BEGIN       // Done with this define
 #undef RAPIDJSON_HAS_STDSTRING         // Done with this define
 #undef RAPIDJSON_NAMESPACE             // Done with this define
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace OpenAL                     // OPENAL API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define AL_ALEXT_PROTOTYPES            // So can get alcResetDevice
@@ -538,8 +548,8 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
       using OpenAL::ALsizei;           // AL specific sizei type
       using OpenAL::ALuint;            // AL specific unsigned int type
       using OpenAL::ALvoid;            // AL specific void type
-    };/* ------------------------------------------------------------------- */
-  };/* -- Ogg Includes ----------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
+  } /* -- Ogg Includes ----------------------------------------------------- */
   namespace Ogg                        // OGGVORBIS API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define OV_EXCLUDE_STATIC_CALLBACKS    // We don't need these callbacks
@@ -549,17 +559,17 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
       using Ogg::ogg_int64_t;          // Ogg specific int64 type
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     /* -- Theora decoder depends on ogg headers ---------------------------- */
     namespace Theora                   // THEORA API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #include <theora/theora.h>             // StrFormat codec (+ ogg codec)
 #include <theora/theoradec.h>          // Decoder
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
 #if !defined(WINDOWS)                  // Not using windows?
 # pragma GCC diagnostic pop            // - Restore compiler warnings
 #endif                                 // Not using windows
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace Sqlite                     // SQLITE API FUNCTIONS
   {/* ---------------------------------------------------------------------- */
 #include <sql/sqlite3.h>               // Main header
@@ -567,8 +577,8 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
       using Sqlite::sqlite3_int64;     // Sqlite specific int64 type
-    };/* ------------------------------------------------------------------- */
-  };/* --------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace FreeType                   // FREETYPE API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #include <ft/ft2build.h>               // Build parameters header
@@ -576,8 +586,8 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <ft/ftstroke.h>               // Stroker header
 #include <ft/ftglyph.h>                // Glyph header
 #include <ft/ftmodapi.h>               // Modification header
-  };/* --------------------------------------------------------------------- */
-};/* ----------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
+} /* ----------------------------------------------------------------------- */
 /* == Main() configuration. So engine.cpp's main() declaration is tidy ===== */
 #if defined(WINDOWS)                   // Targeting Windows?
 typedef Lib::OS::TCHAR ArgType;        // Set main argument type

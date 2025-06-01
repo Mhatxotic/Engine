@@ -24,7 +24,9 @@ using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Main fbo class ======================================================= */
-static class FboCore final :           // The main fbo operations manager
+class FboCore;                         // Class prototype
+static FboCore *cFboCore = nullptr;    // Pointer to global class
+class FboCore :                        // The main fbo operations manager
   /* -- Base classes ------------------------------------------------------- */
   public FboColour,                    // Backbuffer clear colour
   public FboBlend,                     // Default blending mode
@@ -272,6 +274,8 @@ static class FboCore final :           // The main fbo operations manager
     fboConsole.FboInit("console",
       fboMain.DimGetWidth(), fboMain.DimGetHeight());
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~FboCore, DestroyAllObjectsAndBuiltIns())
   /* -- Initialise fbos using a different constructor ---------------------- */
   FboCore(void) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -281,11 +285,9 @@ static class FboCore final :           // The main fbo operations manager
     bLockViewport(false),              bClearBuffer(false),
     fboConsole{ GL_RGBA8, true },      fboMain{ GL_RGB8, true },
     dRTFPS(0)
-    /* -- Set pointer to main fbo ------------------------------------------ */
-    { cFbos->fboMain = &fboMain; }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~FboCore, DestroyAllObjectsAndBuiltIns())
-  /* -- Set main fbo float reserve ----------------------------------------- */
+    /* -- Set pointer to global class and main fbo ------------------------- */
+    { cFboCore = this; cFbos->fboMain = &fboMain; }
+  /* -- Set main fbo float reserve --------------------------------- */ public:
   CVarReturn SetFloatReserve(const size_t stCount)
     { return BoolToCVarReturn(fboMain.FboReserveTriangles(stCount)); }
   /* -- Set main fbo command reserve --------------------------------------- */
@@ -326,9 +328,7 @@ static class FboCore final :           // The main fbo operations manager
   /* -- Set simple matrix -------------------------------------------------- */
   CVarReturn SetSimpleMatrix(const bool bState)
     { return CVarSimpleSetInt(bSimpleMatrix, bState); }
-  /* -- FboCore::End ------------------------------------------------------- */
-} *cFboCore = nullptr;                 // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

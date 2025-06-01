@@ -520,7 +520,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     ICHelperFbo{ cFbos },              // Initially unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     FboBase{ iPixFmt, bLocked }        // Init alpha channel and lua protect
-    /* -- Code ------------------------------------------------------------- */
+    /* -- No code ---------------------------------------------------------- */
     { }                                // Do nothing else
   /* -- Destructor --------------------------------------------------------- */
   ~Fbo(void) { FboDeInit(); }

@@ -14,7 +14,9 @@ using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-static class Timer final               // Members initially private
+class Timer;                           // Class prototype
+static Timer *cTimer = nullptr;        // Address of global class
+class Timer                            // Members initially private
 { /* -- Limits ------------------------------------------------------------- */
   static const uint64_t uqIntvMin =    2000000, // Minimum interval
                         uqIntvMax = 1000000000; // Maximum interval
@@ -153,15 +155,15 @@ static class Timer final               // Members initially private
     // Reset timer
     TimerCatchup();
   }
-  /* -- Default constructors ----------------------------------------------- */
+  /* -- Default constructor ------------------------------------- */ protected:
   Timer(void) :                        // No parameters
     /* --------------------------------------------------------------------- */
     uqTriggers(0),                     // Init number of frame timeout checks
     uqTicks(0),                        // Init no. of ticks processed this sec
     bWait(false)                       // Init force wait?
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- TimerSetDelay ------------------------------------------------------ */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cTimer = this; }
+  /* -- Set time out ----------------------------------------------- */ public:
   CVarReturn TimerSetTimeOut(const unsigned int uiTimeOut)
     { return CVarSimpleSetIntNL(cdTimeOut,
         seconds{ uiTimeOut }, seconds{ 1 }); }
@@ -182,9 +184,7 @@ static class Timer final               // Members initially private
     // Success
     return ACCEPT;
   }
-} /* ----------------------------------------------------------------------- */
-*cTimer = nullptr;                     // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

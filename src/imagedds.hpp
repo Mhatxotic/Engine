@@ -16,7 +16,9 @@ using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-static class CodecDDS final :          // DDS codec object
+class CodecDDS;                        // Class prototype
+static CodecDDS *cCodecDDS = nullptr;  // Pointer to global class
+class CodecDDS :                       // GIF codec object
   /* -- Base classes ------------------------------------------------------- */
   private ImageLib                     // Image format helper class
 { /* ----------------------------------------------------------------------- */
@@ -327,16 +329,14 @@ static class CodecDDS final :          // DDS codec object
     } // Succeeded
     return true;
   }
-  /* -- Constructor ------------------------------------------------ */ public:
+  /* -- Default constructor ------------------------------------- */ protected:
   CodecDDS(void) :
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_DDS, "DirectDraw Surface", "DDS",
       bind(&CodecDDS::Decode, this, _1, _2) }
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- End ---------------------------------------------------------------- */
-} *cCodecDDS = nullptr;                // Codec pointer
-/* ------------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCodecDDS = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

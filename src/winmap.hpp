@@ -82,7 +82,7 @@ class SysMap :                         // Members initially private
   /* -- Get pointer to memory ---------------------------------------------- */
   char *SMSetupMemory(void)
   { // Return a blank string if file is empty
-    if(!qSize) return const_cast<char*>(cCommon->CBlank());
+    if(!qSize) return const_cast<char*>(cCommon->CommonCBlank());
     // Get pointer to mapped memory and return it if successful
     if(char*const cpM =
       reinterpret_cast<char*>(MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)))
@@ -102,7 +102,7 @@ class SysMap :                         // Members initially private
   /* -- Get members ------------------------------------------------ */ public:
   template<typename RT=char>RT *SysMapGetMemory(void) const
     { return reinterpret_cast<RT*>(cpMem); }
-  bool SysMapIsEmpty(void) const { return cpMem == cCommon->CBlank(); }
+  bool SysMapIsEmpty(void) const { return cpMem == cCommon->CommonCBlank(); }
   bool SysMapIsNotEmpty(void) const { return !SysMapIsEmpty(); }
   bool SysMapIsAvailable(void) const { return !!SysMapGetMemory(); }
   bool SysMapIsNotAvailable(void) const { return !SysMapIsAvailable(); }

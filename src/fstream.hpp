@@ -9,9 +9,10 @@
 /* ------------------------------------------------------------------------- */
 namespace IFStream {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IError::P;             using namespace IIdent::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IMemory::P;            using namespace IUtil::P;
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IIdent::P;             using namespace IStd::P;
+using namespace IString::P;            using namespace IMemory::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Typedefs ------------------------------------------------------------- */
@@ -78,9 +79,9 @@ class FStreamBase :                    // File stream base class
     if(FStreamOpened()) return;
     // Return if there is no home directory
     using namespace ICmdLine::P;
-    if(cCmdLine->IsNoHome()) return;
+    if(cCmdLine->CmdLineIsNoHome()) return;
     // Try opened again from persist directory
-    IdentSet(cCmdLine->GetHome(strF));
+    IdentSet(cCmdLine->CmdLineGetHome(strF));
     FStreamSetHandle(FStreamDoOpenDirect(IdentGet(), fsmMode));
   }
   /* -- Retrun true if internal stream or stream closed successfully ------- */
@@ -181,7 +182,7 @@ class FStreamBase :                    // File stream base class
   }
   const string FStreamReadStringSafe(const size_t stBytes)
     { return FStreamIsReadyRead() && stBytes ?
-        FStreamReadString(stBytes) : cCommon->Blank(); }
+        FStreamReadString(stBytes) : cCommon->CommonBlank(); }
   const string FStreamReadStringSafe(void)
   { // Read if ready to read and there are remaining characters
     if(FStreamIsReadyRead())
@@ -234,7 +235,7 @@ class FStreamBase :                    // File stream base class
   /* -- Read entire file without knowing the size of the file -------------- */
   const string FStreamReadStringChunkedSafe(const size_t stBytes=4096)
     { return FStreamIsReadyRead() && stBytes ?
-        FStreamReadStringChunked(stBytes) : cCommon->Blank(); }
+        FStreamReadStringChunked(stBytes) : cCommon->CommonBlank(); }
   /* -- Read data and return memory block ---------------------------------- */
   Memory FStreamReadBlock(const size_t stBytes)
   { // Allocate initial memory of expected bytes to read
@@ -289,9 +290,9 @@ class FStreamBase :                    // File stream base class
         return FStreamDoAccept(strFile, fPtr);
     // Return original error if there is a home directory?
     using namespace ICmdLine::P;
-    if(cCmdLine->IsHome())
+    if(cCmdLine->CmdLineIsHome())
     { // Build new filename and return the new open result
-      string strFilePersist{ cCmdLine->GetHome(strFile) };
+      string strFilePersist{ cCmdLine->CmdLineGetHome(strFile) };
       if(FILE*const fPtr = FStreamDoOpenDirect(strFilePersist, fsmMode))
         return FStreamDoAccept(strFilePersist, fPtr);
     } // Failed so return error number

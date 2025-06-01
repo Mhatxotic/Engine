@@ -12,9 +12,9 @@ namespace IPalette {                   // Start of private module namespace
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IFboDef::P;            using namespace IIdent::P;
 using namespace IImage::P;             using namespace IImageDef::P;
-using namespace ILockable::P;          using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IShaders::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IShaders::P;           using namespace IStd::P;
 using namespace ITexDef::P;            using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */

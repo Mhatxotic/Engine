@@ -10,10 +10,11 @@
 /* ------------------------------------------------------------------------- */
 namespace ILog {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICVarDef::P;
-using namespace IFStream::P;           using namespace IIdent::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IClock::P;             using namespace ICommon::P;
+using namespace ICVarDef::P;           using namespace IFStream::P;
+using namespace IIdent::P;             using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IToken::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Log levels ----------------------------------------------------------- */
@@ -35,7 +36,9 @@ struct LogLine                         // Log line structure
 typedef list<LogLine>            LogLines;        // List of log lines
 typedef LogLines::const_iterator LogLinesConstIt; // Log lines iterator
 /* == Log class ============================================================ */
-static class Log final :
+class Log;                             // Class prototype
+static Log *cLog = nullptr;            // Address of global log class
+class Log :                            // The actual class body
   /* -- Base classes ------------------------------------------------------- */
   public LogLines,                     // Holds info about every log line
   private FStream,                     // Output log file if needed
@@ -111,7 +114,7 @@ static class Log final :
   }
   /* -- Write string to log. Line feed creates multiple lines -------------- */
   void WriteString(const LHLevel lhL, const string &strL) noexcept(true)
-    { WriteLines(lhL, { strL, cCommon->Lf(), stMaximum }); }
+    { WriteLines(lhL, { strL, cCommon->CommonLf(), stMaximum }); }
   /* ----------------------------------------------------------------------- */
   void WriteString(const string &strL) { WriteString(LH_CRITICAL, strL); }
   /* ----------------------------------------------------------------------- */
@@ -267,6 +270,8 @@ static class Log final :
     WriteString(StrFormat("Log file is '$'.", IdentGet()));
     return true;
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Log, DeInitSafe())
   /* -- Constructor -------------------------------------------------------- */
   Log(void) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -281,11 +286,9 @@ static class Log final :
     strStdErr{ "/dev/stderr" },        // Initialise display label for stderr
     lhlLevel{ LH_DEBUG },              // Initialise default level
     stMaximum(1000)                    // Initialise maximum output lines
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Log, DeInitSafe())
-  /* -- Conlib callback function for APP_LOG variable ---------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cLog = this; }
+  /* -- Conlib callback function for APP_LOG variable -------------- */ public:
   CVarReturn LogFileModified(const string &strFN, string &strCV)
   { // Lock mutex
     const LockGuard lgLogSync{ GetMutex() };
@@ -295,14 +298,21 @@ static class Log final :
     switch(strFN.length())
     { // Empty? Ignore
       case 0: return ACCEPT;
-      // One character? Compare it...
-      case 1: switch(strFN.front())
-      { // Check for requested use of stderr or stdout
-        case '!': Init(stderr, strStdErr); return ACCEPT;
-        case '-': Init(stdout, strStdOut); return ACCEPT;
-        // Anything else ignore and open the file normally
-        default: break;
-      } // Anything else just break;
+      // If not on Windows?
+#if !defined(WINDOWS)
+      // One character was specified?
+      case 1:
+        // Compare the character
+        switch(strFN.front())
+        { // Check for requested use of stderr or stdout
+          case '!': Init(stderr, strStdErr); return ACCEPT;
+          case '-': Init(stdout, strStdOut); return ACCEPT;
+          // Anything else ignore and open the file normally
+          default: break;
+        } // Done
+        break;
+#endif
+      // Anything else just break.
       default: break;
     } // Create new filename and set filename on success and return success
     if(!Init(StrAppend(strFN, "." LOG_EXTENSION))) return DENY;
@@ -322,9 +332,7 @@ static class Log final :
     stMaximum = stL;
     return ACCEPT;
   }
-  /* -- End ---------------------------------------------------------------- */
-} *cLog = nullptr;                     // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */
 };                                     // End of private module namespace

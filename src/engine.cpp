@@ -1,23 +1,24 @@
-/* == ENGINE.CPP =========================================================== */
-/* ######################################################################### */
-/* ##*@@****@@*@@***@@**@@@@@**@@****@@***@@*@@@@@**@@*****@@@@@@**@@@@@**## */
-/* ##*@@@@@@@@*@@***@@*@@***@@*@@@@@@*@@*@@*@@***@@*@@@@@@***@@***@@***@@*## */
-/* ##*@@*@@*@@*@@@@@@@*@@@@@@@*@@******@@@**@@***@@*@@*******@@***@@******## */
-/* ##*@@****@@*@@***@@*@@***@@*@@**@@*@@*@@*@@***@@*@@*******@@***@@***@@*## */
-/* ##*@@****@@*@@***@@*@@***@@**@@@@*@@***@@**@@@@***@@@@@*@@@@@@**@@@@@**## */
-/* ######################################################################### */
-/* ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## */
-/* ######################################################################### */
-/* ## This the file that handles the inclusing of engine subsystems in a  ## */
-/* ## tidy namespace and handles the main entry point.                    ## */
-/* ######################################################################### */
-/* ========================================================================= */
+/* == ENGINE.CPP =========================================================== **
+** ######################################################################### **
+** ##*@@****@@*@@***@@**@@@@@**@@****@@***@@*@@@@@**@@*****@@@@@@**@@@@@**## **
+** ##*@@@@@@@@*@@***@@*@@***@@*@@@@@@*@@*@@*@@***@@*@@@@@@***@@***@@***@@*## **
+** ##*@@*@@*@@*@@@@@@@*@@@@@@@*@@******@@@**@@***@@*@@*******@@***@@******## **
+** ##*@@****@@*@@***@@*@@***@@*@@**@@*@@*@@*@@***@@*@@*******@@***@@***@@*## **
+** ##*@@****@@*@@***@@*@@***@@**@@@@*@@***@@**@@@@***@@@@@*@@@@@@**@@@@@**## **
+** ######################################################################### **
+** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
+** ######################################################################### **
+** ## This the file that handles the inclusing of engine subsystems in a  ## **
+** ## tidy namespace and handles the main entry point.                    ## **
+** ######################################################################### **
+** ========================================================================= */
 #include "setup.hpp"                   // Setup the compilation environment
 /* ------------------------------------------------------------------------- */
 namespace E {                          // Start of engine namespace
 /* ------------------------------------------------------------------------- */
 #include "engine.hpp"                  // Engine version information header
 #include "stdtypes.hpp"                // Engine STL type aliases header
+#include "common.hpp"                  // Common constant variables header
 #include "flags.hpp"                   // Flags helper utility header
 #include "utf.hpp"                     // UTF strings utility header
 #include "std.hpp"                     // StdLib function helpers header
@@ -28,10 +29,10 @@ namespace E {                          // Start of engine namespace
 #include "parser.hpp"                  // String parsing utility header
 #include "psplit.hpp"                  // Path handling utilities header
 #include "ident.hpp"                   // Identifier utility header
+#include "cvardef.hpp"                 // CVar definitions header
 #include "dir.hpp"                     // Directory handling utility header
 #include "util.hpp"                    // Miscellenious utilities header
 #include "sysutil.hpp"                 // System utilities header
-#include "cvardef.hpp"                 // CVar definitions header
 #include "clock.hpp"                   // Clock utilities header
 #include "timer.hpp"                   // Timing utilities header
 #include "args.hpp"                    // Arguments handling header
@@ -132,12 +133,52 @@ namespace E {                          // Start of engine namespace
 #include "luavar.hpp"                  // Lua variable class
 #include "luacmd.hpp"                  // Lua console command class
 #include "core.hpp"                    // Core class header
-#include "lualib.hpp"                  // Lua lua function api library
+#include "lualib.hpp"                  // Lua function API library
 /* ------------------------------------------------------------------------- */
 };                                     // End of engine namespace
 /* == The main entry point ================================================= */
 int ENTRYFUNC                          // Macro defined in 'setup.hpp'
-{ // Create and run the engine and return its exit result
-  return E::ICore::P::Core{}.CoreMain(__argc, __wargv, _wenviron);
+{ // Includes required to build the engine.
+  using namespace E;                   using namespace ISysUtil::P;
+  using namespace IStd::P;
+  // Initialise and label the main thread
+  SysInitThread("main", STP_MAIN);
+  // Capture exceptions.
+  try
+  { // Create the base systems, run main procedure and return result
+    using namespace ICmdLine::P;       using namespace ICommon::P;
+    using namespace ICore::P;          using namespace IDir::P;
+    using namespace ILog::P;
+    // Create engine class
+    struct Engine final :
+      // Base classes required to run the main part of the engine.
+      private Common, private DirBase, private CmdLine, private Log
+    { // Main procedure into running the engine
+      int EngineMain(void) const try { return Core{}.CoreMain(); }
+      // Safe loggable exception occured?
+      catch(const exception &eReason)
+      { // Send to log and show error message to user. Show message box and
+        // return error status.
+        cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", eReason);
+        SysMessage("Main Thread Exception", eReason.what(), MB_ICONSTOP);
+        return 2;
+      }
+      // Constructor
+      Engine(const int iArgs,          // Arguments count
+             ArgType**const lArgs,     // Arguments array
+             ArgType**const lEnv) :    // Environment variables array
+        // Initialisers
+        CmdLine{ iArgs, lArgs, lEnv }  // Initialise command-line arg
+        // No code
+        { }
+    };
+    // Create the engine object, run the main function and return its result
+    return Engine{ __argc, __wargv, _wenviron }.EngineMain();
+  } // Unsafe exception occured?
+  catch(const exception &eReason)
+  { // Show message box and return error status.
+    SysMessage("Main Init Exception", eReason.what(), MB_ICONSTOP);
+    return 1;
+  }
 }
 /* == End-of-File ========================================================== */

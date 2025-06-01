@@ -640,7 +640,7 @@ class SysCon :                         // Members initially private
     { RedrawStatus(0, strTL, strTR); }
   /* -- Redraw console buffer ---------------------------------------------- */
   void RedrawBuffer(const ConLines &clLines,
-    const ConLinesConstRevIt clcriStart)
+    const ConLinesConstRevIt &clcriStart)
   { // Reset cursor position to top left of drawing area
     stX = 0;
     stY = stHm1;
@@ -821,8 +821,10 @@ class SysCon :                         // Members initially private
     // System console is initialised
     cLog->LogDebugSafe("SysCon initialised.");
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  ~SysCon(void) noexcept(false) { SysConDeInit(); }
   /* -- Constructor -------------------------------------------------------- */
-  SysCon(const string &strW) :         // Wine version if applicable
+  explicit SysCon(const string &strW): // Wine version if applicable
     /* -- Initialisers ----------------------------------------------------- */
     strWine{ strW },                   // Set reference to wine version
     hIn(nullptr), hOut(nullptr),       // Handles to input and output streams
@@ -837,11 +839,9 @@ class SysCon :                         // Members initially private
     stHm1(0), stHm2(0),                // Width and height of window-2 not set
     stX1(0), stY1(0),                  // Minimum drawing extent not set
     stX2(0), stY2(0)                   // Maximum drawing extent not set
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~SysCon, SysConDeInit());
-  /* -- Set maximum console line length ------------------------------------ */
+    /* -- Set console output codepage to UTF-8 ----------------------------- */
+    { SetConsoleOutputCP(CP_UTF8); }
+  /* -- Set maximum console line length ---------------------------- */ public:
   CVarReturn RowsModified(const size_t stRows)
   { // Deny if out of range. The maximum value is a SHORT from Win32 API.
     if(stRows < 25 || UtilIntWillOverflow<SHORT>(stRows)) return DENY;

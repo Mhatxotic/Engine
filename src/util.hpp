@@ -129,9 +129,9 @@ template<typename IntType>static IntType UtilToI32LE(const IntType itV)
       is_integral_v<IntType>, "Not a 32-bit integer!");
     return static_cast<IntType>(STRICT_U32LE(itV)); }
 template<typename IntType>static IntType UtilToI32BE(const IntType itV)
- { static_assert(sizeof(IntType) == sizeof(uint32_t) &&
-     is_integral_v<IntType>, "Not a 32-bit integer!");
-   return static_cast<IntType>(STRICT_U32BE(itV)); }
+  { static_assert(sizeof(IntType) == sizeof(uint32_t) &&
+      is_integral_v<IntType>, "Not a 32-bit integer!");
+    return static_cast<IntType>(STRICT_U32BE(itV)); }
 template<typename IntType>static IntType UtilToI64LE(const IntType itV)
   { static_assert(sizeof(IntType) == sizeof(uint64_t) &&
       is_integral_v<IntType>, "Not a 64-bit integer!");

@@ -9,11 +9,11 @@
 /* ------------------------------------------------------------------------- */
 namespace IGlFWMonitor {               // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IDim::P;               using namespace IDimCoord::P;
-using namespace IError::P;             using namespace IGlFWUtil::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace ICommon::P;            using namespace IDim::P;
+using namespace IDimCoord::P;          using namespace IError::P;
+using namespace IGlFWUtil::P;          using namespace ILog::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -82,9 +82,9 @@ class GlFWMonitor :                    // Members initially private
     { // If monitor name is blank return blank name
       if(*cpName) return cpName;
       // Return blank name
-      return cCommon->Unspec();
+      return cCommon->CommonUnspec();
     } // Return null name
-    return cCommon->Null();
+    return cCommon->CommonNull();
   }
   /* -- Get monitor context ---------------------------------------- */ public:
   GLFWmonitor *Context(void) const { return mContext; }

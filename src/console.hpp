@@ -12,16 +12,17 @@
 namespace IConsole {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs::P;              using namespace IClock::P;
-using namespace IConDef::P;            using namespace IConLib::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFlags;
-using namespace IGlFW::P;              using namespace IHelper::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISocket::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITimer::P;             using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
+using namespace ICommon::P;            using namespace IConDef::P;
+using namespace IConLib::P;            using namespace ICVar::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFlags;                using namespace IGlFW::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISocket::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITimer::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Typedefs ============================================================= */
@@ -58,7 +59,9 @@ BUILD_FLAGS(Redraw,                    // Redraw terminal or graphical console
 );/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(Cmd, const string, const ConLib) // Map of commands type
 /* ========================================================================= */
-static class Console final :           // Members initially private
+class Console;                         // Class prototype
+static Console *cConsole = nullptr;    // Pointer to global class
+class Console :                        // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public ConLines,                     // Console text lines list
   private ConLinesConstIt,             // Text lines forward iterator
@@ -94,7 +97,7 @@ static class Console final :           // Members initially private
   AutoCompleteFlags acFlags;           // Flags for autocomplete
   const ConCmdStaticList &ccslInt;     // Default console cmds list
   CmdMap           cmMap;              // Console commands list
-  const EvtMainRegVec reEvents;        // Events list to register
+  const EvtMainRegVec emrvEvents;      // Events list to register
   /* -- Do clear console, clear history and reset position ----------------- */
   void DoFlush(void)
   { // Do clear the console output lines
@@ -488,7 +491,7 @@ static class Console final :           // Members initially private
         // No value specified?
         if(aList.size() <= 1)
         { // Show it
-          osS << "is currently " << cCVars->Protect(cvmMapIt) << "!";
+          osS << "is currently " << cCVars->GetValueSafe(cvmMapIt) << "!";
           // Copy it to clipboard if requested
           if(FlagIsSet(CF_AUTOCOPYCVAR))
             cGlFW->WinSetClipboardString(StrFormat("$ \"$\"",
@@ -499,7 +502,7 @@ static class Console final :           // Members initially private
           cCVars->Set(cvmMapIt, aList[1], PUSR, CCF_NOTHING))
         { // Success. Show result
           case CVS_OK:
-            osS << "is now " << cCVars->Protect(cvmMapIt) << '!'; break;
+            osS << "is now " << cCVars->GetValueSafe(cvmMapIt) << '!'; break;
           // Success. Show result
           case CVS_OKNOTCHANGED: osS << "not changed!"; break;
           // Cvar not found (THIS SHOULDNT HAPPEN!!!)
@@ -753,11 +756,12 @@ static class Console final :           // Members initially private
       { strName, uiMin, uiMax, CFL_NONE, ccbFunc } }).first;
   }
   /* -- Unregister console command ----------------------------------------- */
-  void UnregisterCommand(const CmdMapIt cmiIt) { cmMap.erase(cmiIt); }
+  void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
   /* -- Add line as string with specified text colour ---------------------- */
   void AddLine(const Colour cColour, const string &strText)
   { // Tokenise lines into a list limited by the maximum number of lines.
-    if(const TokenList tlLines{ strText, cCommon->Lf(), GetOutputMaximum() })
+    if(const TokenList tlLines{
+      strText, cCommon->CommonLf(), GetOutputMaximum() })
     { // Add all the lines to the output queue
       const double dTime = cLog->CCDeltaToDouble();
       for(const string &strLine : tlLines)
@@ -766,7 +770,7 @@ static class Console final :           // Members initially private
           clqOutput.push({ dTime, cColour, StdMove(strLine) });
         // Push a truncated line
         else clqOutput.push({ dTime, cColour,
-          strLine.substr(0, stMaxOutputLineE) + cCommon->Ellipsis() });
+          strLine.substr(0, stMaxOutputLineE) + cCommon->CommonEllipsis() });
       }
     }
   }
@@ -837,7 +841,7 @@ static class Console final :           // Members initially private
     { // Add flag for it
       GetDefaultRedrawFlags().FlagReset(RD_TEXT);
       // Register console events
-      cEvtMain->RegisterEx(reEvents);
+      cEvtMain->RegisterEx(emrvEvents);
     } // Redraw the console
     SetRedraw();
     // Initially shown and not closable
@@ -865,7 +869,7 @@ static class Console final :           // Members initially private
     // Initially shown and not closable. All other flags removed.
     FlagReset(CF_CANTDISABLE|CF_ENABLED|CF_INSERT);
     // Unregister console events if using text mode
-    if(cSystem->IsTextMode()) cEvtMain->UnregisterEx(reEvents);
+    if(cSystem->IsTextMode()) cEvtMain->UnregisterEx(emrvEvents);
     // If commands registered?
     switch(const size_t stCount = cmMap.size())
     { // Impossible?
@@ -885,7 +889,7 @@ static class Console final :           // Members initially private
     // Log progress
     cLog->LogInfoSafe("Console de-initialised successfully.");
   }
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Constructor --------------------------------------------- */ protected:
   explicit Console(const ConCmdStaticList &ccslDef) :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Init helper function name
@@ -906,14 +910,12 @@ static class Console final :           // Members initially private
     acFlags{ AC_NONE },                // No autocomplete flags
     ccslInt{ ccslDef },                // Set default commands list
     /* --------------------------------------------------------------------- */
-    reEvents{                          // Default events
+    emrvEvents{                        // Default events
       { EMC_CON_UPDATE, bind(&Console::OnForceRedraw, this, _1) },
     }
-    /* --------------------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Console, DeInit())
-  /* -- Set page move count ------------------------------------------------ */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cConsole = this; }
+  /* -- Set page move count ---------------------------------------- */ public:
   CVarReturn SetPageMoveCount(const ssize_t sstAmount)
   { // Deny if invalid value
     if(!CVarToBoolReturn(CVarSimpleSetIntNLG(sstPageLines, sstAmount, 1, 100)))
@@ -957,7 +959,7 @@ static class Console final :           // Members initially private
       1024UL, 65536UL)))
         return DENY;
     // Set subtracted value from ellipsis size
-    stMaxOutputLineE = stMaxOutputLine - cCommon->Ellipsis().length();
+    stMaxOutputLineE = stMaxOutputLine - cCommon->CommonEllipsis().length();
     // Value accepted
     return ACCEPT;
   }
@@ -1021,9 +1023,7 @@ static class Console final :           // Members initially private
   CVarReturn TextForegroundColourModified(const unsigned int uiNewColour)
     { return CVarSimpleSetIntNG(cTextColour, static_cast<Colour>(uiNewColour),
         COLOUR_MAX); }
-  /* ----------------------------------------------------------------------- */
-} *cConsole = nullptr;                 // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

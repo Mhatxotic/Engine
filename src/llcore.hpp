@@ -146,7 +146,7 @@ LLFUNC(Engine, 12, LuaUtilPushVar(lS, cSystem->ENGName(),
 // ? empty. All environment variables are converted to upper-case at startup.
 // ? Type 'env' in the console to see the current environment.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Env, 1, LuaUtilPushVar(lS, cCmdLine->GetEnv(AgString{lS,1})))
+LLFUNC(Env, 1, LuaUtilPushVar(lS, cCmdLine->CmdLineGetEnv(AgString{lS,1})))
 /* ========================================================================= */
 // $ Core.Events
 // < Events:integer=Number of events in the engine events system.

@@ -16,6 +16,11 @@ using namespace IHelper::P;            using namespace IIdent::P;
 using namespace ILog::P;               using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* == Static class try/catch helpers ======================================= **
+** ######################################################################### **
+** ## Don't put try/catch on func level. (C++ ISO/IEC JTC 1/SC 22 N 4411) ## **
+** ######################################################################### **
+** ------------------------------------------------------------------------- */
 /* -- Collector header ----------------------------------------------------- */
 #define CTOR_HDR_BEGIN(p,              /* The parent (collector) class type */\
                        m,              /* The member class type             */\
@@ -33,13 +38,15 @@ namespace P {                          // Start of public module namespace
   typedef ln::iterator in;             /* Create iterator type alias        */\
   typedef ln::const_iterator cn;       /* Create const iterator type alias  */\
   typedef h<m,s<m,ln,in>,ln,in> hn;    /* Create alias for collector type   */\
-  static struct p final :              /* Begin collector object class      */\
+  class p;                             /* Collector class prototype         */\
+  static p*c ## p = nullptr;           /* Address to global collector class */\
+  class p :                            /* Begin collector object class      */\
     public LuaIdent,                   /* Name of object for Lua            */\
     public hn                          /* Derived by our collector class    */\
     __VA_ARGS__                        /* Any other custom class derives    */\
-  { p(void);                           /* Constructor prototype             */\
+  { protected: p(void);                /* Constructor prototype             */\
     ~p(void) noexcept(false);          /* Destructor prototype              */\
-    x                                  /* Any extra variables? (no comma!)  */
+    public: x                          /* Any extra variables? (no comma!)  */
 /* -- Collector header that lets you use a custom container ---------------- */
 #define CTOR_HDR_CUSTCTR(p,m,l,h,s,x,...) \
   CTOR_HDR_BEGIN(p,m,l,p ## Ctr,p ## It,p ## ItConst,h,p ## Helper,\
@@ -48,37 +55,38 @@ namespace P {                          // Start of public module namespace
 #define CTOR_HDR_DEFCTR(p,m,h,s,x,...) \
   CTOR_HDR_CUSTCTR(p,m,list,h,s,x,## __VA_ARGS__)
 /* -- Collector footer that creates the global class pointer init in core -- */
-#define CTOR_HDR_END(p) } *c ## p = nullptr;
+#define CTOR_HDR_END };
 /* -- Build a collector class with base classes and body ------------------- */
 #define CTOR_BEGIN(p,m,s,x,...) \
   CTOR_HDR_DEFCTR(p,m,CLHelper,        /* Insert standard header            */\
     s,x,## __VA_ARGS__)                /*   with body and custom derives    */\
-  CTOR_HDR_END(p)                      /* Insert standard footer             */
+  CTOR_HDR_END                         /* Insert standard footer             */
 /* -- Build a collector class body with a fully custom body ---------------- */
 #define CTOR_BEGIN_NOBASE(p,m,s,...) \
   CTOR_HDR_DEFCTR(p,m,CLHelper,s,)     /* Begin standard header             */\
   __VA_ARGS__                          /* Insert user collector body        */\
-  CTOR_HDR_END(p)                      /* Insert standard footer             */
+  CTOR_HDR_END                         /* Insert standard footer             */
 /* -- Build a collector class body with no special parameters -------------- */
 #define CTOR_BEGIN_NOBB(p,m,s) CTOR_BEGIN(p,m,s,,)
 /* -- Build a collector class body with no special parameters only type ---- */
 #define CTOR_BEGIN_CUSTCTR(p,m,l,s,...) \
   CTOR_HDR_CUSTCTR(p,m,l,CLHelper,s,)  /* Begin std hdr with custom ctr     */\
   __VA_ARGS__                          /* Insert user collector body        */\
-  CTOR_HDR_END(p)                      /* Insert standard footer             */
+  CTOR_HDR_END                         /* Insert standard footer             */
 /* -- Thread safe collector with user-defined variables or classes --------- */
 #define CTOR_BEGIN_ASYNC(p,m,h,x,...) \
   CTOR_HDR_DEFCTR(p,m,CLHelperAsync,h,x,## __VA_ARGS__) \
-  CTOR_HDR_END(p)
+  CTOR_HDR_END
 /* -- Tailing collector class macro with init and deinit calls ------------- */
 #define CTOR_END_EX(p,                 /* The parent (collector) class type */\
                     m,                 /* The child (member) class type     */\
-                    c,                 /* Lua class id code (luadef.hpp)    */\
+                    e,                 /* Lua class id enum (luadef.hpp)    */\
                     i,                 /* Constructor initialisation code   */\
                     d,                 /* Destructor de-initialisation code */\
                     ...)               /* Constructor initialisers code     */\
-  p::p(void) : LuaIdent{#m, LMT_ ## c}, __VA_ARGS__ { IHInitialise(); i; } \
-  DTORHELPER(p::~p, if(IHNotDeInitialise()) return; d)
+  DTORHELPER(p::~p, if(IHDeInitialise()){d;} ) \
+  p::p(void) : LuaIdent{#m, LMT_ ## e}, __VA_ARGS__ \
+    { c ## p=this; IHInitialise(); i; }
 /* -- Tailing collector class macro that inits a collector helper ---------- */
 #define CTOR_END(p,m,c,i,d,...) \
   CTOR_END_EX(p,m,c,i,d,CLHelper{STR(p)} __VA_ARGS__)
@@ -480,7 +488,7 @@ struct ICHelper :                      // Members initially public
   /* -- Register to list --------------------------------------------------- */
   void CollectorRegister(void) { this->ICHelperPush(); }
   void CollectorUnregister(void) { this->ICHelperErase(); }
-  /* -- Destructor (unregister if registered) ------------------------------ */
+  /* -- Destructor (unregister if registered) ------------------- */ protected:
   ~ICHelper(void) { CollectorUnregister(); }
   /* -- Constructor (move) ------------------------------------------------- */
   explicit ICHelper(ICHelper &&icOther) :

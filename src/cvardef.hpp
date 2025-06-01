@@ -84,8 +84,6 @@ BUILD_FLAGS(CVar,
   CFILENAME                {Flag(24)},
   /* -- Manipulation (M) --------------------------------------------------- */
   MTRIM                    {Flag(32)}, // Variable string should be trimmed
-  /* -- Other (O) ---------------------------------------------------------- */
-  OSAVEFORCE               {Flag(40)}, // Force variable to be saved
   /* -- Privates (Used internally) ----------------------------------------- */
   // Variable was created by LUA?      Variable is a trusted filename
   TLUA                     {Flag(48)}, CTRUSTEDFN               {Flag(49)},
@@ -93,8 +91,8 @@ BUILD_FLAGS(CVar,
   LOCKED                   {Flag(50)}, COMMIT                   {Flag(51)},
   // Var should be purged from DB?     Variable not readable by lua?
   PURGE                    {Flag(52)}, CONFIDENTIAL             {Flag(53)},
-  // Variable value was loaded from db
-  LOADED                   {Flag(54)},
+  // Variable value was loaded from db Commit even if default/value match
+  LOADED                   {Flag(54)}, COMMITNOCHECK            {Flag(55)},
   /* -- Sources (S) [Private] ---------------------------------------------- */
   // Set from engine internally?       Set from command-line?
   SENGINE                  {Flag(56)}, SCMDLINE                 {Flag(57)},
@@ -123,8 +121,7 @@ BUILD_FLAGS(CVar,
   CVREGMASK{ COMMIT|SANY },            CALPHANUMERIC{ CALPHA|CNUMERIC },
   /* -- Allowed bits ------------------------------------------------------- */
   CVMASK{ TSTRING|TINTEGER|TFLOAT|TBOOLEAN|CALPHA|CNUMERIC|CSAVEABLE|
-          CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM|
-          OSAVEFORCE };
+          CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM };
 );/* ----------------------------------------------------------------------- */
 class CVarItem;                        // (Prototype) Cvar callback data
 typedef CVarReturn (*CbFunc)(CVarItem&, const string&); // Callback return type
@@ -148,15 +145,15 @@ using namespace ICVarDef::P;
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 enum CVarEnums : size_t
-{ /* -- Critical cvars (order is important!) ------------------------------- */
+{ /* -- Critical cvars (order is critical!) -------------------------------- */
   APP_CMDLINE,      LOG_LEVEL,         AST_LZMABUFFER,      AST_PIPEBUFFER,
   AST_FSOVERRIDE,   AST_EXEBUNDLE,     AST_BASEDIR,         AST_BUNDLES,
   APP_CONFIG,       APP_AUTHOR,        APP_SHORTNAME,       AST_HOMEDIR,
-  AST_MODBUNDLE,    SQL_DB,            SQL_RETRYCOUNT,      SQL_RETRYSUSPEND,
-  SQL_ERASEEMPTY,   SQL_TEMPSTORE,     SQL_SYNCHRONOUS,     SQL_JOURNALMODE,
-  SQL_AUTOVACUUM,   SQL_FOREIGNKEYS,   SQL_INCVACUUM,       SQL_DEFAULTS,
-  SQL_LOADCONFIG,   APP_CFLAGS,        LOG_LINES,           LOG_FILE,
-  APP_LONGNAME,     APP_CLEARMUTEX,    ERR_INSTANCE,
+  AST_MODBUNDLE,    AST_SAFETYMODE,    SQL_DB,              SQL_RETRYCOUNT,
+  SQL_RETRYSUSPEND, SQL_ERASEEMPTY,    SQL_TEMPSTORE,       SQL_SYNCHRONOUS,
+  SQL_JOURNALMODE,  SQL_AUTOVACUUM,    SQL_FOREIGNKEYS,     SQL_INCVACUUM,
+  SQL_DEFAULTS,     SQL_LOADCONFIG,    APP_CFLAGS,          LOG_LINES,
+  LOG_FILE,         APP_LONGNAME,      ERR_INSTANCE,
   /* -- Object cvars ------------------------------------------------------- */
   OBJ_CLIPMAX,      OBJ_CMDMAX,        OBJ_CVARMAX,         OBJ_CVARIMAX,
   OBJ_ARCHIVEMAX,   OBJ_ASSETMAX,      OBJ_BINMAX,          OBJ_FBOMAX,
@@ -219,6 +216,8 @@ enum CVarEnums : size_t
   WIN_WIDTHMIN,
   /* -- Logging cvars ------------------------------------------------------ */
   LOG_CREDITS,      LOG_DYLIBS,
+  /* -- Other cvars -------------------------------------------------------- */
+  COM_FLAGS,
   /* -- Misc (do not (re)move) --------------------------------------------- */
   CVAR_MAX,                            // Maximum cvars
   CVAR_FIRST = APP_CMDLINE,            // The first cvar item
@@ -226,10 +225,10 @@ enum CVarEnums : size_t
 struct CVarItemStatic                  // Start of CVar static struct
 { /* ----------------------------------------------------------------------- */
   const CoreFlagsConst cfcRequired;    // Required core flags
-  const string_view    &strvVar;       // Variable name from C-String
-  const string_view    &strvValue;     // Variable default value from C-String
+  const string_view    strvVar;        // Variable name from C-String
+  const string_view    strvValue;      // Variable default value from C-String
   const CbFunc         cbTrigger;      // Callback trigger event
-  const CVarFlagsConst &cFlags;        // Variable flags
+  const CVarFlagsConst cFlags;         // Variable flags
 };/* ----------------------------------------------------------------------- */
 typedef array<const CVarItemStatic, CVAR_MAX> CVarItemStaticList;
 /* ------------------------------------------------------------------------- */

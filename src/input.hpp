@@ -34,7 +34,9 @@ BUILD_FLAGS(Input,
   // Ignore input on focus loss?       Clamp mouse cursor? (MacOS only)
   IF_RESTORE                {Flag(6)}, IF_CLAMPMOUSE             {Flag(7)}
 );/* == Input class ======================================================== */
-static class Input final :             // Handles keyboard, mouse & controllers
+class Input;                           // Class prototype
+static Input *cInput = nullptr;        // Pointer to global class
+class Input :                          // Handles keyboard, mouse & controllers
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialsation helper
   public InputFlags,                   // Input configuration settings
@@ -54,7 +56,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Filtered key pressed ----------------------------------------------- */
   void OnFilteredKey(const EvtMainEvent &emeEvent)
   { // Get key pressed
-    const unsigned int uiKey = emeEvent.aArgs[1].ui;
+    const unsigned int uiKey = emeEvent.eaArgs[1].ui;
     // If console is enabled, send it to console instead
     if(cConsole->IsVisible()) return cConsole->OnCharPress(uiKey);
     // Else send the key to lua callbacks
@@ -63,7 +65,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Mouse moved -------------------------------------------------------- */
   void OnMouseMove(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Do not process this event if input disabled on lack of mouse focus
 #if defined(MACOS)
     // Get mouse position. We might need to clamp it
@@ -95,7 +97,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Mouse went inside the window --------------------------------------- */
   void OnMouseFocus(const EvtMainEvent &emeEvent)
   { // Get and check state
-    const int iState = emeEvent.aArgs[1].i;
+    const int iState = emeEvent.eaArgs[1].i;
     switch(iState)
     { // Mouse is in the window? Set mouse in window flag
       case GLFW_TRUE:
@@ -126,7 +128,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Mouse wheel scroll ------------------------------------------------- */
   void OnMouseWheel(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get movements
     const double dX = emaArgs[1].d, dY = emaArgs[2].d;
     // If console is enabled and ctrl not pressed? Send it to console instead
@@ -137,14 +139,14 @@ static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Mouse button clicked ----------------------------------------------- */
   void OnMouseClick(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Set event to lua callbacks
     lfOnMouseClick.LuaFuncDispatch(emaArgs[1].i, emaArgs[2].i, emaArgs[3].i);
   }
   /* -- Unfiltered key pressed --------------------------------------------- */
   void OnKeyPress(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get key code, state and modifier state
     const int iKey = emaArgs[1].i, iState = emaArgs[3].i, iMod = emaArgs[4].i;
     // If...
@@ -214,8 +216,6 @@ static class Input final :             // Handles keyboard, mouse & controllers
     while(const unsigned int uiChar = utfString.Next())
       if(uiChar >= 32) cConsole->OnCharPress(uiChar);
   }
-  /* -- Commit cursor visibility now ------------------------------- */ public:
-  void CommitCursorNow(void) { cGlFW->WinSetCursor(FlagIsSet(IF_CURSOR)); }
   /* -- Commit cursor visibility ------------------------------------------- */
   void CommitCursor(void)
     { cEvtWin->AddUnblock(EWC_WIN_CURSETVIS, FlagIsSet(IF_CURSOR)); }
@@ -305,6 +305,8 @@ static class Input final :             // Handles keyboard, mouse & controllers
     // Log progress
     cLog->LogDebugSafe("Input interface deinitialised.");
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Input, DeInit())
   /* -- Constructor -------------------------------------------------------- */
   Input(void) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -332,11 +334,9 @@ static class Input final :             // Handles keyboard, mouse & controllers
     lfOnKey{ "OnUnfilteredKey" },      // Init unfiltered keypress lua event
     lfOnChar{ "OnFilteredKey" },       // Init filtered keypress lua event
     lfOnDragDrop{ "OnDragDrop" }       // Init drag & drop lua event
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Input, DeInit())
-  // -- CVar callback to toggle raw mouse ---------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cInput = this; }
+  /* -- CVar callback to toggle raw mouse -------------------------- */ public:
   CVarReturn SetRawMouseEnabled(const bool bState)
   { // Send request to set raw mouse motion state if enabled
     if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETRAWMOUSE, bState);
@@ -372,9 +372,7 @@ static class Input final :             // Handles keyboard, mouse & controllers
   /* -- Set clamp mouse cursor --------------------------------------------- */
   CVarReturn SetClampMouse(const bool bState)
     { FlagSetOrClear(IF_CLAMPMOUSE, bState); return ACCEPT; }
-  /* ----------------------------------------------------------------------- */
-} *cInput = nullptr;                   // Global input class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

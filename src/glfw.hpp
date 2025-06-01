@@ -9,18 +9,21 @@
 /* ------------------------------------------------------------------------- */
 namespace IGlFW {                      // Start of module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IError::P;             using namespace IGlFWCursor::P;
-using namespace IGlFWUtil::P;          using namespace IGlFWWindow::P;
-using namespace IHelper::P;            using namespace ILog::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IToken::P;             using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IGlFWCursor::P;        using namespace IGlFWUtil::P;
+using namespace IGlFWWindow::P;        using namespace IHelper::P;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace IToken::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 typedef array<GlFWCursor, CUR_MAX> CursorStandard;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= */
-static class GlFW final :              // Root engine class
+class GlFW;                            // Class prototype
+static GlFW *cGlFW = nullptr;          // Pointer to global class
+class GlFW :                           // Root engine class
   /* -- Base classes ------------------------------------------------------- */
   public InitHelper,                   // Initialisation helper
   public GlFWWindow,                   // GLFW window class
@@ -109,7 +112,7 @@ static class GlFW final :              // Root engine class
   { // Get GLFW's identity
     if(const char*const cpIdentity = glfwGetVersionString())
     { // Parse each token (0 is always the version), rest is the features
-      if(const Token tIdentity{ cpIdentity, cCommon->Space() })
+      if(const Token tIdentity{ cpIdentity, cCommon->CommonSpace() })
       { // Store library version and If first token which says the version
         // mismatches with our version? Write a log message. It's not really a
         // problem since GlFW's headers maintain compatibility across versions.
@@ -157,8 +160,8 @@ static class GlFW final :              // Root engine class
     // Report initialisation successful
     cLog->LogInfoSafe("GlFW subsystem initialised.");
   }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~GlFW, DeInit())          // Try to de-initialise glfw
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~GlFW, DeInit())
   /* -- Constructor -------------------------------------------------------- */
   GlFW(void) :                         // Default constructor (No arguments)
     /* -- Initialisers ----------------------------------------------------- */
@@ -200,10 +203,9 @@ static class GlFW final :              // Root engine class
     },
     /* --------------------------------------------------------------------- */
     bRawMouseSupported(false)          // Raw mouse support is detected soon
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* ----------------------------------------------------------------------- */
-} *cGlFW = nullptr;                    // Pointer to static class
+    /* -- Set global pointer to static class ------------------------------- */
+    { cGlFW = this; }
+};/* ----------------------------------------------------------------------- */
 /* == Process a glfw error ================================================= */
 void GlFW::ErrorHandler(int iCode, const char*const cpDesc)
   { cGlFW->HandleError(iCode, cpDesc); }

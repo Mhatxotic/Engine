@@ -11,14 +11,15 @@
 namespace IAsset {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArchive::P;           using namespace IASync::P;
-using namespace ICodec::P;             using namespace ICollector::P;
-using namespace ICVarDef::P;           using namespace IDir::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IIdent::P;             using namespace IFlags;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
+using namespace ICodec::P;             using namespace ICommon::P;
+using namespace ICollector::P;         using namespace ICVarDef::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IIdent::P;
+using namespace IFlags;                using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Override type -------------------------------------------------------- */
@@ -129,7 +130,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   public Lockable,                     // Lua garbage collector instruction
   public AssetFlags                    // Asset settings
 { /* -------------------------------------------------------------- */ private:
-  void SwapAsset(Asset &aOther)
+  void AssetSwap(Asset &aOther)
   { // Swap settings flags
     FlagSwap(aOther);
     MemSwap(aOther);
@@ -138,35 +139,42 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     CollectorSwapRegistration(aOther);
   }
   /* -- Perform decoding --------------------------------------------------- */
-  template<class Codec>void CodecExec(FileMap &fmData, size_t stLevel=0)
+  template<class Codec>void AssetCodecExec(FileMap &fmData, size_t stLevel=0)
     { MemSwap(Block<Codec>{ fmData, stLevel }); }
   /* -- Perform decoding converting flags to compression level ------------- */
-  template<class Codec>void CodecExecEx(FileMap &fmData)
-    { CodecExec<Codec>(fmData,
+  template<class Codec>void AssetCodecExecEx(FileMap &fmData)
+    { AssetCodecExec<Codec>(fmData,
         FlagIsSet(CD_LEVEL_FASTEST)  ? 1 : (FlagIsSet(CD_LEVEL_FAST) ? 3 :
        (FlagIsSet(CD_LEVEL_MODERATE) ? 5 : (FlagIsSet(CD_LEVEL_SLOW) ? 7 :
        (FlagIsSet(CD_LEVEL_SLOWEST)  ? 9 : 1))))); }
   /* -- Load asset from memory ------------------------------------- */ public:
   void AsyncReady(FileMap &fmData)
   { // Guest wants data put into a raw magic block (no user flags)
-    if(FlagIsSet(CD_ENCODE_RAW)) CodecExec<RAWEncoder>(fmData);
+    if(FlagIsSet(CD_ENCODE_RAW))
+      AssetCodecExec<RAWEncoder>(fmData);
     // Guest wants data encrypted into a magic block (no user flags)
-    else if(FlagIsSet(CD_ENCODE_AES)) CodecExec<AESEncoder>(fmData);
+    else if(FlagIsSet(CD_ENCODE_AES))
+      AssetCodecExec<AESEncoder>(fmData);
     // Guest wants data deflated into a magic block
-    else if(FlagIsSet(CD_ENCODE_ZLIB)) CodecExecEx<ZLIBEncoder>(fmData);
+    else if(FlagIsSet(CD_ENCODE_ZLIB))
+      AssetCodecExecEx<ZLIBEncoder>(fmData);
     // Guest wants data encrypted and deflated into a magic block
-    else if(FlagIsSet(CD_ENCODE_ZLIBAES)) CodecExecEx<AESZLIBEncoder>(fmData);
+    else if(FlagIsSet(CD_ENCODE_ZLIBAES))
+      AssetCodecExecEx<AESZLIBEncoder>(fmData);
     // Guest wants data compressed into a magic block
-    else if(FlagIsSet(CD_ENCODE_LZMA)) CodecExecEx<LZMAEncoder>(fmData);
+    else if(FlagIsSet(CD_ENCODE_LZMA))
+      AssetCodecExecEx<LZMAEncoder>(fmData);
     // Guest wants data encrypted and compressed into a magic block
-    else if(FlagIsSet(CD_ENCODE_LZMAAES)) CodecExecEx<AESLZMAEncoder>(fmData);
+    else if(FlagIsSet(CD_ENCODE_LZMAAES))
+      AssetCodecExecEx<AESLZMAEncoder>(fmData);
     // Guest wants data decoded from a magic block (no user flags)
-    else if(FlagIsSet(CD_DECODE)) CodecExec<CoDecoder>(fmData);
+    else if(FlagIsSet(CD_DECODE))
+      AssetCodecExec<CoDecoder>(fmData);
     // Guest wants data untouched? Load in all the data in the map
     else MemSwap(fmData.FileMapDecouple());
   }
   /* -- Load asset from asset asynchronously ------------------------------- */
-  void InitAsyncAsset(lua_State*const lS, const string &strName,
+  void AssetInitAsyncAsset(lua_State*const lS, const string &strName,
     const AssetFlagsConst &afcFlags, Asset &aCref)
   { // Prepare user flags
     FlagSet(afcFlags);
@@ -174,7 +182,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     AsyncInitArray(lS, strName, "assetdata", aCref);
   }
   /* -- Load asset from file asynchronously -------------------------------- */
-  void InitAsyncFile(lua_State*const lS, const string &strFile,
+  void AssetInitAsyncFile(lua_State*const lS, const string &strFile,
     const AssetFlagsConst &afcFlags)
   { // Prepare user flags
     FlagSet(afcFlags);
@@ -182,7 +190,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     AsyncInitFile(lS, strFile, "assetfile");
   }
   /* -- Load asset from command-line --------------------------------------- */
-  void InitAsyncCmdLine(lua_State*const lS, const string &strCmdLine,
+  void AssetInitAsyncCmdLine(lua_State*const lS, const string &strCmdLine,
     const AssetFlagsConst &afcFlags)
   { // Prepare user flags
     FlagSet(afcFlags);
@@ -192,7 +200,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     AsyncInitCmdLine(lS, strCmdLine, "cmdline", mbBlank);
   }
   /* -- Load asset from command-line --------------------------------------- */
-  void InitAsyncCmdLineEx(lua_State*const lS, const string &strCmdLine,
+  void AssetInitAsyncCmdLineEx(lua_State*const lS, const string &strCmdLine,
     const AssetFlagsConst &afcFlags, Asset &aStdIn)
   { // Prepare user flags
     FlagSet(afcFlags);
@@ -201,14 +209,14 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
       StrAppend("cmdline<", aStdIn.MemSize()), aStdIn);
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitFile(const string &strFile, const AssetFlagsConst &afcFlags)
+  void AssetInitFile(const string &strFile, const AssetFlagsConst &afcFlags)
   { // Set load flags
     FlagSet(afcFlags);
     // Load file normally
     SyncInitFileSafe(strFile);
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitPtr(const string &strName, const AssetFlagsConst &afcFlags,
+  void AssetInitPtr(const string &strName, const AssetFlagsConst &afcFlags,
     size_t stNSize, const char*const cpNPtr)
   { // Prepare flags
     FlagSet(afcFlags);
@@ -218,11 +226,12 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     SyncInitArray(strName, mData);
   }
   /* -- Init from asset ---------------------------------------------------- */
-  void InitAsset(const string &strName, const AssetFlagsConst &afcFlags,
+  void AssetInitAsset(const string &strName, const AssetFlagsConst &afcFlags,
     Asset &aData)
-      { InitPtr(strName, afcFlags, aData.MemSize(), aData.MemPtr<char>()); }
+      { AssetInitPtr(strName,
+          afcFlags, aData.MemSize(), aData.MemPtr<char>()); }
   /* -- Init duplicate asset ----------------------------------------------- */
-  void InitDuplicate(const Asset &aCref)
+  void AssetInitDuplicate(const Asset &aCref)
   { // Copy name of asset
     IdentSet(aCref.IdentGet());
     // Copy flags
@@ -231,14 +240,14 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     MemInitCopy(aCref);
   }
   /* -- Init blank asset --------------------------------------------------- */
-  void InitBlank(const string &strName, const size_t stBytes)
+  void AssetInitBlank(const string &strName, const size_t stBytes)
   { // Set name of memory
     IdentSet(StdMove(strName));
     // Allocate the memory and fill it
     MemInitSafe(stBytes);
   }
   /* -- Init from string --------------------------------------------------- */
-  void InitArray(const string &strName, Asset &aRef,
+  void AssetInitArray(const string &strName, Asset &aRef,
     const AssetFlagsConst &afcFlags)
   { // Set load flags
     FlagSet(afcFlags);
@@ -246,9 +255,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     SyncInitArray(strName, aRef);
   }
   /* -- Move assignment ---------------------------------------------------- */
-  Asset& operator=(Asset &&aOther) { SwapAsset(aOther); return *this; }
+  Asset& operator=(Asset &&aOther) { AssetSwap(aOther); return *this; }
   /* -- Move constructor --------------------------------------------------- */
-  Asset(Asset &&aOther) : Asset() { SwapAsset(aOther); }
+  Asset(Asset &&aOther) : Asset() { AssetSwap(aOther); }
   /* -- For loading via LUA ------------------------------------------------ */
   Asset(void) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -277,7 +286,7 @@ struct AssetList :
     StrSet{ bOnlyDirs ? StdMove(Dir{ strDir }.DirsToSet()) :
                         StdMove(Dir{ strDir }.FilesToSet()) }
     /* -- Add archive files to list ---------------------------------------- */
-    { ArchiveEnumerate(strDir, cCommon->Blank(), bOnlyDirs, *this); }
+    { ArchiveEnumerate(strDir, cCommon->CommonBlank(), bOnlyDirs, *this); }
   /* -- Return files in directories with extension matching ---------------- */
   AssetList(const string &strDir, const string &strExt, const bool bOnlyDirs) :
     /* -- Initialisers ----------------------------------------------------- */

@@ -14,20 +14,23 @@
 namespace ILua {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICollector::P;
-using namespace ICrypt::P;             using namespace ICVarDef::P;
-using namespace ICVar::P;              using namespace ICVarLib::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags;                using namespace ILog::P;
-using namespace ILuaDef;               using namespace ILuaCode::P;
-using namespace ILuaFunc::P;           using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITimer::P;
-using namespace IUtil::P;              using namespace Lib::Sqlite::Types;
+using namespace ICommon::P;            using namespace ICrypt::P;
+using namespace ICVarDef::P;           using namespace ICVar::P;
+using namespace ICVarLib::P;           using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFlags;
+using namespace ILog::P;               using namespace ILuaDef;
+using namespace ILuaCode::P;           using namespace ILuaFunc::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITimer::P;             using namespace IUtil::P;
+using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Lua class ============================================================ */
-static class Lua final :
+class Lua;                             // Class prototype
+static Lua *cLua = nullptr;            // Pointer to global class
+class Lua :                            // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   public ClockChrono<CoreClock>,       // Runtime clock
   private EvtMainRegVec                // Events list to register
@@ -287,7 +290,7 @@ static class Lua final :
       llcirAPI[llRef.lciId] = iReference;
       // Push the name of the object for 'tostring()' LUA function.
       LuaUtilPushStrView(GetState(), llRef.strvName);
-      LuaUtilSetField(GetState(), -2, cCommon->LuaName().c_str());
+      LuaUtilSetField(GetState(), -2, cCommon->CommonLuaName().c_str());
       // Set function methods so var:func() works.
       LuaUtilPushTable(GetState(), 0, llRef.iLLMFCount);
       luaL_setfuncs(GetState(), llRef.libmfList, 0);
@@ -480,6 +483,8 @@ static class Lua final :
       "- Maximum CFunction calls: $; Maximum UpValues: $.",
       LUA_MINSTACK, LUAI_MAXSTACK, LUAI_MAXCCALLS, MAXUPVAL);
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Lua, DeInit())
   /* -- Constructor -------------------------------------------------------- */
   Lua(void) :
     /* --------------------------------------------------------------------- */
@@ -500,11 +505,9 @@ static class Lua final :
     lrMainTick{ "MainTick" },          // Main tick event
     lrMainEnd{ "EndTick" },            // End tick event
     lrMainRedraw{ "OnRedraw" }         // Redraw event
-    /* --------------------------------------------------------------------- */
-    { }                                // No code
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Lua, DeInit())
-  /* -- When operations count have changed --------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cLua = this; }
+  /* -- When operations count have changed ------------------------- */ public:
   CVarReturn SetOpsInterval(const int iCount)
     { return CVarSimpleSetIntNL(iOperations, iCount, 1); }
   /* -- Set default size of stack ------------------------------------------ */
@@ -522,9 +525,7 @@ static class Lua final :
   /* -- Set debug locals on stack ------------------------------------------ */
   CVarReturn SetDebugLocals(const bool bState)
     { return CVarSimpleSetInt(bDebugLocals, bState); }
-  /* -- End ---------------------------------------------------------------- */
-} *cLua = nullptr;                     // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

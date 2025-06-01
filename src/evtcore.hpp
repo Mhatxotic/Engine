@@ -86,7 +86,7 @@ class EvtCore :                        // Start of common event system class
   typedef pair<const Cmd, const CbEcFunc> RegPair; // Event command and cb func
   typedef const vector<RegPair>           RegVec;  // Event list
   /* ----------------------------------------------------------------------- */
-  typedef vector<EvtArgVar> Args;      // Vector of RegPairs
+  typedef vector<EvtArgVar> EvtArgs;   // Vector of RegPairs
   /* ----------------------------------------------------------------------- */
   typedef IdList<EvtMaxEvents> ISList; // Events as strings
   const ISList islEventStrings;        // Actual variable
@@ -95,21 +95,21 @@ class EvtCore :                        // Start of common event system class
   { /* --------------------------------------------------------------------- */
     Cmd            cCmd;               // Command send
     CbEcFunc       cbfFunc;            // Function to call
-    Args           aArgs;              // User parameters
+    EvtArgs        eaArgs;             // User parameters
     /* -- Constructor with move parameters --------------------------------- */
-    Event(const Cmd cNCmd, const CbEcFunc &cbfNFunc, Args &&aNArgs) :
+    Event(const Cmd cNCmd, const CbEcFunc &cbfNFunc, EvtArgs &&eaNArgs) :
       /* -- Initialisers --------------------------------------------------- */
       cCmd(cNCmd),                     // Set requested command
       cbfFunc{ cbfNFunc },             // Set callback function
-      aArgs{ StdMove(aNArgs) }         // Move requested parameters
+      eaArgs{ StdMove(eaNArgs) }       // Move requested parameters
       /* -- No code -------------------------------------------------------- */
       { }
     /* -- Initialiser with copy parameters --------------------------------- */
-    Event(const Cmd cNCmd, const CbEcFunc &cbfNFunc, const Args &aNArgs) :
+    Event(const Cmd cNCmd, const CbEcFunc &cbfNFunc, const EvtArgs &eaNArgs) :
       /* -- Initialisers --------------------------------------------------- */
       cCmd(cNCmd),                     // Set requested command
       cbfFunc{ cbfNFunc },             // Set callback function
-      aArgs{ aNArgs }                  // Copy requested parameters
+      eaArgs{ eaNArgs }                  // Copy requested parameters
       /* -- No code -------------------------------------------------------- */
       { }
     /* -- Move constructor ------------------------------------------------- */
@@ -117,7 +117,7 @@ class EvtCore :                        // Start of common event system class
       /* -- Initialisers --------------------------------------------------- */
       cCmd(cOther.cCmd),                  // Set other command
       cbfFunc{ StdMove(cOther.cbfFunc) }, // Set other cb function
-      aArgs{ StdMove(cOther.aArgs) }      // Move other parameters
+      eaArgs{ StdMove(cOther.eaArgs) }      // Move other parameters
       /* -- No code -------------------------------------------------------- */
       { }
   };/* -- Private variables --------------------------------------- */ private:
@@ -142,25 +142,25 @@ class EvtCore :                        // Start of common event system class
     return cefEmpty;
   }
   /* -- Execute specified event NOW (finisher) ----------------------------- */
-  void ExecuteParam(const Cmd cCmd, Args &aArgs)
+  void ExecuteParam(const Cmd cCmd, EvtArgs &eaArgs)
   { // Get callback function
     const CbEcFunc &fnCB = GetFunction(cCmd);
     // Execute callback function
-    fnCB({ cCmd, fnCB, StdMove(aArgs) });
+    fnCB({ cCmd, fnCB, StdMove(eaArgs) });
   }
   /* -- Execute specified event NOW (parameters) --------------------------- */
   template<typename ...VarArgs,typename AnyType>
-    void ExecuteParam(const Cmd cCmd, Args &aArgs, AnyType atArg,
+    void ExecuteParam(const Cmd cCmd, EvtArgs &eaArgs, AnyType atArg,
       const VarArgs &...vaArgs)
   { // Insert parameter into list
-    aArgs.push_back(EvtArgVar{ atArg });
+    eaArgs.push_back(EvtArgVar{ atArg });
     // Add more parameters
-    ExecuteParam(cCmd, aArgs, vaArgs...);
+    ExecuteParam(cCmd, eaArgs, vaArgs...);
   }
   /* -- Add with copy parameter semantics (finisher) ----------------------- */
-  void AddParam(const Cmd cCmd, Args &aArgs)
+  void AddParam(const Cmd cCmd, EvtArgs &eaArgs)
   { // Event data to add to events list
-    Event eEvent{ cCmd, GetFunction(cCmd), StdMove(aArgs) };
+    Event eEvent{ cCmd, GetFunction(cCmd), StdMove(eaArgs) };
     // Wait and lock main event list
     const LockGuard lgEventsSync{ mMutex };
     // Move cell into event list
@@ -168,12 +168,12 @@ class EvtCore :                        // Start of common event system class
   }
   /* -- Add with copy parameter semantics (parameters) --------------------- */
   template<typename ...VarArgs, typename AnyType>
-    void AddParam(const Cmd cCmd, Args &aArgs, AnyType atArg,
+    void AddParam(const Cmd cCmd, EvtArgs &eaArgs, AnyType atArg,
       const VarArgs &...vaArgs)
   { // Place parameter in list
-    aArgs.emplace_back(EvtArgVar{ atArg });
+    eaArgs.emplace_back(EvtArgVar{ atArg });
     // Add more parameters or finish
-    AddParam(cCmd, aArgs, vaArgs...);
+    AddParam(cCmd, eaArgs, vaArgs...);
   }
   /* -- list is empty? --------------------------------------------- */ public:
   bool Empty(void)
@@ -257,26 +257,26 @@ class EvtCore :                        // Start of common event system class
   template<typename ...VarArgs>
     void Execute(const Cmd cCmd, const VarArgs &...vaArgs)
   { // Parameters list
-    Args aArgs;
+    EvtArgs eaArgs;
     // Reserve memory for parameters
-    aArgs.reserve(sizeof...(VarArgs));
+    eaArgs.reserve(sizeof...(VarArgs));
     // Prepare parameters list and execute
-    ExecuteParam(cCmd, aArgs, vaArgs...);
+    ExecuteParam(cCmd, eaArgs, vaArgs...);
   }
   /* -- Add with copy parameter semantics (starter) ------------------------ */
   template<typename ...VarArgs>
     void Add(const Cmd cCmd, const VarArgs &...vaArgs)
   { // Parameters list
-    Args aArgs;
+    EvtArgs eaArgs;
     // Reserve memory for parameters
-    aArgs.reserve(sizeof...(VarArgs));
+    eaArgs.reserve(sizeof...(VarArgs));
     // Prepare parameters list and add a new event
-    AddParam(cCmd, aArgs, vaArgs...);
+    AddParam(cCmd, eaArgs, vaArgs...);
   }
   /* -- Add to events and return iterator (finisher) ----------------------- */
-  void AddExParam(const Cmd cCmd, QueueConstIt &qciItem, Args &aArgs)
+  void AddExParam(const Cmd cCmd, QueueConstIt &qciItem, EvtArgs &eaArgs)
   { // Setup cell to insert
-    Event eEvent{ cCmd, GetFunction(cCmd), StdMove(aArgs) };
+    Event eEvent{ cCmd, GetFunction(cCmd), StdMove(eaArgs) };
     // Try to lock main event list
     const LockGuard lgEventsSync{ mMutex };
     // Push new event whilst move parameters into it
@@ -285,11 +285,11 @@ class EvtCore :                        // Start of common event system class
   /* -- Add to events and return iterator (parameters) --------------------- */
   template<typename ...VarArgs, typename AnyType>
     void AddExParam(const Cmd cCmd, QueueConstIt &qciItem,
-      Args &aArgs, AnyType atArg, const VarArgs &...vaArgs)
+      EvtArgs &eaArgs, AnyType atArg, const VarArgs &...vaArgs)
   { // Place parameter into parameter list
-    aArgs.emplace_back(EvtArgVar{ atArg });
+    eaArgs.emplace_back(EvtArgVar{ atArg });
     // Add more parameters or finish
-    AddExParam(cCmd, qciItem, aArgs, vaArgs...);
+    AddExParam(cCmd, qciItem, eaArgs, vaArgs...);
   }
   /* -- Queue and event and return the id of the event copy params --------- */
   template<typename ...VarArgs>
@@ -297,11 +297,11 @@ class EvtCore :                        // Start of common event system class
   { // Iterator to return
     QueueConstIt qciItem;
     // Parameters list
-    Args aArgs;
+    EvtArgs eaArgs;
     // Reserve parameters
-    aArgs.reserve(sizeof...(VarArgs));
+    eaArgs.reserve(sizeof...(VarArgs));
     // Prepare parameters list and execute
-    AddExParam(cCmd, qciItem, aArgs, vaArgs...);
+    AddExParam(cCmd, qciItem, eaArgs, vaArgs...);
     // Return iterator
     return qciItem;
   }
@@ -338,7 +338,7 @@ class EvtCore :                        // Start of common event system class
   /* -- Unregister multiple events ----------------------------------------- */
   void UnregisterEx(const RegVec &rvEvents)
     { for(const RegPair &rpItem : rvEvents) Unregister(rpItem.first); }
-  /* -- Event data, all empty functions ------------------------------------ */
+  /* -- Event data, all empty functions ------------------------- */ protected:
   EvtCore(string &&strCName, ISList &&islStrings) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ StdMove(strCName) },             // Initialise event system name
@@ -348,7 +348,7 @@ class EvtCore :                        // Start of common event system class
     /* -- No code ---------------------------------------------------------- */
     { }
 };/* ----------------------------------------------------------------------- */
-};                                     // End of public module namespace
+}                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-};                                     // End of private module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

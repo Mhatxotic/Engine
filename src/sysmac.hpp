@@ -24,19 +24,135 @@
 ** ## again - they are only for initialisation.                           ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-class SysProcess                       // Need this before of System init order
+class SysProcess :                     // Need this before of System init order
+  /* -- Dependency classes ------------------------------------------------- */
+  private Ident                        // Mutex identifier
 { /* -- Private variables -------------------------------------------------- */
   const pid_t      ullProcessId;       // Process id
   const pthread_t  vpThreadId;         // Thread id
   /* -- Protected variables ------------------------------------- */ protected:
   const uint64_t   qwPageSize;         // Memory page size
   const mach_port_t mptHost, mptTask;  // Current mach host and task id
+  /* -- Shared memory ------------------------------------------------------ */
+  pid_t           *pProcessId;         // Process id (OS level memory)
+  static constexpr size_t stPidSize = sizeof(*pProcessId); // Size of a pid
   /* -- Return process and thread id --------------------------------------- */
   template<typename IntType=decltype(ullProcessId)>IntType GetPid(void) const
     { return static_cast<IntType>(ullProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid(void) const
     { return static_cast<IntType>(UtilBruteCast<const size_t>(vpThreadId)); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Initialise global mutex ------------------------------------ */ public:
+  bool InitGlobalMutex(const string_view &strvTitle)
+  { // Initialise mutex ident
+    IdentSet(strvTitle);
+    // Shared memory file descriptor helper
+    class Shm
+    { /* -- Private variables ---------------------------------------------- */
+      const string_view &strvTitle; // Filename of shm object
+      int               iFd,        // The file descriptor of the shm object
+                        iMode;      // Requested mode for the shm object
+      /* -- Return mode -------------------------------------------- */ public:
+      int Mode(void) const { return iMode; }
+      /* -- Get file descriptor -------------------------------------------- */
+      int Get(void) const { return iFd; }
+      /* -- Resize file descriptor content --------------------------------- */
+      bool Truncate(const size_t stSize) const
+        { return !ftruncate(Get(), static_cast<off_t>(stSize)); }
+      /* -- Close the file descriptor -------------------------------------- */
+      bool Close(void)
+      { // Return success if already closed
+        if(Get() < 0) return true;
+        // Do the close and return failure if failed
+        if(close(Get())) return false;
+        // Reset the file descriptor
+        iFd = -1;
+        // Success
+        return true;
+      }
+      /* -- Open the file descriptor --------------------------------------- */
+      bool Open(const int iNMode)
+      { // Close previous file descriptor
+        Close();
+        // Set new mode
+        iMode = iNMode;
+        // Open and assign the new descriptor
+        iFd = shm_open(strvTitle.data(), iMode, 0600);
+        // Return if the open succeeded
+        return Get() >= 0;
+      }
+      /* -- Destructor that closes the file descriptor --------------------- */
+      ~Shm(void) { if(Get() >= 0) close(Get()); }
+      /* -- Constructor that initialises variables ------------------------- */
+      explicit Shm(const string_view &strvNTitle) :
+        /* -- Initialisers ------------------------------------------------- */
+        strvTitle(strvNTitle),         // Set reference to title
+        iFd(-1),                       // File descriptor uninitialised
+        iMode(0)                       // Mode uninitialised
+        /* -- No code ------------------------------------------------------ */
+        { }
+      /* -- Initialise a single object that automatically cleans up -------- */
+    } shmShm{ strvTitle };
+    // Create the semaphore and if an error occurs?
+    if(!shmShm.Open(O_CREAT|O_EXCL|O_WRONLY))
+    { // Report error if it isn't because the semaphore already exists
+      if(StdIsNotError(EEXIST))
+        XCL("Failed to setup shared memory object for exclusive writing!",
+            "Name", strvTitle, "Mode", shmShm.Mode());
+      // Try opening it again for reading with exclusivity
+      if(!shmShm.Open(O_RDONLY|O_EXCL))
+        XCL("Failed to setup shared memory object for exclusive reading!",
+            "Name", strvTitle, "Mode", shmShm.Mode());
+      // Initialise memory
+      pProcessId = StdMMap<pid_t>
+        (nullptr, stPidSize, PROT_READ, MAP_SHARED, shmShm.Get(), 0);
+      if(pProcessId == MAP_FAILED)
+        XCL("Failed to setup shared memory for reading!",
+            "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+      // Test if the process exists
+      if(getpgid(*pProcessId) >= 0)
+      { // Put in log that another instance of this application is running and
+        // return to caller that execution must cease.
+        cLog->LogWarningExSafe("System detected another instance of this "
+          "application running at pid $.", *pProcessId);
+        return false;
+      } // Put in log that another instance of this application is running.
+      cLog->LogWarningExSafe(
+        "Previous pid of $ not valid so assuming no previous instance.",
+        *pProcessId);
+      // Unmap previous shared memory
+      if(munmap(pProcessId, stPidSize))
+        XCL("Failed to unmap shared memory from reading!", "Name", strvTitle);
+      // Try reopening for exclusive writing again
+      if(!shmShm.Open(O_WRONLY|O_EXCL))
+        XCL("Failed to setup shared memory object for exclusive writing!",
+            "Name", strvTitle, "Mode", shmShm.Mode());
+    } // Make sure it is the correct size
+    if(!shmShm.Truncate(stPidSize) && StdIsNotError(EINVAL))
+      XCL("Failed to truncate shared memory object!",
+          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+    // Initialise memory
+    pProcessId = StdMMap<pid_t>
+      (nullptr, stPidSize, PROT_WRITE, MAP_SHARED, shmShm.Get(), 0);
+    if(pProcessId == MAP_FAILED)
+      XCL("Failed to setup shared memory for writing!",
+          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+    // Write the current PID to shared memory
+    *pProcessId = ullProcessId;
+    // Execution can continue
+    return true;
+  }
+  /* -- Destructor --------------------------------------------------------- */
+  ~SysProcess(void)
+  { // Unmap the memory containing the pid and reset the pid memory address
+    if(pProcessId && munmap(pProcessId, stPidSize))
+      cLog->LogWarningExSafe("System failed to unmap shared memory of size "
+        "$ bytes! $", stPidSize, SysError());
+    // Unlink the shared memory object if data is set
+    if(IdentIsSet() && shm_unlink(IdentGetData()))
+      cLog->LogWarningExSafe("System failed to unlink shared memory object "
+        "'$'! $", IdentGet(), SysError());
+  }
+  /* -- Constructor -------------------------------------------------------- */
   SysProcess(void) :
     /* -- Initialisers ----------------------------------------------------- */
     ullProcessId(getpid()),            // Initialise process id number
@@ -44,7 +160,8 @@ class SysProcess                       // Need this before of System init order
     qwPageSize(static_cast<uint64_t>   // Initialise memory page size
       (sysconf(_SC_PAGESIZE))),        // Usually 16k on M1 or 4k on Intel
     mptHost(mach_host_self()),         // Initialise host task
-    mptTask(mach_task_self())          // Initialise self task
+    mptTask(mach_task_self()),         // Initialise self task
+    pProcessId(nullptr)                // Process id memory not available
     /* -- No code ---------------------------------------------------------- */
     { }
 };/* == Class ============================================================== */
@@ -64,7 +181,7 @@ class SysCore :
     string strOut; strOut.resize(stSize - 1);
     if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.c_str()),
       &stSize, nullptr, 0) < 0)
-        return cCommon->Blank();
+        return cCommon->CommonBlank();
     // Return the string
     return strOut;
   }
@@ -76,6 +193,15 @@ class SysCore :
     size_t stOut = sizeof(tOut);
     // Return the number
     return sysctlbyname(cpS, &tOut, &stOut, nullptr, 0) < 0 ? 0 : tOut;
+  }
+  /* ----------------------------------------------------------------------- */
+  void InitMemorySize(void)
+  { // Store real total memory and return if succesful
+    memData.qMTotal = GetSysCTLInfoNum<uint64_t>("hw.memsize");
+    if(memData.qMTotal) return;
+    // Update memory information and set total from current data instead
+    UpdateMemoryUsageData();
+    memData.qMTotal = memData.qMFree + memData.qMUsed;
   }
   /* --------------------------------------------------------------- */ public:
   void UpdateMemoryUsageData(void)
@@ -92,7 +218,6 @@ class SysCore :
                      +  static_cast<uint64_t>(vmsData.inactive_count)
                      +  static_cast<uint64_t>(vmsData.wire_count))
                      * qwPageSize;
-      memData.qMTotal = memData.qMFree + memData.qMUsed;
     } // For getting process info
     task_vm_info_data_t tvidData;
     mach_msg_type_number_t mmtnCount = TASK_VM_INFO_COUNT;
@@ -517,7 +642,8 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   OSData GetOperatingSystemData(void)
   { // Get operating system name
-    const Token tVersion{ GetSysCTLInfoString("kern.osproductversion"), "." };
+    const Token tVersion{ GetSysCTLInfoString("kern.osproductversion"),
+      cCommon->CommonPeriod() };
     unsigned int uiMajor =
         tVersion.empty() ? 0 : StrToNum<unsigned int>(tVersion[0]),
       uiMinor = tVersion.size() < 2 ? 0 : StrToNum<unsigned int>(tVersion[1]),
@@ -533,17 +659,17 @@ class SysCore :
     };
     // List of MacOS versions and when they expire
     static const array<const OSListItem,22>osList{ {
-      { cCommon->CBlank(), 16,  0 },   { "Sequoia",         15,  0 },
-      { "Sonoma",          14,  0 },   { "Ventura",         13,  0 },
-      { "Monterey",        12,  0 },   { "Big Sur",         11,  0 },
-      { "Catalina",        10, 15 },   { "Mojave",          10, 14 },
-      { "High Sierra",     10, 13 },   { "Sierra",          10, 12 },
-      { "El Capitan",      10, 11 },   { "Yosemite",        10, 10 },
-      { "Mavericks",       10,  9 },   { "Mountain Lion",   10,  8 },
-      { "Lion",            10,  7 },   { "Snow Leopard",    10,  6 },
-      { "Leopard",         10,  5 },   { "Tiger",           10,  4 },
-      { "Panther",         10,  3 },   { "Jaguar",          10,  2 },
-      { "Puma",            10,  1 },   { "Cheetah",         10,  0 },
+      { "Tahoe",       26,  0 }, { "Sequoia",       15,  0 },
+      { "Sonoma",      14,  0 }, { "Ventura",       13,  0 },
+      { "Monterey",    12,  0 }, { "Big Sur",       11,  0 },
+      { "Catalina",    10, 15 }, { "Mojave",        10, 14 },
+      { "High Sierra", 10, 13 }, { "Sierra",        10, 12 },
+      { "El Capitan",  10, 11 }, { "Yosemite",      10, 10 },
+      { "Mavericks",   10,  9 }, { "Mountain Lion", 10,  8 },
+      { "Lion",        10,  7 }, { "Snow Leopard",  10,  6 },
+      { "Leopard",     10,  5 }, { "Tiger",         10,  4 },
+      { "Panther",     10,  3 }, { "Jaguar",        10,  2 },
+      { "Puma",        10,  1 }, { "Cheetah",       10,  0 },
     } };
     // Iterate through the versions and try to find a match for the
     // versions above. 'Unknown' is caught if none are found.
@@ -554,15 +680,15 @@ class SysCore :
       osS << osItem.cpLabel;
       // Skip adding version numbers
       goto SkipNumericalVersionNumber;
-    } // Nothing was found so add version number detected
-    osS << uiMajor << '.' << uiMinor;
+    } // Set unknown operating system label
+    osS << "Unknown";
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
     // Get LANGUAGE code and set default if not 5 bytes long?
-    string strCode{ cCmdLine->GetEnv("LANGUAGE") } ;
+    string strCode{ cCmdLine->CmdLineGetEnv("LANGUAGE") } ;
     if(strCode.size() != 5)
     { // Get LANG code and set default if not found
-      strCode = cCmdLine->GetEnv("LANG");
+      strCode = cCmdLine->CmdLineGetEnv("LANG");
       if(strCode.size() >= 5)
       { // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
         const size_t stPeriod = strCode.find('.');
@@ -599,7 +725,7 @@ class SysCore :
       } // This should never happen but just incase?
       else XC("Could not detect region code!");
       // Update and set global locale
-      cCommon->SetLocale(strCode);
+      cCommon->CommonSetLocale(strCode);
     } // Set global locale and show error if failed
     if(!setlocale(LC_ALL, strCode.c_str()))
       XCL("Failed to initialise default locale!", "Locale", strCode);
@@ -617,7 +743,7 @@ class SysCore :
       uiMajor,                         // Major OS version
       uiMinor,                         // Minor OS version
       uiBuild,                         // OS build version
-      numeric_limits<void*>::digits,   // 32 or 64 OS arch
+      sizeof(void*)<<3,                // 32 or 64 OS arch
       StdMove(strCode),                // Get locale
       DetectElevation(),               // Elevated?
       false                            // Wine or Old OS?
@@ -699,7 +825,7 @@ class SysCore :
     StrCompactRef(strVendorId);
     StrCompactRef(strProcessorName);
     // Fail-safe empty strings
-    if(strVendorId.empty()) strVendorId = cCommon->Unspec();
+    if(strVendorId.empty()) strVendorId = cCommon->CommonUnspec();
 #endif
     // Check processor name is specified
     if(strProcessorName.empty()) strProcessorName = strVendorId;
@@ -749,14 +875,17 @@ class SysCore :
   int LastSocketOrSysError(void) const { return StdGetError(); }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir(void) const
-    { return cCmdLine->MakeEnvPath("HOME", "/Library/Application Support"); }
-  /* -- Constructor -------------------------------------------------------- */
-  SysCore(void) :
+    { return cCmdLine->CmdLineMakeEnvPath("HOME",
+        "/Library/Application Support"); }
+  /* -- Default constructor ------------------------------------------------ */
+  SysCore(void) :                      // No parameters
     /* -- Initialisers ----------------------------------------------------- */
-    SysCon{ EnumModules(), 0 },
-    SysCommon{ GetExecutableData(),
-               GetOperatingSystemData(),
-               GetProcessorData() },
-    bWindowInitialised(false) { }
-}; /* ---------------------------------------------------------------------- */
+    SysCon{ EnumModules(), 0 },        // Build system module dependencies
+    SysCommon{ GetExecutableData(),    // Build data about the executable
+               GetOperatingSystemData(), // Build data about the OS
+               GetProcessorData() },   // Build data about the CPU
+    bWindowInitialised(false)          // Window not initialised yet
+    /* -- Initialise total memory size ------------------------------------- */
+    { InitMemorySize(); }
+};/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

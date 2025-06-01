@@ -17,17 +17,27 @@ using namespace ILuaLib::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
-/* == Thread collector class with global thread id counter ================= */
+/* ------------------------------------------------------------------------- */
+enum ThreadStatus : int                // Thread status codes
+{ /* ----------------------------------------------------------------------- */
+  TS_EXCEPTION = -2,                   // (-2) Thread exited with an exception
+  TS_ERROR,                            // (-1) Thread will terminate cleanly
+  TS_STANDBY,                          // ( 0) Thread is in stand-by mode
+  TS_RUNNING,                          // ( 1) Thread is running still
+  TS_RETRY,                            // ( 2) Thread will start again
+  TS_OK,                               // ( 3) Thread will terminate cleanly
+};/* == Thread collector class with global thread id counter =============== */
 CTOR_BEGIN(Threads, Thread, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
   SafeSizeT        stRunning;          // Number of threads running
+  const IdMap<ThreadStatus> imCodes;   // Thread status codes
 )/* ------------------------------------------------------------------------ */
-typedef int (CbThFuncT)(Thread&);      // Thread callback function
+typedef ThreadStatus (CbThFuncT)(Thread&); // Thread callback function
 typedef function<CbThFuncT> CbThFunc;  // Wrapped inside a function class
 /* ------------------------------------------------------------------------- */
 class ThreadBase                       // Thread variables class
 { /* -- Private variables --------------------------------------- */ protected:
-  SafeInt          siExitCode;         // Callback exit code
+  atomic<ThreadStatus> tsCode;         // Callback exit code
   void            *vpParam;            // User parameter
   CbThFunc         ctfFunc;            // Thread callback function
   SafeBool         sbShouldExit;       // Thread should exit
@@ -39,7 +49,7 @@ class ThreadBase                       // Thread variables class
              void*const vpNParam,      // Thread user parameter
              const CbThFunc &ctfNFunc) : // Thread callback function
     /* -- Initialisers ----------------------------------------------------- */
-    siExitCode(0),                     // Set exit code to standby
+    tsCode{TS_STANDBY},                // Set exit code to standby
     vpParam(vpNParam),                 // Set user thread parameter
     ctfFunc{ ctfNFunc },               // Set thread callback function
     sbShouldExit(false),               // Should never exit at first
@@ -67,31 +77,30 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Loop forever until thread should exit
     while(ThreadShouldNotExit())
     { // Set exit code to -1 as a reference that execution is proceeding
-      ThreadSetExitCode(-1);
+      ThreadSetExitCode(TS_RUNNING);
       // Run thread and capture result
       ThreadSetExitCode(ThreadGetCallback()(*this));
       // If non-zero then break else start thread again
-      if(ThreadGetExitCode()) break;
+      if(ThreadGetExitCode() != TS_RETRY) break;
     } // Set shutdown time
     scdEnd = cmHiRes.GetEpochTime();
     // Log if thread didn't signal to exit
-    cLog->LogDebugExSafe("Thread $<$> exited in $ with code $<$$>.",
+    cLog->LogDebugExSafe("Thread $<$> finished in $ with $.",
       CtrGet(), IdentGet(),
       StrShortFromDuration(ClockTimePointRangeToClampedDouble(
-        ThreadGetEndTime(), ThreadGetStartTime())),
-      ThreadGetExitCode(), hex, ThreadGetExitCode());
+        ThreadGetEndTime(), ThreadGetStartTime())), ThreadGetExitCodeString());
     // Reduce thread count
     --cParent->stRunning;
   } // exception occured in thread so handle it
   catch(const exception &eReason)
   { // Return error and set thread to exit
-    ThreadSetExitCode(-2);
+    ThreadSetExitCode(TS_EXCEPTION);
     // Reduce thread count
     --cParent->stRunning;
     // Set shutdown time
     scdEnd = cmHiRes.GetEpochTime();
     // Log if thread didn't signal to exit
-    cLog->LogErrorExSafe("Thread $<$> exited in $ due to exception: $!",
+    cLog->LogErrorExSafe("Thread $<$> finished in $ due to exception: $!",
       CtrGet(), IdentGet(),
       StrShortFromDuration(ClockTimePointRangeToClampedDouble(
         ThreadGetEndTime(), ThreadGetStartTime())), eReason);
@@ -110,6 +119,10 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     else cLog->LogErrorSafe(
       "Thread switch to thiscall failed with null class ptr!");
   }
+  /* ----------------------------------------------------------------------- */
+  void ThreadSetExitFlag(const bool bState) { sbShouldExit = bState; }
+  /* ----------------------------------------------------------------------- */
+  void ThreadDoSetExit(void) { ThreadSetExitFlag(true); }
   /* --------------------------------------------------------------- */ public:
   template<typename ReturnType>ReturnType ThreadGetParam(void) const
     { return reinterpret_cast<ReturnType>(vpParam); }
@@ -121,25 +134,28 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   const ClkTimePoint ThreadGetEndTime(void) const
     { return ClkTimePoint{ scdEnd }; }
   /* ----------------------------------------------------------------------- */
-  int ThreadGetExitCode(void) const { return siExitCode; }
-  void ThreadSetExitCode(const int iNewCode) { siExitCode = iNewCode; }
+  ThreadStatus ThreadGetExitCode(void) const { return tsCode; }
+  void ThreadSetExitCode(const ThreadStatus tsNew) { tsCode = tsNew; }
+  const string_view ThreadGetExitCodeString(void) const
+    { return cParent->imCodes.Get(ThreadGetExitCode()); }
   /* ----------------------------------------------------------------------- */
   const CbThFunc &ThreadGetCallback(void) const { return ctfFunc; }
   bool ThreadHaveCallback(void) const { return !!ThreadGetCallback(); }
   /* ----------------------------------------------------------------------- */
   bool ThreadIsParamSet(void) const { return !!vpParam; }
   /* ----------------------------------------------------------------------- */
+  void ThreadCancelExit(void) { ThreadSetExitFlag(false); }
+  /* ----------------------------------------------------------------------- */
   void ThreadSetExit(void)
   { // Ignore if already exited or already signalled to exit
     if(ThreadShouldExit()) return;
     // Set exit
-    sbShouldExit = true;
-    // Log signalled to exit
-    cLog->LogDebugExSafe("Thread $<$> $ to exit.", CtrGet(), IdentGet(),
-      ThreadIsCurrent() ? "signalling" : "signalled");
+    ThreadDoSetExit();
+    // Log signal to exit if sent from the thread
+    if(ThreadIsCurrent())
+      cLog->LogDebugExSafe("Thread $<$> signalling to exit.",
+        CtrGet(), IdentGet());
   }
-  /* ----------------------------------------------------------------------- */
-  void ThreadCancelExit(void) { sbShouldExit = false; }
   /* ----------------------------------------------------------------------- */
   void ThreadWait(void)
   { // Wait for the thread to terminate. It is important to put this here
@@ -206,7 +222,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Set new thread parameters
     ThreadCancelExit();
     ThreadSetParam(vpPtr);
-    ThreadSetExitCode(0);
+    ThreadSetExitCode(TS_STANDBY);
     // Start the thread and move that thread class to this thread
     ThreadNew(ThreadMain, this);
   }
@@ -232,7 +248,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Not signalled to exit?
     if(ThreadShouldNotExit())
     { // Set exit signal
-      sbShouldExit = true;
+      ThreadDoSetExit();
       // Log signalled to exit in destructor
       cLog->LogWarningExSafe("Thread $<$> signalled to exit in destructor.",
         CtrGet(), IdentGet());
@@ -282,7 +298,13 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     /* --------------------------------------------------------------------- */
     { }                                // Do nothing else
 };/* ======================================================================= */
-CTOR_END(Threads, Thread, THREAD,,,, stRunning{0});
+CTOR_END(Threads, Thread, THREAD,,,, stRunning{0}, imCodes{{
+  /* ----------------------------------------------------------------------- */
+  IDMAPSTR(TS_EXCEPTION),              IDMAPSTR(TS_ERROR),
+  IDMAPSTR(TS_STANDBY),                IDMAPSTR(TS_RUNNING),
+  IDMAPSTR(TS_RETRY),                  IDMAPSTR(TS_OK),
+  /* ----------------------------------------------------------------------- */
+}});                                   // End of 'Threads' initialisation
 /* -- Thread sync helper --------------------------------------------------- */
 template<class Callbacks>class ThreadSyncHelper : private Callbacks
 { /* -------------------------------------------------------------- */ private:
@@ -373,7 +395,7 @@ template<class Callbacks>class ThreadSyncHelper : private Callbacks
 };/* ----------------------------------------------------------------------- */
 static size_t ThreadGetRunning(void) { return cThreads->stRunning; }
 /* ------------------------------------------------------------------------- */
-};                                     // End of public namespace
+}                                      // End of public namespace
 /* ------------------------------------------------------------------------- */
-};                                     // End of private namespace
+}                                      // End of private namespace
 /* == EoF =========================================================== EoF == */

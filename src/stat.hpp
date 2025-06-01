@@ -11,12 +11,12 @@
 /* ------------------------------------------------------------------------- */
 namespace IStat {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IError::P;
-using namespace IIdent::P;             using namespace ILockable::P;
+using namespace ICollector::P;         using namespace ICommon::P;
+using namespace IError::P;             using namespace IIdent::P;
+using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Statistic class ------------------------------------------------------ */
@@ -76,7 +76,7 @@ class Statistic
     // Get headers size minus one
     const size_t stHM1 = Headers() - 1;
     // Create string for gap
-    const string strGap(stGap, ' '), &strLF = cCommon->Lf();
+    const string strGap(stGap, ' '), &strLF = cCommon->CommonLf();
     // Proc headers except the last header item
     for(size_t stHIndex = 0; stHIndex < stHM1; ++stHIndex)
       ProcHdrSuf(osS, hdHeaders[stHIndex], strGap);
@@ -199,7 +199,7 @@ class Statistic
   template<typename ...VarArgs>Statistic &DataF(const char*const cpFormat,
     const VarArgs &...vaArgs) { return Data(StrFormat(cpFormat, vaArgs...)); }
   /* -- Data by read-only lvalue string copy ------------------------------- */
-  Statistic &Data(const string &strVal=cCommon->Blank())
+  Statistic &Data(const string &strVal=cCommon->CommonBlank())
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
@@ -353,8 +353,9 @@ class Statistic
     return *this;
   }
   /* -- Add an empty header ------------------------------------------------ */
-  Statistic &Header(const string &strH=cCommon->Blank(), const size_t stL=0)
-    { return Header(strH, !hdHeaders.empty(), stL); }
+  Statistic &Header(const string &strH=cCommon->CommonBlank(),
+    const size_t stL=0)
+      { return Header(strH, !hdHeaders.empty(), stL); }
   /* -- Add data by pointer ------------------------------------------------ */
   Statistic &DataV(const void*const vpAddr) { return Data(StrAppend(vpAddr)); }
   /* -- Constructor that does nothing -------------------------------------- */
@@ -376,7 +377,7 @@ CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Stats, Stat, STAT)    // End of stat objects collector
 /* ------------------------------------------------------------------------- */
-};                                     // End of private module namespace
+}                                      // End of private module namespace
 /* ------------------------------------------------------------------------- */
-};                                     // End of public module namespace
+}                                      // End of public module namespace
 /* == EoF =========================================================== EoF == */

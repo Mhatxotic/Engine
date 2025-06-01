@@ -25,6 +25,7 @@ FRAMEWORKS="-framework AudioToolbox \
 # Make sure libraries are combined with x86_64 and arm64
 LIBS="lib/glfw64.ma \
       lib/lzma64.ma \
+      lib/lua64.ma \
       lib/nc64.ma \
       lib/ssl64.ma \
       lib/zlib64.ma"
@@ -51,6 +52,7 @@ compile()
            -target $2 \
            -std=gnu++20 \
            -stdlib=libc++ \
+           -ffast-math \
            $INCLUDE \
            $FRAMEWORKS \
            $LIBS \
@@ -71,7 +73,7 @@ printf '\33c\e[3J'
 cd ~/Assets/Engine
 if [ $? -ne 0 ]; then exit 2; fi
 # Compile X86-64 version
-compile $TYPE x86_64-apple-macos10.12 32
+compile $TYPE x86_64-apple-macos10.15 32
 if [ $? -ne 0 ]; then exit 3; fi
 # Compile ARM64 version
 compile $TYPE arm64-apple-macos11 64

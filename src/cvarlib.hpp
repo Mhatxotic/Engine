@@ -2,11 +2,13 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This module is parsed at the main procedure in 'core.cpp' and       ## **
-** ## defines the default cvars and their callbacks. Make sure to use the ## **
-** ## helper CB(STR) macros to help define your callbacks. If you add,    ## **
-** ## remove or change the order of these cvars, you must update the      ## **
-** ## 'CVarEnums' in 'cvardef.hpp' to match the order in this list. This  ## **
+** ## This module is included by 'core.cpp' inside the 'Core' class       ## **
+** ## constructor initialisers and thus a part of the 'E::ICore'          ## **
+** ## namespace which contains all the default console variables. Make    ## **
+** ## sure to update the 'CVarEnums' enum scope in 'cvardef.hpp' if you   ## **
+** ## modify the order, remove or add new console commands. Make sure to  ## **
+** ## use the helper CB(STR) macros to help define your callbacks.        ## **
+** ######################################################################### **
 ** ## This file is also parsed by the engine project management           ## **
 ** ## utility to help create html documentation. New cvar descriptions    ## **
 ** ## start with '// !' with the cvar name and continues on each          ## **
@@ -14,22 +16,19 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Required types ======================================================= */
-using namespace Lib::OpenAL::Types;    using namespace Lib::OS::GlFW::Types;
-using namespace Lib::Sqlite::Types;
-/* -- Built-in CVar definition struct -------------------------------------- */
-const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 /* -- Use this when cvar is an integer ------------------------------------- */
 #define CB(f,t) [](CVarItem&, const string &strV)->CVarReturn \
   { return f(StrToNum<t>(strV)); }
 /* -- Use this when cvar is a string (NoOp for no callback needed) --------- */
 #define CBSTR(f) [](CVarItem &cviItem, const string &strV)->CVarReturn \
   { return f(strV, cviItem.GetModifyableValue()); }
+/* -- Built-in CVar definition struct -------------------------------------- */
+CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 // ! APP_CMDLINE
 // ? Shows the commandline sent to the application it cannot be changed at all.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_cmdline", cCommon->Blank(),
+{ CFL_NONE, "app_cmdline", cCommon->CommonBlank(),
   CBSTR(cCore->CoreParseCmdLine), CONFIDENTIAL|TSTRING|MTRIM|PBOOT },
 /* == Core cvars (don't modify order) ====================================== */
 // ! LOG_LEVEL
@@ -45,7 +44,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 #if !defined(RELEASE)                  // Not release version?
   "4",                                 // Default of DEBUG for log level
 #else                                  // Release version?
-  "2",                                 // Default of WARNING for log level
+  cCommon->CommonTwo(),                // Default of WARNING for log level
 #endif                                 // Release type check
   /* ----------------------------------------------------------------------- */
   CB(cLog->SetLevel, LHLevel), TUINTEGER|PANY },
@@ -69,7 +68,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? then archives, '2' to load from archives first and then try the disk or
 // ? '3' to load from disk only.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_fsoverride", "2",
+{ CFL_NONE, "ast_fsoverride", cCommon->CommonTwo(),
   CB(AssetSetFSOverride, FSOverrideType), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! AST_EXEBUNDLE
@@ -77,14 +76,14 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? 7-zip archive and use that to load guest assets. This is only supported
 // ? on Windows architectures right now and ignored on others.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_exebundle", cCommon->One(),
+{ CFL_NONE, "ast_exebundle", cCommon->CommonOne(),
   CB(ArchiveInitExe, bool), TBOOLEAN|PBOOT },
 /* ------------------------------------------------------------------------- */
 // ! AST_BASEDIR
 // ? Specifies the base directory of where the executable was started from. It
 // ? is only readable by the end-user and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_basedir", cCommon->Blank(),
+{ CFL_NONE, "ast_basedir", cCommon->CommonBlank(),
   CBSTR(cSystem->SetWorkDir), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PBOOT },
 /* ------------------------------------------------------------------------- */
 // ! AST_BUNDLES
@@ -124,7 +123,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? be written to the working directory. It is only readable by the end-user
 // ? and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_homedir", cCommon->Blank(),
+{ CFL_NONE, "ast_homedir", cCommon->CommonBlank(),
   CBSTR(cCore->CoreSetHomeDir), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PBOOT },
 /* ------------------------------------------------------------------------- */
 // ! AST_MODBUNDLE
@@ -132,15 +131,23 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? ending in the value specified by 'ast_bundles' which can override any game
 // ? asset (except app.cfg). The default is true (yes).
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_modbundle",
-/* ------------------------------------------------------------------------- */
-#if defined(RELEASE)                   // Default disabled in release builds
-  cCommon->Zero(),
-#else                                  // Default enabled in other builds
-  cCommon->One(),
-#endif                                 // Build type check
-  /* ----------------------------------------------------------------------- */
+{ CFL_NONE, "ast_modbundle", cCommon->CommonOne(),
   CB(ArchiveInitPersist, bool), TBOOLEAN|PBOOT|PSYSTEM },
+/* ------------------------------------------------------------------------- */
+// ! AST_SAFETYMODE
+// ? Specifies the default file access safety mode. Specify 0 to completely
+// ? disable this feature, 1 for very basic checks such as checking pathnames
+// ? for invalid control characters, too long pathnames, or 2 (default) to
+// ? fully check each path part which denies attempting to escape above the
+// ? directory pointed by 'ast_basedir', using directories '.' and '..',
+// ? reserved Windows system device names and Windows drive letters are denied.
+// ? Note that '.' is allowed with directory enumeration functions. Non-default
+// ? settings are provided for troubleshooting purposes only. If this setting
+// ? is changed, any file on the system that the calling user has access rights
+// ? to can be accessed.
+/* ------------------------------------------------------------------------- */
+{ CFL_NONE, "ast_safetymode", cCommon->CommonTwo(),
+  CB(cDirBase->SetDefaultSafetyMode, ValidType), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DB
 // ? Specifies the Sql database filename to use. This filename is subject
@@ -152,7 +159,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? result in the Sqlite database being stored in memory. Specifying a blank
 // ? string uses the executables filename without the extension.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_db", cCommon->Blank(),
+{ CFL_NONE, "sql_db", cCommon->CommonBlank(),
   CBSTR(cSql->UdbFileModified), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PBOOT },
 /* ------------------------------------------------------------------------- */
 // ! SQL_RETRYCOUNT
@@ -167,14 +174,14 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? operation. The default value is 1 and the the maximum value is 1000 for
 // ? safety reasons. Setting to zero disables but yields the calling thread.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_retrysuspend", cCommon->One(),
+{ CFL_NONE, "sql_retrysuspend", cCommon->CommonOne(),
   CB(cSql->RetrySuspendModified, uint64_t), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_ERASEEMPTY
 // ? Specifies to automatically erase the database at exit if no cvars or
 // ? custom tables are written to it by the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_eraseempty", cCommon->One(),
+{ CFL_NONE, "sql_eraseempty", cCommon->CommonOne(),
   CB(cSql->DeleteEmptyDBModified, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_TEMPSTORE
@@ -186,34 +193,34 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ! SQL_SYNCHRONOUS
 // ? Performs 'pragma synchronous x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_synchronous", cCommon->Zero(),
+{ CFL_NONE, "sql_synchronous", cCommon->CommonZero(),
   CB(cSql->SynchronousModified, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_JOURNALMODE
 // ? Performs 'pragma journal_mode x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_journalmode", cCommon->Zero(),
+{ CFL_NONE, "sql_journalmode", cCommon->CommonZero(),
   CB(cSql->JournalModeModified, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_AUTOVACUUM
 // ? Performs 'pragma auto_vacuum x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_autovacuum", cCommon->One(),
+{ CFL_NONE, "sql_autovacuum", cCommon->CommonOne(),
   CB(cSql->AutoVacuumModified, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_FOREIGNKEYS
 // ? Performs 'pragma foreign_keys x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_foreignkeys", cCommon->One(),
+{ CFL_NONE, "sql_foreignkeys", cCommon->CommonOne(),
   CB(cSql->ForeignKeysModified, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_INCVACUUM
 // ? Performs 'pragma incremental_vacuum(x)' when the database is opened and
 // ? sets 'x' to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_incvacuum", cCommon->Zero(),
+{ CFL_NONE, "sql_incvacuum", cCommon->CommonZero(),
   CB(cSql->IncVacuumModified, uint64_t), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DEFAULTS
@@ -222,13 +229,13 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? [1] DC_OVERWRITE = Overwrite engine variables with defaults.
 // ? [2] DC_REFRESH   = Completely clear SQL cvars table.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_defaults", cCommon->Zero(),
+{ CFL_NONE, "sql_defaults", cCommon->CommonZero(),
   CB(cCVars->SetDefaults, CVarDefaults), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_LOADCONFIG
 // ? Actually loads cvars from the configuration database.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_loadconfig", cCommon->One(),
+{ CFL_NONE, "sql_loadconfig", cCommon->CommonOne(),
   CB(cCVars->LoadSettings, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! APP_CFLAGS
@@ -236,7 +243,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? [0x1] CFL_TERMINAL = Opens (Win32) or reuses (Unix) a console window.
 // ? [0x2] CFL_AUDIO    = Initialises an OpenAL audio context and exposes API.
 // ? [0x4] CFL_VIDEO    = Initialises an OpenGL context+window and exposes API.
-{ CFL_NONE, "app_cflags", cCommon->Zero(),
+{ CFL_NONE, "app_cflags", cCommon->CommonZero(),
   CB(cSystem->SetCoreFlags, CoreFlagsType), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! LOG_LINES
@@ -251,7 +258,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? debugging. Leave as blank for no log file. It can be set from command-line
 // ? parameters, the app.cfg file and the user.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "log_file", cCommon->Blank(),
+{ CFL_NONE, "log_file", cCommon->CommonBlank(),
   CBSTR(cLog->LogFileModified), TSTRING|CFILENAME|MTRIM|PBOOT|PUSR },
 /* ------------------------------------------------------------------------- */
 // ! APP_LONGNAME
@@ -262,29 +269,13 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_NONE, "app_longname", "Untitled", CBSTR(cSystem->SetGuestTitle),
   TSTRING|CNOTEMPTY|MTRIM|PSYSTEM },
 /* ------------------------------------------------------------------------- */
-// ! APP_CLEARMUTEX
-// ? Asks the system to delete the global mutex in Linux and MacOS so the
-// ? engine can startup. You only need to do this if the engine crashes. On
-// ? Windows the mutex is freed on process termination so there is never any
-// ? need to use this on Windows.
-/* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_clearmutex",
-  /* ----------------------------------------------------------------------- */
-#if !defined(WINDOWS) && defined(ALPHA)
-  cCommon->One(),
-#else
-  cCommon->Zero(),
-#endif
-  /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreClearMutex, bool), TBOOLEAN|PBOOT },
-/* ------------------------------------------------------------------------- */
 // ! ERR_INSTANCE
 // ? Tries to activate an existing window of the same name if another instance
 // ? is running. On Windows, mutexes are always cleaned up properly even in a
 // ? crash but not on Linux and MacOS. So just simply remove the app name from
 // ? /dev/shm and the engine should run again.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_instance", cCommon->One(),
+{ CFL_NONE, "err_instance", cCommon->CommonOne(),
   CB(cCore->CoreSetOneInstance, bool), TBOOLEAN|PSYSTEM },
 /* == Object cvars ========================================================= */
 // ! OBJ_CLIPMAX
@@ -510,7 +501,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? any format that is supported with the Image.* loading functions. It can
 // ? also be changed dynamically by Lua. Keep to empty for default icon.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_icon", cCommon->Blank(),
+{ CFL_NONE, "app_icon", cCommon->CommonBlank(),
   CBSTR(cDisplay->SetIcon), TSTRING|MTRIM|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! APP_COPYRIGHT
@@ -542,7 +533,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? This is ignored on interactive mode because a one millisecond delay is
 // ? forced for every frame under the target rate.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_delay", cCommon->One(),
+{ CFL_NONE, "app_delay", cCommon->CommonOne(),
   CB(cTimer->TimerSetDelay, unsigned int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! APP_TITLE
@@ -554,7 +545,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? value of 'app_longname', where 'V' is the value of 'app_version' and 'T'
 // ? is the target executable architechture.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_title", cCommon->Blank(),
+{ CFL_NONE, "app_title", cCommon->CommonBlank(),
   CBSTR(cCore->CoreTitleModified), TSTRING|MTRIM|PSYSTEM },
 /* == Error cvars ========================================================== */
 // ! ERR_ADMIN
@@ -565,7 +556,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? 2 = Same as 1 but ALLOWS when OS's has admin as default (i.e. XP!).
 // ? The default value is 2.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_admin", "2",
+{ CFL_NONE, "err_admin", cCommon->CommonTwo(),
   CB(cSystem->CheckAdminModified, unsigned int), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! ERR_CHECKSUM
@@ -577,9 +568,9 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_NONE, "err_checksum",
   /* ----------------------------------------------------------------------- */
 #if defined(RELEASE)
-  cCommon->One(),
+  cCommon->CommonOne(),
 #else
-  cCommon->Zero(),
+  cCommon->CommonZero(),
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cSystem->CheckChecksumModified, bool), TBOOLEAN|PSYSTEM },
@@ -591,9 +582,9 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_NONE, "err_debugger",
   /* ----------------------------------------------------------------------- */
 #if defined(RELEASE)
-  cCommon->One(),
+  cCommon->CommonOne(),
 #else
-  cCommon->Zero(),
+  cCommon->CommonZero(),
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cSystem->CheckDebuggerDetected, bool), TBOOLEAN|PSYSTEM },
@@ -611,7 +602,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 #if defined(RELEASE)
   "3",
 #else
-  "2",
+  cCommon->CommonTwo(),
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cCore->CoreErrorBehaviourModified, CoreErrorReason), TUINTEGER|PSYSTEM },
@@ -636,7 +627,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? The engine fails to run if the system does not have this amount of VRAM
 // ? available.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "err_minvram", cCommon->Zero(),
+{ CFL_VIDEO, "err_minvram", cCommon->CommonZero(),
   CB(cOgl->SetMinVRAM, uint64_t), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! ERR_MINRAM
@@ -646,7 +637,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? speed of the clear is reported in the log then the memory is freed. The
 // ? default value is zero.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_minram", cCommon->Zero(),
+{ CFL_NONE, "err_minram", cCommon->CommonZero(),
   CB(cSystem->SetMinRAM, uint64_t), TUINTEGER|PSYSTEM },
 /* == Lua cvars ============================================================ */
 // ! LUA_CACHE
@@ -658,13 +649,13 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? [2] LCC_MINIMUM  = " with minimum debug information and store result.
 // ? The default value is 3 for release executable and 2 for beta executable.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_cache", cCommon->One(),
+{ CFL_NONE, "lua_cache", cCommon->CommonOne(),
   CB(LuaCodeSetCache, LuaCache), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! LUA_DEBUGLOCALS
 // ? Print locals when generating stack traces (default is true).
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_debuglocals", cCommon->One(),
+{ CFL_NONE, "lua_debuglocals", cCommon->CommonOne(),
   CB(cLua->SetDebugLocals, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCPAUSE
@@ -685,14 +676,14 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? completely deleted so all code is recompiled.
 /* ------------------------------------------------------------------------- */
 { CFL_NONE, "lua_lastver", LUA_VDIR "." LUA_VERSION_RELEASE,
-  CBSTR(LuaCodeCheckVersion), TSTRINGSAVE|OSAVEFORCE },
+  CBSTR(LuaCodeCheckVersion), TSTRINGSAVE },
 /* ------------------------------------------------------------------------- */
 // ! LUA_RANDOMSEED
 // ? Specifies a fixed random seed that Lua's math.random() function should
 // ? use. Specify zero to have this value randomised at startup with entropy
 // ? from the operating system.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_randomseed", cCommon->Zero(),
+{ CFL_NONE, "lua_randomseed", cCommon->CommonZero(),
   CB(cLua->SetSeed, lua_Integer), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! LUA_SCRIPT
@@ -742,14 +733,15 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? older OS audio API's.
 /* ------------------------------------------------------------------------- */
 { CFL_AUDIO, "aud_vol", "0.75",
-  CB(cAudio->SetGlobalVolume, ALfloat), TUFLOATSAVE|PANY },
+  CB(cAudio->AudioSetVolume, ALfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AUD_INTERFACE
 // ? Specifies the audio device number to use. -1 makes sure to use the default
 // ? device, otherwise it is the index number of a specific audio device to
 // ? use.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_interface", cCommon->NOne(), NoOp, TINTEGERSAVE|PANY },
+{ CFL_AUDIO, "aud_interface", cCommon->CommonNegOne(),
+    NoOp, TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AUD_CHECK
 // ? Specifies an interval (in number of milliseconds) of checking for audio
@@ -767,7 +759,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? CPU usage but increases the chances of errors if too many sources are
 // ? requested.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_numsources", cCommon->Zero(),
+{ CFL_AUDIO, "aud_numsources", cCommon->CommonZero(),
   CB(SourceSetCount, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AUD_SAMVOL
@@ -815,7 +807,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? Specifies whether to use HRTF dynamics on audio output. This could cause
 // ? strange audio stereo quality issues so it is recommended to disable.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_hrtf", cCommon->Zero(), NoOp, TUINTEGERSAVE|PANY },
+{ CFL_AUDIO, "aud_hrtf", cCommon->CommonZero(), NoOp, TUINTEGERSAVE|PANY },
 /* == Console cvars ======================================================== */
 // ! CON_KEYPRIMARY
 // ? The primary GLFW console key virtual key code to use to toggle console
@@ -845,14 +837,14 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? A boolean that specifies whether to autoscroll the console to the last
 // ? newly printed message.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_autoscroll", cCommon->One(),
+{ CFL_NONE, "con_autoscroll", cCommon->CommonOne(),
   CB(cConsole->SetAutoScroll, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_AUTOCOPYCVAR
 // ? A boolean that specifies whether to automatically copy the variable
 // ? name and value when a cvar name is typed in the console.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_autocopycvar", cCommon->One(),
+{ CFL_NONE, "con_autocopycvar", cCommon->CommonOne(),
   CB(cConsole->SetAutoCopyCVar, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_HEIGHT
@@ -879,14 +871,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ! CON_DISABLED
 // ? Specifies wether the console is permanantly disabled or not.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_disabled",
-  /* ----------------------------------------------------------------------- */
-#if defined(RELEASE)
-  cCommon->One(),
-#else
-  cCommon->Zero(),
-#endif
-  /* ----------------------------------------------------------------------- */
+{ CFL_VIDEO, "con_disabled", cCommon->CommonZero(),
   CB(cConGraphics->CantDisableModified, bool), TBOOLEAN|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! CON_CVSHOWFLAGS
@@ -896,7 +881,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? [0x1] SF_CONFIDENTIAL = Show cvars marked as private.
 // ? [0x2] SF_PROTECTED    = Show cvars marked as protected.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_cvshowflags", cCommon->Zero(),
+{ CFL_NONE, "con_cvshowflags", cCommon->CommonZero(),
   CB(cCVars->SetDisplayFlags, CVarShowFlagsType), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_BGCOLOUR
@@ -911,7 +896,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? The texture file to load that will be used as the background for the
 // ? console.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_bgtexture", cCommon->Blank(), NoOp,
+{ CFL_VIDEO, "con_bgtexture", cCommon->CommonBlank(), NoOp,
   TSTRING|CFILENAME|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONT
@@ -925,7 +910,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? Specifies manipulation of the loaded font. See the 'Char.Flags' for
 // ? possible values
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fontflags", cCommon->Zero(),
+{ CFL_VIDEO, "con_fontflags", cCommon->CommonZero(),
   CB(cConGraphics->ConsoleFontFlagsModified, ImageFlagsType), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTCOLOUR
@@ -947,7 +932,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? Specifies any extra padding to add to each FreeType font glyph to prevent
 // ? pixels from other glyphs spilling into the render due to filtering.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fontpadding", cCommon->Zero(),
+{ CFL_VIDEO, "con_fontpadding", cCommon->CommonZero(),
   NoOp, TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTPCMIN
@@ -964,19 +949,19 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? Specifies the scale adjust of the font. A value not equal to one will
 // ? cause interpolation to occur so filtering is advised.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fontscale", cCommon->One(),
+{ CFL_VIDEO, "con_fontscale", cCommon->CommonOne(),
   CB(cConGraphics->TextScaleModified, GLfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTSPACING
 // ? Specifies the amount of padding to add after each cahracter rendered.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fontspacing", cCommon->Zero(),
+{ CFL_VIDEO, "con_fontspacing", cCommon->CommonZero(),
   CB(cConGraphics->TextLetterSpacingModified, GLfloat), TFLOAT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTLSPACING
 // ? Specifies the amount of padding to add below each line of text rendered.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fontlspacing", cCommon->Zero(),
+{ CFL_VIDEO, "con_fontlspacing", cCommon->CommonZero(),
   CB(cConGraphics->TextLineSpacingModified, GLfloat), TFLOAT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTWIDTH
@@ -991,7 +976,8 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? this value. An exception is thrown if not. Zero means start with enough
 // ? size for one character.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fonttexsize", cCommon->Zero(), NoOp, TUINTEGER|PSYSTEM },
+{ CFL_VIDEO, "con_fonttexsize", cCommon->CommonZero(), NoOp,
+  TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! CON_INPREFRESH
 // ? Specifies the time interval in microseconds between input polls. Only
@@ -1059,7 +1045,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? not prevent CONTROL+C/BREAK keys. This only applies to the Windows
 // ? operating system console only and a nullop on any other system!
 /* ------------------------------------------------------------------------- */
-{ CFL_TERMINAL, "con_tmcnoclose", cCommon->One(), NoOp,
+{ CFL_TERMINAL, "con_tmcnoclose", cCommon->CommonOne(), NoOp,
   TBOOLEAN|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCTFORMAT
@@ -1099,7 +1085,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? where the cursor is allowed to leave the window. Recommended to enable
 // ? 'inp_fsignore' too to disable the input when mouse leaves the window.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_clampmouse", cCommon->One(),
+{ CFL_VIDEO, "inp_clampmouse", cCommon->CommonOne(),
   CB(cInput->SetClampMouse, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_JOYDEFFDZ
@@ -1118,37 +1104,37 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? Enables or disables the ALT+ENTER or OPTION+ENTER combinations to switch
 // ? between full-screen or windowed mode (Uses value from 'vid_fs').
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_fstoggler", cCommon->One(),
+{ CFL_VIDEO, "inp_fstoggler", cCommon->CommonOne(),
   CB(cInput->SetFSTogglerEnabled, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_RAWMOUSE
 // ? Enables raw mouse input if available.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_rawmouse", cCommon->One(),
+{ CFL_VIDEO, "inp_rawmouse", cCommon->CommonOne(),
   CB(cInput->SetRawMouseEnabled, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_STICKYKEY
 // ? Enables sticky key presses.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_stickykey", cCommon->One(),
+{ CFL_VIDEO, "inp_stickykey", cCommon->CommonOne(),
   CB(cInput->SetStickyKeyEnabled, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_STICKYMOUSE
 // ? Enables sticky mouse buttons.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_stickymouse", cCommon->One(),
+{ CFL_VIDEO, "inp_stickymouse", cCommon->CommonOne(),
   CB(cInput->SetStickyMouseEnabled, bool), TBOOLEANSAVE|PANY },
 /* == Network cvars ======================================================== */
 // ! NET_CBPFLAG1
 // ? Specifies the certificate error ignore flags.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_cbpflag1", cCommon->Zero(),
+{ CFL_NONE, "net_cbpflag1", cCommon->CommonZero(),
   CB(cSockets->CertsSetBypassFlags1, uint64_t), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! NET_CBPFLAG2
 // ? Specifies the extended certificate error ignore flags.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_cbpflag2", cCommon->Zero(),
+{ CFL_NONE, "net_cbpflag2", cCommon->CommonZero(),
   CB(cSockets->CertsSetBypassFlags2, uint64_t), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! NET_BUFFER
@@ -1183,8 +1169,8 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? Specifies the default settings for TLSv3 connections. The default is empty
 // ? which lets OpenSSL decide.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_ciphertlsv13", cCommon->Blank(), CBSTR(SocketSetCipher13),
-  MTRIM|TSTRING|PSYSTEM },
+{ CFL_NONE, "net_ciphertlsv13", cCommon->CommonBlank(),
+  CBSTR(SocketSetCipher13), MTRIM|TSTRING|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! NET_CASTORE
 // ? Specifies the relative directory to the client certificate store. These
@@ -1192,13 +1178,13 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? connection. These certificates are loaded and checked at startup and
 // ? a log warning message is generated if the certificate is not usable.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_castore", cCommon->Blank(),
+{ CFL_NONE, "net_castore", cCommon->CommonBlank(),
   CBSTR(cSockets->CertsFileModified), TSTRING|CFILENAME|MTRIM|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! NET_OCSP
 // ? Informs OpenSSL to verify server certificates via OCSP.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_ocsp", cCommon->One(),
+{ CFL_NONE, "net_ocsp", cCommon->CommonOne(),
   CB(SocketOCSPModified, int), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! NET_USERAGENT
@@ -1207,7 +1193,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? to "Mozilla/5.0 (<EngineName>; <EngineBits>-bit; v<EngineVersion>)
 // ? <AppName>/<AppVersion>".
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_useragent", cCommon->Blank(),
+{ CFL_NONE, "net_useragent", cCommon->CommonBlank(),
   CBSTR(SocketAgentModified), TSTRING|MTRIM|PBOOT|PSYSTEM },
 /* == Video cvars ========================================================== */
 // ! VID_API
@@ -1215,7 +1201,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? only and serves no other purpose. Select 0 (default) for GLFW_OPENGL_API,
 // ? 1 for GLFW_OPENGL_ES_API or 2 for GLFW_NO_API.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_api",  cCommon->Zero(),
+{ CFL_VIDEO, "vid_api",  cCommon->CommonZero(),
   CB(cDisplay->ApiChanged, size_t), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_AUXBUFFERS
@@ -1223,7 +1209,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? for double-buffering, 1 for triple-buffering or -1 to let the OpenGL
 // ? driver decide.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_auxbuffers", cCommon->NOne(),
+{ CFL_VIDEO, "vid_auxbuffers", cCommon->CommonNegOne(),
   CB(cDisplay->AuxBuffersChanged, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBALPHA
@@ -1236,7 +1222,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 #if defined(MACOS)
   "10",                                // Force RGBA10101010
 #else
-  cCommon->NOne(),                     // Win32/Wayland doesn't need
+  cCommon->CommonNegOne(),             // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cDisplay->SetForcedBitDepthA, int), TINTEGERSAVE|PANY },
@@ -1252,7 +1238,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 #if defined(MACOS)
   "10",                                // Force RGBA10101010
 #else
-  cCommon->NOne(),                     // Win32/Wayland doesn't need
+  cCommon->CommonNegOne(),             // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cDisplay->SetForcedBitDepthB, int), TINTEGERSAVE|PANY },
@@ -1268,7 +1254,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 #if defined(MACOS)
   "10",                                // Force RGBA10101010
 #else
-  cCommon->NOne(),                     // Win32/Wayland doesn't need
+  cCommon->CommonNegOne(),             // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cDisplay->SetForcedBitDepthG, int), TINTEGERSAVE|PANY },
@@ -1284,7 +1270,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 #if defined(MACOS)
   "10",                                // Force RGBA10101010
 #else
-  cCommon->NOne(),                     // Win32/Wayland doesn't need
+  cCommon->CommonNegOne(),             // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cDisplay->SetForcedBitDepthR, int), TINTEGERSAVE|PANY },
@@ -1302,32 +1288,32 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? troubleshooting purposes only and serves no other purpose. The default is
 // ? 2 with a core profile.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_ctxminor", "2",
+{ CFL_VIDEO, "vid_ctxminor", cCommon->CommonTwo(),
   CB(cDisplay->CtxMinorChanged, int), TINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_CLEAR
 // ? Specifies to clear the main frame buffer every frame.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_clear", cCommon->One(),
+{ CFL_VIDEO, "vid_clear", cCommon->CommonOne(),
   CB(cFboCore->SetBackBufferClear, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_CLEARCOLOUR
 // ? Specifies the 32-bit integer (0xAARRGGBB) as the default clear value.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_clearcolour", cCommon->Zero(),
+{ CFL_VIDEO, "vid_clearcolour", cCommon->CommonZero(),
   CB(cFboCore->SetBackBufferClearColour, unsigned int), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_DBLBUFF
 // ? Specifies to use double-buffering. This is only used for troubleshooting
 // ? purposes only and serves no other purpose. The default is 1 for yes.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_dblbuff", cCommon->One(),
+{ CFL_VIDEO, "vid_dblbuff", cCommon->CommonOne(),
   CB(cDisplay->DoubleBufferChanged, bool), TBOOLEAN|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_DEBUG
 // ? Sets 'GLFW_OPENGL_DEBUG_CONTEXT'. Default is 0 (disabled).
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_debug", cCommon->Zero(),
+{ CFL_VIDEO, "vid_debug", cCommon->CommonZero(),
   CB(cDisplay->SetGLDebugMode, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FS
@@ -1335,7 +1321,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? a normal window, 1 for exclusive full-screen mode (specified by
 // ? 'vid_fsmode') or 2 for borderless full-screen mode.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_fs", cCommon->Zero(),
+{ CFL_VIDEO, "vid_fs", cCommon->CommonZero(),
   CB(cDisplay->FullScreenStateChanged, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FSAA
@@ -1344,7 +1330,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? 0, 90, 180 or 270 degrees. This cvar has been semi-disabled as instability
 // ? occurs with any setting other than the default on a Mac.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_fsaa", cCommon->NOne(),
+{ CFL_VIDEO, "vid_fsaa", cCommon->CommonNegOne(),
   CB(cDisplay->FsaaChanged, int), TINTEGER|CPOW2|PBOOT },
 /* ------------------------------------------------------------------------- */
 // ! VID_FORWARD
@@ -1352,7 +1338,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? troubleshooting purposes only and serves no other purpose. The default is
 // ? 1 for yes.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_forward", cCommon->One(),
+{ CFL_VIDEO, "vid_forward", cCommon->CommonOne(),
   CB(cDisplay->ForwardChanged, bool), TBOOLEAN|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_FSMODE
@@ -1365,7 +1351,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_VIDEO, "vid_fsmode",
   /* ----------------------------------------------------------------------- */
 #if defined(MACOS)
-  cCommon->NOne(),                     // Exclusive full-screen mode
+  cCommon->CommonNegOne(),             // Exclusive full-screen mode
 #else
   "-2",                                // Force borderless full-screen
 #endif
@@ -1376,7 +1362,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? Overrides the gamma level. The default is 1 which is to keep the desktop
 // ? gamma level.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_gamma", cCommon->One(),
+{ CFL_VIDEO, "vid_gamma", cCommon->CommonOne(),
   CB(cDisplay->GammaChanged, GLfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_GASWITCH
@@ -1386,9 +1372,9 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_VIDEO, "vid_gaswitch",
   /* ----------------------------------------------------------------------- */
 #if defined(MACOS)
-    cCommon->One(),                    // Enable graphics switching
+    cCommon->CommonOne(),              // Enable graphics switching
 #else
-    cCommon->Zero(),                   // No support for graphics switching
+    cCommon->CommonZero(),             // No support for graphics switching
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cDisplay->GraphicsSwitchingChanged, bool), TBOOLEANSAVE|PANY },
@@ -1399,9 +1385,9 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_VIDEO, "vid_hidpi",
   /* ----------------------------------------------------------------------- */
 #if defined(MACOS)
-  cCommon->One(),                      // Default enabled
+  cCommon->CommonOne(),                // Default enabled
 #else
-  cCommon->Zero(),                     // Forced disabled as unsupported
+  cCommon->CommonZero(),               // Forced disabled as unsupported
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cDisplay->HiDPIChanged, bool), TBOOLEANSAVE|PANY },
@@ -1411,20 +1397,20 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? 'vid_orwidth' and 'vid_orheight' instead of resizing it to the windows
 // ? size.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_lock", cCommon->Zero(),
+{ CFL_VIDEO, "vid_lock", cCommon->CommonZero(),
   CB(cFboCore->SetLockViewport, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_MONITOR
 // ? Specifies the monitor id to use. Use the 'mlist' console command to see
 // ? possible values or just use -1 to let the operating system decide.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_monitor", cCommon->NOne(),
+{ CFL_VIDEO, "vid_monitor", cCommon->CommonNegOne(),
   CB(cDisplay->MonitorChanged, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_NOERRORS
 // ? Sets GLFW_CONTEXT_NO_ERROR. Default is 0 (disabled).
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_noerrors", cCommon->Zero(),
+{ CFL_VIDEO, "vid_noerrors", cCommon->CommonZero(),
   CB(cDisplay->SetNoErrorsMode, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_ORASPMAX
@@ -1461,7 +1447,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? (default) for GLFW_OPENGL_CORE_PROFILE, 1 for GLFW_OPENGL_COMPAT_PROFILE
 // ? or 2 for GLFW_OPENGL_ANY_PROFILE.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_profile", cCommon->Zero(),
+{ CFL_VIDEO, "vid_profile", cCommon->CommonZero(),
   CB(cDisplay->ProfileChanged, size_t), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_QCOMPRESS
@@ -1473,13 +1459,13 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ! VID_QLINE
 // ? Specifies line quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_qline", cCommon->Zero(),
+{ CFL_VIDEO, "vid_qline", cCommon->CommonZero(),
   CB(cOgl->SetQLineHint, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_QPOLYGON
 // ? Specifies polygon quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_qpolygon", cCommon->Zero(),
+{ CFL_VIDEO, "vid_qpolygon", cCommon->CommonZero(),
   CB(cOgl->SetQPolygonHint, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_QSHADER
@@ -1519,7 +1505,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? (default) for GLFW_ANY_RELEASE_BEHAVIOR, 1 for GLFW_RELEASE_BEHAVIOR_FLUSH
 // ? or 2 for GLFW_RELEASE_BEHAVIOR_NONE.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_release", "2",
+{ CFL_VIDEO, "vid_release", cCommon->CommonTwo(),
   CB(cDisplay->ReleaseChanged, size_t), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_RFBO
@@ -1529,7 +1515,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? low and many frame buffers are used. Only the app author needs to be
 // ? concerned with this value and can only be set in the application manifest.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_rfbo", "2",
+{ CFL_VIDEO, "vid_rfbo", cCommon->CommonTwo(),
   CB(FboSetOrderReserve, size_t), TINTEGER|PSYSTEM|CUNSIGNED|PBOOT },
 /* ------------------------------------------------------------------------- */
 // ! VID_RFLOATS
@@ -1547,7 +1533,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? for GLFW_NO_RESET_NOTIFICATION, 1 (default) for
 // ? GLFW_LOSE_CONTEXT_ON_RESET or 2 for GLFW_NO_ROBUSTNESS.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_robustness", "2",
+{ CFL_VIDEO, "vid_robustness", cCommon->CommonTwo(),
   CB(cDisplay->RobustnessChanged, size_t), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_SIMPLEMATRIX
@@ -1555,13 +1541,13 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? main frame buffer to stick to the users preferred aspect ratio (see
 // ? 'vid_oraspmin' and 'vid_oraspmax).
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_simplematrix", cCommon->Zero(),
+{ CFL_VIDEO, "vid_simplematrix", cCommon->CommonZero(),
   CB(cFboCore->SetSimpleMatrix, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_SRGB
 // ? Enables SRGB colour space.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_srgb", cCommon->One(),
+{ CFL_VIDEO, "vid_srgb", cCommon->CommonOne(),
   CB(cDisplay->SRGBColourSpaceChanged, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_SSTYPE
@@ -1569,13 +1555,13 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? the image types supported and the id's for them. Only entries marked with
 // ? the 'S' (saveable) token can be used.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_sstype", cCommon->Zero(),
+{ CFL_VIDEO, "vid_sstype", cCommon->CommonZero(),
   CB(SShotsSetType, ImageFormat), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_STEREO
 // ? Enables 3D glasses support.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_stereo", cCommon->Zero() ,
+{ CFL_VIDEO, "vid_stereo", cCommon->CommonZero() ,
   CB(cDisplay->SetStereoMode, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_SUBPIXROUND
@@ -1584,7 +1570,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? function, 2 to use the ceil() function, 3 to use the round() function or
 // ? 4 to use the roundEven() function.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_subpixround", cCommon->Zero(),
+{ CFL_VIDEO, "vid_subpixround", cCommon->CommonZero(),
   CB(cShaderCore->SetSPRoundingMethod, size_t), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_TEXFILTER
@@ -1601,14 +1587,14 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? refresh rate. You can also use -1 to use adaptive sync, and 2 to half the
 // ? refresh rate if you like.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_vsync", cCommon->One(),
+{ CFL_VIDEO, "vid_vsync", cCommon->CommonOne(),
   CB(cOgl->SetVSyncMode, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_ALPHA
 // ? Specifies that the window has alpha which is needed for transparent
 // ? windows. Default is 0 for no.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_alpha", cCommon->Zero(),
+{ CFL_VIDEO, "win_alpha", cCommon->CommonZero(),
   CB(cDisplay->SetWindowTransparency, bool), TBOOLEAN|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! WIN_ASPECT
@@ -1616,38 +1602,38 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? number. i.e. 16.9 for 16:9 or 4.3 for 4:3, etc. or 0 for numeric and/or
 // ? denominator for freedom for the end user to resize at will.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_aspect", cCommon->Zero(), NoOp, TUFLOAT|PSYSTEM },
+{ CFL_VIDEO, "win_aspect", cCommon->CommonZero(), NoOp, TUFLOAT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! WIN_BORDER
 // ? Specifies if the window should have a titlebar and a border.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_border", cCommon->One(),
+{ CFL_VIDEO, "win_border", cCommon->CommonOne(),
   CB(cDisplay->BorderChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_CLOSEABLE
 // ? Specifies if the window is closable by the user.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_closeable", cCommon->One(),
+{ CFL_VIDEO, "win_closeable", cCommon->CommonOne(),
   CB(cDisplay->CloseableChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_FLOATING
 // ? Specifies to lock the visibility of the window, otherwise known as 'always
 // ? on top' or 'Topmost'.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_floating", cCommon->Zero(),
+{ CFL_VIDEO, "win_floating", cCommon->CommonZero(),
   CB(cDisplay->FloatingChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_FOCUSED
 // ? Specifies to automatically focus the window on creation.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_focused", cCommon->One(),
+{ CFL_VIDEO, "win_focused", cCommon->CommonOne(),
   CB(cDisplay->AutoFocusChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_HEIGHT
 // ? Sets the initial height of the window. This value is saved to the
 // ? persistence database when changed.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_height", cCommon->Zero(),
+{ CFL_VIDEO, "win_height", cCommon->CommonZero(),
   CB(cDisplay->HeightChanged, int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_HEIGHTMAX
@@ -1656,26 +1642,26 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? The upper value is clamped by the GPU's maximum texture size which is
 // ? normally 16384 on all modern GPU's. Specify 0 to use the GPU maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_heightmax", cCommon->Zero(), NoOp, TUINTEGER|PSYSTEM },
+{ CFL_VIDEO, "win_heightmax", cCommon->CommonZero(), NoOp, TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! WIN_HEIGHTMIN
 // ? Sets the minimum height of the window. This is only changable at the
 // ? application configuration file and is not saved to persistence database.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_heightmin", cCommon->Zero(), NoOp, TUINTEGER|PSYSTEM },
+{ CFL_VIDEO, "win_heightmin", cCommon->CommonZero(), NoOp, TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! WIN_MAXIMISED
 // ? Specify 1 to have the window automatically maximised on creation or 0
 // ? to not. The default value is 0.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_maximised", cCommon->Zero(),
+{ CFL_VIDEO, "win_maximised", cCommon->CommonZero(),
   CB(cDisplay->SetMaximisedMode, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_MINIMISEAUTO
 // ? Specify 1 to have the window automatically minimise when it is not active
 // ? or 0 to not. The default value is 1.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_minimiseauto", cCommon->One(),
+{ CFL_VIDEO, "win_minimiseauto", cCommon->CommonOne(),
   CB(cDisplay->AutoIconifyChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_POSX
@@ -1698,14 +1684,14 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? Specify 1 if the window is allowed to be resized or 0 if not. The default
 // ? value is 1.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_sizable", cCommon->One(),
+{ CFL_VIDEO, "win_sizable", cCommon->CommonOne(),
   CB(cDisplay->SizableChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_WIDTH
 // ? Sets the initial width of the window. This value is saved to the
 // ? persistence database when changed.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_width", cCommon->Zero(),
+{ CFL_VIDEO, "win_width", cCommon->CommonZero(),
   CB(cDisplay->WidthChanged, int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_WIDTHMAX
@@ -1714,28 +1700,43 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? The upper value is clamped by the GPU's maximum texture size which is
 // ? normally 16384 on all modern GPU's. Specify 0 to use the GPU maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_widthmax", cCommon->Zero(), NoOp, TUINTEGER|PSYSTEM },
+{ CFL_VIDEO, "win_widthmax", cCommon->CommonZero(), NoOp, TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! WIN_WIDTHMIN
 // ? Sets the minimum width of the window. This is only changable at the
 // ? application configuration file and is not saved to persistence database.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_widthmin", cCommon->Zero(), NoOp, TUINTEGER|PSYSTEM },
+{ CFL_VIDEO, "win_widthmin", cCommon->CommonZero(), NoOp, TUINTEGER|PSYSTEM },
 /* == Logging cvars ======================================================== */
 // ! LOG_CREDITS
 // ? Specifies to include credits in the log at startup.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "log_credits", cCommon->Zero(),
+{ CFL_NONE, "log_credits", cCommon->CommonZero(),
   CB(cCredits->CreditDumpList, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! LOG_DYLIBS
 // ? Specifies to include shared libraries in the log at startup.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "log_dylibs", cCommon->Zero(),
+{ CFL_NONE, "log_dylibs", cCommon->CommonZero(),
   CB(cSystem->DumpModuleList, bool), TBOOLEAN|PANY },
+/* ------------------------------------------------------------------------- */
+// ! COM_FLAGS
+// ? Specifies compatibility flags. Great care is taken to make sure the engine
+// ? works on any Ubuntu, MacOS or Windows system, when upgrading third-party
+// ? components, problems may occur. These work as temporary workarounds to
+// ? make the engine work flawlessly on certain systems. By default, all flags
+// ? are enabled by default but you can selectively disable them in order to
+// ? to assist with troubleshooting. The aim is to resolve all these issues
+// ? so most of the time 'com_flags' has no function whatsoever...
+// ? [Bit 1/Linux] = If Wayland is detected then the window and video system
+// ?                 is restarted after creating it initially to fix a
+// ?                 graphical corruption where you need to resize to fix it.
+/* ------------------------------------------------------------------------- */
+{ CFL_NONE, "com_flags", cCommon->CommonNegOne(),
+  CB(cCore->CoreProcessCompatibilityFlags, uint64_t), TINTEGER|PANY },
 /* -- Undefines ------------------------------------------------------------ */
 #undef CBSTR                           // Done with string function callback
 #undef CB                              // Done with int function callback
 /* ------------------------------------------------------------------------- */
-} };                                   // End of module namespace
+}},                                    // End of array
 /* == EoF =========================================================== EoF == */

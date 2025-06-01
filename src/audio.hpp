@@ -22,7 +22,9 @@ using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= */
-static class Audio final :             // Audio manager class
+class Audio;                           // Class prototype
+static Audio *cAudio = nullptr;        // Pointer to global class
+class Audio :                          // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper class
   private Thread                       // Audio monitoring thread
@@ -40,24 +42,24 @@ static class Audio final :             // Audio manager class
   /* -- References ------------------------------------------------- */ public:
   LuaFunc          lfOnUpdate;         // Fire this when device updates
   /* -- Playback device list was updated ----------------------------------- */
-  void OnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
+  void AudioOnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
   { // Update the device context if supplied
-    cOal->UpdateDevice(reinterpret_cast<ALCdevice*>(emeEvent.aArgs[0].vp));
+    cOal->UpdateDevice(reinterpret_cast<ALCdevice*>(emeEvent.eaArgs[0].vp));
     // Refresh device list and update the name
-    EnumeratePlaybackDevices();
+    AudioEnumPlaybackDevices();
     cOal->UpdatePlaybackDeviceName();
-    // Send lua event with isplaybackdevice set to true
+    // Send Lua event with isplaybackdevice set to true
     lfOnUpdate.LuaFuncDispatch(true);
   }
   /* -- Capture device list was updated ------------------------------------ */
-  void OnCapDeviceUpdated(const EvtMainEvent&)
+  void AudioOnCapDeviceUpdated(const EvtMainEvent&)
   { // Re-enumerate capture devices
-    EnumerateCaptureDevices();
-    // Send lua event with isplaybackdevice set to true
+    AudioEnumCaptureDevices();
+    // Send Lua event with isplaybackdevice set to true
     lfOnUpdate.LuaFuncDispatch(false);
   }
   /* -- Init thread -------------------------------------------------------- */
-  void InitThread(void)
+  void AudioInitThread(void)
   { // Log that the thread is starting
     cLog->LogDebugSafe("Audio monitoring thread initialising...");
     // Start the minimal thread
@@ -69,33 +71,33 @@ static class Audio final :             // Audio manager class
       StrShortFromDuration(ClockDurationToDouble(cdCheckRate)));
   }
   /* -- DeInit thread ------------------------------------------------------ */
-  void DeInitThread(void)
+  void AudioDeInitThread(void)
   { // Stop and de-init the thread and log progress
     cLog->LogDebugSafe("Audio monitoring thread de-initialising...");
     ThreadDeInit();
     cLog->LogDebugSafe("Audio monitoring thread de-initialised.");
   }
   /* -- Reset timer interval ----------------------------------------------- */
-  void ResetCheckTime(void)
+  void AudioResetCheckTime(void)
     { tpNextCheck = cmHiRes.GetTime() + cdCheckRate.load(); }
   /* -- ReInit requested --------------------------------------------------- */
-  void OnReInit(const EvtMainEvent&)
+  void AudioOnReInit(const EvtMainEvent&)
   { // Capture exceptions
     try
     { // Log status
       cLog->LogDebugSafe("Audio class re-initialising...");
       // De-Init thread
-      DeInitThread();
+      AudioDeInitThread();
       // Unload all buffers for streams and samples and destroy all sources
       VideoDeInit();
       StreamDeInit();
       SourceDeInit();
       SampleDeInit();
       // Deinit and reinit context
-      DeInitContext();
-      InitContext();
+      AudioDeInitContext();
+      AudioInitContext();
       // Re-initialise volume levels
-      SetGlobalVolume(cSources->fGVolume);
+      AudioSetVolume(cSources->fGVolume);
       SampleSetVolume(cSources->fSVolume);
       StreamSetVolume(cSources->fMVolume);
       VideoSetVolume(cSources->fVVolume);
@@ -105,7 +107,7 @@ static class Audio final :             // Audio manager class
       StreamReInit();
       VideoReInit();
       // Init monitoring thread
-      InitThread();
+      AudioInitThread();
       // Send lua event with the device type not set
       lfOnUpdate.LuaFuncDispatch();
       // Log status
@@ -115,12 +117,12 @@ static class Audio final :             // Audio manager class
     { // Log the exception first
       cLog->LogErrorExSafe("Audio re-init exception: $", eReason);
       // Reset next thread check time
-      ResetCheckTime();
+      AudioResetCheckTime();
     } // Remove re-initialisation flag
     cOal->FlagClear(AFL_REINIT);
   }
   /* -- Thread main function with system events support -------------------- */
-  int AudioThreadMainSysEvents(Thread &) try
+  ThreadStatus AudioThreadMainSysEvents(Thread &) try
   { // Loop forever until thread exit signalled.
     while(ThreadShouldNotExit())
     { // Manage stream classes
@@ -128,16 +130,16 @@ static class Audio final :             // Audio manager class
       // Suspend thread for the user requested time
       StdSuspend(cdThreadDelay.load());
     } // Terminate thread
-    return 1;
+    return TS_OK;
   } // exception occured in this thread
   catch(const exception &eReason)
   { // Report error
     cLog->LogErrorExSafe("(AUDIO SE THREAD EXCEPTION) $", eReason);
     // Restart the thread
-    return 0;
+    return TS_RETRY;
   }
   /* -- Verification of context -------------------------------------------- */
-  bool Verify(void)
+  bool AudioVerify(void)
   { // Ignore if next check time not met
     if(cmHiRes.GetTime() < tpNextCheck) return true;
     // Number of discrepancies found. If there is no such device in the current
@@ -195,37 +197,37 @@ static class Audio final :             // Audio manager class
       // Terminate this thread
       return false;
     } // Check again in a few seconds
-    ResetCheckTime();
+    AudioResetCheckTime();
     // Audio context still valid, continue monitoring
     return true;
   }
   /* -- Thread main function with no system events support ----------------- */
-  int AudioThreadMainNoSysEvents(Thread &) try
+  ThreadStatus AudioThreadMainNoSysEvents(Thread &) try
   { // Enumerate...
-    for(ResetCheckTime();                 // Reset device list check time
+    for(AudioResetCheckTime();            // Reset device list check time
         ThreadShouldNotExit();            // Enum until thread exit signalled
         StdSuspend(cdThreadDelay.load())) // Suspend thread pecified time
     { // Manage all streams audio.
       StreamManage();
       // Verify the hardware setup and reset if there are any descreprencies.
       // If there were no descreprencies detected then loop again.
-      if(Verify()) continue;
+      if(AudioVerify()) continue;
       // Put in infinite loop and wait for the reinit function to request
       // termination of this thread
       while(ThreadShouldNotExit()) StdSuspend(cdDiscWait);
       // Thread terminate request recieved, now break the loop.
       break;
     } // Terminate thread
-    return 1;
+    return TS_OK;
   } // exception occured in this thread
   catch(const exception &eReason)
   { // Report error
     cLog->LogErrorExSafe("(AUDIO NSE THREAD EXCEPTION) $", eReason);
     // Restart the thread
-    return 0;
+    return TS_RETRY;
   }
   /* -- Event function (switch to this call) ------------------------------- */
-  static void OnEvent(const ALCenum eEventType, const ALCenum eDeviceType,
+  static void AudioOnEvent(const ALCenum eEventType, const ALCenum eDeviceType,
     ALCdevice*const alcNDevice, const ALCsizei stLength,
     const ALCchar*const cpMessage, void*const)
   { // Create string view of message and log the event
@@ -254,12 +256,12 @@ static class Audio final :             // Audio manager class
     }
   }
   /* -- Init context ------------------------------------------------------- */
-  void InitContext(void)
+  void AudioInitContext(void)
   { // Log that we are initialising
     cLog->LogDebugSafe("Audio subsystem initialising...");
     // Enumerate devices
-    EnumeratePlaybackDevices();
-    EnumerateCaptureDevices();
+    AudioEnumPlaybackDevices();
+    AudioEnumCaptureDevices();
     // Set device and override if requested
     size_t stDevice = cCVars->GetInternal<size_t>(AUD_INTERFACE);
     // Holding current device name
@@ -274,7 +276,7 @@ static class Audio final :             // Audio manager class
         // Set to default device
         stDevice = 0;
       } // Set device
-      strDevice = GetPlaybackDeviceById(stDevice).c_str();
+      strDevice = AudioGetPbkDeviceById(stDevice).c_str();
     } // Device id setup complete
     { // Get pointer to device name
       const char*const cpDevice =
@@ -301,20 +303,20 @@ static class Audio final :             // Audio manager class
     // Register engine events
     cEvtMain->RegisterEx(emrvEvents);
     // Set parameters and check for errors
-    SetDistanceModel(AL_NONE);
-    SetPosition(0, 0, 0);
-    SetVelocity(0, 0, 0);
-    SetOrientation(0, 0, 1, 0, -1, 0);
+    AudioSetDistanceModel(AL_NONE);
+    AudioSetPosition(0, 0, 0);
+    AudioSetVelocity(0, 0, 0);
+    AudioSetOrientation(0, 0, 1, 0, -1, 0);
   }
-  /* -- DeInitContext ------------------------------------------------------ */
-  void DeInitContext(void)
+  /* -- De-initialise the context ------------------------------------------ */
+  void AudioDeInitContext(void)
   { // Clear openAL context
     cOal->DeInit();
     // Unregister engine events
     cEvtMain->UnregisterEx(emrvEvents);
   }
   /* -- Enumerate capture devices ------------------------------------------ */
-  void EnumerateCaptureDevices(void)
+  void AudioEnumCaptureDevices(void)
   { // Log enumerations
     cLog->LogDebugSafe("Audio enumerating capture devices...");
     // Storage for list of devices
@@ -334,7 +336,7 @@ static class Audio final :             // Audio manager class
     { // For each capture device
       while(*cpList)
       { // Print device
-        cLog->LogDebugExSafe("- $: $.", GetNumCaptureDevices(), cpList);
+        cLog->LogDebugExSafe("- $: $.", AudioGetNumCapDevices(), cpList);
         // Push to list
         dlCTDevices.emplace_back(cpList);
         // Jump to next item
@@ -346,10 +348,10 @@ static class Audio final :             // Audio manager class
       hex, cOal->GetError());
     // Log enumerations
     cLog->LogDebugExSafe("Audio found $ capture devices.",
-      GetNumCaptureDevices());
+      AudioGetNumCapDevices());
   }
   /* -- Enumerate playback devices ----------------------------------------- */
-  void EnumeratePlaybackDevices(void)
+  void AudioEnumPlaybackDevices(void)
   { // Log enumerations
     cLog->LogDebugSafe("Audio enumerating playback devices...");
     // Clear playback devices list
@@ -365,7 +367,7 @@ static class Audio final :             // Audio manager class
       { // For each playback device
         while(*cpList)
         { // Print device
-          cLog->LogDebugExSafe("- $: $.", GetNumPlaybackDevices(), cpList);
+          cLog->LogDebugExSafe("- $: $.", AudioGetNumPbkDevices(), cpList);
           // Push to list
           dlPBDevices.emplace_back(cpList);
           // Jump to next item
@@ -373,7 +375,7 @@ static class Audio final :             // Audio manager class
           // Until no more devices
         } // Log enumerations and return
         cLog->LogDebugExSafe("Audio found $ playback devices.",
-          GetNumPlaybackDevices());
+          AudioGetNumPbkDevices());
         return;
       } // Report that the attempt failed
       cLog->LogWarningExSafe("Audio attempt $ failed on playback device "
@@ -382,23 +384,25 @@ static class Audio final :             // Audio manager class
     cLog->LogErrorSafe("Audio couldn't access playback devices list.");
   }
   /* -- Set distance model ------------------------------------------------- */
-  void SetDistanceModel(const ALenum eModel) const
+  void AudioSetDistanceModel(const ALenum eModel) const
     { AL(cOal->SetDistanceModel(eModel),
         "Failed to set audio distance model!", "Model", eModel); }
   /* -- Set listener position ---------------------------------------------- */
-  void SetPosition(const ALfloat fX, const ALfloat fY, const ALfloat fZ) const
+  void AudioSetPosition(const ALfloat fX,
+    const ALfloat fY, const ALfloat fZ) const
   { // Set position
     AL(cOal->SetListenerPosition(fX, fY, fZ),
       "Failed to set audio listener position!", "X", fX, "Y", fY, "Z", fZ);
   }
   /* -- Set listener velocity ---------------------------------------------- */
-  void SetVelocity(const ALfloat fX, const ALfloat fY, const ALfloat fZ) const
+  void AudioSetVelocity(const ALfloat fX,
+    const ALfloat fY, const ALfloat fZ) const
   { // Set position
     AL(cOal->SetListenerVelocity(fX, fY, fZ),
       "Failed to set audio velocity!", "X", fX, "Y", fY, "Z", fZ);
   }
   /* -- Set listener orientation ------------------------------------------- */
-  void SetOrientation(const ALfloat fX1, const ALfloat fY1,
+  void AudioSetOrientation(const ALfloat fX1, const ALfloat fY1,
     const ALfloat fZ1, const ALfloat fX2, const ALfloat fY2,
     const ALfloat fZ2) const
   { // Build array
@@ -409,32 +413,32 @@ static class Audio final :             // Audio manager class
       "X1", fX1, "Y1", fY1, "Z1", fZ1, "X2", fX2, "Y2", fY2, "Z2", fZ2);
   }
   /* -- Get current playback device ---------------------------------------- */
-  const string GetPlaybackDeviceById(const size_t stId) const
+  const string AudioGetPbkDeviceById(const size_t stId) const
   { // bail if value out of range
-    if(stId >= GetNumPlaybackDevices())
+    if(stId >= AudioGetNumPbkDevices())
       XC("Specified audio playback device id out of range!",
-        "Index", stId, "Count", GetNumPlaybackDevices());
+        "Index", stId, "Count", AudioGetNumPbkDevices());
     // Return device
     return dlPBDevices[stId];
   }
   /* -- Return devices ----------------------------------------------------- */
-  const StrVector &GetPBDevices(void) { return dlPBDevices; }
-  const StrVector &GetCTDevices(void) { return dlCTDevices; }
+  const StrVector &AudioGetPbkDevices(void) { return dlPBDevices; }
+  const StrVector &AudioGetCapDevices(void) { return dlCTDevices; }
   /* -- Get device information --------------------------------------------- */
-  size_t GetNumPlaybackDevices(void) const { return dlPBDevices.size(); }
+  size_t AudioGetNumPbkDevices(void) const { return dlPBDevices.size(); }
   /* -- Get device information --------------------------------------------- */
-  const string GetCaptureDevice(const size_t stId) const
+  const string AudioGetCapDevice(const size_t stId) const
   { // bail if value out of range
-    if(stId >= GetNumCaptureDevices())
+    if(stId >= AudioGetNumCapDevices())
       XC("Specified audio capture device id out of range!",
-        "Index", stId, "Count", GetNumCaptureDevices());
+        "Index", stId, "Count", AudioGetNumCapDevices());
     // Return device
     return dlCTDevices[stId];
   }
   /* -- Get device information --------------------------------------------- */
-  size_t GetNumCaptureDevices(void) const { return dlCTDevices.size(); }
+  size_t AudioGetNumCapDevices(void) const { return dlCTDevices.size(); }
   /* -- Send init signal --------------------------------------------------- */
-  bool ReInit(void)
+  bool AudioReInit(void)
   { // Return if signal already set to re-initialise
     if(cOal->FlagIsSet(AFL_REINIT)) return false;
     // Set the signal to re-init (it will get unset when re-initialised)
@@ -445,15 +449,15 @@ static class Audio final :             // Audio manager class
     return true;
   }
   /* -- Stop all sounds ---------------------------------------------------- */
-  void Stop(void) { VideoStop(); StreamStop(); SampleStop(); }
+  void AudioStopAll(void) { VideoStop(); StreamStop(); SampleStop(); }
   /* -- Init --------------------------------------------------------------- */
-  void DeInit(void)
+  void AudioDeInit(void)
   { // Ignore if class already de-initialised
     if(IHNotDeInitialise()) return;
     // Log subsystem
     cLog->LogDebugSafe("Audio class shutting down...");
     // DeInit thread
-    DeInitThread();
+    AudioDeInitThread();
     // Unload all Video, Stream, Sample and Source classes. All these should
     // already by zero size at this point but they all rely on this class so we
     // should make sure they're all loaded just incase.
@@ -462,7 +466,7 @@ static class Audio final :             // Audio manager class
     cSamples->CollectorDestroyUnsafe();
     cSources->CollectorDestroyUnsafe();
     // Unload handles
-    DeInitContext();
+    AudioDeInitContext();
     // Re-Init members
     tpNextCheck = {};
     dlPBDevices.clear();
@@ -471,39 +475,43 @@ static class Audio final :             // Audio manager class
     cLog->LogDebugSafe("Audio class shutdown finished.");
   }
   /* -- Init --------------------------------------------------------------- */
-  void Init(void)
+  void AudioInit(void)
   { // Class initialised
     IHInitialise();
     // Log subsystem
     cLog->LogDebugSafe("Audio class starting up...");
     // Init context and thread
-    InitContext();
+    AudioInitContext();
     // Enable the audio device change event
-    AL(cOal->SetEventCallback(reinterpret_cast<ALCEVENTPROCTYPESOFT>(OnEvent),
-      this), "Failed to set system event callback!");
+    AL(cOal->SetEventCallback(
+      reinterpret_cast<ALCEVENTPROCTYPESOFT>(AudioOnEvent), this),
+      "Failed to set system event callback!");
     // Start the monitoring thread
-    InitThread();
+    AudioInitThread();
     // Log status
     cLog->LogDebugSafe("Audio class started successfully.");
   }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~Audio, AudioDeInit())
   /* -- Default constructor ------------------------------------------------ */
   Audio(void) :                        // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Initialise class name
     Thread{ "audio", STP_AUDIO },      // Initialise high perf audio thread
-    emrvEvents{
-      { EMC_AUD_REINIT,          bind(&Audio::OnReInit,  this, _1) },
-      { EMC_AUD_PDEVICE_UPDATED, bind(&Audio::OnPbkDeviceUpdated, this, _1) },
-      { EMC_AUD_CDEVICE_UPDATED, bind(&Audio::OnCapDeviceUpdated, this, _1) }
+    emrvEvents{                        // Initialise audio events
+      { EMC_AUD_REINIT,                // Re-initialisation request
+          bind(&Audio::AudioOnReInit,  this, _1) },
+      { EMC_AUD_PDEVICE_UPDATED,       // Playback devices updated event
+          bind(&Audio::AudioOnPbkDeviceUpdated, this, _1) },
+      { EMC_AUD_CDEVICE_UPDATED,       // Capture devices updated event
+          bind(&Audio::AudioOnCapDeviceUpdated, this, _1) }
     },
     cdDiscWait{ milliseconds{ 100 } }, // Initialise discrepency sleep time
     ctfThSysEvts{ bind(&Audio::AudioThreadMainSysEvents, this, _1) },
     ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) },
     lfOnUpdate{ "OnUpdate" }           // On update event
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Audio, DeInit())         // Destructor helper
+    /* -- Set global pointer to static class ------------------------------- */
+    { cAudio = this; }
   /* ----------------------------------------------------------------------- */
   CVarReturn SetAudCheckRate(const unsigned int uiTime)
     { return CVarSimpleSetIntNLG(cdCheckRate,
@@ -513,7 +521,7 @@ static class Audio final :             // Audio manager class
     { return CVarSimpleSetIntNG(cdThreadDelay,
         milliseconds{ uiTime }, milliseconds{ 1000 }); }
   /* -- Set global volume -------------------------------------------------- */
-  CVarReturn SetGlobalVolume(const ALfloat fVolume)
+  CVarReturn AudioSetVolume(const ALfloat fVolume)
   { // Ignore if invalid value
     if(fVolume < 0.0f || fVolume > 1.0f) return DENY;
     // Store volume
@@ -525,9 +533,7 @@ static class Audio final :             // Audio manager class
     // Done
     return ACCEPT;
   }
-  /* -- End ---------------------------------------------------------------- */
-} *cAudio = nullptr;                   // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

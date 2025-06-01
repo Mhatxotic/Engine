@@ -10,13 +10,14 @@
 /* ------------------------------------------------------------------------- */
 namespace ICrypt {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace IError::P;
-using namespace IHelper::P;            using namespace ILog::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS::OpenSSL;      using namespace Lib::OS::SevenZip;
+using namespace IClock::P;             using namespace ICommon::P;
+using namespace IError::P;             using namespace IHelper::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS::OpenSSL;
+using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */
@@ -407,11 +408,11 @@ static const string CryptEntEncode(const string &strS)
   // Until null character. Which control token?
   for(UtfDecoder utfSrc{ strS }; unsigned int uiChar = utfSrc.Next();)
   { // Characters not these character ranges will be encoded
-    if(uiChar <= 31                  || // Control characters
-      (uiChar >= 33 && uiChar <= 47) || // Symbols before numbers
-      (uiChar >= 58 && uiChar <= 64) || // Symbols before capitals
-       uiChar >= 123)                   // Extended characters
-      osS << "&#x" << uiChar << ';';
+    if(uiChar <  ' '                   || // Control characters
+      (uiChar >= '!' && uiChar <= '/') || // Symbols before numbers
+      (uiChar >= ':' && uiChar <= '@') || // Symbols before capitals
+       uiChar >= '{')                     // Extended characters
+      osS << cCommon->CommonEnt() << uiChar << ';';
     // Character is usable as is
     else osS << static_cast<char>(uiChar);
   } // Return string
@@ -624,11 +625,46 @@ static string CryptSanitise(const string &strMessage)
   return strOutput;
 }
 /* -- Crypt manager class -------------------------------------------------- */
-static class Crypt final :
+class Crypt;                           // Class prototype
+static Crypt *cCrypt = nullptr;        // Address of global class
+class Crypt :                          // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   public InitHelper                    // The crypto manager class
-{ /* -------------------------------------------------------------- */ private:
+{ /* ----------------------------------------------------------------------- */
   const StrVStrVMap svsvmEnt;          // Html entity decoding lookup table
+  /* -- De-Initialise cryptographic systems -------------------------------- */
+  void CryptDeInit(void)
+  { // Ignore if not initialised
+    if(IHNotDeInitialise()) return;
+    // De-initialise openssl
+    OPENSSL_cleanup();
+    // Overwrite loaded private key so it doesn't linger in memory
+    SetDefaultPrivateKey();
+  }
+  /* -- Initialise cryptographic systems ----------------------------------- */
+  void CryptInit(void)
+  { // Set address of global class
+    cCrypt = this;
+    // Use sql to allocate memory?
+    if(!CRYPTO_set_mem_functions(OSSLAlloc, OSSLReAlloc, OSSLFree))
+      XC("Failed to setup allocator for crypto interface!");
+    // Generate CRC table (for lzma lib)
+    CrcGenerateTable();
+    // Init openSSL
+    OPENSSL_init();
+    // Class initialised
+    IHInitialise();
+    // Loop until...
+    do
+    { // Get some random entropy from the system hardware
+      const Memory mData{ cSystem->GetEntropy() };
+      // Set seed from system class to opensl
+      RAND_seed(mData.MemPtr<void>(), mData.MemSize<int>());
+      // Make a simple request to initialise more entropy
+      CryptRandom<int>();
+    } // ...PRNG is ready
+    while(!RAND_status());
+  }
   /* ----------------------------------------------------------------------- */
   static void *OSSLAlloc(size_t stSize, const char*const, const int)
     { return StdAlloc<void>(stSize); }
@@ -725,162 +761,120 @@ static class Crypt final :
     } // Return string
     return strS;
   }
-  /* -- Constructor -------------------------------------------------------- */
-  Crypt(void) :
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Crypt, CryptDeInit())
+  /* -- Default constructor ------------------------------------------------ */
+  Crypt(void) :                        // No arguments
     /* -- Initialisers ----------------------------------------------------- */
-    InitHelper{ __FUNCTION__ },
-    svsvmEnt{
-      { "Agrave",  "\xC0"           }, { "Aacute",  "\xC1"           },
-      { "Acirc",   "\xC2"           }, { "Atilde",  "\xC3"           },
-      { "Auml",    "\xC4"           }, { "Aring",   "\xC5"           },
-      { "AElig",   "\xC6"           }, { "Ccedil",  "\xC7"           },
-      { "Egrave",  "\xC8"           }, { "Eacute",  "\xC9"           },
-      { "Ecirc",   "\xCA"           }, { "Euml",    "\xCB"           },
-      { "Igrave",  "\xCC"           }, { "Iacute",  "\xCD"           },
-      { "Icirc",   "\xCE"           }, { "Iuml",    "\xCF"           },
-      { "ETH",     "\xD0"           }, { "Ntilde",  "\xD1"           },
-      { "Ograve",  "\xD2"           }, { "Oacute",  "\xD3"           },
-      { "Ocirc",   "\xD4"           }, { "Otilde",  "\xD5"           },
-      { "Ouml",    "\xD6"           }, { "Oslash",  "\xD8"           },
-      { "Ugrave",  "\xD9"           }, { "Uacute",  "\xDA"           },
-      { "Ucirc",   "\xDB"           }, { "Uuml",    "\xDC"           },
-      { "Yacute",  "\xDD"           }, { "THORN",   "\xDE"           },
-      { "aacute",  "\xE1"           }, { "acirc",   "\xE2"           },
-      { "acute",   "\xB4"           }, { "aelig",   "\xE6"           },
-      { "agrave",  "\xE0"           }, { "alefsym", cCommon->Blank() },
-      { "alpha",   "a"              }, { "amp",     "&"              },
-      { "and",     cCommon->Blank() }, { "ang",     cCommon->Blank() },
-      { "apos",    "'"              }, { "aring",   "\xE5"           },
-      { "asymp",   "\x98"           }, { "atilde",  "\xE3"           },
-      { "auml",    "\xE4"           }, { "bdquo",   "\x84"           },
-      { "beta",    "\xDF"           }, { "brvbar",  "\xA6"           },
-      { "bull",    "\x95"           }, { "cap",     "n"              },
-      { "ccedil",  "\xE7"           }, { "cedil",   "\xB8"           },
-      { "cent",    "\xA2"           }, { "chi",     "X"              },
-      { "circ",    "\x88"           }, { "clubs",   cCommon->Blank() },
-      { "cong",    cCommon->Blank() }, { "copy",    "\xA9"           },
-      { "crarr",   cCommon->Blank() }, { "cup",     cCommon->Blank() },
-      { "curren",  "\xA4"           }, { "dArr",    cCommon->Blank() },
-      { "dagger",  "\x86"           }, { "darr",    cCommon->Blank() },
-      { "deg",     "\xB0"           }, { "delta",   "d"              },
-      { "diams",   cCommon->Blank() }, { "divide",  "\xF7"           },
-      { "eacute",  "\xE9"           }, { "ecirc",   "\xEA"           },
-      { "egrave",  "\xE8"           }, { "empty",   "\xD8"           },
-      { "emsp",    cCommon->Space() }, { "ensp",    cCommon->Space() },
-      { "epsilon", "e"              }, { "equiv",   cCommon->Equals()},
-      { "eta",     cCommon->Blank() }, { "eth",     "\xF0"           },
-      { "euml",    "\xEB"           }, { "euro",    "\x80"           },
-      { "exist",   cCommon->Blank() }, { "fnof",    "\x83"           },
-      { "forall",  cCommon->Blank() }, { "frac12",  "\xBD"           },
-      { "frac14",  "\xBC"           }, { "frac34",  "\xBE"           },
-      { "frasl",   cCommon->FSlash()}, { "gamma",   cCommon->Blank() },
-      { "ge",      cCommon->Equals()}, { "gt",      ">"              },
-      { "hArr",    cCommon->Blank() }, { "harr",    cCommon->Blank() },
-      { "hearts",  cCommon->Blank() }, { "hellip",  "\x85"           },
-      { "iacute",  "\xED"           }, { "icirc",   "\xEE"           },
-      { "iexcl",   "\xA1"           }, { "igrave",  "\xEC"           },
-      { "image",   "I"              }, { "infin",   "8"              },
-      { "int",     cCommon->Blank() }, { "iota",    cCommon->Blank() },
-      { "iquest",  "\xBF"           }, { "isin",    cCommon->Blank() },
-      { "iuml",    "\xEF"           }, { "kappa",   cCommon->Blank() },
-      { "lArr",    cCommon->Blank() }, { "lambda",  cCommon->Blank() },
-      { "lang",    "<"              }, { "laquo",   "\xAB"           },
-      { "larr",    cCommon->Blank() }, { "lceil",   cCommon->Blank() },
-      { "ldquo",   "\x93"           }, { "le",      cCommon->Equals()},
-      { "lfloor",  cCommon->Blank() }, { "lowast",  "*"              },
-      { "loz",     cCommon->Blank() }, { "lrm",     "\xE2\x80\x8E"   },
-      { "lsaquo",  "\x8B"           }, { "lsquo",   "\x91"           },
-      { "lt",      "<"              }, { "macr",    "\xAF"           },
-      { "mdash",   "\x97"           }, { "micro",   "\xB5"           },
-      { "middot",  "\xB7"           }, { "minus",   "-"              },
-      { "mu",      "\xB5"           }, { "nabla",   cCommon->Blank() },
-      { "nbsp",    cCommon->Space() }, { "ndash",   "\x96"           },
-      { "ne",      cCommon->Blank() }, { "ni",      cCommon->Blank() },
-      { "not",     "\xAC"           }, { "notin",   cCommon->Blank() },
-      { "nsub",    cCommon->Blank() }, { "ntilde",  "\xF1"           },
-      { "nu",      cCommon->Blank() }, { "oacute",  "\xF3"           },
-      { "ocirc",   "\xF4"           }, { "oelig",   "\x9C"           },
-      { "ograve",  "\xF2"           }, { "oline",   cCommon->Blank() },
-      { "omega",   cCommon->Blank() }, { "omicron", cCommon->Blank() },
-      { "oplus",   cCommon->Blank() }, { "or",      cCommon->Blank() },
-      { "ordf",    "\xAA"           }, { "ordm",    "\xBA"           },
-      { "oslash",  "\xF8"           }, { "otilde",  "\xF5"           },
-      { "otimes",  cCommon->Blank() }, { "ouml",    "\xF6"           },
-      { "para",    "\xB6"           }, { "part",    cCommon->Blank() },
-      { "permil",  "\x89"           }, { "perp",    cCommon->Blank() },
-      { "phi",     "f"              }, { "pi",      "p"              },
-      { "piv",     cCommon->Blank() }, { "plusmn",  "\xB1"           },
-      { "pound",   "\xA3"           }, { "prime",   "'"              },
-      { "prod",    cCommon->Blank() }, { "prop",    cCommon->Blank() },
-      { "psi",     cCommon->Blank() }, { "quot",    "\""             },
-      { "rArr",    cCommon->Blank() }, { "radic",   "v"              },
-      { "rang",    ">"              }, { "raquo",   "\xBB"           },
-      { "rarr",    cCommon->Blank() }, { "rceil",   cCommon->Blank() },
-      { "rdquo",   "\x94"           }, { "real",    "R"              },
-      { "reg",     "\xAE"           }, { "rfloor",  cCommon->Blank() },
-      { "rho",     cCommon->Blank() }, { "rlm",     "\xE2\x80\x8F"   },
-      { "rsaquo",  "\x9B"           }, { "rsquo",   "\x92"           },
-      { "sbquo",   "\x82"           }, { "scaron",  "\x9A"           },
-      { "sdot",    "\xB7"           }, { "sect",    "\xA7"           },
-      { "shy",     "\xC2\xAD"       }, { "sigma",   "s"              },
-      { "sigmaf",  cCommon->Blank() }, { "sim",     "~"              },
-      { "spades",  cCommon->Blank() }, { "sub",     cCommon->Blank() },
-      { "sube",    cCommon->Blank() }, { "sum",     cCommon->Blank() },
-      { "sup",     cCommon->Blank() }, { "sup1",    "\xB9"           },
-      { "sup2",    "\xB2"           }, { "sup3",    "\xB3"           },
-      { "supe",    cCommon->Blank() }, { "szlig",   "\xDF"           },
-      { "tau",     "t"              }, { "there4",  cCommon->Blank() },
-      { "theta",   cCommon->Blank() }, { "thetasym",cCommon->Blank() },
-      { "thinsp",  cCommon->Blank() }, { "thorn",   "\xFE"           },
-      { "tilde",   "\x98"           }, { "times",   "\xD7"           },
-      { "trade",   "\x99"           }, { "uArr",    cCommon->Blank() },
-      { "uacute",  "\xFA"           }, { "uarr",    cCommon->Blank() },
-      { "ucirc",   "\xFB"           }, { "ugrave",  "\xF9"           },
-      { "uml",     "\xA8"           }, { "upsih",   cCommon->Blank() },
-      { "upsilon", "Y"              }, { "uuml",    "\xFC"           },
-      { "weierp",  "P"              }, { "xi",      cCommon->Blank() },
-      { "yacute",  "\xFD"           }, { "yen",     "\xA5"           },
-      { "yuml",    "\xFF"           }, { "zeta",    "Z"              },
-      { "zwj",     "\xE2\x80\x8D"   }, { "zwnj",    "\xE2\x80\x8C"   },
-    },                                 // Default private
-    pkDKey{ { { 0x9F7C1E39CA3935CA, 0x71F2A9630EF11A98,
-                0xA2AB924A293A01FB, 0x2BA92A197F3AD1A9 },
-              { 0x109CF37A284B8910, 0x89FE280958CFD102 } } },
-    pkKey(pkDKey)                      // and IV key
-    /* -- Code ------------------------------------------------------------- */
-    { // Use sql to allocate memory?
-      if(!CRYPTO_set_mem_functions(OSSLAlloc, OSSLReAlloc, OSSLFree))
-        XC("Failed to setup allocator for crypto interface!");
-      // Generate CRC table (for lzma lib)
-      CrcGenerateTable();
-      // Init openSSL
-      OPENSSL_init();
-      // Class initialised
-      IHInitialise();
-      // Loop until...
-      do
-      { // Get some random entropy from the system hardware
-        const Memory mData{ cSystem->GetEntropy() };
-        // Set seed from system class to opensl
-        RAND_seed(mData.MemPtr<void>(), mData.MemSize<int>());
-        // Make a simple request to initialise more entropy
-        CryptRandom<int>();
-      } // ...PRNG is ready
-      while(!RAND_status());
-    }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPERBEGIN(~Crypt)
-  // Ignore if not initialised
-  if(IHNotDeInitialise()) return;
-  // De-initialise openssl
-  OPENSSL_cleanup();
-  // Overwrite loaded private key so it doesn't linger in memory
-  SetDefaultPrivateKey();
-  // Done
-  DTORHELPEREND(~Crypt)
-  /* ----------------------------------------------------------------------- */
-} *cCrypt = nullptr;                   // Pointer to static class
-/* ------------------------------------------------------------------------- */
+    InitHelper{ __FUNCTION__ },        // Initialise init helper
+    svsvmEnt{                          // Define HTML entities
+      { "Agrave", "\xC0" }, { "Aacute", "\xC1" }, { "Acirc", "\xC2" },
+      { "Atilde", "\xC3" }, { "Auml", "\xC4" }, { "Aring", "\xC5" },
+      { "AElig", "\xC6" }, { "Ccedil", "\xC7" }, { "Egrave", "\xC8" },
+      { "Eacute", "\xC9" }, { "Ecirc", "\xCA" }, { "Euml", "\xCB" },
+      { "Igrave", "\xCC" }, { "Iacute", "\xCD" }, { "Icirc", "\xCE" },
+      { "Iuml", "\xCF" }, { "ETH", "\xD0" }, { "Ntilde", "\xD1" },
+      { "Ograve", "\xD2" }, { "Oacute", "\xD3" }, { "Ocirc", "\xD4" },
+      { "Otilde", "\xD5" }, { "Ouml", "\xD6" }, { "Oslash", "\xD8" },
+      { "Ugrave", "\xD9" }, { "Uacute", "\xDA" }, { "Ucirc", "\xDB" },
+      { "Uuml", "\xDC" }, { "Yacute", "\xDD" }, { "THORN", "\xDE" },
+      { "aacute", "\xE1" }, { "acirc", "\xE2" }, { "acute", "\xB4" },
+      { "aelig", "\xE6" }, { "agrave", "\xE0" },
+      { "alefsym", cCommon->CommonBlank() }, { "alpha", "a" }, { "amp", "&" },
+      { "and", cCommon->CommonBlank() }, { "ang", cCommon->CommonBlank() },
+      { "apos", "'" }, { "aring", "\xE5" }, { "asymp", "\x98" },
+      { "atilde", "\xE3" }, { "auml", "\xE4" }, { "bdquo", "\x84" },
+      { "beta", "\xDF" }, { "brvbar", "\xA6" }, { "bull", "\x95" },
+      { "cap", "n" }, { "ccedil", "\xE7" }, { "cedil", "\xB8" },
+      { "cent", "\xA2" }, { "chi", "X" }, { "circ", "\x88" },
+      { "clubs", cCommon->CommonBlank() }, { "cong", cCommon->CommonBlank() },
+      { "copy", "\xA9" }, { "crarr", cCommon->CommonBlank() },
+      { "cup", cCommon->CommonBlank() }, { "curren", "\xA4" },
+      { "dArr", cCommon->CommonBlank() }, { "dagger", "\x86" },
+      { "darr", cCommon->CommonBlank() }, { "deg", "\xB0" },
+      { "delta", "d" }, { "diams", cCommon->CommonBlank() },
+      { "divide", "\xF7" }, { "eacute", "\xE9" }, { "ecirc", "\xEA" },
+      { "egrave", "\xE8" }, { "empty", "\xD8" },
+      { "emsp", cCommon->CommonSpace() }, { "ensp", cCommon->CommonSpace() },
+      { "epsilon", "e" }, { "equiv", cCommon->CommonEquals() },
+      { "eta", cCommon->CommonBlank() }, { "eth", "\xF0" }, { "euml", "\xEB" },
+      { "euro", "\x80" }, { "exist", cCommon->CommonBlank() },
+      { "fnof", "\x83" }, { "forall", cCommon->CommonBlank() },
+      { "frac12", "\xBD" }, { "frac14", "\xBC" }, { "frac34", "\xBE" },
+      { "frasl", cCommon->CommonFSlash() },
+      { "gamma", cCommon->CommonBlank() }, { "ge", cCommon->CommonEquals() },
+      { "gt", ">" }, { "hArr", cCommon->CommonBlank() },
+      { "harr", cCommon->CommonBlank() }, { "hearts", cCommon->CommonBlank() },
+      { "hellip", "\x85" }, { "iacute", "\xED" }, { "icirc", "\xEE" },
+      { "iexcl", "\xA1" }, { "igrave", "\xEC" }, { "image", "I" },
+      { "infin", "8" }, { "int", cCommon->CommonBlank() },
+      { "iota", cCommon->CommonBlank() }, { "iquest", "\xBF" },
+      { "isin", cCommon->CommonBlank() }, { "iuml", "\xEF" },
+      { "kappa", cCommon->CommonBlank() }, { "lArr", cCommon->CommonBlank() },
+      { "lambda", cCommon->CommonBlank() }, { "lang", "<" },
+      { "laquo", "\xAB" }, { "larr", cCommon->CommonBlank() },
+      { "lceil", cCommon->CommonBlank() }, { "ldquo", "\x93" },
+      { "le", cCommon->CommonEquals() }, { "lfloor", cCommon->CommonBlank() },
+      { "lowast", "*" }, { "loz", cCommon->CommonBlank() },
+      { "lrm", "\xE2\x80\x8E" }, { "lsaquo", "\x8B" }, { "lsquo", "\x91" },
+      { "lt", "<" }, { "macr", "\xAF" }, { "mdash", "\x97" },
+      { "micro", "\xB5" }, { "middot", "\xB7" }, { "minus", "-" },
+      { "mu", "\xB5" }, { "nabla", cCommon->CommonBlank() },
+      { "nbsp", cCommon->CommonSpace() }, { "ndash", "\x96" },
+      { "ne", cCommon->CommonBlank() }, { "ni", cCommon->CommonBlank() },
+      { "not", "\xAC" }, { "notin", cCommon->CommonBlank() },
+      { "nsub", cCommon->CommonBlank() }, { "ntilde", "\xF1" },
+      { "nu", cCommon->CommonBlank() }, { "oacute", "\xF3" },
+      { "ocirc", "\xF4" }, { "oelig", "\x9C" }, { "ograve", "\xF2" },
+      { "oline", cCommon->CommonBlank() }, { "omega", cCommon->CommonBlank() },
+      { "omicron", cCommon->CommonBlank() },
+      { "oplus", cCommon->CommonBlank() }, { "or", cCommon->CommonBlank() },
+      { "ordf", "\xAA" }, { "ordm", "\xBA" }, { "oslash", "\xF8" },
+      { "otilde", "\xF5" }, { "otimes", cCommon->CommonBlank() },
+      { "ouml", "\xF6" }, { "para", "\xB6" },
+      { "part", cCommon->CommonBlank() }, { "permil", "\x89" },
+      { "perp", cCommon->CommonBlank() }, { "phi", "f" }, { "pi", "p" },
+      { "piv", cCommon->CommonBlank() }, { "plusmn", "\xB1" },
+      { "pound", "\xA3" }, { "prime", "'" },
+      { "prod", cCommon->CommonBlank() }, { "prop", cCommon->CommonBlank() },
+      { "psi", cCommon->CommonBlank() }, { "quot", "\"" },
+      { "rArr", cCommon->CommonBlank() }, { "radic", "v" }, { "rang", ">" },
+      { "raquo", "\xBB" }, { "rarr", cCommon->CommonBlank() },
+      { "rceil", cCommon->CommonBlank() }, { "rdquo", "\x94" },
+      { "real", "R" }, { "reg", "\xAE" }, { "rfloor", cCommon->CommonBlank() },
+      { "rho", cCommon->CommonBlank() }, { "rlm", "\xE2\x80\x8F" },
+      { "rsaquo", "\x9B" }, { "rsquo", "\x92" }, { "sbquo", "\x82" },
+      { "scaron", "\x9A" }, { "sdot", "\xB7" }, { "sect", "\xA7" },
+      { "shy", "\xC2\xAD" }, { "sigma", "s" },
+      { "sigmaf", cCommon->CommonBlank() }, { "sim", "~" },
+      { "spades", cCommon->CommonBlank() }, { "sub", cCommon->CommonBlank() },
+      { "sube", cCommon->CommonBlank() }, { "sum", cCommon->CommonBlank() },
+      { "sup", cCommon->CommonBlank() }, { "sup1", "\xB9" },
+      { "sup2", "\xB2" }, { "sup3", "\xB3" },
+      { "supe", cCommon->CommonBlank() }, { "szlig", "\xDF" }, { "tau", "t" },
+      { "there4", cCommon->CommonBlank() },
+      { "theta", cCommon->CommonBlank() },
+      { "thetasym",cCommon->CommonBlank() },
+      { "thinsp", cCommon->CommonBlank() }, { "thorn", "\xFE" },
+      { "tilde", "\x98" }, { "times", "\xD7" }, { "trade", "\x99" },
+      { "uArr", cCommon->CommonBlank() }, { "uacute", "\xFA" },
+      { "uarr", cCommon->CommonBlank() }, { "ucirc", "\xFB" },
+      { "ugrave", "\xF9" }, { "uml", "\xA8" },
+      { "upsih", cCommon->CommonBlank() }, { "upsilon", "Y" },
+      { "uuml", "\xFC" }, { "weierp", "P" }, { "xi", cCommon->CommonBlank() },
+      { "yacute", "\xFD" }, { "yen", "\xA5" }, { "yuml", "\xFF" },
+      { "zeta", "Z" }, { "zwj", "\xE2\x80\x8D" }, { "zwnj", "\xE2\x80\x8C" },
+    },
+    pkDKey{{{ 0x9F7C1E39CA3935CA,      // Default private key (1/4) 256-bits
+              0x71F2A9630EF11A98,      // Default private key (2/4)
+              0xA2AB924A293A01FB,      // Default private key (3/4)
+              0x2BA92A197F3AD1A9 },    // Default private key (4/4)
+            { 0x109CF37A284B8910,      // Default IV key (1/2) 128-bits
+              0x89FE280958CFD102 }}},  // Default IV key (2/2)
+    pkKey(pkDKey)                      // Modified private key
+    /* -- Initialise cryptography ------------------------------------------ */
+    { CryptInit(); }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

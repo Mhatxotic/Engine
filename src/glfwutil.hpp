@@ -203,7 +203,8 @@ static void GlFWSetVSync(const int iI) { glfwSwapInterval(iI); }
 /* -- Wait for window event ------------------------------------------------ */
 static void GlFWWaitEvents(void) { glfwWaitEvents(); }
 /* -- Release current context ---------------------------------------------- */
-static void GlFWReleaseContext(void) { glfwMakeContextCurrent(nullptr); }
+static void GlFWSetContext(GLFWwindow*const wWindow=nullptr)
+  { glfwMakeContextCurrent(wWindow); }
 /* -- Set gamma ------------------------------------------------------------ */
 static void GlFWSetGamma(GLFWmonitor*const mDevice, const GLfloat fValue)
   { glfwSetGamma(mDevice, fValue); }

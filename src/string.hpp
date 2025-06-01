@@ -9,85 +9,10 @@
 /* ------------------------------------------------------------------------- */
 namespace IString {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IStd::P;               using namespace IUtf::P;
+using namespace ICommon::P;            using namespace IStd::P;
+using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Common class with common objects ------------------------------------- */
-static class Common final              // Members initially private
-{ /* -- Private variables -------------------------------------------------- */
-  const string     strTrue,            // C++ string as "true"
-                   strFalse,           // C++ string as "false"
-                   strY,               // C++ string as "Y"
-                   strN,               // C++ string as "N"
-                   strEquals,          // C++ string as "="
-                   strNOne,            // C++ string as "-1"
-                   strZero,            // C++ string as "0"
-                   strOne,             // C++ string as "1"
-                   strSpace,           // C++ string with whitespace
-                   strEllipsis,        // C++ string for "..."
-                   strBlank,           // Empty c++ string
-                   strCr,              // Carriage return c++ string
-                   strLf,              // Linefeed c++ string
-                   strCrLf,            // CR and LF c++ string
-                   strCrLf2,           // Double CR and LF c++ string
-                   strLfCr,            // LF and CR c++ string
-                   strFSlash,          // C++ string as forward-slash '/'
-                   strUnspec,          // C++ string as "<Unspecified>"
-                   strNull,            // C++ string as "<NullPtr>"
-                   strPeriod,          // C++ string as "."
-                   strTwoPeriod,       // C++ string as ".."
-                   strLuaName;         // C++ string as "__name"
-  const char       cFSlash;            // Forward slash character
-  const char*const cpBlank;            // Blank C-String
-  locale           lLocaleCurrent;     // Current locale
-  /* --------------------------------------------------------------- */ public:
-  const locale &Locale(void) const { return lLocaleCurrent; }
-  void SetLocale(const string &strLocale)
-    { lLocaleCurrent = locale(strLocale); }
-  /* ----------------------------------------------------------------------- */
-  const string &Blank(void) const { return strBlank; }
-  const char *CBlank(void) const { return cpBlank; }
-  const string &Tru(void) const { return strTrue; }
-  const string &Fals(void) const { return strFalse; }
-  const string &Y(void) const { return strY; }
-  const string &N(void) const { return strN; }
-  const string &Equals(void) const { return strEquals; }
-  const string &NOne(void) const { return strNOne; }
-  const string &Zero(void) const { return strZero; }
-  const string &One(void) const { return strOne; }
-  const string &Cr(void) const { return strCr; }
-  const string &Lf(void) const { return strLf; }
-  const string &CrLf(void) const { return strCrLf; }
-  const string &CrLf2(void) const { return strCrLf2; }
-  const string &LfCr(void) const { return strLfCr; }
-  const string &Space(void) const { return strSpace; }
-  const string &Ellipsis(void) const { return strEllipsis; }
-  const string &FSlash(void) const { return strFSlash; }
-  char CFSlash(void) const { return cFSlash; }
-  const string &Unspec(void) const { return strUnspec; }
-  const string &Null(void) const { return strNull; }
-  const string &Period(void) const { return strPeriod; }
-  const string &TwoPeriod(void) const { return strTwoPeriod; }
-  const string &LuaName(void) const { return strLuaName; }
-  /* -- Default Constructor ------------------------------------------------ */
-  Common(void) :                       // No parameters
-    /* -- Initialisers ----------------------------------------------------- */
-    strTrue{ "true" },                 strFalse{ "false" },
-    strY{ "Y" },                       strN{ "N" },
-    strEquals{ "=" },                  strNOne{ "-1" },
-    strZero{ "0" },                    strOne{ "1" },
-    strSpace{ " " },                   strEllipsis{ "..." },
-    strCr{ "\r" },                     strLf{ "\n" },
-    strCrLf{ strCr + strLf },          strCrLf2{ strCrLf + strCrLf },
-    strLfCr{ strLf + strCr },          strFSlash{ "/" },
-    strUnspec{ "<Unspecified>" },      strNull{ "<NullPtr>" },
-    strPeriod{ "." },                  strTwoPeriod{ ".." },
-    strLuaName{ "__name" },            cFSlash(strFSlash[0]),
-    cpBlank(strBlank.c_str()),         lLocaleCurrent{ strBlank }
-    /* -- No code ---------------------------------------------------------- */
-    { }
-} /* ----------------------------------------------------------------------- */
-*cCommon;                              // Assigned in main function
 /* -- Some helpful globals so not to repeat anything ----------------------- */
 static const char*const cpTimeFormat = "%a %b %d %H:%M:%S %Y %z";
 /* -- Functions for StrAppend, StrAppendImbue and StrFormat ---------------- */
@@ -133,7 +58,7 @@ namespace H                            // Private functions
       // Stream to write to
       ostringstream osS;
       // Imbue current locale
-      osS.imbue(cCommon->Locale());
+      osS.imbue(cCommon->CommonLocale());
       // Build string
       Param(osS, vaVars...);
       // Return appended string
@@ -492,7 +417,7 @@ static const string &StrIsBlank(const string &strIn, const string &strAlt)
   { return strIn.empty() ? strAlt : strIn; }
 /* ------------------------------------------------------------------------- */
 static const string &StrIsBlank(const string &strIn)
-  { return StrIsBlank(strIn, cCommon->Blank()); }
+  { return StrIsBlank(strIn, cCommon->CommonBlank()); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
   static const char *StrCPluralise(const IntType itCount,
@@ -539,30 +464,30 @@ static const string StrLongFromDuration(const StdTimeT tDuration,
   } // Add months?
   if(tD.tm_mon && uiCompMax > 0)
   { // Do add months
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_mon, "month", "months");
     --uiCompMax;
   } // Add days? (removing the added 1)
   if(--tD.tm_mday && uiCompMax > 0)
   { // Do add days
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_mday, "day", "days");
     --uiCompMax;
   } // Add hours?
   if(tD.tm_hour && uiCompMax > 0)
   { // Do add hours
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_hour, "hour", "hours");
     --uiCompMax;
   } // Add Minutes?
   if(tD.tm_min && uiCompMax > 0)
   { // Do add minutes
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_min, "min", "mins");
     --uiCompMax;
   } // Check seconds
   if((tD.tm_sec || !tDuration) && uiCompMax > 0)
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_sec, "sec", "secs");
   // Return string
   return osS.str();
@@ -597,8 +522,8 @@ namespace StrFromEvalTokensPrivateData
   typedef vector<BoolCharPair> BoolCharPairVector;
   // The actual function
   static const string StrFromEvalTokens(const BoolCharPairVector &bcpvList)
-    { return bcpvList.empty() ? cCommon->Blank() :
-        accumulate(bcpvList.cbegin(), bcpvList.cend(), cCommon->Blank(),
+    { return bcpvList.empty() ? cCommon->CommonBlank() :
+        accumulate(bcpvList.cbegin(), bcpvList.cend(), cCommon->CommonBlank(),
           [](const string &strOut, const BoolCharPair &bcpPair)
             { return bcpPair.first ? StrAppend(strOut,
               bcpPair.second) : strOut; }); }
@@ -644,9 +569,9 @@ static const string StrShortFromDuration(const double dDuration,
 }
 /* -- Return true of false ------------------------------------------------- */
 static const string &StrFromBoolTF(const bool bCondition)
-  { return bCondition ? cCommon->Tru() : cCommon->Fals(); }
+  { return bCondition ? cCommon->CommonTrue() : cCommon->CommonFalse(); }
 static const string &StrFromBoolYN(const bool bCondition)
-  { return bCondition ? cCommon->Y() : cCommon->N(); }
+  { return bCondition ? cCommon->CommonYes() : cCommon->CommonNo(); }
 /* -- Count occurence of string -------------------------------------------- */
 static size_t StrCountOccurences(const string &strStr, const string &strWhat)
 { // Zero if string is empty
@@ -663,7 +588,7 @@ static size_t StrCountOccurences(const string &strStr, const string &strWhat)
 /* -- Implode a stringdeque to a single string ----------------------------- */
 template<class AnyArray, class CtrType = typename AnyArray::value_type>
   static const string StrImplode(const AnyArray &aArray,
-    const ssize_t &sstBegin=0, const string &strSep=cCommon->Space())
+    const ssize_t &sstBegin=0, const string &strSep=cCommon->CommonSpace())
 { // Cast array size to ssize_t
   const ssize_t sstSize = static_cast<ssize_t>(aArray.size());
   // Done if empty or begin position is invalid
@@ -684,8 +609,8 @@ template<class AnyArray, class CtrType = typename AnyArray::value_type>
 }
 /* -- Converts the key/value pairs to a stringvector ----------------------- */
 static const string ImplodeMap(const StrNCStrMap &ssmSrc,
-  const string &strLineSep=cCommon->Space(),
-  const string &strKeyValSep=cCommon->Equals(),
+  const string &strLineSep=cCommon->CommonSpace(),
+  const string &strKeyValSep=cCommon->CommonEquals(),
   const string &strValEncaps="\"")
 { // Done if empty
   if(ssmSrc.empty()) return {};
@@ -747,7 +672,7 @@ template<typename OutType, typename InType, class SuffixClass>
   static OutType StrToReadableSuffix(const InType itValue,
     const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup)
 { return StrToReadableSuffix<OutType, InType, SuffixClass>(itValue,
-    cpSuffix, iPrecision, scLookup, cCommon->CBlank()); }
+    cpSuffix, iPrecision, scLookup, cCommon->CommonCBlank()); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
   static double StrToBytesHelper(const IntType itBytes,
@@ -1008,7 +933,7 @@ static const string StrFromTimeTT(const StdTimeT ttTimestamp,
 /* -- Remove suffixing carriage return and line feed ----------------------- */
 static string &StrChop(string &strStr)
 { // Find the pos of the last char that is not a carriage return or line feed
-  const size_t stEndPos = strStr.find_last_not_of("\r\n");
+  const size_t stEndPos = strStr.find_last_not_of(cCommon->CommonCrLf());
   // If all characters are removed, set the string to empty else erase the part
   if(stEndPos == StdNPos) strStr.clear();
   else strStr.erase(stEndPos + 1);

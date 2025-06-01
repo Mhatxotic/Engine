@@ -9,11 +9,11 @@
 /* ------------------------------------------------------------------------- */
 namespace ICVarDef {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICodec::P;             using namespace IDir::P;
-using namespace IError::P;             using namespace IFlags;
-using namespace ILog::P;               using namespace IMemory::P;
-using namespace ISql::P;               using namespace IStd::P;
-using namespace IString::P;
+using namespace ICodec::P;             using namespace ICommon::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IFlags;                using namespace ILog::P;
+using namespace IMemory::P;            using namespace ISql::P;
+using namespace IStd::P;               using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -90,13 +90,11 @@ class CVarItem :                       // Members initially private
     CR_FAIL_COMPRESS,                  // Cvar could not be compress
   };/* -- Private variables ------------------------------------------------ */
   const string   strVar;               // Variable name
-  string         strValue;             // Value name
-  string         strDefValue;          // Default value name
+  string         strValue,             // Value name
+                 strDefValue;          // Default value name
   CbFunc         cfTrigger;            // Callback trigger event
   /* --------------------------------------------------------------- */ public:
   const CbFunc &GetTrigger(void) const { return cfTrigger; }
-  /* -- To stop a false positive in CppCheck ------------------------------- */
-  void NullOp(void) { }
   /* ----------------------------------------------------------------------- */
   void SetTrigger(const CbFunc &cfCb) { cfTrigger = cfCb; }
   /* ----------------------------------------------------------------------- */
@@ -138,15 +136,15 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   void SetValue(string &&strV) { strValue = StdMove(strV); }
   /* ----------------------------------------------------------------------- */
-  const string Protect(void) const
+  const string GetValueSafe(void) const
   { // If confidential, return confidential
     if(FlagIsSet(CONFIDENTIAL) && csfShowFlags.FlagIsClear(CSF_CONFIDENTIAL))
-      return "<Private>";
+      return cCommon->CommonPrivate();
     // If protected, return protected
     if(FlagIsSet(CPROTECTED) && csfShowFlags.FlagIsClear(CSF_PROTECTED))
-      return "<Protected>";
+      return cCommon->CommonProtected();
     // If value is empty, return as empty
-    if(IsValueUnset()) return "<Empty>";
+    if(IsValueUnset()) return cCommon->CommonEmpty();
     // If is a float, return value
     if(FlagIsSet(TFLOAT))
       return StrFromNum(StrToNum<double>(GetValue()), 0, 12);
@@ -156,8 +154,8 @@ class CVarItem :                       // Members initially private
     // If is a integer, return number + hex
     if(FlagIsSet(TINTEGER))
     { // Get value as 64-bit integer
-      const ValueIntType iV = StrToNum<ValueIntType>(GetValue());
-      return StrFormat("$ [0x$$]", iV, hex, iV);
+      const ValueIntType vitV = StrToNum<ValueIntType>(GetValue());
+      return StrFormat("$ [0x$$]", vitV, hex, vitV);
     } // Unknown value or string. Return as-is.
     return StrFormat("\"$\"", GetValue());
   }
@@ -178,26 +176,19 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   CommitResult Commit(void)
   { // Ignore if variable not modified, force saved or loaded
-    if(FlagIsClear(COMMIT|OSAVEFORCE|LOADED)) return CR_FAIL_NOT_SAVEABLE;
-    // If the value is the same as the default value and force not enabled?
-    if(IsValueUnchanged())
-    { // If the value was loaded from the database?
-      if(FlagIsSet(LOADED))
-      { // Don't delete the variable if force save is enabled
-        if(FlagIsSet(OSAVEFORCE)) return CR_OK_NOTHING_TO_DO;
-        // Purge the cvar from the database
-        switch(cSql->CVarPurge(GetVar()))
-        { case Sql::PR_OK    : return CR_OK_PURGE;
-          case Sql::PR_FAIL  : return CR_FAIL_PURGE;
-          case Sql::PR_OK_NC : return CR_FAIL_PURGE_NOT_CHANGED;
-          default            : return CR_FAIL_PURGE_UNKNOWN_ERROR;
-        }
-      } // Was not loaded from the database so nothing to do if no force save
-      else if(FlagIsClear(OSAVEFORCE)) return CR_OK_NOTHING_TO_DO;
-    } // Nothing to write if variable was just loaded
-    else if(FlagIsSetAndClear(LOADED, COMMIT|OSAVEFORCE))
-      return CR_FAIL_LOADED_NOT_MODIFIED;
-    // If we are to encrypt?
+    if(FlagIsClear(COMMIT|COMMITNOCHECK)) return CR_OK_NOTHING_TO_DO;
+    // If the value is the same as default value and nocheck not set?
+    if(IsValueUnchanged() && FlagIsClear(COMMITNOCHECK))
+    { // Nothing to do if the flag wasn't loaded from the database
+      if(FlagIsClear(LOADED)) return CR_OK_NOTHING_TO_DO;
+      // Purge the cvar from the database
+      switch(cSql->CVarPurge(GetVar()))
+      { case Sql::PR_OK    : return CR_OK_PURGE;
+        case Sql::PR_FAIL  : return CR_FAIL_PURGE;
+        case Sql::PR_OK_NC : return CR_FAIL_PURGE_NOT_CHANGED;
+        default            : return CR_FAIL_PURGE_UNKNOWN_ERROR;
+      }
+    } // If we are to encrypt?
     if(FlagIsSet(CPROTECTED)) try
     { // Try encryption and/or compression and store result in database
       if(FlagIsSet(CDEFLATE)) Commit(Block<AESZLIBEncoder>(GetValue()));
@@ -295,25 +286,23 @@ class CVarItem :                       // Members initially private
     switch(cbrResult)
     { // The change was not allowed?
       case DENY:
-        // Throw if requested
+        // Throw exception if requested otherwise return trigger denied code
         if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
           XC("CVar callback denied change!",
              "Variable", GetVar(), "Value", strNValue);
-        // Otherwise return trigger denied code
         return CVS_TRIGGERDENIED;
         // The new value is acceptable? Set the new value
       case ACCEPT: SetValue(strNValue); break;
       // The new value is acceptable, but the caller set the value? Ignore
       case ACCEPT_HANDLED: break;
       // Same as above but forcing commit? Set commit flag as requested
-      case ACCEPT_HANDLED_FORCECOMMIT: FlagSet(COMMIT); break;
+      case ACCEPT_HANDLED_FORCECOMMIT: FlagSet(COMMIT|COMMITNOCHECK); break;
       // Unknown return value?
       default:
-        // Throw if requested
+        // Throw exception if requested otherwise return trigger denied code
         if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
           XC("CVar callback returned unknown value!",
              "Variable", GetVar(), "Value", strNValue, "Result", cbrResult);
-        // Otherwise return trigger denied code
         return CVS_TRIGGEREXCEPTION;
     } // Free unused memory from cvar
     PruneValue();
@@ -330,7 +319,7 @@ class CVarItem :                       // Members initially private
     } // Log progress and return success
     cLog->LogDebugExSafe("CVars $ '$' to $.",
       ccfcFlags.FlagIsSet(CCF_NEWCVAR) ? "registered" : "set",
-      GetVar(), Protect());
+      GetVar(), GetValueSafe());
     // Return success
     return CVS_OK;
   }
@@ -408,12 +397,12 @@ class CVarItem :                       // Members initially private
         default: break;
       } // True?
       else if(strNValue.size() == 4 &&
-        StrToLowCase(strNValue) == cCommon->Tru())
-          return SetValue(cCommon->One(), ccfcFlags, strCBError);
+        StrToLowCase(strNValue) == cCommon->CommonTrue())
+          return SetValue(cCommon->CommonOne(), ccfcFlags, strCBError);
       // False?
       else if(strNValue.size() == 5 &&
-        StrToLowCase(strNValue) == cCommon->Fals())
-          return SetValue(cCommon->Zero(), ccfcFlags, strCBError);
+        StrToLowCase(strNValue) == cCommon->CommonFalse())
+          return SetValue(cCommon->CommonZero(), ccfcFlags, strCBError);
       // If we should not abort? Just return error else throw exception
       if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
         return CVS_NOTBOOLEAN;
@@ -433,15 +422,14 @@ class CVarItem :                       // Members initially private
       } // Check if valid untrusted pathname required
       if(FlagIsSet(CFILENAME))
       { // Check filename and get result
-        switch(const ValidResult vrRes =
-          DirValidName(strNewValue, VT_UNTRUSTED))
+        switch(const ValidResult vrRes = DirValidName(strNewValue))
         { // Break if ok or empty
           case VR_OK: case VR_EMPTY: break;
           // Show error otherwise
           default: if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
                      return CVS_NOTFILENAME;
                    XC("CVar untrusted path name is invalid!",
-                      "Reason",   cDirBase->VNRtoStr(vrRes),
+                      "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
                       "Result",   vrRes,
                       "Variable", GetVar());
         }
@@ -455,7 +443,7 @@ class CVarItem :                       // Members initially private
           default : if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
                       return CVS_NOTFILENAME;
                     XC("CVar trusted path name is invalid!",
-                       "Reason",   cDirBase->VNRtoStr(vrRes),
+                       "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
                        "Result",   vrRes,
                        "Variable", GetVar(),
                        "Path",     strNewValue);

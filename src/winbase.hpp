@@ -21,68 +21,12 @@ class SysBase :                        // Members initially private
   const ExCoList   eclStrings;         // Exception strings strings
   /* -- Private variables -------------------------------------------------- */
   HWND             hwndWindow;         // Main window handle being used
-  HANDLE           hMutex;             // Global mutex handle
   ostringstream    osS;                // Output stringstream
   /* ----------------------------------------------------------------------- */
   const UINT       uiOldErrorMode;            // Old error mode
   const _crt_signal_t fcbAbortCallback,       // Saved abort callback
                    fcbIllegalStorageAccess,   // " illegal storage access cb
                    fcbFloatingPointException; // " float point exception cb
-  /* ----------------------------------------------------------------------- */
-  void DeleteGlobalMutex(void)
-  { // Ignore if not initialised
-    if(hMutex) return;
-    // Close the handle and log if failed
-    if(!CloseHandle(hMutex))
-      cLog->LogWarningExSafe("SysMutex failed to close mutex handle '$'! $.",
-        IdentGet(), SysError());
-  }
-  /* ----------------------------------------------------------------------- */
-  static BOOL WINAPI EnumWindowsProc(HWND hH, LPARAM lP)
-  { // Get title of window and cancel if empty
-    wstring wstrT(GetWindowTextLength(hH), 0);
-    if(!GetWindowText(hH, const_cast<LPWSTR>(wstrT.c_str()),
-      static_cast<DWORD>(wstrT.capacity())))
-        return TRUE;
-    // If there is not enough characters in this windows title or the title
-    // and requested window title's contents do not match? Ignore this window!
-    const wstring &wstrN = *reinterpret_cast<wstring*>(lP);
-    if(wstrT.length() < wstrN.length() ||
-      StdCompare(wstrN.data(), wstrT.data(), wstrN.length()*sizeof(wchar_t)))
-        return TRUE;
-    // We found the window
-    cLog->LogDebugExSafe("- Found window handle at $$.\n"
-                 "- Window name is '$'.",
-      hex, reinterpret_cast<void*>(hH), WS16toUTF(wstrT));
-    // First try showing the window and if successful?
-    if(ShowWindow(hH, SW_RESTORE|SW_SHOWNORMAL))
-    { // Log the successful command
-      cLog->LogDebugSafe("- Show window request was successful.");
-    } // Showing the window failed?
-    else
-    { // Log the failure with reason
-      cLog->LogWarningExSafe("- Show window request failed: $!", SysError());
-    } // Then try setting it as a foreground window and if succeeded?
-    if(SetForegroundWindow(hH))
-    { // Log the successful command
-      cLog->LogDebugSafe("- Set fg window request was successful.");
-    } // Setting foreground window failed?
-    else
-    { // Log the failure with reason
-      cLog->LogWarningExSafe("- Set fg window request failed: $!", SysError());
-    }// Then try setting the focus of the window and if succeeded?
-    if(SetFocus(hH) || SysIsErrorCode())
-    { // Log the successful command
-      cLog->LogDebugSafe("- Set focus request was successful.");
-    } // Setting focus failed?
-    else
-    { // Log the failure with reason
-      cLog->LogWarningExSafe("- Set focus request failed: $!", SysError());
-    } // Reset error so it's not seen as the result
-    SetLastError(0);
-    // Don't look for any more windows
-    return FALSE;
-  }
   /* == Get environment ==================================================== */
   void SEHDumpEnvironment(void) try
   { // Prepare formatted data
@@ -244,7 +188,8 @@ class SysBase :                        // Members initially private
 #define D128X(id,x,e) id "=" \
       << setw(16) << *reinterpret_cast<const uint64_t*>(&cData.x)\
       << setw(16) << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
-    const string strCrLf{ "\r\n" }, strSpc{ "  " };
+    const string &strCrLf = cCommon->CommonCrLf(),
+                 &strSpc = cCommon->CommonDblSpace();
     // Return registers
 #if defined(X64)
     // Write basic registers
@@ -698,7 +643,7 @@ class SysBase :                        // Members initially private
     // Prepare summary
     const string strDialog{ SEHGetSummary(epData) };
     // Clear string stream
-    osS.str(cCommon->CBlank());
+    osS.str(cCommon->CommonCBlank());
     // Write the log file
     SEHDumpLog(epData.ContextRecord, strDialog);
     // No need to show anything if we're in a debugger
@@ -747,50 +692,14 @@ class SysBase :                        // Members initially private
     } // Raise exception
     RaiseException(dwId, 0, 0, nullptr);
   }
-  /* ------------------------------------------------------------ */ protected:
-  void SetWindowHandle(HWND hwndNew) { hwndWindow = hwndNew; }
   /* --------------------------------------------------------------- */ public:
   HWND GetWindowHandle(void) const { return hwndWindow; }
   bool IsWindowHandleSet(void) const { return GetWindowHandle() != nullptr; }
   bool IsNotWindowHandleSet(void) const { return !IsWindowHandleSet(); }
   void SetWindowDestroyed(void) { SetWindowHandle(nullptr); }
-  /* ----------------------------------------------------------------------- */
-  bool InitGlobalMutex(const string_view &strvTitle)
-  { // Convert UTF title to wide string
-    const wstring wstrTitle{ UTFtoS16(strvTitle) };
-    // Create the global mutex handle with the specified name and check error
-    hMutex = CreateMutex(nullptr, FALSE, wstrTitle.c_str());
-    switch(const DWORD dwResult = SysErrorCode<DWORD>())
-    { // No error, continue
-      case 0: return true;
-      // Global mutex name already exists?
-      case ERROR_ALREADY_EXISTS:
-        // Log that another instance already exists
-        cLog->LogDebugSafe(
-          "System found existing mutex, scanning for original window...");
-        // Look for the specified window and if we activated it?
-        if(!EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&wstrTitle)))
-        { // If an error occured?
-          if(SysIsNotErrorCode())
-          { // Log the error and reason why it failed
-            cLog->LogErrorExSafe(
-              "System failed to find the window to activate! $!", SysError());
-          } // No window was found
-          else cLog->LogWarningSafe("System window enumeration successful!");
-        } // Could not find it?
-        else cLog->LogDebugSafe("System window enumeration unsuccessful!");
-        // Caller must terminate program
-        return false;
-      // Other error
-      default: XCS("Failed to create global mutex object!",
-        "Title",  strvTitle,
-        "Result", static_cast<unsigned int>(dwResult),
-        "mutex",  reinterpret_cast<void*>(hMutex));
-    } // Getting here is impossible
-  }
-  /* -- Delete specified mutex (not needed on windoze) --------------------- */
-  void DeleteGlobalMutex(const string_view&) { }
-  /* == Destructor ========================================================= */
+  /* ------------------------------------------------------------ */ protected:
+  void SetWindowHandle(HWND hwndNew) { hwndWindow = hwndNew; }
+  /* -- Destructor --------------------------------------------------------- */
   ~SysBase(void)
   { // Restore original signal handlers
     if(fcbFloatingPointException) signal(SIGFPE, fcbFloatingPointException);
@@ -800,14 +709,11 @@ class SysBase :                        // Members initially private
     SetUnhandledExceptionFilter(nullptr);
     // Restore old error mode
     SetErrorMode(uiOldErrorMode);
-    // Delete global mutex
-    DeleteGlobalMutex();
   }
   /* -- Constructor (install exception filter) ----------------------------- */
   SysBase(void) :
     /* -- Initialisers ----------------------------------------------------- */
     hwndWindow(nullptr),
-    hMutex(nullptr),
     // Set no dialogues for system errors and save code
     uiOldErrorMode(SetErrorMode(SEM_NOOPENFILEERRORBOX)),
     // Install signal handlers and save old ones
@@ -844,7 +750,7 @@ class SysBase :                        // Members initially private
     }}
   /* -- Install unhandled exception filter --------------------------------- */
   { SetUnhandledExceptionFilter(HandleExceptionStatic); }
-};/* ======================================================================= */
+};/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
   LONG WINAPI SysBase::HandleExceptionStatic(LPEXCEPTION_POINTERS \
     epData) { return cSystem->HandleException(*epData); }

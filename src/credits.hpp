@@ -11,11 +11,11 @@
 /* ------------------------------------------------------------------------- */
 namespace ICredit {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICodec::P;             using namespace ICVarDef::P;
-using namespace IGlFW::P;              using namespace IError::P;
-using namespace ILog::P;               using namespace IMemory::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace Lib::Ogg::Theora;
+using namespace ICodec::P;             using namespace ICommon::P;
+using namespace ICVarDef::P;           using namespace IGlFW::P;
+using namespace IError::P;             using namespace ILog::P;
+using namespace IMemory::P;            using namespace IString::P;
+using namespace ISystem::P;            using namespace Lib::Ogg::Theora;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Credit library class ------------------------------------------------- */
@@ -78,7 +78,9 @@ enum CreditEnums : size_t              // Credit ids
 typedef array<const CreditLib,CL_MAX> CreditLibList; // Library list typedef
 typedef CreditLibList::const_iterator CreditLibListConstIt; // Iterator
 /* ------------------------------------------------------------------------- */
-static const class Credits final       // Members initially private
+class Credits;                         // Class prototype
+static Credits *cCredits = nullptr;    // Pointer to global class
+class Credits                          // Members initially private
 { /* -- License data ------------------------------------------------------- */
 #define BEGINLICENSE(n,s) static constexpr const array<const uint8_t,s> l ## n{
 #define ENDLICENSE };                  // Helper functions for licenses header
@@ -117,13 +119,13 @@ static const class Credits final       // Members initially private
       CreditGetItemCount());
     for(const CreditLib &lD : CreditGetLibList())
       cLog->LogNLCInfoExSafe("- Using $ (v$) $$", lD.GetName(),
-        lD.GetVersion(), lD.IsCopyright() ? "\xC2\xA9 " : cCommon->Blank(),
-        lD.GetAuthor());
+        lD.GetVersion(), lD.IsCopyright() ? "\xC2\xA9 " :
+          cCommon->CommonBlank(), lD.GetAuthor());
   }
   /* -- Dump credits to log (cvar version) --------------------------------- */
   CVarReturn CreditDumpList(const bool bDoIt) const
     { if(bDoIt) CreditDumpList(); return ACCEPT; }
-  /* -- Default constructor ------------------------------------------------ */
+  /* -- Default constructor ------------------------------------- */ protected:
   Credits(void) :                      // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     strTheoraVersion{ StrFormat("$.$.$", // Generate Theora version string
@@ -172,11 +174,9 @@ static const class Credits final       // Members initially private
       // End of credits data structure
 #undef LD                              // Done with this macro
     } }                                // End of credits list
-  /* -- No code ------------------------------------------------------------ */
-  { }
-} /* ----------------------------------------------------------------------- */
-*cCredits = nullptr;                   // Pointer to static class
-/* ------------------------------------------------------------------------- */
+  /* -- Set global pointer to static class --------------------------------- */
+  { cCredits = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

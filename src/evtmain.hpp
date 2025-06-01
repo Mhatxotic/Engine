@@ -87,9 +87,10 @@ enum EvtMainCmd : size_t               // Engine thread event commands
   EMC_NOLOG = EMC_INP_CHAR             // Suppress log from this event forwards
 #endif                                 // Build check
 };/* -- Remember to update the id strings at EvtMain constructor ----------- */
-static class EvtMain final :           // Event list for render thread
+class EvtMain;                         // Prototype class
+static EvtMain *cEvtMain = nullptr;    // Address of global class
+class EvtMain :                        // Event list for render thread
   /* -- Dependencies ------------------------------------------------------- */
-  private InitHelper,                  // Initialisation helper
   public EvtCore                       // Events common class
    <EvtMainCmd,                        // The enum list of events supported
     EMC_MAX,                           // Maximum events allowed
@@ -97,8 +98,8 @@ static class EvtMain final :           // Event list for render thread
     EMC_NOLOG>,                        // Event id for NOLOG
   public Thread                        // Engine thread
 { /* -- Private --------------------------------------------------- */ private:
-  EvtMainCmd       emcPending;         // Event fired before exit requested
-  EvtMainCmd       emcExit;            // Thread exit code
+  EvtMainCmd       emcPending,         // Event fired before exit requested
+                   emcExit;            // Thread exit code
   unsigned int     uiConfirm;          // Exit confirmation progress
   /* -- Events list -------------------------------------------------------- */
   const RegVec     rvEvents;           // Events list to register
@@ -204,25 +205,12 @@ static class EvtMain final :           // Event list for render thread
   /* -- Add event to quit thread and restart window manager ---------------- */
   void RequestQuitThread(void) { Add(EMC_QUIT_THREAD); }
   /* -- Initialise base events (called from Main) -------------------------- */
-  void Init(void)
-  { // Class initialised
-    IHInitialise();
-    // Registrer base events
-    RegisterEx(rvEvents);
-  }
+  void Init(void) { RegisterEx(rvEvents); }
   /* -- DeInitialise base events (called from Main) ------------------------ */
-  void DeInit(void)
-  { // Ignore if class not initialised
-    if(IHNotDeInitialise()) return;
-    // Registrer base events
-    UnregisterEx(rvEvents);
-  }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~EvtMain)
-  /* -- Constructor -------------------------------------------------------- */
+  void DeInit(void) { UnregisterEx(rvEvents); }
+  /* -- Constructor --------------------------------------------- */ protected:
   EvtMain(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    InitHelper{ __FUNCTION__ },        // Initialise helper
     EvtCore{ "EventMain", ISList{{     // Set name of this object
       /* ------------------------------------------------------------------- */
 #define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings
@@ -236,9 +224,9 @@ static class EvtMain final :           // Event list for render thread
       EMC(LUA_PAUSE),       EMC(LUA_REDRAW),       EMC(LUA_REINIT),
       EMC(LUA_RESUME),
       /* ------------------------------------------------------------------- */
-      EMC(WIN_FOCUS),       EMC(WIN_ICONIFY),      EMC(WIN_MOVED),
-      EMC(WIN_REFRESH),     EMC(WIN_RESIZED),      EMC(WIN_SCALE),
-      EMC(WIN_CLOSE),
+      EMC(WIN_CLOSE),       EMC(WIN_FOCUS),        EMC(WIN_ICONIFY),
+      EMC(WIN_MOVED),       EMC(WIN_REFRESH),      EMC(WIN_RESIZED),
+      EMC(WIN_SCALE),
       /* ------------------------------------------------------------------- */
       EMC(VID_FB_REINIT),   EMC(VID_MATRIX_REINIT),
       /* ------------------------------------------------------------------- */
@@ -275,14 +263,12 @@ static class EvtMain final :           // Event list for render thread
       { EMC_LUA_END,          nullptr }, { EMC_LUA_REINIT,       nullptr },
       { EMC_LUA_CONFIRM_EXIT, nullptr }
     }
-    /* --------------------------------------------------------------------- */
-    { }
-  /* -- End ---------------------------------------------------------------- */
-} *cEvtMain = nullptr;                 // Pointer to static class
-/* ------------------------------------------------------------------------- */
-typedef EvtMain::Args   EvtMainArgs;   // Shortcut to EvtMain::Args class
-typedef EvtMain::Event  EvtMainEvent;  // Shortcut to EvtMain::Cell class
-typedef EvtMain::RegVec EvtMainRegVec; // Shortcut to EvtMain::RegVec class
+    /* -- Set global pointer to static class ------------------------------- */
+    { cEvtMain = this; }
+};/* ----------------------------------------------------------------------- */
+typedef EvtMain::EvtArgs EvtMainArgs;  // Shortcut to EvtMain::Args class
+typedef EvtMain::Event   EvtMainEvent; // Shortcut to EvtMain::Cell class
+typedef EvtMain::RegVec  EvtMainRegVec;// Shortcut to EvtMain::RegVec class
 /* ------------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */

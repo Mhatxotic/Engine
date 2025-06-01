@@ -45,21 +45,23 @@ static CVarReturn LuaCodeSetCache(const LuaCache lcVal)
 static CVarReturn LuaCodeCheckVersion(const string &strVal, string &strNVal)
 { // Get current LUA version
   const string_view &svVersion = cCredits->CreditGetItem(CL_LUA).GetVersion();
-  // Is version the same? Then we're good
-  if(strVal == svVersion) return ACCEPT;
-  // Log that the LUA version is different
-  cLog->LogWarningExSafe("LuaCode detected LUA version mismatch ($ != $) so "
-    "the code cache will be flushed.", strVal, svVersion);
-  // Clear the cache and if succeeded?
-  if(cSql->FlushTable(cSql->strvLCTable) == SQLITE_OK)
-  { // Write success in the console
-    cLog->LogWarningSafe("LuaCode flushed the LUA code cache successfully!");
-    // Update cvar to the current version
-    strNVal = svVersion;
-  } // Failed? Write reason to console
-  else cLog->LogWarningExSafe("LuaCode failed to flush the LUA code cache "
-    "because $ ($)!", cSql->GetErrorStr(), cSql->GetError());
-  // Accepted
+  // Is version not the same?
+  if(strVal != svVersion)
+  { // Log that the LUA version is different
+    cLog->LogWarningExSafe("LuaCode detected LUA version mismatch ($ != $) so "
+      "the code cache will be flushed.", strVal, svVersion);
+    // Clear the cache and if succeeded?
+    if(cSql->FlushTable(cSql->strvLCTable) == SQLITE_OK)
+    { // Write success in the console
+      cLog->LogWarningSafe("LuaCode flushed the LUA code cache successfully!");
+      // Update cvar to the current version
+      strNVal = svVersion;
+      // Accepted and value modified
+      return ACCEPT_HANDLED_FORCECOMMIT;
+    } // Failed? Write reason to console
+    else cLog->LogWarningExSafe("LuaCode failed to flush the LUA code cache "
+      "because $ ($)!", cSql->GetErrorStr(), cSql->GetError());
+  } // Version not changed or problem occured
   return ACCEPT;
 }
 /* -- Callback for lua_dump ------------------------------------------------ */

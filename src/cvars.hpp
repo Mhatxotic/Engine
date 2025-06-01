@@ -12,14 +12,14 @@
 namespace ICVar {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace ICodec::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IDir::P;               using namespace IError::P;
-using namespace IHelper::P;            using namespace IJson::P;
-using namespace ILog::P;               using namespace IPSplit::P;
-using namespace ISql::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::Sqlite;
+using namespace ICommon::P;            using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace IDir::P;
+using namespace IError::P;             using namespace IHelper::P;
+using namespace IJson::P;              using namespace ILog::P;
+using namespace IPSplit::P;            using namespace ISql::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -31,7 +31,9 @@ enum CVarDefaults : unsigned int       // Flags when loaded from DB
   DC_OVERWRITE,                        // Overwrite core variables only
   DC_REFRESH                           // Wipe database completely
 }; /* ---------------------------------------------------------------------- */
-static struct CVars final :            // Start of vars class
+struct CVars;                          // Class prototype
+static CVars *cCVars = nullptr;        // Pointer to global class
+struct CVars :                         // Start of vars class
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper                   // Initialisation helper
 { /* -- Settings ----------------------------------------------------------- */
@@ -70,7 +72,7 @@ static struct CVars final :            // Start of vars class
   CVarMapIt FindVariable(const string &strVar)
     { return cvmActive.find(strVar); }
   /* ----------------------------------------------------------------------- */
-  CVarSetEnums Set(const CVarMapIt cvmiIt, const string &strValue,
+  CVarSetEnums Set(const CVarMapIt &cvmiIt, const string &strValue,
     const CVarFlagsConst cvfcFlags=PUSR,
     const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
       { return cvmiIt->second.SetValue(strValue,
@@ -167,7 +169,7 @@ static struct CVars final :            // Start of vars class
   { // Get internal iterator and return value or empty string if invalid
     const CVarMapConstIt cvmciIt{ GetInternalList()[cveId] };
     return cvmciIt != cvmActive.cend() ? cvmciIt->second.GetValue() :
-      cCommon->Blank();
+      cCommon->CommonBlank();
   }
   /* -- Return the cvar id's value as a string ----------------------------- */
   const char *GetCStrInternal(const CVarEnums cveId)
@@ -245,7 +247,7 @@ static struct CVars final :            // Start of vars class
   { // Overwrite engine variables with defaults
     cLog->LogDebugSafe("CVars forcing default engine settings...");
     cSql->Begin();
-    for(const CVarMapIt cvmiIt : GetInternalList())
+    for(const CVarMapIt &cvmiIt : GetInternalList())
       if(cvmiIt != cvmActive.end()) cSql->CVarPurge(cvmiIt->first);
     cSql->End();
     cLog->LogWarningSafe("CVars finished setting defaults.");
@@ -256,10 +258,10 @@ static struct CVars final :            // Start of vars class
   bool VarExists(const string &strVar) const
     { return cvmActive.contains(strVar); }
   /* -- Return the cvar name's value as a string --------------------------- */
-  const string &GetStr(const CVarMapConstIt cvmciIt) const
+  const string &GetStr(const CVarMapConstIt &cvmciIt) const
     { return cvmciIt->second.GetValue(); }
   /* -- Return the cvar name's default value as a string ------------------- */
-  const string &GetDefStr(const CVarMapConstIt cvmciIt) const
+  const string &GetDefStr(const CVarMapConstIt &cvmciIt) const
     { return cvmciIt->second.GetDefValue(); }
   /* -- Unregister variable by iterator ------------------------------------ */
   void UnregisterVar(const CVarMapIt &cvmiIt)
@@ -271,7 +273,7 @@ static struct CVars final :            // Start of vars class
     const string strVar{ cviRef.GetVar() };
     // If this cvar is marked as commit, force save or loaded from database?
     // Move back into the initial list so it can be saved.
-    if(cviRef.FlagIsAnyOfSet(COMMIT|OSAVEFORCE|LOADED))
+    if(cviRef.FlagIsAnyOfSet(COMMIT|LOADED))
       cvmPending.emplace(StdMove(*cvmiIt));
     // Erase iterator from list
     cvmActive.erase(cvmiIt);
@@ -369,13 +371,14 @@ static struct CVars final :            // Start of vars class
   /* -- Return last error from callback (also moves it) -------------------- */
   const string GetCBError(void) { return StdMove(strCBError); }
   /* ----------------------------------------------------------------------- */
-  const string Protect(const CVarMapConstIt cvmicIt) const
-    { return cvmicIt->second.Protect(); }
+  const string GetValueSafe(const CVarMapConstIt &cvmciIt) const
+    { return cvmciIt->second.GetValueSafe(); }
   /* ----------------------------------------------------------------------- */
-  const string Protect(const string &strVar) const
+  const string GetValueSafe(const string &strVar) const
   { // Find item and return invalid if not found
     const CVarMapConstIt cvmciIt{ FindVariableConst(strVar) };
-    return cvmciIt == cvmActive.cend() ? "<invalid>" : Protect(cvmciIt);
+    return cvmciIt == cvmActive.cend() ?
+      cCommon->CommonInvalid() : GetValueSafe(cvmciIt);
   }
   /* ----------------------------------------------------------------------- */
   size_t MarkAllEncodedVarsAsCommit(void)
@@ -431,7 +434,7 @@ static struct CVars final :            // Start of vars class
   { // Find var and return empty string or the var
     const CVarMapConstIt cvmciIt{ cvmPending.find(strKey) };
     return cvmciIt != cvmPending.cend() ?
-      cvmciIt->second.GetValue() : cCommon->Blank();
+      cvmciIt->second.GetValue() : cCommon->CommonBlank();
   }
   /* ----------------------------------------------------------------------- */
   size_t Clean(void)
@@ -648,6 +651,8 @@ static struct CVars final :            // Start of vars class
       cvmActive.size(), cvislList.size(), cSystem->GetCoreFlagsString(),
       cSystem->GetCoreFlags());
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~CVars, DeInit())
   /* -- Default constructor ------------------------------------------------ */
   explicit CVars(const CVarItemStaticList &cvislDef) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -658,11 +663,9 @@ static struct CVars final :            // Start of vars class
       { cvmPending, "unregistered" },  // Inactive cvars list
       { cvmActive,  "registered" } }}, // Active cvars list
     cvislList{ cvislDef }              // Default engine cvars list
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~CVars, DeInit())         // Save and clean-up all variables
-  /* ----------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCVars = this; }
+  /* --------------------------------------------------------------- */ public:
   CVarReturn SetDefaults(const CVarDefaults cvdVal)
   { // Compare defaults setting
     switch(cvdVal)
@@ -742,12 +745,12 @@ static struct CVars final :            // Start of vars class
         // Json entry is a boolean type?
         case Lib::RapidJson::kTrueType:
           if(SetVarOrInitial(rjvKey.GetString(),
-             cCommon->One(), cvfcFlags, cvcfcFlags))
+             cCommon->CommonOne(), cvfcFlags, cvcfcFlags))
             ++stGood; else ++stBad;
           break;
         case Lib::RapidJson::kFalseType:
           if(SetVarOrInitial(rjvKey.GetString(),
-             cCommon->Zero(), cvfcFlags, cvcfcFlags))
+             cCommon->CommonZero(), cvfcFlags, cvcfcFlags))
             ++stGood; else ++stBad;
           break;
         // Everything else is unsupported
@@ -811,12 +814,12 @@ static struct CVars final :            // Start of vars class
           // Json entry is a boolean type?
           case Lib::RapidJson::kTrueType:
             if(SetVarOrInitial(rjvKey.GetString(),
-               cCommon->One(), cvfcFlags, cvcfcFlags))
+               cCommon->CommonOne(), cvfcFlags, cvcfcFlags))
               ++stGood; else ++stBad;
             break;
           case Lib::RapidJson::kFalseType:
             if(SetVarOrInitial(rjvKey.GetString(),
-               cCommon->Zero(), cvfcFlags, cvcfcFlags))
+               cCommon->CommonZero(), cvfcFlags, cvcfcFlags))
               ++stGood; else ++stBad;
             break;
           // Everything else is unsupported
@@ -838,9 +841,7 @@ static struct CVars final :            // Start of vars class
     // Carry on parsing cvars
     return ACCEPT_HANDLED;
   }
-  /* ----------------------------------------------------------------------- */
-} *cCVars = nullptr;                   // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

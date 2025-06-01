@@ -9,6 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IDir {                       // Start of private module namespace
 /* ------------------------------------------------------------------------- */
+using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IIdent::P;
 using namespace IPSplit::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace IToken::P;
@@ -24,44 +25,91 @@ enum ValidResult : unsigned int        // Return values for ValidName()
   VR_NODRIVE,                          // 04: Drive letter not allowed
   VR_INVDRIVE,                         // 05: Invalid drive letter
   VR_INVALID,                          // 06: Invalid trust parameter
-  VR_DPRS,                             // 07: Doubleslash or pre/suffix slash
+  VR_RESERVED,                         // 07: No reserved names
   VR_INVCHAR,                          // 08: Invalid character in part
-  VR_PARENT,                           // 09: Parent directory not allowed
-  VR_NOTRAILWS,                        // 10: No trailing whitespace
-  VR_NOLEADWS,                         // 11: No leading whitespace
-  VR_RESERVED,                         // 12: No reserved names
-  VR_EXPLODE,                          // 13: String failed to explode
+  VR_CSUBDIR,                          // 09: As above but as a a sub-dir
+  VR_CURRENT,                          // 10: Current directory not allowed
+  VR_EXPLODE,                          // 11: String failed to explode
+  VR_NOTRAILWS,                        // 12: No trailing whitespace
+  VR_NOLEADWS,                         // 13: No leading whitespace
   /* ----------------------------------------------------------------------- */
-  VR_MAX,                              // 14: Maximum number of errors
+  VR_MAX                               // 14: Maximum number of errors
 };/* ----------------------------------------------------------------------- */
 enum ValidType : unsigned int          // Types for ValidName()
 { /* ----------------------------------------------------------------------- */
-  VT_TRUSTED,                          // Trusted caller
-  VT_UNTRUSTED,                        // Untrusted caller (chroot-like)
+  VT_NOTHING,                          // 0: Absolutely no safety whatsoever
+  VT_TRUSTED,                          // 1: Trusted caller
+  VT_UNTRUSTED,                        // 2: Untrusted caller (chroot-like)
+  /* ----------------------------------------------------------------------- */
+  VT_MAX                               // 3: Maximum trust modes
 };/* ----------------------------------------------------------------------- */
-static const class DirBase final       // Members initially private
-{ /* ----------------------------------------------------------------------- */
+class DirBase;                         // Prototype to class
+static DirBase *cDirBase = nullptr;    // Pointer to global class
+class DirBase                          // Members initially private
+{ /* -- Private typedefs --------------------------------------------------- */
   typedef IdList<VR_MAX> VRList;       // List of ValidName strings typedef
+  /* -- Private variables -------------------------------------------------- */
   const VRList     vrlStrings;         // " container
+  const StrVUSet   svusReserved;       // Reserved names
+  ValidType        vtMode;             // Default safety mode
   /* -- Convert a valid result from ValidName to string ------------ */ public:
-  const string_view &VNRtoStr(const ValidResult vrId) const
+  const string_view &DirBaseVNRtoStr(const ValidResult vrId) const
     { return vrlStrings.Get(vrId); }
-  /* -- Default constructor ------------------------------------------------ */
+  /* -- Return if a name is reserved --------------------------------------- */
+  bool DirBaseIsReservedName(const string &strName) const
+    { return svusReserved.contains(strName); }
+  /* -- Return safety mode ------------------------------------------------- */
+  ValidType DirBaseGetSafetyMode(void) const { return vtMode; }
+  /* -- Default constructor ------------------------------------- */ protected:
   DirBase(void) :                      // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     vrlStrings{{                       // Init ValidNameResult strings
-      "Pathname is valid",         /*0001*/ "Empty pathname",
-      "Pathname too long",         /*0203*/ "Root directory not allowed",
-      "Drive letter not allowed",  /*0405*/ "Invalid drive letter",
-      "Invalid trust parameter",   /*0607*/ "Double-slash or pre/suffix slash",
-      "Invalid character in part", /*0809*/ "Parent directory not allowed",
-      "No trailing whitespace",    /*1011*/ "No leading whitespace",
-      "No reserved names",         /*1213*/ "Explode pathname failed",
-    }}                                 // Finished ValidNameResult strings
-    /* -- No code ---------------------------------------------------------- */
-    { }
-} /* ----------------------------------------------------------------------- */
-*cDirBase = nullptr;                   // Assigned by main function
+      "Pathname is valid",         /*0001*/ "Empty pathname denied",
+      "Pathname too long",         /*0203*/ "Root directory denied",
+      "Drive letter denied",       /*0405*/ "Invalid drive letter",
+      "Invalid trust parameter",   /*0607*/ "Reserved name denied",
+      "Invalid character in part", /*0809*/ "Current sub-directory denied",
+      "Current directory denied",  /*1011*/ "Explode pathname failed",
+      "Trailing whitespace denied",/*1213*/ "Leading whitespace denied",
+    }},                                 // Finished ValidNameResult strings
+    svusReserved{{                      // Init reserved names
+      "aux",  "auX",  "aUx",  "aUX",  "Aux",  "AuX",  "AUx",  "AUX",
+      "com1", "coM1", "cOm1", "cOM1", "Com1", "CoM1", "COm1", "COM1",
+      "com2", "coM2", "cOm2", "cOM2", "Com2", "CoM2", "COm2", "COM2",
+      "com3", "coM3", "cOm3", "cOM3", "Com3", "CoM3", "COm3", "COM3",
+      "com4", "coM4", "cOm4", "cOM4", "Com4", "CoM4", "COm4", "COM4",
+      "com5", "coM5", "cOm5", "cOM5", "Com5", "CoM5", "COm5", "COM5",
+      "com6", "coM6", "cOm6", "cOM6", "Com6", "CoM6", "COm6", "COM6",
+      "com7", "coM7", "cOm7", "cOM7", "Com7", "CoM7", "COm7", "COM7",
+      "com8", "coM8", "cOm8", "cOM8", "Com8", "CoM8", "COm8", "COM8",
+      "com9", "coM9", "cOm9", "cOM9", "Com9", "CoM9", "COm9", "COM9",
+      "con",  "coN",  "cOn",  "cON",  "Con",  "CoN",  "COn",  "CON",
+      "lpt1", "lpT1", "lPt1", "lPT1", "Lpt1", "LpT1", "LPt1", "LPT1",
+      "lpt2", "lpT2", "lPt2", "lPT2", "Lpt2", "LpT2", "LPt2", "LPT2",
+      "lpt3", "lpT3", "lPt3", "lPT3", "Lpt3", "LpT3", "LPt3", "LPT3",
+      "lpt4", "lpT4", "lPt4", "lPT4", "Lpt4", "LpT4", "LPt4", "LPT4",
+      "lpt5", "lpT5", "lPt5", "lPT5", "Lpt5", "LpT5", "LPt5", "LPT5",
+      "lpt6", "lpT6", "lPt6", "lPT6", "Lpt6", "LpT6", "LPt6", "LPT6",
+      "lpt7", "lpT7", "lPt7", "lPT7", "Lpt7", "LpT7", "LPt7", "LPT7",
+      "lpt8", "lpT8", "lPt8", "lPT8", "Lpt8", "LpT8", "LPt8", "LPT8",
+      "lpt9", "lpT9", "lPt9", "lPT9", "Lpt9", "LpT9", "LPt9", "LPT9",
+      "nul",  "nuL",  "nUl",  "nUL",  "Nul",  "NuL",  "NUl",  "NUL",
+      "prn",  "prN",  "pRn",  "pRN",  "Prn",  "PrN",  "PRn",  "PRN",
+      cCommon->CommonTwoPeriod()
+    }},
+    vtMode(VT_UNTRUSTED)               // Default mode is 'untrusted' access
+    /* -- Set pointer to global class -------------------------------------- */
+    { cDirBase = this; }
+  /* -- Default safety mode ---------------------------------------- */ public:
+  CVarReturn SetDefaultSafetyMode(const ValidType vtNMode)
+  { // Deny if invalid mode
+    if(vtNMode >= VT_MAX) return DENY;
+    // Set new safety mode
+    vtMode = vtNMode;
+    // Accepted new setting
+    return ACCEPT;
+  }
+};/* ----------------------------------------------------------------------- */
 /* -- Check that path part character is valid ------------------------------ */
 static bool DirIsValidPathPartCharacter(const char cChar)
 { // Test character
@@ -86,93 +134,132 @@ static bool DirIsValidPathPartCharacters(const string &strPart,
 static bool DirIsValidPathPartCharacters(const string &strPart)
   { return !any_of(strPart.cbegin(), strPart.cend(),
       DirIsValidPathPartCharactersCallback); }
+/* -- Valid Windows drive letter ------------------------------------------- */
+static bool DirIsValidDrive(const char cFirst)
+  { return (cFirst >= 'A' && cFirst <= 'Z') ||
+           (cFirst >= 'a' && cFirst <= 'z'); }
 /* -- Check that filename doesn't leave the exe directory ------------------ */
-static ValidResult DirValidName(const string &strName,
-  const ValidType vtId=VT_UNTRUSTED)
+static ValidResult DirValidName(const string &strName, const ValidType vtId)
 { // Failed if empty string
   if(strName.empty()) return VR_EMPTY;
   // Failed if the length is longer than the maximum allowed path.
   if(strName.length() > _MAX_PATH) return VR_TOOLONG;
-  // If using windows
+  // If using windows? Replace backslashes with forward slashes.
+  const string &strChosen =
 #if defined(WINDOWS)
-  // Failed if the first or last character is a space
-  if(strName.front() <= 32) return VR_NOLEADWS;
-  if(strName.back() <= 32) return VR_NOTRAILWS;
-  // Replace backslashes with forward slashes on Windows
-  const string &strChosen = PSplitBackToForwardSlashes(strName);
+    PSplitBackToForwardSlashes(strName);
 #else
-  const string &strChosen = strName;
+    strName;
 #endif
   // Which type
   switch(vtId)
-  { // Full sandbox. Do not leave .exe directory
+  { // Full sandbox. Do not leave .exe directory.
     case VT_UNTRUSTED:
-      // Root directory not allowed
-      if(strChosen.front() == cCommon->CFSlash()) return VR_NOROOT;
-      // Get parts from pathname and return if empty.
-      if(const Token tParts{ strChosen, cCommon->FSlash() })
-      { // Get first iterator and string.
-        StrVectorConstIt svciPart{ tParts.cbegin() };
-        const string &strFirst = tParts.front();
-        // If we have a length of 2 or more?
-        if(strFirst.length() > 1)
-        { // No parent directory or drive letter allowed
-          if(strFirst == cCommon->TwoPeriod()) return VR_PARENT;
-          if(strFirst[1] == ':') return VR_NODRIVE;
-        } // Test all the characters in the first string
-        if(!DirIsValidPathPartCharacters(strFirst)) return VR_INVCHAR;
-        // This check will allow trailing forwardslashes
-        const StrVectorConstIt svciEnd{ tParts.cend() -
-          (tParts.size() >= 2 && tParts.rbegin()->empty() ? 1 : 0) };
-        // Check the rest of them
-        while(++svciPart != svciEnd)
-        { // Get part
-          const string &strPart = *svciPart;
-          // Not allowed to be empty or parent directory
-          if(strPart.empty()) return VR_DPRS;
-          if(strPart == cCommon->TwoPeriod()) return VR_PARENT;
-          // Failed first character is an invalid character.
-          if(!DirIsValidPathPartCharacters(strPart)) return VR_INVCHAR;
-        } // Success
-        return VR_OK;
-      } // Tokeniser failed (should be impossible)
-      return VR_EXPLODE;
-    // Trusted filename?
+    { // Failed if the first or last character is a space
+      if(strName.front() <= ' ') return VR_NOLEADWS;
+      if(strName.back() <= ' ') return VR_NOTRAILWS;
+      // Root directory not allowed.
+      if(strChosen.front() == '/') return VR_NOROOT;
+      // Path length is one byte?
+      if(strChosen.length() == 1)
+      { // Disallow current directory if it is a dot.
+        if(strChosen.front() == '.') return VR_CURRENT;
+      } // Disallow Windows drive.
+      else if(strChosen[1] == ':')
+        return DirIsValidDrive(strChosen.front()) ? VR_NODRIVE : VR_INVDRIVE;
+      // Get parts from pathname and compare size
+      const Token tParts{ strChosen, cCommon->CommonFSlash() };
+      switch(tParts.size())
+      { // Tokeniser failed (should be impossible)
+        case 0: return VR_EXPLODE;
+        // Two parts or more? (fall through to case 1 underneath)
+        default:
+        { // Skip trailing forward-slash if needed
+          StrVectorConstIt svciPart{ tParts.cend() -
+            (tParts.rbegin()->empty() ? 2 : 1) };
+          // Enumerate parts from chosen end to start plus one.
+          while(svciPart != tParts.cbegin())
+          { // Get part string
+            const string &strPart = *svciPart;
+            // Test the length of the first path part
+            switch(strPart.length())
+            { // No length? Return empty
+              case 0: return VR_EMPTY;
+              // One character. No dot allowed.
+              case 1: if(strPart.front() == '.') return VR_CSUBDIR; break;
+              // Two or three characters or more? Checks are fine
+              default: break;
+            } // Failed first character is an invalid character.
+            if(!DirIsValidPathPartCharacters(strPart)) return VR_INVCHAR;
+            // Check for reserved names.
+            if(cDirBase->DirBaseIsReservedName(strPart)) return VR_RESERVED;
+            // Go backwards
+            --svciPart;
+          } // Fall through to check first string.
+          [[fallthrough]];
+        } // One part?
+        case 1:
+        { // Get first string
+          const string &strFirst = tParts.front();
+          // Test all the characters in the first string
+          if(!DirIsValidPathPartCharacters(strFirst)) return VR_INVCHAR;
+          // Check for reserved names. Only Windows has reserved names but
+          // we'll prevent them on MacOS and Linux too to prevent problems
+          // being passed over to Windows.
+          if(cDirBase->DirBaseIsReservedName(strFirst)) return VR_RESERVED;
+          // Success if the first entry in the path isn't a dot
+          return strFirst.length() != 1 ||
+                 strFirst.front() != '.' ? VR_OK : VR_CURRENT;
+        }
+      }
+    } // Trusted filename?
     case VT_TRUSTED:
-      // Get parts from pathname and if was just a root directory, it's fine
-      if(const Token tParts{ strChosen, cCommon->FSlash() })
-      { // Get first string item and iterator.
-        StrVectorConstIt svciPart{ tParts.cbegin() };
-        const string &strFirst = tParts.front();
-        // Check drive letter is valid
-        if(strFirst.length() > 1 && strFirst[1] == ':')
-        { // Get first character and make sure the drive letter is valid
-          const char cFirst = strFirst.front();
-          if((cFirst < 'A' || cFirst > 'Z') &&
-             (cFirst < 'a' || cFirst > 'z')) return VR_INVDRIVE;
-          // Test rest of characters from the second character
-          if(!DirIsValidPathPartCharacters(strFirst, 2)) return VR_INVCHAR;
-        } // Test all of the characters
-        else if(!DirIsValidPathPartCharacters(strFirst)) return VR_INVCHAR;
-        // This check will allow trailing forwardslashes
-        const StrVectorConstIt svciEnd{ tParts.cend() -
-          (tParts.size() >= 2 && tParts.rbegin()->empty() ? 1 : 0) };
-        // Check the rest of them
-        while(++svciPart != svciEnd)
-        { // Get part
-          const string &strPart = *svciPart;
-          // Not allowed to be empty or parent directory
-          if(strPart.empty()) return VR_DPRS;
-          // Failed first character is an invalid character.
-          if(!DirIsValidPathPartCharacters(strPart)) return VR_INVCHAR;
+    { // Get parts from pathname and compare size
+      const Token tParts{ strChosen, cCommon->CommonFSlash() };
+      switch(tParts.size())
+      { // Tokeniser failed (should be impossible)
+        case 0: return VR_EXPLODE;
+        // Two parts or more? (fall through to case 1 underneath)
+        default:
+        { // Skip trailing forward-slash if needed
+          StrVectorConstIt svciPart{ tParts.cend() -
+            (tParts.rbegin()->empty() ? 2 : 1) };
+          // Enumerate parts from chosen end to start plus one.
+          while(svciPart != tParts.cbegin())
+          { // Get part string
+            const string &strPart = *svciPart;
+            // Not allowed to be empty or parent directory
+            if(strPart.empty()) return VR_EMPTY;
+            // Failed first character is an invalid character.
+            if(!DirIsValidPathPartCharacters(strPart)) return VR_INVCHAR;
+            // Go backwards
+            --svciPart;
+          } // Fall through to check first string.
+          [[fallthrough]];
+        } // One part?
+        case 1:
+        { // Get first string
+          const string &strFirst = tParts.front();
+          // Check drive letter is valid
+          if(strFirst.length() > 1 && strFirst[1] == ':')
+          { // Get first character and make sure the drive letter is valid
+            if(!DirIsValidDrive(strFirst.front())) return VR_INVDRIVE;
+            // Test rest of characters from the second character
+            if(!DirIsValidPathPartCharacters(strFirst, 2)) return VR_INVCHAR;
+          } // Test all of the characters
+          else if(!DirIsValidPathPartCharacters(strFirst)) return VR_INVCHAR;
         } // Success
         return VR_OK;
-      } // Tokeniser failed (should be impossible)
-      return VR_EXPLODE;
+      }
+    } // Disabled? No checks whatsoever
+    case VT_NOTHING: return VR_OK;
     // Anything else invalid
     default: return VR_INVALID;
   }
 }
+/* -- Check that filename doesn't leave the exe directory ------------------ */
+static ValidResult DirValidName(const string &strName)
+  { return DirValidName(strName, cDirBase->DirBaseGetSafetyMode()); }
 /* -- Public typedefs ------------------------------------------------------ */
 class DirItem                          // File information structure
 { /* ----------------------------------------------------------------------- */
@@ -318,9 +405,11 @@ class DirCore :                        // System specific implementation
   /* -- Constructor for WIN32 system --------------------------------------- */
   explicit DirCore(const string &strDir) :
     /* -- Initialisers ----------------------------------------------------- */
-    iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ? "*" :
-      StrAppend(StrTrimSuffix(strDir, cCommon->CFSlash()),
-        cCommon->CFSlash(), "*")).c_str(), &wfData)),
+    iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ?
+      cCommon->CommonAsterisk() :
+        StrAppend(StrTrimSuffix(strDir, '/'), '/',
+          cCommon->CommonAsterisk())).c_str(),
+      &wfData)),
     bMore(iHandle != -1)
     /* -- Process file if there are more ----------------------------------- */
     { if(bMore) ProcessItem(); }
@@ -356,7 +445,7 @@ class DirCore :                        // System specific implementation
     // Data for stat
     struct stat sfssData;
     // Get information about the filename
-    if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData) == -1)
+    if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData))
     { // Not a directory (unknown)
       bIsDir = false;
       // Set the file data as blank
@@ -382,7 +471,7 @@ class DirCore :                        // System specific implementation
       // Set filename
       strFile = dePtr->d_name;
       // Get information about the filename
-      if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData) == -1)
+      if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData))
       { // Not a directory (unknown)
         bIsDir = false;
         // Set the file data as blank
@@ -406,10 +495,9 @@ class DirCore :                        // System specific implementation
     /* -- Initialisers ----------------------------------------------------- */
     strPrefix{ StrAppend(              // Initialise string prefix
       strDir.empty() ?                 // If requested directory is empty?
-        cCommon->Period() :            // Set to scan current directory
-        StrTrimSuffix(strDir,          // Trim forward-slash trailing...
-          cCommon->CFSlash()),         // ...characters from directory
-      cCommon->FSlash()) },            // Add our own slash at the end
+        cCommon->CommonPeriod() :      // Set to scan current directory
+        StrTrimSuffix(strDir, '/'),    // Trim forward-slash trailing slashes
+      cCommon->CommonFSlash()) },      // Add our own slash at the end
     dupHandle{                         // Initialise directory handle
       opendir(strPrefix.c_str()) }     // Open the directory and store handle
     /* -- MacOS initialisers ----------------------------------------------- */
@@ -436,11 +524,11 @@ class Dir :                            // Directory information class
   /* -- Remove current and parent directory entries ------------------------ */
   static void RemoveParentAndCurrentDirectory(DirEntMap &dfemMap)
   { // Remove "." and ".." current directory entries
-    RemoveEntry(dfemMap, cCommon->Period());
-    RemoveEntry(dfemMap, cCommon->TwoPeriod());
+    RemoveEntry(dfemMap, cCommon->CommonPeriod());
+    RemoveEntry(dfemMap, cCommon->CommonTwoPeriod());
   }
   /* -- Scan with no match checking ---------------------------------------- */
-  static DirFile ScanDir(const string &strDir=cCommon->Blank())
+  static DirFile ScanDir(const string &strDir=cCommon->CommonBlank())
   { // Directory and file list
     DirEntMap demNDirs, demNFiles;
     // Load up the specification and return if failed
@@ -529,8 +617,10 @@ static bool DirSetCWD(const string &strDirectory)
   // Get first character because it needs casting
   const unsigned char &ucD = strDirectory.front();
   // Set drive first if specified
-  if(strDirectory.length() >= 3 && strDirectory[1] == ':' &&
-     (strDirectory[2] == '\\' || strDirectory[2] != cCommon->CFSlash()) &&
+  if(strDirectory.length() >= 3 &&
+     strDirectory[1] == ':' &&
+     (strDirectory[2] == '\\' ||
+      strDirectory[2] != '/') &&
        _chdrive((StdToUpper(ucD) - 'A') + 1) < 0) return false;
 #endif
   // Set current directory and return false if there is a problem
@@ -546,7 +636,7 @@ static bool DirMkDirEx(const string &strDir)
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
   if(const Token tParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->FSlash() })
+    cCommon->CommonFSlash() })
   { // This will be the string that wile sent to mkdir multiple times
     // gradually.
     ostringstream osS; osS << psParts.strDrive;
@@ -565,7 +655,7 @@ static bool DirMkDirEx(const string &strDir)
                            svI != tParts.cend();
                          ++svI)
       { // Append next directory
-        osS << cCommon->CFSlash() << StdMove(*svI);
+        osS << '/' << StdMove(*svI);
         // Make the directory and if failed and it doesn't exist return error
         if(!DirMkDir(osS.str()) && StdIsNotError(EEXIST)) return false;
       }
@@ -580,7 +670,7 @@ static bool DirRmDirEx(const string &strDir)
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
   Token tParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->FSlash() };
+    cCommon->CommonFSlash() };
   // Get the first item and if it is not empty?
   while(!tParts.empty())
   { // This will be the string that wile sent to mkdir multiple times
@@ -595,7 +685,7 @@ static bool DirRmDirEx(const string &strDir)
       for(StrVectorConstIt svI{ next(tParts.begin(), 1) };
                            svI != tParts.end();
                          ++svI)
-        osS << cCommon->CFSlash() << *svI;
+        osS << '/' << *svI;
     // Make the directory and if failed and it doesn't exist return error
     if(!DirRmDir(osS.str()) && StdIsNotError(EEXIST)) return false;
     // Remove the last item
@@ -655,28 +745,28 @@ static void DirVerifyFileNameIsValid(const string &strFile)
   if(const ValidResult vrId = DirValidName(strFile))
     XC("Filename is invalid!",
        "File",     strFile,
-       "Reason",   cDirBase->VNRtoStr(vrId),
+       "Reason",   cDirBase->DirBaseVNRtoStr(vrId),
        "ReasonId", vrId);
 }
-/* ------------------------------------------------------------------------- */
+/* -- Directory saver/restorer class --------------------------------------- */
 class DirSaver
-{ /* ----------------------------------------------------------------------- */
+{ /* -- Private variables -------------------------------------------------- */
   const string strCWD;                 // Saved current directory
-  /* --------------------------------------------------------------- */ public:
+  /* -- Constructor to set directory ------------------------------- */ public:
   explicit DirSaver(const string &strNWD) :
-    /* --------------------------------------------------------------------- */
+    /* -- Initialisers ----------------------------------------------------- */
     strCWD{ DirGetCWD() }              // Save current working directory
-    /* --------------------------------------------------------------------- */
+    /* -- Set new directory ------------------------------------------------ */
     { DirSetCWD(strNWD); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Default constructor ------------------------------------------------ */
   DirSaver(void) :                     // Save current working directory
-    /* --------------------------------------------------------------------- */
-    strCWD{ DirGetCWD() }
-    /* --------------------------------------------------------------------- */
+    /* -- Initialisers ----------------------------------------------------- */
+    strCWD{ DirGetCWD() }              // Initialise current working directory
+    /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
+  /* -- Destructor --------------------------------------------------------- */
   ~DirSaver(void) noexcept(false)
-    /* --------------------------------------------------------------------- */
+    /* -- Restore current working directory -------------------------------- */
     { DirSetCWD(strCWD); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

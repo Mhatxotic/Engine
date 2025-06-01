@@ -16,7 +16,9 @@ using namespace Lib::FreeType;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Freetype core class -------------------------------------------------- */
-static class FreeType final :          // Members initially private
+class FreeType;                        // Class prototype
+static FreeType *cFreeType = nullptr;  // Pointer to global class
+class FreeType :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   private mutex                        // Instance protection
 { /* -- Private variables -------------------------------------------------- */
@@ -91,7 +93,9 @@ static class FreeType final :          // Members initially private
   }
   /* ----------------------------------------------------------------------- */
   void DeInit(void) { if(DoDeInit()) ftlContext = nullptr; }
-  /* ----------------------------------------------------------------------- */
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~FreeType, DoDeInit())
+  /* -- Default constructor ------------------------------------------------ */
   FreeType(void) : ftlContext(nullptr), ftmrAlloc{ this,
     [](FT_Memory, long lBytes)->void*
       { return StdAlloc<void>(lBytes); },
@@ -99,12 +103,10 @@ static class FreeType final :          // Members initially private
       { StdFree(vpAddress); },
     [](FT_Memory, long, long lBytes, void*const vpAddress)->void*
       { return StdReAlloc(vpAddress, lBytes); }
-  } { }
-  /* ----------------------------------------------------------------------- */
-  DTORHELPER(~FreeType, DoDeInit())
-  /* ----------------------------------------------------------------------- */
-} *cFreeType = nullptr;                // Pointer to static class
-/* ------------------------------------------------------------------------- */
+  }
+  /* -- Set global pointer to static class --------------------------------- */
+  { cFreeType = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

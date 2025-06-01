@@ -288,6 +288,12 @@ static int StdPClose[[maybe_unused]](FILE*const fStream)
   { return pclose(fStream); }
 /* -- Wrapper for srandom() function --------------------------------------- */
 static void StdSRand(const unsigned int uiSeed) { srandom(uiSeed); }
+/* -- Wrapper for mmap function -------------------------------------------- */
+template<typename PtrType>PtrType *StdMMap(void*vpAddr,
+  const size_t stLen, const int iProtection, const int iFlags,
+  const int iDescriptor, const off_t otOffset)
+    { return reinterpret_cast<PtrType*>(Lib::OS::mmap(vpAddr, stLen,
+        iProtection, iFlags, iDescriptor, otOffset)); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Operating system check
 /* -- Some frequently used maximums ---------------------------------------- */
@@ -406,10 +412,9 @@ template<class AnyType>
 ** ## Don't put try/catch on func level. (C++ ISO/IEC JTC 1/SC 22 N 4411) ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-#define DTORHELPERBEGIN(c) c(void) noexcept(false) { try {
-#define DTORHELPEREND(c) } catch(const exception &eReason) \
-  { SysMessage(STR(c) " Shutdown Exception", eReason.what(), MB_ICONSTOP); } }
-#define DTORHELPER(c,...) DTORHELPERBEGIN(c) __VA_ARGS__; DTORHELPEREND(c)
+#define DTORHELPER(c,...) c(void) noexcept(false) { try { __VA_ARGS__; } \
+  catch(const exception &eReason) \
+    { cLog->LogWarningExSafe("(" STR(c) ") $", eReason.what()); } }
 /* == Init helper ========================================================== **
 ** ######################################################################### **
 ** ## Very useful little helper to create a class in-scope to init and    ## **

@@ -25,12 +25,13 @@
 /* ------------------------------------------------------------------------- */
 namespace IPSplit {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IStd::P;               using namespace IString::P;
+using namespace ICommon::P;            using namespace IStd::P;
+using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert back slashes to forward slashes ------------------------------ */
 static string &PSplitBackToForwardSlashes(string &strText)
-  { return StrReplace(strText, '\\', cCommon->CFSlash()); }
+  { return StrReplace(strText, '\\', '/'); }
 static const string PSplitBackToForwardSlashes(const string &strIn)
   { string strOut{ strIn }; return PSplitBackToForwardSlashes(strOut); }
 #if defined(WINDOWS)
@@ -134,8 +135,8 @@ class PathSplit :
         else strDir.resize(strlen(strDir.c_str()));
         // Finalise directory and append slash if there is not one to match how
         // Win32's splitpath works which is better really.
-        if(strDir.back() != cCommon->CFSlash())
-          strDir.append(cCommon->FSlash());
+        if(strDir.back() != '/')
+          strDir.append(cCommon->CommonFSlash());
       } // We're not interested in pointlessly prepending the current dir
       else strDir.clear();
     } // Fiailed so clear the directory name
@@ -154,7 +155,7 @@ class PathSplit :
     } // Failed so clear the filename
     else strFile.clear();
     // Prepare extension and save extension and if found?
-    const size_t stSlashPos = strFile.find_last_of(cCommon->CFSlash()),
+    const size_t stSlashPos = strFile.find_last_of('/'),
     stDotPos = StrFindCharBackwards(strFile, strFile.length() - 1,
       stSlashPos != StdNPos ? (stSlashPos + 1) : 0, '.');
     if(stDotPos != StdNPos)

@@ -126,9 +126,9 @@ LLFUNC(String, 1,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Variable:* member functions begin
-  LLRSFUNC(Boolean), LLRSFUNC(Clear),   LLRSFUNC(Default), LLRSFUNC(Destroy),
-  LLRSFUNC(Empty),   LLRSFUNC(Get),     LLRSFUNC(Id),      LLRSFUNC(Integer),
-  LLRSFUNC(Name),    LLRSFUNC(Number),  LLRSFUNC(Reset),   LLRSFUNC(String),
+  LLRSFUNC(Boolean), LLRSFUNC(Clear),  LLRSFUNC(Default), LLRSFUNC(Destroy),
+  LLRSFUNC(Empty),   LLRSFUNC(Get),    LLRSFUNC(Id),      LLRSFUNC(Integer),
+  LLRSFUNC(Name),    LLRSFUNC(Number), LLRSFUNC(Reset),   LLRSFUNC(String),
 LLRSEND                                // Variable:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -153,8 +153,15 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
 // ? the default is used. If the cvar already exists then an exception is
 // ? thrown so make sure you check for it first if do not expect this call
 // ? to garauntee success. Normally it is unless there is a memory allocation
-// ? issue. You can register an unlimited amount of variables.
-// ? See Variable.Flags to see available flags.
+// ? issue. The amount of cvars you can register is limited by the integral
+// ? value of the 'obj_cvarmax' cvar. The syntax of the callback function is
+// ? function(V:string){return RR:boolean,RV:string} where 'V' is the value
+// ? string that was requested to be set. If 'RV' is not set then 'RR' is
+// ? whether to accept (true) or deny (false) the requested change to 'V',
+// ? otherwise, if 'RV' is set to a string then the actual cvar value is
+// ? replaced by the 'RV' string and 'RR' refers to if the variable should be
+// ? force committed to disk (true) or not (false). Note that variable values
+// ? that are equal to the default value are not committed to the database.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Register, 1, AcVariable{lS}().Init(lS))
 /* ========================================================================= */
@@ -231,7 +238,6 @@ LLRSKTBEGIN(Flags)                     // Beginning of cvar register flags
   LLRSKTITEM(C,POW2),                  LLRSKTITEM(C,DEFLATE),
   LLRSKTITEM(C,ALPHA),                 LLRSKTITEM(C,FILENAME),
   LLRSKTITEM(C,NUMERIC),               LLRSKTITEM(M,TRIM),
-  LLRSKTITEM(O,SAVEFORCE),
 LLRSKTEND                              // End of cvar register status flags
 /* ========================================================================= */
 // @ Variable.Result

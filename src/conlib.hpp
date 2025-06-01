@@ -2,15 +2,21 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This module is included inside the main procedure in 'core.cpp' and ## **
-** ## handles all the default console cvars. Make sure to update the      ## **
-** ## 'ConCmdEnums' enum scope if you modify the order, remove or add     ## **
-** ## new console commands.                                               ## **
+** ## This module is included by 'core.cpp' inside the 'Core' class       ## **
+** ## constructor initialisers and thus a part of the 'E::ICore'          ## **
+** ## namespace which contains all the default console commands. Make     ## **
+** ## sure to update the 'ConCmdEnums' enum scope in 'condef.hpp' if you  ## **
+** ## modify the order, remove or add new console commands.               ## **
+** ######################################################################### **
+** ## This file is also parsed by the engine project management           ## **
+** ## utility to help create html documentation. New command descriptions ## **
+** ## start with '// !' with the cvar name and continues on each          ## **
+** ## subsequent line with '// ?' to describe the command.                ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* ========================================================================= */
-const ConCmdStaticList ccslList{{      // Default console commands list
+/* -- Built-in CVar definition struct -------------------------------------- */
+ConCmdStaticList{{
 /* ========================================================================= */
 // ! archives
 // ? Lists archive objects that are loaded into the game engine.
@@ -29,11 +35,11 @@ uint64_t uqResources = 0;
 for(const Archive*const aPtr : *cArchives)
 { // Get reference to class and
   const Archive &aRef = *aPtr;
-  sTable.DataN(aRef.CtrGet()).DataN(aRef.GetFileList().size())
-        .DataN(aRef.GetDirList().size()).DataN(aRef.GetTotal())
-        .DataN(aRef.GetInUse()).Data(aRef.IdentGet());
+  sTable.DataN(aRef.CtrGet()).DataN(aRef.ArchiveGetNumFiles())
+        .DataN(aRef.ArchiveGetNumDirs()).DataN(aRef.ArchiveGetTotal())
+        .DataN(aRef.ArchiveGetInUse()).Data(aRef.IdentGet());
   // Add to resources total
-  uqResources += aRef.GetFileList().size();
+  uqResources += aRef.ArchiveGetFileList().size();
 } // Show count
 cConsole->AddLineF("$$ and $.", sTable.Finish(),
   StrCPluraliseNum(cArchives->size(), "archive", "archives"),
@@ -48,7 +54,7 @@ cConsole->AddLineF("$$ and $.", sTable.Finish(),
 /* ------------------------------------------------------------------------- */
 // Reset the audio subsystem and print result of the reset call
 cConsole->AddLineA("Audio subsystem reset ",
-  cAudio->ReInit() ? "requested." : "failed.");
+  cAudio->AudioReInit() ? "requested." : "failed.");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'areset' function
 /* ========================================================================= */
@@ -117,10 +123,10 @@ if(!cOal->IsInitialised()) return cConsole->AddLine("Audio not initialised.");
 // Data for device output
 Statistic sTable;
 sTable.Header("ID").Header("INPUT DEVICE", false)
-      .Reserve(cAudio->GetNumCaptureDevices());
+      .Reserve(cAudio->AudioGetNumCapDevices());
 // list audio devices
 size_t stDeviceId = 0;
-for(const string &strName : cAudio->GetCTDevices())
+for(const string &strName : cAudio->AudioGetCapDevices())
   sTable.DataN(stDeviceId++).Data(strName);
 // Output devices
 cConsole->AddLineA(sTable.Finish(),
@@ -163,10 +169,10 @@ if(!cOal->IsInitialised()) return cConsole->AddLine("Audio not initialised.");
 // Data for device output
 Statistic sTable;
 sTable.Header("ID").Header("OUTPUT DEVICE", false)
-      .Reserve(cAudio->GetNumPlaybackDevices());
+      .Reserve(cAudio->AudioGetNumPbkDevices());
 // list audio devices
 size_t stDeviceId = 0;
-for(const string &strName : cAudio->GetPBDevices())
+for(const string &strName : cAudio->AudioGetPbkDevices())
   sTable.DataN(stDeviceId++).Data(strName);
 // Output devices
 cConsole->AddLineA(sTable.Finish(),
@@ -214,13 +220,13 @@ for(const Certs::X509Pair &xPair : cSockets->GetCertList())
   sTable.Data(StrFromBoolYN(CertIsExpired(xPair.second))).Data(xPair.first);
   // Split subject key/value pairs. We couldn't split the data if empty
   const ParserConst<>
-    pSubject{ CertGetSubject(xPair), cCommon->FSlash(), '=' };
+    pSubject{ CertGetSubject(xPair), cCommon->CommonFSlash(), '=' };
   if(pSubject.empty()) { sTable.Data("??").Data("<No sub>"); continue; }
   // Print country and certificate name
   const StrStrMapConstIt iC{ pSubject.find("C") }, iCN{ pSubject.find("CN") };
   sTable.Data(iC == pSubject.cend() ? "--" : CryptURLDecode(iC->second))
         .Data(iCN == pSubject.cend() ?
-          cCommon->Unspec() : CryptURLDecode(iCN->second));
+          cCommon->CommonUnspec() : CryptURLDecode(iCN->second));
 } // Print output and number of root certificates listed
 cConsole->AddLineA(sTable.Finish(),
   StrCPluraliseNum(cSockets->GetCertListSize(),
@@ -234,7 +240,7 @@ cConsole->AddLineA(sTable.Finish(),
 { "cla", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get list of environment variables
-const StrVector &svArgs = cCmdLine->GetArgList();
+const StrVector &svArgs = cCmdLine->CmdLineGetArgList();
 // If parameter was specified?
 if(aArgs.size() > 1)
 { // Convert parmeter to number
@@ -282,7 +288,7 @@ cConsole->Flush();
 // Build commands list and if commands were matched? Print them all
 string strMatched;
 if(const size_t stMatched = CommandsBuildList(cConsole->GetCmdsList(),
-     aArgs.size() > 1 ? aArgs[1] : cCommon->Blank(), strMatched))
+     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
   cConsole->AddLineF("$:$.", StrCPluraliseNum(stMatched,
     "matching command", "matching commands"), strMatched);
 // No commands matched
@@ -292,7 +298,7 @@ else cConsole->AddLineF("No match from $.",
 } },                                   // End of 'cmds' function
 /* ========================================================================= */
 // ! con
-// ? No explanation yet.
+// ? Dump console information. For reference only.
 /* ========================================================================= */
 { "con", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -316,7 +322,7 @@ cConsole->AddLineF("Console flags are currently 0x$$$ ($).\n"
 } },                                   // End of 'con' function
 /* ========================================================================= */
 // ! conlog
-// ? No explanation yet.
+// ? Dumps the entire console backlog to log.
 /* ========================================================================= */
 { "conlog", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -327,7 +333,7 @@ cConsole->AddLineA(StrCPluraliseNum(cConsole->ToLog(), "line", "lines"),
 } },                                   // End of 'conlog' function
 /* ========================================================================= */
 // ! cpu
-// ? No explanation yet.
+// ? Displays information about the processor and how the engine is using it.
 /* ========================================================================= */
 { "cpu", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -354,7 +360,9 @@ cConsole->AddLineF(
 } },                                   // End of 'cpu' function
 /* ========================================================================= */
 // ! crash
-// ? No explanation yet.
+// ? Simulates a crash by calling abort() also creating a crash log. Only used
+// ? to test the crash handling routines. All current unsaved changes will be
+// ? permanently lost. You have been warned!
 /* ========================================================================= */
 { "crash", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -363,7 +371,15 @@ System::CriticalHandler("Requested operation");
 } },                                   // End of 'crash' function
 /* ========================================================================= */
 // ! credits
-// ? No explanation yet.
+// ? Shows information about all the contributing libraries to the
+// ? engine. Specifying the command without an id number shows the list of
+// ? contributors. Specify the id number to show information about that
+// ? its accompanying license. Id 0 is always information about the
+// ? engine. Data is statically stored and compressed using a 'Codec' class
+// ? object inside the executable. The static compressed data is defined as
+// ? code inside the 'license.hpp' header file and automatically generated by
+// ? the Mhatxotic Engine Project Management Utility parsing all the
+// ? 'licenses/*.txt' files.
 /* ========================================================================= */
 { "credits", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -382,7 +398,7 @@ sTable.Header("ID").Header("NAME", false).Header("VERSION")
 for(const CreditLib &clRef : cCredits->CreditGetLibList())
   sTable.DataN(clRef.GetID()).Data(clRef.GetName()).Data(clRef.GetVersion())
         .DataA(clRef.IsCopyright() ?
-    "\xC2\xA9 " : cCommon->Blank(), clRef.GetAuthor());
+    "\xC2\xA9 " : cCommon->CommonBlank(), clRef.GetAuthor());
 // Show number of libs
 cConsole->AddLineA(sTable.Finish(),
   StrCPluraliseNum(cCredits->CreditGetItemCount(),
@@ -391,17 +407,21 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'credits' function
 /* ========================================================================= */
 // ! cvars
-// ? No explanation yet.
+// ? Disables all the user configurable variables. You can add a 'prefix'
+// ? argument to match the first part of the variable. Type the full variable
+// ? name to show all the internal data about the variable. Do be careful when
+// ? using this command when sharing desktops as this reveal the value even
+// ? if the variable is set to 'confidential'.
 /* ========================================================================= */
 { "cvars", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(VariablesMakeList(cCVars->GetVarList(),
-  aArgs.size() > 1 ? aArgs[1] : cCommon->Blank()));
+  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvars' function
 /* ========================================================================= */
 // ! cvclr
-// ? No explanation yet.
+// ? Purges all currently unrecognised orphan cvars from the database.
 /* ========================================================================= */
 { "cvclr", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -411,7 +431,7 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->Clean(),
 } },                                   // End of 'cvclr' function
 /* ========================================================================= */
 // ! cvload
-// ? No explanation yet.
+// ? Replaces the current variable with values from the database.
 /* ========================================================================= */
 { "cvload", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -421,7 +441,12 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->LoadFromDatabase(),
 } },                                   // End of 'cvload' function
 /* ========================================================================= */
 // ! cvnpk
-// ? No explanation yet.
+// ? This function creates a new private key for variables marked as
+// ? encrypted using AES128. This is not normally a destructive operation as
+// ? all variables are marked to be recommited to the database so encrypted
+// ? variables are re-encrypted with the new private key on commit time. If you
+// ? use the private key for own purposes then all data using the old private
+// ? key will 1destroy all encrypted data using it.
 /* ========================================================================= */
 { "cvnpk", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -435,17 +460,19 @@ else cConsole->AddLine("Failed to create new private key!");
 } },                                   // End of 'cvnpk' function
 /* ========================================================================= */
 // ! cvpend
-// ? No explanation yet.
+// ? Show pending variables. These are variables that were committed to the
+// ? database that have not been registered by LUA. When a variable is
+// ? unregistered then the variable is placed back in this pending list.
 /* ========================================================================= */
 { "cvpend", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(VariablesMakeList(cCVars->GetInitialVarList(),
-  aArgs.size() > 1 ? aArgs[1] : cCommon->Blank()));
+  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvpend' function
 /* ========================================================================= */
 // ! cvsave
-// ? No explanation yet.
+// ? Commit all unsaved variables to the SQLite database in volatile storage.
 /* ========================================================================= */
 { "cvsave", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -455,20 +482,24 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->Save(), "cvar", "cvars"),
 } },                                   // End of 'cvsave' function
 /* ========================================================================= */
 // ! dir
-// ? No explanation yet.
+// ? Shows all the files in the current or specified directory. If the file is
+// ? on disk then the file shows as <DISK> but if the file is from an archive
+// ? that archive filename and its entry ID number is displayed instead.
 /* ========================================================================= */
 { "dir", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Make and checkfilename
-const string &strVal = aArgs.size() > 1 ? aArgs[1] : ".";
-const ValidResult vrResult = DirValidName(strVal);
-if(vrResult != VR_OK)
-  return cConsole->AddLineF("Cannot check directory '$': $!",
-    strVal, cDirBase->VNRtoStr(vrResult));
-// Enumerate local directories on disk
+const string &strVal = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
+switch(const ValidResult vrResult = DirValidName(strVal))
+{ // Continue if valid directory or current directory
+  case VR_CURRENT: case VR_OK: break;
+  // Error if anything else
+  default: return cConsole->AddLineF("Cannot check directory '$': $!",
+    strVal, cDirBase->DirBaseVNRtoStr(vrResult));
+} // Enumerate local directories on disk
 const Dir dPath{ StdMove(strVal) };
 // Set directory and get directories and files
-const string &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->Blank();
+const string &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank();
 // Directory data we are enumerating
 struct Item { const uint64_t uqSize;
               const unsigned int uiId;
@@ -483,29 +514,28 @@ for(const Archive*const aPtr : *cArchives)
 { // Get reference to class
   const Archive &aRef = *aPtr;
   // Goto next archive if directory specified and is not found
-  const StrUIntMap &suimDirs = aRef.GetDirList();
+  const StrUIntMap &suimDirs = aRef.ArchiveGetDirList();
   // Enumerate directories
   for(const StrUIntMapPair &suimpPair : suimDirs)
   { // Skip directory if start of directory does not match
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
     string strName{ StrTrim(
-      suimpPair.first.substr(strDir.length()), cCommon->CFSlash()) };
-    if(strName.find(cCommon->CFSlash()) != StdNPos) continue;
+      suimpPair.first.substr(strDir.length()), '/') };
+    if(strName.find('/') != StdNPos) continue;
     // Add to directory list and increment directory count
     silDirs.insert({ StdMove(strName),
       { StdMaxUInt64, suimpPair.second, aRef.IdentGet() } });
   } // Enumerate all files in archive
-  const StrUIntMap &suimFiles = aRef.GetFileList();
+  const StrUIntMap &suimFiles = aRef.ArchiveGetFileList();
   for(const StrUIntMapPair &suimpPair : suimFiles)
   { // Skip file if start of directory does not match
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    string strName{ StrTrim(
-      suimpPair.first.substr(strDir.length()), cCommon->CFSlash()) };
-    if(strName.find(cCommon->CFSlash()) != StdNPos) continue;
+    string strName{ StrTrim(suimpPair.first.substr(strDir.length()), '/') };
+    if(strName.find('/') != StdNPos) continue;
     // Add to file list and increment total bytes and file count
-    const uint64_t uqSize = aRef.GetSize(suimpPair.second);
+    const uint64_t uqSize = aRef.ArchiveGetSize(suimpPair.second);
     silFiles.insert({ StdMove(strName),
       { uqSize, suimpPair.second, aRef.IdentGet() } });
   }
@@ -565,12 +595,12 @@ cConsole->AddLineF("$$ and $ totalling $ ($) in $.",
 } },                                   // End of 'dir' function
 /* ========================================================================= */
 // ! env
-// ? No explanation yet.
+// ? Show all operating system environment variables at process start.
 /* ========================================================================= */
 { "env", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get list of environment variables
-const StrStrMap &ssmEnv = cCmdLine->GetEnvList();
+const StrStrMap &ssmEnv = cCmdLine->CmdLineGetEnvList();
 // If parameter was specified?
 if(aArgs.size() > 1)
 { // Get parameter name and find it
@@ -593,7 +623,7 @@ cConsole->AddLineA(sTable.Finish(), StrCPluraliseNum(ssmEnv.size(),
 } },                                   // End of 'env' function
 /* ========================================================================= */
 // ! events
-// ? No explanation yet.
+// ? Shows the current event queue. This should always be empty.
 /* ========================================================================= */
 { "events", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -605,7 +635,8 @@ cConsole->AddLineF("$ and $.",
 } },                                   // End of 'events' function
 /* ========================================================================= */
 // ! fbos
-// ? No explanation yet.
+// ? Shows all created OpenGL frame buffer 'Fbo' object classes created by LUA
+// ? including classes used internally by the engine.
 /* ========================================================================= */
 { "fbos", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -654,7 +685,7 @@ cConsole->AddLineF("$$ totalling $ and $.", sTable.Finish(),
 } },                                   // End of 'fbos' function
 /* ========================================================================= */
 // ! files
-// ? No explanation yet.
+// ? Shows all created 'File' objects created by LUA.
 /* ========================================================================= */
 { "files", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -680,7 +711,9 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'files' function
 /* ========================================================================= */
 // ! find
-// ? No explanation yet.
+// ? Finds the specified text in the console log, the log is scrolled to the
+// ? position of the occurrence BEGINNING FROM the last log entry. Repeat the
+// ? same command to continue the search for the next occurrence.
 /* ========================================================================= */
 { "find", 2, 0, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -690,7 +723,8 @@ cConsole->FindText(StrImplode(aArgs, 1));
 } },                                   // End of 'find' function
 /* ========================================================================= */
 // ! fonts
-// ? No explanation yet.
+// ? Shows all created OpenGL 'Font' object classes created by LUA including
+// ? classes internally used by the engine.
 /* ========================================================================= */
 { "fonts", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -724,7 +758,8 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'fonts' function
 /* ========================================================================= */
 // ! ftfs
-// ? No explanation yet.
+// ? Shows all created Freetype font 'Ftf' object classes created by LUA
+// ? including classes internally used by the engine.
 /* ========================================================================= */
 { "ftfs", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -751,7 +786,7 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'ftfs' function
 /* ========================================================================= */
 // ! gpu
-// ? No explanation yet.
+// ? Shows live information about the OpenGL rendering context.
 /* ========================================================================= */
 { "gpu", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -771,7 +806,7 @@ cConsole->AddLineF(
   cOgl->FlagIsSet(GFL_HAVEMEM) ?
     StrFormat("Memory: $ mBytes ($ mBytes available).\n",
       cOgl->GetVRAMTotal() / 1048576, cOgl->GetVRAMFree() / 1048576) :
-    cCommon->Blank(),
+    cCommon->CommonBlank(),
   cInput->DimGetWidth(), cInput->DimGetHeight(),
     StrFromRatio(cInput->DimGetWidth(), cInput->DimGetHeight()),
     cDisplay->GetWindowPosX(), cDisplay->GetWindowPosY(),
@@ -802,7 +837,8 @@ cConsole->AddLineF(
 } },                                   // End of 'gpu' function
 /* ========================================================================= */
 // ! images
-// ? No explanation yet.
+// ? Shows all created 'Image' object classes created by LUA including classes
+// ? internally used by the engine.
 /* ========================================================================= */
 { "images", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -864,7 +900,7 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'images' function
 /* ========================================================================= */
 // ! imgfmts
-// ? No explanation yet.
+// ? Shows all the supported image codec formats supported by the engine.
 /* ========================================================================= */
 { "imgfmts", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -886,7 +922,7 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'imgfmts' function
 /* ========================================================================= */
 // ! input
-// ? No explanation yet.
+// ? Displays live game controller information.
 /* ========================================================================= */
 { "input", 1, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -948,17 +984,15 @@ sTable.Header("ID").Header("FL").Header("AX").Header("BT")
 // For each joystick
 const JoyList &jlList = cInput->JoyListGetConst();
 for(const JoyInfo &jiRef : jlList)
-{ // If joystick is connected
-  if(jiRef.JoyIsDisconnected())
-  { // If joystick name was empty then ignore it. Still show disconnected ones
-    if(jiRef.IdentGet().empty()) continue;
-  } // Store data
+{ // If joystick is disconnected and joystick name was empty then ignore it.
+  if(jiRef.JoyIsDisconnected() && jiRef.IdentIsNotSet()) continue;
+  // Store joystick data in table, even if disconnected showing last data.
   sTable.DataN(jiRef.JoyGetId()).Data(StrFromEvalTokens({
     { jiRef.JoyIsGamepad(), 'G' }, { jiRef.JoyIsConnected(), 'C' }
   })).DataN(jiRef.JoyAxisListCount()).DataN(jiRef.JoyButtonListCount())
      .Data(jiRef.JoyGUID()).Data(jiRef.JoyGamePadName())
      .Data(jiRef.IdentGet());
-} // Print totals
+} // Print totals.
 cConsole->AddLineF("$$ connected ($ supported).\n"
                    "Input flags are 0x$$.",
   sTable.Finish(),
@@ -968,7 +1002,7 @@ cConsole->AddLineF("$$ connected ($ supported).\n"
 } },                                   // End of 'input' function
 /* ========================================================================= */
 // ! jsons
-// ? No explanation yet.
+// ? Shows all created 'Json' object classes created by LUA.
 /* ========================================================================= */
 { "jsons", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -980,7 +1014,7 @@ cConsole->AddLineA(StrCPluraliseNum(cJsons->size(), "json.", "jsons."));
 } },                                   // End of 'jsons' function
 /* ========================================================================= */
 // ! lcalc
-// ? No explanation yet.
+// ? Performs a simple calculation using LUA.
 /* ========================================================================= */
 { "lcalc", 2, 0, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -990,14 +1024,14 @@ cConsole->AddLine(cLua->CompileStringAndReturnResult(
 } },                                   // End of 'lcalc' function
 /* ========================================================================= */
 // ! lcmds
-// ? No explanation yet.
+// ? Shows all created 'Command' object classes created by LUA.
 /* ========================================================================= */
 { "lcmds", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Build LUA commands list and if commands were matched? Print them all
 string strMatched;
 if(const size_t stMatched = CommandsBuildList(cCommands->lcmMap,
-     aArgs.size() > 1 ? aArgs[1] : cCommon->Blank(), strMatched))
+     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
   cConsole->AddLineF("$:$.", StrCPluraliseNum(stMatched,
     "matching LUA command", "matching LUA commands"), strMatched);
 // No LUA commands matched
@@ -1008,7 +1042,10 @@ else cConsole->AddLineF("No match from $.",
 } },                                   // End of 'lcmds' function
 /* ========================================================================= */
 // ! lend
-// ? No explanation yet.
+// ? Destroys the current sandbox and initialises a new one. Note that there
+// ? will be a delay if the 'Core.OnEnd()' callback is used. If the callback
+// ? function used is blocking this command then using the command a second
+// ? time will force destruction.
 /* ========================================================================= */
 { "lend", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1020,7 +1057,9 @@ cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_END) ?
 } },                                   // End of 'lend' function
 /* ========================================================================= */
 // ! lexec
-// ? No explanation yet.
+// ? Executes the specified LUA command in the current sandbox. You can also
+// ? use the 'return' prefix and the result will be shown when the command has
+// ? finished executing.
 /* ========================================================================= */
 { "lexec", 2, 0, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -1029,7 +1068,8 @@ cConsole->AddLine(cLua->CompileStringAndReturnResult(StrImplode(aArgs, 1)));
 } },                                   // End of 'lexec' function
 /* ========================================================================= */
 // ! lfuncs
-// ? No explanation yet.
+// ? Shows all created 'LuaFunc' object classes created by the engine. These
+// ? are for reference only and cannot be interacted with directly with LUA.
 /* ========================================================================= */
 { "lfuncs", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1060,7 +1100,8 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'lfuncs' function
 /* ========================================================================= */
 // ! lg
-// ? No explanation yet.
+// ? Prints the entire listing of variables and functions in the LUA global
+// ? registry index (otherwise known as the '_G' table).
 /* ========================================================================= */
 { "lg", 1, 0, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -1138,7 +1179,8 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'lg' function
 /* ========================================================================= */
 // ! lgc
-// ? No explanation yet.
+// ? Performs full garbage collection. The amount of memory recovered is
+// ? displayed in the command output.
 /* ========================================================================= */
 { "lgc", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1151,7 +1193,8 @@ else cConsole->AddLine("No unreferenced memory!");
 } },                                   // End of 'lgc' function
 /* ========================================================================= */
 // ! log
-// ? No explanation yet.
+// ? Dumps the entire engine log to console. If the 'log_file' cvar is changed
+// ? then there will be no command output.
 /* ========================================================================= */
 { "log", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1174,7 +1217,7 @@ cConsole->AddLineA(StrCPluraliseNum(cLog->size(), "line.", "lines."));
 } },                                   // End of 'log' function
 /* ========================================================================= */
 // ! logclr
-// ? No explanation yet.
+// ? Clears the entire backlog.
 /* ========================================================================= */
 { "logclr", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1202,7 +1245,8 @@ cLua->RequestPause(true);
 } },                                   // End of 'lpause' function
 /* ========================================================================= */
 // ! lreset
-// ? No explanation yet.
+// ? Performs an 'lreset' destroying the current sandbox, creates a new one and
+// ? then re-executes the starting script.
 /* ========================================================================= */
 { "lreset", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1214,7 +1258,8 @@ cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_REINIT) ?
 } },                                   // End of 'lreset' function
 /* ========================================================================= */
 // ! lresume
-// ? No explanation yet.
+// ? Resumes LUA sandbox execution after using 'lpause' or after an error
+// ? occurs. Only errors from asynchronous events are usually recoverable.
 /* ========================================================================= */
 { "lresume", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1223,7 +1268,10 @@ cEvtMain->Add(EMC_LUA_RESUME);
 } },                                   // End of 'lresume' function
 /* ========================================================================= */
 // ! lstack
-// ? No explanation yet.
+// ? Shows all the variables and functions in the current LUA calling stack.
+// ? This should normally be empty and if it is not then there is an internal
+// ? problem where it did not get cleaned up. Please report this if so with
+// ? reproduction steps if you can.
 /* ========================================================================= */
 { "lstack", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1248,17 +1296,17 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'lstack' function
 /* ========================================================================= */
 // ! lvars
-// ? No explanation yet.
+// ? Shows all created 'Variable' object classes created by LUA.
 /* ========================================================================= */
 { "lvars", 1, 0, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(VariablesMakeList(cVariables->lcvmMap,
-  aArgs.size() > 1 ? aArgs[1] : cCommon->Blank()));
+  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lvars' function
 /* ========================================================================= */
 // ! masks
-// ? No explanation yet.
+// ? Shows all created 'Mask' object classes created by LUA.
 /* ========================================================================= */
 { "masks", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1280,7 +1328,9 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'masks' function
 /* ========================================================================= */
 // ! mem
-// ? No explanation yet.
+// ? Shows current memory information. Memory used by LUA, SQL, the engine,
+// ? the GPU memory (with compatible nVidia or ATI/AMD devices) and the
+// ? operating system.
 /* ========================================================================= */
 { "mem", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1331,7 +1381,7 @@ cConsole->AddLine(sTable.Finish(false));
 } },                                   // End of 'mem' function
 /* ========================================================================= */
 // ! mlist
-// ? No explanation yet.
+// ? Shows all the detected monitors on the system.
 /* ========================================================================= */
 { "mlist", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1362,7 +1412,9 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'mlist' function
 /* ========================================================================= */
 // ! mods
-// ? No explanation yet.
+// ? Show all the loaded modules by the engine and operating system at
+// ? startup. On Windows, these are '.dll' files, '.dylib' files on MacOS and
+// ? '.so' shared objects on Linux.
 /* ========================================================================= */
 { "mods", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1385,13 +1437,14 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'mods' function
 /* ========================================================================= */
 // ! objs
-// ? No explanation yet.
+// ? Shows how many class objects are loaded into the engine. You can use the
+// ? 'obj_*' cvars to limit these values.
 /* ========================================================================= */
 { "objs", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Typedefs for building memory usage data
 struct MemoryUsageItem{ const string_view &strName; size_t stCount, stBytes; }
-  muiTotal{ cCommon->Blank(), 0, 0 };
+  muiTotal{ cCommon->CommonBlank(), 0, 0 };
 typedef list<MemoryUsageItem> MemoryUsageItems;
 // Helper macros so there is not as much spam
 #define MSSX(s,c) { c->IdentGet(), \
@@ -1431,7 +1484,8 @@ cConsole->AddLineF("$$ totalling $ ($).", stData.Finish(),
 } },                                   // End of 'objs' function
 /* ========================================================================= */
 // ! oglext
-// ? No explanation yet.
+// ? Specify an OpenGL extension to test if that extension is supported by your
+// ? rendering driver.
 /* ========================================================================= */
 { "oglext", 2, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -1440,12 +1494,13 @@ const string &strExtName = aArgs[1];
 cConsole->AddLineF(
   "Extension '$' is$ supported by the selected graphics device.",
     strExtName, cOgl->HaveExtension(strExtName.c_str()) ?
-      cCommon->Blank() : " NOT");
+      cCommon->CommonBlank() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'oglext' function
 /* ========================================================================= */
 // ! oglfunc
-// ? No explanation yet.
+// ? Specify an OpenGL function to test if that function is supported by your
+// ? rendering driver.
 /* ========================================================================= */
 { "oglfunc", 2, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -1454,12 +1509,12 @@ const string &strFunction = aArgs[1];
 cConsole->AddLineF(
   "Function '$' is$ supported by the selected graphics device.",
     strFunction, GlFWProcExists(strFunction.c_str()) ?
-      cCommon->Blank() : " NOT");
+      cCommon->CommonBlank() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'oglfunc' function
 /* ========================================================================= */
 // ! palettes
-// ? No explanation yet.
+// ? Shows all created 'Palette' object classes created by LUA.
 /* ========================================================================= */
 { "palettes", 2, 2, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1470,7 +1525,7 @@ cConsole->AddLineA(StrCPluraliseNum(cPalettes->size(),
 } },                                   // End of 'palettes' function
 /* ========================================================================= */
 // ! pcmfmts
-// ? No explanation yet.
+// ? Shows all the supported audio codecs by the engine.
 /* ========================================================================= */
 { "pcmfmts", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1492,7 +1547,7 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'pcmfmts' function
 /* ========================================================================= */
 // ! pcms
-// ? No explanation yet.
+// ? Shows all created 'Pcm' audio PCM data object classes created by LUA.
 /* ========================================================================= */
 { "pcms", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1523,7 +1578,8 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'pcms' function
 /* ========================================================================= */
 // ! quit
-// ? No explanation yet.
+// ? Performs an 'lend' command and then asks the engine and process to
+// ? terminate after sandbox destruction.
 /* ========================================================================= */
 { "quit", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1535,7 +1591,10 @@ cConsole->AddLine(cLua->TryEventOrForce(EMC_QUIT) ?
 } },                                   // End of 'quit' function
 /* ========================================================================= */
 // ! restart
-// ? No explanation yet.
+// ? Performs an 'lend' command and then asks the engine and process to
+// ? restart after sandbox destruction. If you specify an argument
+// ? (any argument) then the process is restarted WITHOUT the original
+// ? command-line arguments.
 /* ========================================================================= */
 { "restart", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -1551,7 +1610,7 @@ cConsole->AddLine(aArgs.size() == 2 ?
 } },                                   // End of 'restart' function
 /* ========================================================================= */
 // ! samples
-// ? No explanation yet.
+// ? Shows all created 'Sample' sound effect object classes created by LUA.
 /* ========================================================================= */
 { "samples", 1, 1, CFL_AUDIO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1572,7 +1631,9 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'samples' function
 /* ========================================================================= */
 // ! shaders
-// ? No explanation yet.
+// ? Shows all created OpenGL 'Shader' object classes internally used by the
+// ? engine. These are provided for reference only and never change, nor can be
+// ? interacted with by LUA.
 /* ========================================================================= */
 { "shaders", 1, 2, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1606,7 +1667,7 @@ cConsole->AddLineF("$$ and $.", sTable.Finish(),
 } },                                   // End of 'shaders' function
 /* ========================================================================= */
 // ! shot
-// ? No explanation yet.
+// ? Takes a screenshot and saves it to disk.
 /* ========================================================================= */
 { "shot", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1618,7 +1679,7 @@ LuaUtilRmStack(cLua->GetState(), 1);
 } },                                   // End of 'shot' function
 /* ========================================================================= */
 // ! sockets
-// ? No explanation yet.
+// ? Shows all created network 'Socket' object classes created by LUA.
 /* ========================================================================= */
 { "sockets", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -1729,7 +1790,7 @@ cConsole->AddLineF("$$ ($ connected).\n"
 } },                                   // End of 'sockets' function
 /* ========================================================================= */
 // ! sockreset
-// ? No explanation yet.
+// ? Tries to forcefully close all currently open socket connections.
 /* ========================================================================= */
 { "sockreset", 2, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -1751,7 +1812,7 @@ else cConsole->AddLineF("Connection $ $ closed.",
 } },                                   // End of 'sockreset' function
 /* ========================================================================= */
 // ! sources
-// ? No explanation yet.
+// ? Shows all created audio 'Source' object classes created by LUA.
 /* ========================================================================= */
 { "sources", 1, 1, CFL_AUDIO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1794,7 +1855,7 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'sources' function
 /* ========================================================================= */
 // ! sqlcheck
-// ? No explanation yet.
+// ? Checks the SQLite database to see if it is structured properly.
 /* ========================================================================= */
 { "sqlcheck", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1809,7 +1870,7 @@ cSql->Reset();
 } },                                   // End of 'sqlcheck' function
 /* ========================================================================= */
 // ! sqldefrag
-// ? No explanation yet.
+// ? Compacts the SQLite database reducing it's size on disk.
 /* ========================================================================= */
 { "sqldefrag", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1843,7 +1904,8 @@ cConsole->AddLine(qChange ?
 } },                                   // End of 'sqldefrag' function
 /* ========================================================================= */
 // ! sqlend
-// ? No explanation yet.
+// ? Ends the currently 'in-progress' SQL transaction. Used only if for some
+// ? reason SQL is stuck in one.
 /* ========================================================================= */
 { "sqlend", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1851,12 +1913,13 @@ cConsole->AddLine(qChange ?
 if(!cSql->Active()) return cConsole->AddLine("Sql transaction not active!");
 // End transaction
 cConsole->AddLineF("Sql transaction$ ended.",
-  cSql->End() == SQLITE_OK ? cCommon->Blank() : " NOT");
+  cSql->End() == SQLITE_OK ? cCommon->CommonBlank() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'sqlend' function
 /* ========================================================================= */
 // ! sqlexec
-// ? No explanation yet.
+// ? Performs the desired SQL query on the SQLite database. Theres is
+// ? absolutely zero restriction to using this so use it at your own risk.
 /* ========================================================================= */
 { "sqlexec", 2, 0, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -1917,7 +1980,8 @@ if(cSql->ExecuteAndSuccess(StrImplode(aArgs, 1)))
           case SQLITE_TEXT: sTable.Data("T")
                                   .Data(sdRef.MemToStringSafe()); break;
           // No data
-          case SQLITE_NULL: sTable.Data("N").Data("<Null>"); break;
+          case SQLITE_NULL: sTable.Data("N")
+                                  .Data(cCommon->CommonNull()); break;
           // Unknown type (impossible)
           default: sTable.Data("?")
                          .DataF("<Type $[0x$$]>",
@@ -1939,19 +2003,20 @@ cSql->Reset();
 } },                                   // End of 'sqlexec' function
 /* ========================================================================= */
 // ! stopall
-// ? No explanation yet.
+// ? Attempts to stop all currently playing 'Sample' and 'Stream' object
+// ? classes.
 /* ========================================================================= */
 { "stopall", 1, 1, CFL_AUDIO, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Tell audio to stop all sounds from playing
-cAudio->Stop();
+cAudio->AudioStopAll();
 // Log event count
 cConsole->AddLine("Stopping all sounds from playing.");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'stopall' function
 /* ========================================================================= */
 // ! streams
-// ? No explanation yet.
+// ? Shows all created audio 'Stream' object classes created by LUA.
 /* ========================================================================= */
 { "streams", 1, 1, CFL_AUDIO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1984,7 +2049,7 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'streams' function
 /* ========================================================================= */
 // ! system
-// ? No explanation yet.
+// ? Displays the currently detected operating system.
 /* ========================================================================= */
 { "system", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -1996,7 +2061,8 @@ cConsole->AddLineF("$-bit $ version $.$ build $ locale $.",
 } },                                   // End of 'system' function
 /* ========================================================================= */
 // ! textures
-// ? No explanation yet.
+// ? Shows all created OpenGL 'Texture' object classes created by LUA including
+// ? classes internally used by the engine.
 /* ========================================================================= */
 { "textures", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -2034,15 +2100,16 @@ cConsole->AddLineA(sTable.Finish(), StrCPluraliseNum(cTextures->size() +
 } },                                   // End of 'textures' function
 /* ========================================================================= */
 // ! threads
-// ? No explanation yet.
+// ? Shows all created 'Thread' object classes created by the engine. These
+// ? threads are not controllable by the guest and are here for reference only.
 /* ========================================================================= */
 { "threads", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Make a table to automatically format our data neatly
 Statistic sTable;
-sTable.Header("ID").Header("FLAG").Header("P").Header("EC").Header("STTIME")
-      .Header("ENTIME").Header("UPTIME").Header("IDENTIFIER", false)
-      .Reserve(cThreads->size());
+sTable.Header("ID").Header("FLAG").Header("P").Header("STATUS", false)
+      .Header("STTIME").Header("ENTIME").Header("UPTIME")
+      .Header("IDENTIFIER", false).Reserve(cThreads->size());
 // For each thread pointer
 for(const Thread*const tPtr : *cThreads)
 { // Get reference to class and write its data to the table
@@ -2051,7 +2118,7 @@ for(const Thread*const tPtr : *cThreads)
     { tRef.ThreadHaveCallback(), 'C' }, { tRef.ThreadIsParamSet(),   'P' },
     { tRef.ThreadShouldExit(),   'T' }, { tRef.ThreadIsException(),  'E' },
     { tRef.ThreadIsJoinable(),   'J' }, { tRef.ThreadIsExited(),     'X' },
-  })).DataN(tRef.ThreadGetPerf()).DataN(tRef.ThreadGetExitCode())
+  })).DataN(tRef.ThreadGetPerf()).Data(tRef.ThreadGetExitCodeString())
      .Data(StrShortFromDuration(cLog->
        CCDeltaToClampedDouble(tRef.ThreadGetStartTime())))
      .Data(StrShortFromDuration(cLog->
@@ -2069,7 +2136,7 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'threads' function
 /* ========================================================================= */
 // ! time
-// ? No explanation yet.
+// ? Displays the current local and UTC time (if different).
 /* ========================================================================= */
 { "time", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -2088,7 +2155,7 @@ else cConsole->AddLineF("Local time is $.\nUniversal time is $.",
 } },                                   // End of 'time' function
 /* ========================================================================= */
 // ! version
-// ? No explanation yet.
+// ? Shows the current engine version.
 /* ========================================================================= */
 { "version", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -2097,7 +2164,7 @@ cConsole->PrintVersion();
 } },                                   // End of 'version' function
 /* ========================================================================= */
 // ! videos
-// ? No explanation yet.
+// ? Shows all created motion 'Video' object classes created by LUA.
 /* ========================================================================= */
 { "videos", 1, 1, CFL_AUDIOVIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -2138,7 +2205,10 @@ cConsole->AddLineA(sTable.Finish(),
 } },                                   // End of 'videos' function
 /* ========================================================================= */
 // ! vmlist
-// ? No explanation yet.
+// ? Shows all the supported desktop resolutions supported by the currently
+// ? selected monitor. You can specify an alternative monitor ID number to see
+// ? which desktop resolutions ar suported by that monitor. Use 'mlist' to see
+// ? the currently detected monitor list.
 /* ========================================================================= */
 { "vmlist", 1, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -2174,7 +2244,9 @@ cConsole->AddLineF("$$ supported on monitor #$ ($).", sTable.Finish(),
 } },                                   // End of 'vmlist' function
 /* ========================================================================= */
 // ! vreset
-// ? No explanation yet.
+// ? Completely shuts down the rendering portion the engine and re-initialises
+// ? it. There could be a short delay as textures are rebuilt and re-uploaded
+// ? to the OpenGL driver by the engine and the guest author (if used).
 /* ========================================================================= */
 { "vreset", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
@@ -2183,13 +2255,15 @@ cEvtMain->RequestQuitThread();
 } },                                   // End of 'vreset' function
 /* ========================================================================= */
 // ! wreset
-// ? No explanation yet.
+// ? Resets the window position and size to the specified values set by
+// ? the currently set 'win_width', 'win_height', 'win_posx' and 'win_posy'
+// ? cvars.
 /* ========================================================================= */
 { "wreset", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
 cDisplay->RequestReposition();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'wreset' function
-/* ========================================================================= */
-} };                                   // End of console commands list
+/* ------------------------------------------------------------------------- */
+}},                                    // End of array
 /* == EoF =========================================================== EoF == */

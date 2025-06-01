@@ -9,7 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IIdent {                     // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IStd::P;               using namespace IString::P;
+using namespace ICommon::P;            using namespace IStd::P;
+using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Read only identifier class ------------------------------------------- */
@@ -24,6 +25,7 @@ template<class StringType>             // STL string type to use
   const StringType &IdentGet(void) const { return strIdentifier; }
   /* -- Get identifier by address ------------------------------------------ */
   const char *IdentGetCStr(void) const { return IdentGet().c_str(); }
+  const char *IdentGetData(void) const { return IdentGet().data(); }
   /* -- Move constructor from another rvalue string ------------- */ protected:
   explicit IdentBase(StringType &&strId) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -115,7 +117,7 @@ struct IdList :                        // Members initially public
   /* -- Constructor with blank alternative string -------------------------- */
   explicit IdList(const List &lNI) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdList{ lNI, cCommon->Blank() }
+    IdList{ lNI, cCommon->CommonBlank() }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Get name from id --------------------------------------------------- */
@@ -153,7 +155,7 @@ struct IdMap :                         // Members initially public
   /* -- Constructor with no alternative string ----------------------------- */
   explicit IdMap(const MapType &mtList) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdMap(mtList, cCommon->Blank())
+    IdMap(mtList, cCommon->CommonBlank())
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Test all items as flags and return a list of strings set ----------- */
