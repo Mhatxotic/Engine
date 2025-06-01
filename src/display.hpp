@@ -177,8 +177,9 @@ static class Display final :
     cLog->LogDebugExSafe("Input updated sticky mouse status to $.",
       StrFromBoolTF(cGlFW->WinGetStickyMouseButtons()));
   }
-  /* -- Window was asked to be hidden -------------------------------------- */
+  /* -- Window was asked to be hidden or shown ----------------------------- */
   void OnReqHide(const EvtWinEvent&) { cGlFW->WinHide(); }
+  void OnReqShow(const EvtWinEvent&) { cGlFW->WinShow(); }
   /* -- Resend mouse position ---------------------------------------------- */
   void OnReqGetCursorPos(const EvtWinEvent&)
     { cGlFW->WinSendMousePosition(); }
@@ -750,14 +751,15 @@ static class Display final :
     // Update the main fbo viewport size without scale
     cFboCore->DimSet(cInput->DimGet<GLsizei>());
 #endif
-    // Show the window
-    cGlFW->WinShow();
     // Window has been focued if auto-focus is enabled
     if(FlagIsSet(DF_AUTOFOCUS)) FlagSet(DF_FOCUSED);
-    // Tell input to reset mouse in window focus
-    cInput->FlagSet(IF_MOUSEFOCUS);
-    // Update cursor visibility as OS or glfw can mess it up
-    cInput->CommitCursorNow();
+    // Check that cursor is in window
+    double dX; double dY; cGlFW->WinGetCursorPos(dX, dY);
+    cInput->FlagSetOrClear(IF_MOUSEFOCUS,
+      dX >= 0 &&
+      dY >= 0 &&
+      dX < dcNew.DimGetWidth<double>() &&
+      dY < dcNew.DimGetHeight<double>());
   }
   /* -- Get monitors list ------------------------------------------ */ public:
   const GlFWMonitors &GetMonitors(void) const { return mlData; }
@@ -782,18 +784,20 @@ static class Display final :
   void RequestCentre(void) { cEvtWin->AddUnblock(EWC_WIN_CENTRE); }
   /* -- Request from alternative thread to reposition the window ----------- */
   void RequestReposition(void) { cEvtWin->AddUnblock(EWC_WIN_RESET); }
+  /* -- Request to open window --------------------------------------------- */
+  void RequestOpen(void) { cEvtWin->AddUnblock(EWC_WIN_SHOW); }
   /* -- Request to close window -------------------------------------------- */
-  void RequestClose(void) { cEvtWin->Add(EWC_WIN_HIDE); }
+  void RequestClose(void) { cEvtWin->AddUnblock(EWC_WIN_HIDE); }
   /* -- Request to minimise window ----------------------------------------- */
-  void RequestMinimise(void) { cEvtWin->Add(EWC_WIN_MINIMISE); }
+  void RequestMinimise(void) { cEvtWin->AddUnblock(EWC_WIN_MINIMISE); }
   /* -- Request to maximise window ----------------------------------------- */
-  void RequestMaximise(void) { cEvtWin->Add(EWC_WIN_MAXIMISE); }
+  void RequestMaximise(void) { cEvtWin->AddUnblock(EWC_WIN_MAXIMISE); }
   /* -- Request to restore window ------------------------------------------ */
-  void RequestRestore(void) { cEvtWin->Add(EWC_WIN_RESTORE); }
+  void RequestRestore(void) { cEvtWin->AddUnblock(EWC_WIN_RESTORE); }
   /* -- Request to focus window -------------------------------------------- */
-  void RequestFocus(void) { cEvtWin->Add(EWC_WIN_FOCUS); }
+  void RequestFocus(void) { cEvtWin->AddUnblock(EWC_WIN_FOCUS); }
   /* -- Request for window attention --------------------------------------- */
-  void RequestAttention(void) { cEvtWin->Add(EWC_WIN_ATTENTION); }
+  void RequestAttention(void) { cEvtWin->AddUnblock(EWC_WIN_ATTENTION); }
   /* -- Request from alternative thread to fullscreen toggle without save -- */
   void RequestFSToggle(const bool bState)
     { cEvtWin->AddUnblock(EWC_WIN_TOGGLE_FS, bState); }
@@ -1024,6 +1028,8 @@ static class Display final :
     UpdateIcons();
     // Set default gamma for selected monitor
     ApplyGamma();
+    // Flush any existing window events
+    cEvtWin->Flush();
     // Register main and window thread events
     cEvtMain->RegisterEx(emrvEvents);
     cEvtWin->RegisterEx(ewrvEvents);
@@ -1113,6 +1119,7 @@ static class Display final :
       { EWC_WIN_SETRAWMOUSE, bind(&Display::OnReqSetRawMouse,  this, _1) },
       { EWC_WIN_SETSTKKEYS,  bind(&Display::OnReqStickyKeys,   this, _1) },
       { EWC_WIN_SETSTKMOUSE, bind(&Display::OnReqStickyMouse,  this, _1) },
+      { EWC_WIN_SHOW,        bind(&Display::OnReqShow,         this, _1) },
       { EWC_WIN_TOGGLE_FS,   bind(&Display::OnReqToggleFS,     this, _1) },
     },
     moSelected(nullptr),               // No monitor selected

@@ -40,15 +40,16 @@ enum EvtWinCmd : size_t                // Render thread event commands
   EWC_WIN_SETRAWMOUSE,                 // 17: Set raw mouse motion
   EWC_WIN_SETSTKKEYS,                  // 18: Set sticky keys state
   EWC_WIN_SETSTKMOUSE,                 // 19: Set sticky mouse buttons state
-  EWC_WIN_TOGGLE_FS,                   // 20: Toggle full-screen
+  EWC_WIN_SHOW,                        // 20: Show the window
+  EWC_WIN_TOGGLE_FS,                   // 21: Toggle full-screen
   /* -- Clipboard events --------------------------------------------------- */
-  EWC_CB_GET,                          // 21: Get clipboard (via Clip class)
-  EWC_CB_SET,                          // 22: Set clipboard (via Clip class)
-  EWC_CB_SETNR,                        // 23: " but no callback
+  EWC_CB_GET,                          // 22: Get clipboard (via Clip class)
+  EWC_CB_SET,                          // 23: Set clipboard (via Clip class)
+  EWC_CB_SETNR,                        // 24: " but no callback
   /* ----------------------------------------------------------------------- */
-  EWC_WIN_CURPOSSET,                   // 24: Set cursor position
+  EWC_WIN_CURPOSSET,                   // 25: Set cursor position
   /* ----------------------------------------------------------------------- */
-  EWC_MAX,                             // 25: Maximum number of async events
+  EWC_MAX,                             // 26: Maximum number of async events
   /* ----------------------------------------------------------------------- */
 #if defined(ALPHA)                     // Compiling debug version?
   EWC_NOLOG = EWC_MAX                  // Log all events
@@ -88,7 +89,7 @@ static class EvtWin final :            // Event list for window thread
       EWC(WIN_MAXIMISE),    EWC(WIN_MINIMISE),    EWC(WIN_MOVE),
       EWC(WIN_RESET),       EWC(WIN_RESIZE),      EWC(WIN_RESTORE),
       EWC(WIN_SETICON),     EWC(WIN_SETRAWMOUSE), EWC(WIN_SETSTKKEYS),
-      EWC(WIN_SETSTKMOUSE), EWC(WIN_TOGGLE_FS),
+      EWC(WIN_SETSTKMOUSE), EWC(WIN_SHOW),        EWC(WIN_TOGGLE_FS),
       /* ------------------------------------------------------------------- */
       EWC(CB_GET),          EWC(CB_SET),          EWC(CB_SETNR),
       /* ------------------------------------------------------------------- */

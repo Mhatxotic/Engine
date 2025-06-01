@@ -263,6 +263,8 @@ class Core final                       // Members initially private
   { // Log reason for deinit
     cLog->LogDebugExSafe("Engine de-initialising interfaces with code $.",
       cEvtMain->GetExitReason());
+    // Request to close window
+    cDisplay->RequestClose();
     // Unregister exit events
     cEvtMain->DeInit();
     // Whats the exit reason code?
@@ -303,8 +305,6 @@ class Core final                       // Members initially private
     cShaderCore->DeInitShaders();
     // OpenGL de-initialised (do not throw error if de-initialised)
     cOgl->DeInit(true);
-    // Request to close window
-    cDisplay->RequestClose();
   } // exception occured?
   catch(const exception &eReason)
   { // Make sure the exception is logged
@@ -349,18 +349,26 @@ class Core final                       // Members initially private
       cInput->Init();
       // Register lua pause and resume events
       cEvtMain->RegisterEx(emrvEvents);
-      // Done
-      return;
-    } // Not initialising for the first time so reconfigure matrix
-    cDisplay->CommitMatrix();
-    // Reset window icon
-    cDisplay->UpdateIcons();
-    // Reload textures
-    FboReInit();
-    cConGraphics->ReInitTextureAndFont();
-    FontReInitTextures();
-    TextureReInitTextures();
-    VideoReInitTextures();
+    } // Not initialising for the first time?
+    else
+    { // Reconfigure matrix
+      cDisplay->CommitMatrix();
+      // Reset window icon
+      cDisplay->UpdateIcons();
+      // Reload guest frame buffer objects
+      FboReInit();
+      // Reload graphical console textures and font
+      cConGraphics->ReInitTextureAndFont();
+      // Reload guest fonts
+      FontReInitTextures();
+      // Reload guest textures
+      TextureReInitTextures();
+      // Reload guest videos
+      VideoReInitTextures();
+      // Update cursor visibility as GLFW does not restore it
+      cInput->CommitCursor();
+    } // Show the window
+    cDisplay->RequestOpen();
   }
   /* -- Engine thread (member function) ------------------------------------ */
   int CoreThreadMain(Thread&) try
@@ -585,8 +593,6 @@ class Core final                       // Members initially private
       INITHELPER(DIH, cDisplay->Init(),
         cEvtMain->ThreadDeInit();
         cDisplay->DeInit());
-      // Full window events
-      cEvtWin->Flush();
       // Setup main thread and start it
       cEvtMain->ThreadInit(cbtMain, nullptr);
       // Loop until window should close

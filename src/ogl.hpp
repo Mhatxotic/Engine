@@ -1113,7 +1113,7 @@ static class Ogl final :               // OGL class for OpenGL use simplicity
     if(!bForce) IHInitialise();
     // Log class initialising
     cLog->LogDebugSafe("OGL subsystem initialising...");
-    // Set context
+    // Set opengl context to engine thread
     cGlFW->WinSetContext();
     // Load GL functions and throw exception with reason if not all loaded
     if(const char*const cpErr = LoadFunctions())
@@ -1211,8 +1211,8 @@ static class Ogl final :               // OGL class for OpenGL use simplicity
       cLog->LogInfoExSafe("OGL deleted vertex array object $.", uiVAO);
       // Clear value
       uiVAO = 0;
-    } // Release opengl context
-    GlFWReleaseContext();
+    } // Release opengl context from engine thread
+    GlFWSetContext();
     // Init flags
     FlagReset(GFL_NONE);
     // Pack alignment and texture size and caches

@@ -214,8 +214,6 @@ static class Input final :             // Handles keyboard, mouse & controllers
     while(const unsigned int uiChar = utfString.Next())
       if(uiChar >= 32) cConsole->OnCharPress(uiChar);
   }
-  /* -- Commit cursor visibility now ------------------------------- */ public:
-  void CommitCursorNow(void) { cGlFW->WinSetCursor(FlagIsSet(IF_CURSOR)); }
   /* -- Commit cursor visibility ------------------------------------------- */
   void CommitCursor(void)
     { cEvtWin->AddUnblock(EWC_WIN_CURSETVIS, FlagIsSet(IF_CURSOR)); }

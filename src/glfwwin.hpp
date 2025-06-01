@@ -379,8 +379,7 @@ class GlFWWindow :                     // GLFW window class
   bool WinIsCurrentContext(void) const
     { return GlFWContext() == WinGetHandle(); }
   /* -- Make current context ----------------------------------------------- */
-  void WinSetContext(void) const
-    { glfwMakeContextCurrent(WinGetHandle()); }
+  void WinSetContext(void) const { GlFWSetContext(WinGetHandle()); }
   /* -- Set window size limits --------------------------------------------- */
   void WinSetLimits(const int iMinW, const int iMinH,
     const int iMaxW, const int iMaxH) const
