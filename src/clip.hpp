@@ -24,7 +24,7 @@ namespace P {                          // Start of public module namespace
 /* -- Clipboard collector and lua interface class -------------------------- */
 CTOR_BEGIN(Clips, Clip, CLHelperUnsafe,
   /* ----------------------------------------------------------------------- */
-  const EvtWinRegVec rvEvents;,,       // Events list to register
+  const EvtWinRegVec ewrvEvents;,,     // Events list to register
   private LuaEvtMaster<Clip, LuaEvtTypeAsync<Clip>>
 );/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
@@ -119,10 +119,10 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
 };/* ----------------------------------------------------------------------- */
 CTOR_END(Clips, Clip, CLIP,            // Finish 'Clips' class body
   /* -- Collector initialisers --------------------------------------------- */
-  cEvtWin->RegisterEx(rvEvents),       // Register all events in 'rvEvents'
-  cEvtWin->UnregisterEx(rvEvents),,    // Unregister all events in 'rvEvents'
+  cEvtWin->RegisterEx(ewrvEvents),     // Register all events in 'ewrvEvents'
+  cEvtWin->UnregisterEx(ewrvEvents),,  // Unregister all events in 'ewrvEvents'
   LuaEvtMaster{ EMC_CB_EVENT },        // Setup Lua event master
-  rvEvents{                            // Define handled Window thread events
+  ewrvEvents{                          // Define handled Window thread events
     { EWC_CB_SET,   &Clip::ClipOnSetCb   },
     { EWC_CB_GET,   &Clip::ClipOnGetCb   },
     { EWC_CB_SETNR, &Clip::ClipOnSetNRCb },

@@ -12,9 +12,9 @@
 #define VER_AUTHOR  "Mhatxotic Design"                // Author of engine
 #define VER_MAJOR   25                                // Version major (year)
 #define VER_MINOR   6                                 // Version minor (month)
-#define VER_BUILD   1                                 // Version build (day)
-#define VER_REV     96                                // Version rev (build#)
-#define VER_STR_NQ  25,6,1,96                         // Version as literal
-#define VER_STR     "25.6.1.96"                       // Version as string
-#define VER_DATE    "Sun Jun 01 23:50:04 2025 +0100"  // Compilation date
+#define VER_BUILD   2                                 // Version build (day)
+#define VER_REV     20                                // Version rev (build#)
+#define VER_STR_NQ  25,6,2,20                         // Version as literal
+#define VER_STR     "25.6.2.20"                       // Version as string
+#define VER_DATE    "Mon Jun 02 23:14:48 2025 +0100"  // Compilation date
 /* == EoF =========================================================== EoF == */

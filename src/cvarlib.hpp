@@ -132,14 +132,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ? ending in the value specified by 'ast_bundles' which can override any game
 // ? asset (except app.cfg). The default is true (yes).
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_modbundle",
-/* ------------------------------------------------------------------------- */
-#if defined(RELEASE)                   // Default disabled in release builds
-  cCommon->Zero(),
-#else                                  // Default enabled in other builds
-  cCommon->One(),
-#endif                                 // Build type check
-  /* ----------------------------------------------------------------------- */
+{ CFL_NONE, "ast_modbundle", cCommon->One(),
   CB(ArchiveInitPersist, bool), TBOOLEAN|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DB
@@ -879,14 +872,7 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 // ! CON_DISABLED
 // ? Specifies wether the console is permanantly disabled or not.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_disabled",
-  /* ----------------------------------------------------------------------- */
-#if defined(RELEASE)
-  cCommon->One(),
-#else
-  cCommon->Zero(),
-#endif
-  /* ----------------------------------------------------------------------- */
+{ CFL_VIDEO, "con_disabled", cCommon->Zero(),
   CB(cConGraphics->CantDisableModified, bool), TBOOLEAN|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! CON_CVSHOWFLAGS

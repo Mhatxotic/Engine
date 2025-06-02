@@ -94,7 +94,7 @@ static class Console final :           // Members initially private
   AutoCompleteFlags acFlags;           // Flags for autocomplete
   const ConCmdStaticList &ccslInt;     // Default console cmds list
   CmdMap           cmMap;              // Console commands list
-  const EvtMainRegVec reEvents;        // Events list to register
+  const EvtMainRegVec emrvEvents;      // Events list to register
   /* -- Do clear console, clear history and reset position ----------------- */
   void DoFlush(void)
   { // Do clear the console output lines
@@ -837,7 +837,7 @@ static class Console final :           // Members initially private
     { // Add flag for it
       GetDefaultRedrawFlags().FlagReset(RD_TEXT);
       // Register console events
-      cEvtMain->RegisterEx(reEvents);
+      cEvtMain->RegisterEx(emrvEvents);
     } // Redraw the console
     SetRedraw();
     // Initially shown and not closable
@@ -865,7 +865,7 @@ static class Console final :           // Members initially private
     // Initially shown and not closable. All other flags removed.
     FlagReset(CF_CANTDISABLE|CF_ENABLED|CF_INSERT);
     // Unregister console events if using text mode
-    if(cSystem->IsTextMode()) cEvtMain->UnregisterEx(reEvents);
+    if(cSystem->IsTextMode()) cEvtMain->UnregisterEx(emrvEvents);
     // If commands registered?
     switch(const size_t stCount = cmMap.size())
     { // Impossible?
@@ -906,7 +906,7 @@ static class Console final :           // Members initially private
     acFlags{ AC_NONE },                // No autocomplete flags
     ccslInt{ ccslDef },                // Set default commands list
     /* --------------------------------------------------------------------- */
-    reEvents{                          // Default events
+    emrvEvents{                        // Default events
       { EMC_CON_UPDATE, bind(&Console::OnForceRedraw, this, _1) },
     }
     /* --------------------------------------------------------------------- */
