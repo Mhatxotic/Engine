@@ -29,7 +29,7 @@ class SysBase :                        // Safe exception handler namespace
     int           &iRead,              // Read end of the pipe (iaPipes[0])
                   &iWrite;             // Write end of the pipe (iaPipes[1])
     /* -- Async off-main thread function ----------------------------------- */
-    int ThreadMain(Thread&)
+    ThreadStatus ThreadMain(Thread&)
     { // Until thread should exit or end of file
       while(ThreadShouldNotExit())
       { // Read some data and if we got some? Return how much we read
@@ -54,7 +54,7 @@ class SysBase :                        // Safe exception handler namespace
           }
         } // Don't get here
       } // Return success to thread manager
-      return 1;
+      return TS_OK;
     }
     /* --------------------------------------------------------------------- */
     void CloseRead(void) { if(iRead) close(iRead); }

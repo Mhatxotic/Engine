@@ -371,7 +371,7 @@ class Core final                       // Members initially private
     cDisplay->RequestOpen();
   }
   /* -- Engine thread (member function) ------------------------------------ */
-  int CoreThreadMain(Thread&) try
+  ThreadStatus CoreThreadMain(Thread&) try
   { // Log reason for init
     cLog->LogDebugExSafe("Core engine thread started (C:$;M:$<$>).",
       cEvtMain->GetExitReason(), cSystem->GetCoreFlagsString(),
@@ -556,7 +556,7 @@ class Core final                       // Members initially private
     } // De-initilise everything
     CoreDeInitEverything();
     // Kill thread
-    return 1;
+    return TS_OK;
   } // exception occured out of loop. Fatal so we have to quit
   catch(const exception &eReason)
   { // We will quit since this is fatal
@@ -566,10 +566,10 @@ class Core final                       // Members initially private
     // Show error
     cSystem->SysMsgEx("Engine Thread Fatal Exception", eReason.what(),
       MB_ICONSTOP);
-    // De-inti everything
+    // De-init everything
     CoreDeInitEverything();
     // Kill thread
-    return 2;
+    return TS_ERROR;
   }
   /* -- Engine should continue? -------------------------------------------- */
   bool CoreShouldEngineContinue(void)

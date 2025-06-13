@@ -120,7 +120,7 @@ static class Audio final :             // Audio manager class
     cOal->FlagClear(AFL_REINIT);
   }
   /* -- Thread main function with system events support -------------------- */
-  int AudioThreadMainSysEvents(Thread &) try
+  ThreadStatus AudioThreadMainSysEvents(Thread &) try
   { // Loop forever until thread exit signalled.
     while(ThreadShouldNotExit())
     { // Manage stream classes
@@ -128,13 +128,13 @@ static class Audio final :             // Audio manager class
       // Suspend thread for the user requested time
       StdSuspend(cdThreadDelay.load());
     } // Terminate thread
-    return 1;
+    return TS_OK;
   } // exception occured in this thread
   catch(const exception &eReason)
   { // Report error
     cLog->LogErrorExSafe("(AUDIO SE THREAD EXCEPTION) $", eReason);
     // Restart the thread
-    return 0;
+    return TS_RETRY;
   }
   /* -- Verification of context -------------------------------------------- */
   bool Verify(void)
@@ -200,7 +200,7 @@ static class Audio final :             // Audio manager class
     return true;
   }
   /* -- Thread main function with no system events support ----------------- */
-  int AudioThreadMainNoSysEvents(Thread &) try
+  ThreadStatus AudioThreadMainNoSysEvents(Thread &) try
   { // Enumerate...
     for(ResetCheckTime();                 // Reset device list check time
         ThreadShouldNotExit();            // Enum until thread exit signalled
@@ -216,13 +216,13 @@ static class Audio final :             // Audio manager class
       // Thread terminate request recieved, now break the loop.
       break;
     } // Terminate thread
-    return 1;
+    return TS_OK;
   } // exception occured in this thread
   catch(const exception &eReason)
   { // Report error
     cLog->LogErrorExSafe("(AUDIO NSE THREAD EXCEPTION) $", eReason);
     // Restart the thread
-    return 0;
+    return TS_RETRY;
   }
   /* -- Event function (switch to this call) ------------------------------- */
   static void OnEvent(const ALCenum eEventType, const ALCenum eDeviceType,

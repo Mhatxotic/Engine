@@ -259,7 +259,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     { FileMap fmData{ AssetExtract(idName.IdentGet()) };
       AsyncParseFileMap(fmData); }
   /* -- Async off-main thread function ------------------------------------- */
-  int AsyncThreadMain(Thread&)
+  ThreadStatus AsyncThreadMain(Thread&)
   { // Capture exceptions. Remember that after these operations the memory at
     // mAsyncLoadData should be de-initialised. So don't use it again.
     try
@@ -295,7 +295,7 @@ template<class MemberType, class ColType>class AsyncLoader :
         default: XC("Internal error: Unknown asset load type!",
                     "Type", asctAsyncType);
       } // Return success to thread manager
-      return 1;
+      return TS_OK;
     } // exception occured?
     catch(const exception &eReason)
     { // Prepend the reason incase there are nested exceptions
@@ -305,7 +305,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       // Report error in log
       cLog->LogErrorExSafe("(ASYNCLOADER THREAD EXCEPTION) $", strAsyncError);
       // Return failure to thread manager
-      return -1;
+      return TS_ERROR;
     }
   }
   /* ----------------------------------------------------------------------- */
@@ -393,7 +393,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   void AsyncCancel(void)
   { // Wait for the thread to stop
     AsyncStop();
-    // Unreference the class
+    // Dereference the class
     lecAsync.LuaEvtDeInit();
   }
   /* -- The thread only calls LoadData() and thats it ---------------------- */

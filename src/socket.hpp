@@ -155,20 +155,20 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     SocketLog(lhlSeverity, cpFormat, vaArgs...);
   }
   /* -- Initialise static error (no openssl error) ------------------------- */
-  int SetErrorStatic(const string &strReason, const bool bSet)
+  ThreadStatus SetErrorStatic(const string &strReason, const bool bSet)
   { // Show reason in log
     SocketLogUnsafe(LH_WARNING, "$", strReason);
     // Forget any error if disconnecting or disconnected
-    if(!bSet || IsDisconnectingOrDisconnected()) return -1;
+    if(!bSet || IsDisconnectingOrDisconnected()) return TS_ERROR;
     // Set our own error code
     iError = -1;
     // Set the error as the reason
     strError = StdMove(strReason);
     // Done
-    return -1;
+    return TS_ERROR;
   }
   /* -- Set aborted connection --------------------------------------------- */
-  int SetAborted(void)
+  ThreadStatus SetAborted(void)
   { // Clear errors
     ERR_clear_error();
     // Connection aborted message
@@ -178,25 +178,24 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Set the error as the reason
     SocketLogSafe(LH_WARNING, "$", strError);
     // Done
-    return -1;
+    return TS_ERROR;
   }
   /* -- Socket initial connect failed cleanup function --------------------- */
-  int SetError(const string &strReason)
-  { // Return if socket was forcefully closed by us
-    if(IsDisconnectedByClient()) return -1;
-    // Show reason in log
-    SocketLogUnsafe(LH_WARNING, "$", strReason);
-    // Forget any error if disconnecting or disconnected or error was already
-    // set to aborted code?
-    if(IsDisconnectingOrDisconnected()) return -1;
-    // Clear the error
-    strError.clear();
-    // Process errors... Only show errors we can actually report on
-    iError = CryptGetError(strError);
-    SocketLogUnsafe(LH_WARNING, "$", strError);
-    if(strError.empty()) strError = strReason;
-    // Break loop
-    return -1;
+  ThreadStatus SetError(const string &strReason)
+  { // If socket was not forcefully closed by us
+    if(!IsDisconnectedByClient())
+    { // If disconnecting or disconnected? Show reason in log
+      if(IsDisconnectingOrDisconnected())
+        SocketLogUnsafe(LH_WARNING, "$", strReason);
+      // Not disconnecting or disconnected?
+      else
+      { // Process errors... Only show errors we can actually report on
+        iError = CryptGetError(strError);
+        SocketLogUnsafe(LH_WARNING, "$: $", strReason, strError);
+        if(strError.empty()) strError = strReason;
+      }
+    } // Return thread error status
+    return TS_ERROR;
   }
   /* -- Read socket -------------------------------------------------------- */
   unsigned int SockRead(char *cpD, const unsigned int uiL)
@@ -211,7 +210,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       { // Server closed the connection
         FlagSet(SS_CLOSEDBYSERVER);
         // Return error status, but there is no actual socket error
-        return StdMaxUInt;
+        return static_cast<unsigned int>(TS_ERROR);
       } // Did the operation fail? Set error and clean up
       case StdMaxUInt:
         return static_cast<unsigned int>(IsDisconnectedByClient() ?
@@ -412,7 +411,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     while(!plData.empty());
   }
   /* -- Create connection with select used to monitor for timeout ---------- */
-  int DoConnect(void)
+  ThreadStatus DoConnect(void)
   { // Set hostname (always returns 1).
     if(CryptBIOSetConnHostname(bioPtr, GetAddressAndPort().c_str()) != 1)
       return SetErrorSafe("Resolve failed");
@@ -481,7 +480,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     if(tReader.ThreadShouldExit()) return SetAborted();
     // Return success if the handshake succeeded or process error
     return BIO_do_handshake(bioPtr) == 1 ?
-      0 : SetErrorSafe("Handshake failed");
+      TS_OK : SetErrorSafe("Handshake failed");
   }
   /* -- OCSP verification result ------------------------------------------- */
   int OCSPVerificationResponse(SSL*const sslCbPtr)
@@ -508,7 +507,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return cParent->iOCSP >= 2 ? 0 : 1;
   }
   /* -- Socket initial connect function ------------------------------------ */
-  int InitialConnect(void)
+  ThreadStatus InitialConnect(void)
   { // Initialise the status flags
     FlagReset(SS_INITIALISING);
     // Reset counters and timers
@@ -565,31 +564,31 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               { // Log the error and return failure
                 SocketLogSafe(LH_WARNING,
                   "Failed to assign verification parameters to context");
-                return -1;
+                return TS_ERROR;
               } // Succeeded a this point
             } // Failed setting host?
             else
             { // Log the error and return failure
               SocketLogSafe(LH_WARNING, "Failed to set matching hostname");
-              return -1;
+              return TS_ERROR;
             }
           } // Failed setting purpose?
           else
           { // Log the error and return failure
             SocketLogSafe(LH_WARNING, "Failed to set purpose");
-            return -1;
+            return TS_ERROR;
           }
         } // Failed setting verification flags?
         else
         { // Log the error and return failure
           SocketLogSafe(LH_WARNING, "Failed to set verification flags");
-          return -1;
+          return TS_ERROR;
         }
       } // Failed creating context?
       else
       { // Log the error and return failure
         SocketLogSafe(LH_WARNING, "Failed to create verification context");
-        return -1;
+        return TS_ERROR;
       } // Done setting up verification. Now create socket
       bioPtr = BIO_new_ssl_connect(sslctxPtr);
       if(!bioPtr) return SetErrorSafe("Failed to create BIO socket");
@@ -619,7 +618,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       if(!CryptSSLSetTlsExtHostName(sslPtr, strAddr.c_str()))
         return SetErrorStaticSafe("Init TLS SNI hostname failed");
       // Log and do secure connection
-      if(DoConnect() == -1) return -1;
+      if(DoConnect() == TS_ERROR) return TS_ERROR;
       // Get X509 chain verificiation result
       switch(const size_t stRes =
         static_cast<size_t>(SSL_get_verify_result(sslPtr)))
@@ -634,7 +633,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
             if(cParent->CertsIsNotX509BypassFlagSet(1, 0x8000000000000000ULL))
             { // Set error and return status
               SetErrorStaticSafe(StrAppend("X509_V_ERR_UNKNOWN_", stRes));
-              return -1;
+              return TS_ERROR;
             } // Log the warning and return success
             SocketLogSafe(LH_WARNING, "Unknown X509 error $ bypassed!", stRes);
           } // Found the error code
@@ -648,7 +647,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
                  xErrInfo.stBank, xErrInfo.qFlag))
             { // Set error and return status
               SetErrorStaticSafe(strErr);
-              return -1;
+              return TS_ERROR;
             } // Log the warning and return success
             SocketLogSafe(LH_WARNING, "$ bypassed!", strErr);
             // Set socket error and error string
@@ -691,13 +690,13 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       bioPtr = BIO_new(BIO_s_connect());
       if(!bioPtr) return SetErrorSafe("Failed to create BIO socket");
       // Log and do insecure connection
-      if(DoConnect() == -1) return -1;
+      if(DoConnect() == TS_ERROR) return TS_ERROR;
     } // Now connected
     AddStatus(SS_CONNECTED, cdConnected);
     // Increase connected count
     ++cParent->stConnected;
     // Successful connect
-    return 0;
+    return TS_OK;
   }
   /* -- Writer thread notification ----------------------------------------- */
   void WriteUnblock(void)
@@ -726,9 +725,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       { return ucC < ' ' && ucC != '\r' && ucC != '\n'; });
   }
   /* -- HTTP Socket main thread function ----------------------------------- */
-  int HTTPMain(void)
+  ThreadStatus HTTPMain(void)
   { // Connect and send http request and break loop if failed.
-    if(InitialConnect() == -1) return 1;
+    if(InitialConnect() == TS_ERROR) return TS_ERROR;
     // Check if this is a HEAD request
     const bool bIsHead = GetRegistry(cParent->strRegVarMETHOD) == "HEAD";
     // Set sending request status event
@@ -743,7 +742,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         strHdrs{ StdMove(pRegistry.ParserImplodeEx(": ", cCommon->CrLf())) },
         strPk{ StdMove(StrAppend(strReq, strHdrs, cCommon->CrLf(), strBody)) };
       // Write the full request to the server and return if failed
-      if(SockWrite(strPk) == StdMaxUInt) return -1;
+      if(SockWrite(strPk) == static_cast<unsigned int>(TS_ERROR))
+        return TS_ERROR;
     } // Set sent request status event
     AddStatus(SS_REPLYWAIT);
     // Content read and content-length
@@ -760,7 +760,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       const unsigned int uiBX =
         SockRead(mDest.MemPtr<char>(), mDest.MemSize<unsigned int>());
       // Connection error or server closed connection?
-      if(uiBX == StdMaxUInt)
+      if(uiBX == static_cast<unsigned int>(TS_ERROR))
       { // If we were waiting for headers still?
         if(bHeaders) return SetErrorSafe("Response failed");
         // We were downloading so if there was a content length?
@@ -774,7 +774,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         } // There was no content length? Just log the bytes downloaded
         else SocketLogSafe(LH_DEBUG, "$ downloaded", stContentRead);
         // We're done with the connection
-        return 1;
+        return TS_OK;
       } // Not processing headers?
       if(!bHeaders)
       { // Not processing headers? Processing content? Increment content read
@@ -789,7 +789,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         if(stContentLength && stContentRead == stContentLength)
         { // Log it and return success
           SocketLogSafe(LH_DEBUG, "Download complete");
-          return 1;
+          return TS_OK;
         } // Wait for next packet, thread abort or server disconnect.
         continue;
       } // Make string view of response which could contain binary chars
@@ -889,13 +889,13 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         if(stInitial == stContentLength)
         { // Log it and return success
           SocketLogSafe(LH_DEBUG, "Downloaded in one go");
-          return 1;
+          return TS_OK;
         } // If we got too many bytes? treat it as completed anyway
         if(stInitial > stContentLength)
         { // Log it and return success
           SocketLogSafe(LH_DEBUG, "Downloaded ($ excess)",
             stInitial-stContentLength);
-          return 1;
+          return TS_OK;
         } // Haven't received all the data
       } // No content length and connection not closed
       else
@@ -907,24 +907,24 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return SetAborted();
   }
   /* -- Socket http connection --------------------------------------------- */
-  int SocketHTTPThreadMain(Thread &)
+  ThreadStatus SocketHTTPThreadMain(Thread &)
   { // Return code
-    int iReturn;
+    ThreadStatus tsReturn;
     // Capture exceptions and switch to thiscall
-    try { iReturn = HTTPMain(); }
-    // exception occured?
+    try { tsReturn = HTTPMain(); }
+    // exception occurred?
     catch(const exception &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET HTTP THREAD EXCEPTION) $", eReason);
       // Set error message
-      iReturn = SetErrorStaticSafe(eReason.what());
+      tsReturn = SetErrorStaticSafe(eReason.what());
     } // Send disconnection and clear
     SendDisconnect();
     FinishDisconnect();
     // Required to stop memory leak
     OPENSSL_thread_stop();
     // Return status
-    return iReturn;
+    return tsReturn;
   }
   /* -- Return if there are TX packets available --------------------------- */
   bool IsTXPacketAvailable(void)
@@ -936,14 +936,15 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void PopOldestTXPacketSafe(void)
     { const LockGuard lgSocketSync{ mMutex }; return plTX.pop_front(); }
   /* -- Socket write manager ----------------------------------------------- */
-  int SockWriteManager(void)
+  ThreadStatus SockWriteManager(void)
   { // Block until requested to exit
     while(tWriter.ThreadShouldNotExit())
     { // For each packet waiting to be written
       while(IsTXPacketAvailable())
       { // Get oldest available TX packet, send it, and kill thread on error
         const MemConst &mcPacket = GetOldestTXPacketSafe();
-        if(SockWrite(mcPacket) == StdMaxUInt) return 2;
+        if(SockWrite(mcPacket) == static_cast<unsigned int>(TS_ERROR))
+          return TS_ERROR;
         // Subtract total bytes counter and pop the packet we just sent
         stTX -= mcPacket.MemSize();
         PopOldestTXPacketSafe();
@@ -954,26 +955,26 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Next wait will block
       bUnlock = false;
     } // Sucesss
-    return 1;
+    return TS_OK;
   }
   /* -- Socket write thread ------------------------------------------------ */
-  int SockWriteThreadMain(Thread &)
+  ThreadStatus SockWriteThreadMain(Thread &)
   { // Return code
-    int iReturn;
+    ThreadStatus tsReturn;
     // Capture exceptions and execute the manager
-    try { iReturn = SockWriteManager(); }
+    try { tsReturn = SockWriteManager(); }
     // exception occured?
     catch(const exception &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET WRITE THREAD EXCEPTION) $", eReason);
       // Set error message
-      iReturn = SetErrorStaticSafe(eReason.what());
+      tsReturn = SetErrorStaticSafe(eReason.what());
     } // Force close the socket if the reader thread isn't already exiting
     SendDisconnect();
     // Required to stop memory leak
     OPENSSL_thread_stop();
     // Return exit code
-    return iReturn;
+    return tsReturn;
   }
   /* -- Dispatch an event -------------------------------------------------- */
   void DispatchEvent(const SocketFlagsConst &evtId)
@@ -983,12 +984,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     LuaEvtDispatch(evtId.FlagGet());
   }
   /* -- Socket read manager ------------------------------------------------ */
-  int SockReadManager(void)
+  ThreadStatus SockReadManager(void)
   { // Create a thread to write data requests
     tWriter.ThreadInit(StrAppend("SW:", GetAddressAndPort()),
       bind(&Socket::SockWriteThreadMain, this, _1), this);
     // Try to connect and if it didn't fail kill the thread
-    if(InitialConnect() == -1) return 2;
+    if(InitialConnect() == TS_ERROR) return TS_ERROR;
     // Create read transfer buffer
     Memory mDest{ cParent->stBufferSize };
     // Loop until thread should terminate
@@ -996,27 +997,27 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     { // Wait for new data to be read and kill thread on error
       const unsigned int uiBX =
         SockRead(mDest.MemPtr<char>(), mDest.MemSize<unsigned int>());
-      if(uiBX == StdMaxUInt) return 3;
+      if(uiBX == static_cast<unsigned int>(TS_ERROR)) return TS_ERROR;
       // Push data block into list ready for LUA to collect
       PushDataSafe(plRX, stRX, mDest.MemPtr<char>(),
         static_cast<size_t>(uiBX));
       // Send read event
       DispatchEvent(SS_READPACKET);
     } // Thread should terminate
-    return 1;
+    return TS_OK;
   }
   /* -- Socket read thread ------------------------------------------------- */
-  int SockReadThreadMain(Thread &)
+  ThreadStatus SockReadThreadMain(Thread &)
   { // Return code
-    int iReturn;
+    ThreadStatus tsReturn;
     // Capture exceptions
-    try { iReturn = SockReadManager(); }
+    try { tsReturn = SockReadManager(); }
     // exception occured?
     catch(const exception &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET THREAD EXCEPTION) $", eReason);
       // Set error message
-      iReturn = SetErrorStaticSafe(eReason.what());
+      tsReturn = SetErrorStaticSafe(eReason.what());
     } // Have writer thread?
     if(tWriter.ThreadIsNotCurrent() && tWriter.ThreadIsJoinable())
     { // Call for writer thread to terminate
@@ -1032,7 +1033,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Required to stop memory leak
     OPENSSL_thread_stop();
     // Break thread
-    return iReturn;
+    return tsReturn;
   }
   /* -- Error occured in event so start cleaning up ------------------------ */
   void EventError(void)
@@ -1112,10 +1113,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     { return GetPacketXSafe(mbD, plTX, stTX); }
   void CompactTXSafe(Memory &mbD) { CompactXSafe(mbD, plTX, stTX); }
   /* ----------------------------------------------------------------------- */
-  int SetErrorSafe(const string &strS)
+  ThreadStatus SetErrorSafe(const string &strS)
     { const LockGuard lgSocketSync{ mMutex };
       return SetError(strS); }
-  int SetErrorStaticSafe(const string &strS, const bool bS=true)
+  ThreadStatus SetErrorStaticSafe(const string &strS, const bool bS=true)
     { const LockGuard lgSocketSync{ mMutex };
       return SetErrorStatic(strS, bS); }
   void PushDataSafe(PacketList &blD, size_t &stX, const char *cpD,

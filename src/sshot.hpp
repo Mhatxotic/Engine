@@ -34,9 +34,9 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
   ImageFormat          ifFormatId;     // Screenshot type to save as
   Thread               tThread;        // Thread processing the request
   /* -- Fbo dumper thread callback ----------------------------------------- */
-  int DumpThread(const Thread &)
+  ThreadStatus DumpThread(const Thread &)
   { // Code to return
-    int iReturn;
+    ThreadStatus tsReturn;
     // Capture exceptions
     try
     { // Reverse pixels or they will be upside down
@@ -44,17 +44,17 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       // Save the image to disk
       SaveFile(IdentGet(), 0, ifFormatId);
       // Success
-      iReturn = 1;
+      tsReturn = TS_OK;
     } // exception occured?
     catch(const exception &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SCREENSHOT WRITER THREAD EXCEPTION) $", eReason);
       // Errored return code
-      iReturn = -1;
+      tsReturn = TS_ERROR;
     } // Free the memory created with the bitmap
     ResetAllData();
     // Return the code specified
-    return iReturn;
+    return tsReturn;
   }
   /* -- Capture screenshot from FBO -------------------------------- */ public:
   bool DumpFBO(const Fbo &fboRef, const string &strFile=cCommon->Blank())

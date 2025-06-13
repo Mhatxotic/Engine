@@ -2040,9 +2040,9 @@ cConsole->AddLineA(sTable.Finish(), StrCPluraliseNum(cTextures->size() +
 /* ------------------------------------------------------------------------- */
 // Make a table to automatically format our data neatly
 Statistic sTable;
-sTable.Header("ID").Header("FLAG").Header("P").Header("EC").Header("STTIME")
-      .Header("ENTIME").Header("UPTIME").Header("IDENTIFIER", false)
-      .Reserve(cThreads->size());
+sTable.Header("ID").Header("FLAG").Header("P").Header("STATUS", false)
+      .Header("STTIME").Header("ENTIME").Header("UPTIME")
+      .Header("IDENTIFIER", false).Reserve(cThreads->size());
 // For each thread pointer
 for(const Thread*const tPtr : *cThreads)
 { // Get reference to class and write its data to the table
@@ -2051,7 +2051,8 @@ for(const Thread*const tPtr : *cThreads)
     { tRef.ThreadHaveCallback(), 'C' }, { tRef.ThreadIsParamSet(),   'P' },
     { tRef.ThreadShouldExit(),   'T' }, { tRef.ThreadIsException(),  'E' },
     { tRef.ThreadIsJoinable(),   'J' }, { tRef.ThreadIsExited(),     'X' },
-  })).DataN(tRef.ThreadGetPerf()).DataN(tRef.ThreadGetExitCode())
+  })).DataN(tRef.ThreadGetPerf())
+     .Data(cThreads->imCodes.Get(tRef.ThreadGetExitCode()))
      .Data(StrShortFromDuration(cLog->
        CCDeltaToClampedDouble(tRef.ThreadGetStartTime())))
      .Data(StrShortFromDuration(cLog->
