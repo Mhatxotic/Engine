@@ -3649,8 +3649,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     if(strLibX.length() < 10 || strLibX.substr(0, 10) != "libvorbis-")
       throw runtime_error{ "Extra argument must be a libvorbis package." };
     // Extract second archive then first archive
-    SetupTarRepoNSD(strLibPath, strTmp, PSLibX.strFile);
-    SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
+    SetupTarRepoNSD(strLibPath, strTmp, PSLib.strFile);
+    SetupTarRepo(strLibPathX, strTmp, PSLibX.strFile, PSLibXR.strFile);
     // Place ogg sources in lib vorbis
     SystemF("mv -f \"$/$/include/ogg\" \"$/$/include\"",
       strTmp, PSLibR.strFile, strTmp, PSLibXR.strFile);
@@ -3660,9 +3660,6 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       strTmp, PSLibR.strFile, strTmp, PSLibXR.strFile);
     // Remove ogg package
     SystemF("rm -rf \"$/$\"", strTmp, PSLibR.strFile);
-    // Set destination directory
-    const string strDir{ StrAppend(strTmp, '/', PSLibXR.strFile) };
-    SetDirectory(strDir);
     // Remove unneeded sources
     System("rm -f lib/barkmel.c lib/tone.c lib/psytune.c");
     // Add ogg/vorbis specific flags

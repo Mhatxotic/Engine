@@ -617,7 +617,7 @@ class SysCore :
       uiMajor,                         // Major OS version
       uiMinor,                         // Minor OS version
       uiBuild,                         // OS build version
-      numeric_limits<void*>::digits,   // 32 or 64 OS arch
+      sizeof(void*)<<3,                // 32 or 64 OS arch
       StdMove(strCode),                // Get locale
       DetectElevation(),               // Elevated?
       false                            // Wine or Old OS?

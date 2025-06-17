@@ -367,7 +367,7 @@ class SysCore :
       tVersion.empty()    ? 0 : StrToNum<unsigned int>(tVersion[0]),
       tVersion.size() < 2 ? 0 : StrToNum<unsigned int>(tVersion[1]),
       tVersion.size() < 3 ? 0 : StrToNum<unsigned int>(tVersion[2]),
-      sizeof(void*)*8, StdMove(strCode), DetectElevation(), false };
+      sizeof(void*)<<3, StdMove(strCode), DetectElevation(), false };
   }
   /* ----------------------------------------------------------------------- */
   ExeData GetExecutableData(void) { return { 0, 0, false, false }; }
