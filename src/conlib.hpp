@@ -2051,8 +2051,7 @@ for(const Thread*const tPtr : *cThreads)
     { tRef.ThreadHaveCallback(), 'C' }, { tRef.ThreadIsParamSet(),   'P' },
     { tRef.ThreadShouldExit(),   'T' }, { tRef.ThreadIsException(),  'E' },
     { tRef.ThreadIsJoinable(),   'J' }, { tRef.ThreadIsExited(),     'X' },
-  })).DataN(tRef.ThreadGetPerf())
-     .Data(cThreads->imCodes.Get(tRef.ThreadGetExitCode()))
+  })).DataN(tRef.ThreadGetPerf()).Data(tRef.ThreadGetExitCodeString())
      .Data(StrShortFromDuration(cLog->
        CCDeltaToClampedDouble(tRef.ThreadGetStartTime())))
      .Data(StrShortFromDuration(cLog->

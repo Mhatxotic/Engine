@@ -21,7 +21,7 @@ namespace P {                          // Start of public namespace
 enum ThreadStatus : int                // Thread status codes
 { /* ----------------------------------------------------------------------- */
   TS_EXCEPTION = -2,                   // (-2) Thread exited with an exception
-  TS_ERROR,                            // (-1) Thread will terminated cleanly
+  TS_ERROR,                            // (-1) Thread will terminate cleanly
   TS_STANDBY,                          // ( 0) Thread is in stand-by mode
   TS_RUNNING,                          // ( 1) Thread is running still
   TS_RETRY,                            // ( 2) Thread will start again
@@ -88,8 +88,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     cLog->LogDebugExSafe("Thread $<$> finished in $ with $.",
       CtrGet(), IdentGet(),
       StrShortFromDuration(ClockTimePointRangeToClampedDouble(
-        ThreadGetEndTime(), ThreadGetStartTime())),
-      cParent->imCodes.Get(ThreadGetExitCode()));
+        ThreadGetEndTime(), ThreadGetStartTime())), ThreadGetExitCodeString());
     // Reduce thread count
     --cParent->stRunning;
   } // exception occured in thread so handle it
@@ -137,6 +136,8 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   ThreadStatus ThreadGetExitCode(void) const { return tsCode; }
   void ThreadSetExitCode(const ThreadStatus tsNew) { tsCode = tsNew; }
+  const string_view ThreadGetExitCodeString(void) const
+    { return cParent->imCodes.Get(ThreadGetExitCode()); }
   /* ----------------------------------------------------------------------- */
   const CbThFunc &ThreadGetCallback(void) const { return ctfFunc; }
   bool ThreadHaveCallback(void) const { return !!ThreadGetCallback(); }
