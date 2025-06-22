@@ -288,6 +288,12 @@ static int StdPClose[[maybe_unused]](FILE*const fStream)
   { return pclose(fStream); }
 /* -- Wrapper for srandom() function --------------------------------------- */
 static void StdSRand(const unsigned int uiSeed) { srandom(uiSeed); }
+/* -- Wrapper for mmap function -------------------------------------------- */
+template<typename PtrType>PtrType *StdMMap(void*vpAddr,
+  const size_t stLen, const int iProtection, const int iFlags,
+  const int iDescriptor, const off_t otOffset)
+    { return reinterpret_cast<PtrType*>(Lib::OS::mmap(vpAddr, stLen,
+        iProtection, iFlags, iDescriptor, otOffset)); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Operating system check
 /* -- Some frequently used maximums ---------------------------------------- */

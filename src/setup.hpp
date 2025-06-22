@@ -351,51 +351,51 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 # undef PSAPI_VERSION                  // Don't need this anymore
 # undef GetObject                      // RapidJSon compatibility
 # define GLFW_EXPOSE_NATIVE_WIN32      // Expose Win32 specific funcs in GlfW
-#elif defined(LINUX)                   // Targeting Linux?
-# include <X11/Xlib.h>                 // Load X11 API
-# include <X11/extensions/Xrandr.h>    // Load X11 Xrandr API
-# include <wayland-client.h>           // Load WayLand API
-# include <elf.h>                      // Elf header file
-# include <link.h>                     // dlinfo() function
-# include <sys/ioctl.h>                // Gettingterminal size
-# include <sys/resource.h>             // Getting process memory info
-# include <sys/sysinfo.h>              // Getting system memory info
-# include <sys/time.h>                 // Getting time info
-# include <sys/times.h>                // Getting cpu usage info
-# include <sys/wait.h>                 // For waiting for pid
-# include <sys/mman.h>                 // Memory manager functions
-# include <sys/fcntl.h>                // File control macros
-# include <sys/types.h>                // Socket types
+#else                                  // Anything but Windows?
+# if defined(LINUX)                    // Targeting Linux?
+#  include <X11/Xlib.h>                // Load X11 API
+#  include <X11/extensions/Xrandr.h>   // Load X11 Xrandr API
+#  include <wayland-client.h>          // Load WayLand API
+#  include <elf.h>                     // Elf header file
+#  include <link.h>                    // dlinfo() function
+#  include <sys/ioctl.h>               // Gettingterminal size
+#  include <sys/resource.h>            // Getting process memory info
+#  include <sys/sysinfo.h>             // Getting system memory info
+#  include <sys/time.h>                // Getting time info
+#  include <sys/times.h>               // Getting cpu usage info
+#  include <sys/wait.h>                // For waiting for pid
+#  include <sys/fcntl.h>               // File control macros
+#  include <sys/types.h>               // Socket types
+#  undef Bool                          // Causes problem with FreeType
+#  define GLFW_EXPOSE_NATIVE_X11       // Expose X11 specific funcs in GLFW
+#  define GLFW_EXPOSE_NATIVE_WAYLAND   // Expose Wayland specific funcs in GLFW
+# elif defined(MACOS)                  // Targeting MacOS?
+#  include <ApplicationServices/ApplicationServices.h> // Load app services API
+#  include <objc/objc.h>               // Load ObjectiveC in C++ API
+#  include <sys/sysctl.h>              // Kernel info stuff
+#  include <mach/mach_init.h>          // For getting cpu and memory usage
+#  include <mach/mach_error.h>         // For getting cpu usage
+#  include <mach/mach_host.h>          // For getting cpu and memory usage
+#  include <mach/vm_map.h>             // For getting cpu usage
+#  include <mach/vm_statistics.h>      // For getting memory usage
+#  include <mach/mach_types.h>         // For getting memory usage
+#  include <mach/mach.h>               // For getting process memory usage
+#  include <mach/kern_return.h>        // For getting process memory usage
+#  include <mach/task_info.h>          // For getting process memory usage
+#  include <mach/mach_time.h>          // For getting system uptime
+#  include <mach-o/dyld.h>             // For enumerating shared objects
+#  include <mach-o/loader.h>           // For getting mach-o header format
+#  include <mach-o/fat.h>              // For getting mach-o fat header format
+#  include <fcntl.h>                   // File control macros
+#  include <termios.h>                 // For changing terminal settings
+#  include <libproc.h>                 // For getting program executable
+#  define _XOPEN_SOURCE_EXTENDED       // Unlock extended ncurses functionality
+     typedef void (*__sighandler_t)(int); // For signal() on MacOS
+#  define GLFW_EXPOSE_NATIVE_COCOA     // Expose Cocoa specific funcs in GLFW
+# endif                                // POSIX system check
+# include <semaphore.h>                // Semaphores
 # include <sys/socket.h>               // Socket header
-# undef Bool                           // Causes problem with FreeType
-# define GLFW_EXPOSE_NATIVE_X11        // Expose X11 specific funcs in GLFW
-# define GLFW_EXPOSE_NATIVE_WAYLAND    // Expose Wayland specific funcs in GLFW
-#elif defined(MACOS)                   // Targeting MacOS?
-# include <ApplicationServices/ApplicationServices.h> // Load app services API
-# include <objc/objc.h>                // Load ObjectiveC in C++ API
-# include <sys/sysctl.h>               // Kernel info stuff
-# include <mach/mach_init.h>           // For getting cpu and memory usage
-# include <mach/mach_error.h>          // For getting cpu usage
-# include <mach/mach_host.h>           // For getting cpu and memory usage
-# include <mach/vm_map.h>              // For getting cpu usage
-# include <mach/vm_statistics.h>       // For getting memory usage
-# include <mach/mach_types.h>          // For getting memory usage
-# include <mach/mach.h>                // For getting process memory usage
-# include <mach/kern_return.h>         // For getting process memory usage
-# include <mach/task_info.h>           // For getting process memory usage
-# include <mach/mach_time.h>           // For getting system uptime
-# include <mach-o/dyld.h>              // For enumerating shared objects
-# include <mach-o/loader.h>            // For getting mach-o header format
-# include <mach-o/fat.h>               // For getting mach-o fat header format
-# include <sys/mman.h>                 // For shm_* functions
-# include <fcntl.h>                    // File control macros
-# include <sys/socket.h>               // Socket functions and types
-# include <termios.h>                  // For changing terminal settings
-# include <libproc.h>                  // For getting program executable
-    /* --------------------------------------------------------------------- */
-# define _XOPEN_SOURCE_EXTENDED        // Unlock extended ncurses functionality
-    typedef void (*__sighandler_t)(int); // For signal() on MacOS
-# define GLFW_EXPOSE_NATIVE_COCOA      // Expose Cocoa specific funcs in GLFW
+# include <sys/mman.h>                 // Memory manager functions
 #endif                                 // Operating system check
     /* --------------------------------------------------------------------- */
     namespace OpenSSL                  // OPENSSL API FUNCTIONS

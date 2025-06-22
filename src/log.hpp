@@ -295,14 +295,21 @@ static class Log final :
     switch(strFN.length())
     { // Empty? Ignore
       case 0: return ACCEPT;
-      // One character? Compare it...
-      case 1: switch(strFN.front())
-      { // Check for requested use of stderr or stdout
-        case '!': Init(stderr, strStdErr); return ACCEPT;
-        case '-': Init(stdout, strStdOut); return ACCEPT;
-        // Anything else ignore and open the file normally
-        default: break;
-      } // Anything else just break;
+      // If not on Windows?
+#if !defined(WINDOWS)
+      // One character was specified?
+      case 1:
+        // Compare the character
+        switch(strFN.front())
+        { // Check for requested use of stderr or stdout
+          case '!': Init(stderr, strStdErr); return ACCEPT;
+          case '-': Init(stdout, strStdOut); return ACCEPT;
+          // Anything else ignore and open the file normally
+          default: break;
+        } // Done
+        break;
+#endif
+      // Anything else just break.
       default: break;
     } // Create new filename and set filename on success and return success
     if(!Init(StrAppend(strFN, "." LOG_EXTENSION))) return DENY;

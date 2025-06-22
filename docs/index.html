@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.6.1.34 -->
-<!-- Automatically built at Sun Jun 01 15:08:16 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.6.1.34 -->
+<!-- Reference for the Mhatxotic Engine API version 25.6.22.86 -->
+<!-- Automatically built at Sun Jun 22 17:37:46 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.6.22.86 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.6.1.34">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.6.22.86">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.6.1.34">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.6.22.86">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.6.1.34">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.6.22.86">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.6.1.34 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.6.22.86 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.6.1.34 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.6.22.86 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.6.1.34 API reference</H1>
+	<H1>Mhatxotic Engine 25.6.22.86 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 847 functions (405 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 209 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 847 functions (405 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 208 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1793,14 +1793,13 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(209 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(208 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
 								<OL>
 									<LI><A href="#cv.app_author">app_author</A></LI>
 									<LI><A href="#cv.app_cflags">app_cflags</A></LI>
-									<LI><A href="#cv.app_clearmutex">app_clearmutex</A></LI>
 									<LI><A href="#cv.app_cmdline">app_cmdline</A></LI>
 									<LI><A href="#cv.app_config">app_config</A></LI>
 									<LI><A href="#cv.app_copyright">app_copyright</A></LI>
@@ -11511,11 +11510,6 @@
 		<PRE>Specifies how the host wants to be run with the following flags&#x2e;&#x2e;&#x2e;<BR>[0x1] CFL_TERMINAL &#x3d; Opens &#x28;Win32&#x29; or reuses &#x28;Unix&#x29; a console window&#x2e;<BR>[0x2] CFL_AUDIO    &#x3d; Initialises an OpenAL audio context and exposes API&#x2e;<BR>[0x4] CFL_VIDEO    &#x3d; Initialises an OpenGL context&#x2b;window and exposes API&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="cv.app_clearmutex" style="display:none">
-		<H3>app_clearmutex</H3>
-		<PRE>Asks the system to delete the global mutex in Linux and MacOS so the engine can startup&#x2e; You only need to do this if the engine crashes&#x2e; On Windows the mutex is freed on process termination so there is never any need to use this on Windows&#x2e;<BR></PRE>
-		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="cv.app_cmdline" style="display:none">
 		<H3>app_cmdline</H3>
 		<PRE>Shows the commandline sent to the application it cannot be changed at all&#x2e;<BR></PRE>
@@ -12547,6 +12541,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sun Jun 01 15:08:16 2025 +0100</ADDRESS>
+	This document was generated at Sun Jun 22 17:37:46 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

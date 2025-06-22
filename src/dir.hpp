@@ -356,7 +356,7 @@ class DirCore :                        // System specific implementation
     // Data for stat
     struct stat sfssData;
     // Get information about the filename
-    if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData) == -1)
+    if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData))
     { // Not a directory (unknown)
       bIsDir = false;
       // Set the file data as blank
@@ -382,7 +382,7 @@ class DirCore :                        // System specific implementation
       // Set filename
       strFile = dePtr->d_name;
       // Get information about the filename
-      if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData) == -1)
+      if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData))
       { // Not a directory (unknown)
         bIsDir = false;
         // Set the file data as blank

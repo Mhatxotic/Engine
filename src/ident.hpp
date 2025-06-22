@@ -24,6 +24,7 @@ template<class StringType>             // STL string type to use
   const StringType &IdentGet(void) const { return strIdentifier; }
   /* -- Get identifier by address ------------------------------------------ */
   const char *IdentGetCStr(void) const { return IdentGet().c_str(); }
+  const char *IdentGetData(void) const { return IdentGet().data(); }
   /* -- Move constructor from another rvalue string ------------- */ protected:
   explicit IdentBase(StringType &&strId) :
     /* -- Initialisers ----------------------------------------------------- */

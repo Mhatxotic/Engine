@@ -948,17 +948,15 @@ sTable.Header("ID").Header("FL").Header("AX").Header("BT")
 // For each joystick
 const JoyList &jlList = cInput->JoyListGetConst();
 for(const JoyInfo &jiRef : jlList)
-{ // If joystick is connected
-  if(jiRef.JoyIsDisconnected())
-  { // If joystick name was empty then ignore it. Still show disconnected ones
-    if(jiRef.IdentGet().empty()) continue;
-  } // Store data
+{ // If joystick is disconnected and joystick name was empty then ignore it.
+  if(jiRef.JoyIsDisconnected() && jiRef.IdentIsNotSet()) continue;
+  // Store joystick data in table, even if disconnected showing last data.
   sTable.DataN(jiRef.JoyGetId()).Data(StrFromEvalTokens({
     { jiRef.JoyIsGamepad(), 'G' }, { jiRef.JoyIsConnected(), 'C' }
   })).DataN(jiRef.JoyAxisListCount()).DataN(jiRef.JoyButtonListCount())
      .Data(jiRef.JoyGUID()).Data(jiRef.JoyGamePadName())
      .Data(jiRef.IdentGet());
-} // Print totals
+} // Print totals.
 cConsole->AddLineF("$$ connected ($ supported).\n"
                    "Input flags are 0x$$.",
   sTable.Finish(),

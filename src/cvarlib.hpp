@@ -255,22 +255,6 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 { CFL_NONE, "app_longname", "Untitled", CBSTR(cSystem->SetGuestTitle),
   TSTRING|CNOTEMPTY|MTRIM|PSYSTEM },
 /* ------------------------------------------------------------------------- */
-// ! APP_CLEARMUTEX
-// ? Asks the system to delete the global mutex in Linux and MacOS so the
-// ? engine can startup. You only need to do this if the engine crashes. On
-// ? Windows the mutex is freed on process termination so there is never any
-// ? need to use this on Windows.
-/* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_clearmutex",
-  /* ----------------------------------------------------------------------- */
-#if !defined(WINDOWS) && defined(ALPHA)
-  cCommon->One(),
-#else
-  cCommon->Zero(),
-#endif
-  /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreClearMutex, bool), TBOOLEAN|PBOOT },
-/* ------------------------------------------------------------------------- */
 // ! ERR_INSTANCE
 // ? Tries to activate an existing window of the same name if another instance
 // ? is running. On Windows, mutexes are always cleaned up properly even in a

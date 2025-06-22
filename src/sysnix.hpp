@@ -23,6 +23,8 @@
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 class SysProcess                       // Need this before of System init order
+  /* -- Dependency classes ------------------------------------------------- */
+  private Ident                        // Mutex identifier
 { /* -- Streams ------------------------------------------------- */ protected:
   FStream          fsDevRandom,        // Handle to dev/random (rng)
                    fsProcStat,         // Handle to proc/stat (cpu)
@@ -45,7 +47,30 @@ class SysProcess                       // Need this before of System init order
     { return static_cast<IntType>(ullProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid(void) const
     { return static_cast<IntType>(vpThreadId); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Initialise global mutex ------------------------------------ */ public:
+  bool InitGlobalMutex(const string_view &strvTitle)
+  { // Initialise mutex ident
+    IdentSet(strvTitle);
+    // Create the semaphore and if the creation failed?
+    if(shm_open(strvTitle.data(), O_CREAT | O_EXCL, 0) == -1)
+    { // If it was because it already exists?
+      if(StdIsError(EEXIST) || StdIsError(EACCES))
+        cLog->LogWarningSafe(
+         "System detected another instance of this application running.");
+      // Execution may not continue
+      return false;
+    } // Report error
+    cLog->LogWarningExSafe("System failed to setup global mutex: $!",
+      SysError());
+  }
+  /* -- Destructor --------------------------------------------------------- */
+  ~SysProcess(void)
+  { // Unlink the mutex and show warning in log if failed
+    if(IdentIsSet() && shm_unlink(IdentGetData()))
+      cLog->LogWarningExSafe("SysMutex could not delete old mutex '$': $",
+        IdentGet(), SysError());
+  }
+  /* -- Constructor -------------------------------------------------------- */
   SysProcess(void) :
     /* -- Initialisers ----------------------------------------------------- */
     fsDevRandom{ "/dev/random",        // Open dev random garbage stream

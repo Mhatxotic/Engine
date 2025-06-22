@@ -848,13 +848,6 @@ class Core final                       // Members initially private
     // We changed the value
     return ACCEPT_HANDLED;
   }
-  /* -- Ask system to clear mutex ------------------ Core::SetOneInstance -- */
-  CVarReturn CoreClearMutex(const bool bEnabled)
-  { // Ignore check if not needed or global mutex creation succeeded
-    if(bEnabled) cSystem->DeleteGlobalMutex(cSystem->GetGuestTitle());
-    // Execution may continue
-    return ACCEPT;
-  }
   /* -- Set once instance cvar changed ------------- Core::SetOneInstance -- */
   CVarReturn CoreSetOneInstance(const bool bEnabled)
   { // Ignore check if not needed or global mutex creation succeeded

@@ -24,19 +24,130 @@
 ** ## again - they are only for initialisation.                           ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-class SysProcess                       // Need this before of System init order
+class SysProcess :                     // Need this before of System init order
+  /* -- Dependency classes ------------------------------------------------- */
+  private Ident                        // Mutex identifier
 { /* -- Private variables -------------------------------------------------- */
   const pid_t      ullProcessId;       // Process id
   const pthread_t  vpThreadId;         // Thread id
   /* -- Protected variables ------------------------------------- */ protected:
   const uint64_t   qwPageSize;         // Memory page size
   const mach_port_t mptHost, mptTask;  // Current mach host and task id
+  /* -- Shared memory ------------------------------------------------------ */
+  pid_t           *pProcessId;         // Process id (OS level memory)
+  static constexpr size_t stPidSize = sizeof(*pProcessId); // Size of a pid
   /* -- Return process and thread id --------------------------------------- */
   template<typename IntType=decltype(ullProcessId)>IntType GetPid(void) const
     { return static_cast<IntType>(ullProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid(void) const
     { return static_cast<IntType>(UtilBruteCast<const size_t>(vpThreadId)); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Initialise global mutex ------------------------------------ */ public:
+  bool InitGlobalMutex(const string_view &strvTitle)
+  { // Initialise mutex ident
+    IdentSet(strvTitle);
+    // Shared memory file descriptor helper
+    class Shm
+    { /* -- Private variables ---------------------------------------------- */
+      const string_view &strvTitle; // Filename of shm object
+      int               iFd,        // The file descriptor of the shm object
+                        iMode;      // Requested mode for the shm object
+      /* -- Return mode -------------------------------------------- */ public:
+      int Mode(void) const { return iMode; }
+      /* -- Get file descriptor -------------------------------------------- */
+      int Get(void) const { return iFd; }
+      /* -- Resize file descriptor content --------------------------------- */
+      bool Truncate(const size_t stSize) const
+        { return !ftruncate(Get(), stSize); }
+      /* -- Close the file descriptor -------------------------------------- */
+      bool Close(void)
+      { // Return success if already closed
+        if(Get() < 0) return true;
+        // Do the close and return failure if failed
+        if(close(Get())) return false;
+        // Reset the file descriptor
+        iFd = -1;
+        // Success
+        return true;
+      }
+      /* -- Open the file descriptor --------------------------------------- */
+      bool Open(const int iNMode)
+      { // Close previous file descriptor
+        Close();
+        // Set new mode
+        iMode = iNMode;
+        // Open and assign the new descriptor
+        iFd = shm_open(strvTitle.data(), iMode, 0600);
+        // Return if the open succeeded
+        return Get() >= 0;
+      }
+      /* -- Destructor that closes the file descriptor --------------------- */
+      ~Shm(void) { if(Get() >= 0) close(Get()); }
+      /* -- Constructor that initialises variables ------------------------- */
+      Shm(const string_view &strvNTitle) : strvTitle(strvNTitle),
+        iFd(-1), iMode(0) { }
+    } // Initialise a single object that automatically cleans up
+    shmShm{ strvTitle };
+    // Create the semaphore and if an error occurs?
+    if(!shmShm.Open(O_CREAT|O_EXCL|O_WRONLY))
+    { // Report error if it isn't because the semaphore already exists
+      if(StdIsNotError(EEXIST))
+        XCL("Failed to setup shared memory object for exclusive writing!",
+            "Name", strvTitle, "Mode", shmShm.Mode());
+      // Try opening it again for reading with exclusivity
+      if(!shmShm.Open(O_RDONLY|O_EXCL))
+        XCL("Failed to setup shared memory object for exclusive reading!",
+            "Name", strvTitle, "Mode", shmShm.Mode());
+      // Initialise memory
+      pProcessId = StdMMap<pid_t>
+        (nullptr, stPidSize, PROT_READ, MAP_SHARED, shmShm.Get(), 0);
+      if(pProcessId == MAP_FAILED)
+        XCL("Failed to setup shared memory for reading!",
+            "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+      // Test if the process exists
+      if(getpgid(*pProcessId) >= 0)
+      { // Put in log that another instance of this application is running and
+        // return to caller that execution must cease.
+        cLog->LogWarningExSafe("System detected another instance of this "
+          "application running at pid $.", *pProcessId);
+        return false;
+      } // Put in log that another instance of this application is running.
+      cLog->LogWarningExSafe(
+        "Previous pid of $ not valid so assuming no previous instance.",
+        *pProcessId);
+      // Unmap previous shared memory
+      if(munmap(pProcessId, stPidSize))
+        XCL("Failed to unmap shared memory from reading!", "Name", strvTitle);
+      // Try reopening for exclusive writing again
+      if(!shmShm.Open(O_WRONLY|O_EXCL))
+        XCL("Failed to setup shared memory object for exclusive writing!",
+            "Name", strvTitle, "Mode", shmShm.Mode());
+    } // Make sure it is the correct size
+    if(!shmShm.Truncate(stPidSize) && StdIsNotError(EINVAL))
+      XCL("Failed to truncate shared memory object!",
+          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+    // Initialise memory
+    pProcessId = StdMMap<pid_t>
+      (nullptr, stPidSize, PROT_WRITE, MAP_SHARED, shmShm.Get(), 0);
+    if(pProcessId == MAP_FAILED)
+      XCL("Failed to setup shared memory for writing!",
+          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+    // Write the current PID to shared memory
+    *pProcessId = ullProcessId;
+    // Execution can continue
+    return true;
+  }
+  /* -- Destructor --------------------------------------------------------- */
+  ~SysProcess(void)
+  { // Unmap the memory containing the pid and reset the pid memory address
+    if(pProcessId && munmap(pProcessId, stPidSize))
+      cLog->LogWarningExSafe("System failed to unmap shared memory of size "
+        "$ bytes! $", stPidSize, SysError());
+    // Unlink the shared memory object if data is set
+    if(IdentIsSet() && shm_unlink(IdentGetData()))
+      cLog->LogWarningExSafe("System failed to unlink shared memory object "
+        "'$'! $", IdentGet(), SysError());
+  }
+  /* -- Constructor -------------------------------------------------------- */
   SysProcess(void) :
     /* -- Initialisers ----------------------------------------------------- */
     ullProcessId(getpid()),            // Initialise process id number
@@ -44,7 +155,8 @@ class SysProcess                       // Need this before of System init order
     qwPageSize(static_cast<uint64_t>   // Initialise memory page size
       (sysconf(_SC_PAGESIZE))),        // Usually 16k on M1 or 4k on Intel
     mptHost(mach_host_self()),         // Initialise host task
-    mptTask(mach_task_self())          // Initialise self task
+    mptTask(mach_task_self()),         // Initialise self task
+    pProcessId(nullptr)                // Process id memory not available
     /* -- No code ---------------------------------------------------------- */
     { }
 };/* == Class ============================================================== */
