@@ -850,10 +850,12 @@ class Core final                       // Members initially private
   }
   /* -- Set once instance cvar changed ------------- Core::SetOneInstance -- */
   CVarReturn CoreSetOneInstance(const bool bEnabled)
-  { // Ignore check if not needed or global mutex creation succeeded
+  { // Ignore check if not needed or global mutex creation succeeded.
     if(!bEnabled || cSystem->InitGlobalMutex(cSystem->GetGuestTitle()))
       return ACCEPT;
-    // Global mutex creation failed so exit program now, cleanly.
+    // De-initialise the log as we are about to exit.
+    cLog->DeInitSafe();
+    // Global mutex creation failed so exit program now.
     exit(5);
   }
   /* -- Set home directory where files are written if base dir dont work --- */
