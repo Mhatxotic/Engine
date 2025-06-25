@@ -83,10 +83,15 @@ class SysProcess :                     // Need this before of System init order
       /* -- Destructor that closes the file descriptor --------------------- */
       ~Shm(void) { if(Get() >= 0) close(Get()); }
       /* -- Constructor that initialises variables ------------------------- */
-      Shm(const string_view &strvNTitle) : strvTitle(strvNTitle),
-        iFd(-1), iMode(0) { }
-    } // Initialise a single object that automatically cleans up
-    shmShm{ strvTitle };
+      explicit Shm(const string_view &strvNTitle) :
+        /* -- Initialisers ------------------------------------------------- */
+        strvTitle(strvNTitle),         // Set reference to title
+        iFd(-1),                       // File descriptor uninitialised
+        iMode(0)                       // Mode uninitialised
+        /* -- No code ------------------------------------------------------ */
+        { }
+      /* -- Initialise a single object that automatically cleans up -------- */
+    } shmShm{ strvTitle };
     // Create the semaphore and if an error occurs?
     if(!shmShm.Open(O_CREAT|O_EXCL|O_WRONLY))
     { // Report error if it isn't because the semaphore already exists

@@ -47,7 +47,7 @@ FILETYPE           VFT_APP
 {
   BLOCK "StringFileInfo"
   {
-    BLOCK "08091252"
+    BLOCK "080904B0"
     {
       VALUE "CompanyName",      "Mhatxotic Design"
       VALUE "FileDescription",  "Mhatxotic Engine"
@@ -63,7 +63,7 @@ FILETYPE           VFT_APP
   }
   BLOCK "VarFileInfo"
   {
-    VALUE "Translation",        0x0809 0x04E4
+    VALUE "Translation",        0x0809 0x04B0
   }
 }
 /* ------------------------------------------------------------------------- */

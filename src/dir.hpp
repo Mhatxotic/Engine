@@ -318,9 +318,9 @@ class DirCore :                        // System specific implementation
   /* -- Constructor for WIN32 system --------------------------------------- */
   explicit DirCore(const string &strDir) :
     /* -- Initialisers ----------------------------------------------------- */
-    iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ? "*" :
+    iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ? cCommon->Asterisk() :
       StrAppend(StrTrimSuffix(strDir, cCommon->CFSlash()),
-        cCommon->CFSlash(), "*")).c_str(), &wfData)),
+        cCommon->CFSlash(), cCommon->Asterisk())).c_str(), &wfData)),
     bMore(iHandle != -1)
     /* -- Process file if there are more ----------------------------------- */
     { if(bMore) ProcessItem(); }

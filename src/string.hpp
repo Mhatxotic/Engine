@@ -15,28 +15,10 @@ namespace P {                          // Start of public module namespace
 /* -- Common class with common objects ------------------------------------- */
 static class Common final              // Members initially private
 { /* -- Private variables -------------------------------------------------- */
-  const string     strTrue,            // C++ string as "true"
-                   strFalse,           // C++ string as "false"
-                   strY,               // C++ string as "Y"
-                   strN,               // C++ string as "N"
-                   strEquals,          // C++ string as "="
-                   strNOne,            // C++ string as "-1"
-                   strZero,            // C++ string as "0"
-                   strOne,             // C++ string as "1"
-                   strSpace,           // C++ string with whitespace
-                   strEllipsis,        // C++ string for "..."
-                   strBlank,           // Empty c++ string
-                   strCr,              // Carriage return c++ string
-                   strLf,              // Linefeed c++ string
-                   strCrLf,            // CR and LF c++ string
-                   strCrLf2,           // Double CR and LF c++ string
-                   strLfCr,            // LF and CR c++ string
-                   strFSlash,          // C++ string as forward-slash '/'
-                   strUnspec,          // C++ string as "<Unspecified>"
-                   strNull,            // C++ string as "<NullPtr>"
-                   strPeriod,          // C++ string as "."
-                   strTwoPeriod,       // C++ string as ".."
-                   strLuaName;         // C++ string as "__name"
+  const string strTrue, strFalse, strY, strN, strEquals, strNOne, strZero,
+    strOne, strSpace, strDblSpace, strBlank, strCr, strLf, strCrLf, strCrLf2,
+    strLfCr, strFSlash, strUnspec, strNull, strPeriod, str2Period, strEllipsis,
+    strLuaName, strPrivate, strProtected, strEmpty, strInvalid, strAsterisk;
   const char       cFSlash;            // Forward slash character
   const char*const cpBlank;            // Blank C-String
   locale           lLocaleCurrent;     // Current locale
@@ -61,14 +43,20 @@ static class Common final              // Members initially private
   const string &CrLf2(void) const { return strCrLf2; }
   const string &LfCr(void) const { return strLfCr; }
   const string &Space(void) const { return strSpace; }
+  const string &DblSpace(void) const { return strDblSpace; }
   const string &Ellipsis(void) const { return strEllipsis; }
   const string &FSlash(void) const { return strFSlash; }
   char CFSlash(void) const { return cFSlash; }
   const string &Unspec(void) const { return strUnspec; }
   const string &Null(void) const { return strNull; }
   const string &Period(void) const { return strPeriod; }
-  const string &TwoPeriod(void) const { return strTwoPeriod; }
+  const string &TwoPeriod(void) const { return str2Period; }
   const string &LuaName(void) const { return strLuaName; }
+  const string &Private(void) const { return strPrivate; }
+  const string &Protected(void) const { return strProtected; }
+  const string &Empty(void) const { return strEmpty; }
+  const string &Invalid(void) const { return strInvalid; }
+  const string &Asterisk(void) const { return strAsterisk; }
   /* -- Default Constructor ------------------------------------------------ */
   Common(void) :                       // No parameters
     /* -- Initialisers ----------------------------------------------------- */
@@ -76,13 +64,16 @@ static class Common final              // Members initially private
     strY{ "Y" },                       strN{ "N" },
     strEquals{ "=" },                  strNOne{ "-1" },
     strZero{ "0" },                    strOne{ "1" },
-    strSpace{ " " },                   strEllipsis{ "..." },
+    strSpace{ " " },                   strDblSpace{ "  " },
     strCr{ "\r" },                     strLf{ "\n" },
-    strCrLf{ strCr + strLf },          strCrLf2{ strCrLf + strCrLf },
-    strLfCr{ strLf + strCr },          strFSlash{ "/" },
-    strUnspec{ "<Unspecified>" },      strNull{ "<NullPtr>" },
-    strPeriod{ "." },                  strTwoPeriod{ ".." },
-    strLuaName{ "__name" },            cFSlash(strFSlash[0]),
+    strCrLf{ "\r\n" },                 strCrLf2{ "\r\n\r\n" },
+    strLfCr{ "\n\r" },                 strFSlash{ "/" },
+    strUnspec{ "<Unspecified>" },      strNull{ "<Null>" },
+    strPeriod{ "." },                  str2Period{ ".." },
+    strEllipsis{ "..." },              strLuaName{ "__name" },
+    strPrivate{ "<Private>" },         strProtected{ "<Protected>" },
+    strEmpty{ "<Empty>" },             strInvalid{ "<Invalid>" },
+    strAsterisk{ "*" },                cFSlash(strFSlash[0]),
     cpBlank(strBlank.c_str()),         lLocaleCurrent{ strBlank }
     /* -- No code ---------------------------------------------------------- */
     { }
@@ -1008,7 +999,7 @@ static const string StrFromTimeTT(const StdTimeT ttTimestamp,
 /* -- Remove suffixing carriage return and line feed ----------------------- */
 static string &StrChop(string &strStr)
 { // Find the pos of the last char that is not a carriage return or line feed
-  const size_t stEndPos = strStr.find_last_not_of("\r\n");
+  const size_t stEndPos = strStr.find_last_not_of(cCommon->CrLf());
   // If all characters are removed, set the string to empty else erase the part
   if(stEndPos == StdNPos) strStr.clear();
   else strStr.erase(stEndPos + 1);

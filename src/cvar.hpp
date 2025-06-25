@@ -90,13 +90,11 @@ class CVarItem :                       // Members initially private
     CR_FAIL_COMPRESS,                  // Cvar could not be compress
   };/* -- Private variables ------------------------------------------------ */
   const string   strVar;               // Variable name
-  string         strValue;             // Value name
-  string         strDefValue;          // Default value name
+  string         strValue,             // Value name
+                 strDefValue;          // Default value name
   CbFunc         cfTrigger;            // Callback trigger event
   /* --------------------------------------------------------------- */ public:
   const CbFunc &GetTrigger(void) const { return cfTrigger; }
-  /* -- To stop a false positive in CppCheck ------------------------------- */
-  void NullOp(void) { }
   /* ----------------------------------------------------------------------- */
   void SetTrigger(const CbFunc &cfCb) { cfTrigger = cfCb; }
   /* ----------------------------------------------------------------------- */
@@ -138,15 +136,15 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   void SetValue(string &&strV) { strValue = StdMove(strV); }
   /* ----------------------------------------------------------------------- */
-  const string Protect(void) const
+  const string GetValueSafe(void) const
   { // If confidential, return confidential
     if(FlagIsSet(CONFIDENTIAL) && csfShowFlags.FlagIsClear(CSF_CONFIDENTIAL))
-      return "<Private>";
+      return cCommon->Private();
     // If protected, return protected
     if(FlagIsSet(CPROTECTED) && csfShowFlags.FlagIsClear(CSF_PROTECTED))
-      return "<Protected>";
+      return cCommon->Protected();
     // If value is empty, return as empty
-    if(IsValueUnset()) return "<Empty>";
+    if(IsValueUnset()) return cCommon->Empty();
     // If is a float, return value
     if(FlagIsSet(TFLOAT))
       return StrFromNum(StrToNum<double>(GetValue()), 0, 12);
@@ -156,8 +154,8 @@ class CVarItem :                       // Members initially private
     // If is a integer, return number + hex
     if(FlagIsSet(TINTEGER))
     { // Get value as 64-bit integer
-      const ValueIntType iV = StrToNum<ValueIntType>(GetValue());
-      return StrFormat("$ [0x$$]", iV, hex, iV);
+      const ValueIntType vitV = StrToNum<ValueIntType>(GetValue());
+      return StrFormat("$ [0x$$]", vitV, hex, vitV);
     } // Unknown value or string. Return as-is.
     return StrFormat("\"$\"", GetValue());
   }
@@ -330,7 +328,7 @@ class CVarItem :                       // Members initially private
     } // Log progress and return success
     cLog->LogDebugExSafe("CVars $ '$' to $.",
       ccfcFlags.FlagIsSet(CCF_NEWCVAR) ? "registered" : "set",
-      GetVar(), Protect());
+      GetVar(), GetValueSafe());
     // Return success
     return CVS_OK;
   }

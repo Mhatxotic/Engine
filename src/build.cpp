@@ -4417,7 +4417,7 @@ bool CheckCommandLine(string &strX1, string &strX2)
   { // Write option to screen
     cout << ((uiFlags & flI.second.uiAdd) ? '*' : ' ')
          << flI.first
-         << (flI.second.uiArg ? " x" : "  ")
+         << (flI.second.uiArg ? " x" : cCommon->DblSpace())
          << " = "
          << setw(stWidth)
          << string{ flI.second.cpDesc, 0, stMax }

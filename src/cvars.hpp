@@ -369,13 +369,14 @@ static struct CVars final :            // Start of vars class
   /* -- Return last error from callback (also moves it) -------------------- */
   const string GetCBError(void) { return StdMove(strCBError); }
   /* ----------------------------------------------------------------------- */
-  const string Protect(const CVarMapConstIt cvmicIt) const
-    { return cvmicIt->second.Protect(); }
+  const string GetValueSafe(const CVarMapConstIt cvmciIt) const
+    { return cvmciIt->second.GetValueSafe(); }
   /* ----------------------------------------------------------------------- */
-  const string Protect(const string &strVar) const
+  const string GetValueSafe(const string &strVar) const
   { // Find item and return invalid if not found
     const CVarMapConstIt cvmciIt{ FindVariableConst(strVar) };
-    return cvmciIt == cvmActive.cend() ? "<invalid>" : Protect(cvmciIt);
+    return cvmciIt == cvmActive.cend() ?
+      cCommon->Invalid() : GetValueSafe(cvmciIt);
   }
   /* ----------------------------------------------------------------------- */
   size_t MarkAllEncodedVarsAsCommit(void)

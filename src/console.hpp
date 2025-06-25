@@ -488,7 +488,7 @@ static class Console final :           // Members initially private
         // No value specified?
         if(aList.size() <= 1)
         { // Show it
-          osS << "is currently " << cCVars->Protect(cvmMapIt) << "!";
+          osS << "is currently " << cCVars->GetValueSafe(cvmMapIt) << "!";
           // Copy it to clipboard if requested
           if(FlagIsSet(CF_AUTOCOPYCVAR))
             cGlFW->WinSetClipboardString(StrFormat("$ \"$\"",
@@ -499,7 +499,7 @@ static class Console final :           // Members initially private
           cCVars->Set(cvmMapIt, aList[1], PUSR, CCF_NOTHING))
         { // Success. Show result
           case CVS_OK:
-            osS << "is now " << cCVars->Protect(cvmMapIt) << '!'; break;
+            osS << "is now " << cCVars->GetValueSafe(cvmMapIt) << '!'; break;
           // Success. Show result
           case CVS_OKNOTCHANGED: osS << "not changed!"; break;
           // Cvar not found (THIS SHOULDNT HAPPEN!!!)

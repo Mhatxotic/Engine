@@ -57,31 +57,27 @@ class SysProcess :                     // Need this before of System init order
     cLog->LogDebugExSafe("- Found window handle at $$.\n"
                  "- Window name is '$'.",
       hex, reinterpret_cast<void*>(hH), WS16toUTF(wstrT));
-    // First try showing the window and if successful?
+    // First try showing the window and if successful? Log the successful
+    // command else if showing the window failed? Log the failure with reason
     if(ShowWindow(hH, SW_RESTORE|SW_SHOWNORMAL))
-    { // Log the successful command
       cLog->LogDebugSafe("- Show window request was successful.");
-    } // Showing the window failed?
     else
-    { // Log the failure with reason
       cLog->LogWarningExSafe("- Show window request failed: $!", SysError());
-    } // Then try setting it as a foreground window and if succeeded?
+    // Then try setting it as a foreground window and if succeeded? Log the
+    // successful command else if setting the foreground window failed? Log the
+    // failure with reason.
     if(SetForegroundWindow(hH))
-    { // Log the successful command
       cLog->LogDebugSafe("- Set fg window request was successful.");
-    } // Setting foreground window failed?
     else
-    { // Log the failure with reason
       cLog->LogWarningExSafe("- Set fg window request failed: $!", SysError());
-    }// Then try setting the focus of the window and if succeeded?
+    // Then try setting the focus of the window and if succeeded? Log the
+    // successful command else if the setting focus failed? Log the failure
+    // with reason.
     if(SetFocus(hH) || SysIsErrorCode())
-    { // Log the successful command
       cLog->LogDebugSafe("- Set focus request was successful.");
-    } // Setting focus failed?
     else
-    { // Log the failure with reason
       cLog->LogWarningExSafe("- Set focus request failed: $!", SysError());
-    } // Reset error so it's not seen as the result
+    // Reset error so it's not seen as the result
     SetLastError(0);
     // Don't look for any more windows
     return FALSE;
@@ -1083,7 +1079,7 @@ class SysCore :
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir(void) const
-    { return cCmdLine->MakeEnvPath("APPDATA", ""); }
+    { return cCmdLine->MakeEnvPath("APPDATA", cCommon->Blank()); }
   /* -- Constructor (only derivable) --------------------------------------- */
   SysCore(void) :
     /* -- Initialisers ----------------------------------------------------- */

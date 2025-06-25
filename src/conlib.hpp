@@ -1973,7 +1973,7 @@ if(cSql->ExecuteAndSuccess(StrImplode(aArgs, 1)))
           case SQLITE_TEXT: sTable.Data("T")
                                   .Data(sdRef.MemToStringSafe()); break;
           // No data
-          case SQLITE_NULL: sTable.Data("N").Data("<Null>"); break;
+          case SQLITE_NULL: sTable.Data("N").Data(cCommon->Null()); break;
           // Unknown type (impossible)
           default: sTable.Data("?")
                          .DataF("<Type $[0x$$]>",

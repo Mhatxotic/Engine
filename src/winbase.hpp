@@ -188,7 +188,7 @@ class SysBase :                        // Members initially private
 #define D128X(id,x,e) id "=" \
       << setw(16) << *reinterpret_cast<const uint64_t*>(&cData.x)\
       << setw(16) << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
-    const string strCrLf{ "\r\n" }, strSpc{ "  " };
+    const string &strCrLf = cCommon->CrLf(), &strSpc = cCommon->DblSpace();
     // Return registers
 #if defined(X64)
     // Write basic registers

@@ -195,7 +195,7 @@ class SysVersion :
   SysVersion(SysModMap &&smlOther, const size_t stI) :
     /* -- Initialisers ----------------------------------------------------- */
     SysModules{ StdMove(smlOther) },            // Move system modules list
-    smdEng{ StdMove(FindBaseModuleInfo(stI)) }, // Move engine executable info
+    smdEng{ FindBaseModuleInfo(stI) },          // Move engine executable info
     strvBuildType{ BUILD_TYPE_LABEL },          // Build type
     strvCompVer{ COMPILER_VERSION },            // Compiler version
     strvCompiled{ VER_DATE },                   // Compilation date

@@ -244,7 +244,7 @@ static void VariablesMakeInformationTokens(Statistic &sTable,
     { cviVar.FlagIsSet(MTRIM),        'R' },
     { cviVar.IsTriggerSet(),          'K' }
   // Name and value
-  })).Data(cviVar.GetVar()).Data(cviVar.Protect());
+  })).Data(cviVar.GetVar()).Data(cviVar.GetValueSafe());
 }
 /* -- Enumerate a list ----------------------------------------------------- */
 template<class MapType>
