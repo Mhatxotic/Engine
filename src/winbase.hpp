@@ -188,7 +188,8 @@ class SysBase :                        // Members initially private
 #define D128X(id,x,e) id "=" \
       << setw(16) << *reinterpret_cast<const uint64_t*>(&cData.x)\
       << setw(16) << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
-    const string &strCrLf = cCommon->CrLf(), &strSpc = cCommon->DblSpace();
+    const string &strCrLf = cCommon->CommonCrLf(),
+                 &strSpc = cCommon->CommonDblSpace();
     // Return registers
 #if defined(X64)
     // Write basic registers
@@ -642,7 +643,7 @@ class SysBase :                        // Members initially private
     // Prepare summary
     const string strDialog{ SEHGetSummary(epData) };
     // Clear string stream
-    osS.str(cCommon->CBlank());
+    osS.str(cCommon->CommonCBlank());
     // Write the log file
     SEHDumpLog(epData.ContextRecord, strDialog);
     // No need to show anything if we're in a debugger

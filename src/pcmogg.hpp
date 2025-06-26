@@ -72,7 +72,8 @@ static class CodecOGG final :          // OGG codec object
         *cpPtr = '\0';
         ssMetaData.insert(ssMetaData.cend(), { cpStr, cpPtr+1 });
       } // We at least have a string so add it as key with empty value
-      else ssMetaData.insert(ssMetaData.cend(), { cpStr, cCommon->CBlank() });
+      else ssMetaData.insert(ssMetaData.cend(),
+        { cpStr, cCommon->CommonCBlank() });
     }); // Return built metadata
     return ssMetaData;
   }

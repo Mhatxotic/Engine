@@ -737,10 +737,15 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // trying to optimise/one-line this as MSVC compiler WILL evaluate
       // expressions in the opposite direction.
       const string
-        strReq{ StdMove(GetRegistry(cParent->strRegVarREQ)) },
-        strBody{ StdMove(GetRegistry(cParent->strRegVarBODY)) },
-        strHdrs{ StdMove(pRegistry.ParserImplodeEx(": ", cCommon->CrLf())) },
-        strPk{ StdMove(StrAppend(strReq, strHdrs, cCommon->CrLf(), strBody)) };
+        strReq{
+          StdMove(GetRegistry(cParent->strRegVarREQ)) },
+        strBody{
+          StdMove(GetRegistry(cParent->strRegVarBODY)) },
+        strHdrs{
+          StdMove(pRegistry.ParserImplodeEx(": ", cCommon->CommonCrLf())) },
+        strPk{
+          StdMove(StrAppend(strReq, strHdrs, cCommon->CommonCrLf(),
+            strBody)) };
       // Write the full request to the server and return if failed
       if(SockWrite(strPk) == static_cast<unsigned int>(TS_ERROR))
         return TS_ERROR;
@@ -795,7 +800,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       } // Make string view of response which could contain binary chars
       string_view strvResp{ mDest.MemPtr<char>(), uiBX };
       // Find end of headers marker and if we do not have it yet?
-      const size_t stEnd = strvResp.find(cCommon->CrLf2());
+      const size_t stEnd = strvResp.find(cCommon->CommonCrLf2());
       if(stEnd == StdNPos)
       { // Check for binary data and if we found binary data? Bail out!
         if(!ValidHeaderPacket(strvResp))
@@ -821,7 +826,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Add rest of response to headers
       strHeaders += strvResp;
       // Build output headers list by exploding header string
-      pRegistry.ParserReInit(strHeaders, cCommon->CrLf(), ':');
+      pRegistry.ParserReInit(strHeaders, cCommon->CommonCrLf(), ':');
       if(pRegistry.empty()) return SetErrorStaticSafe("No response");
       // Done with the headers string
       strHeaders.clear();
@@ -831,7 +836,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         vlR{ pRegistry.find(cParent->strRegVarRESPONSE) };
       if(vlR == pRegistry.cend()) return SetErrorStaticSafe("Bad response");
       // Split into words. We should have got at least three words
-      const Token tWords{ vlR->second, cCommon->Space() };
+      const Token tWords{ vlR->second, cCommon->CommonSpace() };
       if(tWords.size() < 3) return SetErrorStaticSafe("Unknown response");
       // Get protocol and if it is not valid?
       const string &strProtoRecv = tWords.front();
@@ -1361,13 +1366,13 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
                  strB{ LuaUtilGetCppStr(lS, 7) };
     LuaUtilCheckFunc(lS, 8);
     // Request must begin with a forward slash
-    if(strR.front() != cCommon->CFSlash())
+    if(strR.front() != cCommon->CommonCFSlash())
       XC("Resource is invalid!", "Resource", strR);
     // Set address and TLS cipher
     SetAddress(strA, uiP);
     SetupCipher(strC);
     // Initialise registry with headers
-    pRegistry.ParserReInit(strH, cCommon->Lf(), ':');
+    pRegistry.ParserReInit(strH, cCommon->CommonLf(), ':');
     // Push default user agent if not specified already
     pRegistry.ParserPushIfNotExist("user-agent", cSockets->strvUserAgent);
     // Find if the request contains a bookmark fragment
@@ -1549,7 +1554,7 @@ static StrNCStrMap SocketOAuth11(const string &strMethod,
   const string &strScheme, const string &strHost, const string &strPort,
   const string &strReq, const string &strURLparams, const string &strParams)
 { // Input varlist and split params into it
-  Parser<> pParams{ strParams, cCommon->Lf(), '=' };
+  Parser<> pParams{ strParams, cCommon->CommonLf(), '=' };
   if(pParams.empty()) return {};
   // Get consumer key
   const string strCK{ pParams.Extract("oauth_consumer_key") };
@@ -1582,7 +1587,7 @@ static StrNCStrMap SocketOAuth11(const string &strMethod,
   // If scheme and default port are equal then ignore port
   const string strCPort{ (strScheme == "https" && strPort != "443") ||
     (strScheme == "http" && strPort != "80") ?
-      StrAppend(':', strPort) : cCommon->Blank() };
+      StrAppend(':', strPort) : cCommon->CommonBlank() };
   // Generate full url
   string strAddr{ StrAppend(strScheme, "://", strHost, strCPort, strReq) };
   // Put basic stuff in. Be careful of using StrPair with CStrings as

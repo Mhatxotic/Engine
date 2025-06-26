@@ -26,7 +26,9 @@ enum ExitOperation : unsigned int      // Things to do at exit
   EO_UI_REBOOT,                        // Same as above but in UI mode
 };/* ----------------------------------------------------------------------- */
 /* -- Command line helper class (should be the first global to inti) ------- */
-static struct CmdLine final            // Members initially public
+struct CmdLine;                        // Class prototype
+static CmdLine *cCmdLine = nullptr;    // Address of global class
+struct CmdLine                         // Members initially public
 { /* -- Command-line and environment variables ---------------------*/ private:
   ExitOperation    eoExit;             // Actions to perform at exit
   int              iArgC;              // Arguments count
@@ -37,23 +39,24 @@ static struct CmdLine final            // Members initially public
   const string     strCWD;             // Current startup working directory
   string           strHD;              // Persistant directory
   /* -- Set persistant directory ----------------------------------- */ public:
-  void SetHome(const string &strDir) { strHD = strDir; }
+  void CmdLineSetHome(const string &strDir) { strHD = strDir; }
   /* -- Get persistant directory ------------------------------------------- */
-  bool IsNoHome(void) const { return strHD.empty(); }
-  bool IsHome(void) const { return !IsNoHome(); }
+  bool CmdLineIsNoHome(void) const { return strHD.empty(); }
+  bool CmdLineIsHome(void) const { return !CmdLineIsNoHome(); }
   /* -- Return and move string into output string -------------------------- */
-  const string &GetHome(void) const { return strHD; }
-  const string GetHome(const string &strSuf) const
-    { return StrAppend(GetHome(), strSuf); }
+  const string &CmdLineGetHome(void) const { return strHD; }
+  const string CmdLineGetHome(const string &strSuf) const
+    { return StrAppend(CmdLineGetHome(), strSuf); }
   /* -- Get environment variable ------------------------------------------- */
-  const string &GetEnv(const string &strEnv,
-    const string &strO=cCommon->Blank()) const
+  const string &CmdLineGetEnv(const string &strEnv,
+    const string &strO=cCommon->CommonBlank()) const
   { // Find item and return it else return the default item
     const StrStrMapConstIt eiEnv{ lEnv.find(strEnv) };
     return eiEnv == lEnv.cend() ? strO : eiEnv->second;
   }
   /* -- Get environment variable and check that it is a valid pathname ----- */
-  const string MakeEnvPath(const string &strEnv, const string &strSuffix)
+  const string CmdLineMakeEnvPath(const string &strEnv,
+    const string &strSuffix)
   { // Get home environment variable and throw error if not found
     const StrStrMapConstIt eiEnv{ lEnv.find(strEnv) };
     if(eiEnv == lEnv.cend())
@@ -66,28 +69,29 @@ static struct CmdLine final            // Members initially public
     // Show error otherwise
     XC("The specified environment variable is invalid!",
        "Variable", strEnv,
-       "Reason",   cDirBase->VNRtoStr(vRes),
+       "Reason",   cDirBase->DirBaseVNRtoStr(vRes),
        "Result",   vRes);
   }
   /* -- Get parameter total ------------------------------------------------ */
-  size_t GetTotalCArgs(void) const { return static_cast<size_t>(iArgC); }
-  ArgType*const*GetCArgs(void) const { return lArgV; }
-  ArgType*const*GetCEnv(void) const { return lEnvP; }
-  const StrStrMap &GetEnvList(void) const { return lEnv; }
-  const StrVector &GetArgList(void) const { return svArg; }
+  size_t CmdLineGetTotalCArgs(void) const
+    { return static_cast<size_t>(iArgC); }
+  ArgType*const*CmdLineGetCArgs(void) const { return lArgV; }
+  ArgType*const*CmdLineGetCEnv(void) const { return lEnvP; }
+  const StrStrMap &CmdLineGetEnvList(void) const { return lEnv; }
+  const StrVector &CmdLineGetArgList(void) const { return svArg; }
   /* -- Set restart flag (0 = no restart, 1 = no params, 2 = params) ------- */
-  void SetRestart(const ExitOperation ecCmd) { eoExit = ecCmd; }
+  void CmdLineSetRestart(const ExitOperation ecCmd) { eoExit = ecCmd; }
   /* -- Get startup current directory -------------------------------------- */
-  const string &GetStartupCWD(void) const { return strCWD; }
+  const string &CmdLineGetStartupCWD(void) const { return strCWD; }
   /* -- Return to startup directory ---------------------------------------- */
-  void SetStartupCWD(void)
+  void CmdLineSetStartupCWD(void)
   { // Try to set the startup working direcotry and throw if failed.
-    if(!DirSetCWD(GetStartupCWD()))
+    if(!DirSetCWD(CmdLineGetStartupCWD()))
       XCL("Failed to set startup working directory!",
-          "Directory", GetStartupCWD());
+          "Directory", CmdLineGetStartupCWD());
   }
   /* -- Parse command line arguments --------------------------------------- */
-  StrVector ParseArgumentsArray(void)
+  StrVector CmdLineParseArgArray(void)
   { // Check that args are valid
     if(iArgC < 1) XC("Arguments array count corrupted!", "Count", iArgC);
     // Check that args are valid
@@ -109,7 +113,7 @@ static struct CmdLine final            // Members initially public
     return svRet;
   }
   /* -- Parse environment variables ---------------------------------------- */
-  StrStrMap ParseEnvironmentArray(void)
+  StrStrMap CmdLineParseEnvArray(void)
   { // Check that environment are valid
     if(!lEnvP) XC("Evironment array corrupted!");
     if(!*lEnvP) XC("First environment variable corrupted!");
@@ -129,9 +133,9 @@ static struct CmdLine final            // Members initially public
       if(!*atStr) continue;
 #endif
       // Split argument into key/value pair. Ignore if no parameters
-      if(Token tokParam{ S16toUTF(atStr), cCommon->Equals(), 2 })
+      if(Token tokParam{ S16toUTF(atStr), cCommon->CommonEquals(), 2 })
         ssmRet.insert({ StdMove(tokParam.front()), tokParam.size() >= 2 ?
-          StdMove(tokParam.back()) : cCommon->Blank() });
+          StdMove(tokParam.back()) : cCommon->CommonBlank() });
     }
     // Compile on MacOS?
 #if defined(MACOS)
@@ -162,18 +166,20 @@ static struct CmdLine final            // Members initially public
     lArgV(atArgs),                     // Initialise stdlib args ptr
     lEnvP(atEnv),                      // Initialise stdlib environment ptr
     svArg{ StdMove(                    // Initialise command line arguments
-      ParseArgumentsArray()) },        // ...so we can keep them const
+      CmdLineParseArgArray()) },       // ...so we can keep them const
     lEnv{ StdMove(                     // Initialise environment variables
-      ParseEnvironmentArray()) },      // ...so we can keep them const
+      CmdLineParseEnvArray()) },       // ...so we can keep them const
     strCWD{ StdMove(DirGetCWD()) }     // Initialise current working directory
-    /* -- No code ---------------------------------------------------------- */
-    { }
+    /* -- Set address of global class -------------------------------------- */
+    { cCmdLine = this; }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPERBEGIN(~CmdLine)
+  // Clear global class
+  cCmdLine = nullptr;
   // Done if arguments were never initialised
   if(iArgC <= 0) return;
   // Restore startup working directory
-  SetStartupCWD();
+  CmdLineSetStartupCWD();
   // Do we have a restart mode set?
   switch(eoExit)
   { // Just return if no restart required
@@ -181,7 +187,7 @@ static struct CmdLine final            // Members initially public
     // Remove first parameter and break?
     case EO_TERM_REBOOT_NOARG: lArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
     // Restart while keeping parameters?
-    case EO_TERM_REBOOT: SetRestart(EO_QUIT);
+    case EO_TERM_REBOOT: CmdLineSetRestart(EO_QUIT);
       // Do the restart and replace the current process with the new one
       switch(const int iCode = StdExecVE(lArgV, lEnvP))
       { // Success? Shouldn't get here!
@@ -194,7 +200,7 @@ static struct CmdLine final            // Members initially public
     // Remove first parameter and fallthrough to next label
     case EO_UI_REBOOT_NOARG: lArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
     // Restart while keeping parameters in ui mode?
-    case EO_UI_REBOOT: SetRestart(EO_QUIT);
+    case EO_UI_REBOOT: CmdLineSetRestart(EO_QUIT);
       // Do the restart using spawn as MacOS goes weird with ui apps otherwise.
       switch(const int iCode = StdSpawnVE(lArgV, lEnvP))
       { // Success? Proceed to quit
@@ -209,8 +215,7 @@ static struct CmdLine final            // Members initially public
   } // Parent process should be exiting cleanly after returning here
   DTORHELPEREND(~CmdLine)
   /* -- End ---------------------------------------------------------------- */
-} *cCmdLine = nullptr;                 // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */
 };                                     // End of private module namespace

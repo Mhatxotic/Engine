@@ -39,13 +39,17 @@ enum ValidType : unsigned int          // Types for ValidName()
   VT_TRUSTED,                          // Trusted caller
   VT_UNTRUSTED,                        // Untrusted caller (chroot-like)
 };/* ----------------------------------------------------------------------- */
-static const class DirBase final       // Members initially private
+class DirBase;                         // Prototype to class
+static DirBase *cDirBase = nullptr;    // Pointer to global class
+class DirBase                          // Members initially private
 { /* ----------------------------------------------------------------------- */
   typedef IdList<VR_MAX> VRList;       // List of ValidName strings typedef
   const VRList     vrlStrings;         // " container
   /* -- Convert a valid result from ValidName to string ------------ */ public:
-  const string_view &VNRtoStr(const ValidResult vrId) const
+  const string_view &DirBaseVNRtoStr(const ValidResult vrId) const
     { return vrlStrings.Get(vrId); }
+  /* -- Destructor --------------------------------------------------------- */
+  ~DirBase(void) { cDirBase = nullptr; }
   /* -- Default constructor ------------------------------------------------ */
   DirBase(void) :                      // No parameters
     /* -- Initialisers ----------------------------------------------------- */
@@ -58,10 +62,9 @@ static const class DirBase final       // Members initially private
       "No trailing whitespace",    /*1011*/ "No leading whitespace",
       "No reserved names",         /*1213*/ "Explode pathname failed",
     }}                                 // Finished ValidNameResult strings
-    /* -- No code ---------------------------------------------------------- */
-    { }
-} /* ----------------------------------------------------------------------- */
-*cDirBase = nullptr;                   // Assigned by main function
+    /* -- Set pointer to global class -------------------------------------- */
+    { cDirBase = this; }
+};/* ----------------------------------------------------------------------- */
 /* -- Check that path part character is valid ------------------------------ */
 static bool DirIsValidPathPartCharacter(const char cChar)
 { // Test character
@@ -108,16 +111,16 @@ static ValidResult DirValidName(const string &strName,
   { // Full sandbox. Do not leave .exe directory
     case VT_UNTRUSTED:
       // Root directory not allowed
-      if(strChosen.front() == cCommon->CFSlash()) return VR_NOROOT;
+      if(strChosen.front() == cCommon->CommonCFSlash()) return VR_NOROOT;
       // Get parts from pathname and return if empty.
-      if(const Token tParts{ strChosen, cCommon->FSlash() })
+      if(const Token tParts{ strChosen, cCommon->CommonFSlash() })
       { // Get first iterator and string.
         StrVectorConstIt svciPart{ tParts.cbegin() };
         const string &strFirst = tParts.front();
         // If we have a length of 2 or more?
         if(strFirst.length() > 1)
         { // No parent directory or drive letter allowed
-          if(strFirst == cCommon->TwoPeriod()) return VR_PARENT;
+          if(strFirst == cCommon->CommonTwoPeriod()) return VR_PARENT;
           if(strFirst[1] == ':') return VR_NODRIVE;
         } // Test all the characters in the first string
         if(!DirIsValidPathPartCharacters(strFirst)) return VR_INVCHAR;
@@ -130,7 +133,7 @@ static ValidResult DirValidName(const string &strName,
           const string &strPart = *svciPart;
           // Not allowed to be empty or parent directory
           if(strPart.empty()) return VR_DPRS;
-          if(strPart == cCommon->TwoPeriod()) return VR_PARENT;
+          if(strPart == cCommon->CommonTwoPeriod()) return VR_PARENT;
           // Failed first character is an invalid character.
           if(!DirIsValidPathPartCharacters(strPart)) return VR_INVCHAR;
         } // Success
@@ -140,7 +143,7 @@ static ValidResult DirValidName(const string &strName,
     // Trusted filename?
     case VT_TRUSTED:
       // Get parts from pathname and if was just a root directory, it's fine
-      if(const Token tParts{ strChosen, cCommon->FSlash() })
+      if(const Token tParts{ strChosen, cCommon->CommonFSlash() })
       { // Get first string item and iterator.
         StrVectorConstIt svciPart{ tParts.cbegin() };
         const string &strFirst = tParts.front();
@@ -318,9 +321,10 @@ class DirCore :                        // System specific implementation
   /* -- Constructor for WIN32 system --------------------------------------- */
   explicit DirCore(const string &strDir) :
     /* -- Initialisers ----------------------------------------------------- */
-    iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ? cCommon->Asterisk() :
-      StrAppend(StrTrimSuffix(strDir, cCommon->CFSlash()),
-        cCommon->CFSlash(), cCommon->Asterisk())).c_str(), &wfData)),
+    iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ? cCommon->CommonAsterisk() :
+      StrAppend(StrTrimSuffix(strDir, cCommon->CommonCFSlash()),
+        cCommon->CommonCFSlash(), cCommon->CommonAsterisk())).c_str(),
+        &wfData)),
     bMore(iHandle != -1)
     /* -- Process file if there are more ----------------------------------- */
     { if(bMore) ProcessItem(); }
@@ -406,10 +410,10 @@ class DirCore :                        // System specific implementation
     /* -- Initialisers ----------------------------------------------------- */
     strPrefix{ StrAppend(              // Initialise string prefix
       strDir.empty() ?                 // If requested directory is empty?
-        cCommon->Period() :            // Set to scan current directory
+        cCommon->CommonPeriod() :      // Set to scan current directory
         StrTrimSuffix(strDir,          // Trim forward-slash trailing...
-          cCommon->CFSlash()),         // ...characters from directory
-      cCommon->FSlash()) },            // Add our own slash at the end
+          cCommon->CommonCFSlash()),   // ...characters from directory
+      cCommon->CommonFSlash()) },      // Add our own slash at the end
     dupHandle{                         // Initialise directory handle
       opendir(strPrefix.c_str()) }     // Open the directory and store handle
     /* -- MacOS initialisers ----------------------------------------------- */
@@ -436,11 +440,11 @@ class Dir :                            // Directory information class
   /* -- Remove current and parent directory entries ------------------------ */
   static void RemoveParentAndCurrentDirectory(DirEntMap &dfemMap)
   { // Remove "." and ".." current directory entries
-    RemoveEntry(dfemMap, cCommon->Period());
-    RemoveEntry(dfemMap, cCommon->TwoPeriod());
+    RemoveEntry(dfemMap, cCommon->CommonPeriod());
+    RemoveEntry(dfemMap, cCommon->CommonTwoPeriod());
   }
   /* -- Scan with no match checking ---------------------------------------- */
-  static DirFile ScanDir(const string &strDir=cCommon->Blank())
+  static DirFile ScanDir(const string &strDir=cCommon->CommonBlank())
   { // Directory and file list
     DirEntMap demNDirs, demNFiles;
     // Load up the specification and return if failed
@@ -529,8 +533,10 @@ static bool DirSetCWD(const string &strDirectory)
   // Get first character because it needs casting
   const unsigned char &ucD = strDirectory.front();
   // Set drive first if specified
-  if(strDirectory.length() >= 3 && strDirectory[1] == ':' &&
-     (strDirectory[2] == '\\' || strDirectory[2] != cCommon->CFSlash()) &&
+  if(strDirectory.length() >= 3 &&
+     strDirectory[1] == ':' &&
+     (strDirectory[2] == '\\' ||
+      strDirectory[2] != cCommon->CommonCFSlash()) &&
        _chdrive((StdToUpper(ucD) - 'A') + 1) < 0) return false;
 #endif
   // Set current directory and return false if there is a problem
@@ -546,7 +552,7 @@ static bool DirMkDirEx(const string &strDir)
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
   if(const Token tParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->FSlash() })
+    cCommon->CommonFSlash() })
   { // This will be the string that wile sent to mkdir multiple times
     // gradually.
     ostringstream osS; osS << psParts.strDrive;
@@ -565,7 +571,7 @@ static bool DirMkDirEx(const string &strDir)
                            svI != tParts.cend();
                          ++svI)
       { // Append next directory
-        osS << cCommon->CFSlash() << StdMove(*svI);
+        osS << cCommon->CommonCFSlash() << StdMove(*svI);
         // Make the directory and if failed and it doesn't exist return error
         if(!DirMkDir(osS.str()) && StdIsNotError(EEXIST)) return false;
       }
@@ -580,7 +586,7 @@ static bool DirRmDirEx(const string &strDir)
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
   Token tParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->FSlash() };
+    cCommon->CommonFSlash() };
   // Get the first item and if it is not empty?
   while(!tParts.empty())
   { // This will be the string that wile sent to mkdir multiple times
@@ -595,7 +601,7 @@ static bool DirRmDirEx(const string &strDir)
       for(StrVectorConstIt svI{ next(tParts.begin(), 1) };
                            svI != tParts.end();
                          ++svI)
-        osS << cCommon->CFSlash() << *svI;
+        osS << cCommon->CommonCFSlash() << *svI;
     // Make the directory and if failed and it doesn't exist return error
     if(!DirRmDir(osS.str()) && StdIsNotError(EEXIST)) return false;
     // Remove the last item
@@ -655,7 +661,7 @@ static void DirVerifyFileNameIsValid(const string &strFile)
   if(const ValidResult vrId = DirValidName(strFile))
     XC("Filename is invalid!",
        "File",     strFile,
-       "Reason",   cDirBase->VNRtoStr(vrId),
+       "Reason",   cDirBase->DirBaseVNRtoStr(vrId),
        "ReasonId", vrId);
 }
 /* ------------------------------------------------------------------------- */

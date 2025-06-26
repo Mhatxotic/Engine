@@ -158,7 +158,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   { // Get StringStream
     Init(cpName, "Ptr");
      // Get variable as a C-string
-    if(!vpPtr) osS << cCommon->Null();
+    if(!vpPtr) osS << cCommon->CommonNull();
     // Valid? Display and translation if neccesary
 #if defined(WINDOWS)                   // Using Windows?
     else osS << "0x" << vpPtr;         // Windows doesn't put in 0x for us
@@ -176,11 +176,11 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   { // Initialise start of string
     Init(cpName, "CStr");
     // Get variable as a C-string
-    if(!cpStr) osS << cCommon->Null() << '.';
+    if(!cpStr) osS << cCommon->CommonNull() << '.';
     // Empty?
-    else if(!*cpStr) osS << cCommon->Empty() << '.';
+    else if(!*cpStr) osS << cCommon->CommonEmpty() << '.';
     // Displayable?
-    else if(*cpStr < 32) osS << cCommon->Invalid() << '.';
+    else if(*cpStr < 32) osS << cCommon->CommonInvalid() << '.';
     // Valid? Display and translation if neccesary
     else osS << '\"' << cpStr << "\".";
     // Process more parameters
@@ -193,11 +193,11 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   { // Initialise start of string
     Init(cpName, "WCStr");
     // Get variable as a C-string
-    if(!wcpStr) osS << cCommon->Null() << '.';
+    if(!wcpStr) osS << cCommon->CommonNull() << '.';
     // Empty?
-    else if(!*wcpStr) osS << cCommon->Empty() << '.';
+    else if(!*wcpStr) osS << cCommon->CommonEmpty() << '.';
     // Displayable?
-    else if(*wcpStr < 32) osS << cCommon->Invalid() << '.';
+    else if(*wcpStr < 32) osS << cCommon->CommonInvalid() << '.';
     // Valid? Display and translation if neccesary
     else osS << '\"' << UtfFromWide(wcpStr) << "\".";
     // Process more parameters
@@ -219,9 +219,9 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   { // Initialise start of string
     Init(cpName, cpType);
     // String is empty?
-    if(tString.empty()) osS << cCommon->Empty() << '.';
+    if(tString.empty()) osS << cCommon->CommonEmpty() << '.';
     // String is not displayable?
-    else if(tString.front() < 32) osS << cCommon->Invalid() << '.';
+    else if(tString.front() < 32) osS << cCommon->CommonInvalid() << '.';
     // Valid? Is a string view? (has no capacity())
     else if constexpr(is_same_v<StringType, string_view>)
       osS << '\"' << tString << '\"' << dec

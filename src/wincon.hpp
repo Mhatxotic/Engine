@@ -640,7 +640,7 @@ class SysCon :                         // Members initially private
     { RedrawStatus(0, strTL, strTR); }
   /* -- Redraw console buffer ---------------------------------------------- */
   void RedrawBuffer(const ConLines &clLines,
-    const ConLinesConstRevIt clcriStart)
+    const ConLinesConstRevIt &clcriStart)
   { // Reset cursor position to top left of drawing area
     stX = 0;
     stY = stHm1;

@@ -76,7 +76,7 @@ class Statistic
     // Get headers size minus one
     const size_t stHM1 = Headers() - 1;
     // Create string for gap
-    const string strGap(stGap, ' '), &strLF = cCommon->Lf();
+    const string strGap(stGap, ' '), &strLF = cCommon->CommonLf();
     // Proc headers except the last header item
     for(size_t stHIndex = 0; stHIndex < stHM1; ++stHIndex)
       ProcHdrSuf(osS, hdHeaders[stHIndex], strGap);
@@ -199,7 +199,7 @@ class Statistic
   template<typename ...VarArgs>Statistic &DataF(const char*const cpFormat,
     const VarArgs &...vaArgs) { return Data(StrFormat(cpFormat, vaArgs...)); }
   /* -- Data by read-only lvalue string copy ------------------------------- */
-  Statistic &Data(const string &strVal=cCommon->Blank())
+  Statistic &Data(const string &strVal=cCommon->CommonBlank())
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
@@ -353,8 +353,9 @@ class Statistic
     return *this;
   }
   /* -- Add an empty header ------------------------------------------------ */
-  Statistic &Header(const string &strH=cCommon->Blank(), const size_t stL=0)
-    { return Header(strH, !hdHeaders.empty(), stL); }
+  Statistic &Header(const string &strH=cCommon->CommonBlank(),
+    const size_t stL=0)
+      { return Header(strH, !hdHeaders.empty(), stL); }
   /* -- Add data by pointer ------------------------------------------------ */
   Statistic &DataV(const void*const vpAddr) { return Data(StrAppend(vpAddr)); }
   /* -- Constructor that does nothing -------------------------------------- */

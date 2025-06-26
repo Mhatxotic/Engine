@@ -334,7 +334,7 @@ static class Display final :
         cLog->LogDebugExSafe("-- Mode $: $x$x$<RGB$$$> @ $Hz$.",
           rData.Index(), rData.Width(), rData.Height(), rData.Depth(),
           rData.Red(), rData.Green(), rData.Blue(), rData.Refresh(),
-          &rData == mData.Primary() ? " (Active)" : cCommon->Blank());
+          &rData == mData.Primary() ? " (Active)" : cCommon->CommonBlank());
     } // Custom monitor selected (-2) and valid monitor? Set it
     static constexpr size_t stM2 = StdMaxSizeT - 1;
     moSelected = (stMRequested < stM2 && stMRequested < mlData.size()) ?
@@ -348,20 +348,10 @@ static class Display final :
     const GlFWMonitor &moPrimary = *mlData.Primary();
     const GlFWRes &rPrimary = *moPrimary.Primary();
     // Write to log the monitor we are using
-    cLog->LogInfoExSafe(
-      "Display finished enumerating $ displays...\n"
-      "- Primary monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
-      "- Primary mode $: $x$x$bpp(R$G$B$) @$hz.\n"
-      "- Selected monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
-      "- Selected mode $: $x$x$bpp(R$G$B$) @$hz.",
+    cLog->LogInfoExSafe("Display finished enumerating $ displays...\n"
+                        "- Selected monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
+                        "- Selected mode $: $x$x$bpp(R$G$B$) @$hz.",
       mlData.size(),
-      moPrimary.Index(), moPrimary.Name(), moPrimary.CoordGetX(),
-        moPrimary.CoordGetY(), fixed, setprecision(1),
-        moPrimary.WidthInch(), moPrimary.HeightInch(),
-        moPrimary.DiagonalInch(),
-      rPrimary.Index(), rPrimary.Width(), rPrimary.Height(),
-        rPrimary.Depth(), rPrimary.Red(), rPrimary.Green(),
-        rPrimary.Blue(), rPrimary.Refresh(),
       moSelected->Index(), moSelected->Name(), moSelected->CoordGetX(),
         moSelected->CoordGetY(), fixed, setprecision(1),
         moSelected->WidthInch(), moSelected->HeightInch(),
@@ -369,6 +359,13 @@ static class Display final :
       rSelected->Index(), rSelected->Width(), rSelected->Height(),
         rSelected->Depth(), rSelected->Red(), rSelected->Green(),
         rSelected->Blue(), rSelected->Refresh());
+    cLog->LogDebugExSafe("- Primary monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
+                         "- Primary mode $: $x$x$bpp(R$G$B$) @$hz.",
+      moPrimary.Index(), moPrimary.Name(), moPrimary.CoordGetX(),
+        moPrimary.CoordGetY(), fixed, setprecision(1), moPrimary.WidthInch(),
+        moPrimary.HeightInch(), moPrimary.DiagonalInch(),
+      rPrimary.Index(), rPrimary.Width(), rPrimary.Height(), rPrimary.Depth(),
+        rPrimary.Red(), rPrimary.Green(), rPrimary.Blue(), rPrimary.Refresh());
   }
   /* -- Monitor changed ---------------------------------------------------- */
   static void OnMonitorStatic(GLFWmonitor*const, const int);

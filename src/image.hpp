@@ -715,44 +715,44 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
         duTileOR.DimGetWidth() && duTileOR.DimGetHeight() ?
           StrFormat("\n- Tile size override: $x$.",
             duTileOR.DimGetWidth(), duTileOR.DimGetHeight()) :
-            cCommon->Blank(),
+            cCommon->CommonBlank(),
         stTiles ? StrFormat("\n- Tile count override: $.", stTiles) :
-          cCommon->Blank(),
+          cCommon->CommonBlank(),
         duOld.DimGetWidth() != DimGetWidth() ||
         duOld.DimGetHeight() != DimGetHeight() ?
           StrFormat("\n- Bitmap dimensions: $x$ -> $x$.",
             duOld.DimGetWidth(), duOld.DimGetHeight(),
-            DimGetWidth(), DimGetHeight()) : cCommon->Blank(),
+            DimGetWidth(), DimGetHeight()) : cCommon->CommonBlank(),
         stSlots != GetSlotCount() ?
           StrFormat("\n- Bitmap slots: $ -> $.",
-            stSlots, GetSlotCount()) : cCommon->Blank(),
+            stSlots, GetSlotCount()) : cCommon->CommonBlank(),
         bdOld != GetBitsPerPixel() ?
           StrFormat("\n- Pixel depth: $<$> -> $<$>.", bdOld, byOld,
-            GetBitsPerPixel(), GetBytesPerPixel()) : cCommon->Blank(),
+            GetBitsPerPixel(), GetBytesPerPixel()) : cCommon->CommonBlank(),
         ttOld != GetPixelType() ?
           StrFormat("\n- Pixel type: $<$$> -> $<$$>.",
             ImageGetPixelFormat(ttOld), hex, ttOld,
             ImageGetPixelFormat(GetPixelType()), GetPixelType(), dec) :
-              cCommon->Blank(),
+              cCommon->CommonBlank(),
         stOld != GetAlloc() ?
           StrFormat("\n- Memory usage: $ -> $ bytes.",
-            stOld, GetAlloc()) : cCommon->Blank(),
+            stOld, GetAlloc()) : cCommon->CommonBlank(),
         IsActiveAtlas() ? "\n- Slots compacted to atlas." :
-          cCommon->Blank(),
+          cCommon->CommonBlank(),
         IsActiveReverse() ? "\n- Pixels reversed." :
-          cCommon->Blank(),
+          cCommon->CommonBlank(),
         IsActiveRGB() ? "\n- Pixels converted to 24-bit." :
-          cCommon->Blank(),
+          cCommon->CommonBlank(),
         IsActiveRGBA() ? "\n- Pixels converted to 32-bit." :
-          cCommon->Blank(),
+          cCommon->CommonBlank(),
         IsActiveBGROrder() ? "\n- Pixels converted to BGR order." :
-          cCommon->Blank(),
+          cCommon->CommonBlank(),
         IsActiveRGBOrder() ? "\n- Pixels converted to RGB order." :
-          cCommon->Blank(),
+          cCommon->CommonBlank(),
         IsActiveBinary() ? "\n- Pixels converted to monochrome." :
-          cCommon->Blank(),
+          cCommon->CommonBlank(),
         IsActiveGPUCompat() ? "\n- Pixels made OpenGL compatible." :
-          cCommon->Blank());
+          cCommon->CommonBlank());
   }
   /* -- Load specified image ----------------------------------------------- */
   void AsyncReady(FileMap &fmData)

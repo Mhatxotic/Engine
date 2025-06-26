@@ -181,7 +181,7 @@ class SysCore :
     string strOut; strOut.resize(stSize - 1);
     if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.c_str()),
       &stSize, nullptr, 0) < 0)
-        return cCommon->Blank();
+        return cCommon->CommonBlank();
     // Return the string
     return strOut;
   }
@@ -650,17 +650,17 @@ class SysCore :
     };
     // List of MacOS versions and when they expire
     static const array<const OSListItem,22>osList{ {
-      { cCommon->CBlank(), 16,  0 },   { "Sequoia",         15,  0 },
-      { "Sonoma",          14,  0 },   { "Ventura",         13,  0 },
-      { "Monterey",        12,  0 },   { "Big Sur",         11,  0 },
-      { "Catalina",        10, 15 },   { "Mojave",          10, 14 },
-      { "High Sierra",     10, 13 },   { "Sierra",          10, 12 },
-      { "El Capitan",      10, 11 },   { "Yosemite",        10, 10 },
-      { "Mavericks",       10,  9 },   { "Mountain Lion",   10,  8 },
-      { "Lion",            10,  7 },   { "Snow Leopard",    10,  6 },
-      { "Leopard",         10,  5 },   { "Tiger",           10,  4 },
-      { "Panther",         10,  3 },   { "Jaguar",          10,  2 },
-      { "Puma",            10,  1 },   { "Cheetah",         10,  0 },
+      { "Unknown",     16,  0 }, { "Sequoia",       15,  0 },
+      { "Sonoma",      14,  0 }, { "Ventura",       13,  0 },
+      { "Monterey",    12,  0 }, { "Big Sur",       11,  0 },
+      { "Catalina",    10, 15 }, { "Mojave",        10, 14 },
+      { "High Sierra", 10, 13 }, { "Sierra",        10, 12 },
+      { "El Capitan",  10, 11 }, { "Yosemite",      10, 10 },
+      { "Mavericks",   10,  9 }, { "Mountain Lion", 10,  8 },
+      { "Lion",        10,  7 }, { "Snow Leopard",  10,  6 },
+      { "Leopard",     10,  5 }, { "Tiger",         10,  4 },
+      { "Panther",     10,  3 }, { "Jaguar",        10,  2 },
+      { "Puma",        10,  1 }, { "Cheetah",       10,  0 },
     } };
     // Iterate through the versions and try to find a match for the
     // versions above. 'Unknown' is caught if none are found.
@@ -676,10 +676,10 @@ class SysCore :
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
     // Get LANGUAGE code and set default if not 5 bytes long?
-    string strCode{ cCmdLine->GetEnv("LANGUAGE") } ;
+    string strCode{ cCmdLine->CmdLineGetEnv("LANGUAGE") } ;
     if(strCode.size() != 5)
     { // Get LANG code and set default if not found
-      strCode = cCmdLine->GetEnv("LANG");
+      strCode = cCmdLine->CmdLineGetEnv("LANG");
       if(strCode.size() >= 5)
       { // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
         const size_t stPeriod = strCode.find('.');
@@ -716,7 +716,7 @@ class SysCore :
       } // This should never happen but just incase?
       else XC("Could not detect region code!");
       // Update and set global locale
-      cCommon->SetLocale(strCode);
+      cCommon->CommonSetLocale(strCode);
     } // Set global locale and show error if failed
     if(!setlocale(LC_ALL, strCode.c_str()))
       XCL("Failed to initialise default locale!", "Locale", strCode);
@@ -816,7 +816,7 @@ class SysCore :
     StrCompactRef(strVendorId);
     StrCompactRef(strProcessorName);
     // Fail-safe empty strings
-    if(strVendorId.empty()) strVendorId = cCommon->Unspec();
+    if(strVendorId.empty()) strVendorId = cCommon->CommonUnspec();
 #endif
     // Check processor name is specified
     if(strProcessorName.empty()) strProcessorName = strVendorId;
@@ -866,7 +866,8 @@ class SysCore :
   int LastSocketOrSysError(void) const { return StdGetError(); }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir(void) const
-    { return cCmdLine->MakeEnvPath("HOME", "/Library/Application Support"); }
+    { return cCmdLine->CmdLineMakeEnvPath("HOME",
+        "/Library/Application Support"); }
   /* -- Constructor -------------------------------------------------------- */
   SysCore(void) :
     /* -- Initialisers ----------------------------------------------------- */

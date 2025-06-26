@@ -74,9 +74,9 @@ class JoyInfo :                        // Joystick class
     { // If monitor name is blank return blank name
       if(*cpName) IdentSet(cpName);
       // Return blank name
-      else IdentSet(cCommon->Unspec());
+      else IdentSet(cCommon->CommonUnspec());
     } // Return null name
-    else IdentSet(cCommon->Null());
+    else IdentSet(cCommon->CommonNull());
     // Refresh joystick data
     JoyRefreshData();
     // We gained this joystick
@@ -89,7 +89,7 @@ class JoyInfo :                        // Joystick class
       strGuid = cpIdent;
       cLog->LogDebugExSafe("- Identifier: $.", strGuid);
     } // Clear guid
-    else strGuid = cCommon->Null();
+    else strGuid = cCommon->CommonNull();
     // Report name if gamepad
     if(JoyIsGamepad())
       if(const char*const cpName = GlFWGetGamepadName(JoyGetId()))
@@ -97,7 +97,7 @@ class JoyInfo :                        // Joystick class
         strName = cpName;
         cLog->LogDebugExSafe("- Gamepad Name: $.", strName);
       } // Clear name
-      else strName = cCommon->Null();
+      else strName = cCommon->CommonNull();
     else strName.clear();
   }
   /* -- Remove connected flag ---------------------------------------------- */

@@ -81,7 +81,7 @@ class SysModule :                      // Members initially private
       { // Put error into data
         strDescription = StrAppend("!E#", SysErrorCode());
         strVendor = StrFromNum(uiLength);
-        strCopyright = cCommon->Unspec();
+        strCopyright = cCommon->CommonUnspec();
         // Done
         return;
       } // Clamp the limit to the lowest zero for safety.

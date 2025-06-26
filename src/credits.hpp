@@ -117,8 +117,8 @@ static const class Credits final       // Members initially private
       CreditGetItemCount());
     for(const CreditLib &lD : CreditGetLibList())
       cLog->LogNLCInfoExSafe("- Using $ (v$) $$", lD.GetName(),
-        lD.GetVersion(), lD.IsCopyright() ? "\xC2\xA9 " : cCommon->Blank(),
-        lD.GetAuthor());
+        lD.GetVersion(), lD.IsCopyright() ? "\xC2\xA9 " :
+          cCommon->CommonBlank(), lD.GetAuthor());
   }
   /* -- Dump credits to log (cvar version) --------------------------------- */
   CVarReturn CreditDumpList(const bool bDoIt) const

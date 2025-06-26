@@ -112,7 +112,7 @@ class SysPipe :
       // Anything else and we need to throw an exception
       default: XC("Executable name is invalid!",
                   "Program", strApp, "Code", vrResult,
-                  "Reason",  cDirBase->VNRtoStr(vrResult));
+                  "Reason",  cDirBase->DirBaseVNRtoStr(vrResult));
     } // Make sure the executable exists
     if(!DirIsFileExecutable(strApp))
       XCS("Executable not valid!", "Program", strApp);
@@ -155,7 +155,7 @@ class SysPipe :
         haParentToChild.DupeReadFd(STDIN_FILENO);
         haParentToChild.CloseWriteFd();
         // Execute the program requested
-        execve(*cpaArgV, cpaArgV, cCmdLine->GetCEnv());
+        execve(*cpaArgV, cpaArgV, cCmdLine->CmdLineGetCEnv());
         // Error so exit process NOW or see uncontrolled fireworks.
         _exit(127);
       } // Success? This is the parent process routine

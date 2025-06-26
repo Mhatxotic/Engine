@@ -68,7 +68,7 @@ class SysPipe :                        // Members initially private
       XC("Executable name is invalid!",
          "CmdLine", strCmdLine, "Program", strApp,
          "Code",    iVResult,
-         "Reason",  cDirBase->VNRtoStr(iVResult));
+         "Reason",  cDirBase->DirBaseVNRtoStr(iVResult));
     // De-init existing process
     Finish();
     // Show command and arguments

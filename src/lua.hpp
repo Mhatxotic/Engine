@@ -287,7 +287,7 @@ static class Lua final :
       llcirAPI[llRef.lciId] = iReference;
       // Push the name of the object for 'tostring()' LUA function.
       LuaUtilPushStrView(GetState(), llRef.strvName);
-      LuaUtilSetField(GetState(), -2, cCommon->LuaName().c_str());
+      LuaUtilSetField(GetState(), -2, cCommon->CommonLuaName().c_str());
       // Set function methods so var:func() works.
       LuaUtilPushTable(GetState(), 0, llRef.iLLMFCount);
       luaL_setfuncs(GetState(), llRef.libmfList, 0);

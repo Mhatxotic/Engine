@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.6.23.4 -->
-<!-- Automatically built at Tue Jun 24 21:22:03 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.6.23.4 -->
+<!-- Reference for the Mhatxotic Engine API version 25.6.26.24 -->
+<!-- Automatically built at Thu Jun 26 16:09:11 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.6.26.24 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.6.23.4">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.6.26.24">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.6.23.4">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.6.26.24">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.6.23.4">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.6.26.24">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.6.23.4 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.6.26.24 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.6.23.4 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.6.26.24 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.6.23.4 API reference</H1>
+	<H1>Mhatxotic Engine 25.6.26.24 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -10450,7 +10450,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Class</U> <I>(Variable)</I> = The Variable object created.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Registers the specified cvar name with the specified default value&#x2e; The default value is ignored if there is already a saved value in the Sql cvars database&#x2e; If the saved value is a corrupted encrypted value then the default is used&#x2e; If the cvar already exists then an exception is thrown so make sure you check for it first if do not expect this call to garauntee success&#x2e; Normally it is unless there is a memory allocation issue&#x2e; You can register an unlimited amount of variables&#x2e;<BR>See Variable&#x2e;Flags to see available flags&#x2e;<BR></PRE>
+		<PRE>Registers the specified cvar name with the specified default value&#x2e; The default value is ignored if there is already a saved value in the Sql cvars database&#x2e; If the saved value is a corrupted encrypted value then the default is used&#x2e; If the cvar already exists then an exception is thrown so make sure you check for it first if do not expect this call to garauntee success&#x2e; Normally it is unless there is a memory allocation issue&#x2e; The amount of cvars you can register is limited by the integral value of the &#x27;obj_cvarmax&#x27; cvar&#x2e; The syntax of the callback function is function&#x28;V&#x3a;string&#x29;&#x7b;return RR&#x3a;boolean&#x2c;RV&#x3a;string&#x7d; where &#x27;V&#x27; is the value string that was requested to be set&#x2e; If &#x27;RV&#x27; is not set then &#x27;RR&#x27; is whether to accept &#x28;true&#x29; or deny &#x28;false&#x29; the requested change to &#x27;V&#x27;&#x2c; otherwise&#x2c; if &#x27;RV&#x27; is set to a string then the actual cvar value is replaced by the &#x27;RV&#x27; string and &#x27;RR&#x27; refers to if the variable should be force committed to disk &#x28;true&#x29; or not &#x28;false&#x29;&#x2e; Note that variable values that are equal to the default value are not committed to the database&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Variable.ResetInt" style="display:none">
@@ -12541,6 +12541,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Tue Jun 24 21:22:03 2025 +0100</ADDRESS>
+	This document was generated at Thu Jun 26 16:09:11 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

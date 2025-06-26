@@ -912,12 +912,12 @@ class SysCore :
         StrCompactRef(strName);
         StrCompactRef(strIdent);
         // Fail-safe empty strings
-        if(strVendor.empty()) strVendor = cCommon->Unspec();
+        if(strVendor.empty()) strVendor = cCommon->CommonUnspec();
         if(strName.empty()) strName = strVendor;
-        if(strIdent.empty()) strIdent = cCommon->Unspec();
+        if(strIdent.empty()) strIdent = cCommon->CommonUnspec();
         // Detect family model and stepping from string (A F 0 M 0 S)
         unsigned int uiFamily, uiModel, uiStepping;
-        Token tTokens{ strIdent, cCommon->Space() };
+        Token tTokens{ strIdent, cCommon->CommonSpace() };
         if(tTokens.size() >= 7 && tTokens[1] == "Family" &&
           tTokens[3] == "Model" && tTokens[5] == "Stepping")
         { // Convert strings to numbers
@@ -936,7 +936,7 @@ class SysCore :
     else cLog->LogWarningExSafe("System could not open registry key $! $",
       strK, SysError());
     // Return default data we could not read
-    return { StdThreadMax(), 0, 0, 0, 0, cCommon->Unspec() };
+    return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
   }
   /* ----------------------------------------------------------------------- */
   void UpdateMemoryUsageData(void)
@@ -1079,7 +1079,7 @@ class SysCore :
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir(void) const
-    { return cCmdLine->MakeEnvPath("APPDATA", cCommon->Blank()); }
+    { return cCmdLine->CmdLineMakeEnvPath("APPDATA", cCommon->CommonBlank()); }
   /* -- Constructor (only derivable) --------------------------------------- */
   SysCore(void) :
     /* -- Initialisers ----------------------------------------------------- */

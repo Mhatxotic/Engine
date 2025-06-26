@@ -109,7 +109,7 @@ static class GlFW final :              // Root engine class
   { // Get GLFW's identity
     if(const char*const cpIdentity = glfwGetVersionString())
     { // Parse each token (0 is always the version), rest is the features
-      if(const Token tIdentity{ cpIdentity, cCommon->Space() })
+      if(const Token tIdentity{ cpIdentity, cCommon->CommonSpace() })
       { // Store library version and If first token which says the version
         // mismatches with our version? Write a log message. It's not really a
         // problem since GlFW's headers maintain compatibility across versions.

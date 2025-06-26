@@ -1,17 +1,17 @@
-/* == ENGINE.CPP =========================================================== */
-/* ######################################################################### */
-/* ##*@@****@@*@@***@@**@@@@@**@@****@@***@@*@@@@@**@@*****@@@@@@**@@@@@**## */
-/* ##*@@@@@@@@*@@***@@*@@***@@*@@@@@@*@@*@@*@@***@@*@@@@@@***@@***@@***@@*## */
-/* ##*@@*@@*@@*@@@@@@@*@@@@@@@*@@******@@@**@@***@@*@@*******@@***@@******## */
-/* ##*@@****@@*@@***@@*@@***@@*@@**@@*@@*@@*@@***@@*@@*******@@***@@***@@*## */
-/* ##*@@****@@*@@***@@*@@***@@**@@@@*@@***@@**@@@@***@@@@@*@@@@@@**@@@@@**## */
-/* ######################################################################### */
-/* ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## */
-/* ######################################################################### */
-/* ## This the file that handles the inclusing of engine subsystems in a  ## */
-/* ## tidy namespace and handles the main entry point.                    ## */
-/* ######################################################################### */
-/* ========================================================================= */
+/* == ENGINE.CPP =========================================================== **
+** ######################################################################### **
+** ##*@@****@@*@@***@@**@@@@@**@@****@@***@@*@@@@@**@@*****@@@@@@**@@@@@**## **
+** ##*@@@@@@@@*@@***@@*@@***@@*@@@@@@*@@*@@*@@***@@*@@@@@@***@@***@@***@@*## **
+** ##*@@*@@*@@*@@@@@@@*@@@@@@@*@@******@@@**@@***@@*@@*******@@***@@******## **
+** ##*@@****@@*@@***@@*@@***@@*@@**@@*@@*@@*@@***@@*@@*******@@***@@***@@*## **
+** ##*@@****@@*@@***@@*@@***@@**@@@@*@@***@@**@@@@***@@@@@*@@@@@@**@@@@@**## **
+** ######################################################################### **
+** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
+** ######################################################################### **
+** ## This the file that handles the inclusing of engine subsystems in a  ## **
+** ## tidy namespace and handles the main entry point.                    ## **
+** ######################################################################### **
+** ========================================================================= */
 #include "setup.hpp"                   // Setup the compilation environment
 /* ------------------------------------------------------------------------- */
 namespace E {                          // Start of engine namespace
@@ -137,7 +137,16 @@ namespace E {                          // Start of engine namespace
 };                                     // End of engine namespace
 /* == The main entry point ================================================= */
 int ENTRYFUNC                          // Macro defined in 'setup.hpp'
-{ // Create and run the engine and return its exit result
-  return E::ICore::P::Core{}.CoreMain(__argc, __wargv, _wenviron);
+{ // Includes required to build the engine.
+  using namespace E;                   using namespace ICore::P;
+  using namespace ISysUtil::P;         using namespace IStd::P;
+  // Capture exceptions, create and run the engine and return its exit result.
+  try { return Core{ __argc, __wargv, _wenviron }.CoreMain(); }
+  // Unsafe exception occured?
+  catch(const exception &eReason)
+  { // Show message box and return error status.
+    SysMessage("Main Init Exception", eReason.what(), MB_ICONSTOP);
+    return 1;
+  }
 }
 /* == End-of-File ========================================================== */

@@ -84,8 +84,6 @@ BUILD_FLAGS(CVar,
   CFILENAME                {Flag(24)},
   /* -- Manipulation (M) --------------------------------------------------- */
   MTRIM                    {Flag(32)}, // Variable string should be trimmed
-  /* -- Other (O) ---------------------------------------------------------- */
-  OSAVEFORCE               {Flag(40)}, // Force variable to be saved
   /* -- Privates (Used internally) ----------------------------------------- */
   // Variable was created by LUA?      Variable is a trusted filename
   TLUA                     {Flag(48)}, CTRUSTEDFN               {Flag(49)},
@@ -93,8 +91,8 @@ BUILD_FLAGS(CVar,
   LOCKED                   {Flag(50)}, COMMIT                   {Flag(51)},
   // Var should be purged from DB?     Variable not readable by lua?
   PURGE                    {Flag(52)}, CONFIDENTIAL             {Flag(53)},
-  // Variable value was loaded from db
-  LOADED                   {Flag(54)},
+  // Variable value was loaded from db Commit even if default/value match
+  LOADED                   {Flag(54)}, COMMITNOCHECK            {Flag(55)},
   /* -- Sources (S) [Private] ---------------------------------------------- */
   // Set from engine internally?       Set from command-line?
   SENGINE                  {Flag(56)}, SCMDLINE                 {Flag(57)},
@@ -123,8 +121,7 @@ BUILD_FLAGS(CVar,
   CVREGMASK{ COMMIT|SANY },            CALPHANUMERIC{ CALPHA|CNUMERIC },
   /* -- Allowed bits ------------------------------------------------------- */
   CVMASK{ TSTRING|TINTEGER|TFLOAT|TBOOLEAN|CALPHA|CNUMERIC|CSAVEABLE|
-          CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM|
-          OSAVEFORCE };
+          CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM };
 );/* ----------------------------------------------------------------------- */
 class CVarItem;                        // (Prototype) Cvar callback data
 typedef CVarReturn (*CbFunc)(CVarItem&, const string&); // Callback return type

@@ -13,7 +13,9 @@ using namespace IStd::P;               using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Common class with common objects ------------------------------------- */
-static class Common final              // Members initially private
+class Common;                          // Prototype
+static Common *cCommon = nullptr;      // Global access to class
+class Common                           // Common variables class
 { /* -- Private variables -------------------------------------------------- */
   const string strTrue, strFalse, strY, strN, strEquals, strNOne, strZero,
     strOne, strSpace, strDblSpace, strBlank, strCr, strLf, strCrLf, strCrLf2,
@@ -23,40 +25,42 @@ static class Common final              // Members initially private
   const char*const cpBlank;            // Blank C-String
   locale           lLocaleCurrent;     // Current locale
   /* --------------------------------------------------------------- */ public:
-  const locale &Locale(void) const { return lLocaleCurrent; }
-  void SetLocale(const string &strLocale)
+  const locale &CommonLocale(void) const { return lLocaleCurrent; }
+  void CommonSetLocale(const string &strLocale)
     { lLocaleCurrent = locale(strLocale); }
   /* ----------------------------------------------------------------------- */
-  const string &Blank(void) const { return strBlank; }
-  const char *CBlank(void) const { return cpBlank; }
-  const string &Tru(void) const { return strTrue; }
-  const string &Fals(void) const { return strFalse; }
-  const string &Y(void) const { return strY; }
-  const string &N(void) const { return strN; }
-  const string &Equals(void) const { return strEquals; }
-  const string &NOne(void) const { return strNOne; }
-  const string &Zero(void) const { return strZero; }
-  const string &One(void) const { return strOne; }
-  const string &Cr(void) const { return strCr; }
-  const string &Lf(void) const { return strLf; }
-  const string &CrLf(void) const { return strCrLf; }
-  const string &CrLf2(void) const { return strCrLf2; }
-  const string &LfCr(void) const { return strLfCr; }
-  const string &Space(void) const { return strSpace; }
-  const string &DblSpace(void) const { return strDblSpace; }
-  const string &Ellipsis(void) const { return strEllipsis; }
-  const string &FSlash(void) const { return strFSlash; }
-  char CFSlash(void) const { return cFSlash; }
-  const string &Unspec(void) const { return strUnspec; }
-  const string &Null(void) const { return strNull; }
-  const string &Period(void) const { return strPeriod; }
-  const string &TwoPeriod(void) const { return str2Period; }
-  const string &LuaName(void) const { return strLuaName; }
-  const string &Private(void) const { return strPrivate; }
-  const string &Protected(void) const { return strProtected; }
-  const string &Empty(void) const { return strEmpty; }
-  const string &Invalid(void) const { return strInvalid; }
-  const string &Asterisk(void) const { return strAsterisk; }
+  const string &CommonBlank(void) const { return strBlank; }
+  const char *CommonCBlank(void) const { return cpBlank; }
+  const string &CommonTrue(void) const { return strTrue; }
+  const string &CommonFalse(void) const { return strFalse; }
+  const string &CommonYes(void) const { return strY; }
+  const string &CommonNo(void) const { return strN; }
+  const string &CommonEquals(void) const { return strEquals; }
+  const string &CommonNegOne(void) const { return strNOne; }
+  const string &CommonZero(void) const { return strZero; }
+  const string &CommonOne(void) const { return strOne; }
+  const string &CommonCr(void) const { return strCr; }
+  const string &CommonLf(void) const { return strLf; }
+  const string &CommonCrLf(void) const { return strCrLf; }
+  const string &CommonCrLf2(void) const { return strCrLf2; }
+  const string &CommonLfCr(void) const { return strLfCr; }
+  const string &CommonSpace(void) const { return strSpace; }
+  const string &CommonDblSpace(void) const { return strDblSpace; }
+  const string &CommonEllipsis(void) const { return strEllipsis; }
+  const string &CommonFSlash(void) const { return strFSlash; }
+  char CommonCFSlash(void) const { return cFSlash; }
+  const string &CommonUnspec(void) const { return strUnspec; }
+  const string &CommonNull(void) const { return strNull; }
+  const string &CommonPeriod(void) const { return strPeriod; }
+  const string &CommonTwoPeriod(void) const { return str2Period; }
+  const string &CommonLuaName(void) const { return strLuaName; }
+  const string &CommonPrivate(void) const { return strPrivate; }
+  const string &CommonProtected(void) const { return strProtected; }
+  const string &CommonEmpty(void) const { return strEmpty; }
+  const string &CommonInvalid(void) const { return strInvalid; }
+  const string &CommonAsterisk(void) const { return strAsterisk; }
+  /* -- Destructor --------------------------------------------------------- */
+  ~Common(void) { cCommon = nullptr; }
   /* -- Default Constructor ------------------------------------------------ */
   Common(void) :                       // No parameters
     /* -- Initialisers ----------------------------------------------------- */
@@ -75,10 +79,9 @@ static class Common final              // Members initially private
     strEmpty{ "<Empty>" },             strInvalid{ "<Invalid>" },
     strAsterisk{ "*" },                cFSlash(strFSlash[0]),
     cpBlank(strBlank.c_str()),         lLocaleCurrent{ strBlank }
-    /* -- No code ---------------------------------------------------------- */
-    { }
-} /* ----------------------------------------------------------------------- */
-*cCommon;                              // Assigned in main function
+    /* -- Set global pointer to class -------------------------------------- */
+    { cCommon = this; }
+};/* ----------------------------------------------------------------------- */
 /* -- Some helpful globals so not to repeat anything ----------------------- */
 static const char*const cpTimeFormat = "%a %b %d %H:%M:%S %Y %z";
 /* -- Functions for StrAppend, StrAppendImbue and StrFormat ---------------- */
@@ -124,7 +127,7 @@ namespace H                            // Private functions
       // Stream to write to
       ostringstream osS;
       // Imbue current locale
-      osS.imbue(cCommon->Locale());
+      osS.imbue(cCommon->CommonLocale());
       // Build string
       Param(osS, vaVars...);
       // Return appended string
@@ -483,7 +486,7 @@ static const string &StrIsBlank(const string &strIn, const string &strAlt)
   { return strIn.empty() ? strAlt : strIn; }
 /* ------------------------------------------------------------------------- */
 static const string &StrIsBlank(const string &strIn)
-  { return StrIsBlank(strIn, cCommon->Blank()); }
+  { return StrIsBlank(strIn, cCommon->CommonBlank()); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
   static const char *StrCPluralise(const IntType itCount,
@@ -530,30 +533,30 @@ static const string StrLongFromDuration(const StdTimeT tDuration,
   } // Add months?
   if(tD.tm_mon && uiCompMax > 0)
   { // Do add months
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_mon, "month", "months");
     --uiCompMax;
   } // Add days? (removing the added 1)
   if(--tD.tm_mday && uiCompMax > 0)
   { // Do add days
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_mday, "day", "days");
     --uiCompMax;
   } // Add hours?
   if(tD.tm_hour && uiCompMax > 0)
   { // Do add hours
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_hour, "hour", "hours");
     --uiCompMax;
   } // Add Minutes?
   if(tD.tm_min && uiCompMax > 0)
   { // Do add minutes
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_min, "min", "mins");
     --uiCompMax;
   } // Check seconds
   if((tD.tm_sec || !tDuration) && uiCompMax > 0)
-    osS << (osS.tellp() ? cCommon->Space() : cCommon->Blank())
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
         << StrCPluraliseNum(tD.tm_sec, "sec", "secs");
   // Return string
   return osS.str();
@@ -588,8 +591,8 @@ namespace StrFromEvalTokensPrivateData
   typedef vector<BoolCharPair> BoolCharPairVector;
   // The actual function
   static const string StrFromEvalTokens(const BoolCharPairVector &bcpvList)
-    { return bcpvList.empty() ? cCommon->Blank() :
-        accumulate(bcpvList.cbegin(), bcpvList.cend(), cCommon->Blank(),
+    { return bcpvList.empty() ? cCommon->CommonBlank() :
+        accumulate(bcpvList.cbegin(), bcpvList.cend(), cCommon->CommonBlank(),
           [](const string &strOut, const BoolCharPair &bcpPair)
             { return bcpPair.first ? StrAppend(strOut,
               bcpPair.second) : strOut; }); }
@@ -635,9 +638,9 @@ static const string StrShortFromDuration(const double dDuration,
 }
 /* -- Return true of false ------------------------------------------------- */
 static const string &StrFromBoolTF(const bool bCondition)
-  { return bCondition ? cCommon->Tru() : cCommon->Fals(); }
+  { return bCondition ? cCommon->CommonTrue() : cCommon->CommonFalse(); }
 static const string &StrFromBoolYN(const bool bCondition)
-  { return bCondition ? cCommon->Y() : cCommon->N(); }
+  { return bCondition ? cCommon->CommonYes() : cCommon->CommonNo(); }
 /* -- Count occurence of string -------------------------------------------- */
 static size_t StrCountOccurences(const string &strStr, const string &strWhat)
 { // Zero if string is empty
@@ -654,7 +657,7 @@ static size_t StrCountOccurences(const string &strStr, const string &strWhat)
 /* -- Implode a stringdeque to a single string ----------------------------- */
 template<class AnyArray, class CtrType = typename AnyArray::value_type>
   static const string StrImplode(const AnyArray &aArray,
-    const ssize_t &sstBegin=0, const string &strSep=cCommon->Space())
+    const ssize_t &sstBegin=0, const string &strSep=cCommon->CommonSpace())
 { // Cast array size to ssize_t
   const ssize_t sstSize = static_cast<ssize_t>(aArray.size());
   // Done if empty or begin position is invalid
@@ -675,8 +678,8 @@ template<class AnyArray, class CtrType = typename AnyArray::value_type>
 }
 /* -- Converts the key/value pairs to a stringvector ----------------------- */
 static const string ImplodeMap(const StrNCStrMap &ssmSrc,
-  const string &strLineSep=cCommon->Space(),
-  const string &strKeyValSep=cCommon->Equals(),
+  const string &strLineSep=cCommon->CommonSpace(),
+  const string &strKeyValSep=cCommon->CommonEquals(),
   const string &strValEncaps="\"")
 { // Done if empty
   if(ssmSrc.empty()) return {};
@@ -738,7 +741,7 @@ template<typename OutType, typename InType, class SuffixClass>
   static OutType StrToReadableSuffix(const InType itValue,
     const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup)
 { return StrToReadableSuffix<OutType, InType, SuffixClass>(itValue,
-    cpSuffix, iPrecision, scLookup, cCommon->CBlank()); }
+    cpSuffix, iPrecision, scLookup, cCommon->CommonCBlank()); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
   static double StrToBytesHelper(const IntType itBytes,
@@ -999,7 +1002,7 @@ static const string StrFromTimeTT(const StdTimeT ttTimestamp,
 /* -- Remove suffixing carriage return and line feed ----------------------- */
 static string &StrChop(string &strStr)
 { // Find the pos of the last char that is not a carriage return or line feed
-  const size_t stEndPos = strStr.find_last_not_of(cCommon->CrLf());
+  const size_t stEndPos = strStr.find_last_not_of(cCommon->CommonCrLf());
   // If all characters are removed, set the string to empty else erase the part
   if(stEndPos == StdNPos) strStr.clear();
   else strStr.erase(stEndPos + 1);

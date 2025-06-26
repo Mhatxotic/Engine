@@ -577,11 +577,11 @@ static const string StrGetReturnFormat(const string &strIn)
       { // Carriage-return found
         case '\r':
           return find(ciC, strIn.cend(), '\n') != strIn.cend() ?
-             cCommon->CrLf() : cCommon->Cr();
+             cCommon->CommonCrLf() : cCommon->CommonCr();
         // Line-feed found
         case '\n':
           return find(ciC, strIn.cend(), '\r') != strIn.cend() ?
-             cCommon->LfCr() : cCommon->Lf();
+             cCommon->CommonLfCr() : cCommon->CommonLf();
         // Anything else is ignored
         default: break;
       }
@@ -592,11 +592,14 @@ static const string StrGetReturnFormat(const string &strIn)
 /* ------------------------------------------------------------------------- */
 int CheckSources(void)
 { // Number of warnings
-  size_t stWarnings = 0;
+  size_t stWarnings = 0, stTotal = 0;
   // Read source files directory
-  const Dir dFiles{ SRCDIR, ".hpp" };
-  for(const DirEntMapPair &dempPair : dFiles.GetFiles())
-  { // Build actual filename
+  const Dir daFiles[2]={{ SRCDIR, ".hpp" },{ SRCDIR, ".cpp" }};
+  for(const Dir &dFiles : daFiles)
+    for(const DirEntMapPair &dempPair : dFiles.GetFiles())
+  { // Total number of files processed
+    ++stTotal;
+    // Build actual filename
     const string strFile{ StrAppend(SRCDIR, '/', dempPair.first) };
     // Capture errors
     try
@@ -657,7 +660,8 @@ int CheckSources(void)
             // Not in a quote?
             else if(!bInQuote)
             { // Is a comment?
-              if(strLine[stPos] == '/' && strLine[stPos+1] == '/')
+              if((stPos-1 >= strLine.length() || strLine[stPos-1] == ' ') &&
+                 strLine[stPos] == '/' && strLine[stPos+1] == '/')
               { // Check if in centre
                 if(bGotAlpha && stPos < 39 && (strLine.length() - stPos) < 39)
                   throw runtime_error("Comment not in centre!");
@@ -696,7 +700,7 @@ int CheckSources(void)
   if(stWarnings) cout << '\n';
   // Finished
   cout << "Finished with " << stWarnings << " warnings in "
-       << dFiles.GetFilesSize() << " modules." << endl;
+       << stTotal << " modules." << endl;
   // Success
   return 0;
 }
@@ -807,7 +811,7 @@ int GenDoc(void)
         case '!':
         { // Add to current class description
           ansCurrent.slDesc.push_back(strLine.length() > 5 ?
-            strLine.substr(5) : cCommon->Blank());
+            strLine.substr(5) : cCommon->CommonBlank());
           // Done
           break;
         } // New CONST table?
@@ -1163,7 +1167,8 @@ int GenDoc(void)
       cout << "\nException! (" << strFile << ":L#" << stLine
            << "): " << e.what() << "... ";
     } // CVar name not empty? Put into cvars list for writing
-    if(!strCName.empty()) ssmCVars.insert({ StrToLowCase(strCName), strCDesc });
+    if(!strCName.empty())
+      ssmCVars.insert({ StrToLowCase(strCName), strCDesc });
     // Report cvars
     cout << ssmCVars.size() << "CV!" << endl;
   } // Set output file
@@ -1219,7 +1224,8 @@ int GenDoc(void)
       "content=\"https://repository-images.githubusercontent.com/"
                 "611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413\">\n"
     "\t<META name=\"og:title\" content=\"$ $.$.$.$ API reference\">\n"
-    "\t<META name=\"og:url\" content=\"https://mhatxotic.github.io/Engine/\">\n"
+    "\t<META name=\"og:url\" "
+      "content=\"https://mhatxotic.github.io/Engine/\">\n"
     "\t<META name=\"robots\" content=\"index,follow\">\n"
     "\t<META name=\"viewport\" "
             "content=\"width=device-width, initial-scale=1\">\n"
@@ -1557,14 +1563,15 @@ int GenDoc(void)
           if(!strOutParams.empty()) strOutParams.pop_back();
           strOutParams += " = ";
         } // Start of function declaration
-        const string strCF{ StrAppend(lAPIp.first, mmItem.ucSep, flpItem.first) };
+        const string strCF{
+          StrAppend(lAPIp.first, mmItem.ucSep, flpItem.first) };
         fSrc.FStreamWriteStringEx(
           "\t<DIV id=\"$\" style=\"display:none\">\n"
           "\t\t<H3>$</H3>\n"
           "\t\t<H4>Syntax:-</H4>\n"
           "\t\t<PRE>$$$$$</PRE>\n",
           strCF, strCF, strOutParams, strCF, mmItem.strLeft,
-          strInParams.empty() ? cCommon->Blank() :
+          strInParams.empty() ? cCommon->CommonBlank() :
             StrAppend("<I>", strInParams, "</I>"), mmItem.strRight);
         // Start writing parameters
         if(!afData.lParameters.empty())
@@ -1800,7 +1807,7 @@ void PatchIcon(const string &strIco, const string &strOut)
 const string GetTempDir(void)
 { // Get temporary directory and remove trailing slash
 #if defined(WINDOWS)
-  string strTmp{ cCmdLine->GetEnv("TMP") };
+  string strTmp{ cCmdLine->CmdLineGetEnv("TMP") };
   if(strTmp.length() <= 1)
     XCL("Could not read TMP environment variable!");
   // Replace backslashes with forwardslashes in directory
@@ -1841,37 +1848,37 @@ void DoCleanCompilerTempFiles(void)
 #endif
 }
 /* ------------------------------------------------------------------------- */
-void DoClean(StrVector &sDeleted, StrVector &sNotDeleted, const Dir &dFiles)
+void DoClean(StrVector &svDeleted, StrVector &svNotDeleted, const Dir &dFiles)
 { // Write initial scan
   if(dFiles.IsFilesEmpty()) return;
   // Allocate memory for filenames
-  sDeleted.reserve(sDeleted.size()+dFiles.GetFilesSize());
-  sNotDeleted.reserve(sNotDeleted.size()+dFiles.GetFilesSize());
+  svDeleted.reserve(svDeleted.size()+dFiles.GetFilesSize());
+  svNotDeleted.reserve(svNotDeleted.size()+dFiles.GetFilesSize());
   // Enumerate files
   for(const DirEntMapPair &dempPair : dFiles.GetFiles())
   { // Delete the file and if failed?
     if(!DirFileUnlink(dempPair.first))
-      sDeleted.push_back(StrFormat("$ [$:$]",
+      svDeleted.push_back(StrFormat("$ [$:$]",
         dempPair.first, StdGetError(), StrFromErrNo()));
     // Success
-    else sDeleted.push_back(dempPair.first);
+    else svDeleted.push_back(dempPair.first);
   }
 }
 /* ------------------------------------------------------------------------- */
 void DoClean(const StrVector svExts)
 { // Files deleted
-  StrVector sDeleted, sNotDeleted;
+  StrVector svDeleted, svNotDeleted;
   // For each extension we don't want. Grab files and clean them
   for(const string &strExt : svExts)
-    DoClean(sDeleted, sNotDeleted,
-      strExt.empty() ? Dir{} : Dir{ cCommon->Blank(), strExt });
+    DoClean(svDeleted, svNotDeleted,
+      strExt.empty() ? Dir{} : Dir{ cCommon->CommonBlank(), strExt });
   // Report result
-  if(!sDeleted.empty())
+  if(!svDeleted.empty())
     ConWrite(StrFormat("*** Deleted $ files from '$': $.",
-      sDeleted.size(), DirGetCWD(), StrImplode(sDeleted, 0, ", ")));
-  if(!sNotDeleted.empty())
+      svDeleted.size(), DirGetCWD(), StrImplode(svDeleted, 0, ", ")));
+  if(!svNotDeleted.empty())
     ConWrite(StrFormat("*** $ files not deleted from '$': $.",
-      sNotDeleted.size(), DirGetCWD(), StrImplode(sNotDeleted, 0, ", ")));
+      svNotDeleted.size(), DirGetCWD(), StrImplode(svNotDeleted, 0, ", ")));
 }
 /* ------------------------------------------------------------------------- */
 void MakeDirectory(const string &strDir)
@@ -1910,14 +1917,15 @@ int SpecialExecute(const string strCmd, const size_t stML,
   const ClkTimePoint tpBegin{ cmHiRes.GetTime() };
   // Execute process and capture output. throw runtime_error if failed
   FILE*const fpPipe = POpen(StrAppend(strCmd,
-    (uiFlags & PF_SYSNOERR) || bErrOverride ? " 2>&1" : cCommon->CBlank()));
+    (uiFlags & PF_SYSNOERR) || bErrOverride ?
+      " 2>&1" : cCommon->CommonCBlank()));
   if(!fpPipe)
     XCL("Could not open pipe to execute process!",
         "CmdLine", strCmd, "Directory", DirGetCWD());
   // So we can clean up the handle
   try
   { // Prepare string vector
-    StrVector vL;
+    StrVector svStrings;
     // Buffer for process output
     Memory aBuffer{ 4096 };
     // Until process finished
@@ -1926,13 +1934,13 @@ int SpecialExecute(const string strCmd, const size_t stML,
       if(!(uiFlags & PF_NOMERGE))
       { // We got the line so find it in the list and if we found it then
         // ignore it!
-        const StrVectorConstIt vI(find(vL.begin(), vL.end(),
-          aBuffer.MemPtr<char>()));
-        if(vI != vL.end()) continue;
+        const StrVectorConstIt svciIt{ find(svStrings.begin(), svStrings.end(),
+          aBuffer.MemPtr<char>()) };
+        if(svciIt != svStrings.end()) continue;
         // If we've exceeded our allowable limit then ignore it as well
-        if(vL.size() >= stML) continue;
+        if(svStrings.size() >= stML) continue;
         // Add it to list
-        vL.push_back(aBuffer.MemPtr<char>());
+        svStrings.push_back(aBuffer.MemPtr<char>());
       } // Print it out
       cout << aBuffer.MemPtr<char>();
     } // Read line and if not succeeded, keep retrying
@@ -1952,7 +1960,7 @@ int SpecialExecute(const string strCmd, const size_t stML,
   // Return result
   return iR;
 }
-/* ------------------------------------------------------ StrFormat a string -- */
+/* ------------------------------------------------------------------------- */
 int SpecialExecute2(const string &strCmd, const bool bOverride=true)
 { // Execute command line and throw error if it failed
   if(const int iR = SpecialExecute(strCmd,
@@ -1965,7 +1973,7 @@ int SpecialExecute2(const string &strCmd, const bool bOverride=true)
   } // Return status
   else return iR;
 }
-/* ------------------------------------------------------ StrFormat a string -- */
+/* ------------------------------------------------------------------------- */
 #define System(...) SpecialExecute2(__VA_ARGS__, true)
 #define SystemF(...) SpecialExecute2(StrFormat(__VA_ARGS__), true)
 #define SystemNF(...) SpecialExecute2(StrFormat(__VA_ARGS__), false)
@@ -1974,12 +1982,8 @@ void RenameFileSafe(const string &strSrc, const string &strDst)
 { // Write progress
   cout << "*** Renaming '" << strSrc << "' to '" << strDst << "'...";
   // Rename the file and show error if failed
-  if(DirFileRename(strSrc, strDst))
-  { // Done
-    cout << " OK!" << endl;
-    // Return
-    return;
-  } // File doesnt exist?
+  if(DirFileRename(strSrc, strDst)) { cout << " OK!" << endl; return; }
+  // File doesnt exist?
   if(errno != EEXIST)
     XCL("Rename failed!", "Source", strSrc, "Destination", strDst);
   // Try delete it and throw error if failed!
@@ -2268,7 +2272,8 @@ int BuildDistro(void)
       strIconSrc{ StrFormat("$/app/icon.png", strName) },
       strPkgInfo{ StrAppend(strAppCDir, "/PkgInfo") },
       strZipSrc{ StrFormat("$/Archive.dmg", strTmp) },
-      strZipDst{ StrFormat("$/$-$-MacOS-Universal.dmg", DISDIR, strArch, strVer)};
+      strZipDst{
+        StrFormat("$/$-$-MacOS-Universal.dmg", DISDIR, strArch, strVer)};
     // Create required mac app directories
     MakeDirectory(strDiskDir);
     MakeDirectory(strAppDir);
@@ -2705,7 +2710,8 @@ int BuildLicenses(void)
     // Until we've processed all the compressed file
     for(size_t stIndex = 0; stIndex < bCompressed.MemSize(); ++stIndex)
     { // Read character as integer
-      const int iVal = static_cast<int>(bCompressed.MemReadInt<uint8_t>(stIndex));
+      const int iVal =
+        static_cast<int>(bCompressed.MemReadInt<uint8_t>(stIndex));
       // Get value of index as string literal
       const string strVal{ StrFromNum(iVal) };
       // If the length of this string would go over the limit?
@@ -2988,9 +2994,9 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
   if(strLib.length() >= 8 && strLib.substr(0, 8) == "openssl-")
   { // Mandatory directory replacements
 #define STRMANDATORY \
-      { "\\\\lib\\\\engines-3",    cCommon->CBlank()                 },\
-      { "///",                     cCommon->CBlank()                 },\
-      { "\\\\lib\\\\ossl-modules", cCommon->CBlank()                 },\
+      { "\\\\lib\\\\engines-3",    cCommon->CommonCBlank() },\
+      { "///",                     cCommon->CommonCBlank() },\
+      { "\\\\lib\\\\ossl-modules", cCommon->CommonCBlank() },\
       { "  -del /Q /F doc\\",      "# !doc\\"              },\
       { ".h\r\n\t-del /Q /F",      ".h"                    },\
       { ".c\r\n\t-del /Q /F",      ".c"                    },\
@@ -2999,34 +3005,40 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       { ".pm\r\n\t-del /Q /F",     ".pm"                   }
     // 64-bit directory replacements
 #define STRBASE64 \
-      { "C:\\\\Program Files\\\\Common Files\\\\SSL", cCommon->CBlank() },\
-      { "C:\\\\Program Files\\\\OpenSSL",             cCommon->CBlank() },\
-      { "C:\\\\Program Files\\\\SSL",                 cCommon->CBlank() },\
-      { "\\Program Files\\OpenSSL",                   cCommon->CBlank() },\
-      { "\\Program Files\\Common Files\\SSL",         cCommon->CBlank() },\
-      { "\\Program Files\\OpenSSL\\lib\\engines-1_1", cCommon->CBlank() }
+      { "C:\\\\Program Files\\\\Common Files\\\\SSL",\
+        cCommon->CommonCBlank() },\
+      { "C:\\\\Program Files\\\\OpenSSL",\
+        cCommon->CommonCBlank() },\
+      { "C:\\\\Program Files\\\\SSL",\
+        cCommon->CommonCBlank() },\
+      { "\\Program Files\\OpenSSL",\
+        cCommon->CommonCBlank() },\
+      { "\\Program Files\\Common Files\\SSL",\
+        cCommon->CommonCBlank() },\
+      { "\\Program Files\\OpenSSL\\lib\\engines-1_1",\
+        cCommon->CommonCBlank() }
     // 32-bit directory replacements
 #define STRBASE32 \
       { "C:\\\\Program Files (x86)\\\\Common Files\\\\SSL",\
-        cCommon->CBlank() },\
+        cCommon->CommonCBlank() },\
       { "C:\\\\Program Files (x86)\\\\OpenSSL",\
-        cCommon->CBlank() },\
+        cCommon->CommonCBlank() },\
       { "C:\\\\Program Files (x86)\\\\SSL",\
-        cCommon->CBlank() },\
+        cCommon->CommonCBlank() },\
       { "\\Program Files (x86)\\OpenSSL",\
-        cCommon->CBlank() },\
+        cCommon->CommonCBlank() },\
       { "\\Program Files (x86)\\Common Files\\SSL",\
-        cCommon->CBlank() },\
+        cCommon->CommonCBlank() },\
       { "\\Program Files (x86)\\OpenSSL\\lib\\engines-1_1",\
-        cCommon->CBlank() }
+        cCommon->CommonCBlank() }
     // Release mode replacement flags
 #define STRRELEASE \
-      { "/Zs",                    cCommon->CBlank() },\
-      { "/Gs0",                   "/GS-"            },\
-      { "/Zi /Fdossl_static.pdb", cCommon->CBlank() },\
-      { "/debug",                 cCommon->CBlank() },\
-      { "/dll",                   cCommon->CBlank() },\
-      { "-D\"NDEBUG\"",           "-DNDEBUG"        } \
+      { "/Zs",                    cCommon->CommonCBlank() },\
+      { "/Gs0",                   "/GS-"                  },\
+      { "/Zi /Fdossl_static.pdb", cCommon->CommonCBlank() },\
+      { "/debug",                 cCommon->CommonCBlank() },\
+      { "/dll",                   cCommon->CommonCBlank() },\
+      { "-D\"NDEBUG\"",           "-DNDEBUG"              } \
     // Actual merged flags
 #define STRREPRELEASE64 { STRMANDATORY, STRBASE64, STRRELEASE,\
       { "/MD /O2", StrFormat("/MT /O2 $", strRel64Extra) } }
@@ -3077,10 +3089,13 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       "our @CMAKECONFIGDIR_REL_LIBDIR  = ( 'cmake\\OpenSSL' );\n"
       "our $VERSION                    = '3.4.0';\n"
       "our @LDLIBS                     =\n"
-      "    # Unix and Windows use space separation, VMS uses comma separation\n"
+      "    # Unix and Windows use space separation, "
+        "VMS uses comma separation\n"
       "    $^O eq 'VMS'\n"
-      "    ? split(/ *, */, 'ws2_32.lib gdi32.lib advapi32.lib crypt32.lib user32.lib ')\n"
-      "    : split(/ +/, 'ws2_32.lib gdi32.lib advapi32.lib crypt32.lib user32.lib ');\n"
+      "    ? split(/ *, */, 'ws2_32.lib gdi32.lib advapi32.lib crypt32.lib "
+        "user32.lib ')\n"
+      "    : split(/ +/, 'ws2_32.lib gdi32.lib advapi32.lib crypt32.lib "
+        "user32.lib ');\n"
       "\n"
       "1;\n" };
     // Setup the repo
@@ -3144,14 +3159,17 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
   { // Setup repo
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Directories
-    const string strBase32("simd/i386"),
-                 strBase64("simd/x86_64"),
+    const string strBase32{ "simd/i386" }, strBase64{ "simd/x86_64" },
     // NASM Assembler flags
-    strNASMRel32("nasm -fwin32 -Isimd/nasm/ -I$/ -Iwin/ -DWIN32"),
-    strNASMRel64("nasm -fwin64 -Isimd/nasm/ -I$/ -Iwin/ -DWIN64 -D__x86_64__"),
+    strNASMRel32{
+      "nasm -fwin32 -Isimd/nasm/ -I$/ -Iwin/ -DWIN32" },
+    strNASMRel64{
+      "nasm -fwin64 -Isimd/nasm/ -I$/ -Iwin/ -DWIN64 -D__x86_64__" },
     // Compilations
-    strCompRel32(StrAppend(StrFormat(strNASMRel32, strBase32), " simd/i386")),
-    strCompRel64(StrAppend(StrFormat(strNASMRel64, strBase64), " simd/x86_64")),
+    strCompRel32{
+      StrAppend(StrFormat(strNASMRel32, strBase32), " simd/i386") },
+    strCompRel64{
+      StrAppend(StrFormat(strNASMRel64, strBase64), " simd/x86_64") },
     // Add jpegturbo specific flags
     strJPTSpecific{ "-I. "
                     "-DWIN32 "
@@ -3318,7 +3336,8 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
       SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJPT16);
       const Dir dJPT16{ ".", envActive.cpOBJ };
       for(const DirEntMapPair &dempPair : dJPT16.GetFiles())
-        RenameFileSafe(dempPair.first, StrFormat("$-$", strJPT16Name, dempPair.first));
+        RenameFileSafe(dempPair.first,
+          StrFormat("$-$", strJPT16Name, dempPair.first));
       for(const DirEntMapPair &dempPair : dJP12.GetFiles())
         RenameFileSafe(
           StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first),
@@ -3809,20 +3828,20 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Patch makefile for linux/mac -------------------------------------------
     ReplaceTextMulti("src/makefile", {
       { "CC= gcc -std=gnu99", "CC=g++ -std=" STANDARD },
-      { "-DLUA_COMPAT_5_3 ",  cCommon->CBlank() },
+      { "-DLUA_COMPAT_5_3 ",  cCommon->CommonCBlank() },
       { "LUA_T=	lua",         "LUA_T=" },
       { "LUA_O=	lua.o",       "LUA_O=" },
       { "LUAC_T=	luac",      "LUAC_T=" },
       { "LUAC_O=	luac.o",    "LUAC_O=" },
-      { " liolib.o",          cCommon->CBlank() },
-      { " loslib.o",          cCommon->CBlank() },
-      { " loadlib.o",         cCommon->CBlank() },
+      { " liolib.o",          cCommon->CommonCBlank() },
+      { " loslib.o",          cCommon->CommonCBlank() },
+      { " loadlib.o",         cCommon->CommonCBlank() },
     });
     // Performing removal of libs from LUA core lib ---------------------------
     ReplaceTextMulti("src/linit.c", {
-      { "{LUA_IOLIBNAME, luaopen_io},",        cCommon->CBlank() },
-      { "{LUA_OSLIBNAME, luaopen_os},",        cCommon->CBlank() },
-      { "{LUA_LOADLIBNAME, luaopen_package},", cCommon->CBlank() },
+      { "{LUA_IOLIBNAME, luaopen_io},",        cCommon->CommonCBlank() },
+      { "{LUA_OSLIBNAME, luaopen_os},",        cCommon->CommonCBlank() },
+      { "{LUA_LOADLIBNAME, luaopen_package},", cCommon->CommonCBlank() },
     });
     // Patch to replace the default throwing code with code that works better
     // to store the exception message so we don't have to have try blocks in
@@ -3846,12 +3865,12 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     });
     // Performing removal of unneeded core function ---------------------------
     ReplaceTextMulti("src/lbaselib.c", {
-      { "{\"dofile\", luaB_dofile},",     cCommon->CBlank() },
-      { "{\"loadfile\", luaB_loadfile},", cCommon->CBlank() },
-      { "{\"load\", luaB_load},",         cCommon->CBlank() },
-      { "{\"print\", luaB_print},",       cCommon->CBlank() },
-      { "{\"_VERSION\", nullptr},",          cCommon->CBlank() },
-      { "{\"_G\", nullptr},",                cCommon->CBlank() },
+      { "{\"dofile\", luaB_dofile},",     cCommon->CommonCBlank() },
+      { "{\"loadfile\", luaB_loadfile},", cCommon->CommonCBlank() },
+      { "{\"load\", luaB_load},",         cCommon->CommonCBlank() },
+      { "{\"print\", luaB_print},",       cCommon->CommonCBlank() },
+      { "{\"_VERSION\", nullptr},",       cCommon->CommonCBlank() },
+      { "{\"_G\", nullptr},",             cCommon->CommonCBlank() },
     });
     // Perform increase of limits ---------------------------------------------
     ReplaceText("src/lparser.c", "MAXVARS\t\t200", "MAXVARS\t\t253");
@@ -3906,7 +3925,8 @@ void GotNewBuildExecutable(const string &strOldExe, const string &strNewExe)
   { // Read the new executable and its checksum
     Memory mA{ fsNewExe.FStreamReadBlockSafe() };
     fsNewExe.FStreamClose();
-    if(mA.MemIsEmpty()) XCL("Failed to read new executable!", "File", strNewExe);
+    if(mA.MemIsEmpty())
+      XCL("Failed to read new executable!", "File", strNewExe);
     const uint32_t uiNewExe = CryptToCRC32(mA);
     // Read the current executable and its checksum
     if(FStream fsExe{ strOldExe, FM_R_B })
@@ -3929,7 +3949,7 @@ void GotNewBuildExecutable(const string &strOldExe, const string &strNewExe)
         const wstring wstrNewExe{ UTFtoS16(strNewExe) };
         // Get environment and modify first parameter
         const ArgType *const lArgs[] = { wstrNewExe.c_str(), L"!", nullptr };
-        const ArgType *const *lEnv = cCmdLine->GetCEnv();
+        const ArgType *const *lEnv = cCmdLine->CmdLineGetCEnv();
         // Execute the new program
         const int iCode = StdExecVE(lArgs, lEnv);
         XCL("Failed to execute program!",
@@ -3943,8 +3963,8 @@ void GotNewBuildExecutable(const string &strOldExe, const string &strNewExe)
         while(!DirFileRename(strNewExe, strOldExe))
           StdSuspend(milliseconds{ 100 });
         // Exit as normal if we were asked to or just return
-        if(cCmdLine->GetTotalCArgs() >= 2 &&
-          !wcscmp(cCmdLine->GetCArgs()[1], L"!")) exit(0);
+        if(cCmdLine->CmdLineGetTotalCArgs() >= 2 &&
+          !wcscmp(cCmdLine->CmdLineGetCArgs()[1], L"!")) exit(0);
         // Return as normal
         return;
       }
@@ -4070,7 +4090,8 @@ int Compile(const bool bSelf)
       // All these don't need checking because they still need 32/64 suffix
       strExe += StrAppend("64", envActive.cpEXE);
       strPdb += StrAppend("64", envActive.cpPDB);
-      strObj += StrAppend("64", uiFlags & PF_PREPROC ? ".cpp" : envActive.cpOBJ);
+      strObj += StrAppend("64",
+        uiFlags & PF_PREPROC ? ".cpp" : envActive.cpOBJ);
       strAsm += StrAppend("64", envActive.cpASM);
       strMap += StrAppend("64", envActive.cpMAP);
     } // 32 bit compilation?
@@ -4113,8 +4134,8 @@ int Compile(const bool bSelf)
           uiVer[2], uiVer[3], strName);
       else XCL("Cannot open version file for writing!", "File", strVerFile);
     } // Write new version header
-    const string
-      strVersion{ StrFormat("$,$,$,$", uiVer[0], uiVer[1], uiVer[2], uiVer[3]) },
+    const string strVersion{
+        StrFormat("$,$,$,$", uiVer[0], uiVer[1], uiVer[2], uiVer[3]) },
       strVersionStr{ StrFormat("\"$.$.$.$\"",
         uiVer[0], uiVer[1], uiVer[2], uiVer[3]) },
       strDate{ StrFormat("\"$\"", cmSys.FormatTime()) },
@@ -4268,8 +4289,8 @@ int DebugApp(void)
 bool CheckCommandLine(string &strX1, string &strX2)
 { // Get first argument
   const string &strTokens =
-    cCmdLine->GetArgList().empty() ?
-    cCommon->Blank() : cCmdLine->GetArgList()[0];
+    cCmdLine->CmdLineGetArgList().empty() ?
+    cCommon->CommonBlank() : cCmdLine->CmdLineGetArgList()[0];
   // Function data structure
   struct FuncData {
     const unsigned int uiArg;           // Requires argument
@@ -4382,16 +4403,16 @@ bool CheckCommandLine(string &strX1, string &strX2)
         XC("Tokens incompatible!",
            "Token1", ucArgsNeededFor,
            "Token2", ucP,
-           "Args", cCmdLine->GetArgList().size());
+           "Args", cCmdLine->CmdLineGetArgList().size());
       // Not enough arguments specified? Throw Error
-      if(cCmdLine->GetArgList().size() <= 1)
+      if(cCmdLine->CmdLineGetArgList().size() <= 1)
         XC("Token requires extra argument!",
-           "Token", ucP, "Args", cCmdLine->GetArgList().size());
+           "Token", ucP, "Args", cCmdLine->CmdLineGetArgList().size());
       // Record the argument required
-      strX1 = cCmdLine->GetArgList()[1];
+      strX1 = cCmdLine->CmdLineGetArgList()[1];
       // Record an optional argument if needed
-      if(flD.uiArg >= 2 && cCmdLine->GetArgList().size() >= 3)
-        strX2 = cCmdLine->GetArgList()[2];
+      if(flD.uiArg >= 2 && cCmdLine->CmdLineGetArgList().size() >= 3)
+        strX2 = cCmdLine->CmdLineGetArgList()[2];
       // Update token data
       ucArgsNeededFor = ucP, uiArgsRequired = flD.uiArg;
     } // We found it so set and remove flags as appropriate
@@ -4417,7 +4438,7 @@ bool CheckCommandLine(string &strX1, string &strX2)
   { // Write option to screen
     cout << ((uiFlags & flI.second.uiAdd) ? '*' : ' ')
          << flI.first
-         << (flI.second.uiArg ? " x" : cCommon->DblSpace())
+         << (flI.second.uiArg ? " x" : cCommon->CommonDblSpace())
          << " = "
          << setw(stWidth)
          << string{ flI.second.cpDesc, 0, stMax }
@@ -4502,18 +4523,12 @@ void SelectEnvironment(const Environment &envNew)
 int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
 { // Set this thread's name for debugger and that it is high performance
   SysInitThread("main", STP_MAIN);
-  // Create static classes to engine components and set the pointer to that
-  // component (which should get optimised to static) so all the other
-  // components can access each other. Then nullptr them on destruction so
-  // any accidental access to them is easily identifiable by the debugger.
-#define INITSS(x, ...) DEINITHELPER(dih ## x, c ## x = nullptr); \
-    x eng ## x{ __VA_ARGS__ }; c ## x = &eng ## x
   // Initialise critical command-line and logging systems. We cannot really
   // do anything else special until we've enabled these subsystems.
-  INITSS(Common);                      // cppcheck-suppress danglingLifetime
-  INITSS(DirBase);                     // cppcheck-suppress danglingLifetime
-  INITSS(CmdLine,iArgC,saArgV,saEnv);  // cppcheck-suppress danglingLifetime
-  INITSS(Log);                         // cppcheck-suppress danglingLifetime
+  Common engCommon;
+  DirBase engDirBase;
+  CmdLine engCmdLine{ iArgC, saArgV, saEnv };
+  Log engLog;
   // Dependencies required only in this scope
   using namespace IArchive::P;         using namespace IArgs::P;
   using namespace IAsset::P;           using namespace ICmdLine::P;
@@ -4523,6 +4538,12 @@ int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
   using namespace IParser::P;          using namespace IStat::P;
   using namespace IThread::P;          using namespace IUtil::P;
   using namespace IUtf::P;
+  // Create static classes to engine components and set the pointer to that
+  // component (which should get optimised to static) so all the other
+  // components can access each other. Then nullptr them on destruction so
+  // any accidental access to them is easily identifiable by the debugger.
+#define INITSS(x, ...) DEINITHELPER(dih ## x, c ## x = nullptr); \
+    x eng ## x{ __VA_ARGS__ }; c ## x = &eng ## x
   // Initialise other systems. The order is important!
   INITSS(Stats);                   // cppcheck-suppress danglingLifetime
   INITSS(Threads);                 // cppcheck-suppress danglingLifetime

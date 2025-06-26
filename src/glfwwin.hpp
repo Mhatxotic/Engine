@@ -270,7 +270,7 @@ class GlFWWindow :                     // GLFW window class
     if(const char*const cpData =
       glfwGetClipboardString(WinGetHandle())) return cpData;
     // Return empty string
-    return cCommon->CBlank();
+    return cCommon->CommonCBlank();
   }
   /* -- Get clipboard C++ string ------------------------------------------- */
   const string WinGetClipboardString(void) const

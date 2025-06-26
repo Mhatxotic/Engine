@@ -35,7 +35,9 @@ struct LogLine                         // Log line structure
 typedef list<LogLine>            LogLines;        // List of log lines
 typedef LogLines::const_iterator LogLinesConstIt; // Log lines iterator
 /* == Log class ============================================================ */
-static class Log final :
+class Log;                             // Class prototype
+static Log *cLog = nullptr;            // Address of global log class
+class Log :                            // The actual class body
   /* -- Base classes ------------------------------------------------------- */
   public LogLines,                     // Holds info about every log line
   private FStream,                     // Output log file if needed
@@ -111,7 +113,7 @@ static class Log final :
   }
   /* -- Write string to log. Line feed creates multiple lines -------------- */
   void WriteString(const LHLevel lhL, const string &strL) noexcept(true)
-    { WriteLines(lhL, { strL, cCommon->Lf(), stMaximum }); }
+    { WriteLines(lhL, { strL, cCommon->CommonLf(), stMaximum }); }
   /* ----------------------------------------------------------------------- */
   void WriteString(const string &strL) { WriteString(LH_CRITICAL, strL); }
   /* ----------------------------------------------------------------------- */
@@ -281,10 +283,10 @@ static class Log final :
     strStdErr{ "/dev/stderr" },        // Initialise display label for stderr
     lhlLevel{ LH_DEBUG },              // Initialise default level
     stMaximum(1000)                    // Initialise maximum output lines
-    /* -- No code ---------------------------------------------------------- */
-    { }
+    /* -- Set pointer to global class -------------------------------------- */
+    { cLog = this; }
   /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Log, DeInitSafe())
+  DTORHELPER(~Log, DeInitSafe(); cLog = nullptr)
   /* -- Conlib callback function for APP_LOG variable ---------------------- */
   CVarReturn LogFileModified(const string &strFN, string &strCV)
   { // Lock mutex
@@ -329,9 +331,7 @@ static class Log final :
     stMaximum = stL;
     return ACCEPT;
   }
-  /* -- End ---------------------------------------------------------------- */
-} *cLog = nullptr;                     // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */
 };                                     // End of private module namespace

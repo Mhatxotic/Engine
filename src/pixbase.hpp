@@ -135,18 +135,19 @@ class SysBase :                        // Safe exception handler namespace
     Dl_info diData;
     // Tokenise the stack after removing duplicate whitespaces. Note that objc
     // calls will have spaces in them.
-    const Token tokData{ StrCompact(cpStack), cCommon->Space() };
+    const Token tokData{ StrCompact(cpStack), cCommon->CommonSpace() };
     // Need some extra work on Apple
 #if defined(MACOS)
     // The last two tokens should always be a + and a number which we will
     // grab.
     switch(tokData.size())
     { // Not enough data?
-      case  0: staData.Data(cCommon->Unspec()).Data(cCommon->Unspec());
+      case  0: staData.Data(cCommon->CommonUnspec())
+                      .Data(cCommon->CommonUnspec());
                break;
-      case  1: staData.Data(tokData.front()).Data(cCommon->Unspec());
+      case  1: staData.Data(tokData.front()).Data(cCommon->CommonUnspec());
                break;
-      case  2: staData.Data(tokData[1]).Data(cCommon->Unspec());
+      case  2: staData.Data(tokData[1]).Data(cCommon->CommonUnspec());
                break;
       case  3: staData.Data(tokData[1]).Data(tokData[2]);
                break;
@@ -160,7 +161,7 @@ class SysBase :                        // Safe exception handler namespace
     } // Get information about the item and if failed?
     if(!dladdr(vpStack, &diData))
     { // Just add unknown and try the next function level
-      staData.Data(cCommon->Unspec());
+      staData.Data(cCommon->CommonUnspec());
       return;
     } // Running on Linux?
 #else
@@ -262,7 +263,8 @@ class SysBase :                        // Safe exception handler namespace
   ExitState DebugMessage(const char*const cpSignal, const char*const cpExtra)
   { // Build filename
     const string strFileName{ cCmdLine ?
-      StrAppend(cCmdLine->GetCArgs()[0], ".dbg") : "/tmp/engine-crash.txt" };
+      StrAppend(cCmdLine->CmdLineGetCArgs()[0], ".dbg") :
+      "/tmp/engine-crash.txt" };
     // Begin message
     ostringstream osS;
     osS << "Received signal 'SIG" << cpSignal << "' at "
@@ -270,7 +272,7 @@ class SysBase :                        // Safe exception handler namespace
     // Dump the stack
     DumpStack(osS);
     // Add extra information if set
-    if(*cpExtra) osS << cCommon->Lf() << cpExtra << cCommon->Lf();
+    if(*cpExtra) osS << cCommon->CommonLf() << cpExtra << cCommon->CommonLf();
  // Not building the command line too?
 #if !defined(BUILD) && defined(MACOS)
     // Shut down the stderr monitoring thread
@@ -313,7 +315,7 @@ class SysBase :                        // Safe exception handler namespace
   }
   /* ----------------------------------------------------------------------- */
   ExitState DebugMessage(const char*const cpSignal)
-    { return DebugMessage(cpSignal, cCommon->CBlank()); }
+    { return DebugMessage(cpSignal, cCommon->CommonCBlank()); }
   /* ----------------------------------------------------------------------- */
   ExitState ConditionalExit(const string &strName, unsigned int &uiAttempts)
   { // If events system is available?

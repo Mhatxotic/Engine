@@ -836,7 +836,7 @@ static struct Sql final :              // Members initially public
     { return sqlite3_changes(sqlDB); }
   /* -- Process a count(*) requested --------------------------------------- */
   size_t GetRecordCount(const string_view &strvTable,
-                        const string_view &strvCondition=cCommon->CBlank())
+    const string_view &strvCondition=cCommon->CommonCBlank())
   { // Do a table count lookup. If succeeded and have records?
     if(ExecuteAndSuccess(StrFormat("SELECT count(*) FROM `$`$",
       strvTable, strvCondition)) && !srKeys.empty())
@@ -1406,7 +1406,7 @@ static struct Sql final :              // Members initially public
     // If the user specified something?
     else
     { // Switch to original startup directory
-      if(!DirSetCWD(cCmdLine->GetStartupCWD())) return DENY;
+      if(!DirSetCWD(cCmdLine->CmdLineGetStartupCWD())) return DENY;
       // Use theirs, but force UDB extension
       strVar = StrAppend(strFile, "." UDB_EXTENSION);
     } // Initialise the db and if succeeded?
@@ -1416,9 +1416,9 @@ static struct Sql final :              // Members initially public
       // Success
       return ACCEPT_HANDLED;
     } // If we have a persistant directory?
-    if(cCmdLine->IsHome())
+    if(cCmdLine->CmdLineIsHome())
     { // Set a new filename in the users home directory
-      strVar = cCmdLine->GetHome(PathSplit{ strVar }.strFileExt);
+      strVar = cCmdLine->CmdLineGetHome(PathSplit{ strVar }.strFileExt);
       // Try opening that and if succeeded then return success
       if(Init(strVar)) goto SqlInitOK;
     } // Use memory database instead

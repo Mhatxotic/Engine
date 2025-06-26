@@ -542,7 +542,8 @@ static class Oal final :
     // Return if debug logging not enabled
     if(cLog->NotHasLevel(LH_DEBUG)) return;
     // Build extensions list
-    const Token tlExtensions{ LuaUtilGetStr(AL_EXTENSIONS), cCommon->Space() };
+    const Token tlExtensions{
+      LuaUtilGetStr(AL_EXTENSIONS), cCommon->CommonSpace() };
     // Build sorted list of extensions and log them all
     typedef pair<const string, const size_t> Pair;
     typedef map<Pair::first_type, Pair::second_type> Map;

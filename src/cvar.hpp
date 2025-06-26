@@ -139,12 +139,12 @@ class CVarItem :                       // Members initially private
   const string GetValueSafe(void) const
   { // If confidential, return confidential
     if(FlagIsSet(CONFIDENTIAL) && csfShowFlags.FlagIsClear(CSF_CONFIDENTIAL))
-      return cCommon->Private();
+      return cCommon->CommonPrivate();
     // If protected, return protected
     if(FlagIsSet(CPROTECTED) && csfShowFlags.FlagIsClear(CSF_PROTECTED))
-      return cCommon->Protected();
+      return cCommon->CommonProtected();
     // If value is empty, return as empty
-    if(IsValueUnset()) return cCommon->Empty();
+    if(IsValueUnset()) return cCommon->CommonEmpty();
     // If is a float, return value
     if(FlagIsSet(TFLOAT))
       return StrFromNum(StrToNum<double>(GetValue()), 0, 12);
@@ -176,26 +176,19 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   CommitResult Commit(void)
   { // Ignore if variable not modified, force saved or loaded
-    if(FlagIsClear(COMMIT|OSAVEFORCE|LOADED)) return CR_FAIL_NOT_SAVEABLE;
-    // If the value is the same as the default value and force not enabled?
-    if(IsValueUnchanged())
-    { // If the value was loaded from the database?
-      if(FlagIsSet(LOADED))
-      { // Don't delete the variable if force save is enabled
-        if(FlagIsSet(OSAVEFORCE)) return CR_OK_NOTHING_TO_DO;
-        // Purge the cvar from the database
-        switch(cSql->CVarPurge(GetVar()))
-        { case Sql::PR_OK    : return CR_OK_PURGE;
-          case Sql::PR_FAIL  : return CR_FAIL_PURGE;
-          case Sql::PR_OK_NC : return CR_FAIL_PURGE_NOT_CHANGED;
-          default            : return CR_FAIL_PURGE_UNKNOWN_ERROR;
-        }
-      } // Was not loaded from the database so nothing to do if no force save
-      else if(FlagIsClear(OSAVEFORCE)) return CR_OK_NOTHING_TO_DO;
-    } // Nothing to write if variable was just loaded
-    else if(FlagIsSetAndClear(LOADED, COMMIT|OSAVEFORCE))
-      return CR_FAIL_LOADED_NOT_MODIFIED;
-    // If we are to encrypt?
+    if(FlagIsClear(COMMIT|COMMITNOCHECK)) return CR_OK_NOTHING_TO_DO;
+    // If the value is the same as default value and nocheck not set?
+    if(IsValueUnchanged() && FlagIsClear(COMMITNOCHECK))
+    { // Nothing to do if the flag wasn't loaded from the database
+      if(FlagIsClear(LOADED)) return CR_OK_NOTHING_TO_DO;
+      // Purge the cvar from the database
+      switch(cSql->CVarPurge(GetVar()))
+      { case Sql::PR_OK    : return CR_OK_PURGE;
+        case Sql::PR_FAIL  : return CR_FAIL_PURGE;
+        case Sql::PR_OK_NC : return CR_FAIL_PURGE_NOT_CHANGED;
+        default            : return CR_FAIL_PURGE_UNKNOWN_ERROR;
+      }
+    } // If we are to encrypt?
     if(FlagIsSet(CPROTECTED)) try
     { // Try encryption and/or compression and store result in database
       if(FlagIsSet(CDEFLATE)) Commit(Block<AESZLIBEncoder>(GetValue()));
@@ -293,25 +286,23 @@ class CVarItem :                       // Members initially private
     switch(cbrResult)
     { // The change was not allowed?
       case DENY:
-        // Throw if requested
+        // Throw exception if requested otherwise return trigger denied code
         if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
           XC("CVar callback denied change!",
              "Variable", GetVar(), "Value", strNValue);
-        // Otherwise return trigger denied code
         return CVS_TRIGGERDENIED;
         // The new value is acceptable? Set the new value
       case ACCEPT: SetValue(strNValue); break;
       // The new value is acceptable, but the caller set the value? Ignore
       case ACCEPT_HANDLED: break;
       // Same as above but forcing commit? Set commit flag as requested
-      case ACCEPT_HANDLED_FORCECOMMIT: FlagSet(COMMIT); break;
+      case ACCEPT_HANDLED_FORCECOMMIT: FlagSet(COMMIT|COMMITNOCHECK); break;
       // Unknown return value?
       default:
-        // Throw if requested
+        // Throw exception if requested otherwise return trigger denied code
         if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
           XC("CVar callback returned unknown value!",
              "Variable", GetVar(), "Value", strNValue, "Result", cbrResult);
-        // Otherwise return trigger denied code
         return CVS_TRIGGEREXCEPTION;
     } // Free unused memory from cvar
     PruneValue();
@@ -406,12 +397,12 @@ class CVarItem :                       // Members initially private
         default: break;
       } // True?
       else if(strNValue.size() == 4 &&
-        StrToLowCase(strNValue) == cCommon->Tru())
-          return SetValue(cCommon->One(), ccfcFlags, strCBError);
+        StrToLowCase(strNValue) == cCommon->CommonTrue())
+          return SetValue(cCommon->CommonOne(), ccfcFlags, strCBError);
       // False?
       else if(strNValue.size() == 5 &&
-        StrToLowCase(strNValue) == cCommon->Fals())
-          return SetValue(cCommon->Zero(), ccfcFlags, strCBError);
+        StrToLowCase(strNValue) == cCommon->CommonFalse())
+          return SetValue(cCommon->CommonZero(), ccfcFlags, strCBError);
       // If we should not abort? Just return error else throw exception
       if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
         return CVS_NOTBOOLEAN;
@@ -439,7 +430,7 @@ class CVarItem :                       // Members initially private
           default: if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
                      return CVS_NOTFILENAME;
                    XC("CVar untrusted path name is invalid!",
-                      "Reason",   cDirBase->VNRtoStr(vrRes),
+                      "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
                       "Result",   vrRes,
                       "Variable", GetVar());
         }
@@ -453,7 +444,7 @@ class CVarItem :                       // Members initially private
           default : if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
                       return CVS_NOTFILENAME;
                     XC("CVar trusted path name is invalid!",
-                       "Reason",   cDirBase->VNRtoStr(vrRes),
+                       "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
                        "Result",   vrRes,
                        "Variable", GetVar(),
                        "Path",     strNewValue);

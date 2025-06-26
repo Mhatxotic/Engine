@@ -753,11 +753,12 @@ static class Console final :           // Members initially private
       { strName, uiMin, uiMax, CFL_NONE, ccbFunc } }).first;
   }
   /* -- Unregister console command ----------------------------------------- */
-  void UnregisterCommand(const CmdMapIt cmiIt) { cmMap.erase(cmiIt); }
+  void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
   /* -- Add line as string with specified text colour ---------------------- */
   void AddLine(const Colour cColour, const string &strText)
   { // Tokenise lines into a list limited by the maximum number of lines.
-    if(const TokenList tlLines{ strText, cCommon->Lf(), GetOutputMaximum() })
+    if(const TokenList tlLines{
+      strText, cCommon->CommonLf(), GetOutputMaximum() })
     { // Add all the lines to the output queue
       const double dTime = cLog->CCDeltaToDouble();
       for(const string &strLine : tlLines)
@@ -766,7 +767,7 @@ static class Console final :           // Members initially private
           clqOutput.push({ dTime, cColour, StdMove(strLine) });
         // Push a truncated line
         else clqOutput.push({ dTime, cColour,
-          strLine.substr(0, stMaxOutputLineE) + cCommon->Ellipsis() });
+          strLine.substr(0, stMaxOutputLineE) + cCommon->CommonEllipsis() });
       }
     }
   }
@@ -957,7 +958,7 @@ static class Console final :           // Members initially private
       1024UL, 65536UL)))
         return DENY;
     // Set subtracted value from ellipsis size
-    stMaxOutputLineE = stMaxOutputLine - cCommon->Ellipsis().length();
+    stMaxOutputLineE = stMaxOutputLine - cCommon->CommonEllipsis().length();
     // Value accepted
     return ACCEPT;
   }

@@ -197,7 +197,7 @@ static const string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
       if(!LuaUtilIsTable(lS, -1))
         return StrFormat("<userdata:$>", LuaUtilToPtr(lS, iIndex));
       // Read internal engine name and return generic data if not a string
-      LuaUtilPushStr(lS, cCommon->LuaName());
+      LuaUtilPushStr(lS, cCommon->CommonLuaName());
       LuaUtilGetRaw(lS, -2);
       return StrFormat("<$:$>",
         LuaUtilIsString(lS, -1) ? LuaUtilToCppString(lS, -1) : "Unknown",
@@ -238,7 +238,7 @@ static const string LuaUtilGetVarStack(lua_State*const lS)
           << iIndex - iCount - 1
           << "] (" << LuaUtilGetStackTokens(lS, iIndex) << ") "
           << LuaUtilGetStackType(lS, iIndex)
-          << cCommon->Lf();
+          << cCommon->CommonLf();
     // Return string
     return osS.str();
   } // No elements in variable stack
@@ -576,8 +576,8 @@ static const string LuaUtilGetCppFile(lua_State*const lS, const int iParam)
   const string strFile{ LuaUtilToCppString(lS, iParam) };
   if(const ValidResult vrId = DirValidName(strFile))
     XC("Invalid parameter!",
-       "Param",    iParam,                       "File",    strFile,
-       "Reason",   cDirBase->VNRtoStr(vrId), "ReasonId", vrId);
+       "Param",    iParam,                          "File",    strFile,
+       "Reason",   cDirBase->DirBaseVNRtoStr(vrId), "ReasonId", vrId);
   // Return the constructed string
   return strFile;
 }
@@ -1032,7 +1032,7 @@ static lua_Integer LuaUtilImplodePrepare(lua_State*const lS,
     UtilIntOrMax<lua_Integer>(LuaUtilGetSize(lS, 1)))
   { // No entries? Just check the separator for consistency and push blank
     case 0: LuaUtilCheckStr(lS, 2);
-            LuaUtilPushStr(lS, cCommon->Blank());
+            LuaUtilPushStr(lS, cCommon->CommonBlank());
             break;
     // One entry? Just check the separator and push the first item
     case 1: LuaUtilCheckStr(lS, 2);

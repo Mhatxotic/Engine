@@ -60,7 +60,7 @@ LLFUNC(OnUpdate, 0, cLua->SetLuaRef(lS, cAudio->lfOnUpdate))
 // ? Sets new master/global volume of all current and new streams/samples. This
 // ? does not modify the cvar which controls the default sample volume.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetGlobalVolume, 0, cAudio->SetGlobalVolume(AgVolume{lS, 1}))
+LLFUNC(SetGlobalVolume, 0, cAudio->AudioSetVolume(AgVolume{lS, 1}))
 /* ========================================================================= */
 // $ Audio.SetStreamVolume
 // > Volume:number=New streams volume (0 to 1).
@@ -92,7 +92,7 @@ LLFUNC(SetVideoVolume, 0, VideoSetVolume(AgVolume{lS, 1}))
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetPosition, 0,
   const AgALfloat aX{lS, 1}, aY{lS, 2}, aZ{lS, 3};
-  cAudio->SetPosition(aX, aY, aZ))
+  cAudio->AudioSetPosition(aX, aY, aZ))
 /* ========================================================================= */
 // $ Audio.SetOrientation
 // > XLook:number=New X listener look orientation.
@@ -107,7 +107,7 @@ LLFUNC(SetPosition, 0,
 LLFUNC(SetOrientation, 0,
   const AgALfloat aXLook{lS, 1}, aYLook{lS, 2}, aZLook{lS, 3},
                   aXUp{lS, 4}, aYUp{lS, 5}, aZUp{lS, 6};
-  cAudio->SetOrientation(aXLook, aYLook, aZLook, aXUp, aYUp, aZUp))
+  cAudio->AudioSetOrientation(aXLook, aYLook, aZLook, aXUp, aYUp, aZUp))
 /* ========================================================================= */
 // $ Audio.SetVelocity
 // > X:number=New X listener velocity.
@@ -118,7 +118,7 @@ LLFUNC(SetOrientation, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetVelocity, 0,
   const AgALfloat aX{lS, 1}, aY{lS, 2}, aZ{lS, 3};
-  cAudio->SetVelocity(aX, aY, aZ))
+  cAudio->AudioSetVelocity(aX, aY, aZ))
 /* ========================================================================= */
 // $ Audio.GetPBActiveDeviceName
 // < Name:string=The name of the active audio playback device.
@@ -131,15 +131,14 @@ LLFUNC(GetPBActiveDeviceName, 1, LuaUtilPushVar(lS, cOal->GetPlaybackDevice()))
 // < Name:string=The name of the audio playback device.
 // ? Returns the name of the playback audio device at id.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetPBDeviceName, 1, LuaUtilPushVar(lS, cAudio->GetPlaybackDeviceById(
-  AgSizeTLG{lS, 1, 0, cAudio->GetNumPlaybackDevices()})))
+LLFUNC(GetPBDeviceName, 1, LuaUtilPushVar(lS, cAudio->AudioGetPbkDeviceById(
+  AgSizeTLG{lS, 1, 0, cAudio->AudioGetNumPbkDevices()})))
 /* ========================================================================= */
 // $ Audio.GetNumPBDevices
 // < Count:integer=The number of playback devices detected.
 // ? Returns the number of audio playback devices detected by OpenAL.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetNumPBDevices, 1,
-  LuaUtilPushVar(lS, cAudio->GetNumPlaybackDevices()))
+LLFUNC(GetNumPBDevices, 1, LuaUtilPushVar(lS, cAudio->AudioGetNumPbkDevices()))
 /* ========================================================================= */
 // $ Audio.Reset
 // < Result:boolean = Was the event sent successfully?
@@ -147,7 +146,7 @@ LLFUNC(GetNumPBDevices, 1,
 // ? samples should resume playing after the reset. The function will return
 // ? 'false' if the request was already sent.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Reset, 1, LuaUtilPushVar(lS, cAudio->ReInit()))
+LLFUNC(Reset, 1, LuaUtilPushVar(lS, cAudio->AudioReInit()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Audio.* namespace functions structure                               ## **

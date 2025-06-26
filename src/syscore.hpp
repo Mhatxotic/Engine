@@ -135,8 +135,10 @@ struct SysModules :
       // Log the module data
       cLog->LogNLCInfoExSafe("- $ <$> '$' by '$' from '$'.",
         smdData.GetFileExt(), smdData.GetVersion(),
-        smdData.GetDesc().empty() ? cCommon->Unspec() : smdData.GetDesc(),
-        smdData.GetVendor().empty() ? cCommon->Unspec() : smdData.GetVendor(),
+        smdData.GetDesc().empty() ?
+          cCommon->CommonUnspec() : smdData.GetDesc(),
+        smdData.GetVendor().empty() ?
+          cCommon->CommonUnspec() : smdData.GetVendor(),
         smdData.GetLoc());
     } // Done
     return ACCEPT;
@@ -537,7 +539,7 @@ static class System final :            // The main system class
         exeData.ulHeaderSum, hex, exeData.ulHeaderSum, dec,
         exeData.ulCheckSum, hex, exeData.ulCheckSum, dec,
 #endif
-      cCmdLine->GetStartupCWD(),
+      cCmdLine->CmdLineGetStartupCWD(),
       GetRoamingDir(),
       GetReadablePid(), hex, GetReadablePid(), dec,
         GetReadableTid(), hex, GetReadableTid(), dec,
@@ -550,7 +552,8 @@ static class System final :            // The main system class
         CPUStepping(),
       StrToBytes(RAMTotal()), StrToBytes(RAMFree()), StrToBytes(RAMProcUse()),
       OSName(), OSMajor(), OSMinor(), OSBuild(), OSBits(), OSLocale(),
-        IsOSNameExSet() ? StrAppend(" via ", OSNameEx()) : cCommon->Blank(),
+        IsOSNameExSet() ? StrAppend(" via ", OSNameEx()) :
+                          cCommon->CommonBlank(),
       StrLongFromDuration(GetUptime()),
       cmSys.FormatTime(), cmSys.FormatTimeUTC(),
       StrFromBoolTF(OSIsAdmin()), StrFromBoolTF(EXEBundled()));
@@ -642,7 +645,7 @@ static class System final :            // The main system class
   CVarReturn SetWorkDir(const string &strP, string &strV)
   { // Set current directory to the startup directory as we want to honour the
     // users choice of relative directory.
-    cCmdLine->SetStartupCWD();
+    cCmdLine->CmdLineSetStartupCWD();
     // If targeting Apple systems?
 #if defined(MACOS)
     // Working directory

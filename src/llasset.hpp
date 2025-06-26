@@ -536,7 +536,7 @@ LLFUNC(Asset, 1,
   const AgNeString aIdentifier{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgAssetFlags aFlags{lS, 3};
-  AcAsset{lS}().InitAsset(aIdentifier, aFlags, aAsset))
+  AcAsset{lS}().AssetInitAsset(aIdentifier, aFlags, aAsset))
 /* ========================================================================= */
 // $ Asset.AssetAsync
 // > Id:string=The user specified identifier of the asset.
@@ -554,7 +554,7 @@ LLFUNC(AssetAsync, 0,
   const AgAsset aAsset{lS, 2};
   const AgAssetFlags aFlags{lS, 3};
   LuaUtilCheckFunc(lS, 4, 5, 6);
-  AcAsset{lS}().InitAsyncAsset(lS, aIdentifier, aFlags, aAsset))
+  AcAsset{lS}().AssetInitAsyncAsset(lS, aIdentifier, aFlags, aAsset))
 /* ========================================================================= */
 // $ Asset.Compile
 // > Filename:string=The name of the file to parse
@@ -603,7 +603,7 @@ LLFUNC(CompileString, 1,
 LLFUNC(Create, 1,
   const AgNeString aIdentifier{lS, 1};
   const AgSizeT aBytes{lS, 2};
-  AcAsset{lS}().InitBlank(aIdentifier, aBytes))
+  AcAsset{lS}().AssetInitBlank(aIdentifier, aBytes))
 /* ========================================================================= */
 // $ Asset.Count
 // < Count:integer=Total number of assets created.
@@ -619,7 +619,7 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cAssets->CollectorCount()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Duplicate, 1,
   const AgAsset aAsset{lS, 1};
-  AcAsset{lS}().InitDuplicate(aAsset))
+  AcAsset{lS}().AssetInitDuplicate(aAsset))
 /* ========================================================================= */
 // $ Asset.Enumerate
 // > Directory:string=The directory to scan (can only be exedir or below).
@@ -660,7 +660,7 @@ LLFUNC(Exec, 0,
   const AgNeString aCmdLine{lS, 1};
   const AgAssetFlags aFlags{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcAsset{lS}().InitAsyncCmdLine(lS, aCmdLine, aFlags))
+  AcAsset{lS}().AssetInitAsyncCmdLine(lS, aCmdLine, aFlags))
 /* ========================================================================= */
 // $ Asset.ExecEx
 // > CmdLine:string=The command-line to execute
@@ -680,7 +680,7 @@ LLFUNC(ExecEx, 0,
   const AgAssetFlags aFlags{lS, 2};
   const AgAsset aAsset{lS,3};
   LuaUtilCheckFunc(lS, 4, 5, 6);
-  AcAsset{lS}().InitAsyncCmdLineEx(lS, aCmdLine, aFlags, aAsset))
+  AcAsset{lS}().AssetInitAsyncCmdLineEx(lS, aCmdLine, aFlags, aAsset))
 /* ========================================================================= */
 // $ Asset.File
 // > Filename:string=The filename of the file to load
@@ -691,7 +691,7 @@ LLFUNC(ExecEx, 0,
 LLFUNC(File, 1,
   const AgNeString aIdentifier{lS, 1};
   const AgAssetFlags aFlags{lS, 2};
-  AcAsset{lS}().InitFile(aIdentifier, aFlags))
+  AcAsset{lS}().AssetInitFile(aIdentifier, aFlags))
 /* ========================================================================= */
 // $ Asset.FileAsync
 // > Filename:string=The filename to load.
@@ -706,7 +706,7 @@ LLFUNC(FileAsync, 0,
   const AgFilename aFilename{lS, 1};
   const AgAssetFlags aFlags{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcAsset{lS}().InitAsyncFile(lS, aFilename, aFlags))
+  AcAsset{lS}().AssetInitAsyncFile(lS, aFilename, aFlags))
 /* ========================================================================= */
 // $ Asset.FileExists
 // > Filename:string=The name of the file to check
@@ -779,7 +779,7 @@ LLFUNC(String, 1,
   const AgNeString aIdentifier{lS, 1};
   const AgLCString aText{lS, 2};
   const AgAssetFlags aFlags{lS, 3};
-  AcAsset{lS}().InitPtr(aIdentifier, aFlags, aText.stB, aText.cpD))
+  AcAsset{lS}().AssetInitPtr(aIdentifier, aFlags, aText.stB, aText.cpD))
 /* ========================================================================= */
 // $ Asset.WaitAsync
 // ? Halts main-thread execution until all async asset events have completed

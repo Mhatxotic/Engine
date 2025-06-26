@@ -60,7 +60,7 @@ class Certs                            // Certificates store
     const string &strD, const string &strF) try
   { // Load the certificate
     const FileMap fmCert{
-      AssetExtract(StrAppend(strD, cCommon->CFSlash(), strF)) };
+      AssetExtract(StrAppend(strD, cCommon->CommonCFSlash(), strF)) };
     // Get pointer
     const unsigned char*ucpPtr = fmCert.MemPtr<unsigned char>();
     // Load the raw certificate and ig it succeeded?

@@ -48,7 +48,12 @@ enum CoreErrorReason                   // Lua error mode behaviour
   CER_CRITICAL,                        // Terminate engine with error
   CER_MAX,                             // Maximum number of options supported
 };/* ----------------------------------------------------------------------- */
-class Core final                       // Members initially private
+class Core final :                     // Members initially private
+  /* -- Base classes ------------------------------------------------------- */
+  private Common,                      // Common variables class
+  private DirBase,                     // Base directory class
+  private CmdLine,                     // Command-line class
+  private Log                          // Logging class
 { /* -- Private Variables -------------------------------------------------- */
   const EvtMainRegVec emrvEvents;      // Core events list
   const CbThFunc   cbtMain;            // Bound main thread function
@@ -296,7 +301,7 @@ class Core final                       // Members initially private
         cConsole->DeInit();
         cFreeType->DeInit();
         // De-init audio
-        if(cSystem->IsAudioMode()) cAudio->DeInit();
+        if(cSystem->IsAudioMode()) cAudio->AudioDeInit();
         // Done
         break;
     } // Unload all fbos (NOT destroy);
@@ -394,7 +399,7 @@ class Core final                       // Members initially private
     else if(cSystem->IsGraphicalMode()) CoreInitGraphicalSubsystems();
     // With audio mode enabled? Initialise audio class.
     if(cSystem->IsAudioMode() && cEvtMain->IsExitReason(EMC_NONE))
-      cAudio->Init();
+      cAudio->AudioInit();
     // Lua loop with initialisation. Compare event code
     SandBoxInit: switch(cEvtMain->GetExitReason())
     { // Ignore LUA initialisation if we're re-initialising other components
@@ -625,226 +630,211 @@ class Core final                       // Members initially private
     };
   }
   /* -- Main function ------------------------------------------------------ */
-  int CoreMain(const int iArgs, ArgType**const lArgs, ArgType**const lEnv) try
-  { // Set this thread's name for debugger and that it is high performance
-    SysInitThread("main", STP_MAIN);
-    // Create static classes to engine components and set the pointer to that
+  int CoreMain(void) try
+  { // Create static classes to engine components and set the pointer to that
     // component (which should get optimised to static) so all the other
     // components can access each other. Then nullptr them on destruction so
     // any accidental access to them is easily identifiable by the debugger.
 #define INITSS(x, ...) DEINITHELPER(dih ## x, c ## x = nullptr); \
       x eng ## x{ __VA_ARGS__ }; c ## x = &eng ## x
-    // Initialise critical command-line and logging systems. We cannot really
-    // do anything else special until we've enabled these subsystems.
-    INITSS(Common);                    // cppcheck-suppress danglingLifetime
-    INITSS(DirBase);                   // cppcheck-suppress danglingLifetime
-    INITSS(CmdLine,iArgs,lArgs,lEnv);  // cppcheck-suppress danglingLifetime
-    INITSS(Log);                       // cppcheck-suppress danglingLifetime
-    // Capture exceptions so we can log any errors
-    try
-    { // Dependencies required only in this scope
-      using namespace IArgs::P;        using namespace IAtlas::P;
-      using namespace IBin::P;         using namespace ICert::P;
-      using namespace IClipboard::P;   using namespace ICmdLine::P;
-      using namespace IClock::P;       using namespace ICodecCAF::P;
-      using namespace ICodecDDS::P;    using namespace ICodecGIF::P;
-      using namespace ICodecJPG::P;    using namespace ICodecMP3::P;
-      using namespace ICodecOGG::P;    using namespace ICodecPNG::P;
-      using namespace ICodecWAV::P;    using namespace IConLib::P;
-      using namespace ICredit::P;      using namespace ICrypt::P;
-      using namespace IFile::P;        using namespace IGlFWMonitor::P;
-      using namespace IImageDef::P;    using namespace IImageLib::P;
-      using namespace ILuaCommand::P;  using namespace ILuaFunc::P;
-      using namespace IMask::P;        using namespace IMemory::P;
-      using namespace IOal::P;         using namespace IPcmLib::P;
-      using namespace ISample::P;      using namespace IShader::P;
-      using namespace ISocket::P;      using namespace ISShot::P;
-      using namespace IStat::P;        using namespace IUtil::P;
-      // Initialise other subsystems. The order is important!
-      INITSS(Stats);                   // cppcheck-suppress danglingLifetime
-      INITSS(Threads);                 // cppcheck-suppress danglingLifetime
-      INITSS(EvtMain);                 // cppcheck-suppress danglingLifetime
-      INITSS(System);                  // cppcheck-suppress danglingLifetime
-      INITSS(LuaFuncs);                // cppcheck-suppress danglingLifetime
-      INITSS(Archives);                // cppcheck-suppress danglingLifetime
-      INITSS(Assets);                  // cppcheck-suppress danglingLifetime
-      INITSS(Crypt);                   // cppcheck-suppress danglingLifetime
-      INITSS(Timer);                   // cppcheck-suppress danglingLifetime
-      INITSS(Sql);                     // cppcheck-suppress danglingLifetime
-      INITSS(Jsons);                   // cppcheck-suppress danglingLifetime
+    // Dependencies required only in this scope
+    using namespace IArgs::P;          using namespace IAtlas::P;
+    using namespace IBin::P;           using namespace ICert::P;
+    using namespace IClipboard::P;     using namespace ICmdLine::P;
+    using namespace IClock::P;         using namespace ICodecCAF::P;
+    using namespace ICodecDDS::P;      using namespace ICodecGIF::P;
+    using namespace ICodecJPG::P;      using namespace ICodecMP3::P;
+    using namespace ICodecOGG::P;      using namespace ICodecPNG::P;
+    using namespace ICodecWAV::P;      using namespace IConLib::P;
+    using namespace ICredit::P;        using namespace ICrypt::P;
+    using namespace IFile::P;          using namespace IGlFWMonitor::P;
+    using namespace IImageDef::P;      using namespace IImageLib::P;
+    using namespace ILuaCommand::P;    using namespace ILuaFunc::P;
+    using namespace IMask::P;          using namespace IMemory::P;
+    using namespace IOal::P;           using namespace IPcmLib::P;
+    using namespace ISample::P;        using namespace IShader::P;
+    using namespace ISocket::P;        using namespace ISShot::P;
+    using namespace IStat::P;          using namespace IUtil::P;
+    // Initialise other subsystems. The order is important!
+    INITSS(Stats);                     // cppcheck-suppress danglingLifetime
+    INITSS(Threads);                   // cppcheck-suppress danglingLifetime
+    INITSS(EvtMain);                   // cppcheck-suppress danglingLifetime
+    INITSS(System);                    // cppcheck-suppress danglingLifetime
+    INITSS(LuaFuncs);                  // cppcheck-suppress danglingLifetime
+    INITSS(Archives);                  // cppcheck-suppress danglingLifetime
+    INITSS(Assets);                    // cppcheck-suppress danglingLifetime
+    INITSS(Crypt);                     // cppcheck-suppress danglingLifetime
+    INITSS(Timer);                     // cppcheck-suppress danglingLifetime
+    INITSS(Sql);                       // cppcheck-suppress danglingLifetime
+    INITSS(Jsons);                     // cppcheck-suppress danglingLifetime
 #include "cvarlib.hpp"                 // Defines 'cvislList' cvar list
-      INITSS(CVars, cvislList);        // cppcheck-suppress danglingLifetime
-      INITSS(Sockets);                 // cppcheck-suppress danglingLifetime
+    INITSS(CVars, cvislList);          // cppcheck-suppress danglingLifetime
+    INITSS(Sockets);                   // cppcheck-suppress danglingLifetime
 #include "conlib.hpp"                  // Defines 'ccslList' command list
-      INITSS(Console, ccslList);       // cppcheck-suppress danglingLifetime
-      INITSS(GlFW);                    // cppcheck-suppress danglingLifetime
-      INITSS(Credits);                 // cppcheck-suppress danglingLifetime
-      INITSS(FreeType);                // cppcheck-suppress danglingLifetime
-      INITSS(Ftfs);                    // cppcheck-suppress danglingLifetime
-      INITSS(Files);                   // cppcheck-suppress danglingLifetime
-      INITSS(Masks);                   // cppcheck-suppress danglingLifetime
-      INITSS(Bins);                    // cppcheck-suppress danglingLifetime
-      INITSS(Oal);                     // cppcheck-suppress danglingLifetime
-      INITSS(PcmLibs);                 // cppcheck-suppress danglingLifetime
-      INITSS(CodecWAV); /* PCMFID=0 */ // cppcheck-suppress danglingLifetime
-      INITSS(CodecCAF); /* PCMFID=1 */ // cppcheck-suppress danglingLifetime
-      INITSS(CodecOGG); /* PCMFID=2 */ // cppcheck-suppress danglingLifetime
-      INITSS(CodecMP3); /* PCMFID=3 */ // cppcheck-suppress danglingLifetime
-      INITSS(Pcms);                    // cppcheck-suppress danglingLifetime
-      INITSS(Audio);                   // cppcheck-suppress danglingLifetime
-      INITSS(Sources);                 // cppcheck-suppress danglingLifetime
-      INITSS(Samples);                 // cppcheck-suppress danglingLifetime
-      INITSS(Streams);                 // cppcheck-suppress danglingLifetime
-      INITSS(EvtWin);                  // cppcheck-suppress danglingLifetime
-      INITSS(Ogl);                     // cppcheck-suppress danglingLifetime
-      INITSS(ImageLibs);               // cppcheck-suppress danglingLifetime
-      INITSS(CodecPNG); /* IMGFID=0 */ // cppcheck-suppress danglingLifetime
-      INITSS(CodecJPG); /* IMGFID=1 */ // cppcheck-suppress danglingLifetime
-      INITSS(CodecGIF); /* IMGFID=2 */ // cppcheck-suppress danglingLifetime
-      INITSS(CodecDDS); /* IMGFID=3 */ // cppcheck-suppress danglingLifetime
-      INITSS(Images);                  // cppcheck-suppress danglingLifetime
-      INITSS(Shaders);                 // cppcheck-suppress danglingLifetime
-      INITSS(Clips);                   // cppcheck-suppress danglingLifetime
-      INITSS(Display);                 // cppcheck-suppress danglingLifetime
-      INITSS(Input);                   // cppcheck-suppress danglingLifetime
-      INITSS(ShaderCore);              // cppcheck-suppress danglingLifetime
-      INITSS(Fbos);                    // cppcheck-suppress danglingLifetime
-      INITSS(FboCore);                 // cppcheck-suppress danglingLifetime
-      INITSS(SShots);                  // cppcheck-suppress danglingLifetime
-      INITSS(Textures);                // cppcheck-suppress danglingLifetime
-      INITSS(Palettes);                // cppcheck-suppress danglingLifetime
-      INITSS(Atlases);                 // cppcheck-suppress danglingLifetime
-      INITSS(Fonts);                   // cppcheck-suppress danglingLifetime
-      INITSS(Videos);                  // cppcheck-suppress danglingLifetime
-      INITSS(ConGraphics);             // cppcheck-suppress danglingLifetime
-      INITSS(Variables);               // cppcheck-suppress danglingLifetime
-      INITSS(Commands);                // cppcheck-suppress danglingLifetime
-      INITSS(Lua);                     // cppcheck-suppress danglingLifetime
-      // Done with this macro
+    INITSS(Console, ccslList);         // cppcheck-suppress danglingLifetime
+    INITSS(GlFW);                      // cppcheck-suppress danglingLifetime
+    INITSS(Credits);                   // cppcheck-suppress danglingLifetime
+    INITSS(FreeType);                  // cppcheck-suppress danglingLifetime
+    INITSS(Ftfs);                      // cppcheck-suppress danglingLifetime
+    INITSS(Files);                     // cppcheck-suppress danglingLifetime
+    INITSS(Masks);                     // cppcheck-suppress danglingLifetime
+    INITSS(Bins);                      // cppcheck-suppress danglingLifetime
+    INITSS(Oal);                       // cppcheck-suppress danglingLifetime
+    INITSS(PcmLibs);                   // cppcheck-suppress danglingLifetime
+    INITSS(CodecWAV); /* PCMFID = 0 */ // cppcheck-suppress danglingLifetime
+    INITSS(CodecCAF); /* PCMFID = 1 */ // cppcheck-suppress danglingLifetime
+    INITSS(CodecOGG); /* PCMFID = 2 */ // cppcheck-suppress danglingLifetime
+    INITSS(CodecMP3); /* PCMFID = 3 */ // cppcheck-suppress danglingLifetime
+    INITSS(Pcms);                      // cppcheck-suppress danglingLifetime
+    INITSS(Audio);                     // cppcheck-suppress danglingLifetime
+    INITSS(Sources);                   // cppcheck-suppress danglingLifetime
+    INITSS(Samples);                   // cppcheck-suppress danglingLifetime
+    INITSS(Streams);                   // cppcheck-suppress danglingLifetime
+    INITSS(EvtWin);                    // cppcheck-suppress danglingLifetime
+    INITSS(Ogl);                       // cppcheck-suppress danglingLifetime
+    INITSS(ImageLibs);                 // cppcheck-suppress danglingLifetime
+    INITSS(CodecPNG); /* IMGFID = 0 */ // cppcheck-suppress danglingLifetime
+    INITSS(CodecJPG); /* IMGFID = 1 */ // cppcheck-suppress danglingLifetime
+    INITSS(CodecGIF); /* IMGFID = 2 */ // cppcheck-suppress danglingLifetime
+    INITSS(CodecDDS); /* IMGFID = 3 */ // cppcheck-suppress danglingLifetime
+    INITSS(Images);                    // cppcheck-suppress danglingLifetime
+    INITSS(Shaders);                   // cppcheck-suppress danglingLifetime
+    INITSS(Clips);                     // cppcheck-suppress danglingLifetime
+    INITSS(Display);                   // cppcheck-suppress danglingLifetime
+    INITSS(Input);                     // cppcheck-suppress danglingLifetime
+    INITSS(ShaderCore);                // cppcheck-suppress danglingLifetime
+    INITSS(Fbos);                      // cppcheck-suppress danglingLifetime
+    INITSS(FboCore);                   // cppcheck-suppress danglingLifetime
+    INITSS(SShots);                    // cppcheck-suppress danglingLifetime
+    INITSS(Textures);                  // cppcheck-suppress danglingLifetime
+    INITSS(Palettes);                  // cppcheck-suppress danglingLifetime
+    INITSS(Atlases);                   // cppcheck-suppress danglingLifetime
+    INITSS(Fonts);                     // cppcheck-suppress danglingLifetime
+    INITSS(Videos);                    // cppcheck-suppress danglingLifetime
+    INITSS(ConGraphics);               // cppcheck-suppress danglingLifetime
+    INITSS(Variables);                 // cppcheck-suppress danglingLifetime
+    INITSS(Commands);                  // cppcheck-suppress danglingLifetime
+    INITSS(Lua);                       // cppcheck-suppress danglingLifetime
+    // Done with this macro
 #undef INITSS
-      // Register default cvars and pass over the current gui mode by ref. All
-      // the core parts of the engine are initialised from cvar callbacks.
-      cCVars->Init();
-      // Text mode requested?
-      if(cSystem->IsTextMode())
-      { // Bail out if logging to standard output because this will prevent
-        // the text mode from working properly
-        if(cLog->IsRedirectedToDevice())
-          XC("Text console cannot be used when logging to standard output!");
-        // Init lightweight text mode console for monitoring.
-        INITHELPER(SysConIH,
-          cSystem->SysConInit(cSystem->GetGuestTitle().data(),
-            cCVars->GetInternal<unsigned int>(CON_TMCCOLS),
-            cCVars->GetInternal<unsigned int>(CON_TMCROWS),
-            cCVars->GetInternal<bool>(CON_TMCNOCLOSE));
-          cSystem->WindowInitialised(nullptr),
-          cEvtMain->ThreadDeInit();
-          cSystem->SetWindowDestroyed();
-          cSystem->SysConDeInit());
-        // Perform the initial draw of the console.
-        cConsole->FlushToLog();
-        // Graphical mode requested too?
-        if(cSystem->IsGraphicalMode()) CoreEnterGraphicalMode();
-        // Only text mode requested?
-        else
-        { // Reset window icon
-          cDisplay->UpdateIcons();
-          // Execute main function until EMC_QUIT or EMC_QUIT_RESTART is
-          // passed. We are using the system's main thread so we just need to
-          // name this thread properly. We won't actually be spawning a new
-          // thread with this though, it's just used as simple exit condition
-          // flag to be compatible with the GUI mode.
-          while(CoreShouldEngineContinue()) CoreThreadMain(*cEvtMain);
-        } // If system says we have to close as quickly as possible?
-        if(cSystem->SysConIsClosing())
-        { // Quickly save cvars, database and log, this is the priority since
-          // Windows has a hardcoded termination time for console apps.
-          cCVars->Save();
-          cSql->DeInit();
-          cLog->DeInitSafe();
-          // Now Windows can exit anytime it wants
-          cSystem->SysConCanCloseNow();
-        }
-      } // Else were in graphical interactive mode
-      else if(cSystem->IsGraphicalMode()) CoreEnterGraphicalMode();
-      // No front-end requested
-      else XC("No front-end specified in core flags!",
-        "Flags", cSystem->GetCoreFlags());
-      // Compare engine exit code...
-      switch(cEvtMain->GetExitReason())
-      { // If we're to restart process with parameters? Set to do so
-        case EMC_QUIT_RESTART:
-          // Message to send
-          cLog->LogWarningExSafe(
-            "Core signalled to restart with $ parameters!",
-            cCmdLine->GetTotalCArgs());
-          // Set exit procedure
-          cCmdLine->SetRestart(cSystem->IsGraphicalMode() ?
-            EO_UI_REBOOT : EO_TERM_REBOOT);
-          // Have debugging enabled?
-          if(cLog->HasLevel(LH_DEBUG))
-          { // Log each argument that will be sent
-            size_t stId = 0;
-            for(const string &strArg : cCmdLine->GetArgList())
-              cLog->LogNLCDebugExSafe("- Arg $: $.", stId++, strArg);
-          } // Clean-up and restart
-          return 3;
-        // If we're to restart process without parameters? Set to do so.
-        case EMC_QUIT_RESTART_NP:
-          // Put event in log
-          cLog->LogWarningSafe(
-            "Core signalled to restart without parameters!");
-          // Set exit procedure
-          cCmdLine->SetRestart(cSystem->IsGraphicalMode() ?
-            EO_UI_REBOOT_NOARG : EO_TERM_REBOOT_NOARG);
-          // Clean-up and restart
-          return 4;
-        // Normal exit (which is already set to EO_QUIT)
-        default: break;
+    // Register default cvars and pass over the current gui mode by ref. All
+    // the core parts of the engine are initialised from cvar callbacks.
+    cCVars->Init();
+    // Text mode requested?
+    if(cSystem->IsTextMode())
+    { // Bail out if logging to standard output because this will prevent
+      // the text mode from working properly
+      if(cLog->IsRedirectedToDevice())
+        XC("Text console cannot be used when logging to standard output!");
+      // Init lightweight text mode console for monitoring.
+      INITHELPER(SysConIH,
+        cSystem->SysConInit(cSystem->GetGuestTitle().data(),
+          cCVars->GetInternal<unsigned int>(CON_TMCCOLS),
+          cCVars->GetInternal<unsigned int>(CON_TMCROWS),
+          cCVars->GetInternal<bool>(CON_TMCNOCLOSE));
+        cSystem->WindowInitialised(nullptr),
+        cEvtMain->ThreadDeInit();
+        cSystem->SetWindowDestroyed();
+        cSystem->SysConDeInit());
+      // Perform the initial draw of the console.
+      cConsole->FlushToLog();
+      // Graphical mode requested too?
+      if(cSystem->IsGraphicalMode()) CoreEnterGraphicalMode();
+      // Only text mode requested?
+      else
+      { // Reset window icon
+        cDisplay->UpdateIcons();
+        // Execute main function until EMC_QUIT or EMC_QUIT_RESTART is
+        // passed. We are using the system's main thread so we just need to
+        // name this thread properly. We won't actually be spawning a new
+        // thread with this though, it's just used as simple exit condition
+        // flag to be compatible with the GUI mode.
+        while(CoreShouldEngineContinue()) CoreThreadMain(*cEvtMain);
+      } // If system says we have to close as quickly as possible?
+      if(cSystem->SysConIsClosing())
+      { // Quickly save cvars, database and log, this is the priority since
+        // Windows has a hardcoded termination time for console apps.
+        cCVars->Save();
+        cSql->DeInit();
+        cLog->DeInitSafe();
+        // Now Windows can exit anytime it wants
+        cSystem->SysConCanCloseNow();
       }
-    } // Safe loggable exception occured?
-    catch(const exception &eReason)
-    { // Send to log and show error message to user
-      cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", eReason);
-      // Show message box
-      SysMessage("Main Thread Exception", eReason.what(), MB_ICONSTOP);
-      // Done
-      return 2;
+    } // Else were in graphical interactive mode
+    else if(cSystem->IsGraphicalMode()) CoreEnterGraphicalMode();
+    // No front-end requested
+    else XC("No front-end specified in core flags!",
+      "Flags", cSystem->GetCoreFlags());
+    // Compare engine exit code...
+    switch(cEvtMain->GetExitReason())
+    { // If we're to restart process with parameters? Set to do so
+      case EMC_QUIT_RESTART:
+        // Message to send
+        cLog->LogWarningExSafe(
+          "Core signalled to restart with $ parameters!",
+          cCmdLine->CmdLineGetTotalCArgs());
+        // Set exit procedure
+        cCmdLine->CmdLineSetRestart(cSystem->IsGraphicalMode() ?
+          EO_UI_REBOOT : EO_TERM_REBOOT);
+        // Have debugging enabled?
+        if(cLog->HasLevel(LH_DEBUG))
+        { // Log each argument that will be sent
+          size_t stId = 0;
+          for(const string &strArg : cCmdLine->CmdLineGetArgList())
+            cLog->LogNLCDebugExSafe("- Arg $: $.", stId++, strArg);
+        } // Clean-up and restart
+        return 3;
+      // If we're to restart process without parameters? Set to do so.
+      case EMC_QUIT_RESTART_NP:
+        // Put event in log
+        cLog->LogWarningSafe(
+          "Core signalled to restart without parameters!");
+        // Set exit procedure
+        cCmdLine->CmdLineSetRestart(cSystem->IsGraphicalMode() ?
+          EO_UI_REBOOT_NOARG : EO_TERM_REBOOT_NOARG);
+        // Clean-up and restart
+        return 4;
+      // Normal exit (which is already set to EO_QUIT)
+      default: break;
     } // Clean exit
     return 0;
-  } // Unsafe exception occured?
+  } // Safe loggable exception occured?
   catch(const exception &eReason)
-  { // Show message box
-    SysMessage("Main Init Exception", eReason.what(), MB_ICONSTOP);
+  { // Send to log and show error message to user
+    cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", eReason);
+    // Show message box
+    SysMessage("Main Thread Exception", eReason.what(), MB_ICONSTOP);
     // Done
-    return 1;
+    return 2;
   }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~Core, cCore = nullptr)
   /* -- Default constructor ------------------------------------------------ */
-  Core(void) :                         // No parameters
-    /* --------------------------------------------------------------------- */
-    emrvEvents{                     // Default events
+  Core(const int iArgs,                // Arguments count
+       ArgType**const lArgs,           // Arguments array
+       ArgType**const lEnv) :          // Environment variables array
+    /* -- Initialisers ----------------------------------------------------- */
+    CmdLine{ iArgs, lArgs, lEnv },     // Initialise command-line arguments
+    emrvEvents{                        // Default events
       { EMC_LUA_PAUSE,  bind(&Core::OnLuaPause,  this, _1) },
       { EMC_LUA_RESUME, bind(&Core::OnLuaResume, this, _1) },
     },
-    /* -- Initialisers ----------------------------------------------------- */
     cbtMain{ bind(&Core::CoreThreadMain, this, _1) },
     cerMode{ CER_CRITICAL },           // Init lua error mode behaviour
     uiErrorCount(0),                   // Init number of errors occured
     uiErrorLimit(0)                    // Init number of errors allowed
-    /* -- Set pointer to this class ---------------------------------------- */
+    /* -- No code ---------------------------------------------------------- */
     { cCore = this; }
-  /* -- Destructor that clears the core pointer ---------------------------- */
-  DTORHELPER(~Core, cCore = nullptr)
   /* -- Set lua error mode behaviour --------------------------------------- */
   CVarReturn CoreErrorBehaviourModified(const CoreErrorReason cefNMode)
     { return CVarSimpleSetIntNGE(cerMode, cefNMode, CER_MAX); }
   /* -- Title modified ----------------------------------------------------- */
-  CVarReturn CoreTitleModified(const string &strN, string &strV)
+  CVarReturn CoreTitleModified(const string &strValue, string &strRValue)
   { // Do not allow user to set this variable, only empty is allowed
-    if(!strN.empty()) return DENY;
+    if(!strValue.empty()) return DENY;
     // Set the title
-    strV = StrAppend(cSystem->GetGuestTitle(), ' ', cSystem->GetGuestVersion(),
-      " (", cSystem->ENGTarget(), ")");
+    strRValue = StrAppend(cSystem->GetGuestTitle(), ' ',
+      cSystem->GetGuestVersion(), " (", cSystem->ENGTarget(), ")");
     // We changed the value
     return ACCEPT_HANDLED;
   }
@@ -864,16 +854,16 @@ class Core final                       // Members initially private
     if(strP.empty())
       strV = StrFormat("$/$/$/", cSystem->GetRoamingDir(),
         cSystem->GetGuestAuthor().empty() ?
-          cCommon->Unspec() : cSystem->GetGuestAuthor(),
+          cCommon->CommonUnspec() : cSystem->GetGuestAuthor(),
         cSystem->GetGuestShortTitle().empty() ?
-          cCommon->Unspec() : cSystem->GetGuestShortTitle());
+          cCommon->CommonUnspec() : cSystem->GetGuestShortTitle());
     // Specified so use what the user specified
     else strV = StdMove(strP);
     // Try to make the users home directory as an alternative save place.
     if(!DirMkDirEx(PSplitBackToForwardSlashes(strV)))
       XCL("Failed to setup persistance directory!", "Directory", strV);
     // Set home directory and return that we set the value
-    cCmdLine->SetHome(strV);
+    cCmdLine->CmdLineSetHome(strV);
     return ACCEPT_HANDLED;
   }
   /* -- Set error limit ---------------------------------------------------- */
@@ -882,7 +872,7 @@ class Core final                       // Members initially private
   /* -- Parses the command-line -------------------------------------------- */
   CVarReturn CoreParseCmdLine(const string&, string &strV)
   { // Get command line parameters and if we have parameters?
-    const StrVector &svArgs = cCmdLine->GetArgList();
+    const StrVector &svArgs = cCmdLine->CmdLineGetArgList();
     if(!svArgs.empty())
     { // Reserve some memory for building command line
       strV.reserve(32767);
@@ -897,15 +887,16 @@ class Core final                       // Members initially private
         // Not empty argument? Tokenise the argument into a key/value pair. We
         // only want a maximum of two tokens, the seperator is allowed on the
         // second token and if succeeded?
-        else if(const Token tKeyVal{ strArg, cCommon->Equals(), 2 })
+        else if(const Token tKeyVal{ strArg, cCommon->CommonEquals(), 2 })
         { // Set the variable from command line with full permission because we
           // should allow any variable to be overridden from the command line.
           // Also show an error if the variable could not be set.
           if(cCVars->SetVarOrInitial(tKeyVal.front(), tKeyVal.size() > 1 ?
-            tKeyVal.back() : cCommon->Blank(), SCMDLINE|PBOOT, CCF_NOTHING))
+            tKeyVal.back() : cCommon->CommonBlank(),
+            SCMDLINE|PBOOT, CCF_NOTHING))
           { // Append argument to accepted command line and add a space
             strV.append(strArg);
-            strV.append(cCommon->Space());
+            strV.append(cCommon->CommonSpace());
             // Good variable
             ++stGood;
           } // Failure? Log the failure

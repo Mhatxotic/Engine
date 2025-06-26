@@ -57,7 +57,7 @@ static CVarReturn LuaCodeCheckVersion(const string &strVal, string &strNVal)
       // Update cvar to the current version
       strNVal = svVersion;
       // Accepted and value modified
-      return ACCEPT_HANDLED;
+      return ACCEPT_HANDLED_FORCECOMMIT;
     } // Failed? Write reason to console
     else cLog->LogWarningExSafe("LuaCode failed to flush the LUA code cache "
       "because $ ($)!", cSql->GetErrorStr(), cSql->GetError());

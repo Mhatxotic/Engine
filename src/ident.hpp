@@ -116,7 +116,7 @@ struct IdList :                        // Members initially public
   /* -- Constructor with blank alternative string -------------------------- */
   explicit IdList(const List &lNI) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdList{ lNI, cCommon->Blank() }
+    IdList{ lNI, cCommon->CommonBlank() }
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Get name from id --------------------------------------------------- */
@@ -154,7 +154,7 @@ struct IdMap :                         // Members initially public
   /* -- Constructor with no alternative string ----------------------------- */
   explicit IdMap(const MapType &mtList) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdMap(mtList, cCommon->Blank())
+    IdMap(mtList, cCommon->CommonBlank())
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Test all items as flags and return a list of strings set ----------- */
