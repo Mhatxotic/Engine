@@ -57,7 +57,7 @@ class SysProcess :                     // Need this before of System init order
       int Get(void) const { return iFd; }
       /* -- Resize file descriptor content --------------------------------- */
       bool Truncate(const size_t stSize) const
-        { return !ftruncate(Get(), stSize); }
+        { return !ftruncate(Get(), static_cast<off_t>(stSize)); }
       /* -- Close the file descriptor -------------------------------------- */
       bool Close(void)
       { // Return success if already closed
@@ -876,5 +876,5 @@ class SysCore :
                GetOperatingSystemData(),
                GetProcessorData() },
     bWindowInitialised(false) { }
-}; /* ---------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

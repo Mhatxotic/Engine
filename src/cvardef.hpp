@@ -223,10 +223,10 @@ enum CVarEnums : size_t
 struct CVarItemStatic                  // Start of CVar static struct
 { /* ----------------------------------------------------------------------- */
   const CoreFlagsConst cfcRequired;    // Required core flags
-  const string_view    &strvVar;       // Variable name from C-String
-  const string_view    &strvValue;     // Variable default value from C-String
+  const string_view    strvVar;        // Variable name from C-String
+  const string_view    strvValue;      // Variable default value from C-String
   const CbFunc         cbTrigger;      // Callback trigger event
-  const CVarFlagsConst &cFlags;        // Variable flags
+  const CVarFlagsConst cFlags;         // Variable flags
 };/* ----------------------------------------------------------------------- */
 typedef array<const CVarItemStatic, CVAR_MAX> CVarItemStaticList;
 /* ------------------------------------------------------------------------- */

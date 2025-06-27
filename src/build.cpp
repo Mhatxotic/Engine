@@ -20,6 +20,7 @@ namespace E {                          // Put everything in engine namespace
 /* ------------------------------------------------------------------------- */
 #include "engine.hpp"                  // Engine version information header
 #include "stdtypes.hpp"                // Engine STL type aliases header
+#include "common.hpp"                  // Common constant variables header
 #include "flags.hpp"                   // Flags helper utility header
 #include "utf.hpp"                     // UTF strings utility header
 #include "std.hpp"                     // StdLib function helpers header
@@ -72,19 +73,20 @@ namespace E {                          // Put everything in engine namespace
 #if defined(WINDOWS)                   // If using Windows?
 # pragma warning(disable: 4505)        // Disable unreferenced function (lots!)
 #endif                                 // Windows check
-/* ------------------------------------------------------------------------- */
+/* -- Includes ------------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICmdLine::P;
-using namespace ICrypt::P;             using namespace ICodec::P;
-using namespace IDir::P;               using namespace IError::P;
-using namespace IFStream::P;           using namespace IHelper::P;
-using namespace IJson::P;              using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace ICommon::P;            using namespace ICrypt::P;
+using namespace ICodec::P;             using namespace IDir::P;
+using namespace IError::P;             using namespace IFStream::P;
+using namespace IHelper::P;            using namespace IJson::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IParser::P;
 using namespace IPSplit::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
 using namespace IUtf::P;               using namespace IUtil::P;
-using namespace IUuId::P;              using namespace IParser::P;
+using namespace IUuId::P;
 /* ========================================================================= */
 #define STANDARD   "c++20"             // Current compilation standard used
 #define ENGINENAME "engine"            // Name of engine 'engine'
@@ -4538,24 +4540,10 @@ int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
   using namespace IParser::P;          using namespace IStat::P;
   using namespace IThread::P;          using namespace IUtil::P;
   using namespace IUtf::P;
-  // Create static classes to engine components and set the pointer to that
-  // component (which should get optimised to static) so all the other
-  // components can access each other. Then nullptr them on destruction so
-  // any accidental access to them is easily identifiable by the debugger.
-#define INITSS(x, ...) DEINITHELPER(dih ## x, c ## x = nullptr); \
-    x eng ## x{ __VA_ARGS__ }; c ## x = &eng ## x
   // Initialise other systems. The order is important!
-  INITSS(Stats);                   // cppcheck-suppress danglingLifetime
-  INITSS(Threads);                 // cppcheck-suppress danglingLifetime
-  INITSS(EvtMain);                 // cppcheck-suppress danglingLifetime
-  INITSS(System);                  // cppcheck-suppress danglingLifetime
-  INITSS(LuaFuncs);                // cppcheck-suppress danglingLifetime
-  INITSS(Archives);                // cppcheck-suppress danglingLifetime
-  INITSS(Assets);                  // cppcheck-suppress danglingLifetime
-  INITSS(Crypt);                   // cppcheck-suppress danglingLifetime
-  INITSS(Jsons);                   // cppcheck-suppress danglingLifetime
-  // Done with this macro
-#undef INITSS
+  Stats  engStats;   Threads  engThreads;   EvtMain  engEvtMain;
+  System engSystem;  LuaFuncs engLuaFuncs;  Archives engArchives;
+  Assets engAssets;  Crypt    engCrypt;     Jsons    engJsons;
   // Force current working directory to the base directory
   SetDirectory(
 #if defined(WINDOWS)

@@ -414,7 +414,7 @@ template<class AnyType>
 ** ------------------------------------------------------------------------- */
 #define DTORHELPERBEGIN(c) c(void) noexcept(false) { try {
 #define DTORHELPEREND(c) } catch(const exception &eReason) \
-  { SysMessage(STR(c) " Shutdown Exception", eReason.what(), MB_ICONSTOP); } }
+  { cLog->LogWarningExSafe("(" STR(c) ") $", eReason.what()); } }
 #define DTORHELPER(c,...) DTORHELPERBEGIN(c) __VA_ARGS__; DTORHELPEREND(c)
 /* == Init helper ========================================================== **
 ** ######################################################################### **

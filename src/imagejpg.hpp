@@ -16,7 +16,9 @@ using namespace ITexDef::P;            using namespace Lib::OS::JpegTurbo;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-static class CodecJPG final :          // JPEG codec object
+class CodecJPG;                        // Class prototype
+static CodecJPG *cCodecJPG = nullptr;  // Pointer to global class
+class CodecJPG :                       // JPEG codec object
   /* -- Base classes ------------------------------------------------------- */
   private ImageLib                     // Image format helper class
 { /* -- JPEG callbacks ----------------------------------------------------- */
@@ -185,17 +187,15 @@ static class CodecJPG final :          // JPEG codec object
     // Success
     return true;
   }
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Default constructor ------------------------------------- */ protected:
   CodecJPG(void) :
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_JPG, "Joint Photographic Experts Group", "JPG",
       bind(&CodecJPG::Decode, this, _1, _2),
       bind(&CodecJPG::Encode, this, _1, _2, _3) }
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- End ---------------------------------------------------------------- */
-} *cCodecJPG = nullptr;                // Codec pointer
-/* ------------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCodecJPG = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

@@ -9,9 +9,10 @@
 /* ------------------------------------------------------------------------- */
 namespace IFStream {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IError::P;             using namespace IIdent::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IMemory::P;            using namespace IUtil::P;
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IIdent::P;             using namespace IStd::P;
+using namespace IString::P;            using namespace IMemory::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Typedefs ------------------------------------------------------------- */

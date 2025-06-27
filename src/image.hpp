@@ -11,16 +11,16 @@
 namespace IImage {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IASync::P;
-using namespace ICollector::P;         using namespace IDim::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFileMap::P;           using namespace IIdent::P;
-using namespace IImageDef::P;          using namespace IImageLib::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IUtil::P;
+using namespace ICollector::P;         using namespace ICommon::P;
+using namespace IDim::P;               using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFileMap::P;
+using namespace IIdent::P;             using namespace IImageDef::P;
+using namespace IImageLib::P;          using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace ITexDef::P;            using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Image collector and member class ===================================== */

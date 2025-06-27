@@ -9,12 +9,12 @@
 /* ------------------------------------------------------------------------- */
 namespace IGlFWWindow {                // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ICollector::P;         using namespace ICoord::P;
-using namespace IDim::P;               using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IGlFWUtil::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace IUtf::P;
-using namespace Lib::OS::GlFW;
+using namespace ICollector::P;         using namespace ICommon::P;
+using namespace ICoord::P;             using namespace IDim::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IGlFWUtil::P;          using namespace ILog::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IUtf::P;               using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

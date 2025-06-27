@@ -344,7 +344,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     else cLog->LogErrorExSafe("AsyncLoader got invalid params in failure "
       "event $ for '$' with luastate($) and fref($) from $ params!",
       emeEvent.cCmd, idName.IdentGet(), lecAsync.LuaRefStateIsSet(),
-      lecAsync.LuaRefGetFunc(LR_ERROR), emeEvent.aArgs.size());
+      lecAsync.LuaRefGetFunc(LR_ERROR), emeEvent.eaArgs.size());
     // The memory for the error is no longer needed
     AsyncTidyUpVars();
   }
@@ -479,7 +479,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   void LuaEvtCallbackAsync(const EvtMainEvent &emeEvent) try
   { // Get reference to string vector and we need three parameters
     // [0]=Pointer to socket class, [1]=Event list id, [2]=Status
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Event result
     const AsyncResult uiAsyncResult =
       lecAsync.template LuaEvtsCheckParams<3>(emaArgs) ?

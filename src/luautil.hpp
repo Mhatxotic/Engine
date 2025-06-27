@@ -9,10 +9,11 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaUtil {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IDir::P;               using namespace IError::P;
-using namespace ILuaIdent::P;          using namespace IMemory::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IToken::P;             using namespace IUtil::P;
+using namespace ICommon::P;            using namespace IDir::P;
+using namespace IError::P;             using namespace ILuaIdent::P;
+using namespace IMemory::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace IToken::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Variables ------------------------------------------------------------ */

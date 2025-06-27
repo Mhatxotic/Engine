@@ -11,12 +11,12 @@
 /* ------------------------------------------------------------------------- */
 namespace IStat {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IError::P;
-using namespace IIdent::P;             using namespace ILockable::P;
+using namespace ICollector::P;         using namespace ICommon::P;
+using namespace IError::P;             using namespace IIdent::P;
+using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Statistic class ------------------------------------------------------ */
@@ -377,7 +377,7 @@ CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Stats, Stat, STAT)    // End of stat objects collector
 /* ------------------------------------------------------------------------- */
-};                                     // End of private module namespace
+}                                      // End of private module namespace
 /* ------------------------------------------------------------------------- */
-};                                     // End of public module namespace
+}                                      // End of public module namespace
 /* == EoF =========================================================== EoF == */

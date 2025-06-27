@@ -22,7 +22,9 @@ using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= */
-static class Audio final :             // Audio manager class
+class Audio;                           // Class prototype
+static Audio *cAudio = nullptr;        // Pointer to global class
+class Audio :                          // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper class
   private Thread                       // Audio monitoring thread
@@ -42,7 +44,7 @@ static class Audio final :             // Audio manager class
   /* -- Playback device list was updated ----------------------------------- */
   void AudioOnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
   { // Update the device context if supplied
-    cOal->UpdateDevice(reinterpret_cast<ALCdevice*>(emeEvent.aArgs[0].vp));
+    cOal->UpdateDevice(reinterpret_cast<ALCdevice*>(emeEvent.eaArgs[0].vp));
     // Refresh device list and update the name
     AudioEnumPlaybackDevices();
     cOal->UpdatePlaybackDeviceName();
@@ -489,6 +491,8 @@ static class Audio final :             // Audio manager class
     // Log status
     cLog->LogDebugSafe("Audio class started successfully.");
   }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~Audio, AudioDeInit())
   /* -- Default constructor ------------------------------------------------ */
   Audio(void) :                        // No parameters
     /* -- Initialisers ----------------------------------------------------- */
@@ -506,10 +510,8 @@ static class Audio final :             // Audio manager class
     ctfThSysEvts{ bind(&Audio::AudioThreadMainSysEvents, this, _1) },
     ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) },
     lfOnUpdate{ "OnUpdate" }           // On update event
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Audio, AudioDeInit())    // Destructor helper
+    /* -- Set global pointer to static class ------------------------------- */
+    { cAudio = this; }
   /* ----------------------------------------------------------------------- */
   CVarReturn SetAudCheckRate(const unsigned int uiTime)
     { return CVarSimpleSetIntNLG(cdCheckRate,
@@ -531,9 +533,7 @@ static class Audio final :             // Audio manager class
     // Done
     return ACCEPT;
   }
-  /* -- End ---------------------------------------------------------------- */
-} *cAudio = nullptr;                   // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

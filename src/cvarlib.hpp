@@ -14,17 +14,14 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Required types ======================================================= */
-using namespace Lib::OpenAL::Types;    using namespace Lib::OS::GlFW::Types;
-using namespace Lib::Sqlite::Types;
-/* -- Built-in CVar definition struct -------------------------------------- */
-const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 /* -- Use this when cvar is an integer ------------------------------------- */
 #define CB(f,t) [](CVarItem&, const string &strV)->CVarReturn \
   { return f(StrToNum<t>(strV)); }
 /* -- Use this when cvar is a string (NoOp for no callback needed) --------- */
 #define CBSTR(f) [](CVarItem &cviItem, const string &strV)->CVarReturn \
   { return f(strV, cviItem.GetModifyableValue()); }
+/* -- Built-in CVar definition struct -------------------------------------- */
+CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 // ! APP_CMDLINE
 // ? Shows the commandline sent to the application it cannot be changed at all.
@@ -1709,5 +1706,5 @@ const CVarItemStaticList cvislList{ {  // Default cvars (from cvars.hpp)
 #undef CBSTR                           // Done with string function callback
 #undef CB                              // Done with int function callback
 /* ------------------------------------------------------------------------- */
-} };                                   // End of module namespace
+}},                                    // End of array
 /* == EoF =========================================================== EoF == */

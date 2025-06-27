@@ -22,9 +22,11 @@ namespace P {                          // Start of public module namespace
 ** ## Windows WAVE format                                             WAV ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-static class CodecWAV final :          // WAV codec object
+class CodecWAV;                        // Class prototype
+static CodecWAV *cCodecWAV = nullptr;  // Pointer to global class
+class CodecWAV :                       // WAV codec object
   /* -- Base classes ------------------------------------------------------- */
-  private PcmLib                       // Pcm format helper class
+  protected PcmLib                     // Pcm format helper class
 { /* -- WAV header layout -------------------------------------------------- */
   enum HeaderLayout
   { // *** WAV FILE LIMITS ***
@@ -169,16 +171,14 @@ static class CodecWAV final :          // WAV codec object
     // Success
     return true;
   }
-  /* -- Constructor ------------------------------------------------ */ public:
+  /* -- Constructor --------------------------------------------- */ protected:
   CodecWAV(void) :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_WAV, "Windows Wave Audio", "WAV",
       bind(&CodecWAV::Decode, this, _1, _2), }
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- End ---------------------------------------------------------------- */
-} *cCodecWAV = nullptr;                // Codec pointer
-/* ------------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCodecWAV = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

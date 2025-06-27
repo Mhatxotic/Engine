@@ -10,23 +10,23 @@
 /* ------------------------------------------------------------------------- */
 namespace IDisplay {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IConGraph::P;          using namespace IConsole::P;
-using namespace ICoord::P;             using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IDim::P;               using namespace IDimCoord::P;
-using namespace IDir::P;               using namespace IEvtMain::P;
-using namespace IEvtWin::P;            using namespace IFboCore::P;
-using namespace IFlags;                using namespace IFont::P;
-using namespace IGlFW::P;              using namespace IGlFWCursor::P;
-using namespace IGlFWMonitor::P;       using namespace IGlFWUtil::P;
-using namespace IHelper::P;            using namespace IIdent::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace IInput::P;             using namespace ILog::P;
-using namespace ILuaFunc::P;           using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace ICommon::P;            using namespace IConGraph::P;
+using namespace IConsole::P;           using namespace ICoord::P;
+using namespace ICVar::P;              using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace IDim::P;
+using namespace IDimCoord::P;          using namespace IDir::P;
+using namespace IEvtMain::P;           using namespace IEvtWin::P;
+using namespace IFboCore::P;           using namespace IFlags;
+using namespace IFont::P;              using namespace IGlFW::P;
+using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
+using namespace IGlFWUtil::P;          using namespace IHelper::P;
+using namespace IIdent::P;             using namespace IImage::P;
+using namespace IImageDef::P;          using namespace IInput::P;
+using namespace ILog::P;               using namespace ILuaFunc::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -61,7 +61,9 @@ BUILD_FLAGS(Display,
   DF_NOERRORS              {Flag(63)}, DF_MAXIMISED             {Flag(64)}
 );
 /* == Display class ======================================================== */
-static class Display final :
+class Display;                         // Class prototype
+static Display *cDisplay = nullptr;    // Pointer to global class
+class Display :                        // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper
   public  DisplayFlags,                // Display settings
@@ -129,7 +131,7 @@ static class Display final :
   /* -- Window moved request ----------------------------------------------- */
   void OnMoved(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Check to see if the window moved
     CheckWindowMoved(emaArgs[1].i, emaArgs[2].i);
   }
@@ -138,7 +140,7 @@ static class Display final :
   /* -- Window set set cursor visibility ----------------------------------- */
   void OnReqSetCurVisib(const EvtWinEvent &eweEvent)
   { // Get requested state
-    const bool bState = eweEvent.aArgs.front().b;
+    const bool bState = eweEvent.eaArgs.front().b;
     // Set the new input if we can and log status
     cGlFW->WinSetCursor(bState);
     cLog->LogDebugExSafe("Input updated cursor visibility status to $.",
@@ -149,7 +151,7 @@ static class Display final :
   { // If raw mouse support is supported?
     if(cGlFW->IsNotRawMouseMotionSupported()) return;
     // Set the new input if we can and log status
-    cGlFW->WinSetRawMouseMotion(eweEvent.aArgs.front().b);
+    cGlFW->WinSetRawMouseMotion(eweEvent.eaArgs.front().b);
     cLog->LogDebugExSafe("Input updated raw mouse status to $.",
       StrFromBoolTF(cGlFW->WinGetRawMouseMotion()));
   }
@@ -166,14 +168,14 @@ static class Display final :
   /* -- Window set sticky keys request ------------------------------------- */
   void OnReqStickyKeys(const EvtWinEvent &eweEvent)
   { // Set the new input if we can and log status
-    cGlFW->WinSetStickyKeys(eweEvent.aArgs.front().b);
+    cGlFW->WinSetStickyKeys(eweEvent.eaArgs.front().b);
     cLog->LogDebugExSafe("Input updated sticky keys status to $.",
       StrFromBoolTF(cGlFW->WinGetStickyKeys()));
   }
   /* -- Window set sticky mouse request ------------------------------------ */
   void OnReqStickyMouse(const EvtWinEvent &eweEvent)
   { // Set the new input if we can and log status
-    cGlFW->WinSetStickyMouseButtons(eweEvent.aArgs.front().b);
+    cGlFW->WinSetStickyMouseButtons(eweEvent.eaArgs.front().b);
     cLog->LogDebugExSafe("Input updated sticky mouse status to $.",
       StrFromBoolTF(cGlFW->WinGetStickyMouseButtons()));
   }
@@ -185,19 +187,19 @@ static class Display final :
     { cGlFW->WinSendMousePosition(); }
   /* -- Set mouse position ------------------------------------------------- */
   void OnReqSetCursorPos(const EvtWinEvent &eweEvent)
-    { cGlFW->WinSetCursorPos(eweEvent.aArgs.front().d,
-                             eweEvent.aArgs.back().d); }
+    { cGlFW->WinSetCursorPos(eweEvent.eaArgs.front().d,
+                             eweEvent.eaArgs.back().d); }
   /* -- Window cursor request ---------------------------------------------- */
   void OnReqSetCursor(const EvtWinEvent &eweEvent)
     { cGlFW->SetCursor(static_cast<GlFWCursorType>
-        (eweEvent.aArgs.front().z)); }
+        (eweEvent.eaArgs.front().z)); }
   /* -- Window reset cursor request ---------------------------------------- */
   void OnReqResetCursor(const EvtWinEvent&)
     { cGlFW->WinSetCursorGraphic(); }
   /* -- Window scale change request ---------------------------------------- */
   void OnScale(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get new values
     const float fNewWidth = emaArgs[1].f,
                 fNewHeight = emaArgs[2].f;
@@ -216,7 +218,7 @@ static class Display final :
   /* -- Window limits change request --------------------------------------- */
   void OnReqSetLimits(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector
-    const EvtWinArgs &ewaArgs = eweEvent.aArgs;
+    const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
     // Get the new limits
     const int iMinW = ewaArgs[0].i, iMinH = ewaArgs[1].i,
               iMaxW = ewaArgs[2].i, iMaxH = ewaArgs[3].i;
@@ -226,7 +228,7 @@ static class Display final :
   /* -- Window focused ----------------------------------------------------- */
   void OnFocus(const EvtMainEvent &emeEvent)
   { // Get state and check it
-    const int iState = emeEvent.aArgs[1].i;
+    const int iState = emeEvent.eaArgs[1].i;
     switch(iState)
     { // Focus restored?
       case GLFW_TRUE:
@@ -282,7 +284,7 @@ static class Display final :
   /* -- On window resized callback ----------------------------------------- */
   void OnResized(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Check if the window resized
     CheckWindowResized(emaArgs[1].i, emaArgs[2].i);
   }
@@ -296,7 +298,7 @@ static class Display final :
   /* -- Window iconified --------------------------------------------------- */
   void OnIconify(const EvtMainEvent &emeEvent)
   { // Get state and check it
-    switch(const int iState = emeEvent.aArgs[1].i)
+    switch(const int iState = emeEvent.eaArgs[1].i)
     { // Minimized? Log that we minimised and return
       case GLFW_TRUE:
         return cLog->LogDebugSafe("Display window state minimised.");
@@ -463,7 +465,7 @@ static class Display final :
   /* == Framebuffer reset requested ======================================== */
   void OnFBReset(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get new frame buffer size
     const int iWidth = emaArgs[1].i, iHeight = emaArgs[2].i;
     // On Mac?
@@ -519,13 +521,13 @@ static class Display final :
   /* -- Window size requested ---------------------------------------------- */
   void OnReqResize(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector and send the new size to GLFW
-    const EvtWinArgs &ewaArgs = eweEvent.aArgs;
+    const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
     cGlFW->WinSetSize({ ewaArgs[0].i, ewaArgs[1].i });
   }
   /* -- Window move requested ---------------------------------------------- */
   void OnReqMove(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector and send new position to GLFW
-    const EvtWinArgs &ewaArgs = eweEvent.aArgs;
+    const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
     cGlFW->WinSetPos({ ewaArgs[0].i, ewaArgs[1].i });
   }
   /* -- Window centre request ---------------------------------------------- */
@@ -551,7 +553,7 @@ static class Display final :
     // Disable input events to prevent the full-screen toggler being repeated
     cInput->DisableInputEvents();
     // Use requested setting instead
-    SetFullScreen(eweEvent.aArgs.front().b);
+    SetFullScreen(eweEvent.eaArgs.front().b);
     // Re-enable input events
     cInput->EnableInputEvents();
   }
@@ -1074,6 +1076,8 @@ static class Display final :
     // Log progress
     cLog->LogInfoSafe("Display class deinitialised successfully.");
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Display, DeInit())
   /* -- Constructor -------------------------------------------------------- */
   Display(void) :
     /* --------------------------------------------------------------------- */
@@ -1144,11 +1148,9 @@ static class Display final :
       STR(FST_STANDBY),    STR(FST_WINDOW), STR(FST_EXCLUSIVE),
       STR(FST_BORDERLESS), STR(FST_NATIVE)
     }, "FST_UNKNOWN"}                  // End of full-screen type strings list
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Display, DeInit())
-  /* -- Helper macro for boolean based CVars based on OS ------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cDisplay = this; }
+  /* -- Helper macro for boolean based CVars based on OS ----------- */ public:
 #define CBCVARFLAG(n, f) CVarReturn n(const bool bState) \
     { FlagSetOrClear(f, bState); return ACCEPT; }
 #define CBCVARFORCEFLAG(n, f, v) CVarReturn n(const bool) \
@@ -1321,8 +1323,7 @@ static class Display final :
   /* -- Icon filenames changed (allow blank strings) ------ Core::SetIcon -- */
   CVarReturn SetIcon(const string &strF, string&)
     { return BoolToCVarReturn(strF.empty() || SetIcon(strF)); }
-  /* ----------------------------------------------------------------------- */
-} *cDisplay = nullptr;                 // Pointer to static class
+};/* ----------------------------------------------------------------------- */
 /* -- Monitor changed static event ----------------------------------------- */
 void Display::OnMonitorStatic(GLFWmonitor*const mA, const int iA)
   { cDisplay->OnMonitor(mA, iA); }

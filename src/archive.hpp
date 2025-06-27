@@ -11,17 +11,18 @@
 namespace IArchive {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IASync::P;             using namespace ICodec::P;
-using namespace ICollector::P;         using namespace ICrypt::P;
-using namespace ICVarDef::P;           using namespace IDir::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFileMap::P;           using namespace IFlags;
-using namespace IIdent::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IPSplit::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS::SevenZip;
+using namespace ICommon::P;            using namespace ICollector::P;
+using namespace ICrypt::P;             using namespace ICVarDef::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFileMap::P;
+using namespace IFlags;                using namespace IIdent::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IPSplit::P;            using namespace IMemory::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Archive collector with extract buffer size =========================== */

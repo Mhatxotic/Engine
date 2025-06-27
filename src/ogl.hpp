@@ -59,7 +59,9 @@ enum OglUndefinedEnums : GLenum        // Some undefined OpenGL consts
 typedef vector<GLuint> GLUIntVector;   // Vector of GLuints
 typedef vector<GLfloat> GLFloatVector; // Vector of GLfloats
 /* -- OpenGL manager class ------------------------------------------------- */
-static class Ogl final :               // OGL class for OpenGL use simplicity
+class Ogl;                             // Class prototype
+static Ogl *cOgl = nullptr;            // Pointer to global class
+class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Sub-classes -------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper
   public FboColour,                    // OpenGL colour
@@ -810,7 +812,7 @@ static class Ogl final :               // OGL class for OpenGL use simplicity
     // Clear the list
     vTextures.clear();
   }
-  /* -- Enable vertex attribute array ------------------------------ */ public:
+  /* -- Enable vertex attribute array -------------------------------------- */
   void EnableVertexAttribArray(const GLuint uiAId) const
     { sAPI.glEnableVertexAttribArray(uiAId); }
   /* -- Disable vertex attribute array ------------------------------------- */
@@ -1227,6 +1229,8 @@ static class Ogl final :               // OGL class for OpenGL use simplicity
     // Log class initialising
     cLog->LogInfoSafe("OGL subsystem de-initialised.");
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Ogl, DeInit(true))
   /* -- Constructor -------------------------------------------------------- */
   Ogl(void) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -1284,11 +1288,9 @@ static class Ogl final :               // OGL class for OpenGL use simplicity
     qwTotalVRAM(0),                    // No total vram
     qwFreeVRAM(0),                     // No free vram
     cdLimit{ milliseconds{0} }         // Init frame duration
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Ogl, DeInit(true))
-  /* -- Setup VSync -------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cOgl = this; }
+  /* -- Setup VSync ------------------------------------------------ */ public:
   CVarReturn SetVSyncMode(const int iValue)
   { // Deny if the value is not valid
     if(CVarSimpleSetIntNLGE(vsSetting, static_cast<VSyncMode>(iValue),
@@ -1369,9 +1371,7 @@ static class Ogl final :               // OGL class for OpenGL use simplicity
 #undef IGLC                            // This macro was only for this class
 #undef IGL                             // This macro was only for this class
 #undef IGLL                            // This macro was only for this class
-  /* ----------------------------------------------------------------------- */
-} *cOgl = nullptr;                     // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

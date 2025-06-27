@@ -10,13 +10,14 @@
 /* ------------------------------------------------------------------------- */
 namespace ICrypt {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace IError::P;
-using namespace IHelper::P;            using namespace ILog::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS::OpenSSL;      using namespace Lib::OS::SevenZip;
+using namespace IClock::P;             using namespace ICommon::P;
+using namespace IError::P;             using namespace IHelper::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS::OpenSSL;
+using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */
@@ -624,7 +625,9 @@ static string CryptSanitise(const string &strMessage)
   return strOutput;
 }
 /* -- Crypt manager class -------------------------------------------------- */
-static class Crypt final :
+class Crypt;                           // Class prototype
+static Crypt *cCrypt = nullptr;        // Address of global class
+class Crypt :                          // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   public InitHelper                    // The crypto manager class
 { /* -------------------------------------------------------------- */ private:
@@ -835,7 +838,9 @@ static class Crypt final :
               0x89FE280958CFD102 }}},  // Default IV key (2/2)
     pkKey(pkDKey)                      // Modified private key
     /* -- Code ------------------------------------------------------------- */
-    { // Use sql to allocate memory?
+    { // Set address of global class
+      cCrypt = this;
+      // Use sql to allocate memory?
       if(!CRYPTO_set_mem_functions(OSSLAlloc, OSSLReAlloc, OSSLFree))
         XC("Failed to setup allocator for crypto interface!");
       // Generate CRC table (for lzma lib)
@@ -865,9 +870,7 @@ static class Crypt final :
   SetDefaultPrivateKey();
   // Done
   DTORHELPEREND(~Crypt)
-  /* ----------------------------------------------------------------------- */
-} *cCrypt = nullptr;                   // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

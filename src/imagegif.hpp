@@ -16,7 +16,9 @@ using namespace ITexDef::P;            using namespace Lib::NSGif;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-static class CodecGIF final :          // GIF codec object
+class CodecGIF;                        // Class prototype
+static CodecGIF *cCodecGIF = nullptr;  // Pointer to global class
+class CodecGIF :                       // GIF codec object
   /* -- Base classes ------------------------------------------------------- */
   private ImageLib                     // Image format helper class
 { /* -- Allocate memory ---------------------------------------------------- */
@@ -139,16 +141,14 @@ static class CodecGIF final :          // GIF codec object
       throw;
     } // Never gets here
   }
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Default constructor ------------------------------------- */ protected:
   CodecGIF(void) :
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_GIF, "Graphics Interchange Format", "GIF",
       bind(&CodecGIF::Decode, this, _1, _2) }
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- End ---------------------------------------------------------------- */
-} *cCodecGIF = nullptr;                // Codec pointer
-/* ------------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCodecGIF = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

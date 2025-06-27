@@ -476,6 +476,14 @@ class SysBase :                        // Safe exception handler namespace
     const pid_t pTerminal = tcgetpgrp(STDOUT_FILENO), pParent = getpgrp();
     return pTerminal != pParent;
   }
+  /* ------------------------------------------------------------ */ protected:
+  ~SysBase(void) noexcept(true)
+  { // Uninstall safe signals
+    for(SignalPair &spPair : slSignals)
+      if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)
+        cLog->LogWarningExSafe("Failed to restore signal $ handler! $.",
+          spPair.first, StrFromErrNo());
+  }
   /* ----------------------------------------------------------------------- */
   SysBase(SysModMap &&smmMap, const size_t stI) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -535,14 +543,6 @@ class SysBase :                        // Safe exception handler namespace
         "System failed to get limit for resource $<0x$$$>: $!",
         rlmpPair.first, hex, rlmpPair.first, dec, SysError());
     }
-  }
-  /* ----------------------------------------------------------------------- */
-  ~SysBase(void) noexcept(true)
-  { // Uninstall safe signals
-    for(SignalPair &spPair : slSignals)
-      if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)
-        cLog->LogWarningExSafe("Failed to restore signal $ handler! $.",
-          spPair.first, StrFromErrNo());
   }
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \

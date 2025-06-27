@@ -12,16 +12,17 @@
 namespace IConsole {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs::P;              using namespace IClock::P;
-using namespace IConDef::P;            using namespace IConLib::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFlags;
-using namespace IGlFW::P;              using namespace IHelper::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISocket::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITimer::P;             using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
+using namespace ICommon::P;            using namespace IConDef::P;
+using namespace IConLib::P;            using namespace ICVar::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFlags;                using namespace IGlFW::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISocket::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITimer::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Typedefs ============================================================= */
@@ -58,7 +59,9 @@ BUILD_FLAGS(Redraw,                    // Redraw terminal or graphical console
 );/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(Cmd, const string, const ConLib) // Map of commands type
 /* ========================================================================= */
-static class Console final :           // Members initially private
+class Console;                         // Class prototype
+static Console *cConsole = nullptr;    // Pointer to global class
+class Console :                        // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public ConLines,                     // Console text lines list
   private ConLinesConstIt,             // Text lines forward iterator
@@ -886,7 +889,7 @@ static class Console final :           // Members initially private
     // Log progress
     cLog->LogInfoSafe("Console de-initialised successfully.");
   }
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Constructor --------------------------------------------- */ protected:
   explicit Console(const ConCmdStaticList &ccslDef) :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Init helper function name
@@ -910,11 +913,9 @@ static class Console final :           // Members initially private
     emrvEvents{                        // Default events
       { EMC_CON_UPDATE, bind(&Console::OnForceRedraw, this, _1) },
     }
-    /* --------------------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Console, DeInit())
-  /* -- Set page move count ------------------------------------------------ */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cConsole = this; }
+  /* -- Set page move count ---------------------------------------- */ public:
   CVarReturn SetPageMoveCount(const ssize_t sstAmount)
   { // Deny if invalid value
     if(!CVarToBoolReturn(CVarSimpleSetIntNLG(sstPageLines, sstAmount, 1, 100)))
@@ -1022,9 +1023,7 @@ static class Console final :           // Members initially private
   CVarReturn TextForegroundColourModified(const unsigned int uiNewColour)
     { return CVarSimpleSetIntNG(cTextColour, static_cast<Colour>(uiNewColour),
         COLOUR_MAX); }
-  /* ----------------------------------------------------------------------- */
-} *cConsole = nullptr;                 // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

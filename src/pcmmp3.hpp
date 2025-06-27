@@ -20,7 +20,9 @@ namespace P {                          // Start of public module namespace
 ** ## MPEG Layer-3                                                    MP3 ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-static class CodecMP3 final :          // MP3 codec object
+class CodecMP3;                        // Class prototype
+static CodecMP3 *cCodecMP3 = nullptr;  // Po
+class CodecMP3 :                       // MP3 codec object
   /* -- Base classes ------------------------------------------------------- */
   private PcmLib,                      // Pcm format helper class
   private IdMap<int>                   // MiniMP3 error codes
@@ -59,7 +61,7 @@ static class CodecMP3 final :          // MP3 codec object
     // Successfully decoded
     return true;
   }
-  /* -- Constructor ------------------------------------------------ */ public:
+  /* -- Constructor --------------------------------------------- */ protected:
   CodecMP3(void) :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_MP3, "MPEG Layer 1-3 Audio", "MP3",
@@ -69,11 +71,9 @@ static class CodecMP3 final :          // MP3 codec object
       IDMAPSTR(MP3D_E_IOERROR),        IDMAPSTR(MP3D_E_USER),
       IDMAPSTR(MP3D_E_DECODE)
     }, "MP3D_E_UNKNOWN" }
-    /* -- No code ---------------------------------------------------------- */
-    {  }
-  /* -- End ---------------------------------------------------------------- */
-} *cCodecMP3 = nullptr;                // Codec pointer
-/* ------------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCodecMP3 = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

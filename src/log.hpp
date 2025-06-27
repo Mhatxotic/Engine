@@ -10,10 +10,11 @@
 /* ------------------------------------------------------------------------- */
 namespace ILog {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICVarDef::P;
-using namespace IFStream::P;           using namespace IIdent::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IClock::P;             using namespace ICommon::P;
+using namespace ICVarDef::P;           using namespace IFStream::P;
+using namespace IIdent::P;             using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IToken::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Log levels ----------------------------------------------------------- */
@@ -269,6 +270,8 @@ class Log :                            // The actual class body
     WriteString(StrFormat("Log file is '$'.", IdentGet()));
     return true;
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Log, DeInitSafe())
   /* -- Constructor -------------------------------------------------------- */
   Log(void) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -283,11 +286,9 @@ class Log :                            // The actual class body
     strStdErr{ "/dev/stderr" },        // Initialise display label for stderr
     lhlLevel{ LH_DEBUG },              // Initialise default level
     stMaximum(1000)                    // Initialise maximum output lines
-    /* -- Set pointer to global class -------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
     { cLog = this; }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Log, DeInitSafe(); cLog = nullptr)
-  /* -- Conlib callback function for APP_LOG variable ---------------------- */
+  /* -- Conlib callback function for APP_LOG variable -------------- */ public:
   CVarReturn LogFileModified(const string &strFN, string &strCV)
   { // Lock mutex
     const LockGuard lgLogSync{ GetMutex() };

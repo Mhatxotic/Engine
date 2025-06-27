@@ -57,7 +57,9 @@ enum EvtWinCmd : size_t                // Render thread event commands
   EWC_NOLOG = EWC_WIN_CURPOSSET        // Suppress log from this event forwards
 #endif                                 // Build check
 };/* -- Remember to update the id strings at EvtWin constructor ------------ */
-static class EvtWin final :            // Event list for window thread
+class EvtWin;                          // Class prototype
+static EvtWin *cEvtWin = nullptr;      // Pointer to global class
+class EvtWin :                         // Event list for window thread
   /* -- Dependencies ------------------------------------------------------- */
   public EvtCore                       // Events common class
    <EvtWinCmd,                         // The enum list of events supported
@@ -72,9 +74,7 @@ static class EvtWin final :            // Event list for window thread
     // Unblock the window thread
     GlFWForceEventHack();
   }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~EvtWin)
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Constructor --------------------------------------------- */ protected:
   EvtWin(void) :
     /* -- Initialisers ----------------------------------------------------- */
     EvtCore{ "EventWin", ISList{{      // Set name of this object
@@ -98,14 +98,12 @@ static class EvtWin final :            // Event list for window thread
 #undef EWC                             // Done with this macro
       /* ------------------------------------------------------------------- */
     }}}
-    /* -- No core ---------------------------------------------------------- */
-    { }
-  /* -- End ---------------------------------------------------------------- */
-} *cEvtWin = nullptr;                  // Pointer to static class
-/* ------------------------------------------------------------------------- */
-typedef EvtWin::Args   EvtWinArgs;     // Shortcut to EvtWin::Args class
-typedef EvtWin::Event  EvtWinEvent;    // Shortcut to EvtWin::Event class
-typedef EvtWin::RegVec EvtWinRegVec;   // Shortcut to EvtWin::RegVec class
+    /* -- Set global pointer to static class ------------------------------- */
+    { cEvtWin = this; }
+};/* ----------------------------------------------------------------------- */
+typedef EvtWin::EvtArgs EvtWinArgs;    // Shortcut to EvtWin::Args class
+typedef EvtWin::Event   EvtWinEvent;   // Shortcut to EvtWin::Event class
+typedef EvtWin::RegVec  EvtWinRegVec;  // Shortcut to EvtWin::RegVec class
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

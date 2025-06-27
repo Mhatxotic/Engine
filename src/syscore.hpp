@@ -13,19 +13,20 @@
 namespace ISystem {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs::P;              using namespace IClock::P;
-using namespace ICmdLine::P;           using namespace IConDef::P;
-using namespace ICoord::P;             using namespace ICVarDef::P;
-using namespace IDim::P;               using namespace IDimCoord::P;
-using namespace IDir::P;               using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFlags;
-using namespace IFStream::P;           using namespace IHelper::P;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace IMemory::P;            using namespace IParser::P;
-using namespace IPSplit::P;            using namespace IStat::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IThread::P;            using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace ICmdLine::P;           using namespace ICommon::P;
+using namespace IConDef::P;            using namespace ICoord::P;
+using namespace ICVarDef::P;           using namespace IDim::P;
+using namespace IDimCoord::P;          using namespace IDir::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFlags;                using namespace IFStream::P;
+using namespace IHelper::P;            using namespace IIdent::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IParser::P;            using namespace IPSplit::P;
+using namespace IStat::P;              using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IThread::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == System module data =================================================== **
@@ -406,7 +407,9 @@ class SysConBase :
 ** ## we already defined above.                                           ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-static class System final :            // The main system class
+class System;                          // Class prototype
+static System *cSystem = nullptr;      // Address of global class
+class System :                         // The main system class
   /* -- Base classes ------------------------------------------------------- */
   public SysCore                       // Defined in 'sys*.hpp' headers
 { /* -- Private typedefs --------------------------------------------------- */
@@ -485,9 +488,11 @@ static class System final :            // The main system class
     // Abort and crash
     abort();
   }
+  /* -- Restore old unexpected and termination handlers --------- */ protected:
+  DTORHELPER(~System, set_terminate(thHandler))
   /* -- Default constructor ------------------------------------------------ */
   System(void) :
-  /* -- Initialisers ----------------------------------------------------- */
+  /* -- Initialisers ------------------------------------------------------- */
     mList{{                            // Initialise mode strings list
       "nothing",                       // [0<    0>] (nothing)
       "text",                          // [1<    1>] (text)
@@ -508,7 +513,9 @@ static class System final :            // The main system class
       PSplitBackToForwardSlashes(      // Convert backward slashes to forward
         BuildRoamingDir()) }           // Get roaming directory from system
   /* -- Code --------------------------------------------------------------- */
-  { // Update cpu and memory usage data
+  { // Set address of global class
+    cSystem = this;
+    // Update cpu and memory usage data
     UpdateCPUUsage();
     UpdateMemoryUsageData();
     // Log information about the environment
@@ -558,9 +565,7 @@ static class System final :            // The main system class
       cmSys.FormatTime(), cmSys.FormatTimeUTC(),
       StrFromBoolTF(OSIsAdmin()), StrFromBoolTF(EXEBundled()));
   }
-  /* -- Restore old unexpected and termination handlers -------------------- */
-  DTORHELPER(~System, set_terminate(thHandler))
-  /* -- CVar callbacks to update guest descriptor strings ------------------ */
+  /* -- CVar callbacks to update guest descriptor strings ---------- */ public:
   CVarReturn SetGuestTitle(const string&, const string &strV)
     { strvTitle = strV; return ACCEPT; }
   CVarReturn SetGuestShortTitle(const string&, const string &strV)
@@ -697,8 +702,7 @@ static class System final :            // The main system class
        "dangerous and thus has been blocked on request by the guest. Please "
        "restart this software with reduced privileges.");
   }
-  /* ----------------------------------------------------------------------- */
-} *cSystem = nullptr;                  // Pointer to static class
+};/* ----------------------------------------------------------------------- */
 /* -- Callback for set_terminate() ----------------------------------------- */
 void System::TerminateHandler(void)
 { // Show message box to user

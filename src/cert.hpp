@@ -10,10 +10,10 @@
 namespace ICert {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IClock::P;
-using namespace ICVarDef::P;           using namespace IError::P;
-using namespace IFileMap::P;           using namespace ILog::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace Lib::OS::OpenSSL;
+using namespace ICommon::P;            using namespace ICVarDef::P;
+using namespace IError::P;             using namespace IFileMap::P;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

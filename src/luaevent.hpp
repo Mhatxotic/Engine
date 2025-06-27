@@ -97,7 +97,7 @@ template<class MemberType>struct LuaEvtTypeParam
 { /* -- Send event to thiscall with no parameters -------------------------- */
   static void OnEvent(const EvtMainEvent &emeEvent)
   { // Get reference to parameters and if there are no parameters?
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     if(emaArgs.empty())
     { // Not enough parameters so show error in log
       cLog->LogErrorExSafe("LuaEvt got generic event $ with zero params!",
@@ -120,7 +120,7 @@ template<class MemberType>struct LuaEvtTypeAsync // Used in async class
 { /* -- Send event to thiscall with no parameters -------------------------- */
   static void OnEvent(const EvtMainEvent &emeEvent)
   { // Get reference to parameters and if we don't have any?
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     if(emaArgs.empty())
     { // Not enough parameters so show error in log
       cLog->LogErrorExSafe("LuaEvt got async event $ with zero params!",
@@ -176,7 +176,7 @@ class LuaEvtSlave :
   /* -- Event callback on main thread -------------------------------------- */
   void LuaEvtCallbackParam(const EvtMainEvent &emeEvent) try
   { // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Sanity check get number of mandatory parameters
     const size_t stMandatory = 2;
     // Get number of parameters and make sure we have enough parameters

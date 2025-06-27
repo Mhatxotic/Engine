@@ -415,7 +415,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <openssl/x509v3.h>            // Certs header
 #include <openssl/httperr.h>           // HTTP client errors (ToDo)
 #include <openssl/http.h>              // HTTP client (ToDo)
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     namespace SevenZip                 // 7-ZIP API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #include <7z/CpuArch.h>                // CPU configuration
@@ -424,7 +424,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <7z/7zFile.h>                 // 7-zip file format
 #include <7z/7zVersion.h>              // 7-zip version information
 #include <7z/LzmaLib.h>                // For compression stuff
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     namespace JpegTurbo                // LIBJPEGTURBO API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
@@ -433,11 +433,11 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <jpeg/jpeglib.h>              // Our main header
 #include <jpeg/jerror.h>               // Our error handling
 #include <jpeg/jversion.h>             // Our version information
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     namespace ZLib                     // ZLIB API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #include <zlib/zlib.h>                 // Main header
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     namespace GlFW                     // GLFW API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #define GLFW_INCLUDE_GLCOREARB         // Include arbitrary OpenGL API
@@ -457,7 +457,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
         using GlFW::GLubyte;           // GL specific unsigned char type
         using GlFW::GLuint;            // GL specific unsigned int type
         using GlFW::GLvoid;            // GL specific void type
-      };/* ----------------------------------------------------------------- */
+      } /* ----------------------------------------------------------------- */
 #if defined(MACOS)                     // MacOS defined?
       /* ------------------------------------------------------------------- */
       // This namespace is required to workaround a major crash bug in MacOS
@@ -470,7 +470,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #endif                                 // End MacOS NSGL namespace
       /* ------------------------------------------------------------------- */
 #undef GLFW_INCLUDE_GLCOREARB          // Done with this macro
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
 #undef GLFW_EXPOSE_NATIVE_WIN32        // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_X11          // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_WAYLAND      // Done with this macro
@@ -487,15 +487,15 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #if defined(WINDOWS)                   // Using Windows
 #endif                                 // Using Windows
     }
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace NSGif                      // LIBNSGIF API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #include <gif/gif.h>                   // Main header
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace Png                        // LIBPNG API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #include <png/png.h>                   // Main header
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace RapidJson                  // RAPIDJSON API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define RAPIDJSON_NAMESPACE            Lib::RapidJson
@@ -516,7 +516,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #undef RAPIDJSON_NAMESPACE_BEGIN       // Done with this define
 #undef RAPIDJSON_HAS_STDSTRING         // Done with this define
 #undef RAPIDJSON_NAMESPACE             // Done with this define
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace OpenAL                     // OPENAL API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define AL_ALEXT_PROTOTYPES            // So can get alcResetDevice
@@ -538,8 +538,8 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
       using OpenAL::ALsizei;           // AL specific sizei type
       using OpenAL::ALuint;            // AL specific unsigned int type
       using OpenAL::ALvoid;            // AL specific void type
-    };/* ------------------------------------------------------------------- */
-  };/* -- Ogg Includes ----------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
+  } /* -- Ogg Includes ----------------------------------------------------- */
   namespace Ogg                        // OGGVORBIS API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define OV_EXCLUDE_STATIC_CALLBACKS    // We don't need these callbacks
@@ -549,17 +549,17 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
       using Ogg::ogg_int64_t;          // Ogg specific int64 type
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
     /* -- Theora decoder depends on ogg headers ---------------------------- */
     namespace Theora                   // THEORA API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #include <theora/theora.h>             // StrFormat codec (+ ogg codec)
 #include <theora/theoradec.h>          // Decoder
-    };/* ------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
 #if !defined(WINDOWS)                  // Not using windows?
 # pragma GCC diagnostic pop            // - Restore compiler warnings
 #endif                                 // Not using windows
-  };/* --------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace Sqlite                     // SQLITE API FUNCTIONS
   {/* ---------------------------------------------------------------------- */
 #include <sql/sqlite3.h>               // Main header
@@ -567,8 +567,8 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
       using Sqlite::sqlite3_int64;     // Sqlite specific int64 type
-    };/* ------------------------------------------------------------------- */
-  };/* --------------------------------------------------------------------- */
+    } /* ------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
   namespace FreeType                   // FREETYPE API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #include <ft/ft2build.h>               // Build parameters header
@@ -576,8 +576,8 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <ft/ftstroke.h>               // Stroker header
 #include <ft/ftglyph.h>                // Glyph header
 #include <ft/ftmodapi.h>               // Modification header
-  };/* --------------------------------------------------------------------- */
-};/* ----------------------------------------------------------------------- */
+  } /* --------------------------------------------------------------------- */
+} /* ----------------------------------------------------------------------- */
 /* == Main() configuration. So engine.cpp's main() declaration is tidy ===== */
 #if defined(WINDOWS)                   // Targeting Windows?
 typedef Lib::OS::TCHAR ArgType;        // Set main argument type

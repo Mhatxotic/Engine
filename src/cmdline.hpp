@@ -10,10 +10,10 @@
 /* ------------------------------------------------------------------------- */
 namespace ICmdLine {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IDir::P;               using namespace IError::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtil::P;
+using namespace ICommon::P;            using namespace IDir::P;
+using namespace IError::P;             using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -158,7 +158,7 @@ struct CmdLine                         // Members initially public
     // Return environment variables list
     return ssmRet;
   }
-  /* -- Assign arguments ------------------------------------------- */ public:
+  /* -- Assign arguments ---------------------------------------- */ protected:
   CmdLine(const int iArgs, ArgType**const atArgs, ArgType**const atEnv) :
     /* -- Initialisers ----------------------------------------------------- */
     eoExit(EO_QUIT),                   // Initialise exit code
@@ -170,51 +170,56 @@ struct CmdLine                         // Members initially public
     lEnv{ StdMove(                     // Initialise environment variables
       CmdLineParseEnvArray()) },       // ...so we can keep them const
     strCWD{ StdMove(DirGetCWD()) }     // Initialise current working directory
-    /* -- Set address of global class -------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
     { cCmdLine = this; }
   /* -- Destructor --------------------------------------------------------- */
-  DTORHELPERBEGIN(~CmdLine)
-  // Clear global class
-  cCmdLine = nullptr;
-  // Done if arguments were never initialised
-  if(iArgC <= 0) return;
-  // Restore startup working directory
-  CmdLineSetStartupCWD();
-  // Do we have a restart mode set?
-  switch(eoExit)
-  { // Just return if no restart required
-    case EO_QUIT: return;
-    // Remove first parameter and break?
-    case EO_TERM_REBOOT_NOARG: lArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
-    // Restart while keeping parameters?
-    case EO_TERM_REBOOT: CmdLineSetRestart(EO_QUIT);
-      // Do the restart and replace the current process with the new one
-      switch(const int iCode = StdExecVE(lArgV, lEnvP))
-      { // Success? Shouldn't get here!
-        case 0: break;
-        // Error occured? Don't attempt execution again and show error
-        default: XCL("Failed to restart process!",
-          "Process", *lArgV, "Code", iCode, "Parameters", iArgC);
-      } // Done
-      break;
-    // Remove first parameter and fallthrough to next label
-    case EO_UI_REBOOT_NOARG: lArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
-    // Restart while keeping parameters in ui mode?
-    case EO_UI_REBOOT: CmdLineSetRestart(EO_QUIT);
-      // Do the restart using spawn as MacOS goes weird with ui apps otherwise.
-      switch(const int iCode = StdSpawnVE(lArgV, lEnvP))
-      { // Success? Proceed to quit
-        case 0: break;
-        // Error occurred? Don't attempt execution again and show error
-        default: XCL("Failed to spawn new process!",
-          "Process", *lArgV, "Code", iCode, "Parameters", iArgC);
-      } // Done
-      break;
-    // Anything else? (Impossible but needed to prevent compiler warning)
-    default: XC("Internal error: Invalid exit command!", "Command", eoExit);
-  } // Parent process should be exiting cleanly after returning here
-  DTORHELPEREND(~CmdLine)
-  /* -- End ---------------------------------------------------------------- */
+  ~CmdLine(void) noexcept(false) try
+  { // Clear global class
+    cCmdLine = nullptr;
+    // Done if arguments were never initialised
+    if(iArgC <= 0) return;
+    // Restore startup working directory
+    CmdLineSetStartupCWD();
+    // Do we have a restart mode set?
+    switch(eoExit)
+    { // Just return if no restart required
+      case EO_QUIT: return;
+      // Reboot with no arguments?
+      case EO_TERM_REBOOT_NOARG:
+        // Remove first parameter and fall through to reboot
+        lArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
+      // Restart while keeping parameters?
+      case EO_TERM_REBOOT: CmdLineSetRestart(EO_QUIT);
+        // Do the restart and replace the current process with the new one
+        switch(const int iCode = StdExecVE(lArgV, lEnvP))
+        { // Success? Shouldn't get here!
+          case 0: break;
+          // Error occured? Don't attempt execution again and show error
+          default: XCL("Failed to restart process!",
+            "Process", *lArgV, "Code", iCode, "Parameters", iArgC);
+        } // Done
+        break;
+      // Remove first parameter and fallthrough to next label
+      case EO_UI_REBOOT_NOARG: lArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
+      // Restart while keeping parameters in ui mode?
+      case EO_UI_REBOOT: CmdLineSetRestart(EO_QUIT);
+        // Do the restart using spawn as MacOS is weird with ui apps otherwise.
+        switch(const int iCode = StdSpawnVE(lArgV, lEnvP))
+        { // Success? Proceed to quit
+          case 0: break;
+          // Error occurred? Don't attempt execution again and show error
+          default: XCL("Failed to spawn new process!",
+            "Process", *lArgV, "Code", iCode, "Parameters", iArgC);
+        } // Done
+        break;
+      // Anything else? (Impossible but needed to prevent compiler warning)
+      default: XC("Internal error: Invalid exit command!", "Command", eoExit);
+    }
+  } // Exception occured?
+  catch(const exception &eReason) \
+  { // Show message box as the log is not available.
+    SysMessage("CmdLine Shutdown Exception", eReason.what(), MB_ICONSTOP);
+  }
 };/* ----------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */

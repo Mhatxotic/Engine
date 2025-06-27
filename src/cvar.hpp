@@ -9,11 +9,11 @@
 /* ------------------------------------------------------------------------- */
 namespace ICVarDef {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICodec::P;             using namespace IDir::P;
-using namespace IError::P;             using namespace IFlags;
-using namespace ILog::P;               using namespace IMemory::P;
-using namespace ISql::P;               using namespace IStd::P;
-using namespace IString::P;
+using namespace ICodec::P;             using namespace ICommon::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IFlags;                using namespace ILog::P;
+using namespace IMemory::P;            using namespace ISql::P;
+using namespace IStd::P;               using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */

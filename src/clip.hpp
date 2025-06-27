@@ -15,10 +15,10 @@ namespace IClipboard {                 // Start of private module namespace
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IGlFW::P;              using namespace IIdent::P;
-using namespace ILockable::P;          using namespace ILuaEvt::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IStd::P;
-using namespace ISysUtil::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Clipboard collector and lua interface class -------------------------- */
@@ -56,18 +56,18 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   }
   /* -- Window set clipboard request --------------------------------------- */
   static void ClipOnSetNRCb(const EvtWinEvent &eweEvent)
-    { reinterpret_cast<Clip*>(eweEvent.aArgs.front().vp)->ClipOnSetNRCbT(); }
+    { reinterpret_cast<Clip*>(eweEvent.eaArgs.front().vp)->ClipOnSetNRCbT(); }
   /* -- Window get clipboard request in window thread ---------------------- */
   static void ClipOnGetCb(const EvtWinEvent &eweEvent)
-    { reinterpret_cast<Clip*>(eweEvent.aArgs.front().vp)->ClipOnGetCbT(); }
+    { reinterpret_cast<Clip*>(eweEvent.eaArgs.front().vp)->ClipOnGetCbT(); }
   /* -- Window set clipboard request --------------------------------------- */
   static void ClipOnSetCb(const EvtWinEvent &eweEvent)
-    { reinterpret_cast<Clip*>(eweEvent.aArgs.front().vp)->ClipOnSetCbT(); }
+    { reinterpret_cast<Clip*>(eweEvent.eaArgs.front().vp)->ClipOnSetCbT(); }
   /* -- Async thread event callback (called by LuaEvtMaster) --------------- */
   void LuaEvtCallbackAsync(const EvtMainEvent &emeEvent) try
   { // Get reference to string vector and we need three parameters
     // [0]=Pointer to clipboard class
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Must have 2 parameters
     if(!LuaEvtsCheckParams<2>(emaArgs))
       XC("Clipboard did not receive two parameters!",

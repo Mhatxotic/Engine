@@ -10,19 +10,20 @@
 namespace ISocket {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICert::P;              using namespace IClock::P;
-using namespace ICollector::P;         using namespace ICrypt::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFlags;
-using namespace IIdent::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaEvt::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IParser::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace IToken::P;             using namespace IUtil::P;
-using namespace IUtf::P;               using namespace Lib::OS::OpenSSL;
+using namespace ICollector::P;         using namespace ICommon::P;
+using namespace ICrypt::P;             using namespace ICVar::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFlags;                using namespace IIdent::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IParser::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IThread::P;            using namespace IToken::P;
+using namespace IUtil::P;              using namespace IUtf::P;
+using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
@@ -1151,7 +1152,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void LuaEvtCallbackAsync(const EvtMainEvent &emeEvent) try
   { // Get reference to string vector and we need three parameters
     // [0]=Pointer to socket class, [1]=Event list id, [2]=Status
-    const EvtMainArgs &emaArgs = emeEvent.aArgs;
+    const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Remove iterator from our events dispatched list if we can
     if(LuaEvtsCheckParams<3>(emaArgs))
     { // Get the status and warn if we have incorrect number of parameters

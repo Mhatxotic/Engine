@@ -9,9 +9,10 @@
 /* ------------------------------------------------------------------------- */
 namespace IDir {                       // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IError::P;             using namespace IIdent::P;
-using namespace IPSplit::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace IToken::P;
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IIdent::P;             using namespace IPSplit::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IToken::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -48,9 +49,7 @@ class DirBase                          // Members initially private
   /* -- Convert a valid result from ValidName to string ------------ */ public:
   const string_view &DirBaseVNRtoStr(const ValidResult vrId) const
     { return vrlStrings.Get(vrId); }
-  /* -- Destructor --------------------------------------------------------- */
-  ~DirBase(void) { cDirBase = nullptr; }
-  /* -- Default constructor ------------------------------------------------ */
+  /* -- Default constructor ------------------------------------- */ protected:
   DirBase(void) :                      // No parameters
     /* -- Initialisers ----------------------------------------------------- */
     vrlStrings{{                       // Init ValidNameResult strings
@@ -664,25 +663,25 @@ static void DirVerifyFileNameIsValid(const string &strFile)
        "Reason",   cDirBase->DirBaseVNRtoStr(vrId),
        "ReasonId", vrId);
 }
-/* ------------------------------------------------------------------------- */
+/* -- Directory saver/restorer class --------------------------------------- */
 class DirSaver
-{ /* ----------------------------------------------------------------------- */
+{ /* -- Private variables -------------------------------------------------- */
   const string strCWD;                 // Saved current directory
-  /* --------------------------------------------------------------- */ public:
+  /* -- Constructor to set directory ------------------------------- */ public:
   explicit DirSaver(const string &strNWD) :
-    /* --------------------------------------------------------------------- */
+    /* -- Initialisers ----------------------------------------------------- */
     strCWD{ DirGetCWD() }              // Save current working directory
-    /* --------------------------------------------------------------------- */
+    /* -- Set new directory ------------------------------------------------ */
     { DirSetCWD(strNWD); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Default constructor ------------------------------------------------ */
   DirSaver(void) :                     // Save current working directory
-    /* --------------------------------------------------------------------- */
-    strCWD{ DirGetCWD() }
-    /* --------------------------------------------------------------------- */
+    /* -- Initialisers ----------------------------------------------------- */
+    strCWD{ DirGetCWD() }              // Initialise current working directory
+    /* -- No code ---------------------------------------------------------- */
     { }
-  /* ----------------------------------------------------------------------- */
+  /* -- Destructor --------------------------------------------------------- */
   ~DirSaver(void) noexcept(false)
-    /* --------------------------------------------------------------------- */
+    /* -- Restore current working directory -------------------------------- */
     { DirSetCWD(strCWD); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

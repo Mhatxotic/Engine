@@ -24,7 +24,9 @@ using namespace ITexture::P;           using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ========================================================================= */
-static class ConGraphics final :       // Members initially private
+class ConGraphics;                     // Class prototype
+static ConGraphics *cConGraphics = nullptr; // Pointer to global class
+class ConGraphics :                    // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper                   // Initialisation helper
 { /* -- Private variables -------------------------------------------------- */
@@ -343,7 +345,7 @@ static class ConGraphics final :       // Members initially private
     // Log progress
     cLog->LogInfoSafe("ConGraph de-initialised.");
   }
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Constructor --------------------------------------------- */ protected:
   explicit ConGraphics(void) :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Init helper function name
@@ -360,11 +362,9 @@ static class ConGraphics final :       // Members initially private
     ctConsole{ IP_TEXTURE },           // Console texture on stand-by
     cfConsole{ IP_FONT },              // Console font on stand-by
     cCursor('|')                       // Cursor shape
-    /* --------------------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~ConGraphics, DeInit())
-  /* -- Set console background colour -------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cConGraphics = this; }
+  /* -- Set console background colour ------------------------------ */ public:
   CVarReturn TextBackgroundColourModified(const uint32_t ulNewColour)
     { return CVarSimpleSetInt(ulBgColour, ulNewColour); }
   /* -- Set console text scale --------------------------------------------- */
@@ -422,9 +422,7 @@ static class ConGraphics final :       // Members initially private
   /* -- Set console height ------------------------------------------------- */
   CVarReturn SetHeight(const GLfloat fHeight)
     { return CVarSimpleSetIntNLG(fConsoleHeight, fHeight, 0.1f, 1.0f); }
-  /* ----------------------------------------------------------------------- */
-} *cConGraphics = nullptr;             // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

@@ -821,8 +821,10 @@ class SysCon :                         // Members initially private
     // System console is initialised
     cLog->LogDebugSafe("SysCon initialised.");
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  ~SysCon(void) noexcept(false) { SysConDeInit(); }
   /* -- Constructor -------------------------------------------------------- */
-  SysCon(const string &strW) :         // Wine version if applicable
+  explicit SysCon(const string &strW): // Wine version if applicable
     /* -- Initialisers ----------------------------------------------------- */
     strWine{ strW },                   // Set reference to wine version
     hIn(nullptr), hOut(nullptr),       // Handles to input and output streams
@@ -839,9 +841,7 @@ class SysCon :                         // Members initially private
     stX2(0), stY2(0)                   // Maximum drawing extent not set
     /* -- No code ---------------------------------------------------------- */
     { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~SysCon, SysConDeInit());
-  /* -- Set maximum console line length ------------------------------------ */
+  /* -- Set maximum console line length ---------------------------- */ public:
   CVarReturn RowsModified(const size_t stRows)
   { // Deny if out of range. The maximum value is a SHORT from Win32 API.
     if(stRows < 25 || UtilIntWillOverflow<SHORT>(stRows)) return DENY;

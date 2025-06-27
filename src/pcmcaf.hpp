@@ -17,7 +17,9 @@ using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-static class CodecCAF final :          // CAF codec object
+class CodecCAF;                        // Class prototype
+static CodecCAF *cCodecCAF = nullptr;  // Pointer to global class
+class CodecCAF :                       // CAF codec object
   /* -- Base classes ------------------------------------------------------- */
   private PcmLib                       // Pcm format helper class
 { /* -- CAF header layout -------------------------------------------------- */
@@ -175,16 +177,14 @@ static class CodecCAF final :          // CAF codec object
     } // Done
     return true;
   }
-  /* -- Constructor ------------------------------------------------ */ public:
+  /* -- Constructor --------------------------------------------- */ protected:
   CodecCAF(void) :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_CAF, "CoreAudio Format", "CAF",
       bind(&CodecCAF::Decode, this, _1, _2) }
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- End ---------------------------------------------------------------- */
-} *cCodecCAF = nullptr;                // Codec pointer
-/* ------------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCodecCAF = this; }
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

@@ -692,14 +692,14 @@ class SysBase :                        // Members initially private
     } // Raise exception
     RaiseException(dwId, 0, 0, nullptr);
   }
-  /* ------------------------------------------------------------ */ protected:
-  void SetWindowHandle(HWND hwndNew) { hwndWindow = hwndNew; }
   /* --------------------------------------------------------------- */ public:
   HWND GetWindowHandle(void) const { return hwndWindow; }
   bool IsWindowHandleSet(void) const { return GetWindowHandle() != nullptr; }
   bool IsNotWindowHandleSet(void) const { return !IsWindowHandleSet(); }
   void SetWindowDestroyed(void) { SetWindowHandle(nullptr); }
-  /* == Destructor ========================================================= */
+  /* ------------------------------------------------------------ */ protected:
+  void SetWindowHandle(HWND hwndNew) { hwndWindow = hwndNew; }
+  /* -- Destructor --------------------------------------------------------- */
   ~SysBase(void)
   { // Restore original signal handlers
     if(fcbFloatingPointException) signal(SIGFPE, fcbFloatingPointException);
@@ -750,7 +750,7 @@ class SysBase :                        // Members initially private
     }}
   /* -- Install unhandled exception filter --------------------------------- */
   { SetUnhandledExceptionFilter(HandleExceptionStatic); }
-};/* ======================================================================= */
+};/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
   LONG WINAPI SysBase::HandleExceptionStatic(LPEXCEPTION_POINTERS \
     epData) { return cSystem->HandleException(*epData); }

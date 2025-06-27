@@ -9,10 +9,10 @@
 /* ------------------------------------------------------------------------- */
 namespace IJoyInfo {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IFlags;                using namespace IGlFWUtil::P;
-using namespace IIdent::P;             using namespace IJoyAxis::P;
-using namespace IJoyButton::P;         using namespace ILog::P;
-using namespace IString::P;
+using namespace ICommon::P;            using namespace IFlags;
+using namespace IGlFWUtil::P;          using namespace IIdent::P;
+using namespace IJoyAxis::P;           using namespace IJoyButton::P;
+using namespace ILog::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Joystick type typedef ------------------------------------------------ */

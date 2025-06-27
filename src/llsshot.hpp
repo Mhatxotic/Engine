@@ -15,8 +15,9 @@
 /* ========================================================================= */
 namespace LLSShot {                    // Screenshot namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IFbo::P;               using namespace ISShot::P;
-using namespace IString::P;            using namespace Common;
+using namespace ICommon::P;            using namespace IFbo::P;
+using namespace ISShot::P;             using namespace IString::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## SShot common helper classes                                         ## **

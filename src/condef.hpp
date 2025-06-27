@@ -94,7 +94,7 @@ struct ConLib                          // Console library command structure
 };/* ----------------------------------------------------------------------- */
 struct ConLibStatic                    // For static engine commands list
 { /* ----------------------------------------------------------------------- */
-  const string_view   &strvName;       // Function name
+  const string_view    strvName;       // Function name
   const unsigned int   uiMinimum,      // Minimum parameters
                        uiMaximum;      // Maximum parameters
   const CoreFlagsConst cfcRequired;    // Required core flags

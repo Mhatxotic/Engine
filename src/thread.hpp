@@ -395,7 +395,7 @@ template<class Callbacks>class ThreadSyncHelper : private Callbacks
 };/* ----------------------------------------------------------------------- */
 static size_t ThreadGetRunning(void) { return cThreads->stRunning; }
 /* ------------------------------------------------------------------------- */
-};                                     // End of public namespace
+}                                      // End of public namespace
 /* ------------------------------------------------------------------------- */
-};                                     // End of private namespace
+}                                      // End of private namespace
 /* == EoF =========================================================== EoF == */

@@ -12,14 +12,14 @@
 namespace ICVar {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace ICodec::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IDir::P;               using namespace IError::P;
-using namespace IHelper::P;            using namespace IJson::P;
-using namespace ILog::P;               using namespace IPSplit::P;
-using namespace ISql::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::Sqlite;
+using namespace ICommon::P;            using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace IDir::P;
+using namespace IError::P;             using namespace IHelper::P;
+using namespace IJson::P;              using namespace ILog::P;
+using namespace IPSplit::P;            using namespace ISql::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -31,7 +31,9 @@ enum CVarDefaults : unsigned int       // Flags when loaded from DB
   DC_OVERWRITE,                        // Overwrite core variables only
   DC_REFRESH                           // Wipe database completely
 }; /* ---------------------------------------------------------------------- */
-static struct CVars final :            // Start of vars class
+struct CVars;                          // Class prototype
+static CVars *cCVars = nullptr;        // Pointer to global class
+struct CVars :                         // Start of vars class
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper                   // Initialisation helper
 { /* -- Settings ----------------------------------------------------------- */
@@ -649,6 +651,8 @@ static struct CVars final :            // Start of vars class
       cvmActive.size(), cvislList.size(), cSystem->GetCoreFlagsString(),
       cSystem->GetCoreFlags());
   }
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~CVars, DeInit())
   /* -- Default constructor ------------------------------------------------ */
   explicit CVars(const CVarItemStaticList &cvislDef) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -659,11 +663,9 @@ static struct CVars final :            // Start of vars class
       { cvmPending, "unregistered" },  // Inactive cvars list
       { cvmActive,  "registered" } }}, // Active cvars list
     cvislList{ cvislDef }              // Default engine cvars list
-    /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~CVars, DeInit())         // Save and clean-up all variables
-  /* ----------------------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
+    { cCVars = this; }
+  /* --------------------------------------------------------------- */ public:
   CVarReturn SetDefaults(const CVarDefaults cvdVal)
   { // Compare defaults setting
     switch(cvdVal)
@@ -839,9 +841,7 @@ static struct CVars final :            // Start of vars class
     // Carry on parsing cvars
     return ACCEPT_HANDLED;
   }
-  /* ----------------------------------------------------------------------- */
-} *cCVars = nullptr;                   // Pointer to static class
-/* ------------------------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

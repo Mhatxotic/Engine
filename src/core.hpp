@@ -9,52 +9,86 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace ICore {                      // Start of private module namespace
-/* -- Dependencies --------------------------------------------------------- */
-using namespace IArchive::P;           using namespace IAsset::P;
-using namespace IAudio::P;             using namespace ICmdLine::P;
-using namespace IConDef::P;            using namespace IConGraph::P;
-using namespace IConsole::P;           using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IDir::P;               using namespace IDisplay::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IEvtWin::P;            using namespace IFbo::P;
-using namespace IFboCore::P;           using namespace IJson::P;
-using namespace IFont::P;              using namespace IFreeType::P;
-using namespace IFtf::P;               using namespace IGlFW::P;
+/* -- Dependencies (pretty much all of them) ------------------------------- */
+using namespace IArchive::P;           using namespace IArgs::P;
+using namespace IAsset::P;             using namespace IAtlas::P;
+using namespace IAudio::P;             using namespace IBin::P;
+using namespace ICVar::P;              using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace ICert::P;
+using namespace IClipboard::P;         using namespace IClock::P;
+using namespace ICommon::P;            using namespace ICmdLine::P;
+using namespace ICmdLine::P;           using namespace ICodecCAF::P;
+using namespace ICodecDDS::P;          using namespace ICodecGIF::P;
+using namespace ICodecJPG::P;          using namespace ICodecMP3::P;
+using namespace ICodecOGG::P;          using namespace ICodecPNG::P;
+using namespace ICodecWAV::P;          using namespace IConDef::P;
+using namespace IConGraph::P;          using namespace IConLib::P;
+using namespace IConsole::P;           using namespace ICredit::P;
+using namespace ICrypt::P;             using namespace IDir::P;
+using namespace IDisplay::P;           using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IEvtWin::P;
+using namespace IFbo::P;               using namespace IFboCore::P;
+using namespace IFile::P;              using namespace IFont::P;
+using namespace IFreeType::P;          using namespace IFtf::P;
+using namespace IGlFW::P;              using namespace IGlFWMonitor::P;
 using namespace IGlFWUtil::P;          using namespace IImage::P;
-using namespace IInput::P;             using namespace ILog::P;
-using namespace ILua::P;               using namespace ILuaCode::P;
-using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
-using namespace IOgl::P;               using namespace IPalette::P;
-using namespace IPcm::P;               using namespace IPSplit::P;
-using namespace IShaders::P;           using namespace ISql::P;
-using namespace ISource::P;            using namespace IStd::P;
+using namespace IImageDef::P;          using namespace IImageLib::P;
+using namespace IInput::P;             using namespace IJson::P;
+using namespace ILog::P;               using namespace ILua::P;
+using namespace ILuaCode::P;           using namespace ILuaCommand::P;
+using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
+using namespace ILuaVariable::P;       using namespace IMask::P;
+using namespace IMemory::P;            using namespace IOal::P;
+using namespace IOgl::P;               using namespace IPSplit::P;
+using namespace IPalette::P;           using namespace IPcm::P;
+using namespace IPcmLib::P;            using namespace ISShot::P;
+using namespace ISample::P;            using namespace IShader::P;
+using namespace IShaders::P;           using namespace ISocket::P;
+using namespace ISource::P;            using namespace ISql::P;
+using namespace IStat::P;              using namespace IStd::P;
 using namespace IStream::P;            using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITexture::P;           using namespace IThread::P;
-using namespace ITimer::P;             using namespace IToken::P;
-using namespace IVideo::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace ISystem::P;            using namespace ITexture::P;
+using namespace IThread::P;            using namespace ITimer::P;
+using namespace IToken::P;             using namespace IUtil::P;
+using namespace IVideo::P;             using namespace Lib::OS::GlFW::Types;
+using namespace Lib::OpenAL::Types;    using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Prototype ------------------------------------------------------------ */
+/* ------------------------------------------------------------------------- */
 class Core;                            // Core class prototype
 static Core *cCore = nullptr;          // Pointer to static class
-/* ------------------------------------------------------------------------- */
-enum CoreErrorReason                   // Lua error mode behaviour
-{ /* ----------------------------------------------------------------------- */
-  CER_IGNORE,                          // Ignore errors and try to continue
-  CER_RESET,                           // Automatically reset on error
-  CER_SHOW,                            // Open console and show error
-  CER_CRITICAL,                        // Terminate engine with error
-  CER_MAX,                             // Maximum number of options supported
-};/* ----------------------------------------------------------------------- */
 class Core final :                     // Members initially private
-  /* -- Base classes ------------------------------------------------------- */
-  private Common,                      // Common variables class
-  private DirBase,                     // Base directory class
-  private CmdLine,                     // Command-line class
-  private Log                          // Logging class
-{ /* -- Private Variables -------------------------------------------------- */
+  /* -- Base classes (order is critical!) ---------------------------------- */
+  private Stats,          private Threads,          private EvtMain,
+  private System,         private LuaFuncs,         private Archives,
+  private Assets,         private Crypt,            private Timer,
+  private Sql,            private Jsons,            private CVarItemStaticList,
+  private CVars,          private Sockets,          private ConCmdStaticList,
+  private Console,        private GlFW,             private Credits,
+  private FreeType,       private Ftfs,             private Files,
+  private Masks,          private Bins,             private Oal,
+  private PcmLibs,        private CodecWAV,         private CodecCAF,
+  private CodecOGG,       private CodecMP3,         private Pcms,
+  private Audio,          private Sources,          private Samples,
+  private Streams,        private EvtWin,           private Ogl,
+  private ImageLibs,      private CodecPNG,         private CodecJPG,
+  private CodecGIF,       private CodecDDS,         private Images,
+  private Shaders,        private Clips,            private Display,
+  private Input,          private ShaderCore,       private Fbos,
+  private FboCore,        private SShots,           private Textures,
+  private Palettes,       private Atlases,          private Fonts,
+  private Videos,         private ConGraphics,      private Variables,
+  private Commands,       private Lua
+{ /* -- Private typedefs --------------------------------------------------- */
+  enum CoreErrorReason                 // Lua error mode behaviour
+  { /* --------------------------------------------------------------------- */
+    CER_IGNORE,                        // Ignore errors and try to continue
+    CER_RESET,                         // Automatically reset on error
+    CER_SHOW,                          // Open console and show error
+    CER_CRITICAL,                      // Terminate engine with error
+    CER_MAX,                           // Maximum number of options supported
+  };/* -- Private Variables ------------------------------------------------ */
   const EvtMainRegVec emrvEvents;      // Core events list
   const CbThFunc   cbtMain;            // Bound main thread function
   CoreErrorReason  cerMode;            // Lua error mode behaviour
@@ -72,7 +106,7 @@ class Core final :                     // Members initially private
       // Write to console
       cConsole->AddLine("Execution paused. Type 'lresume' to continue.");
     } // Already paused? Remind console if it was manually requested
-    else if(emeEvent.aArgs.front().b)
+    else if(emeEvent.eaArgs.front().b)
       cConsole->AddLine(
         "Execution already paused. Type 'lresume' to continue.");
   }
@@ -630,94 +664,8 @@ class Core final :                     // Members initially private
     };
   }
   /* -- Main function ------------------------------------------------------ */
-  int CoreMain(void) try
-  { // Create static classes to engine components and set the pointer to that
-    // component (which should get optimised to static) so all the other
-    // components can access each other. Then nullptr them on destruction so
-    // any accidental access to them is easily identifiable by the debugger.
-#define INITSS(x, ...) DEINITHELPER(dih ## x, c ## x = nullptr); \
-      x eng ## x{ __VA_ARGS__ }; c ## x = &eng ## x
-    // Dependencies required only in this scope
-    using namespace IArgs::P;          using namespace IAtlas::P;
-    using namespace IBin::P;           using namespace ICert::P;
-    using namespace IClipboard::P;     using namespace ICmdLine::P;
-    using namespace IClock::P;         using namespace ICodecCAF::P;
-    using namespace ICodecDDS::P;      using namespace ICodecGIF::P;
-    using namespace ICodecJPG::P;      using namespace ICodecMP3::P;
-    using namespace ICodecOGG::P;      using namespace ICodecPNG::P;
-    using namespace ICodecWAV::P;      using namespace IConLib::P;
-    using namespace ICredit::P;        using namespace ICrypt::P;
-    using namespace IFile::P;          using namespace IGlFWMonitor::P;
-    using namespace IImageDef::P;      using namespace IImageLib::P;
-    using namespace ILuaCommand::P;    using namespace ILuaFunc::P;
-    using namespace IMask::P;          using namespace IMemory::P;
-    using namespace IOal::P;           using namespace IPcmLib::P;
-    using namespace ISample::P;        using namespace IShader::P;
-    using namespace ISocket::P;        using namespace ISShot::P;
-    using namespace IStat::P;          using namespace IUtil::P;
-    // Initialise other subsystems. The order is important!
-    INITSS(Stats);                     // cppcheck-suppress danglingLifetime
-    INITSS(Threads);                   // cppcheck-suppress danglingLifetime
-    INITSS(EvtMain);                   // cppcheck-suppress danglingLifetime
-    INITSS(System);                    // cppcheck-suppress danglingLifetime
-    INITSS(LuaFuncs);                  // cppcheck-suppress danglingLifetime
-    INITSS(Archives);                  // cppcheck-suppress danglingLifetime
-    INITSS(Assets);                    // cppcheck-suppress danglingLifetime
-    INITSS(Crypt);                     // cppcheck-suppress danglingLifetime
-    INITSS(Timer);                     // cppcheck-suppress danglingLifetime
-    INITSS(Sql);                       // cppcheck-suppress danglingLifetime
-    INITSS(Jsons);                     // cppcheck-suppress danglingLifetime
-#include "cvarlib.hpp"                 // Defines 'cvislList' cvar list
-    INITSS(CVars, cvislList);          // cppcheck-suppress danglingLifetime
-    INITSS(Sockets);                   // cppcheck-suppress danglingLifetime
-#include "conlib.hpp"                  // Defines 'ccslList' command list
-    INITSS(Console, ccslList);         // cppcheck-suppress danglingLifetime
-    INITSS(GlFW);                      // cppcheck-suppress danglingLifetime
-    INITSS(Credits);                   // cppcheck-suppress danglingLifetime
-    INITSS(FreeType);                  // cppcheck-suppress danglingLifetime
-    INITSS(Ftfs);                      // cppcheck-suppress danglingLifetime
-    INITSS(Files);                     // cppcheck-suppress danglingLifetime
-    INITSS(Masks);                     // cppcheck-suppress danglingLifetime
-    INITSS(Bins);                      // cppcheck-suppress danglingLifetime
-    INITSS(Oal);                       // cppcheck-suppress danglingLifetime
-    INITSS(PcmLibs);                   // cppcheck-suppress danglingLifetime
-    INITSS(CodecWAV); /* PCMFID = 0 */ // cppcheck-suppress danglingLifetime
-    INITSS(CodecCAF); /* PCMFID = 1 */ // cppcheck-suppress danglingLifetime
-    INITSS(CodecOGG); /* PCMFID = 2 */ // cppcheck-suppress danglingLifetime
-    INITSS(CodecMP3); /* PCMFID = 3 */ // cppcheck-suppress danglingLifetime
-    INITSS(Pcms);                      // cppcheck-suppress danglingLifetime
-    INITSS(Audio);                     // cppcheck-suppress danglingLifetime
-    INITSS(Sources);                   // cppcheck-suppress danglingLifetime
-    INITSS(Samples);                   // cppcheck-suppress danglingLifetime
-    INITSS(Streams);                   // cppcheck-suppress danglingLifetime
-    INITSS(EvtWin);                    // cppcheck-suppress danglingLifetime
-    INITSS(Ogl);                       // cppcheck-suppress danglingLifetime
-    INITSS(ImageLibs);                 // cppcheck-suppress danglingLifetime
-    INITSS(CodecPNG); /* IMGFID = 0 */ // cppcheck-suppress danglingLifetime
-    INITSS(CodecJPG); /* IMGFID = 1 */ // cppcheck-suppress danglingLifetime
-    INITSS(CodecGIF); /* IMGFID = 2 */ // cppcheck-suppress danglingLifetime
-    INITSS(CodecDDS); /* IMGFID = 3 */ // cppcheck-suppress danglingLifetime
-    INITSS(Images);                    // cppcheck-suppress danglingLifetime
-    INITSS(Shaders);                   // cppcheck-suppress danglingLifetime
-    INITSS(Clips);                     // cppcheck-suppress danglingLifetime
-    INITSS(Display);                   // cppcheck-suppress danglingLifetime
-    INITSS(Input);                     // cppcheck-suppress danglingLifetime
-    INITSS(ShaderCore);                // cppcheck-suppress danglingLifetime
-    INITSS(Fbos);                      // cppcheck-suppress danglingLifetime
-    INITSS(FboCore);                   // cppcheck-suppress danglingLifetime
-    INITSS(SShots);                    // cppcheck-suppress danglingLifetime
-    INITSS(Textures);                  // cppcheck-suppress danglingLifetime
-    INITSS(Palettes);                  // cppcheck-suppress danglingLifetime
-    INITSS(Atlases);                   // cppcheck-suppress danglingLifetime
-    INITSS(Fonts);                     // cppcheck-suppress danglingLifetime
-    INITSS(Videos);                    // cppcheck-suppress danglingLifetime
-    INITSS(ConGraphics);               // cppcheck-suppress danglingLifetime
-    INITSS(Variables);                 // cppcheck-suppress danglingLifetime
-    INITSS(Commands);                  // cppcheck-suppress danglingLifetime
-    INITSS(Lua);                       // cppcheck-suppress danglingLifetime
-    // Done with this macro
-#undef INITSS
-    // Register default cvars and pass over the current gui mode by ref. All
+  int CoreMain(void)
+  { // Register default cvars and pass over the current gui mode by ref. All
     // the core parts of the engine are initialised from cvar callbacks.
     cCVars->Init();
     // Text mode requested?
@@ -798,23 +746,18 @@ class Core final :                     // Members initially private
       default: break;
     } // Clean exit
     return 0;
-  } // Safe loggable exception occured?
-  catch(const exception &eReason)
-  { // Send to log and show error message to user
-    cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", eReason);
-    // Show message box
-    SysMessage("Main Thread Exception", eReason.what(), MB_ICONSTOP);
-    // Done
-    return 2;
   }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Core, cCore = nullptr)
   /* -- Default constructor ------------------------------------------------ */
-  Core(const int iArgs,                // Arguments count
-       ArgType**const lArgs,           // Arguments array
-       ArgType**const lEnv) :          // Environment variables array
+  Core(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    CmdLine{ iArgs, lArgs, lEnv },     // Initialise command-line arguments
+#include "cvarlib.hpp"                 // Defines cvar list
+    CVars{                             // Initialise cvars list
+      static_cast<CVarItemStaticList&> // Grab the one we just made
+        (*this) },
+#include "conlib.hpp"                  // Defines console command list
+    Console{                           // Initialise console commands list
+      static_cast<ConCmdStaticList&>   // Grab the one we just made
+        (*this) },
     emrvEvents{                        // Default events
       { EMC_LUA_PAUSE,  bind(&Core::OnLuaPause,  this, _1) },
       { EMC_LUA_RESUME, bind(&Core::OnLuaResume, this, _1) },
@@ -823,7 +766,7 @@ class Core final :                     // Members initially private
     cerMode{ CER_CRITICAL },           // Init lua error mode behaviour
     uiErrorCount(0),                   // Init number of errors occured
     uiErrorLimit(0)                    // Init number of errors allowed
-    /* -- No code ---------------------------------------------------------- */
+    /* -- Set global pointer to static class ------------------------------- */
     { cCore = this; }
   /* -- Set lua error mode behaviour --------------------------------------- */
   CVarReturn CoreErrorBehaviourModified(const CoreErrorReason cefNMode)
@@ -919,8 +862,9 @@ class Core final :                     // Members initially private
     // We handled setting the variable
     return ACCEPT_HANDLED;
   }
-};/* ----------------------------------------------------------------------- */
-};                                     // End of public module namespace
+};
 /* ------------------------------------------------------------------------- */
-};                                     // End of private module namespace
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */
