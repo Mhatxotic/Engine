@@ -182,9 +182,20 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       { return static_cast<StdTimeT>(SzBitWithVals_Check(&csbuTime, stId) ?
           UtilBruteCast<uint64_t>(csbuTime.Vals[stId]) / 100000000 :
           numeric_limits<StdTimeT>::max()); }
+  /* -- Get archive file/dir count as human readable string ---------------- */
+  const string ArchiveGetNumFilesString(void) const
+    { return StrCPluraliseNum(ArchiveGetNumFiles(),
+        "file", "files"); }
+  const string ArchiveGetNumDirsString(void) const
+    { return StrCPluraliseNum(ArchiveGetNumDirs(),
+        "directory", "directories"); }
   /* -- Get archive file/dir as table ------------------------------ */ public:
   const StrUIntMap &ArchiveGetFileList(void) const { return suimFiles; }
   const StrUIntMap &ArchiveGetDirList(void) const { return suimDirs; }
+  /* -- Get archive file/dir counts ---------------------------------------- */
+  size_t ArchiveGetNumFiles(void) const { return suimFiles.size(); }
+  size_t ArchiveGetNumDirs(void) const { return suimDirs.size(); }
+  size_t ArchiveGetTotal(void) const { return csaeData.NumFiles; }
   /* -- Returns modified or creation time of specified file ---------------- */
   StdTimeT ArchiveGetModifiedTime(const size_t stId) const
     { return ArchiveSzTimeToStdTime(stId, csaeData.MTime); }
@@ -193,8 +204,6 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Returns uncompressed size of file by id ---------------------------- */
   uint64_t ArchiveGetSize(const size_t stId) const
     { return static_cast<uint64_t>(SzArEx_GetFileSize(&csaeData, stId)); }
-  /* -- Total files and directories in archive ----------------------------- */
-  size_t ArchiveGetTotal(void) const { return csaeData.NumFiles; }
   /* -- Get a file/dir and uid by zero-index ------------------------------- */
   const StrUIntMapConstIt &ArchiveGetFile(const size_t stIndex) const
     { return suimcivFiles[stIndex]; }
@@ -373,9 +382,21 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // specifically so lets free the extra memory allocated for the lists
     suimcivFiles.shrink_to_fit();
     suimcivDirs.shrink_to_fit();
-    // Log progress
-    cLog->LogInfoExSafe("Archive loaded '$' (F:$;D:$).",
-      IdentGet(), suimFiles.size(), suimDirs.size());
+    // Archive has files?
+    if(!suimFiles.empty())
+      // Archive has directories? Write log with number of files and dirs.
+      if(!suimDirs.empty())
+        cLog->LogInfoExSafe("Archive loaded '$' with $ and $.",
+          IdentGet(), ArchiveGetNumFilesString(), ArchiveGetNumDirsString());
+      // Archive has only files? Write log with number of dirs.
+      else cLog->LogInfoExSafe("Archive loaded '$' with $ files.",
+        IdentGet(), ArchiveGetNumFilesString());
+    // Archive has only dirs? Write log with number of dirs.
+    else if(!suimDirs.empty())
+      cLog->LogInfoExSafe("Archive loaded '$' with $ dirs.",
+        IdentGet(), ArchiveGetNumDirsString());
+    // Archive is empty?
+    else cLog->LogWarningExSafe("Archive loaded empty '$'!", IdentGet());
   }
   /* -- Loads archive synchronously at specified position ------------------ */
   void InitFromFile(const string &strFile, const uint64_t uqPosition)
@@ -394,9 +415,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     ArchiveFlags{ AE_STANDBY },        // Set default archive flags
     stInUse(0),                        // Set threads in use
     uqArchPos(0),                      // Set archive initial position
-    cfisData{},                        // Init file stream data
-    cltrData{},                        // Init lookup stream data
-    csaeData{}                         // Init archive stream data
+    cfisData{},                        // Clear file stream data
+    cltrData{},                        // Clear lookup stream data
+    csaeData{}                         // Clear archive stream data
     /* -- No code ---------------------------------------------------------- */
     { }
   /* -- Unloads the archive ------------------------------------------------ */
@@ -545,8 +566,7 @@ static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
     [&strDir, &ssFiles, &mLock](const StrUIntMapPair &suimpRef)
   { // Ignore if folder name does not match or a forward-slash found after
     if(strDir != suimpRef.first.substr(0, strDir.length()) ||
-      suimpRef.first.find(cCommon->CommonCFSlash(),
-        strDir.length() + 1) != StdNPos) return;
+      suimpRef.first.find('/', strDir.length() + 1) != StdNPos) return;
     // Split file path
     const PathSplit psParts{ suimpRef.first };
     // Lock access to archives list
@@ -585,8 +605,7 @@ static const StrSet &ArchiveEnumerate(const string &strDir,
         [&strDir, &ssFiles, &mLock, &strExt](const StrUIntMapPair &suimpRef)
       { // Ignore if folder name does not match or a forward-slash found after
         if(strDir != suimpRef.first.substr(0, strDir.length()) ||
-          suimpRef.first.find(cCommon->CommonCFSlash(),
-            strDir.length() + 1) != StdNPos) return;
+          suimpRef.first.find('/', strDir.length() + 1) != StdNPos) return;
         // Split path parts, and ignore if extension does not match
         const PathSplit psParts{ suimpRef.first };
         if(psParts.strExt != strExt) return;

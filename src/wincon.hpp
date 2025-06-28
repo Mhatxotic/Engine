@@ -839,8 +839,8 @@ class SysCon :                         // Members initially private
     stHm1(0), stHm2(0),                // Width and height of window-2 not set
     stX1(0), stY1(0),                  // Minimum drawing extent not set
     stX2(0), stY2(0)                   // Maximum drawing extent not set
-    /* -- No code ---------------------------------------------------------- */
-    { }
+    /* -- Set console output codepage to UTF-8 ----------------------------- */
+    { SetConsoleOutputCP(CP_UTF8); }
   /* -- Set maximum console line length ---------------------------- */ public:
   CVarReturn RowsModified(const size_t stRows)
   { // Deny if out of range. The maximum value is a SHORT from Win32 API.

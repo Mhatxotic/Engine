@@ -59,8 +59,7 @@ class Certs                            // Certificates store
   template<class SyncMethod>void CertsLoad(SyncMethod &smClass,
     const string &strD, const string &strF) try
   { // Load the certificate
-    const FileMap fmCert{
-      AssetExtract(StrAppend(strD, cCommon->CommonCFSlash(), strF)) };
+    const FileMap fmCert{ AssetExtract(StrAppend(strD, '/', strF)) };
     // Get pointer
     const unsigned char*ucpPtr = fmCert.MemPtr<unsigned char>();
     // Load the raw certificate and ig it succeeded?

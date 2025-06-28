@@ -488,7 +488,7 @@ struct ICHelper :                      // Members initially public
   /* -- Register to list --------------------------------------------------- */
   void CollectorRegister(void) { this->ICHelperPush(); }
   void CollectorUnregister(void) { this->ICHelperErase(); }
-  /* -- Destructor (unregister if registered) ------------------------------ */
+  /* -- Destructor (unregister if registered) ------------------- */ protected:
   ~ICHelper(void) { CollectorUnregister(); }
   /* -- Constructor (move) ------------------------------------------------- */
   explicit ICHelper(ICHelper &&icOther) :

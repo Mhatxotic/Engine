@@ -145,7 +145,7 @@ using namespace ICVarDef::P;
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 enum CVarEnums : size_t
-{ /* -- Critical cvars (order is important!) ------------------------------- */
+{ /* -- Critical cvars (order is critical!) -------------------------------- */
   APP_CMDLINE,      LOG_LEVEL,         AST_LZMABUFFER,      AST_PIPEBUFFER,
   AST_FSOVERRIDE,   AST_EXEBUNDLE,     AST_BASEDIR,         AST_BUNDLES,
   APP_CONFIG,       APP_AUTHOR,        APP_SHORTNAME,       AST_HOMEDIR,

@@ -412,10 +412,9 @@ template<class AnyType>
 ** ## Don't put try/catch on func level. (C++ ISO/IEC JTC 1/SC 22 N 4411) ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-#define DTORHELPERBEGIN(c) c(void) noexcept(false) { try {
-#define DTORHELPEREND(c) } catch(const exception &eReason) \
-  { cLog->LogWarningExSafe("(" STR(c) ") $", eReason.what()); } }
-#define DTORHELPER(c,...) DTORHELPERBEGIN(c) __VA_ARGS__; DTORHELPEREND(c)
+#define DTORHELPER(c,...) c(void) noexcept(false) { try { __VA_ARGS__; } \
+  catch(const exception &eReason) \
+    { cLog->LogWarningExSafe("(" STR(c) ") $", eReason.what()); } }
 /* == Init helper ========================================================== **
 ** ######################################################################### **
 ** ## Very useful little helper to create a class in-scope to init and    ## **

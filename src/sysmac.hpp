@@ -634,7 +634,8 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   OSData GetOperatingSystemData(void)
   { // Get operating system name
-    const Token tVersion{ GetSysCTLInfoString("kern.osproductversion"), "." };
+    const Token tVersion{ GetSysCTLInfoString("kern.osproductversion"),
+      cCommon->CommonPeriod() };
     unsigned int uiMajor =
         tVersion.empty() ? 0 : StrToNum<unsigned int>(tVersion[0]),
       uiMinor = tVersion.size() < 2 ? 0 : StrToNum<unsigned int>(tVersion[1]),
@@ -650,7 +651,7 @@ class SysCore :
     };
     // List of MacOS versions and when they expire
     static const array<const OSListItem,22>osList{ {
-      { "Unknown",     16,  0 }, { "Sequoia",       15,  0 },
+      { "Tahoe",       26,  0 }, { "Sequoia",       15,  0 },
       { "Sonoma",      14,  0 }, { "Ventura",       13,  0 },
       { "Monterey",    12,  0 }, { "Big Sur",       11,  0 },
       { "Catalina",    10, 15 }, { "Mojave",        10, 14 },
@@ -671,8 +672,8 @@ class SysCore :
       osS << osItem.cpLabel;
       // Skip adding version numbers
       goto SkipNumericalVersionNumber;
-    } // Nothing was found so add version number detected
-    osS << uiMajor << '.' << uiMinor;
+    } // Set unknown operating system label
+    osS << "Unknown";
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
     // Get LANGUAGE code and set default if not 5 bytes long?

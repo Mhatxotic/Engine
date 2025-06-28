@@ -29,8 +29,8 @@ uint64_t uqResources = 0;
 for(const Archive*const aPtr : *cArchives)
 { // Get reference to class and
   const Archive &aRef = *aPtr;
-  sTable.DataN(aRef.CtrGet()).DataN(aRef.ArchiveGetFileList().size())
-        .DataN(aRef.ArchiveGetDirList().size()).DataN(aRef.ArchiveGetTotal())
+  sTable.DataN(aRef.CtrGet()).DataN(aRef.ArchiveGetNumFiles())
+        .DataN(aRef.ArchiveGetNumDirs()).DataN(aRef.ArchiveGetTotal())
         .DataN(aRef.ArchiveGetInUse()).Data(aRef.IdentGet());
   // Add to resources total
   uqResources += aRef.ArchiveGetFileList().size();
@@ -483,7 +483,7 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->Save(), "cvar", "cvars"),
 { "dir", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Make and checkfilename
-const string &strVal = aArgs.size() > 1 ? aArgs[1] : ".";
+const string &strVal = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
 const ValidResult vrResult = DirValidName(strVal);
 if(vrResult != VR_OK)
   return cConsole->AddLineF("Cannot check directory '$': $!",
@@ -513,8 +513,8 @@ for(const Archive*const aPtr : *cArchives)
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
     string strName{ StrTrim(
-      suimpPair.first.substr(strDir.length()), cCommon->CommonCFSlash()) };
-    if(strName.find(cCommon->CommonCFSlash()) != StdNPos) continue;
+      suimpPair.first.substr(strDir.length()), '/') };
+    if(strName.find('/') != StdNPos) continue;
     // Add to directory list and increment directory count
     silDirs.insert({ StdMove(strName),
       { StdMaxUInt64, suimpPair.second, aRef.IdentGet() } });
@@ -525,8 +525,8 @@ for(const Archive*const aPtr : *cArchives)
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
     string strName{ StrTrim(
-      suimpPair.first.substr(strDir.length()), cCommon->CommonCFSlash()) };
-    if(strName.find(cCommon->CommonCFSlash()) != StdNPos) continue;
+      suimpPair.first.substr(strDir.length()), '/') };
+    if(strName.find('/') != StdNPos) continue;
     // Add to file list and increment total bytes and file count
     const uint64_t uqSize = aRef.ArchiveGetSize(suimpPair.second);
     silFiles.insert({ StdMove(strName),

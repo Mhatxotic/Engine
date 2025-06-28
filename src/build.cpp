@@ -3,13 +3,18 @@
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
 ** ## This is the Mhatxotic Design Project Management utility which helps ## **
-** ## build and maintain the components of the Mhatxotic multimedia       ## **
-** ## engine.                                                             ## **
+** ## build and maintain the components of the Mhatxotic engine.          ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 #define BUILD                          // Indicates command-line tool compile
 /* ------------------------------------------------------------------------- */
 #include "setup.hpp"                   // Environment configuration
+/* -- Disable unreferenced function warning -------------------------------- */
+#if defined(WINDOWS)                   // Compiling on Windows?
+# pragma warning(disable: 4505)
+#else                                  // Compiling on MacOS or Linux?
+# pragma GCC diagnostic ignored "-Wunused-function"
+#endif                                 // Operating system check
 /* ------------------------------------------------------------------------- */
 #include <iostream>                    // Using cout to print to con
 /* ------------------------------------------------------------------------- */
@@ -69,10 +74,6 @@ namespace E {                          // Put everything in engine namespace
 #include "asset.hpp"                   // Asset handling class header
 #include "json.hpp"                    // Json handling class header
 #include "file.hpp"                    // FStream+FileMap class header
-/* ------------------------------------------------------------------------- */
-#if defined(WINDOWS)                   // If using Windows?
-# pragma warning(disable: 4505)        // Disable unreferenced function (lots!)
-#endif                                 // Windows check
 /* -- Includes ------------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICmdLine::P;
 using namespace ICommon::P;            using namespace ICrypt::P;
@@ -98,7 +99,6 @@ using namespace IUuId::P;
 #define DOCDIR     "docs"              // Documentation directory
 #define DRDDIR     DBGDIR              // "-rd" Debugging symbols ramdisk dir
 #define DISDIR     "distro"            // Distributable directory
-#define ETCDIR     "etc"               // Configuration directory
 #define CFGEXT     "cfg"               // Configuration file extension
 #define INCDIR     "include"           // Include files directory
 #define LIBDIR     "lib"               // Library files directory
@@ -109,7 +109,7 @@ using namespace IUuId::P;
 #define VERHEADER  ENGINENAME SRCEXT   // Include file for build info
 #define LICHEADER  "license" SRCEXT    // Include file for licenses info
 /* ------------------------------------------------------------------------- */
-struct Environment                     // Preconfigured environment settings
+static struct Environment              // Preconfigured environment settings
 { /* ------------------------------------------------------------ */ const char
   *const cpPerl,     *const cpCMake,    *const cpCppCheck, *const cpCppChkM,
   *const cpCppChk32, *const cpCppChk64, *const cpDBG,      *const cp7z,
@@ -550,22 +550,27 @@ envLinuxGCC =                          // GCC on Linux
 /* -- All the flags -------------------------------------------------------- */
 #define PF_ALL (PF_COMPILE|PF_OTHERS)
 /* ------------------------------------------------------------------------- */
-uint64_t uiFlags = PF_RVER|PF_RPROJ|PF_SYSNOERR|PF_X64|PF_BETA|
+static uint64_t uiFlags = PF_RVER|PF_RPROJ|PF_SYSNOERR|PF_X64|PF_BETA|
 #if defined(WINDOWS)                   // Using windows?
                    PF_ENVWMSVC;        // Using MSVC environment by default.
-Environment envActive{envWindowsMSVC}; // Current environment
+static Environment envActive{envWindowsMSVC}; // Using MSVC environment
 #elif defined(MACOS)                   // Using osx?
                    PF_ENVXCODE;        // Using XCode environment
-Environment envActive{envMacOSLLVM};   // Using LLVM environment
+static Environment envActive{envMacOSLLVM};   // Using LLVM environment
 #elif defined(LINUX)                   // Using linux?
                    PF_ENVGCC;          // Using XCode environment
-Environment envActive{envLinuxGCC};    // Current environment
+static Environment envActive{envLinuxGCC};    // Using GCC environment
 #endif                                 // Setup environment
-array<unsigned int,4> uiVer{           // Version of engine (y.m.d.b)
+static array<unsigned int,4> uiVer{    // Version of engine (y.m.d.b)
   static_cast<unsigned int>(-1), static_cast<unsigned int>(-1),
   static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) };
-string strName, strArch, strVer, strTitle, strAuthor;
-const string strEName{ VER_NAME }, strEAuthor{ VER_AUTHOR };
+static string strName, strArch, strVer, strTitle, strAuthor;
+static const string strEName{ VER_NAME }, strEAuthor{ VER_AUTHOR };
+static const string strVerFile{ "build." JSON_EXTENSION };
+/* -- These directory names are reserved ----------------------------------- */
+static const StrSet ssIgnore{ ARCDIR, BINDIR, CRTDIR, DBGDIR, DOCDIR, DRDDIR,
+                              DISDIR, INCDIR, LIBDIR, LICDIR, SRCDIR, UTLDIR,
+                              WINDIR };
 /* -- Get return character format of text string --------------------------- */
 static const string StrGetReturnFormat(const string &strIn)
 { // String is not empty?
@@ -592,7 +597,7 @@ static const string StrGetReturnFormat(const string &strIn)
   return {};
 }
 /* ------------------------------------------------------------------------- */
-int CheckSources(void)
+static int CheckSources(void)
 { // Number of warnings
   size_t stWarnings = 0, stTotal = 0;
   // Read source files directory
@@ -707,7 +712,7 @@ int CheckSources(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-int GenDoc(void)
+static int GenDoc(void)
 { // Typedefs
   struct StrStrStr { string strName, strType, strDesc; };
   typedef list<StrStrStr> StrStrStrList;
@@ -1665,7 +1670,7 @@ int GenDoc(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-void ConWrite(const string &strText)
+static void ConWrite(const string &strText)
 { // Pretty word wrap the text and write each line
 #if defined(WINDOWS)
   const StrVector svLines{ UtfWordWrap(strText, 79, 2) };
@@ -1676,7 +1681,7 @@ void ConWrite(const string &strText)
 }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)
-void PatchIcon(const string &strIco, const string &strOut)
+static void PatchIcon(const string &strIco, const string &strOut)
 { // Using Windows API
   using namespace Lib::OS;
   // Return if file does not exist
@@ -1806,7 +1811,7 @@ void PatchIcon(const string &strIco, const string &strOut)
 }
 #endif
 /* ------------------------------------------------------------------------- */
-const string GetTempDir(void)
+static const string GetTempDir(void)
 { // Get temporary directory and remove trailing slash
 #if defined(WINDOWS)
   string strTmp{ cCmdLine->CmdLineGetEnv("TMP") };
@@ -1824,7 +1829,7 @@ const string GetTempDir(void)
 #endif
 }
 /* ------------------------------------------------------------------------- */
-void DoCleanCompilerTempFiles(void)
+static void DoCleanCompilerTempFiles(void)
 { // Get files
 #if defined(WINDOWS)
   const string strTmp{ StrAppend(GetTempDir(), '/') };
@@ -1850,7 +1855,8 @@ void DoCleanCompilerTempFiles(void)
 #endif
 }
 /* ------------------------------------------------------------------------- */
-void DoClean(StrVector &svDeleted, StrVector &svNotDeleted, const Dir &dFiles)
+static void DoClean(StrVector &svDeleted, StrVector &svNotDeleted,
+  const Dir &dFiles)
 { // Write initial scan
   if(dFiles.IsFilesEmpty()) return;
   // Allocate memory for filenames
@@ -1867,7 +1873,7 @@ void DoClean(StrVector &svDeleted, StrVector &svNotDeleted, const Dir &dFiles)
   }
 }
 /* ------------------------------------------------------------------------- */
-void DoClean(const StrVector svExts)
+static void DoClean(const StrVector svExts)
 { // Files deleted
   StrVector svDeleted, svNotDeleted;
   // For each extension we don't want. Grab files and clean them
@@ -1883,18 +1889,18 @@ void DoClean(const StrVector svExts)
       svNotDeleted.size(), DirGetCWD(), StrImplode(svNotDeleted, 0, ", ")));
 }
 /* ------------------------------------------------------------------------- */
-void MakeDirectory(const string &strDir)
+static void MakeDirectory(const string &strDir)
   { if(!DirMkDirEx(strDir))
       XCL("Failed to make directory!", "Directory", strDir); }
 /* ------------------------------------------------------------------------- */
-void SetDirectory(const string &strDir)
+static void SetDirectory(const string &strDir)
   { if(!DirSetCWD(strDir))
       XCL("Failed to set new directory!", "Directory", strDir); }
 /* ------------------------------------------------------------------------- */
-void MakeAndSetDirectory(const string &strDir)
+static void MakeAndSetDirectory(const string &strDir)
   { MakeDirectory(strDir); SetDirectory(strDir); }
 /* ------------------------------------------------------------------------- */
-void DoClean(const StrVector svExts, const string &strDir)
+static void DoClean(const StrVector svExts, const string &strDir)
 { // Save current directory
   const string strOldDir{ DirGetCWD() };
   // Chdir to the directory
@@ -1909,7 +1915,7 @@ static FILE *POpen(const string &strCL) { return StdPOpen(strCL); }
 /* -- Close a process output stream ---------------------------------------- */
 static int PClose(FILE*const fHandle) { return StdPClose(fHandle); }
 /* ------------------------------------------------------------------------- */
-int SpecialExecute(const string strCmd, const size_t stML,
+static int SpecialExecute(const string strCmd, const size_t stML,
   const bool bErrOverride = false)
 { // Clear error number
   StdSetError(0);
@@ -1963,7 +1969,7 @@ int SpecialExecute(const string strCmd, const size_t stML,
   return iR;
 }
 /* ------------------------------------------------------------------------- */
-int SpecialExecute2(const string &strCmd, const bool bOverride=true)
+static int SpecialExecute2(const string &strCmd, const bool bOverride=true)
 { // Execute command line and throw error if it failed
   if(const int iR = SpecialExecute(strCmd,
     uiFlags & PF_SYSOUT ? StdNPos : 0, bOverride))
@@ -1980,7 +1986,7 @@ int SpecialExecute2(const string &strCmd, const bool bOverride=true)
 #define SystemF(...) SpecialExecute2(StrFormat(__VA_ARGS__), true)
 #define SystemNF(...) SpecialExecute2(StrFormat(__VA_ARGS__), false)
 /* ------------------------------------------------------------------------- */
-void RenameFileSafe(const string &strSrc, const string &strDst)
+static void RenameFileSafe(const string &strSrc, const string &strDst)
 { // Write progress
   cout << "*** Renaming '" << strSrc << "' to '" << strDst << "'...";
   // Rename the file and show error if failed
@@ -2000,7 +2006,7 @@ void RenameFileSafe(const string &strSrc, const string &strDst)
   cout << " OW OK!" << endl;
 }
 /* ------------------------------------------------------------------------- */
-int CertFunc(const string strOut)
+static int CertFunc(const string strOut)
 { // Files that we care about
   const string
     strP12{ StrFormat("$/$.p12", WINDIR, ENGINENAME) },
@@ -2144,7 +2150,7 @@ int CertFunc(const string strOut)
 }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)
-void PatchChecksum(const string &strOut)
+static void PatchChecksum(const string &strOut)
 { // Need Windows API
   using namespace Lib::OS;
   // Read executable file
@@ -2182,7 +2188,7 @@ void PatchChecksum(const string &strOut)
 #endif
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS) || defined(LINUX)
-void BuildExecutable(const string &strTmp, const string &strOS,
+static void BuildExecutable(const string &strTmp, const string &strOS,
   const unsigned int uiBits, const unsigned int uiArch)
 { // Build filename for project assets
   const string strAdb{ StrFormat("$/$.adb", strName, strName) };
@@ -2217,7 +2223,7 @@ void BuildExecutable(const string &strTmp, const string &strOS,
 }
 #endif
 /* ------------------------------------------------------------------------- */
-const StrStrMap LoadVars(const string &strCfg)
+static const StrStrMap LoadVars(const string &strCfg)
 { // Open file and if succeeded?
   if(FStream fsVars{ strCfg, FM_R_B })
   { // Read filee
@@ -2238,7 +2244,7 @@ const StrStrMap LoadVars(const string &strCfg)
   XCL("Failed to open vars file!", "File", strCfg);
 }
 /* ------------------------------------------------------------------------- */
-int BuildDistro(void)
+static int BuildDistro(void)
 { // Get and make temporary directory and if it failed?
   const string strTmp{ StrAppend(GetTempDir(), '/', UuId().UuIdToString()) };
   MakeDirectory(strTmp);
@@ -2376,28 +2382,7 @@ int BuildDistro(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-int ChangeProject(const string &strProj)
-{ // Ignore if directories we use
-  if(strProj == SRCDIR)
-    XC("Invalid project!", "Project", strProj);
-  // Get directory name. Bail if project doesnt exist
-  const string strProjDir{ StrFormat("$/$.cfg", strProj,
-    DEFAULT_CONFIGURATION) };
-  if(!DirLocalDirExists(strProjDir))
-    XCL("No such project exists!", "Project", strProj, "VarsFile", strProjDir);
-  // Rewrite version file
-  const string strVerFile{ StrFormat("$/$.ver", ETCDIR, ENGINENAME) };
-  if(FStream{ strVerFile, FM_W_B }.
-    FStreamWriteStringEx("$ $ $ $ $", uiVer[0], uiVer[1],
-      uiVer[2], uiVer[3], strProj) == StdNPos)
-        XCL("Failed to write version file!", "File", strVerFile);
-  // Show success
-  cout << "Switch project to '" << strProj << "' succeeded!\n";
-  // Done
-  return 0;
-}
-/* ------------------------------------------------------------------------- */
-int CertGen(void)
+static int CertGen(void)
 { // Need openssl library
   using namespace Lib::OS::OpenSSL;
   // Switch to resources directory. Create it if not exists
@@ -2512,7 +2497,7 @@ int CertGen(void)
     } // Add data if parsing
     else if(bParseData) strData += strLine;
   } // Get files in the directory and enumerate them
-  const Dir dCerts{ ".", ".cer" };
+  const Dir dCerts{ cCommon->CommonPeriod(), ".cer" };
   for(const DirEntMapPair &dempPair : dCerts.GetFiles())
   { // Find this file in written list
     const auto &aItem = ssProcessed.find(dempPair.first);
@@ -2539,7 +2524,7 @@ int CertGen(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-int RebuildAssets(const bool bClear)
+static int RebuildAssets(const bool bClear)
 { // Build filename of archive database and tempa rchive database
   const string strADB{ StrAppend(strName, '.', ARCHIVE_EXTENSION) },
                strADBTmp{ StrAppend(strADB, ".tmp") };
@@ -2565,7 +2550,8 @@ int RebuildAssets(const bool bClear)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-void CheckFiles(const StrVector &svReadable, const StrVector &svWritable)
+static void CheckFiles(const StrVector &svReadable,
+  const StrVector &svWritable)
 { // Check files that need to be readable
   for(const string &strFile : svReadable)
     if(!DirCheckFileAccess(strFile, 4))
@@ -2576,7 +2562,8 @@ void CheckFiles(const StrVector &svReadable, const StrVector &svWritable)
       XCL("File not writable!", "File", strFile);
 }
 /* ------------------------------------------------------------------------- */
-void ReplaceTextMulti(const string &strFile, const StrPairList &ssplPairs)
+static void ReplaceTextMulti(const string &strFile,
+  const StrPairList &ssplPairs)
 { // Ignore if nothing in list
   if(ssplPairs.empty())
     XC("No entries specified to replace in file!", "File", strFile);
@@ -2620,10 +2607,11 @@ void ReplaceTextMulti(const string &strFile, const StrPairList &ssplPairs)
     stChanges, ssplPairs.size(), strFile));
 }
 /* ------------------------------------------------------------------------- */
-void ReplaceText(const string &strFile, const string &strFrom,
+static void ReplaceText(const string &strFile, const string &strFrom,
   const string &strTo) { ReplaceTextMulti(strFile, {{ strFrom, strTo }}); }
 /* ------------------------------------------------------------------------- */
-const string BuildHPPHeader(const string &strFileName, const string &strDesc)
+static const string BuildHPPHeader(const string &strFileName,
+  const string &strDesc)
 { // A double line
   const string strHashLine(73, '#');
   // Beginning of text
@@ -2649,7 +2637,7 @@ const string BuildHPPHeader(const string &strFileName, const string &strDesc)
   return strLines;
 }
 /* ------------------------------------------------------------------------- */
-int BuildLicenses(void)
+static int BuildLicenses(void)
 { // Find license files
   const Dir dLicenses{ LICDIR, ".txt" };
   if(dLicenses.IsFilesEmpty())
@@ -2760,7 +2748,7 @@ int BuildLicenses(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-int NewProject(const string &strProj)
+static int NewProject(const string &strProj)
 { // Ignore if directories we use
   if(strProj == SRCDIR)
     XC("Invalid project!", "Project", strProj);
@@ -2798,7 +2786,7 @@ int NewProject(const string &strProj)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-void MakeIncludeFromBin(const string &strIn, const string &strPrefix,
+static void MakeIncludeFromBin(const string &strIn, const string &strPrefix,
   const string &strOut)
 { // Open binary file
   cout << "*** Binary in: " << strIn << "... ";
@@ -2827,7 +2815,7 @@ void MakeIncludeFromBin(const string &strIn, const string &strPrefix,
   cout << fOut.FStreamTell() << " bytes written!\n";
 }
 /* -- Build a file list ---------------------------------------------------- */
-string BuildFileList(const string &strBase, const string &strDir,
+static string BuildFileList(const string &strBase, const string &strDir,
   const string &strExt)
 { // String storage
   string strOut;
@@ -2845,7 +2833,7 @@ string BuildFileList(const string &strBase, const string &strDir,
   return strOut;
 }
 /* ------------------------------------------------------------------------- */
-void GenericExtLibBuild(const string &strCmdLine, const string &strLib,
+static void GenericExtLibBuild(const string &strCmdLine, const string &strLib,
   const string &strTempDir, const string &strPrefix, bool bSwap=false)
 { // Do swap?
   if(bSwap) System("swap");
@@ -2860,7 +2848,7 @@ void GenericExtLibBuild(const string &strCmdLine, const string &strLib,
   if(bSwap) System("swap");
 }
 /* ------------------------------------------------------------------------- */
-void GenericExtLibBuildBits(const string &strCLRel,
+static void GenericExtLibBuildBits(const string &strCLRel,
   const string &strLib, const string &strTmp, const string &strPrefix,
   const unsigned int uiBits)
 { // Generate prefix with bits
@@ -2869,7 +2857,7 @@ void GenericExtLibBuildBits(const string &strCLRel,
   GenericExtLibBuild(strCLRel, strLib, strTmp, strBits, uiBits==32);
 }
 /* ------------------------------------------------------------------------- */
-void GenericExtLibBuildAll(const string &strCLRel64,
+static void GenericExtLibBuildAll(const string &strCLRel64,
   const string &strCLRel32,  const string &strL64,
   const string &strL32, const string &strTmp, const string &strPrefix)
 { // Compile 64-bit version
@@ -2878,7 +2866,7 @@ void GenericExtLibBuildAll(const string &strCLRel64,
   GenericExtLibBuildBits(strCLRel32, strL32, strTmp, strPrefix, 32);
 }
 /* ------------------------------------------------------------------------- */
-const string GetFiles(const string &strExt, const string &strDir="")
+static const string GetFiles(const string &strExt, const string &strDir="")
 { // Get files and return if empty
   Dir dEntries{ strDir, strExt };
   if(dEntries.IsFilesEmpty()) return {};
@@ -2903,7 +2891,7 @@ const string GetFiles(const string &strExt, const string &strDir="")
   return strOut;
 }
 /* ------------------------------------------------------------------------- */
-void SetupZipRepo(const string &strLibPath, const string &strTmp,
+static void SetupZipRepo(const string &strLibPath, const string &strTmp,
   const string &strPSFile, bool bNoDir=false)
 { // Set destination temp directory
   const string strDir{ StrAppend(strTmp, '/', strPSFile) },
@@ -2914,7 +2902,7 @@ void SetupZipRepo(const string &strLibPath, const string &strTmp,
   SetDirectory(strDir);
 }
 /* ------------------------------------------------------------------------- */
-void SetupTarRepoNSD(const string &strLibPath, const string &strTmp,
+static void SetupTarRepoNSD(const string &strLibPath, const string &strTmp,
   const string &strPSFile)
 { // Must have .tar. in filename
   if(strLibPath.find(".tar.") == StdNPos)
@@ -2932,7 +2920,7 @@ void SetupTarRepoNSD(const string &strLibPath, const string &strTmp,
     XCL("Failed to delete tar file!", "File", strTar);
 }
 /* ------------------------------------------------------------------------- */
-void SetupTarRepo(const string &strLibPath, const string &strTmp,
+static void SetupTarRepo(const string &strLibPath, const string &strTmp,
   const string &strPSFile, const string &strPSRFile)
 { // Do the operation
   SetupTarRepoNSD(strLibPath, strTmp, strPSFile);
@@ -2940,7 +2928,7 @@ void SetupTarRepo(const string &strLibPath, const string &strTmp,
   SetDirectory({ StrAppend(strTmp, '/', strPSRFile) });
 }
 /* ------------------------------------------------------------------------- */
-int ExtLibScript(const string &strOpt, const string &strOpt2)
+static int ExtLibScript(const string &strOpt, const string &strOpt2)
 { // Lib name and base package name
   const PathSplit PSLib{ strOpt };
   const string strLib{ PSLib.strFileExt };
@@ -2960,7 +2948,9 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
   // Make extra lib name. Bail if it doesn't exist (and was specified)
   const string strLibPathX{ StrAppend(ARCDIR, '/', strLibX) };
   // Store extra lib if specified?
-  if(!strLibX.empty() && strLibX != "." && !DirLocalFileExists(strLibPathX))
+  if(!strLibX.empty() &&
+     strLibX != cCommon->CommonPeriod() &&
+     !DirLocalFileExists(strLibPathX))
     XCL("Specified dependency archive not found!", "File", strLibPathX);
   // Mandatory compiler flags
   const string
@@ -3274,22 +3264,22 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Compile 64-bit release version
     {
       SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP12);
-      const Dir dJP12{ ".", envActive.cpOBJ };
+      const Dir dJP12{ cCommon->CommonPeriod(), envActive.cpOBJ };
       for(const DirEntMapPair &dempPair : dJP12.GetFiles())
         RenameFileSafe(dempPair.first,
           StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first));
       SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP16);
-      const Dir dJP16{ ".", envActive.cpOBJ };
+      const Dir dJP16{ cCommon->CommonPeriod(), envActive.cpOBJ };
       for(const DirEntMapPair &dempPair : dJP16.GetFiles())
         RenameFileSafe(dempPair.first,
           StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first));
       SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT12);
-      const Dir dJPT12{ ".", envActive.cpOBJ };
+      const Dir dJPT12{ cCommon->CommonPeriod(), envActive.cpOBJ };
       for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
         RenameFileSafe(dempPair.first,
           StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first));
       SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT16);
-      const Dir dJPT16{ ".", envActive.cpOBJ };
+      const Dir dJPT16{ cCommon->CommonPeriod(), envActive.cpOBJ };
       for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
         RenameFileSafe(dempPair.first,
           StrFormat("$-$", strJPT16Name, dempPair.first));
@@ -3321,22 +3311,22 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Compile 32-bit release version
     {
       SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJP12);
-      const Dir dJP12{ ".", envActive.cpOBJ };
+      const Dir dJP12{ cCommon->CommonPeriod(), envActive.cpOBJ };
       for(const DirEntMapPair &dempPair : dJP12.GetFiles())
         RenameFileSafe(dempPair.first,
           StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first));
       SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJP16);
-      const Dir dJP16{ ".", envActive.cpOBJ };
+      const Dir dJP16{ cCommon->CommonPeriod(), envActive.cpOBJ };
       for(const DirEntMapPair &dempPair : dJP16.GetFiles())
         RenameFileSafe(dempPair.first,
           StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first));
       SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJPT12);
-      const Dir dJPT12{ ".", envActive.cpOBJ };
+      const Dir dJPT12{ cCommon->CommonPeriod(), envActive.cpOBJ };
       for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
         RenameFileSafe(dempPair.first,
           StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first));
       SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJPT16);
-      const Dir dJPT16{ ".", envActive.cpOBJ };
+      const Dir dJPT16{ cCommon->CommonPeriod(), envActive.cpOBJ };
       for(const DirEntMapPair &dempPair : dJPT16.GetFiles())
         RenameFileSafe(dempPair.first,
           StrFormat("$-$", strJPT16Name, dempPair.first));
@@ -3712,11 +3702,11 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Remove unneeded code
     System("if exist \"shell.c\" rm -rf \"shell.c\"");
     // Add sqlite specific flags
-    const string strSQLiteSpecific("-DSQLITE_DEFAULT_AUTOVACUUM=2 "
-      "-DSQLITE_TEMP_STORE=2 -DSQLITE_ENABLE_NULL_TRIM -DSQLITE_OS_WINNT "
-      "-DSQLITE_WIN32_NO_ANSI -DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_OMIT_WAL "
-      "-DSQLITE_OMIT_UTF16 -DSQLITE_OMIT_DEPRECATED -DSQLITE_THREADSAFE "
-      "-DSQLITE_ENABLE_MATH_FUNCTIONS *.c");
+    const string strSQLiteSpecific(
+      "-DSQLITE_DEFAULT_AUTOVACUUM=2 -DSQLITE_TEMP_STORE=2 "
+      "-DSQLITE_ENABLE_NULL_TRIM -DSQLITE_OS_WINNT -DSQLITE_WIN32_NO_ANSI "
+      "-DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_OMIT_DEPRECATED "
+      "-DSQLITE_THREADSAFE -DSQLITE_ENABLE_MATH_FUNCTIONS *.c");
     strRelFlags64 += strSQLiteSpecific;
     strRelFlags32 += strSQLiteSpecific;
     // Compile 64-bit release version -----------------------------------------
@@ -3893,7 +3883,7 @@ int ExtLibScript(const string &strOpt, const string &strOpt2)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-int CppCheck(void)
+static int CppCheck(void)
 { // Do exec, if succeeded no more code is executed
   SystemF("$ "                         "--inline-suppr "
     "--suppress=missingIncludeSystem " "--exception-handling "
@@ -3919,7 +3909,8 @@ int CppCheck(void)
 }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)
-void GotNewBuildExecutable(const string &strOldExe, const string &strNewExe)
+static void GotNewBuildExecutable(const string &strOldExe,
+  const string &strNewExe)
 { // Wait for the compiled file to be readable and writable just incase
   while(!DirCheckFileAccess(strNewExe, 6)) StdSuspend(milliseconds{ 100 });
   // Open the new executable and if succeeded?
@@ -3977,7 +3968,7 @@ void GotNewBuildExecutable(const string &strOldExe, const string &strNewExe)
 }
 #endif
 /* ------------------------------------------------------------------------- */
-void CheckForNewBuildExecutable(void)
+static void CheckForNewBuildExecutable(void)
 { // Build executable filename and temp filename
 #if defined(WINDOWS)
   // Make filename to new executable in current directory and if we have it?
@@ -3998,7 +3989,82 @@ void CheckForNewBuildExecutable(void)
 #endif
 }
 /* ------------------------------------------------------------------------- */
-int Compile(const bool bSelf)
+static void WriteVersion(void)
+{ // Create the json object to write to
+  using namespace IJson;
+  Document dOut;
+  Document::AllocatorType& dAlloc = dOut.GetAllocator();
+  dOut.SetObject();
+  // Add version number
+  dOut.AddMember("Version", Value(1).Move(), dAlloc);
+  // Add project name
+  dOut.AddMember("Project", strName, dAlloc);
+  // Build version array
+  Value vVersion{ kArrayType };
+  for(size_t stIndex = 0; stIndex < uiVer.size(); ++stIndex)
+    vVersion.PushBack(Value{uiVer[stIndex]}.Move(), dAlloc);
+  dOut.AddMember("Engine", vVersion, dAlloc);
+  // Build stringified output buffer
+  StringBuffer rsbOut;
+  Writer<StringBuffer, UTF8<>, UTF8<>> pwWriter{ rsbOut };
+  dOut.Accept(pwWriter);
+  // Open version file and if opened?
+  if(FStream{ strVerFile, FM_W_B }.
+       FStreamWriteSafe(rsbOut.GetString(), rsbOut.GetSize()) !=
+         rsbOut.GetSize())
+    XCL("Cannot open version file for writing!", "File", strVerFile);
+}
+/* ------------------------------------------------------------------------- */
+static void ReadVersion(void)
+{ // Create the json object and parse it
+  const Json jsManifest{ strVerFile };
+  // Check version is correct
+  const unsigned int uiVersionRequired = 1;
+  const unsigned int uiVersion = jsManifest.GetInteger("Version");
+  if(uiVersion != uiVersionRequired)
+    XC("Invalid build manifest version!",
+       "Manfiest", jsManifest.IdentGet(), "Required", uiVersionRequired,
+       "Actual",   uiVersion);
+  // Look for version information and throw error if there is none
+  using Lib::RapidJson::Value;
+  const Value &rjvConstants = jsManifest.GetValue("Engine");
+  if(!rjvConstants.IsArray())
+    XC("Constants array not valid!", "Manfiest", jsManifest.IdentGet());
+  // Must have 4 values
+  if(rjvConstants.Size() != uiVer.size())
+    XC("Invalid array count!", "Manfiest", jsManifest.IdentGet(),
+       "Expected", uiVer.size(), "Actual", rjvConstants.Size());
+  for(unsigned int uiIndex = 0; uiIndex < uiVer.size(); ++uiIndex)
+  { // Must be all integers
+    const Value &rjvInteger = rjvConstants[uiIndex];
+    if(!rjvInteger.IsInt())
+      XC("Integer not valid!",
+         "Manfiest", jsManifest.IdentGet(), "Index", uiIndex);
+    // Set actual integer
+    uiVer[uiIndex] = static_cast<unsigned int>(rjvInteger.GetInt());
+  } // Set name of project
+  strName = StdMove(jsManifest.GetString("Project"));
+}
+/* ------------------------------------------------------------------------- */
+static int ChangeProject(const string &strProj)
+{ // Make sure the directory specified is valid
+  if(ssIgnore.find(strProj) != ssIgnore.cend() ||
+       strProj.find('/') != StdNPos || DirValidName(strProj) != VR_OK)
+    XC("Invalid project name!", "Project", strProj);
+  // Get directory name. Bail if project doesnt exist
+  if(!DirLocalDirExists(strProj))
+    XCL("No such project directory exists!", "Project", strProj);
+  // Set the new project
+  strName = strProj;
+  // Write the new project
+  WriteVersion();
+  // Show success
+  cout << "Switch project to '" << strProj << "' succeeded!" << endl;
+  // Done
+  return 0;
+}
+/* ------------------------------------------------------------------------- */
+static int Compile(const bool bSelf)
 { // Storage for filenames and command lines
   string strCpp,
          strRc,
@@ -4128,44 +4194,41 @@ int Compile(const bool bSelf)
         uiVer[2] = tD.tm_mday, uiVer[3] = 1;
       // Update revision
       else uiVer[3]++;
-    } // Write new version information
-    const string strVerFile{ StrFormat("$/$.ver", ETCDIR, ENGINENAME) };
-    { // Write the new version information
-      if(FStream verFile{ strVerFile, FM_W_B })
-        verFile.FStreamWriteStringEx("$ $ $ $ $", uiVer[0], uiVer[1],
-          uiVer[2], uiVer[3], strName);
-      else XCL("Cannot open version file for writing!", "File", strVerFile);
-    } // Write new version header
-    const string strVersion{
-        StrFormat("$,$,$,$", uiVer[0], uiVer[1], uiVer[2], uiVer[3]) },
-      strVersionStr{ StrFormat("\"$.$.$.$\"",
+    } // Update version information
+    WriteVersion();
+    // Write new version header
+    const string
+      strVersion{ StrFormat("$,$,$,$",
         uiVer[0], uiVer[1], uiVer[2], uiVer[3]) },
+      strVersionStr{ StrFormat("\"$.$.$.$\"",
+       uiVer[0], uiVer[1], uiVer[2], uiVer[3]) },
       strDate{ StrFormat("\"$\"", cmSys.FormatTime()) },
       strFile{ StrAppend(SRCDIR, '/', VERHEADER) },
-      strText{ StrFormat("$\n/* $ */\n"
-      "#define VER_NAME    $$$ // Name of engine\n"
-      "#define VER_AUTHOR  $$ // Author of engine\n"
-      "#define VER_MAJOR   $$ // Version major (year)\n"
-      "#define VER_MINOR   $$ // Version minor (month)\n"
-      "#define VER_BUILD   $$ // Version build (day)\n"
-      "#define VER_REV     $$ // Version rev (build#)\n"
-      "#define VER_STR_NQ  $$ // Version as literal\n"
-      "#define VER_STR     $$ // Version as string\n"
-      "#define VER_DATE    $$ // Compilation date\n"
-      "/* == EoF =========================================================== "
-            "EoF == */\n",
-      BuildHPPHeader(VERHEADER,
-        "This file is automatically generated by build. Changes are lost when "
-        "the engine is rebuilt."),
-      string(73, '-'),
-      left, setw(33), StrAppend('\"',strEName,'\"'),
-            setw(33), StrAppend('\"',strEAuthor,'\"'),
-            setw(33), uiVer[0],   setw(33), uiVer[1],
-            setw(33), uiVer[2],   setw(33), uiVer[3],
-            setw(33), strVersion, setw(33), strVersionStr,
-            setw(33), strDate) };
+      strText{ StrFormat(
+        "$\n/* $ */\n"
+        "#define VER_NAME    $$$ // Name of engine\n"
+        "#define VER_AUTHOR  $$ // Author of engine\n"
+        "#define VER_MAJOR   $$ // Version major (year)\n"
+        "#define VER_MINOR   $$ // Version minor (month)\n"
+        "#define VER_BUILD   $$ // Version build (day)\n"
+        "#define VER_REV     $$ // Version rev (build#)\n"
+        "#define VER_STR_NQ  $$ // Version as literal\n"
+        "#define VER_STR     $$ // Version as string\n"
+        "#define VER_DATE    $$ // Compilation date\n"
+        "/* == EoF =========================================================== "
+              "EoF == */\n",
+        BuildHPPHeader(VERHEADER,
+          "This file is automatically generated by build. Changes are lost when "
+          "the engine is rebuilt."),
+        string(73, '-'),
+        left, setw(33), StrAppend('\"',strEName,'\"'),
+              setw(33), StrAppend('\"',strEAuthor,'\"'),
+              setw(33), uiVer[0],   setw(33), uiVer[1],
+              setw(33), uiVer[2],   setw(33), uiVer[3],
+              setw(33), strVersion, setw(33), strVersionStr,
+              setw(33), strDate) };
     // Write new version header
-    if(FStream{ strFile, FM_W_B }.FStreamWriteString(strText)
+    if(FStream{ strFile, FM_W_B }.FStreamWriteStringSafe(strText)
       != strText.length())
         XCL("Could not write version header!", "File", strFile);
   } // Check files are readable and writable
@@ -4277,7 +4340,7 @@ int Compile(const bool bSelf)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-int DebugApp(void)
+static int DebugApp(void)
 { // Goto assets directory
   SetDirectory(strName);
   // Execute the debugger
@@ -4288,10 +4351,9 @@ int DebugApp(void)
   else throw runtime_error{ "unknown arch" };
 }
 /* ------------------------------------------------------------------------- */
-bool CheckCommandLine(string &strX1, string &strX2)
+static bool CheckCommandLine(string &strX1, string &strX2)
 { // Get first argument
-  const string &strTokens =
-    cCmdLine->CmdLineGetArgList().empty() ?
+  const string &strTokens = cCmdLine->CmdLineGetArgList().empty() ?
     cCommon->CommonBlank() : cCmdLine->CmdLineGetArgList()[0];
   // Function data structure
   struct FuncData {
@@ -4299,7 +4361,10 @@ bool CheckCommandLine(string &strX1, string &strX2)
     const uint64_t     uiAdd, uiRemove; // Flags to add and remove
     const char*const   cpDesc;          // Description of flag
   }; // Wrap into a list
-  MAPPACK_BUILD(FuncList, const string, const FuncData);
+  typedef pair<const string, const FuncData> FuncListMapPair;
+  typedef map<FuncListMapPair::first_type,
+              FuncListMapPair::second_type> FuncListMap;
+  typedef FuncListMap::const_iterator FuncListMapConstIt;
   // Command-line argument to flag and description list
   const FuncListMap flData{
   /* ----------------------------------------------------------------------- */
@@ -4453,7 +4518,7 @@ bool CheckCommandLine(string &strX1, string &strX2)
   return true;
 }
 /* ------------------------------------------------------------------------- */
-void ReadProject(void)
+static void ReadProject(void)
 { // If project does not exist then show the error
   if(!DirLocalDirExists(strName))
     XCL("Could not find project directory!",
@@ -4481,26 +4546,7 @@ void ReadProject(void)
   strAuthor = StdMove(rjvConstants["app_author"].GetString());
 }
 /* ------------------------------------------------------------------------- */
-void ReadVersion(void)
-{ // Build path to version file and if succeeded?
-  const string strVerFile{ StrFormat("$/$.ver", ETCDIR, ENGINENAME) };
-  if(FStream fsVerFile{ strVerFile, FM_R_T })
-  { // Read five tokens and make sure we read five
-    Token tLines{ fsVerFile.FStreamReadStringSafe(), " ", 5 };
-    if(tLines.size() != 5)
-      XCL("Could not read version file!",
-          "File", strVerFile, "Tokens", tLines.size());
-    // Convert version numbers. Only read the first four tokens because the
-    // syntax of these are <int> <int> <int> <int> <string>
-    for(size_t stIndex = 0; stIndex < 4; ++stIndex)
-      uiVer[stIndex] = StrToNum<unsigned int>(tLines[stIndex]);
-    // Set name of project
-    strName = StdMove(tLines[tLines.size()-1]);
-  } // Failed to open file
-  else XCL("Could not open version file!", "File", strVerFile);
-}
-/* ------------------------------------------------------------------------- */
-int ShowVersion(void)
+static int ShowVersion(void)
 { // Write extra details to log
   cLog->LogDebugExSafe(
     "Executable drive: \"$\".\n"    "Executable directory: \"$\".\n"
@@ -4516,21 +4562,16 @@ int ShowVersion(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-void SelectEnvironment(const Environment &envNew)
+static void SelectEnvironment(const Environment &envNew)
 { // Copy new environment over. GCC will complain if you try to memcpy to
   // a structure. It thinks it's a class but it's not, it's a struct!
   memcpy(reinterpret_cast<void*>(&envActive), &envNew, sizeof(Environment));
 }
 /* ------------------------------------------------------------------------- */
-int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
+static int Build(const int iArgC, ArgType**const saArgV,
+  ArgType**const saEnv) try
 { // Set this thread's name for debugger and that it is high performance
   SysInitThread("main", STP_MAIN);
-  // Initialise critical command-line and logging systems. We cannot really
-  // do anything else special until we've enabled these subsystems.
-  Common engCommon;
-  DirBase engDirBase;
-  CmdLine engCmdLine{ iArgC, saArgV, saEnv };
-  Log engLog;
   // Dependencies required only in this scope
   using namespace IArchive::P;         using namespace IArgs::P;
   using namespace IAsset::P;           using namespace ICmdLine::P;
@@ -4540,10 +4581,14 @@ int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
   using namespace IParser::P;          using namespace IStat::P;
   using namespace IThread::P;          using namespace IUtil::P;
   using namespace IUtf::P;
-  // Initialise other systems. The order is important!
-  Stats  engStats;   Threads  engThreads;   EvtMain  engEvtMain;
-  System engSystem;  LuaFuncs engLuaFuncs;  Archives engArchives;
-  Assets engAssets;  Crypt    engCrypt;     Jsons    engJsons;
+  // Initialise required subsystems
+  const struct Engine : private Common, private DirBase, private CmdLine,
+    private Log, private Stats, private Threads, private EvtMain,
+    private System, private LuaFuncs, private Archives, private Assets,
+    private Crypt, private Jsons
+  { Engine(const int iArgC, ArgType**const saArgV, ArgType**const saEnv) :
+      CmdLine{ iArgC, saArgV, saEnv } { }
+  } engEngine{ iArgC, saArgV, saEnv };
   // Force current working directory to the base directory
   SetDirectory(
 #if defined(WINDOWS)
@@ -4555,9 +4600,9 @@ int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
   // Check for unfinished install of new build executable
   CheckForNewBuildExecutable();
   // Show header
-  cout << strEName << "(tm), Project Management Utility, "
+  cout << strEName << "™, Project Management Utility, "
        << cSystem->ENGCompiled()
-       << ".\nCopyright (c) " << strEAuthor << ", 2006-"
+       << ".\nCopyright © " << strEAuthor << ", 2006-"
        << cmSys.FormatTime("%Y")
        << ". All Rights Reserved.\n\n";
   // Initialise default flags
@@ -4593,9 +4638,8 @@ int Build(int iArgC, ArgType**saArgV, ArgType**saEnv) try
   XC("Nothing to do!", "Flags", uiFlags);
 } // exception occured?
 catch(const exception &e)
-{ // Print exception emssage
+{ // Print exception message and return error status
   cout << "exception > " << e.what() << "\n";
-  // Return error status
   return -1;
 }
 /* ------------------------------------------------------------------------- */

@@ -408,11 +408,11 @@ static const string CryptEntEncode(const string &strS)
   // Until null character. Which control token?
   for(UtfDecoder utfSrc{ strS }; unsigned int uiChar = utfSrc.Next();)
   { // Characters not these character ranges will be encoded
-    if(uiChar <= 31                  || // Control characters
-      (uiChar >= 33 && uiChar <= 47) || // Symbols before numbers
-      (uiChar >= 58 && uiChar <= 64) || // Symbols before capitals
-       uiChar >= 123)                   // Extended characters
-      osS << "&#x" << uiChar << ';';
+    if(uiChar <  ' '                   || // Control characters
+      (uiChar >= '!' && uiChar <= '/') || // Symbols before numbers
+      (uiChar >= ':' && uiChar <= '@') || // Symbols before capitals
+       uiChar >= '{')                     // Extended characters
+      osS << cCommon->CommonEnt() << uiChar << ';';
     // Character is usable as is
     else osS << static_cast<char>(uiChar);
   } // Return string
@@ -630,8 +630,41 @@ static Crypt *cCrypt = nullptr;        // Address of global class
 class Crypt :                          // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   public InitHelper                    // The crypto manager class
-{ /* -------------------------------------------------------------- */ private:
+{ /* ----------------------------------------------------------------------- */
   const StrVStrVMap svsvmEnt;          // Html entity decoding lookup table
+  /* -- De-Initialise cryptographic systems -------------------------------- */
+  void CryptDeInit(void)
+  { // Ignore if not initialised
+    if(IHNotDeInitialise()) return;
+    // De-initialise openssl
+    OPENSSL_cleanup();
+    // Overwrite loaded private key so it doesn't linger in memory
+    SetDefaultPrivateKey();
+  }
+  /* -- Initialise cryptographic systems ----------------------------------- */
+  void CryptInit(void)
+  { // Set address of global class
+    cCrypt = this;
+    // Use sql to allocate memory?
+    if(!CRYPTO_set_mem_functions(OSSLAlloc, OSSLReAlloc, OSSLFree))
+      XC("Failed to setup allocator for crypto interface!");
+    // Generate CRC table (for lzma lib)
+    CrcGenerateTable();
+    // Init openSSL
+    OPENSSL_init();
+    // Class initialised
+    IHInitialise();
+    // Loop until...
+    do
+    { // Get some random entropy from the system hardware
+      const Memory mData{ cSystem->GetEntropy() };
+      // Set seed from system class to opensl
+      RAND_seed(mData.MemPtr<void>(), mData.MemSize<int>());
+      // Make a simple request to initialise more entropy
+      CryptRandom<int>();
+    } // ...PRNG is ready
+    while(!RAND_status());
+  }
   /* ----------------------------------------------------------------------- */
   static void *OSSLAlloc(size_t stSize, const char*const, const int)
     { return StdAlloc<void>(stSize); }
@@ -728,8 +761,10 @@ class Crypt :                          // Actual class body
     } // Return string
     return strS;
   }
-  /* -- Constructor -------------------------------------------------------- */
-  Crypt(void) :
+  /* -- Destructor ---------------------------------------------- */ protected:
+  DTORHELPER(~Crypt, CryptDeInit())
+  /* -- Default constructor ------------------------------------------------ */
+  Crypt(void) :                        // No arguments
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Initialise init helper
     svsvmEnt{                          // Define HTML entities
@@ -837,39 +872,8 @@ class Crypt :                          // Actual class body
             { 0x109CF37A284B8910,      // Default IV key (1/2) 128-bits
               0x89FE280958CFD102 }}},  // Default IV key (2/2)
     pkKey(pkDKey)                      // Modified private key
-    /* -- Code ------------------------------------------------------------- */
-    { // Set address of global class
-      cCrypt = this;
-      // Use sql to allocate memory?
-      if(!CRYPTO_set_mem_functions(OSSLAlloc, OSSLReAlloc, OSSLFree))
-        XC("Failed to setup allocator for crypto interface!");
-      // Generate CRC table (for lzma lib)
-      CrcGenerateTable();
-      // Init openSSL
-      OPENSSL_init();
-      // Class initialised
-      IHInitialise();
-      // Loop until...
-      do
-      { // Get some random entropy from the system hardware
-        const Memory mData{ cSystem->GetEntropy() };
-        // Set seed from system class to opensl
-        RAND_seed(mData.MemPtr<void>(), mData.MemSize<int>());
-        // Make a simple request to initialise more entropy
-        CryptRandom<int>();
-      } // ...PRNG is ready
-      while(!RAND_status());
-    }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPERBEGIN(~Crypt)
-  // Ignore if not initialised
-  if(IHNotDeInitialise()) return;
-  // De-initialise openssl
-  OPENSSL_cleanup();
-  // Overwrite loaded private key so it doesn't linger in memory
-  SetDefaultPrivateKey();
-  // Done
-  DTORHELPEREND(~Crypt)
+    /* -- Initialise cryptography ------------------------------------------ */
+    { CryptInit(); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

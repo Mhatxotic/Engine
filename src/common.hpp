@@ -14,12 +14,13 @@ namespace P {                          // Start of public module namespace
 class Common;                          // Prototype
 static Common *cCommon = nullptr;      // Global access to class
 class Common                           // Common variables class
-{ /* -- Private variables -------------------------------------------------- */
+{ /* -- Common strings ----------------------------------------------------- */
   const string strTrue, strFalse, strY, strN, strEquals, strNOne, strZero,
     strOne, strSpace, strDblSpace, strBlank, strCr, strLf, strCrLf, strCrLf2,
     strLfCr, strFSlash, strUnspec, strNull, strPeriod, str2Period, strEllipsis,
-    strLuaName, strPrivate, strProtected, strEmpty, strInvalid, strAsterisk;
-  const char       cFSlash;            // Forward slash character
+    strLuaName, strPrivate, strProtected, strEmpty, strInvalid, strAsterisk,
+    strEnt;
+  /* -- Miscellaneous common variables ------------------------------------- */
   const char*const cpBlank;            // Blank C-String
   locale           lLocaleCurrent;     // Current locale
   /* --------------------------------------------------------------- */ public:
@@ -46,7 +47,6 @@ class Common                           // Common variables class
   const string &CommonDblSpace(void) const { return strDblSpace; }
   const string &CommonEllipsis(void) const { return strEllipsis; }
   const string &CommonFSlash(void) const { return strFSlash; }
-  char CommonCFSlash(void) const { return cFSlash; }
   const string &CommonUnspec(void) const { return strUnspec; }
   const string &CommonNull(void) const { return strNull; }
   const string &CommonPeriod(void) const { return strPeriod; }
@@ -57,6 +57,7 @@ class Common                           // Common variables class
   const string &CommonEmpty(void) const { return strEmpty; }
   const string &CommonInvalid(void) const { return strInvalid; }
   const string &CommonAsterisk(void) const { return strAsterisk; }
+  const string &CommonEnt(void) const { return strEnt; }
   /* -- Default constructor ------------------------------------- */ protected:
   Common(void) :                       // No parameters
     /* -- Initialisers ----------------------------------------------------- */
@@ -73,8 +74,8 @@ class Common                           // Common variables class
     strEllipsis{ "..." },              strLuaName{ "__name" },
     strPrivate{ "<Private>" },         strProtected{ "<Protected>" },
     strEmpty{ "<Empty>" },             strInvalid{ "<Invalid>" },
-    strAsterisk{ "*" },                cFSlash(strFSlash[0]),
-    cpBlank(strBlank.c_str()),         lLocaleCurrent{ strBlank }
+    strAsterisk{ "*" },                strEnt{ "&#x" },
+    cpBlank(strBlank.data()),          lLocaleCurrent{ strBlank }
     /* -- Set global pointer to static class ------------------------------- */
     { cCommon = this; }
 };/* ----------------------------------------------------------------------- */

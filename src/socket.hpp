@@ -1367,7 +1367,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
                  strB{ LuaUtilGetCppStr(lS, 7) };
     LuaUtilCheckFunc(lS, 8);
     // Request must begin with a forward slash
-    if(strR.front() != cCommon->CommonCFSlash())
+    if(strR.front() != '/')
       XC("Resource is invalid!", "Resource", strR);
     // Set address and TLS cipher
     SetAddress(strA, uiP);

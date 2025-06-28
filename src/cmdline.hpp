@@ -61,16 +61,18 @@ struct CmdLine                         // Members initially public
     const StrStrMapConstIt eiEnv{ lEnv.find(strEnv) };
     if(eiEnv == lEnv.cend())
       XC("The specified environment variable is required and missing!",
-         "Variable", strEnv);
+         "Variable", strEnv, "Suffix", strSuffix);
     // Check validity of the specified environmen variable
     const string &strEnvVal = eiEnv->second;
     const ValidResult vRes = DirValidName(strEnvVal, VT_TRUSTED);
     if(vRes == VR_OK) return StrAppend(strEnvVal, strSuffix);
     // Show error otherwise
-    XC("The specified environment variable is invalid!",
-       "Variable", strEnv,
-       "Reason",   cDirBase->DirBaseVNRtoStr(vRes),
-       "Result",   vRes);
+    XC("The specified environment variable directory is invalid!",
+       "Variable",  strEnv,
+       "Suffix",    strSuffix,
+       "Directory", strEnvVal,
+       "Reason",    cDirBase->DirBaseVNRtoStr(vRes),
+       "Result",    vRes);
   }
   /* -- Get parameter total ------------------------------------------------ */
   size_t CmdLineGetTotalCArgs(void) const

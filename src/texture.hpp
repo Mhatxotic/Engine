@@ -618,8 +618,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     const GLsizei siWidth, const GLsizei siHeight, const TextureType ttPixType,
     const GLvoid*const vpData, const GLsizei siStride)
   { // Set stride and alignment
-    GL(cOgl->SetUnpackRowLength(siStride),
-      "Failed to set unpack row length!",
+    GL(cOgl->SetUnpackRowLength(siStride), "Failed to set unpack row length!",
       "Texture", IdentGet(), "Stride", siStride);
     // Update the texture
     UpdateEx(uiTexId, iLeft, iTop, siWidth, siHeight, ttPixType, vpData);

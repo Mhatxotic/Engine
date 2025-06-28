@@ -224,9 +224,9 @@ class EvtMain :                        // Event list for render thread
       EMC(LUA_PAUSE),       EMC(LUA_REDRAW),       EMC(LUA_REINIT),
       EMC(LUA_RESUME),
       /* ------------------------------------------------------------------- */
-      EMC(WIN_FOCUS),       EMC(WIN_ICONIFY),      EMC(WIN_MOVED),
-      EMC(WIN_REFRESH),     EMC(WIN_RESIZED),      EMC(WIN_SCALE),
-      EMC(WIN_CLOSE),
+      EMC(WIN_CLOSE),       EMC(WIN_FOCUS),        EMC(WIN_ICONIFY),
+      EMC(WIN_MOVED),       EMC(WIN_REFRESH),      EMC(WIN_RESIZED),
+      EMC(WIN_SCALE),
       /* ------------------------------------------------------------------- */
       EMC(VID_FB_REINIT),   EMC(VID_MATRIX_REINIT),
       /* ------------------------------------------------------------------- */
