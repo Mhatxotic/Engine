@@ -30,6 +30,8 @@
 /* == Compiled type setup ================================================== */
 #if !defined(__cplusplus)              // Must be compiling in C++ mode
 # error Please use a C++ compiler such as GCC, CLANG or MSVC!
+#elif __cplusplus < 202002L            // Must be using a C++20 compiler
+# error Must use a C++ 20 or better compiler!
 #elif defined(_WIN32)                  // Only applies to MS compiler
 # define WINDOWS                       // Using windows
 # if defined(ALPHA)                    // Debugging?
@@ -41,10 +43,19 @@
 #  define NDEBUG                       // No assertions
 #  define _NDEBUG                      // No assertions
 # endif                                // Debugging check
-# if defined(__clang__)                // Actually using CLang?
-#  if __cplusplus < 202002L            // Must be using a C++20 compiler
-#   error Must use a C++20 standards clang compiler!
-#  endif                               // C++ standards check
+# if defined(__MINGW64__)              // Using MINGW64 compiler?
+#  define COMPILER_NAME                "MingW64"
+#  define COMPILER_VERSION             STR(__MINGW64_MAJOR_VERSION) "." \
+                                       STR(__MINGW64_MINOR_VERSION) "." \
+                                       STR(__MINGW64_PATCHLEVEL)
+#  define _M_AMD64                   1 // Not defined on MINGW64 compiler
+# elif defined(__MINGW32__)            // Using MINGW32 compiler?
+#  define COMPILER_NAME                "MingW32"
+#  define COMPILER_VERSION             STR(__MINGW32_MAJOR_VERSION) "." \
+                                       STR(__MINGW32_MINOR_VERSION) "." \
+                                       STR(__MINGW32_PATCHLEVEL)
+#  define _M_IX86                    1 // Not defined on MINGW64 compiler
+# elif defined(__clang__)              // Actually using CLang?
 #  define COMPILER_NAME                "CLang"
 #  define COMPILER_VERSION             STR(__clang_major__) "." \
                                        STR(__clang_minor__) "." \
@@ -133,8 +144,6 @@
                                        STR(__GNUC_PATCHLEVEL__)
 # define _DARWIN_USE_64_BIT_INODE      // For 64-bit size values
 # define _LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS // On in MSVC & GCC
-#elif __cplusplus < 202002L            // Must be using a C++20 compiler
-# error Must use a C++ 20 or better compiler!
 #elif defined(__linux__)               // Linux detected?
 # define LINUX                         // Using Linux
 # define COMPILER_NAME                 "GCC"
