@@ -582,6 +582,21 @@ static const string LuaUtilGetCppFile(lua_State*const lS, const int iParam)
   // Return the constructed string
   return strFile;
 }
+/* -- Get and return a C++ string and throw exception if not string/empty -- */
+static const string LuaUtilGetCppDir(lua_State*const lS, const int iParam)
+{ // Test to make sure if supplied parameter is a valid string.
+  LuaUtilCheckStr(lS, iParam);
+  // Get the filename and verify that the filename is valid.
+  const string strFile{ LuaUtilToCppString(lS, iParam) };
+  switch(const ValidResult vrId = DirValidName(strFile))
+  { // Ok or current directory? Allow the name.
+    case VR_OK: case VR_CURRENT: return strFile;
+    // Anything else?
+    default: XC("Invalid parameter!",
+      "Param",  iParam,                          "File",     strFile,
+      "Reason", cDirBase->DirBaseVNRtoStr(vrId), "ReasonId", vrId);
+  } // We don't get here.
+}
 /* -- Get and return a C++ string and throw exception if not a string ------ */
 static const string LuaUtilGetCppStrUpper(lua_State*const lS, const int iParam)
 { // Throw if requested parameter isn't a string else return it in uppercase

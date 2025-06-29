@@ -5,20 +5,20 @@
 # *** All Rights Reserved Worldwide.
 
 # Binary locations
-BIN=/bin
-BINCHMOD=$BIN/chmod
-BINECHO=$BIN/echo
-USRBIN=/usr/bin
-BINREALPATH=$BIN/realpath
-USRBINBASENAME=$USRBIN/basename
-USRBINDIRNAME=$USRBIN/dirname
-USRBINREADLINK=$USRBIN/readlink
-USRBINGDB=$USRBIN/gdb
+ROOTBIN=/bin
+BINCHMOD=$ROOTBIN/chmod
+BINECHO=$ROOTBIN/echo
+ROOTUSRBIN=/usr/bin
+BINREALPATH=$ROOTBIN/realpath
+USRBINBASENAME=$ROOTUSRBIN/basename
+USRBINDIRNAME=$ROOTUSRBIN/dirname
+USRBINREADLINK=$ROOTUSRBIN/readlink
+USRBINGDB=$ROOTUSRBIN/gdb
 USRBINLLDB=lldb
-#USRBINLLDB=$USRBIN/lldb
-USRBINTR=$USRBIN/tr
-USRBINUNANE=$USRBIN/uname
-USRBINVALGRIND=$USRBIN/valgrind
+#USRBINLLDB=$ROOTUSRBIN/lldb
+USRBINTR=$ROOTUSRBIN/tr
+USRBINUNANE=$ROOTUSRBIN/uname
+USRBINVALGRIND=$ROOTUSRBIN/valgrind
 ENGBIN=../bin
 
 # If this script was symbolically linked?
@@ -55,6 +55,7 @@ UNAME=$($USRBINUNANE -s)
 case "$UNAME" in
   Linux*)
     if [ ! -z $DEBUG ]; then
+      export WAYLAND_DEBUG=1
       PREFIX="$USRBINGDB --args "
     fi
     if [ ! -z $VALGRIND ]; then

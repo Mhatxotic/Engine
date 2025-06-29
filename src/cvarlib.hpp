@@ -2,11 +2,13 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This module is parsed at the main procedure in 'core.cpp' and       ## **
-** ## defines the default cvars and their callbacks. Make sure to use the ## **
-** ## helper CB(STR) macros to help define your callbacks. If you add,    ## **
-** ## remove or change the order of these cvars, you must update the      ## **
-** ## 'CVarEnums' in 'cvardef.hpp' to match the order in this list. This  ## **
+** ## This module is included by 'core.cpp' inside the 'Core' class       ## **
+** ## constructor initialisers and thus a part of the 'E::ICore'          ## **
+** ## namespace which contains all the default console variables. Make    ## **
+** ## sure to update the 'CVarEnums' enum scope in 'cvardef.hpp' if you   ## **
+** ## modify the order, remove or add new console commands. Make sure to  ## **
+** ## use the helper CB(STR) macros to help define your callbacks.        ## **
+** ######################################################################### **
 ** ## This file is also parsed by the engine project management           ## **
 ** ## utility to help create html documentation. New cvar descriptions    ## **
 ** ## start with '// !' with the cvar name and continues on each          ## **
@@ -42,7 +44,7 @@ CVarItemStaticList{{
 #if !defined(RELEASE)                  // Not release version?
   "4",                                 // Default of DEBUG for log level
 #else                                  // Release version?
-  "2",                                 // Default of WARNING for log level
+  cCommon->CommonTwo(),                // Default of WARNING for log level
 #endif                                 // Release type check
   /* ----------------------------------------------------------------------- */
   CB(cLog->SetLevel, LHLevel), TUINTEGER|PANY },
@@ -66,7 +68,7 @@ CVarItemStaticList{{
 // ? then archives, '2' to load from archives first and then try the disk or
 // ? '3' to load from disk only.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_fsoverride", "2",
+{ CFL_NONE, "ast_fsoverride", cCommon->CommonTwo(),
   CB(AssetSetFSOverride, FSOverrideType), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! AST_EXEBUNDLE
@@ -131,6 +133,21 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_NONE, "ast_modbundle", cCommon->CommonOne(),
   CB(ArchiveInitPersist, bool), TBOOLEAN|PBOOT|PSYSTEM },
+/* ------------------------------------------------------------------------- */
+// ! AST_SAFETYMODE
+// ? Specifies the default file access safety mode. Specify 0 to completely
+// ? disable this feature, 1 for very basic checks such as checking pathnames
+// ? for invalid control characters, too long pathnames, or 2 (default) to
+// ? fully check each path part which denies attempting to escape above the
+// ? directory pointed by 'ast_basedir', using directories '.' and '..',
+// ? reserved Windows system device names and Windows drive letters are denied.
+// ? Note that '.' is allowed with directory enumeration functions. Non-default
+// ? settings are provided for troubleshooting purposes only. If this setting
+// ? is changed, any file on the system that the calling user has access rights
+// ? to can be accessed.
+/* ------------------------------------------------------------------------- */
+{ CFL_NONE, "ast_safetymode", cCommon->CommonTwo(),
+  CB(cDirBase->SetDefaultSafetyMode, ValidType), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DB
 // ? Specifies the Sql database filename to use. This filename is subject
@@ -539,7 +556,7 @@ CVarItemStaticList{{
 // ? 2 = Same as 1 but ALLOWS when OS's has admin as default (i.e. XP!).
 // ? The default value is 2.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_admin", "2",
+{ CFL_NONE, "err_admin", cCommon->CommonTwo(),
   CB(cSystem->CheckAdminModified, unsigned int), TUINTEGER|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! ERR_CHECKSUM
@@ -585,7 +602,7 @@ CVarItemStaticList{{
 #if defined(RELEASE)
   "3",
 #else
-  "2",
+  cCommon->CommonTwo(),
 #endif
   /* ----------------------------------------------------------------------- */
   CB(cCore->CoreErrorBehaviourModified, CoreErrorReason), TUINTEGER|PSYSTEM },
@@ -1271,7 +1288,7 @@ CVarItemStaticList{{
 // ? troubleshooting purposes only and serves no other purpose. The default is
 // ? 2 with a core profile.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_ctxminor", "2",
+{ CFL_VIDEO, "vid_ctxminor", cCommon->CommonTwo(),
   CB(cDisplay->CtxMinorChanged, int), TINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_CLEAR
@@ -1488,7 +1505,7 @@ CVarItemStaticList{{
 // ? (default) for GLFW_ANY_RELEASE_BEHAVIOR, 1 for GLFW_RELEASE_BEHAVIOR_FLUSH
 // ? or 2 for GLFW_RELEASE_BEHAVIOR_NONE.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_release", "2",
+{ CFL_VIDEO, "vid_release", cCommon->CommonTwo(),
   CB(cDisplay->ReleaseChanged, size_t), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_RFBO
@@ -1498,7 +1515,7 @@ CVarItemStaticList{{
 // ? low and many frame buffers are used. Only the app author needs to be
 // ? concerned with this value and can only be set in the application manifest.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_rfbo", "2",
+{ CFL_VIDEO, "vid_rfbo", cCommon->CommonTwo(),
   CB(FboSetOrderReserve, size_t), TINTEGER|PSYSTEM|CUNSIGNED|PBOOT },
 /* ------------------------------------------------------------------------- */
 // ! VID_RFLOATS
@@ -1516,7 +1533,7 @@ CVarItemStaticList{{
 // ? for GLFW_NO_RESET_NOTIFICATION, 1 (default) for
 // ? GLFW_LOSE_CONTEXT_ON_RESET or 2 for GLFW_NO_ROBUSTNESS.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_robustness", "2",
+{ CFL_VIDEO, "vid_robustness", cCommon->CommonTwo(),
   CB(cDisplay->RobustnessChanged, size_t), TUINTEGER|PBOOT|PSYSTEM },
 /* ------------------------------------------------------------------------- */
 // ! VID_SIMPLEMATRIX
@@ -1702,6 +1719,21 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_NONE, "log_dylibs", cCommon->CommonZero(),
   CB(cSystem->DumpModuleList, bool), TBOOLEAN|PANY },
+/* ------------------------------------------------------------------------- */
+// ! COM_FLAGS
+// ? Specifies compatibility flags. Great care is taken to make sure the engine
+// ? works on any Ubuntu, MacOS or Windows system, when upgrading third-party
+// ? components, problems may occur. These work as temporary workarounds to
+// ? make the engine work flawlessly on certain systems. By default, all flags
+// ? are enabled by default but you can selectively disable them in order to
+// ? to assist with troubleshooting. The aim is to resolve all these issues
+// ? so most of the time 'com_flags' has no function whatsoever...
+// ? [Bit 1/Linux] = If Wayland is detected then the window and video system
+// ?                 is restarted after creating it initially to fix a
+// ?                 graphical corruption where you need to resize to fix it.
+/* ------------------------------------------------------------------------- */
+{ CFL_NONE, "com_flags", cCommon->CommonNegOne(),
+  CB(cCore->CoreProcessCompatibilityFlags, uint64_t), TINTEGER|PANY },
 /* -- Undefines ------------------------------------------------------------ */
 #undef CBSTR                           // Done with string function callback
 #undef CB                              // Done with int function callback

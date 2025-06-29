@@ -217,6 +217,7 @@
 #include <stdexcept>                   // Runtime errors
 #include <string>                      // String containers
 #include <thread>                      // Operating system threads
+#include <unordered_set>               // Unordered set
 #include <vector>                      // Dynamic arrays
 /* -- More checks ---------------------------------------------------------- */
 #if CHAR_BIT != 8                      // Sanity check bits-per-byte

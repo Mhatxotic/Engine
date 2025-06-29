@@ -191,8 +191,11 @@ class SysPipe :
     haParentToChild.CloseHandles();
   }
   /* -- Constructor with init ---------------------------------------------- */
-  void Init(const string &strCmdLine, const ValidType vtId=VT_UNTRUSTED)
+  void Init(const string &strCmdLine, const ValidType vtId)
     { if(const Args aList{ strCmdLine }) InitArgs(strCmdLine, aList, vtId); }
+  /* -- Constructor with init with default safety mode --------------------- */
+  void Init(const string &strCmdLine)
+    { Init(strCmdLine, cDirBase->DirBaseGetSafetyMode()); }
   /* -- Finished sending --------------------------------------------------- */
   void SendFinish(void)
   { // Ignore if write handle already closed

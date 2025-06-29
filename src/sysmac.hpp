@@ -194,6 +194,15 @@ class SysCore :
     // Return the number
     return sysctlbyname(cpS, &tOut, &stOut, nullptr, 0) < 0 ? 0 : tOut;
   }
+  /* ----------------------------------------------------------------------- */
+  void InitMemorySize(void)
+  { // Store real total memory and return if succesful
+    memData.qMTotal = GetSysCTLInfoNum<uint64_t>("hw.memsize");
+    if(memData.qMTotal) return;
+    // Update memory information and set total from current data instead
+    UpdateMemoryUsageData();
+    memData.qMTotal = memData.qMFree + memData.qMUsed;
+  }
   /* --------------------------------------------------------------- */ public:
   void UpdateMemoryUsageData(void)
   { // More containers
@@ -209,7 +218,6 @@ class SysCore :
                      +  static_cast<uint64_t>(vmsData.inactive_count)
                      +  static_cast<uint64_t>(vmsData.wire_count))
                      * qwPageSize;
-      memData.qMTotal = memData.qMFree + memData.qMUsed;
     } // For getting process info
     task_vm_info_data_t tvidData;
     mach_msg_type_number_t mmtnCount = TASK_VM_INFO_COUNT;
@@ -869,13 +877,15 @@ class SysCore :
   const string BuildRoamingDir(void) const
     { return cCmdLine->CmdLineMakeEnvPath("HOME",
         "/Library/Application Support"); }
-  /* -- Constructor -------------------------------------------------------- */
-  SysCore(void) :
+  /* -- Default constructor ------------------------------------------------ */
+  SysCore(void) :                      // No parameters
     /* -- Initialisers ----------------------------------------------------- */
-    SysCon{ EnumModules(), 0 },
-    SysCommon{ GetExecutableData(),
-               GetOperatingSystemData(),
-               GetProcessorData() },
-    bWindowInitialised(false) { }
+    SysCon{ EnumModules(), 0 },        // Build system module dependencies
+    SysCommon{ GetExecutableData(),    // Build data about the executable
+               GetOperatingSystemData(), // Build data about the OS
+               GetProcessorData() },   // Build data about the CPU
+    bWindowInitialised(false)          // Window not initialised yet
+    /* -- Initialise total memory size ------------------------------------- */
+    { InitMemorySize(); }
 };/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

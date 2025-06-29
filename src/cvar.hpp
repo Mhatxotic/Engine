@@ -422,8 +422,7 @@ class CVarItem :                       // Members initially private
       } // Check if valid untrusted pathname required
       if(FlagIsSet(CFILENAME))
       { // Check filename and get result
-        switch(const ValidResult vrRes =
-          DirValidName(strNewValue, VT_UNTRUSTED))
+        switch(const ValidResult vrRes = DirValidName(strNewValue))
         { // Break if ok or empty
           case VR_OK: case VR_EMPTY: break;
           // Show error otherwise

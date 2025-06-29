@@ -232,8 +232,11 @@ class SysPipe :                        // Members initially private
     return 0;
   }
   /* -- Constructor with init ---------------------------------------------- */
-  void Init(const string &strCmdLine, const ValidType vtId=VT_UNTRUSTED)
+  void Init(const string &strCmdLine, const ValidType vtId)
     { if(const Args aList{ strCmdLine }) InitArgs(strCmdLine, aList, vtId); }
+  /* -- Constructor with init with default safety mode --------------------- */
+  void Init(const string &strCmdLine)
+    { Init(strCmdLine, cDirBase->DirBaseGetSafetyMode()); }
   /* -- Return pid --------------------------------------------------------- */
   unsigned int GetPid(void) { return static_cast<unsigned int>(dwPid); }
   /* -- Constructor with init ---------------------------------------------- */

@@ -492,7 +492,7 @@ class System :                         // The main system class
   DTORHELPER(~System, set_terminate(thHandler))
   /* -- Default constructor ------------------------------------------------ */
   System(void) :
-  /* -- Initialisers ------------------------------------------------------- */
+    /* -- Initialisers ----------------------------------------------------- */
     mList{{                            // Initialise mode strings list
       "nothing",                       // [0<    0>] (nothing)
       "text",                          // [1<    1>] (text)

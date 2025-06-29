@@ -2,10 +2,16 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This module is included inside the main procedure in 'core.cpp' and ## **
-** ## handles all the default console cvars. Make sure to update the      ## **
-** ## 'ConCmdEnums' enum scope if you modify the order, remove or add     ## **
-** ## new console commands.                                               ## **
+** ## This module is included by 'core.cpp' inside the 'Core' class       ## **
+** ## constructor initialisers and thus a part of the 'E::ICore'          ## **
+** ## namespace which contains all the default console commands. Make     ## **
+** ## sure to update the 'ConCmdEnums' enum scope in 'condef.hpp' if you  ## **
+** ## modify the order, remove or add new console commands.               ## **
+** ######################################################################### **
+** ## This file is also parsed by the engine project management           ## **
+** ## utility to help create html documentation. New command descriptions ## **
+** ## start with '// !' with the cvar name and continues on each          ## **
+** ## subsequent line with '// ?' to describe the command.                ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
@@ -484,11 +490,13 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->Save(), "cvar", "cvars"),
 /* ------------------------------------------------------------------------- */
 // Make and checkfilename
 const string &strVal = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
-const ValidResult vrResult = DirValidName(strVal);
-if(vrResult != VR_OK)
-  return cConsole->AddLineF("Cannot check directory '$': $!",
+switch(const ValidResult vrResult = DirValidName(strVal))
+{ // Continue if valid directory or current directory
+  case VR_CURRENT: case VR_OK: break;
+  // Error if anything else
+  default: return cConsole->AddLineF("Cannot check directory '$': $!",
     strVal, cDirBase->DirBaseVNRtoStr(vrResult));
-// Enumerate local directories on disk
+} // Enumerate local directories on disk
 const Dir dPath{ StdMove(strVal) };
 // Set directory and get directories and files
 const string &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank();
@@ -524,8 +532,7 @@ for(const Archive*const aPtr : *cArchives)
   { // Skip file if start of directory does not match
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    string strName{ StrTrim(
-      suimpPair.first.substr(strDir.length()), '/') };
+    string strName{ StrTrim(suimpPair.first.substr(strDir.length()), '/') };
     if(strName.find('/') != StdNPos) continue;
     // Add to file list and increment total bytes and file count
     const uint64_t uqSize = aRef.ArchiveGetSize(suimpPair.second);

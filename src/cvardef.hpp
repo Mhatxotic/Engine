@@ -149,11 +149,11 @@ enum CVarEnums : size_t
   APP_CMDLINE,      LOG_LEVEL,         AST_LZMABUFFER,      AST_PIPEBUFFER,
   AST_FSOVERRIDE,   AST_EXEBUNDLE,     AST_BASEDIR,         AST_BUNDLES,
   APP_CONFIG,       APP_AUTHOR,        APP_SHORTNAME,       AST_HOMEDIR,
-  AST_MODBUNDLE,    SQL_DB,            SQL_RETRYCOUNT,      SQL_RETRYSUSPEND,
-  SQL_ERASEEMPTY,   SQL_TEMPSTORE,     SQL_SYNCHRONOUS,     SQL_JOURNALMODE,
-  SQL_AUTOVACUUM,   SQL_FOREIGNKEYS,   SQL_INCVACUUM,       SQL_DEFAULTS,
-  SQL_LOADCONFIG,   APP_CFLAGS,        LOG_LINES,           LOG_FILE,
-  APP_LONGNAME,     ERR_INSTANCE,
+  AST_MODBUNDLE,    AST_SAFETYMODE,    SQL_DB,              SQL_RETRYCOUNT,
+  SQL_RETRYSUSPEND, SQL_ERASEEMPTY,    SQL_TEMPSTORE,       SQL_SYNCHRONOUS,
+  SQL_JOURNALMODE,  SQL_AUTOVACUUM,    SQL_FOREIGNKEYS,     SQL_INCVACUUM,
+  SQL_DEFAULTS,     SQL_LOADCONFIG,    APP_CFLAGS,          LOG_LINES,
+  LOG_FILE,         APP_LONGNAME,      ERR_INSTANCE,
   /* -- Object cvars ------------------------------------------------------- */
   OBJ_CLIPMAX,      OBJ_CMDMAX,        OBJ_CVARMAX,         OBJ_CVARIMAX,
   OBJ_ARCHIVEMAX,   OBJ_ASSETMAX,      OBJ_BINMAX,          OBJ_FBOMAX,
@@ -216,6 +216,8 @@ enum CVarEnums : size_t
   WIN_WIDTHMIN,
   /* -- Logging cvars ------------------------------------------------------ */
   LOG_CREDITS,      LOG_DYLIBS,
+  /* -- Other cvars -------------------------------------------------------- */
+  COM_FLAGS,
   /* -- Misc (do not (re)move) --------------------------------------------- */
   CVAR_MAX,                            // Maximum cvars
   CVAR_FIRST = APP_CMDLINE,            // The first cvar item

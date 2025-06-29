@@ -1082,11 +1082,7 @@ class Display :                        // Actual class body
   Display(void) :
     /* --------------------------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Send name to init helper
-#if defined(LINUX)
-    DisplayFlags{ DF_WAYLANDFIX },     // Wayland fix required
-#else
     DisplayFlags{ DF_NONE },           // No display flags set
-#endif
     DimCoInt{ -1, -1, 0, 0 },          // Requested position and size
     emrvEvents{                        // Register main events
       { EMC_VID_FB_REINIT,     bind(&Display::OnFBReset,     this, _1) },

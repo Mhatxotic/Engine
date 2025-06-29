@@ -261,8 +261,8 @@ class Core final :                     // Members initially private
 #if defined(LINUX)
         // We need to fix wayland?
         if(cDisplay->FlagIsSet(DF_WAYLANDFIX))
-        { // Restart the thread if actually using wayland
-          if(cSystem->IsWayland()) cEvtMain->RequestQuitThread();
+        { // Restart the thread
+          cEvtMain->RequestQuitThread();
           // Won't ever need to trigger this again
           cDisplay->FlagClear(DF_WAYLANDFIX);
         }
@@ -692,11 +692,11 @@ class Core final :                     // Members initially private
       else
       { // Reset window icon
         cDisplay->UpdateIcons();
-        // Execute main function until EMC_QUIT or EMC_QUIT_RESTART is
-        // passed. We are using the system's main thread so we just need to
-        // name this thread properly. We won't actually be spawning a new
-        // thread with this though, it's just used as simple exit condition
-        // flag to be compatible with the GUI mode.
+        // Execute main function until EMC_QUIT or EMC_QUIT_RESTART is passed.
+        // We are using the system's main thread so we just need to name this
+        // thread properly. We won't actually be spawning a new thread with
+        // this though, it's just used as simple exit condition flag to be
+        // compatible with the GUI mode.
         while(CoreShouldEngineContinue()) CoreThreadMain(*cEvtMain);
       } // If system says we have to close as quickly as possible?
       if(cSystem->SysConIsClosing())
@@ -768,6 +768,17 @@ class Core final :                     // Members initially private
     uiErrorLimit(0)                    // Init number of errors allowed
     /* -- Set global pointer to static class ------------------------------- */
     { cCore = this; }
+  /* -- Process compatibility flags ---------------------------------------- */
+  CVarReturn CoreProcessCompatibilityFlags(const uint64_t uqFlags)
+  { // Bit 1 performing another init on Wayland to fix graphical corruption
+#if defined(LINUX)
+    if(uqFlags & 0x1 && cSystem->IsWayland()) cDisplay.FlagSet(DF_WAYLAND);
+#else
+    static_cast<void>(uqFlags);
+#endif
+    // Allow the cvar change
+    return ACCEPT;
+  }
   /* -- Set lua error mode behaviour --------------------------------------- */
   CVarReturn CoreErrorBehaviourModified(const CoreErrorReason cefNMode)
     { return CVarSimpleSetIntNGE(cerMode, cefNMode, CER_MAX); }

@@ -66,6 +66,12 @@ template<typename AnyType>struct AgAsPoVn :
 struct AgAssetFlags : public AgFlags<AssetFlagsConst> {
   explicit AgAssetFlags(lua_State*const lS, const int iArg) :
     AgFlags{lS, iArg, CD_MASK}{} };
+/* -- Get Valid directory allowing the dot --------------------------------- */
+struct AgDirectory { const string strFilename;
+  const string &operator()(void) const { return strFilename; }
+  operator const string&(void) const { return operator()(); }
+  explicit AgDirectory(lua_State*const lS, const int iArg) :
+    strFilename{LuaUtilGetCppDir(lS, iArg)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Asset:* member functions                                            ## **
@@ -628,7 +634,7 @@ LLFUNC(Duplicate, 1,
 // ? Enumerates the list of files from the specified directory.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Enumerate, 1,
-  const AgFilename aDirectory{lS, 1};
+  const AgDirectory aDirectory{lS, 1};
   const AgBoolean aOnlyDirs{lS, 2};
   LuaUtilToTable(lS, AssetList{ aDirectory, aOnlyDirs }.ToStrSet()))
 /* ========================================================================= */
@@ -640,8 +646,8 @@ LLFUNC(Enumerate, 1,
 // ? Enumerates the list of files from the specified directory.
 /* ------------------------------------------------------------------------- */
 LLFUNC(EnumerateEx, 1,
-  const AgFilename aDirectory{lS, 1},
-                   aExtension{lS, 2};
+  const AgDirectory aDirectory{lS, 1};
+  const AgFilename aExtension{lS, 2};
   const AgBoolean aOnlyDirs{lS, 3};
   LuaUtilToTable(lS,
     AssetList{ aDirectory, aExtension, aOnlyDirs }.ToStrSet()))

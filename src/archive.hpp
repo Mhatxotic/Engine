@@ -183,12 +183,14 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
           UtilBruteCast<uint64_t>(csbuTime.Vals[stId]) / 100000000 :
           numeric_limits<StdTimeT>::max()); }
   /* -- Get archive file/dir count as human readable string ---------------- */
+  const string ArchiveGetFilesString(const auto iFiles) const
+    { return StrCPluraliseNum(iFiles, "file", "files"); }
   const string ArchiveGetNumFilesString(void) const
-    { return StrCPluraliseNum(ArchiveGetNumFiles(),
-        "file", "files"); }
+    { return ArchiveGetFilesString(ArchiveGetNumFiles()); }
+  const string ArchiveGetDirsString(const auto iDirs) const
+    { return StrCPluraliseNum(iDirs, "directory", "directories"); }
   const string ArchiveGetNumDirsString(void) const
-    { return StrCPluraliseNum(ArchiveGetNumDirs(),
-        "directory", "directories"); }
+    { return ArchiveGetDirsString(ArchiveGetNumDirs()); }
   /* -- Get archive file/dir as table ------------------------------ */ public:
   const StrUIntMap &ArchiveGetFileList(void) const { return suimFiles; }
   const StrUIntMap &ArchiveGetDirList(void) const { return suimDirs; }
@@ -386,15 +388,15 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     if(!suimFiles.empty())
       // Archive has directories? Write log with number of files and dirs.
       if(!suimDirs.empty())
-        cLog->LogInfoExSafe("Archive loaded '$' with $ and $.",
-          IdentGet(), ArchiveGetNumFilesString(), ArchiveGetNumDirsString());
+        cLog->LogInfoExSafe("Archive loaded '$' with $ and $.", IdentGet(),
+          ArchiveGetNumFilesString(), ArchiveGetNumDirsString());
       // Archive has only files? Write log with number of dirs.
-      else cLog->LogInfoExSafe("Archive loaded '$' with $ files.",
-        IdentGet(), ArchiveGetNumFilesString());
+      else cLog->LogInfoExSafe("Archive loaded '$' with $.", IdentGet(),
+        ArchiveGetNumFilesString());
     // Archive has only dirs? Write log with number of dirs.
     else if(!suimDirs.empty())
-      cLog->LogInfoExSafe("Archive loaded '$' with $ dirs.",
-        IdentGet(), ArchiveGetNumDirsString());
+      cLog->LogInfoExSafe("Archive loaded '$' with $.", IdentGet(),
+        ArchiveGetNumDirsString());
     // Archive is empty?
     else cLog->LogWarningExSafe("Archive loaded empty '$'!", IdentGet());
   }
@@ -512,8 +514,8 @@ static CVarReturn ArchiveScan(const char*const cpType, const string &strDir,
     cLog->LogDebugSafe("Archives matched no potential archive filenames!");
     return ACCEPT;
   } // Start processing filenames
-  cLog->LogDebugExSafe("Archives loading $ files in $ directory...",
-    cpType, dArchives.GetFilesSize());
+  cLog->LogDebugExSafe("Archives loading $ candidates...",
+    dArchives.GetFilesSize());
   // Counters
   size_t stFound = 0, stFiles = 0, stDirs = 0;
   // For each archive file

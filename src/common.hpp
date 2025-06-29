@@ -16,10 +16,10 @@ static Common *cCommon = nullptr;      // Global access to class
 class Common                           // Common variables class
 { /* -- Common strings ----------------------------------------------------- */
   const string strTrue, strFalse, strY, strN, strEquals, strNOne, strZero,
-    strOne, strSpace, strDblSpace, strBlank, strCr, strLf, strCrLf, strCrLf2,
-    strLfCr, strFSlash, strUnspec, strNull, strPeriod, str2Period, strEllipsis,
-    strLuaName, strPrivate, strProtected, strEmpty, strInvalid, strAsterisk,
-    strEnt;
+    strOne, strTwo, strSpace, strDblSpace, strBlank, strCr, strLf, strCrLf,
+    strCrLf2, strLfCr, strFSlash, strUnspec, strNull, strPeriod, str2Period,
+    strEllipsis, strLuaName, strPrivate, strProtected, strEmpty, strInvalid,
+    strAsterisk, strEnt;
   /* -- Miscellaneous common variables ------------------------------------- */
   const char*const cpBlank;            // Blank C-String
   locale           lLocaleCurrent;     // Current locale
@@ -38,6 +38,7 @@ class Common                           // Common variables class
   const string &CommonNegOne(void) const { return strNOne; }
   const string &CommonZero(void) const { return strZero; }
   const string &CommonOne(void) const { return strOne; }
+  const string &CommonTwo(void) const { return strTwo; }
   const string &CommonCr(void) const { return strCr; }
   const string &CommonLf(void) const { return strLf; }
   const string &CommonCrLf(void) const { return strCrLf; }
@@ -65,17 +66,18 @@ class Common                           // Common variables class
     strY{ "Y" },                       strN{ "N" },
     strEquals{ "=" },                  strNOne{ "-1" },
     strZero{ "0" },                    strOne{ "1" },
-    strSpace{ " " },                   strDblSpace{ "  " },
-    strCr{ "\r" },                     strLf{ "\n" },
-    strCrLf{ "\r\n" },                 strCrLf2{ "\r\n\r\n" },
-    strLfCr{ "\n\r" },                 strFSlash{ "/" },
-    strUnspec{ "<Unspecified>" },      strNull{ "<Null>" },
-    strPeriod{ "." },                  str2Period{ ".." },
-    strEllipsis{ "..." },              strLuaName{ "__name" },
-    strPrivate{ "<Private>" },         strProtected{ "<Protected>" },
-    strEmpty{ "<Empty>" },             strInvalid{ "<Invalid>" },
-    strAsterisk{ "*" },                strEnt{ "&#x" },
-    cpBlank(strBlank.data()),          lLocaleCurrent{ strBlank }
+    strTwo{ "2" },                     strSpace{ " " },
+    strDblSpace{ "  " },               strCr{ "\r" },
+    strLf{ "\n" },                     strCrLf{ "\r\n" },
+    strCrLf2{ "\r\n\r\n" },            strLfCr{ "\n\r" },
+    strFSlash{ "/" },                  strUnspec{ "<Unspecified>" },
+    strNull{ "<Null>" },               strPeriod{ "." },
+    str2Period{ ".." },                strEllipsis{ "..." },
+    strLuaName{ "__name" },            strPrivate{ "<Private>" },
+    strProtected{ "<Protected>" },     strEmpty{ "<Empty>" },
+    strInvalid{ "<Invalid>" },         strAsterisk{ "*" },
+    strEnt{ "&#x" },                   cpBlank(strBlank.data()),
+    lLocaleCurrent{ strBlank }
     /* -- Set global pointer to static class ------------------------------- */
     { cCommon = this; }
 };/* ----------------------------------------------------------------------- */

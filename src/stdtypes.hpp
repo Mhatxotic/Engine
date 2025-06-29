@@ -13,8 +13,8 @@ using ::std::array;                    using ::std::deque;
 using ::std::list;                     using ::std::map;
 using ::std::queue;                    using ::std::pair;
 using ::std::set;                      using ::std::string;
-using ::std::string_view;              using ::std::vector;
-using ::std::wstring;
+using ::std::string_view;              using ::std::unordered_set;
+using ::std::vector;                   using ::std::wstring;
 /* -- Exceptions ----------------------------------------------------------- */
 using ::std::exception;                using ::std::runtime_error;
 /* -- Other ---------------------------------------------------------------- */
@@ -108,6 +108,7 @@ typedef list<StrPair>                    StrPairList;
 /* -- Set of strings ------------------------------------------------------- */
 typedef set<string>            StrSet;
 typedef StrSet::const_iterator StrSetConstIt;
+typedef unordered_set<string_view> StrVUSet;
 /* -- Helper macro to build typedefs for a new map type -------------------- */
 #define MAPPACK_BUILD(n,t1,t2) \
   typedef pair<t1,t2> n ## MapPair; \
