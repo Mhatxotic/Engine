@@ -36,10 +36,10 @@ namespace E {                          // Put everything in engine namespace
 #include "parser.hpp"                  // String parsing utility header
 #include "psplit.hpp"                  // Path handling utilities header
 #include "ident.hpp"                   // Identifier utility header
+#include "cvardef.hpp"                 // CVar definitions header
 #include "dir.hpp"                     // Directory handling utility header
 #include "util.hpp"                    // Miscellenious utilities header
 #include "sysutil.hpp"                 // System utilities header
-#include "cvardef.hpp"                 // CVar definitions header
 #include "clock.hpp"                   // Clock utilities header
 #include "ihelper.hpp"                 // Init helper utility header
 #include "args.hpp"                    // Arguments handling header
@@ -144,7 +144,7 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
   /* ACA        */ "-Zi",
   /* ACB        */ "",
   /* CCX        */ "CL.EXE",
-  /* CCM        */ "-nologo -c -MP4 -GA -Gy -GF -EHsc -bigobj",
+  /* CCM        */ "-nologo -c -Zc:__cplusplus -MP4 -GA -Gy -GF -EHsc -bigobj",
   /* CCMX       */ "-std:$ -utf-8 -W4 -I$ -I$/ft",
   /* CCLIB      */ "-DUNICODE -D_UNICODE",
   /* CCINCDBG   */ "-showIncludes",
