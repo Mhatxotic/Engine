@@ -178,7 +178,7 @@ class SysVersion :
   const string &ENGLoc(void) const { return smdEng.GetLoc(); }
   const string &ENGName(void) const { return smdEng.GetDesc(); }
   const string &ENGVersion(void) const { return smdEng.GetVersion(); }
-  unsigned int ENGBits(void) const { return numeric_limits<void*>::digits; }
+  unsigned int ENGBits(void) const { return sizeof(void*)<<3; }
   unsigned int ENGBuild(void) const { return smdEng.GetBuild(); }
   unsigned int ENGMajor(void) const { return smdEng.GetMajor(); }
   unsigned int ENGMinor(void) const { return smdEng.GetMinor(); }
