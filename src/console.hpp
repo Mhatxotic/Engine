@@ -498,8 +498,8 @@ class Console :                        // Members initially private
               strVarOrCmd, cCVars->GetStr(cvmMapIt)));
         } // Else set item and get return value
         else switch(aList[1] == "~" ?
-          cCVars->Reset(cvmMapIt, PUSR, CCF_NOTHING) :
-          cCVars->Set(cvmMapIt, aList[1], PUSR, CCF_NOTHING))
+          cCVars->Reset(cvmMapIt, PCONSOLE, CCF_NOTHING) :
+          cCVars->Set(cvmMapIt, aList[1], PCONSOLE, CCF_NOTHING))
         { // Success. Show result
           case CVS_OK:
             osS << "is now " << cCVars->GetValueSafe(cvmMapIt) << '!'; break;

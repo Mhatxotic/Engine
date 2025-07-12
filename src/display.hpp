@@ -39,7 +39,7 @@ BUILD_FLAGS(Display,
   // Window is actually in fullscreen? Bad position was specified?
   DF_INFULLSCREEN           {Flag(4)}, DF_BADPOS                 {Flag(5)},
   // Bad size was specified?
-  DF_BADSIZE                {Flag(6)}, DF_WAYLANDFIX             {Flag(7)},
+  DF_BADSIZE                {Flag(6)},
   /* -- End-user configuration flags --------------------------------------- */
   // Use forward compatible context?   Use double-buffering?
   DF_FORWARD               {Flag(47)}, DF_DOUBLEBUFFER          {Flag(48)},
@@ -137,6 +137,13 @@ class Display :                        // Actual class body
   }
   /* -- Window set icon request -------------------------------------------- */
   void OnReqSetIcons(const EvtWinEvent&) { UpdateIcons(); }
+  /* -- Window set set lock key mods state --------------------------------- */
+  void OnReqSetLKMods(const EvtWinEvent &eweEvent)
+  { // Set the new lock key mod state and log status
+    cGlFW->WinSetLockKeyMods(eweEvent.eaArgs.front().b);
+    cLog->LogDebugExSafe("Input updated lock key mod status to $.",
+      StrFromBoolTF(cGlFW->WinGetLockKeyMods()));
+  }
   /* -- Window set set cursor visibility ----------------------------------- */
   void OnReqSetCurVisib(const EvtWinEvent &eweEvent)
   { // Get requested state
@@ -739,12 +746,12 @@ class Display :                        // Actual class body
     const DimCoords dcNew{
     // If compiling on Linux?
 #if defined(LINUX)
-      // Using Wayland? Getting position and size not available
-      cSystem->IsWayland() ?
-        PostInitWindow<false>(ciPosition, diSize, diSize) :
-#endif
+      // Getting position and size not available
+      PostInitWindow<false>(ciPosition, diSize, diSize)
+#else
       // Get new position and size normally
-      PostInitWindow<true>(cGlFW->WinGetPos(), cGlFW->WinGetSize(), diSize),
+      PostInitWindow<true>(cGlFW->WinGetPos(), cGlFW->WinGetSize(), diSize)
+#endif
     };
     // Store initial window size. This needs to be done because on Linux, the
     // window size isn't sent so we need to store the value.
@@ -829,17 +836,19 @@ class Display :                        // Actual class body
     if(FlagIsEqualToBool(DF_INFULLSCREEN, bState)) return;
     // If using Linux?
 #if defined(LINUX)
-    // Here appears to be yet another issue with GLFW and Wayland on Linux.
-    // Changing back to window mode from full-screen isn't working for some
-    // reason so I'm just going to work around that by just quitting the
-    // thread and doing a full re-initialisation until I can (ever?) figure
-    // out why this is happening on Linux and not on MacOS or Windows.
-    if(cSystem->IsWayland()) return cEvtMain->RequestQuitThread();
-#endif
+    // Here appears to be yet another issue with GLFW on Linux. Changing back
+    // to window mode from full-screen isn't working for some reason so I'm
+    // just going to work around that by just quitting the thread and doing a
+    // full re-initialisation until I can (ever?) figure out why this is
+    // happening on Linux and not on MacOS or Windows.
+    cEvtMain->RequestQuitThread();
+    // Using Windows or MacOS?
+#else
     // Update new fullscreen setting and re-initialise if successful
     ReInitWindow(bState);
     // Update viewport
     cEvtMain->Add(EMC_VID_MATRIX_REINIT);
+#endif
   }
   /* -- Return current video mode refresh rate ----------------------------- */
   int GetRefreshRate(void) { return rSelected->Refresh(); }
@@ -1136,6 +1145,7 @@ class Display :                        // Actual class body
       { EWC_WIN_RESIZE,      bind(&Display::OnReqResize,       this, _1) },
       { EWC_WIN_RESTORE,     bind(&Display::OnReqRestore,      this, _1) },
       { EWC_WIN_SETICON,     bind(&Display::OnReqSetIcons,     this, _1) },
+      { EWC_WIN_SETLKMODS,   bind(&Display::OnReqSetLKMods,    this, _1) },
       { EWC_WIN_SETRAWMOUSE, bind(&Display::OnReqSetRawMouse,  this, _1) },
       { EWC_WIN_SETSTKKEYS,  bind(&Display::OnReqStickyKeys,   this, _1) },
       { EWC_WIN_SETSTKMOUSE, bind(&Display::OnReqStickyMouse,  this, _1) },

@@ -94,18 +94,18 @@ BUILD_FLAGS(CVar,
   // Variable value was loaded from db Commit even if default/value match
   LOADED                   {Flag(54)}, COMMITNOCHECK            {Flag(55)},
   /* -- Sources (S) [Private] ---------------------------------------------- */
-  // Set from engine internally?       Set from command-line?
-  SENGINE                  {Flag(56)}, SCMDLINE                 {Flag(57)},
-  // Set from appconfig?               Set from database?
-  SAPPCFG                  {Flag(58)}, SUDB                     {Flag(59)},
+  // Set from command-line?            Set from database?
+  SCMDLINE                 {Flag(57)}, SUDB                     {Flag(58)},
+  // Set from application manifest?
+  SAPPCFG                  {Flag(59)},
   /* -- Permissions (P) [Private] ------------------------------------------ */
   // Variable can be changed at boot?  Variable can be changed by system
-  PBOOT                    {Flag(62)}, PSYSTEM                  {Flag(63)},
-  // Variable can be changed by user?
-  PUSR                     {Flag(64)},
+  PCMDLINE                 {Flag(61)}, PAPPCFG                  {Flag(62)},
+  // Variable can be changed by udb?   Variable can be changed by user?
+  PUDB                     {Flag(63)}, PCONSOLE                 {Flag(64)},
   /* -- Other -------------------------------------------------------------- */
   // No flags                          Private vars begin after here
-  NONE                      {Flag(0)}, PRIVATE                      {TLUA},
+  NONE                      {Flag(0)}, PRIVATE                  {TLUA},
   /* -- Collections -------------------------------------------------------- */
   // Shortcut to unsigned int type     Shortcut to 'unsigned float' type
   TUINTEGER{ TINTEGER|CUNSIGNED },     TUFLOAT{ TFLOAT|CUNSIGNED },
@@ -115,13 +115,13 @@ BUILD_FLAGS(CVar,
   TUINTEGERSAVE{ TUINTEGER|CSAVEABLE },TUFLOATSAVE{ TUFLOAT|CSAVEABLE },
   // Shortcut to string + saveable     Shortcut to boolean + saveable
   TSTRINGSAVE{ TSTRING|CSAVEABLE },    TBOOLEANSAVE{ TBOOLEAN|CSAVEABLE },
-  // All perms granted to modify       // Any source
-  PANY{ PBOOT|PSYSTEM|PUSR },          SANY{ SENGINE|SCMDLINE|SAPPCFG|SUDB },
-  // Registration mask bits            Only alphanumeric characeters
-  CVREGMASK{ COMMIT|SANY },            CALPHANUMERIC{ CALPHA|CNUMERIC },
+  // Only alphanumeric characeters     Any source
+  CALPHANUMERIC{ CALPHA|CNUMERIC },    SANY{ SCMDLINE|SAPPCFG|SUDB },
+  // Registration mask bits            All perms granted to modify
+  CVREGMASK{ COMMIT|SANY },            PANY{ PCMDLINE|PAPPCFG|PUDB|PCONSOLE },
   /* -- Allowed bits ------------------------------------------------------- */
   CVMASK{ TSTRING|TINTEGER|TFLOAT|TBOOLEAN|CALPHA|CNUMERIC|CSAVEABLE|
-          CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM };
+          CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM }
 );/* ----------------------------------------------------------------------- */
 class CVarItem;                        // (Prototype) Cvar callback data
 typedef CVarReturn (*CbFunc)(CVarItem&, const string&); // Callback return type
@@ -190,7 +190,7 @@ enum CVarEnums : size_t
   FMV_ABUFFER,      FMV_IOBUFFER,      FMV_MAXDRIFT,
   /* -- Input cvars -------------------------------------------------------- */
   INP_CLAMPMOUSE,   INP_JOYDEFFDZ,     INP_JOYDEFRDZ,       INP_FSTOGGLER,
-  INP_RAWMOUSE,     INP_STICKYKEY,     INP_STICKYMOUSE,
+  INP_LOCKKEYMODS,  INP_RAWMOUSE,      INP_STICKYKEY,       INP_STICKYMOUSE,
   /* -- Network cvars ------------------------------------------------------ */
   NET_CBPFLAG1,     NET_CBPFLAG2,      NET_BUFFER,          NET_RTIMEOUT,
   NET_STIMEOUT,     NET_CIPHERTLSv1,   NET_CIPHERTLSv13,    NET_CASTORE,

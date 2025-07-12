@@ -257,17 +257,7 @@ class Core final :                     // Members initially private
         }
       } // Graphical mode requested?
       else if(cSystem->IsGraphicalMode())
-      { // On linux?
-#if defined(LINUX)
-        // We need to fix wayland?
-        if(cDisplay->FlagIsSet(DF_WAYLANDFIX))
-        { // Restart the thread
-          cEvtMain->RequestQuitThread();
-          // Won't ever need to trigger this again
-          cDisplay->FlagClear(DF_WAYLANDFIX);
-        }
-#endif
-        // Initialise accumulator for first time
+      { // Initialise accumulator for first time
         cTimer->TimerUpdateInteractive();
         // Loop until event manager says we should break
         while(cEvtMain->HandleSafe()) CoreTick();
@@ -712,7 +702,7 @@ class Core final :                     // Members initially private
     else if(cSystem->IsGraphicalMode()) CoreEnterGraphicalMode();
     // No front-end requested
     else XC("No front-end specified in core flags!",
-      "Flags", cSystem->GetCoreFlags());
+            "Flags", cSystem->GetCoreFlags());
     // Compare engine exit code...
     switch(cEvtMain->GetExitReason())
     { // If we're to restart process with parameters? Set to do so
@@ -843,7 +833,7 @@ class Core final :                     // Members initially private
           // Also show an error if the variable could not be set.
           if(cCVars->SetVarOrInitial(tKeyVal.front(), tKeyVal.size() > 1 ?
             tKeyVal.back() : cCommon->CommonBlank(),
-            SCMDLINE|PBOOT, CCF_NOTHING))
+            SCMDLINE|PCMDLINE, CCF_NOTHING))
           { // Append argument to accepted command line and add a space
             strV.append(strArg);
             strV.append(cCommon->CommonSpace());

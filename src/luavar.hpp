@@ -47,7 +47,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   LuaCVarMapIt GetLuaVarListEnd(void) { return GetLuaVarList().end(); }
   /* == Cvar updated callback for Lua ============================== */ public:
   static CVarReturn LuaCallbackStatic(
-    CVarItem &cviVar,               // cppcheck-suppress constParameterCallback
+    CVarItem &cviVar,
     const string &strVal)
   { // Find cvar and ignore if we don't have it yet! This can happen if the
     // variable is initialising for the first time. We haven't added the
@@ -177,13 +177,13 @@ imcveConditions{{                      // Conditional flags
 }, "NONE" },
 /* ------------------------------------------------------------------------- */
 imcvePermissions{{                     // Permission flags
-  IDMAPSTR(PBOOT),                     IDMAPSTR(PSYSTEM),
-  IDMAPSTR(PUSR),
+  IDMAPSTR(PCMDLINE),                  IDMAPSTR(PAPPCFG),
+  IDMAPSTR(PUDB),                      IDMAPSTR(PCONSOLE),
 }, "NONE" },
 /* ------------------------------------------------------------------------- */
 imcveSources{{                         // Load sources
-  IDMAPSTR(SENGINE),                   IDMAPSTR(SCMDLINE),
-  IDMAPSTR(SAPPCFG),                   IDMAPSTR(SUDB),
+  IDMAPSTR(SCMDLINE),                  IDMAPSTR(SAPPCFG),
+  IDMAPSTR(SUDB),
 }, "NONE" },
 /* ------------------------------------------------------------------------- */
 imcveOther{{                           // Misc flags
@@ -227,14 +227,14 @@ static void VariablesMakeInformationTokens(Statistic &sTable,
            (cviVar.FlagIsSet(CTRUSTEDFN) ? 'T' :
                                            '?'))))) },
     // Permissions
-    { cviVar.FlagIsSet(PBOOT),         '1' },
-    { cviVar.FlagIsSet(PSYSTEM),       '2' },
-    { cviVar.FlagIsSet(PUSR),          '3' },
+    { cviVar.FlagIsSet(PCMDLINE),      '1' },
+    { cviVar.FlagIsSet(PAPPCFG),       '2' },
+    { cviVar.FlagIsSet(PUDB),          '3' },
+    { cviVar.FlagIsSet(PCONSOLE),      '4' },
     // Sources
-    { cviVar.FlagIsSet(SENGINE),       '6' },
-    { cviVar.FlagIsSet(SCMDLINE),      '7' },
-    { cviVar.FlagIsSet(SAPPCFG),       '8' },
-    { cviVar.FlagIsSet(SUDB) ,         '9' },
+    { cviVar.FlagIsSet(SCMDLINE),      '6' },
+    { cviVar.FlagIsSet(SAPPCFG),       '7' },
+    { cviVar.FlagIsSet(SUDB) ,         '8' },
     // Conditions and operations
     { cviVar.FlagIsSet(CONFIDENTIAL),  'C' },
     { cviVar.FlagIsSet(CDEFLATE),      'D' },

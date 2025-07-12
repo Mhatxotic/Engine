@@ -64,10 +64,10 @@ BUILD_FLAGS(CVarCondition,             // For Set() functions
   CCF_NOTHING               {Flag(0)}, CCF_NOMARKCOMMIT          {Flag(1)},
   // Don't throw if var missing?       Throw if there is an error?
   CCF_IGNOREIFMISSING       {Flag(2)}, CCF_THROWONERROR          {Flag(3)},
-  // Variable was just registered?     Do not override existing initial var?
-  CCF_NEWCVAR               {Flag(4)}, CCF_NOIOVERRIDE           {Flag(5)},
-  // The variable was decrypted?       The variable was not encrypted?
-  CCF_DECRYPTED             {Flag(6)}, CCF_NOTDECRYPTED          {Flag(7)}
+  // Variable was just registered?     The variable was decrypted?
+  CCF_NEWCVAR               {Flag(4)}, CCF_DECRYPTED             {Flag(5)},
+  // The variable was not encrypted?
+  CCF_NOTDECRYPTED          {Flag(6)}
 );/* -- Cvar item class ---------------------------------------------------- */
 class CVarItem :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
@@ -109,6 +109,9 @@ class CVarItem :                       // Members initially private
   size_t GetDefCapacity(void) const { return GetDefValue().capacity(); }
   /* ----------------------------------------------------------------------- */
   string &GetModifyableValue(void) { return strValue; }
+  /* ----------------------------------------------------------------------- */
+  bool IsLowerPriority(const CVarFlagsConst cvfcFlags) const
+    { return (FlagGet() & SANY) < (cvfcFlags & SANY); }
   /* ----------------------------------------------------------------------- */
   const string &GetValue(void) const { return strValue; }
   /* ----------------------------------------------------------------------- */
@@ -332,7 +335,7 @@ class CVarItem :                       // Members initially private
     { // If we should not abort? Just return error else throw exception
       if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTWRITABLE;
       XC("CVar is not writable from this scope!",
-         "Variable", GetVar(),     "Value", strNValue,
+         "Variable", GetVar(),            "Value", strNValue,
          "Scope",    cvfcFlags.FlagGet(), "Flags", FlagGet());
     } // If integer?
     if(FlagIsSet(TINTEGER))

@@ -44,11 +44,11 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
   static void LuaCallbackStatic(const Args &aArgs)
   { // Find command in console command list and log if not found (impossible)
     const LuaCmdMapIt lcmiIt{ cCommands->lcmMap.find(aArgs.front()) };
-    if(lcmiIt == cCommands->lcmMap.end())
+    if(lcmiIt == cCommands->lcmMap.cend())
       cLog->LogWarningExSafe("Command can't find virtual command '$'!",
         aArgs.front());
     // Call the function callback in Lua
-    lcmiIt->second.first.LuaFuncProtectedDispatch(0, aArgs);
+    else lcmiIt->second.first.LuaFuncProtectedDispatch(0, aArgs);
   }
   /* -- Check that the console variable name is valid ---------------------- */
   bool IsValidConsoleCommandName(const string &strName)
@@ -58,7 +58,7 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     // Get address of string. The first character must be a letter
     const unsigned char *ucpPtr =
       reinterpret_cast<const unsigned char*>(strName.c_str());
-    if(!isalpha(*ucpPtr)) return false;
+    if(StdIsNotAlpha(*ucpPtr)) return false;
     // For each character in cvar name until end of string...
     for(const unsigned char*const ucpPtrEnd = ucpPtr + strName.length();
                                    ++ucpPtr < ucpPtrEnd;)

@@ -101,7 +101,6 @@ class SysCore :
   public SysCommon                     // Common system object
 { /* -- Variables ---------------------------------------------------------- */
   bool             bWindowInitialised; // Is window initialised?
-  const bool       bIsWayland;         // Is using wayland
   /* --------------------------------------------------------------- */ public:
   void UpdateMemoryUsageData(void)
   { // If the stat file is opened
@@ -491,8 +490,6 @@ class SysCore :
   const char *HeapCheck(void) const { return "Not implemented!"; }
   /* ----------------------------------------------------------------------- */
   int LastSocketOrSysError(void) const { return StdGetError(); }
-  /* -- Returns if using wayland ------------------------------------------- */
-  bool IsWayland(void) const { return bIsWayland; }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir(void) const
     { return cCmdLine->CmdLineMakeEnvPath("HOME", "/.local"); }
@@ -503,8 +500,7 @@ class SysCore :
     SysCommon{ GetExecutableData(),
                GetOperatingSystememData(),
                GetProcessorData() },
-    bWindowInitialised(false),
-    bIsWayland(!cCmdLine->CmdLineGetEnv("WAYLAND_DISPLAY").empty())
+    bWindowInitialised(false)
     /* -- No code ---------------------------------------------------------- */
     { }
 };/* ----------------------------------------------------------------------- */

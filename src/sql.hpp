@@ -1296,7 +1296,7 @@ struct Sql :                           // Members initially public
       cLog->LogWarningExSafe("Sql could not open '$' because $ ($)!", strDb,
         GetErrorStr(), iCode);
       // Sql open failed so 'sqlDBtemp' stays NULL. Hush yourself cppcheck!
-      return false;                    // cppcheck-suppress resourceLeak
+      return false;
     } // Set to this database and set name
     sqlDB = sqlDBtemp;
     IdentSet(strDb);

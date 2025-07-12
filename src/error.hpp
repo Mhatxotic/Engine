@@ -38,7 +38,14 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   void Init(const char*const cpName, const char*const cpType)
     { osS << "\n+ " << cpName << '<' << cpType << "> = "; }
   /* -- Last parameter processed ------------------------------------------- */
-  void Param(void) { const Plugin pPlugin{ osS }; assign(osS.str()); }
+  void Param(void)
+  { // Process custom plugin on generated error message
+    const Plugin pPlugin{ osS };
+    // Finalise the error message into string
+    assign(osS.str());
+    // It was just a functor cppcheck!
+    static_cast<void>(pPlugin);
+  }
   /* -- Show integer ------------------------------------------------------- */
   template<typename Type,typename UnsignedType=Type>
     void Int(const char*const cpName, const char*const cpType, const Type tVal)

@@ -395,16 +395,14 @@ static Source *SourceGetFromLua(lua_State*const lS)
     soNew->SetClass(true);
     // Return reused class
     return LuaUtilClassReuse<Source>(lS, *cSources, soNew);
-  } // If we can make a new source?
-  if(SourceCanMakeNew())
-    // Try to make a new one and if successful?
-    if(Source*const soNew = LuaUtilClassCreate<Source>(lS, *cSources))
-    { // Set that this is a LUA managed class
-      soNew->SetClass(true);
-      // Return the class
-      return soNew;
-    } // Failed so caller should handle this (for now).
-  return nullptr;
+  } // Return if we can't make a new source
+  if(!SourceCanMakeNew()) return nullptr;
+  // Make a new source (exception is already thrown on error)
+  Source*const soNew = LuaUtilClassCreate<Source>(lS, *cSources);
+  // Set that this is a LUA managed class
+  soNew->SetClass(true);
+  // Return the class
+  return soNew;
 }
 /* == Return a free source ================================================= */
 static Source *GetSource(void)
