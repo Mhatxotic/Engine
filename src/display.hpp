@@ -39,7 +39,7 @@ BUILD_FLAGS(Display,
   // Window is actually in fullscreen? Bad position was specified?
   DF_INFULLSCREEN           {Flag(4)}, DF_BADPOS                 {Flag(5)},
   // Bad size was specified?
-  DF_BADSIZE                {Flag(6)}, DF_WAYLANDFIX             {Flag(7)},
+  DF_BADSIZE                {Flag(6)},
   /* -- End-user configuration flags --------------------------------------- */
   // Use forward compatible context?   Use double-buffering?
   DF_FORWARD               {Flag(47)}, DF_DOUBLEBUFFER          {Flag(48)},
