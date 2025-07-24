@@ -96,8 +96,8 @@ BUILD_FLAGS(CVar,
   /* -- Sources (S) [Private] ---------------------------------------------- */
   // Set from engine internally?       Set from command-line?
   SENGINE                  {Flag(56)}, SCMDLINE                 {Flag(57)},
-  // Set from appconfig?               Set from database?
-  SAPPCFG                  {Flag(58)}, SUDB                     {Flag(59)},
+  // Set from database?                Set from application manifest?
+  SUDB                     {Flag(58)}, SAPPCFG                  {Flag(59)},
   /* -- Permissions (P) [Private] ------------------------------------------ */
   // Variable can be changed at boot?  Variable can be changed by system
   PBOOT                    {Flag(62)}, PSYSTEM                  {Flag(63)},
@@ -115,13 +115,13 @@ BUILD_FLAGS(CVar,
   TUINTEGERSAVE{ TUINTEGER|CSAVEABLE },TUFLOATSAVE{ TUFLOAT|CSAVEABLE },
   // Shortcut to string + saveable     Shortcut to boolean + saveable
   TSTRINGSAVE{ TSTRING|CSAVEABLE },    TBOOLEANSAVE{ TBOOLEAN|CSAVEABLE },
-  // All perms granted to modify       // Any source
+  // All perms granted to modify       Any source
   PANY{ PBOOT|PSYSTEM|PUSR },          SANY{ SENGINE|SCMDLINE|SAPPCFG|SUDB },
   // Registration mask bits            Only alphanumeric characeters
   CVREGMASK{ COMMIT|SANY },            CALPHANUMERIC{ CALPHA|CNUMERIC },
   /* -- Allowed bits ------------------------------------------------------- */
   CVMASK{ TSTRING|TINTEGER|TFLOAT|TBOOLEAN|CALPHA|CNUMERIC|CSAVEABLE|
-          CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM };
+          CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM }
 );/* ----------------------------------------------------------------------- */
 class CVarItem;                        // (Prototype) Cvar callback data
 typedef CVarReturn (*CbFunc)(CVarItem&, const string&); // Callback return type

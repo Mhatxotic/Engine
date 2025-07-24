@@ -702,7 +702,7 @@ class Core final :                     // Members initially private
     else if(cSystem->IsGraphicalMode()) CoreEnterGraphicalMode();
     // No front-end requested
     else XC("No front-end specified in core flags!",
-      "Flags", cSystem->GetCoreFlags());
+            "Flags", cSystem->GetCoreFlags());
     // Compare engine exit code...
     switch(cEvtMain->GetExitReason())
     { // If we're to restart process with parameters? Set to do so

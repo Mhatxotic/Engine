@@ -739,12 +739,12 @@ class Display :                        // Actual class body
     const DimCoords dcNew{
     // If compiling on Linux?
 #if defined(LINUX)
-      // Using Wayland? Getting position and size not available
-      cSystem->IsWayland() ?
-        PostInitWindow<false>(ciPosition, diSize, diSize) :
-#endif
+      // Getting position and size not available
+      PostInitWindow<false>(ciPosition, diSize, diSize)
+#else
       // Get new position and size normally
-      PostInitWindow<true>(cGlFW->WinGetPos(), cGlFW->WinGetSize(), diSize),
+      PostInitWindow<true>(cGlFW->WinGetPos(), cGlFW->WinGetSize(), diSize)
+#endif
     };
     // Store initial window size. This needs to be done because on Linux, the
     // window size isn't sent so we need to store the value.
@@ -829,17 +829,19 @@ class Display :                        // Actual class body
     if(FlagIsEqualToBool(DF_INFULLSCREEN, bState)) return;
     // If using Linux?
 #if defined(LINUX)
-    // Here appears to be yet another issue with GLFW and Wayland on Linux.
-    // Changing back to window mode from full-screen isn't working for some
-    // reason so I'm just going to work around that by just quitting the
-    // thread and doing a full re-initialisation until I can (ever?) figure
-    // out why this is happening on Linux and not on MacOS or Windows.
-    if(cSystem->IsWayland()) return cEvtMain->RequestQuitThread();
-#endif
+    // Here appears to be yet another issue with GLFW on Linux. Changing back
+    // to window mode from full-screen isn't working for some reason so I'm
+    // just going to work around that by just quitting the thread and doing a
+    // full re-initialisation until I can (ever?) figure out why this is
+    // happening on Linux and not on MacOS or Windows.
+    cEvtMain->RequestQuitThread();
+    // Using Windows or MacOS?
+#else
     // Update new fullscreen setting and re-initialise if successful
     ReInitWindow(bState);
     // Update viewport
     cEvtMain->Add(EMC_VID_MATRIX_REINIT);
+#endif
   }
   /* -- Return current video mode refresh rate ----------------------------- */
   int GetRefreshRate(void) { return rSelected->Refresh(); }
