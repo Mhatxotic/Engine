@@ -279,6 +279,7 @@ class Input :                          // Handles keyboard, mouse & controllers
     // Log progress
     cLog->LogDebugSafe("Input interface is initialising...");
     // Init input settings
+    SetLockKeyModEnabled(cCVars->GetInternal<bool>(INP_LOCKKEYMODS));
     SetRawMouseEnabled(cCVars->GetInternal<bool>(INP_RAWMOUSE));
     SetStickyKeyEnabled(cCVars->GetInternal<bool>(INP_STICKYKEY));
     SetStickyMouseEnabled(cCVars->GetInternal<bool>(INP_STICKYMOUSE));
@@ -347,6 +348,13 @@ class Input :                          // Handles keyboard, mouse & controllers
   CVarReturn SetStickyKeyEnabled(const bool bState)
   { // Send request to set sticky keys state if enabled
     if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETSTKKEYS, bState);
+    // CVar allowed to be set
+    return ACCEPT;
+  }
+  // -- CVar callback to toggle lock key mod bits -------------------------- */
+  CVarReturn SetLockKeyModEnabled(const bool bState)
+  { // Send request to set lock key mods state if enabled
+    if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETLKMODS, bState);
     // CVar allowed to be set
     return ACCEPT;
   }

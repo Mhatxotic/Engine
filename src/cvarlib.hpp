@@ -1107,6 +1107,13 @@ CVarItemStaticList{{
 { CFL_VIDEO, "inp_fstoggler", cCommon->CommonOne(),
   CB(cInput->SetFSTogglerEnabled, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
+// ! INP_LOCKKEYMODS
+// ? Enables or disables the placing CAPS/NUM/SCROLL LOCK status in the key
+// ? events.
+/* ------------------------------------------------------------------------- */
+{ CFL_VIDEO, "inp_lockkeymods", cCommon->CommonOne(),
+  CB(cInput->SetLockKeyModEnabled, bool), TBOOLEANSAVE|PANY },
+/* ------------------------------------------------------------------------- */
 // ! INP_RAWMOUSE
 // ? Enables raw mouse input if available.
 /* ------------------------------------------------------------------------- */

@@ -137,6 +137,13 @@ class Display :                        // Actual class body
   }
   /* -- Window set icon request -------------------------------------------- */
   void OnReqSetIcons(const EvtWinEvent&) { UpdateIcons(); }
+  /* -- Window set set lock key mods state --------------------------------- */
+  void OnReqSetLKMods(const EvtWinEvent &eweEvent)
+  { // Set the new lock key mod state and log status
+    cGlFW->WinSetLockKeyMods(eweEvent.eaArgs.front().b);
+    cLog->LogDebugExSafe("Input updated lock key mod status to $.",
+      StrFromBoolTF(cGlFW->WinGetLockKeyMods()));
+  }
   /* -- Window set set cursor visibility ----------------------------------- */
   void OnReqSetCurVisib(const EvtWinEvent &eweEvent)
   { // Get requested state
@@ -1138,6 +1145,7 @@ class Display :                        // Actual class body
       { EWC_WIN_RESIZE,      bind(&Display::OnReqResize,       this, _1) },
       { EWC_WIN_RESTORE,     bind(&Display::OnReqRestore,      this, _1) },
       { EWC_WIN_SETICON,     bind(&Display::OnReqSetIcons,     this, _1) },
+      { EWC_WIN_SETLKMODS,   bind(&Display::OnReqSetLKMods,    this, _1) },
       { EWC_WIN_SETRAWMOUSE, bind(&Display::OnReqSetRawMouse,  this, _1) },
       { EWC_WIN_SETSTKKEYS,  bind(&Display::OnReqStickyKeys,   this, _1) },
       { EWC_WIN_SETSTKMOUSE, bind(&Display::OnReqStickyMouse,  this, _1) },

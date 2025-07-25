@@ -402,6 +402,11 @@ class GlFWWindow :                     // GLFW window class
     { WinSetInputModeBoolean(GLFW_RAW_MOUSE_MOTION, bS); }
   bool WinGetRawMouseMotion(void) const
     { return WinGetInputModeBoolean(GLFW_RAW_MOUSE_MOTION); }
+  /* -- Set/get lock key mods ---------------------------------------------- */
+  void WinSetLockKeyMods(const bool bS) const
+    { WinSetInputModeBoolean(GLFW_LOCK_KEY_MODS, bS); }
+  bool WinGetLockKeyMods(void) const
+    { return WinGetInputModeBoolean(GLFW_LOCK_KEY_MODS); }
   /* -- Set/get sticky mouse buttons --------------------------------------- */
   void WinSetStickyMouseButtons(const bool bS) const
     { WinSetInputModeBoolean(GLFW_STICKY_MOUSE_BUTTONS, bS); }
