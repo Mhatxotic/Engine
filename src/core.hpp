@@ -833,7 +833,7 @@ class Core final :                     // Members initially private
           // Also show an error if the variable could not be set.
           if(cCVars->SetVarOrInitial(tKeyVal.front(), tKeyVal.size() > 1 ?
             tKeyVal.back() : cCommon->CommonBlank(),
-            SCMDLINE|PBOOT, CCF_NOTHING))
+            SCMDLINE|PCMDLINE, CCF_NOTHING))
           { // Append argument to accepted command line and add a space
             strV.append(strArg);
             strV.append(cCommon->CommonSpace());

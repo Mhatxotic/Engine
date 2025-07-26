@@ -200,7 +200,7 @@ template<typename IntType>
 /* -- Return if specified string has numbers ------------------------------- */
 static bool StrIsAlpha(const string &strValue)
   { return StdAllOf(par_unseq, strValue.cbegin(), strValue.cend(),
-      [](const char cValue) { return isalpha(static_cast<int>(cValue)); }); }
+      [](const char cValue) { return StdIsAlpha(cValue); }); }
 /* -- Return if specified string has numbers ------------------------------- */
 static bool StrIsAlphaNum(const string &strValue)
   { return StdAllOf(par_unseq, strValue.cbegin(), strValue.cend(),

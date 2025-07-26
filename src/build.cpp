@@ -656,7 +656,7 @@ static int CheckSources(void)
           while(++stPos);
           // Check for macros
           if(stPos > 1 && stPos < stEnd && strLine[stPos] == '#' &&
-            isalpha(strLine[stPos+1]))
+            StdIsAlpha(strLine[stPos+1]))
               throw runtime_error("Remove pre-processor indentation!");
           // Scan rest of string
           bool bInQuote = false, bGotAlpha = false;

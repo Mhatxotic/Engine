@@ -58,7 +58,7 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     // Get address of string. The first character must be a letter
     const unsigned char *ucpPtr =
       reinterpret_cast<const unsigned char*>(strName.c_str());
-    if(!isalpha(*ucpPtr)) return false;
+    if(StdIsNotAlpha(*ucpPtr)) return false;
     // For each character in cvar name until end of string...
     for(const unsigned char*const ucpPtrEnd = ucpPtr + strName.length();
                                    ++ucpPtr < ucpPtrEnd;)

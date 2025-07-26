@@ -335,7 +335,7 @@ class CVarItem :                       // Members initially private
     { // If we should not abort? Just return error else throw exception
       if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTWRITABLE;
       XC("CVar is not writable from this scope!",
-         "Variable", GetVar(),     "Value", strNValue,
+         "Variable", GetVar(),            "Value", strNValue,
          "Scope",    cvfcFlags.FlagGet(), "Flags", FlagGet());
     } // If integer?
     if(FlagIsSet(TINTEGER))

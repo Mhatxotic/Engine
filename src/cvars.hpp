@@ -73,13 +73,13 @@ struct CVars :                         // Start of vars class
     { return cvmActive.find(strVar); }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums Set(const CVarMapIt &cvmiIt, const string &strValue,
-    const CVarFlagsConst cvfcFlags=PUSR,
+    const CVarFlagsConst cvfcFlags=PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
       { return cvmiIt->second.SetValue(strValue,
           cvfcFlags, cvcfcFlags, strCBError); }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums Set(const string &strVar, const string &strValue,
-    const CVarFlagsConst cvfcFlags=PUSR,
+    const CVarFlagsConst cvfcFlags=PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
   { // Find item and if variable is found? Goto the next step
     const CVarMapIt cvmiIt{ FindVariable(strVar) };
@@ -97,7 +97,7 @@ struct CVars :                         // Start of vars class
     // Get address of string. The first character must be a letter
     const unsigned char *ucpPtr =
       reinterpret_cast<const unsigned char*>(strVar.c_str());
-    if(!isalpha(*ucpPtr)) return false;
+    if(StdIsNotAlpha(*ucpPtr)) return false;
     // For each character in cvar name until end of string...
     for(const unsigned char*const ucpPtrEnd = ucpPtr + strVar.length();
                                    ++ucpPtr < ucpPtrEnd;)
@@ -105,7 +105,7 @@ struct CVars :                         // Start of vars class
       if(*ucpPtr == '_')
       { // Next character must be a letter. This could also catch a nullptr
         // character if at the end of string but thats okay too!
-        if(!isalpha(*(++ucpPtr))) return false;
+        if(StdIsNotAlpha(*(++ucpPtr))) return false;
         // Skip underscore and keep comparing with new conditions. The
         // underscore is now allowed normally.
         while(++ucpPtr < ucpPtrEnd)
@@ -114,13 +114,13 @@ struct CVars :                         // Start of vars class
         // Success!
         return true;
       } // Fail if not a letter
-      else if(!isalpha(*ucpPtr)) break;
+      else if(StdIsNotAlpha(*ucpPtr)) break;
     } // An underscore was not specified or invalid character
     return false;
   }
   /* ----------------------------------------------------------------------- */
   bool SetInitialVar(const string &strVar, const string &strVal,
-    const CVarFlagsConst cvfcFlags=PUSR,
+    const CVarFlagsConst cvfcFlags=PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
   { // Check that the variable name is valid.
     if(!IsValidVariableName(strVar))
@@ -220,12 +220,12 @@ struct CVars :                         // Start of vars class
   }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums Reset(const CVarMapIt &cvmiIt,
-    const CVarFlagsConst cvfcFlags=PUSR,
+    const CVarFlagsConst cvfcFlags=PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
       { return cvmiIt->second.ResetValue(cvfcFlags, cvcfcFlags, strCBError); }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums Reset(const CVarEnums cveId,
-    const CVarFlagsConst cvfcFlags=PUSR,
+    const CVarFlagsConst cvfcFlags=PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
   { // Get internal iterator and return value or empty string if invalid
     const CVarMapIt cvmiIt{ GetInternalList()[cveId] };
@@ -234,7 +234,7 @@ struct CVars :                         // Start of vars class
   }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums SetInternal(const CVarEnums cveId, const string &strValue,
-    const CVarFlagsConst cvfcFlags=PUSR,
+    const CVarFlagsConst cvfcFlags=PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
   { // Get iterator and set the value if valid except return invalid
     const CVarMapIt cvmiIt{ GetInternalList()[cveId] };
@@ -309,7 +309,7 @@ struct CVars :                         // Start of vars class
       try
       { // Use the default value. Although we already set the default value
         // when we inserted it, we need to check if it is valid too.
-        cvmiIt->second.SetValue(strValue, cvfcFlags|PANY,
+        cvmiIt->second.SetValue(strValue, PANY,
           cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR, strCBError);
       } // Exception occured?
       catch(const exception&)
@@ -336,19 +336,16 @@ struct CVars :                         // Start of vars class
       // Strip flags from pending cvar and XOR them with requested flags and
       // a flag to say the flag was moved from the pending list (LOADED).
       cviRef.FlagReset(cvfcFlags | LOADED | (cviRef & CVREGMASK));
-      // Use the value from the pending cvar
-      cviRef.SetValue(cviRef.GetValue(), cvfcFlags|PANY,
+      // Update value and send appropriate perm based on where it came from
+      cviRef.SetValue(cviRef.GetValue(),
+        cviRef.FlagIsSet(SCMDLINE) ? PCMDLINE :
+       (cviRef.FlagIsSet(SAPPCFG) ? PAPPCFG :
+       (cviRef.FlagIsSet(SUDB) ? PUDB : PANY)),
         cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR, strCBError);
       // Return iterator
       return cvmiIt;
-    } // exception occured
-    catch(const exception&)
-    { // Remove the item. We won't put it back in the initial list because we
-      // might have corrupted the data.
-      cvmActive.erase(cvmiIt);
-      // Rethrow the error.
-      throw;
-    }
+    } // exception occured so remove the added item and rethrow the exception
+    catch(const exception&) { cvmActive.erase(cvmiIt); throw; }
   }
   /* -- Try to set the variable even if it doesnt exist and return result -- */
   bool SetVarOrInitial(const string &strVar, const string &strVal,
@@ -371,7 +368,7 @@ struct CVars :                         // Start of vars class
   const CVarMap &GetInitialVarList(void) { return cvmPending; }
   /* ----------------------------------------------------------------------- */
   bool SetExistingInitialVar(const string &strVar, const string &strVal,
-    const CVarFlagsConst cvfcFlags=PUSR)
+    const CVarFlagsConst cvfcFlags=PCONSOLE)
   { // Find initial item and return failure if it doesn't exist
     const CVarMapIt cvmiIt{ cvmPending.find(strVar) };
     if(cvmiIt == cvmPending.end()) return false;
@@ -566,7 +563,7 @@ struct CVars :                         // Start of vars class
             return;
           } // Store value directly with synchronisation and goto next
           if(SetVarOrInitial(strVar, sdValueRef.MemToStringSafe(),
-            PUSR|SUDB, CCF_NOTDECRYPTED))
+            PUDB|SUDB, CCF_NOTDECRYPTED))
               ++stLoaded;
           return;
         } // New decrypted value to write into
@@ -589,7 +586,7 @@ struct CVars :                         // Start of vars class
         // are not to be marked as changed. Do not throw on error because it
         // is not easy to change a sql database manually if we change the
         // rules on a cvar.
-        if(SetVarOrInitial(strVar, strNewValue, PUSR, CCF_DECRYPTED))
+        if(SetVarOrInitial(strVar, strNewValue, PUDB|SUDB, CCF_DECRYPTED))
           ++stLoaded;
       });
       // If we loaded all the variables? Report that we loaded all the vars
@@ -729,7 +726,7 @@ struct CVars :                         // Start of vars class
     // Total variables parsed, good vars and bad vars.
     size_t stGood = 0, stBad = 0;
     // Precompute compulsory flags
-    const CVarFlagsConst cvfcFlags{ PSYSTEM|SAPPCFG };
+    const CVarFlagsConst cvfcFlags{ PAPPCFG|SAPPCFG };
     const CVarConditionFlagsConst cvcfcFlags{
       CCF_IGNOREIFMISSING|CCF_THROWONERROR|CCF_NOMARKCOMMIT };
     // Add the characters the manifest file cares about
