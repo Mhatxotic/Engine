@@ -992,7 +992,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Socket read manager ------------------------------------------------ */
   ThreadStatus SockReadManager(void)
   { // Create a thread to write data requests
-    tWriter.ThreadInit(StrAppend("SW:", GetAddressAndPort()),
+    tWriter.ThreadInit(StrAppend("socketwriter:", CtrGet()),
       bind(&Socket::SockWriteThreadMain, this, _1), this);
     // Try to connect and if it didn't fail kill the thread
     if(InitialConnect() == TS_ERROR) return TS_ERROR;
@@ -1156,7 +1156,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Remove iterator from our events dispatched list if we can
     if(LuaEvtsCheckParams<3>(emaArgs))
     { // Get the status and warn if we have incorrect number of parameters
-      const unsigned int uiStatus = emaArgs[2].ui;
+      const unsigned int uiStatus = emaArgs[2].UInt();
       // Lua is not paused?
       if(!uiLuaPaused)
       { // Push function callback onto stack
@@ -1349,7 +1349,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     LuaEvtInitEx(lS);
     // Initialise name, thread and start the connection process
     IdentSetA("S:", GetAddressAndPort());
-    tReader.ThreadInit(StrAppend("SR:", GetAddressAndPort()),
+    tReader.ThreadInit(StrAppend("socketreader:", CtrGet()),
       bind(&Socket::SockReadThreadMain, this, _1), this);
   }
   /* -- Init --------------------------------------------------------------- */
@@ -1404,7 +1404,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     LuaEvtInitEx(lS);
     // Start the thread
     IdentSetA("HS:", GetAddressAndPort());
-    tReader.ThreadInit(StrAppend("HSR:", GetAddressAndPort()),
+    tReader.ThreadInit(StrAppend("sockethttp:", CtrGet()),
       bind(&Socket::SocketHTTPThreadMain, this, _1), this);
   }
   /* -- Constructor -------------------------------------------------------- */
@@ -1550,6 +1550,9 @@ static const SocketsItConst SocketFind(const unsigned int uiId)
   { return StdFindIf(par_unseq, cSockets->cbegin(), cSockets->cend(),
       [uiId](const Socket*const sCptr)
         { return sCptr->CtrGet() == uiId; }); }
+/* ------------------------------------------------------------------------- */
+static void SocketResetCounters(void)
+  { cSockets->qRX = cSockets->qTX = cSockets->qRXp = cSockets->qTXp = 0; }
 /* ------------------------------------------------------------------------- */
 static StrNCStrMap SocketOAuth11(const string &strMethod,
   const string &strScheme, const string &strHost, const string &strPort,

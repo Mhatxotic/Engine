@@ -782,7 +782,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Get openGL int ----------------------------------------------------- */
   template<typename IntegerType = GLint>
     IntegerType GetInteger(const GLenum eId) const
-      { return static_cast<IntegerType>(GetIntegerArray<1>(eId)[0]); }
+      { return static_cast<IntegerType>(
+          GetIntegerArray<sizeof(IntegerType) / sizeof(GLint)>(eId)[0]); }
   /* -- Get openGL string -------------------------------------------------- */
   template<typename PtrType = GLubyte>
     const PtrType* LuaUtilGetStr(const GLenum eId) const
@@ -1005,10 +1006,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   GLuint64 GetVRAMFree(void) const { return qwFreeVRAM; }
   GLuint64 GetVRAMTotal(void) const { return qwTotalVRAM; }
   GLuint64 GetVRAMUsed(void) const { return GetVRAMTotal() - GetVRAMFree(); }
-  double GetVRAMFreePC(void) const {
-    return 100.0 - ((static_cast<double>(GetVRAMFree()) /
-      GetVRAMTotal()) * 100.0);
-  }
+  double GetVRAMFreePC(void) const
+    { return 100.0 - UtilMakePercentage(GetVRAMFree(), GetVRAMTotal()); }
   /* -- Get free memory on nvidia cards ------------------------------------ */
   void UpdateVRAMAvailableNV(void)
   { // - OG macro name: GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX
@@ -1021,7 +1020,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   { // - OG macro name: TEXTURE_FREE_MEMORY_ATI
     // - https://www.khronos.org/registry/OpenGL/extensions/
     //     ATI/ATI_meminfo.txt
-    qwFreeVRAM = static_cast<GLuint64>(GetIntegerArray<4>(0x87FC)[0]) * 1024;
+    qwFreeVRAM = GetInteger<GLuint64>(0x87FC) * 1024;
     // Update total if higher
     if(qwFreeVRAM > qwTotalVRAM) qwTotalVRAM = qwFreeVRAM;
   }

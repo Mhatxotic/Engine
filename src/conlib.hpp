@@ -90,13 +90,13 @@ for(const Asset *aPtr : *cAssets)
   // Show first sixteen bytes
   for(size_t stIndex = 0; stIndex < stMax; ++stIndex)
   { // Get character
-    const uint8_t ucChar = aRef.MemReadInt<uint8_t>(stIndex);
+    const unsigned int uiChar = aRef.MemReadInt<uint8_t>(stIndex);
     // Add hex of block
-    strHex += StrHexFromInt(ucChar, 2) + ' ';
+    strHex += StrHexFromInt(uiChar, 2) + ' ';
     // Put a dot if character is invalid
-    if(ucChar < ' ') { strAscii += '.'; continue; }
+    if(uiChar < ' ') { strAscii += '.'; continue; }
     // Encode the character
-    strAscii += static_cast<char>(ucChar);
+    strAscii += static_cast<char>(uiChar);
   } // Add padding for characters that don't exist
   for(size_t stIndex = stMax; stIndex < stCount; ++stIndex)
     { strHex += ".. "; strAscii += ' '; }
@@ -187,13 +187,13 @@ cConsole->AddLineA(sTable.Finish(),
 /* ------------------------------------------------------------------------- */
 // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("WIDTH").Header("HEIGHT").Header("OCCUPANCY").Header("TOTL")
-      .Header("USED").Header("FREE").Reserve(cBins->size());
+sTable.Header("ID", false).Header("WIDTH").Header("HEIGHT").Header("OCCUPANCY")
+      .Header("TOTL").Header("USED").Header("FREE").Reserve(cBins->size());
 // Walk through bin classes
 for(const Bin*const bPtr : *cBins)
 { // Get reference to class and write its data to the table
   const Bin &bRef = *bPtr;
-  sTable.DataN(bRef.DimGetWidth()).DataN(bRef.DimGetHeight())
+  sTable.DataN(bRef.CtrGet()).DataN(bRef.DimGetHeight())
         .DataN(bRef.Occupancy(), 7).DataN(bRef.Total()).DataN(bRef.Used())
         .DataN(bRef.Free());
 } // Log counts
@@ -483,8 +483,9 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->Save(), "cvar", "cvars"),
 /* ========================================================================= */
 // ! dir
 // ? Shows all the files in the current or specified directory. If the file is
-// ? on disk then the file shows as <DISK> but if the file is from an archive
-// ? that archive filename and its entry ID number is displayed instead.
+// ? on disk then the file shows as <FS> (FileSystem) but if the file is from
+// ? an archive that archive filename and its entry ID number is displayed
+// ? instead.
 /* ========================================================================= */
 { "dir", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -549,9 +550,7 @@ for(const DirEntMapPair &dempPair : dPath.GetFiles())
   const DirItem &diFile = dempPair.second;
   silFiles.insert({ StdMove(dempPair.first),
     { diFile.Size(), StdMaxUInt, {} } });
-} // Directory name and disk name strings
-const string strDirName{"<DIR>"}, strDiskName{"<DISK>"};
-// Prepare data table for archive display
+} // Prepare data table for archive display
 Statistic sTable;
 sTable.Header("SIZE").Header().Header("ID").Header("ARCHIVE", false)
       .Header("FILENAME", false).Reserve(silDirs.size() + silFiles.size());
@@ -560,9 +559,9 @@ for(const StrItemPair &sipPair : silDirs)
 { // Get item data
   const Item &itData = sipPair.second;
   // Add directory tag and blank cell
-  sTable.Data(strDirName).Data();
+  sTable.Data(cCommon->CommonDir()).Data();
   // If this is a file on disk?
-  if(itData.uiId == StdMaxUInt) sTable.Data().Data(strDiskName);
+  if(itData.uiId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
   // Is from archive?
   else sTable.DataN(itData.uiId).Data(itData.strArc);
   // Add directory name
@@ -574,9 +573,9 @@ for(const StrItemPair &sipPair : silFiles)
 { // Get item data
   const Item &itData = sipPair.second;
   // Add size and humann readable size
-  sTable.DataN(itData.uqSize).Data(StrToBytes(itData.uqSize));
+  sTable.DataN(itData.uqSize).DataB(itData.uqSize);
   // If this is a file on disk?
-  if(itData.uiId == StdMaxUInt) sTable.Data().Data(strDiskName);
+  if(itData.uiId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
   // Is from archive?
   else sTable.DataN(itData.uiId).Data(itData.strArc);
   // Add file name
@@ -836,6 +835,15 @@ cConsole->AddLineF(
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'gpu' function
 /* ========================================================================= */
+// ! greset
+// ? Resets OpenGL without destroying the window
+/* ========================================================================= */
+{ "greset", 1, 1, CFL_VIDEO, [](const Args &){
+/* ------------------------------------------------------------------------- */
+cEvtMain->RequestGLReInit();
+/* ------------------------------------------------------------------------- */
+} },                                   // End of 'gpu' function
+/* ========================================================================= */
 // ! images
 // ? Shows all created 'Image' object classes created by LUA including classes
 // ? internally used by the engine.
@@ -1049,7 +1057,7 @@ else cConsole->AddLineF("No match from $.",
 /* ========================================================================= */
 { "lend", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
-// Re-init lua and inform user of the result
+// Reinit lua and inform user of the result
 cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_END) ?
   "Bypassing guest end routine and going stand-by!" :
   "Asking guest to end execution and going stand-by.");
@@ -1084,7 +1092,7 @@ for(const LuaFunc*const lfPtr : *cLuaFuncs)
 { // Get Lua function
   const LuaFunc &lfRef = *lfPtr;
   // Put on stack
-  lfRef.LuaFuncPushFunc();
+  lfRef.LuaFuncPushFuncOrBlank();
   // Print totals info
   sTable.DataN(lfRef.CtrGet())
         .Data(LuaUtilGetStackTokens(cLuaFuncs->LuaRefGetState(), -1))
@@ -1250,7 +1258,7 @@ cLua->RequestPause(true);
 /* ========================================================================= */
 { "lreset", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
-// Re-init lua and inform user of the result
+// Reinit lua and inform user of the result
 cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_REINIT) ?
   "Bypassing guest end routine and restarting execution!" :
   "Asking guest to end execution and restarting execution.");
@@ -1390,11 +1398,12 @@ Statistic sTable;
 sTable.Header("ID").Header("A").Header("POSX").Header("POSY").Header("HORI")
       .Header("VERT").Header("RATIO").Header("RD").Header("GD").Header("BD")
       .Header("TD").Header("HTZ").Header("DWIN").Header("DHIN").Header("SIZE")
-      .Header("NAME", false).Reserve(cDisplay->GetMonitorsCount());
+      .Header("NAME", false).Reserve(cDisplay->MonitorsCount());
 // Walk the monitors list
-for(const GlFWMonitor &gfwmRef : cDisplay->GetMonitors())
+StdForEach(seq, cDisplay->MonitorsBegin(), cDisplay->MonitorsEnd(),
+  [&sTable](const GlFWMonitor &gfwmRef)
 { // Get reference to class and write its data to the table
-  const GlFWRes &gfwrRef = *gfwmRef.Primary();
+  const GlFWRes &gfwrRef = gfwmRef.Primary();
   sTable.DataN(gfwmRef.Index())
         .Data(StrFromBoolYN(&gfwmRef == cDisplay->GetSelectedMonitor()))
         .DataN(gfwmRef.CoordGetX()).DataN(gfwmRef.CoordGetY())
@@ -1404,9 +1413,9 @@ for(const GlFWMonitor &gfwmRef : cDisplay->GetMonitors())
         .DataN(gfwrRef.Depth()).DataN(gfwrRef.Refresh())
         .DataN(gfwmRef.WidthInch(), 1).DataN(gfwmRef.HeightInch(), 1)
         .DataN(gfwmRef.DiagonalInch(), 1).Data(gfwmRef.Name());
-} // Write total monitors found
+}); // Write total monitors found
 cConsole->AddLineA(sTable.Finish(),
-  StrCPluraliseNum(cDisplay->GetMonitorsCount(), "monitor", "monitors"),
+  StrCPluraliseNum(cDisplay->MonitorsCount(), "monitor", "monitors"),
     " detected.");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'mlist' function
@@ -1975,17 +1984,18 @@ if(cSql->ExecuteAndSuccess(StrImplode(aArgs, 1)))
           case SQLITE_FLOAT:
             sTable.Data("F").DataN(sdRef.MemReadInt<double>()); break;
           // Raw data? Just write number of bytes
-          case SQLITE_BLOB: sTable.Data("B").Data("<Blob>"); break;
+          case SQLITE_BLOB:
+            sTable.Data("B").Data("<Blob>"); break;
           // Text?
-          case SQLITE_TEXT: sTable.Data("T")
-                                  .Data(sdRef.MemToStringSafe()); break;
+          case SQLITE_TEXT:
+            sTable.Data("T").Data(sdRef.MemToStringSafe()); break;
           // No data
-          case SQLITE_NULL: sTable.Data("N")
-                                  .Data(cCommon->CommonNull()); break;
+          case SQLITE_NULL:
+            sTable.Data("N").Data(cCommon->CommonNull()); break;
           // Unknown type (impossible)
-          default: sTable.Data("?")
-                         .DataF("<Type $[0x$$]>",
-                           sdRef.iType, hex, sdRef.iType);
+          default:
+            sTable.Data("?")
+                  .DataF("<Type $[0x$$]>", sdRef.iType, hex, sdRef.iType);
                    break;
         }
       } // Increase record number
@@ -2001,6 +2011,26 @@ else cConsole->AddLineF("Query took $ with $<$>: $!", cSql->TimeStr(),
 cSql->Reset();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'sqlexec' function
+/* ========================================================================= */
+// ! stats
+// ? Lists currently loaded stat objects.
+/* ------------------------------------------------------------------------- */
+{ "stats", 1, 1, CFL_NONE, [](const Args &){
+/* ------------------------------------------------------------------------- */
+// Text table class to help us write neat output
+Statistic sTable;
+sTable.Header("ID", false).Header("HEADERS").Header("CELLS").Header("ROWS");
+// Walk through bin classes
+for(const Stat*const sPtr : *cStats)
+{ // Get reference to class and write its data to the table
+  const Stat &sRef = *sPtr;
+  sTable.DataN(sRef.CtrGet()).DataN(sRef.Headers()).DataN(sRef.Cells())
+        .DataN(sRef.Rows());
+} // Log counts
+cConsole->AddLineA(sTable.Finish(),
+  StrCPluraliseNum(cStats->size(), "stat.", "stats."));
+/* ------------------------------------------------------------------------- */
+} },                                   // End of 'bins' function
 /* ========================================================================= */
 // ! stopall
 // ? Attempts to stop all currently playing 'Sample' and 'Stream' object
@@ -2215,36 +2245,38 @@ cConsole->AddLineA(sTable.Finish(),
 // Monitor number and return if invalid
 const size_t stMonitorSelected =
   aArgs.size() == 1 ? 0 : StrToNum<size_t>(aArgs[1]);
-if(stMonitorSelected >= cDisplay->GetMonitorsCount())
+if(stMonitorSelected >= cDisplay->MonitorsCount())
   return cConsole->AddLineF("Invalid monitor $ specified!",
     stMonitorSelected);
 // Header (to be printed twice)
 Statistic sTable;
-sTable.Header("VM#").Header("A").Header("HORI").Header("VERT")
-      .Header("CD").Header("HTZ").Header("RD").Header("GD").Header("BD")
-      .Header("RATIO ", false);
+sTable.Header("VM").Header("A").Header("HORI").Header("VERT").Header("CD")
+      .Header("HTZ").Header("RD").Header("GD").Header("BD")
+      .Header("ASR ", false);
 // Get selected monitor and add extra headers if more than one mode
-const GlFWMonitor &gfwmRef = cDisplay->GetMonitors()[stMonitorSelected];
-if(gfwmRef.size() > 1)
-  sTable.DupeHeader().Reserve(cDisplay->GetMonitorsCount() / 2);
+const GlFWMonitor &gfwmRef = cDisplay->MonitorsGet(stMonitorSelected);
+if(gfwmRef.Count() > 1)
+  sTable.DupeHeader().Reserve(cDisplay->MonitorsCount() / 2);
 else sTable.Reserve(1);
-// Write each resolution to the table
-for(const GlFWRes &gfwrRef : gfwmRef)
+// Enumerate each resolution
+StdForEach(seq, gfwmRef.Begin(), gfwmRef.End(),
+  [&sTable, &gfwmRef](const GlFWRes &gfwrRef)
+{ // Write each resolution to the table
   sTable.DataN(gfwrRef.Index())
-        .Data(StrFromBoolYN(&gfwrRef == gfwmRef.Primary()))
+        .Data(StrFromBoolYN(&gfwrRef == gfwmRef.PrimaryPtr()))
         .DataN(gfwrRef.Width()).DataN(gfwrRef.Height()).DataN(gfwrRef.Depth())
         .DataN(gfwrRef.Refresh()).DataN(gfwrRef.Red()).DataN(gfwrRef.Green())
         .DataN(gfwrRef.Blue())
         .Data(StrFromRatio(gfwrRef.Width(), gfwrRef.Height()));
-// Print number of video modes
+}); // Print number of video modes
 cConsole->AddLineF("$$ supported on monitor #$ ($).", sTable.Finish(),
-  StrCPluraliseNum(gfwmRef.size(), "mode", "modes"), stMonitorSelected,
+  StrCPluraliseNum(gfwmRef.Count(), "mode", "modes"), stMonitorSelected,
   gfwmRef.Name());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'vmlist' function
 /* ========================================================================= */
 // ! vreset
-// ? Completely shuts down the rendering portion the engine and re-initialises
+// ? Completely shuts down the rendering portion the engine and reinitialises
 // ? it. There could be a short delay as textures are rebuilt and re-uploaded
 // ? to the OpenGL driver by the engine and the guest author (if used).
 /* ========================================================================= */

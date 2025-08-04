@@ -54,7 +54,7 @@ BUILD_FLAGS(Video,
   FL_REC709                 {Flag(6)}, FL_FILTER                 {Flag(7)},
   // Hard stopped?                     Video is playing?
   FL_STOP                   {Flag(8)}, FL_PLAY                   {Flag(9)},
-  // Play after re-init?
+  // Play after reinit?
   FL_RESUME                {Flag(10)}
 );/* ======================================================================= */
 CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
@@ -549,7 +549,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       case UB_BLOCK: [[fallthrough]];
       // The video was playing? Shouldn't happen! Restart the thread
       case UB_PLAY: [[fallthrough]];
-      // The video was re-initialised? Shouldn't happen! Restart the thread
+      // The video was reinitialised? Shouldn't happen! Restart the thread
       case UB_REINIT: [[fallthrough]];
       // The thread was terminated? Just break
       case UB_DATA: break;
@@ -932,11 +932,11 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   }
   /* -- Video is playing? -------------------------------------------------- */
   bool IsPlaying(void) const { return tThread.ThreadIsJoinable(); }
-  /* -- DeInitialise audio ouput (because re-initialising) ----------------- */
+  /* -- DeInitialise audio ouput (because reinitialising) ------------------ */
   void DeInitAudio(void)
   { // Return if there is no audio in this video
     if(FlagIsClear(FL_VORBIS)) return;
-    // Pause the video and set to resume on re-init
+    // Pause the video and set to resume on reinit
     if(Pause(UB_REINIT)) FlagSet(FL_RESUME);
     // Audio buffers are empty
     dAudioBuffer = 0.0;
@@ -947,7 +947,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   void ReInitAudio(void)
   { // Just return if we're not to resume
     if(FlagIsClear(FL_RESUME)) return;
-    // If there is an audio stream and we're re-initialising then resume play
+    // If there is an audio stream and we're reinitialising then resume play
     if(Play(UB_REINIT)) FlagClear(FL_RESUME);
   }
   /* -- Stop and unload audio buffers -------------------------------------- */
@@ -1039,7 +1039,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     } // If theres a audio segment and AL portion is initialised?
     if(FlagIsSet(FL_VORBIS) && IsSourceUnavailable())
     { // Compare number of channels in file to set appropriate format. This is
-      // here and not at the files init stage as it handles re-inits too and
+      // here and not at the files init stage as it handles reinits too and
       // the FP supported audio format flag have changed.
       switch(GetChannels())
       { // 1 channel mono?
@@ -1301,12 +1301,12 @@ CTOR_END_ASYNC_NOFUNCS(Videos, Video, VIDEO, VIDEO, // Finish collector class
   dMaxDrift(0.0)                       // Max drift initialised by cvar
 )/* == Reinit textures (after engine thread shutdown) ====================== */
 static void VideoReInitTextures(void)
-{ // Ignore if no videos otherwise re-initialise ogl textures on all videos
+{ // Ignore if no videos otherwise reinitialise ogl textures on all videos
   if(cVideos->empty()) return;
-  cLog->LogDebugExSafe("Videos re-initialising $ video surfaces...",
+  cLog->LogDebugExSafe("Videos reinitialising $ video surfaces...",
     cVideos->CollectorCountUnsafe());
   for(Video*const vVideo : *cVideos) vVideo->ReInitDisplayOutput();
-  cLog->LogDebugExSafe("Videos re-initialised $ video surfaces!",
+  cLog->LogDebugExSafe("Videos reinitialised $ video surfaces!",
     cVideos->CollectorCountUnsafe());
 }
 /* == De-init video textures (after thread shutdown) ======================= */
@@ -1348,12 +1348,12 @@ static void VideoDeInit(void)
 }
 /* == ReInit all videos (after engine thread shutdown) ===================== */
 static void VideoReInit(void)
-{ // Ignore if no videos otherwise re-initialise oal buffers on all videos
+{ // Ignore if no videos otherwise reinitialise oal buffers on all videos
   if(cVideos->empty()) return;
-  cLog->LogDebugExSafe("Videos re-initialising $ videos...",
+  cLog->LogDebugExSafe("Videos reinitialising $ videos...",
     cVideos->CollectorCountUnsafe());
   for(Video*const vVideo : *cVideos) vVideo->ReInitAudio();
-  cLog->LogDebugExSafe("Videos re-initialised $ videos!",
+  cLog->LogDebugExSafe("Videos reinitialised $ videos!",
     cVideos->CollectorCountUnsafe());
 }
 /* == Render all videos ==================================================== */

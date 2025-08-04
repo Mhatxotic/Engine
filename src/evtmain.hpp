@@ -11,75 +11,79 @@
 namespace IEvtMain {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IEvtCore::P;           using namespace IHelper::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace IIdent::P;             using namespace ILog::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Available engine commands -------------------------------------------- */
 enum EvtMainCmd : size_t               // Engine thread event commands
 { /* -- Main events -------------------------------------------------------- */
   EMC_NONE,                            // 00: No event occured
+  EMC_SUSPEND,                         // 01: Suspend and wait for signal
   /* -- Quit events -------------------------------------------------------- */
-  EMC_QUIT,                            // 01: Main loop should quit
-  EMC_QUIT_THREAD,                     // 02: Thread loop should quit
+  EMC_QUIT,                            // 02: Main loop should quit
   EMC_QUIT_RESTART,                    // 03: Cleanly quit and restart app
   EMC_QUIT_RESTART_NP,                 // 04: Same as above but without args
+  EMC_QUIT_THREAD,                     // 05: Thread loop should quit
+  EMC_QUIT_VREINIT,                    // 06: As above but reinit open gl
   /* -- Lua events --------------------------------------------------------- */
-  EMC_LUA_ASK_EXIT,                    // 05: To LUA asking to clean up & exit
-  EMC_LUA_CONFIRM_EXIT,                // 06: From LUA to confirm the exit
-  EMC_LUA_END,                         // 07: End LUA execution
-  EMC_LUA_PAUSE,                       // 08: Pause LUA execution
-  EMC_LUA_REDRAW,                      // 09: Ask LUA guest to redraw fbo's
-  EMC_LUA_REINIT,                      // 10: Reinit LUA execution
-  EMC_LUA_RESUME,                      // 11: Resume LUA execution
+  EMC_LUA_ASK_EXIT,                    // 07: To LUA asking to clean up & exit
+  EMC_LUA_CONFIRM_EXIT,                // 08: From LUA to confirm the exit
+  EMC_LUA_END,                         // 09: End LUA execution
+  EMC_LUA_PAUSE,                       // 10: Pause LUA execution
+  EMC_LUA_REDRAW,                      // 11: Ask LUA guest to redraw fbo's
+  EMC_LUA_REINIT,                      // 12: Reinit LUA execution
+  EMC_LUA_RESUME,                      // 13: Resume LUA execution
   /* -- Window events ------------------------------------------------------ */
-  EMC_WIN_CLOSE,                       // 12: Window wants to be closed
-  EMC_WIN_FOCUS,                       // 13: Window focus was changed
-  EMC_WIN_ICONIFY,                     // 14: Window was minimised or restored
-  EMC_WIN_MOVED,                       // 15: Window was moved
-  EMC_WIN_REFRESH,                     // 16: Window content needs refresh
-  EMC_WIN_RESIZED,                     // 17: Window was resized
-  EMC_WIN_SCALE,                       // 18: Window content scale changed
+  EMC_WIN_CLOSE,                       // 14: Window wants to be closed
+  EMC_WIN_FOCUS,                       // 15: Window focus was changed
+  EMC_WIN_ICONIFY,                     // 16: Window was minimised or restored
+  EMC_WIN_MOVED,                       // 17: Window was moved
+  EMC_WIN_REFRESH,                     // 18: Window content needs refresh
+  EMC_WIN_RESIZED,                     // 19: Window was resized
+  EMC_WIN_SCALE,                       // 20: Window content scale changed
   /* -- OpenGL events ------------------------------------------------------ */
-  EMC_VID_FB_REINIT,                   // 19: Reset frame buffer
-  EMC_VID_MATRIX_REINIT,               // 20: Reset matrix
+  EMC_VID_FB_REINIT,                   // 21: Reset frame buffer
+  EMC_VID_MATRIX_REINIT,               // 22: Reset matrix
+  EMC_VID_REINIT,                      // 23: Reset open gl
   /* -- Audio events ------------------------------------------------------- */
-  EMC_AUD_REINIT,                      // 21: Re-initialise audio
-  EMC_AUD_PDEVICE_UPDATED,             // 22: Playback devices updated
-  EMC_AUD_CDEVICE_UPDATED,             // 23: Capture devices updated
+  EMC_AUD_CD_UPDATED,                  // 24: Capture devices updated
+  EMC_AUD_PD_UPDATED,                  // 25: Playback devices updated
+  EMC_AUD_REINIT,                      // 26: Reinitialise audio
   /* -- Input events ------------------------------------------------------- */
-  EMC_INP_DRAG_DROP,                   // 24: Files dragged and dropped
-  EMC_INP_JOY_STATE,                   // 25: Joystick status changed
-  EMC_INP_MOUSE_FOCUS,                 // 26: Mouse moved (in|out)side window
-  EMC_INP_PASTE,                       // 27: Paste into input from clipboard
+  EMC_INP_DRAG_DROP,                   // 27: Files dragged and dropped
+  EMC_INP_JOY_STATE,                   // 28: Joystick status changed
+  EMC_INP_MOUSE_FOCUS,                 // 29: Mouse moved (in|out)side window
+  EMC_INP_PASTE,                       // 30: Paste into input from clipboard
   /* -- Unique async events ------------------------------------------------ */
-  EMC_CB_EVENT,                        // 28: Clipboard event occured
-  EMC_CUR_EVENT,                       // 29: Cursor event occured
-  EMC_STR_EVENT,                       // 30: Stream event occured
-  EMC_VID_EVENT,                       // 31: Video event occured
+  EMC_CB_EVENT,                        // 31: Clipboard event occured
+  EMC_CUR_EVENT,                       // 32: Cursor event occured
+  EMC_STR_EVENT,                       // 33: Stream event occured
+  EMC_VID_EVENT,                       // 34: Video event occured
   /* -- Console events------------------------------------------------------ */
-  EMC_CON_UPDATE,                      // 32: Force syscon display update
+  EMC_CON_UPDATE,                      // 35: Force syscon display update
   /* -- Input events ------------------------------------------------------- */
-  EMC_INP_CHAR,                        // 33: Filtered key pressed
-  EMC_INP_KEYPRESS,                    // 34: Unfiltered key pressed
-  EMC_INP_MOUSE_CLICK,                 // 35: Mouse button clicked
-  EMC_INP_MOUSE_MOVE,                  // 36: Mouse cursor moved
-  EMC_INP_MOUSE_SCROLL,                // 37: Mouse wheel scrolled
+  EMC_INP_CHAR,                        // 36: Filtered key pressed
+  EMC_INP_KEYPRESS,                    // 37: Unfiltered key pressed
+  EMC_INP_MOUSE_CLICK,                 // 38: Mouse button clicked
+  EMC_INP_MOUSE_MOVE,                  // 39: Mouse cursor moved
+  EMC_INP_MOUSE_SCROLL,                // 40: Mouse wheel scrolled
   /* -- Loading async events ----------------------------------------------- */
-  EMC_MP_ARCHIVE,                      // 38: Archive async event occured
-  EMC_MP_ASSET,                        // 39: Asset async event occured
-  EMC_MP_FONT,                         // 40: Char async event occured
-  EMC_MP_IMAGE,                        // 41: Image async event occured
-  EMC_MP_JSON,                         // 42: Json async event occured
-  EMC_MP_PCM,                          // 43: Pcm async event occured
-  EMC_MP_PROCESS,                      // 44: Process async event occured
-  EMC_MP_SOCKET,                       // 45: Socket async event occured
-  EMC_MP_STREAM,                       // 46: Stream async event occured
-  EMC_MP_VIDEO,                        // 47: Video async event occured
+  EMC_MP_ARCHIVE,                      // 41: Archive async event occured
+  EMC_MP_ASSET,                        // 42: Asset async event occured
+  EMC_MP_FONT,                         // 43: Char async event occured
+  EMC_MP_IMAGE,                        // 44: Image async event occured
+  EMC_MP_JSON,                         // 45: Json async event occured
+  EMC_MP_PCM,                          // 46: Pcm async event occured
+  EMC_MP_PROCESS,                      // 47: Process async event occured
+  EMC_MP_SOCKET,                       // 48: Socket async event occured
+  EMC_MP_STREAM,                       // 49: Stream async event occured
+  EMC_MP_VIDEO,                        // 50: Video async event occured
   /* ----------------------------------------------------------------------- */
-  EMC_MAX,                             // 48: Below are just codes
+  EMC_MAX,                             // 51: Below are just codes
   /* ----------------------------------------------------------------------- */
-  EMC_LUA_ERROR,                       // 49: Error in LUA exec (not an event)
+  EMC_LUA_ERROR,                       // 52: Error in LUA exec (not an event)
   /* ----------------------------------------------------------------------- */
 #if defined(ALPHA)                     // Compiling debug version?
   EMC_NOLOG = EMC_MAX                  // Log all events
@@ -91,32 +95,54 @@ class EvtMain;                         // Prototype class
 static EvtMain *cEvtMain = nullptr;    // Address of global class
 class EvtMain :                        // Event list for render thread
   /* -- Dependencies ------------------------------------------------------- */
+  private IdList<EMC_MAX>,             // Event strings
   public EvtCore                       // Events common class
    <EvtMainCmd,                        // The enum list of events supported
     EMC_MAX,                           // Maximum events allowed
     EMC_NONE,                          // Event id for NONE
     EMC_NOLOG>,                        // Event id for NOLOG
-  public Thread                        // Engine thread
+  public Thread,                       // Engine thread
+  private condition_variable,          // CV for suspending the thread
+  private mutex                        // Mutex for suspending the thread
 { /* -- Private --------------------------------------------------- */ private:
+  const RegAuto    raEvents;           // Events to register
   EvtMainCmd       emcPending,         // Event fired before exit requested
                    emcExit;            // Thread exit code
   unsigned int     uiConfirm;          // Exit confirmation progress
-  /* -- Events list -------------------------------------------------------- */
-  const RegVec     rvEvents;           // Events list to register
+  bool             bUnsuspend;         // Waiting for unsuspend signal
+  /* -- A suspend event is requested? -------------------------------------- */
+  void OnSuspend(const Event &eEvent)
+  { // Wait for subsequent uses to complete
+    UniqueLock ulWait{ *this };
+    // Log starting of suspension
+    cLog->LogDebugSafe("EvtMain suspending engine thread...");
+     // Get reference to argument stack
+    const EvtArgs &eaArgs = eEvent.eaArgs;
+    // Tell requesting thread that it may continue
+    eaArgs[0].Ptr<SafeBool>()->store(true);
+    eaArgs[1].Ptr<condition_variable>()->notify_one();
+    // Wait for thread termination or calling thread to finish
+    wait(ulWait, [this]{ return bUnsuspend; });
+    // Reset suspension state and resume execution
+    bUnsuspend = false;
+    // Log finish of suspension
+    cLog->LogDebugSafe("EvtMain suspension of engine thread complete.");
+  }
   /* -- Check events (called from Main) ------------------------------------ */
   bool ProcessResult(const EvtMainCmd emcResult)
   { // Which event?
     switch(emcResult)
-    { // Thread should quit. Tell main loop to loop again
-      case EMC_QUIT_THREAD: emcExit = EMC_QUIT_THREAD;
-        return false;
+    { // Thread should quit? Tell main loop to loop again
+      case EMC_QUIT_THREAD: emcExit = EMC_QUIT_THREAD; return false;
+      // Thread should quit to reinit opengl? Tell main loop to loop again
+      case EMC_QUIT_VREINIT: emcExit = EMC_QUIT_VREINIT; return false;
       // Thread should quit and main thread should restart completely
       case EMC_QUIT_RESTART: ConfirmExit(EMC_QUIT_RESTART); break;
       // Same as above but without command line parameters
       case EMC_QUIT_RESTART_NP: ConfirmExit(EMC_QUIT_RESTART_NP); break;
       // Lua executing is ending
       case EMC_LUA_END: ConfirmExit(EMC_LUA_END); break;
-      // Lua executing is re-initialising
+      // Lua executing is reinitialising
       case EMC_LUA_REINIT: ConfirmExit(EMC_LUA_REINIT); break;
       // Lua confirmed exit is allowed now so return the code we recorded
       case EMC_LUA_CONFIRM_EXIT: if(!uiConfirm) break;
@@ -133,7 +159,20 @@ class EvtMain :                        // Event list for render thread
     } // Thread shouldn't break
     return true;
   }
-  /* -- Get exit reason code --------------------------------------- */ public:
+  /* -- Unsuspend the thread after a EVT_SUSPEND event ------------- */ public:
+  void Unsuspend(void)
+  { // Lock the unlock variable
+    UniqueLock ulWait{ *this, try_to_lock };
+    // Return if already suspended
+    if(bUnsuspend) return;
+    // Unsuspend the condition variable wait
+    bUnsuspend = true;
+    // Unblock the condition variable wait
+    notify_one();
+    // Log finish of suspension
+    cLog->LogDebugSafe("EvtMain signalling end of engine thread suspension.");
+  }
+  /* -- Get exit reason code ----------------------------------------------- */
   EvtMainCmd GetExitReason(void) const { return emcExit; }
   /* -- Set exit reason code ----------------------------------------------- */
   void SetExitReason(const EvtMainCmd emcReason)
@@ -204,71 +243,55 @@ class EvtMain :                        // Event list for render thread
   void RequestQuit(void) { Add(EMC_QUIT); }
   /* -- Add event to quit thread and restart window manager ---------------- */
   void RequestQuitThread(void) { Add(EMC_QUIT_THREAD); }
-  /* -- Initialise base events (called from Main) -------------------------- */
-  void Init(void) { RegisterEx(rvEvents); }
-  /* -- DeInitialise base events (called from Main) ------------------------ */
-  void DeInit(void) { UnregisterEx(rvEvents); }
+  /* -- Add event to quit thread and wait for it to complete --------------- */
+  void RequestQuitThreadWait(void) { Add(EMC_QUIT_THREAD); }
+  /* -- Add event to quit thread and restart opengl ------------------------ */
+  void RequestGLReInit(void) { Add(EMC_QUIT_VREINIT); }
+  /* -- Add event to quit thread and restart opengl and wait --------------- */
+  void RequestGLReInitWait(void) { RequestGLReInit(); ThreadJoin(); }
   /* -- Constructor --------------------------------------------- */ protected:
   EvtMain(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    EvtCore{ "EventMain", ISList{{     // Set name of this object
-      /* ------------------------------------------------------------------- */
+    IdList{{                           // Build event list
 #define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings
-      /* ------------------------------------------------------------------- */
-      EMC(NONE),
-      /* ------------------------------------------------------------------- */
-      EMC(QUIT),            EMC(QUIT_THREAD),      EMC(QUIT_RESTART),
-      EMC(QUIT_RESTART_NP),
-      /* ------------------------------------------------------------------- */
-      EMC(LUA_ASK_EXIT),    EMC(LUA_CONFIRM_EXIT), EMC(LUA_END),
-      EMC(LUA_PAUSE),       EMC(LUA_REDRAW),       EMC(LUA_REINIT),
-      EMC(LUA_RESUME),
-      /* ------------------------------------------------------------------- */
-      EMC(WIN_CLOSE),       EMC(WIN_FOCUS),        EMC(WIN_ICONIFY),
-      EMC(WIN_MOVED),       EMC(WIN_REFRESH),      EMC(WIN_RESIZED),
-      EMC(WIN_SCALE),
-      /* ------------------------------------------------------------------- */
-      EMC(VID_FB_REINIT),   EMC(VID_MATRIX_REINIT),
-      /* ------------------------------------------------------------------- */
-      EMC(AUD_REINIT),      EMC(AUD_PDEVICE_UPDATED),
-      EMC(AUD_CDEVICE_UPDATED),
-      /* ------------------------------------------------------------------- */
+      EMC(NONE),            EMC(SUSPEND),          EMC(QUIT),
+      EMC(QUIT_RESTART),    EMC(QUIT_RESTART_NP),  EMC(QUIT_THREAD),
+      EMC(QUIT_VREINIT),    EMC(LUA_ASK_EXIT),     EMC(LUA_CONFIRM_EXIT),
+      EMC(LUA_END),         EMC(LUA_PAUSE),        EMC(LUA_REDRAW),
+      EMC(LUA_REINIT),      EMC(LUA_RESUME),       EMC(WIN_CLOSE),
+      EMC(WIN_FOCUS),       EMC(WIN_ICONIFY),      EMC(WIN_MOVED),
+      EMC(WIN_REFRESH),     EMC(WIN_RESIZED),      EMC(WIN_SCALE),
+      EMC(VID_FB_REINIT),   EMC(VID_MATRIX_REINIT),EMC(VID_REINIT),
+      EMC(AUD_CD_UPDATED),  EMC(AUD_PD_UPDATED),   EMC(AUD_REINIT),
       EMC(INP_DRAG_DROP),   EMC(INP_JOY_STATE),    EMC(INP_MOUSE_FOCUS),
-      EMC(INP_PASTE),
-      /* ------------------------------------------------------------------- */
-      EMC(CB_EVENT),        EMC(CUR_EVENT),        EMC(STR_EVENT),
-      EMC(VID_EVENT),
-      /* ------------------------------------------------------------------- */
-      EMC(CON_UPDATE),
-      /* ------------------------------------------------------------------- */
+      EMC(INP_PASTE),       EMC(CB_EVENT),         EMC(CUR_EVENT),
+      EMC(STR_EVENT),       EMC(VID_EVENT),        EMC(CON_UPDATE),
       EMC(INP_CHAR),        EMC(INP_KEYPRESS),     EMC(INP_MOUSE_CLICK),
-      EMC(INP_MOUSE_MOVE),  EMC(INP_MOUSE_SCROLL),
-      /* ------------------------------------------------------------------- */
-      EMC(MP_ARCHIVE),      EMC(MP_ASSET),         EMC(MP_FONT),
-      EMC(MP_IMAGE),        EMC(MP_JSON),          EMC(MP_PCM),
-      EMC(MP_PROCESS),      EMC(MP_SOCKET),        EMC(MP_STREAM),
-      EMC(MP_VIDEO),
-      /* ------------------------------------------------------------------- */
+      EMC(INP_MOUSE_MOVE),  EMC(INP_MOUSE_SCROLL), EMC(MP_ARCHIVE),
+      EMC(MP_ASSET),        EMC(MP_FONT),          EMC(MP_IMAGE),
+      EMC(MP_JSON),         EMC(MP_PCM),           EMC(MP_PROCESS),
+      EMC(MP_SOCKET),       EMC(MP_STREAM),        EMC(MP_VIDEO)
 #undef EMC                             // Done with this macro
-      /* ------------------------------------------------------------------- */
-    }}},
+    }},
+    EvtCore{ "EventMain", *this },     // Construct core
     Thread{ "engine", STP_ENGINE },    // Set up high perf engine thread
+    raEvents{ this, {                  // Initialise custom handled events
+      { EMC_SUSPEND,                 bind(&EvtMain::OnSuspend, this, _1) },
+      { EMC_QUIT,             nullptr }, { EMC_QUIT_RESTART,     nullptr },
+      { EMC_QUIT_RESTART_NP,  nullptr }, { EMC_QUIT_THREAD,      nullptr },
+      { EMC_QUIT_VREINIT,     nullptr }, { EMC_LUA_END,          nullptr },
+      { EMC_LUA_REINIT,       nullptr }, { EMC_LUA_CONFIRM_EXIT, nullptr }
+    } },
     emcPending(EMC_NONE),              // Not exiting yet
     emcExit(EMC_NONE),                 // Not exited yet
     uiConfirm(0),                      // Exit not confirmed yet
-    /* --------------------------------------------------------------------- */
-    rvEvents{                          // Initialise custom handled events
-      { EMC_QUIT,             nullptr }, { EMC_QUIT_THREAD,      nullptr },
-      { EMC_QUIT_RESTART,     nullptr }, { EMC_QUIT_RESTART_NP,  nullptr },
-      { EMC_LUA_END,          nullptr }, { EMC_LUA_REINIT,       nullptr },
-      { EMC_LUA_CONFIRM_EXIT, nullptr }
-    }
-    /* -- Set global pointer to static class ------------------------------- */
+    bUnsuspend(false)                  // Not suspended yet
+    /* -- Set global pointer to static class and register events ----------- */
     { cEvtMain = this; }
 };/* ----------------------------------------------------------------------- */
-typedef EvtMain::EvtArgs EvtMainArgs;  // Shortcut to EvtMain::Args class
-typedef EvtMain::Event   EvtMainEvent; // Shortcut to EvtMain::Cell class
-typedef EvtMain::RegVec  EvtMainRegVec;// Shortcut to EvtMain::RegVec class
+typedef EvtMain::EvtArgs EvtMainArgs;  // Event callback arguments
+typedef EvtMain::Event   EvtMainEvent; // Event command
+typedef EvtMain::RegAuto EvtMainRegAuto; // Event (de)registration
 /* ------------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */

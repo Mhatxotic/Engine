@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.7.31.1 -->
-<!-- Automatically built at Fri Aug 01 00:40:39 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.7.31.1 -->
+<!-- Reference for the Mhatxotic Engine API version 25.9.1.7 -->
+<!-- Automatically built at Mon Sep 01 12:45:36 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.9.1.7 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.7.31.1">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.1.7">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.7.31.1">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.1.7">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.7.31.1">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.1.7">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.7.31.1 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.9.1.7 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.7.31.1 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.9.1.7 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.7.31.1 API reference</H1>
+	<H1>Mhatxotic Engine 25.9.1.7 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 847 functions (405 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 211 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 850 functions (402 members, 448 methods) and 27 consts in 30 namespaces with 85 commands and 211 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1283,9 +1283,14 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(13 methods)</I>
+								<B>Methods</B> <I>(19 methods)</I>
 								<OL>
+									<LI><A href="#Stat:Cells">Cells</A></LI>
 									<LI><A href="#Stat:Data">Data</A></LI>
+									<LI><A href="#Stat:DataB">DataB</A></LI>
+									<LI><A href="#Stat:DataFB">DataFB</A></LI>
+									<LI><A href="#Stat:DataFI">DataFI</A></LI>
+									<LI><A href="#Stat:DataFN">DataFN</A></LI>
 									<LI><A href="#Stat:DataI">DataI</A></LI>
 									<LI><A href="#Stat:DataN">DataN</A></LI>
 									<LI><A href="#Stat:Destroy">Destroy</A></LI>
@@ -1296,6 +1301,7 @@
 									<LI><A href="#Stat:Id">Id</A></LI>
 									<LI><A href="#Stat:Name">Name</A></LI>
 									<LI><A href="#Stat:Reserve">Reserve</A></LI>
+									<LI><A href="#Stat:Rows">Rows</A></LI>
 									<LI><A href="#Stat:Sort">Sort</A></LI>
 									<LI><A href="#Stat:SortTwo">SortTwo</A></LI>
 								</OL>
@@ -1579,15 +1585,12 @@
 						<OL>
 							<LI><P>The Variable class allows creation and manipulation of console commands</P></LI>
 							<LI>
-								<B>Members</B> <I>(7 members)</I>
+								<B>Members</B> <I>(4 members)</I>
 								<OL>
 									<LI><A href="#Variable.Count">Count</A></LI>
 									<LI><A href="#Variable.Exists">Exists</A></LI>
-									<LI><A href="#Variable.GetInt">GetInt</A></LI>
 									<LI><A href="#Variable.Register">Register</A></LI>
-									<LI><A href="#Variable.ResetInt">ResetInt</A></LI>
 									<LI><A href="#Variable.Save">Save</A></LI>
-									<LI><A href="#Variable.SetInt">SetInt</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1695,7 +1698,7 @@
 			<LI id="idx.cc">
 				<DIV>
 					<DIV>
-						<A href="#cmds">Commands</A> <I>(83 commands)</I>
+						<A href="#cmds">Commands</A> <I>(85 commands)</I>
 						<OL>
 							<LI><P>Console commands that can see and manipulate all the data in the engine.</P></LI>
 							<LI>
@@ -1732,6 +1735,7 @@
 									<LI><A href="#cc.fonts">fonts</A></LI>
 									<LI><A href="#cc.ftfs">ftfs</A></LI>
 									<LI><A href="#cc.gpu">gpu</A></LI>
+									<LI><A href="#cc.greset">greset</A></LI>
 									<LI><A href="#cc.images">images</A></LI>
 									<LI><A href="#cc.imgfmts">imgfmts</A></LI>
 									<LI><A href="#cc.input">input</A></LI>
@@ -1772,6 +1776,7 @@
 									<LI><A href="#cc.sqldefrag">sqldefrag</A></LI>
 									<LI><A href="#cc.sqlend">sqlend</A></LI>
 									<LI><A href="#cc.sqlexec">sqlexec</A></LI>
+									<LI><A href="#cc.stats">stats</A></LI>
 									<LI><A href="#cc.stopall">stopall</A></LI>
 									<LI><A href="#cc.streams">streams</A></LI>
 									<LI><A href="#cc.system">system</A></LI>
@@ -3459,7 +3464,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Result</U> <I>(boolean )</I> =  Was the event sent successfully?<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Ends LUA execution&#x2c; clears the context&#x2c; and restarts LUA execution&#x2e; It will return &#x27;false&#x27; if Lua is already re&#x2d;initialising&#x2e;<BR></PRE>
+		<PRE>Ends LUA execution&#x2c; clears the context&#x2c; and restarts LUA execution&#x2e; It will return &#x27;false&#x27; if Lua is already reinitialising&#x2e;<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.Restart" style="display:none">
@@ -4169,7 +4174,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Width</U> <I>(number)</I> = The new width of the main frame buffer<BR><U>Height</U> <I>(number)</I> = The new height of the main frame buffer<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>This is a run&#x2d;time override for &#x27;vid_orwidth&#x27; and &#x27;vid_orheight&#x27; cvars in which the main frame buffer viewport is re&#x2d;calculated and re&#x2d;initialised to these dimensions&#x2e; Note that this modifies the console size as well&#x2e;<BR></PRE>
+		<PRE>This is a run&#x2d;time override for &#x27;vid_orwidth&#x27; and &#x27;vid_orheight&#x27; cvars in which the main frame buffer viewport is re&#x2d;calculated and reinitialised to these dimensions&#x2e; Note that this modifies the console size as well&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo.SetBlend" style="display:none">
@@ -8054,6 +8059,16 @@
 		<PRE>Creates an empty stat table&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Stat:Cells" style="display:none">
+		<H3>Stat:Cells</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Stat:Cells()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Number of cells added<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the number of cells in the table </PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Stat:Data" style="display:none">
 		<H3>Stat:Data</H3>
 		<H4>Syntax:-</H4>
@@ -8062,6 +8077,46 @@
 		<PRE><U>String</U> <I>(string)</I> = Data string to add to the cell.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Inserts the specified string into the next cell&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:DataB" style="display:none">
+		<H3>Stat:DataB</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:DataB(<I><U>String</U>, <U>Precision</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>String</U> <I>(string)</I> = Number of bytes to convert to readable.<BR><U>Precision</U> <I>(integer)</I> = Amount of precision to use on the number.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Formats the specified cell as bytes&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:DataFB" style="display:none">
+		<H3>Stat:DataFB</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:DataFB(<I><U>String</U>, <U>Precision</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>String</U> <I>(string)</I> = Number of bytes to convert to readable.<BR><U>Precision</U> <I>(integer)</I> = Amount of precision to use on the number.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Formats the specified cell as bytes but with a human readable number&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:DataFI" style="display:none">
+		<H3>Stat:DataFI</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:DataFI(<I><U>Value</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Value</U> <I>(integer)</I> = Integer to add to the next cell.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Inserts the specified integer into the next cell but as a human readable number&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:DataFN" style="display:none">
+		<H3>Stat:DataFN</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:DataFN(<I><U>Value</U>, <U>Precision</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Value</U> <I>(number)</I> = Number to add to the next cell.<BR><U>Precision</U> <I>(integer)</I> = Amount of precision to use on the number.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Inserts the specified number into the next cell but as a human readable number&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Stat:DataI" style="display:none">
@@ -8162,6 +8217,16 @@
 		<PRE><U>Rows</U> <I>(integer)</I> = Reserve memory for this many rows.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Reserves memory for this many rows&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:Rows" style="display:none">
+		<H3>Stat:Rows</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Stat:Rows()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Number of rows registered<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the number of complete rows in the table </PRE>
 		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Stat:Sort" style="display:none">
@@ -10432,18 +10497,6 @@
 		<PRE>Returns if the specified console command is registered which includes the built&#x2d;in engine console commands too&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Variable.GetInt" style="display:none">
-		<H3>Variable.GetInt</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Value</U> = Variable.GetInt(<I><U>Id</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = The engine cvar index.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Value</U> <I>(mixed)</I> = The engine internal id value.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Retrieves the value of the specified cvar given at the specified id&#x2e; The id&#x27;s are populated as key&#x2f;value pairs in the &#x27;Variable&#x2e;Internal&#x27; table&#x2e;<BR></PRE>
-		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Variable.Register" style="display:none">
 		<H3>Variable.Register</H3>
 		<H4>Syntax:-</H4>
@@ -10456,16 +10509,6 @@
 		<PRE>Registers the specified cvar name with the specified default value&#x2e; The default value is ignored if there is already a saved value in the Sql cvars database&#x2e; If the saved value is a corrupted encrypted value then the default is used&#x2e; If the cvar already exists then an exception is thrown so make sure you check for it first if do not expect this call to garauntee success&#x2e; Normally it is unless there is a memory allocation issue&#x2e; The amount of cvars you can register is limited by the integral value of the &#x27;obj_cvarmax&#x27; cvar&#x2e; The syntax of the callback function is function&#x28;V&#x3a;string&#x29;&#x7b;return RR&#x3a;boolean&#x2c;RV&#x3a;string&#x7d; where &#x27;V&#x27; is the value string that was requested to be set&#x2e; If &#x27;RV&#x27; is not set then &#x27;RR&#x27; is whether to accept &#x28;true&#x29; or deny &#x28;false&#x29; the requested change to &#x27;V&#x27;&#x2c; otherwise&#x2c; if &#x27;RV&#x27; is set to a string then the actual cvar value is replaced by the &#x27;RV&#x27; string and &#x27;RR&#x27; refers to if the variable should be force committed to disk &#x28;true&#x29; or not &#x28;false&#x29;&#x2e; Note that variable values that are equal to the default value are not committed to the database&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Variable.ResetInt" style="display:none">
-		<H3>Variable.ResetInt</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Variable.ResetInt(<I><U>Id</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = The engine cvar index.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Resets the specified cvar to its default variable&#x2e;<BR></PRE>
-		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Variable.Save" style="display:none">
 		<H3>Variable.Save</H3>
 		<H4>Syntax:-</H4>
@@ -10474,16 +10517,6 @@
 		<PRE><U>Count</U> <I>(number)</I> = Number of items saved<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Commits all modified variables to database&#x2e; Returns number of items written&#x2e;<BR></PRE>
-		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Variable.SetInt" style="display:none">
-		<H3>Variable.SetInt</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Variable.SetInt(<I><U>Id</U>, <U>Value</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = The engine cvar index.<BR><U>Value</U> <I>(string)</I> = The new engine cvar value.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Sets the new value of the specified engine cvar name&#x2e; An exception is raised if any error occurds&#x2e; See Variable&#x2e;Result to see the possible results&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Variable:Boolean" style="display:none">
@@ -11205,7 +11238,7 @@
 	</DIV>
 	<DIV id="cc.dir" style="display:none">
 		<H3>dir</H3>
-		<PRE>Shows all the files in the current or specified directory&#x2e; If the file is on disk then the file shows as &#x3c;DISK&#x3e; but if the file is from an archive that archive filename and its entry ID number is displayed instead&#x2e;<BR></PRE>
+		<PRE>Shows all the files in the current or specified directory&#x2e; If the file is on disk then the file shows as &#x3c;FS&#x3e; &#x28;FileSystem&#x29; but if the file is from an archive that archive filename and its entry ID number is displayed instead&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.env" style="display:none">
@@ -11246,6 +11279,11 @@
 	<DIV id="cc.gpu" style="display:none">
 		<H3>gpu</H3>
 		<PRE>Shows live information about the OpenGL rendering context&#x2e;<BR></PRE>
+		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cc.greset" style="display:none">
+		<H3>greset</H3>
+		<PRE>Resets OpenGL without destroying the window </PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.images" style="display:none">
@@ -11448,6 +11486,11 @@
 		<PRE>Performs the desired SQL query on the SQLite database&#x2e; Theres is absolutely zero restriction to using this so use it at your own risk&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cc.stats" style="display:none">
+		<H3>stats</H3>
+		<PRE>Lists currently loaded stat objects&#x2e;<BR></PRE>
+		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cc.stopall" style="display:none">
 		<H3>stopall</H3>
 		<PRE>Attempts to stop all currently playing &#x27;Sample&#x27; and &#x27;Stream&#x27; object classes&#x2e;<BR></PRE>
@@ -11495,7 +11538,7 @@
 	</DIV>
 	<DIV id="cc.vreset" style="display:none">
 		<H3>vreset</H3>
-		<PRE>Completely shuts down the rendering portion the engine and re&#x2d;initialises it&#x2e; There could be a short delay as textures are rebuilt and re&#x2d;uploaded to the OpenGL driver by the engine and the guest author &#x28;if used&#x29;&#x2e;<BR></PRE>
+		<PRE>Completely shuts down the rendering portion the engine and reinitialises it&#x2e; There could be a short delay as textures are rebuilt and re&#x2d;uploaded to the OpenGL driver by the engine and the guest author &#x28;if used&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.wreset" style="display:none">
@@ -12340,7 +12383,7 @@
 	</DIV>
 	<DIV id="cv.vid_hidpi" style="display:none">
 		<H3>vid_hidpi</H3>
-		<PRE>Enables or disables HiDPI support&#x2e;<BR></PRE>
+		<PRE>Enables or disables HiDPI support&#x2e; Set to &#x27;0&#x27; to disable HiDPI&#x2c; &#x27;1&#x27; to &#x28;default&#x29; to enable it&#x2c; or &#x27;2&#x27; to enable it with a fix for going from a HiDPI window to non&#x2d;HiDPI window to increase window size to match the previous OpenGL frame&#x2d;buffer size which is useful for video capturing and maintaining capture quality&#x2e; The cvar only applies to MacOS and can only be set via command&#x2d;line or the application manifest&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.vid_lock" style="display:none">
@@ -12559,6 +12602,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Fri Aug 01 00:40:39 2025 +0100</ADDRESS>
+	This document was generated at Mon Sep 01 12:45:36 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

@@ -450,10 +450,10 @@ static void FontDeInitTextures(void)
 static void FontReInitTextures(void)
 { // Ignore if no fonts
   if(cFonts->empty()) return;
-  // Re-init all the font textures and log pre/post init
-  cLog->LogDebugExSafe("Fonts re-initialising $ objects...", cFonts->size());
+  // Reinit all the font textures and log pre/post init
+  cLog->LogDebugExSafe("Fonts reinitialising $ objects...", cFonts->size());
   for(Font*const fCptr : *cFonts) fCptr->ReloadTexture();
-  cLog->LogInfoExSafe("Fonts re-initialising $ objects.", cFonts->size());
+  cLog->LogInfoExSafe("Fonts reinitialising $ objects.", cFonts->size());
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

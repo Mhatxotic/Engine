@@ -496,7 +496,7 @@ LLFUNC(Matrix, 2, LuaUtilPushVar(lS, cFboCore->GetMatrixWidth(),
 // < Height:number=The new height of the main frame buffer
 // > Success:boolean=Returns whether the frame buffer changed or not.
 // ? This is a run-time override for 'vid_orwidth' and 'vid_orheight' cvars in
-// ? which the main frame buffer viewport is re-calculated and re-initialised
+// ? which the main frame buffer viewport is re-calculated and reinitialised
 // ? to these dimensions. Note that this modifies the console size as well.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Resize, 1,

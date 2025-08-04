@@ -80,7 +80,6 @@ namespace E {                          // Start of engine namespace
 #include "luacode.hpp"                 // Lua code subsystem header
 #include "json.hpp"                    // Json handling class header
 #include "cvars.hpp"                   // CVars management class header
-#include "lua.hpp"                     // Lua core subsystem header
 #include "socket.hpp"                  // Socket handling class header
 #include "console.hpp"                 // Console handling header
 #include "oal.hpp"                     // OpenAL audio header
@@ -132,6 +131,7 @@ namespace E {                          // Start of engine namespace
 #include "audio.hpp"                   // Audio base management class header
 #include "luavar.hpp"                  // Lua variable class
 #include "luacmd.hpp"                  // Lua console command class
+#include "lua.hpp"                     // Lua core subsystem header
 #include "core.hpp"                    // Core class header
 #include "lualib.hpp"                  // Lua function API library
 /* ------------------------------------------------------------------------- */

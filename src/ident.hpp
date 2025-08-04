@@ -198,7 +198,9 @@ template<typename IntType = uint64_t,             // Counter integer type
 class IdentCMaster :
   /* -- Initialisers ------------------------------------------------------ */
   public SlaveClass                    // Might as well reuse it
-{ /* -- Protected functions ------------------------------------- */ protected:
+{ /* -- Protected functions ---------------------------------------- */ public:
+  void CounterReset(const IntType itValue) { this->itCounter = itValue; }
+  /* -------------------------------------------------------------*/ protected:
   IdentCMaster() :
     /* -- Initialisers ----------------------------------------------------- */
     SlaveClass(0)                      // Initialise id at zero

@@ -994,6 +994,8 @@ template<typename IntType> // Forcing any type to GLenum
   static const string_view &ImageGetPixelFormat(const IntType itMode)
      { return cImages->idFormatModes.Get(static_cast<TextureType>(itMode)); }
 /* ------------------------------------------------------------------------- */
+typedef vector<Image> ImageVector;     // Vector of images
+/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

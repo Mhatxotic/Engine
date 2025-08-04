@@ -51,14 +51,15 @@ class GlFWRes                          // Members initially private
     iIndex(iId),                       // Initialise video mode index
     vmData(vmD),                       // Initialise video mode data
     iDepth(Red() + Green() + Blue())   // Initialise video mode total bits
-    /* -- No code ---------------------------------------------------------- */
+    /* -- Update unique identifier of monitor ------------------------------ */
     { }
 };/* ----------------------------------------------------------------------- */
 typedef vector<GlFWRes> GlFWResList;   // Vector of resolution classes
+typedef GlFWResList::const_iterator GlFWResListConstIt;
 /* ------------------------------------------------------------------------- */
 class GlFWMonitor :                    // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  public GlFWResList,                  // Resolutions list
+  private GlFWResList,                 // Resolutions list
   public DimCoInt                      // Position and physical size
 { /* -- Private variables -------------------------------------------------- */
   const int      iIndex;               // Monitor index
@@ -90,8 +91,6 @@ class GlFWMonitor :                    // Members initially private
   GLFWmonitor *Context(void) const { return mContext; }
   /* -- Get glfw monitor id ------------------------------------------------ */
   int Index(void) const { return iIndex; }
-  /* -- Get primary monitor ------------------------------------------------ */
-  const GlFWRes *Primary(void) const { return rPrimary; }
   /* -- Get monitor name --------------------------------------------------- */
   const string &Name(void) const { return strName; }
   /* -- Return diagonal size ----------------------------------------------- */
@@ -100,6 +99,15 @@ class GlFWMonitor :                    // Members initially private
   /* -- Return size -------------------------------------------------------- */
   double WidthInch(void) const { return ddInches.DimGetWidth(); }
   double HeightInch(void) const { return ddInches.DimGetHeight(); }
+  /* -- Get primary resolution --------------------------------------------- */
+  const GlFWRes *PrimaryPtr(void) const { return rPrimary; }
+  const GlFWRes &Primary(void) const { return *rPrimary; }
+  /* -- Resolution list access --------------------------------------------- */
+  const GlFWRes &Get(const size_t stIndex) const { return (*this)[stIndex]; }
+  const GlFWRes *GetPtr(const size_t stIndex) const { return &Get(stIndex); }
+  const GlFWResListConstIt Begin(void) const { return cbegin(); }
+  const GlFWResListConstIt End(void) const { return cend(); }
+  size_t Count(void) const { return size(); }
   /* -- Constructor -------------------------------------------------------- */
   GlFWMonitor(const int iId, GLFWmonitor*const mC) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -116,7 +124,7 @@ class GlFWMonitor :                    // Members initially private
     dDiagonalInches(                   // Initialise diagonal length in inches
       UtilMillimetresToInches(dDiagonal)),
     strName{ StdMove(InitName(mC)) }   // Initialise monitor name
-  /* -- No code ------------------------------------------------------------ */
+  /* -- Build monitor list ------------------------------------------------- */
   { // Get primary video mode information. Note that if a monitor is
     // just connecting, the width, height and refreshRate properties can be
     // zero which means we cannot detect the current resolution right now.
@@ -132,8 +140,7 @@ class GlFWMonitor :                    // Members initially private
           for(int iMode = 0; iMode < iModes; ++iMode)
           { // Monitor data to add. Do not use insert() here as it causes
             // a realloc and our pointers will be invalidated.
-            const GlFWRes rData{ iMode, vModes[iMode] };
-            emplace_back(StdMove(rData));
+            push_back({ iMode, vModes[iMode] });
             // Ignore if this is not the active resolution for this display
             if(!back().Same(*vPrimary)) continue;
             // Set active resolution
@@ -165,24 +172,15 @@ class GlFWMonitor :                    // Members initially private
   }
 };/* ----------------------------------------------------------------------- */
 typedef vector<GlFWMonitor> GlFWMonitorList; // Vector of monitor classes
+typedef GlFWMonitorList::const_iterator GlFWMonitorListConstIt;
 /* ------------------------------------------------------------------------- */
-struct GlFWMonitors :
+class GlFWMonitors :
   /* -- Base classes ------------------------------------------------------- */
-  public GlFWMonitorList               // Monitors list
+  private GlFWMonitorList              // Monitors list
 { /* ----------------------------------------------------------------------- */
   const GlFWMonitor *moPrimary;        // Primary monitor
-  /* -- Find a match from specified glfw monitor context ------------------- */
-  const GlFWMonitor *Find(GLFWmonitor*const moCptr)
-  { // Find the GLFW context in our structured classes
-    typedef GlFWMonitorList::const_iterator GlFWMonitorListConstIt;
-    const GlFWMonitorListConstIt gwmlciIt{
-      StdFindIf(par_unseq, cbegin(), cend(), [moCptr](const GlFWMonitor &moIt)
-        { return moIt.Context() == moCptr; }) };
-    // Return the pointer to it or NULL if not found
-    return gwmlciIt != cend() ? &(*gwmlciIt) : nullptr;
-  }
-  /* ----------------------------------------------------------------------- */
-  void Refresh(void)
+  /* --------------------------------------------------------------- */ public:
+  void MonitorsRefresh(void)
   { // Reset primary monitor
     moPrimary = nullptr;
     // Clear monitor list and free memory because we're using pointers to
@@ -209,12 +207,16 @@ struct GlFWMonitors :
         reserve(static_cast<size_t>(iMonitors));
         // Display information about each new monitor
         for(int iMonitor = 0; iMonitor < iMonitors; ++iMonitor)
-        { // Monitor data to add. Do not use const or insert() here as it
+        { // Get monitor pointer
+          GLFWmonitor*const mMonitor = mMonitors[iMonitor];
+          // Monitor data to add. Do not use const or insert() here as it
           // causes a realloc and our pointers will be invalidated.
-          GlFWMonitor mData{ iMonitor, mMonitors[iMonitor] };
-          emplace_back(StdMove(mData));
+          push_back({ iMonitor, mMonitor });
+          // Get pointer to new monitor class and set it in glfw
+          GlFWMonitor*const moMonPtr = &back();
+          glfwSetMonitorUserPointer(mMonitor, moMonPtr);
           // Set primary monitor handle
-          if(back().Context() == mPrimary) moPrimary = &back();
+          if(mMonitor == mPrimary) moPrimary = moMonPtr;
         } // Check that we detected the primary resolution and monitor
         if(!moPrimary) XC("Could not detect primary monitor id!");
       } // Failed to detect monitor list
@@ -223,7 +225,16 @@ struct GlFWMonitors :
     else XC("Could not detect primary monitor!");
   }
   /* -- Get primary monitor ------------------------------------------------ */
-  const GlFWMonitor *Primary(void) const { return moPrimary; }
+  const GlFWMonitor *MonitorsPrimaryPtr(void) const { return moPrimary; }
+  const GlFWMonitor &MonitorsPrimary(void) const { return *moPrimary; }
+  /* -- Monitor list access ------------------------------------------------ */
+  const GlFWMonitor &MonitorsGet(const size_t stIndex) const
+    { return (*this)[stIndex]; }
+  const GlFWMonitor *MonitorsGetPtr(const size_t stIndex) const
+    { return &MonitorsGet(stIndex); }
+  const GlFWMonitorListConstIt MonitorsBegin(void) const { return cbegin(); }
+  const GlFWMonitorListConstIt MonitorsEnd(void) const { return cend(); }
+  size_t MonitorsCount(void) const { return size(); }
   /* ----------------------------------------------------------------------- */
   GlFWMonitors(void) : moPrimary(nullptr) { }
 };/* ----------------------------------------------------------------------- */

@@ -67,7 +67,8 @@ class Console :                        // Members initially private
   private ConLinesConstIt,             // Text lines forward iterator
   private ConLinesConstRevIt,          // Text lines reverse iterator
   private InitHelper,                  // Initialisation helper
-  public ConsoleFlags                  // Console flags
+  public ConsoleFlags,                 // Console flags
+  private EvtMainRegAuto               // Events list to register
 { /* -- Private typedefs --------------------------------------------------- */
   typedef queue<ConLine> ConLineQueue; // Pending console lines
   /* -- Input -------------------------------------------------------------- */
@@ -93,11 +94,15 @@ class Console :                        // Members initially private
   string           strStatusLeft,      // Text-mode console left status text
                    strStatusRight;     // Text-mode console right status text
   string_view      strvTimeFormat;     // Default time format
-  /* -- Other -------------------------------------------------------------- */
+  /* -- Autocomplete ------------------------------------------------------- */
   AutoCompleteFlags acFlags;           // Flags for autocomplete
+  typedef set<string>                  AuComItSet;
+  typedef AuComItSet::const_iterator   AuComItSetConstIt;
+  AuComItSet        acisList;          // Autocompleted strings list
+  AuComItSetConstIt acisciCurrent;     // Current position iterator
+  /* -- Other -------------------------------------------------------------- */
   const ConCmdStaticList &ccslInt;     // Default console cmds list
   CmdMap           cmMap;              // Console commands list
-  const EvtMainRegVec emrvEvents;      // Events list to register
   /* -- Do clear console, clear history and reset position ----------------- */
   void DoFlush(void)
   { // Do clear the console output lines
@@ -162,49 +167,68 @@ class Console :                        // Members initially private
     // Update history to first item
     slriInputPosition = slHistory.crend();
   }
-  /* -- TestAutoComplete ------------------- Processes a successful match -- */
-  template<class MapType>
-    bool TestAutoComplete(const MapType &mtList, const size_t stBPos,
-      const size_t stEPos, const string &strWhat)
-  { // Setup iterator to find item and return if empty
-    typedef typename MapType::const_iterator MapIterator;
-    const MapIterator ciItem{ mtList.lower_bound(strWhat) };
-    if (ciItem == mtList.cend()) return false;
-    // Get reference name of item and return failed if comparison failed
-    const string &strKey = ciItem->first;
-    if(strKey.compare(0, strWhat.size(), strWhat)) return false;
+  /* -- Reset auto complete ------------------------------------------------ */
+  void AutoCompleteReset(void)
+  { // Return if already reset
+    if(acisList.empty()) return;
+    // Clear the auto-complete string list
+    acisList.clear();
+    // Set current selection to uninitialised
+    acisciCurrent = acisList.cend();
+  }
+  /* -- AutoComplete ------------ Auto complete the word under the cursor -- */
+  bool AutoComplete(void)
+  { // Do not attempt to autocomplete if disabled
+    if(acFlags == AC_NONE) return false;
+    // Grab the word where the cursor is in line to autocomplete
+    const size_t stBPos = strConsoleBegin.find_last_of(' '),
+                 stEPos = strConsoleEnd.find(' ');
+    const string strWord{ (stBPos == StdNPos
+      ? strConsoleBegin : strConsoleBegin.substr(stBPos + 1)) +
+                          (stEPos == StdNPos
+      ? strConsoleEnd : strConsoleEnd.substr(0, stEPos)) };
+    // If we have an existing autocomplete list?
+    if(acisciCurrent != acisList.cend())
+    { // Set next item and if invalid then restart
+      if(++acisciCurrent == acisList.cend()) acisciCurrent = acisList.cbegin();
+    } // Pressing autocomplete for the first time?
+    else
+    { // Clear list for new entries
+      acisList.clear();
+      // Start adding matching commands
+      for(CmdMapConstIt cmiIt{ cmMap.lower_bound(strWord) };
+                        cmiIt != cmMap.cend();
+                      ++cmiIt)
+      { // Get string and break if prefix doesn't match this command
+        const string &strKey = cmiIt->first;
+        if(strKey.compare(0, strWord.size(), strWord)) break;
+        // Insert command into list. It HAS to copy the full string incase the
+        // specified command is unregistered whilst enumerating.
+        acisList.emplace(strKey);
+      } // Start adding matching cvars
+      for(CVarMapConstIt cvmiIt{ cCVars->GetVarList().lower_bound(strWord)};
+                         cvmiIt != cCVars->GetVarListEnd();
+                       ++cvmiIt)
+      { // Get string and break if prefix doesn't match this command
+        const string &strKey = cvmiIt->first;
+        if(strKey.compare(0, strWord.size(), strWord)) break;
+        // Insert cvar into list. It HAS to copy the full string incase the
+        // specified cvar is unregistered whilst enumerating.
+        acisList.emplace(strKey);
+      } // Set first item in autocompleted list and if no entries?
+      acisciCurrent = acisList.cbegin();
+      if(acisciCurrent == acisList.cend()) return false;
+    } // Get reference name of item and return failed if comparison failed
+    const string &strKey = *acisciCurrent;
     // We found the word so now we need to replace it with the actual command.
     if(stBPos == StdNPos) strConsoleBegin = strKey;
     else strConsoleBegin =
       StrAppend(strConsoleBegin.substr(0, stBPos+1), strKey);
     if(stEPos == StdNPos) strConsoleEnd.clear();
     else strConsoleEnd = strConsoleEnd.substr(stEPos);
-    // Redraw the console because we changed the input field
+    // Redraw console and return success
     SetRedraw();
-    // Succeeded
     return true;
-  }
-  /* -- AutoComplete ------------ Auto complete the word under the cursor -- */
-  bool AutoComplete(void)
-  { // Do not attempt to autocomplete if disabled
-    if(acFlags == AC_NONE) return false;
-    // Find last whitespace or use the whole text on the beginning text
-    // and also find first whitespace or use the whole text on the end text
-    const size_t stBPos = strConsoleBegin.find_last_of(' '),
-                 stEPos = strConsoleEnd.find(' ');
-    // Grab word to autocomplete and return if it is empty
-    const string strWhat{ (stBPos == StdNPos
-      ? strConsoleBegin : strConsoleBegin.substr(stBPos + 1)) +
-                          (stEPos == StdNPos
-      ? strConsoleEnd : strConsoleEnd.substr(0, stEPos)) };
-    // Return failure if word is empty... or
-    if(strWhat.empty()) return false;
-    // Walk through all the commands and check if the partial command matches
-    // and then try the cvars if failed.
-    return (acFlags.FlagIsSet(AC_COMMANDS) &&
-            TestAutoComplete(cmMap, stBPos, stEPos, strWhat)) ||
-           (acFlags.FlagIsSet(AC_CVARS) &&
-            TestAutoComplete(cCVars->GetVarList(), stBPos, stEPos, strWhat));
   }
   /* -- Return text input -------------------------------------------------- */
   bool InputEmpty(void)
@@ -226,11 +250,13 @@ class Console :                        // Members initially private
   /* -- OnCharPress --------------------------- Console character pressed -- */
   void OnCharPress(const unsigned int uiKey)
   { // Ignore first key? Ignore it
-    if(FlagIsSet(CF_IGNOREKEY)) FlagClear(CF_IGNOREKEY);
+    if(FlagIsSet(CF_IGNOREKEY)) return FlagClear(CF_IGNOREKEY);
     // Insert character if insert mode is on
-    else if(FlagIsSet(CF_INSERT)) AddInputChar(uiKey);
+    if(FlagIsSet(CF_INSERT)) AddInputChar(uiKey);
     // Repalce character in input buffer
     else ReplaceInputChar(uiKey);
+    // Reset autocomplete
+    AutoCompleteReset();
   }
   /* -- OnForceRedraw ------------------- Force a terminal display update -- */
   void OnForceRedraw(const EvtMainEvent&)
@@ -242,35 +268,38 @@ class Console :                        // Members initially private
     // Control key, which key?
     if(iMods & GLFW_MOD_CONTROL) switch(iKey)
     { // Test keys with control held
-      case GLFW_KEY_PAGE_UP   : MoveLogPageUp(); break;
-      case GLFW_KEY_PAGE_DOWN : MoveLogPageDown(); break;
-      case GLFW_KEY_HOME      : MoveLogHome(); break;
-      case GLFW_KEY_END       : MoveLogEnd(); break;
+      case GLFW_KEY_C: break;
+      case GLFW_KEY_V: break;
+      case GLFW_KEY_PAGE_UP: MoveLogPageUp(); return;
+      case GLFW_KEY_PAGE_DOWN: MoveLogPageDown(); return;
+      case GLFW_KEY_HOME: MoveLogHome(); return;
+      case GLFW_KEY_END: MoveLogEnd(); return;
 #if defined(MACOS) // Because MacOS keyboards don't have an 'insert' key.
-      case GLFW_KEY_DELETE    : ToggleCursorMode(); break;
+      case GLFW_KEY_DELETE: ToggleCursorMode(); return;
 #endif
       // Unknown key (ignore)
-      default: break;
+      default: return;
     } // Normal key, which key?
-    else switch(iKey)
+    switch(iKey)
     { // Test keys with no modifiers held
-      case GLFW_KEY_PAGE_UP   : MoveLogUp(); break;
-      case GLFW_KEY_PAGE_DOWN : MoveLogDown(); break;
-      case GLFW_KEY_HOME      : CursorHome(); break;
-      case GLFW_KEY_END       : CursorEnd(); break;
-      case GLFW_KEY_BACKSPACE : PopInputBeforeCursor(); break;
-      case GLFW_KEY_DELETE    : PopInputAfterCursor(); break;
-      case GLFW_KEY_UP        : HistoryMoveBack(); break;
-      case GLFW_KEY_DOWN      : HistoryMoveForward(); break;
-      case GLFW_KEY_ESCAPE    : ClearInput(); break;
-      case GLFW_KEY_LEFT      : CursorLeft(); break;
-      case GLFW_KEY_RIGHT     : CursorRight(); break;
-      case GLFW_KEY_ENTER     : Execute(); break;
-      case GLFW_KEY_TAB       : AutoComplete(); break;
-      case GLFW_KEY_INSERT    : ToggleCursorMode(); break;
+      case GLFW_KEY_PAGE_UP: MoveLogUp(); return;
+      case GLFW_KEY_PAGE_DOWN: MoveLogDown(); return;
+      case GLFW_KEY_HOME: CursorHome(); break;
+      case GLFW_KEY_END: CursorEnd(); break;
+      case GLFW_KEY_BACKSPACE: PopInputBeforeCursor(); break;
+      case GLFW_KEY_DELETE: PopInputAfterCursor(); break;
+      case GLFW_KEY_UP: HistoryMoveBack(); break;
+      case GLFW_KEY_DOWN: HistoryMoveForward(); break;
+      case GLFW_KEY_ESCAPE: ClearInput(); break;
+      case GLFW_KEY_LEFT: CursorLeft(); break;
+      case GLFW_KEY_RIGHT: CursorRight(); break;
+      case GLFW_KEY_ENTER: Execute(); break;
+      case GLFW_KEY_TAB: AutoComplete(); return;
+      case GLFW_KEY_INSERT: ToggleCursorMode(); return;
       // Unknown key (ignore)
-      default: break;
-    }
+      default: return;
+    } // Reset autocomplete
+    AutoCompleteReset();
   }
   /* -- Pop the back of the before cursor string --------------------------- */
   void PopInputBeforeCursor(void)
@@ -836,13 +865,9 @@ class Console :                        // Members initially private
       ccslInt.size());
     // Reset cursor position
     clriPosition = rbegin();
-    // Using text mode?
-    if(cSystem->IsTextMode())
-    { // Add flag for it
-      GetDefaultRedrawFlags().FlagReset(RD_TEXT);
-      // Register console events
-      cEvtMain->RegisterEx(emrvEvents);
-    } // Redraw the console
+    // Using text mode? Reset text flag
+    if(cSystem->IsTextMode()) GetDefaultRedrawFlags().FlagReset(RD_TEXT);
+    // Redraw the console
     SetRedraw();
     // Initially shown and not closable
     FlagSet(CF_CANTDISABLE|CF_ENABLED|CF_INSERT);
@@ -868,8 +893,6 @@ class Console :                        // Members initially private
     cLog->LogDebugSafe("Console de-initialising...");
     // Initially shown and not closable. All other flags removed.
     FlagReset(CF_CANTDISABLE|CF_ENABLED|CF_INSERT);
-    // Unregister console events if using text mode
-    if(cSystem->IsTextMode()) cEvtMain->UnregisterEx(emrvEvents);
     // If commands registered?
     switch(const size_t stCount = cmMap.size())
     { // Impossible?
@@ -894,6 +917,9 @@ class Console :                        // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Init helper function name
     Flags{ CF_NONE },                  // No initial flags
+    EvtMainRegAuto{ cEvtMain, {        // Default events
+      { EMC_CON_UPDATE, bind(&Console::OnForceRedraw, this, _1) },
+    } },
     clriPosition{ rbegin() },          // Input position at beginning
     slriInputPosition{                 // Init log position...
       slHistory.crend() },             // ...at beginning
@@ -908,11 +934,8 @@ class Console :                        // Members initially private
     rfFlags{ RD_NONE },                // Redraw type
     cTextColour(COLOUR_WHITE),         // Default white text colour
     acFlags{ AC_NONE },                // No autocomplete flags
-    ccslInt{ ccslDef },                // Set default commands list
-    /* --------------------------------------------------------------------- */
-    emrvEvents{                        // Default events
-      { EMC_CON_UPDATE, bind(&Console::OnForceRedraw, this, _1) },
-    }
+    acisciCurrent{ acisList.cend() },  // Autocomplete not initialised
+    ccslInt{ ccslDef }                 // Set default commands list
     /* -- Set global pointer to static class ------------------------------- */
     { cConsole = this; }
   /* -- Set page move count ---------------------------------------- */ public:

@@ -40,7 +40,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialsation helper
   public InputFlags,                   // Input configuration settings
-  private EvtMainRegVec,               // Events list to register
+  private EvtMainRegAuto,              // Events list to register
   public DimInt,                       // Window dimensions
   public Joystick                      // Joystick class
 { /* -- Console ------------------------------------------------------------ */
@@ -56,7 +56,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Filtered key pressed ----------------------------------------------- */
   void OnFilteredKey(const EvtMainEvent &emeEvent)
   { // Get key pressed
-    const unsigned int uiKey = emeEvent.eaArgs[1].ui;
+    const unsigned int uiKey = emeEvent.eaArgs[1].UInt();
     // If console is enabled, send it to console instead
     if(cConsole->IsVisible()) return cConsole->OnCharPress(uiKey);
     // Else send the key to lua callbacks
@@ -69,20 +69,20 @@ class Input :                          // Handles keyboard, mouse & controllers
     // Do not process this event if input disabled on lack of mouse focus
 #if defined(MACOS)
     // Get mouse position. We might need to clamp it
-    double dX = emaArgs[1].d, dY = emaArgs[2].d;
+    double dX = emaArgs[1].Double(), dY = emaArgs[2].Double();
     // If mouse clamp enabled?
     if(FlagIsSet(IF_CLAMPMOUSE))
     { // Return if mouse out of focus
       if(FlagIsClear(IF_MOUSEFOCUS)) return;
       // Clamp mouse co-ordinates if out of the window?
       if(dX < 0.0) dX = 0.0;
-      else if(dX >= DimGetWidth()) dX = DimGetWidth()-1;
+      else if(dX >= DimGetWidth()) dX = DimGetWidth() - 1;
       if(dY < 0.0) dY = 0.0;
-      else if(dY >= DimGetHeight()) dY = DimGetHeight()-1;
+      else if(dY >= DimGetHeight()) dY = DimGetHeight() - 1;
     }
 #else
     // Get mouse position
-    const double dX = emaArgs[1].d, dY = emaArgs[2].d;
+    const double dX = emaArgs[1].Double(), dY = emaArgs[2].Double();
 #endif
     // Recalculate cursor position based on framebuffer size and send the new
     // co-ordinates to the lua callback handler
@@ -97,7 +97,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Mouse went inside the window --------------------------------------- */
   void OnMouseFocus(const EvtMainEvent &emeEvent)
   { // Get and check state
-    const int iState = emeEvent.eaArgs[1].i;
+    const int iState = emeEvent.eaArgs[1].Int();
     switch(iState)
     { // Mouse is in the window? Set mouse in window flag
       case GLFW_TRUE:
@@ -130,7 +130,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get movements
-    const double dX = emaArgs[1].d, dY = emaArgs[2].d;
+    const double dX = emaArgs[1].Double(), dY = emaArgs[2].Double();
     // If console is enabled and ctrl not pressed? Send it to console instead
     if(cConsole->IsVisible()) return cConGraphics->OnMouseWheel(dX, dY);
     // Set event to lua callbacks
@@ -141,14 +141,16 @@ class Input :                          // Handles keyboard, mouse & controllers
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Set event to lua callbacks
-    lfOnMouseClick.LuaFuncDispatch(emaArgs[1].i, emaArgs[2].i, emaArgs[3].i);
+    lfOnMouseClick.LuaFuncDispatch(emaArgs[1].Int(), emaArgs[2].Int(),
+      emaArgs[3].Int());
   }
   /* -- Unfiltered key pressed --------------------------------------------- */
   void OnKeyPress(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get key code, state and modifier state
-    const int iKey = emaArgs[1].i, iState = emaArgs[3].i, iMod = emaArgs[4].i;
+    const int iKey = emaArgs[1].Int(), iState = emaArgs[3].Int(),
+      iMod = emaArgs[4].Int();
     // If...
     if(iMod == GLFW_MOD_ALT &&         // ALT key pressed/released/repeated?
        iKey == GLFW_KEY_ENTER &&       // ENTER key pressed/released/repeated?
@@ -195,7 +197,7 @@ class Input :                          // Handles keyboard, mouse & controllers
         // Don't dispatch an event
         return;
     } // Send lua event with key, state, mod and scan code
-    lfOnKey.LuaFuncDispatch(iKey, iState, iMod, emaArgs[2].i);
+    lfOnKey.LuaFuncDispatch(iKey, iState, iMod, emaArgs[2].Int());
   }
   /* -- Files dragged and dropped on window--------------------------------- */
   void OnDragDrop(const EvtMainEvent&)
@@ -221,7 +223,7 @@ class Input :                          // Handles keyboard, mouse & controllers
     { cEvtWin->AddUnblock(EWC_WIN_CURSETVIS, FlagIsSet(IF_CURSOR)); }
   /* -- Set visibility of mouse cursor ------------------------------------- */
   void SetCursor(const bool bState)
-  { // Set member var incase window needs to re-init so we can restore the
+  { // Set member var incase window needs to reinit so we can restore the
     // cursor state
     FlagSetOrClear(IF_CURSOR, bState);
     // Request to set cursor visibility
@@ -261,10 +263,6 @@ class Input :                          // Handles keyboard, mouse & controllers
   void SetCursorCentre(void)
     { SetCursorPos(cFboCore->GetMatrixWidth() / 2.0f,
                    cFboCore->GetMatrixHeight() / 2.0f); }
-  /* -- Disable input events ----------------------------------------------- */
-  void DisableInputEvents(void) { cEvtMain->UnregisterEx(*this); }
-  /* -- Enable input events ------------------------------------------------ */
-  void EnableInputEvents(void) { cEvtMain->RegisterEx(*this); }
   /* -- Init --------------------------------------------------------------- */
   void Init(void)
   { // if window not available? This should never happen but we will put
@@ -287,8 +285,6 @@ class Input :                          // Handles keyboard, mouse & controllers
     SetCursor(FlagIsSet(IF_CURSOR));
     // Init joystick system
     JoyInit();
-    // Init input engine events
-    EnableInputEvents();
     // Log progress
     cLog->LogDebugExSafe("Input interface initialised (R:$;J:$).",
       StrFromBoolTF(GlFWIsRawMouseMotionSupported()), JoyGetCount());
@@ -299,8 +295,6 @@ class Input :                          // Handles keyboard, mouse & controllers
     if(IHNotDeInitialise()) return;
     // Log progress
     cLog->LogDebugSafe("Input interface deinitialising...");
-    // Deinit engine events in the order they were registered
-    DisableInputEvents();
     // De-init joystick system
     JoyDeInit();
     // Log progress
@@ -314,7 +308,7 @@ class Input :                          // Handles keyboard, mouse & controllers
     InitHelper{ __FUNCTION__ },        // Init initialisation helper class
     InputFlags{ IF_NONE },             // No flags set initially
     /* -- Init events for event manager ------------------------------------ */
-    EvtMainRegVec{                     // Events list to register
+    EvtMainRegAuto{ cEvtMain, {        // Events list to register
       { EMC_INP_CHAR,         bind(&Input::OnFilteredKey, this, _1) },
       { EMC_INP_PASTE,        bind(&Input::OnWindowPaste, this, _1) },
       { EMC_INP_MOUSE_MOVE,   bind(&Input::OnMouseMove,   this, _1) },
@@ -324,7 +318,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       { EMC_INP_KEYPRESS,     bind(&Input::OnKeyPress,    this, _1) },
       { EMC_INP_DRAG_DROP,    bind(&Input::OnDragDrop,    this, _1) },
       { EMC_INP_JOY_STATE,    bind(&Joystick::OnJoyState, this, _1) },
-    },
+    } },
     /* -- More initialisers ------------------------------------------------ */
     iConKey1(GLFW_KEY_UNKNOWN),        // Init primary console key
     iConKey2(iConKey1),                // Init secondary console key

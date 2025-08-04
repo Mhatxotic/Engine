@@ -22,9 +22,9 @@ using namespace IStd::P;               using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Clipboard collector and lua interface class -------------------------- */
-CTOR_BEGIN(Clips, Clip, CLHelperUnsafe,
+CTOR_BEGIN(Clips, Clip, CLHelperUnsafe,,,
   /* ----------------------------------------------------------------------- */
-  const EvtWinRegVec ewrvEvents;,,     // Events list to register
+  private EvtWinRegAuto,               // Events list to register
   private LuaEvtMaster<Clip, LuaEvtTypeAsync<Clip>>
 );/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
@@ -56,13 +56,13 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   }
   /* -- Window set clipboard request --------------------------------------- */
   static void ClipOnSetNRCb(const EvtWinEvent &eweEvent)
-    { reinterpret_cast<Clip*>(eweEvent.eaArgs.front().vp)->ClipOnSetNRCbT(); }
+    { eweEvent.eaArgs.front().Ptr<Clip>()->ClipOnSetNRCbT(); }
   /* -- Window get clipboard request in window thread ---------------------- */
   static void ClipOnGetCb(const EvtWinEvent &eweEvent)
-    { reinterpret_cast<Clip*>(eweEvent.eaArgs.front().vp)->ClipOnGetCbT(); }
+    { eweEvent.eaArgs.front().Ptr<Clip>()->ClipOnGetCbT(); }
   /* -- Window set clipboard request --------------------------------------- */
   static void ClipOnSetCb(const EvtWinEvent &eweEvent)
-    { reinterpret_cast<Clip*>(eweEvent.eaArgs.front().vp)->ClipOnSetCbT(); }
+    { eweEvent.eaArgs.front().Ptr<Clip>()->ClipOnSetCbT(); }
   /* -- Async thread event callback (called by LuaEvtMaster) --------------- */
   void LuaEvtCallbackAsync(const EvtMainEvent &emeEvent) try
   { // Get reference to string vector and we need three parameters
@@ -117,16 +117,14 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     { }
 };/* ----------------------------------------------------------------------- */
-CTOR_END(Clips, Clip, CLIP,            // Finish 'Clips' class body
+CTOR_END(Clips, Clip, CLIP,,,,         // Finish 'Clips' class body
   /* -- Collector initialisers --------------------------------------------- */
-  cEvtWin->RegisterEx(ewrvEvents),     // Register all events in 'ewrvEvents'
-  cEvtWin->UnregisterEx(ewrvEvents),,  // Unregister all events in 'ewrvEvents'
-  LuaEvtMaster{ EMC_CB_EVENT },        // Setup Lua event master
-  ewrvEvents{                          // Define handled Window thread events
+  EvtWinRegAuto{ cEvtWin, {            // Define handled Window thread events
     { EWC_CB_SET,   &Clip::ClipOnSetCb   },
     { EWC_CB_GET,   &Clip::ClipOnGetCb   },
     { EWC_CB_SETNR, &Clip::ClipOnSetNRCb },
-  }
+  } },
+  LuaEvtMaster{ EMC_CB_EVENT }         // Setup Lua event master
 );/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

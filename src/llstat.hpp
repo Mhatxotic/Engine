@@ -41,11 +41,58 @@ struct AgColumn : public AgSSizeTLGE {
 ** ## Stat:* member functions                                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
+// $ Stat:Cells
+// < Count:integer=Number of cells added
+// ? Returns the number of cells in the table
+/* ------------------------------------------------------------------------- */
+LLFUNC(Cells, 1, AgStat{lS, 1}().Cells())
+/* ========================================================================= */
 // $ Stat:Data
 // > String:string=Data string to add to the cell.
 // ? Inserts the specified string into the next cell.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Data, 0, AgStat{lS, 1}().Data(AgString{lS, 2}))
+/* ========================================================================= */
+// $ Stat:DataB
+// > String:string=Number of bytes to convert to readable.
+// > Precision:integer=Amount of precision to use on the number.
+// ? Formats the specified cell as bytes.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DataB, 0,
+  const AgStat aStat{lS, 1};
+  const AgLuaInteger aValue{lS, 2};
+  const AgInt aPrecision{lS, 3};
+  aStat().DataB(aValue(), aPrecision))
+/* ========================================================================= */
+// $ Stat:DataFB
+// > String:string=Number of bytes to convert to readable.
+// > Precision:integer=Amount of precision to use on the number.
+// ? Formats the specified cell as bytes but with a human readable number.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DataFB, 0,
+  const AgStat aStat{lS, 1};
+  const AgLuaInteger aValue{lS, 2};
+  const AgInt aPrecision{lS, 3};
+  aStat().DataFB(aValue(), aPrecision))
+/* ========================================================================= */
+// $ Stat:DataFI
+// > Value:integer=Integer to add to the next cell.
+// ? Inserts the specified integer into the next cell but as a human readable
+// ? number.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DataFI, 0, AgStat{lS, 1}().DataFN(AgLuaInteger{lS, 2}()))
+/* ========================================================================= */
+// $ Stat:DataFN
+// > Value:number=Number to add to the next cell.
+// > Precision:integer=Amount of precision to use on the number.
+// ? Inserts the specified number into the next cell but as a human readable
+// ? number.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DataFN, 0,
+  const AgStat aStat{lS, 1};
+  const AgLuaNumber aValue{lS, 2};
+  const AgInt aPrecision{lS, 3};
+  aStat().DataFN(aValue(), aPrecision))
 /* ========================================================================= */
 // $ Stat:DataI
 // > Value:integer=Integer to add to the next cell.
@@ -127,6 +174,12 @@ LLFUNC(Name, 1, LuaUtilPushVar(lS, AgStat{lS, 1}().IdentGet()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Reserve, 0, AgStat{lS, 1}().Reserve(AgSizeT{lS, 2}))
 /* ========================================================================= */
+// $ Stat:Rows
+// < Count:integer=Number of rows registered
+// ? Returns the number of complete rows in the table
+/* ------------------------------------------------------------------------- */
+LLFUNC(Rows, 1, AgStat{lS, 1}().Rows())
+/* ========================================================================= */
 // $ Stat:Sort
 // > Column:integer=Sort from this column
 // > Reverse:boolean=Sort the list in descending order
@@ -156,10 +209,11 @@ LLFUNC(SortTwo, 0,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // stat:* member functions begin
-  LLRSFUNC(Data),   LLRSFUNC(DataI),  LLRSFUNC(DataN),      LLRSFUNC(Destroy),
-  LLRSFUNC(Finish), LLRSFUNC(Header), LLRSFUNC(HeaderDupe), LLRSFUNC(Headers),
-  LLRSFUNC(Id),     LLRSFUNC(Name),   LLRSFUNC(Reserve),    LLRSFUNC(Sort),
-  LLRSFUNC(SortTwo),
+  LLRSFUNC(Cells),   LLRSFUNC(Data),   LLRSFUNC(DataB),  LLRSFUNC(DataFB),
+  LLRSFUNC(DataFI),  LLRSFUNC(DataFN), LLRSFUNC(DataI),  LLRSFUNC(DataN),
+  LLRSFUNC(Destroy), LLRSFUNC(Finish), LLRSFUNC(Header), LLRSFUNC(HeaderDupe),
+  LLRSFUNC(Headers), LLRSFUNC(Id),     LLRSFUNC(Name),   LLRSFUNC(Reserve),
+  LLRSFUNC(Rows),    LLRSFUNC(Sort),   LLRSFUNC(SortTwo),
 LLRSEND                                // Stat:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

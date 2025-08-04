@@ -21,28 +21,56 @@ enum EvtArgVarType : unsigned int      // EvtArgVar variable types
   EAVT_DOUBLE,   EAVT_UINT,    EAVT_INT, EAVT_ULONGLONG, EAVT_LONGLONG,
   EAVT_LONGUINT, EAVT_LONGINT, EAVT_MAX
 };/* ----------------------------------------------------------------------- */
-struct EvtArgVar                       // Multi-type helps access event data
+class EvtArgVar                        // Multi-type helps access event data
 { /* ----------------------------------------------------------------------- */
   const EvtArgVarType  t;              // Variable type
   /* ----------------------------------------------------------------------- */
   union                                // Variables share same memory space
   { /* -- All these use the same memory ------------------------------------ */
-    size_t             z;              // Size Integer ............ (4-8 bytes)
     bool               b;              // Boolean .................... (1 byte)
-    void              *vp;             // Pointer ................. (4-8 bytes)
     char              *cp;             // C-String pointer ........ (4-8 bytes)
-    string            *str;            // STL-String pointer ...... (4-8 bytes)
-    float              f;              // Float ..................... (4 bytes)
     double             d;              // Double .................... (8 bytes)
-    unsigned int       ui;             // Unsigned Integer .......... (4 bytes)
-    signed int         i;              // Signed Integer ............ (4 bytes)
-    unsigned long long ull;            // Unsigned Long Long ........ (8 bytes)
-    signed long long   ll;             // Signed Long Long .......... (8 bytes)
+    float              f;              // Float ..................... (4 bytes)
+    long signed int    lsi;            // Long Signed Integer ..... (4-8 bytes)
     long unsigned int  lui;            // Long Unsigned Integer ... (4-8 bytes)
-    long signed int    li;             // Long Signed Integer ..... (4-8 bytes)
-  }; /* -------------------------------------------------------------------- */
+    signed int         si;             // Signed Integer ............ (4 bytes)
+    signed long long   sll;            // Signed Long Long .......... (8 bytes)
+    size_t             st;             // Size Integer ............ (4-8 bytes)
+    string            *str;            // STL-String pointer ...... (4-8 bytes)
+    unsigned int       ui;             // Unsigned Integer .......... (4 bytes)
+    unsigned long long ull;            // Unsigned Long Long ........ (8 bytes)
+    void              *vp;             // Pointer ................. (4-8 bytes)
+  }; /* ------------------------------------------------------------ */ public:
+  EvtArgVarType Type(void) const { return t; }
+  /* ----------------------------------------------------------------------- */
+  template<typename AnyCast=void>AnyCast *Ptr(void) const
+    { return reinterpret_cast<AnyCast*>(vp); }
+  template<typename AnyCast>AnyCast &Ref(void) const
+    { return *Ptr<AnyCast>(vp); }
+  /* ----------------------------------------------------------------------- */
+  char *CStr(void) const { return cp; }
+  bool Bool(void) const { return b; }
+  size_t SizeT(void) const { return st; }
+  /* ----------------------------------------------------------------------- */
+  signed int Int(void) const { return si; }
+  unsigned int UInt(void) const { return ui; }
+  /* ----------------------------------------------------------------------- */
+  long signed int Long(void) const { return lsi; }
+  long unsigned int ULong(void) const { return lui; }
+  /* ----------------------------------------------------------------------- */
+  signed long long LongLong(void) const { return sll; }
+  unsigned long long ULongLong(void) const { return ull; }
+  /* ----------------------------------------------------------------------- */
+  double Double(void) const { return d; }
+  float Float(void) const { return f; }
+  /* ----------------------------------------------------------------------- */
+  string *StrPtr(void) const { return str; }
+  string &Str(void) const { return *StrPtr(); }
+  /* ----------------------------------------------------------------------- */
   explicit EvtArgVar(const void*const vpP) :
     t(EAVT_PTR), vp(const_cast<void*>(vpP)) {}
+  explicit EvtArgVar(const std::nullptr_t) :
+    t(EAVT_PTR), vp(nullptr) {}
   explicit EvtArgVar(const char*const cpP) :
     t(EAVT_CSTR), cp(const_cast<char*>(cpP)) {}
   explicit EvtArgVar(const string &strV) :
@@ -50,7 +78,7 @@ struct EvtArgVar                       // Multi-type helps access event data
   explicit EvtArgVar(const unsigned int uiV) :
     t(EAVT_UINT), ui(static_cast<unsigned int>(uiV)) {}
   explicit EvtArgVar(const signed int siV) :
-    t(EAVT_INT), i(static_cast<signed int>(siV)){}
+    t(EAVT_INT), si(static_cast<signed int>(siV)){}
   explicit EvtArgVar(const double dV) :
     t(EAVT_DOUBLE), d(dV) {}
   explicit EvtArgVar(const float fV):
@@ -58,11 +86,11 @@ struct EvtArgVar                       // Multi-type helps access event data
   explicit EvtArgVar(const unsigned long long ullV) :
     t(EAVT_ULONGLONG), ull(ullV) {}
   explicit EvtArgVar(const signed long long sllV) :
-    t(EAVT_LONGLONG), ll(sllV) {}
+    t(EAVT_LONGLONG), sll(sllV) {}
   explicit EvtArgVar(const long unsigned int luiV) :
     t(EAVT_LONGUINT), lui(luiV) {}
   explicit EvtArgVar(const long signed int liV) :
-    t(EAVT_LONGINT), li(liV) {}
+    t(EAVT_LONGINT), lsi(liV) {}
   explicit EvtArgVar(const bool bV):
     t(EAVT_BOOL), b(bV) {}
 };/* ----------------------------------------------------------------------- */
@@ -89,8 +117,19 @@ class EvtCore :                        // Start of common event system class
   typedef vector<EvtArgVar> EvtArgs;   // Vector of RegPairs
   /* ----------------------------------------------------------------------- */
   typedef IdList<EvtMaxEvents> ISList; // Events as strings
-  const ISList islEventStrings;        // Actual variable
+  const ISList &islEventStrings;       // Actual variable
   /* ----------------------------------------------------------------------- */
+  class RegAuto                        // Automatic event registration
+  { /* -- Private variables ------------------------------------------------ */
+    EvtCore       &ecCore;             // Events core to unregister from
+    const RegVec   rvEvents;           // Reference to events list to handle
+    /* -- Constructor that registers the events -------------------- */ public:
+    RegAuto(EvtCore *ecpCore, const RegVec &&rvNEvents) :
+      ecCore{ *ecpCore }, rvEvents{ StdMove(rvNEvents) }
+        { ecCore.RegisterEx(rvNEvents); }
+    /* -- Destructor that unregisters the events --------------------------- */
+    ~RegAuto(void) { ecCore.UnregisterEx(rvEvents); }
+  }; /* -------------------------------------------------------------------- */
   struct Event                         // Event packet information
   { /* --------------------------------------------------------------------- */
     Cmd            cCmd;               // Command send
@@ -250,8 +289,15 @@ class EvtCore :                        // Start of common event system class
   void Flush(void)
   { // Lock access to the events list from other threads
     const LockGuard lgEventsSync{ mMutex };
+    // Return if no events to clear
+    if(qlEvents.empty()) return;
+    // Store number of events cleared
+    const size_t stCleared = qlEvents.size();
     // Clear the events list
     qlEvents.clear();
+    // Write number of events cleared
+    cLog->LogDebugExSafe("$ cleared $ lingering events.",
+      IdentGet(), stCleared);
   }
   /* -- Execute specified event NOW (starter) ------------------------------ */
   template<typename ...VarArgs>
@@ -339,10 +385,10 @@ class EvtCore :                        // Start of common event system class
   void UnregisterEx(const RegVec &rvEvents)
     { for(const RegPair &rpItem : rvEvents) Unregister(rpItem.first); }
   /* -- Event data, all empty functions ------------------------- */ protected:
-  EvtCore(string &&strCName, ISList &&islStrings) :
+  EvtCore(string &&strCName, const ISList &islStrings) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(strCName) },             // Initialise event system name
-    islEventStrings{ StdMove(islStrings) }, // Initialise event id names
+    Ident{ StdMove(strCName) },        // Initialise event system name
+    islEventStrings{ islStrings },     // Initialise event id names
     cefEmpty{ bind(&EvtCore::WarningFunction, this, _1) },
     fFuncs{ UtilMkFilledContainer<Funcs>(cefEmpty) }
     /* -- No code ---------------------------------------------------------- */

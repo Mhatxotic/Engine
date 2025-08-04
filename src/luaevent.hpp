@@ -47,7 +47,7 @@ class LuaEvts :
   { // Minimum arguments must be two or more
     static_assert(stMinimum >= 2, "Must specify two parameters or more!");
     // If we have at least two parameters remove the iterator
-    if(emaArgs.size() >= 2) LuaEvtsRemoveIterator(emaArgs[1].z);
+    if(emaArgs.size() >= 2) LuaEvtsRemoveIterator(emaArgs[1].SizeT());
     // Return true if required args is 2 because we've already checked that
     if constexpr(stMinimum == 2) return true;
     // Return success if we have enough parameters
@@ -105,7 +105,7 @@ template<class MemberType>struct LuaEvtTypeParam
       // Done
       return;
     } // Get pointer to class and call if if it is valid
-    MemberType*const mtPtr = reinterpret_cast<MemberType*>(emaArgs.front().vp);
+    MemberType*const mtPtr = emaArgs.front().Ptr<MemberType>();
     if(mtPtr) return mtPtr->LuaEvtCallbackParam(emeEvent);
     // Show error so show error in log
     cLog->LogErrorExSafe(
@@ -128,9 +128,8 @@ template<class MemberType>struct LuaEvtTypeAsync // Used in async class
       // Done
       return;
     } // Get pointer to class and call if if it is valid
-    if(MemberType*const mtPtr =
-      reinterpret_cast<MemberType*>(emaArgs.front().vp))
-        return mtPtr->LuaEvtCallbackAsync(emeEvent);
+    if(MemberType*const mtPtr = emaArgs.front().Ptr<MemberType>())
+      return mtPtr->LuaEvtCallbackAsync(emeEvent);
     // Show error so show error in log
     cLog->LogErrorExSafe(
       "LuaEvt got async event $ with null class ptr from $ params!",
@@ -185,7 +184,7 @@ class LuaEvtSlave :
          "Identifier", mtPtr->IdentGet(), "Event",   emeEvent.cCmd,
          "Count",      emaArgs.size(),    "Maximum", stMandatory);
     // Remove iterator from our events dispatched list
-    LuaEvtsRemoveIterator(static_cast<size_t>(emaArgs[1].ui));
+    LuaEvtsRemoveIterator(static_cast<size_t>(emaArgs[1].UInt()));
     // Lua is paused?
     if(uiLuaPaused)
     { // Show error in log
@@ -213,43 +212,43 @@ class LuaEvtSlave :
       using namespace IEvtCore;
       const EvtArgVar &eavArg = emaArgs[stIndex];
       // Compare type
-      switch(eavArg.t)
+      switch(eavArg.Type())
       { // Boolean?
         case EAVT_BOOL:
-          LuaUtilPushBool(this->LuaRefGetState(), eavArg.b);
+          LuaUtilPushBool(this->LuaRefGetState(), eavArg.Bool());
           break;
         // C-String?
         case EAVT_CSTR:
-          LuaUtilPushCStr(this->LuaRefGetState(), eavArg.cp);
+          LuaUtilPushCStr(this->LuaRefGetState(), eavArg.CStr());
           break;
         // STL String?
         case EAVT_STR:
-          LuaUtilPushStr(this->LuaRefGetState(), *eavArg.str);
+          LuaUtilPushStr(this->LuaRefGetState(), eavArg.Str());
           break;
         // Float?
         case EAVT_FLOAT:
           LuaUtilPushNum(this->LuaRefGetState(),
-            static_cast<lua_Number>(eavArg.f));
+            static_cast<lua_Number>(eavArg.Float()));
           break;
         // Double?
         case EAVT_DOUBLE:
           LuaUtilPushNum(this->LuaRefGetState(),
-            static_cast<lua_Number>(eavArg.d));
+            static_cast<lua_Number>(eavArg.Double()));
           break;
         // Signed or unsigned integer?
         case EAVT_UINT: [[fallthrough]]; case EAVT_INT:
           LuaUtilPushInt(this->LuaRefGetState(),
-            static_cast<lua_Integer>(eavArg.i));
+            static_cast<lua_Integer>(eavArg.Int()));
           break;
         // Signed or unsigned long long?
         case EAVT_ULONGLONG: [[fallthrough]]; case EAVT_LONGLONG:
           LuaUtilPushInt(this->LuaRefGetState(),
-            static_cast<lua_Integer>(eavArg.ll));
+            static_cast<lua_Integer>(eavArg.LongLong()));
           break;
         // Signed or unsigned long int?
         case EAVT_LONGUINT: [[fallthrough]]; case EAVT_LONGINT:
           LuaUtilPushInt(this->LuaRefGetState(),
-            static_cast<lua_Integer>(eavArg.li));
+            static_cast<lua_Integer>(eavArg.Long()));
           break;
         // Unsupported type? Push nil
         default: [[fallthrough]]; case EAVT_MAX:

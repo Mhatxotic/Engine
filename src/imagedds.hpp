@@ -282,7 +282,7 @@ class CodecDDS :                       // GIF codec object
     idData.SetReversed();
     // DXT[n]? Compressed bitmaps need a special calculation
     if(idData.IsCompressed()) for(unsigned int
-      // Pre-initialised variables
+      // Preinitialised variables
       uiBitDiv    = (idData.GetPixelType() == TT_DXT1 ? 8 : 16),
       uiMipIndex  = 0,
       uiMipWidth  = idData.DimGetWidth(),
@@ -306,7 +306,7 @@ class CodecDDS :                       // GIF codec object
       idData.AddSlot(mPixels, uiMipWidth, uiMipHeight);
     } // Uncompressed image?
     else for(unsigned int
-      // Pre-initialised variables
+      // Preinitialised variables
       uiMipIndex  = 0,                               // Mipmap index
       uiMipWidth  = idData.DimGetWidth(),            // Mipmap width
       uiMipHeight = idData.DimGetHeight(),           // Mipmap height

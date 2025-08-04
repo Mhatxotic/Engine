@@ -36,7 +36,7 @@ enum StreamPlayState : unsigned int    // Current playback state
   PS_STANDBY,                          // Is not playing?
   PS_PLAYING,                          // Is playing?
   PS_FINISHING,                        // Was stopping? (no more data)
-  PS_WASPLAYING,                       // Was playing? (audio re-init)
+  PS_WASPLAYING,                       // Was playing? (audio reinit)
   PS_MAX                               // Maximum number of states
 };/* ----------------------------------------------------------------------- */
 typedef IdList<PS_MAX> PSList;         // Play state strings
@@ -256,7 +256,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     // Save current state. Use our internal state to decide if we should replay
     // the source as if the context was lost due to hardware changes. IsPlaying
     // will report as AL_STOPPED and any music that was playing, will not
-    // resume when the audio is re-initialised.
+    // resume when the audio is reinitialised.
     if(psState == PS_PLAYING && IsPlaying()) psState = PS_WASPLAYING;
     // Get reference to source, stop it, unqueue it
     sCptr->StopAndUnQueueAllBuffers();
@@ -645,7 +645,7 @@ static void StreamClearEvents(void)
 }
 /* == Generate all source and buffers ====================================== */
 static void StreamReInit(void)
-{ // Lock access to bitmap collector list and re-init source/buffers
+{ // Lock access to bitmap collector list and reinit source/buffers
   const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
   for(Stream*const sPtr : *cStreams) sPtr->GenerateSourceAndBuffers();
 }

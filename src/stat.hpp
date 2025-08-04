@@ -65,11 +65,15 @@ class Statistic
     { if(hdHeaders.empty()) XC("No headers!"); }
   /* -- Check row not finished --------------------------------------------- */
   void CheckRowNotFinished(void) const
-    { if(const size_t stRow = svValues.size() % hdHeaders.size())
+    { if(const size_t stRow = Cells() % Headers())
         XC("Row not finished!",
-           "ExpectCols", hdHeaders.size(), "ActualCols", stRow,
-           "RowCount", svValues.size() / hdHeaders.size()); }
-  /* -- Finish with existing string stream ------------------------- */ public:
+           "ExpectCols", Headers(), "ActualCols", stRow,
+           "RowCount", Rows()); }
+  /* -- Get item counts -------------------------------------------- */ public:
+  size_t Cells(void) const { return svValues.size(); }
+  size_t Headers(void) const { return hdHeaders.size(); }
+  size_t Rows(void) const { return Cells() / Headers(); }
+  /* -- Finish with existing string stream --------------------------------- */
   void Finish(ostringstream &osS, const bool bAddLF=true, const size_t stGap=1)
   { // Check that there are headers
     CheckHeaderCount();
@@ -93,12 +97,12 @@ class Statistic
       // Fill in rest of missing header columns with blanks. This is so we
       // don't need to add extra condition checks which would increase
       // processing time.
-      while(svValues.size() % Headers()) svValues.push_back({});
+      while(Cells() % Headers()) svValues.push_back({});
       // Get last iterator and iterator to first item
       const StrVectorConstIt vLast{ prev(svValues.cend()) };
       StrVectorIt svciIt{ svValues.begin() };
       // Get total row count and if we have more than zero rows to print?
-      if(size_t stRows = svValues.size() / Headers())
+      if(size_t stRows = Rows())
       { // Get last iterator of the penultimate row
         const StrVectorConstIt svciLastRowIt{
           prev(svValues.cend(), static_cast<ssize_t>(Headers())) };
@@ -123,8 +127,6 @@ class Statistic
     } // Clear headers
     hdHeaders.clear();
   }
-  /* -- Headers count ------------------------------------------------------ */
-  size_t Headers(void) const { return hdHeaders.size(); }
   /* -- Finish with new string stream -------------------------------------- */
   const string Finish(const bool bAddLF=true, const size_t stGap=1)
   { // Output stream
@@ -134,6 +136,15 @@ class Statistic
     // Return the string
     return osS.str();
   }
+  /* ----------------------------------------------------------------------- */
+  template<typename IntType>
+    Statistic &DataFN(const IntType tNum, const int iP=0)
+      { return Data(StdMove(StrReadableFromNum<IntType>(tNum, iP))); }
+  /* ----------------------------------------------------------------------- */
+  template<typename IntType>
+    Statistic &DataFB(const IntType tNum, const int iP=0)
+      { return Data(StrToReadableBytes
+          (static_cast<uint64_t>(tNum), iP)); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
     Statistic &DataN(const IntType tNum, const int iP=0)
@@ -151,7 +162,7 @@ class Statistic
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
-    Head &hRef = hdHeaders[svValues.size() % Headers()];
+    Head &hRef = hdHeaders[Cells() % Headers()];
     // Copy the character into the last slot
     svValues.insert(svValues.cend(), { &cCharacter, 1 });
     // Initialise maximum length if not set
@@ -164,7 +175,7 @@ class Statistic
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
-    Head &hRef = hdHeaders[svValues.size() % Headers()];
+    Head &hRef = hdHeaders[Cells() % Headers()];
     // Copy the value into the last and put the string we inserted into a
     // decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(
@@ -180,7 +191,7 @@ class Statistic
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
-    Head &hRef = hdHeaders[svValues.size() % Headers()];
+    Head &hRef = hdHeaders[Cells() % Headers()];
     // Copy the value into the last and put the string we inserted into a
     // decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(
@@ -203,7 +214,7 @@ class Statistic
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
-    Head &hRef = hdHeaders[svValues.size() % Headers()];
+    Head &hRef = hdHeaders[Cells() % Headers()];
     // Copy the value into the last and put the string we inserted into a
     // decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(
@@ -222,7 +233,7 @@ class Statistic
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
-    Head &hRef = hdHeaders[svValues.size() % Headers()];
+    Head &hRef = hdHeaders[Cells() % Headers()];
     // Move the value into the list and put the tring we inserted into
     // a decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(UtfDecoder{
@@ -261,7 +272,7 @@ class Statistic
     struct StrRef { StrVectorIt sviRowIt, sviColPri, sviColSec; };
     typedef vector<StrRef> StrRefVec;
     StrRefVec srvList;
-    srvList.reserve(svValues.size() / Headers());
+    srvList.reserve(Rows());
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
     // For each value. Add row start iterator and column iterator to list
@@ -296,7 +307,7 @@ class Statistic
       });
     // Now we have the sorted list we can rebuilding the new list
     StrVector svValuesNew;
-    svValuesNew.reserve(svValues.size());
+    svValuesNew.reserve(Cells());
     for(const StrRef &srRow : srvList)
       for(StrVectorIt sviColIt{ srRow.sviRowIt },
                       sviColEnd{ next(sviColIt, sstHeaders) };
@@ -316,7 +327,7 @@ class Statistic
     struct StrRef { StrVectorIt sviRowIt, sviColIt; };
     typedef vector<StrRef> StrRefVec;
     StrRefVec srvList;
-    srvList.reserve(svValues.size() / Headers());
+    srvList.reserve(Rows());
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
     // For each value. Add row start iterator and column iterator to list
@@ -332,7 +343,7 @@ class Statistic
         { return *srRow1.sviColIt < *srRow2.sviColIt; });
     // Now we have the sorted list we can rebuilding the new list
     StrVector svValuesNew;
-    svValuesNew.reserve(svValues.size());
+    svValuesNew.reserve(Cells());
     for(const StrRef &srRow : srvList)
       for(StrVectorIt sviColIt{ srRow.sviRowIt },
                       sviColEnd{ next(sviColIt, sstHeaders) };

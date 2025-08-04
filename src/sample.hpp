@@ -309,7 +309,7 @@ static void SampleDeInit(void)
 static void SampleReInit(void)
 { // Done if empty
   if(cSamples->empty()) return;
-  // Re-create buffers for all the samples and log pre/post re-init
+  // Re-create buffers for all the samples and log pre/post reinit
   cLog->LogDebugExSafe("Samples reinitialising $ objects...",
     cSamples->size());
   for(Sample*const scPtr : *cSamples) scPtr->ReloadSample();

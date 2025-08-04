@@ -310,7 +310,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   }
   /* ----------------------------------------------------------------------- */
   void AsyncInit(lua_State*const lsS, const string &strIdentifier,
-    const string &strL)
+    const string &strLabel)
   { // Set the filename
     idName.IdentSet(strIdentifier);
     // Parse the class, error and success functions.
@@ -319,9 +319,10 @@ template<class MemberType, class ColType>class AsyncLoader :
     // event subsystem executes the callback and will be empty.
     strAsyncError = StdMove(LuaUtilStack(lsS));
     // Begin async thread
-    tAsyncThread.ThreadInit(StrAppend(strL, ':', strIdentifier),
-      bind(&AsyncLoader<MemberType,ColType>::AsyncThreadMain,
-        this, _1), this);
+    tAsyncThread.ThreadInit(
+      StrAppend(strLabel, ':', mtAsyncOwner.CtrGet()),
+      bind(&AsyncLoader<MemberType,ColType>::AsyncThreadMain, this, _1),
+        this);
   }
   /* ----------------------------------------------------------------------- */
   void AsyncStop(void)
@@ -336,8 +337,10 @@ template<class MemberType, class ColType>class AsyncLoader :
     if(lecAsync.LuaRefGetFunc(LR_ERROR))
     { // Push the error message
       LuaUtilPushStr(lecAsync.LuaRefGetState(), strAsyncError);
-      // Wait for thread and register the class
-      AsyncStopAndRegister();
+      // Wait for the thread to terminate if it is still running
+      AsyncStop();
+      // Unregister the class from the requested collector type
+      static_cast<ColType&>(mtAsyncOwner).CollectorUnregister();
       // Now do the callback. An exception could occur here.
       LuaUtilCallFuncEx(lecAsync.LuaRefGetState(), 1);
     } // Invalid userdata?
@@ -371,18 +374,13 @@ template<class MemberType, class ColType>class AsyncLoader :
     } // Throw error back to user error handler
     AsyncDoLuaThrowErrorHandler(emeEvent);
   }
-  /* -- Waits for the thread to finish and registers the class ------------- */
-  void AsyncStopAndRegister(void)
+  /* -- Async do protected call dispatams already pushed onto lua stack) --- */
+  void AsyncDoFinishLuaProtectedDispatch(const EvtMainEvent &emeEvent,
+    const int iParam, const int iHandler)
   { // Wait for the thread to terminate if it is still running
     AsyncStop();
     // Register the class from the requested collector type
     static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
-  }
-  /* -- Async do protected call dispatams already pushed onto lua stack) --- */
-  void AsyncDoFinishLuaProtectedDispatch(const EvtMainEvent &emeEvent,
-    const int iParam, const int iHandler)
-  { // Wait for thread and register the class
-    AsyncStopAndRegister();
     // Now do the callback. An exception could occur here as well and it
     // should be protected.
     AsyncDoLuaProtectedDispatch(emeEvent, iParam, iHandler);
@@ -483,10 +481,12 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Event result
     const AsyncResult uiAsyncResult =
       lecAsync.template LuaEvtsCheckParams<3>(emaArgs) ?
-        static_cast<AsyncResult>(emaArgs[2].lui) : AR_UNKNOWN;
+        static_cast<AsyncResult>(emaArgs[2].ULong()) : AR_UNKNOWN;
     // If lua is not paused?
     if(!uiLuaPaused)
-    { // Whats the code sent in the event?
+    { // Save stack position and restore it on leaving scope
+      const LuaStackSaver lssSaved{ lecAsync.LuaRefGetState() };
+      // Whats the code sent in the event?
       switch(uiAsyncResult)
       { // Unknown operation?
         case AR_UNKNOWN:
@@ -507,7 +507,7 @@ template<class MemberType, class ColType>class AsyncLoader :
             const size_t stMax = emaArgs.size();
             for(size_t stIndex = 3; stIndex < stMax; ++stIndex)
               LuaUtilPushInt(lecAsync.LuaRefGetState(),
-                emaArgs[stIndex].ll);
+                emaArgs[stIndex].LongLong());
             // Execute the progress callback
             AsyncDoLuaProtectedDispatch(emeEvent, static_cast<int>(stMax - 3),
               iErrorHandler);
@@ -533,7 +533,8 @@ template<class MemberType, class ColType>class AsyncLoader :
             { // Push the class ref and if both succeeded?
               if(lecAsync.LuaRefGetUData())
               { // Push the specified parameter
-                LuaUtilPushInt(lecAsync.LuaRefGetState(), emaArgs[3].ll);
+                LuaUtilPushInt(lecAsync.LuaRefGetState(),
+                  emaArgs[3].LongLong());
                 // Dispatch the event with two parameters
                 AsyncDoFinishLuaProtectedDispatch(emeEvent, 2, iErrorHandler);
               } // Failed? Write error to log

@@ -15,8 +15,8 @@ using namespace ICVarLib::P;           using namespace IError::P;
 using namespace IIdent::P;             using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace ILuaFunc::P;           using namespace ILua::P;
-using namespace IString::P;            using namespace IStat::P;
+using namespace ILuaFunc::P;           using namespace IString::P;
+using namespace IStat::P;
 using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 typedef IdMap<CVarFlagsType> IdMapCVarEnums;
@@ -46,9 +46,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   /* -- Returns the end of the lua console command list -------------------- */
   LuaCVarMapIt GetLuaVarListEnd(void) { return GetLuaVarList().end(); }
   /* == Cvar updated callback for Lua ============================== */ public:
-  static CVarReturn LuaCallbackStatic(
-    CVarItem &cviVar,
-    const string &strVal)
+  static CVarReturn LuaCallbackStatic(CVarItem &cviVar, const string &strVal)
   { // Find cvar and ignore if we don't have it yet! This can happen if the
     // variable is initialising for the first time. We haven't added the
     // variable to cvmActive yet and we don't want to until the CVARS system
@@ -97,9 +95,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     { return SetString(StrFromNum(lnValue, 0, 15)); }
   /* -- Register user console command from lua ----------------------------- */
   void Init(lua_State*const lS)
-  { // Must be running on the main thread
-    cLua->StateAssert(lS);
-    // Must have 5 parameters (including this class ptr that was just created)
+  { // Must have 5 parameters (including this class ptr that was just created)
     LuaUtilCheckParams(lS, 5);
     // Get and check the variable name
     const string strName{ LuaUtilGetCppStr(lS, 1) };
@@ -140,13 +136,24 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     lcvmiIt->second.second = cCVars->RegisterVar(strName, strD,
       LuaCallbackStatic, cvfcFlags|TLUA|PANY);
   }
+  /* -- Register existing internal engine variable as a Lua variable ------- */
+  void InitInternal(const CVarMapIt &cvmiIt)
+  { // Get cvar name
+    const string &strName = cvmiIt->first;
+    // Insert a new variable
+    lcvmiIt = cVariables->lcvmMap.insert(GetLuaVarListEnd(), { strName,
+      make_pair(LuaFunc{ strName, false }, cCVars->GetVarListEnd()) });
+    // Register the variable and set the iterator to the new cvar.
+    lcvmiIt->second.second = cvmiIt;
+  }
   /* -- Destructor that unregisters the cvar ------------------------------- */
   ~Variable(void)
   { // Return if the iterator is invalid?
     if(lcvmiIt == GetLuaVarListEnd()) return;
-    // Unregister the cvar
-    if(lcvmiIt->second.second != cCVars->GetVarListEnd())
-      cCVars->UnregisterVar(lcvmiIt->second.second);
+    // Unregister the cvar if valid and registered by Lua
+    const CVarMapIt &cvmiIt = lcvmiIt->second.second;
+    if(cvmiIt != cCVars->GetVarListEnd() && cvmiIt->second.FlagIsSet(TLUA))
+      cCVars->UnregisterVar(cvmiIt);
     // Remove the lua var
     GetLuaVarList().erase(lcvmiIt);
   }

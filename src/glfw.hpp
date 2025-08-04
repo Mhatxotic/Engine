@@ -10,16 +10,19 @@
 namespace IGlFW {                      // Start of module namespace
 /* ------------------------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
-using namespace IGlFWCursor::P;        using namespace IGlFWUtil::P;
-using namespace IGlFWWindow::P;        using namespace IHelper::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace IToken::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace IEvtWin::P;            using namespace IEvtMain::P;
+using namespace IGlFWCursor::P;
+using namespace IGlFWUtil::P;          using namespace IGlFWWindow::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IToken::P;             using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 typedef array<GlFWCursor, CUR_MAX> CursorStandard;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* -- Public typedefs ------------------------------------------------------ */
+typedef vector<GLFWimage> GlFWIconVector; // Vector of GLFW image handles
 /* ========================================================================= */
 class GlFW;                            // Class prototype
 static GlFW *cGlFW = nullptr;          // Pointer to global class
@@ -42,10 +45,36 @@ class GlFW :                           // Root engine class
     { return StdReAlloc(vpPtr, stSize); }
   /* -- Custom free -------------------------------------------------------- */
   static void GlFWFree(void*const vpPtr, void*const) { StdFree(vpPtr); }
+  /* -- Monitor changed ---------------------------------------------------- */
+  static void OnMonitorChangedStatic(GLFWmonitor*const, const int);
+  void OnMonitorChanged(GLFWmonitor*const mAffected, const int iAction) try
+  { // Send event to process monitor which has to unsuspend the engine thread
+    if(iAction == GLFW_CONNECTED)
+      cEvtWin->Execute(EWC_WIN_MONITOR,
+        GlFWGetMonitorName(mAffected), nullptr);
+    // Anything but connected means the name is invalid
+    else if(iAction == GLFW_DISCONNECTED)
+      cEvtWin->Execute(EWC_WIN_MONITOR,
+        nullptr, GlFWGetMonitorUserPointer<void*>(mAffected));
+    // Invalid event
+    else
+    { // Log invalid event
+      cLog->LogWarningExSafe("GlFW got invalid monitor change action of 0x$$!",
+        hex, iAction);
+      // Ask engine thread to quit and re-init window
+      cEvtMain->RequestQuitThread();
+    }
+  } // Exceptions we have to handle since func could be in a thread GlFW owns.
+  catch(const exception &e)
+  { // Write error
+    cLog->LogWarningExSafe("GlFW monitor event exception: $", e.what());
+    // Ask engine thread to quit and re-init window
+    cEvtMain->RequestQuitThread();
+  }
   /* -- Error handler prototype (full body at bottom) ---------------------- */
-  static void ErrorHandler(int, const char*const);
+  static void OnHandleErrorStatic(int, const char*const);
   /* -- Error handler converted to thiscall -------------------------------- */
-  void HandleError(const int iCode, const char*const cpDesc)
+  void OnHandleError(const int iCode, const char*const cpDesc)
   { // What's the error code?
     switch(iCode)
     { // Errors that are safe to ignore
@@ -75,6 +104,8 @@ class GlFW :                           // Root engine class
     cLog->LogDebugSafe("GlFW subsystem de-initialising...");
     // Destroy window if created
     this->WinDeInit();
+    // Clear monitor change callback
+    GlFWSetMonitorCallback(nullptr);
     // De-Initialise standard cursors
     DeInitCursors();
     // Terminate glfw
@@ -143,7 +174,7 @@ class GlFW :                           // Root engine class
     glfwInitAllocator(&gaInfo);
 #endif
     // Set error callback which just throws an exception and reset error level
-    glfwSetErrorCallback(ErrorHandler);
+    glfwSetErrorCallback(OnHandleErrorStatic);
     ResetErrorLevel();
     // Initialise GlFW and throw exception if failed
     if(!glfwInit()) XC("GlFW initialisation failed!");
@@ -157,6 +188,8 @@ class GlFW :                           // Root engine class
     bRawMouseSupported = GlFWIsRawMouseMotionSupported();
     cLog->LogDebugExSafe("GlFW raw mouse motion support is $.",
       IsRawMouseMotionSupported() ? "available" : "unavailable");
+    // Set monitor change callback
+    GlFWSetMonitorCallback(OnMonitorChangedStatic);
     // Report initialisation successful
     cLog->LogInfoSafe("GlFW subsystem initialised.");
   }
@@ -206,9 +239,13 @@ class GlFW :                           // Root engine class
     /* -- Set global pointer to static class ------------------------------- */
     { cGlFW = this; }
 };/* ----------------------------------------------------------------------- */
-/* == Process a glfw error ================================================= */
-void GlFW::ErrorHandler(int iCode, const char*const cpDesc)
-  { cGlFW->HandleError(iCode, cpDesc); }
+/* -- Process a glfw error ------------------------------------------------- */
+void GlFW::OnHandleErrorStatic(int iCode, const char*const cpDesc)
+  { cGlFW->OnHandleError(iCode, cpDesc); }
+/* -- Process a glfw error ------------------------------------------------- */
+void GlFW::OnMonitorChangedStatic(GLFWmonitor*const mAffected,
+  const int iAction)
+    { cGlFW->OnMonitorChanged(mAffected, iAction); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

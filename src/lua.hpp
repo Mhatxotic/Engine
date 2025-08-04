@@ -2,7 +2,7 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## The lua instance is the core scripting module that glues all the    ## **
+** ## The LUA instance is the core scripting module that glues all the    ## **
 ** ## engine components together. Note that this class does not handle    ## **
 ** ## and inits or deinits because this has to be done later on as        ## **
 ** ## lua allocated objects need to destruct their objects before the     ## **
@@ -14,17 +14,18 @@
 namespace ILua {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICollector::P;
-using namespace ICommon::P;            using namespace ICrypt::P;
+using namespace ICommon::P;            using namespace IConGraph::P;
+using namespace IConsole::P;           using namespace ICrypt::P;
 using namespace ICVarDef::P;           using namespace ICVar::P;
 using namespace ICVarLib::P;           using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFlags;
 using namespace ILog::P;               using namespace ILuaDef;
 using namespace ILuaCode::P;           using namespace ILuaFunc::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITimer::P;             using namespace IUtil::P;
-using namespace Lib::Sqlite::Types;
+using namespace ILuaVariable::P;       using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITimer::P;
+using namespace IUtil::P;              using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Lua class ============================================================ */
@@ -33,7 +34,7 @@ static Lua *cLua = nullptr;            // Pointer to global class
 class Lua :                            // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   public ClockChrono<CoreClock>,       // Runtime clock
-  private EvtMainRegVec                // Events list to register
+  private EvtMainRegAuto               // Events list to register
 { /* -- Private typedefs --------------------------------------------------- */
   typedef unique_ptr<lua_State, function<decltype(lua_close)>> LuaPtr;
   /* -- Private variables -------------------------------------------------- */
@@ -76,6 +77,33 @@ class Lua :                            // Actual class body
     lrMainRedraw.LuaFuncDispatch();
     // Say that we've finished calling the function
     cLog->LogDebugSafe("Lua finished calling redraw execution callback.");
+  }
+  /* -- Fired when lua needs to be paused (EMC_LUA_PAUSE) ------------------ */
+  void OnLuaPause(const EvtMainEvent &emeEvent)
+  { // Pause execution and if paused for the first time?
+    if(!PauseExecution())
+    { // Performance is no longer a priority
+      cTimer->TimerSetDelayIfZero();
+      // Can't disable console while paused
+      cConGraphics->SetCantDisable(true);
+      // Write to console
+      cConsole->AddLine("Execution paused. Type 'lresume' to continue.");
+    } // Already paused? Remind console if it was manually requested
+    else if(emeEvent.eaArgs.front().Bool())
+      cConsole->AddLine(
+        "Execution already paused. Type 'lresume' to continue.");
+  }
+  /* -- Fired when lua needs to be resumed (EMC_LUA_RESUME) ---------------- */
+  void OnLuaResume(const EvtMainEvent&)
+  { // Return if pause was not successful
+    if(!ResumeExecution())
+      return cConsole->AddLine("Execution already in progress.");
+    // Refresh originally stored delay
+    cTimer->TimerSetDelay(cCVars->GetInternal<unsigned int>(APP_DELAY));
+    // Console can now be disabled
+    cConGraphics->SetCantDisable(false);
+    // Write to console
+    cConsole->AddLine("Execution resumed.");
   }
   /* -- Check if we're already exiting ------------------------------------- */
   bool Exiting(void) { return bExiting; }
@@ -349,18 +377,16 @@ class Lua :                            // Actual class body
     LuaUtilGetGlobal(GetState(), "Variable");
     // Create a table of the specified number of variables
     LuaUtilPushTable(GetState(), 0, CVAR_MAX);
-    // Push each cvar id to the table
-    lua_Integer liIndex = 0;
+    // Enumerate cvars and if stored iterator is registered?
     for(const CVarMapIt &cvmiIt : cCVars->GetInternalList())
-    { // If stored iterator is valid?
       if(cvmiIt != cCVars->GetVarListEnd())
       { // Push internal id value name
-        LuaUtilPushInt(GetState(), liIndex);
+        LuaUtilClassCreate<Variable>(GetState(), *cVariables)->
+          InitInternal(cvmiIt);
         // Assign the id to the cvar name
         LuaUtilSetField(GetState(), -2, cvmiIt->first.c_str());
-      } // Next id
-      ++liIndex;
-    } // Push cvar id table into the core namespace
+      }
+    // Push cvar id table into the core namespace
     LuaUtilSetField(GetState(), -2, "Internal");
     // Remove the table
     LuaUtilRmStack(GetState());
@@ -406,8 +432,6 @@ class Lua :                            // Actual class body
     LuaUtilSetHookCallback(GetState(), nullptr, 0);
     // Disable garbage collector
     StopGC();
-    // Unregister lua related events
-    cEvtMain->UnregisterEx(*this);
     // DeInit references
     LuaFuncDeInitRef();
     // Close state and reset var
@@ -475,8 +499,6 @@ class Lua :                            // Actual class body
     lua_atpanic(GetState(), LuaUtilException);
     // Set warning catcher
     lua_setwarnf(GetState(), WarningCallback, this);
-    // Register callback events
-    cEvtMain->RegisterEx(*this);
     // Report initialisation with version and some important variables
     cLog->LogDebugExSafe("Lua sandbox initialised...\n"
       "- Stack size minimum: $; Stack size maximum: $.\n"
@@ -488,14 +510,12 @@ class Lua :                            // Actual class body
   /* -- Constructor -------------------------------------------------------- */
   Lua(void) :
     /* --------------------------------------------------------------------- */
-    EvtMainRegVec{                     // Lua events
-      { EMC_LUA_REDRAW,                // Redraw event data
-          bind(&Lua::SendRedraw,       // - Redraw callback
-            this, _1) },               // - This class
-      { EMC_LUA_ASK_EXIT,              // Ask exit event data
-          bind(&Lua::AskExit,          // - Ask exit callback
-            this, _1) },               // - This class
-    },                                 // End of redraw event data
+    EvtMainRegAuto{ cEvtMain, {        // Regster LUA events
+      { EMC_LUA_ASK_EXIT, bind(&Lua::AskExit,     this, _1) },
+      { EMC_LUA_PAUSE,    bind(&Lua::OnLuaPause,  this, _1) },
+      { EMC_LUA_REDRAW,   bind(&Lua::SendRedraw,  this, _1) },
+      { EMC_LUA_RESUME,   bind(&Lua::OnLuaResume, this, _1) }
+    } },                               // End of redraw event data
     bExiting(false),                   // Not exiting
     iOperations(0),                    // No operations
     iStack(0),                         // No stack

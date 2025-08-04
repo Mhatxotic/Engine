@@ -27,9 +27,9 @@ static Audio *cAudio = nullptr;        // Pointer to global class
 class Audio :                          // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper class
-  private Thread                       // Audio monitoring thread
+  private Thread,                      // Audio monitoring thread
+  private EvtMainRegAuto               // Frequently used events
 { /* -- Monitoring thread timers ---------------------------------- */ private:
-  const EvtMainRegVec emrvEvents;      // Frequently used events
   ClkTimePoint        tpNextCheck;     // Next check for hardware changes
   SafeClkDuration     cdCheckRate,     // Check rate
                       cdThreadDelay;   // Thread sleep time
@@ -44,7 +44,7 @@ class Audio :                          // Audio manager class
   /* -- Playback device list was updated ----------------------------------- */
   void AudioOnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
   { // Update the device context if supplied
-    cOal->UpdateDevice(reinterpret_cast<ALCdevice*>(emeEvent.eaArgs[0].vp));
+    cOal->UpdateDevice(emeEvent.eaArgs[0].Ptr<ALCdevice>());
     // Refresh device list and update the name
     AudioEnumPlaybackDevices();
     cOal->UpdatePlaybackDeviceName();
@@ -85,7 +85,7 @@ class Audio :                          // Audio manager class
   { // Capture exceptions
     try
     { // Log status
-      cLog->LogDebugSafe("Audio class re-initialising...");
+      cLog->LogDebugSafe("Audio class reinitialising...");
       // De-Init thread
       AudioDeInitThread();
       // Unload all buffers for streams and samples and destroy all sources
@@ -96,7 +96,7 @@ class Audio :                          // Audio manager class
       // Deinit and reinit context
       AudioDeInitContext();
       AudioInitContext();
-      // Re-initialise volume levels
+      // Reinitialise volume levels
       AudioSetVolume(cSources->fGVolume);
       SampleSetVolume(cSources->fSVolume);
       StreamSetVolume(cSources->fMVolume);
@@ -111,14 +111,14 @@ class Audio :                          // Audio manager class
       // Send lua event with the device type not set
       lfOnUpdate.LuaFuncDispatch();
       // Log status
-      cLog->LogInfoSafe("Audio class re-initialised successfully.");
+      cLog->LogInfoSafe("Audio class reinitialised successfully.");
     } // We don't want LUA to hard break really.
     catch(const exception &eReason)
     { // Log the exception first
-      cLog->LogErrorExSafe("Audio re-init exception: $", eReason);
+      cLog->LogErrorExSafe("Audio reinit exception: $", eReason);
       // Reset next thread check time
       AudioResetCheckTime();
-    } // Remove re-initialisation flag
+    } // Remove reinitialisation flag
     cOal->FlagClear(AFL_REINIT);
   }
   /* -- Thread main function with system events support -------------------- */
@@ -242,14 +242,12 @@ class Audio :                          // Audio manager class
     { // It was a playback device?
       case ALC_PLAYBACK_DEVICE_SOFT:
         // Send playback devices updated event and break
-        cEvtMain->Add(EMC_AUD_PDEVICE_UPDATED,
-          reinterpret_cast<void*>(alcNDevice));
+        cEvtMain->Add(EMC_AUD_PD_UPDATED, reinterpret_cast<void*>(alcNDevice));
         break;
       // It was a capture device?
       case ALC_CAPTURE_DEVICE_SOFT:
         // Send capture devices updated event and break
-        cEvtMain->Add(EMC_AUD_CDEVICE_UPDATED,
-          reinterpret_cast<void*>(alcNDevice));
+        cEvtMain->Add(EMC_AUD_CD_UPDATED, reinterpret_cast<void*>(alcNDevice));
         break;
       // Unknown device?
       default: break;
@@ -300,8 +298,6 @@ class Audio :                          // Audio manager class
     cOal->Init();
     // Allocate sources data
     SourceAlloc(cCVars->GetInternal<ALuint>(AUD_NUMSOURCES));
-    // Register engine events
-    cEvtMain->RegisterEx(emrvEvents);
     // Set parameters and check for errors
     AudioSetDistanceModel(AL_NONE);
     AudioSetPosition(0, 0, 0);
@@ -309,12 +305,7 @@ class Audio :                          // Audio manager class
     AudioSetOrientation(0, 0, 1, 0, -1, 0);
   }
   /* -- De-initialise the context ------------------------------------------ */
-  void AudioDeInitContext(void)
-  { // Clear openAL context
-    cOal->DeInit();
-    // Unregister engine events
-    cEvtMain->UnregisterEx(emrvEvents);
-  }
+  void AudioDeInitContext(void) { cOal->DeInit(); }
   /* -- Enumerate capture devices ------------------------------------------ */
   void AudioEnumCaptureDevices(void)
   { // Log enumerations
@@ -439,11 +430,11 @@ class Audio :                          // Audio manager class
   size_t AudioGetNumCapDevices(void) const { return dlCTDevices.size(); }
   /* -- Send init signal --------------------------------------------------- */
   bool AudioReInit(void)
-  { // Return if signal already set to re-initialise
+  { // Return if signal already set to reinitialise
     if(cOal->FlagIsSet(AFL_REINIT)) return false;
-    // Set the signal to re-init (it will get unset when re-initialised)
+    // Set the signal to reinit (it will get unset when reinitialised)
     cOal->FlagSet(AFL_REINIT);
-    // Send event to re-initialise audio
+    // Send event to reinitialise audio
     cEvtMain->Add(EMC_AUD_REINIT);
     // Event sent
     return true;
@@ -467,7 +458,7 @@ class Audio :                          // Audio manager class
     cSources->CollectorDestroyUnsafe();
     // Unload handles
     AudioDeInitContext();
-    // Re-Init members
+    // ReInit members
     tpNextCheck = {};
     dlPBDevices.clear();
     dlCTDevices.clear();
@@ -498,14 +489,11 @@ class Audio :                          // Audio manager class
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Initialise class name
     Thread{ "audio", STP_AUDIO },      // Initialise high perf audio thread
-    emrvEvents{                        // Initialise audio events
-      { EMC_AUD_REINIT,                // Re-initialisation request
-          bind(&Audio::AudioOnReInit,  this, _1) },
-      { EMC_AUD_PDEVICE_UPDATED,       // Playback devices updated event
-          bind(&Audio::AudioOnPbkDeviceUpdated, this, _1) },
-      { EMC_AUD_CDEVICE_UPDATED,       // Capture devices updated event
-          bind(&Audio::AudioOnCapDeviceUpdated, this, _1) }
-    },
+    EvtMainRegAuto{ cEvtMain, {        // Initialise audio events
+      { EMC_AUD_REINIT,     bind(&Audio::AudioOnReInit,           this, _1) },
+      { EMC_AUD_PD_UPDATED, bind(&Audio::AudioOnPbkDeviceUpdated, this, _1) },
+      { EMC_AUD_CD_UPDATED, bind(&Audio::AudioOnCapDeviceUpdated, this, _1) }
+    } },
     cdDiscWait{ milliseconds{ 100 } }, // Initialise discrepency sleep time
     ctfThSysEvts{ bind(&Audio::AudioThreadMainSysEvents, this, _1) },
     ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) },

@@ -17,8 +17,8 @@
 /* ========================================================================= */
 namespace LLCommand {                  // Console namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IConsole::P;           using namespace ILuaCommand::P;
-using namespace Common;
+using namespace IConsole::P;           using namespace ILua::P;
+using namespace ILuaCommand::P;        using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Command common helper classes                                       ## **
@@ -95,6 +95,7 @@ LLFUNC(Register, 1,
   const AgUInt aMinimum{lS, 2},
                aMaximum{lS, 3};
   LuaUtilCheckFunc(lS, 4);
+  cLua->StateAssert(lS);
   AcCommand{lS}().Init(lS, aIdentifier, aMinimum, aMaximum))
 /* ========================================================================= **
 ** ######################################################################### **

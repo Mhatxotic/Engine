@@ -105,7 +105,7 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
     // Return success
     return true;
   }
-  /* -- Constructor that does nothing but pre-initialise references -------- */
+  /* -- Constructor that does nothing but preinitialise references --------- */
   LuaRef(void) :
     /* -- Initialisers ----------------------------------------------------- */
     lsState(nullptr),                  // State not initialised yet

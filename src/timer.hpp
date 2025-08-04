@@ -111,7 +111,7 @@ class Timer                            // Members initially private
   }
   /* -- Should not execute a game tick? ------------------------------------ */
   bool TimerShouldNotTick(void) { return !TimerShouldTick(); }
-  /* -- Reset counters and re-initialise start and end time ---------------- */
+  /* -- Reset counters and reinitialise start and end time ----------------- */
   void TimerCatchup(void)
   { // Reset accumulator and duration
     cdAcc = cdLoop = cdFrame = seconds{ 0 };

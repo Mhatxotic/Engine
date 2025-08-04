@@ -307,10 +307,12 @@ struct CVars :                         // Start of vars class
       // Capture exceptions as we need to remove the variable if the value
       // failed to set for a multitude of reasons.
       try
-      { // Use the default value. Although we already set the default value
+      { // Merge throw on error and new cvar flag to supplied flags
+        const CVarConditionFlagsConst cvcfcSetFlags{
+          cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR };
+        // Use the default value. Although we already set the default value
         // when we inserted it, we need to check if it is valid too.
-        cvmiIt->second.SetValue(strValue, PANY,
-          cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR, strCBError);
+        cvmiIt->second.SetValue(strValue, PANY, cvcfcSetFlags, strCBError);
       } // Exception occured?
       catch(const exception&)
       { // Unregister the variable that was created to not cause problems when
@@ -336,12 +338,21 @@ struct CVars :                         // Start of vars class
       // Strip flags from pending cvar and XOR them with requested flags and
       // a flag to say the flag was moved from the pending list (LOADED).
       cviRef.FlagReset(cvfcFlags | LOADED | (cviRef & CVREGMASK));
-      // Update value and send appropriate perm based on where it came from
-      cviRef.SetValue(cviRef.GetValue(),
+      // Do not use the saved value if the cvar isn't from the command-line,
+      // the application manifest or loaded from the database
+      const string &strNewValue =
+        cviRef.FlagIsAnyOfSet(CSAVEABLE|SAPPCFG|SCMDLINE) ?
+          cviRef.GetValue() : strValue;
+      // Calculate permissions to use based on where the initial var came from
+      const CVarFlagsConst cvfcPermissions{
         cviRef.FlagIsSet(SCMDLINE) ? PCMDLINE :
        (cviRef.FlagIsSet(SAPPCFG) ? PAPPCFG :
-       (cviRef.FlagIsSet(SUDB) ? PUDB : PANY)),
-        cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR, strCBError);
+       (cviRef.FlagIsSet(SUDB) ? PUDB : PANY)) };
+      // Merge throw on error and new cvar flag to supplied flags
+      const CVarConditionFlagsConst cvcfcSetFlags{
+        cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR };
+      // Update value and send appropriate perm based on where it came from
+      cviRef.SetValue(strNewValue, cvfcPermissions, cvcfcSetFlags, strCBError);
       // Return iterator
       return cvmiIt;
     } // exception occured so remove the added item and rethrow the exception
@@ -655,9 +666,9 @@ struct CVars :                         // Start of vars class
             cvisRef.cbTrigger, cvisRef.cFlags, CCF_NOTHING) : cvmActive.end();
     } // Finished
     cLog->LogInfoExSafe(
-      "CVars registered $ of $ built-in variables for $ mode $.",
+      "CVars registered $ of $ built-in variables for $<0x$$>.",
       cvmActive.size(), cvislList.size(), cSystem->GetCoreFlagsString(),
-      cSystem->GetCoreFlags());
+      hex, cSystem->GetCoreFlags());
   }
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~CVars, DeInit())

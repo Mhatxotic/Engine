@@ -949,10 +949,10 @@ static void TextureReInitTextures(void)
 { // Ignore if no textures
   if(cTextures->empty()) return;
   // Reload all the textures and log the pre/post init of them
-  cLog->LogDebugExSafe("Textures re-initialising $ objects...",
+  cLog->LogDebugExSafe("Textures reinitialising $ objects...",
     cTextures->size());
   for(Texture*const tCptr : *cTextures) tCptr->ReloadTexture();
-  cLog->LogDebugExSafe("Textures re-initialised $ objects.",
+  cLog->LogDebugExSafe("Textures reinitialised $ objects.",
     cTextures->size());
 }
 /* ------------------------------------------------------------------------- */

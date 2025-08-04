@@ -18,7 +18,8 @@
 namespace LLVariable {                 // Console namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICVar::P;              using namespace ICVarLib::P;
-using namespace ILuaVariable::P;       using namespace Common;
+using namespace ILua::P;               using namespace ILuaVariable::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Variable common helper classes                                      ## **
@@ -163,7 +164,7 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
 // ? force committed to disk (true) or not (false). Note that variable values
 // ? that are equal to the default value are not committed to the database.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Register, 1, AcVariable{lS}().Init(lS))
+LLFUNC(Register, 1, cLua->StateAssert(lS);AcVariable{lS}().Init(lS))
 /* ========================================================================= */
 // $ Variable.Exists
 // > String:string=The console command name to lookup
@@ -172,33 +173,6 @@ LLFUNC(Register, 1, AcVariable{lS}().Init(lS))
 // ? the built-in engine console commands too.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Exists, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS,1})))
-/* ========================================================================= */
-// $ Variable.GetInt
-// > Id:integer=The engine cvar index.
-// < Value:mixed=The engine internal id value.
-// ? Retrieves the value of the specified cvar given at the specified id. The
-// ? id's are populated as key/value pairs in the 'Variable.Internal' table.
-/* ------------------------------------------------------------------------- */
-LLFUNC(GetInt, 1,
-  LuaUtilPushVar(lS, cCVars->GetStrInternal(AgCVarId{lS, 1})))
-/* ========================================================================= */
-// $ Variable.SetInt
-// > Id:integer=The engine cvar index.
-// > Value:string=The new engine cvar value.
-// ? Sets the new value of the specified engine cvar name. An exception is
-// ? raised if any error occurds. See Variable.Result to see the possible
-// ? results.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetInt, 1,
-  const AgCVarId aCVarId{lS, 1};
-  const AgString aValue{lS, 2};
-  LuaUtilPushVar(lS, cCVars->SetInternal(aCVarId, aValue())))
-/* ========================================================================= */
-// $ Variable.ResetInt
-// > Id:integer=The engine cvar index.
-// ? Resets the specified cvar to its default variable.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ResetInt, 1, LuaUtilPushVar(lS, cCVars->Reset(AgCVarId{lS, 1})))
 /* ========================================================================= */
 // $ Variable.Save
 // < Count:number=Number of items saved
@@ -212,8 +186,7 @@ LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->Save()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Variable.* namespace functions begin
-  LLRSFUNC(Count),    LLRSFUNC(Exists), LLRSFUNC(GetInt), LLRSFUNC(Register),
-  LLRSFUNC(ResetInt), LLRSFUNC(Save),   LLRSFUNC(SetInt),
+  LLRSFUNC(Count), LLRSFUNC(Exists), LLRSFUNC(Register), LLRSFUNC(Save),
 LLRSEND                                // Variable.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

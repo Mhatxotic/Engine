@@ -80,49 +80,17 @@ class Core final :                     // Members initially private
   private Palettes,       private Atlases,          private Fonts,
   private Videos,         private ConGraphics,      private Variables,
   private Commands,       private Lua
-{ /* -- Private typedefs --------------------------------------------------- */
-  enum CoreErrorReason                 // Lua error mode behaviour
-  { /* --------------------------------------------------------------------- */
-    CER_IGNORE,                        // Ignore errors and try to continue
-    CER_RESET,                         // Automatically reset on error
-    CER_SHOW,                          // Open console and show error
-    CER_CRITICAL,                      // Terminate engine with error
-    CER_MAX,                           // Maximum number of options supported
-  };/* -- Private Variables ------------------------------------------------ */
-  const EvtMainRegVec emrvEvents;      // Core events list
+{ /* -- Private Variables ------------------------------------------------- */
+  enum CoreErrorReason                 // Lua error mode behaviour options
+  { CER_IGNORE,                        // [0] Ignore errors and try to continue
+    CER_RESET,                         // [1] Automatically reset on error
+    CER_SHOW,                          // [2] Open console and show error
+    CER_CRITICAL,                      // [3] Terminate engine with error
+    CER_MAX,                           // [4] Maximum # of options supported
+  } cerMode;                           // Lua error mode behaviour setting
   const CbThFunc   cbtMain;            // Bound main thread function
-  CoreErrorReason  cerMode;            // Lua error mode behaviour
   unsigned int     uiErrorCount,       // Number of errors occured
                    uiErrorLimit;       // Number of errors allowed
-  /* -- Fired when lua needs to be paused (EMC_LUA_PAUSE) ------------------ */
-  void OnLuaPause(const EvtMainEvent &emeEvent)
-  { // Pause execution and if paused for the first time?
-    if(!cLua->PauseExecution())
-    { // The mainmanual* functions will consume 100% of the thread load when
-      // it doesn't request a request to redraw so make sure to throttle it.
-      if(cSystem->IsNotGraphicalMode()) cTimer->TimerSetDelayIfZero();
-      // Can't disable console while paused
-      cConGraphics->SetCantDisable(true);
-      // Write to console
-      cConsole->AddLine("Execution paused. Type 'lresume' to continue.");
-    } // Already paused? Remind console if it was manually requested
-    else if(emeEvent.eaArgs.front().b)
-      cConsole->AddLine(
-        "Execution already paused. Type 'lresume' to continue.");
-  }
-  /* -- Fired when lua needs to be resumed (EMC_LUA_RESUME) ---------------- */
-  void OnLuaResume(const EvtMainEvent&)
-  { // Return if pause was not successful
-    if(!cLua->ResumeExecution())
-      return cConsole->AddLine("Execution already in progress.");
-    // Refresh stored delay because of manual render mode
-    if(cSystem->IsNotGraphicalMode())
-      cTimer->TimerSetDelay(cCVars->GetInternal<unsigned int>(APP_DELAY));
-    // Console can now be disabled
-    cConGraphics->SetCantDisable(false);
-    // Write to console
-    cConsole->AddLine("Execution resumed.");
-  }
   /* -- Reset environment function ----------------------------------------- */
   void CoreResetEnvironment(const bool bLeaving)
   { // Log that we're resetting the environment
@@ -153,8 +121,27 @@ class Core final :                     // Members initially private
       cConGraphics->RestoreDefaultProperties();
     } // Bot mode? Clear bottom status texts
     if(cSystem->IsTextMode()) cConsole->ClearStatus();
-    // Reset timer and clear any lingering engine events
+    // Reset frame timer control
     cTimer->TimerReset(bLeaving);
+    // Reset unique ids. Remember some classes aren't registered in the
+    // collector, such as the console and main fbo.
+#define RSCEX(x,v) x->CounterReset(x->CollectorCount() + v)
+#define RSCX(x,v) RSCEX(c ## x, v)
+#define RSC(x) RSCX(x, 0)
+    RSC(Archives); RSC(Assets);    RSC(Atlases);   RSC(Bins);     RSC(Clips);
+    RSC(Commands); RSCX(Fbos,2);   RSC(Files);     RSC(Fonts);    RSC(Ftfs);
+    RSC(Images);   RSC(ImageLibs); RSC(Jsons);     RSC(LuaFuncs); RSC(Masks);
+    RSC(Palettes); RSC(Pcms);      RSC(PcmLibs);   RSC(Samples);  RSC(Shaders);
+    RSC(Sockets);  RSC(Sources);   RSC(SShots);    RSC(Stats);    RSC(Streams);
+    RSC(Textures); RSC(Threads);   RSC(Variables); RSC(Videos);
+#undef RSC
+#undef RSCX
+#undef RSCEX
+    // Reset socket packet and traffic counters
+    SocketResetCounters();
+    // Clear any lingering events which is very important because events from
+    // the last sandbox may contain invalidated pointers and as long as they
+    // don't reach the 'cEvtMain->ManageSafe()' function we're fine.
     cEvtMain->Flush();
     // Log that we've reset the environment
     cLog->LogDebugExSafe("Core environment $.",
@@ -198,7 +185,7 @@ class Core final :                     // Members initially private
       cEvtMain->ThreadCancelExit();
       // Compare event code. Do we need to execute scripts?
       switch(cEvtMain->GetExitReason())
-      { // Do not re-initialise anything if we processed a LUA error code
+      { // Do not reinitialise anything if we processed a LUA error code
         case EMC_LUA_ERROR: break;
         // Lua execution was ended (e.g. use of the 'lend' command)
         case EMC_LUA_END:
@@ -210,7 +197,8 @@ class Core final :                     // Members initially private
           cEvtMain->SetExitReason(EMC_LUA_ERROR);
           // Done
           break;
-        // The thread was re-initialised? (e.g. vreset command)
+        // The thread and window was reinitialised? (e.g. vreset command)
+        case EMC_QUIT_VREINIT: [[fallthrough]];
         case EMC_QUIT_THREAD:
           // Tell guest scripts to redraw their fbo's
           cEvtMain->Add(EMC_LUA_REDRAW);
@@ -294,11 +282,10 @@ class Core final :                     // Members initially private
       cEvtMain->GetExitReason());
     // Request to close window
     cDisplay->RequestClose();
-    // Unregister exit events
-    cEvtMain->DeInit();
     // Whats the exit reason code?
     switch(cEvtMain->GetExitReason())
     { // Quitting thread?
+      case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD:
         // Not interactive mode? Nothing to de-initialise
         if(cSystem->IsNotGraphicalMode()) return;
@@ -314,8 +301,6 @@ class Core final :                     // Members initially private
       default:
         // De-initialise Lua
         CoreLuaDeInitHelper();
-        // Deregister lua pause and resume callbacks
-        cEvtMain->UnregisterEx(emrvEvents);
         // If in graphical mode?
         if(cSystem->IsGraphicalMode())
         { // De-init console graphics and input
@@ -376,8 +361,6 @@ class Core final :                     // Members initially private
       cConsole->Init();
       cConGraphics->Init();
       cInput->Init();
-      // Register lua pause and resume events
-      cEvtMain->RegisterEx(emrvEvents);
     } // Not initialising for the first time?
     else
     { // Reconfigure matrix
@@ -405,8 +388,6 @@ class Core final :                     // Members initially private
     cLog->LogDebugExSafe("Core engine thread started (C:$;M:$<$>).",
       cEvtMain->GetExitReason(), cSystem->GetCoreFlagsString(),
       cSystem->GetCoreFlags());
-    // Register exit events
-    cEvtMain->Init();
     // Non-interactive mode?
     if(cSystem->IsTextMode())
     { // And interactive mode?
@@ -416,7 +397,6 @@ class Core final :                     // Members initially private
       { // Initialise freetype and console
         cFreeType->Init();
         cConsole->Init();
-        cEvtMain->RegisterEx(emrvEvents);
       } // Initialising for first time? Just update window icons
       else cDisplay->UpdateIcons();
     } // Init interactive console?
@@ -426,7 +406,8 @@ class Core final :                     // Members initially private
       cAudio->AudioInit();
     // Lua loop with initialisation. Compare event code
     SandBoxInit: switch(cEvtMain->GetExitReason())
-    { // Ignore LUA initialisation if we're re-initialising other components
+    { // Ignore LUA initialisation if we're reinitialising other components
+      case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD: break;
       // Any other code will initialise LUA
       default: cLua->Init();
@@ -512,7 +493,7 @@ class Core final :                     // Members initially private
           switch(cEvtMain->GetExitReason())
           { // Lua is ending execution? (i.e. via 'lend') fall through.
             case EMC_LUA_END: [[fallthrough]];
-            // Lua executing is re-initialising? (i.e. lreset).
+            // Lua executing is reinitialising? (i.e. lreset).
             case EMC_LUA_REINIT:
               // Write exception to log.
               cLog->LogErrorExSafe("Core sandbox de-init exception: $",
@@ -543,7 +524,7 @@ class Core final :                     // Members initially private
           [[fallthrough]];
         // Lua is ending execution? Shouldn't happen.
         case EMC_LUA_END: [[fallthrough]];
-        // Lua executing is re-initialising? Shouldn't happen.
+        // Lua executing is reinitialising? Shouldn't happen.
         case EMC_LUA_REINIT: [[fallthrough]];
         // Quitting and restarting? Shouldn't happen.
         case EMC_QUIT_RESTART: [[fallthrough]];
@@ -560,15 +541,15 @@ class Core final :                     // Members initially private
         cConsole->AddLine("Execution ended! Use 'lreset' to restart.");
         // De-initialis lua
         CoreLuaDeInitHelper();
-        // Re-initialise lua and go back into the sandbox
+        // Reinitialise lua and go back into the sandbox
         goto SandBoxInit;
-      // Execution re-initialising? (e.g. 'lreset' command was used)
+      // Execution reinitialising? (e.g. 'lreset' command was used)
       case EMC_LUA_REINIT:
         // Add message to say the execution is restarting
         cConsole->AddLine("Execution restarting...");
         // De-initialis lua
         CoreLuaDeInitHelper();
-        // Re-initialise lua and go back into the sandbox
+        // Reinitialise lua and go back into the sandbox
         goto SandBoxInit;
       // Unknown value so report it and fall through.
       default: cLog->LogWarningExSafe("Core has unknown error behaviour of $!",
@@ -581,6 +562,7 @@ class Core final :                     // Members initially private
       // Quitting the engine completely? De-initialise lua and fall through.
       case EMC_QUIT: [[fallthrough]];
       // Restarting engine subsystems. i.e. 'vreset'? Fall through.
+      case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD: break;
     } // De-initilise everything
     CoreDeInitEverything();
@@ -608,7 +590,7 @@ class Core final :                     // Members initially private
       case EMC_QUIT: [[fallthrough]];
       case EMC_QUIT_RESTART: [[fallthrough]];
       case EMC_QUIT_RESTART_NP: return false;
-      // Systems were just re-initialising? YES!
+      // Systems were just reinitialising? YES!
       default: return true;
     }
   }
@@ -623,14 +605,21 @@ class Core final :                     // Members initially private
         cEvtMain->ThreadDeInit();
         cDisplay->DeInit());
       // Setup main thread and start it
-      cEvtMain->ThreadInit(cbtMain, nullptr);
+      Restart: cEvtMain->ThreadInit(cbtMain, nullptr);
       // Loop until window should close
       while(cGlFW->WinShouldNotClose())
       { // Process window event manager commands from other threads
         cEvtWin->ManageSafe();
         // Wait for more window events
         GlFWWaitEvents();
-      }
+      } // Restart to hard reinit the window if not doing a soft reinit
+      if(cEvtMain->GetExitReason() != EMC_QUIT_VREINIT) continue;
+      // De-initialise the thread
+      cEvtMain->ThreadDeInit();
+      // Soft reinitialise the window
+      cDisplay->ReInit();
+      // Go back to the thread restart point
+      goto Restart;
     } // Error occured
     catch(const exception &eReason)
     { // Send to log and show error message to user
@@ -712,8 +701,8 @@ class Core final :                     // Members initially private
           "Core signalled to restart with $ parameters!",
           cCmdLine->CmdLineGetTotalCArgs());
         // Set exit procedure
-        cCmdLine->CmdLineSetRestart(cSystem->IsGraphicalMode() ?
-          EO_UI_REBOOT : EO_TERM_REBOOT);
+        cCmdLine->CmdLineSetRestart(cSystem->IsTextMode() ?
+          EO_TERM_REBOOT : EO_UI_REBOOT);
         // Have debugging enabled?
         if(cLog->HasLevel(LH_DEBUG))
         { // Log each argument that will be sent
@@ -728,8 +717,8 @@ class Core final :                     // Members initially private
         cLog->LogWarningSafe(
           "Core signalled to restart without parameters!");
         // Set exit procedure
-        cCmdLine->CmdLineSetRestart(cSystem->IsGraphicalMode() ?
-          EO_UI_REBOOT_NOARG : EO_TERM_REBOOT_NOARG);
+        cCmdLine->CmdLineSetRestart(cSystem->IsTextMode() ?
+          EO_TERM_REBOOT_NOARG : EO_UI_REBOOT_NOARG);
         // Clean-up and restart
         return 4;
       // Normal exit (which is already set to EO_QUIT)
@@ -748,12 +737,8 @@ class Core final :                     // Members initially private
     Console{                           // Initialise console commands list
       static_cast<ConCmdStaticList&>   // Grab the one we just made
         (*this) },
-    emrvEvents{                        // Default events
-      { EMC_LUA_PAUSE,  bind(&Core::OnLuaPause,  this, _1) },
-      { EMC_LUA_RESUME, bind(&Core::OnLuaResume, this, _1) },
-    },
-    cbtMain{ bind(&Core::CoreThreadMain, this, _1) },
     cerMode{ CER_CRITICAL },           // Init lua error mode behaviour
+    cbtMain{ bind(&Core::CoreThreadMain, this, _1) },
     uiErrorCount(0),                   // Init number of errors occured
     uiErrorLimit(0)                    // Init number of errors allowed
     /* -- Set global pointer to static class ------------------------------- */

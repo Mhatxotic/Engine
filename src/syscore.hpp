@@ -613,7 +613,7 @@ class System :                         // The main system class
       cLog->LogInfoExSafe("System heap init of $ ($+$) in $ ($/s).",
         StrToBytes(stMemory), StrToBytes(RAMProcUse()),
         StrToBytes(stActualMemory), StrShortFromDuration(dDuration),
-          StrToBytes(static_cast<uint64_t>(1.0 / dDuration * stMemory)));
+          StrToBytes(static_cast<uint64_t>(1.0 / dDuration * stActualMemory)));
     } // Success
     return ACCEPT;
   }

@@ -63,13 +63,15 @@ class SysPipe :                        // Members initially private
     const ValidType vtId)
   { // Get the program filename and check it
     const string &strApp = aList.front();
-    const ValidResult iVResult = DirValidName(strApp, vtId);
-    if(iVResult != VR_OK)
-      XC("Executable name is invalid!",
-         "CmdLine", strCmdLine, "Program", strApp,
-         "Code",    iVResult,
-         "Reason",  cDirBase->DirBaseVNRtoStr(iVResult));
-    // De-init existing process
+    switch(const ValidResult vrResult = DirValidName(strApp, vtId))
+    { // Good result? Skip to next task
+      case VR_OK: break;
+      // Anything else and we need to throw an exception
+      default: XC("Executable name is invalid!",
+                  "Program", strApp, "Code", vrResult,
+                  "Reason",  cDirBase->DirBaseVNRtoStr(vrResult),
+                  "CmdLine", strCmdLine);
+    } // De-init existing process
     Finish();
     // Show command and arguments
     cLog->LogDebugExSafe("System opening pipe to '$' with $ args '$'.",

@@ -103,7 +103,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   }
   /* -- Reset parameters --------------------------------------------------- */
   void Reset(void) { Init(); SetExternal(true); }
-  /* -- Re-initialise the source id ---------------------------------------- */
+  /* -- Reinitialise the source id ----------------------------------------- */
   void ReInit(void) { uiId = cOal->CreateSource(); Reset(); }
   /* -- Unlock a source so it can be recycled ------------------------------ */
   void Unlock(void)
@@ -350,7 +350,7 @@ static void SourceDeInit(void)
   { // Get reference to source class
     Source &soRef = **siIt;
     // If it is not LUA managed then delete it because the Sample, Video and
-    // Stream classes will all re-initialise a new source again.
+    // Stream classes will all reinitialise a new source again.
     if(!soRef.GetClass()) { siIt = cSources->erase(siIt); continue; }
     // Is a LUA class so just stop and clear it. LUA GC deletes this, not us.
     soRef.Stop();
@@ -366,7 +366,7 @@ static void SourceDeInit(void)
 static void SourceReInit(void)
 { // Done if empty
   if(cSources->empty()) return;
-  // Re-create buffers for all the samples and log pre/post re-init
+  // Re-create buffers for all the samples and log pre/post reinit
   cLog->LogDebugExSafe("Sources reinitialising $ objects...",
     cSources->size());
   for(Source*const soPtr : *cSources) soPtr->ReInit();

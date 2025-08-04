@@ -197,7 +197,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     // Nothing to send to 'stdin'
     Memory mbBlank;
     // Dispatch the request asynchronously
-    AsyncInitCmdLine(lS, strCmdLine, "cmdline", mbBlank);
+    AsyncInitCmdLine(lS, strCmdLine, "assetexec", mbBlank);
   }
   /* -- Load asset from command-line --------------------------------------- */
   void AssetInitAsyncCmdLineEx(lua_State*const lS, const string &strCmdLine,
@@ -205,8 +205,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   { // Prepare user flags
     FlagSet(afcFlags);
     // Load asset from file asynchronously
-    AsyncInitCmdLine(lS, strCmdLine,
-      StrAppend("cmdline<", aStdIn.MemSize()), aStdIn);
+    AsyncInitCmdLine(lS, strCmdLine, "assetexecex", aStdIn);
   }
   /* -- Init from file ----------------------------------------------------- */
   void AssetInitFile(const string &strFile, const AssetFlagsConst &afcFlags)

@@ -542,10 +542,10 @@ static void FboRender(void)
 static void FboReInit(void)
 { // Ignore if no fbos
   if(cFbos->empty()) return;
-  // Re-init all fbos and log pre/post operation.
-  cLog->LogDebugExSafe("Fbos re-initialising $ objects...", cFbos->size());
+  // Reinit all fbos and log pre/post operation.
+  cLog->LogDebugExSafe("Fbos reinitialising $ objects...", cFbos->size());
   for(Fbo*const fCptr : *cFbos) fCptr->FboReInit();
-  cLog->LogInfoExSafe("Fbos re-initialised $ objects.", cFbos->size());
+  cLog->LogInfoExSafe("Fbos reinitialised $ objects.", cFbos->size());
 }
 /* ========================================================================= */
 static void FboDeInit(void)

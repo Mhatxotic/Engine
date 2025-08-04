@@ -1279,7 +1279,7 @@ struct Sql :                           // Members initially public
   { // If named database is already opened
     if(sqlDB && strPrefix == IdentGet())
     { // Put in console and return failure
-      cLog->LogWarningExSafe("Sql skipped re-init of '$'.", strPrefix);
+      cLog->LogWarningExSafe("Sql skipped reinit of '$'.", strPrefix);
       return false;
     } // Log initialisation. Set filename using memory db name if empty
     const string &strDb = strPrefix.empty() ? strMemoryDBName : strPrefix;
@@ -1295,7 +1295,7 @@ struct Sql :                           // Members initially public
     { // Log error result
       cLog->LogWarningExSafe("Sql could not open '$' because $ ($)!", strDb,
         GetErrorStr(), iCode);
-      // Sql open failed so 'sqlDBtemp' stays NULL. Hush yourself cppcheck!
+      // Sql open failed so 'sqlDBtemp' stays NULL.
       return false;
     } // Set to this database and set name
     sqlDB = sqlDBtemp;

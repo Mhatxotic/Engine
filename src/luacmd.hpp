@@ -14,9 +14,8 @@ using namespace IConsole::P;           using namespace IError::P;
 using namespace IIdent::P;             using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace ILua::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace ILuaUtil::P;           using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -71,9 +70,7 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
   /* -- Register user console command from lua ----------------------------- */
   void Init(lua_State*const lS, const string &strName,
     const unsigned int uiMinimum, const unsigned int uiMaximum)
-  { // Must be running on the main thread
-    cLua->StateAssert(lS);
-    // Check that the console command is valid
+  { // Check that the console command is valid
     if(!IsValidConsoleCommandName(strName))
       XC("Console command name is invalid!",
          "Command", strName, "Minimum", stConCmdMinLength,
