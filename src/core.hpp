@@ -712,8 +712,8 @@ class Core final :                     // Members initially private
           "Core signalled to restart with $ parameters!",
           cCmdLine->CmdLineGetTotalCArgs());
         // Set exit procedure
-        cCmdLine->CmdLineSetRestart(cSystem->IsGraphicalMode() ?
-          EO_UI_REBOOT : EO_TERM_REBOOT);
+        cCmdLine->CmdLineSetRestart(cSystem->IsTextMode() ?
+          EO_TERM_REBOOT : EO_UI_REBOOT);
         // Have debugging enabled?
         if(cLog->HasLevel(LH_DEBUG))
         { // Log each argument that will be sent
@@ -728,8 +728,8 @@ class Core final :                     // Members initially private
         cLog->LogWarningSafe(
           "Core signalled to restart without parameters!");
         // Set exit procedure
-        cCmdLine->CmdLineSetRestart(cSystem->IsGraphicalMode() ?
-          EO_UI_REBOOT_NOARG : EO_TERM_REBOOT_NOARG);
+        cCmdLine->CmdLineSetRestart(cSystem->IsTextMode() ?
+          EO_TERM_REBOOT_NOARG : EO_UI_REBOOT_NOARG);
         // Clean-up and restart
         return 4;
       // Normal exit (which is already set to EO_QUIT)

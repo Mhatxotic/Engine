@@ -662,11 +662,16 @@ class SysCon :                         // All members initially private
           ShortTri &stEntry = ctPalette[stIndex];
           init_color(static_cast<short>(stIndex),
             stEntry[0], stEntry[1], stEntry[2]);
-        }
+        } // Log that we restored the colours
+        cLog->LogDebugSafe("SysCon palette restored.");
       } // Restore terminal settings
-      endwin();
+      if(const int iResult = endwin())
+        cLog->LogWarningExSafe("SysCon ncurses session end failure ($)!",
+          iResult);
+      // Log that we ended the ncurses session
+      else cLog->LogDebugSafe("SysCon ncurses session ended.");
     } // System console is de-initialised
-    cLog->LogDebugSafe("SysCon de-initialised!");
+    cLog->LogDebugSafe("SysCon de-initialised.");
   }
   /* -- Re-initialise ------------------------------------------------------ */
   void SysConReInit(void)

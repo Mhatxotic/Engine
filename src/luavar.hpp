@@ -46,9 +46,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   /* -- Returns the end of the lua console command list -------------------- */
   LuaCVarMapIt GetLuaVarListEnd(void) { return GetLuaVarList().end(); }
   /* == Cvar updated callback for Lua ============================== */ public:
-  static CVarReturn LuaCallbackStatic(
-    CVarItem &cviVar,
-    const string &strVal)
+  static CVarReturn LuaCallbackStatic(CVarItem &cviVar, const string &strVal)
   { // Find cvar and ignore if we don't have it yet! This can happen if the
     // variable is initialising for the first time. We haven't added the
     // variable to cvmActive yet and we don't want to until the CVARS system
