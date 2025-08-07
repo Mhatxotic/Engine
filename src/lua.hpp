@@ -21,10 +21,10 @@ using namespace IEvtMain::P;           using namespace IFlags;
 using namespace ILog::P;               using namespace ILuaDef;
 using namespace ILuaCode::P;           using namespace ILuaFunc::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITimer::P;             using namespace IUtil::P;
-using namespace Lib::Sqlite::Types;
+using namespace ILuaVariable::P;       using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITimer::P;
+using namespace IUtil::P;              using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Lua class ============================================================ */
@@ -349,18 +349,16 @@ class Lua :                            // Actual class body
     LuaUtilGetGlobal(GetState(), "Variable");
     // Create a table of the specified number of variables
     LuaUtilPushTable(GetState(), 0, CVAR_MAX);
-    // Push each cvar id to the table
-    lua_Integer liIndex = 0;
+    // Enumerate cvars and if stored iterator is registered?
     for(const CVarMapIt &cvmiIt : cCVars->GetInternalList())
-    { // If stored iterator is valid?
       if(cvmiIt != cCVars->GetVarListEnd())
       { // Push internal id value name
-        LuaUtilPushInt(GetState(), liIndex);
+        LuaUtilClassCreate<Variable>(GetState(), *cVariables)->
+          InitInternal(cvmiIt);
         // Assign the id to the cvar name
         LuaUtilSetField(GetState(), -2, cvmiIt->first.c_str());
-      } // Next id
-      ++liIndex;
-    } // Push cvar id table into the core namespace
+      }
+    // Push cvar id table into the core namespace
     LuaUtilSetField(GetState(), -2, "Internal");
     // Remove the table
     LuaUtilRmStack(GetState());

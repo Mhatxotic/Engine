@@ -180,6 +180,13 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
        "Name",  IdentGet(), "Value", iLiveReference,
        "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
   }
+  /* -- Send a function or blank ------------------------------------------- */
+  void LuaFuncPushFuncOrBlank(void) const
+  { // Get referenced function and return if succeeded
+    if(LuaUtilGetRefFunc(LuaFuncGetState(), iLiveReference)) return;
+    // Push empty function instead
+    LuaUtilGetRefFunc(LuaFuncGetState(), cParent->LuaRefGetFunc());
+  }
   /* -- Dispatch the requested variables ----------------------------------- */
   template<typename ...VarArgs>void LuaFuncDispatch(const VarArgs &...vArgs)
   { // Push the call back function

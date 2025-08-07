@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.7.31.1 -->
-<!-- Automatically built at Fri Aug 01 00:40:39 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.7.31.1 -->
+<!-- Reference for the Mhatxotic Engine API version 25.8.7.34 -->
+<!-- Automatically built at Thu Aug 07 16:33:05 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.8.7.34 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.7.31.1">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.8.7.34">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.7.31.1">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.8.7.34">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.7.31.1">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.8.7.34">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.7.31.1 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.8.7.34 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.7.31.1 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.8.7.34 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.7.31.1 API reference</H1>
+	<H1>Mhatxotic Engine 25.8.7.34 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 847 functions (405 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 211 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 844 functions (402 members, 442 methods) and 27 consts in 30 namespaces with 83 commands and 211 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1579,15 +1579,12 @@
 						<OL>
 							<LI><P>The Variable class allows creation and manipulation of console commands</P></LI>
 							<LI>
-								<B>Members</B> <I>(7 members)</I>
+								<B>Members</B> <I>(4 members)</I>
 								<OL>
 									<LI><A href="#Variable.Count">Count</A></LI>
 									<LI><A href="#Variable.Exists">Exists</A></LI>
-									<LI><A href="#Variable.GetInt">GetInt</A></LI>
 									<LI><A href="#Variable.Register">Register</A></LI>
-									<LI><A href="#Variable.ResetInt">ResetInt</A></LI>
 									<LI><A href="#Variable.Save">Save</A></LI>
-									<LI><A href="#Variable.SetInt">SetInt</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -10432,18 +10429,6 @@
 		<PRE>Returns if the specified console command is registered which includes the built&#x2d;in engine console commands too&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Variable.GetInt" style="display:none">
-		<H3>Variable.GetInt</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Value</U> = Variable.GetInt(<I><U>Id</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = The engine cvar index.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Value</U> <I>(mixed)</I> = The engine internal id value.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Retrieves the value of the specified cvar given at the specified id&#x2e; The id&#x27;s are populated as key&#x2f;value pairs in the &#x27;Variable&#x2e;Internal&#x27; table&#x2e;<BR></PRE>
-		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Variable.Register" style="display:none">
 		<H3>Variable.Register</H3>
 		<H4>Syntax:-</H4>
@@ -10456,16 +10441,6 @@
 		<PRE>Registers the specified cvar name with the specified default value&#x2e; The default value is ignored if there is already a saved value in the Sql cvars database&#x2e; If the saved value is a corrupted encrypted value then the default is used&#x2e; If the cvar already exists then an exception is thrown so make sure you check for it first if do not expect this call to garauntee success&#x2e; Normally it is unless there is a memory allocation issue&#x2e; The amount of cvars you can register is limited by the integral value of the &#x27;obj_cvarmax&#x27; cvar&#x2e; The syntax of the callback function is function&#x28;V&#x3a;string&#x29;&#x7b;return RR&#x3a;boolean&#x2c;RV&#x3a;string&#x7d; where &#x27;V&#x27; is the value string that was requested to be set&#x2e; If &#x27;RV&#x27; is not set then &#x27;RR&#x27; is whether to accept &#x28;true&#x29; or deny &#x28;false&#x29; the requested change to &#x27;V&#x27;&#x2c; otherwise&#x2c; if &#x27;RV&#x27; is set to a string then the actual cvar value is replaced by the &#x27;RV&#x27; string and &#x27;RR&#x27; refers to if the variable should be force committed to disk &#x28;true&#x29; or not &#x28;false&#x29;&#x2e; Note that variable values that are equal to the default value are not committed to the database&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Variable.ResetInt" style="display:none">
-		<H3>Variable.ResetInt</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Variable.ResetInt(<I><U>Id</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = The engine cvar index.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Resets the specified cvar to its default variable&#x2e;<BR></PRE>
-		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Variable.Save" style="display:none">
 		<H3>Variable.Save</H3>
 		<H4>Syntax:-</H4>
@@ -10474,16 +10449,6 @@
 		<PRE><U>Count</U> <I>(number)</I> = Number of items saved<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Commits all modified variables to database&#x2e; Returns number of items written&#x2e;<BR></PRE>
-		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Variable.SetInt" style="display:none">
-		<H3>Variable.SetInt</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Variable.SetInt(<I><U>Id</U>, <U>Value</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = The engine cvar index.<BR><U>Value</U> <I>(string)</I> = The new engine cvar value.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Sets the new value of the specified engine cvar name&#x2e; An exception is raised if any error occurds&#x2e; See Variable&#x2e;Result to see the possible results&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Variable:Boolean" style="display:none">
@@ -12559,6 +12524,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Fri Aug 01 00:40:39 2025 +0100</ADDRESS>
+	This document was generated at Thu Aug 07 16:33:05 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

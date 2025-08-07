@@ -1084,7 +1084,7 @@ for(const LuaFunc*const lfPtr : *cLuaFuncs)
 { // Get Lua function
   const LuaFunc &lfRef = *lfPtr;
   // Put on stack
-  lfRef.LuaFuncPushFunc();
+  lfRef.LuaFuncPushFuncOrBlank();
   // Print totals info
   sTable.DataN(lfRef.CtrGet())
         .Data(LuaUtilGetStackTokens(cLuaFuncs->LuaRefGetState(), -1))
