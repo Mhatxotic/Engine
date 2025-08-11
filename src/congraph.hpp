@@ -48,24 +48,6 @@ class ConGraphics :                    // Members initially private
     cCursor = cConsole->FlagIsSet(CF_INSERT) ? '|' : '_';
     cConsole->SetRedraw();
   }
-  /* -- Either clear the input text or close the console ------------------- */
-  void ClearInputOrClose(void)
-  { // If there is no text in the input buffer?
-    if(cConsole->InputEmpty())
-    { // Hide the console and set to ignore an escape keypress if succeeded
-      if(SetVisible(false)) cConsole->FlagSet(CF_IGNOREESC);
-    } // Else clear input
-    else cConsole->ClearInput();
-  }
-  /* -- Copy text ---------------------------------------------------------- */
-  void CopyText(void)
-  { // Build command by appending text before and after the cursor
-    const string strCmd{ cConsole->InputText() };
-    // Copy to clipboard if not empty
-    if(!strCmd.empty()) cGlFW->WinSetClipboardString(strCmd);
-  }
-  /* -- Paste text --------------------------------------------------------- */
-  void PasteText(void) { cEvtMain->Add(EMC_INP_PASTE); }
   /* -- Calculate the number of triangles and commands for console fbo ----- */
   void RecalculateFboListReserves(void)
   { // Ignore if font not available (not in graphical mode).
@@ -201,17 +183,36 @@ class ConGraphics :                    // Members initially private
     // Control key, which key?
     if(iMods & GLFW_MOD_CONTROL) switch(iKey)
     { // Test keys with control held
-#if defined(MACOS) // Because MacOS keyboards don't have an 'insert' key.
-      case GLFW_KEY_DELETE : return ToggleCursorMode();
+#if defined(MACOS)
+      // Because MacOS keyboards don't have an 'insert' key.
+      case GLFW_KEY_DELETE: return ToggleCursorMode();
 #endif
-      case GLFW_KEY_C      : return CopyText();
-      case GLFW_KEY_V      : return PasteText();
-      default              : break;
+      // Copy text from clipboard?
+      case GLFW_KEY_C:
+      { // Build command by appending text before and after the cursor
+        const string strCmd{ cConsole->InputText() };
+        // Copy to clipboard if not empty
+        if(!strCmd.empty()) cGlFW->WinSetClipboardString(strCmd);
+        // Break to pass to console class
+        break;
+      } // Paste text from clipboard?
+      case GLFW_KEY_V: cEvtMain->Add(EMC_INP_PASTE); break;
+      // Nothing interesting break to pass to console class
+      default: break;
     } // Normal key, which key?
     else switch(iKey)
     { // Test keys with no modifiers held
-      case GLFW_KEY_ESCAPE : return ClearInputOrClose();
-      default              : break;
+      case GLFW_KEY_ESCAPE:
+      { // If there is no text in the input buffer?
+        if(cConsole->InputEmpty())
+        { // Hide the console and set to ignore an escape keypress if succeeded
+          if(SetVisible(false)) cConsole->FlagSet(CF_IGNOREESC);
+        } // Let console class clear the input
+        else break;
+        // Do not do anything else
+        return;
+      } // Nothing interesting break to pass to console class
+      default: break;
     } // We didnt handle any keys so let the actual console handle them
     cConsole->OnKeyPress(iKey, iAction, iMods);
   }

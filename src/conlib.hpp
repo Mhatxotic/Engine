@@ -90,13 +90,13 @@ for(const Asset *aPtr : *cAssets)
   // Show first sixteen bytes
   for(size_t stIndex = 0; stIndex < stMax; ++stIndex)
   { // Get character
-    const uint8_t ucChar = aRef.MemReadInt<uint8_t>(stIndex);
+    const unsigned int uiChar = aRef.MemReadInt<uint8_t>(stIndex);
     // Add hex of block
-    strHex += StrHexFromInt(ucChar, 2) + ' ';
+    strHex += StrHexFromInt(uiChar, 2) + ' ';
     // Put a dot if character is invalid
-    if(ucChar < ' ') { strAscii += '.'; continue; }
+    if(uiChar < ' ') { strAscii += '.'; continue; }
     // Encode the character
-    strAscii += static_cast<char>(ucChar);
+    strAscii += static_cast<char>(uiChar);
   } // Add padding for characters that don't exist
   for(size_t stIndex = stMax; stIndex < stCount; ++stIndex)
     { strHex += ".. "; strAscii += ' '; }

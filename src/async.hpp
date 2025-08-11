@@ -310,7 +310,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   }
   /* ----------------------------------------------------------------------- */
   void AsyncInit(lua_State*const lsS, const string &strIdentifier,
-    const string &strL)
+    const string &strLabel)
   { // Set the filename
     idName.IdentSet(strIdentifier);
     // Parse the class, error and success functions.
@@ -319,7 +319,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     // event subsystem executes the callback and will be empty.
     strAsyncError = StdMove(LuaUtilStack(lsS));
     // Begin async thread
-    tAsyncThread.ThreadInit(StrAppend(strL, ':', strIdentifier),
+    tAsyncThread.ThreadInit(StrAppend(strLabel, ':', strIdentifier),
       bind(&AsyncLoader<MemberType,ColType>::AsyncThreadMain,
         this, _1), this);
   }

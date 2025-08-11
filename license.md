@@ -1,6 +1,6 @@
-# [License & Disclaimer](#license)…
+# License & Disclaimer…
 This **engine** software is designed **only** for legitimate and lawful multimedia solutions and is provided **as is** with **zero** warranty. It also contains very strong cryptographic technologies which [might not be allowed](https://en.wikipedia.org/wiki/Cryptography_law) to be imported in your country. By using this software, whether you are the **guest** author or the **end** user, you accept that the [engine author](https://github.com/mhatxotic) and **all** the authors of **all** the [engine components](https://github.com/mhatxotic/engine?tab=readme-ov-file#credits) disclaim **all** liability for how the **guest author** or the **end user** chooses to use this software.
 
 The **engine** source code was supplied for **reference only** so people can confidently trust the projects I make with it and try to help me improve it if necessary. However, it is also public as a result so I cannot stop anyone from doing what they want with it. My hope is that if you **only** do good things with this software, then it would be greatly appreciated if you could be as so kind as to credit me and help improve the source code farther.
 
-## [Copyright © 2006-2025 Mhatxotic Design. All Rights Reserved](https://github.com/mhatxotic).
+## Copyright © 2006-2025 Mhatxotic Design. All Rights Reserved.
