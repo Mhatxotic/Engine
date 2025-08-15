@@ -85,7 +85,7 @@ class Audio :                          // Audio manager class
   { // Capture exceptions
     try
     { // Log status
-      cLog->LogDebugSafe("Audio class re-initialising...");
+      cLog->LogDebugSafe("Audio class reinitialising...");
       // De-Init thread
       AudioDeInitThread();
       // Unload all buffers for streams and samples and destroy all sources
@@ -96,7 +96,7 @@ class Audio :                          // Audio manager class
       // Deinit and reinit context
       AudioDeInitContext();
       AudioInitContext();
-      // Re-initialise volume levels
+      // Reinitialise volume levels
       AudioSetVolume(cSources->fGVolume);
       SampleSetVolume(cSources->fSVolume);
       StreamSetVolume(cSources->fMVolume);
@@ -111,14 +111,14 @@ class Audio :                          // Audio manager class
       // Send lua event with the device type not set
       lfOnUpdate.LuaFuncDispatch();
       // Log status
-      cLog->LogInfoSafe("Audio class re-initialised successfully.");
+      cLog->LogInfoSafe("Audio class reinitialised successfully.");
     } // We don't want LUA to hard break really.
     catch(const exception &eReason)
     { // Log the exception first
-      cLog->LogErrorExSafe("Audio re-init exception: $", eReason);
+      cLog->LogErrorExSafe("Audio reinit exception: $", eReason);
       // Reset next thread check time
       AudioResetCheckTime();
-    } // Remove re-initialisation flag
+    } // Remove reinitialisation flag
     cOal->FlagClear(AFL_REINIT);
   }
   /* -- Thread main function with system events support -------------------- */
@@ -439,11 +439,11 @@ class Audio :                          // Audio manager class
   size_t AudioGetNumCapDevices(void) const { return dlCTDevices.size(); }
   /* -- Send init signal --------------------------------------------------- */
   bool AudioReInit(void)
-  { // Return if signal already set to re-initialise
+  { // Return if signal already set to reinitialise
     if(cOal->FlagIsSet(AFL_REINIT)) return false;
-    // Set the signal to re-init (it will get unset when re-initialised)
+    // Set the signal to reinit (it will get unset when reinitialised)
     cOal->FlagSet(AFL_REINIT);
-    // Send event to re-initialise audio
+    // Send event to reinitialise audio
     cEvtMain->Add(EMC_AUD_REINIT);
     // Event sent
     return true;
@@ -467,7 +467,7 @@ class Audio :                          // Audio manager class
     cSources->CollectorDestroyUnsafe();
     // Unload handles
     AudioDeInitContext();
-    // Re-Init members
+    // ReInit members
     tpNextCheck = {};
     dlPBDevices.clear();
     dlCTDevices.clear();
@@ -499,7 +499,7 @@ class Audio :                          // Audio manager class
     InitHelper{ __FUNCTION__ },        // Initialise class name
     Thread{ "audio", STP_AUDIO },      // Initialise high perf audio thread
     emrvEvents{                        // Initialise audio events
-      { EMC_AUD_REINIT,                // Re-initialisation request
+      { EMC_AUD_REINIT,                // Reinitialisation request
           bind(&Audio::AudioOnReInit,  this, _1) },
       { EMC_AUD_PDEVICE_UPDATED,       // Playback devices updated event
           bind(&Audio::AudioOnPbkDeviceUpdated, this, _1) },

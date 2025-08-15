@@ -836,6 +836,15 @@ cConsole->AddLineF(
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'gpu' function
 /* ========================================================================= */
+// ! greset
+// ? Resets OpenGL without destroying the window
+/* ========================================================================= */
+{ "greset", 1, 1, CFL_VIDEO, [](const Args &){
+/* ------------------------------------------------------------------------- */
+cEvtMain->RequestGLReInit();
+/* ------------------------------------------------------------------------- */
+} },                                   // End of 'gpu' function
+/* ========================================================================= */
 // ! images
 // ? Shows all created 'Image' object classes created by LUA including classes
 // ? internally used by the engine.
@@ -1049,7 +1058,7 @@ else cConsole->AddLineF("No match from $.",
 /* ========================================================================= */
 { "lend", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
-// Re-init lua and inform user of the result
+// Reinit lua and inform user of the result
 cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_END) ?
   "Bypassing guest end routine and going stand-by!" :
   "Asking guest to end execution and going stand-by.");
@@ -1250,7 +1259,7 @@ cLua->RequestPause(true);
 /* ========================================================================= */
 { "lreset", 1, 1, CFL_NONE, [](const Args &){
 /* ------------------------------------------------------------------------- */
-// Re-init lua and inform user of the result
+// Reinit lua and inform user of the result
 cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_REINIT) ?
   "Bypassing guest end routine and restarting execution!" :
   "Asking guest to end execution and restarting execution.");
@@ -2244,7 +2253,7 @@ cConsole->AddLineF("$$ supported on monitor #$ ($).", sTable.Finish(),
 } },                                   // End of 'vmlist' function
 /* ========================================================================= */
 // ! vreset
-// ? Completely shuts down the rendering portion the engine and re-initialises
+// ? Completely shuts down the rendering portion the engine and reinitialises
 // ? it. There could be a short delay as textures are rebuilt and re-uploaded
 // ? to the OpenGL driver by the engine and the guest author (if used).
 /* ========================================================================= */

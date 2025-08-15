@@ -198,7 +198,7 @@ class Core final :                     // Members initially private
       cEvtMain->ThreadCancelExit();
       // Compare event code. Do we need to execute scripts?
       switch(cEvtMain->GetExitReason())
-      { // Do not re-initialise anything if we processed a LUA error code
+      { // Do not reinitialise anything if we processed a LUA error code
         case EMC_LUA_ERROR: break;
         // Lua execution was ended (e.g. use of the 'lend' command)
         case EMC_LUA_END:
@@ -210,7 +210,8 @@ class Core final :                     // Members initially private
           cEvtMain->SetExitReason(EMC_LUA_ERROR);
           // Done
           break;
-        // The thread was re-initialised? (e.g. vreset command)
+        // The thread and window was reinitialised? (e.g. vreset command)
+        case EMC_QUIT_VREINIT: [[fallthrough]];
         case EMC_QUIT_THREAD:
           // Tell guest scripts to redraw their fbo's
           cEvtMain->Add(EMC_LUA_REDRAW);
@@ -299,6 +300,7 @@ class Core final :                     // Members initially private
     // Whats the exit reason code?
     switch(cEvtMain->GetExitReason())
     { // Quitting thread?
+      case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD:
         // Not interactive mode? Nothing to de-initialise
         if(cSystem->IsNotGraphicalMode()) return;
@@ -426,7 +428,8 @@ class Core final :                     // Members initially private
       cAudio->AudioInit();
     // Lua loop with initialisation. Compare event code
     SandBoxInit: switch(cEvtMain->GetExitReason())
-    { // Ignore LUA initialisation if we're re-initialising other components
+    { // Ignore LUA initialisation if we're reinitialising other components
+      case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD: break;
       // Any other code will initialise LUA
       default: cLua->Init();
@@ -512,7 +515,7 @@ class Core final :                     // Members initially private
           switch(cEvtMain->GetExitReason())
           { // Lua is ending execution? (i.e. via 'lend') fall through.
             case EMC_LUA_END: [[fallthrough]];
-            // Lua executing is re-initialising? (i.e. lreset).
+            // Lua executing is reinitialising? (i.e. lreset).
             case EMC_LUA_REINIT:
               // Write exception to log.
               cLog->LogErrorExSafe("Core sandbox de-init exception: $",
@@ -543,7 +546,7 @@ class Core final :                     // Members initially private
           [[fallthrough]];
         // Lua is ending execution? Shouldn't happen.
         case EMC_LUA_END: [[fallthrough]];
-        // Lua executing is re-initialising? Shouldn't happen.
+        // Lua executing is reinitialising? Shouldn't happen.
         case EMC_LUA_REINIT: [[fallthrough]];
         // Quitting and restarting? Shouldn't happen.
         case EMC_QUIT_RESTART: [[fallthrough]];
@@ -560,15 +563,15 @@ class Core final :                     // Members initially private
         cConsole->AddLine("Execution ended! Use 'lreset' to restart.");
         // De-initialis lua
         CoreLuaDeInitHelper();
-        // Re-initialise lua and go back into the sandbox
+        // Reinitialise lua and go back into the sandbox
         goto SandBoxInit;
-      // Execution re-initialising? (e.g. 'lreset' command was used)
+      // Execution reinitialising? (e.g. 'lreset' command was used)
       case EMC_LUA_REINIT:
         // Add message to say the execution is restarting
         cConsole->AddLine("Execution restarting...");
         // De-initialis lua
         CoreLuaDeInitHelper();
-        // Re-initialise lua and go back into the sandbox
+        // Reinitialise lua and go back into the sandbox
         goto SandBoxInit;
       // Unknown value so report it and fall through.
       default: cLog->LogWarningExSafe("Core has unknown error behaviour of $!",
@@ -581,6 +584,7 @@ class Core final :                     // Members initially private
       // Quitting the engine completely? De-initialise lua and fall through.
       case EMC_QUIT: [[fallthrough]];
       // Restarting engine subsystems. i.e. 'vreset'? Fall through.
+      case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD: break;
     } // De-initilise everything
     CoreDeInitEverything();
@@ -608,7 +612,7 @@ class Core final :                     // Members initially private
       case EMC_QUIT: [[fallthrough]];
       case EMC_QUIT_RESTART: [[fallthrough]];
       case EMC_QUIT_RESTART_NP: return false;
-      // Systems were just re-initialising? YES!
+      // Systems were just reinitialising? YES!
       default: return true;
     }
   }
@@ -623,14 +627,21 @@ class Core final :                     // Members initially private
         cEvtMain->ThreadDeInit();
         cDisplay->DeInit());
       // Setup main thread and start it
-      cEvtMain->ThreadInit(cbtMain, nullptr);
+      Restart: cEvtMain->ThreadInit(cbtMain, nullptr);
       // Loop until window should close
       while(cGlFW->WinShouldNotClose())
       { // Process window event manager commands from other threads
         cEvtWin->ManageSafe();
         // Wait for more window events
         GlFWWaitEvents();
-      }
+      } // Restart to hard reinit the window if not doing a soft reinit
+      if(cEvtMain->GetExitReason() != EMC_QUIT_VREINIT) continue;
+      // De-initialise the thread
+      cEvtMain->ThreadDeInit();
+      // Soft reinitialise the window
+      cDisplay->ReInit();
+      // Go back to the thread restart point
+      goto Restart;
     } // Error occured
     catch(const exception &eReason)
     { // Send to log and show error message to user

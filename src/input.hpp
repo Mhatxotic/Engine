@@ -221,7 +221,7 @@ class Input :                          // Handles keyboard, mouse & controllers
     { cEvtWin->AddUnblock(EWC_WIN_CURSETVIS, FlagIsSet(IF_CURSOR)); }
   /* -- Set visibility of mouse cursor ------------------------------------- */
   void SetCursor(const bool bState)
-  { // Set member var incase window needs to re-init so we can restore the
+  { // Set member var incase window needs to reinit so we can restore the
     // cursor state
     FlagSetOrClear(IF_CURSOR, bState);
     // Request to set cursor visibility

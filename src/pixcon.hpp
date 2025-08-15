@@ -673,7 +673,7 @@ class SysCon :                         // All members initially private
     } // System console is de-initialised
     cLog->LogDebugSafe("SysCon de-initialised.");
   }
-  /* -- Re-initialise ------------------------------------------------------ */
+  /* -- Reinitialise ------------------------------------------------------- */
   void SysConReInit(void)
   { // Ignore if not enabled
     using namespace ICurses;
@@ -687,8 +687,8 @@ class SysCon :                         // All members initially private
       case OK: break;
       // Any other value
       default: XC("Failed to de-initialise ncurses!", "Code", iResult);
-    } // Re-initialise ncurses
-    if(!initscr()) XC("Failed to re-initialise ncurses!");
+    } // Reinitialise ncurses
+    if(!initscr()) XC("Failed to reinitialise ncurses!");
   }
   /* -- Initialise --------------------------------------------------------- */
   void SysConInit(const char*const, const size_t, const size_t, const bool)

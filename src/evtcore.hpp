@@ -89,7 +89,7 @@ class EvtCore :                        // Start of common event system class
   typedef vector<EvtArgVar> EvtArgs;   // Vector of RegPairs
   /* ----------------------------------------------------------------------- */
   typedef IdList<EvtMaxEvents> ISList; // Events as strings
-  const ISList islEventStrings;        // Actual variable
+  const ISList &islEventStrings;       // Actual variable
   /* ----------------------------------------------------------------------- */
   struct Event                         // Event packet information
   { /* --------------------------------------------------------------------- */
@@ -339,10 +339,10 @@ class EvtCore :                        // Start of common event system class
   void UnregisterEx(const RegVec &rvEvents)
     { for(const RegPair &rpItem : rvEvents) Unregister(rpItem.first); }
   /* -- Event data, all empty functions ------------------------- */ protected:
-  EvtCore(string &&strCName, ISList &&islStrings) :
+  EvtCore(string &&strCName, const ISList &islStrings) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(strCName) },             // Initialise event system name
-    islEventStrings{ StdMove(islStrings) }, // Initialise event id names
+    Ident{ StdMove(strCName) },        // Initialise event system name
+    islEventStrings{ islStrings },     // Initialise event id names
     cefEmpty{ bind(&EvtCore::WarningFunction, this, _1) },
     fFuncs{ UtilMkFilledContainer<Funcs>(cefEmpty) }
     /* -- No code ---------------------------------------------------------- */

@@ -161,6 +161,10 @@ class GlFWUtil                         // Members initially private
   /* -- No code ------------------------------------------------------------ */
   { }
 };/* ----------------------------------------------------------------------- */
+/* -- Get monitor data pointer --------------------------------------------- */
+template<typename AnyCast=void*>
+  static AnyCast GlFWGetMonitorUserPointer(GLFWmonitor*const mC)
+    { return reinterpret_cast<AnyCast>(glfwGetMonitorUserPointer(mC)); }
 /* -- Get window data pointer ---------------------------------------------- */
 template<typename AnyCast=void*>
   static AnyCast GlFWGetWindowUserPointer(GLFWwindow*const wC)

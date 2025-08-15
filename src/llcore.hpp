@@ -381,7 +381,7 @@ LLFUNC(RAM, 6, cSystem->UpdateMemoryUsageData();
 // $ Core.Reset
 // < Result:boolean = Was the event sent successfully?
 // ? Ends LUA execution, clears the context, and restarts LUA execution. It
-// ? will return 'false' if Lua is already re-initialising.
+// ? will return 'false' if Lua is already reinitialising.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Reset, 1, LuaUtilPushVar(lS, cLua->ReInit()))
 /* ========================================================================= */

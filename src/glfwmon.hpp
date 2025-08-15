@@ -51,7 +51,7 @@ class GlFWRes                          // Members initially private
     iIndex(iId),                       // Initialise video mode index
     vmData(vmD),                       // Initialise video mode data
     iDepth(Red() + Green() + Blue())   // Initialise video mode total bits
-    /* -- No code ---------------------------------------------------------- */
+    /* -- Update unique identifier of monitor ------------------------------ */
     { }
 };/* ----------------------------------------------------------------------- */
 typedef vector<GlFWRes> GlFWResList;   // Vector of resolution classes
@@ -116,7 +116,7 @@ class GlFWMonitor :                    // Members initially private
     dDiagonalInches(                   // Initialise diagonal length in inches
       UtilMillimetresToInches(dDiagonal)),
     strName{ StdMove(InitName(mC)) }   // Initialise monitor name
-  /* -- No code ------------------------------------------------------------ */
+  /* -- Build monitor list ------------------------------------------------- */
   { // Get primary video mode information. Note that if a monitor is
     // just connecting, the width, height and refreshRate properties can be
     // zero which means we cannot detect the current resolution right now.
@@ -132,8 +132,7 @@ class GlFWMonitor :                    // Members initially private
           for(int iMode = 0; iMode < iModes; ++iMode)
           { // Monitor data to add. Do not use insert() here as it causes
             // a realloc and our pointers will be invalidated.
-            const GlFWRes rData{ iMode, vModes[iMode] };
-            emplace_back(StdMove(rData));
+            push_back({ iMode, vModes[iMode] });
             // Ignore if this is not the active resolution for this display
             if(!back().Same(*vPrimary)) continue;
             // Set active resolution
@@ -171,16 +170,6 @@ struct GlFWMonitors :
   public GlFWMonitorList               // Monitors list
 { /* ----------------------------------------------------------------------- */
   const GlFWMonitor *moPrimary;        // Primary monitor
-  /* -- Find a match from specified glfw monitor context ------------------- */
-  const GlFWMonitor *Find(GLFWmonitor*const moCptr)
-  { // Find the GLFW context in our structured classes
-    typedef GlFWMonitorList::const_iterator GlFWMonitorListConstIt;
-    const GlFWMonitorListConstIt gwmlciIt{
-      StdFindIf(par_unseq, cbegin(), cend(), [moCptr](const GlFWMonitor &moIt)
-        { return moIt.Context() == moCptr; }) };
-    // Return the pointer to it or NULL if not found
-    return gwmlciIt != cend() ? &(*gwmlciIt) : nullptr;
-  }
   /* ----------------------------------------------------------------------- */
   void Refresh(void)
   { // Reset primary monitor
@@ -209,12 +198,16 @@ struct GlFWMonitors :
         reserve(static_cast<size_t>(iMonitors));
         // Display information about each new monitor
         for(int iMonitor = 0; iMonitor < iMonitors; ++iMonitor)
-        { // Monitor data to add. Do not use const or insert() here as it
+        { // Get monitor pointer
+          GLFWmonitor*const mMonitor = mMonitors[iMonitor];
+          // Monitor data to add. Do not use const or insert() here as it
           // causes a realloc and our pointers will be invalidated.
-          GlFWMonitor mData{ iMonitor, mMonitors[iMonitor] };
-          emplace_back(StdMove(mData));
+          push_back({ iMonitor, mMonitor });
+          // Get pointer to new monitor class and set it in glfw
+          GlFWMonitor*const moMonPtr = &back();
+          glfwSetMonitorUserPointer(mMonitor, moMonPtr);
           // Set primary monitor handle
-          if(back().Context() == mPrimary) moPrimary = &back();
+          if(mMonitor == mPrimary) moPrimary = moMonPtr;
         } // Check that we detected the primary resolution and monitor
         if(!moPrimary) XC("Could not detect primary monitor id!");
       } // Failed to detect monitor list

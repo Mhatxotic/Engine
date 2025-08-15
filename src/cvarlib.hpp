@@ -1399,7 +1399,7 @@ CVarItemStaticList{{
   cCommon->CommonZero(),               // Forced disabled as unsupported
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->HiDPIChanged, bool), TBOOLEANSAVE|PANY },
+  CB(cDisplay->HiDPIChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_LOCK
 // ? Locks the main frame buffer size to the app author values specified by
