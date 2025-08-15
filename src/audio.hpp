@@ -44,7 +44,7 @@ class Audio :                          // Audio manager class
   /* -- Playback device list was updated ----------------------------------- */
   void AudioOnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
   { // Update the device context if supplied
-    cOal->UpdateDevice(reinterpret_cast<ALCdevice*>(emeEvent.eaArgs[0].vp));
+    cOal->UpdateDevice(emeEvent.eaArgs[0].Ptr<ALCdevice>());
     // Refresh device list and update the name
     AudioEnumPlaybackDevices();
     cOal->UpdatePlaybackDeviceName();

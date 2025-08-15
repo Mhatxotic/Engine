@@ -1399,11 +1399,12 @@ Statistic sTable;
 sTable.Header("ID").Header("A").Header("POSX").Header("POSY").Header("HORI")
       .Header("VERT").Header("RATIO").Header("RD").Header("GD").Header("BD")
       .Header("TD").Header("HTZ").Header("DWIN").Header("DHIN").Header("SIZE")
-      .Header("NAME", false).Reserve(cDisplay->GetMonitorsCount());
+      .Header("NAME", false).Reserve(cDisplay->MonitorsCount());
 // Walk the monitors list
-for(const GlFWMonitor &gfwmRef : cDisplay->GetMonitors())
+StdForEach(seq, cDisplay->MonitorsBegin(), cDisplay->MonitorsEnd(),
+  [&sTable](const GlFWMonitor &gfwmRef)
 { // Get reference to class and write its data to the table
-  const GlFWRes &gfwrRef = *gfwmRef.Primary();
+  const GlFWRes &gfwrRef = gfwmRef.Primary();
   sTable.DataN(gfwmRef.Index())
         .Data(StrFromBoolYN(&gfwmRef == cDisplay->GetSelectedMonitor()))
         .DataN(gfwmRef.CoordGetX()).DataN(gfwmRef.CoordGetY())
@@ -1413,9 +1414,9 @@ for(const GlFWMonitor &gfwmRef : cDisplay->GetMonitors())
         .DataN(gfwrRef.Depth()).DataN(gfwrRef.Refresh())
         .DataN(gfwmRef.WidthInch(), 1).DataN(gfwmRef.HeightInch(), 1)
         .DataN(gfwmRef.DiagonalInch(), 1).Data(gfwmRef.Name());
-} // Write total monitors found
+}); // Write total monitors found
 cConsole->AddLineA(sTable.Finish(),
-  StrCPluraliseNum(cDisplay->GetMonitorsCount(), "monitor", "monitors"),
+  StrCPluraliseNum(cDisplay->MonitorsCount(), "monitor", "monitors"),
     " detected.");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'mlist' function
@@ -2224,30 +2225,32 @@ cConsole->AddLineA(sTable.Finish(),
 // Monitor number and return if invalid
 const size_t stMonitorSelected =
   aArgs.size() == 1 ? 0 : StrToNum<size_t>(aArgs[1]);
-if(stMonitorSelected >= cDisplay->GetMonitorsCount())
+if(stMonitorSelected >= cDisplay->MonitorsCount())
   return cConsole->AddLineF("Invalid monitor $ specified!",
     stMonitorSelected);
 // Header (to be printed twice)
 Statistic sTable;
-sTable.Header("VM#").Header("A").Header("HORI").Header("VERT")
-      .Header("CD").Header("HTZ").Header("RD").Header("GD").Header("BD")
-      .Header("RATIO ", false);
+sTable.Header("VM").Header("A").Header("HORI").Header("VERT").Header("CD")
+      .Header("HTZ").Header("RD").Header("GD").Header("BD")
+      .Header("ASR ", false);
 // Get selected monitor and add extra headers if more than one mode
-const GlFWMonitor &gfwmRef = cDisplay->GetMonitors()[stMonitorSelected];
-if(gfwmRef.size() > 1)
-  sTable.DupeHeader().Reserve(cDisplay->GetMonitorsCount() / 2);
+const GlFWMonitor &gfwmRef = cDisplay->MonitorsGet(stMonitorSelected);
+if(gfwmRef.Count() > 1)
+  sTable.DupeHeader().Reserve(cDisplay->MonitorsCount() / 2);
 else sTable.Reserve(1);
-// Write each resolution to the table
-for(const GlFWRes &gfwrRef : gfwmRef)
+// Enumerate each resolution
+StdForEach(seq, gfwmRef.Begin(), gfwmRef.End(),
+  [&sTable, &gfwmRef](const GlFWRes &gfwrRef)
+{ // Write each resolution to the table
   sTable.DataN(gfwrRef.Index())
-        .Data(StrFromBoolYN(&gfwrRef == gfwmRef.Primary()))
+        .Data(StrFromBoolYN(&gfwrRef == gfwmRef.PrimaryPtr()))
         .DataN(gfwrRef.Width()).DataN(gfwrRef.Height()).DataN(gfwrRef.Depth())
         .DataN(gfwrRef.Refresh()).DataN(gfwrRef.Red()).DataN(gfwrRef.Green())
         .DataN(gfwrRef.Blue())
         .Data(StrFromRatio(gfwrRef.Width(), gfwrRef.Height()));
-// Print number of video modes
+}); // Print number of video modes
 cConsole->AddLineF("$$ supported on monitor #$ ($).", sTable.Finish(),
-  StrCPluraliseNum(gfwmRef.size(), "mode", "modes"), stMonitorSelected,
+  StrCPluraliseNum(gfwmRef.Count(), "mode", "modes"), stMonitorSelected,
   gfwmRef.Name());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'vmlist' function

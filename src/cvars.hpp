@@ -666,9 +666,9 @@ struct CVars :                         // Start of vars class
             cvisRef.cbTrigger, cvisRef.cFlags, CCF_NOTHING) : cvmActive.end();
     } // Finished
     cLog->LogInfoExSafe(
-      "CVars registered $ of $ built-in variables for $ mode $.",
+      "CVars registered $ of $ built-in variables for $<0x$$>.",
       cvmActive.size(), cvislList.size(), cSystem->GetCoreFlagsString(),
-      cSystem->GetCoreFlags());
+      hex, cSystem->GetCoreFlags());
   }
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~CVars, DeInit())

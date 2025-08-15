@@ -120,8 +120,8 @@ class EvtMain :                        // Event list for render thread
      // Get reference to argument stack
     const EvtArgs &eaArgs = eEvent.eaArgs;
     // Tell requesting thread that it may continue
-    reinterpret_cast<SafeBool*>(eaArgs[0].vp)->store(true);
-    reinterpret_cast<condition_variable*>(eaArgs[1].vp)->notify_one();
+    eaArgs[0].Ptr<SafeBool>()->store(true);
+    eaArgs[1].Ptr<condition_variable>()->notify_one();
     // Wait for thread termination or calling thread to finish
     wait(ulWait, [this]{ return bUnsuspend; });
     // Reset suspension state and resume execution

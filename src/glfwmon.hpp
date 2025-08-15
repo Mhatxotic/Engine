@@ -55,10 +55,11 @@ class GlFWRes                          // Members initially private
     { }
 };/* ----------------------------------------------------------------------- */
 typedef vector<GlFWRes> GlFWResList;   // Vector of resolution classes
+typedef GlFWResList::const_iterator GlFWResListConstIt;
 /* ------------------------------------------------------------------------- */
 class GlFWMonitor :                    // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  public GlFWResList,                  // Resolutions list
+  private GlFWResList,                 // Resolutions list
   public DimCoInt                      // Position and physical size
 { /* -- Private variables -------------------------------------------------- */
   const int      iIndex;               // Monitor index
@@ -90,8 +91,6 @@ class GlFWMonitor :                    // Members initially private
   GLFWmonitor *Context(void) const { return mContext; }
   /* -- Get glfw monitor id ------------------------------------------------ */
   int Index(void) const { return iIndex; }
-  /* -- Get primary monitor ------------------------------------------------ */
-  const GlFWRes *Primary(void) const { return rPrimary; }
   /* -- Get monitor name --------------------------------------------------- */
   const string &Name(void) const { return strName; }
   /* -- Return diagonal size ----------------------------------------------- */
@@ -100,6 +99,15 @@ class GlFWMonitor :                    // Members initially private
   /* -- Return size -------------------------------------------------------- */
   double WidthInch(void) const { return ddInches.DimGetWidth(); }
   double HeightInch(void) const { return ddInches.DimGetHeight(); }
+  /* -- Get primary resolution --------------------------------------------- */
+  const GlFWRes *PrimaryPtr(void) const { return rPrimary; }
+  const GlFWRes &Primary(void) const { return *rPrimary; }
+  /* -- Resolution list access --------------------------------------------- */
+  const GlFWRes &Get(const size_t stIndex) const { return (*this)[stIndex]; }
+  const GlFWRes *GetPtr(const size_t stIndex) const { return &Get(stIndex); }
+  const GlFWResListConstIt Begin(void) const { return cbegin(); }
+  const GlFWResListConstIt End(void) const { return cend(); }
+  size_t Count(void) const { return size(); }
   /* -- Constructor -------------------------------------------------------- */
   GlFWMonitor(const int iId, GLFWmonitor*const mC) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -164,14 +172,15 @@ class GlFWMonitor :                    // Members initially private
   }
 };/* ----------------------------------------------------------------------- */
 typedef vector<GlFWMonitor> GlFWMonitorList; // Vector of monitor classes
+typedef GlFWMonitorList::const_iterator GlFWMonitorListConstIt;
 /* ------------------------------------------------------------------------- */
-struct GlFWMonitors :
+class GlFWMonitors :
   /* -- Base classes ------------------------------------------------------- */
-  public GlFWMonitorList               // Monitors list
+  private GlFWMonitorList              // Monitors list
 { /* ----------------------------------------------------------------------- */
   const GlFWMonitor *moPrimary;        // Primary monitor
-  /* ----------------------------------------------------------------------- */
-  void Refresh(void)
+  /* --------------------------------------------------------------- */ public:
+  void MonitorsRefresh(void)
   { // Reset primary monitor
     moPrimary = nullptr;
     // Clear monitor list and free memory because we're using pointers to
@@ -216,7 +225,16 @@ struct GlFWMonitors :
     else XC("Could not detect primary monitor!");
   }
   /* -- Get primary monitor ------------------------------------------------ */
-  const GlFWMonitor *Primary(void) const { return moPrimary; }
+  const GlFWMonitor *MonitorsPrimaryPtr(void) const { return moPrimary; }
+  const GlFWMonitor &MonitorsPrimary(void) const { return *moPrimary; }
+  /* -- Monitor list access ------------------------------------------------ */
+  const GlFWMonitor &MonitorsGet(const size_t stIndex) const
+    { return (*this)[stIndex]; }
+  const GlFWMonitor *MonitorsGetPtr(const size_t stIndex) const
+    { return &MonitorsGet(stIndex); }
+  const GlFWMonitorListConstIt MonitorsBegin(void) const { return cbegin(); }
+  const GlFWMonitorListConstIt MonitorsEnd(void) const { return cend(); }
+  size_t MonitorsCount(void) const { return size(); }
   /* ----------------------------------------------------------------------- */
   GlFWMonitors(void) : moPrimary(nullptr) { }
 };/* ----------------------------------------------------------------------- */

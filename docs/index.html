@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.8.15.121 -->
-<!-- Automatically built at Fri Aug 15 21:06:44 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.8.15.121 -->
+<!-- Reference for the Mhatxotic Engine API version 25.8.17.13 -->
+<!-- Automatically built at Sun Aug 17 00:29:59 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.8.17.13 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.8.15.121">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.8.17.13">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.8.15.121">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.8.17.13">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.8.15.121">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.8.17.13">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.8.15.121 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.8.17.13 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.8.15.121 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.8.17.13 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.8.15.121 API reference</H1>
+	<H1>Mhatxotic Engine 25.8.17.13 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -3457,7 +3457,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Result</U> <I>(boolean )</I> =  Was the event sent successfully?<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Ends LUA execution&#x2c; clears the context&#x2c; and restarts LUA execution&#x2e; It will return &#x27;false&#x27; if Lua is already re&#x2d;initialising&#x2e;<BR></PRE>
+		<PRE>Ends LUA execution&#x2c; clears the context&#x2c; and restarts LUA execution&#x2e; It will return &#x27;false&#x27; if Lua is already reinitialising&#x2e;<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.Restart" style="display:none">
@@ -4167,7 +4167,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Width</U> <I>(number)</I> = The new width of the main frame buffer<BR><U>Height</U> <I>(number)</I> = The new height of the main frame buffer<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>This is a run&#x2d;time override for &#x27;vid_orwidth&#x27; and &#x27;vid_orheight&#x27; cvars in which the main frame buffer viewport is re&#x2d;calculated and re&#x2d;initialised to these dimensions&#x2e; Note that this modifies the console size as well&#x2e;<BR></PRE>
+		<PRE>This is a run&#x2d;time override for &#x27;vid_orwidth&#x27; and &#x27;vid_orheight&#x27; cvars in which the main frame buffer viewport is re&#x2d;calculated and reinitialised to these dimensions&#x2e; Note that this modifies the console size as well&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo.SetBlend" style="display:none">
@@ -11466,7 +11466,7 @@
 	</DIV>
 	<DIV id="cc.vreset" style="display:none">
 		<H3>vreset</H3>
-		<PRE>Completely shuts down the rendering portion the engine and re&#x2d;initialises it&#x2e; There could be a short delay as textures are rebuilt and re&#x2d;uploaded to the OpenGL driver by the engine and the guest author &#x28;if used&#x29;&#x2e;<BR></PRE>
+		<PRE>Completely shuts down the rendering portion the engine and reinitialises it&#x2e; There could be a short delay as textures are rebuilt and re&#x2d;uploaded to the OpenGL driver by the engine and the guest author &#x28;if used&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.wreset" style="display:none">
@@ -12311,7 +12311,7 @@
 	</DIV>
 	<DIV id="cv.vid_hidpi" style="display:none">
 		<H3>vid_hidpi</H3>
-		<PRE>Enables or disables HiDPI support&#x2e;<BR></PRE>
+		<PRE>Enables or disables HiDPI support&#x2e; Set to &#x27;0&#x27; to disable HiDPI&#x2c; &#x27;1&#x27; to &#x28;default&#x29; to enable it&#x2c; or &#x27;2&#x27; to enable it with a fix for going from a HiDPI window to non&#x2d;HiDPI window to increase window size to match the previous OpenGL frame&#x2d;buffer size which is useful for video capturing and maintaining capture quality&#x2e; The cvar only applies to MacOS and can only be set via command&#x2d;line or the application manifest&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.vid_lock" style="display:none">
@@ -12530,6 +12530,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Fri Aug 15 21:06:44 2025 +0100</ADDRESS>
+	This document was generated at Sun Aug 17 00:29:59 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

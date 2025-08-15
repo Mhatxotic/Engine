@@ -50,7 +50,7 @@ BUILD_FLAGS(Display,
   // Window has a border?              Minimize on lose focus?
   DF_BORDER                {Flag(53)}, DF_MINFOCUS              {Flag(54)},
   // HiDPI is enabled?                 SRGB namespace is enabled?
-  DF_HIDPI                 {Flag(55)}, DF_SRGB                  {Flag(56)},
+  DF_SRGB                  {Flag(56)},
   // Graphics switching enabled?       Full-screen mode set?
   DF_GASWITCH              {Flag(57)}, DF_FULLSCREEN            {Flag(58)},
   // Window is closable?               Stereo mode enabled?
@@ -60,7 +60,14 @@ BUILD_FLAGS(Display,
   // No opengl errors?                 Window maximised at start?
   DF_NOERRORS              {Flag(63)}, DF_MAXIMISED             {Flag(64)}
 );
-/* == Display class ======================================================== */
+/* -- HIDPI setting enums -------------------------------------------------- */
+enum HiDPISetting                      // Possible values for 'vid_hidpi'
+{ /* ----------------------------------------------------------------------- */
+  HD_DISABLED,                         // Do not enable HiDPI
+  HD_ENABLED,                          // Enable HiDPI
+  HD_ENHANCED                          // Enable HiDPI with certain behaviours
+};/* ----------------------------------------------------------------------- */
+/* -- Display class -------------------------------------------------------- */
 class Display;                         // Class prototype
 static Display *cDisplay = nullptr;    // Pointer to global class
 class Display :                        // Actual class body
@@ -68,21 +75,26 @@ class Display :                        // Actual class body
   private InitHelper,                  // Initialisation helper
   public  DisplayFlags,                // Display settings
   private DimCoInt,                    // Requested window position and size
+  public  GlFWMonitors,                // Monitor list data
   private mutex,                       // Mutex for sychronising engine thread
   private condition_variable           // CV for sychronising engine thread
-{ /* -- Variables ---------------------------------------------------------- */
+{ /* -- Events ------------------------------------------------------------- */
   const EvtMainRegVec emrvEvents;      // Main events list to register
   const EvtWinRegVec  ewrvEvents;      // Window events list to register
-  GlFWMonitors        mlData;          // Monitor list data
-  const GlFWMonitor  *moSelected;      // Monitor selected
-  const GlFWRes      *rSelected;       // Monitor resolution selected
+  /* -- Monitors and resolutions ------------------------------------------- */
+  const GlFWMonitor  *gfwmActive;      // Monitor selected
+  const GlFWRes      *gfwrActive;      // Monitor resolution selected
   size_t           stMRequested,       // Monitor id request
                    stVRequested;       // Video mode requested
+  SafeBool         bUnsuspend;         // Request to un-suspend window thread
+  /* -- Configuration ------------------------------------------------------ */
   DimGLFloat       dfMatrix,           // Currently selected frame-buffer dims
                    dfMatrixReq,        // Requested frame-buffer dimensions
-                   dfWinScale;         // Window scale dimensions
+                   dfWinScale,         // Active window scale dimensions
+                   dfInitScale;        // Init window scale dimensions
   GLfloat          fGamma;             // Monitor gamma setting
   CoordInt         ciPosition;         // Window position
+  HiDPISetting     hdpiSetting;        // High DPI handling setting
   int              iApi,               // Selected API from GLFW
                    iProfile,           // Selected profile for the context
                    iCtxMajor,          // Selected context major version
@@ -95,16 +107,11 @@ class Display :                        // Actual class body
                    iFBDepthA,          // Selected alpha bit depth mode
                    iAuxBuffers,        // Auxilliary buffers to use
                    iSamples;           // FSAA setting to use
-  string           strClipboard;       // Clipboard string to copy or grab
-  SafeBool         bUnsuspend;         // Request to un-suspend window thread
   /* -- Icons -------------------------------------------------------------- */
-  typedef vector<GLFWimage> GlFWIconList; // Glfw image list
-  GlFWIconList     gilIcons;           // Contiguous memory for glfw image data
-  typedef vector<Image> IconList;      // Actual icon list
-  IconList         ilIcons;            // Image icon data
-  /* -- Macros ----------------------------------------------------- */ public:
-  LuaFunc          lrFocused,          // Window focused lua event
-                   lrClipboard;        // Clipboard function callback
+  GlFWIconVector   gfwivIcons;         // Contiguous memory for glfw image data
+  ImageVector      ivIcons;            // Image icon data
+  /* -- Events ----------------------------------------------------- */ public:
+  LuaFunc          lrFocused;          // Window focused lua event
   /* -- Public typedefs ---------------------------------------------------- */
   enum FSType {                        // Available window types
     /* --------------------------------------------------------------------- */
@@ -136,21 +143,21 @@ class Display :                        // Actual class body
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Check to see if the window moved
-    CheckWindowMoved(emaArgs[1].i, emaArgs[2].i);
+    CheckWindowMoved(emaArgs[1].Int(), emaArgs[2].Int());
   }
   /* -- Window set icon request -------------------------------------------- */
   void OnReqSetIcons(const EvtWinEvent&) { UpdateIcons(); }
   /* -- Window set set lock key mods state --------------------------------- */
   void OnReqSetLKMods(const EvtWinEvent &eweEvent)
   { // Set the new lock key mod state and log status
-    cGlFW->WinSetLockKeyMods(eweEvent.eaArgs.front().b);
+    cGlFW->WinSetLockKeyMods(eweEvent.eaArgs.front().Bool());
     cLog->LogDebugExSafe("Input updated lock key mod status to $.",
       StrFromBoolTF(cGlFW->WinGetLockKeyMods()));
   }
   /* -- Window set set cursor visibility ----------------------------------- */
   void OnReqSetCurVisib(const EvtWinEvent &eweEvent)
   { // Get requested state
-    const bool bState = eweEvent.eaArgs.front().b;
+    const bool bState = eweEvent.eaArgs.front().Bool();
     // Set the new input if we can and log status
     cGlFW->WinSetCursor(bState);
     cLog->LogDebugExSafe("Input updated cursor visibility status to $.",
@@ -161,7 +168,7 @@ class Display :                        // Actual class body
   { // If raw mouse support is supported?
     if(cGlFW->IsNotRawMouseMotionSupported()) return;
     // Set the new input if we can and log status
-    cGlFW->WinSetRawMouseMotion(eweEvent.eaArgs.front().b);
+    cGlFW->WinSetRawMouseMotion(eweEvent.eaArgs.front().Bool());
     cLog->LogDebugExSafe("Input updated raw mouse status to $.",
       StrFromBoolTF(cGlFW->WinGetRawMouseMotion()));
   }
@@ -178,14 +185,14 @@ class Display :                        // Actual class body
   /* -- Window set sticky keys request ------------------------------------- */
   void OnReqStickyKeys(const EvtWinEvent &eweEvent)
   { // Set the new input if we can and log status
-    cGlFW->WinSetStickyKeys(eweEvent.eaArgs.front().b);
+    cGlFW->WinSetStickyKeys(eweEvent.eaArgs.front().Bool());
     cLog->LogDebugExSafe("Input updated sticky keys status to $.",
       StrFromBoolTF(cGlFW->WinGetStickyKeys()));
   }
   /* -- Window set sticky mouse request ------------------------------------ */
   void OnReqStickyMouse(const EvtWinEvent &eweEvent)
   { // Set the new input if we can and log status
-    cGlFW->WinSetStickyMouseButtons(eweEvent.eaArgs.front().b);
+    cGlFW->WinSetStickyMouseButtons(eweEvent.eaArgs.front().Bool());
     cLog->LogDebugExSafe("Input updated sticky mouse status to $.",
       StrFromBoolTF(cGlFW->WinGetStickyMouseButtons()));
   }
@@ -197,12 +204,12 @@ class Display :                        // Actual class body
     { cGlFW->WinSendMousePosition(); }
   /* -- Set mouse position ------------------------------------------------- */
   void OnReqSetCursorPos(const EvtWinEvent &eweEvent)
-    { cGlFW->WinSetCursorPos(eweEvent.eaArgs.front().d,
-                             eweEvent.eaArgs.back().d); }
+    { cGlFW->WinSetCursorPos(eweEvent.eaArgs.front().Double(),
+                             eweEvent.eaArgs.back().Double()); }
   /* -- Window cursor request ---------------------------------------------- */
   void OnReqSetCursor(const EvtWinEvent &eweEvent)
     { cGlFW->SetCursor(static_cast<GlFWCursorType>
-        (eweEvent.eaArgs.front().z)); }
+        (eweEvent.eaArgs.front().SizeT())); }
   /* -- Window reset cursor request ---------------------------------------- */
   void OnReqResetCursor(const EvtWinEvent&)
     { cGlFW->WinSetCursorGraphic(); }
@@ -211,8 +218,8 @@ class Display :                        // Actual class body
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get new values
-    const float fNewWidth = emaArgs[1].f,
-                fNewHeight = emaArgs[2].f;
+    const float fNewWidth = emaArgs[1].Float(),
+                fNewHeight = emaArgs[2].Float();
     // If scale not changed? Report event and return
     if(UtilIsFloatEqual(fNewWidth, dfWinScale.DimGetWidth()) &&
        UtilIsFloatEqual(fNewHeight, dfWinScale.DimGetHeight()))
@@ -230,15 +237,15 @@ class Display :                        // Actual class body
   { // Get reference to actual arguments vector
     const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
     // Get the new limits
-    const int iMinW = ewaArgs[0].i, iMinH = ewaArgs[1].i,
-              iMaxW = ewaArgs[2].i, iMaxH = ewaArgs[3].i;
+    const int iMinW = ewaArgs[0].Int(), iMinH = ewaArgs[1].Int(),
+              iMaxW = ewaArgs[2].Int(), iMaxH = ewaArgs[3].Int();
     // Set the new limits
     cGlFW->WinSetLimits(iMinW, iMinH, iMaxW, iMaxH);
   }
   /* -- Window focused ----------------------------------------------------- */
   void OnFocus(const EvtMainEvent &emeEvent)
   { // Get state and check it
-    const int iState = emeEvent.eaArgs[1].i;
+    const int iState = emeEvent.eaArgs[1].Int();
     switch(iState)
     { // Focus restored?
       case GLFW_TRUE:
@@ -296,7 +303,7 @@ class Display :                        // Actual class body
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Check if the window resized
-    CheckWindowResized(emaArgs[1].i, emaArgs[2].i);
+    CheckWindowResized(emaArgs[1].Int(), emaArgs[2].Int());
   }
   /* -- On window closed callback ------------------------------------------ */
   void OnClose(const EvtMainEvent&)
@@ -308,7 +315,7 @@ class Display :                        // Actual class body
   /* -- Window iconified --------------------------------------------------- */
   void OnIconify(const EvtMainEvent &emeEvent)
   { // Get state and check it
-    switch(const int iState = emeEvent.eaArgs[1].i)
+    switch(const int iState = emeEvent.eaArgs[1].Int())
     { // Minimized? Log that we minimised and return
       case GLFW_TRUE:
         return cLog->LogDebugSafe("Display window state minimised.");
@@ -326,178 +333,125 @@ class Display :                        // Actual class body
   }
   /* -- Enumerate monitors ------------------------------------------------- */
   void EnumerateMonitorsAndVideoModes(void)
-  { // Log progress
+  { // Log initial progress
     cLog->LogDebugSafe("Display now enumerating available displays...");
     // Refresh monitors data
-    mlData.Refresh();
-    // Get primary monitor information, throw exception if invalid
-    for(const GlFWMonitor &mData : mlData)
+    MonitorsRefresh();
+    // Enumerate through each monitor detected
+    StdForEach(seq, MonitorsBegin(), MonitorsEnd(),
+      [](const GlFWMonitor &gfwmMon)
     { // Write information about the monitor
       cLog->LogDebugExSafe(
         "- Monitor $: $.\n"            "- Mode count: $.\n"
         "- Position: $x$.\n"           "- Dimensions: $$$x$\" ($x$mm).\n"
         "- Size: $\" ($mm).",
-        mData.Index(), mData.Name(), mData.size(), mData.CoordGetX(),
-        mData.CoordGetY(), fixed, setprecision(1), mData.WidthInch(),
-        mData.HeightInch(), mData.DimGetWidth(), mData.DimGetHeight(),
-        mData.DiagonalInch(), mData.Diagonal());
-      // Log resolution data
-      for(const GlFWRes &rData : mData)
+        gfwmMon.Index(), gfwmMon.Name(), gfwmMon.Count(), gfwmMon.CoordGetX(),
+        gfwmMon.CoordGetY(), fixed, setprecision(1), gfwmMon.WidthInch(),
+        gfwmMon.HeightInch(), gfwmMon.DimGetWidth(), gfwmMon.DimGetHeight(),
+        gfwmMon.DiagonalInch(), gfwmMon.Diagonal());
+      // Enumerate each resolution of the monitor
+      StdForEach(seq, gfwmMon.Begin(), gfwmMon.End(),
+        [&gfwmMon](const GlFWRes &gfwrRes)
+      { // Log resolution data
         cLog->LogDebugExSafe("-- Mode $: $x$x$<RGB$$$> @ $Hz$.",
-          rData.Index(), rData.Width(), rData.Height(), rData.Depth(),
-          rData.Red(), rData.Green(), rData.Blue(), rData.Refresh(),
-          &rData == mData.Primary() ? " (Active)" : cCommon->CommonBlank());
-    } // Custom monitor selected (-2) and valid monitor? Set it
+          gfwrRes.Index(), gfwrRes.Width(), gfwrRes.Height(), gfwrRes.Depth(),
+          gfwrRes.Red(), gfwrRes.Green(), gfwrRes.Blue(), gfwrRes.Refresh(),
+          &gfwrRes == gfwmMon.PrimaryPtr() ?
+            " (Active)" : cCommon->CommonBlank());
+      });
+    }); // Custom monitor selected (-2) and valid monitor? Set it
     static constexpr size_t stM2 = StdMaxSizeT - 1;
-    moSelected = (stMRequested < stM2 && stMRequested < mlData.size()) ?
-      &mlData[stMRequested] : mlData.Primary();
+    gfwmActive = (stMRequested < stM2 && stMRequested < MonitorsCount()) ?
+      MonitorsGetPtr(stMRequested) : MonitorsPrimaryPtr();
     // Get selected screen resolution
-    rSelected = (stVRequested < stM2 && stVRequested < (*moSelected).size()) ?
-      &(*moSelected)[stVRequested] : moSelected->Primary();
+    gfwrActive = (stVRequested < stM2 && stVRequested < gfwmActive->Count()) ?
+      gfwmActive->GetPtr(stVRequested) : gfwmActive->PrimaryPtr();
     // Set exclusive full-screen mode flag if value is not -2
     FlagSetOrClear(DF_EXCLUSIVE, stVRequested != stM2);
     // Get primary monitor and mode
-    const GlFWMonitor &moPrimary = *mlData.Primary();
-    const GlFWRes &rPrimary = *moPrimary.Primary();
+    const GlFWMonitor &gfwmPrimaryRef = MonitorsPrimary();
+    const GlFWRes &gfwrPrimaryRef = gfwmPrimaryRef.Primary();
     // Write to log the monitor we are using
     cLog->LogInfoExSafe("Display finished enumerating $ displays...\n"
                         "- Selected monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
                         "- Selected mode $: $x$x$bpp(R$G$B$) @$hz.",
-      mlData.size(),
-      moSelected->Index(), moSelected->Name(), moSelected->CoordGetX(),
-        moSelected->CoordGetY(), fixed, setprecision(1),
-        moSelected->WidthInch(), moSelected->HeightInch(),
-        moSelected->DiagonalInch(),
-      rSelected->Index(), rSelected->Width(), rSelected->Height(),
-        rSelected->Depth(), rSelected->Red(), rSelected->Green(),
-        rSelected->Blue(), rSelected->Refresh());
+      MonitorsCount(),
+      gfwmActive->Index(), gfwmActive->Name(), gfwmActive->CoordGetX(),
+        gfwmActive->CoordGetY(), fixed, setprecision(1),
+        gfwmActive->WidthInch(), gfwmActive->HeightInch(),
+        gfwmActive->DiagonalInch(),
+      gfwrActive->Index(), gfwrActive->Width(), gfwrActive->Height(),
+        gfwrActive->Depth(), gfwrActive->Red(), gfwrActive->Green(),
+        gfwrActive->Blue(), gfwrActive->Refresh());
     cLog->LogDebugExSafe("- Primary monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
                          "- Primary mode $: $x$x$bpp(R$G$B$) @$hz.",
-      moPrimary.Index(), moPrimary.Name(), moPrimary.CoordGetX(),
-        moPrimary.CoordGetY(), fixed, setprecision(1), moPrimary.WidthInch(),
-        moPrimary.HeightInch(), moPrimary.DiagonalInch(),
-      rPrimary.Index(), rPrimary.Width(), rPrimary.Height(), rPrimary.Depth(),
-        rPrimary.Red(), rPrimary.Green(), rPrimary.Blue(), rPrimary.Refresh());
+      gfwmPrimaryRef.Index(), gfwmPrimaryRef.Name(),
+        gfwmPrimaryRef.CoordGetX(), gfwmPrimaryRef.CoordGetY(), fixed,
+        setprecision(1), gfwmPrimaryRef.WidthInch(),
+        gfwmPrimaryRef.HeightInch(), gfwmPrimaryRef.DiagonalInch(),
+      gfwrPrimaryRef.Index(), gfwrPrimaryRef.Width(), gfwrPrimaryRef.Height(),
+        gfwrPrimaryRef.Depth(), gfwrPrimaryRef.Red(), gfwrPrimaryRef.Green(),
+        gfwrPrimaryRef.Blue(), gfwrPrimaryRef.Refresh());
   }
-  /* -- On monitor refresh requested --------------------------------------- */
-  void OnReqMonitors(const EvtWinEvent &) try
-  { // Wait for engine thread to acknowledge suspension of execution
+  /* -- Monitor changed ---------------------------------------------------- */
+  void OnReqMonitor(const EvtWinEvent &eweEvent)
+  { // Lock mutex and make other requests wait
     UniqueLock ulWait{ *this };
-    // Log finish of suspension
-    cLog->LogDebugSafe("Display monitor refresh waiting for engine...");
-    // Capture exceptions so we can un-suspend
+    // Get reference to actual arguments vector
+    const EvtMainArgs &emaArgs = eweEvent.eaArgs;
+    // Get connected monitor name. Will be NULL if GLFW_CONNECTED
+    if(const char*const cpName = emaArgs[0].CStr())
+    { // Log if name is set or not?
+      if(*cpName)
+        cLog->LogInfoExSafe("Display detected new monitor '$'.", cpName);
+      else cLog->LogInfoSafe("Display detected new unnamed monitor.");
+    } // Get disconnected monitor data. Will be NULL if GLFW_DISCONNECTED
+    else if(const GlFWMonitor *gfwmPtr = emaArgs[1].Ptr<GlFWMonitor>())
+    { // If this was our monitor?
+      if(gfwmPtr == gfwmActive)
+      { // We recognise it so we can savely disconnect it
+        cLog->LogInfoExSafe(
+          "Display disconnected monitor '$', reinitialising...",
+           gfwmPtr->Name());
+        // The selected device is no longer valid so make sure it is
+        // cleared so DeInit() doesn't try to restore gamma and crash the
+        // whole engine with an exception.
+        gfwmActive = nullptr;
+        // Request soft reinitialisation of window
+        cEvtMain->RequestGLReInit();
+        // Unsuspend the main thread and return
+        return;
+      } // Try to get monitor name and if found? Log the name.
+      else cLog->LogInfoExSafe("Display disconnected monitor '$'.",
+        gfwmActive->Name());
+    } // Log that we're processing a monitor change event
+    cLog->LogDebugSafe("Display got monitor event, suspending engine...");
+    // Capture exceptions so we can resume a suspended engine thread
     try
     { // Tell engine thread to suspend
       cEvtMain->Add(EMC_SUSPEND, &bUnsuspend,
         static_cast<condition_variable*>(this));
       // Wait for engine thread to tell us it's suspended
       wait(ulWait, [this]{ return bUnsuspend == true; });
+      // Reset our unsuspension variable
+      bUnsuspend = false;
+      // Log that we're processing a monitor change event
+      cLog->LogDebugSafe("Display acknowledged engine suspension.");
       // Enumerate monitors and video modes
       EnumerateMonitorsAndVideoModes();
-    } // If error, set unsuspend request and throw to outer handler
-    catch(...) { cEvtMain->Unsuspend(); throw; }
-    // We're done modifying variables so execution can continue
-    cEvtMain->Unsuspend();
-    // Thread unsuspended
-    bUnsuspend = false;
-    // Log finish of suspension
-    cLog->LogDebugSafe("Display monitors refreshed.");
-  } // Set unsuspended and throw error to Lua
-  catch(...) { bUnsuspend = false; throw; }
-  /* -- Monitor changed ---------------------------------------------------- */
-  static void OnMonitorStatic(GLFWmonitor*const, const int);
-  void OnMonitor(GLFWmonitor*const mAffected, const int iAction) try
-  { // We're in the main window thread here so we cannot modify any of the
-    // monitor state as the engine thread could read from it at any time. All
-    // we can do for now is ask the engine thread to restart.
-    switch(iAction)
-    { // Device was connected?
-      case GLFW_CONNECTED:
-        // Ignore if null context
-        if(!mAffected)
-          cLog->LogWarningSafe(
-            "Display connected monitor event with null context!");
-        // We shouldn't already have this monitor in our structured list
-        else if(const GlFWMonitor*const moAffected =
-                  GlFWGetMonitorUserPointer<GlFWMonitor*>(mAffected))
-          cLog->LogWarningExSafe(
-            "Display already connected monitor '$'.", moAffected->Name());
-        // Monitor has a name?
-        else if(const char*const cpName = GlFWGetMonitorName(mAffected))
-        { // Log if name is set or not?
-          if(*cpName)
-            cLog->LogInfoExSafe("Display detected new monitor '$'.", cpName);
-          else cLog->LogInfoSafe("Display detected new unnamed monitor.");
-        } // Null name (impossible)
-        else cLog->LogWarningSafe(
-          "Display detected new monitor with null name.");
-        // Done
-        break;
-      // Device was disconnected?
-      case GLFW_DISCONNECTED:
-        // Ignore if null context
-        if(!mAffected)
-          cLog->LogWarningSafe(
-            "Display disconnected monitor event with null context!");
-        // We should have this monitor in our structured list
-        else if(const GlFWMonitor*const moAffected =
-          GlFWGetMonitorUserPointer<GlFWMonitor*>(mAffected))
-        { // If this was our monitor?
-          if(moAffected == moSelected)
-          { // We recognise it so we can savely disconnect it
-            cLog->LogInfoExSafe(
-              "Display disconnected monitor '$', reinitialising...",
-              moAffected->Name());
-            // The selected device is no longer valid so make sure it is
-            // cleared so DeInit() doesn't try to restore gamma and crash the
-            // whole engine with an exception.
-            moSelected = nullptr;
-            // We need to reinitialise the opengl context
-            return cEvtMain->RequestGLReInit();
-          } // Try to get monitor name and if found? Log the name.
-          cLog->LogInfoExSafe("Display disconnected monitor '$'.",
-            GlFWGetMonitorName(mAffected));
-        } // We don't have it so if it has a name?
-        else if(const char*const cpName = GlFWGetMonitorName(mAffected))
-        { // Log that it has a name or not
-          if(*cpName)
-            cLog->LogWarningExSafe(
-              "Display already disconnected monitor '$'.", cpName);
-          else cLog->LogWarningSafe(
-            "Display already disconnected unnamed monitor.");
-        } // Null name (impossible)
-        else cLog->LogWarningSafe(
-          "Display already disconnected monitor with null name.");
-        // Break to return
-        break;
-      // Unknown state?
-      default:
-        // Ignore if null context
-        if(!mAffected)
-          cLog->LogWarningExSafe(
-            "Display sent bad state of 0x$$ with null context!",
-            hex, iAction);
-        // Not a null context?
-        else
-        { // Find this monitor context, log the failure and ignore event
-          const GlFWMonitor*const moAffected =
-            GlFWGetMonitorUserPointer<GlFWMonitor*>(mAffected);
-          cLog->LogWarningExSafe(
-            "Display sent bad state of 0x$$ for monitor '$'!",
-            hex, iAction,
-            moAffected ? moAffected->Name() : GlFWGetMonitorName(mAffected));
-        } // Break to return
-        break;
-    } // Add monitor refresh request as we can't do a refresh in this callback.
-    // Note that if another one of these events occurs that ends up having to
-    // reinit the window, that process will cancel this out.
-    cEvtWin->AddUnblock(EWC_WIN_MONITORS);
-  } // Exception occurred? We have to handle this.
-  catch(const exception &e)
-  { // Write to log
-    cLog->LogWarningExSafe("Display monitor change callback exception: $", e);
-    // Do a normal reset
-    cEvtMain->RequestQuitThread();
+      // Engine thread can continue
+      cEvtMain->Unsuspend();
+      // Log that we're processing a monitor change event
+      cLog->LogDebugSafe("Display finished processing monitor event.");
+    } // Exception occured?
+    catch(...)
+    { // Reset our unsuspension variable
+      bUnsuspend = false;
+      // Engine thread can continue
+      cEvtMain->Unsuspend();
+      // Throw exception to LUA
+      throw;
+    }
   }
   /* -- Add event to reinit matrix ----------------------------------------- */
   void RequestMatrixReInit(void) { cEvtMain->Add(EMC_VID_MATRIX_REINIT); }
@@ -507,19 +461,19 @@ class Display :                        // Actual class body
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get new frame buffer size
-    const int iWidth = emaArgs[1].i, iHeight = emaArgs[2].i;
+    const int iWidth = emaArgs[1].Int(), iHeight = emaArgs[2].Int();
     // On Mac?
 #if defined(MACOS)
     // Get addition position and window size data
-    const int iWinX     = emaArgs[3].i, iWinY      = emaArgs[4].i,
-              iWinWidth = emaArgs[5].i, iWinHeight = emaArgs[6].i;
+    const int iWinX     = emaArgs[3].Int(), iWinY      = emaArgs[4].Int(),
+              iWinWidth = emaArgs[5].Int(), iWinHeight = emaArgs[6].Int();
     // Log new viewport
     cLog->LogDebugExSafe(
       "Display received new frame buffer size of $x$ (P:$x$;W:$x$).",
       iWidth, iHeight, iWinX, iWinY, iWinWidth, iWinHeight);
     // What is the window type?
     // Frame buffer is covering the entire screen?
-    if(!iWinX && !iWinY && rSelected->IsDim(iWinWidth, iWinHeight))
+    if(!iWinX && !iWinY && gfwrActive->IsDim(iWinWidth, iWinHeight))
     { // We don't recognise the full-screen?
       if(FlagIsClear(DF_INFULLSCREEN))
       { // Now a native borderless full-screen window
@@ -562,13 +516,13 @@ class Display :                        // Actual class body
   void OnReqResize(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector and send the new size to GLFW
     const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
-    cGlFW->WinSetSize({ ewaArgs[0].i, ewaArgs[1].i });
+    cGlFW->WinSetSize({ ewaArgs[0].Int(), ewaArgs[1].Int() });
   }
   /* -- Window move requested ---------------------------------------------- */
   void OnReqMove(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector and send new position to GLFW
     const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
-    cGlFW->WinSetPos({ ewaArgs[0].i, ewaArgs[1].i });
+    cGlFW->WinSetPos({ ewaArgs[0].Int(), ewaArgs[1].Int() });
   }
   /* -- Window centre request ---------------------------------------------- */
   void OnReqCentre(const EvtWinEvent&)
@@ -593,14 +547,14 @@ class Display :                        // Actual class body
     // Disable input events to prevent the full-screen toggler being repeated
     cInput->DisableInputEvents();
     // Use requested setting instead
-    SetFullScreen(eweEvent.eaArgs.front().b);
+    SetFullScreen(eweEvent.eaArgs.front().Bool());
     // Re-enable input events
     cInput->EnableInputEvents();
   }
   /* -- Apply gamma setting ------------------------------------------------ */
   void ApplyGamma(void)
   { // Set gamma
-    GlFWSetGamma(moSelected->Context(), fGamma);
+    GlFWSetGamma(gfwmActive->Context(), fGamma);
     // Report
     cLog->LogDebugExSafe("Display set gamma to $$.", fixed, fGamma);
   }
@@ -610,13 +564,13 @@ class Display :                        // Actual class body
     DimInt diOptimal{ *this };
     if(diOptimal.DimGetWidth() <= 0 && diOptimal.DimGetHeight() <= 0)
     { // Convert selected height to double as we need to use it twice
-      const double dHeight = static_cast<double>(rSelected->Height());
+      const double dHeight = static_cast<double>(gfwrActive->Height());
       // Set the height to 80% of desktop height
       diOptimal.DimSetHeight(static_cast<int>(ceil(dHeight * 0.8)));
       // Now set the width based on desktop aspect ratio
       diOptimal.DimSetWidth(static_cast<int>(
         ceil(diOptimal.DimGetHeight<double>() *
-          (static_cast<double>(rSelected->Width()) / dHeight))));
+          (static_cast<double>(gfwrActive->Width()) / dHeight))));
       // Report result
       cLog->LogDebugExSafe("Display calculated an optimal window size of $x$.",
         diOptimal.DimGetWidth(), diOptimal.DimGetHeight());
@@ -632,9 +586,9 @@ class Display :                        // Actual class body
   { // If not in full-screen?
     if(FlagIsClear(DF_INFULLSCREEN))
     { // Return centre of screen if monitor selected
-      if(moSelected->Context())
-        return { (rSelected->Width() / 2) - (diSize.DimGetWidth() / 2),
-                 (rSelected->Height() / 2) - (diSize.DimGetHeight() / 2) };
+      if(gfwmActive->Context())
+        return { (gfwrActive->Width() / 2) - (diSize.DimGetWidth() / 2),
+                 (gfwrActive->Height() / 2) - (diSize.DimGetHeight() / 2) };
       // No monitor selected
       else cLog->LogWarningSafe(
         "Display class cannot centre the window without monitor data.");
@@ -732,7 +686,7 @@ class Display :                        // Actual class body
       // Exclusive full-screen window requested?
       if(FlagIsSet(DF_EXCLUSIVE))
       { // Set video mode and label
-        mUsing = moSelected->Context();
+        mUsing = gfwmActive->Context();
         cpType = "exclusive";
         fsType = FST_EXCLUSIVE;
       } // Not exclusive full-screen mode?
@@ -747,13 +701,14 @@ class Display :                        // Actual class body
       } // Position is top-left in full-screen
       ciPosition.CoordSet();
       // Set initial window width and height
-      diSize.DimSet(rSelected->Width(), rSelected->Height());
+      diSize.DimSet(gfwrActive->Width(), gfwrActive->Height());
       // Log that we are switching to full-screen mode. Casting requested
       // monitor and video mode to int so it displays as -1 and not max uint64.
       cLog->LogInfoExSafe("Display setting a $x$ $ full-screen window...",
         diSize.DimGetWidth(), diSize.DimGetHeight(), cpType);
       // Instruct glfw to set full-screen window
-      cGlFW->WinSetMonitor(mUsing, ciPosition, diSize, rSelected->Refresh());
+      cGlFW->WinSetMonitor(mUsing, ciPosition, diSize,
+        gfwrActive->Refresh());
     } // Window mode selected
     else
     { // Not in full-screen mode or native mode
@@ -765,7 +720,7 @@ class Display :                        // Actual class body
       fsType = FST_WINDOW;
       // We need to adjust to the position of the currently selected monitor so
       // it actually appears on that monitor.
-      ciPosition.CoordInc(*moSelected);
+      ciPosition.CoordInc(*gfwmActive);
       // Log that we switched to window mode
       cLog->LogInfoExSafe("Display setting a $x$ desktop window at $x$...",
         diSize.DimGetWidth(), diSize.DimGetHeight(), ciPosition.CoordGetX(),
@@ -789,16 +744,51 @@ class Display :                        // Actual class body
     // Store initial window size. This needs to be done because on Linux, the
     // window size isn't sent so we need to store the value.
     cInput->DimSet(diSize);
-    // Get scale of window
-    dfWinScale.DimSet(cGlFW->WinGetScale());
     // Need to fix a GLFW scaling bug with this :(
 #if defined(MACOS)
+    // Store scale of window
+    dfWinScale.DimSet(cGlFW->WinGetScale());
     // If hidpi not enabled? Update the main fbo viewport size without scale
-    if(FlagIsClear(DF_HIDPI)) cFboCore->DimSet(cInput->DimGet<GLsizei>());
-    // Update the main fbo viewport size with scale
-    else cFboCore->DimSet(
-      cInput->DimGetWidth<GLsizei>() * dfWinScale.DimGetWidth<GLsizei>(),
-      cInput->DimGetHeight<GLsizei>() * dfWinScale.DimGetHeight<GLsizei>());
+    switch(hdpiSetting)
+    { // Disabled?
+      case HD_DISABLED: cFboCore->DimSet(cInput->DimGet<GLsizei>()); break;
+      // Enabled with downscale fix?
+      case HD_ENHANCED:
+        // If we went from >1x scale to 1x scale?
+        if(dfWinScale.DimGetWidth() < dfInitScale.DimGetWidth() &&
+           dfWinScale.DimGetHeight() < dfInitScale.DimGetWidth())
+        { // Use original framebuffer size
+          cFboCore->DimSet(cInput->DimGet<GLsizei>());
+          // Increase size
+          diSize.DimSet(static_cast<int>(diSize.DimGetWidth<GLfloat>() *
+                          dfInitScale.DimGetWidth()),
+                        static_cast<int>(diSize.DimGetHeight<GLfloat>() *
+                          dfInitScale.DimGetHeight()));
+          // Set new window size to match the previous window size
+          cGlFW->WinSetSize(diSize);
+          // Write that we applied a fix
+          cLog->LogDebugExSafe("Display fixed window size to $x$ due to "
+            " DPI scale decrease from $x$ to $x$", diSize.DimGetWidth(),
+            diSize.DimGetHeight(), dfInitScale.DimGetWidth(),
+            dfInitScale.DimGetHeight(), dfWinScale.DimGetWidth(),
+            dfWinScale.DimGetHeight());
+          // Done
+          break;
+        } // Fall through
+        [[fallthrough]];
+      // Unknown setting (impossible)
+      default: [[fallthrough]];
+      // Enabled with no fixes
+      case HD_ENABLED:
+        // Just scale the frame buffer
+        cFboCore->DimSet(static_cast<int>(cInput->DimGetWidth<GLfloat>() *
+                           dfWinScale.DimGetWidth()),
+                         static_cast<int>(cInput->DimGetHeight<GLfloat>() *
+                           dfWinScale.DimGetHeight()));
+        // Done
+        break;
+    } // Store scale of window
+    dfInitScale.DimSet(dfWinScale);
     // Remove native flag since GLFW cannot set or detect this directly.
     FlagClear(DF_NATIVEFS);
     // Were any user specified parameters bad? GLFW has a bug where an invalid
@@ -823,14 +813,10 @@ class Display :                        // Actual class body
       dX < dcNew.DimGetWidth<double>() &&
       dY < dcNew.DimGetHeight<double>());
   }
-  /* -- Get monitors list ------------------------------------------ */ public:
-  const GlFWMonitors &GetMonitors(void) const { return mlData; }
-  /* -- Get monitors cound ------------------------------------------------- */
-  size_t GetMonitorsCount(void) const { return mlData.size(); }
-  /* -- Return selected monitor -------------------------------------------- */
-  const GlFWMonitor *GetSelectedMonitor(void) const { return moSelected; }
+  /* -- Return selected monitor ------------------------------------ */ public:
+  const GlFWMonitor *GetSelectedMonitor(void) const { return gfwmActive; }
   /* -- Return selected resolution ----------------------------------------- */
-  const GlFWRes *GetSelectedRes(void) const { return rSelected; }
+  const GlFWRes *GetSelectedRes(void) const { return gfwrActive; }
   /* -- Request from alternative thread to resize window ------------------- */
   void RequestResize(const int iW, const int iH)
     { cEvtWin->AddUnblock(EWC_WIN_RESIZE, iW, iH); }
@@ -884,13 +870,13 @@ class Display :                        // Actual class body
 #endif
   }
   /* -- Return current video mode refresh rate ----------------------------- */
-  int GetRefreshRate(void) { return rSelected->Refresh(); }
+  int GetRefreshRate(void) { return gfwrActive->Refresh(); }
   /* -- Get selected monitor id -------------------------------------------- */
-  int GetMonitorId(void) const { return moSelected->Index(); }
+  int GetMonitorId(void) const { return gfwmActive->Index(); }
   /* -- Get selected video mode id ----------------------------------------- */
-  int GetVideoModeId(void) const { return rSelected->Index(); }
+  int GetVideoModeId(void) const { return gfwrActive->Index(); }
   /* -- Init info ---------------------------------------------------------- */
-  const string &GetMonitorName(void) const { return moSelected->Name(); }
+  const string &GetMonitorName(void) const { return gfwmActive->Name(); }
   /* -- Commit current matrix size ----------------------------------------- */
   void CommitMatrix(const bool bForce=true) const
   { // Set the default matrix from the configuration and if it was changed
@@ -942,10 +928,10 @@ class Display :                        // Actual class body
     // If using interactive mode?
     if(cSystem->IsGraphicalMode())
     { // Ignore if no icons
-      if(gilIcons.empty()) return;
+      if(gfwivIcons.empty()) return;
       // Capture exceptions and ask GLFW to set the icon
-      try { cGlFW->WinSetIcon(UtilIntOrMax<int>(gilIcons.size()),
-              gilIcons.data()); }
+      try { cGlFW->WinSetIcon(UtilIntOrMax<int>(gfwivIcons.size()),
+              gfwivIcons.data()); }
       // Exception occured? GLFW can throw GLFW_PLATFORM_ERROR on Wayland which
       // is absolutely retarded as is not consistent with other platforms such
       // as MacOS which will silently succeed
@@ -953,15 +939,15 @@ class Display :                        // Actual class body
       { // Just log the error that occured
         cLog->LogWarningExSafe(
           "Display could not load $ icon files due to GlFW exception: $.",
-          gilIcons.size(), eReason);
+          gfwivIcons.size(), eReason);
         // Done
         return;
       } // Report that we updated the icons
       cLog->LogInfoExSafe("Display updated $ windows icons." ,
-        gilIcons.size());
+        gfwivIcons.size());
       // Show details?
       if(cLog->HasLevel(LH_DEBUG))
-        for(Image &imC : ilIcons)
+        for(Image &imC : ivIcons)
         { // Get first icon and log data
           const ImageSlot &imsD = imC.GetSlotsConst().front();
           cLog->LogNLCDebugExSafe("- $x$x$: $.", imsD.DimGetWidth(),
@@ -978,19 +964,19 @@ class Display :                        // Actual class body
     { // If using interactive mode?
       if(cSystem->IsGraphicalMode())
       { // Clear images and icons
-        gilIcons.clear();
-        ilIcons.clear();
+        gfwivIcons.clear();
+        ivIcons.clear();
         // Create contiguous memory for glfw icon descriptors and icon data
-        gilIcons.reserve(tIcons.size());
-        ilIcons.reserve(tIcons.size());
+        gfwivIcons.reserve(tIcons.size());
+        ivIcons.reserve(tIcons.size());
         // Build icons
         for(string &strName : tIcons)
         { // Check filename and load icon and force to RGB 32BPP.
           DirVerifyFileNameIsValid(strName);
-          const Image &imC = ilIcons.emplace_back(
+          const Image &imC = ivIcons.emplace_back(
             Image{ StdMove(strName), IL_REVERSE|IL_TORGB|IL_TO32BPP });
           const ImageSlot &imsD = imC.GetSlotsConst().front();
-          gilIcons.push_back({ imsD.DimGetWidth<int>(),
+          gfwivIcons.push_back({ imsD.DimGetWidth<int>(),
             imsD.DimGetHeight<int>(), imsD.MemPtr<unsigned char>() });
         }
       } // Not in interactive mode?
@@ -1046,8 +1032,6 @@ class Display :                        // Actual class body
     EnumerateMonitorsAndVideoModes();
     // Reinitialise the window
     ReInitWindow(FlagIsSet(DF_INFULLSCREEN));
-    // Flush any existing window events
-    cEvtWin->Flush();
     // Log progress
     cLog->LogInfoSafe("Display class reinitialised successfully.");
   }
@@ -1081,7 +1065,7 @@ class Display :                        // Actual class body
     cGlFW->GlFWSetRedBits(iFBDepthR);
     cGlFW->GlFWSetRefreshRate(GetRefreshRate());
     cGlFW->GlFWSetRelease(iRelease);
-    cGlFW->GlFWSetRetinaMode(FlagIsSet(DF_HIDPI));
+    cGlFW->GlFWSetRetinaMode(hdpiSetting != HD_DISABLED);
     cGlFW->GlFWSetRobustness(iRobustness);
     cGlFW->GlFWSetSRGBCapable(FlagIsSet(DF_SRGB));
     cGlFW->GlFWSetStencilBits(0); // No use (yet)
@@ -1099,16 +1083,10 @@ class Display :                        // Actual class body
     ReInitWindow(FlagIsSet(DF_FULLSCREEN));
     // Set forced aspect ratio
     cGlFW->WinSetAspectRatio(cCVars->GetStrInternal(WIN_ASPECT));
-    // Register monitor removal event. We can't use our events system for this
-    // because once the event callback is over, the data for the monitor is
-    // freed.
-    GlFWSetMonitorCallback(OnMonitorStatic);
     // Update icons if there are some loaded by the cvars callbacks
     UpdateIcons();
     // Set default gamma for selected monitor
     ApplyGamma();
-    // Flush any existing window events
-    cEvtWin->Flush();
     // Register main and window thread events
     cEvtMain->RegisterEx(emrvEvents);
     cEvtWin->RegisterEx(ewrvEvents);
@@ -1121,8 +1099,6 @@ class Display :                        // Actual class body
     if(IHNotDeInitialise()) return;
     // Log progress
     cLog->LogDebugSafe("Display class deinitialising...");
-    // Remove events we personally handle
-    GlFWSetMonitorCallback(nullptr);
     // Remove invalidated active flags
     FlagClear(DF_FOCUSED|DF_EXCLUSIVE|DF_INFULLSCREEN|DF_NATIVEFS);
     // Window type deinitialised
@@ -1133,11 +1109,11 @@ class Display :                        // Actual class body
     // Have window?
     if(cGlFW->WinIsAvailable())
     { // If we have monitor?
-      if(moSelected)
+      if(gfwmActive)
       { // Restore gamma (this fails if theres no window).
-        GlFWSetGamma(moSelected->Context(), 1.0);
+        GlFWSetGamma(gfwmActive->Context(), 1.0);
         // Monitor no longer valid
-        moSelected = nullptr;
+        gfwmActive = nullptr;
       } // Tell system we destroyed the window
       cSystem->SetWindowDestroyed();
       // Actually destroy window
@@ -1150,9 +1126,9 @@ class Display :                        // Actual class body
       cLog->LogDebugSafe(
         "Display window handle and context destruction skipped.");
       // Can't restore gamma without window
-      moSelected = nullptr;
+      gfwmActive = nullptr;
     } // Clear selected video mode
-    rSelected = nullptr;
+    gfwrActive = nullptr;
     // Log progress
     cLog->LogInfoSafe("Display class deinitialised successfully.");
   }
@@ -1188,7 +1164,7 @@ class Display :                        // Actual class body
       { EWC_WIN_LIMITS,      bind(&Display::OnReqSetLimits,    this, _1) },
       { EWC_WIN_MAXIMISE,    bind(&Display::OnReqMaximise,     this, _1) },
       { EWC_WIN_MINIMISE,    bind(&Display::OnReqMinimise,     this, _1) },
-      { EWC_WIN_MONITORS,    bind(&Display::OnReqMonitors,     this, _1) },
+      { EWC_WIN_MONITOR,     bind(&Display::OnReqMonitor,      this, _1) },
       { EWC_WIN_MOVE,        bind(&Display::OnReqMove,         this, _1) },
       { EWC_WIN_RESET,       bind(&Display::OnReqReset,        this, _1) },
       { EWC_WIN_RESIZE,      bind(&Display::OnReqResize,       this, _1) },
@@ -1201,13 +1177,16 @@ class Display :                        // Actual class body
       { EWC_WIN_SHOW,        bind(&Display::OnReqShow,         this, _1) },
       { EWC_WIN_TOGGLE_FS,   bind(&Display::OnReqToggleFS,     this, _1) },
     },
-    moSelected(nullptr),               // No monitor selected
-    rSelected(nullptr),                // No video mode selected
+    gfwmActive(nullptr),               // No monitor selected
+    gfwrActive(nullptr),               // No video mode selected
     stMRequested(StdMaxSizeT),         // No monitor requested
     stVRequested(StdMaxSizeT),         // No video mode id requested
+    bUnsuspend{ false },               // Not unsuspending engine thread
     dfWinScale{ 1.0f, 1.0f },          // Window scale initialised later
+    dfInitScale{ dfWinScale },         // Window scale at init
     fGamma(0),                         // Gamma initialised by CVars
     ciPosition{ GLFW_DONT_CARE },      // Window position
+    hdpiSetting(HD_DISABLED),          // HiDPI setting initialised by CVars
     iApi(GLFW_DONT_CARE),              // Api type set by cvars
     iProfile(GLFW_DONT_CARE),          // Profile type set by cvars
     iCtxMajor(GLFW_DONT_CARE),         // Context major version set by cvars
@@ -1220,7 +1199,6 @@ class Display :                        // Actual class body
     iFBDepthA(GLFW_DONT_CARE),         // Bit depth not selected yet
     iAuxBuffers(GLFW_DONT_CARE),       // No auxiliary buffers specified
     iSamples(GLFW_DONT_CARE),          // No anti-aliasing samples specified
-    bUnsuspend{ false },               // Unsuspend monitor event function
     lrFocused{ "OnFocused" },          // Set name for OnFocused lua event
     fsType(FST_STANDBY),               // Full-screen type
     fstStrings{{                       // Init full-screen type strings
@@ -1257,16 +1235,17 @@ class Display :                        // Actual class body
   CBCVARRANGE(int, SetForcedBitDepthB, iFBDepthB, GLFW_DONT_CARE, 16)
   CBCVARRANGE(int, SetForcedBitDepthG, iFBDepthG, GLFW_DONT_CARE, 16)
   CBCVARRANGE(int, SetForcedBitDepthR, iFBDepthR, GLFW_DONT_CARE, 16)
-  CBCVARRANGE(GLfloat,
-    SetMatrixHeight, dfMatrixReq.DimGetHeightRef(), 200.0f, 16384.0f)
-  CBCVARRANGE(GLfloat,
-    SetMatrixWidth, dfMatrixReq.DimGetWidthRef(), 320.0f, 16384.0f)
+  CBCVARRANGE(GLfloat, SetMatrixHeight, dfMatrixReq.DimGetHeightRef(),
+    200.0f, 16384.0f)
+  CBCVARRANGE(GLfloat, SetMatrixWidth, dfMatrixReq.DimGetWidthRef(),
+    320.0f, 16384.0f)
+  CBCVARRANGE(HiDPISetting, HiDPIChanged, hdpiSetting,
+    HD_DISABLED, HD_ENHANCED)
   /* ----------------------------------------------------------------------- */
 #if defined(MACOS)                     // Compiling on MacOS?
   /* ----------------------------------------------------------------------- */
-  CBCVARFLAG(GraphicsSwitchingChanged, DF_GASWITCH)
-  CBCVARFLAG(HiDPIChanged, DF_HIDPI)
   CBCVARFORCEFLAG(ForwardChanged, DF_FORWARD, true)
+  CBCVARFLAG(GraphicsSwitchingChanged, DF_GASWITCH)
   CBCVARFORCEFLAG(SetGLDebugMode, DF_DEBUG, false)
   CBCVARFORCEFLAG(SetNoErrorsMode, DF_NOERRORS, false)
   CBCVARFORCEFLAG(SetStereoMode, DF_STEREO, false)
@@ -1274,11 +1253,10 @@ class Display :                        // Actual class body
 #else                                  // Windows or Linux?
   /* ----------------------------------------------------------------------- */
   CBCVARFLAG(ForwardChanged, DF_FORWARD)
+  CBCVARFORCEFLAG(GraphicsSwitchingChanged, DF_GASWITCH, false)
   CBCVARFLAG(SetGLDebugMode, DF_DEBUG)
   CBCVARFLAG(SetNoErrorsMode, DF_NOERRORS)
   CBCVARFLAG(SetStereoMode, DF_STEREO)
-  CBCVARFORCEFLAG(GraphicsSwitchingChanged, DF_GASWITCH, false)
-  CBCVARFORCEFLAG(HiDPIChanged, DF_HIDPI, false)
   /* ----------------------------------------------------------------------- */
 #endif                                 // End of OS conditions check
   /* -- Done with these macros --------------------------------------------- */
@@ -1395,7 +1373,8 @@ class Display :                        // Actual class body
     if(!CVarToBoolReturn(CVarSimpleSetIntNLG(fGamma, fNewGamma, 0.25f, 4.00f)))
       return DENY;
     // Apply new gamma setting if window is available
-    if(cGlFW && cGlFW->WinIsAvailable() && moSelected->Context()) ApplyGamma();
+    if(cGlFW && cGlFW->WinIsAvailable() && gfwmActive->Context())
+      ApplyGamma();
     // Success
     return ACCEPT;
   }
@@ -1403,10 +1382,6 @@ class Display :                        // Actual class body
   CVarReturn SetIcon(const string &strF, string&)
     { return BoolToCVarReturn(strF.empty() || SetIcon(strF)); }
 };/* ----------------------------------------------------------------------- */
-/* -- Monitor changed static event ----------------------------------------- */
-void Display::OnMonitorStatic(GLFWmonitor*const mA, const int iA)
-  { cDisplay->OnMonitor(mA, iA); }
-/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

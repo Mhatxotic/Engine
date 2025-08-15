@@ -56,7 +56,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Filtered key pressed ----------------------------------------------- */
   void OnFilteredKey(const EvtMainEvent &emeEvent)
   { // Get key pressed
-    const unsigned int uiKey = emeEvent.eaArgs[1].ui;
+    const unsigned int uiKey = emeEvent.eaArgs[1].UInt();
     // If console is enabled, send it to console instead
     if(cConsole->IsVisible()) return cConsole->OnCharPress(uiKey);
     // Else send the key to lua callbacks
@@ -69,20 +69,20 @@ class Input :                          // Handles keyboard, mouse & controllers
     // Do not process this event if input disabled on lack of mouse focus
 #if defined(MACOS)
     // Get mouse position. We might need to clamp it
-    double dX = emaArgs[1].d, dY = emaArgs[2].d;
+    double dX = emaArgs[1].Double(), dY = emaArgs[2].Double();
     // If mouse clamp enabled?
     if(FlagIsSet(IF_CLAMPMOUSE))
     { // Return if mouse out of focus
       if(FlagIsClear(IF_MOUSEFOCUS)) return;
       // Clamp mouse co-ordinates if out of the window?
       if(dX < 0.0) dX = 0.0;
-      else if(dX >= DimGetWidth()) dX = DimGetWidth()-1;
+      else if(dX >= DimGetWidth()) dX = DimGetWidth() - 1;
       if(dY < 0.0) dY = 0.0;
-      else if(dY >= DimGetHeight()) dY = DimGetHeight()-1;
+      else if(dY >= DimGetHeight()) dY = DimGetHeight() - 1;
     }
 #else
     // Get mouse position
-    const double dX = emaArgs[1].d, dY = emaArgs[2].d;
+    const double dX = emaArgs[1].Double(), dY = emaArgs[2].Double();
 #endif
     // Recalculate cursor position based on framebuffer size and send the new
     // co-ordinates to the lua callback handler
@@ -97,7 +97,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Mouse went inside the window --------------------------------------- */
   void OnMouseFocus(const EvtMainEvent &emeEvent)
   { // Get and check state
-    const int iState = emeEvent.eaArgs[1].i;
+    const int iState = emeEvent.eaArgs[1].Int();
     switch(iState)
     { // Mouse is in the window? Set mouse in window flag
       case GLFW_TRUE:
@@ -130,7 +130,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get movements
-    const double dX = emaArgs[1].d, dY = emaArgs[2].d;
+    const double dX = emaArgs[1].Double(), dY = emaArgs[2].Double();
     // If console is enabled and ctrl not pressed? Send it to console instead
     if(cConsole->IsVisible()) return cConGraphics->OnMouseWheel(dX, dY);
     // Set event to lua callbacks
@@ -141,14 +141,16 @@ class Input :                          // Handles keyboard, mouse & controllers
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Set event to lua callbacks
-    lfOnMouseClick.LuaFuncDispatch(emaArgs[1].i, emaArgs[2].i, emaArgs[3].i);
+    lfOnMouseClick.LuaFuncDispatch(emaArgs[1].Int(), emaArgs[2].Int(),
+      emaArgs[3].Int());
   }
   /* -- Unfiltered key pressed --------------------------------------------- */
   void OnKeyPress(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get key code, state and modifier state
-    const int iKey = emaArgs[1].i, iState = emaArgs[3].i, iMod = emaArgs[4].i;
+    const int iKey = emaArgs[1].Int(), iState = emaArgs[3].Int(),
+      iMod = emaArgs[4].Int();
     // If...
     if(iMod == GLFW_MOD_ALT &&         // ALT key pressed/released/repeated?
        iKey == GLFW_KEY_ENTER &&       // ENTER key pressed/released/repeated?
@@ -195,7 +197,7 @@ class Input :                          // Handles keyboard, mouse & controllers
         // Don't dispatch an event
         return;
     } // Send lua event with key, state, mod and scan code
-    lfOnKey.LuaFuncDispatch(iKey, iState, iMod, emaArgs[2].i);
+    lfOnKey.LuaFuncDispatch(iKey, iState, iMod, emaArgs[2].Int());
   }
   /* -- Files dragged and dropped on window--------------------------------- */
   void OnDragDrop(const EvtMainEvent&)

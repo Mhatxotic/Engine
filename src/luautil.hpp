@@ -170,7 +170,7 @@ static const string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
 { // What type of variable?
   switch(lua_type(lS, iIndex))
   { // Nil?
-    case LUA_TNIL: return "nil"; break;
+    case LUA_TNIL: return cCommon->CommonNil(); break;
     // A number?
     case LUA_TNUMBER:
     { // If not actually an integer? Write as normal floating-point number
@@ -193,16 +193,16 @@ static const string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
     case LUA_TUSERDATA:
     { // Save stack count and restore it when leaving scope
       const LuaStackSaver lssUserData{ lS };
+      // Get pointer to data
+      const void*const vpPtr = LuaUtilToPtr(lS, iIndex);
       // Get metadata and return if not metadata (generic userdata)
       LuaUtilGetMetaTable(lS, -1);
-      if(!LuaUtilIsTable(lS, -1))
-        return StrFormat("<userdata:$>", LuaUtilToPtr(lS, iIndex));
+      if(!LuaUtilIsTable(lS, -1)) return StrFormat("<userdata:$>", vpPtr);
       // Read internal engine name and return generic data if not a string
       LuaUtilPushStr(lS, cCommon->CommonLuaName());
       LuaUtilGetRaw(lS, -2);
-      return StrFormat("<$:$>",
-        LuaUtilIsString(lS, -1) ? LuaUtilToCppString(lS, -1) : "Unknown",
-        LuaUtilToPtr(lS, iIndex));
+      return StrFormat("<$:$>", LuaUtilIsString(lS, -1) ?
+        LuaUtilToCppString(lS, -1) : "Unknown", vpPtr);
     } // Who knows? Function? Userdata?
     default: return StrFormat("<$:$>",
       LuaUtilGetType(lS, iIndex), LuaUtilToPtr(lS, iIndex));

@@ -1156,7 +1156,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Remove iterator from our events dispatched list if we can
     if(LuaEvtsCheckParams<3>(emaArgs))
     { // Get the status and warn if we have incorrect number of parameters
-      const unsigned int uiStatus = emaArgs[2].ui;
+      const unsigned int uiStatus = emaArgs[2].UInt();
       // Lua is not paused?
       if(!uiLuaPaused)
       { // Push function callback onto stack

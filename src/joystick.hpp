@@ -50,7 +50,7 @@ class Joystick :
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get joystick id as int
-    const int iJId = emaArgs[0].i, iEvent = emaArgs[1].i;
+    const int iJId = emaArgs[0].Int(), iEvent = emaArgs[1].Int();
     // Show warning if joystick id is out of range
     if(static_cast<size_t>(iJId) >= JoyGetCount())
       return cLog->LogWarningExSafe(

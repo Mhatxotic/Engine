@@ -106,7 +106,7 @@ class Core final :                     // Members initially private
       // Write to console
       cConsole->AddLine("Execution paused. Type 'lresume' to continue.");
     } // Already paused? Remind console if it was manually requested
-    else if(emeEvent.eaArgs.front().b)
+    else if(emeEvent.eaArgs.front().Bool())
       cConsole->AddLine(
         "Execution already paused. Type 'lresume' to continue.");
   }

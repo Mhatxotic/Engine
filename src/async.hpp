@@ -483,7 +483,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Event result
     const AsyncResult uiAsyncResult =
       lecAsync.template LuaEvtsCheckParams<3>(emaArgs) ?
-        static_cast<AsyncResult>(emaArgs[2].lui) : AR_UNKNOWN;
+        static_cast<AsyncResult>(emaArgs[2].ULong()) : AR_UNKNOWN;
     // If lua is not paused?
     if(!uiLuaPaused)
     { // Whats the code sent in the event?
@@ -507,7 +507,7 @@ template<class MemberType, class ColType>class AsyncLoader :
             const size_t stMax = emaArgs.size();
             for(size_t stIndex = 3; stIndex < stMax; ++stIndex)
               LuaUtilPushInt(lecAsync.LuaRefGetState(),
-                emaArgs[stIndex].ll);
+                emaArgs[stIndex].LongLong());
             // Execute the progress callback
             AsyncDoLuaProtectedDispatch(emeEvent, static_cast<int>(stMax - 3),
               iErrorHandler);
@@ -533,7 +533,8 @@ template<class MemberType, class ColType>class AsyncLoader :
             { // Push the class ref and if both succeeded?
               if(lecAsync.LuaRefGetUData())
               { // Push the specified parameter
-                LuaUtilPushInt(lecAsync.LuaRefGetState(), emaArgs[3].ll);
+                LuaUtilPushInt(lecAsync.LuaRefGetState(),
+                  emaArgs[3].LongLong());
                 // Dispatch the event with two parameters
                 AsyncDoFinishLuaProtectedDispatch(emeEvent, 2, iErrorHandler);
               } // Failed? Write error to log

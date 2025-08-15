@@ -29,11 +29,11 @@ using namespace Common;
 ** -- Get a monitor id ----------------------------------------------------- */
 struct AgMonitorId : public AgSizeTLG {
   explicit AgMonitorId(lua_State*const lS, const int iArg) :
-    AgSizeTLG{ lS, iArg, 0, cDisplay->GetMonitorsCount() }{} };
+    AgSizeTLG{ lS, iArg, 0, cDisplay->MonitorsCount() }{} };
 /* -- Get monitor data from id --------------------------------------------- */
 struct AgMonitorData : public ArClass<const GlFWMonitor> {
   explicit AgMonitorData(lua_State*const lS, const int iArg) :
-    ArClass{ cDisplay->GetMonitors()[AgMonitorId{ lS, iArg }] }{} };
+    ArClass{ cDisplay->MonitorsGet(AgMonitorId{ lS, iArg }) }{} };
 /* -- Other types ---------------------------------------------------------- */
 typedef AgIntegerLGE<int> AgIntLGE;
 typedef AgIntegerLG<uint64_t> AgUInt64LG;
@@ -157,7 +157,7 @@ LLFUNC(Monitor, 1, LuaUtilPushVar(lS, cDisplay->GetMonitorId()))
 // < Id:number=Monitor count.
 // ? Returns the total number of detected monitors on the system.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Monitors, 1, LuaUtilPushVar(lS, cDisplay->GetMonitorsCount()))
+LLFUNC(Monitors, 1, LuaUtilPushVar(lS, cDisplay->MonitorsCount()))
 /* ========================================================================= */
 // $ Display.MonitorData
 // > Id:integer=Id of monitor to query.
@@ -267,8 +267,8 @@ LLFUNC(VidMode, 1, LuaUtilPushVar(lS, cDisplay->GetVideoModeId()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(VidModeData, 7,
   const AgMonitorData aMonitorData{lS, 1};
-  const AgSizeTLGE aVideoModeId{lS, 2, 0, aMonitorData().size()};
-  const GlFWRes &rItem = aMonitorData()[aVideoModeId];
+  const AgSizeTLGE aVideoModeId{lS, 2, 0, aMonitorData().Count()};
+  const GlFWRes &rItem = aMonitorData().Get(aVideoModeId);
   LuaUtilPushVar(lS, rItem.Width(), rItem.Height(), rItem.Depth(),
     rItem.Refresh(), rItem.Red(), rItem.Green(), rItem.Blue()))
 /* ========================================================================= */
@@ -276,7 +276,7 @@ LLFUNC(VidModeData, 7,
 // < Count:number=Total video modes.
 // ? Returns the total number of video modes supported by the GPU.
 /* ------------------------------------------------------------------------- */
-LLFUNC(VidModes, 1, LuaUtilPushVar(lS, AgMonitorData{lS, 1}().size()))
+LLFUNC(VidModes, 1, LuaUtilPushVar(lS, AgMonitorData{lS, 1}().Count()))
 /* ========================================================================= */
 // $ Display.Visible
 // < State:boolean=The window is visible?

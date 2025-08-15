@@ -32,7 +32,7 @@ enum EvtWinCmd : size_t                // Render thread event commands
   EWC_WIN_LIMITS,                      // 09: Window limits change
   EWC_WIN_MAXIMISE,                    // 10: Maximise window
   EWC_WIN_MINIMISE,                    // 11: Minimise window
-  EWC_WIN_MONITORS,                    // 12: Monitors refresh
+  EWC_WIN_MONITOR,                     // 12: Monitor changed
   EWC_WIN_MOVE,                        // 13: Move window
   EWC_WIN_RESET,                       // 14: Reset window position and size
   EWC_WIN_RESIZE,                      // 15: Resize window
@@ -62,7 +62,7 @@ enum EvtWinCmd : size_t                // Render thread event commands
 class EvtWin;                          // Class prototype
 static EvtWin *cEvtWin = nullptr;      // Pointer to global class
 class EvtWin :                         // Event list for window thread
-  /* -- Dependencies ------------------------------------------------------- */
+  /* -- Base classes ------------------------------------------------------- */
   private IdList<EWC_MAX>,             // Event strings
   public EvtCore                       // Events common class
    <EvtWinCmd,                         // The enum list of events supported
@@ -86,7 +86,7 @@ class EvtWin :                         // Event list for window thread
       EWC(WIN_ATTENTION),   EWC(WIN_CENTRE),      EWC(WIN_CURPOSGET),
       EWC(WIN_CURRESET),    EWC(WIN_CURSET),      EWC(WIN_CURSETVIS),
       EWC(WIN_FOCUS),       EWC(WIN_HIDE),        EWC(WIN_LIMITS),
-      EWC(WIN_MAXIMISE),    EWC(WIN_MINIMISE),    EWC(WIN_MONITORS),
+      EWC(WIN_MAXIMISE),    EWC(WIN_MINIMISE),    EWC(WIN_MONITOR),
       EWC(WIN_MOVE),        EWC(WIN_RESET),       EWC(WIN_RESIZE),
       EWC(WIN_RESTORE),     EWC(WIN_SETICON),     EWC(WIN_SETLKMODS),
       EWC(WIN_SETRAWMOUSE), EWC(WIN_SETSTKKEYS),  EWC(WIN_SETSTKMOUSE),

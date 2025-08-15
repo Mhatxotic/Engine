@@ -56,13 +56,13 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   }
   /* -- Window set clipboard request --------------------------------------- */
   static void ClipOnSetNRCb(const EvtWinEvent &eweEvent)
-    { reinterpret_cast<Clip*>(eweEvent.eaArgs.front().vp)->ClipOnSetNRCbT(); }
+    { eweEvent.eaArgs.front().Ptr<Clip>()->ClipOnSetNRCbT(); }
   /* -- Window get clipboard request in window thread ---------------------- */
   static void ClipOnGetCb(const EvtWinEvent &eweEvent)
-    { reinterpret_cast<Clip*>(eweEvent.eaArgs.front().vp)->ClipOnGetCbT(); }
+    { eweEvent.eaArgs.front().Ptr<Clip>()->ClipOnGetCbT(); }
   /* -- Window set clipboard request --------------------------------------- */
   static void ClipOnSetCb(const EvtWinEvent &eweEvent)
-    { reinterpret_cast<Clip*>(eweEvent.eaArgs.front().vp)->ClipOnSetCbT(); }
+    { eweEvent.eaArgs.front().Ptr<Clip>()->ClipOnSetCbT(); }
   /* -- Async thread event callback (called by LuaEvtMaster) --------------- */
   void LuaEvtCallbackAsync(const EvtMainEvent &emeEvent) try
   { // Get reference to string vector and we need three parameters
