@@ -119,6 +119,17 @@ class EvtCore :                        // Start of common event system class
   typedef IdList<EvtMaxEvents> ISList; // Events as strings
   const ISList &islEventStrings;       // Actual variable
   /* ----------------------------------------------------------------------- */
+  class RegAuto                        // Automatic event registration
+  { /* -- Private variables ------------------------------------------------ */
+    EvtCore       &ecCore;             // Events core to unregister from
+    const RegVec   rvEvents;           // Reference to events list to handle
+    /* -- Constructor that registers the events -------------------- */ public:
+    RegAuto(EvtCore *ecpCore, const RegVec &&rvNEvents) :
+      ecCore{ *ecpCore }, rvEvents{ StdMove(rvNEvents) }
+        { ecCore.RegisterEx(rvNEvents); }
+    /* -- Destructor that unregisters the events --------------------------- */
+    ~RegAuto(void) { ecCore.UnregisterEx(rvEvents); }
+  }; /* -------------------------------------------------------------------- */
   struct Event                         // Event packet information
   { /* --------------------------------------------------------------------- */
     Cmd            cCmd;               // Command send
@@ -278,8 +289,15 @@ class EvtCore :                        // Start of common event system class
   void Flush(void)
   { // Lock access to the events list from other threads
     const LockGuard lgEventsSync{ mMutex };
+    // Return if no events to clear
+    if(qlEvents.empty()) return;
+    // Store number of events cleared
+    const size_t stCleared = qlEvents.size();
     // Clear the events list
     qlEvents.clear();
+    // Write number of events cleared
+    cLog->LogDebugExSafe("$ cleared $ lingering events.",
+      IdentGet(), stCleared);
   }
   /* -- Execute specified event NOW (starter) ------------------------------ */
   template<typename ...VarArgs>

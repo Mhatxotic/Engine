@@ -187,13 +187,13 @@ cConsole->AddLineA(sTable.Finish(),
 /* ------------------------------------------------------------------------- */
 // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("WIDTH").Header("HEIGHT").Header("OCCUPANCY").Header("TOTL")
-      .Header("USED").Header("FREE").Reserve(cBins->size());
+sTable.Header("ID", false).Header("WIDTH").Header("HEIGHT").Header("OCCUPANCY")
+      .Header("TOTL").Header("USED").Header("FREE").Reserve(cBins->size());
 // Walk through bin classes
 for(const Bin*const bPtr : *cBins)
 { // Get reference to class and write its data to the table
   const Bin &bRef = *bPtr;
-  sTable.DataN(bRef.DimGetWidth()).DataN(bRef.DimGetHeight())
+  sTable.DataN(bRef.CtrGet()).DataN(bRef.DimGetHeight())
         .DataN(bRef.Occupancy(), 7).DataN(bRef.Total()).DataN(bRef.Used())
         .DataN(bRef.Free());
 } // Log counts
@@ -483,8 +483,9 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->Save(), "cvar", "cvars"),
 /* ========================================================================= */
 // ! dir
 // ? Shows all the files in the current or specified directory. If the file is
-// ? on disk then the file shows as <DISK> but if the file is from an archive
-// ? that archive filename and its entry ID number is displayed instead.
+// ? on disk then the file shows as <FS> (FileSystem) but if the file is from
+// ? an archive that archive filename and its entry ID number is displayed
+// ? instead.
 /* ========================================================================= */
 { "dir", 1, 2, CFL_NONE, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
@@ -549,9 +550,7 @@ for(const DirEntMapPair &dempPair : dPath.GetFiles())
   const DirItem &diFile = dempPair.second;
   silFiles.insert({ StdMove(dempPair.first),
     { diFile.Size(), StdMaxUInt, {} } });
-} // Directory name and disk name strings
-const string strDirName{"<DIR>"}, strDiskName{"<DISK>"};
-// Prepare data table for archive display
+} // Prepare data table for archive display
 Statistic sTable;
 sTable.Header("SIZE").Header().Header("ID").Header("ARCHIVE", false)
       .Header("FILENAME", false).Reserve(silDirs.size() + silFiles.size());
@@ -560,9 +559,9 @@ for(const StrItemPair &sipPair : silDirs)
 { // Get item data
   const Item &itData = sipPair.second;
   // Add directory tag and blank cell
-  sTable.Data(strDirName).Data();
+  sTable.Data(cCommon->CommonDir()).Data();
   // If this is a file on disk?
-  if(itData.uiId == StdMaxUInt) sTable.Data().Data(strDiskName);
+  if(itData.uiId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
   // Is from archive?
   else sTable.DataN(itData.uiId).Data(itData.strArc);
   // Add directory name
@@ -574,9 +573,9 @@ for(const StrItemPair &sipPair : silFiles)
 { // Get item data
   const Item &itData = sipPair.second;
   // Add size and humann readable size
-  sTable.DataN(itData.uqSize).Data(StrToBytes(itData.uqSize));
+  sTable.DataN(itData.uqSize).DataB(itData.uqSize);
   // If this is a file on disk?
-  if(itData.uiId == StdMaxUInt) sTable.Data().Data(strDiskName);
+  if(itData.uiId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
   // Is from archive?
   else sTable.DataN(itData.uiId).Data(itData.strArc);
   // Add file name
@@ -1985,17 +1984,18 @@ if(cSql->ExecuteAndSuccess(StrImplode(aArgs, 1)))
           case SQLITE_FLOAT:
             sTable.Data("F").DataN(sdRef.MemReadInt<double>()); break;
           // Raw data? Just write number of bytes
-          case SQLITE_BLOB: sTable.Data("B").Data("<Blob>"); break;
+          case SQLITE_BLOB:
+            sTable.Data("B").Data("<Blob>"); break;
           // Text?
-          case SQLITE_TEXT: sTable.Data("T")
-                                  .Data(sdRef.MemToStringSafe()); break;
+          case SQLITE_TEXT:
+            sTable.Data("T").Data(sdRef.MemToStringSafe()); break;
           // No data
-          case SQLITE_NULL: sTable.Data("N")
-                                  .Data(cCommon->CommonNull()); break;
+          case SQLITE_NULL:
+            sTable.Data("N").Data(cCommon->CommonNull()); break;
           // Unknown type (impossible)
-          default: sTable.Data("?")
-                         .DataF("<Type $[0x$$]>",
-                           sdRef.iType, hex, sdRef.iType);
+          default:
+            sTable.Data("?")
+                  .DataF("<Type $[0x$$]>", sdRef.iType, hex, sdRef.iType);
                    break;
         }
       } // Increase record number
@@ -2011,6 +2011,26 @@ else cConsole->AddLineF("Query took $ with $<$>: $!", cSql->TimeStr(),
 cSql->Reset();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'sqlexec' function
+/* ========================================================================= */
+// ! stats
+// ? Lists currently loaded stat objects.
+/* ------------------------------------------------------------------------- */
+{ "stats", 1, 1, CFL_NONE, [](const Args &){
+/* ------------------------------------------------------------------------- */
+// Text table class to help us write neat output
+Statistic sTable;
+sTable.Header("ID", false).Header("HEADERS").Header("CELLS").Header("ROWS");
+// Walk through bin classes
+for(const Stat*const sPtr : *cStats)
+{ // Get reference to class and write its data to the table
+  const Stat &sRef = *sPtr;
+  sTable.DataN(sRef.CtrGet()).DataN(sRef.Headers()).DataN(sRef.Cells())
+        .DataN(sRef.Rows());
+} // Log counts
+cConsole->AddLineA(sTable.Finish(),
+  StrCPluraliseNum(cStats->size(), "stat.", "stats."));
+/* ------------------------------------------------------------------------- */
+} },                                   // End of 'bins' function
 /* ========================================================================= */
 // ! stopall
 // ? Attempts to stop all currently playing 'Sample' and 'Stream' object

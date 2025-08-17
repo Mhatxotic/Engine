@@ -1006,10 +1006,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   GLuint64 GetVRAMFree(void) const { return qwFreeVRAM; }
   GLuint64 GetVRAMTotal(void) const { return qwTotalVRAM; }
   GLuint64 GetVRAMUsed(void) const { return GetVRAMTotal() - GetVRAMFree(); }
-  double GetVRAMFreePC(void) const {
-    return 100.0 - ((static_cast<double>(GetVRAMFree()) /
-      GetVRAMTotal()) * 100.0);
-  }
+  double GetVRAMFreePC(void) const
+    { return 100.0 - UtilMakePercentage(GetVRAMFree(), GetVRAMTotal()); }
   /* -- Get free memory on nvidia cards ------------------------------------ */
   void UpdateVRAMAvailableNV(void)
   { // - OG macro name: GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX

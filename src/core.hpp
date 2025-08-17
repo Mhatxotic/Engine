@@ -80,49 +80,17 @@ class Core final :                     // Members initially private
   private Palettes,       private Atlases,          private Fonts,
   private Videos,         private ConGraphics,      private Variables,
   private Commands,       private Lua
-{ /* -- Private typedefs --------------------------------------------------- */
-  enum CoreErrorReason                 // Lua error mode behaviour
-  { /* --------------------------------------------------------------------- */
-    CER_IGNORE,                        // Ignore errors and try to continue
-    CER_RESET,                         // Automatically reset on error
-    CER_SHOW,                          // Open console and show error
-    CER_CRITICAL,                      // Terminate engine with error
-    CER_MAX,                           // Maximum number of options supported
-  };/* -- Private Variables ------------------------------------------------ */
-  const EvtMainRegVec emrvEvents;      // Core events list
+{ /* -- Private Variables ------------------------------------------------- */
+  enum CoreErrorReason                 // Lua error mode behaviour options
+  { CER_IGNORE,                        // [0] Ignore errors and try to continue
+    CER_RESET,                         // [1] Automatically reset on error
+    CER_SHOW,                          // [2] Open console and show error
+    CER_CRITICAL,                      // [3] Terminate engine with error
+    CER_MAX,                           // [4] Maximum # of options supported
+  } cerMode;                           // Lua error mode behaviour setting
   const CbThFunc   cbtMain;            // Bound main thread function
-  CoreErrorReason  cerMode;            // Lua error mode behaviour
   unsigned int     uiErrorCount,       // Number of errors occured
                    uiErrorLimit;       // Number of errors allowed
-  /* -- Fired when lua needs to be paused (EMC_LUA_PAUSE) ------------------ */
-  void OnLuaPause(const EvtMainEvent &emeEvent)
-  { // Pause execution and if paused for the first time?
-    if(!cLua->PauseExecution())
-    { // The mainmanual* functions will consume 100% of the thread load when
-      // it doesn't request a request to redraw so make sure to throttle it.
-      if(cSystem->IsNotGraphicalMode()) cTimer->TimerSetDelayIfZero();
-      // Can't disable console while paused
-      cConGraphics->SetCantDisable(true);
-      // Write to console
-      cConsole->AddLine("Execution paused. Type 'lresume' to continue.");
-    } // Already paused? Remind console if it was manually requested
-    else if(emeEvent.eaArgs.front().Bool())
-      cConsole->AddLine(
-        "Execution already paused. Type 'lresume' to continue.");
-  }
-  /* -- Fired when lua needs to be resumed (EMC_LUA_RESUME) ---------------- */
-  void OnLuaResume(const EvtMainEvent&)
-  { // Return if pause was not successful
-    if(!cLua->ResumeExecution())
-      return cConsole->AddLine("Execution already in progress.");
-    // Refresh stored delay because of manual render mode
-    if(cSystem->IsNotGraphicalMode())
-      cTimer->TimerSetDelay(cCVars->GetInternal<unsigned int>(APP_DELAY));
-    // Console can now be disabled
-    cConGraphics->SetCantDisable(false);
-    // Write to console
-    cConsole->AddLine("Execution resumed.");
-  }
   /* -- Reset environment function ----------------------------------------- */
   void CoreResetEnvironment(const bool bLeaving)
   { // Log that we're resetting the environment
@@ -153,8 +121,25 @@ class Core final :                     // Members initially private
       cConGraphics->RestoreDefaultProperties();
     } // Bot mode? Clear bottom status texts
     if(cSystem->IsTextMode()) cConsole->ClearStatus();
-    // Reset timer and clear any lingering engine events
+    // Reset frame timer control
     cTimer->TimerReset(bLeaving);
+    // Reset unique ids. Remember some classes aren't registered in the
+    // collector, such as the console and main fbo.
+#define RSCEX(x,v) x->CounterReset(x->CollectorCount() + v)
+#define RSCX(x,v) RSCEX(c ## x, v)
+#define RSC(x) RSCX(x, 0)
+    RSC(Archives); RSC(Assets);    RSC(Atlases);   RSC(Bins);     RSC(Clips);
+    RSC(Commands); RSCX(Fbos,2);   RSC(Files);     RSC(Fonts);    RSC(Ftfs);
+    RSC(Images);   RSC(ImageLibs); RSC(Jsons);     RSC(LuaFuncs); RSC(Masks);
+    RSC(Palettes); RSC(Pcms);      RSC(PcmLibs);   RSC(Samples);  RSC(Shaders);
+    RSC(Sockets);  RSC(Sources);   RSC(SShots);    RSC(Stats);    RSC(Streams);
+    RSC(Textures); RSC(Threads);   RSC(Variables); RSC(Videos);
+#undef RSC
+#undef RSCX
+#undef RSCEX
+    // Clear any lingering events which is very important because events from
+    // the last sandbox may contain invalidated pointers and as long as they
+    // don't reach the 'cEvtMain->ManageSafe()' function we're fine.
     cEvtMain->Flush();
     // Log that we've reset the environment
     cLog->LogDebugExSafe("Core environment $.",
@@ -295,8 +280,6 @@ class Core final :                     // Members initially private
       cEvtMain->GetExitReason());
     // Request to close window
     cDisplay->RequestClose();
-    // Unregister exit events
-    cEvtMain->DeInit();
     // Whats the exit reason code?
     switch(cEvtMain->GetExitReason())
     { // Quitting thread?
@@ -316,8 +299,6 @@ class Core final :                     // Members initially private
       default:
         // De-initialise Lua
         CoreLuaDeInitHelper();
-        // Deregister lua pause and resume callbacks
-        cEvtMain->UnregisterEx(emrvEvents);
         // If in graphical mode?
         if(cSystem->IsGraphicalMode())
         { // De-init console graphics and input
@@ -378,8 +359,6 @@ class Core final :                     // Members initially private
       cConsole->Init();
       cConGraphics->Init();
       cInput->Init();
-      // Register lua pause and resume events
-      cEvtMain->RegisterEx(emrvEvents);
     } // Not initialising for the first time?
     else
     { // Reconfigure matrix
@@ -407,8 +386,6 @@ class Core final :                     // Members initially private
     cLog->LogDebugExSafe("Core engine thread started (C:$;M:$<$>).",
       cEvtMain->GetExitReason(), cSystem->GetCoreFlagsString(),
       cSystem->GetCoreFlags());
-    // Register exit events
-    cEvtMain->Init();
     // Non-interactive mode?
     if(cSystem->IsTextMode())
     { // And interactive mode?
@@ -418,7 +395,6 @@ class Core final :                     // Members initially private
       { // Initialise freetype and console
         cFreeType->Init();
         cConsole->Init();
-        cEvtMain->RegisterEx(emrvEvents);
       } // Initialising for first time? Just update window icons
       else cDisplay->UpdateIcons();
     } // Init interactive console?
@@ -759,12 +735,8 @@ class Core final :                     // Members initially private
     Console{                           // Initialise console commands list
       static_cast<ConCmdStaticList&>   // Grab the one we just made
         (*this) },
-    emrvEvents{                        // Default events
-      { EMC_LUA_PAUSE,  bind(&Core::OnLuaPause,  this, _1) },
-      { EMC_LUA_RESUME, bind(&Core::OnLuaResume, this, _1) },
-    },
-    cbtMain{ bind(&Core::CoreThreadMain, this, _1) },
     cerMode{ CER_CRITICAL },           // Init lua error mode behaviour
+    cbtMain{ bind(&Core::CoreThreadMain, this, _1) },
     uiErrorCount(0),                   // Init number of errors occured
     uiErrorLimit(0)                    // Init number of errors allowed
     /* -- Set global pointer to static class ------------------------------- */

@@ -50,11 +50,11 @@ class GlFW :                           // Root engine class
   void OnMonitorChanged(GLFWmonitor*const mAffected, const int iAction) try
   { // Send event to process monitor which has to unsuspend the engine thread
     if(iAction == GLFW_CONNECTED)
-      cEvtWin->Add(EWC_WIN_MONITOR,
+      cEvtWin->Execute(EWC_WIN_MONITOR,
         GlFWGetMonitorName(mAffected), nullptr);
     // Anything but connected means the name is invalid
     else if(iAction == GLFW_DISCONNECTED)
-      cEvtWin->Add(EWC_WIN_MONITOR,
+      cEvtWin->Execute(EWC_WIN_MONITOR,
         nullptr, GlFWGetMonitorUserPointer<void*>(mAffected));
     // Invalid event
     else

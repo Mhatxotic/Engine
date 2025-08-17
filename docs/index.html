@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.8.17.13 -->
-<!-- Automatically built at Sun Aug 17 00:29:59 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.8.17.13 -->
+<!-- Reference for the Mhatxotic Engine API version 25.8.17.132 -->
+<!-- Automatically built at Mon Aug 18 00:37:48 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.8.17.132 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,18 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.8.17.13">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.8.17.132">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.8.17.13">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.8.17.132">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.8.17.13">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.8.17.132">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.8.17.13 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.8.17.132 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.8.17.13 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.8.17.132 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +60,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.8.17.13 API reference</H1>
+	<H1>Mhatxotic Engine 25.8.17.132 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +99,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 844 functions (402 members, 442 methods) and 27 consts in 30 namespaces with 84 commands and 211 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 850 functions (402 members, 448 methods) and 27 consts in 30 namespaces with 85 commands and 211 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1283,9 +1283,14 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(13 methods)</I>
+								<B>Methods</B> <I>(19 methods)</I>
 								<OL>
+									<LI><A href="#Stat:Cells">Cells</A></LI>
 									<LI><A href="#Stat:Data">Data</A></LI>
+									<LI><A href="#Stat:DataB">DataB</A></LI>
+									<LI><A href="#Stat:DataFB">DataFB</A></LI>
+									<LI><A href="#Stat:DataFI">DataFI</A></LI>
+									<LI><A href="#Stat:DataFN">DataFN</A></LI>
 									<LI><A href="#Stat:DataI">DataI</A></LI>
 									<LI><A href="#Stat:DataN">DataN</A></LI>
 									<LI><A href="#Stat:Destroy">Destroy</A></LI>
@@ -1296,6 +1301,7 @@
 									<LI><A href="#Stat:Id">Id</A></LI>
 									<LI><A href="#Stat:Name">Name</A></LI>
 									<LI><A href="#Stat:Reserve">Reserve</A></LI>
+									<LI><A href="#Stat:Rows">Rows</A></LI>
 									<LI><A href="#Stat:Sort">Sort</A></LI>
 									<LI><A href="#Stat:SortTwo">SortTwo</A></LI>
 								</OL>
@@ -1692,7 +1698,7 @@
 			<LI id="idx.cc">
 				<DIV>
 					<DIV>
-						<A href="#cmds">Commands</A> <I>(84 commands)</I>
+						<A href="#cmds">Commands</A> <I>(85 commands)</I>
 						<OL>
 							<LI><P>Console commands that can see and manipulate all the data in the engine.</P></LI>
 							<LI>
@@ -1770,6 +1776,7 @@
 									<LI><A href="#cc.sqldefrag">sqldefrag</A></LI>
 									<LI><A href="#cc.sqlend">sqlend</A></LI>
 									<LI><A href="#cc.sqlexec">sqlexec</A></LI>
+									<LI><A href="#cc.stats">stats</A></LI>
 									<LI><A href="#cc.stopall">stopall</A></LI>
 									<LI><A href="#cc.streams">streams</A></LI>
 									<LI><A href="#cc.system">system</A></LI>
@@ -8052,6 +8059,16 @@
 		<PRE>Creates an empty stat table&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Stat:Cells" style="display:none">
+		<H3>Stat:Cells</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Stat:Cells()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Number of cells added<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the number of cells in the table </PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Stat:Data" style="display:none">
 		<H3>Stat:Data</H3>
 		<H4>Syntax:-</H4>
@@ -8060,6 +8077,46 @@
 		<PRE><U>String</U> <I>(string)</I> = Data string to add to the cell.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Inserts the specified string into the next cell&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:DataB" style="display:none">
+		<H3>Stat:DataB</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:DataB(<I><U>String</U>, <U>Precision</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>String</U> <I>(string)</I> = Number of bytes to convert to readable.<BR><U>Precision</U> <I>(integer)</I> = Amount of precision to use on the number.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Formats the specified cell as bytes&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:DataFB" style="display:none">
+		<H3>Stat:DataFB</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:DataFB(<I><U>String</U>, <U>Precision</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>String</U> <I>(string)</I> = Number of bytes to convert to readable.<BR><U>Precision</U> <I>(integer)</I> = Amount of precision to use on the number.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Formats the specified cell as bytes but with a human readable number&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:DataFI" style="display:none">
+		<H3>Stat:DataFI</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:DataFI(<I><U>Value</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Value</U> <I>(integer)</I> = Integer to add to the next cell.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Inserts the specified integer into the next cell but as a human readable number&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:DataFN" style="display:none">
+		<H3>Stat:DataFN</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:DataFN(<I><U>Value</U>, <U>Precision</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Value</U> <I>(number)</I> = Number to add to the next cell.<BR><U>Precision</U> <I>(integer)</I> = Amount of precision to use on the number.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Inserts the specified number into the next cell but as a human readable number&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Stat:DataI" style="display:none">
@@ -8160,6 +8217,16 @@
 		<PRE><U>Rows</U> <I>(integer)</I> = Reserve memory for this many rows.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Reserves memory for this many rows&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:Rows" style="display:none">
+		<H3>Stat:Rows</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Stat:Rows()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Number of rows registered<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the number of complete rows in the table </PRE>
 		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Stat:Sort" style="display:none">
@@ -11171,7 +11238,7 @@
 	</DIV>
 	<DIV id="cc.dir" style="display:none">
 		<H3>dir</H3>
-		<PRE>Shows all the files in the current or specified directory&#x2e; If the file is on disk then the file shows as &#x3c;DISK&#x3e; but if the file is from an archive that archive filename and its entry ID number is displayed instead&#x2e;<BR></PRE>
+		<PRE>Shows all the files in the current or specified directory&#x2e; If the file is on disk then the file shows as &#x3c;External&#x3e; but if the file is from an archive that archive filename and its entry ID number is displayed instead&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.env" style="display:none">
@@ -11417,6 +11484,11 @@
 	<DIV id="cc.sqlexec" style="display:none">
 		<H3>sqlexec</H3>
 		<PRE>Performs the desired SQL query on the SQLite database&#x2e; Theres is absolutely zero restriction to using this so use it at your own risk&#x2e;<BR></PRE>
+		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cc.stats" style="display:none">
+		<H3>stats</H3>
+		<PRE>Lists currently loaded stat objects&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.stopall" style="display:none">
@@ -12530,6 +12602,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sun Aug 17 00:29:59 2025 +0100</ADDRESS>
+	This document was generated at Mon Aug 18 00:37:48 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

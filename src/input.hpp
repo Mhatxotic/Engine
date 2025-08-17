@@ -40,7 +40,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialsation helper
   public InputFlags,                   // Input configuration settings
-  private EvtMainRegVec,               // Events list to register
+  private EvtMainRegAuto,              // Events list to register
   public DimInt,                       // Window dimensions
   public Joystick                      // Joystick class
 { /* -- Console ------------------------------------------------------------ */
@@ -263,10 +263,6 @@ class Input :                          // Handles keyboard, mouse & controllers
   void SetCursorCentre(void)
     { SetCursorPos(cFboCore->GetMatrixWidth() / 2.0f,
                    cFboCore->GetMatrixHeight() / 2.0f); }
-  /* -- Disable input events ----------------------------------------------- */
-  void DisableInputEvents(void) { cEvtMain->UnregisterEx(*this); }
-  /* -- Enable input events ------------------------------------------------ */
-  void EnableInputEvents(void) { cEvtMain->RegisterEx(*this); }
   /* -- Init --------------------------------------------------------------- */
   void Init(void)
   { // if window not available? This should never happen but we will put
@@ -289,8 +285,6 @@ class Input :                          // Handles keyboard, mouse & controllers
     SetCursor(FlagIsSet(IF_CURSOR));
     // Init joystick system
     JoyInit();
-    // Init input engine events
-    EnableInputEvents();
     // Log progress
     cLog->LogDebugExSafe("Input interface initialised (R:$;J:$).",
       StrFromBoolTF(GlFWIsRawMouseMotionSupported()), JoyGetCount());
@@ -301,8 +295,6 @@ class Input :                          // Handles keyboard, mouse & controllers
     if(IHNotDeInitialise()) return;
     // Log progress
     cLog->LogDebugSafe("Input interface deinitialising...");
-    // Deinit engine events in the order they were registered
-    DisableInputEvents();
     // De-init joystick system
     JoyDeInit();
     // Log progress
@@ -316,7 +308,7 @@ class Input :                          // Handles keyboard, mouse & controllers
     InitHelper{ __FUNCTION__ },        // Init initialisation helper class
     InputFlags{ IF_NONE },             // No flags set initially
     /* -- Init events for event manager ------------------------------------ */
-    EvtMainRegVec{                     // Events list to register
+    EvtMainRegAuto{ cEvtMain, {        // Events list to register
       { EMC_INP_CHAR,         bind(&Input::OnFilteredKey, this, _1) },
       { EMC_INP_PASTE,        bind(&Input::OnWindowPaste, this, _1) },
       { EMC_INP_MOUSE_MOVE,   bind(&Input::OnMouseMove,   this, _1) },
@@ -326,7 +318,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       { EMC_INP_KEYPRESS,     bind(&Input::OnKeyPress,    this, _1) },
       { EMC_INP_DRAG_DROP,    bind(&Input::OnDragDrop,    this, _1) },
       { EMC_INP_JOY_STATE,    bind(&Joystick::OnJoyState, this, _1) },
-    },
+    } },
     /* -- More initialisers ------------------------------------------------ */
     iConKey1(GLFW_KEY_UNKNOWN),        // Init primary console key
     iConKey2(iConKey1),                // Init secondary console key

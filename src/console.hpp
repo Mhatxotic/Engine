@@ -67,7 +67,8 @@ class Console :                        // Members initially private
   private ConLinesConstIt,             // Text lines forward iterator
   private ConLinesConstRevIt,          // Text lines reverse iterator
   private InitHelper,                  // Initialisation helper
-  public ConsoleFlags                  // Console flags
+  public ConsoleFlags,                 // Console flags
+  private EvtMainRegAuto               // Events list to register
 { /* -- Private typedefs --------------------------------------------------- */
   typedef queue<ConLine> ConLineQueue; // Pending console lines
   /* -- Input -------------------------------------------------------------- */
@@ -102,7 +103,6 @@ class Console :                        // Members initially private
   /* -- Other -------------------------------------------------------------- */
   const ConCmdStaticList &ccslInt;     // Default console cmds list
   CmdMap           cmMap;              // Console commands list
-  const EvtMainRegVec emrvEvents;      // Events list to register
   /* -- Do clear console, clear history and reset position ----------------- */
   void DoFlush(void)
   { // Do clear the console output lines
@@ -865,13 +865,9 @@ class Console :                        // Members initially private
       ccslInt.size());
     // Reset cursor position
     clriPosition = rbegin();
-    // Using text mode?
-    if(cSystem->IsTextMode())
-    { // Add flag for it
-      GetDefaultRedrawFlags().FlagReset(RD_TEXT);
-      // Register console events
-      cEvtMain->RegisterEx(emrvEvents);
-    } // Redraw the console
+    // Using text mode? Reset text flag
+    if(cSystem->IsTextMode()) GetDefaultRedrawFlags().FlagReset(RD_TEXT);
+    // Redraw the console
     SetRedraw();
     // Initially shown and not closable
     FlagSet(CF_CANTDISABLE|CF_ENABLED|CF_INSERT);
@@ -897,8 +893,6 @@ class Console :                        // Members initially private
     cLog->LogDebugSafe("Console de-initialising...");
     // Initially shown and not closable. All other flags removed.
     FlagReset(CF_CANTDISABLE|CF_ENABLED|CF_INSERT);
-    // Unregister console events if using text mode
-    if(cSystem->IsTextMode()) cEvtMain->UnregisterEx(emrvEvents);
     // If commands registered?
     switch(const size_t stCount = cmMap.size())
     { // Impossible?
@@ -923,6 +917,9 @@ class Console :                        // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Init helper function name
     Flags{ CF_NONE },                  // No initial flags
+    EvtMainRegAuto{ cEvtMain, {        // Default events
+      { EMC_CON_UPDATE, bind(&Console::OnForceRedraw, this, _1) },
+    } },
     clriPosition{ rbegin() },          // Input position at beginning
     slriInputPosition{                 // Init log position...
       slHistory.crend() },             // ...at beginning
@@ -938,11 +935,7 @@ class Console :                        // Members initially private
     cTextColour(COLOUR_WHITE),         // Default white text colour
     acFlags{ AC_NONE },                // No autocomplete flags
     acisciCurrent{ acisList.cend() },  // Autocomplete not initialised
-    ccslInt{ ccslDef },                // Set default commands list
-    /* --------------------------------------------------------------------- */
-    emrvEvents{                        // Default events
-      { EMC_CON_UPDATE, bind(&Console::OnForceRedraw, this, _1) },
-    }
+    ccslInt{ ccslDef }                 // Set default commands list
     /* -- Set global pointer to static class ------------------------------- */
     { cConsole = this; }
   /* -- Set page move count ---------------------------------------- */ public:

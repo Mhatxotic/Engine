@@ -77,11 +77,10 @@ class Display :                        // Actual class body
   private DimCoInt,                    // Requested window position and size
   public  GlFWMonitors,                // Monitor list data
   private mutex,                       // Mutex for sychronising engine thread
-  private condition_variable           // CV for sychronising engine thread
-{ /* -- Events ------------------------------------------------------------- */
-  const EvtMainRegVec emrvEvents;      // Main events list to register
-  const EvtWinRegVec  ewrvEvents;      // Window events list to register
-  /* -- Monitors and resolutions ------------------------------------------- */
+  private condition_variable,          // CV for sychronising engine thread
+  private EvtMainRegAuto,              // Main events list to register
+  private EvtWinRegAuto                // Window events list to register
+{ /* -- Monitors and resolutions ------------------------------------------- */
   const GlFWMonitor  *gfwmActive;      // Monitor selected
   const GlFWRes      *gfwrActive;      // Monitor resolution selected
   size_t           stMRequested,       // Monitor id request
@@ -91,7 +90,7 @@ class Display :                        // Actual class body
   DimGLFloat       dfMatrix,           // Currently selected frame-buffer dims
                    dfMatrixReq,        // Requested frame-buffer dimensions
                    dfWinScale,         // Active window scale dimensions
-                   dfInitScale;        // Init window scale dimensions
+                   dfLastScale;        // Init window scale dimensions
   GLfloat          fGamma;             // Monitor gamma setting
   CoordInt         ciPosition;         // Window position
   HiDPISetting     hdpiSetting;        // High DPI handling setting
@@ -225,6 +224,13 @@ class Display :                        // Actual class body
        UtilIsFloatEqual(fNewHeight, dfWinScale.DimGetHeight()))
       return cLog->LogDebugExSafe("Display received window scale of $x$.",
         fNewWidth, fNewHeight);
+    // Set scale for ReInit if we went from HiDPI to LoDPI
+    if(UtilIsFloatEqual(fNewWidth, 1.0f) &&
+       UtilIsFloatEqual(fNewHeight, 1.0f) &&
+       fNewWidth < dfWinScale.DimGetWidth() &&
+       fNewHeight < dfWinScale.DimGetHeight())
+      dfLastScale.DimSet(dfWinScale);
+    else dfLastScale.DimSet(0.0f, 0.0f);
     // Report change
     cLog->LogInfoExSafe("Display changed window scale from $x$ to $x$.",
       dfWinScale.DimGetWidth(), dfWinScale.DimGetHeight(),
@@ -393,38 +399,11 @@ class Display :                        // Actual class body
         gfwrPrimaryRef.Depth(), gfwrPrimaryRef.Red(), gfwrPrimaryRef.Green(),
         gfwrPrimaryRef.Blue(), gfwrPrimaryRef.Refresh());
   }
-  /* -- Monitor changed ---------------------------------------------------- */
-  void OnReqMonitor(const EvtWinEvent &eweEvent)
+  /* -- Monitors refresh requested ----------------------------------------- */
+  void OnReqMonitors(const EvtWinEvent &)
   { // Lock mutex and make other requests wait
     UniqueLock ulWait{ *this };
-    // Get reference to actual arguments vector
-    const EvtMainArgs &emaArgs = eweEvent.eaArgs;
-    // Get connected monitor name. Will be NULL if GLFW_CONNECTED
-    if(const char*const cpName = emaArgs[0].CStr())
-    { // Log if name is set or not?
-      if(*cpName)
-        cLog->LogInfoExSafe("Display detected new monitor '$'.", cpName);
-      else cLog->LogInfoSafe("Display detected new unnamed monitor.");
-    } // Get disconnected monitor data. Will be NULL if GLFW_DISCONNECTED
-    else if(const GlFWMonitor *gfwmPtr = emaArgs[1].Ptr<GlFWMonitor>())
-    { // If this was our monitor?
-      if(gfwmPtr == gfwmActive)
-      { // We recognise it so we can savely disconnect it
-        cLog->LogInfoExSafe(
-          "Display disconnected monitor '$', reinitialising...",
-           gfwmPtr->Name());
-        // The selected device is no longer valid so make sure it is
-        // cleared so DeInit() doesn't try to restore gamma and crash the
-        // whole engine with an exception.
-        gfwmActive = nullptr;
-        // Request soft reinitialisation of window
-        cEvtMain->RequestGLReInit();
-        // Unsuspend the main thread and return
-        return;
-      } // Try to get monitor name and if found? Log the name.
-      else cLog->LogInfoExSafe("Display disconnected monitor '$'.",
-        gfwmActive->Name());
-    } // Log that we're processing a monitor change event
+    // Log that we're processing a monitor change event
     cLog->LogDebugSafe("Display got monitor event, suspending engine...");
     // Capture exceptions so we can resume a suspended engine thread
     try
@@ -452,6 +431,38 @@ class Display :                        // Actual class body
       // Throw exception to LUA
       throw;
     }
+  }
+  /* -- Monitor changed ---------------------------------------------------- */
+  void OnReqMonitor(const EvtWinEvent &eweEvent)
+  { // Get reference to actual arguments vector
+    const EvtMainArgs &emaArgs = eweEvent.eaArgs;
+    // Get connected monitor name. Will be NULL if GLFW_CONNECTED
+    if(const char*const cpName = emaArgs[0].CStr())
+    { // Log if name is set or not?
+      if(*cpName)
+        cLog->LogInfoExSafe("Display detected new monitor '$'.", cpName);
+      else cLog->LogInfoSafe("Display detected new unnamed monitor.");
+    } // Get disconnected monitor data. Will be NULL if GLFW_DISCONNECTED
+    else if(const GlFWMonitor *gfwmPtr = emaArgs[1].Ptr<GlFWMonitor>())
+    { // If this was our monitor?
+      if(gfwmPtr == gfwmActive)
+      { // We recognise it so we can savely disconnect it
+        cLog->LogInfoExSafe(
+          "Display disconnected monitor '$', reinitialising...",
+           gfwmPtr->Name());
+        // The selected device is no longer valid so make sure it is
+        // cleared so DeInit() doesn't try to restore gamma and crash the
+        // whole engine with an exception.
+        gfwmActive = nullptr;
+        // Request soft reinitialisation of window
+        cEvtMain->RequestGLReInitWait();
+        // Unsuspend the main thread and return
+        return;
+      } // Try to get monitor name and if found? Log the name.
+      else cLog->LogInfoExSafe("Display disconnected monitor '$'.",
+        gfwmActive->Name());
+    } // Add event to refresh monitors
+    cEvtWin->AddUnblock(EWC_WIN_MONITORS);
   }
   /* -- Add event to reinit matrix ----------------------------------------- */
   void RequestMatrixReInit(void) { cEvtMain->Add(EMC_VID_MATRIX_REINIT); }
@@ -544,12 +555,8 @@ class Display :                        // Actual class body
   void OnReqToggleFS(const EvtWinEvent &eweEvent)
   { // Ignore further requests if already restarting or using native fullscreen
     if(FlagIsSet(DF_NATIVEFS)) return;
-    // Disable input events to prevent the full-screen toggler being repeated
-    cInput->DisableInputEvents();
     // Use requested setting instead
     SetFullScreen(eweEvent.eaArgs.front().Bool());
-    // Re-enable input events
-    cInput->EnableInputEvents();
   }
   /* -- Apply gamma setting ------------------------------------------------ */
   void ApplyGamma(void)
@@ -744,6 +751,8 @@ class Display :                        // Actual class body
     // Store initial window size. This needs to be done because on Linux, the
     // window size isn't sent so we need to store the value.
     cInput->DimSet(diSize);
+    // Remove native flag since GLFW cannot set or detect this directly.
+    FlagClear(DF_NATIVEFS);
     // Need to fix a GLFW scaling bug with this :(
 #if defined(MACOS)
     // Store scale of window
@@ -755,23 +764,27 @@ class Display :                        // Actual class body
       // Enabled with downscale fix?
       case HD_ENHANCED:
         // If we went from >1x scale to 1x scale?
-        if(dfWinScale.DimGetWidth() < dfInitScale.DimGetWidth() &&
-           dfWinScale.DimGetHeight() < dfInitScale.DimGetWidth())
-        { // Use original framebuffer size
-          cFboCore->DimSet(cInput->DimGet<GLsizei>());
-          // Increase size
+        if(UtilIsFloatEqual(dfWinScale.DimGetWidth(), 1.0f) &&
+           UtilIsFloatEqual(dfWinScale.DimGetHeight(), 1.0f) &&
+           dfWinScale.DimGetWidth() < dfLastScale.DimGetWidth() &&
+           dfWinScale.DimGetHeight() < dfLastScale.DimGetWidth())
+        { // Increase size by old scale size
           diSize.DimSet(static_cast<int>(diSize.DimGetWidth<GLfloat>() *
-                          dfInitScale.DimGetWidth()),
+                          dfLastScale.DimGetWidth()),
                         static_cast<int>(diSize.DimGetHeight<GLfloat>() *
-                          dfInitScale.DimGetHeight()));
+                          dfLastScale.DimGetHeight()));
+          // Copy to the frame buffer upwards too since we're at 1x
+          cFboCore->DimSet(diSize);
           // Set new window size to match the previous window size
           cGlFW->WinSetSize(diSize);
           // Write that we applied a fix
           cLog->LogDebugExSafe("Display fixed window size to $x$ due to "
             " DPI scale decrease from $x$ to $x$", diSize.DimGetWidth(),
-            diSize.DimGetHeight(), dfInitScale.DimGetWidth(),
-            dfInitScale.DimGetHeight(), dfWinScale.DimGetWidth(),
+            diSize.DimGetHeight(), dfLastScale.DimGetWidth(),
+            dfLastScale.DimGetHeight(), dfWinScale.DimGetWidth(),
             dfWinScale.DimGetHeight());
+          // Clear window scale
+          dfWinScale.DimSet(0.0f, 0.0f);
           // Done
           break;
         } // Fall through
@@ -787,10 +800,7 @@ class Display :                        // Actual class body
                            dfWinScale.DimGetHeight()));
         // Done
         break;
-    } // Store scale of window
-    dfInitScale.DimSet(dfWinScale);
-    // Remove native flag since GLFW cannot set or detect this directly.
-    FlagClear(DF_NATIVEFS);
+    }
     // Were any user specified parameters bad? GLFW has a bug where an invalid
     // window dimensions in MacOS can mess up the frame buffer.
     if(FlagIsAnyOfSet(DF_BADPOS|DF_BADSIZE))
@@ -808,8 +818,8 @@ class Display :                        // Actual class body
     // Check that cursor is in window
     double dX; double dY; cGlFW->WinGetCursorPos(dX, dY);
     cInput->FlagSetOrClear(IF_MOUSEFOCUS,
-      dX >= 0 &&
-      dY >= 0 &&
+      dX >= 0.0 &&
+      dY >= 0.0 &&
       dX < dcNew.DimGetWidth<double>() &&
       dY < dcNew.DimGetHeight<double>());
   }
@@ -1079,6 +1089,10 @@ class Display :                        // Actual class body
     // Initialise basic window. We will modify it after due to limitations in
     // this particular function. For example, this can't set the refresh rate.
     cSystem->WindowInitialised(cGlFW->WinInit(cpTitle, nullptr));
+    // Clear any lingering window events which is very important because
+    // events from the last window may contain invalidated pointers and as long
+    // as they don't reach the 'cEvtWin->ManageSafe()' function we're fine.
+    cEvtWin->Flush();
     // Re-adjust the window
     ReInitWindow(FlagIsSet(DF_FULLSCREEN));
     // Set forced aspect ratio
@@ -1087,9 +1101,6 @@ class Display :                        // Actual class body
     UpdateIcons();
     // Set default gamma for selected monitor
     ApplyGamma();
-    // Register main and window thread events
-    cEvtMain->RegisterEx(emrvEvents);
-    cEvtWin->RegisterEx(ewrvEvents);
     // Log progress
     cLog->LogInfoSafe("Display class started successfully.");
   }
@@ -1103,9 +1114,6 @@ class Display :                        // Actual class body
     FlagClear(DF_FOCUSED|DF_EXCLUSIVE|DF_INFULLSCREEN|DF_NATIVEFS);
     // Window type deinitialised
     fsType = FST_STANDBY;
-    // Deinit window and engine events
-    cEvtWin->UnregisterEx(ewrvEvents);
-    cEvtMain->UnregisterEx(emrvEvents);
     // Have window?
     if(cGlFW->WinIsAvailable())
     { // If we have monitor?
@@ -1140,7 +1148,7 @@ class Display :                        // Actual class body
     InitHelper{ __FUNCTION__ },        // Send name to init helper
     DisplayFlags{ DF_NONE },           // No display flags set
     DimCoInt{ -1, -1, 0, 0 },          // Requested position and size
-    emrvEvents{                        // Register main events
+    EvtMainRegAuto{ cEvtMain, {        // Register main events
       { EMC_VID_FB_REINIT,     bind(&Display::OnFBReset,     this, _1) },
       { EMC_VID_MATRIX_REINIT, bind(&Display::OnMatrixReset, this, _1) },
       { EMC_WIN_CLOSE,         bind(&Display::OnClose,       this, _1) },
@@ -1150,8 +1158,8 @@ class Display :                        // Actual class body
       { EMC_WIN_REFRESH,       bind(&Display::OnRefresh,     this, _1) },
       { EMC_WIN_RESIZED,       bind(&Display::OnResized,     this, _1) },
       { EMC_WIN_SCALE,         bind(&Display::OnScale,       this, _1) },
-    },
-    ewrvEvents{                        // Register window events
+    } },
+    EvtWinRegAuto{ cEvtWin, {          // Register window events
       { EWC_WIN_ATTENTION,   bind(&Display::OnReqAttention,    this, _1) },
       { EWC_WIN_CENTRE,      bind(&Display::OnReqCentre,       this, _1) },
       { EWC_WIN_CURPOSGET,   bind(&Display::OnReqGetCursorPos, this, _1) },
@@ -1165,6 +1173,7 @@ class Display :                        // Actual class body
       { EWC_WIN_MAXIMISE,    bind(&Display::OnReqMaximise,     this, _1) },
       { EWC_WIN_MINIMISE,    bind(&Display::OnReqMinimise,     this, _1) },
       { EWC_WIN_MONITOR,     bind(&Display::OnReqMonitor,      this, _1) },
+      { EWC_WIN_MONITORS,    bind(&Display::OnReqMonitors,     this, _1) },
       { EWC_WIN_MOVE,        bind(&Display::OnReqMove,         this, _1) },
       { EWC_WIN_RESET,       bind(&Display::OnReqReset,        this, _1) },
       { EWC_WIN_RESIZE,      bind(&Display::OnReqResize,       this, _1) },
@@ -1176,14 +1185,14 @@ class Display :                        // Actual class body
       { EWC_WIN_SETSTKMOUSE, bind(&Display::OnReqStickyMouse,  this, _1) },
       { EWC_WIN_SHOW,        bind(&Display::OnReqShow,         this, _1) },
       { EWC_WIN_TOGGLE_FS,   bind(&Display::OnReqToggleFS,     this, _1) },
-    },
+    } },
     gfwmActive(nullptr),               // No monitor selected
     gfwrActive(nullptr),               // No video mode selected
     stMRequested(StdMaxSizeT),         // No monitor requested
     stVRequested(StdMaxSizeT),         // No video mode id requested
     bUnsuspend{ false },               // Not unsuspending engine thread
     dfWinScale{ 1.0f, 1.0f },          // Window scale initialised later
-    dfInitScale{ dfWinScale },         // Window scale at init
+    dfLastScale{ 0.0f, 0.0f },         // Window scale reduction
     fGamma(0),                         // Gamma initialised by CVars
     ciPosition{ GLFW_DONT_CARE },      // Window position
     hdpiSetting(HD_DISABLED),          // HiDPI setting initialised by CVars
