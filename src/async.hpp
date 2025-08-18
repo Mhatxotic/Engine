@@ -319,9 +319,10 @@ template<class MemberType, class ColType>class AsyncLoader :
     // event subsystem executes the callback and will be empty.
     strAsyncError = StdMove(LuaUtilStack(lsS));
     // Begin async thread
-    tAsyncThread.ThreadInit(StrAppend(strLabel, ':', strIdentifier),
-      bind(&AsyncLoader<MemberType,ColType>::AsyncThreadMain,
-        this, _1), this);
+    tAsyncThread.ThreadInit(
+      StrAppend(strLabel, ':', mtAsyncOwner.CtrGet()),
+      bind(&AsyncLoader<MemberType,ColType>::AsyncThreadMain, this, _1),
+        this);
   }
   /* ----------------------------------------------------------------------- */
   void AsyncStop(void)

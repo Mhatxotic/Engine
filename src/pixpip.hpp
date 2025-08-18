@@ -112,7 +112,8 @@ class SysPipe :
       // Anything else and we need to throw an exception
       default: XC("Executable name is invalid!",
                   "Program", strApp, "Code", vrResult,
-                  "Reason",  cDirBase->DirBaseVNRtoStr(vrResult));
+                  "Reason",  cDirBase->DirBaseVNRtoStr(vrResult),
+                  "CmdLine", strCmdLine);
     } // Make sure the executable exists
     if(!DirIsFileExecutable(strApp))
       XCS("Executable not valid!", "Program", strApp);

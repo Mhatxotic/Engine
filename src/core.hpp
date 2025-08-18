@@ -137,6 +137,8 @@ class Core final :                     // Members initially private
 #undef RSC
 #undef RSCX
 #undef RSCEX
+    // Reset socket packet and traffic counters
+    SocketResetCounters();
     // Clear any lingering events which is very important because events from
     // the last sandbox may contain invalidated pointers and as long as they
     // don't reach the 'cEvtMain->ManageSafe()' function we're fine.
