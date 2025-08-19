@@ -337,8 +337,10 @@ template<class MemberType, class ColType>class AsyncLoader :
     if(lecAsync.LuaRefGetFunc(LR_ERROR))
     { // Push the error message
       LuaUtilPushStr(lecAsync.LuaRefGetState(), strAsyncError);
-      // Wait for thread and register the class
-      AsyncStopAndRegister();
+      // Wait for the thread to terminate if it is still running
+      AsyncStop();
+      // Unregister the class from the requested collector type
+      static_cast<ColType&>(mtAsyncOwner).CollectorUnregister();
       // Now do the callback. An exception could occur here.
       LuaUtilCallFuncEx(lecAsync.LuaRefGetState(), 1);
     } // Invalid userdata?
@@ -372,18 +374,13 @@ template<class MemberType, class ColType>class AsyncLoader :
     } // Throw error back to user error handler
     AsyncDoLuaThrowErrorHandler(emeEvent);
   }
-  /* -- Waits for the thread to finish and registers the class ------------- */
-  void AsyncStopAndRegister(void)
+  /* -- Async do protected call dispatams already pushed onto lua stack) --- */
+  void AsyncDoFinishLuaProtectedDispatch(const EvtMainEvent &emeEvent,
+    const int iParam, const int iHandler)
   { // Wait for the thread to terminate if it is still running
     AsyncStop();
     // Register the class from the requested collector type
     static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
-  }
-  /* -- Async do protected call dispatams already pushed onto lua stack) --- */
-  void AsyncDoFinishLuaProtectedDispatch(const EvtMainEvent &emeEvent,
-    const int iParam, const int iHandler)
-  { // Wait for thread and register the class
-    AsyncStopAndRegister();
     // Now do the callback. An exception could occur here as well and it
     // should be protected.
     AsyncDoLuaProtectedDispatch(emeEvent, iParam, iHandler);
@@ -487,7 +484,9 @@ template<class MemberType, class ColType>class AsyncLoader :
         static_cast<AsyncResult>(emaArgs[2].ULong()) : AR_UNKNOWN;
     // If lua is not paused?
     if(!uiLuaPaused)
-    { // Whats the code sent in the event?
+    { // Save stack position and restore it on leaving scope
+      const LuaStackSaver lssSaved{ lecAsync.LuaRefGetState() };
+      // Whats the code sent in the event?
       switch(uiAsyncResult)
       { // Unknown operation?
         case AR_UNKNOWN:
