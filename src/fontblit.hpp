@@ -178,6 +178,20 @@ void HandlePrintControl(GLfloat &fX, GLfloat &fY, UtfDecoder &utfRef,
     default: break;
   }
 }
+/* -- Handle space character ----------------------------------------------- */
+void HandleSpace(const unsigned int uiChar, GLfloat &fX, GLfloat &fY,
+  const GLfloat fW, const GLfloat fI, UtfDecoder &utfRef)
+{ // Get first character as normal
+  size_t stPos = CheckGlyph(uiChar);
+  // Get character width
+  const GLfloat fWidth = GetCharWidth(stPos);
+  // Just move the X position forward as we don't need to draw it.
+  fX += fWidth;
+  // Check if the draw length of the next word would go off the limit
+  // and if either did?
+  if(fX + fWidth >= fW || PrintGetWord(utfRef, stPos, fX, fY, fW))
+    HandleReturn(utfRef, fX, fY, fI);
+}
 /* -- Print a utfstring of textures, wrap at width, return height ---------- */
 GLfloat DoPrintW(GLfloat fX, GLfloat fY, const GLfloat fW, const GLfloat fI,
   UtfDecoder &utfRef)
@@ -192,20 +206,8 @@ GLfloat DoPrintW(GLfloat fX, GLfloat fY, const GLfloat fW, const GLfloat fI,
                  fXO, fW, fI);
                break;
     // Whitespace character?
-    case ' ':
-    { // Get first character as normal
-      size_t stPos = CheckGlyph(uiChar);
-      // Do the print to move the X position
-      PrintDraw(fX, fY, stPos);
-      // Ignore if the space character processed went over the limit OR
-      // Check if the draw length of the next word would go off the limit
-      // and if either did?
-      if(fX + GetCharWidth(stPos) >= fW ||
-        PrintGetWord(utfRef, stPos, fX, fY, fW))
-          HandleReturn(utfRef, fX, fY, fXO);
-      // Done
-      break;
-    } // Normal character
+    case ' ': HandleSpace(uiChar, fX, fY, fW, fXO, utfRef); break;
+    // Normal character?
     default:
     { // Character storage
       const size_t stPos = CheckGlyph(uiChar);
@@ -234,21 +236,8 @@ GLfloat DoPrintWS(const GLfloat fW, const GLfloat fI, UtfDecoder &utfRef)
       // Done
       break;
     } // Whitespace character?
-    case ' ':
-    { // Get first character as normal
-      size_t stPos = CheckGlyph(uiChar);
-      // Get character width
-      const GLfloat fWidth = GetCharWidth(stPos);
-      // Move X position forward
-      fX += fWidth;
-      // Ignore if the space character processed went over the limit OR
-      // Check if the draw length of the next word would go off the limit
-      // and if either did? Handle the return!
-      if(fWidth + fX >= fW || PrintGetWord(utfRef, stPos, fX, fY, fW))
-        HandleReturn(utfRef, fX, fY, fI);
-      // Done
-      break;
-    } // Normal character
+    case ' ': HandleSpace(uiChar, fX, fY, fW, fI, utfRef); break;
+    // Normal character?
     default:
     { // Get width
       const GLfloat fWidth = GetCharWidth(CheckGlyph(uiChar));
