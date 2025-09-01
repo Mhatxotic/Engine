@@ -49,7 +49,13 @@ struct AgOutline : public AgGLfloatLG
 // ? The object will no longer be useable after this call and an error will be
 // ? generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Ftf>(lS, 1, *cFtfs))
+LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Ftf>(lS, cFtfs))
+/* ========================================================================= */
+// $ Ftf:Destroyed
+// < Destroyed:boolean=If the Ftf class is destroyed
+// ? Returns if the Ftf class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFtfs)))
 /* ========================================================================= */
 // $ Ftf:Family
 // < Name:string=The internal name of the freetype font
@@ -86,8 +92,8 @@ LLFUNC(Style, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetStyle()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Ftf:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Family), LLRSFUNC(Glyphs),
-  LLRSFUNC(Id),      LLRSFUNC(Name),   LLRSFUNC(Style),
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Family), LLRSFUNC(Glyphs),
+  LLRSFUNC(Id),      LLRSFUNC(Name),      LLRSFUNC(Style),
 LLRSEND                                // Ftf:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

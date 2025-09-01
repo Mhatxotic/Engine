@@ -51,7 +51,13 @@ LLFUNC(Close, 1, LuaUtilPushVar(lS, AgFile{lS, 1}().FStreamCloseSafe()))
 // ? with it. The object will no longer be useable after this call and an
 // ? error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<File>(lS, 1, *cFiles))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<File>(lS, cFiles))
+/* ========================================================================= */
+// $ File:Destroyed
+// < Destroyed:boolean=If the File class is destroyed
+// ? Returns if the File class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFiles)))
 /* ========================================================================= */
 // $ File:End
 // < State:boolean=File is at EOF?
@@ -200,11 +206,13 @@ LLFUNC(WriteStr, 1,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // File:* member functions begin
-  LLRSFUNC(Close),    LLRSFUNC(Destroy), LLRSFUNC(End),     LLRSFUNC(Error),
-  LLRSFUNC(ErrorStr), LLRSFUNC(FError),  LLRSFUNC(Flush),   LLRSFUNC(Id),
-  LLRSFUNC(Name),     LLRSFUNC(Opened),  LLRSFUNC(Read),    LLRSFUNC(ReadStr),
-  LLRSFUNC(Rewind),   LLRSFUNC(Seek),    LLRSFUNC(SeekCur), LLRSFUNC(SeekEnd),
-  LLRSFUNC(Size),     LLRSFUNC(Tell),    LLRSFUNC(Write),   LLRSFUNC(WriteStr),
+  LLRSFUNC(Close),   LLRSFUNC(Destroy), LLRSFUNC(Destroyed),
+  LLRSFUNC(End),     LLRSFUNC(Error),   LLRSFUNC(ErrorStr),
+  LLRSFUNC(FError),  LLRSFUNC(Flush),   LLRSFUNC(Id),
+  LLRSFUNC(Name),    LLRSFUNC(Opened),  LLRSFUNC(Read),
+  LLRSFUNC(ReadStr), LLRSFUNC(Rewind),  LLRSFUNC(Seek),
+  LLRSFUNC(SeekCur), LLRSFUNC(SeekEnd), LLRSFUNC(Size),
+  LLRSFUNC(Tell),    LLRSFUNC(Write),   LLRSFUNC(WriteStr),
 LLRSEND                                // File:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

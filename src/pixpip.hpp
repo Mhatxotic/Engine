@@ -69,9 +69,9 @@ class SysPipe :
       { }
     /* --------------------------------------------------------------------- */
     ~Handles(void) { CloseHandles(); }
-  };/* --------------------------------------------------------------------- */
-  Handles          haChildToParent;    // Child-to-parent handles
-  Handles          haParentToChild;    // Parent-to-child handles
+  } /* --------------------------------------------------------------------- */
+  haChildToParent,                     // Child-to-parent handles
+  haParentToChild;                     // Parent-to-child handles
   /* -- Kill an wait for pid ----------------------------------------------- */
   int DeInit(void)
   { // Return result

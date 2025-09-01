@@ -29,7 +29,7 @@ namespace P {                          // Start of public namespace
 BUILD_FLAGS(Console,                   // Console flags classes
   /* --------------------------------------------------------------------- */
   // No settings?                      Can't disable console? (temporary)
-  CF_NONE                   {Flag(0)}, CF_CANTDISABLE            {Flag(1)},
+  CF_NONE                   {Flag(0)}, CF_LOCKED                 {Flag(1)},
   // Ignore first key on show console? Autoscroll on message?
   CF_IGNOREKEY              {Flag(2)}, CF_AUTOSCROLL             {Flag(3)},
   // Automatically copy cvar on check? Character insert mode?
@@ -37,7 +37,7 @@ BUILD_FLAGS(Console,                   // Console flags classes
   // Console displayed?                Ignore escape key?
   CF_ENABLED                {Flag(6)}, CF_IGNOREESC              {Flag(7)},
   // Can't disable console?            Block output position update?
-  CF_CANTDISABLEGLOBAL      {Flag(8)}, CF_BLOCKOUTPUTUPDATE      {Flag(9)}
+  CF_LOCKEDGLOBAL           {Flag(8)}, CF_BLOCKOUTPUTUPDATE      {Flag(9)}
 );/* ======================================================================= */
 BUILD_FLAGS(AutoComplete,              // Autocomplete flags classes
   /* ----------------------------------------------------------------------- */
@@ -461,33 +461,43 @@ class Console :                        // Members initially private
   void SetRedraw(void)
     { GetRedrawFlags().FlagReset(GetDefaultRedrawFlags().FlagIsSet(RD_TEXT) ||
         IsVisible() ? GetDefaultRedrawFlags() : RD_NONE); }
+  /* -- Returns if we should be hiding the graphical console --------------- */
+  bool IsHidingGraphicalConsole(void)
+    { return cSystem->IsTextMode() &&
+             !cCVars->GetInternal<bool>(CON_GCWTERM); }
   /* -- Do Set Console status ---------------------------------------------- */
-  bool DoSetVisible(const bool bState)
-  { // Enabling and not enabled?
-    if(bState && IsNotVisible())
+  bool SetVisible(const bool bState)
+  { // Can't change state?
+    if(FlagIsSet(CF_LOCKED))
+      cLog->LogDebugExSafe(
+        "Console visibility cannot be set to $ because it is locked.",
+          StrFromBoolTF(bState));
+    // Graphical console not allowed?
+    else if(IsHidingGraphicalConsole())
+      cLog->LogDebugExSafe(
+        "Console visibility cannot be set to $ as graphical console locked.",
+          StrFromBoolTF(bState));
+    // Enabling and not enabled?
+    else if(bState && IsNotVisible())
     { // Set console enabled and redraw the buffer
       FlagSet(CF_ENABLED);
+      // Log that the console has been enabled
+      cLog->LogDebugSafe("Console visibility enabled.");
       // Redraw console
       SetRedraw();
-      // Log that the console has been enabled
-      cLog->LogDebugSafe("Console has been enabled.");
+      // Success
+      return true;
     } // Disabled and not disabled?
     else if(!bState && IsVisible())
     { // Set console disabled and clear redraw flag
       FlagClear(CF_ENABLED);
-      // Redraw console
-      SetRedraw();
       // Log that the console has been disabled
-      cLog->LogDebugSafe("Console has been disabled.");
-    } // Say that nothing changed
-    else
-    { // Log the request
-      cLog->LogDebugExSafe("Console has already been $.",
-        bState ? "enabled" : "disabled");
-      // Failed
-      return false;
-    } // Success
-    return true;
+      cLog->LogDebugSafe("Console visibility disabled.");
+    } // Nothing changed? Log the request
+    else cLog->LogDebugExSafe("Console visibility already $.",
+      StrFromBoolTF(bState));
+    // Don't redraw
+    return false;
   }
   /* -- Execute arguments list --------------------------------------------- */
   void ExecuteArguments(const string &strCmd, const Args &aList)
@@ -608,7 +618,7 @@ class Console :                        // Members initially private
         AddLineA("Console CB failed! > ", eReason);
         // Force the console to be shown because the callback might have
         // hidden the console
-        DoSetVisible(true);
+        SetVisible(true);
         // Force scroll to bottom
         clriPosition = rbegin();
       } // Carry on executing as normal
@@ -701,6 +711,20 @@ class Console :                        // Members initially private
     // Redrawing screen again
     SetRedraw();
   }
+  /* -- Tick for stdout render --------------------------------------------- */
+  void FlushToTerminal(void)
+  { // If there are console lines in the queue?
+    while(!clqOutput.empty())
+    { // Get next item
+      const ConLine &clLine = clqOutput.front();
+      // Print line to output
+      fwprintf(stdout, L"\033[%um[%.6f]<!> %ls\033[0m\n",
+        clLine.cColour, clLine.dTime,
+          UtfDecoder{ clLine.strLine }.Wide().c_str());
+      // remove the old item
+      clqOutput.pop();
+    }
+  }
   /* -- Tick for bot render ------------------------------------------------ */
   void FlushToLog(void)
   { // Process queued console log lines
@@ -782,7 +806,7 @@ class Console :                        // Members initially private
     const ConCbFunc ccbFunc)
   { // Insert trusted command into commands list
     return cmMap.insert({ strName,
-      { strName, uiMin, uiMax, CFL_NONE, ccbFunc } }).first;
+      { strName, uiMin, uiMax, CFL_BASIC, ccbFunc } }).first;
   }
   /* -- Unregister console command ----------------------------------------- */
   void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
@@ -870,7 +894,7 @@ class Console :                        // Members initially private
     // Redraw the console
     SetRedraw();
     // Initially shown and not closable
-    FlagSet(CF_CANTDISABLE|CF_ENABLED|CF_INSERT);
+    FlagSet(CF_LOCKED|CF_ENABLED|CF_INSERT);
     // Show version information
     PrintVersion();
     // Iterate each item and register command if required core flags match
@@ -892,7 +916,7 @@ class Console :                        // Members initially private
     // Log progress
     cLog->LogDebugSafe("Console de-initialising...");
     // Initially shown and not closable. All other flags removed.
-    FlagReset(CF_CANTDISABLE|CF_ENABLED|CF_INSERT);
+    FlagReset(CF_LOCKED|CF_ENABLED|CF_INSERT);
     // If commands registered?
     switch(const size_t stCount = cmMap.size())
     { // Impossible?

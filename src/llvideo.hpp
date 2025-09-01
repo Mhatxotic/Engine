@@ -75,7 +75,13 @@ LLFUNC(BlitT, 0,
 // ? freed after the main FBO has been rendered. The object will no longer be
 // ? useable after this call and an error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Video>(lS, 1, *cVideos))
+LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Video>(lS, cVideos))
+/* ========================================================================= */
+// $ Video:Destroyed
+// < Destroyed:boolean=If the Video class is destroyed
+// ? Returns if the Video class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cVideos)))
 /* ========================================================================= */
 // $ Video:GetATime
 // < Seconds:Number=Returns the elapsed audio time in seconds
@@ -415,20 +421,20 @@ LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Stop()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Video:* member functions begin
-  LLRSFUNC(Advance),
-  LLRSFUNC(Awaken),        LLRSFUNC(Blit),         LLRSFUNC(BlitT),
-  LLRSFUNC(Destroy),       LLRSFUNC(GetATime),     LLRSFUNC(GetDrift),
-  LLRSFUNC(GetFPS),        LLRSFUNC(GetFrame),     LLRSFUNC(GetFrames),
-  LLRSFUNC(GetFramesLost), LLRSFUNC(GetHeight),    LLRSFUNC(GetId),
-  LLRSFUNC(GetLoop),       LLRSFUNC(GetName),      LLRSFUNC(GetPlaying),
-  LLRSFUNC(GetTime),       LLRSFUNC(GetWidth),     LLRSFUNC(OnEvent),
-  LLRSFUNC(Pause),         LLRSFUNC(Play),         LLRSFUNC(Rewind),
-  LLRSFUNC(SetCRGBA),      LLRSFUNC(SetCX),        LLRSFUNC(SetFDR),
-  LLRSFUNC(SetFilter),     LLRSFUNC(SetKeyColour), LLRSFUNC(SetKeyed),
-  LLRSFUNC(SetLoop),       LLRSFUNC(SetRec709),    LLRSFUNC(SetTCLTRB),
-  LLRSFUNC(SetTCLTWH),     LLRSFUNC(SetTCX),       LLRSFUNC(SetVLTRB),
-  LLRSFUNC(SetVLTWH),      LLRSFUNC(SetVLTWHA),    LLRSFUNC(SetVX),
-  LLRSFUNC(SetVolume),     LLRSFUNC(Stop),
+  LLRSFUNC(Advance),      LLRSFUNC(Awaken),     LLRSFUNC(Blit),
+  LLRSFUNC(BlitT),        LLRSFUNC(Destroy),    LLRSFUNC(Destroyed),
+  LLRSFUNC(GetATime),     LLRSFUNC(GetDrift),   LLRSFUNC(GetFPS),
+  LLRSFUNC(GetFrame),     LLRSFUNC(GetFrames),  LLRSFUNC(GetFramesLost),
+  LLRSFUNC(GetHeight),    LLRSFUNC(GetId),      LLRSFUNC(GetLoop),
+  LLRSFUNC(GetName),      LLRSFUNC(GetPlaying), LLRSFUNC(GetTime),
+  LLRSFUNC(GetWidth),     LLRSFUNC(OnEvent),    LLRSFUNC(Pause),
+  LLRSFUNC(Play),         LLRSFUNC(Rewind),     LLRSFUNC(SetCRGBA),
+  LLRSFUNC(SetCX),        LLRSFUNC(SetFDR),     LLRSFUNC(SetFilter),
+  LLRSFUNC(SetKeyColour), LLRSFUNC(SetKeyed),   LLRSFUNC(SetLoop),
+  LLRSFUNC(SetRec709),    LLRSFUNC(SetTCLTRB),  LLRSFUNC(SetTCLTWH),
+  LLRSFUNC(SetTCX),       LLRSFUNC(SetVLTRB),   LLRSFUNC(SetVLTWH),
+  LLRSFUNC(SetVLTWHA),    LLRSFUNC(SetVX),      LLRSFUNC(SetVolume),
+  LLRSFUNC(Stop),
 LLRSEND                                // Video:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

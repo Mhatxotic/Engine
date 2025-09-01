@@ -44,7 +44,13 @@ struct AgDimension : public AgUIntLGE {
 // ? will no longer be useable after this call and an error will be generated
 // ? if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Bin>(lS, 1, *cBins))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Bin>(lS, cBins))
+/* ========================================================================= */
+// $ Bin:Destroyed
+// < Destroyed:boolean=If the Bin class is destroyed
+// ? Returns if the Bin class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cBins)))
 /* ========================================================================= */
 // $ Bin:Enlarge
 // > Width:integer=The new width of the bin in units
@@ -125,8 +131,9 @@ LLFUNC(Width, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().DimGetWidth()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Bin:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Id),        LLRSFUNC(Insert), LLRSFUNC(Enlarge),
-  LLRSFUNC(Height),  LLRSFUNC(Occupancy), LLRSFUNC(Test),   LLRSFUNC(Width),
+  LLRSFUNC(Destroy),   LLRSFUNC(Destroyed), LLRSFUNC(Id),
+  LLRSFUNC(Insert),    LLRSFUNC(Enlarge),   LLRSFUNC(Height),
+  LLRSFUNC(Occupancy), LLRSFUNC(Test),      LLRSFUNC(Width),
 LLRSEND                                // Bin:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

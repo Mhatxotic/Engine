@@ -43,7 +43,13 @@ struct AgPcmFlags : public AgFlags<PcmFlagsConst> {
 // ? object will no longer be useable after this call and an error will be
 // ? generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Pcm>(lS, 1, *cPcms))
+LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Pcm>(lS, cPcms))
+/* ========================================================================= */
+// $ Pcm:Destroyed
+// < Destroyed:boolean=If the Pcm class is destroyed
+// ? Returns if the Pcm class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cPcms)))
 /* ========================================================================= */
 // $ Pcm:Id
 // < Id:integer=The id number of the PCM object.
@@ -64,7 +70,7 @@ LLFUNC(Name, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().IdentGet()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Pcm:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Id), LLRSFUNC(Name),
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Id), LLRSFUNC(Name),
 LLRSEND                                // Pcm:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

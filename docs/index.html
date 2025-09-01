@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.9.1.7 -->
-<!-- Automatically built at Mon Sep 01 12:45:36 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.9.1.7 -->
+<!-- Reference for the Mhatxotic Engine API version 25.9.30.67 -->
+<!-- Automatically built at Wed Oct 01 01:31:01 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.9.30.67 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,18 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.1.7">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.30.67">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.1.7">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.30.67">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.1.7">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.30.67">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.9.1.7 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.9.30.67 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
-	<TITLE>Mhatxotic Engine 25.9.1.7 API reference</TITLE>
+	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
+	<TITLE>Mhatxotic Engine 25.9.30.67 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -60,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.9.1.7 API reference</H1>
+	<H1>Mhatxotic Engine 25.9.30.67 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -99,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 850 functions (402 members, 448 methods) and 27 consts in 30 namespaces with 85 commands and 211 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 878 functions (403 members, 475 methods) and 29 consts in 30 namespaces with 85 commands and 212 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -169,9 +170,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(11 methods)</I>
+								<B>Methods</B> <I>(12 methods)</I>
 								<OL>
 									<LI><A href="#Archive:Destroy">Destroy</A></LI>
+									<LI><A href="#Archive:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Archive:Dir">Dir</A></LI>
 									<LI><A href="#Archive:DirList">DirList</A></LI>
 									<LI><A href="#Archive:Dirs">Dirs</A></LI>
@@ -221,7 +223,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(23 methods)</I>
+								<B>Methods</B> <I>(24 methods)</I>
 								<OL>
 									<LI><A href="#Asset:BitClear">BitClear</A></LI>
 									<LI><A href="#Asset:BitFlip">BitFlip</A></LI>
@@ -230,6 +232,7 @@
 									<LI><A href="#Asset:Clear">Clear</A></LI>
 									<LI><A href="#Asset:Crop">Crop</A></LI>
 									<LI><A href="#Asset:Destroy">Destroy</A></LI>
+									<LI><A href="#Asset:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Asset:Duplicate">Duplicate</A></LI>
 									<LI><A href="#Asset:Fill">Fill</A></LI>
 									<LI><A href="#Asset:Find">Find</A></LI>
@@ -324,9 +327,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(8 methods)</I>
+								<B>Methods</B> <I>(9 methods)</I>
 								<OL>
 									<LI><A href="#Bin:Destroy">Destroy</A></LI>
+									<LI><A href="#Bin:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Bin:Enlarge">Enlarge</A></LI>
 									<LI><A href="#Bin:Height">Height</A></LI>
 									<LI><A href="#Bin:Id">Id</A></LI>
@@ -356,9 +360,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(4 methods)</I>
+								<B>Methods</B> <I>(5 methods)</I>
 								<OL>
 									<LI><A href="#Clip:Destroy">Destroy</A></LI>
+									<LI><A href="#Clip:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Clip:Id">Id</A></LI>
 									<LI><A href="#Clip:Name">Name</A></LI>
 									<LI><A href="#Clip:Value">Value</A></LI>
@@ -384,9 +389,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(3 methods)</I>
+								<B>Methods</B> <I>(4 methods)</I>
 								<OL>
 									<LI><A href="#Command:Destroy">Destroy</A></LI>
+									<LI><A href="#Command:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Command:Id">Id</A></LI>
 									<LI><A href="#Command:Name">Name</A></LI>
 								</OL>
@@ -563,12 +569,13 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(26 methods)</I>
+								<B>Methods</B> <I>(27 methods)</I>
 								<OL>
 									<LI><A href="#Fbo:Activate">Activate</A></LI>
 									<LI><A href="#Fbo:Blit">Blit</A></LI>
 									<LI><A href="#Fbo:BlitT">BlitT</A></LI>
 									<LI><A href="#Fbo:Destroy">Destroy</A></LI>
+									<LI><A href="#Fbo:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Fbo:Finish">Finish</A></LI>
 									<LI><A href="#Fbo:GetFloatCount">GetFloatCount</A></LI>
 									<LI><A href="#Fbo:GetId">GetId</A></LI>
@@ -642,10 +649,11 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(20 methods)</I>
+								<B>Methods</B> <I>(21 methods)</I>
 								<OL>
 									<LI><A href="#File:Close">Close</A></LI>
 									<LI><A href="#File:Destroy">Destroy</A></LI>
+									<LI><A href="#File:Destroyed">Destroyed</A></LI>
 									<LI><A href="#File:End">End</A></LI>
 									<LI><A href="#File:Error">Error</A></LI>
 									<LI><A href="#File:ErrorStr">ErrorStr</A></LI>
@@ -694,10 +702,12 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(49 methods)</I>
+								<B>Methods</B> <I>(51 methods)</I>
 								<OL>
 									<LI><A href="#Font:Destroy">Destroy</A></LI>
+									<LI><A href="#Font:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Font:Dump">Dump</A></LI>
+									<LI><A href="#Font:GetFlags">GetFlags</A></LI>
 									<LI><A href="#Font:GetHeight">GetHeight</A></LI>
 									<LI><A href="#Font:GetId">GetId</A></LI>
 									<LI><A href="#Font:GetName">GetName</A></LI>
@@ -776,9 +786,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(6 methods)</I>
+								<B>Methods</B> <I>(7 methods)</I>
 								<OL>
 									<LI><A href="#Ftf:Destroy">Destroy</A></LI>
+									<LI><A href="#Ftf:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Ftf:Family">Family</A></LI>
 									<LI><A href="#Ftf:Glyphs">Glyphs</A></LI>
 									<LI><A href="#Ftf:Id">Id</A></LI>
@@ -812,10 +823,12 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(7 methods)</I>
+								<B>Methods</B> <I>(9 methods)</I>
 								<OL>
 									<LI><A href="#Image:Depth">Depth</A></LI>
 									<LI><A href="#Image:Destroy">Destroy</A></LI>
+									<LI><A href="#Image:Destroyed">Destroyed</A></LI>
+									<LI><A href="#Image:Flags">Flags</A></LI>
 									<LI><A href="#Image:Height">Height</A></LI>
 									<LI><A href="#Image:Id">Id</A></LI>
 									<LI><A href="#Image:Name">Name</A></LI>
@@ -824,9 +837,11 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Consts</B> <I>(2 consts)</I>
+								<B>Consts</B> <I>(4 consts)</I>
 								<OL>
-									<LI><A href="#Image.Flags">Flags</A></LI>
+									<LI><A href="#Image.FlagsImage">FlagsImage</A></LI>
+									<LI><A href="#Image.FlagsPost">FlagsPost</A></LI>
+									<LI><A href="#Image.FlagsPre">FlagsPre</A></LI>
 									<LI><A href="#Image.Formats">Formats</A></LI>
 								</OL>
 							</LI>
@@ -890,8 +905,10 @@
 						<OL>
 							<LI><P>This allows the programmer to encode and decode Json objects.</P></LI>
 							<LI>
-								<B>Members</B> <I>(7 members)</I>
+								<B>Members</B> <I>(9 members)</I>
 								<OL>
+									<LI><A href="#Json.Asset">Asset</A></LI>
+									<LI><A href="#Json.AssetAsync">AssetAsync</A></LI>
 									<LI><A href="#Json.Count">Count</A></LI>
 									<LI><A href="#Json.File">File</A></LI>
 									<LI><A href="#Json.FileAsync">FileAsync</A></LI>
@@ -902,9 +919,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(9 methods)</I>
+								<B>Methods</B> <I>(10 methods)</I>
 								<OL>
 									<LI><A href="#Json:Destroy">Destroy</A></LI>
+									<LI><A href="#Json:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Json:Id">Id</A></LI>
 									<LI><A href="#Json:Name">Name</A></LI>
 									<LI><A href="#Json:Sort">Sort</A></LI>
@@ -936,11 +954,12 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(15 methods)</I>
+								<B>Methods</B> <I>(16 methods)</I>
 								<OL>
 									<LI><A href="#Mask:Clear">Clear</A></LI>
 									<LI><A href="#Mask:Copy">Copy</A></LI>
 									<LI><A href="#Mask:Destroy">Destroy</A></LI>
+									<LI><A href="#Mask:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Mask:Erase">Erase</A></LI>
 									<LI><A href="#Mask:Fill">Fill</A></LI>
 									<LI><A href="#Mask:Height">Height</A></LI>
@@ -978,11 +997,12 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(29 methods)</I>
+								<B>Methods</B> <I>(30 methods)</I>
 								<OL>
 									<LI><A href="#Palette:Commit">Commit</A></LI>
 									<LI><A href="#Palette:Copy">Copy</A></LI>
 									<LI><A href="#Palette:Destroy">Destroy</A></LI>
+									<LI><A href="#Palette:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Palette:Fill">Fill</A></LI>
 									<LI><A href="#Palette:GetA">GetA</A></LI>
 									<LI><A href="#Palette:GetAI">GetAI</A></LI>
@@ -1035,9 +1055,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(3 methods)</I>
+								<B>Methods</B> <I>(4 methods)</I>
 								<OL>
 									<LI><A href="#Pcm:Destroy">Destroy</A></LI>
+									<LI><A href="#Pcm:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Pcm:Id">Id</A></LI>
 									<LI><A href="#Pcm:Name">Name</A></LI>
 								</OL>
@@ -1068,9 +1089,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(3 methods)</I>
+								<B>Methods</B> <I>(4 methods)</I>
 								<OL>
 									<LI><A href="#SShot:Destroy">Destroy</A></LI>
+									<LI><A href="#SShot:Destroyed">Destroyed</A></LI>
 									<LI><A href="#SShot:Id">Id</A></LI>
 									<LI><A href="#SShot:Name">Name</A></LI>
 								</OL>
@@ -1094,9 +1116,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(8 methods)</I>
+								<B>Methods</B> <I>(9 methods)</I>
 								<OL>
 									<LI><A href="#Sample:Destroy">Destroy</A></LI>
+									<LI><A href="#Sample:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Sample:Duration">Duration</A></LI>
 									<LI><A href="#Sample:Id">Id</A></LI>
 									<LI><A href="#Sample:Name">Name</A></LI>
@@ -1118,14 +1141,13 @@
 						<OL>
 							<LI><P>The socket class allows the programmer to connect to a remote network using OpenSSL encryption or unencrypted connection. There is also basic support for HTTP connections, or you can write your own routines for that or any other protocol in Lua!</P></LI>
 							<LI>
-								<B>Members</B> <I>(12 members)</I>
+								<B>Members</B> <I>(11 members)</I>
 								<OL>
 									<LI><A href="#Socket.Connected">Connected</A></LI>
 									<LI><A href="#Socket.Count">Count</A></LI>
 									<LI><A href="#Socket.Create">Create</A></LI>
 									<LI><A href="#Socket.CreateHTTP">CreateHTTP</A></LI>
 									<LI><A href="#Socket.Flush">Flush</A></LI>
-									<LI><A href="#Socket.OAuth11">OAuth11</A></LI>
 									<LI><A href="#Socket.SocketWaitAsync">SocketWaitAsync</A></LI>
 									<LI><A href="#Socket.TotalRXBytes">TotalRXBytes</A></LI>
 									<LI><A href="#Socket.TotalRXPackets">TotalRXPackets</A></LI>
@@ -1135,20 +1157,22 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(32 methods)</I>
+								<B>Methods</B> <I>(34 methods)</I>
 								<OL>
 									<LI><A href="#Socket:Callback">Callback</A></LI>
 									<LI><A href="#Socket:CompactRecvQ">CompactRecvQ</A></LI>
 									<LI><A href="#Socket:CompactSendQ">CompactSendQ</A></LI>
 									<LI><A href="#Socket:Destroy">Destroy</A></LI>
+									<LI><A href="#Socket:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Socket:Disconnect">Disconnect</A></LI>
 									<LI><A href="#Socket:GetAddress">GetAddress</A></LI>
 									<LI><A href="#Socket:GetAddressEx">GetAddressEx</A></LI>
 									<LI><A href="#Socket:GetCipher">GetCipher</A></LI>
 									<LI><A href="#Socket:GetError">GetError</A></LI>
 									<LI><A href="#Socket:GetIPAddress">GetIPAddress</A></LI>
-									<LI><A href="#Socket:GetIPAddressAndPortEx">GetIPAddressAndPortEx</A></LI>
+									<LI><A href="#Socket:GetIPAddressEx">GetIPAddressEx</A></LI>
 									<LI><A href="#Socket:GetId">GetId</A></LI>
+									<LI><A href="#Socket:GetPort">GetPort</A></LI>
 									<LI><A href="#Socket:GetRXBytes">GetRXBytes</A></LI>
 									<LI><A href="#Socket:GetRXPackets">GetRXPackets</A></LI>
 									<LI><A href="#Socket:GetReason">GetReason</A></LI>
@@ -1195,9 +1219,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(31 methods)</I>
+								<B>Methods</B> <I>(32 methods)</I>
 								<OL>
 									<LI><A href="#Source:Destroy">Destroy</A></LI>
+									<LI><A href="#Source:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Source:GetDirection">GetDirection</A></LI>
 									<LI><A href="#Source:GetElapsed">GetElapsed</A></LI>
 									<LI><A href="#Source:GetGain">GetGain</A></LI>
@@ -1283,7 +1308,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(19 methods)</I>
+								<B>Methods</B> <I>(20 methods)</I>
 								<OL>
 									<LI><A href="#Stat:Cells">Cells</A></LI>
 									<LI><A href="#Stat:Data">Data</A></LI>
@@ -1294,6 +1319,7 @@
 									<LI><A href="#Stat:DataI">DataI</A></LI>
 									<LI><A href="#Stat:DataN">DataN</A></LI>
 									<LI><A href="#Stat:Destroy">Destroy</A></LI>
+									<LI><A href="#Stat:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Stat:Finish">Finish</A></LI>
 									<LI><A href="#Stat:Header">Header</A></LI>
 									<LI><A href="#Stat:HeaderDupe">HeaderDupe</A></LI>
@@ -1330,9 +1356,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(30 methods)</I>
+								<B>Methods</B> <I>(31 methods)</I>
 								<OL>
 									<LI><A href="#Stream:Destroy">Destroy</A></LI>
+									<LI><A href="#Stream:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Stream:GetBitRate">GetBitRate</A></LI>
 									<LI><A href="#Stream:GetBytes">GetBytes</A></LI>
 									<LI><A href="#Stream:GetChannels">GetChannels</A></LI>
@@ -1396,7 +1423,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(61 methods)</I>
+								<B>Methods</B> <I>(63 methods)</I>
 								<OL>
 									<LI><A href="#Texture:Blit">Blit</A></LI>
 									<LI><A href="#Texture:BlitILT">BlitILT</A></LI>
@@ -1421,8 +1448,10 @@
 									<LI><A href="#Texture:BlitSLTWH">BlitSLTWH</A></LI>
 									<LI><A href="#Texture:BlitSLTWHA">BlitSLTWHA</A></LI>
 									<LI><A href="#Texture:Destroy">Destroy</A></LI>
+									<LI><A href="#Texture:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Texture:Download">Download</A></LI>
 									<LI><A href="#Texture:Dump">Dump</A></LI>
+									<LI><A href="#Texture:GetFlags">GetFlags</A></LI>
 									<LI><A href="#Texture:GetHeight">GetHeight</A></LI>
 									<LI><A href="#Texture:GetId">GetId</A></LI>
 									<LI><A href="#Texture:GetName">GetName</A></LI>
@@ -1494,9 +1523,7 @@
 									<LI><A href="#Util.ClampInt">ClampInt</A></LI>
 									<LI><A href="#Util.Compact">Compact</A></LI>
 									<LI><A href="#Util.CountOf">CountOf</A></LI>
-									<LI><A href="#Util.DecodeUUID">DecodeUUID</A></LI>
 									<LI><A href="#Util.Duration">Duration</A></LI>
-									<LI><A href="#Util.EncodeUUID">EncodeUUID</A></LI>
 									<LI><A href="#Util.EntDecode">EntDecode</A></LI>
 									<LI><A href="#Util.EntEncode">EntEncode</A></LI>
 									<LI><A href="#Util.Explode">Explode</A></LI>
@@ -1551,7 +1578,6 @@
 									<LI><A href="#Util.PlusOrMinus">PlusOrMinus</A></LI>
 									<LI><A href="#Util.PlusOrMinusEx">PlusOrMinusEx</A></LI>
 									<LI><A href="#Util.Position">Position</A></LI>
-									<LI><A href="#Util.RandUUID">RandUUID</A></LI>
 									<LI><A href="#Util.Random">Random</A></LI>
 									<LI><A href="#Util.RandomA">RandomA</A></LI>
 									<LI><A href="#Util.RelTime">RelTime</A></LI>
@@ -1568,6 +1594,9 @@
 									<LI><A href="#Util.TableSize">TableSize</A></LI>
 									<LI><A href="#Util.Trim">Trim</A></LI>
 									<LI><A href="#Util.UTF8Char">UTF8Char</A></LI>
+									<LI><A href="#Util.UUIDDecode">UUIDDecode</A></LI>
+									<LI><A href="#Util.UUIDEncode">UUIDEncode</A></LI>
+									<LI><A href="#Util.UUIDRandom">UUIDRandom</A></LI>
 									<LI><A href="#Util.UrlDecode">UrlDecode</A></LI>
 									<LI><A href="#Util.UrlEncode">UrlEncode</A></LI>
 									<LI><A href="#Util.WordWrap">WordWrap</A></LI>
@@ -1594,12 +1623,13 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(12 methods)</I>
+								<B>Methods</B> <I>(13 methods)</I>
 								<OL>
 									<LI><A href="#Variable:Boolean">Boolean</A></LI>
 									<LI><A href="#Variable:Clear">Clear</A></LI>
 									<LI><A href="#Variable:Default">Default</A></LI>
 									<LI><A href="#Variable:Destroy">Destroy</A></LI>
+									<LI><A href="#Variable:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Variable:Empty">Empty</A></LI>
 									<LI><A href="#Variable:Get">Get</A></LI>
 									<LI><A href="#Variable:Id">Id</A></LI>
@@ -1641,13 +1671,14 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(39 methods)</I>
+								<B>Methods</B> <I>(40 methods)</I>
 								<OL>
 									<LI><A href="#Video:Advance">Advance</A></LI>
 									<LI><A href="#Video:Awaken">Awaken</A></LI>
 									<LI><A href="#Video:Blit">Blit</A></LI>
 									<LI><A href="#Video:BlitT">BlitT</A></LI>
 									<LI><A href="#Video:Destroy">Destroy</A></LI>
+									<LI><A href="#Video:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Video:GetATime">GetATime</A></LI>
 									<LI><A href="#Video:GetDrift">GetDrift</A></LI>
 									<LI><A href="#Video:GetFPS">GetFPS</A></LI>
@@ -1798,7 +1829,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(211 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(212 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -1859,6 +1890,7 @@
 									<LI><A href="#cv.con_fontspacing">con_fontspacing</A></LI>
 									<LI><A href="#cv.con_fonttexsize">con_fonttexsize</A></LI>
 									<LI><A href="#cv.con_fontwidth">con_fontwidth</A></LI>
+									<LI><A href="#cv.con_gcwterm">con_gcwterm</A></LI>
 									<LI><A href="#cv.con_height">con_height</A></LI>
 									<LI><A href="#cv.con_inprefresh">con_inprefresh</A></LI>
 									<LI><A href="#cv.con_inputmax">con_inputmax</A></LI>
@@ -2069,6 +2101,16 @@
 		<PRE>Archive:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Destroys the archive and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Archive">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Archive:Destroyed" style="display:none">
+		<H3>Archive:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Archive:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Archive class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Archive class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Archive">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Archive:Dir" style="display:none">
@@ -2473,6 +2515,16 @@
 		<PRE>Frees the internal memory allocated to the asset&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Asset">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Asset:Destroyed" style="display:none">
+		<H3>Asset:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Asset:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Asset is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Asset is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Asset">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Asset:Duplicate" style="display:none">
 		<H3>Asset:Duplicate</H3>
 		<H4>Syntax:-</H4>
@@ -2871,6 +2923,16 @@
 		<PRE>Destroys the bin and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Bin">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Bin:Destroyed" style="display:none">
+		<H3>Bin:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Bin:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Bin class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Bin class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Bin">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Bin:Enlarge" style="display:none">
 		<H3>Bin:Enlarge</H3>
 		<H4>Syntax:-</H4>
@@ -2985,6 +3047,16 @@
 		<PRE>Destroys the specified Clip object&#x2e;<BR></PRE>
 		<H4><A href="#idx:Clip">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Clip:Destroyed" style="display:none">
+		<H3>Clip:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Clip:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Clip class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Clip class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Clip">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Clip:Id" style="display:none">
 		<H3>Clip:Id</H3>
 		<H4>Syntax:-</H4>
@@ -3055,6 +3127,16 @@
 		<PRE>Command:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Unregisters the specified console command&#x2e;<BR></PRE>
+		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Command:Destroyed" style="display:none">
+		<H3>Command:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Command:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Command class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Command class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Command:Id" style="display:none">
@@ -4221,6 +4303,16 @@
 		<PRE>Destroys the FBO and frees all the memory associated with it&#x2e; The OpenGL handles and VRAM allocated by it are freed after the main FBO has has been rendered&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Fbo:Destroyed" style="display:none">
+		<H3>Fbo:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Fbo:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Fbo class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Fbo class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Fbo:Finish" style="display:none">
 		<H3>Fbo:Finish</H3>
 		<H4>Syntax:-</H4>
@@ -4775,6 +4867,16 @@
 		<PRE>Closes and destroys the file stream and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:File">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="File:Destroyed" style="display:none">
+		<H3>File:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = File:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the File class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the File class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:File">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="File:End" style="display:none">
 		<H3>File:End</H3>
 		<H4>Syntax:-</H4>
@@ -5041,6 +5143,16 @@
 		<PRE>Destroys the font and frees all the memory associated with it&#x2e; The OpenGL handles and VRAM allocated by it are freed after the main FBO has has been rendered&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Font:Destroyed" style="display:none">
+		<H3>Font:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Font:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Font class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Font class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Font:Dump" style="display:none">
 		<H3>Font:Dump</H3>
 		<H4>Syntax:-</H4>
@@ -5049,6 +5161,16 @@
 		<PRE><U>TexId</U> <I>(integer)</I> = The texture id to dump.<BR><U>File</U> <I>(stream)</I> = The filename of the stream to write to.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Dumps the font tileset to the specified file&#x2e;<BR></PRE>
+		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Font:GetFlags" style="display:none">
+		<H3>Font:GetFlags</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Flags</U> = Font:GetFlags()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Flags</U> <I>(integer)</I> = Font flags value<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the current font flags&#x2e;<BR></PRE>
 		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Font:GetHeight" style="display:none">
@@ -5623,6 +5745,16 @@
 		<PRE>Destroys the freetype font and frees all the memory associated with it&#x2e;<BR>The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Ftf">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Ftf:Destroyed" style="display:none">
+		<H3>Ftf:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Ftf:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Ftf class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Ftf class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Ftf">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Ftf:Family" style="display:none">
 		<H3>Ftf:Family</H3>
 		<H4>Syntax:-</H4>
@@ -5789,6 +5921,26 @@
 		<PRE>Destroys the image and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Image:Destroyed" style="display:none">
+		<H3>Image:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Image:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Image class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Image class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Image:Flags" style="display:none">
+		<H3>Image:Flags</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Flags</U> = Image:Flags()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Flags</U> <I>(integer)</I> = Image flags value<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the current image flags&#x2e;<BR></PRE>
+		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Image:Height" style="display:none">
 		<H3>Image:Height</H3>
 		<H4>Syntax:-</H4>
@@ -5839,14 +5991,34 @@
 		<PRE>Returns the width if the image&#x2e;<BR></PRE>
 		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Image.Flags" style="display:none">
-		<H3>Image.Flags</H3>
+	<DIV id="Image.FlagsImage" style="display:none">
+		<H3>Image.FlagsImage</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Codes</U> = Image.Flags</PRE>
+		<PRE><U>Codes</U> = Image.FlagsImage</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags<BR></PRE>
+		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the image plugins available&#x2e; Returned as key&#x2f;value pairs&#x2e; The value is a unique identifier to the flag&#x2e;<BR></PRE>
+		<PRE>Returns the flags that define the original image before manipulation&#x2e; These values are used with the &#x27;GetFlags&#x28;&#x29;&#x27; function&#x2e;<BR></PRE>
+		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Image.FlagsPost" style="display:none">
+		<H3>Image.FlagsPost</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Codes</U> = Image.FlagsPost</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the flags that were activated after manipulation functions were completed&#x2e; These values are used with the &#x27;GetFlags&#x28;&#x29;&#x27; function&#x2e;<BR></PRE>
+		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Image.FlagsPre" style="display:none">
+		<H3>Image.FlagsPre</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Codes</U> = Image.FlagsPre</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the flags that are sent to the loader functions to manipulate the the image&#x2e; The flags that get activated are in the &#x27;FlagsPost&#x27; array&#x2e; These values are used with the &#x27;GetFlags&#x28;&#x29;&#x27; function&#x2e;<BR></PRE>
 		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Image.Formats" style="display:none">
@@ -6139,6 +6311,26 @@
 		<PRE>Returns a table of key&#x2f;value pairs that identify a the state in which the keyboard or mouse key was pressed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Input">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Json.Asset" style="display:none">
+		<H3>Json.Asset</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Json.Asset(<I><U>Id</U>, <U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Id</U> <I>(string)</I> = The user specified identifier of the asset.<BR><U>Data</U> <I>(Asset)</I> = The asset class to process.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Decodes the specified asset as JSON encoded&#x2e; The level depth is limited to 255 due to limitations with LUA&#x27;s hardcoded stack level&#x2e;<BR></PRE>
+		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Json.AssetAsync" style="display:none">
+		<H3>Json.AssetAsync</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Json.AssetAsync(<I><U>Id</U>, <U>Data</U>, <U>ErrorFunc</U>, <U>ProgressFunc</U>, <U>SuccessFunc</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Id</U> <I>(string)</I> = The user specified identifier of the asset.<BR><U>Data</U> <I>(Asset)</I> = The asset class to process.<BR><U>ErrorFunc</U> <I>(function)</I> = The function to call when there is an error<BR><U>ProgressFunc</U> <I>(function)</I> = The function to call when there is progress<BR><U>SuccessFunc</U> <I>(function)</I> = The function to call when the JSON string is laoded<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Decodes the specified asset as JSON encoded asynchronously&#x2e;<BR></PRE>
+		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Json.Count" style="display:none">
 		<H3>Json.Count</H3>
 		<H4>Syntax:-</H4>
@@ -6172,9 +6364,9 @@
 	<DIV id="Json.String" style="display:none">
 		<H3>Json.String</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Json.String(<I><U>Code</U></I>)</PRE>
+		<PRE><U>Handle</U> = Json.String(<I><U>Id</U>, <U>Code</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Code</U> <I>(string)</I> = The string of JSON encoded data to decode<BR></PRE>
+		<PRE><U>Id</U> <I>(string)</I> = The user specified identifier of the asset.<BR><U>Code</U> <I>(string)</I> = The string of JSON encoded data to decode<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Json)</I> = Handle to the Json object<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -6184,9 +6376,9 @@
 	<DIV id="Json.StringAsync" style="display:none">
 		<H3>Json.StringAsync</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Json.StringAsync(<I><U>Code</U>, <U>ErrorFunc</U>, <U>ProgressFunc</U>, <U>SuccessFunc</U></I>)</PRE>
+		<PRE>Json.StringAsync(<I><U>Id</U>, <U>Code</U>, <U>ErrorFunc</U>, <U>ProgressFunc</U>, <U>SuccessFunc</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Code</U> <I>(string)</I> = The string of JSON encoded data to decode<BR><U>ErrorFunc</U> <I>(function)</I> = The function to call when there is an error<BR><U>ProgressFunc</U> <I>(function)</I> = The function to call when there is progress<BR><U>SuccessFunc</U> <I>(function)</I> = The function to call when the JSON string is laoded<BR></PRE>
+		<PRE><U>Id</U> <I>(string)</I> = The user specified identifier of the asset.<BR><U>Code</U> <I>(string)</I> = The string of JSON encoded data to decode<BR><U>ErrorFunc</U> <I>(function)</I> = The function to call when there is an error<BR><U>ProgressFunc</U> <I>(function)</I> = The function to call when there is progress<BR><U>SuccessFunc</U> <I>(function)</I> = The function to call when the JSON string is laoded<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Decodes the specified string as JSON encoded asynchronously&#x2e;<BR></PRE>
 		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
@@ -6217,6 +6409,16 @@
 		<PRE>Json:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Destroys the json object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Json:Destroyed" style="display:none">
+		<H3>Json:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Json:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Json class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Json class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Json:Id" style="display:none">
@@ -6375,6 +6577,16 @@
 		<PRE>Mask:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>destroys the mask and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Mask:Destroyed" style="display:none">
+		<H3>Mask:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Mask:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Mask class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Mask class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Mask:Erase" style="display:none">
@@ -6593,6 +6805,16 @@
 		<PRE>Palette:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Destroys the palette and frees the memory associated with it&#x2e; This does not affect the active palette as this is stored on the GPU&#x2e;<BR></PRE>
+		<H4><A href="#idx:Palette">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Palette:Destroyed" style="display:none">
+		<H3>Palette:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Palette:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Palette class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Palette class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Palette">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Palette:Fill" style="display:none">
@@ -6959,6 +7181,16 @@
 		<PRE>Destroys the pcm object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Pcm:Destroyed" style="display:none">
+		<H3>Pcm:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Pcm:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Pcm class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Pcm class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Pcm:Id" style="display:none">
 		<H3>Pcm:Id</H3>
 		<H4>Syntax:-</H4>
@@ -7029,6 +7261,16 @@
 		<PRE>Destroys the specified screenshot object&#x2e;<BR></PRE>
 		<H4><A href="#idx:SShot">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="SShot:Destroyed" style="display:none">
+		<H3>SShot:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = SShot:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the SShot class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the SShot class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:SShot">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="SShot:Id" style="display:none">
 		<H3>SShot:Id</H3>
 		<H4>Syntax:-</H4>
@@ -7077,6 +7319,16 @@
 		<PRE>Sample:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Destroys the sample object and frees all the memory associated with it&#x2e;<BR>The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Sample">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Sample:Destroyed" style="display:none">
+		<H3>Sample:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Sample:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Sample class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Sample class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Sample">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Sample:Duration" style="display:none">
@@ -7184,9 +7436,9 @@
 	<DIV id="Socket.CreateHTTP" style="display:none">
 		<H3>Socket.CreateHTTP</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Socket.CreateHTTP(<I><U>Cipher</U>, <U>Address</U>, <U>Port</U>, <U>Request</U>, <U>Scheme</U>, <U>Headers</U>, <U>Body</U>, <U>Error</U>, <U>Success</U></I>)</PRE>
+		<PRE>Socket.CreateHTTP(<I><U>Cipher</U>, <U>Address</U>, <U>Port</U>, <U>Request</U>, <U>Scheme</U>, <U>Headers</U>, <U>Body</U>, <U>Success</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Cipher</U> <I>(string)</I> = Make SSL connection and try this cipher.<BR><U>Address</U> <I>(string)</I> = The network destination address to connect to.<BR><U>Port</U> <I>(integer)</I> = The port to connect to (1-65535).<BR><U>Request</U> <I>(string)</I> = The HTTP URI request resource.<BR><U>Scheme</U> <I>(string)</I> = The HTTP scheme (GET, POST, PUT, DELETE, etc.).<BR><U>Headers</U> <I>(string)</I> = A carriage return separated list of headers.<BR><U>Body</U> <I>(string)</I> = A body of text to send with the request.<BR><U>Error</U> <I>(function)</I> = Function to call when a critical error occurs<BR><U>Success</U> <I>(function)</I> = Function to call when any other event occurs<BR></PRE>
+		<PRE><U>Cipher</U> <I>(string)</I> = Make SSL connection and try this cipher.<BR><U>Address</U> <I>(string)</I> = The network destination address to connect to.<BR><U>Port</U> <I>(integer)</I> = The port to connect to (1-65535).<BR><U>Request</U> <I>(string)</I> = The HTTP URI request resource.<BR><U>Scheme</U> <I>(string)</I> = The HTTP scheme (GET, POST, PUT, DELETE, etc.).<BR><U>Headers</U> <I>(string)</I> = A carriage return separated list of headers.<BR><U>Body</U> <I>(string)</I> = A body of text to send with the request.<BR><U>Success</U> <I>(function)</I> = Function to call when any other event occurs<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>This is a minimalist implementation of a HTTP request and will support most &#x28;if not all&#x29; operations one would need&#x2e; The function returns immediately&#x2e; The worker thread uses blocking socket operations&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
@@ -7199,18 +7451,6 @@
 		<PRE><U>Count</U> <I>(integer)</I> = Total number of sockets disconnected.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Disconnects all active Sockets&#x2e; Returns immediately&#x2e;<BR></PRE>
-		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Socket.OAuth11" style="display:none">
-		<H3>Socket.OAuth11</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Text</U> = Socket.OAuth11(<I><U>Method</U>, <U>Scheme</U>, <U>Port</U>, <U>Resource</U>, <U>Params</U>, <U>Body</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Method</U> <I>(string)</I> = The HTTP method (GET, PUT, etc.).<BR><U>Scheme</U> <I>(string)</I> = The HTTP scheme (HTTP, HTTPS, etc.);<BR><U>Port</U> <I>(integer)</I> = The HTTP port connected.<BR><U>Resource</U> <I>(string)</I> = The HTTP resource requested.<BR><U>Params</U> <I>(string)</I> = A HTTP URI list of variables that will be sent.<BR><U>Body</U> <I>(string)</I> = Any HTTP body text sent.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Text</U> <I>(string)</I> = An OAuth11 compatible string that you can pass to web request.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a OAuth v1&#x2e;1 string to use with HTTP requests&#x2e; Twitter is an example that uses this system&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Socket.SocketWaitAsync" style="display:none">
@@ -7313,6 +7553,16 @@
 		<PRE>Aborts&#x2c; disconnects and destroys the socket object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Socket:Destroyed" style="display:none">
+		<H3>Socket:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Socket:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Socket class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Socket class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Socket:Disconnect" style="display:none">
 		<H3>Socket:Disconnect</H3>
 		<H4>Syntax:-</H4>
@@ -7373,14 +7623,14 @@
 		<PRE>Returns the IP address of the socket&#x2e; Only valid when the hostname has been resolved&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Socket:GetIPAddressAndPortEx" style="display:none">
-		<H3>Socket:GetIPAddressAndPortEx</H3>
+	<DIV id="Socket:GetIPAddressEx" style="display:none">
+		<H3>Socket:GetIPAddressEx</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Address</U> = Socket:GetIPAddressAndPortEx()</PRE>
+		<PRE><U>Address</U> = Socket:GetIPAddressEx()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Address</U> <I>(string)</I> = The IP address of the socket.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the IP address of the socket&#x2e; Only valid when the hostname has been resolved&#x2e;<BR></PRE>
+		<PRE>Returns the IP address of the socket and the port&#x2e; Only valid when the hostname has been resolved&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Socket:GetId" style="display:none">
@@ -7391,6 +7641,16 @@
 		<PRE><U>Id</U> <I>(integer)</I> = The id of the Socket object.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the unique id of the Socket object&#x2e;<BR></PRE>
+		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Socket:GetPort" style="display:none">
+		<H3>Socket:GetPort</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Port</U> = Socket:GetPort()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Port</U> <I>(integer)</I> = The port number of the socket.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the port number of the socket&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Socket:GetRXBytes" style="display:none">
@@ -7619,6 +7879,16 @@
 		<PRE>Source:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Stops and destroys the source object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Source:Destroyed" style="display:none">
+		<H3>Source:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Source:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Source class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Source class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Source:GetDirection" style="display:none">
@@ -8147,6 +8417,16 @@
 		<PRE>Destroys the stat object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Stat:Destroyed" style="display:none">
+		<H3>Stat:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Stat:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Stat class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Stat class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Stat:Finish" style="display:none">
 		<H3>Stat:Finish</H3>
 		<H4>Syntax:-</H4>
@@ -8325,6 +8605,16 @@
 		<PRE>Stream:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Stops and destroys the stream object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stream">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stream:Destroyed" style="display:none">
+		<H3>Stream:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Stream:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Stream class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Stream class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stream">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Stream:GetBitRate" style="display:none">
@@ -8949,6 +9239,16 @@
 		<PRE>Destroys the texture and frees all the memory associated with it&#x2e; The OpenGL handles and VRAM allocated by it are freed after the main FBO has has been rendered&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Texture:Destroyed" style="display:none">
+		<H3>Texture:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Texture:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Texture class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Texture class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Texture:Download" style="display:none">
 		<H3>Texture:Download</H3>
 		<H4>Syntax:-</H4>
@@ -8967,6 +9267,16 @@
 		<PRE>Texture:Dump()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Dumps the texture to the specified file in the specified format&#x2e;<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Texture:GetFlags" style="display:none">
+		<H3>Texture:GetFlags</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Flags</U> = Texture:GetFlags()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Flags</U> <I>(integer)</I> = Texture flags value<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the current texture flags&#x2e;<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Texture:GetHeight" style="display:none">
@@ -9555,18 +9865,6 @@
 		<PRE>A fast way of counting the number of occurences in a string&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Util.DecodeUUID" style="display:none">
-		<H3>Util.DecodeUUID</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DecodeUUID(<I><U>High64</U>, <U>Low64</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer.<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The decoded UUID.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Decodes the specified UUID integers to a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Util.Duration" style="display:none">
 		<H3>Util.Duration</H3>
 		<H4>Syntax:-</H4>
@@ -9577,18 +9875,6 @@
 		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Converts the specified number of seconds into a human readable duration string in the format of 000&#x3a;00&#x3a;00&#x3a;00&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.EncodeUUID" style="display:none">
-		<H3>Util.EncodeUUID</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>High64</U>, <U>Low64</U> = Util.EncodeUUID(<I><U>UUID</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>UUID</U> <I>(string)</I> = The UUID string to recode.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Encodes the specified UUID string to two 64&#x2d;bit integers&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.EntDecode" style="display:none">
@@ -10170,13 +10456,13 @@
 	<DIV id="Util.ParseUrl" style="display:none">
 		<H3>Util.ParseUrl</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Result</U>, <U>Scheme</U>, <U>Secure</U>, <U>Host</U>, <U>Port</U>, <U>Resource</U>, <U>Bookmark</U>, <U>Username</U>, <U>Password</U> = Util.ParseUrl(<I><U>String</U></I>)</PRE>
+		<PRE><U>Result</U>, <U>Url</U>, <U>Scheme</U>, <U>Secure</U>, <U>Host</U>, <U>Port</U>, <U>Resource</U>, <U>Bookmark</U>, <U>Username</U>, <U>Password</U>, <U>Params</U> = Util.ParseUrl(<I><U>String</U>, <U>Post</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>String</U> <I>(string)</I> = The url to parse<BR></PRE>
+		<PRE><U>String</U> <I>(string)</I> = The url to parse<BR><U>Post</U> <I>(integer)</I> = Encode, decode or none<BR></PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(integer)</I> = The result code of the parse<BR><U>Scheme</U> <I>(string)</I> = The scheme string 'http' or 'https'<BR><U>Secure</U> <I>(boolean)</I> = The conneciton would need to use SSL?<BR><U>Host</U> <I>(string)</I> = The hostname to connect to<BR><U>Port</U> <I>(integer)</I> = The port number to connect to<BR><U>Resource</U> <I>(string)</I> = The resource to request<BR><U>Bookmark</U> <I>(string)</I> = The bookmark part of the request<BR><U>Username</U> <I>(string)</I> = The username part of the request<BR><U>Password</U> <I>(string)</I> = The password part of the request<BR></PRE>
+		<PRE><U>Result</U> <I>(integer)</I> = The result code of the parse<BR><U>Url</U> <I>(string)</I> = The canonicalised url<BR><U>Scheme</U> <I>(string)</I> = The scheme string 'http' or 'https'<BR><U>Secure</U> <I>(boolean)</I> = The conneciton would need to use SSL?<BR><U>Host</U> <I>(string)</I> = The hostname to connect to<BR><U>Port</U> <I>(integer)</I> = The port number to connect to<BR><U>Resource</U> <I>(string)</I> = The resource to request<BR><U>Bookmark</U> <I>(string)</I> = The bookmark part of the request<BR><U>Username</U> <I>(string)</I> = The username part of the request<BR><U>Password</U> <I>(string)</I> = The password part of the request<BR><U>Params</U> <I>(table)</I> = The key/value table of parameters parsed<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Parses the specified url and returns all the information about it </PRE>
+		<PRE>Parses the specified url and returns all the information about it&#x2e; The &#x27;Post&#x27; argument refers to one of the following&#x2e;&#x2e;&#x2e;<BR>[0] Don&#x27;t modify parameters&#x2e;<BR>[1] URL Encode parameters &#x28;URL passed is not properly URL encoded&#x29;&#x2e;<BR>[2] URL Decode parameters &#x28;URL passed is already properly encoded&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Pluralise" style="display:none">
@@ -10237,16 +10523,6 @@
 		<PRE><U>Result</U> <I>(string)</I> = The resulting string<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Converts the specified number into a positional number&#x2e; i&#x2e;e&#x2e; 1&#x3d;1st&#x2c; 2&#x3d;&#x22;2nd&#x22;&#x2c; 11&#x3d;&#x22;11th&#x22;&#x2c; 98&#x3d;&#x22;98th&#x22;&#x2c; etc&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.RandUUID" style="display:none">
-		<H3>Util.RandUUID</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>High64</U>, <U>Low64</U> = Util.RandUUID()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Generates a random UUIDv4 </PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Random" style="display:none">
@@ -10436,7 +10712,41 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>ByteCode</U> <I>(string)</I> = The 'value' cast as a string.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Casts the specified 24&#x2d;bit integer directly to a string&#x2e; This is useful as a quicker way to create unicode characters&#x2e; All bits above 24 are automatically stripped by a bitwise operation for safety&#x2e;<BR></PRE>
+		<PRE>Casts the specified 24&#x2d;bit integer directly to a string which is different from &#x27;utf8&#x2e;char&#x27; as you specify the integer with the actual utf8 encoded bytes in them&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.UUIDDecode" style="display:none">
+		<H3>Util.UUIDDecode</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.UUIDDecode(<I><U>High64</U>, <U>Low64</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer.<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The decoded UUID.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Decodes the specified UUID integers to a string&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.UUIDEncode" style="display:none">
+		<H3>Util.UUIDEncode</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>High64</U>, <U>Low64</U> = Util.UUIDEncode(<I><U>UUID</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>UUID</U> <I>(string)</I> = The UUID string to recode.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Encodes the specified UUID string to two 64&#x2d;bit integers&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.UUIDRandom" style="display:none">
+		<H3>Util.UUIDRandom</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>High64</U>, <U>Low64</U> = Util.UUIDRandom()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Generates a random UUIDv4 </PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.UrlDecode" style="display:none">
@@ -10557,6 +10867,16 @@
 		<PRE>Variable:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Unregisters the specified console command&#x2e;<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Variable:Destroyed" style="display:none">
+		<H3>Variable:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Variable:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Variable class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Variable class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Variable:Empty" style="display:none">
@@ -10771,6 +11091,16 @@
 		<PRE>Video:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Stops and destroys the stream object and frees all the memory associated with it&#x2e; The OpenGL handles and VRAM associated with the object will be freed after the main FBO has been rendered&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Video:Destroyed" style="display:none">
+		<H3>Video:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Video:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Video class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Video class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Video:GetATime" style="display:none">
@@ -11553,7 +11883,7 @@
 	</DIV>
 	<DIV id="cv.app_cflags" style="display:none">
 		<H3>app_cflags</H3>
-		<PRE>Specifies how the host wants to be run with the following flags&#x2e;&#x2e;&#x2e;<BR>[0x1] CFL_TERMINAL &#x3d; Opens &#x28;Win32&#x29; or reuses &#x28;Unix&#x29; a console window&#x2e;<BR>[0x2] CFL_AUDIO    &#x3d; Initialises an OpenAL audio context and exposes API&#x2e;<BR>[0x4] CFL_VIDEO    &#x3d; Initialises an OpenGL context&#x2b;window and exposes API&#x2e;<BR></PRE>
+		<PRE>Specifies how the host wants to be run with the following flags&#x2e;&#x2e;&#x2e;<BR>[0x0] CFL_BASIC &#x3d; Only output to stdout with no input &#x28;Ctrl&#x2b;C aborts&#x29;&#x2e;<BR>[0x1] CFL_TEXT  &#x3d; Inits a Win32 or NCurses console window&#x2e;<BR>[0x2] CFL_AUDIO &#x3d; Inits an OpenAL audio context and API&#x2e;<BR>[0x4] CFL_VIDEO &#x3d; Inits an OpenGL context&#x2b;window and API&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.app_cmdline" style="display:none">
@@ -11763,7 +12093,7 @@
 	</DIV>
 	<DIV id="cv.con_disabled" style="display:none">
 		<H3>con_disabled</H3>
-		<PRE>Specifies wether the console is permanantly disabled or not&#x2e;<BR></PRE>
+		<PRE>Specifies wether the console is permanantly disabled or not&#x2e; It ignores the CON_GCWTERM setting as well&#x2e; This does not disable the NCurses mode terminal which cannot be disabled&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.con_font" style="display:none">
@@ -11824,6 +12154,11 @@
 	<DIV id="cv.con_fontwidth" style="display:none">
 		<H3>con_fontwidth</H3>
 		<PRE>Specifies the width of the loaded console FreeType font&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.con_gcwterm" style="display:none">
+		<H3>con_gcwterm</H3>
+		<PRE>Enable to allow the graphical console to show when &#x27;app_cflags&#x27; is set to include a terminal window as well as the main engine window&#x2e; It is set to &#x27;false&#x27; by default&#x2e; This is useful if you do live on&#x2d;screen testing of your application and work with sensitive information in which you&#x27;ll want to keep this disabled to prevent potential leaking of private information on&#x2d;screen&#x2e; It can only be set in the application manifest file&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.con_height" style="display:none">
@@ -12602,6 +12937,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Mon Sep 01 12:45:36 2025 +0100</ADDRESS>
+	This document was generated at Wed Oct 01 01:31:01 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

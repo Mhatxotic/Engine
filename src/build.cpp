@@ -30,7 +30,6 @@ namespace E {                          // Put everything in engine namespace
 #include "utf.hpp"                     // UTF strings utility header
 #include "std.hpp"                     // StdLib function helpers header
 #include "string.hpp"                  // String utilities header
-#include "url.hpp"                     // Url parsing library
 #include "error.hpp"                   // Error handling utility header
 #include "token.hpp"                   // String tokenisation utility header
 #include "parser.hpp"                  // String parsing utility header
@@ -62,12 +61,14 @@ namespace E {                          // Put everything in engine namespace
 #include "dimcoord.hpp"                // DimensionCoord class header
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
+#include "toggler.hpp"                 // Toggler class header
 #include "luautil.hpp"                 // Lua utility functions header
 #include "luaref.hpp"                  // Lua reference helper class header
 #include "luaevent.hpp"                // Lua event helper class header
 #include "luafunc.hpp"                 // Lua callback helper class header
 #include "async.hpp"                   // Async file loading class header
 #include "crypt.hpp"                   // Cryptography utilities header
+#include "url.hpp"                     // Url parsing library
 #include "uuid.hpp"                    // UuId parsing header
 #include "codec.hpp"                   // Codec classes header
 #include "archive.hpp"                 // Archive handling class header
@@ -217,7 +218,8 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
                    "-Wno-gnu-zero-variadic-macro-arguments "
                    "-Wno-covered-switch-default -Wno-switch-enum "
                    "-Wno-poison-system-directories -Wno-global-constructors "
-                   "-Wno-padded -Wno-cast-function-type-strict",
+                   "-Wno-padded -Wno-cast-function-type-strict "
+                   "-Wno-reserved-identifier",
   /* CCAA       */ envWindowsMSVC.cpCCAA,
   /* CCAB       */ "-DBETA -MT -Z7 -O2 -GS- -Gw",
   /* CCAR       */ "-DRELEASE -MT -O2 -GS- -Gw",
@@ -1235,6 +1237,7 @@ static int GenDoc(void)
     "\t<META name=\"robots\" content=\"index,follow\">\n"
     "\t<META name=\"viewport\" "
             "content=\"width=device-width, initial-scale=1\">\n"
+    "\t<LINK rel=\"icon\" type=\"image/x-icon\" href=\"favicon.ico\">\n"
     "\t<TITLE>$ $.$.$.$ API reference</TITLE>\n"
     "\t<STYLE media=\"screen\">\n"
     "\t* { margin:0; padding:0 }\n"

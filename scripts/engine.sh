@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # *** Mhatxotic Engine Shell Helper Script.
 # *** Copyright © 2006-present, Mhatxotic Design.
@@ -14,6 +14,7 @@ USRBINBASENAME=$ROOTUSRBIN/basename
 USRBINDIRNAME=$ROOTUSRBIN/dirname
 USRBINREADLINK=$ROOTUSRBIN/readlink
 USRBINGDB=$ROOTUSRBIN/gdb
+USRBINLEAKS=$ROOTUSRBIN/leaks
 USRBINLLDB=lldb
 #USRBINLLDB=$ROOTUSRBIN/lldb
 USRBINTR=$ROOTUSRBIN/tr
@@ -46,8 +47,12 @@ if [ ! -z $1 ]; then
   elif [ $1 = "valgrind" ]; then
     VALGRIND=1
     shift
+  elif [ $1 = "leaks" ]; then
+    LEAKS=1
+    shift
   fi
 fi
+
 
 # Compare result and set appropriate executable extension
 # Get unix environment
@@ -65,16 +70,15 @@ case "$UNAME" in
     ;;
   Darwin*)
     if [ ! -z $DEBUG ]; then
-#        export DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib
-#        export NSZombieEnabled=YES
-#        export MallocHelp=YES
-#        export NSDeallocateZombies=NO
-#        export MallocCheckHeapEach=1000000
-#        export MallocCheckHeapStart=1000000
-#        export MallocScribble=YES
-#        export MallocGuardEdges=YES
-#        export MallocCheckHeapAbort=1
-      PREFIX="$USRBINLLDB -- "
+      E="settings set target.env-vars DYLD_INSERT_LIBRARIES=/usr/lib/libgmalloc.dylib NSZombieEnabled=YES MallocHelp=YES NSDeallocateZombies=NO MallocCheckHeapEach=1000000 MallocCheckHeapStart=1000000 MallocScribble=YES MallocGuardEdges=YES MallocCheckHeapAbort=1"
+#     P="process handle SIGPIPE -s true -p true -n true"
+      P=""
+      PREFIX="$USRBINLLDB -o \"$E\" -o \"$P\" -- "
+      EXEPARAMS=" log_file=-"
+    fi
+    if [ ! -z $LEAKS ]; then
+      PREFIX="$USRBINLEAKS --atExit -- "
+      EXEPARAMS=" log_file=-"
     fi
     EXT=mac
     ;;
@@ -105,7 +109,7 @@ else
   else
     EXE=$ENGBIN/engine64.$EXT
   fi
-  EXEPARAMS=" ast_basedir=$PWD sql_db=$BASE"
+  EXEPARAMS="$EXEPARAMS ast_basedir=$PWD sql_db=$BASE"
 fi
 
 # Check that the file exists and is executable and try to make it executable
@@ -123,4 +127,4 @@ if [ ! -x "$EXE" ]; then
 fi
 
 # Go execute the application
-$PREFIX$EXE$EXEPARAMS $*
+/bin/bash -c "$PREFIX$EXE$EXEPARAMS $*"

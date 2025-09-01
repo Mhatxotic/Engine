@@ -21,7 +21,7 @@ ConCmdStaticList{{
 // ! archives
 // ? Lists archive objects that are loaded into the game engine.
 /* ------------------------------------------------------------------------- */
-{ "archives", 1, 1, CFL_NONE, [](const Args &){
+{ "archives", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to assets collector class and lock it so it's not changed
 const LockGuard lgAssetsSync{ cArchives->CollectorGetMutex() };
@@ -61,7 +61,7 @@ cConsole->AddLineA("Audio subsystem reset ",
 // ! assets
 // ? Lists assets that are loaded into the game engine.
 /* ------------------------------------------------------------------------- */
-{ "assets", 1, 1, CFL_NONE, [](const Args &){
+{ "assets", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to arrays collector class and lock it so it's not changed
 const LockGuard lgAssetsSync{ cAssets->CollectorGetMutex() };
@@ -183,7 +183,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ! bins
 // ? Lists currently loaded bin objects.
 /* ------------------------------------------------------------------------- */
-{ "bins", 1, 1, CFL_NONE, [](const Args &){
+{ "bins", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Text table class to help us write neat output
 Statistic sTable;
@@ -193,9 +193,9 @@ sTable.Header("ID", false).Header("WIDTH").Header("HEIGHT").Header("OCCUPANCY")
 for(const Bin*const bPtr : *cBins)
 { // Get reference to class and write its data to the table
   const Bin &bRef = *bPtr;
-  sTable.DataN(bRef.CtrGet()).DataN(bRef.DimGetHeight())
-        .DataN(bRef.Occupancy(), 7).DataN(bRef.Total()).DataN(bRef.Used())
-        .DataN(bRef.Free());
+  sTable.DataN(bRef.CtrGet()).DataN(bRef.DimGetWidth())
+        .DataN(bRef.DimGetHeight()).DataN(bRef.Occupancy(), 7)
+        .DataN(bRef.Total()).DataN(bRef.Used()).DataN(bRef.Free());
 } // Log counts
 cConsole->AddLineA(sTable.Finish(),
   StrCPluraliseNum(cBins->size(), "bin.", "bins."));
@@ -206,7 +206,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? Lists currently loaded X509 certificates which are populated by the
 // ? 'net_castore' cvar on startup.
 /* ------------------------------------------------------------------------- */
-{ "certs", 1, 1, CFL_NONE, [](const Args &){
+{ "certs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Required parser class
 using namespace IParser::P;
@@ -237,7 +237,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ! cla
 // ? Lists all command-line arguments sent to the process.
 /* ------------------------------------------------------------------------- */
-{ "cla", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "cla", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get list of environment variables
 const StrVector &svArgs = cCmdLine->CmdLineGetArgList();
@@ -264,7 +264,7 @@ cConsole->AddLineA(sTable.Finish(), StrCPluraliseNum(stCount,
 // ! clh
 // ? Flushes the historic use of commands entered into the console.
 /* ------------------------------------------------------------------------- */
-{ "clh", 1, 1, CFL_NONE, [](const Args &){
+{ "clh", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 cConsole->ClearHistory();
 /* ------------------------------------------------------------------------- */
@@ -273,7 +273,7 @@ cConsole->ClearHistory();
 // ! cls
 // ? Flushes the console output buffer.
 /* ------------------------------------------------------------------------- */
-{ "cls", 1, 1, CFL_NONE, [](const Args &){
+{ "cls", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 cConsole->Flush();
 /* ------------------------------------------------------------------------- */
@@ -283,7 +283,7 @@ cConsole->Flush();
 // ? Shows all the available console commands. You can optionally specify
 // ? an argument to partially match the beginning of each command.
 /* ------------------------------------------------------------------------- */
-{ "cmds", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "cmds", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Build commands list and if commands were matched? Print them all
 string strMatched;
@@ -300,7 +300,7 @@ else cConsole->AddLineF("No match from $.",
 // ! con
 // ? Dump console information. For reference only.
 /* ========================================================================= */
-{ "con", 1, 1, CFL_NONE, [](const Args &){
+{ "con", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Write console status
 cConsole->AddLineF("Console flags are currently 0x$$$ ($).\n"
@@ -308,12 +308,12 @@ cConsole->AddLineF("Console flags are currently 0x$$$ ($).\n"
                     "- Input commands: $ (Maximum: $).\n"
                     "- Engine commands: $.",
   hex, cConsole->FlagGet(), dec, StrFromEvalTokens({
-    { cConsole->FlagIsSet(CF_CANTDISABLE), 'D' },
     { cConsole->FlagIsSet(CF_IGNOREKEY),   'K' },
     { cConsole->FlagIsSet(CF_AUTOSCROLL),  'A' },
     { cConsole->FlagIsSet(CF_AUTOCOPYCVAR),'C' },
     { cConsole->FlagIsSet(CF_INSERT),      'I' },
-    { cConsole->FlagIsSet(CF_ENABLED),     'E' }
+    { cConsole->FlagIsSet(CF_ENABLED),     'E' },
+    { cConsole->FlagIsSet(CF_LOCKED),      'L' }
   }),
   cConsole->GetOutputCount(), cConsole->GetOutputMaximum(),
   cConsole->GetInputCount(), cConsole->GetInputMaximum(),
@@ -324,7 +324,7 @@ cConsole->AddLineF("Console flags are currently 0x$$$ ($).\n"
 // ! conlog
 // ? Dumps the entire console backlog to log.
 /* ========================================================================= */
-{ "conlog", 1, 1, CFL_NONE, [](const Args &){
+{ "conlog", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Copy all the console lines to log and report how many lines we copied
 cConsole->AddLineA(StrCPluraliseNum(cConsole->ToLog(), "line", "lines"),
@@ -335,7 +335,7 @@ cConsole->AddLineA(StrCPluraliseNum(cConsole->ToLog(), "line", "lines"),
 // ! cpu
 // ? Displays information about the processor and how the engine is using it.
 /* ========================================================================= */
-{ "cpu", 1, 1, CFL_NONE, [](const Args &){
+{ "cpu", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Update cpu usage times
 cSystem->UpdateCPUUsage();
@@ -364,7 +364,7 @@ cConsole->AddLineF(
 // ? to test the crash handling routines. All current unsaved changes will be
 // ? permanently lost. You have been warned!
 /* ========================================================================= */
-{ "crash", 1, 1, CFL_NONE, [](const Args &){
+{ "crash", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 System::CriticalHandler("Requested operation");
 /* ------------------------------------------------------------------------- */
@@ -381,7 +381,7 @@ System::CriticalHandler("Requested operation");
 // ? the Mhatxotic Engine Project Management Utility parsing all the
 // ? 'licenses/*.txt' files.
 /* ========================================================================= */
-{ "credits", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "credits", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Do we have a parameter?
 if(aArgs.size() > 1)
@@ -413,7 +413,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? using this command when sharing desktops as this reveal the value even
 // ? if the variable is set to 'confidential'.
 /* ========================================================================= */
-{ "cvars", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "cvars", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(VariablesMakeList(cCVars->GetVarList(),
   aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank()));
@@ -423,7 +423,7 @@ cConsole->AddLine(VariablesMakeList(cCVars->GetVarList(),
 // ! cvclr
 // ? Purges all currently unrecognised orphan cvars from the database.
 /* ========================================================================= */
-{ "cvclr", 1, 1, CFL_NONE, [](const Args &){
+{ "cvclr", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLineA(StrCPluraliseNum(cCVars->Clean(),
   "cvar", "cvars"), " purged.");
@@ -433,7 +433,7 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->Clean(),
 // ! cvload
 // ? Replaces the current variable with values from the database.
 /* ========================================================================= */
-{ "cvload", 1, 1, CFL_NONE, [](const Args &){
+{ "cvload", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLineA(StrCPluraliseNum(cCVars->LoadFromDatabase(),
   "cvar", "cvars"), " reloaded.");
@@ -448,7 +448,7 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->LoadFromDatabase(),
 // ? use the private key for own purposes then all data using the old private
 // ? key will 1destroy all encrypted data using it.
 /* ========================================================================= */
-{ "cvnpk", 1, 1, CFL_NONE, [](const Args &){
+{ "cvnpk", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Create the private key and if succeeded? Show the result
 if(cSql->CreatePrivateKey())
@@ -464,7 +464,7 @@ else cConsole->AddLine("Failed to create new private key!");
 // ? database that have not been registered by LUA. When a variable is
 // ? unregistered then the variable is placed back in this pending list.
 /* ========================================================================= */
-{ "cvpend", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "cvpend", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(VariablesMakeList(cCVars->GetInitialVarList(),
   aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank()));
@@ -474,7 +474,7 @@ cConsole->AddLine(VariablesMakeList(cCVars->GetInitialVarList(),
 // ! cvsave
 // ? Commit all unsaved variables to the SQLite database in volatile storage.
 /* ========================================================================= */
-{ "cvsave", 1, 1, CFL_NONE, [](const Args &){
+{ "cvsave", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLineA(StrCPluraliseNum(cCVars->Save(), "cvar", "cvars"),
   " commited.");
@@ -487,7 +487,7 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->Save(), "cvar", "cvars"),
 // ? an archive that archive filename and its entry ID number is displayed
 // ? instead.
 /* ========================================================================= */
-{ "dir", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "dir", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Make and checkfilename
 const string &strVal = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
@@ -596,7 +596,7 @@ cConsole->AddLineF("$$ and $ totalling $ ($) in $.",
 // ! env
 // ? Show all operating system environment variables at process start.
 /* ========================================================================= */
-{ "env", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "env", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get list of environment variables
 const StrStrMap &ssmEnv = cCmdLine->CmdLineGetEnvList();
@@ -624,7 +624,7 @@ cConsole->AddLineA(sTable.Finish(), StrCPluraliseNum(ssmEnv.size(),
 // ! events
 // ? Shows the current event queue. This should always be empty.
 /* ========================================================================= */
-{ "events", 1, 1, CFL_NONE, [](const Args &){
+{ "events", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Log event counts
 cConsole->AddLineF("$ and $.",
@@ -686,7 +686,7 @@ cConsole->AddLineF("$$ totalling $ and $.", sTable.Finish(),
 // ! files
 // ? Shows all created 'File' objects created by LUA.
 /* ========================================================================= */
-{ "files", 1, 1, CFL_NONE, [](const Args &){
+{ "files", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Text table class to help us write neat output
 Statistic sTable;
@@ -714,7 +714,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? position of the occurrence BEGINNING FROM the last log entry. Repeat the
 // ? same command to continue the search for the next occurrence.
 /* ========================================================================= */
-{ "find", 2, 0, CFL_NONE, [](const Args &aArgs){
+{ "find", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Find text in console backlog and if not found, show message
 cConsole->FindText(StrImplode(aArgs, 1));
@@ -760,7 +760,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? Shows all created Freetype font 'Ftf' object classes created by LUA
 // ? including classes internally used by the engine.
 /* ========================================================================= */
-{ "ftfs", 1, 1, CFL_NONE, [](const Args &){
+{ "ftfs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to fonts collector class and lock it so it's not changed
 const LockGuard lgFtfsSync{ cFtfs->CollectorGetMutex() };
@@ -848,7 +848,7 @@ cEvtMain->RequestGLReInit();
 // ? Shows all created 'Image' object classes created by LUA including classes
 // ? internally used by the engine.
 /* ========================================================================= */
-{ "images", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "images", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get reference to images collector class and lock it so it's not changed
 const LockGuard lgImagesSync{ cImages->CollectorGetMutex() };
@@ -910,7 +910,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ! imgfmts
 // ? Shows all the supported image codec formats supported by the engine.
 /* ========================================================================= */
-{ "imgfmts", 1, 1, CFL_NONE, [](const Args &){
+{ "imgfmts", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Text table class to help us write neat output
 Statistic sTable;
@@ -1012,7 +1012,7 @@ cConsole->AddLineF("$$ connected ($ supported).\n"
 // ! jsons
 // ? Shows all created 'Json' object classes created by LUA.
 /* ========================================================================= */
-{ "jsons", 1, 1, CFL_NONE, [](const Args &){
+{ "jsons", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to jsons collector class and lock it so it's not changed
 const LockGuard lgJsonsSync{ cJsons->CollectorGetMutex() };
@@ -1024,7 +1024,7 @@ cConsole->AddLineA(StrCPluraliseNum(cJsons->size(), "json.", "jsons."));
 // ! lcalc
 // ? Performs a simple calculation using LUA.
 /* ========================================================================= */
-{ "lcalc", 2, 0, CFL_NONE, [](const Args &aArgs){
+{ "lcalc", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(cLua->CompileStringAndReturnResult(
   StrFormat("return $", StrImplode(aArgs, 1))));
@@ -1034,7 +1034,7 @@ cConsole->AddLine(cLua->CompileStringAndReturnResult(
 // ! lcmds
 // ? Shows all created 'Command' object classes created by LUA.
 /* ========================================================================= */
-{ "lcmds", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "lcmds", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Build LUA commands list and if commands were matched? Print them all
 string strMatched;
@@ -1055,7 +1055,7 @@ else cConsole->AddLineF("No match from $.",
 // ? function used is blocking this command then using the command a second
 // ? time will force destruction.
 /* ========================================================================= */
-{ "lend", 1, 1, CFL_NONE, [](const Args &){
+{ "lend", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Reinit lua and inform user of the result
 cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_END) ?
@@ -1069,7 +1069,7 @@ cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_END) ?
 // ? use the 'return' prefix and the result will be shown when the command has
 // ? finished executing.
 /* ========================================================================= */
-{ "lexec", 2, 0, CFL_NONE, [](const Args &aArgs){
+{ "lexec", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(cLua->CompileStringAndReturnResult(StrImplode(aArgs, 1)));
 /* ------------------------------------------------------------------------- */
@@ -1079,7 +1079,7 @@ cConsole->AddLine(cLua->CompileStringAndReturnResult(StrImplode(aArgs, 1)));
 // ? Shows all created 'LuaFunc' object classes created by the engine. These
 // ? are for reference only and cannot be interacted with directly with LUA.
 /* ========================================================================= */
-{ "lfuncs", 1, 1, CFL_NONE, [](const Args &){
+{ "lfuncs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to luarefs collector class and lock it so it's not changed
 const LockGuard lgLuaRefsSync(cLuaFuncs->CollectorGetMutex());
@@ -1111,7 +1111,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? Prints the entire listing of variables and functions in the LUA global
 // ? registry index (otherwise known as the '_G' table).
 /* ========================================================================= */
-{ "lg", 1, 0, CFL_NONE, [](const Args &aArgs){
+{ "lg", 1, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get lua state
 lua_State*const lS = cLua->GetState();
@@ -1171,7 +1171,7 @@ for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
     ssmpmMap.insert({ StrFromNum(LuaUtilToInt(lS, -2)),
       { LuaUtilGetStackType(lS, -1), LuaUtilGetStackTokens(lS, -1) } });
   // For everything else. Create item info struct and add to list
-  else ssmpmMap.insert({ lua_tostring(lS, -2),
+  else ssmpmMap.insert({ LuaUtilToString<char>(lS, -2),
     { LuaUtilGetStackType(lS, -1), LuaUtilGetStackTokens(lS, -1) } });
 } // Build string to output
 Statistic sTable;
@@ -1190,7 +1190,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? Performs full garbage collection. The amount of memory recovered is
 // ? displayed in the command output.
 /* ========================================================================= */
-{ "lgc", 1, 1, CFL_NONE, [](const Args &){
+{ "lgc", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Free data and get bytes freed, if there are any? Report them
 if(const size_t stT = cLua->GarbageCollect())
@@ -1204,7 +1204,7 @@ else cConsole->AddLine("No unreferenced memory!");
 // ? Dumps the entire engine log to console. If the 'log_file' cvar is changed
 // ? then there will be no command output.
 /* ========================================================================= */
-{ "log", 1, 1, CFL_NONE, [](const Args &){
+{ "log", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Colours for log levels
 typedef array<const Colour, LH_MAX> LogLevelColours;
@@ -1227,7 +1227,7 @@ cConsole->AddLineA(StrCPluraliseNum(cLog->size(), "line.", "lines."));
 // ! logclr
 // ? Clears the entire backlog.
 /* ========================================================================= */
-{ "logclr", 1, 1, CFL_NONE, [](const Args &){
+{ "logclr", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Lock access to the log
 const LockGuard lgLogSync{ cLog->GetMutex() };
@@ -1246,7 +1246,7 @@ cConsole->AddLineA(StrCPluraliseNum(stCount,
 // ! lpause
 // ? Requests to pause the engine.
 /* ========================================================================= */
-{ "lpause", 1, 1, CFL_NONE, [](const Args &){
+{ "lpause", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 cLua->RequestPause(true);
 /* ------------------------------------------------------------------------- */
@@ -1256,7 +1256,7 @@ cLua->RequestPause(true);
 // ? Performs an 'lreset' destroying the current sandbox, creates a new one and
 // ? then re-executes the starting script.
 /* ========================================================================= */
-{ "lreset", 1, 1, CFL_NONE, [](const Args &){
+{ "lreset", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Reinit lua and inform user of the result
 cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_REINIT) ?
@@ -1269,7 +1269,7 @@ cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_REINIT) ?
 // ? Resumes LUA sandbox execution after using 'lpause' or after an error
 // ? occurs. Only errors from asynchronous events are usually recoverable.
 /* ========================================================================= */
-{ "lresume", 1, 1, CFL_NONE, [](const Args &){
+{ "lresume", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 cEvtMain->Add(EMC_LUA_RESUME);
 /* ------------------------------------------------------------------------- */
@@ -1281,7 +1281,7 @@ cEvtMain->Add(EMC_LUA_RESUME);
 // ? problem where it did not get cleaned up. Please report this if so with
 // ? reproduction steps if you can.
 /* ========================================================================= */
-{ "lstack", 1, 1, CFL_NONE, [](const Args &){
+{ "lstack", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get lua state
 lua_State*const lS = cLua->GetState();
@@ -1306,7 +1306,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ! lvars
 // ? Shows all created 'Variable' object classes created by LUA.
 /* ========================================================================= */
-{ "lvars", 1, 0, CFL_NONE, [](const Args &aArgs){
+{ "lvars", 1, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(VariablesMakeList(cVariables->lcvmMap,
   aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank()));
@@ -1316,7 +1316,7 @@ cConsole->AddLine(VariablesMakeList(cVariables->lcvmMap,
 // ! masks
 // ? Shows all created 'Mask' object classes created by LUA.
 /* ========================================================================= */
-{ "masks", 1, 1, CFL_NONE, [](const Args &){
+{ "masks", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Text table class to help us write neat output
 Statistic sTable;
@@ -1340,7 +1340,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? the GPU memory (with compatible nVidia or ATI/AMD devices) and the
 // ? operating system.
 /* ========================================================================= */
-{ "mem", 1, 1, CFL_NONE, [](const Args &){
+{ "mem", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Update counters
 cSystem->UpdateMemoryUsageData();
@@ -1425,7 +1425,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? startup. On Windows, these are '.dll' files, '.dylib' files on MacOS and
 // ? '.so' shared objects on Linux.
 /* ========================================================================= */
-{ "mods", 1, 1, CFL_NONE, [](const Args &){
+{ "mods", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Make a table to automatically format our data neatly
 Statistic sTable;
@@ -1449,7 +1449,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? Shows how many class objects are loaded into the engine. You can use the
 // ? 'obj_*' cvars to limit these values.
 /* ========================================================================= */
-{ "objs", 1, 1, CFL_NONE, [](const Args &){
+{ "objs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Typedefs for building memory usage data
 struct MemoryUsageItem{ const string_view &strName; size_t stCount, stBytes; }
@@ -1536,7 +1536,7 @@ cConsole->AddLineA(StrCPluraliseNum(cPalettes->size(),
 // ! pcmfmts
 // ? Shows all the supported audio codecs by the engine.
 /* ========================================================================= */
-{ "pcmfmts", 1, 1, CFL_NONE, [](const Args &){
+{ "pcmfmts", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Text table class to help us write neat output
 Statistic sTable;
@@ -1558,7 +1558,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ! pcms
 // ? Shows all created 'Pcm' audio PCM data object classes created by LUA.
 /* ========================================================================= */
-{ "pcms", 1, 1, CFL_NONE, [](const Args &){
+{ "pcms", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Required pcm definition namespace
 using namespace IPcmDef::P;
@@ -1590,7 +1590,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ? Performs an 'lend' command and then asks the engine and process to
 // ? terminate after sandbox destruction.
 /* ========================================================================= */
-{ "quit", 1, 1, CFL_NONE, [](const Args &){
+{ "quit", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Quit the engine and inform user of the result
 cConsole->AddLine(cLua->TryEventOrForce(EMC_QUIT) ?
@@ -1605,7 +1605,7 @@ cConsole->AddLine(cLua->TryEventOrForce(EMC_QUIT) ?
 // ? (any argument) then the process is restarted WITHOUT the original
 // ? command-line arguments.
 /* ========================================================================= */
-{ "restart", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "restart", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Restart the process and inform user of the result
 cConsole->AddLine(aArgs.size() == 2 ?
@@ -1690,7 +1690,7 @@ LuaUtilRmStack(cLua->GetState(), 1);
 // ! sockets
 // ? Shows all created network 'Socket' object classes created by LUA.
 /* ========================================================================= */
-{ "sockets", 1, 2, CFL_NONE, [](const Args &aArgs){
+{ "sockets", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Id specified?
 if(aArgs.size() == 2)
@@ -1711,13 +1711,14 @@ if(aArgs.size() == 2)
     : ((sfcFlags.FlagIsSet(SS_CLOSEDBYSERVER)) ? "ServerClosed"
     : ((sfcFlags.FlagIsSet(SS_STANDBY))        ? "Disconnected"
     : ((sfcFlags.FlagIsSet(SS_DISCONNECTING))  ? "Disconnecting"
+    : ((sfcFlags.FlagIsSet(SS_UPGRADED))       ? "WebSocketConnected"
     : ((sfcFlags.FlagIsSet(SS_DOWNLOADING))    ? "Downloading"
     : ((sfcFlags.FlagIsSet(SS_REPLYWAIT))      ? "ReplyWait"
     : ((sfcFlags.FlagIsSet(SS_SENDREQUEST))    ? "SendRequest"
     : ((sfcFlags.FlagIsSet(SS_CONNECTED))      ? "Connected"
     : ((sfcFlags.FlagIsSet(SS_CONNECTING))     ? "Connecting"
     : ((sfcFlags.FlagIsSet(SS_INITIALISING))   ? "Initialising"
-    :                                  "Unknown"))))))))));
+    :                                            "Unknown")))))))))));
   // If the socket is not connected?
   if(sfcFlags.FlagIsClear(SS_CONNECTED))
     return cConsole->AddLineF("Status for socket $...\n"
@@ -1779,6 +1780,7 @@ for(const Socket*const sPtr : *cSockets)
     { sfcFlags.FlagIsSet(SS_SENDREQUEST),    'H' },
     { sfcFlags.FlagIsSet(SS_REPLYWAIT),      'R' },
     { sfcFlags.FlagIsSet(SS_DOWNLOADING),    'D' },
+    { sfcFlags.FlagIsSet(SS_UPGRADED),       'U' },
     { sfcFlags.FlagIsSet(SS_DISCONNECTING),  'N' },
     { sfcFlags.FlagIsSet(SS_STANDBY),        'B' },
     { sRef.GetError() != 0,                  'E' },
@@ -1801,7 +1803,7 @@ cConsole->AddLineF("$$ ($ connected).\n"
 // ! sockreset
 // ? Tries to forcefully close all currently open socket connections.
 /* ========================================================================= */
-{ "sockreset", 2, 2, CFL_NONE, [](const Args &aArgs){
+{ "sockreset", 2, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get parameter and if user requested to close all connections? Close all
 // the sockets and report how many we closed and return
@@ -1866,7 +1868,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ! sqlcheck
 // ? Checks the SQLite database to see if it is structured properly.
 /* ========================================================================= */
-{ "sqlcheck", 1, 1, CFL_NONE, [](const Args &){
+{ "sqlcheck", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Don't continue if theres a transaction in progress
 if(cSql->Active()) return cConsole->AddLine("Sql transaction already active!");
@@ -1881,7 +1883,7 @@ cSql->Reset();
 // ! sqldefrag
 // ? Compacts the SQLite database reducing it's size on disk.
 /* ========================================================================= */
-{ "sqldefrag", 1, 1, CFL_NONE, [](const Args &){
+{ "sqldefrag", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Don't continue if theres a transaction in progress
 if(cSql->Active()) return cConsole->AddLine("Sql transaction already active!");
@@ -1916,7 +1918,7 @@ cConsole->AddLine(qChange ?
 // ? Ends the currently 'in-progress' SQL transaction. Used only if for some
 // ? reason SQL is stuck in one.
 /* ========================================================================= */
-{ "sqlend", 1, 1, CFL_NONE, [](const Args &){
+{ "sqlend", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Don't continue if theres a transaction in progress
 if(!cSql->Active()) return cConsole->AddLine("Sql transaction not active!");
@@ -1930,7 +1932,7 @@ cConsole->AddLineF("Sql transaction$ ended.",
 // ? Performs the desired SQL query on the SQLite database. Theres is
 // ? absolutely zero restriction to using this so use it at your own risk.
 /* ========================================================================= */
-{ "sqlexec", 2, 0, CFL_NONE, [](const Args &aArgs){
+{ "sqlexec", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Don't continue if theres a transaction in progress
 if(cSql->Active()) return cConsole->AddLine("Sql transaction already active!");
@@ -2015,7 +2017,7 @@ cSql->Reset();
 // ! stats
 // ? Lists currently loaded stat objects.
 /* ------------------------------------------------------------------------- */
-{ "stats", 1, 1, CFL_NONE, [](const Args &){
+{ "stats", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Text table class to help us write neat output
 Statistic sTable;
@@ -2081,7 +2083,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ! system
 // ? Displays the currently detected operating system.
 /* ========================================================================= */
-{ "system", 1, 1, CFL_NONE, [](const Args &){
+{ "system", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Print OS stats
 cConsole->AddLineF("$-bit $ version $.$ build $ locale $.",
@@ -2133,7 +2135,7 @@ cConsole->AddLineA(sTable.Finish(), StrCPluraliseNum(cTextures->size() +
 // ? Shows all created 'Thread' object classes created by the engine. These
 // ? threads are not controllable by the guest and are here for reference only.
 /* ========================================================================= */
-{ "threads", 1, 1, CFL_NONE, [](const Args &){
+{ "threads", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Make a table to automatically format our data neatly
 Statistic sTable;
@@ -2168,7 +2170,7 @@ cConsole->AddLineA(sTable.Finish(),
 // ! time
 // ? Displays the current local and UTC time (if different).
 /* ========================================================================= */
-{ "time", 1, 1, CFL_NONE, [](const Args &){
+{ "time", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Timestamp to use
 const char*const cpFmt = "%a %b %d %H:%M:%S %Y %z";
@@ -2187,7 +2189,7 @@ else cConsole->AddLineF("Local time is $.\nUniversal time is $.",
 // ! version
 // ? Shows the current engine version.
 /* ========================================================================= */
-{ "version", 1, 1, CFL_NONE, [](const Args &){
+{ "version", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 cConsole->PrintVersion();
 /* ------------------------------------------------------------------------- */

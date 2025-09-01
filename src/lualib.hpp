@@ -140,21 +140,21 @@ template<typename AnyType, int itSize>
 /* -- Define the engine api list loaded at startup ------------------------- */
 const LuaLibStaticArray llsaAPI{{
   /* -- Make sure to follow the order of 'LuaClassId' from 'luadef.hpp' ---- */
-  LLFMx(Archive, NONE, ARCHIVE),       LLFMC(Asset, NONE, ASSET),
+  LLFMx(Archive, BASIC, ARCHIVE),      LLFMC(Asset, BASIC, ASSET),
   LLFxx(Atlas, VIDEO),                 LLFxx(Audio, AUDIO),
-  LLFMx(Bin, NONE, BIN),               LLFMx(Clip, VIDEO, CLIP),
-  LLFxC(Core, NONE),                   LLFMx(Command, NONE, COMMAND),
+  LLFMx(Bin, BASIC, BIN),              LLFMx(Clip, VIDEO, CLIP),
+  LLFxC(Core, BASIC),                  LLFMx(Command, BASIC, COMMAND),
   LLFxC(Display, VIDEO),               LLFMC(Fbo, VIDEO, FBO),
-  LLFMC(File, NONE, FILE),             LLFMC(Font, VIDEO, FONT),
-  LLFMx(Ftf, NONE, FTF),               LLFMC(Image, NONE, IMAGE),
-  LLFxC(Input, VIDEO),                 LLFMx(Json, NONE, JSON),
-  LLFMx(Mask, NONE, MASK),             LLFMx(Palette, VIDEO, PALETTE),
-  LLFMC(Pcm, NONE, PCM),               LLFMx(Sample, AUDIO, SAMPLE),
-  LLFMx(SShot, VIDEO, SSHOT),          LLFMx(Stat, NONE, STAT),
-  LLFMC(Socket, NONE, SOCKET),         LLFMx(Source, AUDIO, SOURCE),
-  LLFxC(Sql, NONE),                    LLFMC(Stream, AUDIO, STREAM),
-  LLFMx(Texture, VIDEO, TEXTURE),      LLFxx(Util, NONE),
-  LLFMC(Variable, NONE, VARIABLE),     LLFMC(Video, AUDIOVIDEO, VIDEO),
+  LLFMC(File, BASIC, FILE),            LLFMC(Font, VIDEO, FONT),
+  LLFMx(Ftf, BASIC, FTF),              LLFMC(Image, BASIC, IMAGE),
+  LLFxC(Input, VIDEO),                 LLFMx(Json, BASIC, JSON),
+  LLFMx(Mask, BASIC, MASK),            LLFMx(Palette, VIDEO, PALETTE),
+  LLFMC(Pcm, BASIC, PCM),              LLFMx(Sample, AUDIO, SAMPLE),
+  LLFMx(SShot, VIDEO, SSHOT),          LLFMx(Stat, BASIC, STAT),
+  LLFMC(Socket, BASIC, SOCKET),        LLFMx(Source, AUDIO, SOURCE),
+  LLFxC(Sql, BASIC),                   LLFMC(Stream, AUDIO, STREAM),
+  LLFMx(Texture, VIDEO, TEXTURE),      LLFxx(Util, BASIC),
+  LLFMC(Variable, BASIC, VARIABLE),    LLFMC(Video, AUDIOVIDEO, VIDEO),
 }};/* -- Done with these macros -------------------------------------------- */
 #undef LLFMC
 #undef LLFxC

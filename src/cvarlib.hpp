@@ -28,7 +28,7 @@ CVarItemStaticList{{
 // ! APP_CMDLINE
 // ? Shows the commandline sent to the application it cannot be changed at all.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_cmdline", cCommon->CommonBlank(),
+{ CFL_BASIC, "app_cmdline", cCommon->CommonBlank(),
   CBSTR(cCore->CoreParseCmdLine), CONFIDENTIAL|TSTRING|MTRIM|PCMDLINE },
 /* == Core cvars (don't modify order) ====================================== */
 // ! LOG_LEVEL
@@ -39,7 +39,7 @@ CVarItemStaticList{{
 // ? [3] LH_INFO     = For reporting useful important messages.
 // ? [4] LH_DEBUG    = For reporitng other information (debugging).
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "log_level",
+{ CFL_BASIC, "log_level",
 /* ------------------------------------------------------------------------- */
 #if !defined(RELEASE)                  // Not release version?
   "4",                                 // Default of DEBUG for log level
@@ -53,13 +53,13 @@ CVarItemStaticList{{
 // ? Specifies the decompression buffer size (in bytes) for the lzma api. The
 // ? default value is 256 kilobytes.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_lzmabuffer", "262144",
+{ CFL_BASIC, "ast_lzmabuffer", "262144",
   CB(ArchiveSetBufferSize, size_t), TUINTEGER|CPOW2|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! AST_PIPEBUFFER
 // ? Specifies the size of the pipe buffer.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_pipebuffer", STR(MAX_PIPE_BUFFER),
+{ CFL_BASIC, "ast_pipebuffer", STR(MAX_PIPE_BUFFER),
   CB(AssetSetPipeBufferSize, size_t), TUINTEGER|CPOW2|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AST_FSOVERRIDE
@@ -68,7 +68,7 @@ CVarItemStaticList{{
 // ? then archives, '2' to load from archives first and then try the disk or
 // ? '3' to load from disk only.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_fsoverride", cCommon->CommonTwo(),
+{ CFL_BASIC, "ast_fsoverride", cCommon->CommonTwo(),
   CB(AssetSetFSOverride, FSOverrideType), TUINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! AST_EXEBUNDLE
@@ -76,21 +76,21 @@ CVarItemStaticList{{
 // ? 7-zip archive and use that to load guest assets. This is only supported
 // ? on Windows architectures right now and ignored on others.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_exebundle", cCommon->CommonOne(),
+{ CFL_BASIC, "ast_exebundle", cCommon->CommonOne(),
   CB(ArchiveInitExe, bool), TBOOLEAN|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! AST_BASEDIR
 // ? Specifies the base directory of where the executable was started from. It
 // ? is only readable by the end-user and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_basedir", cCommon->CommonBlank(),
+{ CFL_BASIC, "ast_basedir", cCommon->CommonBlank(),
   CBSTR(cSystem->SetWorkDir), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! AST_BUNDLES
 // ? Specifies the [.ext]ension to use as 7-zip archives. These filenames will
 // ? be checked for at startup and automatically loaded by the engine.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_bundles", "." ARCHIVE_EXTENSION,
+{ CFL_BASIC, "ast_bundles", "." ARCHIVE_EXTENSION,
   CBSTR(ArchiveInit), TSTRING|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! APP_CONFIG
@@ -99,7 +99,7 @@ CVarItemStaticList{{
 // ? guest need never specify it. This variable can only be set at the
 // ? command-line.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_config", DEFAULT_CONFIGURATION,
+{ CFL_BASIC, "app_config", DEFAULT_CONFIGURATION,
   CBSTR(cCVars->ExecuteAppConfig), TSTRING|CFILENAME|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! APP_AUTHOR
@@ -107,7 +107,7 @@ CVarItemStaticList{{
 // ? purposes only and can be requested by the guest and only set in the
 // ? app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_author", "Anonymous", CBSTR(cSystem->SetGuestAuthor),
+{ CFL_BASIC, "app_author", "Anonymous", CBSTR(cSystem->SetGuestAuthor),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_SHORTNAME
@@ -115,7 +115,7 @@ CVarItemStaticList{{
 // ? display purposes only to the end-user. It can be requested by the guest
 // ? and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_shortname", "Untitled", CBSTR(cSystem->SetGuestShortTitle),
+{ CFL_BASIC, "app_shortname", "Untitled", CBSTR(cSystem->SetGuestShortTitle),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! AST_HOMEDIR
@@ -123,7 +123,7 @@ CVarItemStaticList{{
 // ? be written to the working directory. It is only readable by the end-user
 // ? and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_homedir", cCommon->CommonBlank(),
+{ CFL_BASIC, "ast_homedir", cCommon->CommonBlank(),
   CBSTR(cCore->CoreSetHomeDir),
   CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
@@ -132,7 +132,7 @@ CVarItemStaticList{{
 // ? ending in the value specified by 'ast_bundles' which can override any game
 // ? asset (except app.cfg). The default is true (yes).
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_modbundle", cCommon->CommonOne(),
+{ CFL_BASIC, "ast_modbundle", cCommon->CommonOne(),
   CB(ArchiveInitPersist, bool), TBOOLEAN|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! AST_SAFETYMODE
@@ -147,7 +147,7 @@ CVarItemStaticList{{
 // ? is changed, any file on the system that the calling user has access rights
 // ? to can be accessed.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "ast_safetymode", cCommon->CommonTwo(),
+{ CFL_BASIC, "ast_safetymode", cCommon->CommonTwo(),
   CB(cDirBase->SetDefaultSafetyMode, ValidType), TUINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DB
@@ -160,7 +160,7 @@ CVarItemStaticList{{
 // ? result in the Sqlite database being stored in memory. Specifying a blank
 // ? string uses the executables filename without the extension.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_db", cCommon->CommonBlank(),
+{ CFL_BASIC, "sql_db", cCommon->CommonBlank(),
   CBSTR(cSql->UdbFileModified),
   CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
@@ -168,7 +168,7 @@ CVarItemStaticList{{
 // ? Specifies the number of times a Sql query can be retried before giving
 // ? up. Set to -1 for infinite. The default value is 1000.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_retrycount", "1000",
+{ CFL_BASIC, "sql_retrycount", "1000",
   CB(cSql->RetryCountModified, unsigned int), TINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_RETRYSUSPEND
@@ -176,53 +176,53 @@ CVarItemStaticList{{
 // ? operation. The default value is 1 and the the maximum value is 1000 for
 // ? safety reasons. Setting to zero disables but yields the calling thread.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_retrysuspend", cCommon->CommonOne(),
+{ CFL_BASIC, "sql_retrysuspend", cCommon->CommonOne(),
   CB(cSql->RetrySuspendModified, uint64_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_ERASEEMPTY
 // ? Specifies to automatically erase the database at exit if no cvars or
 // ? custom tables are written to it by the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_eraseempty", cCommon->CommonOne(),
+{ CFL_BASIC, "sql_eraseempty", cCommon->CommonOne(),
   CB(cSql->DeleteEmptyDBModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_TEMPSTORE
 // ? Performs 'pragma temp_store' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_tempstore", "MEMORY",
+{ CFL_BASIC, "sql_tempstore", "MEMORY",
   CBSTR(cSql->TempStoreModified), TSTRING|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_SYNCHRONOUS
 // ? Performs 'pragma synchronous x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_synchronous", cCommon->CommonZero(),
+{ CFL_BASIC, "sql_synchronous", cCommon->CommonZero(),
   CB(cSql->SynchronousModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_JOURNALMODE
 // ? Performs 'pragma journal_mode x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_journalmode", cCommon->CommonZero(),
+{ CFL_BASIC, "sql_journalmode", cCommon->CommonZero(),
   CB(cSql->JournalModeModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_AUTOVACUUM
 // ? Performs 'pragma auto_vacuum x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_autovacuum", cCommon->CommonOne(),
+{ CFL_BASIC, "sql_autovacuum", cCommon->CommonOne(),
   CB(cSql->AutoVacuumModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_FOREIGNKEYS
 // ? Performs 'pragma foreign_keys x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_foreignkeys", cCommon->CommonOne(),
+{ CFL_BASIC, "sql_foreignkeys", cCommon->CommonOne(),
   CB(cSql->ForeignKeysModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_INCVACUUM
 // ? Performs 'pragma incremental_vacuum(x)' when the database is opened and
 // ? sets 'x' to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_incvacuum", cCommon->CommonZero(),
+{ CFL_BASIC, "sql_incvacuum", cCommon->CommonZero(),
   CB(cSql->IncVacuumModified, uint64_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DEFAULTS
@@ -231,28 +231,29 @@ CVarItemStaticList{{
 // ? [1] DC_OVERWRITE = Overwrite engine variables with defaults.
 // ? [2] DC_REFRESH   = Completely clear SQL cvars table.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_defaults", cCommon->CommonZero(),
+{ CFL_BASIC, "sql_defaults", cCommon->CommonZero(),
   CB(cCVars->SetDefaults, CVarDefaults), TUINTEGER|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! SQL_LOADCONFIG
 // ? Actually loads cvars from the configuration database.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "sql_loadconfig", cCommon->CommonOne(),
+{ CFL_BASIC, "sql_loadconfig", cCommon->CommonOne(),
   CB(cCVars->LoadSettings, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_CFLAGS
 // ? Specifies how the host wants to be run with the following flags...
-// ? [0x1] CFL_TERMINAL = Opens (Win32) or reuses (Unix) a console window.
-// ? [0x2] CFL_AUDIO    = Initialises an OpenAL audio context and exposes API.
-// ? [0x4] CFL_VIDEO    = Initialises an OpenGL context+window and exposes API.
-{ CFL_NONE, "app_cflags", cCommon->CommonZero(),
+// ? [0x0] CFL_BASIC = Only output to stdout with no input (Ctrl+C aborts).
+// ? [0x1] CFL_TEXT  = Inits a Win32 or NCurses console window.
+// ? [0x2] CFL_AUDIO = Inits an OpenAL audio context and API.
+// ? [0x4] CFL_VIDEO = Inits an OpenGL context+window and API.
+{ CFL_BASIC, "app_cflags", cCommon->CommonZero(),
   CB(cSystem->SetCoreFlags, CoreFlagsType), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! LOG_LINES
 // ? Specifies the maximum number of lines to keep in the backlog. The log
 // ? lines are always empty when logging to a file.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "log_lines", "10000",
+{ CFL_BASIC, "log_lines", "10000",
   CB(cLog->LogLinesModified, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! LOG_FILE
@@ -260,7 +261,7 @@ CVarItemStaticList{{
 // ? debugging. Leave as blank for no log file. It can be set from command-line
 // ? parameters, the app.cfg file and the user.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "log_file", cCommon->CommonBlank(),
+{ CFL_BASIC, "log_file", cCommon->CommonBlank(),
   CBSTR(cLog->LogFileModified), TSTRING|CFILENAME|MTRIM|PCMDLINE|PCONSOLE },
 /* ------------------------------------------------------------------------- */
 // ! APP_LONGNAME
@@ -268,7 +269,7 @@ CVarItemStaticList{{
 // ? window title and for display purposes only to the end-user. It can be
 // ? requested by the guest and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_longname", "Untitled", CBSTR(cSystem->SetGuestTitle),
+{ CFL_BASIC, "app_longname", "Untitled", CBSTR(cSystem->SetGuestTitle),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! ERR_INSTANCE
@@ -277,7 +278,7 @@ CVarItemStaticList{{
 // ? crash but not on Linux and MacOS. So just simply remove the app name from
 // ? /dev/shm and the engine should run again.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_instance", cCommon->CommonOne(),
+{ CFL_BASIC, "err_instance", cCommon->CommonOne(),
   CB(cCore->CoreSetOneInstance, bool), TBOOLEAN|PAPPCFG },
 /* == Object cvars ========================================================= */
 // ! OBJ_CLIPMAX
@@ -285,14 +286,14 @@ CVarItemStaticList{{
 // ? by the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_clipmax", "100",
+{ CFL_BASIC, "obj_clipmax", "100",
   CB(cClips->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_CMDMAX
 // ? Specifies the maximum number of Lua console commands allowed to be
 // ? registered by the engine.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_cmdmax", "1000",
+{ CFL_BASIC, "obj_cmdmax", "1000",
   CB(cCommands->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_CVARMAX
@@ -300,7 +301,7 @@ CVarItemStaticList{{
 // ? engine. This includes the internal default cvars. An exception is
 // ? generated if more cvars than this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_cvarmax", "1000",
+{ CFL_BASIC, "obj_cvarmax", "1000",
   CB(cVariables->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_CVARIMAX
@@ -311,7 +312,7 @@ CVarItemStaticList{{
 // ? cvars are then commited to database at exit and on-demand. An exception is
 // ? generated if more initial cvars than this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_cvarimax", "1000",
+{ CFL_BASIC, "obj_cvarimax", "1000",
   CB(cCVars->MaxICountModified, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_ARCHIVEMAX
@@ -319,7 +320,7 @@ CVarItemStaticList{{
 // ? by the engine. This includes the archives that are loaded at startup
 // ? An exception is generated if more archives than this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_archivemax", "1000",
+{ CFL_BASIC, "obj_archivemax", "1000",
   CB(cArchives->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_ASSETMAX
@@ -327,7 +328,7 @@ CVarItemStaticList{{
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_assetmax", "1000",
+{ CFL_BASIC, "obj_assetmax", "1000",
   CB(cAssets->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_BINMAX
@@ -335,7 +336,7 @@ CVarItemStaticList{{
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_binmax", "1000",
+{ CFL_BASIC, "obj_binmax", "1000",
   CB(cBins->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FBOMAX
@@ -359,7 +360,7 @@ CVarItemStaticList{{
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_filemax", "1000",
+{ CFL_BASIC, "obj_filemax", "1000",
   CB(cFiles->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FTFMAX
@@ -367,7 +368,7 @@ CVarItemStaticList{{
 // ? by the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_ftfmax", "1000",
+{ CFL_BASIC, "obj_ftfmax", "1000",
   CB(cFtfs->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FUNCMAX
@@ -375,7 +376,7 @@ CVarItemStaticList{{
 // ? be registered by the engine. An exception is generated if more cvars than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_funcmax", "1000",
+{ CFL_BASIC, "obj_funcmax", "1000",
   CB(cLuaFuncs->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_IMGMAX
@@ -383,7 +384,7 @@ CVarItemStaticList{{
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_imgmax", "1000",
+{ CFL_BASIC, "obj_imgmax", "1000",
   CB(cImages->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_JSONMAX
@@ -391,7 +392,7 @@ CVarItemStaticList{{
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_jsonmax", "1000",
+{ CFL_BASIC, "obj_jsonmax", "1000",
   CB(cJsons->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_MASKMAX
@@ -399,7 +400,7 @@ CVarItemStaticList{{
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_maskmax", "1000",
+{ CFL_BASIC, "obj_maskmax", "1000",
   CB(cMasks->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_PCMMAX
@@ -407,7 +408,7 @@ CVarItemStaticList{{
 // ? the engine. An exception is generated if more objects than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_pcmmax", "1000",
+{ CFL_BASIC, "obj_pcmmax", "1000",
   CB(cPcms->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_SAMPLEMAX
@@ -431,7 +432,7 @@ CVarItemStaticList{{
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_socketmax", "1000",
+{ CFL_BASIC, "obj_socketmax", "1000",
   CB(cSockets->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_SOURCEMAX
@@ -447,7 +448,7 @@ CVarItemStaticList{{
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_statmax", "1000",
+{ CFL_BASIC, "obj_statmax", "1000",
   CB(cStats->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_STREAMMAX
@@ -471,7 +472,7 @@ CVarItemStaticList{{
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "obj_threadmax", "1000",
+{ CFL_BASIC, "obj_threadmax", "1000",
   CB(cThreads->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_VIDEOMAX
@@ -487,7 +488,7 @@ CVarItemStaticList{{
 // ? display purposes only to the end-user. It can be requested by the guest
 // ? and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_description", "Undescribed",
+{ CFL_BASIC, "app_description", "Undescribed",
   CBSTR(cSystem->SetGuestDescription), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_VERSION
@@ -495,7 +496,7 @@ CVarItemStaticList{{
 // ? purposes only to the end-user. It can be requested by the guest and only
 // ? set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_version", "0.0", CBSTR(cSystem->SetGuestVersion),
+{ CFL_BASIC, "app_version", "0.0", CBSTR(cSystem->SetGuestVersion),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_ICON
@@ -503,7 +504,7 @@ CVarItemStaticList{{
 // ? any format that is supported with the Image.* loading functions. It can
 // ? also be changed dynamically by Lua. Keep to empty for default icon.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_icon", cCommon->CommonBlank(),
+{ CFL_BASIC, "app_icon", cCommon->CommonBlank(),
   CBSTR(cDisplay->SetIcon), TSTRING|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_COPYRIGHT
@@ -511,7 +512,7 @@ CVarItemStaticList{{
 // ? purely for display purposes only to the end-user. It can be requested by
 // ? the guest and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_copyright", "Public Domain",
+{ CFL_BASIC, "app_copyright", "Public Domain",
   CBSTR(cSystem->SetGuestCopyright), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_WEBSITE
@@ -519,7 +520,7 @@ CVarItemStaticList{{
 // ? purposes only to the end-user. It can be requested by the guest and only
 // ? set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_website", "about:blank", CBSTR(cSystem->SetGuestWebsite),
+{ CFL_BASIC, "app_website", "about:blank", CBSTR(cSystem->SetGuestWebsite),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_TICKRATE
@@ -535,7 +536,7 @@ CVarItemStaticList{{
 // ? This is ignored on interactive mode because a one millisecond delay is
 // ? forced for every frame under the target rate.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_delay", cCommon->CommonOne(),
+{ CFL_BASIC, "app_delay", cCommon->CommonOne(),
   CB(cTimer->TimerSetDelay, unsigned int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! APP_TITLE
@@ -547,7 +548,7 @@ CVarItemStaticList{{
 // ? value of 'app_longname', where 'V' is the value of 'app_version' and 'T'
 // ? is the target executable architechture.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "app_title", cCommon->CommonBlank(),
+{ CFL_BASIC, "app_title", cCommon->CommonBlank(),
   CBSTR(cCore->CoreTitleModified), TSTRING|MTRIM|PAPPCFG },
 /* == Error cvars ========================================================== */
 // ! ERR_ADMIN
@@ -558,7 +559,7 @@ CVarItemStaticList{{
 // ? 2 = Same as 1 but ALLOWS when OS's has admin as default (i.e. XP!).
 // ? The default value is 2.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_admin", cCommon->CommonTwo(),
+{ CFL_BASIC, "err_admin", cCommon->CommonTwo(),
   CB(cSystem->CheckAdminModified, unsigned int), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! ERR_CHECKSUM
@@ -567,7 +568,7 @@ CVarItemStaticList{{
 // ? checksum and MacOS uses code signing externally. The default value is 1
 // ? on release executable else 0 on beta executable.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_checksum",
+{ CFL_BASIC, "err_checksum",
   /* ----------------------------------------------------------------------- */
 #if defined(RELEASE)
   cCommon->CommonOne(),
@@ -581,7 +582,7 @@ CVarItemStaticList{{
 // ? Throws an error if a debugger is running at start-up. The default value
 // ? is 1 on release executable else 0 on beta executable.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_debugger",
+{ CFL_BASIC, "err_debugger",
   /* ----------------------------------------------------------------------- */
 #if defined(RELEASE)
   cCommon->CommonOne(),
@@ -599,7 +600,7 @@ CVarItemStaticList{{
 // ? [3] LEM_CRITICAL = Terminate engine with error.
 // ? The default value is 3 for release executable and 2 for beta executable.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_luamode",
+{ CFL_BASIC, "err_luamode",
   /* ----------------------------------------------------------------------- */
 #if defined(RELEASE)
   "3",
@@ -615,7 +616,7 @@ CVarItemStaticList{{
 // ? critical error. The default value for release executable is 1000 and
 // ? 10 for beta executable.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_lmresetlimit",
+{ CFL_BASIC, "err_lmresetlimit",
   /* ----------------------------------------------------------------------- */
 #if defined(RELEASE)
   "1000",
@@ -639,7 +640,7 @@ CVarItemStaticList{{
 // ? speed of the clear is reported in the log then the memory is freed. The
 // ? default value is zero.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "err_minram", cCommon->CommonZero(),
+{ CFL_BASIC, "err_minram", cCommon->CommonZero(),
   CB(cSystem->SetMinRAM, uint64_t), TUINTEGER|PAPPCFG },
 /* == Lua cvars ============================================================ */
 // ! LUA_CACHE
@@ -651,25 +652,25 @@ CVarItemStaticList{{
 // ? [2] LCC_MINIMUM  = " with minimum debug information and store result.
 // ? The default value is 3 for release executable and 2 for beta executable.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_cache", cCommon->CommonOne(),
+{ CFL_BASIC, "lua_cache", cCommon->CommonOne(),
   CB(LuaCodeSetCache, LuaCache), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! LUA_DEBUGLOCALS
 // ? Print locals when generating stack traces (default is true).
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_debuglocals", cCommon->CommonOne(),
+{ CFL_BASIC, "lua_debuglocals", cCommon->CommonOne(),
   CB(cLua->SetDebugLocals, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCPAUSE
 // ? Overrides Lua's internal LUA_GCPAUSE value with this.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_gcpause", "200",
+{ CFL_BASIC, "lua_gcpause", "200",
   CB(cLua->SetGCPause, int), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCSTEPMUL
 // ? Overrides Lua's internal LUA_GCSTEP value with this.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_gcstepmul", "100",
+{ CFL_BASIC, "lua_gcstepmul", "100",
   CB(cLua->SetGCStep, int), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! LUA_LASTVER
@@ -677,7 +678,7 @@ CVarItemStaticList{{
 // ? current LUA version is different to this then the code cache will be
 // ? completely deleted so all code is recompiled.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_lastver", LUA_VDIR "." LUA_VERSION_RELEASE,
+{ CFL_BASIC, "lua_lastver", LUA_VDIR "." LUA_VERSION_RELEASE,
   CBSTR(LuaCodeCheckVersion), TSTRINGSAVE|PCMDLINE|PUDB },
 /* ------------------------------------------------------------------------- */
 // ! LUA_RANDOMSEED
@@ -685,7 +686,7 @@ CVarItemStaticList{{
 // ? use. Specify zero to have this value randomised at startup with entropy
 // ? from the operating system.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_randomseed", cCommon->CommonZero(),
+{ CFL_BASIC, "lua_randomseed", cCommon->CommonZero(),
   CB(cLua->SetSeed, lua_Integer), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! LUA_SCRIPT
@@ -693,13 +694,13 @@ CVarItemStaticList{{
 // ? be a safe filename that does not leave the engines active parent
 // ? directory.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_script", "main.lua", NoOp,
-  TSTRING|CFILENAME|CNOTEMPTY|MTRIM|PAPPCFG },
+{ CFL_BASIC, "lua_script", "main.lua", NoOp,
+  TSTRING|CFILENAME|CNOTEMPTY|MTRIM|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! LUA_SIZESTACK
 // ? Makes sure theres room for this many values on the Lua stack.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_sizestack", "1000",
+{ CFL_BASIC, "lua_sizestack", "1000",
   CB(cLua->SetStack, int), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! LUA_TICKCHECK
@@ -708,7 +709,7 @@ CVarItemStaticList{{
 // ? has been executing for too long. You can see the rate of the operations
 // ? by using the 'cpu' command in the engine console.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_tickcheck", "1000000",
+{ CFL_BASIC, "lua_tickcheck", "1000000",
   CB(cLua->SetOpsInterval, int), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! LUA_TICKTIMEOUT
@@ -717,7 +718,7 @@ CVarItemStaticList{{
 // ? as resulting infinite loops in Lua cannot be recovered and will require
 // ? force termination of the entire process.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "lua_ticktimeout", "1",
+{ CFL_BASIC, "lua_ticktimeout", "1",
   CB(cTimer->TimerSetTimeOut, unsigned int), TUINTEGER|PAPPCFG },
 /* == Audio cvars ========================================================== */
 // ! AUD_DELAY
@@ -832,21 +833,21 @@ CVarItemStaticList{{
 // ? [0x1] AC_COMMANDS = Autocomplete command names
 // ? [0x2] AC_CVARS    = Autocomplete cvar names
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_autocomplete", "3",
+{ CFL_BASIC, "con_autocomplete", "3",
   CB(cConsole->SetAutoComplete, AutoCompleteFlagsType), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_AUTOSCROLL
 // ? A boolean that specifies whether to autoscroll the console to the last
 // ? newly printed message.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_autoscroll", cCommon->CommonOne(),
+{ CFL_BASIC, "con_autoscroll", cCommon->CommonOne(),
   CB(cConsole->SetAutoScroll, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_AUTOCOPYCVAR
 // ? A boolean that specifies whether to automatically copy the variable
 // ? name and value when a cvar name is typed in the console.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_autocopycvar", cCommon->CommonOne(),
+{ CFL_BASIC, "con_autocopycvar", cCommon->CommonOne(),
   CB(cConsole->SetAutoCopyCVar, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_HEIGHT
@@ -860,21 +861,23 @@ CVarItemStaticList{{
 // ? Specifies the maximum number of lines to keep in the console. Excess
 // ? messages are discarded automatically to not fill up memory.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_bloutput", "10000",
+{ CFL_BASIC, "con_bloutput", "10000",
   CB(cConsole->SetConsoleOutputLines, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_BLINPUT
 // ? Number of lines to store in the input backlog. A successful command input
 // ? automatically adds the last command typed into this list.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_blinput", "1000",
+{ CFL_BASIC, "con_blinput", "1000",
   CB(cConsole->SetConsoleInputLines, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_DISABLED
-// ? Specifies wether the console is permanantly disabled or not.
+// ? Specifies wether the console is permanantly disabled or not. It ignores
+// ? the CON_GCWTERM setting as well. This does not disable the NCurses mode
+// ? terminal which cannot be disabled.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_disabled", cCommon->CommonZero(),
-  CB(cConGraphics->CantDisableModified, bool), TBOOLEAN|PCMDLINE|PAPPCFG },
+  CB(cConGraphics->CantDisableModified, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_CVSHOWFLAGS
 // ? Flags specifying how to show CVar values in the console to protect
@@ -883,7 +886,7 @@ CVarItemStaticList{{
 // ? [0x1] SF_CONFIDENTIAL = Show cvars marked as private.
 // ? [0x2] SF_PROTECTED    = Show cvars marked as protected.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_cvshowflags", cCommon->CommonZero(),
+{ CFL_BASIC, "con_cvshowflags", cCommon->CommonZero(),
   CB(cCVars->SetDisplayFlags, CVarShowFlagsType), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_BGCOLOUR
@@ -981,13 +984,23 @@ CVarItemStaticList{{
 { CFL_VIDEO, "con_fonttexsize", cCommon->CommonZero(), NoOp,
   TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
+// ! CON_GCWTERM
+// ? Enable to allow the graphical console to show when 'app_cflags' is set to
+// ? include a terminal window as well as the main engine window. It is set to
+// ? 'false' by default. This is useful if you do live on-screen testing of
+// ? your application and work with sensitive information in which you'll want
+// ? to keep this disabled to prevent potential leaking of private information
+// ? on-screen. It can only be set in the application manifest file.
+{ CFL_TEXT, "con_gcwterm", cCommon->CommonZero(), NoOp,
+  TUINTEGER|PAPPCFG|PCMDLINE },
+/* ------------------------------------------------------------------------- */
 // ! CON_INPREFRESH
 // ? Specifies the time interval in microseconds between input polls. Only
 // ? applies to the text mode console. The default is 3125 microseconds on
 // ? windows (31.25 milliseconds) to prevent concurrency slowdowns and 10000
 // ? microseconds (10 milliseconds) on anything else.
 /* ------------------------------------------------------------------------- */
-{ CFL_TERMINAL, "con_inprefresh",
+{ CFL_TEXT, "con_inprefresh",
 #if defined(WINDOWS)
   "31250",                             // 31.25ms (0.003 sec)
 #else
@@ -999,7 +1012,7 @@ CVarItemStaticList{{
 // ? Specifies the maximum number of characters that are allowed to be typed
 // ? into the console input buffer.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_inputmax", "1024",
+{ CFL_BASIC, "con_inputmax", "1024",
   CB(cConsole->SetMaxInputChars, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_OUTPUTMAX
@@ -1007,14 +1020,14 @@ CVarItemStaticList{{
 // ? console output line. It is needed to limit stalling the engine and GPU
 // ? with very long lines.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_outputmax", "4096",
+{ CFL_BASIC, "con_outputmax", "4096",
   CB(cConsole->SetMaxOutputChars, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_PAGELINES
 // ? The number of lines that are scrolled when pressing CONTROL and PAGEUP or
 // ? PAGEDOWN keys.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "con_pagelines", "10",
+{ CFL_BASIC, "con_pagelines", "10",
   CB(cConsole->SetPageMoveCount, ssize_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCCOLS
@@ -1022,7 +1035,7 @@ CVarItemStaticList{{
 // ? larger this value is, the more text that can be displayed at once but
 // ? will increase CPU usage from the operating system.
 /* ------------------------------------------------------------------------- */
-{ CFL_TERMINAL, "con_tmccols", "80",
+{ CFL_TEXT, "con_tmccols", "80",
   CB(cSystem->ColsModified, unsigned int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCROWS
@@ -1030,7 +1043,7 @@ CVarItemStaticList{{
 // ? this value is, the more text that can be displayed at once but will
 // ? increase CPU usage from the operating system.
 /* ------------------------------------------------------------------------- */
-{ CFL_TERMINAL, "con_tmcrows", "32",
+{ CFL_TEXT, "con_tmcrows", "32",
   CB(cSystem->RowsModified, unsigned int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCREFRESH
@@ -1039,7 +1052,7 @@ CVarItemStaticList{{
 // ? status bar is configurable by LUA and contains the input bar when text
 // ? is being typed.
 /* ------------------------------------------------------------------------- */
-{ CFL_TERMINAL, "con_tmcrefresh", "1000",
+{ CFL_TEXT, "con_tmcrefresh", "1000",
   CB(cConsole->OutputRefreshModified, unsigned int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCNOCLOSE
@@ -1047,13 +1060,13 @@ CVarItemStaticList{{
 // ? not prevent CONTROL+C/BREAK keys. This only applies to the Windows
 // ? operating system console only and a nullop on any other system!
 /* ------------------------------------------------------------------------- */
-{ CFL_TERMINAL, "con_tmcnoclose", cCommon->CommonOne(), NoOp,
+{ CFL_TEXT, "con_tmcnoclose", cCommon->CommonOne(), NoOp,
   TBOOLEAN|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCTFORMAT
 // ? The format of the time in the titlebar (see strftime() for details).
 /* ------------------------------------------------------------------------- */
-{ CFL_TERMINAL, "con_tmctformat", "%y-%m-%d %T",
+{ CFL_TEXT, "con_tmctformat", "%y-%m-%d %T",
   CBSTR(cConsole->SetTimeFormat), TSTRINGSAVE|MTRIM|CNOTEMPTY|PANY },
 /* == Fmv cvars ============================================================ */
 // ! FMV_ABUFFER
@@ -1137,48 +1150,48 @@ CVarItemStaticList{{
 // ! NET_CBPFLAG1
 // ? Specifies the certificate error ignore flags.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_cbpflag1", cCommon->CommonZero(),
+{ CFL_BASIC, "net_cbpflag1", cCommon->CommonZero(),
   CB(cSockets->CertsSetBypassFlags1, uint64_t), TUINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! NET_CBPFLAG2
 // ? Specifies the extended certificate error ignore flags.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_cbpflag2", cCommon->CommonZero(),
+{ CFL_BASIC, "net_cbpflag2", cCommon->CommonZero(),
   CB(cSockets->CertsSetBypassFlags2, uint64_t), TUINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! NET_BUFFER
 // ? Specifies the amount of memory in bytes to reserve for each recv() or
 // ? send() call. Default is 64k.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_buffer", "65536",
+{ CFL_BASIC, "net_buffer", "65536",
   CB(SocketSetBufferSize, size_t), TUINTEGER|CPOW2|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! NET_RTIMEOUT
 // ? Specifies a socket recv() command timeout in seconds.
 // ? Default is 2 minutes.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_rtimeout", "120",
+{ CFL_BASIC, "net_rtimeout", "120",
   CB(SocketSetRXTimeout, double), TUFLOAT|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! NET_STIMEOUT
 // ? Specifies a socket send() command timeout in seconds.
 // ? Default is 30 seconds.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_stimeout", "30",
+{ CFL_BASIC, "net_stimeout", "30",
   CB(SocketSetTXTimeout, double), TUFLOAT|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! NET_CIPHERTLSv1
 // ? Specifies the default settings for TLSv1.x connections. The default is
 // ? use only maximum strength ciphers.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_ciphertlsv1", "HIGH:!DSS:!aNULL@STRENGTH",
+{ CFL_BASIC, "net_ciphertlsv1", "HIGH:!DSS:!aNULL@STRENGTH",
   CBSTR(SocketSetCipher12), MTRIM|TSTRING|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! NET_CIPHERTLSv13
 // ? Specifies the default settings for TLSv3 connections. The default is empty
 // ? which lets OpenSSL decide.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_ciphertlsv13", cCommon->CommonBlank(),
+{ CFL_BASIC, "net_ciphertlsv13", cCommon->CommonBlank(),
   CBSTR(SocketSetCipher13), MTRIM|TSTRING|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! NET_CASTORE
@@ -1187,13 +1200,13 @@ CVarItemStaticList{{
 // ? connection. These certificates are loaded and checked at startup and
 // ? a log warning message is generated if the certificate is not usable.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_castore", cCommon->CommonBlank(),
+{ CFL_BASIC, "net_castore", cCommon->CommonBlank(),
   CBSTR(cSockets->CertsFileModified), TSTRING|CFILENAME|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! NET_OCSP
 // ? Informs OpenSSL to verify server certificates via OCSP.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_ocsp", cCommon->CommonOne(),
+{ CFL_BASIC, "net_ocsp", cCommon->CommonOne(),
   CB(SocketOCSPModified, int), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! NET_USERAGENT
@@ -1202,7 +1215,7 @@ CVarItemStaticList{{
 // ? to "Mozilla/5.0 (<EngineName>; <EngineBits>-bit; v<EngineVersion>)
 // ? <AppName>/<AppVersion>".
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "net_useragent", cCommon->CommonBlank(),
+{ CFL_BASIC, "net_useragent", cCommon->CommonBlank(),
   CBSTR(SocketAgentModified), TSTRING|MTRIM|PCMDLINE|PAPPCFG },
 /* == Video cvars ========================================================== */
 // ! VID_API
@@ -1718,13 +1731,13 @@ CVarItemStaticList{{
 // ! LOG_CREDITS
 // ? Specifies to include credits in the log at startup.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "log_credits", cCommon->CommonZero(),
+{ CFL_BASIC, "log_credits", cCommon->CommonZero(),
   CB(cCredits->CreditDumpList, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! LOG_DYLIBS
 // ? Specifies to include shared libraries in the log at startup.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "log_dylibs", cCommon->CommonZero(),
+{ CFL_BASIC, "log_dylibs", cCommon->CommonZero(),
   CB(cSystem->DumpModuleList, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! COM_FLAGS
@@ -1739,7 +1752,7 @@ CVarItemStaticList{{
 // ?                 is restarted after creating it initially to fix a
 // ?                 graphical corruption where you need to resize to fix it.
 /* ------------------------------------------------------------------------- */
-{ CFL_NONE, "com_flags", cCommon->CommonNegOne(),
+{ CFL_BASIC, "com_flags", cCommon->CommonNegOne(),
   CB(cCore->CoreProcessCompatibilityFlags, uint64_t), TINTEGER|PANY },
 /* -- Undefines ------------------------------------------------------------ */
 #undef CBSTR                           // Done with string function callback

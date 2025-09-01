@@ -56,7 +56,14 @@ LLFUNC(Clear, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Clear()))
 // $ Variable:Destroy
 // ? Unregisters the specified console command.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Variable>(lS, 1, *cVariables))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Variable>(lS, cVariables))
+/* ========================================================================= */
+// $ Variable:Destroyed
+// < Destroyed:boolean=If the Variable class is destroyed
+// ? Returns if the Variable class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cVariables)))
 /* ========================================================================= */
 // $ Variable:Empty
 // < Empty:boolean=Is the value empty?
@@ -127,9 +134,10 @@ LLFUNC(String, 1,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Variable:* member functions begin
-  LLRSFUNC(Boolean), LLRSFUNC(Clear),  LLRSFUNC(Default), LLRSFUNC(Destroy),
-  LLRSFUNC(Empty),   LLRSFUNC(Get),    LLRSFUNC(Id),      LLRSFUNC(Integer),
-  LLRSFUNC(Name),    LLRSFUNC(Number), LLRSFUNC(Reset),   LLRSFUNC(String),
+  LLRSFUNC(Boolean),   LLRSFUNC(Clear), LLRSFUNC(Default), LLRSFUNC(Destroy),
+  LLRSFUNC(Destroyed), LLRSFUNC(Empty), LLRSFUNC(Get),     LLRSFUNC(Id),
+  LLRSFUNC(Integer),   LLRSFUNC(Name),  LLRSFUNC(Number),  LLRSFUNC(Reset),
+  LLRSFUNC(String),
 LLRSEND                                // Variable:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

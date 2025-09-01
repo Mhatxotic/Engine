@@ -205,15 +205,6 @@ LLFUNC(Compact, 1, LuaUtilPushVar(lS, StrCompact(AgCStringChar{lS, 1})))
 LLFUNC(CountOf, 1, const AgString aSource{lS, 1}, aWhat{lS, 2};
   LuaUtilPushVar(lS, StrCountOccurences(aSource, aWhat)))
 /* ========================================================================= */
-// $ Util.DecodeUUID
-// > High64:integer=The high-order 128-bit integer.
-// > Low64:integer=The low-order 128-bit integer.
-// < Result:string=The decoded UUID.
-// ? Decodes the specified UUID integers to a string.
-/* ------------------------------------------------------------------------- */
-LLFUNC(DecodeUUID, 1, const AgUInt64 aHigh{lS, 1}, aLow{lS, 2};
-  LuaUtilPushVar(lS, UuId{ aHigh, aLow }.UuIdToString()))
-/* ========================================================================= */
 // $ Util.Duration
 // > Seconds:number=The number of seconds.
 // > Precision:integer=The maximum number of floating point digits.
@@ -225,15 +216,6 @@ LLFUNC(Duration, 1,
   const AgDouble aSeconds{lS, 1};
   const AgInt aPrecision{lS, 2};
   LuaUtilPushVar(lS, StrShortFromDuration(aSeconds, aPrecision)))
-/* ========================================================================= */
-// $ Util.EncodeUUID
-// > UUID:string=The UUID string to recode.
-// < High64:integer=The high-order 128-bit integer
-// < Low64:integer=The low-order 128-bit integer
-// ? Encodes the specified UUID string to two 64-bit integers.
-/* ------------------------------------------------------------------------- */
-LLFUNC(EncodeUUID, 2, const UuId uuidData{ AgString{lS, 1} };
-  LuaUtilPushVar(lS, uuidData.d.qwRandom[0], uuidData.d.qwRandom[1]))
 /* ========================================================================= */
 // $ Util.EntDecode
 // > Text:string=The URL string to remove HTML entities from.
@@ -358,6 +340,120 @@ LLFUNC(Grouped, 1,
   const AgUInt64 aValue{lS, 1};
   const AgInt aPrecision{lS, 2};
   LuaUtilPushVar(lS, StrToReadableGrouped(aValue(), aPrecision)))
+/* ========================================================================= */
+// $ Util.Hash
+// > Salt:string|Asset=The salt string or raw data used to randomise the data
+// > Data:string|Asset=The string or raw data to hash.
+// < Hash:string|Asset=The string or raw data calculated hash.
+// ? A collection of functions that will calculate a hash from a 'string' class
+// ? or raw 'Asset' class with or without salting.
+// ?
+// ? Actual functions (Replace 'Hash' with one of the below). Syntax of the
+// ? function is <TYP><STR><R><P...> where <TYP> is the hash type. <STR> is the
+// ? strength of the hash, <R> is either 'A' returning an 'Asset' class or 'S'
+// ? returning a string object and <P...> means one or more 'Asset' (A) or
+// ? 'String' (S) parameters. (*) denotes do not use due to collision risks...
+// ? - Hash:Asset = SHA1AA(Data:Asset) (*).
+// ? - Hash:Asset = SHA1AAA(Salt:Asset, Data:Asset) (*).
+// ? - Hash:Asset = SHA1AAS(Salt:Asset, Data:string) (*).
+// ? - Hash:Asset = SHA1AS(Data:string) (*).
+// ? - Hash:Asset = SHA1ASA(Salt:string, Data:Asset) (*).
+// ? - Hash:Asset = SHA1ASS(Salt:string, Data:string) (*).
+// ? - Hash:string = SHA1SA(Data:Asset) (*).
+// ? - Hash:string = SHA1SAA(Salt:Asset, Data:Asset) (*).
+// ? - Hash:string = SHA1SAS(Salt:Asset, Data:string) (*).
+// ? - Hash:string = SHA1SS(Data:string) (*).
+// ? - Hash:string = SHA1SSA(Salt:string, Data:Asset) (*).
+// ? - Hash:string = SHA1SSS(Salt:string, Data:string) (*).
+// ? - Hash:Asset = SHA224AA(Data:Asset).
+// ? - Hash:Asset = SHA224AAA(Salt:Asset, Data:Asset).
+// ? - Hash:Asset = SHA224AAS(Salt:Asset, Data:string).
+// ? - Hash:Asset = SHA224AS(Data:string).
+// ? - Hash:Asset = SHA224ASA(Salt:string, Data:Asset).
+// ? - Hash:Asset = SHA224ASS(Salt:string, Data:string).
+// ? - Hash:string = SHA224SA(Data:Asset).
+// ? - Hash:string = SHA224SAA(Salt:Asset, Data:Asset).
+// ? - Hash:string = SHA224SAS(Salt:Asset, Data:string).
+// ? - Hash:string = SHA224SS(Data:string).
+// ? - Hash:string = SHA224SSA(Salt:string, Data:Asset).
+// ? - Hash:string = SHA224SSS(Salt:string, Data:string).
+// ? - Hash:Asset = SHA256AA(Data:Asset).
+// ? - Hash:Asset = SHA256AAA(Salt:Asset, Data:Asset).
+// ? - Hash:Asset = SHA256AAS(Salt:Asset, Data:string).
+// ? - Hash:Asset = SHA256AS(Data:string).
+// ? - Hash:Asset = SHA256ASA(Salt:string, Data:Asset).
+// ? - Hash:Asset = SHA256ASS(Salt:string, Data:string).
+// ? - Hash:string = SHA256SA(Data:Asset).
+// ? - Hash:string = SHA256SAA(Salt:Asset, Data:Asset).
+// ? - Hash:string = SHA256SAS(Salt:Asset, Data:string).
+// ? - Hash:string = SHA256SS(Data:string).
+// ? - Hash:string = SHA256SSA(Salt:string, Data:Asset).
+// ? - Hash:string = SHA256SSS(Salt:string, Data:string).
+// ? - Hash:Asset = SHA384AA(Data:Asset).
+// ? - Hash:Asset = SHA384AAA(Salt:Asset, Data:Asset).
+// ? - Hash:Asset = SHA384AAS(Salt:Asset, Data:string).
+// ? - Hash:Asset = SHA384AS(Data:string).
+// ? - Hash:Asset = SHA384ASA(Salt:string, Data:Asset).
+// ? - Hash:Asset = SHA384ASS(Salt:string, Data:string).
+// ? - Hash:string = SHA384SA(Data:Asset).
+// ? - Hash:string = SHA384SAA(Salt:Asset, Data:Asset).
+// ? - Hash:string = SHA384SAS(Salt:Asset, Data:string).
+// ? - Hash:string = SHA384SS(Data:string).
+// ? - Hash:string = SHA384SSA(Salt:string, Data:Asset).
+// ? - Hash:string = SHA384SSS(Salt:string, Data:string).
+// ? - Hash:Asset = SHA512AA(Data:Asset).
+// ? - Hash:Asset = SHA512AAA(Salt:Asset, Data:Asset).
+// ? - Hash:Asset = SHA512AAS(Salt:Asset, Data:string).
+// ? - Hash:Asset = SHA512AS(Data:string).
+// ? - Hash:Asset = SHA512ASA(Salt:string, Data:Asset).
+// ? - Hash:Asset = SHA512ASS(Salt:string, Data:string).
+// ? - Hash:string = SHA512SA(Data:Asset).
+// ? - Hash:string = SHA512SAA(Salt:Asset, Data:Asset).
+// ? - Hash:string = SHA512SAS(Salt:Asset, Data:string).
+// ? - Hash:string = SHA512SS(Data:string).
+// ? - Hash:string = SHA512SSA(Salt:string, Data:Asset).
+// ? - Hash:string = SHA512SSS(Salt:string, Data:string).
+/* -- Macro to create a function that creates a string hash ---------------- */
+#define HASH_FUNC_NOSALT_STR(pf, af, cf, ty) \
+  LLFUNC(pf ## af, 1, LuaUtilPushVar(lS, pf ## functions::H ## cf(ty{lS, 1})))
+/* -- Macro to create a function that creates a raw hash ------------------- */
+#define HASH_FUNC_NOSALT_ASSET(pf, af, cf, ty) \
+  LLFUNC(pf ## af, 1, \
+    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(ty{lS, 1})))
+/* -- Macro to create a function that creates a salted string hash --------- */
+#define HASH_FUNC_SALT_STR(pf, af, cf, t1, t2) \
+  LLFUNC(pf ## af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
+    LuaUtilPushVar(lS, pf ## functions::H ## cf(aKey, aData)))
+/* -- Macro to create a function that creates a salted raw hash ------------ */
+#define HASH_FUNC_SALT_ASSET(pf, af, cf, t1, t2) \
+  LLFUNC(pf ## af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
+    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(aKey, aData)))
+/* -- Macro to create a bunch of functions with different rets/params ------ */
+#define HASH_FUNC_PACK(pf) \
+  HASH_FUNC_NOSALT_ASSET(pf, AA, MM, AgAsset) \
+  HASH_FUNC_NOSALT_ASSET(pf, AS, MS, AgString) \
+  HASH_FUNC_NOSALT_STR(pf, SA, SM, AgAsset) \
+  HASH_FUNC_NOSALT_STR(pf, SS, SS, AgString) \
+  HASH_FUNC_SALT_ASSET(pf, AAA, MMM, AgAsset, AgAsset) \
+  HASH_FUNC_SALT_ASSET(pf, AAS, MMS, AgAsset, AgString) \
+  HASH_FUNC_SALT_ASSET(pf, ASA, MSM, AgString, AgAsset) \
+  HASH_FUNC_SALT_ASSET(pf, ASS, MSS, AgString, AgString) \
+  HASH_FUNC_SALT_STR(pf, SAA, SMM, AgAsset, AgAsset) \
+  HASH_FUNC_SALT_STR(pf, SAS, SMS, AgAsset, AgString) \
+  HASH_FUNC_SALT_STR(pf, SSA, SSM, AgString, AgAsset) \
+  HASH_FUNC_SALT_STR(pf, SSS, SSS, AgString, AgString)
+/* -- Create the actual function packs for different hash types ------------ */
+HASH_FUNC_PACK(SHA1)                   // 128-bit function pack (insecure)
+HASH_FUNC_PACK(SHA224)                 // 224-bit function pack
+HASH_FUNC_PACK(SHA256)                 // 256-bit function pack
+HASH_FUNC_PACK(SHA384)                 // 384-bit function pack
+HASH_FUNC_PACK(SHA512)                 // 512-bit function pack
+/* -- Done with these macros ----------------------------------------------- */
+#undef HASH_FUNC_PACK
+#undef HASH_FUNC_SALT_ASSET
+#undef HASH_FUNC_SALT_STR
+#undef HASH_FUNC_NOSALT_ASSET
+#undef HASH_FUNC_NOSALT_STR
 /* ========================================================================= */
 // $ Util.Hex
 // > Value:integer=Integer to be converted to hex
@@ -643,7 +739,9 @@ LLFUNC(ParseTimeEx, 1,
 /* ========================================================================= */
 // $ Util.ParseUrl
 // > String:string=The url to parse
+// > Post:integer=Encode, decode or none
 // < Result:integer=The result code of the parse
+// < Url:string=The canonicalised url
 // < Scheme:string=The scheme string 'http' or 'https'
 // < Secure:boolean=The conneciton would need to use SSL?
 // < Host:string=The hostname to connect to
@@ -652,15 +750,24 @@ LLFUNC(ParseTimeEx, 1,
 // < Bookmark:string=The bookmark part of the request
 // < Username:string=The username part of the request
 // < Password:string=The password part of the request
-// ? Parses the specified url and returns all the information about it
+// < Params:table=The key/value table of parameters parsed
+// ? Parses the specified url and returns all the information about it. The
+// ? 'Post' argument refers to one of the following...
+// ? [0] Don't modify parameters.
+// ? [1] URL Encode parameters (URL passed is not properly URL encoded).
+// ? [2] URL Decode parameters (URL passed is already properly encoded).
 /* ------------------------------------------------------------------------- */
-LLFUNC(ParseUrl, 9,
-  const Url uParsed{ AgString{lS, 1} };
+LLFUNC(ParseUrl, 11,
+  const AgString aUrl{lS, 1};
+  const AgUIntLG aEncode{lS, 2, 0, 2};
+  const Url uParsed{aUrl, aEncode};
   LuaUtilPushVar(lS, uParsed.GetResult());
   if(uParsed.GetResult() != Url::R_GOOD) return 1;
-  LuaUtilPushVar(lS, uParsed.GetScheme(), uParsed.GetSecure(),
-    uParsed.GetHost(), uParsed.GetPort(), uParsed.GetResource(),
-    uParsed.GetBookmark(), uParsed.GetUsername(), uParsed.GetPassword()))
+  LuaUtilPushVar(lS, uParsed.GetUrl(), uParsed.GetScheme(),
+    uParsed.GetSecure(), uParsed.GetHost(), uParsed.GetPort(),
+    uParsed.GetResource(), uParsed.GetBookmark(), uParsed.GetUsername(),
+    uParsed.GetPassword());
+  LuaUtilToTableEx(lS, uParsed))
 /* ========================================================================= */
 // $ Util.Pluralise
 // > Count:integer=The number to check
@@ -778,14 +885,6 @@ LLFUNC(Replace, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(ReplaceEx, 1, LuaUtilReplaceMulti(lS))
 /* ========================================================================= */
-// $ Util.RandUUID
-// < High64:integer=The high-order 128-bit integer
-// < Low64:integer=The low-order 128-bit integer
-// ? Generates a random UUIDv4
-/* ------------------------------------------------------------------------- */
-LLFUNC(RandUUID, 2, const UuId uuidData;
-  LuaUtilPushVar(lS, uuidData.d.qwRandom[0], uuidData.d.qwRandom[1]))
-/* ========================================================================= */
 // $ Util.Round
 // > Value:string=A number value
 // > Precision:integer=Maximum number of floating point digits
@@ -825,120 +924,6 @@ LLFUNC(RoundMul, 1, const AgLuaNumber aValue{lS, 1}, aMultiplier{lS, 2};
 /* ------------------------------------------------------------------------- */
 LLFUNC(RoundPow2, 1,
   LuaUtilPushVar(lS, UtilNearestPow2<lua_Integer>(AgLuaInteger{lS, 1}())))
-/* ========================================================================= */
-// $ Util.Hash
-// > Salt:string|Asset=The salt string or raw data used to randomise the data
-// > Data:string|Asset=The string or raw data to hash.
-// < Hash:string|Asset=The string or raw data calculated hash.
-// ? A collection of functions that will calculate a hash from a 'string' class
-// ? or raw 'Asset' class with or without salting.
-// ?
-// ? Actual functions (Replace 'Hash' with one of the below). Syntax of the
-// ? function is <TYP><STR><R><P...> where <TYP> is the hash type. <STR> is the
-// ? strength of the hash, <R> is either 'A' returning an 'Asset' class or 'S'
-// ? returning a string object and <P...> means one or more 'Asset' (A) or
-// ? 'String' (S) parameters. (*) denotes do not use due to collision risks...
-// ? - Hash:Asset = SHA1AA(Data:Asset) (*).
-// ? - Hash:Asset = SHA1AAA(Salt:Asset, Data:Asset) (*).
-// ? - Hash:Asset = SHA1AAS(Salt:Asset, Data:string) (*).
-// ? - Hash:Asset = SHA1AS(Data:string) (*).
-// ? - Hash:Asset = SHA1ASA(Salt:string, Data:Asset) (*).
-// ? - Hash:Asset = SHA1ASS(Salt:string, Data:string) (*).
-// ? - Hash:string = SHA1SA(Data:Asset) (*).
-// ? - Hash:string = SHA1SAA(Salt:Asset, Data:Asset) (*).
-// ? - Hash:string = SHA1SAS(Salt:Asset, Data:string) (*).
-// ? - Hash:string = SHA1SS(Data:string) (*).
-// ? - Hash:string = SHA1SSA(Salt:string, Data:Asset) (*).
-// ? - Hash:string = SHA1SSS(Salt:string, Data:string) (*).
-// ? - Hash:Asset = SHA224AA(Data:Asset).
-// ? - Hash:Asset = SHA224AAA(Salt:Asset, Data:Asset).
-// ? - Hash:Asset = SHA224AAS(Salt:Asset, Data:string).
-// ? - Hash:Asset = SHA224AS(Data:string).
-// ? - Hash:Asset = SHA224ASA(Salt:string, Data:Asset).
-// ? - Hash:Asset = SHA224ASS(Salt:string, Data:string).
-// ? - Hash:string = SHA224SA(Data:Asset).
-// ? - Hash:string = SHA224SAA(Salt:Asset, Data:Asset).
-// ? - Hash:string = SHA224SAS(Salt:Asset, Data:string).
-// ? - Hash:string = SHA224SS(Data:string).
-// ? - Hash:string = SHA224SSA(Salt:string, Data:Asset).
-// ? - Hash:string = SHA224SSS(Salt:string, Data:string).
-// ? - Hash:Asset = SHA256AA(Data:Asset).
-// ? - Hash:Asset = SHA256AAA(Salt:Asset, Data:Asset).
-// ? - Hash:Asset = SHA256AAS(Salt:Asset, Data:string).
-// ? - Hash:Asset = SHA256AS(Data:string).
-// ? - Hash:Asset = SHA256ASA(Salt:string, Data:Asset).
-// ? - Hash:Asset = SHA256ASS(Salt:string, Data:string).
-// ? - Hash:string = SHA256SA(Data:Asset).
-// ? - Hash:string = SHA256SAA(Salt:Asset, Data:Asset).
-// ? - Hash:string = SHA256SAS(Salt:Asset, Data:string).
-// ? - Hash:string = SHA256SS(Data:string).
-// ? - Hash:string = SHA256SSA(Salt:string, Data:Asset).
-// ? - Hash:string = SHA256SSS(Salt:string, Data:string).
-// ? - Hash:Asset = SHA384AA(Data:Asset).
-// ? - Hash:Asset = SHA384AAA(Salt:Asset, Data:Asset).
-// ? - Hash:Asset = SHA384AAS(Salt:Asset, Data:string).
-// ? - Hash:Asset = SHA384AS(Data:string).
-// ? - Hash:Asset = SHA384ASA(Salt:string, Data:Asset).
-// ? - Hash:Asset = SHA384ASS(Salt:string, Data:string).
-// ? - Hash:string = SHA384SA(Data:Asset).
-// ? - Hash:string = SHA384SAA(Salt:Asset, Data:Asset).
-// ? - Hash:string = SHA384SAS(Salt:Asset, Data:string).
-// ? - Hash:string = SHA384SS(Data:string).
-// ? - Hash:string = SHA384SSA(Salt:string, Data:Asset).
-// ? - Hash:string = SHA384SSS(Salt:string, Data:string).
-// ? - Hash:Asset = SHA512AA(Data:Asset).
-// ? - Hash:Asset = SHA512AAA(Salt:Asset, Data:Asset).
-// ? - Hash:Asset = SHA512AAS(Salt:Asset, Data:string).
-// ? - Hash:Asset = SHA512AS(Data:string).
-// ? - Hash:Asset = SHA512ASA(Salt:string, Data:Asset).
-// ? - Hash:Asset = SHA512ASS(Salt:string, Data:string).
-// ? - Hash:string = SHA512SA(Data:Asset).
-// ? - Hash:string = SHA512SAA(Salt:Asset, Data:Asset).
-// ? - Hash:string = SHA512SAS(Salt:Asset, Data:string).
-// ? - Hash:string = SHA512SS(Data:string).
-// ? - Hash:string = SHA512SSA(Salt:string, Data:Asset).
-// ? - Hash:string = SHA512SSS(Salt:string, Data:string).
-/* -- Macro to create a function that creates a string hash ---------------- */
-#define HASH_FUNC_NOSALT_STR(pf, af, cf, ty) \
-  LLFUNC(pf ## af, 1, LuaUtilPushVar(lS, pf ## functions::H ## cf(ty{lS, 1})))
-/* -- Macro to create a function that creates a raw hash ------------------- */
-#define HASH_FUNC_NOSALT_ASSET(pf, af, cf, ty) \
-  LLFUNC(pf ## af, 1, \
-    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(ty{lS, 1})))
-/* -- Macro to create a function that creates a salted string hash --------- */
-#define HASH_FUNC_SALT_STR(pf, af, cf, t1, t2) \
-  LLFUNC(pf ## af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
-    LuaUtilPushVar(lS, pf ## functions::H ## cf(aKey, aData)))
-/* -- Macro to create a function that creates a salted raw hash ------------ */
-#define HASH_FUNC_SALT_ASSET(pf, af, cf, t1, t2) \
-  LLFUNC(pf ## af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
-    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(aKey, aData)))
-/* -- Macro to create a bunch of functions with different rets/params ------ */
-#define HASH_FUNC_PACK(pf) \
-  HASH_FUNC_NOSALT_ASSET(pf, AA, MM, AgAsset) \
-  HASH_FUNC_NOSALT_ASSET(pf, AS, MS, AgString) \
-  HASH_FUNC_NOSALT_STR(pf, SA, SM, AgAsset) \
-  HASH_FUNC_NOSALT_STR(pf, SS, SS, AgString) \
-  HASH_FUNC_SALT_ASSET(pf, AAA, MMM, AgAsset, AgAsset) \
-  HASH_FUNC_SALT_ASSET(pf, AAS, MMS, AgAsset, AgString) \
-  HASH_FUNC_SALT_ASSET(pf, ASA, MSM, AgString, AgAsset) \
-  HASH_FUNC_SALT_ASSET(pf, ASS, MSS, AgString, AgString) \
-  HASH_FUNC_SALT_STR(pf, SAA, SMM, AgAsset, AgAsset) \
-  HASH_FUNC_SALT_STR(pf, SAS, SMS, AgAsset, AgString) \
-  HASH_FUNC_SALT_STR(pf, SSA, SSM, AgString, AgAsset) \
-  HASH_FUNC_SALT_STR(pf, SSS, SSS, AgString, AgString)
-/* -- Create the actual function packs for different hash types ------------ */
-HASH_FUNC_PACK(SHA1)                   // 128-bit function pack (insecure)
-HASH_FUNC_PACK(SHA224)                 // 224-bit function pack
-HASH_FUNC_PACK(SHA256)                 // 256-bit function pack
-HASH_FUNC_PACK(SHA384)                 // 384-bit function pack
-HASH_FUNC_PACK(SHA512)                 // 512-bit function pack
-/* -- Done with these macros ----------------------------------------------- */
-#undef HASH_FUNC_PACK
-#undef HASH_FUNC_SALT_ASSET
-#undef HASH_FUNC_SALT_STR
-#undef HASH_FUNC_NOSALT_ASSET
-#undef HASH_FUNC_NOSALT_STR
 /* ========================================================================= */
 // $ Util.Sanitise
 // > Text:string=The string to sanitise.
@@ -1014,11 +999,37 @@ LLFUNC(Trim, 1,
 // $ Util.UTF8Char
 // > Value:integer=Value to cast to a string
 // < ByteCode:string=The 'value' cast as a string.
-// ? Casts the specified 24-bit integer directly to a string. This is useful
-// ? as a quicker way to create unicode characters. All bits above 24 are
-// ? automatically stripped by a bitwise operation for safety.
+// ? Casts the specified 24-bit integer directly to a string which is
+// ? different from 'utf8.char' as you specify the integer with the actual
+// ? utf8 encoded bytes in them.
 /* ------------------------------------------------------------------------- */
 LLFUNC(UTF8Char, 1, LuaUtilPushVar(lS, UtfDecodeNum(AgUInt32{lS, 1})))
+/* ========================================================================= */
+// $ Util.UUIDDecode
+// > High64:integer=The high-order 128-bit integer.
+// > Low64:integer=The low-order 128-bit integer.
+// < Result:string=The decoded UUID.
+// ? Decodes the specified UUID integers to a string.
+/* ------------------------------------------------------------------------- */
+LLFUNC(UUIDDecode, 1, const AgUInt64 aHigh{lS, 1}, aLow{lS, 2};
+  LuaUtilPushVar(lS, UuId{ aHigh, aLow }.UuIdToString()))
+/* ========================================================================= */
+// $ Util.UUIDEncode
+// > UUID:string=The UUID string to recode.
+// < High64:integer=The high-order 128-bit integer
+// < Low64:integer=The low-order 128-bit integer
+// ? Encodes the specified UUID string to two 64-bit integers.
+/* ------------------------------------------------------------------------- */
+LLFUNC(UUIDEncode, 2, const UuId uuidData{ AgString{lS, 1} };
+  LuaUtilPushVar(lS, uuidData.d.qwRandom[0], uuidData.d.qwRandom[1]))
+/* ========================================================================= */
+// $ Util.UUIDRandom
+// < High64:integer=The high-order 128-bit integer
+// < Low64:integer=The low-order 128-bit integer
+// ? Generates a random UUIDv4
+/* ------------------------------------------------------------------------- */
+LLFUNC(UUIDRandom, 2, const UuId uuidData;
+  LuaUtilPushVar(lS, uuidData.d.qwRandom[0], uuidData.d.qwRandom[1]))
 /* ========================================================================= */
 // $ Util.UrlDecode
 // > Text:string=The URL string to decode.
@@ -1051,58 +1062,58 @@ LLFUNC(WordWrap, 1,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Util.* namespace functions begin
-  LLRSFUNC(AscNTime),       LLRSFUNC(AscNTimeUTC),   LLRSFUNC(AscTime),
-  LLRSFUNC(AscTimeUTC),     LLRSFUNC(B64D),          LLRSFUNC(B64DA),
-  LLRSFUNC(B64E),           LLRSFUNC(B64EA),         LLRSFUNC(Bits),
-  LLRSFUNC(Blank),          LLRSFUNC(Bytes),         LLRSFUNC(Capitalise),
-  LLRSFUNC(Chop),           LLRSFUNC(Clamp),         LLRSFUNC(ClampInt),
-  LLRSFUNC(Compact),        LLRSFUNC(CountOf),       LLRSFUNC(CRC),
-  LLRSFUNC(CRCA),           LLRSFUNC(DecodeUUID),    LLRSFUNC(Duration),
-  LLRSFUNC(EncodeUUID),     LLRSFUNC(EntDecode),     LLRSFUNC(EntEncode),
-  LLRSFUNC(Explode),        LLRSFUNC(ExplodeEx),     LLRSFUNC(FormatNTime),
-  LLRSFUNC(FormatNTimeUTC), LLRSFUNC(FormatNumber),  LLRSFUNC(FormatNumberI),
-  LLRSFUNC(FormatTime),     LLRSFUNC(FormatTimeUTC), LLRSFUNC(GetRatio),
-  LLRSFUNC(Grouped),        LLRSFUNC(Hex),           LLRSFUNC(HexDecode),
-  LLRSFUNC(HexDecodeA),     LLRSFUNC(HexEncode),     LLRSFUNC(HexEncodeA),
-  LLRSFUNC(HexEncodeL),     LLRSFUNC(HexEncodeLA),   LLRSFUNC(HexL),
-  LLRSFUNC(HighByte),       LLRSFUNC(HighDWord),     LLRSFUNC(HighWord),
-  LLRSFUNC(IfBlank),        LLRSFUNC(Implode),       LLRSFUNC(ImplodeEx),
-  LLRSFUNC(IsASCII),        LLRSFUNC(IsBoolean),     LLRSFUNC(IsExtASCII),
-  LLRSFUNC(IsFunction),     LLRSFUNC(IsInteger),     LLRSFUNC(IsNumber),
-  LLRSFUNC(IsString),       LLRSFUNC(IsTable),       LLRSFUNC(IsUserdata),
-  LLRSFUNC(LDuration),      LLRSFUNC(LDurationEx),   LLRSFUNC(LowByte),
-  LLRSFUNC(LowDWord),       LLRSFUNC(LowWord),       LLRSFUNC(MakeDWord),
-  LLRSFUNC(MakeQWord),      LLRSFUNC(MakeWord),      LLRSFUNC(ParseArgs),
-  LLRSFUNC(ParseTime),      LLRSFUNC(ParseTime2),    LLRSFUNC(ParseTimeEx),
-  LLRSFUNC(ParseUrl),       LLRSFUNC(Pluralise),     LLRSFUNC(PluraliseEx),
-  LLRSFUNC(PlusOrMinus),    LLRSFUNC(PlusOrMinusEx), LLRSFUNC(Position),
-  LLRSFUNC(Random),         LLRSFUNC(RandomA),       LLRSFUNC(RandUUID),
-  LLRSFUNC(RelTime),        LLRSFUNC(RelTimeEx),     LLRSFUNC(Replace),
-  LLRSFUNC(ReplaceEx),      LLRSFUNC(Round),         LLRSFUNC(RoundInt),
-  LLRSFUNC(RoundMul),       LLRSFUNC(RoundPow2),     LLRSFUNC(SHA1AA),
-  LLRSFUNC(SHA1AAA),        LLRSFUNC(SHA1AAS),       LLRSFUNC(SHA1AS),
-  LLRSFUNC(SHA1ASA),        LLRSFUNC(SHA1ASS),       LLRSFUNC(SHA1SA),
-  LLRSFUNC(SHA1SAA),        LLRSFUNC(SHA1SAS),       LLRSFUNC(SHA1SS),
-  LLRSFUNC(SHA1SSA),        LLRSFUNC(SHA1SSS),       LLRSFUNC(SHA224AA),
-  LLRSFUNC(SHA224AAA),      LLRSFUNC(SHA224AAS),     LLRSFUNC(SHA224AS),
-  LLRSFUNC(SHA224ASA),      LLRSFUNC(SHA224ASS),     LLRSFUNC(SHA224SA),
-  LLRSFUNC(SHA224SAA),      LLRSFUNC(SHA224SAS),     LLRSFUNC(SHA224SS),
-  LLRSFUNC(SHA224SSA),      LLRSFUNC(SHA224SSS),     LLRSFUNC(SHA256AA),
-  LLRSFUNC(SHA256AAA),      LLRSFUNC(SHA256AAS),     LLRSFUNC(SHA256AS),
-  LLRSFUNC(SHA256ASA),      LLRSFUNC(SHA256ASS),     LLRSFUNC(SHA256SA),
-  LLRSFUNC(SHA256SAA),      LLRSFUNC(SHA256SAS),     LLRSFUNC(SHA256SS),
-  LLRSFUNC(SHA256SSA),      LLRSFUNC(SHA256SSS),     LLRSFUNC(SHA384AA),
-  LLRSFUNC(SHA384AAA),      LLRSFUNC(SHA384AAS),     LLRSFUNC(SHA384AS),
-  LLRSFUNC(SHA384ASA),      LLRSFUNC(SHA384ASS),     LLRSFUNC(SHA384SA),
-  LLRSFUNC(SHA384SAA),      LLRSFUNC(SHA384SAS),     LLRSFUNC(SHA384SS),
-  LLRSFUNC(SHA384SSA),      LLRSFUNC(SHA384SSS),     LLRSFUNC(SHA512AA),
-  LLRSFUNC(SHA512AAA),      LLRSFUNC(SHA512AAS),     LLRSFUNC(SHA512AS),
-  LLRSFUNC(SHA512ASA),      LLRSFUNC(SHA512ASS),     LLRSFUNC(SHA512SA),
-  LLRSFUNC(SHA512SAA),      LLRSFUNC(SHA512SAS),     LLRSFUNC(SHA512SS),
-  LLRSFUNC(SHA512SSA),      LLRSFUNC(SHA512SSS),     LLRSFUNC(Sanitise),
-  LLRSFUNC(StretchInner),   LLRSFUNC(StretchOuter),  LLRSFUNC(TableSize),
-  LLRSFUNC(Trim),           LLRSFUNC(UrlDecode),     LLRSFUNC(UrlEncode),
-  LLRSFUNC(UTF8Char),       LLRSFUNC(WordWrap),
+  LLRSFUNC(AscNTime),      LLRSFUNC(AscNTimeUTC),    LLRSFUNC(AscTime),
+  LLRSFUNC(AscTimeUTC),    LLRSFUNC(B64D),           LLRSFUNC(B64DA),
+  LLRSFUNC(B64E),          LLRSFUNC(B64EA),          LLRSFUNC(Bits),
+  LLRSFUNC(Blank),         LLRSFUNC(Bytes),          LLRSFUNC(Capitalise),
+  LLRSFUNC(Chop),          LLRSFUNC(Clamp),          LLRSFUNC(ClampInt),
+  LLRSFUNC(Compact),       LLRSFUNC(CountOf),        LLRSFUNC(CRC),
+  LLRSFUNC(CRCA),          LLRSFUNC(Duration),       LLRSFUNC(EntDecode),
+  LLRSFUNC(EntEncode),     LLRSFUNC(Explode),        LLRSFUNC(ExplodeEx),
+  LLRSFUNC(FormatNTime),   LLRSFUNC(FormatNTimeUTC), LLRSFUNC(FormatNumber),
+  LLRSFUNC(FormatNumberI), LLRSFUNC(FormatTime),     LLRSFUNC(FormatTimeUTC),
+  LLRSFUNC(GetRatio),      LLRSFUNC(Grouped),        LLRSFUNC(Hex),
+  LLRSFUNC(HexDecode),     LLRSFUNC(HexDecodeA),     LLRSFUNC(HexEncode),
+  LLRSFUNC(HexEncodeA),    LLRSFUNC(HexEncodeL),     LLRSFUNC(HexEncodeLA),
+  LLRSFUNC(HexL),          LLRSFUNC(HighByte),       LLRSFUNC(HighDWord),
+  LLRSFUNC(HighWord),      LLRSFUNC(IfBlank),        LLRSFUNC(Implode),
+  LLRSFUNC(ImplodeEx),     LLRSFUNC(IsASCII),        LLRSFUNC(IsBoolean),
+  LLRSFUNC(IsExtASCII),    LLRSFUNC(IsFunction),     LLRSFUNC(IsInteger),
+  LLRSFUNC(IsNumber),      LLRSFUNC(IsString),       LLRSFUNC(IsTable),
+  LLRSFUNC(IsUserdata),    LLRSFUNC(LDuration),      LLRSFUNC(LDurationEx),
+  LLRSFUNC(LowByte),       LLRSFUNC(LowDWord),       LLRSFUNC(LowWord),
+  LLRSFUNC(MakeDWord),     LLRSFUNC(MakeQWord),      LLRSFUNC(MakeWord),
+  LLRSFUNC(ParseArgs),     LLRSFUNC(ParseTime),      LLRSFUNC(ParseTime2),
+  LLRSFUNC(ParseTimeEx),   LLRSFUNC(ParseUrl),       LLRSFUNC(Pluralise),
+  LLRSFUNC(PluraliseEx),   LLRSFUNC(PlusOrMinus),    LLRSFUNC(PlusOrMinusEx),
+  LLRSFUNC(Position),      LLRSFUNC(Random),         LLRSFUNC(RandomA),
+  LLRSFUNC(RelTime),       LLRSFUNC(RelTimeEx),     LLRSFUNC(Replace),
+  LLRSFUNC(ReplaceEx),     LLRSFUNC(Round),         LLRSFUNC(RoundInt),
+  LLRSFUNC(RoundMul),      LLRSFUNC(RoundPow2),     LLRSFUNC(SHA1AA),
+  LLRSFUNC(SHA1AAA),       LLRSFUNC(SHA1AAS),       LLRSFUNC(SHA1AS),
+  LLRSFUNC(SHA1ASA),       LLRSFUNC(SHA1ASS),       LLRSFUNC(SHA1SA),
+  LLRSFUNC(SHA1SAA),       LLRSFUNC(SHA1SAS),       LLRSFUNC(SHA1SS),
+  LLRSFUNC(SHA1SSA),       LLRSFUNC(SHA1SSS),       LLRSFUNC(SHA224AA),
+  LLRSFUNC(SHA224AAA),     LLRSFUNC(SHA224AAS),     LLRSFUNC(SHA224AS),
+  LLRSFUNC(SHA224ASA),     LLRSFUNC(SHA224ASS),     LLRSFUNC(SHA224SA),
+  LLRSFUNC(SHA224SAA),     LLRSFUNC(SHA224SAS),     LLRSFUNC(SHA224SS),
+  LLRSFUNC(SHA224SSA),     LLRSFUNC(SHA224SSS),     LLRSFUNC(SHA256AA),
+  LLRSFUNC(SHA256AAA),     LLRSFUNC(SHA256AAS),     LLRSFUNC(SHA256AS),
+  LLRSFUNC(SHA256ASA),     LLRSFUNC(SHA256ASS),     LLRSFUNC(SHA256SA),
+  LLRSFUNC(SHA256SAA),     LLRSFUNC(SHA256SAS),     LLRSFUNC(SHA256SS),
+  LLRSFUNC(SHA256SSA),     LLRSFUNC(SHA256SSS),     LLRSFUNC(SHA384AA),
+  LLRSFUNC(SHA384AAA),     LLRSFUNC(SHA384AAS),     LLRSFUNC(SHA384AS),
+  LLRSFUNC(SHA384ASA),     LLRSFUNC(SHA384ASS),     LLRSFUNC(SHA384SA),
+  LLRSFUNC(SHA384SAA),     LLRSFUNC(SHA384SAS),     LLRSFUNC(SHA384SS),
+  LLRSFUNC(SHA384SSA),     LLRSFUNC(SHA384SSS),     LLRSFUNC(SHA512AA),
+  LLRSFUNC(SHA512AAA),     LLRSFUNC(SHA512AAS),     LLRSFUNC(SHA512AS),
+  LLRSFUNC(SHA512ASA),     LLRSFUNC(SHA512ASS),     LLRSFUNC(SHA512SA),
+  LLRSFUNC(SHA512SAA),     LLRSFUNC(SHA512SAS),     LLRSFUNC(SHA512SS),
+  LLRSFUNC(SHA512SSA),     LLRSFUNC(SHA512SSS),     LLRSFUNC(Sanitise),
+  LLRSFUNC(StretchInner),  LLRSFUNC(StretchOuter),  LLRSFUNC(TableSize),
+  LLRSFUNC(Trim),          LLRSFUNC(UrlDecode),     LLRSFUNC(UrlEncode),
+  LLRSFUNC(UTF8Char),      LLRSFUNC(UUIDDecode),    LLRSFUNC(UUIDEncode),
+  LLRSFUNC(UUIDRandom),    LLRSFUNC(WordWrap),
 LLRSEND                                // Util.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Util namespace

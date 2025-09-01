@@ -116,7 +116,13 @@ LLFUNC(DataN, 0,
 // ? object will no longer be useable after this call and an error will be
 // ? generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Stat>(lS, 1, *cStats))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Stat>(lS, cStats))
+/* ========================================================================= */
+// $ Stat:Destroyed
+// < Destroyed:boolean=If the Stat class is destroyed
+// ? Returns if the Stat class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cStats)))
 /* ========================================================================= */
 // $ Stat:Finish
 // > OmitLF:boolean=Omits the ending linefeed.
@@ -209,11 +215,13 @@ LLFUNC(SortTwo, 0,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // stat:* member functions begin
-  LLRSFUNC(Cells),   LLRSFUNC(Data),   LLRSFUNC(DataB),  LLRSFUNC(DataFB),
-  LLRSFUNC(DataFI),  LLRSFUNC(DataFN), LLRSFUNC(DataI),  LLRSFUNC(DataN),
-  LLRSFUNC(Destroy), LLRSFUNC(Finish), LLRSFUNC(Header), LLRSFUNC(HeaderDupe),
-  LLRSFUNC(Headers), LLRSFUNC(Id),     LLRSFUNC(Name),   LLRSFUNC(Reserve),
-  LLRSFUNC(Rows),    LLRSFUNC(Sort),   LLRSFUNC(SortTwo),
+  LLRSFUNC(Cells),      LLRSFUNC(Data),    LLRSFUNC(DataB),
+  LLRSFUNC(DataFB),     LLRSFUNC(DataFI),  LLRSFUNC(DataFN),
+  LLRSFUNC(DataI),      LLRSFUNC(DataN),   LLRSFUNC(Destroy),
+  LLRSFUNC(Destroyed),  LLRSFUNC(Finish),  LLRSFUNC(Header),
+  LLRSFUNC(HeaderDupe), LLRSFUNC(Headers), LLRSFUNC(Id),
+  LLRSFUNC(Name),       LLRSFUNC(Reserve), LLRSFUNC(Rows),
+  LLRSFUNC(Sort),       LLRSFUNC(SortTwo),
 LLRSEND                                // Stat:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

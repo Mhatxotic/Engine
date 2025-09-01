@@ -339,42 +339,6 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   template<typename T>int ToFile(const string &strFile) const
     { return FStream{ strFile, FM_W_T }.
         FStreamWriteStringSafe(ToString<T>()) ? 0 : StdGetError(); }
-  /* -- Load json from file asynchronously --------------------------------- */
-  void InitAsyncFile(lua_State*const lS)
-  { // Must have 4 parameters (including the class pointer)
-    LuaUtilCheckParams(lS, 5);
-    // Check and get parameters
-    const string strName{ LuaUtilGetCppFile(lS, 1) };
-    LuaUtilCheckFunc(lS, 2, 3, 4);
-    // Init the specified string as a file asynchronously
-    AsyncInitFile(lS, strName, "jsonfile");
-  }
-  /* -- Load json from string asynchronously ------------------------------- */
-  void InitAsyncString(lua_State*const lS)
-  { // Must have 5 parameters (including the class pointer)
-    LuaUtilCheckParams(lS, 6);
-    // Check and get parameters
-    const string strN{ LuaUtilGetCppStrNE(lS, 1) };
-    Memory mData{ LuaUtilGetMBfromLStr(lS, 2) };
-    LuaUtilCheckFunc(lS, 3, 4, 5);
-    // Init the specified string as an array asynchronously
-    AsyncInitArray(lS, strN, "jsonstring", mData);
-  }
-  /* -- Init from LUA string ----------------------------------------------- */
-  void InitString(lua_State*const lS)
-  { // Need three parameters...
-    //   1: identifier
-    //   2: string to convert
-    //   3: the userdata object that contains a pointer to this class
-    LuaUtilCheckParams(lS, 3);
-    // Get name and code to parse
-    IdentSet(LuaUtilGetCppStr(lS, 1));
-    // Init file as array
-    Memory mbData{ LuaUtilGetMBfromLStr(lS, 2) };
-    SyncInitArray(IdentGet(), mbData);
-  }
-  /* -- Parse the table into a value --------------------------------------- */
-  void InitFromTable(lua_State*const lS) { ParseTable(lS, 1, 1).Swap(*this); }
   /* ----------------------------------------------------------------------- */
   ~Json(void) { AsyncCancel(); }
   /* -- Default constructor ------------------------------------------------ */

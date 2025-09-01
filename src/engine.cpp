@@ -23,7 +23,6 @@ namespace E {                          // Start of engine namespace
 #include "utf.hpp"                     // UTF strings utility header
 #include "std.hpp"                     // StdLib function helpers header
 #include "string.hpp"                  // String utilities header
-#include "url.hpp"                     // Url parsing library
 #include "error.hpp"                   // Error handling utility header
 #include "token.hpp"                   // String tokenisation utility header
 #include "parser.hpp"                  // String parsing utility header
@@ -63,12 +62,14 @@ namespace E {                          // Start of engine namespace
 #include "condef.hpp"                  // Console definitions header
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
+#include "toggler.hpp"                 // Toggler class header
 #include "luautil.hpp"                 // Lua utility functions header
 #include "luaref.hpp"                  // Lua reference helper class header
 #include "luaevent.hpp"                // Lua event helper class header
 #include "luafunc.hpp"                 // Lua callback helper class header
 #include "async.hpp"                   // Async file loading class header
 #include "crypt.hpp"                   // Cryptography utilities header
+#include "url.hpp"                     // Url parsing library
 #include "uuid.hpp"                    // UuId parsing header
 #include "codec.hpp"                   // Codec classes header
 #include "credits.hpp"                 // Credits handling class header

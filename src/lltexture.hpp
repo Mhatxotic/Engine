@@ -427,7 +427,14 @@ LLFUNC(BlitSLTWHA, 0,
 // ? has been rendered. The object will no longer be useable after this call
 // ? and an error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Texture>(lS, 1, *cTextures))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Texture>(lS, cTextures))
+/* ========================================================================= */
+// $ Texture:Destroyed
+// < Destroyed:boolean=If the Texture class is destroyed
+// ? Returns if the Texture class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cTextures)))
 /* ========================================================================= */
 // $ Texture:Download
 // > TexId:Integer=The sub-id of the texture to download
@@ -448,6 +455,12 @@ LLFUNC(Dump, 0,
   const AgTextureId aTextureId{lS, 2, aTexture};
   const AgFilename aFilename{lS, 3};
   aTexture().Dump(aTextureId, aFilename))
+/* ========================================================================= */
+// $ Texture:GetFlags
+// < Flags:integer=Texture flags value
+// ? Returns the current texture flags.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetFlags, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().FlagGet()))
 /* ========================================================================= */
 // $ Texture:GetHeight
 // < Height:integer=The handle of the new mask created.
@@ -955,20 +968,20 @@ LLRSMFBEGIN                            // Texture:* member functions begin
   LLRSFUNC(BlitLTA),     LLRSFUNC(BlitLTRB),    LLRSFUNC(BlitLTWH),
   LLRSFUNC(BlitLTWHA),   LLRSFUNC(BlitM),       LLRSFUNC(BlitSLT),
   LLRSFUNC(BlitSLTA),    LLRSFUNC(BlitSLTRB),   LLRSFUNC(BlitSLTWH),
-  LLRSFUNC(BlitSLTWHA),  LLRSFUNC(Destroy),     LLRSFUNC(Download),
-  LLRSFUNC(Dump),        LLRSFUNC(GetHeight),   LLRSFUNC(GetId),
-  LLRSFUNC(GetName),     LLRSFUNC(GetSubCount), LLRSFUNC(GetWidth),
-  LLRSFUNC(PopColour),   LLRSFUNC(PushColour),  LLRSFUNC(SetCA),
-  LLRSFUNC(SetCB),       LLRSFUNC(SetCG),       LLRSFUNC(SetCR),
-  LLRSFUNC(SetCRGB),     LLRSFUNC(SetCRGBA),    LLRSFUNC(SetCRGBAI),
-  LLRSFUNC(SetCX),       LLRSFUNC(SetTCLTRB),   LLRSFUNC(SetTCLTWH),
-  LLRSFUNC(SetTCX),      LLRSFUNC(SetVLTRB),    LLRSFUNC(SetVLTWH),
-  LLRSFUNC(SetVLTWHA),   LLRSFUNC(SetVX),       LLRSFUNC(TileA),
-  LLRSFUNC(TileAD),      LLRSFUNC(TileAS),      LLRSFUNC(TileASD),
-  LLRSFUNC(TileGSTC),    LLRSFUNC(TileGTC),     LLRSFUNC(TileS),
-  LLRSFUNC(TileSD),      LLRSFUNC(TileSS),      LLRSFUNC(TileSSD),
-  LLRSFUNC(TileSSTC),    LLRSFUNC(TileSTC),     LLRSFUNC(Upload),
-  LLRSFUNC(UploadEx),
+  LLRSFUNC(BlitSLTWHA),  LLRSFUNC(Destroy),     LLRSFUNC(Destroyed),
+  LLRSFUNC(Download),    LLRSFUNC(Dump),        LLRSFUNC(GetFlags),
+  LLRSFUNC(GetHeight),   LLRSFUNC(GetId),       LLRSFUNC(GetName),
+  LLRSFUNC(GetSubCount), LLRSFUNC(GetWidth),    LLRSFUNC(PopColour),
+  LLRSFUNC(PushColour),  LLRSFUNC(SetCA),       LLRSFUNC(SetCB),
+  LLRSFUNC(SetCG),       LLRSFUNC(SetCR),       LLRSFUNC(SetCRGB),
+  LLRSFUNC(SetCRGBA),    LLRSFUNC(SetCRGBAI),   LLRSFUNC(SetCX),
+  LLRSFUNC(SetTCLTRB),   LLRSFUNC(SetTCLTWH),   LLRSFUNC(SetTCX),
+  LLRSFUNC(SetVLTRB),    LLRSFUNC(SetVLTWH),    LLRSFUNC(SetVLTWHA),
+  LLRSFUNC(SetVX),       LLRSFUNC(TileA),       LLRSFUNC(TileAD),
+  LLRSFUNC(TileAS),      LLRSFUNC(TileASD),     LLRSFUNC(TileGSTC),
+  LLRSFUNC(TileGTC),     LLRSFUNC(TileS),       LLRSFUNC(TileSD),
+  LLRSFUNC(TileSS),      LLRSFUNC(TileSSD),     LLRSFUNC(TileSSTC),
+  LLRSFUNC(TileSTC),     LLRSFUNC(Upload),      LLRSFUNC(UploadEx),
 LLRSEND                                // Texture:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

@@ -608,7 +608,7 @@ template<class AnyArray, class CtrType = typename AnyArray::value_type>
   return osS.str();
 }
 /* -- Converts the key/value pairs to a stringvector ----------------------- */
-static const string ImplodeMap(const StrNCStrMap &ssmSrc,
+static const string ImplodeMap[[maybe_unused]](const StrNCStrMap &ssmSrc,
   const string &strLineSep=cCommon->CommonSpace(),
   const string &strKeyValSep=cCommon->CommonEquals(),
   const string &strValEncaps="\"")

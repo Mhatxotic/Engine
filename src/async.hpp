@@ -42,6 +42,7 @@ using namespace ILuaEvt::P;            using namespace ILuaUtil::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace IToggler::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -53,7 +54,8 @@ enum ASyncProgressCommand : unsigned int // For lua callback events
 };/* ----------------------------------------------------------------------- */
 template<class MemberType, class ColType>class AsyncLoader :
   /* -- Base classes ------------------------------------------------------- */
-  public Memory                        // Loading from memory data (reusable)
+  public Memory,                       // Loading from memory data (reusable)
+  public TogglerMaster<>               // Boolean to protect from destruction
 { /* -- Private typedefs ------------------------------------------ */ private:
   enum AsyncResult : unsigned int      // Async loading results
   { /* --------------------------------------------------------------------- */
@@ -143,18 +145,18 @@ template<class MemberType, class ColType>class AsyncLoader :
       static_cast<uint64_t>(stPosition), static_cast<uint64_t>(MemSize()));
   }
   /* ----------------------------------------------------------------------- */
-  void AsyncTidyUpVars(void)
-  { // Clear Lua stack string and recover memory as we are done with it. If
+  void AsyncCleanup(void)
+  { // Wait for thread to finish if not already
+    AsyncStop();
+    // Clear Lua stack string and recover memory as we are done with it. If
     // the member class wants to reuse this string now they can.
     strAsyncError.clear();
     strAsyncError.shrink_to_fit();
     // Clear other members
     asctAsyncType = BA_NONE;
     uiAsyncPid = 0;
-    // The 'Memory' used from the loading would have already been transferred
-    // to the 'FileMap' class on the callback so it will already be empty now.
-    // Also the member controls the 'Ident' class so it's up to them to manage
-    // it.
+    // Clear references and state or Lua's GC won't ever delete the class
+    lecAsync.LuaRefDeInit();
   }
   /* -- Get thread ---------------------------------------------- */ protected:
   bool AsyncThreadIsCurrent(void) const
@@ -331,30 +333,33 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Wait for thread to terminate
     tAsyncThread.ThreadDeInit();
   }
+  /* -- Push generic error handler ----------------------------------------- */
+  int AsyncPushErrorHandler(void) const
+    { return LuaUtilPushAndGetGenericErrId(lecAsync.LuaRefGetState()); }
   /* -- Async do protected dispatch (assumes params already on lua stack) -- */
   void AsyncDoLuaThrowErrorHandler(const EvtMainEvent &emeEvent)
-  { // Get error function callback
+  { // Push and get error callback function id
+    const int iErrorHandler = AsyncPushErrorHandler();
+    // Get error function callback
     if(lecAsync.LuaRefGetFunc(LR_ERROR))
     { // Push the error message
       LuaUtilPushStr(lecAsync.LuaRefGetState(), strAsyncError);
-      // Wait for the thread to terminate if it is still running
-      AsyncStop();
-      // Unregister the class from the requested collector type
-      static_cast<ColType&>(mtAsyncOwner).CollectorUnregister();
-      // Now do the callback. An exception could occur here.
-      LuaUtilCallFuncEx(lecAsync.LuaRefGetState(), 1);
+      // Now do the callback. An exception could occur here if the error
+      // hanlder has errors too which will be thrown all the way back to the
+      // exception handler in 'core.cpp'.
+      LuaUtilPCall(lecAsync.LuaRefGetState(), 1, 0, iErrorHandler);
     } // Invalid userdata?
     else cLog->LogErrorExSafe("AsyncLoader got invalid params in failure "
       "event $ for '$' with luastate($) and fref($) from $ params!",
       emeEvent.cCmd, idName.IdentGet(), lecAsync.LuaRefStateIsSet(),
       lecAsync.LuaRefGetFunc(LR_ERROR), emeEvent.eaArgs.size());
-    // The memory for the error is no longer needed
-    AsyncTidyUpVars();
   }
   /* -- Async do protected dispatch (assumes params already on lua stack) -- */
   void AsyncDoLuaProtectedDispatch(const EvtMainEvent &emeEvent,
     const int iParams, const int iHandler)
-  { // Compare error code
+  { // Set a 'protect' flag and then unset it when leaving this scope
+    const TogglerSlave<> tsProtect{ this };
+    // Compare error code
     switch(LuaUtilPCallExSafe(lecAsync.LuaRefGetState(), iParams, 0, iHandler))
     { // No error so remove error handler value and return
       case LUA_OK: return;
@@ -377,7 +382,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   /* -- Async do protected call dispatams already pushed onto lua stack) --- */
   void AsyncDoFinishLuaProtectedDispatch(const EvtMainEvent &emeEvent,
     const int iParam, const int iHandler)
-  { // Wait for the thread to terminate if it is still running
+  { // Wait for the thread to stop
     AsyncStop();
     // Register the class from the requested collector type
     static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
@@ -499,8 +504,7 @@ template<class MemberType, class ColType>class AsyncLoader :
         } // The operation is still loading?
         case AR_LOADING:
         { // Push and get error callback function id
-          const int iErrorHandler =
-            LuaUtilPushAndGetGenericErrId(lecAsync.LuaRefGetState());
+          const int iErrorHandler = AsyncPushErrorHandler();
           // Push the progress callback and if succeeded?
           if(lecAsync.LuaRefGetFunc(LR_PROGRESS))
           { // Push the sent parameters onto the stack
@@ -526,8 +530,7 @@ template<class MemberType, class ColType>class AsyncLoader :
         { // We need that third (first) parameter and if we do?
           if(emaArgs.size() >= 4)
           { // Push and get error callback function id
-            const int iErrorHandler =
-              LuaUtilPushAndGetGenericErrId(lecAsync.LuaRefGetState());
+            const int iErrorHandler = AsyncPushErrorHandler();
             // Push the success callback and if succeeded?
             if(lecAsync.LuaRefGetFunc(LR_SUCCESS))
             { // Push the class ref and if both succeeded?
@@ -557,8 +560,7 @@ template<class MemberType, class ColType>class AsyncLoader :
         } // The operation succeeded?
         case AR_SUCCESS:
         { // Push and get error callback function id
-          const int iErrorHandler =
-            LuaUtilPushAndGetGenericErrId(lecAsync.LuaRefGetState());
+          const int iErrorHandler = AsyncPushErrorHandler();
           // Push the success callback and if succeeded?
           if(lecAsync.LuaRefGetFunc(LR_SUCCESS))
           { // Push the class ref and if both succeeded?
@@ -578,7 +580,9 @@ template<class MemberType, class ColType>class AsyncLoader :
           break;
         } // If there was an error?
         case AR_ERROR:
-        { // Push the error callback and if succeeded?
+        { // Wait for the thread to stop
+          AsyncStop();
+          // Push the error callback and if succeeded?
           AsyncDoLuaThrowErrorHandler(emeEvent);
           // Done
           break;
@@ -592,11 +596,14 @@ template<class MemberType, class ColType>class AsyncLoader :
         case AR_ABORT: break;
       }
     } // Tidy up the variables
-    AsyncTidyUpVars();
-    // Clear references and state or Lua's GC won't ever delete the class
-    lecAsync.LuaRefDeInit();
+    AsyncCleanup();
   } // Exception occured? Disable lua callback/refs and rethrow
-  catch(const exception&) { lecAsync.LuaRefDeInit(); throw; }
+  catch(const exception&)
+  { // Tidy up the variables
+    AsyncCleanup();
+    // Re-throw the exception to the sandbox exception handler in 'core.hpp'.
+    throw;
+  }
   /* -- Main constructor --------------------------------------------------- */
   AsyncLoader(                         // Initialise with derived class
     Ident &idNName,                      // Reference to identified

@@ -505,17 +505,19 @@ class SysBase :                        // Safe exception handler namespace
       { RLIMIT_RSS,    { 0, 0 } },     { RLIMIT_STACK,      { 0, 0 } }
     }},
     slSignals{{                        // Init signals list
-      { SIGABRT, nullptr }, { SIGBUS,  nullptr },
-      { SIGFPE,  nullptr }, { SIGHUP,  nullptr }, { SIGILL,  nullptr },
-      { SIGINT,  nullptr }, { SIGPIPE, nullptr }, { SIGQUIT, nullptr },
-      { SIGSEGV, nullptr }, { SIGSYS,  nullptr }, { SIGTERM, nullptr },
-      { SIGTRAP, nullptr }, { SIGXCPU, nullptr }, { SIGXFSZ, nullptr },
+      { SIGABRT, HandleSignalStatic }, { SIGBUS,  HandleSignalStatic },
+      { SIGFPE,  HandleSignalStatic }, { SIGHUP,  HandleSignalStatic },
+      { SIGILL,  HandleSignalStatic }, { SIGINT,  HandleSignalStatic },
+      { SIGPIPE, SIG_IGN            }, { SIGQUIT, HandleSignalStatic },
+      { SIGSEGV, HandleSignalStatic }, { SIGSYS,  HandleSignalStatic },
+      { SIGTERM, HandleSignalStatic }, { SIGTRAP, HandleSignalStatic },
+      { SIGXCPU, HandleSignalStatic }, { SIGXFSZ, HandleSignalStatic },
     }}
     /* --------------------------------------------------------------------- */
   { // Install all those signal handlers
     for(SignalPair &spPair : slSignals)
     { // Set the signal and check for error
-      spPair.second = signal(spPair.first, HandleSignalStatic);
+      spPair.second = signal(spPair.first, spPair.second);
       if(spPair.second == SIG_ERR)
         XCL("Failed to install signal handler!", "Id", spPair.first);
     } // Increase resource limits we can change so the engine can do more

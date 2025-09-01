@@ -108,7 +108,15 @@ class Certs                            // Certificates store
   }
   /* -- Unload open ssl certificate store ---------------------------------- */
   void CertsUnload(void)
-  { // Remove pointer to certificate store as it is above to become invalid
+  { // If there are certificates in the list then clear them
+    if(!lCAStore.empty())
+    { // Write that we're clearing them
+      cLog->LogDebugExSafe("Certs cleared $ certificates.", lCAStore.size());
+      // Clear them and recover memory. The SSL_CTX_free() function will free
+      // them for us if applicable.
+      lCAStore.clear();
+      lCAStore.shrink_to_fit();
+    } // Remove pointer to certificate store as it is above to become invalid
     if(xsCerts) xsCerts = nullptr;
     // Return if ssl store is not available
     if(!scStore) return;
@@ -120,34 +128,10 @@ class Certs                            // Certificates store
     // Log that we unloaded the certificate store
     cLog->LogInfoSafe("Certs unloaded certificate store.");
   }
-  /* -- Unload entire certificate store ------------------------------------ */
-  void CertsEmpty(void)
-  { // Unload the certificate store in OpenSSL
-    CertsUnload();
-    // Ignore if no ceritificates loaded
-    if(lCAStore.empty()) return;
-    // Now deleting certificate store
-    cLog->LogDebugExSafe("Certs de-initialising $ certificates...",
-      lCAStore.size());
-    // Counters
-    size_t stFreed = 0;
-    // For each certificate
-    while(!lCAStore.empty())
-    { // Get last item
-      const X509Pair &xpItem = lCAStore.back();
-      // Have certificate? Free the cert and increment number
-      if(xpItem.second) { X509_free(xpItem.second); ++stFreed; }
-      // Remove the cached version
-      lCAStore.pop_back();
-    } // Free memory
-    lCAStore.shrink_to_fit();
-    // Finished
-    cLog->LogInfoExSafe("Certs de-initialised $ certificates.", stFreed);
-  }
   /* -- Load certificates from a list of files ----------------------------- */
   void CertsLoadList(const string &strD, const AssetList &aList)
   { // Unload existing certificates
-    CertsEmpty();
+    CertsUnload();
     // Now initialising certificate store
     cLog->LogDebugExSafe(
       "Certs found $ files, initialising certificate store...", aList.size());
@@ -297,7 +281,7 @@ class Certs                            // Certificates store
   /* -- No code ------------------------------------------------------------ */
   { }
   /* -- Destructor that unloads all x509 certificates ---------------------- */
-  ~Certs(void) { CertsEmpty(); }
+  ~Certs(void) { CertsUnload(); }
   /* --------------------------------------------------------------- */ public:
   CVarReturn CertsSetBypassFlags1(const uint64_t uiFlags)
     { return CVarSimpleSetInt(qCertBypass.front(), uiFlags); }

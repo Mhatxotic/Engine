@@ -89,7 +89,14 @@ LLFUNC(Copy, 0,
 // ? Destroys the palette and frees the memory associated with it. This does
 // ? not affect the active palette as this is stored on the GPU.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Palette>(lS, 1, *cPalettes))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Palette>(lS, cPalettes))
+/* ========================================================================= */
+// $ Palette:Destroyed
+// < Destroyed:boolean=If the Palette class is destroyed
+// ? Returns if the Palette class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cPalettes)))
 /* ========================================================================= */
 // $ Palette:GetA
 // > Id:integer=Palette entry to modify (0-255).
@@ -397,14 +404,16 @@ LLFUNC(ShiftF, 0,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Palette:* member functions begin
-  LLRSFUNC(Commit),   LLRSFUNC(Copy),    LLRSFUNC(Destroy),  LLRSFUNC(Fill),
-  LLRSFUNC(GetA),     LLRSFUNC(GetAI),   LLRSFUNC(GetB),     LLRSFUNC(GetBI),
-  LLRSFUNC(GetG),     LLRSFUNC(GetGI),   LLRSFUNC(GetId),    LLRSFUNC(GetName),
-  LLRSFUNC(GetR),     LLRSFUNC(GetRGBA), LLRSFUNC(GetRGBAI), LLRSFUNC(GetRI),
-  LLRSFUNC(SetA),     LLRSFUNC(SetAI),   LLRSFUNC(SetB),     LLRSFUNC(SetBI),
-  LLRSFUNC(SetG),     LLRSFUNC(SetGI),   LLRSFUNC(SetR),     LLRSFUNC(SetRGBA),
-  LLRSFUNC(SetRGBAI), LLRSFUNC(SetRI),   LLRSFUNC(Shift),    LLRSFUNC(ShiftB),
-  LLRSFUNC(ShiftF),
+  LLRSFUNC(Commit),    LLRSFUNC(Copy),     LLRSFUNC(Destroy),
+  LLRSFUNC(Destroyed), LLRSFUNC(Fill),     LLRSFUNC(GetA),
+  LLRSFUNC(GetAI),     LLRSFUNC(GetB),     LLRSFUNC(GetBI),
+  LLRSFUNC(GetG),      LLRSFUNC(GetGI),    LLRSFUNC(GetId),
+  LLRSFUNC(GetName),   LLRSFUNC(GetR),     LLRSFUNC(GetRGBA),
+  LLRSFUNC(GetRGBAI),  LLRSFUNC(GetRI),    LLRSFUNC(SetA),
+  LLRSFUNC(SetAI),     LLRSFUNC(SetB),     LLRSFUNC(SetBI),
+  LLRSFUNC(SetG),      LLRSFUNC(SetGI),    LLRSFUNC(SetR),
+  LLRSFUNC(SetRGBA),   LLRSFUNC(SetRGBAI), LLRSFUNC(SetRI),
+  LLRSFUNC(Shift),     LLRSFUNC(ShiftB),   LLRSFUNC(ShiftF),
 LLRSEND                                // Palette:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

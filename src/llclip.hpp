@@ -36,7 +36,13 @@ struct AcClip : public ArClass<Clip> {
 // $ Clip:Destroy
 // ? Destroys the specified Clip object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Clip>(lS, 1, *cClips))
+LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Clip>(lS, cClips))
+/* ========================================================================= */
+// $ Clip:Destroyed
+// < Destroyed:boolean=If the Clip class is destroyed
+// ? Returns if the Clip class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cClips)))
 /* ========================================================================= */
 // $ Clip:Id
 // < Id:integer=The id number of the Clip object.
@@ -62,7 +68,8 @@ LLFUNC(Value, 1, AgClip{lS, 1}().ClipGet())
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Clip:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Id), LLRSFUNC(Name), LLRSFUNC(Value),
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Id), LLRSFUNC(Name),
+  LLRSFUNC(Value),
 LLRSEND                                // Clip:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

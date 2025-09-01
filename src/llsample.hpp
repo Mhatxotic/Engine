@@ -41,7 +41,13 @@ struct AcSample : public ArClass<Sample> {
 // ? The object will no longer be useable after this call and an error will be
 // ? generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Sample>(lS, 1, *cSamples))
+LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Sample>(lS, cSamples))
+/* ========================================================================= */
+// $ Sample:Destroyed
+// < Destroyed:boolean=If the Sample class is destroyed
+// ? Returns if the Sample class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSamples)))
 /* ========================================================================= */
 // $ Sample:Duration
 // < Duration:number=Duration of buffer in seconds
@@ -117,8 +123,9 @@ LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().Stop()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Sample:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Duration), LLRSFUNC(Id),    LLRSFUNC(Name),
-  LLRSFUNC(Play),    LLRSFUNC(PlayEx),   LLRSFUNC(Spawn), LLRSFUNC(Stop),
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Duration), LLRSFUNC(Id),
+  LLRSFUNC(Name),    LLRSFUNC(Play),      LLRSFUNC(PlayEx),   LLRSFUNC(Spawn),
+  LLRSFUNC(Stop),
 LLRSEND                                // Sample:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

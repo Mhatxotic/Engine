@@ -318,7 +318,7 @@ template<typename IntType>static char StdToLower(const IntType itC)
 /* -- Returns if character is a whitespace --------------------------------- */
 template<typename IntType>
   constexpr static bool StdIsSpace(const IntType itChar)
-    { return ::std::isspace(static_cast<int>(itChar)); }
+    { return itChar == ' '; }
 /* -- Returns if character is NOT a whitespace ----------------------------- */
 template<typename IntType>
   constexpr static bool StdIsNotSpace(const IntType itChar)
@@ -326,7 +326,7 @@ template<typename IntType>
 /* -- Returns if character is a digit (0-9) -------------------------------- */
 template<typename IntType>
   constexpr static bool StdIsDigit(const IntType itChar)
-    { return ::std::isdigit(static_cast<int>(itChar)); }
+    { return itChar >= '0' && itChar <= '9'; }
 /* -- Returns if character is NOT a digit (0-9) ---------------------------- */
 template<typename IntType>
   constexpr static bool StdIsNotDigit(const IntType itChar)
@@ -334,7 +334,8 @@ template<typename IntType>
 /* -- Returns if character is alphanumeric (A-Za-z) ------------------------ */
 template<typename IntType>
   constexpr static bool StdIsAlpha(const IntType itChar)
-    { return ::std::isalpha(static_cast<int>(itChar)); }
+    { return (itChar >= 'A' && itChar <= 'Z') ||
+             (itChar >= 'a' && itChar <= 'z'); }
 /* -- Returns if character is NOT alphanumeric (A-Za-z) -------------------- */
 template<typename IntType>
   constexpr static bool StdIsNotAlpha(const IntType itChar)
@@ -342,7 +343,7 @@ template<typename IntType>
 /* -- Returns if character is alphanumeric or numeric (0-9A-Za-z) ---------- */
 template<typename IntType>
   constexpr static bool StdIsAlnum(const IntType itChar)
-    { return ::std::isalnum(static_cast<int>(itChar)); }
+    { return StdIsAlpha(itChar) || StdIsDigit(itChar); }
 /* -- Returns if character is NOT alphanumeric or numeric (0-9A-Za-z) ------ */
 template<typename IntType>
   constexpr static bool StdIsNotAlnum(const IntType itChar)

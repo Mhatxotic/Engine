@@ -56,7 +56,14 @@ struct AcArchive : public ArClass<Archive> {
 // ? object will no longer be useable after this call and an error will be
 // ? generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Archive>(lS, 1, *cArchives))
+LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Archive>(lS, cArchives))
+/* ========================================================================= */
+// $ Archive:Destroyed
+// < Destroyed:boolean=If the Archive class is destroyed
+// ? Returns if the Archive class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cArchives)))
 /* ========================================================================= */
 // $ Archive:Dir
 // > Id:integer=Zero-index id of the directory
@@ -142,9 +149,9 @@ LLFUNC(Total, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().ArchiveGetTotal()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Archive:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Dir),   LLRSFUNC(Dirs),     LLRSFUNC(DirList),
-  LLRSFUNC(File),    LLRSFUNC(Files), LLRSFUNC(FileList), LLRSFUNC(Id),
-  LLRSFUNC(Name),    LLRSFUNC(Size),  LLRSFUNC(Total),
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Dir),   LLRSFUNC(Dirs),
+  LLRSFUNC(DirList), LLRSFUNC(File),      LLRSFUNC(Files), LLRSFUNC(FileList),
+  LLRSFUNC(Id),      LLRSFUNC(Name),      LLRSFUNC(Size),  LLRSFUNC(Total),
 LLRSEND                                // Archive:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

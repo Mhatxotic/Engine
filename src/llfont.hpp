@@ -63,7 +63,13 @@ typedef AgIntegerLG<GLuint> AgGLuintLG;
 // ? rendered. The object will no longer be useable after this call and an
 // ? error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Font>(lS, 1, *cFonts))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Font>(lS, cFonts))
+/* ========================================================================= */
+// $ Font:Destroyed
+// < Destroyed:boolean=If the Font class is destroyed
+// ? Returns if the Font class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFonts)))
 /* ========================================================================= */
 // $ Font:Dump
 // > TexId:integer=The texture id to dump.
@@ -83,6 +89,12 @@ LLFUNC(Dump, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetHeight, 1,
   LuaUtilPushVar(lS, AgFont{lS, 1}().duiTile.DimGetHeight()))
+/* ========================================================================= */
+// $ Font:GetFlags
+// < Flags:integer=Font flags value
+// ? Returns the current font flags.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetFlags, 1, LuaUtilPushVar(lS, AgFont{lS, 1}().FlagGet()))
 /* ========================================================================= */
 // $ Font:GetId
 // < Id:integer=The id number of the Font object.
@@ -701,23 +713,23 @@ LLFUNC(SetSpacing, 0,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Font:* member functions begin
-  LLRSFUNC(Destroy),    LLRSFUNC(Dump),        LLRSFUNC(GetHeight),
-  LLRSFUNC(GetId),      LLRSFUNC(GetName),     LLRSFUNC(GetWidth),
-  LLRSFUNC(LoadChars),  LLRSFUNC(LoadRange),   LLRSFUNC(Print),
-  LLRSFUNC(PrintC),     LLRSFUNC(PrintCT),     LLRSFUNC(PrintM),
-  LLRSFUNC(PrintMT),    LLRSFUNC(PrintR),      LLRSFUNC(PrintRT),
-  LLRSFUNC(PrintS),     LLRSFUNC(PrintT),      LLRSFUNC(PrintTS),
-  LLRSFUNC(PrintU),     LLRSFUNC(PrintUC),     LLRSFUNC(PrintUCT),
-  LLRSFUNC(PrintUR),    LLRSFUNC(PrintURT),    LLRSFUNC(PrintUS),
-  LLRSFUNC(PrintW),     LLRSFUNC(PrintWS),     LLRSFUNC(PrintWT),
-  LLRSFUNC(PrintWTS),   LLRSFUNC(PrintWU),     LLRSFUNC(PrintWUT),
-  LLRSFUNC(SetCA),      LLRSFUNC(SetCB),       LLRSFUNC(SetCG),
-  LLRSFUNC(SetCOA),     LLRSFUNC(SetCOB),      LLRSFUNC(SetCOG),
-  LLRSFUNC(SetCOR),     LLRSFUNC(SetCORGB),    LLRSFUNC(SetCORGBA),
-  LLRSFUNC(SetCORGBAI), LLRSFUNC(SetCR),       LLRSFUNC(SetCRGBAI),
-  LLRSFUNC(SetCRGB),    LLRSFUNC(SetCRGBA),    LLRSFUNC(SetGPad),
-  LLRSFUNC(SetGSize),   LLRSFUNC(SetLSpacing), LLRSFUNC(SetSize),
-  LLRSFUNC(SetSpacing),
+  LLRSFUNC(Destroy),     LLRSFUNC(Destroyed), LLRSFUNC(Dump),
+  LLRSFUNC(GetHeight),   LLRSFUNC(GetFlags),  LLRSFUNC(GetId),
+  LLRSFUNC(GetName),     LLRSFUNC(GetWidth),  LLRSFUNC(LoadChars),
+  LLRSFUNC(LoadRange),   LLRSFUNC(Print),     LLRSFUNC(PrintC),
+  LLRSFUNC(PrintCT),     LLRSFUNC(PrintM),    LLRSFUNC(PrintMT),
+  LLRSFUNC(PrintR),      LLRSFUNC(PrintRT),   LLRSFUNC(PrintS),
+  LLRSFUNC(PrintT),      LLRSFUNC(PrintTS),   LLRSFUNC(PrintU),
+  LLRSFUNC(PrintUC),     LLRSFUNC(PrintUCT),  LLRSFUNC(PrintUR),
+  LLRSFUNC(PrintURT),    LLRSFUNC(PrintUS),   LLRSFUNC(PrintW),
+  LLRSFUNC(PrintWS),     LLRSFUNC(PrintWT),   LLRSFUNC(PrintWTS),
+  LLRSFUNC(PrintWU),     LLRSFUNC(PrintWUT),  LLRSFUNC(SetCA),
+  LLRSFUNC(SetCB),       LLRSFUNC(SetCG),     LLRSFUNC(SetCOA),
+  LLRSFUNC(SetCOB),      LLRSFUNC(SetCOG),    LLRSFUNC(SetCOR),
+  LLRSFUNC(SetCORGB),    LLRSFUNC(SetCORGBA), LLRSFUNC(SetCORGBAI),
+  LLRSFUNC(SetCR),       LLRSFUNC(SetCRGBAI), LLRSFUNC(SetCRGB),
+  LLRSFUNC(SetCRGBA),    LLRSFUNC(SetGPad),   LLRSFUNC(SetGSize),
+  LLRSFUNC(SetLSpacing), LLRSFUNC(SetSize),   LLRSFUNC(SetSpacing),
 LLRSEND                                // Font:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

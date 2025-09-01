@@ -12,8 +12,8 @@ namespace ILuaUtil {                   // Start of private module namespace
 using namespace ICommon::P;            using namespace IDir::P;
 using namespace IError::P;             using namespace ILuaIdent::P;
 using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace IToken::P;
-using namespace IUtil::P;
+using namespace IString::P;            using namespace IToggler::P;
+using namespace IToken::P;             using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Variables ------------------------------------------------------------ */
@@ -505,7 +505,7 @@ static void LuaUtilAssert(lua_State*const lS, const bool bCond,
 { // Return if condition is true else break execution
   if(bCond) return;
   XC("Invalid parameter!", "Parameter", iIndex,
-     "Required", cpType, "Supplied",  LuaUtilGetType(lS, iIndex));
+     "Required", cpType, "Supplied", LuaUtilGetType(lS, iIndex));
 }
 /* -- Check that parameter is a table -------------------------------------- */
 static void LuaUtilCheckTable(lua_State*const lS, const int iParam)
@@ -517,27 +517,31 @@ static void LuaUtilCheckStr(lua_State*const lS, const int iParam)
 static void LuaUtilCheckStrNE(lua_State*const lS, const int iParam)
 { // Return if parameter is a string and not empty else break execution
   LuaUtilCheckStr(lS, iParam);
-  if(lua_rawlen(lS, iParam) > 0) return;
+  if(LuaUtilGetSize(lS, iParam) > 0) return;
   XC("Non-empty string required!", "Parameter", iParam);
+}
+/* -- Get the specified string --------------------------------------------- */
+template<typename StrType, typename StrTypeConstPtr=const StrType*>
+  static StrTypeConstPtr LuaUtilToString(lua_State*const lS, const int iParam)
+{ // Throw if specified parameter isn't a string else return cast
+  static_assert(!is_pointer_v<StrType>, "Do not use pointers!");
+  static_assert(sizeof(StrType)==sizeof(uint8_t), "Invalid size!");
+  return reinterpret_cast<StrTypeConstPtr>(lua_tostring(lS, iParam));
 }
 /* -- Get the specified string from the stack ------------------------------ */
 template<typename StrType, typename StrTypeConstPtr=const StrType*>
   static StrTypeConstPtr LuaUtilGetStr(lua_State*const lS, const int iParam)
 { // Throw if specified parameter isn't a string else return cast
-  static_assert(!is_pointer_v<StrType>, "Do not use pointers!");
-  static_assert(sizeof(StrType)==sizeof(uint8_t), "Invalid size!");
   LuaUtilCheckStr(lS, iParam);
-  return reinterpret_cast<StrTypeConstPtr>(lua_tostring(lS, iParam));
+  return LuaUtilToString<StrType, StrTypeConstPtr>(lS, iParam);
 }
 /* -- Get the specified string from the stack ------------------------------ */
 template<typename StrType, typename StrTypeConstPtr=const StrType*>
   static StrTypeConstPtr LuaUtilGetStrNE[[maybe_unused]](lua_State*const lS,
     const int iParam)
 { // Throw if specified parameter isn't a string or empty else return cast
-  static_assert(!is_pointer_v<StrType>, "Do not use pointers!");
-  static_assert(sizeof(StrType)==sizeof(uint8_t), "Invalid size!");
   LuaUtilCheckStrNE(lS, iParam);
-  return reinterpret_cast<StrTypeConstPtr>(lua_tostring(lS, iParam));
+  return LuaUtilToString<StrType, StrTypeConstPtr>(lS, iParam);
 }
 /* -- Get and return a string and throw exception if not a string ---------- */
 template<typename StrType, typename StrTypeConstPtr=const StrType*>
@@ -597,10 +601,79 @@ static const string LuaUtilGetCppDir(lua_State*const lS, const int iParam)
       "Reason", cDirBase->DirBaseVNRtoStr(vrId), "ReasonId", vrId);
   } // We don't get here.
 }
+/* -- Check if valid hostname ---------------------------------------------- */
+static bool LuaUtilValidHostname(lua_State*const lS, const int iParam)
+{ // Return if parameter is a string and not empty else break execution
+  LuaUtilCheckStr(lS, iParam);
+  const size_t stSize = LuaUtilGetSize(lS, iParam);
+  if(stSize < 1 || stSize > 253) return false;
+  // Get the string
+  const char*const cpStr = LuaUtilToString<char>(lS, iParam);
+  // Position where error occurds (domain parts
+  constexpr size_t stDomainSize = 63;
+  size_t stFirstDot = 0, stLastDot = stDomainSize;
+  // Make sure the characters are valid
+  for(size_t stPos = 0; stPos < stSize; ++stPos)
+  { // Dereference character and check characters
+    const char cChar = cpStr[stPos];
+    if(StdIsNotAlpha(cChar) && StdIsNotDigit(cChar) &&
+               cChar != '.' && cChar != '-') return false;
+    // Domain separator?
+    if(cChar == '.')
+    { // Two periods cant be together
+      const size_t stNextPos = stPos + 1;
+      if(stFirstDot == stPos || stNextPos >= stSize) return false;
+      // Prepare next domain
+      stFirstDot = stNextPos;
+      stLastDot = stPos + stDomainSize;
+    } // Domain too long
+    else if(stPos > stLastDot) return false;
+  } // Valid hostname
+  return true;
+}
+/* -- Get a valid hostname ------------------------------------------------- */
+static const string LuaUtilGetCppHostname(lua_State*const lS, const int iParam)
+{ // Return if parameter is a string and not empty else break execution
+  LuaUtilCheckStr(lS, iParam);
+  // Get size and verify it
+  const size_t stSize = LuaUtilGetSize(lS, iParam);
+  constexpr size_t stMinimum = 1, stMaximum = 253;
+  if(stSize < stMinimum || stSize > stMaximum)
+    XC("Invalid hostname length!",
+       "Parameter",  iParam,    "NotLower",  stMinimum,
+       "NotGreater", stMaximum, "Supplied",  stSize);
+  // Get the string
+  const char*const cpStr = LuaUtilToString<char>(lS, iParam);
+  // Position where error occurds (domain parts
+  constexpr size_t stDomainSize = 63;
+  size_t stFirstDot = 0, stLastDot = stDomainSize;
+  // Make sure the characters are valid
+  for(size_t stPos = 0; stPos < stSize; ++stPos)
+  { // Dereference character and check characters
+    const char cChar = cpStr[stPos];
+    if(StdIsNotAlpha(cChar) && StdIsNotDigit(cChar) &&
+               cChar != '.' && cChar != '-')
+      XC("Invalid hostname characters!", "Parameter",  iParam, "At", stPos);
+    // Domain separator?
+    if(cChar == '.')
+    { // Two periods cant be together
+      const size_t stNextPos = stPos + 1;
+      if(stFirstDot == stPos || stNextPos >= stSize)
+        XC("Empty domain!", "Parameter", iParam, "At", stPos);
+      // Prepare next domain
+      stFirstDot = stNextPos;
+      stLastDot = stPos + stDomainSize;
+    } // Domain too long
+    else if(stPos > stLastDot)
+      XC("Invalid domain length!", "Parameter", iParam, "At", stPos);
+  } // Valid hostname. Now store the string and return it
+  string strStr{ LuaUtilToCppString(lS, iParam) };
+  return StrToLowCaseRef(strStr);
+}
 /* -- Get and return a C++ string and throw exception if not a string ------ */
 static const string LuaUtilGetCppStrUpper(lua_State*const lS, const int iParam)
 { // Throw if requested parameter isn't a string else return it in uppercase
-  string strStr{ LuaUtilGetCppStr(lS, iParam) };
+  string strStr{ LuaUtilGetCppStrNE(lS, iParam) };
   return StrToUpCaseRef(strStr);
 }
 /* -- Check the specified number of parameters are set --------------------- */
@@ -746,22 +819,87 @@ template<class FlagsType>
      "Parameter", iIndex, "Supplied",  ftFlags.FlagGet(),
      "Mask", ftMask.FlagGet());
 }
+/* -- Get a LuaUtilClass pointer from userdata ----------------------------- */
+static LuaUtilClass *LuaUtilGetBasePtr(lua_State*const lS, const int iParam,
+  const LuaIdent &liParent)
+{ return reinterpret_cast<LuaUtilClass*>
+    (luaL_checkudata(lS, iParam, liParent.LuaIdentCStr())); }
+/* -- Get a LuaUtilClass pointer from userdata and throw if null ----------- */
+static LuaUtilClass *LuaUtilGetCheckedBasePtr(lua_State*const lS,
+  const int iParam, const LuaIdent &liParent)
+{ // Get lua data class and if it is valid
+  if(LuaUtilClass*const lucPtr = LuaUtilGetBasePtr(lS, iParam, liParent))
+    return lucPtr;
+  // lua data class not valid
+  XC("Null class parameter!",
+     "Parameter", iParam, "Type", liParent.LuaIdentStr());
+}
+/* -- Boolean return for LuaUtilGetCheckedBasePtr -------------------------- */
+static bool LuaUtilIsClassDestroyed(lua_State*const lS, const int iParam,
+  const LuaIdent &liParent)
+    { return LuaUtilGetCheckedBasePtr(lS, iParam, liParent)->vpPtr
+        == nullptr; }
+/* -- Boolean return for LuaUtilGetCheckedBasePtr without parameter -------- */
+static bool LuaUtilIsClassDestroyed(lua_State*const lS,
+  const LuaIdent*const liParent)
+    { return LuaUtilIsClassDestroyed(lS, 1, *liParent); }
+/* -- Gets a pointer to any class ------------------------------------------ */
+template<typename ClassType>
+  static ClassType *LuaUtilGetPtr(lua_State*const lS, const int iParam,
+    const LuaIdent &liParent)
+{ // Get lua data class and if it is valid
+  static_assert(is_class_v<ClassType>, "Not a class!");
+  // Get reference to class and return pointer if valid
+  const LuaUtilClass &lcR = *LuaUtilGetCheckedBasePtr(lS, iParam, liParent);
+  if(lcR.vpPtr) return reinterpret_cast<ClassType*>(lcR.vpPtr);
+  // Actual class pointer has already been freed so error occured
+  XC("Unallocated class parameter!",
+     "Parameter", iParam, "Type", liParent.LuaIdentStr());
+}
+/* -- Do clear and free the object ----------------------------------------- */
+template<class ClassType>
+  void LuaUtilDoClassDestroy(LuaUtilClass*const lucPtr, ClassType*const ctPtr)
+{ // Clear the pointer to the class
+  lucPtr->vpPtr = nullptr;
+  // Free the class if not set to locked (engine managed class)
+  if(ctPtr->LockIsNotSet()) delete ctPtr;
+}
 /* -- Destroy an object ---------------------------------------------------- */
 template<class ClassType>
-  static void LuaUtilClassDestroy(lua_State*const lS, const int iParam,
-  const LuaIdent &liParent)
+  static void LuaUtilClassDestroy(lua_State*const lS,
+    const LuaIdent*const liParent)
 { // Get userdata pointer from Lua and if the address is valid?
   static_assert(is_class_v<ClassType>, "Not a class!");
-  if(LuaUtilClass*const lucPtr =
-    reinterpret_cast<LuaUtilClass*>(
-      luaL_checkudata(lS, iParam, liParent.LuaIdentCStr())))
+  if(LuaUtilClass*const lucPtr = LuaUtilGetBasePtr(lS, 1, *liParent))
+    // Get address to the C++ class and if that is valid?
+    if(ClassType*const ctPtr = reinterpret_cast<ClassType*>(lucPtr->vpPtr))
+      // Clear the pointer to the C++ class and destroy it if not locked
+      LuaUtilDoClassDestroy(lucPtr, ctPtr);
+  // Don't throw any errors even if the structs are invalid as much as I
+  // want to. However, the garbage collector routine '__gc' calls this
+  // function and we don't want any problems when this happens.
+}
+/* -- Destroy an object with async protected callback check ---------------- */
+template<class ClassType>
+  static void LuaUtilClassDestroyChecked(lua_State*const lS,
+    const LuaIdent*const liParent)
+{ // Check class type
+  static_assert(is_class_v<ClassType>, "Not a class!");
+  // Get reference to collector pointer
+  const LuaIdent &liRef = *liParent;
+  // Get userdata pointer from Lua and if the address is valid?
+  if(LuaUtilClass*const lucPtr = LuaUtilGetBasePtr(lS, 1, liRef))
   { // Get address to the C++ class and if that is valid?
     if(ClassType*const ctPtr = reinterpret_cast<ClassType*>(lucPtr->vpPtr))
-    { // Clear the pointer to the C++ class and destroy it if not locked
-      lucPtr->vpPtr = nullptr;
-      if(ctPtr->LockIsNotSet()) delete ctPtr;
-    }
-  }
+    { // Throw error if destruction attempted in protected callback
+      if(ctPtr->TogglerIsEnabled())
+        XC("Call not allowed in protected callback!",
+           "Type", liRef.LuaIdentStr());
+      // Clear the pointer to the C++ class and destroy it if not locked
+      LuaUtilDoClassDestroy(lucPtr, ctPtr);
+    } // Don't throw any errors even if the structs are invalid as much as I
+  } // want to. However, the garbage collector routine '__gc' calls this
+  // function and we don't want any problems when this happens.
 }
 /* -- Set metatable entry in userdata -------------------------------------- */
 static int LuaUtilSetMetaTable(lua_State*const lS, const int iIndex)
@@ -821,25 +959,6 @@ template<typename ClassType>
   // Return pointer to memory
   return ctPtr;
 }
-/* -- Gets a pointer to any class ------------------------------------------ */
-template<typename ClassType>
-  ClassType *LuaUtilGetPtr(lua_State*const lS, const int iParam,
-  const LuaIdent &liParent)
-{ // Get lua data class and if it is valid
-  static_assert(is_class_v<ClassType>, "Not a class!");
-  if(const LuaUtilClass*const lucPtr =
-    reinterpret_cast<LuaUtilClass*>(
-      luaL_checkudata(lS, iParam, liParent.LuaIdentCStr())))
-  { // Get reference to class and return pointer if valid
-    const LuaUtilClass &lcR = *lucPtr;
-    if(lcR.vpPtr) return reinterpret_cast<ClassType*>(lcR.vpPtr);
-    // Actual class pointer has already been freed so error occured
-    XC("Unallocated class parameter!",
-       "Parameter", iParam, "Type", liParent.LuaIdentStr());
-  } // lua data class not valid
-  XC("Null class parameter!",
-     "Parameter", iParam, "Type", liParent.LuaIdentStr());
-}
 /* -- Check that a class isn't locked (i.e. a built-in class) -------------- */
 template<class ClassType>
   ClassType *LuaUtilGetUnlockedPtr(lua_State*const lS, const int iParam)
@@ -888,6 +1007,14 @@ static size_t LuaUtilGCCollect(lua_State*const lS)
 static void LuaUtilCallFuncEx(lua_State*const lS, const int iParams=0,
   const int iReturns=0)
     { lua_call(lS, iParams, iReturns); }
+/* -- Standard in-sandbox call function with toggler ref ctr (unmanaged) --- */
+static void LuaUtilCallFuncTogglerEx(lua_State*const lS,
+  TogglerMaster<>*const tmMaster, const int iParams=0, const int iReturns=0)
+{ // Set a 'protect' flag and then unset it when leaving this scope
+  const TogglerSlave<> tsProtect{ tmMaster };
+  // Do the call
+  LuaUtilCallFuncEx(lS, iParams, iReturns);
+}
 /* -- Standard in-sandbox call function (unmanaged, no params) ------------- */
 static void LuaUtilCallFunc(lua_State*const lS, const int iReturns=0)
   { LuaUtilCallFuncEx(lS, 0, iReturns); }
@@ -949,15 +1076,15 @@ static void LuaUtilIfBlank(lua_State*const lS)
   LuaUtilPushLStr(lS, cpStr, stStr);
 }
 /* -- Convert string string map to lua table and put it on stack ----------- */
-static void LuaUtilToTable[[maybe_unused]](lua_State*const lS,
-  const StrStrMap &ssmData)
+template<class MapClassType>static void LuaUtilToTableEx(lua_State*const lS,
+  const MapClassType &mctData)
 { // Create the table, we're creating non-indexed key/value pairs
-  LuaUtilPushTable(lS, 0, ssmData.size());
+  LuaUtilPushTable(lS, 0, mctData.size());
   // For each table item
-  for(const StrStrMapPair &ssmPair : ssmData)
+  for(auto &mctPair : mctData)
   { // Push value and key name
-    LuaUtilPushStr(lS, ssmPair.second);
-    LuaUtilSetField(lS, -2, ssmPair.first.c_str());
+    LuaUtilPushStr(lS, mctPair.second);
+    LuaUtilSetField(lS, -2, mctPair.first.c_str());
   }
 }
 /* -- Push the specified string at the specified index --------------------- */

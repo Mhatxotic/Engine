@@ -33,6 +33,22 @@ struct AgSocket : public ArClass<Socket> {
 struct AcSocket : public ArClass<Socket> {
   explicit AcSocket(lua_State*const lS) :
     ArClass{*LuaUtilClassCreate<Socket>(lS, *cSockets)}{} };
+/* -- Create socket port class argument ------------------------------------ */
+struct AgPort : public AgUIntLG {
+  explicit AgPort(lua_State*const lS, const int iParam) :
+    AgUIntLG{ lS, iParam, 1, 65535 }{} };
+/* -- Create http method class argument ------------------------------------ */
+struct AgAddress { string strString;
+  string &operator()(void) { return strString; }
+  operator string&(void) { return operator()(); }
+  explicit AgAddress(lua_State*const lS, const int iArg) :
+    strString{LuaUtilGetCppHostname(lS, iArg)}{} };
+/* -- Create http method class argument ------------------------------------ */
+struct AgMethod { string strString;
+  string &operator()(void) { return strString; }
+  operator string&(void) { return operator()(); }
+  explicit AgMethod(lua_State*const lS, const int iArg) :
+    strString{LuaUtilGetCppStrUpper(lS, iArg)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Socket:* member functions                                           ## **
@@ -67,7 +83,13 @@ LLFUNC(CompactSendQ, 1, AgSocket{lS, 1}().CompactTXSafe(AcAsset{lS}()))
 // ? memory associated with it. The object will no longer be useable after
 // ? this call and an error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Socket>(lS, 1, *cSockets))
+LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Socket>(lS, cSockets))
+/* ========================================================================= */
+// $ Socket:Destroyed
+// < Destroyed:boolean=If the Socket class is destroyed
+// ? Returns if the Socket class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSockets)))
 /* ========================================================================= */
 // $ Socket:Disconnect
 // > Socket:socket=The socket to disconnect.
@@ -115,13 +137,19 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().CtrGet()))
 LLFUNC(GetIPAddress, 1,
   LuaUtilPushVar(lS, AgSocket{lS, 1}().GetIPAddressSafe()))
 /* ========================================================================= */
-// $ Socket:GetIPAddressAndPortEx
+// $ Socket:GetIPAddressEx
 // < Address:string=The IP address of the socket.
-// ? Returns the IP address of the socket. Only valid when the hostname has
-// ? been resolved.
+// ? Returns the IP address of the socket and the port. Only valid when the
+// ? hostname has been resolved.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetIPAddressEx, 1,
   LuaUtilPushVar(lS, AgSocket{lS, 1}().GetIPAddressAndPortSafe()))
+/* ========================================================================= */
+// $ Socket:GetPort
+// < Port:integer=The port number of the socket.
+// ? Returns the port number of the socket.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetPort, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetPortSafe()))
 /* ========================================================================= */
 // $ Socket:GetReason
 // < Reason:string=Reason for last error
@@ -282,17 +310,18 @@ LLFUNC(WriteString, 1,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Socket:* member functions begin
-  LLRSFUNC(Callback),      LLRSFUNC(CompactRecvQ), LLRSFUNC(CompactSendQ),
-  LLRSFUNC(Destroy),       LLRSFUNC(Disconnect),   LLRSFUNC(GetAddress),
-  LLRSFUNC(GetAddressEx),  LLRSFUNC(GetCipher),    LLRSFUNC(GetError),
-  LLRSFUNC(GetId),         LLRSFUNC(GetIPAddress), LLRSFUNC(GetIPAddressEx),
-  LLRSFUNC(GetReason),     LLRSFUNC(GetRXBytes),   LLRSFUNC(GetRXPackets),
-  LLRSFUNC(GetSecure),     LLRSFUNC(GetStatus),    LLRSFUNC(GetTXBytes),
-  LLRSFUNC(GetTXPackets),  LLRSFUNC(PopRecvQ),     LLRSFUNC(PopSendQ),
-  LLRSFUNC(PopSendQT),     LLRSFUNC(RecvQCount),   LLRSFUNC(SendQCount),
-  LLRSFUNC(TConnect),      LLRSFUNC(TConnected),   LLRSFUNC(TDisconnect),
-  LLRSFUNC(TDisconnected), LLRSFUNC(TRead),        LLRSFUNC(TWrite),
-  LLRSFUNC(Write),         LLRSFUNC(WriteString),
+  LLRSFUNC(Callback),       LLRSFUNC(CompactRecvQ), LLRSFUNC(CompactSendQ),
+  LLRSFUNC(Destroy),        LLRSFUNC(Destroyed),    LLRSFUNC(Disconnect),
+  LLRSFUNC(GetAddress),     LLRSFUNC(GetAddressEx), LLRSFUNC(GetCipher),
+  LLRSFUNC(GetError),       LLRSFUNC(GetId),        LLRSFUNC(GetIPAddress),
+  LLRSFUNC(GetIPAddressEx), LLRSFUNC(GetPort),      LLRSFUNC(GetReason),
+  LLRSFUNC(GetRXBytes),     LLRSFUNC(GetRXPackets), LLRSFUNC(GetSecure),
+  LLRSFUNC(GetStatus),      LLRSFUNC(GetTXBytes),   LLRSFUNC(GetTXPackets),
+  LLRSFUNC(PopRecvQ),       LLRSFUNC(PopSendQ),     LLRSFUNC(PopSendQT),
+  LLRSFUNC(RecvQCount),     LLRSFUNC(SendQCount),   LLRSFUNC(TConnect),
+  LLRSFUNC(TConnected),     LLRSFUNC(TDisconnect),  LLRSFUNC(TDisconnected),
+  LLRSFUNC(TRead),          LLRSFUNC(TWrite),       LLRSFUNC(Write),
+  LLRSFUNC(WriteString),
 LLRSEND                                // Socket:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -326,7 +355,13 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cSockets->CollectorCount()))
 // ? throttle the loop as all operations are non-blocking. A value of 0 will
 // ? make the thread consume 100% of a CPU core so be careful.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Create, 0, AcSocket{lS}().Connect(lS))
+LLFUNC(Create, 0,
+  LuaUtilCheckParams(lS, 4);
+  AgAddress strAddress{ lS, 1 };
+  const AgPort uiPort{ lS, 2 };
+  const AgString strCipher{ lS, 3 };
+  LuaUtilCheckFunc(lS, 4);
+  AcSocket{lS}().Connect(lS, strAddress, uiPort, strCipher))
 /* ========================================================================= */
 // $ Socket.CreateHTTP
 // > Cipher:string=Make SSL connection and try this cipher.
@@ -336,36 +371,29 @@ LLFUNC(Create, 0, AcSocket{lS}().Connect(lS))
 // > Scheme:string=The HTTP scheme (GET, POST, PUT, DELETE, etc.).
 // > Headers:string=A carriage return separated list of headers.
 // > Body:string=A body of text to send with the request.
-// > Error:function=Function to call when a critical error occurs
 // > Success:function=Function to call when any other event occurs
 // ? This is a minimalist implementation of a HTTP request and will support
 // ? most (if not all) operations one would need. The function returns
 // ? immediately. The worker thread uses blocking socket operations.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CreateHTTP, 0, AcSocket{lS}().HTTPRequest(lS))
+LLFUNC(CreateHTTP, 0,
+  LuaUtilCheckParams(lS, 8);
+  const AgString strCipher{ lS, 1 };
+  AgAddress strAddress{ lS, 2 };
+  const AgPort uiPort{ lS, 3 };
+  const AgNeString strRequest{ lS, 4 };
+  AgMethod strMethod{ lS, 5 };
+  const AgString strHeaders{ lS, 6 };
+  const AgString strBody{ lS, 7 };
+  LuaUtilCheckFunc(lS, 8);
+  AcSocket{lS}().HTTPRequest(lS, strCipher, strAddress, uiPort, strRequest,
+    strMethod, strHeaders, strBody))
 /* ========================================================================= */
 // $ Socket.Flush
 // < Count:integer=Total number of sockets disconnected.
 // ? Disconnects all active Sockets. Returns immediately.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Flush, 1, LuaUtilPushVar(lS, SocketReset()))
-/* ========================================================================= */
-// $ Socket.OAuth11
-// > Method:string=The HTTP method (GET, PUT, etc.).
-// > Scheme:string=The HTTP scheme (HTTP, HTTPS, etc.);
-// > Port:integer=The HTTP port connected.
-// > Resource:string=The HTTP resource requested.
-// > Params:string=A HTTP URI list of variables that will be sent.
-// > Body:string=Any HTTP body text sent.
-// < Text:string=An OAuth11 compatible string that you can pass to web request.
-// ? Calculates a OAuth v1.1 string to use with HTTP requests. Twitter is an
-// ? example that uses this system.
-/* ------------------------------------------------------------------------- */
-LLFUNC(OAuth11, 1,
-  const AgString aMethod{lS,1}, aScheme{lS, 2}, aPort{lS,3}, aResource{lS,4},
-                 aParams{lS,5}, aBody{lS,6}, aText{lS,7};
-   LuaUtilToTable(lS, SocketOAuth11(aMethod, aScheme, aPort, aResource,
-     aParams, aBody, aText)))
 /* ========================================================================= */
 // $ Socket.TotalRXBytes
 // < Total:integer=The number of bytes read from this socket.
@@ -396,8 +424,7 @@ LLFUNC(TotalTXPackets, 1, LuaUtilPushVar(lS, cSockets->qTXp.load()))
 // < State:boolean=The address is valid or not.
 // ? Returns if the specified hostname or IP address is valid.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ValidAddress, 1,
-  LuaUtilPushVar(lS, Socket::ValidAddress(AgString{lS,1})))
+LLFUNC(ValidAddress, 1, LuaUtilPushVar(lS, LuaUtilValidHostname(lS, 1)))
 /* ========================================================================= */
 // $ Socket.SocketWaitAsync
 // < Count:integer=Total number of sockets disconnected.
@@ -410,10 +437,10 @@ LLFUNC(WaitAsync, 1, LuaUtilPushVar(lS, SocketWaitAsync()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Socket.* namespace functions begin
-  LLRSFUNC(Create),         LLRSFUNC(CreateHTTP),   LLRSFUNC(Count),
-  LLRSFUNC(Connected),      LLRSFUNC(Flush),        LLRSFUNC(OAuth11),
-  LLRSFUNC(TotalRXBytes),   LLRSFUNC(TotalTXBytes), LLRSFUNC(TotalRXPackets),
-  LLRSFUNC(TotalTXPackets), LLRSFUNC(WaitAsync),    LLRSFUNC(ValidAddress),
+  LLRSFUNC(Create),         LLRSFUNC(CreateHTTP),     LLRSFUNC(Count),
+  LLRSFUNC(Connected),      LLRSFUNC(Flush),          LLRSFUNC(TotalRXBytes),
+  LLRSFUNC(TotalTXBytes),   LLRSFUNC(TotalRXPackets), LLRSFUNC(TotalTXPackets),
+  LLRSFUNC(WaitAsync),      LLRSFUNC(ValidAddress),
 LLRSEND                                // Socket.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -425,13 +452,14 @@ LLRSEND                                // Socket.* namespace functions end
 // ? Returns a key/value table of socket connction status codes supported.
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(Flags)                     // Beginning of socket status flags
-  LLRSKTITEM(SS_,STANDBY),             LLRSKTITEM(SS_,INITIALISING),
-  LLRSKTITEM(SS_,ENCRYPTION),          LLRSKTITEM(SS_,CONNECTING),
-  LLRSKTITEM(SS_,CONNECTED),           LLRSKTITEM(SS_,DISCONNECTING),
-  LLRSKTITEM(SS_,SENDREQUEST),         LLRSKTITEM(SS_,CLOSEDBYCLIENT),
-  LLRSKTITEM(SS_,CLOSEDBYSERVER),      LLRSKTITEM(SS_,REPLYWAIT),
-  LLRSKTITEM(SS_,DOWNLOADING),         LLRSKTITEM(SS_,EVENTERROR),
-  LLRSKTITEM(SS_,READPACKET),
+  LLRSKTITEM(SS_,CLOSEDBYCLIENT),      LLRSKTITEM(SS_,CLOSEDBYSERVER),
+  LLRSKTITEM(SS_,CONNECTED),           LLRSKTITEM(SS_,CONNECTING),
+  LLRSKTITEM(SS_,DISCONNECTING),       LLRSKTITEM(SS_,DOWNLOADING),
+  LLRSKTITEM(SS_,ENCRYPTION),          LLRSKTITEM(SS_,EVENTERROR),
+  LLRSKTITEM(SS_,INITIALISING),        LLRSKTITEM(SS_,PONG),
+  LLRSKTITEM(SS_,READPACKET),          LLRSKTITEM(SS_,REPLYWAIT),
+  LLRSKTITEM(SS_,SENDREQUEST),         LLRSKTITEM(SS_,STANDBY),
+  LLRSKTITEM(SS_,UPGRADED),
 LLRSKTEND                              // End of socket status flags
 /* ========================================================================= **
 ** ######################################################################### **

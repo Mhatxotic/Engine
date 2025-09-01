@@ -14,7 +14,7 @@ namespace ILuaEvt {                    // Start of private module namespace
 using namespace ILuaRef::P;            using namespace ILuaUtil::P;
 using namespace IError::P;             using namespace IEvtCore::P;
 using namespace IEvtMain::P;           using namespace ILog::P;
-using namespace IStd::P;
+using namespace IStd::P;               using namespace IToggler::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Private typedefs ----------------------------------------------------- */
@@ -105,8 +105,8 @@ template<class MemberType>struct LuaEvtTypeParam
       // Done
       return;
     } // Get pointer to class and call if if it is valid
-    MemberType*const mtPtr = emaArgs.front().Ptr<MemberType>();
-    if(mtPtr) return mtPtr->LuaEvtCallbackParam(emeEvent);
+    if(MemberType*const mtPtr = emaArgs.front().Ptr<MemberType>())
+      return mtPtr->LuaEvtCallbackParam(emeEvent);
     // Show error so show error in log
     cLog->LogErrorExSafe(
       "LuaEvt got generic event $ with null class ptr from $ params!",
@@ -256,7 +256,7 @@ class LuaEvtSlave :
           break;
       }
     } // Call the callback function.
-    LuaUtilCallFuncEx(this->LuaRefGetState(),
+    LuaUtilCallFuncTogglerEx(this->LuaRefGetState(), mtPtr,
       static_cast<int>(emaArgs.size() - stMandatory));
   } // Exception occured? Disable lua callback and rethrow
   catch(const exception&) { this->LuaRefDeInit(); throw; }

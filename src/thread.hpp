@@ -20,7 +20,8 @@ namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
 enum ThreadStatus : int                // Thread status codes
 { /* ----------------------------------------------------------------------- */
-  TS_EXCEPTION = -2,                   // (-2) Thread exited with an exception
+  TS_EXCEPTION = -3,                   // (-3) Thread exited with an exception
+  TS_INIT,                             // (-2) Thread starting up
   TS_ERROR,                            // (-1) Thread will terminate cleanly
   TS_STANDBY,                          // ( 0) Thread is in stand-by mode
   TS_RUNNING,                          // ( 1) Thread is running still
@@ -64,10 +65,20 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   private thread                       // The C++11 thread
 { /* -- Put in place a new thread ------------------------------------------ */
   template<typename ...VarArgs>void ThreadNew(const VarArgs &...vaArgs)
-    { thread tNewThread{ vaArgs... }; this->swap(tNewThread); }
+  { // Start the thread
+    thread tNewThread{ vaArgs... };
+    // Set to this thread
+    this->swap(tNewThread);
+    // Thread can now resume
+    tsCode = TS_INIT;
+  }
   /* -- Thread handler function -------------------------------------------- */
   void ThreadHandler(void) try
-  { // Incrememt thread running count
+  { // Wait for main thread swap function to complete for the minute chance
+    // that this thread could execute faster than the main thread and access
+    // data from an uninitialised 'std::thread' class before 'swap()' finishes.
+    while(tsCode != TS_INIT) StdSuspend();
+    // Incrememt thread running count
     ++cParent->stRunning;
     // Thread starting up in log
     cLog->LogDebugExSafe("Thread $<$> started.", CtrGet(), IdentGet());

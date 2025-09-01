@@ -56,7 +56,19 @@ LLFUNC(Depth, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().GetBitsPerPixel()))
 // ? object will no longer be useable after this call and an error will be
 // ? generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Image>(lS, 1, *cImages))
+LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Image>(lS, cImages))
+/* ========================================================================= */
+// $ Image:Destroyed
+// < Destroyed:boolean=If the Image class is destroyed
+// ? Returns if the Image class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cImages)))
+/* ========================================================================= */
+// $ Image:Flags
+// < Flags:integer=Image flags value
+// ? Returns the current image flags.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Flags, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().FlagGet()))
 /* ========================================================================= */
 // $ Image:Height
 // < Height:integer=The height of the image in pixels
@@ -97,8 +109,9 @@ LLFUNC(Width, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().DimGetWidth()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Image:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Depth), LLRSFUNC(Height),  LLRSFUNC(Id),
-  LLRSFUNC(Name),    LLRSFUNC(Save),  LLRSFUNC(Width),
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Depth), LLRSFUNC(Flags),
+  LLRSFUNC(Height),  LLRSFUNC(Id),        LLRSFUNC(Name),  LLRSFUNC(Save),
+  LLRSFUNC(Width),
 LLRSEND                                // Image:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -230,18 +243,44 @@ LLRSEND                                // Image.* namespace functions end
 ** ## Image.* namespace constants                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// @ Image.Flags
-// < Codes:table=The table of key/value pairs of available flags
-// ? Returns the image plugins available. Returned as key/value pairs. The
-// ? value is a unique identifier to the flag.
+// @ Image.FlagsPre
+// < Codes:table=The table of key/value pairs of available flags.
+// ? Returns the flags that are sent to the loader functions to manipulate the
+// ? the image. The flags that get activated are in the 'FlagsPost'
+// ? array. These values are used with the 'GetFlags()' function.
 /* ------------------------------------------------------------------------- */
-LLRSKTBEGIN(Flags)                     // Beginning of image flags codes
+LLRSKTBEGIN(FlagsPre)                  // Beginning of image loader flags codes
   LLRSKTITEM(IL_,NONE),    LLRSKTITEM(IL_,TOGPU),    LLRSKTITEM(IL_,TO24BPP),
   LLRSKTITEM(IL_,TO32BPP), LLRSKTITEM(IL_,TOBGR),    LLRSKTITEM(IL_,TORGB),
   LLRSKTITEM(IL_,REVERSE), LLRSKTITEM(IL_,TOBINARY), LLRSKTITEM(IL_,ATLAS),
   LLRSKTITEM(IL_,FCE_DDS), LLRSKTITEM(IL_,FCE_GIF),  LLRSKTITEM(IL_,FCE_JPG),
   LLRSKTITEM(IL_,FCE_PNG),
-LLRSKTEND                              // End of image flags codes
+LLRSKTEND                              // End of image loader flags codes
+/* ========================================================================= */
+// @ Image.FlagsPost
+// < Codes:table=The table of key/value pairs of available flags.
+// ? Returns the flags that were activated after manipulation functions
+// ? were completed. These values are used with the 'GetFlags()' function.
+/* ------------------------------------------------------------------------- */
+LLRSKTBEGIN(FlagsPost)               // Beginning of image active flags codes
+  LLRSKTITEM(IL_,NONE),    LLRSKTITEM(IA_,TOGPU),    LLRSKTITEM(IA_,TO24BPP),
+  LLRSKTITEM(IA_,TO32BPP), LLRSKTITEM(IA_,TOBGR),    LLRSKTITEM(IA_,TORGB),
+  LLRSKTITEM(IA_,REVERSE), LLRSKTITEM(IA_,TOBINARY), LLRSKTITEM(IA_,ATLAS),
+LLRSKTEND                              // End of image flags active codes
+/* ========================================================================= */
+// @ Image.FlagsImage
+// < Codes:table=The table of key/value pairs of available flags.
+// ? Returns the flags that define the original image before
+// ? manipulation. These values are used with the 'GetFlags()' function.
+/* ------------------------------------------------------------------------- */
+LLRSKTBEGIN(FlagsImage)                // Beginning of image orig flags codes
+  LLRSKTITEM(IL_,NONE),       LLRSKTITEM(IF_,MIPMAPS),
+  LLRSKTITEM(IF_,REVERSED),   LLRSKTITEM(IF_,COMPRESSED),
+  LLRSKTITEM(IF_,DYNAMIC),    LLRSKTITEM(IF_,PALETTE),
+  LLRSKTITEM(TF_,DELETE),     LLRSKTITEM(IP_,IMAGE),
+  LLRSKTITEM(IP_,TEXTURE),    LLRSKTITEM(IP_,FONT),
+  LLRSKTITEM(IP_,ATLAS),
+LLRSKTEND                              // End of image flags orig codes
 /* ------------------------------------------------------------------------- */
 // @ Image.Formats
 // < Codes:table=The table of key/value pairs of available texture formats
@@ -258,7 +297,8 @@ LLRSKTEND                              // End of image formats codes
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSCONSTBEGIN                         // Image.* namespace consts begin
-  LLRSCONST(Flags), LLRSCONST(Formats),
+  LLRSCONST(FlagsPre),      LLRSCONST(FlagsPost),
+  LLRSCONST(FlagsImage),    LLRSCONST(Formats),
 LLRSCONSTEND                           // Image.* namespace consts end
 /* ========================================================================= */
 }                                      // End of Image namespace

@@ -19,6 +19,7 @@ using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IToggler::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Clipboard collector and lua interface class -------------------------- */
@@ -30,6 +31,7 @@ CTOR_BEGIN(Clips, Clip, CLHelperUnsafe,,,
 CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public LuaEvtSlave<Clip, 2>,         // Need to store callback and class
+  public TogglerMaster<>,              // Boolean to protect from destruction
   public Lockable,                     // Lua garbage collector instruction
   public Ident                         // Name of this clipboard event
 { /* -- Private variables -------------------------------------------------- */
@@ -83,7 +85,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
         XC("Clipboard second argument not a class!",
            "Identifier", IdentGet());
       // Call callback with class
-      LuaUtilCallFuncEx(lsState, 1);
+      LuaUtilCallFuncTogglerEx(lsState, this, 1);
     } // Done with references. We won't be using them anymore.
     return LuaEvtDeInit();
   } // Exception occured? Cleanup and rethrow exception

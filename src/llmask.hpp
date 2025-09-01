@@ -47,7 +47,13 @@ struct AgTileId : public AgSizeTLGE {
 // ? will no longer be useable after this call and an error will be generated
 // ? if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Mask>(lS, 1, *cMasks))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Mask>(lS, cMasks))
+/* ========================================================================= */
+// $ Mask:Destroyed
+// < Destroyed:boolean=If the Mask class is destroyed
+// ? Returns if the Mask class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cMasks)))
 /* ========================================================================= */
 // $ Mask:IsCollide
 // > Dest:Mask=The destination mask to test upon
@@ -236,11 +242,12 @@ LLFUNC(Width, 1, LuaUtilPushVar(lS, AgMask{lS, 1}().DimGetWidth()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Mask:* member functions begin
-  LLRSFUNC(Clear), LLRSFUNC(Copy),      LLRSFUNC(Destroy),
-  LLRSFUNC(Erase), LLRSFUNC(Fill),      LLRSFUNC(Height),
-  LLRSFUNC(Id),    LLRSFUNC(IsCollide), LLRSFUNC(IsCollideEx),
-  LLRSFUNC(Merge), LLRSFUNC(Name),      LLRSFUNC(Raycast),
-  LLRSFUNC(Save),  LLRSFUNC(Tiles),     LLRSFUNC(Width),
+  LLRSFUNC(Clear),       LLRSFUNC(Copy),  LLRSFUNC(Destroy),
+  LLRSFUNC(Destroyed),   LLRSFUNC(Erase), LLRSFUNC(Fill),
+  LLRSFUNC(Height),      LLRSFUNC(Id),    LLRSFUNC(IsCollide),
+  LLRSFUNC(IsCollideEx), LLRSFUNC(Merge), LLRSFUNC(Name),
+  LLRSFUNC(Raycast),     LLRSFUNC(Save),  LLRSFUNC(Tiles),
+  LLRSFUNC(Width),
 LLRSEND                                // Mask:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

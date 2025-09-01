@@ -61,7 +61,13 @@ struct AgSample : public AgIntegerLG<ogg_int64_t> {
 // ? with it. The object will no longer be useable after this call and an
 // ? error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Stream>(lS, 1, *cStreams))
+LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Stream>(lS, cStreams))
+/* ========================================================================= */
+// $ Stream:Destroyed
+// < Destroyed:boolean=If the Stream class is destroyed
+// ? Returns if the Stream class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cStreams)))
 /* ========================================================================= */
 // $ Stream:OnEvent
 // > Func:function=The callback function to call when an event occurs.
@@ -286,16 +292,17 @@ LLFUNC(GetChannels, 1, LuaUtilPushVar(lS, AgStream{lS, 1}().GetChannels()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Stream:* member functions begin
-  LLRSFUNC(OnEvent),        LLRSFUNC(GetBitRate),   LLRSFUNC(GetBytes),
-  LLRSFUNC(GetChannels),    LLRSFUNC(GetDuration),  LLRSFUNC(GetElapsed),
-  LLRSFUNC(GetId),          LLRSFUNC(GetName),      LLRSFUNC(GetPosition),
-  LLRSFUNC(GetLoop),        LLRSFUNC(GetLoopBegin), LLRSFUNC(GetLoopEnd),
-  LLRSFUNC(GetRate),        LLRSFUNC(GetSamples),   LLRSFUNC(GetVersion),
-  LLRSFUNC(GetVolume),      LLRSFUNC(GetMetaData),  LLRSFUNC(IsPlaying),
-  LLRSFUNC(OnEvent),        LLRSFUNC(Play),         LLRSFUNC(SetElapsed),
-  LLRSFUNC(SetElapsedPage), LLRSFUNC(SetPosition),  LLRSFUNC(SetPositionPage),
-  LLRSFUNC(SetLoop),        LLRSFUNC(SetLoopBegin), LLRSFUNC(SetLoopEnd),
-  LLRSFUNC(SetLoopRange),   LLRSFUNC(SetVolume),    LLRSFUNC(Stop),
+  LLRSFUNC(Destroy),      LLRSFUNC(Destroyed),       LLRSFUNC(OnEvent),
+  LLRSFUNC(GetBitRate),   LLRSFUNC(GetBytes),        LLRSFUNC(GetChannels),
+  LLRSFUNC(GetDuration),  LLRSFUNC(GetElapsed),      LLRSFUNC(GetId),
+  LLRSFUNC(GetName),      LLRSFUNC(GetPosition),     LLRSFUNC(GetLoop),
+  LLRSFUNC(GetLoopBegin), LLRSFUNC(GetLoopEnd),      LLRSFUNC(GetRate),
+  LLRSFUNC(GetSamples),   LLRSFUNC(GetVersion),      LLRSFUNC(GetVolume),
+  LLRSFUNC(GetMetaData),  LLRSFUNC(IsPlaying),       LLRSFUNC(OnEvent),
+  LLRSFUNC(Play),         LLRSFUNC(SetElapsed),      LLRSFUNC(SetElapsedPage),
+  LLRSFUNC(SetPosition),  LLRSFUNC(SetPositionPage), LLRSFUNC(SetLoop),
+  LLRSFUNC(SetLoopBegin), LLRSFUNC(SetLoopEnd),      LLRSFUNC(SetLoopRange),
+  LLRSFUNC(SetVolume),    LLRSFUNC(Stop),
 LLRSEND                                // Stream:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

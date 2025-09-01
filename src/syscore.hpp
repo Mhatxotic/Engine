@@ -468,7 +468,7 @@ class System :                         // The main system class
     { return GetCoreFlags().FlagIsSet(CFL_VIDEO); }
   bool IsNotGraphicalMode(void) const { return !IsGraphicalMode(); }
   bool IsTextMode(void) const
-    { return GetCoreFlags().FlagIsSet(CFL_TERMINAL); }
+    { return GetCoreFlags().FlagIsSet(CFL_TEXT); }
   bool IsNotTextMode(void) const { return !IsTextMode(); }
   bool IsAudioMode(void) const
     { return GetCoreFlags().FlagIsSet(CFL_AUDIO); }
@@ -620,7 +620,7 @@ class System :                         // The main system class
   /* -- Set/Get GUI mode status -------------------------------------------- */
   CVarReturn SetCoreFlags(const CoreFlagsType cftFlags)
   { // Failed if bad value
-    if(cftFlags != CFL_NONE && (cftFlags & ~CFL_MASK)) return DENY;
+    if(cftFlags != CFL_BASIC && (cftFlags & ~CFL_MASK)) return DENY;
     // Set new value
     cfMode.FlagReset(cftFlags);
     // Accepted

@@ -11,12 +11,12 @@ namespace IGlFW {                      // Start of module namespace
 /* ------------------------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IEvtMain::P;
-using namespace IGlFWCursor::P;
-using namespace IGlFWUtil::P;          using namespace IGlFWWindow::P;
-using namespace IHelper::P;            using namespace ILog::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IToken::P;             using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IGlFWCursor::P;        using namespace IGlFWUtil::P;
+using namespace IGlFWWindow::P;        using namespace IHelper::P;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace IToken::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 typedef array<GlFWCursor, CUR_MAX> CursorStandard;
 /* ------------------------------------------------------------------------- */

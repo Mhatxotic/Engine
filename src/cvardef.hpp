@@ -58,12 +58,12 @@ template<typename AnyToType, typename AnyFromType, typename AnyRangeType>
 BUILD_FLAGS(Core,
   /* ----------------------------------------------------------------------- */
   // No flags?                         Want text mode console?
-  CFL_NONE                  {Flag(0)}, CFL_TERMINAL              {Flag(1)},
+  CFL_BASIC                 {Flag(0)}, CFL_TEXT              {Flag(1)},
   // Want audio sub-system?            Want opengl window?
   CFL_AUDIO                 {Flag(2)}, CFL_VIDEO                 {Flag(3)},
   /* ----------------------------------------------------------------------- */
   CFL_AUDIOVIDEO{ CFL_AUDIO|CFL_VIDEO },
-  CFL_MASK{ CFL_TERMINAL|CFL_AUDIOVIDEO }
+  CFL_MASK{ CFL_TEXT|CFL_AUDIOVIDEO }
 );/* -- CVar flags --------------------------------------------------------- */
 BUILD_FLAGS(CVar,
   /* -- Types (T) ---------------------------------------------------------- */
@@ -183,9 +183,9 @@ enum CVarEnums : size_t
   CON_FONT,         CON_FONTFLAGS,     CON_FONTCOLOUR,      CON_FONTHEIGHT,
   CON_FONTPADDING,  CON_FONTPCMIN,     CON_FONTPCMAX,       CON_FONTSCALE,
   CON_FONTSPACING,  CON_FONTLSPACING,  CON_FONTWIDTH,       CON_FONTTEXSIZE,
-  CON_INPREFRESH,   CON_INPUTMAX,      CON_OUTPUTMAX,       CON_PAGELINES,
-  CON_TMCCOLS,      CON_TMCROWS,       CON_TMCREFRESH,      CON_TMCNOCLOSE,
-  CON_TMCTFORMAT,
+  CON_GCWTERM,      CON_INPREFRESH,    CON_INPUTMAX,        CON_OUTPUTMAX,
+  CON_PAGELINES,    CON_TMCCOLS,       CON_TMCROWS,         CON_TMCREFRESH,
+  CON_TMCNOCLOSE,   CON_TMCTFORMAT,
   /* -- Fmv cvars ---------------------------------------------------------- */
   FMV_ABUFFER,      FMV_IOBUFFER,      FMV_MAXDRIFT,
   /* -- Input cvars -------------------------------------------------------- */

@@ -101,6 +101,10 @@ class Core final :                     // Members initially private
       cLog->LogWarningSafe("Core ended an in-progress SQL transaction!");
     // Reset all SQL error codes and stored results and records.
     cSql->Reset();
+    // Clear console status bars. Although this only applies if there is a
+    // terminal window, we don't restrict use of the function in graphical only
+    // mode so clear it regardless of what the gui mode is.
+    cConsole->ClearStatus();
     // If using graphical inteactive mode?
     if(cSystem->IsGraphicalMode())
     { // Reset input environment
@@ -112,17 +116,24 @@ class Core final :                     // Members initially private
       // Set main framebuffer as default and reset to original settings
       cFboCore->ActivateMain();
       cDisplay->CommitDefaultMatrix();
-      // Cant't disable console if leaving, can if entering
-      cConGraphics->SetCantDisable(bLeaving);
-      // Reset cursor if leaving else hide console if entering
-      if(bLeaving) cDisplay->RequestResetCursor();
-      else cConGraphics->SetVisible(false);
-      // Restore console font properties
-      cConGraphics->RestoreDefaultProperties();
-    } // Bot mode? Clear bottom status texts
-    if(cSystem->IsTextMode()) cConsole->ClearStatus();
-    // Reset frame timer control
-    cTimer->TimerReset(bLeaving);
+      // Reset the cursor
+      cDisplay->RequestResetCursor();
+      // If leaving main execution?
+      if(bLeaving)
+      { // Enable and show console, and set full-screen
+        cConGraphics->LeaveResetEnvironment();
+        // Force a 1ms suspend lock to not hog the cpu
+        cTimer->TimerReset(true);
+      } // If entering?
+      else
+      { // Disable and hide console, and restore size
+        cConGraphics->EnterResetEnvironment();
+        // Remove the 1ms FPS limit lock on the engine
+        cTimer->TimerReset(false);
+      } // Make sure main fbo is cleared
+      cFboCore->SetDraw();
+    } // Not graphical? Set or remove the 1ms FPS limit lock on the engine
+    else cTimer->TimerReset(bLeaving);
     // Reset unique ids. Remember some classes aren't registered in the
     // collector, such as the console and main fbo.
 #define RSCEX(x,v) x->CounterReset(x->CollectorCount() + v)
@@ -249,6 +260,14 @@ class Core final :                     // Members initially private
         cTimer->TimerUpdateInteractive();
         // Loop until event manager says we should break
         while(cEvtMain->HandleSafe()) CoreTick();
+      } // No mode set
+      else while(cEvtMain->HandleSafe())
+      { // Calculate time elapsed in this tick
+        cTimer->TimerUpdateBot();
+        // Execute the main tick
+        cLua->ExecuteMain();
+        // Process bot console
+        cConsole->FlushToTerminal();
       }
     } // exception occured so throw LUA stackdump and leave the sandbox
     catch(const exception &eReason)
@@ -689,9 +708,30 @@ class Core final :                     // Members initially private
       }
     } // Else were in graphical interactive mode
     else if(cSystem->IsGraphicalMode()) CoreEnterGraphicalMode();
-    // No front-end requested
-    else XC("No front-end specified in core flags!",
-            "Flags", cSystem->GetCoreFlags());
+    // No front-end requested so we just use stdout
+    else
+    { // Init lightweight text mode console for monitoring.
+      INITHELPER(NoConIH,
+        cSystem->WindowInitialised(nullptr),
+        cEvtMain->ThreadDeInit();
+        cSystem->SetWindowDestroyed());
+      // Execute main function until EMC_QUIT or EMC_QUIT_RESTART is passed.
+      // We are using the system's main thread so we just need to name this
+      // thread properly. We won't actually be spawning a new thread with
+      // this though, it's just used as simple exit condition flag to be
+      // compatible with the GUI mode.
+      while(CoreShouldEngineContinue()) CoreThreadMain(*cEvtMain);
+      // If system says we have to close as quickly as possible?
+      if(cSystem->SysConIsClosing())
+      { // Quickly save cvars, database and log, this is the priority since
+        // Windows has a hardcoded termination time for console apps.
+        cCVars->Save();
+        cSql->DeInit();
+        cLog->DeInitSafe();
+        // Now Windows can exit anytime it wants
+        cSystem->SysConCanCloseNow();
+      }
+    }
     // Compare engine exit code...
     switch(cEvtMain->GetExitReason())
     { // If we're to restart process with parameters? Set to do so
