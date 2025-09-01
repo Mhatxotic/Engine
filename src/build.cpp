@@ -1235,6 +1235,7 @@ static int GenDoc(void)
     "\t<META name=\"robots\" content=\"index,follow\">\n"
     "\t<META name=\"viewport\" "
             "content=\"width=device-width, initial-scale=1\">\n"
+    "\t<LINK rel=\"icon\" type=\"image/x-icon\" href=\"favicon.ico\">\n"
     "\t<TITLE>$ $.$.$.$ API reference</TITLE>\n"
     "\t<STYLE media=\"screen\">\n"
     "\t* { margin:0; padding:0 }\n"
