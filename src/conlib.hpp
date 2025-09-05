@@ -193,9 +193,9 @@ sTable.Header("ID", false).Header("WIDTH").Header("HEIGHT").Header("OCCUPANCY")
 for(const Bin*const bPtr : *cBins)
 { // Get reference to class and write its data to the table
   const Bin &bRef = *bPtr;
-  sTable.DataN(bRef.CtrGet()).DataN(bRef.DimGetHeight())
-        .DataN(bRef.Occupancy(), 7).DataN(bRef.Total()).DataN(bRef.Used())
-        .DataN(bRef.Free());
+  sTable.DataN(bRef.CtrGet()).DataN(bRef.DimGetWidth())
+        .DataN(bRef.DimGetHeight()).DataN(bRef.Occupancy(), 7)
+        .DataN(bRef.Total()).DataN(bRef.Used()).DataN(bRef.Free());
 } // Log counts
 cConsole->AddLineA(sTable.Finish(),
   StrCPluraliseNum(cBins->size(), "bin.", "bins."));
@@ -1711,13 +1711,14 @@ if(aArgs.size() == 2)
     : ((sfcFlags.FlagIsSet(SS_CLOSEDBYSERVER)) ? "ServerClosed"
     : ((sfcFlags.FlagIsSet(SS_STANDBY))        ? "Disconnected"
     : ((sfcFlags.FlagIsSet(SS_DISCONNECTING))  ? "Disconnecting"
+    : ((sfcFlags.FlagIsSet(SS_UPGRADED))       ? "WebSocketConnected"
     : ((sfcFlags.FlagIsSet(SS_DOWNLOADING))    ? "Downloading"
     : ((sfcFlags.FlagIsSet(SS_REPLYWAIT))      ? "ReplyWait"
     : ((sfcFlags.FlagIsSet(SS_SENDREQUEST))    ? "SendRequest"
     : ((sfcFlags.FlagIsSet(SS_CONNECTED))      ? "Connected"
     : ((sfcFlags.FlagIsSet(SS_CONNECTING))     ? "Connecting"
     : ((sfcFlags.FlagIsSet(SS_INITIALISING))   ? "Initialising"
-    :                                  "Unknown"))))))))));
+    :                                            "Unknown")))))))))));
   // If the socket is not connected?
   if(sfcFlags.FlagIsClear(SS_CONNECTED))
     return cConsole->AddLineF("Status for socket $...\n"
@@ -1779,6 +1780,7 @@ for(const Socket*const sPtr : *cSockets)
     { sfcFlags.FlagIsSet(SS_SENDREQUEST),    'H' },
     { sfcFlags.FlagIsSet(SS_REPLYWAIT),      'R' },
     { sfcFlags.FlagIsSet(SS_DOWNLOADING),    'D' },
+    { sfcFlags.FlagIsSet(SS_UPGRADED),       'U' },
     { sfcFlags.FlagIsSet(SS_DISCONNECTING),  'N' },
     { sfcFlags.FlagIsSet(SS_STANDBY),        'B' },
     { sRef.GetError() != 0,                  'E' },

@@ -84,6 +84,12 @@ LLFUNC(Dump, 0,
 LLFUNC(GetHeight, 1,
   LuaUtilPushVar(lS, AgFont{lS, 1}().duiTile.DimGetHeight()))
 /* ========================================================================= */
+// $ Font:GetFlags
+// < Flags:integer=Font flags value
+// ? Returns the current font flags.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetFlags, 1, LuaUtilPushVar(lS, AgFont{lS, 1}().FlagGet()))
+/* ========================================================================= */
 // $ Font:GetId
 // < Id:integer=The id number of the Font object.
 // ? Returns the unique id of the Font object.
@@ -702,22 +708,22 @@ LLFUNC(SetSpacing, 0,
 ** ========================================================================= */
 LLRSMFBEGIN                            // Font:* member functions begin
   LLRSFUNC(Destroy),    LLRSFUNC(Dump),        LLRSFUNC(GetHeight),
-  LLRSFUNC(GetId),      LLRSFUNC(GetName),     LLRSFUNC(GetWidth),
-  LLRSFUNC(LoadChars),  LLRSFUNC(LoadRange),   LLRSFUNC(Print),
-  LLRSFUNC(PrintC),     LLRSFUNC(PrintCT),     LLRSFUNC(PrintM),
-  LLRSFUNC(PrintMT),    LLRSFUNC(PrintR),      LLRSFUNC(PrintRT),
-  LLRSFUNC(PrintS),     LLRSFUNC(PrintT),      LLRSFUNC(PrintTS),
-  LLRSFUNC(PrintU),     LLRSFUNC(PrintUC),     LLRSFUNC(PrintUCT),
-  LLRSFUNC(PrintUR),    LLRSFUNC(PrintURT),    LLRSFUNC(PrintUS),
-  LLRSFUNC(PrintW),     LLRSFUNC(PrintWS),     LLRSFUNC(PrintWT),
-  LLRSFUNC(PrintWTS),   LLRSFUNC(PrintWU),     LLRSFUNC(PrintWUT),
-  LLRSFUNC(SetCA),      LLRSFUNC(SetCB),       LLRSFUNC(SetCG),
-  LLRSFUNC(SetCOA),     LLRSFUNC(SetCOB),      LLRSFUNC(SetCOG),
-  LLRSFUNC(SetCOR),     LLRSFUNC(SetCORGB),    LLRSFUNC(SetCORGBA),
-  LLRSFUNC(SetCORGBAI), LLRSFUNC(SetCR),       LLRSFUNC(SetCRGBAI),
-  LLRSFUNC(SetCRGB),    LLRSFUNC(SetCRGBA),    LLRSFUNC(SetGPad),
-  LLRSFUNC(SetGSize),   LLRSFUNC(SetLSpacing), LLRSFUNC(SetSize),
-  LLRSFUNC(SetSpacing),
+  LLRSFUNC(GetFlags),   LLRSFUNC(GetId),       LLRSFUNC(GetName),
+  LLRSFUNC(GetWidth),   LLRSFUNC(LoadChars),   LLRSFUNC(LoadRange),
+  LLRSFUNC(Print),      LLRSFUNC(PrintC),      LLRSFUNC(PrintCT),
+  LLRSFUNC(PrintM),     LLRSFUNC(PrintMT),     LLRSFUNC(PrintR),
+  LLRSFUNC(PrintRT),    LLRSFUNC(PrintS),      LLRSFUNC(PrintT),
+  LLRSFUNC(PrintTS),    LLRSFUNC(PrintU),      LLRSFUNC(PrintUC),
+  LLRSFUNC(PrintUCT),   LLRSFUNC(PrintUR),     LLRSFUNC(PrintURT),
+  LLRSFUNC(PrintUS),    LLRSFUNC(PrintW),      LLRSFUNC(PrintWS),
+  LLRSFUNC(PrintWT),    LLRSFUNC(PrintWTS),    LLRSFUNC(PrintWU),
+  LLRSFUNC(PrintWUT),   LLRSFUNC(SetCA),       LLRSFUNC(SetCB),
+  LLRSFUNC(SetCG),      LLRSFUNC(SetCOA),      LLRSFUNC(SetCOB),
+  LLRSFUNC(SetCOG),     LLRSFUNC(SetCOR),      LLRSFUNC(SetCORGB),
+  LLRSFUNC(SetCORGBA),  LLRSFUNC(SetCORGBAI),  LLRSFUNC(SetCR),
+  LLRSFUNC(SetCRGBAI),  LLRSFUNC(SetCRGB),     LLRSFUNC(SetCRGBA),
+  LLRSFUNC(SetGPad),    LLRSFUNC(SetGSize),    LLRSFUNC(SetLSpacing),
+  LLRSFUNC(SetSize),    LLRSFUNC(SetSpacing),
 LLRSEND                                // Font:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

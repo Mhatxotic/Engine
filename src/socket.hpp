@@ -37,13 +37,15 @@ BUILD_SECURE_FLAGS(Socket,
   SS_CONNECTED              {Flag(4)}, SS_SENDREQUEST            {Flag(5)},
   // Socket waiting for reply? (HTTP)? Socket is downloading (HTTP)
   SS_REPLYWAIT              {Flag(6)}, SS_DOWNLOADING            {Flag(7)},
-  // Socket was closed by server?      Socket was closed by server?
-  SS_CLOSEDBYSERVER         {Flag(7)}, SS_CLOSEDBYCLIENT         {Flag(8)},
-  // Socket is disconnecting?          Socket on standby (disconnected)
-  SS_DISCONNECTING          {Flag(9)}, SS_STANDBY               {Flag(10)},
+  // Socket is upgraded (WEBSOCKET)    Socket was closed by server?
+  SS_UPGRADED               {Flag(8)}, SS_CLOSEDBYSERVER         {Flag(9)},
+  // Socket was closed by server?      Socket is disconnecting?
+  SS_CLOSEDBYCLIENT        {Flag(10)}, SS_DISCONNECTING         {Flag(11)},
+  // Socket on standby (disconnected)
+  SS_STANDBY               {Flag(12)},
   /* ----------------------------------------------------------------------- */
   // Set if error with event callback? Socket read a packet (not ever set)
-  SS_EVENTERROR            {Flag(11)}, SS_READPACKET            {Flag(12)}
+  SS_EVENTERROR            {Flag(13)}, SS_READPACKET            {Flag(14)}
 );/* == Socket collector class for collector data and custom variables ===== */
 CTOR_BEGIN(Sockets, Socket, CLHelperUnsafe,
 /* -- Internal registry values for http data ------------------------------- **
@@ -199,99 +201,91 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return TS_ERROR;
   }
   /* -- Read socket -------------------------------------------------------- */
-  unsigned int SockRead(char *cpD, const unsigned int uiL)
+  size_t SockRead(char *cpData, const size_t stSize)
   { // If thread should exit
     if(tReader.ThreadShouldExit() || tWriter.ThreadShouldExit())
-       return static_cast<unsigned int>(SetAborted());
+       return static_cast<size_t>(SetAborted());
     // Wait for new packet, storing bytes read and compare result
-    switch(const unsigned int uiRX = static_cast<unsigned int>
-      (BIO_read(bioPtr, cpD, static_cast<int>(uiL))))
+    switch(const size_t stRead = static_cast<size_t>
+      (BIO_read(bioPtr, cpData, static_cast<int>(stSize))))
     { // Did the server close the conection?
       case 0:
       { // Server closed the connection
         FlagSet(SS_CLOSEDBYSERVER);
         // Return error status, but there is no actual socket error
-        return static_cast<unsigned int>(TS_ERROR);
+        return static_cast<size_t>(TS_ERROR);
       } // Did the operation fail? Set error and clean up
       case StdMaxUInt:
-        return static_cast<unsigned int>(IsDisconnectedByClient() ?
+        return static_cast<size_t>(IsDisconnectedByClient() ?
           SetAborted() : SetErrorSafe("Read error or timeout"));
       // Did openssl fail? Set error and clean up
-      case static_cast<unsigned int>(-2):
-        return static_cast<unsigned int>(SetErrorSafe("Not implemented"));
+      case static_cast<size_t>(-2):
+        return static_cast<size_t>(SetErrorSafe("Not implemented"));
       // We read data. Incrememnt counter
       default:
         // Increment received bytes and packet counters
-        qRX += uiRX;
+        qRX += stRead;
         ++qRXp;
-        cParent->qRX += uiRX;
+        cParent->qRX += stRead;
         ++cParent->qRXp;
         // Set last received timestamp
         cdRead = cmHiRes.GetEpochTime();
         // Log status
-        SocketLogSafe(LH_DEBUG, "$ received", uiRX);
+        SocketLogSafe(LH_DEBUG, "$ received", stRead);
         // Return bytes read
-        return uiRX;
+        return stRead;
     }
   }
   /* -- Write socket ------------------------------------------------------- */
-  unsigned int SockWrite(const char *cpD, const unsigned int uiL)
+  size_t SockWrite(const char *cpData, const size_t stSize)
   { // If thread should exit
     if(tReader.ThreadShouldExit() || tWriter.ThreadShouldExit())
-      return static_cast<unsigned int>(SetAborted());
+      return static_cast<size_t>(SetAborted());
     // Wait to write new packet, storing bytes written and compare result
-    switch(const unsigned int uiTX = static_cast<unsigned int>
-      (BIO_write(bioPtr, cpD, static_cast<int>(uiL))))
+    switch(const size_t stWritten = static_cast<size_t>
+      (BIO_write(bioPtr, cpData, static_cast<int>(stSize))))
     { // Server closed connection. Set connection completed status
       case 0:
       { // Server closed the connection
         FlagSet(SS_CLOSEDBYSERVER);
         // Return no bytes written
-        return static_cast<unsigned int>
-          (SetErrorStaticSafe("EOF from server"));
+        return static_cast<size_t>(SetErrorStaticSafe("EOF from server"));
       } // Did the operation fail? Disconnect with error
       case StdMaxUInt:
-        return static_cast<unsigned int>
-          (SetErrorSafe("Send error or timeout"));
+        return static_cast<size_t>(SetErrorSafe("Send error or timeout"));
       // Other error? Set error and clean up
-      case static_cast<unsigned int>(-2):
-        return static_cast<unsigned int>
-          (SetErrorSafe("Not implemented"));
+      case static_cast<size_t>(-2):
+        return static_cast<size_t>(SetErrorSafe("Not implemented"));
       // We wrote data.
       default:
         // Make sure we sent the same bytes as read. This should never
         // happen, but if we did?
-        if(uiTX == uiL)
+        if(stWritten == stSize)
         { // Thats good, what we wanted log the transfer
-          SocketLogSafe(LH_DEBUG, "$ sent", uiTX);
+          SocketLogSafe(LH_DEBUG, "$ sent", stWritten);
           // Increment sent bytes and packet counters
-          qTX += uiTX;
+          qTX += stWritten;
           ++qTXp;
-          cParent->qTX += uiTX;
+          cParent->qTX += stWritten;
           ++cParent->qTXp;
           // Set last sent timestamp
           cdWrite = cmHiRes.GetEpochTime();
           // Return bytes written
-          return uiTX;
+          return stWritten;
         } // Log the error we did not send enough bytes
-        return static_cast<unsigned int>
-          (SetErrorSafe(StrFormat("Sent only $/$", uiTX, uiL)));
+        return static_cast<size_t>
+          (SetErrorSafe(StrFormat("Sent only $/$", stWritten, stSize)));
     }
   }
   /* -- Write string to socket --------------------------------------------- */
-  unsigned int SockWrite(const string &strStr)
-    { return SockWrite(strStr.data(),
-        static_cast<unsigned int>(strStr.length())); }
+  size_t SockWrite(const string &strStr)
+    { return SockWrite(strStr.data(), strStr.length()); }
   /* -- Write memory block class to socket --------------------------------- */
-  unsigned int SockWrite(const MemConst &mcSrc)
-    { return SockWrite(mcSrc.MemPtr<char>(), mcSrc.MemSize<unsigned int>()); }
+  size_t SockWrite(const MemConst &mcSrc)
+    { return SockWrite(mcSrc.MemPtr<char>(), mcSrc.MemSize()); }
   /* -- Convert packet to memblock for LUA API ----------------------------- */
   double GetPacket(Memory &mDest, PacketList &plData, size_t &stS)
-  { // Not empty? Return top memory block else through error
-    if(plData.empty())
-      XC("No packets remaining in blocklist!",
-         "Address", strAddr, "Port", uiPort);
-    // Get first top packet and move data to memblock supplied by caller
+  { // Get first top packet and move data to memblock supplied by caller
     Packet &pData = plData.front();
     mDest.MemSwap(pData.mData);
     // Copy record timestamp
@@ -725,12 +719,254 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return !any_of(strStr.cbegin(), strStr.cend(), [](const unsigned char &ucC)
       { return ucC < ' ' && ucC != '\r' && ucC != '\n'; });
   }
+  /* -- Terminate writer thread -------------------------------------------- */
+  void SocketTerminateWriteThread(void)
+  { // Return if wrong thread or not running
+    if(tWriter.ThreadIsCurrent() || tWriter.ThreadIsNotJoinable()) return;
+    // Call for writer thread to terminate
+    tWriter.ThreadSetExit();
+    // Unblock writer thread so that it may terminate cleanly
+    WriteUnblock();
+    // Wait for thread to terminate and deinit
+    tWriter.ThreadStop();
+    tWriter.ThreadDeInit();
+  }
+  /* -- Web socket main thread function reusing temporary buffer ----------- */
+  ThreadStatus WebSocketMain(Memory &mDest)
+  { // Check for upgrade status and return error if not found
+    const StrNCStrMapIt sncsmiIt{ pRegistry.find("Upgrade") };
+    if(sncsmiIt == pRegistry.cend())
+      return SetErrorStaticSafe("Missing upgrade header!");
+    // Must be websocket
+    if(sncsmiIt->second != "websocket")
+      return SetErrorStaticSafe(
+        StrAppend("Invalid upgrade protocol '$'!", sncsmiIt->second));
+    // Create a thread to write data requests
+    tWriter.ThreadInit(StrAppend("websocketwriter:", CtrGet()),
+      bind(&Socket::SockWebWriteThreadMain, this, _1), this);
+    // Send upgraded event
+    DispatchEvent(SS_UPGRADED);
+    // Websocket packet op codes
+    enum OpCode : unsigned int {
+      OC_NONE   = static_cast<unsigned int>(-1),
+      OC_FRAG   = 0x0, // Fragmented packet
+      OC_TEXT   = 0x1, // UTF-8 Text packet
+      OC_BINARY = 0x2, // Binary text packet
+      OC_CLOSE  = 0x8, // Close the connection request
+      OC_PING   = 0x9, // Ping the client test
+      OC_PONG   = 0xA  // Server ACK the ping client test.
+    } uiOpCode = OC_NONE;
+    // Websocket packet read modes
+    enum ReadMode : unsigned int { RM_HEADER, RM_SMALL_PAYLOAD,
+      RM_LARGE_PAYLOAD, RM_PAYLOAD } uiMode = RM_HEADER;
+    // Current buffer position and required bytes
+    size_t stRequired  = 2, // Bytes required in buffer
+           stPLTotal   = 0, // Payload size
+           stPLCurrent = 0; // Payload progress
+    bool bFinal = false;    // Is final websocket packet?
+    PacketList plTemp;      // Packets in current header
+    // Loop until thread should terminate
+    while(tReader.ThreadShouldNotExit())
+    { // Current buffer position and bytes read
+      size_t stTRead = 0;
+      // We need more bytes to required or fill the buffer?
+      Read: for(size_t stRead = 0;
+                stTRead < stRequired && stTRead < mDest.MemSize();
+                stTRead += stRead)
+      { // Wait for new payload and return if error or quit requested
+        const size_t stAmount = mDest.MemSize() - stTRead;
+        stRead = SockRead(mDest.MemRead(stTRead, stAmount), stAmount);
+        if(stRead == static_cast<size_t>(TS_ERROR)) return TS_ERROR;
+        if(tReader.ThreadShouldExit()) return TS_OK;
+      } // Calculate any extra data we read
+      size_t stExtra = stTRead > stRequired ? stTRead - stRequired : 0;
+      // What section of the data are we on?
+      switch(uiMode)
+      { // Payload?
+        case RM_PAYLOAD: Payload:
+        { // Put payload straight into packets
+          const size_t stPLPktSize = stTRead - stExtra;
+          PushData(plTemp, stPLCurrent,
+            mDest.MemRead(0, stPLPktSize), stPLPktSize);
+          // Check opcode
+          switch(uiOpCode)
+          { // Normal data?
+            case OC_TEXT: case OC_BINARY: case OC_FRAG:
+            { // Keep reading data if we're not done yet
+              stRequired -= stPLPktSize;
+              if(stRequired) continue;
+              // Ignore if not final packet
+              if(!bFinal) break;
+              { // Lock access to the packet list
+                const LockGuard lgSocketSync{ mMutex };
+                // Move packets to main packet list
+                plRX.splice(plRX.end(), plTemp);
+                // Set total size
+                stRX += stPLTotal;
+              } // Tell client that we have data ready
+              DispatchEvent(SS_READPACKET);
+              // Break to reset counters
+              break;
+            } // Ping? event?
+            case OC_PING:
+            { // Compact data segments and send it back
+              Memory mTemp;
+              Compact(mTemp, plTemp, stPLCurrent);
+              Send(mTemp);
+              // Done
+              break;
+            } // Pong! event? Ignore packet data.
+            case OC_PONG: plTemp.clear(); break;
+            // Close the connection? Do it.
+            case OC_CLOSE: plTemp.clear(); return TS_OK;
+            // Unsupported opcode?
+            default: plTemp.clear();
+              return SetErrorStaticSafe(
+                StrAppend("Invalid opcode 0x", hex, uiOpCode));
+          } // Reset to header mode
+          uiMode = RM_HEADER;
+          // Reset op code function
+          uiOpCode = OC_NONE;
+          // Reset payload values
+          stPLCurrent = stPLTotal = 0;
+          // Set required bytes for a header
+          stRequired = 2;
+          // If we don't have extra data? Wait for more data
+          if(!stExtra) continue;
+          // Shift data left
+          mDest.MemWrite(0, mDest.MemRead(stPLPktSize, stExtra), stExtra);
+          // Set bytes unprocessed
+          stTRead = stExtra;
+          // We don't have enough for a header yet? Wait for more
+          if(stTRead < stRequired) goto Read;
+          // We have enough for a header so set extra data size
+          stExtra = stTRead - stRequired;
+          // Fall through to process header
+          [[fallthrough]];
+        } // Waiting for header?
+        case RM_HEADER:
+        { // Get bits 0 to 7 and 8 to 15
+          const unsigned int uiFirst = mDest.MemReadInt<uint8_t>(),
+                             uiSecond = mDest.MemReadInt<uint8_t>(1);
+          // Throw error if reserved bits are set
+          if(uiFirst & 0x40 || uiFirst & 0x20 || uiFirst & 0x10)
+            return SetErrorStaticSafe("Reserved headers set!");
+          // Server should not send a mask (bit 8)
+          if(uiSecond & 0x80) return SetErrorStaticSafe("Mask bit set!");
+          // Set if a final packet (bit 0)
+          bFinal = !!(uiFirst & 0x80);
+          // Set the opcode (bit 4-7)
+          uiOpCode = static_cast<OpCode>(uiFirst & 0x0F);
+          // Get initial payload value (bits 9 to 15)
+          stPLTotal = uiSecond & 0x7F;
+          // Compare payload value
+          switch(stPLTotal)
+          { // Payload is small? (126 bytes)
+            case 126:
+            { // Set small payload expected next
+              uiMode = RM_SMALL_PAYLOAD;
+              // Need two bytes next
+              const size_t stRequiredNext = 2;
+              // If we don't have extra data? Wait for more data
+              if(!stExtra) { stRequired = stRequiredNext; continue; }
+              // Shift data left
+              mDest.MemWrite(0, mDest.MemRead(stRequired, stExtra), stExtra);
+              // Set next requirement
+              stRequired = stRequiredNext;
+              // Set bytes unprocessed
+              stTRead = stExtra;
+              // We don't have enough for a header yet? Wait for more
+              if(stTRead < stRequired) goto Read;
+              // We have enough for a header so set extra data size
+              stExtra = stTRead - stRequired;
+              // Process small payload immediately
+              goto SmallPayload;
+            } // Payload is large? (127 bytes)
+            case 127:
+            { // Set large payload expected next
+              uiMode = RM_LARGE_PAYLOAD;
+              // Need eight bytes next
+              const size_t stRequiredNext = 8;
+              // If we don't have extra data? Wait for more data
+              if(!stExtra) { stRequired = stRequiredNext; continue; }
+              // Shift data left
+              mDest.MemWrite(0, mDest.MemRead(stRequired, stExtra), stExtra);
+              // Set next requirement
+              stRequired = stRequiredNext;
+              // Set bytes unprocessed
+              stTRead = stExtra;
+              // We don't have enough for a header yet? Wait for more
+              if(stTRead < stRequired) goto Read;
+              // We have enough for a header so set extra data size
+              stExtra = stTRead - stRequired;
+              // Process large payload immediately
+              goto LargePayload;
+            } // Payload is tiny? (<126 bytes) break to process payload
+            default: break;
+          } // Done
+          break;
+        } // Waiting for small payload size?
+        case RM_SMALL_PAYLOAD: SmallPayload:
+        { // Update actual payload size
+          stPLTotal = static_cast<size_t>((mDest.MemReadInt<uint8_t>(0) << 8) |
+                                           mDest.MemReadInt<uint8_t>(1));
+          // Now process payload
+          break;
+        } // Waiting for large payload size?
+        case RM_LARGE_PAYLOAD: LargePayload:
+        { // Calculate 64-bit size of payload
+          uint64_t uqPayload = 0;
+          for(size_t stIndex = 0; stIndex < 8; ++stIndex)
+            uqPayload = (uqPayload << 8) |
+              mDest.MemReadInt<uint8_t>(stIndex);
+          // Let's be sensible and deny above 4GB payloads for now
+          if(uqPayload > 0xFFFFFFFF)
+            return SetErrorStaticSafe(
+              StrAppend("Payload $ too big", hex, uqPayload));
+          // Now process payload
+          break;
+        } // Should never get here
+        default: return SetErrorStaticSafe("Invalid mode!");
+      } // Set payload mode
+      uiMode = RM_PAYLOAD;
+      // Need eight bytes next
+      const size_t stRequiredNext = stPLTotal;
+      // If we don't have extra data? Wait for more data
+      if(!stExtra) { stRequired = stRequiredNext; continue; }
+      // Shift data left
+      mDest.MemWrite(0, mDest.MemRead(stRequired, stExtra), stExtra);
+      // Set next requirement
+      stRequired = stRequiredNext;
+      // Set bytes unprocessed
+      stTRead = stExtra;
+      // We don't have enough for a header yet? Wait for more
+      if(stTRead < stRequired) goto Read;
+      // We have enough for a header so set extra data size
+      stExtra = stTRead - stRequired;
+      // Process actual payload data immediately
+      goto Payload;
+    } // Thread should terminate
+    return TS_OK;
+  }
   /* -- HTTP Socket main thread function ----------------------------------- */
   ThreadStatus HTTPMain(void)
   { // Connect and send http request and break loop if failed.
     if(InitialConnect() == TS_ERROR) return TS_ERROR;
-    // Check if this is a HEAD request
-    const bool bIsHead = GetRegistry(cParent->strRegVarMETHOD) == "HEAD";
+    // Check if websocket
+    enum { HTTP, HTTP_HEAD, WEBSOCKET } eMode;
+    { // Check for websocket key and if we have it
+      StrNCStrMapIt sncsmiIt{ pRegistry.find("Sec-WebSocket-Key") };
+      if(sncsmiIt != pRegistry.cend())
+      { // Create base 64 key
+        sncsmiIt->second = CryptMBtoB64(CryptRandomBlock(16));
+        // Set mode
+        eMode = WEBSOCKET;
+        // Remove request method from registry so it doesn't get sent
+        GetRegistry(cParent->strRegVarMETHOD);
+      } // Set normal HTTP request or HEAD request
+      else eMode = GetRegistry(cParent->strRegVarMETHOD) == "HEAD" ?
+                     HTTP_HEAD : HTTP;
+    }
     // Set sending request status event
     AddStatus(SS_SENDREQUEST);
     { // Get first line request and body which will also be deleted from the
@@ -748,8 +984,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           StdMove(StrAppend(strReq, strHdrs, cCommon->CommonCrLf(),
             strBody)) };
       // Write the full request to the server and return if failed
-      if(SockWrite(strPk) == static_cast<unsigned int>(TS_ERROR))
-        return TS_ERROR;
+      if(SockWrite(strPk) == static_cast<size_t>(TS_ERROR)) return TS_ERROR;
     } // Set sent request status event
     AddStatus(SS_REPLYWAIT);
     // Content read and content-length
@@ -763,43 +998,43 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Begin monitoring for reply and break if thread should exit
     while(tReader.ThreadShouldNotExit())
     { // Wait for data from connected server
-      const unsigned int uiBX =
-        SockRead(mDest.MemPtr<char>(), mDest.MemSize<unsigned int>());
+      const size_t stRead = SockRead(mDest.MemPtr<char>(), mDest.MemSize());
       // Connection error or server closed connection?
-      if(uiBX == static_cast<unsigned int>(TS_ERROR))
+      if(stRead == static_cast<size_t>(TS_ERROR))
       { // If we were waiting for headers still?
         if(bHeaders) return SetErrorSafe("Response failed");
         // We were downloading so if there was a content length?
         if(stContentLength)
         { // Read the correct number of bytes? Or we're just doing a HEAD req?
           // Log that the download was successful.
-          if(stContentRead == stContentLength || bIsHead)
+          if(stContentRead == stContentLength || eMode == HTTP_HEAD)
             SocketLogSafe(LH_DEBUG, "Download successful");
           // We did not get the correct number of bytes? Set error code.
           else return SetErrorSafe(StrAppend("Failed at ", stContentRead));
         } // There was no content length? Just log the bytes downloaded
         else SocketLogSafe(LH_DEBUG, "$ downloaded", stContentRead);
         // We're done with the connection
-        return TS_OK;
+        return TS_ERROR;
       } // Not processing headers?
       if(!bHeaders)
       { // Not processing headers? Processing content? Increment content read
-        stContentRead += uiBX;
+        stContentRead += stRead;
         // Push data into RX list. Truncate bytes read if we have a content
         // length and the we read past the content length.
         PushDataSafe(plRX, stRX, mDest.MemPtr<char>(),
           stContentLength && stContentRead > stContentLength ?
-            uiBX - static_cast<unsigned int>(stContentLength - stContentRead) :
-            uiBX);
-        // Have content length and at EOF? Done!
+            stRead - static_cast<size_t>(stContentLength - stContentRead) :
+            stRead);
+        // Have content length and at EOF? Log it
         if(stContentLength && stContentRead == stContentLength)
-        { // Log it and return success
+        { // All downloaded
           SocketLogSafe(LH_DEBUG, "Download complete");
+          // So below scopes can jump here
           return TS_OK;
         } // Wait for next packet, thread abort or server disconnect.
         continue;
       } // Make string view of response which could contain binary chars
-      string_view strvResp{ mDest.MemPtr<char>(), uiBX };
+      string_view strvResp{ mDest.MemPtr<char>(), stRead };
       // Find end of headers marker and if we do not have it yet?
       const size_t stEnd = strvResp.find(cCommon->CommonCrLf2());
       if(stEnd == StdNPos)
@@ -855,6 +1090,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       if(stStatus < 400) SocketLogSafe(LH_DEBUG, "Status code $", strStatus);
       // Error status code? Log error status code
       else SocketLogSafe(LH_WARNING, "Status error $", strStatus);
+      // If connection upgrade required? Handle websocket if requested else
+      // throw an error because the socket might be left in a waiting state
+      // which our client expects the server to close the connection.
+      if(stStatus == 101)
+        return eMode == WEBSOCKET ? WebSocketMain(mDest):
+          SetErrorStaticSafe("Not upgrading");
       // Add protocol and status code to registry so guest can read them
       // without having to perform any special string operations
       pRegistry.ParserPushOrUpdatePair(cParent->strRegVarPROTO, strProtoRecv);
@@ -893,16 +1134,15 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         AddStatus(SS_DOWNLOADING);
         // If we already got enough bytes from the header packet?
         if(stInitial == stContentLength)
-        { // Log it and return success
           SocketLogSafe(LH_DEBUG, "Downloaded in one go");
-          return TS_OK;
-        } // If we got too many bytes? treat it as completed anyway
-        if(stInitial > stContentLength)
-        { // Log it and return success
+        // If we got too many bytes? treat it as completed anyway
+        else if(stInitial > stContentLength)
           SocketLogSafe(LH_DEBUG, "Downloaded ($ excess)",
             stInitial-stContentLength);
-          return TS_OK;
-        } // Haven't received all the data
+        // Keep waiting for data
+        else continue;
+        // Success
+        return TS_OK;
       } // No content length and connection not closed
       else
       { // Set zero content length and downloading flag
@@ -918,13 +1158,15 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     ThreadStatus tsReturn;
     // Capture exceptions and switch to thiscall
     try { tsReturn = HTTPMain(); }
-    // exception occurred?
+    // Exception occurred?
     catch(const exception &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET HTTP THREAD EXCEPTION) $", eReason);
       // Set error message
       tsReturn = SetErrorStaticSafe(eReason.what());
-    } // Send disconnection and clear
+    } // If we're a websocket then stop the writer thread
+    SocketTerminateWriteThread();
+    // Clear connection and clean-up
     SendDisconnect();
     FinishDisconnect();
     // Required to stop memory leak
@@ -942,6 +1184,103 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void PopOldestTXPacketSafe(void)
     { const LockGuard lgSocketSync{ mMutex }; return plTX.pop_front(); }
   /* -- Socket write manager ----------------------------------------------- */
+  ThreadStatus SockWebWriteManager(void)
+  { // Block until requested to exit
+    while(tWriter.ThreadShouldNotExit())
+    { // For each packet waiting to be written
+      while(IsTXPacketAvailable())
+      { // Get oldest available TX packet
+        const MemConst &mcPacket = GetOldestTXPacketSafe();
+        // Typedef for mask data
+        typedef array<uint8_t,4> MaskData;
+        // Calculate payload size and if empty?
+        Memory mPayload;
+        if(mcPacket.MemIsEmpty())
+        { // Setup header
+          mPayload.MemInitSafe(6);
+          mPayload.MemWriteInt<uint8_t>(0, 0x8A);
+          mPayload.MemWriteInt<uint8_t>(1, 0x80);
+        } // Small payload size?
+        else if(mcPacket.MemSize() < 125)
+        { // Setup header
+          mPayload.MemInitBlank(6 + mcPacket.MemSize());
+          mPayload.MemWriteInt<uint8_t>(0, 0x81);
+          mPayload.MemWriteInt<uint8_t>(1, 0x80 | mcPacket.MemSize<uint8_t>());
+          // Setup random masking key
+          const MaskData ucaMask{ CryptRandom<MaskData>() };
+          mPayload.MemWrite(2, ucaMask.data(), ucaMask.size());
+          // Mask original packet data into the payload
+          for(size_t stIndex = 0; stIndex < mcPacket.MemSize(); ++stIndex)
+            mPayload.MemWriteInt<uint8_t>(6 + stIndex,
+              mcPacket.MemReadInt<uint8_t>(stIndex) ^ ucaMask[stIndex % 4]);
+        } // Medium payload size?
+        else if(mcPacket.MemSize() <= 65535)
+        { // Setup header
+          mPayload.MemInitBlank(8 + mcPacket.MemSize());
+          mPayload.MemWriteInt<uint8_t>(0, 0x81);
+          mPayload.MemWriteInt<uint8_t>(1, 0x80 | 126);
+          mPayload.MemWriteInt<uint8_t>(2, (mcPacket.MemSize() >> 8) & 0xFF);
+          mPayload.MemWriteInt<uint8_t>(3, mcPacket.MemSize() & 0xFF);
+          // Setup random masking key
+          const MaskData ucaMask{ CryptRandom<MaskData>() };
+          mPayload.MemWrite(4, ucaMask.data(), ucaMask.size());
+          // Mask original packet data into the payload
+          for(size_t stIndex = 0; stIndex < mcPacket.MemSize(); ++stIndex)
+            mPayload.MemWriteInt<uint8_t>(8 + stIndex,
+              mcPacket.MemReadInt<uint8_t>(stIndex) ^ ucaMask[stIndex % 4]);
+        } // Large payload size?
+        else
+        { // Setup header
+          mPayload.MemInitBlank(13 + mcPacket.MemSize());
+          mPayload.MemWriteInt<uint8_t>(0, 0x81);
+          mPayload.MemWriteInt<uint8_t>(1, 0x80 | 127);
+          for(size_t stIndex = 7;
+                     stIndex != static_cast<size_t>(-1);
+                   --stIndex)
+            mPayload.MemWriteInt<uint8_t>((mcPacket.MemSize() >>
+              (9 * stIndex)) & 0xFF);
+          // Setup random masking key
+          const MaskData ucaMask{ CryptRandom<MaskData>() };
+          mPayload.MemWrite(9, ucaMask.data(), ucaMask.size());
+          // Mask original packet data into the payload
+          for(size_t stIndex = 0; stIndex < mcPacket.MemSize(); ++stIndex)
+            mPayload.MemWriteInt<uint8_t>(13 + stIndex,
+              mcPacket.MemReadInt<uint8_t>(stIndex) ^ ucaMask[stIndex % 4]);
+        } // Send it, and kill thread on error
+        if(SockWrite(mPayload) == static_cast<size_t>(TS_ERROR))
+          return TS_ERROR;
+        // Subtract total bytes counter and pop the packet we just sent
+        stTX -= mcPacket.MemSize();
+        PopOldestTXPacketSafe();
+      } // Setup lock for condition variable and wait for new data to write
+      UniqueLock uLock{ mWriter };
+      cvWriter.wait(uLock,
+        [this]{ return bUnlock || tReader.ThreadShouldExit(); });
+      // Next wait will block
+      bUnlock = false;
+    } // Sucesss
+    return TS_OK;
+  }
+  /* -- WebSocket write thread --------------------------------------------- */
+  ThreadStatus SockWebWriteThreadMain(Thread &)
+  { // Return code
+    ThreadStatus tsReturn;
+    // Capture exceptions and execute the manager
+    try { tsReturn = SockWebWriteManager(); }
+    // exception occured?
+    catch(const exception &eReason)
+    { // Report error
+      cLog->LogErrorExSafe("(WEBSOCKET WRITE THREAD EXCEPTION) $", eReason);
+      // Set error message
+      tsReturn = SetErrorStaticSafe(eReason.what());
+    } // Force close the socket if the reader thread isn't already exiting
+    SendDisconnect();
+    // Required to stop memory leak
+    OPENSSL_thread_stop();
+    // Return exit code
+    return tsReturn;
+  }
+  /* -- Socket write manager ----------------------------------------------- */
   ThreadStatus SockWriteManager(void)
   { // Block until requested to exit
     while(tWriter.ThreadShouldNotExit())
@@ -949,7 +1288,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       while(IsTXPacketAvailable())
       { // Get oldest available TX packet, send it, and kill thread on error
         const MemConst &mcPacket = GetOldestTXPacketSafe();
-        if(SockWrite(mcPacket) == static_cast<unsigned int>(TS_ERROR))
+        if(SockWrite(mcPacket) == static_cast<size_t>(TS_ERROR))
           return TS_ERROR;
         // Subtract total bytes counter and pop the packet we just sent
         stTX -= mcPacket.MemSize();
@@ -1001,12 +1340,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Loop until thread should terminate
     while(tReader.ThreadShouldNotExit())
     { // Wait for new data to be read and kill thread on error
-      const unsigned int uiBX =
-        SockRead(mDest.MemPtr<char>(), mDest.MemSize<unsigned int>());
-      if(uiBX == static_cast<unsigned int>(TS_ERROR)) return TS_ERROR;
+      const size_t stRead = SockRead(mDest.MemPtr<char>(), mDest.MemSize());
+      if(stRead == static_cast<size_t>(TS_ERROR)) return TS_ERROR;
       // Push data block into list ready for LUA to collect
-      PushDataSafe(plRX, stRX, mDest.MemPtr<char>(),
-        static_cast<size_t>(uiBX));
+      PushDataSafe(plRX, stRX, mDest.MemPtr<char>(), stRead);
       // Send read event
       DispatchEvent(SS_READPACKET);
     } // Thread should terminate
@@ -1018,27 +1355,20 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     ThreadStatus tsReturn;
     // Capture exceptions
     try { tsReturn = SockReadManager(); }
-    // exception occured?
+    // Exception occured?
     catch(const exception &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET THREAD EXCEPTION) $", eReason);
       // Set error message
       tsReturn = SetErrorStaticSafe(eReason.what());
-    } // Have writer thread?
-    if(tWriter.ThreadIsNotCurrent() && tWriter.ThreadIsJoinable())
-    { // Call for writer thread to terminate
-      tWriter.ThreadSetExit();
-      // Unblock writer thread so that it may terminate cleanly
-      WriteUnblock();
-      // Wait for thread to terminate and deinit
-      tWriter.ThreadStop();
-      tWriter.ThreadDeInit();
-    } // Clear connection and clean-up
+    } // Stop writer thread
+    SocketTerminateWriteThread();
+    // Clear connection and clean-up
     SendDisconnect();
     FinishDisconnect();
     // Required to stop memory leak
     OPENSSL_thread_stop();
-    // Break thread
+    // Return status
     return tsReturn;
   }
   /* -- Error occured in event so start cleaning up ------------------------ */
@@ -1066,12 +1396,20 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   template<typename AnyType>const AnyType GetVarSafe(const AnyType &atVar)
     { const LockGuard lgSocketSync{ mMutex }; return atVar; }
   /* ----------------------------------------------------------------------- */
+  double GetPacketXSafe(Memory &mbD, PacketList &plList, size_t &stX)
+  { // Synchronise access to packet list
+    const LockGuard lgSocketSync{ mMutex };
+    // Not empty? Return top memory block else through error
+    if(plList.empty())
+      XC("No packets remaining in blocklist!",
+         "Address", strAddr, "Port", uiPort);
+    // Get last packet and return time
+    return GetPacket(mbD, plList, stX);
+  }
+  /* ----------------------------------------------------------------------- */
   size_t GetXQCountSafe(const PacketList &plList)
     { const LockGuard lgSocketSync{ mMutex };
       return plList.size(); }
-  double GetPacketXSafe(Memory &mbD, PacketList &plList, size_t &stX)
-    { const LockGuard lgSocketSync{ mMutex };
-      return GetPacket(mbD, plList, stX); }
   void CompactXSafe(Memory &mbD, PacketList &plList, size_t &stX)
     { const LockGuard lgSocketSync{ mMutex };
       Compact(mbD, plList, stX); }
@@ -1125,10 +1463,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   ThreadStatus SetErrorStaticSafe(const string &strS, const bool bS=true)
     { const LockGuard lgSocketSync{ mMutex };
       return SetErrorStatic(strS, bS); }
-  void PushDataSafe(PacketList &blD, size_t &stX, const char *cpD,
+  void PushDataSafe(PacketList &blD, size_t &stX, const char *cpData,
     const size_t stS)
       { const LockGuard lgSocketSync{ mMutex };
-        PushData(blD, stX, cpD, stS); }
+        PushData(blD, stX, cpData, stS); }
   void SendSafe(const MemConst &mcPacket)
     { const LockGuard lgSocketSync{ mMutex }; Send(mcPacket); }
   void SendStringSafe(const string &strData)
@@ -1361,9 +1699,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
                  strA{ LuaUtilGetCppStrNE(lS, 2) };
     const unsigned int uiP =
       LuaUtilGetIntLG<unsigned int>(lS, 3, 1, 65535);
-    const string strR{ LuaUtilGetCppStrNE(lS, 4) },
-                 strS{ LuaUtilGetCppStrUpper(lS, 5) },
-                 strH{ LuaUtilGetCppStr(lS, 6) },
+    const string strR{ LuaUtilGetCppStrNE(lS, 4) };
+    string       strM{ LuaUtilGetCppStrUpper(lS, 5) };
+    const string strH{ LuaUtilGetCppStr(lS, 6) },
                  strB{ LuaUtilGetCppStr(lS, 7) };
     LuaUtilCheckFunc(lS, 8);
     // Request must begin with a forward slash
@@ -1375,28 +1713,40 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Initialise registry with headers
     pRegistry.ParserReInit(strH, cCommon->CommonLf(), ':');
     // Push default user agent if not specified already
-    pRegistry.ParserPushIfNotExist("user-agent", cSockets->strvUserAgent);
+    pRegistry.ParserPushIfNotExist("User-Agent", cSockets->strvUserAgent);
+    // Check for websocket method
+    if(strM == "WS")
+    { // Set GET mathod back
+      strM = "GET";
+      // Set required websocket headers
+      pRegistry.ParserPushOrUpdatePairs({
+        // Websocket required headers
+        { "Connection", "Upgrade, close" },
+        { "Sec-WebSocket-Key", "" },
+        { "Sec-WebSocket-Version", "13" },
+        { "Upgrade", "websocket" }
+      });
+    } // Disable keep-alive, we don't support it (yet?).
+    else pRegistry.ParserPushPair("Connection", "close");
     // Find if the request contains a bookmark fragment
     const size_t stFrag = strR.find('#');
     // Start building registry for connector thread
     pRegistry.ParserPushOrUpdatePairs({
-      // Also disable keep-alive, we don't support it (yet?).
-      { "connection", "close" },
       // Push the source address
-      { "host", StdMove(strA) },
+      { "Host", strAddrPort },
       // Push the formulated request line. Remove the right hand fragment from
       // the URL if neccesary.
-      { cParent->strRegVarREQ, StrAppend(strS, ' ',
+      { cParent->strRegVarREQ, StrAppend(strM, ' ',
           (StrUrlEncodeSpaces(stFrag == StdNPos ?
             strR : strR.substr(0, stFrag))), " HTTP/1.0\r\n") },
       // Push method because we need to check if this is a HEAD request and
       // thus to know when to expect no output.
-      { cParent->strRegVarMETHOD, StdMove(strS) },
+      { cParent->strRegVarMETHOD, StdMove(strM) },
     });
     // Body specified?
     if(!strB.empty()) pRegistry.ParserPushOrUpdatePairs({
       // Add length of body text
-      { "content-length", StrFromNum(strB.length()) },
+      { "Content-Length", StrFromNum(strB.length()) },
       // Add body text
       { cParent->strRegVarBODY, StdMove(strB) }
     });

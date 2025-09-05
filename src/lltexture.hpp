@@ -449,6 +449,12 @@ LLFUNC(Dump, 0,
   const AgFilename aFilename{lS, 3};
   aTexture().Dump(aTextureId, aFilename))
 /* ========================================================================= */
+// $ Texture:GetFlags
+// < Flags:integer=Texture flags value
+// ? Returns the current texture flags.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetFlags, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().FlagGet()))
+/* ========================================================================= */
 // $ Texture:GetHeight
 // < Height:integer=The handle of the new mask created.
 // ? Returns height of texture.
@@ -956,19 +962,19 @@ LLRSMFBEGIN                            // Texture:* member functions begin
   LLRSFUNC(BlitLTWHA),   LLRSFUNC(BlitM),       LLRSFUNC(BlitSLT),
   LLRSFUNC(BlitSLTA),    LLRSFUNC(BlitSLTRB),   LLRSFUNC(BlitSLTWH),
   LLRSFUNC(BlitSLTWHA),  LLRSFUNC(Destroy),     LLRSFUNC(Download),
-  LLRSFUNC(Dump),        LLRSFUNC(GetHeight),   LLRSFUNC(GetId),
-  LLRSFUNC(GetName),     LLRSFUNC(GetSubCount), LLRSFUNC(GetWidth),
-  LLRSFUNC(PopColour),   LLRSFUNC(PushColour),  LLRSFUNC(SetCA),
-  LLRSFUNC(SetCB),       LLRSFUNC(SetCG),       LLRSFUNC(SetCR),
-  LLRSFUNC(SetCRGB),     LLRSFUNC(SetCRGBA),    LLRSFUNC(SetCRGBAI),
-  LLRSFUNC(SetCX),       LLRSFUNC(SetTCLTRB),   LLRSFUNC(SetTCLTWH),
-  LLRSFUNC(SetTCX),      LLRSFUNC(SetVLTRB),    LLRSFUNC(SetVLTWH),
-  LLRSFUNC(SetVLTWHA),   LLRSFUNC(SetVX),       LLRSFUNC(TileA),
-  LLRSFUNC(TileAD),      LLRSFUNC(TileAS),      LLRSFUNC(TileASD),
-  LLRSFUNC(TileGSTC),    LLRSFUNC(TileGTC),     LLRSFUNC(TileS),
-  LLRSFUNC(TileSD),      LLRSFUNC(TileSS),      LLRSFUNC(TileSSD),
-  LLRSFUNC(TileSSTC),    LLRSFUNC(TileSTC),     LLRSFUNC(Upload),
-  LLRSFUNC(UploadEx),
+  LLRSFUNC(Dump),        LLRSFUNC(GetFlags),    LLRSFUNC(GetHeight),
+  LLRSFUNC(GetId),       LLRSFUNC(GetName),     LLRSFUNC(GetSubCount),
+  LLRSFUNC(GetWidth),    LLRSFUNC(PopColour),   LLRSFUNC(PushColour),
+  LLRSFUNC(SetCA),       LLRSFUNC(SetCB),       LLRSFUNC(SetCG),
+  LLRSFUNC(SetCR),       LLRSFUNC(SetCRGB),     LLRSFUNC(SetCRGBA),
+  LLRSFUNC(SetCRGBAI),   LLRSFUNC(SetCX),       LLRSFUNC(SetTCLTRB),
+  LLRSFUNC(SetTCLTWH),   LLRSFUNC(SetTCX),      LLRSFUNC(SetVLTRB),
+  LLRSFUNC(SetVLTWH),    LLRSFUNC(SetVLTWHA),   LLRSFUNC(SetVX),
+  LLRSFUNC(TileA),       LLRSFUNC(TileAD),      LLRSFUNC(TileAS),
+  LLRSFUNC(TileASD),     LLRSFUNC(TileGSTC),    LLRSFUNC(TileGTC),
+  LLRSFUNC(TileS),       LLRSFUNC(TileSD),      LLRSFUNC(TileSS),
+  LLRSFUNC(TileSSD),     LLRSFUNC(TileSSTC),    LLRSFUNC(TileSTC),
+  LLRSFUNC(Upload),      LLRSFUNC(UploadEx),
 LLRSEND                                // Texture:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **
