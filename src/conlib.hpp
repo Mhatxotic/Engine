@@ -1715,9 +1715,10 @@ if(aArgs.size() == 2)
     : ((sfcFlags.FlagIsSet(SS_REPLYWAIT))      ? "ReplyWait"
     : ((sfcFlags.FlagIsSet(SS_SENDREQUEST))    ? "SendRequest"
     : ((sfcFlags.FlagIsSet(SS_CONNECTED))      ? "Connected"
+    : ((sfcFlags.FlagIsSet(SS_UPGRADED))       ? "WebSocketConnected"
     : ((sfcFlags.FlagIsSet(SS_CONNECTING))     ? "Connecting"
     : ((sfcFlags.FlagIsSet(SS_INITIALISING))   ? "Initialising"
-    :                                  "Unknown"))))))))));
+    :                                            "Unknown")))))))))));
   // If the socket is not connected?
   if(sfcFlags.FlagIsClear(SS_CONNECTED))
     return cConsole->AddLineF("Status for socket $...\n"
@@ -1779,6 +1780,7 @@ for(const Socket*const sPtr : *cSockets)
     { sfcFlags.FlagIsSet(SS_SENDREQUEST),    'H' },
     { sfcFlags.FlagIsSet(SS_REPLYWAIT),      'R' },
     { sfcFlags.FlagIsSet(SS_DOWNLOADING),    'D' },
+    { sfcFlags.FlagIsSet(SS_UPGRADED),       'U' },
     { sfcFlags.FlagIsSet(SS_DISCONNECTING),  'N' },
     { sfcFlags.FlagIsSet(SS_STANDBY),        'B' },
     { sRef.GetError() != 0,                  'E' },

@@ -115,13 +115,19 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().CtrGet()))
 LLFUNC(GetIPAddress, 1,
   LuaUtilPushVar(lS, AgSocket{lS, 1}().GetIPAddressSafe()))
 /* ========================================================================= */
-// $ Socket:GetIPAddressAndPortEx
+// $ Socket:GetIPAddressEx
 // < Address:string=The IP address of the socket.
-// ? Returns the IP address of the socket. Only valid when the hostname has
-// ? been resolved.
+// ? Returns the IP address of the socket and the port. Only valid when the
+// ? hostname has been resolved.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetIPAddressEx, 1,
   LuaUtilPushVar(lS, AgSocket{lS, 1}().GetIPAddressAndPortSafe()))
+/* ========================================================================= */
+// $ Socket:GetPort
+// < Port:integer=The port number of the socket.
+// ? Returns the port number of the socket.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetPort, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetPortSafe()))
 /* ========================================================================= */
 // $ Socket:GetReason
 // < Reason:string=Reason for last error
@@ -282,17 +288,17 @@ LLFUNC(WriteString, 1,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Socket:* member functions begin
-  LLRSFUNC(Callback),      LLRSFUNC(CompactRecvQ), LLRSFUNC(CompactSendQ),
-  LLRSFUNC(Destroy),       LLRSFUNC(Disconnect),   LLRSFUNC(GetAddress),
-  LLRSFUNC(GetAddressEx),  LLRSFUNC(GetCipher),    LLRSFUNC(GetError),
-  LLRSFUNC(GetId),         LLRSFUNC(GetIPAddress), LLRSFUNC(GetIPAddressEx),
-  LLRSFUNC(GetReason),     LLRSFUNC(GetRXBytes),   LLRSFUNC(GetRXPackets),
-  LLRSFUNC(GetSecure),     LLRSFUNC(GetStatus),    LLRSFUNC(GetTXBytes),
-  LLRSFUNC(GetTXPackets),  LLRSFUNC(PopRecvQ),     LLRSFUNC(PopSendQ),
-  LLRSFUNC(PopSendQT),     LLRSFUNC(RecvQCount),   LLRSFUNC(SendQCount),
-  LLRSFUNC(TConnect),      LLRSFUNC(TConnected),   LLRSFUNC(TDisconnect),
-  LLRSFUNC(TDisconnected), LLRSFUNC(TRead),        LLRSFUNC(TWrite),
-  LLRSFUNC(Write),         LLRSFUNC(WriteString),
+  LLRSFUNC(Callback),     LLRSFUNC(CompactRecvQ),  LLRSFUNC(CompactSendQ),
+  LLRSFUNC(Destroy),      LLRSFUNC(Disconnect),    LLRSFUNC(GetAddress),
+  LLRSFUNC(GetAddressEx), LLRSFUNC(GetCipher),     LLRSFUNC(GetError),
+  LLRSFUNC(GetId),        LLRSFUNC(GetIPAddress),  LLRSFUNC(GetIPAddressEx),
+  LLRSFUNC(GetPort),      LLRSFUNC(GetReason),     LLRSFUNC(GetRXBytes),
+  LLRSFUNC(GetRXPackets), LLRSFUNC(GetSecure),     LLRSFUNC(GetStatus),
+  LLRSFUNC(GetTXBytes),   LLRSFUNC(GetTXPackets),  LLRSFUNC(PopRecvQ),
+  LLRSFUNC(PopSendQ),     LLRSFUNC(PopSendQT),     LLRSFUNC(RecvQCount),
+  LLRSFUNC(SendQCount),   LLRSFUNC(TConnect),      LLRSFUNC(TConnected),
+  LLRSFUNC(TDisconnect),  LLRSFUNC(TDisconnected), LLRSFUNC(TRead),
+  LLRSFUNC(TWrite),       LLRSFUNC(Write),         LLRSFUNC(WriteString),
 LLRSEND                                // Socket:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -336,7 +342,6 @@ LLFUNC(Create, 0, AcSocket{lS}().Connect(lS))
 // > Scheme:string=The HTTP scheme (GET, POST, PUT, DELETE, etc.).
 // > Headers:string=A carriage return separated list of headers.
 // > Body:string=A body of text to send with the request.
-// > Error:function=Function to call when a critical error occurs
 // > Success:function=Function to call when any other event occurs
 // ? This is a minimalist implementation of a HTTP request and will support
 // ? most (if not all) operations one would need. The function returns
@@ -429,9 +434,9 @@ LLRSKTBEGIN(Flags)                     // Beginning of socket status flags
   LLRSKTITEM(SS_,ENCRYPTION),          LLRSKTITEM(SS_,CONNECTING),
   LLRSKTITEM(SS_,CONNECTED),           LLRSKTITEM(SS_,DISCONNECTING),
   LLRSKTITEM(SS_,SENDREQUEST),         LLRSKTITEM(SS_,CLOSEDBYCLIENT),
-  LLRSKTITEM(SS_,CLOSEDBYSERVER),      LLRSKTITEM(SS_,REPLYWAIT),
-  LLRSKTITEM(SS_,DOWNLOADING),         LLRSKTITEM(SS_,EVENTERROR),
-  LLRSKTITEM(SS_,READPACKET),
+  LLRSKTITEM(SS_,UPGRADED),            LLRSKTITEM(SS_,CLOSEDBYSERVER),
+  LLRSKTITEM(SS_,REPLYWAIT),           LLRSKTITEM(SS_,DOWNLOADING),
+  LLRSKTITEM(SS_,EVENTERROR),          LLRSKTITEM(SS_,READPACKET),
 LLRSKTEND                              // End of socket status flags
 /* ========================================================================= **
 ** ######################################################################### **
