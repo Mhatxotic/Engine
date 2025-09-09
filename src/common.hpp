@@ -19,7 +19,7 @@ class Common                           // Common variables class
     strOne, strTwo, strSpace, strDblSpace, strBlank, strCr, strLf, strCrLf,
     strCrLf2, strLfCr, strFSlash, strUnspec, strNull, strPeriod, str2Period,
     strEllipsis, strLuaName, strPrivate, strProtected, strEmpty, strInvalid,
-    strAsterisk, strEnt, strNil, strFs, strDir;
+    strAsterisk, strEnt, strNil, strFs, strDir, strHttp, strHttps;
   /* -- Miscellaneous common variables ------------------------------------- */
   const char*const cpBlank;            // Blank C-String
   locale           lLocaleCurrent;     // Current locale
@@ -62,6 +62,8 @@ class Common                           // Common variables class
   const string &CommonNil(void) const { return strNil; }
   const string &CommonFs(void) const { return strFs; }
   const string &CommonDir(void) const { return strDir; }
+  const string &CommonHttp(void) const { return strHttp; }
+  const string &CommonHttps(void) const { return strHttps; }
   /* -- Default constructor ------------------------------------- */ protected:
   Common(void) :                       // No parameters
     /* -- Initialisers ----------------------------------------------------- */
@@ -81,6 +83,7 @@ class Common                           // Common variables class
     strInvalid{ "<Invalid>" },         strAsterisk{ "*" },
     strEnt{ "&#x" },                   strNil{ "nil" },
     strFs{ "<FS>" },                   strDir{ "<DIR>" },
+    strHttp{ "http" },                 strHttps{ "https" },
     cpBlank(strBlank.data()),          lLocaleCurrent{ strBlank }
     /* -- Set global pointer to static class ------------------------------- */
     { cCommon = this; }

@@ -183,9 +183,9 @@ enum CVarEnums : size_t
   CON_FONT,         CON_FONTFLAGS,     CON_FONTCOLOUR,      CON_FONTHEIGHT,
   CON_FONTPADDING,  CON_FONTPCMIN,     CON_FONTPCMAX,       CON_FONTSCALE,
   CON_FONTSPACING,  CON_FONTLSPACING,  CON_FONTWIDTH,       CON_FONTTEXSIZE,
-  CON_INPREFRESH,   CON_INPUTMAX,      CON_OUTPUTMAX,       CON_PAGELINES,
-  CON_TMCCOLS,      CON_TMCROWS,       CON_TMCREFRESH,      CON_TMCNOCLOSE,
-  CON_TMCTFORMAT,
+  CON_GCWTERM,      CON_INPREFRESH,    CON_INPUTMAX,        CON_OUTPUTMAX,
+  CON_PAGELINES,    CON_TMCCOLS,       CON_TMCROWS,         CON_TMCREFRESH,
+  CON_TMCNOCLOSE,   CON_TMCTFORMAT,
   /* -- Fmv cvars ---------------------------------------------------------- */
   FMV_ABUFFER,      FMV_IOBUFFER,      FMV_MAXDRIFT,
   /* -- Input cvars -------------------------------------------------------- */

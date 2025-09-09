@@ -84,8 +84,8 @@ class Lua :                            // Actual class body
     if(!PauseExecution())
     { // Performance is no longer a priority
       cTimer->TimerSetDelayIfZero();
-      // Can't disable console while paused
-      cConGraphics->SetCantDisable(true);
+      // Update console visibility
+      cConGraphics->SandboxLeaveProcedure();
       // Write to console
       cConsole->AddLine("Execution paused. Type 'lresume' to continue.");
     } // Already paused? Remind console if it was manually requested
@@ -100,8 +100,8 @@ class Lua :                            // Actual class body
       return cConsole->AddLine("Execution already in progress.");
     // Refresh originally stored delay
     cTimer->TimerSetDelay(cCVars->GetInternal<unsigned int>(APP_DELAY));
-    // Console can now be disabled
-    cConGraphics->SetCantDisable(false);
+    // Update console visibility
+    cConGraphics->SandboxEnterProcedure();
     // Write to console
     cConsole->AddLine("Execution resumed.");
   }

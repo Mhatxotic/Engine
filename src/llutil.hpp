@@ -644,6 +644,7 @@ LLFUNC(ParseTimeEx, 1,
 // $ Util.ParseUrl
 // > String:string=The url to parse
 // < Result:integer=The result code of the parse
+// < Url:string=The canonicalised url
 // < Scheme:string=The scheme string 'http' or 'https'
 // < Secure:boolean=The conneciton would need to use SSL?
 // < Host:string=The hostname to connect to
@@ -654,13 +655,14 @@ LLFUNC(ParseTimeEx, 1,
 // < Password:string=The password part of the request
 // ? Parses the specified url and returns all the information about it
 /* ------------------------------------------------------------------------- */
-LLFUNC(ParseUrl, 9,
+LLFUNC(ParseUrl, 10,
   const Url uParsed{ AgString{lS, 1} };
   LuaUtilPushVar(lS, uParsed.GetResult());
   if(uParsed.GetResult() != Url::R_GOOD) return 1;
-  LuaUtilPushVar(lS, uParsed.GetScheme(), uParsed.GetSecure(),
-    uParsed.GetHost(), uParsed.GetPort(), uParsed.GetResource(),
-    uParsed.GetBookmark(), uParsed.GetUsername(), uParsed.GetPassword()))
+  LuaUtilPushVar(lS, uParsed.GetUrl(), uParsed.GetScheme(),
+    uParsed.GetSecure(), uParsed.GetHost(), uParsed.GetPort(),
+    uParsed.GetResource(), uParsed.GetBookmark(), uParsed.GetUsername(),
+    uParsed.GetPassword()))
 /* ========================================================================= */
 // $ Util.Pluralise
 // > Count:integer=The number to check
@@ -1014,9 +1016,9 @@ LLFUNC(Trim, 1,
 // $ Util.UTF8Char
 // > Value:integer=Value to cast to a string
 // < ByteCode:string=The 'value' cast as a string.
-// ? Casts the specified 24-bit integer directly to a string. This is useful
-// ? as a quicker way to create unicode characters. All bits above 24 are
-// ? automatically stripped by a bitwise operation for safety.
+// ? Casts the specified 24-bit integer directly to a string which is
+// ? different from 'utf8.char' as you specify the integer with the actual
+// ? utf8 encoded bytes in them.
 /* ------------------------------------------------------------------------- */
 LLFUNC(UTF8Char, 1, LuaUtilPushVar(lS, UtfDecodeNum(AgUInt32{lS, 1})))
 /* ========================================================================= */

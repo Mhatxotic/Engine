@@ -981,6 +981,16 @@ CVarItemStaticList{{
 { CFL_VIDEO, "con_fonttexsize", cCommon->CommonZero(), NoOp,
   TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
+// ! CON_GCWTERM
+// ? Enable to allow the graphical console to show when 'app_cflags' is set to
+// ? include a terminal window as well as the main engine window. It is set to
+// ? 'false' by default. This is useful if you do live on-screen testing of
+// ? your application and work with sensitive information in which you'll want
+// ? to keep this disabled to prevent potential leaking of private information
+// ? on-screen. It can only be set in the application manifest file.
+{ CFL_TERMINAL, "con_gcwterm", cCommon->CommonZero(), NoOp,
+  TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
 // ! CON_INPREFRESH
 // ? Specifies the time interval in microseconds between input polls. Only
 // ? applies to the text mode console. The default is 3125 microseconds on

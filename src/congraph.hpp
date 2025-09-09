@@ -147,6 +147,31 @@ class ConGraphics :                    // Members initially private
     // Do set enabled
     return DoSetVisible(bState);
   }
+  /* -- Set console locked and shown (from lua.hpp) ------------------------ */
+  void SetLockedAndShown(void)
+    { cConsole->FlagSet(CF_CANTDISABLE|CF_ENABLED); }
+  /* -- Set console locked and hidden (from core.hpp) ---------------------- */
+  void SetLockedAndHidden(void)
+    { cConsole->FlagSetAndClear(CF_CANTDISABLE, CF_ENABLED); }
+  /* -- Set console unlocked and hidden (from core.hpp) -------------------- */
+  void SetUnlockedAndHidden(void)
+    { cConsole->FlagClear(CF_CANTDISABLE|CF_ENABLED); }
+  /* -- Sandbox exit procedure --------------------------------------------- */
+  void SandboxLeaveProcedure()
+  { // Lock and show if not text mode or GCW term setting is enabled
+    if(cSystem->IsNotTextMode() || cCVars->GetInternal<bool>(CON_GCWTERM))
+      cConGraphics->SetLockedAndShown();
+    // Otherwise lock and hide the console
+    else cConGraphics->SetLockedAndHidden();
+  }
+  /* -- Sandbox enter procedure -------------------------------------------- */
+  void SandboxEnterProcedure()
+  { // Lock and hide if not text mode or GCW term setting is enabled
+    if(cSystem->IsNotTextMode() || cCVars->GetInternal<bool>(CON_GCWTERM))
+      cConGraphics->SetUnlockedAndHidden();
+    // Otherwise unlock and hide the console
+    else cConGraphics->SetLockedAndHidden();
+  }
   /* -- Set Console status ------------------------------------------------- */
   void SetCantDisable(const bool bState)
   { // Ignore if not in graphical mode because CON_HEIGHT isn't defined in
@@ -160,13 +185,14 @@ class ConGraphics :                    // Members initially private
     { // Log that the console has beend disabled
       cLog->LogDebugSafe("Console visibility control has been disabled.");
       // Make sure console is showing and set full height and return
-      DoSetVisible(true);
+      SandboxLeaveProcedure();
       SetHeight(1.0f);
       // Done
       return;
     } // Disabling so log that the console can now be disabled
     cLog->LogDebugSafe("Console visibility control has been enabled.");
     // Restore user defined height
+    SandboxEnterProcedure();
     SetHeight(cCVars->GetInternal<GLfloat>(CON_HEIGHT));
   }
   /* -- Mouse wheel moved event -------------------------------------------- */
@@ -353,7 +379,7 @@ class ConGraphics :                    // Members initially private
     ulFgColour(                        // Set input text colour
       uiNDXtoRGB[COLOUR_YELLOW] |      // - Lookup RGB value for yellow
       0xFF000000),                     // - Force opaqueness
-    ulBgColour(0),                     // No background colour
+    ulBgColour(0x00000000),            // No background colour
     fTextScale(0.0f),                  // No font scale
     fConsoleHeight(0.0f),              // No console height
     fTextLetterSpacing(0.0f),          // No text letter spacing

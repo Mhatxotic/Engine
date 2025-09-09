@@ -355,23 +355,6 @@ LLFUNC(CreateHTTP, 0, AcSocket{lS}().HTTPRequest(lS))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Flush, 1, LuaUtilPushVar(lS, SocketReset()))
 /* ========================================================================= */
-// $ Socket.OAuth11
-// > Method:string=The HTTP method (GET, PUT, etc.).
-// > Scheme:string=The HTTP scheme (HTTP, HTTPS, etc.);
-// > Port:integer=The HTTP port connected.
-// > Resource:string=The HTTP resource requested.
-// > Params:string=A HTTP URI list of variables that will be sent.
-// > Body:string=Any HTTP body text sent.
-// < Text:string=An OAuth11 compatible string that you can pass to web request.
-// ? Calculates a OAuth v1.1 string to use with HTTP requests. Twitter is an
-// ? example that uses this system.
-/* ------------------------------------------------------------------------- */
-LLFUNC(OAuth11, 1,
-  const AgString aMethod{lS,1}, aScheme{lS, 2}, aPort{lS,3}, aResource{lS,4},
-                 aParams{lS,5}, aBody{lS,6}, aText{lS,7};
-   LuaUtilToTable(lS, SocketOAuth11(aMethod, aScheme, aPort, aResource,
-     aParams, aBody, aText)))
-/* ========================================================================= */
 // $ Socket.TotalRXBytes
 // < Total:integer=The number of bytes read from this socket.
 // ? Returns the total number of bytes read from this socket.
@@ -415,10 +398,10 @@ LLFUNC(WaitAsync, 1, LuaUtilPushVar(lS, SocketWaitAsync()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Socket.* namespace functions begin
-  LLRSFUNC(Create),         LLRSFUNC(CreateHTTP),   LLRSFUNC(Count),
-  LLRSFUNC(Connected),      LLRSFUNC(Flush),        LLRSFUNC(OAuth11),
-  LLRSFUNC(TotalRXBytes),   LLRSFUNC(TotalTXBytes), LLRSFUNC(TotalRXPackets),
-  LLRSFUNC(TotalTXPackets), LLRSFUNC(WaitAsync),    LLRSFUNC(ValidAddress),
+  LLRSFUNC(Create),         LLRSFUNC(CreateHTTP),     LLRSFUNC(Count),
+  LLRSFUNC(Connected),      LLRSFUNC(Flush),          LLRSFUNC(TotalRXBytes),
+  LLRSFUNC(TotalTXBytes),   LLRSFUNC(TotalRXPackets), LLRSFUNC(TotalTXPackets),
+  LLRSFUNC(WaitAsync),      LLRSFUNC(ValidAddress),
 LLRSEND                                // Socket.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

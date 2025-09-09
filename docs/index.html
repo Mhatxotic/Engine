@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.9.5.18 -->
-<!-- Automatically built at Fri Sep 05 12:17:37 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.9.5.18 -->
+<!-- Reference for the Mhatxotic Engine API version 25.9.10.28 -->
+<!-- Automatically built at Wed Sep 10 23:49:56 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.9.10.28 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.5.18">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.10.28">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.5.18">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.10.28">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.5.18">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.10.28">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.9.5.18 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.9.10.28 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 25.9.5.18 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.9.10.28 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.9.5.18 API reference</H1>
+	<H1>Mhatxotic Engine 25.9.10.28 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 856 functions (404 members, 452 methods) and 29 consts in 30 namespaces with 85 commands and 211 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 855 functions (403 members, 452 methods) and 29 consts in 30 namespaces with 85 commands and 212 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1125,14 +1125,13 @@
 						<OL>
 							<LI><P>The socket class allows the programmer to connect to a remote network using OpenSSL encryption or unencrypted connection. There is also basic support for HTTP connections, or you can write your own routines for that or any other protocol in Lua!</P></LI>
 							<LI>
-								<B>Members</B> <I>(12 members)</I>
+								<B>Members</B> <I>(11 members)</I>
 								<OL>
 									<LI><A href="#Socket.Connected">Connected</A></LI>
 									<LI><A href="#Socket.Count">Count</A></LI>
 									<LI><A href="#Socket.Create">Create</A></LI>
 									<LI><A href="#Socket.CreateHTTP">CreateHTTP</A></LI>
 									<LI><A href="#Socket.Flush">Flush</A></LI>
-									<LI><A href="#Socket.OAuth11">OAuth11</A></LI>
 									<LI><A href="#Socket.SocketWaitAsync">SocketWaitAsync</A></LI>
 									<LI><A href="#Socket.TotalRXBytes">TotalRXBytes</A></LI>
 									<LI><A href="#Socket.TotalRXPackets">TotalRXPackets</A></LI>
@@ -1807,7 +1806,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(211 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(212 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -1868,6 +1867,7 @@
 									<LI><A href="#cv.con_fontspacing">con_fontspacing</A></LI>
 									<LI><A href="#cv.con_fonttexsize">con_fonttexsize</A></LI>
 									<LI><A href="#cv.con_fontwidth">con_fontwidth</A></LI>
+									<LI><A href="#cv.con_gcwterm">con_gcwterm</A></LI>
 									<LI><A href="#cv.con_height">con_height</A></LI>
 									<LI><A href="#cv.con_inprefresh">con_inprefresh</A></LI>
 									<LI><A href="#cv.con_inputmax">con_inputmax</A></LI>
@@ -7270,18 +7270,6 @@
 		<PRE>Disconnects all active Sockets&#x2e; Returns immediately&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Socket.OAuth11" style="display:none">
-		<H3>Socket.OAuth11</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Text</U> = Socket.OAuth11(<I><U>Method</U>, <U>Scheme</U>, <U>Port</U>, <U>Resource</U>, <U>Params</U>, <U>Body</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Method</U> <I>(string)</I> = The HTTP method (GET, PUT, etc.).<BR><U>Scheme</U> <I>(string)</I> = The HTTP scheme (HTTP, HTTPS, etc.);<BR><U>Port</U> <I>(integer)</I> = The HTTP port connected.<BR><U>Resource</U> <I>(string)</I> = The HTTP resource requested.<BR><U>Params</U> <I>(string)</I> = A HTTP URI list of variables that will be sent.<BR><U>Body</U> <I>(string)</I> = Any HTTP body text sent.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Text</U> <I>(string)</I> = An OAuth11 compatible string that you can pass to web request.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Calculates a OAuth v1&#x2e;1 string to use with HTTP requests&#x2e; Twitter is an example that uses this system&#x2e;<BR></PRE>
-		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Socket.SocketWaitAsync" style="display:none">
 		<H3>Socket.SocketWaitAsync</H3>
 		<H4>Syntax:-</H4>
@@ -10259,11 +10247,11 @@
 	<DIV id="Util.ParseUrl" style="display:none">
 		<H3>Util.ParseUrl</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Result</U>, <U>Scheme</U>, <U>Secure</U>, <U>Host</U>, <U>Port</U>, <U>Resource</U>, <U>Bookmark</U>, <U>Username</U>, <U>Password</U> = Util.ParseUrl(<I><U>String</U></I>)</PRE>
+		<PRE><U>Result</U>, <U>Url</U>, <U>Scheme</U>, <U>Secure</U>, <U>Host</U>, <U>Port</U>, <U>Resource</U>, <U>Bookmark</U>, <U>Username</U>, <U>Password</U> = Util.ParseUrl(<I><U>String</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
 		<PRE><U>String</U> <I>(string)</I> = The url to parse<BR></PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(integer)</I> = The result code of the parse<BR><U>Scheme</U> <I>(string)</I> = The scheme string 'http' or 'https'<BR><U>Secure</U> <I>(boolean)</I> = The conneciton would need to use SSL?<BR><U>Host</U> <I>(string)</I> = The hostname to connect to<BR><U>Port</U> <I>(integer)</I> = The port number to connect to<BR><U>Resource</U> <I>(string)</I> = The resource to request<BR><U>Bookmark</U> <I>(string)</I> = The bookmark part of the request<BR><U>Username</U> <I>(string)</I> = The username part of the request<BR><U>Password</U> <I>(string)</I> = The password part of the request<BR></PRE>
+		<PRE><U>Result</U> <I>(integer)</I> = The result code of the parse<BR><U>Url</U> <I>(string)</I> = The canonicalised url<BR><U>Scheme</U> <I>(string)</I> = The scheme string 'http' or 'https'<BR><U>Secure</U> <I>(boolean)</I> = The conneciton would need to use SSL?<BR><U>Host</U> <I>(string)</I> = The hostname to connect to<BR><U>Port</U> <I>(integer)</I> = The port number to connect to<BR><U>Resource</U> <I>(string)</I> = The resource to request<BR><U>Bookmark</U> <I>(string)</I> = The bookmark part of the request<BR><U>Username</U> <I>(string)</I> = The username part of the request<BR><U>Password</U> <I>(string)</I> = The password part of the request<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Parses the specified url and returns all the information about it </PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
@@ -10525,7 +10513,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>ByteCode</U> <I>(string)</I> = The 'value' cast as a string.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Casts the specified 24&#x2d;bit integer directly to a string&#x2e; This is useful as a quicker way to create unicode characters&#x2e; All bits above 24 are automatically stripped by a bitwise operation for safety&#x2e;<BR></PRE>
+		<PRE>Casts the specified 24&#x2d;bit integer directly to a string which is different from &#x27;utf8&#x2e;char&#x27; as you specify the integer with the actual utf8 encoded bytes in them&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.UrlDecode" style="display:none">
@@ -11915,6 +11903,11 @@
 		<PRE>Specifies the width of the loaded console FreeType font&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.con_gcwterm" style="display:none">
+		<H3>con_gcwterm</H3>
+		<PRE>Enable to allow the graphical console to show when &#x27;app_cflags&#x27; is set to include a terminal window as well as the main engine window&#x2e; It is set to &#x27;false&#x27; by default&#x2e; This is useful if you do live on&#x2d;screen testing of your application and work with sensitive information in which you&#x27;ll want to keep this disabled to prevent potential leaking of private information on&#x2d;screen&#x2e; It can only be set in the application manifest file&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.con_height" style="display:none">
 		<H3>con_height</H3>
 		<PRE>Specifies the height of the console in OpenGL mode&#x2e; 1 means the console is covering the whole screen&#x2c; and 0 means the console is not showing&#x2e;<BR></PRE>
@@ -12691,6 +12684,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Fri Sep 05 12:17:37 2025 +0100</ADDRESS>
+	This document was generated at Wed Sep 10 23:49:56 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

@@ -702,10 +702,13 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Notify the condition variable
     cvWriter.notify_one();
   }
+  /* -- Get registry iterator ---------------------------------------------- */
+  StrNCStrMapIt GetRegistryIterator(const string &strItem)
+    { return pRegistry.find(strItem); }
   /* -- Get and delete registry item --------------------------------------- */
   const string GetRegistry(const string &strItem)
   { // Find item and if we didn't find it? Return default string
-    const StrNCStrMapIt sncsmiIt{ pRegistry.find(strItem) };
+    const StrNCStrMapIt sncsmiIt{ GetRegistryIterator(strItem) };
     if(sncsmiIt == pRegistry.cend()) return {};
     // Get the value and delete it. We will move instead of copying
     const string strReq{ StdMove(sncsmiIt->second) };
@@ -734,7 +737,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Web socket main thread function reusing temporary buffer ----------- */
   ThreadStatus WebSocketMain(Memory &mDest)
   { // Check for upgrade status and return error if not found
-    const StrNCStrMapIt sncsmiIt{ pRegistry.find("Upgrade") };
+    const StrNCStrMapIt sncsmiIt{ GetRegistryIterator("Upgrade") };
     if(sncsmiIt == pRegistry.cend())
       return SetErrorStaticSafe("Missing upgrade header!");
     // Must be websocket
@@ -929,7 +932,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         default: return SetErrorStaticSafe("Invalid mode!");
       } // Set payload mode
       uiMode = RM_PAYLOAD;
-      // Need eight bytes next
+      // Expecting the payload size next
       const size_t stRequiredNext = stPLTotal;
       // If we don't have extra data? Wait for more data
       if(!stExtra) { stRequired = stRequiredNext; continue; }
@@ -955,14 +958,16 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Check if websocket
     enum { HTTP, HTTP_HEAD, WEBSOCKET } eMode;
     { // Check for websocket key and if we have it
-      StrNCStrMapIt sncsmiIt{ pRegistry.find("Sec-WebSocket-Key") };
+      StrNCStrMapIt sncsmiIt{ GetRegistryIterator("Sec-WebSocket-Key") };
       if(sncsmiIt != pRegistry.cend())
       { // Create base 64 key
         sncsmiIt->second = CryptMBtoB64(CryptRandomBlock(16));
         // Set mode
         eMode = WEBSOCKET;
-        // Remove request method from registry so it doesn't get sent
-        GetRegistry(cParent->strRegVarMETHOD);
+        // Remove request method from registry so it doesn't accidentally get
+        // sent as a header.
+        sncsmiIt = GetRegistryIterator(cParent->strRegVarMETHOD);
+        if(sncsmiIt != pRegistry.cend()) pRegistry.erase(sncsmiIt);
       } // Set normal HTTP request or HEAD request
       else eMode = GetRegistry(cParent->strRegVarMETHOD) == "HEAD" ?
                      HTTP_HEAD : HTTP;
@@ -1069,7 +1074,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       strHeaders.shrink_to_fit();
       // Find initial reponse (should be #0 set by VARS class)
       const StrNCStrMapConstIt
-        vlR{ pRegistry.find(cParent->strRegVarRESPONSE) };
+        vlR{ GetRegistryIterator(cParent->strRegVarRESPONSE) };
       if(vlR == pRegistry.cend()) return SetErrorStaticSafe("Bad response");
       // Split into words. We should have got at least three words
       const Token tWords{ vlR->second, cCommon->CommonSpace() };
@@ -1113,11 +1118,13 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
             sncsmpPair.second.size()+1);
         }
       } // If we got a content type?
-      const StrNCStrMapConstIt sncsmciType{ pRegistry.find("content-type") };
+      const StrNCStrMapConstIt sncsmciType{
+        GetRegistryIterator("content-type") };
       if(sncsmciType != pRegistry.cend())
         SocketLogSafe(LH_DEBUG, "Type is $", sncsmciType->second);
       // Should get content length
-      const StrNCStrMapConstIt sncsmciLen{ pRegistry.find("content-length") };
+      const StrNCStrMapConstIt sncsmciLen{
+        GetRegistryIterator("content-length") };
       if(sncsmciLen != pRegistry.cend())
       { // Get reference to string and if it's not valid?
         const string &strVal = sncsmciLen->second;
@@ -1903,100 +1910,6 @@ static const SocketsItConst SocketFind(const unsigned int uiId)
 /* ------------------------------------------------------------------------- */
 static void SocketResetCounters(void)
   { cSockets->qRX = cSockets->qTX = cSockets->qRXp = cSockets->qTXp = 0; }
-/* ------------------------------------------------------------------------- */
-static StrNCStrMap SocketOAuth11(const string &strMethod,
-  const string &strScheme, const string &strHost, const string &strPort,
-  const string &strReq, const string &strURLparams, const string &strParams)
-{ // Input varlist and split params into it
-  Parser<> pParams{ strParams, cCommon->CommonLf(), '=' };
-  if(pParams.empty()) return {};
-  // Get consumer key
-  const string strCK{ pParams.Extract("oauth_consumer_key") };
-  if(strCK.empty())
-    XC("No 'oauth_consumer_key' specified!",
-       "Method",  strMethod, "Scheme", strScheme,
-       "Host",    strHost,   "Port",   strPort,
-       "Request", strReq,    "Params", strParams);
-  // Get token
-  const string strTok{ pParams.Extract("oauth_token") };
-  if(strTok.empty())
-    XC("No 'oauth_token' specified!",
-       "Method",  strMethod, "Scheme", strScheme,
-       "Host",    strHost,   "Port",   strPort,
-       "Request", strReq,    "Params", strParams);
-  // Get user secret
-  const string strUS{ pParams.Extract("oauth_user_secret") };
-  if(strUS.empty())
-    XC("No 'oauth_user_secret' specified!",
-       "Method",  strMethod, "Scheme", strScheme,
-       "Host",    strHost,   "Port",   strPort,
-       "Request", strReq,    "Params", strParams);
-  // Get consumer secret
-  const string strCS{ pParams.Extract("oauth_consumer_secret") };
-  if(strCS.empty())
-    XC("No 'oauth_consumer_secret' specified!",
-       "Method",  strMethod, "Scheme", strScheme,
-       "Host",    strHost,   "Port",   strPort,
-       "Request", strReq,    "Params", strParams);
-  // If scheme and default port are equal then ignore port
-  const string strCPort{ (strScheme == "https" && strPort != "443") ||
-    (strScheme == "http" && strPort != "80") ?
-      StrAppend(':', strPort) : cCommon->CommonBlank() };
-  // Generate full url
-  string strAddr{ StrAppend(strScheme, "://", strHost, strCPort, strReq) };
-  // Put basic stuff in. Be careful of using StrPair with CStrings as
-  // you cant use string& with cstrings, so use CSTR*PAIR's instead.
-  StrNCStrMap ssmFinal{{
-    { "oauth_consumer_key",                    StdMove(strCK) },
-    { "oauth_nonce", SHA1functions::HSM(CryptRandomBlock(64)) },
-    { "oauth_timestamp",         StrFromNum(cmSys.GetTimeS()) },
-    { "oauth_token",                          StdMove(strTok) },
-    { "oauth_signature_method",                   "HMAC-SHA1" },
-    { "oauth_version",                                  "1.0" }
-  }};
-  // Copy config vars and oauth vars into unsigned params map
-  StrNCStrMap ssmDupe{ ssmFinal };
-  ssmDupe.insert(pParams.cbegin(), pParams.cend());
-  // Split URL parameters and put each one in unsigned parameters list
-  const ParserConst<> pUrl{ strURLparams, "&", '=' };
-  ssmDupe.insert(pUrl.cbegin(), pUrl.cend());
-  // Now for each unsigned parameter. Encode it into the signed param table.
-  const string strOAParams{ CryptImplodeMapAndEncode(ssmDupe, "&") };
-  // Whats left in pParams should be body parameters so lets sign them
-  const string strBody{ CryptImplodeMapAndEncode(pParams, "&") };
-  // Hash the string with the key and return empty if fail
-  ssmFinal.insert({ "oauth_signature",
-    CryptURLEncode(CryptMBtoB64(StdMove(SHA1functions::HMSS(
-      StrAppend(CryptURLEncode(strCS), '&', CryptURLEncode(strUS)),
-      StrAppend(CryptURLEncode(strMethod), '&', CryptURLEncode(strAddr), '&',
-                CryptURLEncode(strOAParams))
-  )))) });
-  // Build final oauth string
-  const string strKV{ ImplodeMap(ssmFinal, ", ") };
-  // Whats left in pUrl should be body parameters so lets sign them
-  string strURLParams{ CryptImplodeMapAndEncode(pUrl, "&") };
-  // This is the URL resource + parameters
-  string strResParams{ strReq };
-  // Have parameters?
-  if(!strURLParams.empty())
-  { // Build URL parameters part
-    strURLParams = StrAppend('?', strURLParams);
-    // Append to request
-    strResParams.append(strURLParams);
-    // Apend to URL address
-    strAddr.append(strURLParams);
-  } // Return final result
-  return {{ "method",   StdMove(strMethod)         },
-          { "url",      StdMove(strAddr)           },
-          { "scheme",   StdMove(strScheme)         },
-          { "host",     StdMove(strHost)           },
-          { "port",     StdMove(strPort)           },
-          { "resource", StdMove(strReq)            },
-          { "params",   StdMove(strURLParams)      },
-          { "request",  StdMove(strResParams)      },
-          { "oauth",    StrAppend("OAuth ", strKV) },
-          { "body",     StdMove(strBody)           }};
-}
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

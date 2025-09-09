@@ -181,8 +181,8 @@ static const string CryptURLEncode(const string &strS)
 }
 /* ------------------------------------------------------------------------- */
 template<class MapType>
-  static const string CryptImplodeMapAndEncode(const MapType &mtRef,
-    const string &strSep)
+  static const string CryptImplodeMapAndEncode[[maybe_unused]]
+    (const MapType &mtRef, const string &strSep)
 { // The vector to return
   StrVector svRet;
   // Make pair type from passed map type

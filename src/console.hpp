@@ -467,16 +467,12 @@ class Console :                        // Members initially private
     if(bState && IsNotVisible())
     { // Set console enabled and redraw the buffer
       FlagSet(CF_ENABLED);
-      // Redraw console
-      SetRedraw();
       // Log that the console has been enabled
       cLog->LogDebugSafe("Console has been enabled.");
     } // Disabled and not disabled?
     else if(!bState && IsVisible())
     { // Set console disabled and clear redraw flag
       FlagClear(CF_ENABLED);
-      // Redraw console
-      SetRedraw();
       // Log that the console has been disabled
       cLog->LogDebugSafe("Console has been disabled.");
     } // Say that nothing changed
@@ -486,7 +482,9 @@ class Console :                        // Members initially private
         bState ? "enabled" : "disabled");
       // Failed
       return false;
-    } // Success
+    } // Redraw console
+    SetRedraw();
+    // Success
     return true;
   }
   /* -- Execute arguments list --------------------------------------------- */
