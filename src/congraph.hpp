@@ -156,19 +156,21 @@ class ConGraphics :                    // Members initially private
   /* -- Set console unlocked and hidden (from core.hpp) -------------------- */
   void SetUnlockedAndHidden(void)
     { cConsole->FlagClear(CF_CANTDISABLE|CF_ENABLED); }
+  /* -- Should the graphical console be shown? ----------------------------- */
+  bool ShouldGraphicalConBeShown(void) const
+    { return cSystem->IsNotTextMode() ||
+             cCVars->GetInternal<bool>(CON_GCWTERM); }
   /* -- Sandbox exit procedure --------------------------------------------- */
-  void SandboxLeaveProcedure()
+  void SandboxLeaveProcedure(void)
   { // Lock and show if not text mode or GCW term setting is enabled
-    if(cSystem->IsNotTextMode() || cCVars->GetInternal<bool>(CON_GCWTERM))
-      cConGraphics->SetLockedAndShown();
+    if(ShouldGraphicalConBeShown()) cConGraphics->SetLockedAndShown();
     // Otherwise lock and hide the console
     else cConGraphics->SetLockedAndHidden();
   }
   /* -- Sandbox enter procedure -------------------------------------------- */
-  void SandboxEnterProcedure()
+  void SandboxEnterProcedure(void)
   { // Lock and hide if not text mode or GCW term setting is enabled
-    if(cSystem->IsNotTextMode() || cCVars->GetInternal<bool>(CON_GCWTERM))
-      cConGraphics->SetUnlockedAndHidden();
+    if(ShouldGraphicalConBeShown()) cConGraphics->SetUnlockedAndHidden();
     // Otherwise unlock and hide the console
     else cConGraphics->SetLockedAndHidden();
   }
@@ -176,24 +178,22 @@ class ConGraphics :                    // Members initially private
   void SetCantDisable(const bool bState)
   { // Ignore if not in graphical mode because CON_HEIGHT isn't defined in
     // terminal mode as it is unneeded or the flag is already set as such.
-    if(cSystem->IsNotGraphicalMode()) return;
+    if(cSystem->IsNotGraphicalMode() ||
+       !ShouldGraphicalConBeShown()) return;
     // Return if state not changed
     if(cConsole->FlagIsEqualToBool(CF_CANTDISABLE, bState)) return;
     // Set the state and if can no longer be disabled?
-    cConsole->FlagSetOrClear(CF_CANTDISABLE, bState);
     if(cConsole->FlagIsSet(CF_CANTDISABLE))
-    { // Log that the console has beend disabled
-      cLog->LogDebugSafe("Console visibility control has been disabled.");
-      // Make sure console is showing and set full height and return
-      SandboxLeaveProcedure();
-      SetHeight(1.0f);
+    { // Enable console
+      SandboxEnterProcedure();
+      // Disabling so log that the console can now be disabled
+      cLog->LogDebugSafe("Console visibility control has been enabled.");
       // Done
       return;
-    } // Disabling so log that the console can now be disabled
-    cLog->LogDebugSafe("Console visibility control has been enabled.");
-    // Restore user defined height
-    SandboxEnterProcedure();
-    SetHeight(cCVars->GetInternal<GLfloat>(CON_HEIGHT));
+    } // Log that the console has beend disabled
+    cLog->LogDebugSafe("Console visibility control has been disabled.");
+    // Disable console
+    SandboxLeaveProcedure();
   }
   /* -- Mouse wheel moved event -------------------------------------------- */
   void OnMouseWheel(const double, const double dY)

@@ -122,12 +122,16 @@ class Core final :                     // Members initially private
       if(bLeaving)
       { // Update console visibility
         cConGraphics->SandboxLeaveProcedure();
+        // Set full-screen console
+        cConGraphics->SetHeight(1.0f);
         // Force a 1ms suspend lock to not hog the cpu
         cTimer->TimerReset(true);
       } // If entering?
       else
       { // Update console visibility
         cConGraphics->SandboxEnterProcedure();
+        // Set pre-defined console size
+        cConGraphics->SetHeight(cCVars->GetInternal<GLfloat>(CON_HEIGHT));
         // Remove the 1ms FPS limit lock on the engine
         cTimer->TimerReset(false);
       } // Restore console font properties
