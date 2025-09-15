@@ -452,7 +452,7 @@ LLFUNC(OnRedraw, 0, cLua->SetLuaRef(lS, cLua->lrMainRedraw))
 // ? overrides the 'con_disabled' setting.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ConSet, 1,
-  LuaUtilPushVar(lS, cConGraphics->DoSetVisible(AgBoolean{lS, 1})))
+  LuaUtilPushVar(lS, cConGraphics->SetVisible(AgBoolean{lS, 1})))
 /* ========================================================================= */
 // $ Fbo.ConHeight
 // > State:number=The console height.
@@ -473,7 +473,7 @@ LLFUNC(ConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
 // ? Lock the visibility of the console on or off. This function is in Fbo
 // ? because it only applies to opengl mode.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ConLock, 0, cConGraphics->SetCantDisable(AgBoolean{lS, 1}))
+LLFUNC(ConLock, 0, cConGraphics->SetLocked(AgBoolean{lS, 1}))
 /* ========================================================================= */
 // $ Fbo.Count
 // < Count:integer=Total number of fbos created.

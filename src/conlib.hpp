@@ -308,12 +308,12 @@ cConsole->AddLineF("Console flags are currently 0x$$$ ($).\n"
                     "- Input commands: $ (Maximum: $).\n"
                     "- Engine commands: $.",
   hex, cConsole->FlagGet(), dec, StrFromEvalTokens({
-    { cConsole->FlagIsSet(CF_CANTDISABLE), 'D' },
     { cConsole->FlagIsSet(CF_IGNOREKEY),   'K' },
     { cConsole->FlagIsSet(CF_AUTOSCROLL),  'A' },
     { cConsole->FlagIsSet(CF_AUTOCOPYCVAR),'C' },
     { cConsole->FlagIsSet(CF_INSERT),      'I' },
-    { cConsole->FlagIsSet(CF_ENABLED),     'E' }
+    { cConsole->FlagIsSet(CF_ENABLED),     'E' },
+    { cConsole->FlagIsSet(CF_LOCKED),      'L' }
   }),
   cConsole->GetOutputCount(), cConsole->GetOutputMaximum(),
   cConsole->GetInputCount(), cConsole->GetInputMaximum(),

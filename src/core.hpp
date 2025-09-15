@@ -120,29 +120,20 @@ class Core final :                     // Members initially private
       cDisplay->RequestResetCursor();
       // If leaving main execution?
       if(bLeaving)
-      { // Update console visibility
-        cConGraphics->SandboxLeaveProcedure();
-        // Set full-screen console
-        cConGraphics->SetHeight(1.0f);
+      { // Enable and show console, and set full-screen
+        cConGraphics->LeaveResetEnvironment();
         // Force a 1ms suspend lock to not hog the cpu
         cTimer->TimerReset(true);
       } // If entering?
       else
-      { // Update console visibility
-        cConGraphics->SandboxEnterProcedure();
-        // Set pre-defined console size
-        cConGraphics->SetHeight(cCVars->GetInternal<GLfloat>(CON_HEIGHT));
+      { // Disable and hide console, and restore size
+        cConGraphics->EnterResetEnvironment();
         // Remove the 1ms FPS limit lock on the engine
         cTimer->TimerReset(false);
-      } // Restore console font properties
-      cConGraphics->RestoreDefaultProperties();
-    } // Not graphical?
-    else
-    { // Set or remove the 1ms FPS limit lock on the engine
-      cTimer->TimerReset(bLeaving);
-      // Terminal mode window? Clear bottom status texts
-      if(cSystem->IsTextMode()) cConsole->ClearStatus();
-    }
+      } // Make sure main fbo is cleared
+      cFboCore->SetDraw();
+    } // Not graphical? Set or remove the 1ms FPS limit lock on the engine
+    else cTimer->TimerReset(bLeaving);
     // Reset unique ids. Remember some classes aren't registered in the
     // collector, such as the console and main fbo.
 #define RSCEX(x,v) x->CounterReset(x->CollectorCount() + v)

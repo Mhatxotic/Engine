@@ -119,18 +119,6 @@ class ConGraphics :                    // Members initially private
   /* -- Commit default line spacing ---------------------------------------- */
   void CommitLineSpacing(void)
     { GetFontRef().SetLineSpacing(fTextLineSpacing); }
-  /* -- Get console textures --------------------------------------- */ public:
-  Texture &GetTextureRef(void) { return ctConsole; }
-  Font &GetFontRef(void) { return cfConsole; }
-  Texture *GetTexture(void) { return &GetTextureRef(); }
-  Font *GetFont(void) { return &GetFontRef(); }
-  /* -- Do set visibility -------------------------------------------------- */
-  bool DoSetVisible(const bool bState)
-  { // Set the visibility state and draw the fbo if enabled and visible
-    const bool bResult = cConsole->DoSetVisible(bState);
-    if(bResult) cFboCore->SetDraw();
-    return bResult;
-  }
   /* -- Reset defaults (for lreset) ---------------------------------------- */
   void RestoreDefaultProperties(void)
   { // Restore default settings from cvar registry
@@ -138,62 +126,54 @@ class ConGraphics :                    // Members initially private
     CommitScale();
     CommitLineSpacing();
   }
-  /* -- Set Console visibility --------------------------------------------- */
+  /* -- Get console textures --------------------------------------- */ public:
+  Texture &GetTextureRef(void) { return ctConsole; }
+  Font &GetFontRef(void) { return cfConsole; }
+  Texture *GetTexture(void) { return &GetTextureRef(); }
+  Font *GetFont(void) { return &GetFontRef(); }
+  /* -- Do set visibility -------------------------------------------------- */
   bool SetVisible(const bool bState)
-  { // Enabling? We cant enable if disabled
-    if(bState) { if(cConsole->FlagIsSet(CF_CANTDISABLEGLOBAL)) return false; }
-    // Disabling but can't disable? Return failure
-    else if(cConsole->FlagIsSet(CF_CANTDISABLE)) return false;
-    // Do set enabled
-    return DoSetVisible(bState);
+  { // Set the visibility state and draw the fbo if enabled and visible
+    const bool bResult = cConsole->SetVisible(bState);
+    if(bResult) cFboCore->SetDraw();
+    return bResult;
   }
-  /* -- Set console locked and shown (from lua.hpp) ------------------------ */
-  void SetLockedAndShown(void)
-    { cConsole->FlagSet(CF_CANTDISABLE|CF_ENABLED); }
-  /* -- Set console locked and hidden (from core.hpp) ---------------------- */
-  void SetLockedAndHidden(void)
-    { cConsole->FlagSetAndClear(CF_CANTDISABLE, CF_ENABLED); }
-  /* -- Set console unlocked and hidden (from core.hpp) -------------------- */
-  void SetUnlockedAndHidden(void)
-    { cConsole->FlagClear(CF_CANTDISABLE|CF_ENABLED); }
-  /* -- Should the graphical console be shown? ----------------------------- */
-  bool ShouldGraphicalConBeShown(void) const
-    { return cSystem->IsNotTextMode() ||
-             cCVars->GetInternal<bool>(CON_GCWTERM); }
-  /* -- Sandbox exit procedure --------------------------------------------- */
-  void SandboxLeaveProcedure(void)
-  { // Lock and show if not text mode or GCW term setting is enabled
-    if(ShouldGraphicalConBeShown()) cConGraphics->SetLockedAndShown();
-    // Otherwise lock and hide the console
-    else cConGraphics->SetLockedAndHidden();
+  /* -- Set console visibility lock status --------------------------------- */
+  void SetLocked(const bool bState)
+  { // Return if requested state is the same.
+    if(cConsole->FlagIsEqualToBool(CF_LOCKED, bState)) return;
+    // Keep locked/hidden if there's a terminal or user wants gfxcon disabled.
+    if(cConsole->IsHidingGraphicalConsole())
+      return cConsole->FlagSetAndClear(CF_LOCKED, CF_ENABLED);
+    // Current value is disabled?
+    if(cConsole->FlagIsClear(CF_LOCKED))
+    { // Enable visibility control
+      cConsole->FlagSet(CF_LOCKED);
+      // Log that the console visibility control was disabled.
+      return cLog->LogDebugSafe(
+        "Console visibility control has been disabled.");
+    } // Disability visibility control
+    cConsole->FlagClear(CF_LOCKED);
+    // Log that the console visibility control was enabled
+    cLog->LogDebugSafe("Console visibility control has been enabled.");
   }
-  /* -- Sandbox enter procedure -------------------------------------------- */
-  void SandboxEnterProcedure(void)
-  { // Lock and hide if not text mode or GCW term setting is enabled
-    if(ShouldGraphicalConBeShown()) cConGraphics->SetUnlockedAndHidden();
-    // Otherwise unlock and hide the console
-    else cConGraphics->SetLockedAndHidden();
+  /* -- Reset leaving defaults (for lreset) -------------------------------- */
+  void LeaveResetEnvironment(void)
+  { // Enable and show console, and set full-screen
+    SetVisible(true);
+    SetLocked(true);
+    SetHeight(1.0f);
+    // Restore console font properties
+    RestoreDefaultProperties();
   }
-  /* -- Set Console status ------------------------------------------------- */
-  void SetCantDisable(const bool bState)
-  { // Ignore if not in graphical mode because CON_HEIGHT isn't defined in
-    // terminal mode as it is unneeded or the flag is already set as such.
-    if(cSystem->IsNotGraphicalMode() ||
-       !ShouldGraphicalConBeShown()) return;
-    // Return if state not changed
-    if(cConsole->FlagIsEqualToBool(CF_CANTDISABLE, bState)) return;
-    // Set the state and if can no longer be disabled?
-    if(cConsole->FlagIsSet(CF_CANTDISABLE))
-    { // Enable console
-      SandboxEnterProcedure();
-      // Disabling so log that the console can now be disabled
-      cLog->LogDebugSafe("Console visibility control has been enabled.");
-      // Done
-      return;
-    } // Log that the console has beend disabled
-    cLog->LogDebugSafe("Console visibility control has been disabled.");
-    // Disable console
-    SandboxLeaveProcedure();
+  /* -- Reset entering defaults (for lreset) ------------------------------- */
+  void EnterResetEnvironment(void)
+  { // Disable and hide console, and restore size
+    SetLocked(cCVars->GetInternal<bool>(CON_DISABLED));
+    SetVisible(false);
+    SetHeight(cCVars->GetInternal<GLfloat>(CON_HEIGHT));
+    // Restore console font properties
+    RestoreDefaultProperties();
   }
   /* -- Mouse wheel moved event -------------------------------------------- */
   void OnMouseWheel(const double, const double dY)
@@ -318,7 +298,7 @@ class ConGraphics :                    // Members initially private
   /* -- Show the console and render it and render the fbo to main fbo ------ */
   void RenderNow(void)
   { // Show the console, render it to main frame buffer and blit it
-    DoSetVisible(true);
+    SetVisible(true);
     // Redraw console if not redrawn
     if(!cFboCore->fboConsole.FboGetFinishCount()) Render();
     // Bit console fbo to main
@@ -442,8 +422,8 @@ class ConGraphics :                    // Members initially private
   /* -- Set Console status ------------------------------------------------- */
   CVarReturn CantDisableModified(const bool bState)
   { // Update flag and disabled status then return success
-    cConsole->FlagSetOrClear(CF_CANTDISABLEGLOBAL, bState);
-    SetCantDisable(cConsole->FlagIsSet(CF_CANTDISABLEGLOBAL));
+    cConsole->FlagSetOrClear(CF_LOCKEDGLOBAL, bState);
+    SetLocked(bState);
     return ACCEPT;
   }
   /* -- Set console height ------------------------------------------------- */
