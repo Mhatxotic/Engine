@@ -746,23 +746,63 @@ template<class FlagsType>
      "Parameter", iIndex, "Supplied",  ftFlags.FlagGet(),
      "Mask", ftMask.FlagGet());
 }
+/* -- Get a LuaUtilClass pointer from userdata ----------------------------- */
+LuaUtilClass *LuaUtilGetBasePtr(lua_State*const lS, const int iParam,
+  const LuaIdent &liParent)
+{ return reinterpret_cast<LuaUtilClass*>
+    (luaL_checkudata(lS, iParam, liParent.LuaIdentCStr())); }
+/* -- Get a LuaUtilClass pointer from userdata and throw if null ----------- */
+LuaUtilClass *LuaUtilGetCheckedBasePtr(lua_State*const lS, const int iParam,
+  const LuaIdent &liParent)
+{ // Get lua data class and if it is valid
+  if(LuaUtilClass*const lucPtr = LuaUtilGetBasePtr(lS, iParam, liParent))
+    return lucPtr;
+  // lua data class not valid
+  XC("Null class parameter!",
+     "Parameter", iParam, "Type", liParent.LuaIdentStr());
+}
+/* -- Boolean return for LuaUtilGetCheckedBasePtr -------------------------- */
+bool LuaUtilIsClassDestroyed(lua_State*const lS, const int iParam,
+  const LuaIdent &liParent)
+    { return LuaUtilGetCheckedBasePtr(lS, iParam, liParent)->vpPtr
+        == nullptr; }
+/* -- Boolean return for LuaUtilGetCheckedBasePtr without parameter -------- */
+bool LuaUtilIsClassDestroyed(lua_State*const lS, const LuaIdent*const liParent)
+  { return LuaUtilIsClassDestroyed(lS, 1, *liParent); }
+/* -- Gets a pointer to any class ------------------------------------------ */
+template<typename ClassType>
+  ClassType *LuaUtilGetPtr(lua_State*const lS, const int iParam,
+  const LuaIdent &liParent)
+{ // Get lua data class and if it is valid
+  static_assert(is_class_v<ClassType>, "Not a class!");
+  // Get reference to class and return pointer if valid
+  const LuaUtilClass &lcR = *LuaUtilGetCheckedBasePtr(lS, iParam, liParent);
+  if(lcR.vpPtr) return reinterpret_cast<ClassType*>(lcR.vpPtr);
+  // Actual class pointer has already been freed so error occured
+  XC("Unallocated class parameter!",
+     "Parameter", iParam, "Type", liParent.LuaIdentStr());
+}
 /* -- Destroy an object ---------------------------------------------------- */
 template<class ClassType>
   static void LuaUtilClassDestroy(lua_State*const lS, const int iParam,
   const LuaIdent &liParent)
 { // Get userdata pointer from Lua and if the address is valid?
   static_assert(is_class_v<ClassType>, "Not a class!");
-  if(LuaUtilClass*const lucPtr =
-    reinterpret_cast<LuaUtilClass*>(
-      luaL_checkudata(lS, iParam, liParent.LuaIdentCStr())))
+  if(LuaUtilClass*const lucPtr = LuaUtilGetBasePtr(lS, iParam, liParent))
   { // Get address to the C++ class and if that is valid?
     if(ClassType*const ctPtr = reinterpret_cast<ClassType*>(lucPtr->vpPtr))
     { // Clear the pointer to the C++ class and destroy it if not locked
       lucPtr->vpPtr = nullptr;
       if(ctPtr->LockIsNotSet()) delete ctPtr;
-    }
-  }
+    } // Don't throw any errors even if the structs are invalid as much as I
+  } // want to. However, the garbage collector routine '__gc' calls this
+  // function and we don't want any problems when this happens.
 }
+/* -- Destroy an object assuming it is the 1st arg and deref collector ----- */
+template<class ClassType>
+  static void LuaUtilClassDestroy(lua_State*const lS,
+    const LuaIdent*const liParent)
+{ LuaUtilClassDestroy<ClassType>(lS, 1, *liParent); }
 /* -- Set metatable entry in userdata -------------------------------------- */
 static int LuaUtilSetMetaTable(lua_State*const lS, const int iIndex)
   { return lua_setmetatable(lS, iIndex); }
@@ -820,25 +860,6 @@ template<typename ClassType>
   lucPtr->vpPtr = reinterpret_cast<void*>(ctPtr);
   // Return pointer to memory
   return ctPtr;
-}
-/* -- Gets a pointer to any class ------------------------------------------ */
-template<typename ClassType>
-  ClassType *LuaUtilGetPtr(lua_State*const lS, const int iParam,
-  const LuaIdent &liParent)
-{ // Get lua data class and if it is valid
-  static_assert(is_class_v<ClassType>, "Not a class!");
-  if(const LuaUtilClass*const lucPtr =
-    reinterpret_cast<LuaUtilClass*>(
-      luaL_checkudata(lS, iParam, liParent.LuaIdentCStr())))
-  { // Get reference to class and return pointer if valid
-    const LuaUtilClass &lcR = *lucPtr;
-    if(lcR.vpPtr) return reinterpret_cast<ClassType*>(lcR.vpPtr);
-    // Actual class pointer has already been freed so error occured
-    XC("Unallocated class parameter!",
-       "Parameter", iParam, "Type", liParent.LuaIdentStr());
-  } // lua data class not valid
-  XC("Null class parameter!",
-     "Parameter", iParam, "Type", liParent.LuaIdentStr());
 }
 /* -- Check that a class isn't locked (i.e. a built-in class) -------------- */
 template<class ClassType>

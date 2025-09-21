@@ -38,7 +38,13 @@ struct AcSShot : public ArClass<SShot> {
 // $ SShot:Destroy
 // ? Destroys the specified screenshot object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<SShot>(lS, 1, *cSShots))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<SShot>(lS, cSShots))
+/* ========================================================================= */
+// $ SShot:Destroyed
+// < Destroyed:boolean=If the SShot class is destroyed
+// ? Returns if the SShot class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSShots)))
 /* ========================================================================= */
 // $ SShot:Id
 // < Id:integer=The id number of the SShot object.
@@ -57,7 +63,7 @@ LLFUNC(Name, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().IdentGet()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // SShot:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Id), LLRSFUNC(Name),
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Id), LLRSFUNC(Name),
 LLRSEND                                // SShot:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

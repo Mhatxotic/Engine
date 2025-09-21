@@ -163,7 +163,9 @@ static const string CryptURLEncode(const string &strS)
   { // Get character
     const uint8_t ucC = static_cast<uint8_t>(*cpPtr);
     // Normal character? Append to string
-    if(StdIsAlnum(ucC) || ucC == '-' || ucC == '.' || ucC == '_' || ucC == '~')
+    if((ucC >= 'a' && ucC <= 'z') || (ucC >= 'A' && ucC <= 'Z') ||
+       (ucC >= '0' && ucC <= '9') || ucC == '-' || ucC == '.' ||
+        ucC == '_' || ucC == '~')
       strURL += static_cast<char>(ucC);
     else
     { // Create storage for buffer and put the hexadecimal inside it

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.9.10.28 -->
-<!-- Automatically built at Wed Sep 10 23:49:56 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.9.10.28 -->
+<!-- Reference for the Mhatxotic Engine API version 25.9.22.23 -->
+<!-- Automatically built at Mon Sep 22 20:27:14 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.9.22.23 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.10.28">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.22.23">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.10.28">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.22.23">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.10.28">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.22.23">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.9.10.28 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.9.22.23 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 25.9.10.28 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.9.22.23 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.9.10.28 API reference</H1>
+	<H1>Mhatxotic Engine 25.9.22.23 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 855 functions (403 members, 452 methods) and 29 consts in 30 namespaces with 85 commands and 212 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 878 functions (403 members, 475 methods) and 29 consts in 30 namespaces with 85 commands and 212 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -170,9 +170,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(11 methods)</I>
+								<B>Methods</B> <I>(12 methods)</I>
 								<OL>
 									<LI><A href="#Archive:Destroy">Destroy</A></LI>
+									<LI><A href="#Archive:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Archive:Dir">Dir</A></LI>
 									<LI><A href="#Archive:DirList">DirList</A></LI>
 									<LI><A href="#Archive:Dirs">Dirs</A></LI>
@@ -222,7 +223,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(23 methods)</I>
+								<B>Methods</B> <I>(24 methods)</I>
 								<OL>
 									<LI><A href="#Asset:BitClear">BitClear</A></LI>
 									<LI><A href="#Asset:BitFlip">BitFlip</A></LI>
@@ -231,6 +232,7 @@
 									<LI><A href="#Asset:Clear">Clear</A></LI>
 									<LI><A href="#Asset:Crop">Crop</A></LI>
 									<LI><A href="#Asset:Destroy">Destroy</A></LI>
+									<LI><A href="#Asset:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Asset:Duplicate">Duplicate</A></LI>
 									<LI><A href="#Asset:Fill">Fill</A></LI>
 									<LI><A href="#Asset:Find">Find</A></LI>
@@ -325,9 +327,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(8 methods)</I>
+								<B>Methods</B> <I>(9 methods)</I>
 								<OL>
 									<LI><A href="#Bin:Destroy">Destroy</A></LI>
+									<LI><A href="#Bin:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Bin:Enlarge">Enlarge</A></LI>
 									<LI><A href="#Bin:Height">Height</A></LI>
 									<LI><A href="#Bin:Id">Id</A></LI>
@@ -357,9 +360,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(4 methods)</I>
+								<B>Methods</B> <I>(5 methods)</I>
 								<OL>
 									<LI><A href="#Clip:Destroy">Destroy</A></LI>
+									<LI><A href="#Clip:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Clip:Id">Id</A></LI>
 									<LI><A href="#Clip:Name">Name</A></LI>
 									<LI><A href="#Clip:Value">Value</A></LI>
@@ -385,9 +389,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(3 methods)</I>
+								<B>Methods</B> <I>(4 methods)</I>
 								<OL>
 									<LI><A href="#Command:Destroy">Destroy</A></LI>
+									<LI><A href="#Command:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Command:Id">Id</A></LI>
 									<LI><A href="#Command:Name">Name</A></LI>
 								</OL>
@@ -564,12 +569,13 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(26 methods)</I>
+								<B>Methods</B> <I>(27 methods)</I>
 								<OL>
 									<LI><A href="#Fbo:Activate">Activate</A></LI>
 									<LI><A href="#Fbo:Blit">Blit</A></LI>
 									<LI><A href="#Fbo:BlitT">BlitT</A></LI>
 									<LI><A href="#Fbo:Destroy">Destroy</A></LI>
+									<LI><A href="#Fbo:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Fbo:Finish">Finish</A></LI>
 									<LI><A href="#Fbo:GetFloatCount">GetFloatCount</A></LI>
 									<LI><A href="#Fbo:GetId">GetId</A></LI>
@@ -643,10 +649,11 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(20 methods)</I>
+								<B>Methods</B> <I>(21 methods)</I>
 								<OL>
 									<LI><A href="#File:Close">Close</A></LI>
 									<LI><A href="#File:Destroy">Destroy</A></LI>
+									<LI><A href="#File:Destroyed">Destroyed</A></LI>
 									<LI><A href="#File:End">End</A></LI>
 									<LI><A href="#File:Error">Error</A></LI>
 									<LI><A href="#File:ErrorStr">ErrorStr</A></LI>
@@ -695,9 +702,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(50 methods)</I>
+								<B>Methods</B> <I>(51 methods)</I>
 								<OL>
 									<LI><A href="#Font:Destroy">Destroy</A></LI>
+									<LI><A href="#Font:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Font:Dump">Dump</A></LI>
 									<LI><A href="#Font:GetFlags">GetFlags</A></LI>
 									<LI><A href="#Font:GetHeight">GetHeight</A></LI>
@@ -778,9 +786,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(6 methods)</I>
+								<B>Methods</B> <I>(7 methods)</I>
 								<OL>
 									<LI><A href="#Ftf:Destroy">Destroy</A></LI>
+									<LI><A href="#Ftf:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Ftf:Family">Family</A></LI>
 									<LI><A href="#Ftf:Glyphs">Glyphs</A></LI>
 									<LI><A href="#Ftf:Id">Id</A></LI>
@@ -814,10 +823,11 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(8 methods)</I>
+								<B>Methods</B> <I>(9 methods)</I>
 								<OL>
 									<LI><A href="#Image:Depth">Depth</A></LI>
 									<LI><A href="#Image:Destroy">Destroy</A></LI>
+									<LI><A href="#Image:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Image:Flags">Flags</A></LI>
 									<LI><A href="#Image:Height">Height</A></LI>
 									<LI><A href="#Image:Id">Id</A></LI>
@@ -909,9 +919,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(9 methods)</I>
+								<B>Methods</B> <I>(10 methods)</I>
 								<OL>
 									<LI><A href="#Json:Destroy">Destroy</A></LI>
+									<LI><A href="#Json:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Json:Id">Id</A></LI>
 									<LI><A href="#Json:Name">Name</A></LI>
 									<LI><A href="#Json:Sort">Sort</A></LI>
@@ -943,11 +954,12 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(15 methods)</I>
+								<B>Methods</B> <I>(16 methods)</I>
 								<OL>
 									<LI><A href="#Mask:Clear">Clear</A></LI>
 									<LI><A href="#Mask:Copy">Copy</A></LI>
 									<LI><A href="#Mask:Destroy">Destroy</A></LI>
+									<LI><A href="#Mask:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Mask:Erase">Erase</A></LI>
 									<LI><A href="#Mask:Fill">Fill</A></LI>
 									<LI><A href="#Mask:Height">Height</A></LI>
@@ -985,11 +997,12 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(29 methods)</I>
+								<B>Methods</B> <I>(30 methods)</I>
 								<OL>
 									<LI><A href="#Palette:Commit">Commit</A></LI>
 									<LI><A href="#Palette:Copy">Copy</A></LI>
 									<LI><A href="#Palette:Destroy">Destroy</A></LI>
+									<LI><A href="#Palette:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Palette:Fill">Fill</A></LI>
 									<LI><A href="#Palette:GetA">GetA</A></LI>
 									<LI><A href="#Palette:GetAI">GetAI</A></LI>
@@ -1042,9 +1055,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(3 methods)</I>
+								<B>Methods</B> <I>(4 methods)</I>
 								<OL>
 									<LI><A href="#Pcm:Destroy">Destroy</A></LI>
+									<LI><A href="#Pcm:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Pcm:Id">Id</A></LI>
 									<LI><A href="#Pcm:Name">Name</A></LI>
 								</OL>
@@ -1075,9 +1089,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(3 methods)</I>
+								<B>Methods</B> <I>(4 methods)</I>
 								<OL>
 									<LI><A href="#SShot:Destroy">Destroy</A></LI>
+									<LI><A href="#SShot:Destroyed">Destroyed</A></LI>
 									<LI><A href="#SShot:Id">Id</A></LI>
 									<LI><A href="#SShot:Name">Name</A></LI>
 								</OL>
@@ -1101,9 +1116,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(8 methods)</I>
+								<B>Methods</B> <I>(9 methods)</I>
 								<OL>
 									<LI><A href="#Sample:Destroy">Destroy</A></LI>
+									<LI><A href="#Sample:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Sample:Duration">Duration</A></LI>
 									<LI><A href="#Sample:Id">Id</A></LI>
 									<LI><A href="#Sample:Name">Name</A></LI>
@@ -1141,12 +1157,13 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(33 methods)</I>
+								<B>Methods</B> <I>(34 methods)</I>
 								<OL>
 									<LI><A href="#Socket:Callback">Callback</A></LI>
 									<LI><A href="#Socket:CompactRecvQ">CompactRecvQ</A></LI>
 									<LI><A href="#Socket:CompactSendQ">CompactSendQ</A></LI>
 									<LI><A href="#Socket:Destroy">Destroy</A></LI>
+									<LI><A href="#Socket:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Socket:Disconnect">Disconnect</A></LI>
 									<LI><A href="#Socket:GetAddress">GetAddress</A></LI>
 									<LI><A href="#Socket:GetAddressEx">GetAddressEx</A></LI>
@@ -1202,9 +1219,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(31 methods)</I>
+								<B>Methods</B> <I>(32 methods)</I>
 								<OL>
 									<LI><A href="#Source:Destroy">Destroy</A></LI>
+									<LI><A href="#Source:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Source:GetDirection">GetDirection</A></LI>
 									<LI><A href="#Source:GetElapsed">GetElapsed</A></LI>
 									<LI><A href="#Source:GetGain">GetGain</A></LI>
@@ -1290,7 +1308,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(19 methods)</I>
+								<B>Methods</B> <I>(20 methods)</I>
 								<OL>
 									<LI><A href="#Stat:Cells">Cells</A></LI>
 									<LI><A href="#Stat:Data">Data</A></LI>
@@ -1301,6 +1319,7 @@
 									<LI><A href="#Stat:DataI">DataI</A></LI>
 									<LI><A href="#Stat:DataN">DataN</A></LI>
 									<LI><A href="#Stat:Destroy">Destroy</A></LI>
+									<LI><A href="#Stat:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Stat:Finish">Finish</A></LI>
 									<LI><A href="#Stat:Header">Header</A></LI>
 									<LI><A href="#Stat:HeaderDupe">HeaderDupe</A></LI>
@@ -1337,9 +1356,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(30 methods)</I>
+								<B>Methods</B> <I>(31 methods)</I>
 								<OL>
 									<LI><A href="#Stream:Destroy">Destroy</A></LI>
+									<LI><A href="#Stream:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Stream:GetBitRate">GetBitRate</A></LI>
 									<LI><A href="#Stream:GetBytes">GetBytes</A></LI>
 									<LI><A href="#Stream:GetChannels">GetChannels</A></LI>
@@ -1403,7 +1423,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(62 methods)</I>
+								<B>Methods</B> <I>(63 methods)</I>
 								<OL>
 									<LI><A href="#Texture:Blit">Blit</A></LI>
 									<LI><A href="#Texture:BlitILT">BlitILT</A></LI>
@@ -1428,6 +1448,7 @@
 									<LI><A href="#Texture:BlitSLTWH">BlitSLTWH</A></LI>
 									<LI><A href="#Texture:BlitSLTWHA">BlitSLTWHA</A></LI>
 									<LI><A href="#Texture:Destroy">Destroy</A></LI>
+									<LI><A href="#Texture:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Texture:Download">Download</A></LI>
 									<LI><A href="#Texture:Dump">Dump</A></LI>
 									<LI><A href="#Texture:GetFlags">GetFlags</A></LI>
@@ -1602,12 +1623,13 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(12 methods)</I>
+								<B>Methods</B> <I>(13 methods)</I>
 								<OL>
 									<LI><A href="#Variable:Boolean">Boolean</A></LI>
 									<LI><A href="#Variable:Clear">Clear</A></LI>
 									<LI><A href="#Variable:Default">Default</A></LI>
 									<LI><A href="#Variable:Destroy">Destroy</A></LI>
+									<LI><A href="#Variable:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Variable:Empty">Empty</A></LI>
 									<LI><A href="#Variable:Get">Get</A></LI>
 									<LI><A href="#Variable:Id">Id</A></LI>
@@ -1649,13 +1671,14 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(39 methods)</I>
+								<B>Methods</B> <I>(40 methods)</I>
 								<OL>
 									<LI><A href="#Video:Advance">Advance</A></LI>
 									<LI><A href="#Video:Awaken">Awaken</A></LI>
 									<LI><A href="#Video:Blit">Blit</A></LI>
 									<LI><A href="#Video:BlitT">BlitT</A></LI>
 									<LI><A href="#Video:Destroy">Destroy</A></LI>
+									<LI><A href="#Video:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Video:GetATime">GetATime</A></LI>
 									<LI><A href="#Video:GetDrift">GetDrift</A></LI>
 									<LI><A href="#Video:GetFPS">GetFPS</A></LI>
@@ -2080,6 +2103,16 @@
 		<PRE>Destroys the archive and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Archive">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Archive:Destroyed" style="display:none">
+		<H3>Archive:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Archive:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Archive class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Archive class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Archive">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Archive:Dir" style="display:none">
 		<H3>Archive:Dir</H3>
 		<H4>Syntax:-</H4>
@@ -2482,6 +2515,16 @@
 		<PRE>Frees the internal memory allocated to the asset&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Asset">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Asset:Destroyed" style="display:none">
+		<H3>Asset:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Asset:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Asset is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Asset is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Asset">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Asset:Duplicate" style="display:none">
 		<H3>Asset:Duplicate</H3>
 		<H4>Syntax:-</H4>
@@ -2880,6 +2923,16 @@
 		<PRE>Destroys the bin and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Bin">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Bin:Destroyed" style="display:none">
+		<H3>Bin:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Bin:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Bin class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Bin class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Bin">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Bin:Enlarge" style="display:none">
 		<H3>Bin:Enlarge</H3>
 		<H4>Syntax:-</H4>
@@ -2994,6 +3047,16 @@
 		<PRE>Destroys the specified Clip object&#x2e;<BR></PRE>
 		<H4><A href="#idx:Clip">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Clip:Destroyed" style="display:none">
+		<H3>Clip:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Clip:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Clip class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Clip class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Clip">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Clip:Id" style="display:none">
 		<H3>Clip:Id</H3>
 		<H4>Syntax:-</H4>
@@ -3064,6 +3127,16 @@
 		<PRE>Command:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Unregisters the specified console command&#x2e;<BR></PRE>
+		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Command:Destroyed" style="display:none">
+		<H3>Command:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Command:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Command class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Command class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Command:Id" style="display:none">
@@ -4230,6 +4303,16 @@
 		<PRE>Destroys the FBO and frees all the memory associated with it&#x2e; The OpenGL handles and VRAM allocated by it are freed after the main FBO has has been rendered&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Fbo:Destroyed" style="display:none">
+		<H3>Fbo:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Fbo:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Fbo class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Fbo class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Fbo:Finish" style="display:none">
 		<H3>Fbo:Finish</H3>
 		<H4>Syntax:-</H4>
@@ -4784,6 +4867,16 @@
 		<PRE>Closes and destroys the file stream and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:File">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="File:Destroyed" style="display:none">
+		<H3>File:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = File:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the File class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the File class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:File">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="File:End" style="display:none">
 		<H3>File:End</H3>
 		<H4>Syntax:-</H4>
@@ -5048,6 +5141,16 @@
 		<PRE>Font:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Destroys the font and frees all the memory associated with it&#x2e; The OpenGL handles and VRAM allocated by it are freed after the main FBO has has been rendered&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Font:Destroyed" style="display:none">
+		<H3>Font:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Font:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Font class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Font class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Font:Dump" style="display:none">
@@ -5642,6 +5745,16 @@
 		<PRE>Destroys the freetype font and frees all the memory associated with it&#x2e;<BR>The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Ftf">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Ftf:Destroyed" style="display:none">
+		<H3>Ftf:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Ftf:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Ftf class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Ftf class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Ftf">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Ftf:Family" style="display:none">
 		<H3>Ftf:Family</H3>
 		<H4>Syntax:-</H4>
@@ -5806,6 +5919,16 @@
 		<PRE>Image:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Destroys the image and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Image:Destroyed" style="display:none">
+		<H3>Image:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Image:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Image class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Image class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Image:Flags" style="display:none">
@@ -6288,6 +6411,16 @@
 		<PRE>Destroys the json object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Json:Destroyed" style="display:none">
+		<H3>Json:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Json:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Json class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Json class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Json">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Json:Id" style="display:none">
 		<H3>Json:Id</H3>
 		<H4>Syntax:-</H4>
@@ -6444,6 +6577,16 @@
 		<PRE>Mask:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>destroys the mask and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Mask:Destroyed" style="display:none">
+		<H3>Mask:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Mask:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Mask class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Mask class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Mask">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Mask:Erase" style="display:none">
@@ -6662,6 +6805,16 @@
 		<PRE>Palette:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Destroys the palette and frees the memory associated with it&#x2e; This does not affect the active palette as this is stored on the GPU&#x2e;<BR></PRE>
+		<H4><A href="#idx:Palette">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Palette:Destroyed" style="display:none">
+		<H3>Palette:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Palette:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Palette class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Palette class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Palette">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Palette:Fill" style="display:none">
@@ -7028,6 +7181,16 @@
 		<PRE>Destroys the pcm object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Pcm:Destroyed" style="display:none">
+		<H3>Pcm:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Pcm:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Pcm class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Pcm class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Pcm:Id" style="display:none">
 		<H3>Pcm:Id</H3>
 		<H4>Syntax:-</H4>
@@ -7098,6 +7261,16 @@
 		<PRE>Destroys the specified screenshot object&#x2e;<BR></PRE>
 		<H4><A href="#idx:SShot">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="SShot:Destroyed" style="display:none">
+		<H3>SShot:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = SShot:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the SShot class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the SShot class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:SShot">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="SShot:Id" style="display:none">
 		<H3>SShot:Id</H3>
 		<H4>Syntax:-</H4>
@@ -7146,6 +7319,16 @@
 		<PRE>Sample:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Destroys the sample object and frees all the memory associated with it&#x2e;<BR>The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Sample">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Sample:Destroyed" style="display:none">
+		<H3>Sample:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Sample:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Sample class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Sample class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Sample">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Sample:Duration" style="display:none">
@@ -7368,6 +7551,16 @@
 		<PRE>Socket:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Aborts&#x2c; disconnects and destroys the socket object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Socket:Destroyed" style="display:none">
+		<H3>Socket:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Socket:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Socket class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Socket class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Socket:Disconnect" style="display:none">
@@ -7686,6 +7879,16 @@
 		<PRE>Source:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Stops and destroys the source object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Source:Destroyed" style="display:none">
+		<H3>Source:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Source:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Source class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Source class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Source:GetDirection" style="display:none">
@@ -8214,6 +8417,16 @@
 		<PRE>Destroys the stat object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Stat:Destroyed" style="display:none">
+		<H3>Stat:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Stat:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Stat class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Stat class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Stat:Finish" style="display:none">
 		<H3>Stat:Finish</H3>
 		<H4>Syntax:-</H4>
@@ -8392,6 +8605,16 @@
 		<PRE>Stream:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Stops and destroys the stream object and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Stream">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stream:Destroyed" style="display:none">
+		<H3>Stream:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Stream:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Stream class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Stream class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stream">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Stream:GetBitRate" style="display:none">
@@ -9014,6 +9237,16 @@
 		<PRE>Texture:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Destroys the texture and frees all the memory associated with it&#x2e; The OpenGL handles and VRAM allocated by it are freed after the main FBO has has been rendered&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Texture:Destroyed" style="display:none">
+		<H3>Texture:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Texture:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Texture class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Texture class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Texture:Download" style="display:none">
@@ -10636,6 +10869,16 @@
 		<PRE>Unregisters the specified console command&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Variable:Destroyed" style="display:none">
+		<H3>Variable:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Variable:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Variable class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Variable class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Variable:Empty" style="display:none">
 		<H3>Variable:Empty</H3>
 		<H4>Syntax:-</H4>
@@ -10848,6 +11091,16 @@
 		<PRE>Video:Destroy()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Stops and destroys the stream object and frees all the memory associated with it&#x2e; The OpenGL handles and VRAM associated with the object will be freed after the main FBO has been rendered&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Video:Destroyed" style="display:none">
+		<H3>Video:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Video:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Video class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Video class is destroyed&#x2e;<BR></PRE>
 		<H4><A href="#idx:Video">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Video:GetATime" style="display:none">
@@ -12684,6 +12937,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Wed Sep 10 23:49:56 2025 +0100</ADDRESS>
+	This document was generated at Mon Sep 22 20:27:14 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

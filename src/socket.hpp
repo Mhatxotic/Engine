@@ -837,7 +837,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           // If we don't have extra data? Wait for more data
           if(!stExtra) continue;
           // Shift data left
-          mDest.MemWrite(0, mDest.MemRead(stPLPktSize, stExtra), stExtra);
+          mDest.MemMove(0, mDest.MemRead(stPLPktSize, stExtra), stExtra);
           // Set bytes unprocessed
           stTRead = stExtra;
           // We don't have enough for a header yet? Wait for more
@@ -873,7 +873,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               // If we don't have extra data? Wait for more data
               if(!stExtra) { stRequired = stRequiredNext; continue; }
               // Shift data left
-              mDest.MemWrite(0, mDest.MemRead(stRequired, stExtra), stExtra);
+              mDest.MemMove(0, mDest.MemRead(stRequired, stExtra), stExtra);
               // Set next requirement
               stRequired = stRequiredNext;
               // Set bytes unprocessed
@@ -893,7 +893,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               // If we don't have extra data? Wait for more data
               if(!stExtra) { stRequired = stRequiredNext; continue; }
               // Shift data left
-              mDest.MemWrite(0, mDest.MemRead(stRequired, stExtra), stExtra);
+              mDest.MemMove(0, mDest.MemRead(stRequired, stExtra), stExtra);
               // Set next requirement
               stRequired = stRequiredNext;
               // Set bytes unprocessed
@@ -937,7 +937,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // If we don't have extra data? Wait for more data
       if(!stExtra) { stRequired = stRequiredNext; continue; }
       // Shift data left
-      mDest.MemWrite(0, mDest.MemRead(stRequired, stExtra), stExtra);
+      mDest.MemMove(0, mDest.MemRead(stRequired, stExtra), stExtra);
       // Set next requirement
       stRequired = stRequiredNext;
       // Set bytes unprocessed

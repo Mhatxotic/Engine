@@ -238,6 +238,9 @@ class MemBase :
 { /* -- Copy memory --------------------------------------------- */ protected:
   void MemDoWrite(const size_t stPos, const void*const vpSrc,
     const size_t stBytes) { memcpy(MemDoRead(stPos), vpSrc, stBytes); }
+  /* -- Move memory (use when memory regions overlap) ---------------------- */
+  void MemDoMove(const size_t stPos, const void*const vpSrc,
+    const size_t stBytes) { memmove(MemDoRead(stPos), vpSrc, stBytes); }
   /* -- Fill with specified character at specifed position ----------------- */
   template<typename Type=unsigned char>void MemFill(const size_t stPos,
     const Type tVal, const size_t stBytes)
@@ -268,6 +271,17 @@ class MemBase :
     { MemFill<Type>(0, tVal, MemSize()); }
   /* -- Fast fill with 64-bit ints ----------------------------------------- */
   void MemFill(void) { MemFill<uint64_t>(); }
+  /* -- Move memory with checks ------------------------------------------ */
+  void MemMove(const size_t stPos, const void*const vpSrc,
+    const size_t stBytes)
+  { // Check parameters are valid
+    if(!MemCheckPtr(stPos, stBytes, vpSrc))
+      XC("Write error!", "Destination", MemPtr(), "Source",   vpSrc,
+                         "Bytes",       stBytes,  "Position", stPos,
+                         "Maximum",     MemSize());
+    // Do copy
+    MemDoMove(stPos, vpSrc, stBytes);
+  }
   /* -- Write memory with checks ------------------------------------------ */
   void MemWrite(const size_t stPos, const void*const vpSrc,
     const size_t stBytes)

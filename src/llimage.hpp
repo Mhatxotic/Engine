@@ -56,7 +56,13 @@ LLFUNC(Depth, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().GetBitsPerPixel()))
 // ? object will no longer be useable after this call and an error will be
 // ? generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Image>(lS, 1, *cImages))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Image>(lS, cImages))
+/* ========================================================================= */
+// $ Image:Destroyed
+// < Destroyed:boolean=If the Image class is destroyed
+// ? Returns if the Image class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cImages)))
 /* ========================================================================= */
 // $ Image:Flags
 // < Flags:integer=Image flags value
@@ -103,8 +109,9 @@ LLFUNC(Width, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().DimGetWidth()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Image:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Depth), LLRSFUNC(Flags), LLRSFUNC(Height),
-  LLRSFUNC(Id),      LLRSFUNC(Name),  LLRSFUNC(Save),  LLRSFUNC(Width),
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Depth), LLRSFUNC(Flags),
+  LLRSFUNC(Height),  LLRSFUNC(Id),        LLRSFUNC(Name),  LLRSFUNC(Save),
+  LLRSFUNC(Width),
 LLRSEND                                // Image:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

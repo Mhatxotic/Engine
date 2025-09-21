@@ -67,7 +67,13 @@ LLFUNC(CompactSendQ, 1, AgSocket{lS, 1}().CompactTXSafe(AcAsset{lS}()))
 // ? memory associated with it. The object will no longer be useable after
 // ? this call and an error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Socket>(lS, 1, *cSockets))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Socket>(lS, cSockets))
+/* ========================================================================= */
+// $ Socket:Destroyed
+// < Destroyed:boolean=If the Socket class is destroyed
+// ? Returns if the Socket class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSockets)))
 /* ========================================================================= */
 // $ Socket:Disconnect
 // > Socket:socket=The socket to disconnect.
@@ -288,17 +294,18 @@ LLFUNC(WriteString, 1,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Socket:* member functions begin
-  LLRSFUNC(Callback),     LLRSFUNC(CompactRecvQ),  LLRSFUNC(CompactSendQ),
-  LLRSFUNC(Destroy),      LLRSFUNC(Disconnect),    LLRSFUNC(GetAddress),
-  LLRSFUNC(GetAddressEx), LLRSFUNC(GetCipher),     LLRSFUNC(GetError),
-  LLRSFUNC(GetId),        LLRSFUNC(GetIPAddress),  LLRSFUNC(GetIPAddressEx),
-  LLRSFUNC(GetPort),      LLRSFUNC(GetReason),     LLRSFUNC(GetRXBytes),
-  LLRSFUNC(GetRXPackets), LLRSFUNC(GetSecure),     LLRSFUNC(GetStatus),
-  LLRSFUNC(GetTXBytes),   LLRSFUNC(GetTXPackets),  LLRSFUNC(PopRecvQ),
-  LLRSFUNC(PopSendQ),     LLRSFUNC(PopSendQT),     LLRSFUNC(RecvQCount),
-  LLRSFUNC(SendQCount),   LLRSFUNC(TConnect),      LLRSFUNC(TConnected),
-  LLRSFUNC(TDisconnect),  LLRSFUNC(TDisconnected), LLRSFUNC(TRead),
-  LLRSFUNC(TWrite),       LLRSFUNC(Write),         LLRSFUNC(WriteString),
+  LLRSFUNC(Callback),       LLRSFUNC(CompactRecvQ), LLRSFUNC(CompactSendQ),
+  LLRSFUNC(Destroy),        LLRSFUNC(Destroyed),    LLRSFUNC(Disconnect),
+  LLRSFUNC(GetAddress),     LLRSFUNC(GetAddressEx), LLRSFUNC(GetCipher),
+  LLRSFUNC(GetError),       LLRSFUNC(GetId),        LLRSFUNC(GetIPAddress),
+  LLRSFUNC(GetIPAddressEx), LLRSFUNC(GetPort),      LLRSFUNC(GetReason),
+  LLRSFUNC(GetRXBytes),     LLRSFUNC(GetRXPackets), LLRSFUNC(GetSecure),
+  LLRSFUNC(GetStatus),      LLRSFUNC(GetTXBytes),   LLRSFUNC(GetTXPackets),
+  LLRSFUNC(PopRecvQ),       LLRSFUNC(PopSendQ),     LLRSFUNC(PopSendQT),
+  LLRSFUNC(RecvQCount),     LLRSFUNC(SendQCount),   LLRSFUNC(TConnect),
+  LLRSFUNC(TConnected),     LLRSFUNC(TDisconnect),  LLRSFUNC(TDisconnected),
+  LLRSFUNC(TRead),          LLRSFUNC(TWrite),       LLRSFUNC(Write),
+  LLRSFUNC(WriteString),
 LLRSEND                                // Socket:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

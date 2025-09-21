@@ -41,7 +41,13 @@ struct AgMbString : public Memory {
 // ? object will no longer be useable after this call and an error will be
 // ? generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Json>(lS, 1, *cJsons))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Json>(lS, cJsons))
+/* ========================================================================= */
+// $ Json:Destroyed
+// < Destroyed:boolean=If the Json class is destroyed
+// ? Returns if the Json class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cJsons)))
 /* ========================================================================= */
 // $ Json:Id
 // < Id:integer=The id number of the Json object.
@@ -107,9 +113,10 @@ LLFUNC(ToTable, 1, AgJson{lS, 1}().ToLuaTable(lS))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Json:* member functions begin
-  LLRSFUNC(Destroy),    LLRSFUNC(Id),      LLRSFUNC(Name),
-  LLRSFUNC(Sort),       LLRSFUNC(ToTable), LLRSFUNC(ToString),
-  LLRSFUNC(ToHRString), LLRSFUNC(ToFile),  LLRSFUNC(ToHRFile),
+  LLRSFUNC(Destroy),  LLRSFUNC(Destroyed),  LLRSFUNC(Id),
+  LLRSFUNC(Name),     LLRSFUNC(Sort),       LLRSFUNC(ToTable),
+  LLRSFUNC(ToString), LLRSFUNC(ToHRString), LLRSFUNC(ToFile),
+  LLRSFUNC(ToHRFile),
 LLRSEND                                // Json:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

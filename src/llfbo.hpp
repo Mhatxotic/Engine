@@ -46,7 +46,13 @@ struct AgBlend : public AgIntegerLGE<OglBlendEnum>
 // ? been rendered. The object will no longer be useable after this call and an
 // ? error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Fbo>(lS, 1, *cFbos))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Fbo>(lS, cFbos))
+/* ========================================================================= */
+// $ Fbo:Destroyed
+// < Destroyed:boolean=If the Fbo class is destroyed
+// ? Returns if the Fbo class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFbos)))
 /* ========================================================================= */
 // $ Fbo.SetBlend
 // > srcRGB:integer=How the source RGB blending factors are computed.
@@ -384,15 +390,16 @@ LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().IdentGet()))
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Fbo:* member functions begin
-  LLRSFUNC(Activate),     LLRSFUNC(Blit),           LLRSFUNC(BlitT),
-  LLRSFUNC(Destroy),      LLRSFUNC(Finish),         LLRSFUNC(GetFloatCount),
-  LLRSFUNC(GetId),        LLRSFUNC(GetLFloatCount), LLRSFUNC(GetMatrix),
-  LLRSFUNC(GetName),      LLRSFUNC(IsFinished),     LLRSFUNC(Reserve),
-  LLRSFUNC(SetBlend),     LLRSFUNC(SetClear),       LLRSFUNC(SetClearColour),
-  LLRSFUNC(SetCRGBA),     LLRSFUNC(SetCX),          LLRSFUNC(SetFilter),
-  LLRSFUNC(SetMatrix),    LLRSFUNC(SetTCLTRB),      LLRSFUNC(SetTCLTWH),
-  LLRSFUNC(SetTCX),       LLRSFUNC(SetVLTRB),       LLRSFUNC(SetVLTWH),
-  LLRSFUNC(SetVLTWHA),    LLRSFUNC(SetVX),          LLRSFUNC(SetWireframe),
+  LLRSFUNC(Activate),       LLRSFUNC(Blit),      LLRSFUNC(BlitT),
+  LLRSFUNC(Destroy),        LLRSFUNC(Destroyed), LLRSFUNC(Finish),
+  LLRSFUNC(GetFloatCount),  LLRSFUNC(GetId),     LLRSFUNC(GetLFloatCount),
+  LLRSFUNC(GetMatrix),      LLRSFUNC(GetName),   LLRSFUNC(IsFinished),
+  LLRSFUNC(Reserve),        LLRSFUNC(SetBlend),  LLRSFUNC(SetClear),
+  LLRSFUNC(SetClearColour), LLRSFUNC(SetCRGBA),  LLRSFUNC(SetCX),
+  LLRSFUNC(SetFilter),      LLRSFUNC(SetMatrix), LLRSFUNC(SetTCLTRB),
+  LLRSFUNC(SetTCLTWH),      LLRSFUNC(SetTCX),    LLRSFUNC(SetVLTRB),
+  LLRSFUNC(SetVLTWH),       LLRSFUNC(SetVLTWHA), LLRSFUNC(SetVX),
+  LLRSFUNC(SetWireframe),
 LLRSEND                                // Fbo:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

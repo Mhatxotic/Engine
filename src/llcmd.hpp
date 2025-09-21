@@ -39,7 +39,14 @@ struct AcCommand : public ArClass<Command> {
 // $ Command:Destroy
 // ? Unregisters the specified console command.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Command>(lS, 1, *cCommands))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Command>(lS, cCommands))
+/* ========================================================================= */
+// $ Command:Destroyed
+// < Destroyed:boolean=If the Command class is destroyed
+// ? Returns if the Command class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cCommands)))
 /* ========================================================================= */
 // $ Command:Id
 // < Id:integer=The id of the Command object.
@@ -58,7 +65,7 @@ LLFUNC(Name, 1, AgCommand{lS, 1}().Name())
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Command:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Id), LLRSFUNC(Name),
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Id), LLRSFUNC(Name),
 LLRSEND                                // Command:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

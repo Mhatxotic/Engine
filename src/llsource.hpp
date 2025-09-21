@@ -37,7 +37,13 @@ struct AgSource : public ArClass<Source> {
 // ? with it. The object will no longer be useable after this call and an
 // ? error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroy, 0, LuaUtilClassDestroy<Source>(lS, 1, *cSources))
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Source>(lS, cSources))
+/* ========================================================================= */
+// $ Source:Destroyed
+// < Destroyed:boolean=If the Source class is destroyed
+// ? Returns if the Source class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSources)))
 /* ========================================================================= */
 // $ Source:GetDirection
 // < X:number=Current X direction.
@@ -282,17 +288,17 @@ LLFUNC(Stop, 0, AgSource{lS, 1}().Stop())
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Source:* member functions begin
-  LLRSFUNC(Destroy),     LLRSFUNC(GetDirection), LLRSFUNC(GetElapsed),
-  LLRSFUNC(GetGain),     LLRSFUNC(GetId),        LLRSFUNC(GetLooping),
-  LLRSFUNC(GetMaxDist),  LLRSFUNC(GetMaxGain),   LLRSFUNC(GetMinGain),
-  LLRSFUNC(GetPitch),    LLRSFUNC(GetPosition),  LLRSFUNC(GetRefDist),
-  LLRSFUNC(GetRelative), LLRSFUNC(GetRollOff),   LLRSFUNC(GetState),
-  LLRSFUNC(GetVelocity), LLRSFUNC(Play),         LLRSFUNC(SetDirection),
-  LLRSFUNC(SetElapsed),  LLRSFUNC(SetGain),      LLRSFUNC(SetLooping),
-  LLRSFUNC(SetMaxDist),  LLRSFUNC(SetMaxGain),   LLRSFUNC(SetMinGain),
-  LLRSFUNC(SetPitch),    LLRSFUNC(SetPosition),  LLRSFUNC(SetRefDist),
-  LLRSFUNC(SetRelative), LLRSFUNC(SetRollOff),   LLRSFUNC(SetVelocity),
-  LLRSFUNC(Stop),
+  LLRSFUNC(Destroy),      LLRSFUNC(Destroyed),   LLRSFUNC(GetDirection),
+  LLRSFUNC(GetElapsed),   LLRSFUNC(GetGain),     LLRSFUNC(GetId),
+  LLRSFUNC(GetLooping),   LLRSFUNC(GetMaxDist),  LLRSFUNC(GetMaxGain),
+  LLRSFUNC(GetMinGain),   LLRSFUNC(GetPitch),    LLRSFUNC(GetPosition),
+  LLRSFUNC(GetRefDist),   LLRSFUNC(GetRelative), LLRSFUNC(GetRollOff),
+  LLRSFUNC(GetState),     LLRSFUNC(GetVelocity), LLRSFUNC(Play),
+  LLRSFUNC(SetDirection), LLRSFUNC(SetElapsed),  LLRSFUNC(SetGain),
+  LLRSFUNC(SetLooping),   LLRSFUNC(SetMaxDist),  LLRSFUNC(SetMaxGain),
+  LLRSFUNC(SetMinGain),   LLRSFUNC(SetPitch),    LLRSFUNC(SetPosition),
+  LLRSFUNC(SetRefDist),   LLRSFUNC(SetRelative), LLRSFUNC(SetRollOff),
+  LLRSFUNC(SetVelocity),  LLRSFUNC(Stop),
 LLRSEND                                // Source:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

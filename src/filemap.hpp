@@ -177,7 +177,7 @@ class FileMap :
       MemSize() - FileMapTell() : stBytes;
     // Copy memory to destination
     memcpy(reinterpret_cast<void*>(vpDst),
-      MemDoRead<void*>(FileMapTell()), stToRead);
+      MemDoRead<void>(FileMapTell()), stToRead);
     // Seek forward
     stPosition += stToRead;
     // Return bytes
