@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.9.22.23 -->
-<!-- Automatically built at Mon Sep 22 20:27:14 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.9.22.23 -->
+<!-- Reference for the Mhatxotic Engine API version 25.9.25.1 -->
+<!-- Automatically built at Thu Sep 25 20:38:38 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.9.25.1 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.22.23">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.25.1">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.22.23">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.25.1">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.22.23">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.25.1">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.9.22.23 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.9.25.1 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 25.9.22.23 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.9.25.1 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.9.22.23 API reference</H1>
+	<H1>Mhatxotic Engine 25.9.25.1 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -1523,9 +1523,7 @@
 									<LI><A href="#Util.ClampInt">ClampInt</A></LI>
 									<LI><A href="#Util.Compact">Compact</A></LI>
 									<LI><A href="#Util.CountOf">CountOf</A></LI>
-									<LI><A href="#Util.DecodeUUID">DecodeUUID</A></LI>
 									<LI><A href="#Util.Duration">Duration</A></LI>
-									<LI><A href="#Util.EncodeUUID">EncodeUUID</A></LI>
 									<LI><A href="#Util.EntDecode">EntDecode</A></LI>
 									<LI><A href="#Util.EntEncode">EntEncode</A></LI>
 									<LI><A href="#Util.Explode">Explode</A></LI>
@@ -1580,7 +1578,6 @@
 									<LI><A href="#Util.PlusOrMinus">PlusOrMinus</A></LI>
 									<LI><A href="#Util.PlusOrMinusEx">PlusOrMinusEx</A></LI>
 									<LI><A href="#Util.Position">Position</A></LI>
-									<LI><A href="#Util.RandUUID">RandUUID</A></LI>
 									<LI><A href="#Util.Random">Random</A></LI>
 									<LI><A href="#Util.RandomA">RandomA</A></LI>
 									<LI><A href="#Util.RelTime">RelTime</A></LI>
@@ -1597,6 +1594,9 @@
 									<LI><A href="#Util.TableSize">TableSize</A></LI>
 									<LI><A href="#Util.Trim">Trim</A></LI>
 									<LI><A href="#Util.UTF8Char">UTF8Char</A></LI>
+									<LI><A href="#Util.UUIDDecode">UUIDDecode</A></LI>
+									<LI><A href="#Util.UUIDEncode">UUIDEncode</A></LI>
+									<LI><A href="#Util.UUIDRandom">UUIDRandom</A></LI>
 									<LI><A href="#Util.UrlDecode">UrlDecode</A></LI>
 									<LI><A href="#Util.UrlEncode">UrlEncode</A></LI>
 									<LI><A href="#Util.WordWrap">WordWrap</A></LI>
@@ -9865,18 +9865,6 @@
 		<PRE>A fast way of counting the number of occurences in a string&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Util.DecodeUUID" style="display:none">
-		<H3>Util.DecodeUUID</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DecodeUUID(<I><U>High64</U>, <U>Low64</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer.<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The decoded UUID.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Decodes the specified UUID integers to a string&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Util.Duration" style="display:none">
 		<H3>Util.Duration</H3>
 		<H4>Syntax:-</H4>
@@ -9887,18 +9875,6 @@
 		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Converts the specified number of seconds into a human readable duration string in the format of 000&#x3a;00&#x3a;00&#x3a;00&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.EncodeUUID" style="display:none">
-		<H3>Util.EncodeUUID</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>High64</U>, <U>Low64</U> = Util.EncodeUUID(<I><U>UUID</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>UUID</U> <I>(string)</I> = The UUID string to recode.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Encodes the specified UUID string to two 64&#x2d;bit integers&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.EntDecode" style="display:none">
@@ -10549,16 +10525,6 @@
 		<PRE>Converts the specified number into a positional number&#x2e; i&#x2e;e&#x2e; 1&#x3d;1st&#x2c; 2&#x3d;&#x22;2nd&#x22;&#x2c; 11&#x3d;&#x22;11th&#x22;&#x2c; 98&#x3d;&#x22;98th&#x22;&#x2c; etc&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Util.RandUUID" style="display:none">
-		<H3>Util.RandUUID</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>High64</U>, <U>Low64</U> = Util.RandUUID()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Generates a random UUIDv4 </PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Util.Random" style="display:none">
 		<H3>Util.Random</H3>
 		<H4>Syntax:-</H4>
@@ -10747,6 +10713,40 @@
 		<PRE><U>ByteCode</U> <I>(string)</I> = The 'value' cast as a string.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Casts the specified 24&#x2d;bit integer directly to a string which is different from &#x27;utf8&#x2e;char&#x27; as you specify the integer with the actual utf8 encoded bytes in them&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.UUIDDecode" style="display:none">
+		<H3>Util.UUIDDecode</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.UUIDDecode(<I><U>High64</U>, <U>Low64</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer.<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The decoded UUID.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Decodes the specified UUID integers to a string&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.UUIDEncode" style="display:none">
+		<H3>Util.UUIDEncode</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>High64</U>, <U>Low64</U> = Util.UUIDEncode(<I><U>UUID</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>UUID</U> <I>(string)</I> = The UUID string to recode.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Encodes the specified UUID string to two 64&#x2d;bit integers&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.UUIDRandom" style="display:none">
+		<H3>Util.UUIDRandom</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>High64</U>, <U>Low64</U> = Util.UUIDRandom()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>High64</U> <I>(integer)</I> = The high-order 128-bit integer<BR><U>Low64</U> <I>(integer)</I> = The low-order 128-bit integer<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Generates a random UUIDv4 </PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.UrlDecode" style="display:none">
@@ -12937,6 +12937,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Mon Sep 22 20:27:14 2025 +0100</ADDRESS>
+	This document was generated at Thu Sep 25 20:38:38 2025 +0100</ADDRESS>
 </BODY>
 </HTML>

@@ -747,8 +747,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Create a thread to write data requests
     tWriter.ThreadInit(StrAppend("websocketwriter:", CtrGet()),
       bind(&Socket::SockWebWriteThreadMain, this, _1), this);
-    // Send upgraded event
-    DispatchEvent(SS_UPGRADED);
+    // Set upgraded status and dispatch event
+    AddStatus(SS_UPGRADED);
     // Websocket packet op codes
     enum OpCode : unsigned int {
       OC_NONE   = static_cast<unsigned int>(-1),
