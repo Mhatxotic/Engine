@@ -20,6 +20,11 @@ static bool UtilIsDivisible(const double dNumber)
 // template<typename FloatType=double>
 //  static bool IsNormal(const FloatType ftValue)
 //    { return fpclassify(iitValue) == FP_NORMAL; }
+/* -- Return -1 or 1 depending wether the value is positive or negative ---- */
+template<typename IntType>IntType UtilSign(const IntType itValue)
+  { static_assert(is_signed_v<IntType>, "Type must be signed.");
+    return static_cast<IntType>(itValue > 0) -
+           static_cast<IntType>(itValue < 0); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType=double, typename FloatType=double>
   static IntType UtilRound(const FloatType ftValue, const int iPrecision)

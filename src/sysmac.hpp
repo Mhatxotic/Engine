@@ -28,17 +28,17 @@ class SysProcess :                     // Need this before of System init order
   /* -- Dependency classes ------------------------------------------------- */
   private Ident                        // Mutex identifier
 { /* -- Private variables -------------------------------------------------- */
-  const pid_t      ullProcessId;       // Process id
+  const pid_t      piProcessId;        // Process id
   const pthread_t  vpThreadId;         // Thread id
   /* -- Protected variables ------------------------------------- */ protected:
   const uint64_t   qwPageSize;         // Memory page size
   const mach_port_t mptHost, mptTask;  // Current mach host and task id
   /* -- Shared memory ------------------------------------------------------ */
-  pid_t           *pProcessId;         // Process id (OS level memory)
-  static constexpr size_t stPidSize = sizeof(*pProcessId); // Size of a pid
+  pid_t           *pipProcessId;       // Process id (OS level memory)
+  static constexpr size_t stPidSize = sizeof(piProcessId); // Size of a pid
   /* -- Return process and thread id --------------------------------------- */
-  template<typename IntType=decltype(ullProcessId)>IntType GetPid(void) const
-    { return static_cast<IntType>(ullProcessId); }
+  template<typename IntType=decltype(piProcessId)>IntType GetPid(void) const
+    { return static_cast<IntType>(piProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid(void) const
     { return static_cast<IntType>(UtilBruteCast<const size_t>(vpThreadId)); }
   /* -- Initialise global mutex ------------------------------------ */ public:
@@ -103,24 +103,42 @@ class SysProcess :                     // Need this before of System init order
         XCL("Failed to setup shared memory object for exclusive reading!",
             "Name", strvTitle, "Mode", shmShm.Mode());
       // Initialise memory
-      pProcessId = StdMMap<pid_t>
+      pipProcessId = StdMMap<pid_t>
         (nullptr, stPidSize, PROT_READ, MAP_SHARED, shmShm.Get(), 0);
-      if(pProcessId == MAP_FAILED)
+      if(pipProcessId == MAP_FAILED)
         XCL("Failed to setup shared memory for reading!",
             "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
       // Test if the process exists
-      if(getpgid(*pProcessId) >= 0)
+      const pid_t pPId = *pipProcessId;
+      if(getpgid(pPId) >= 0)
       { // Put in log that another instance of this application is running and
         // return to caller that execution must cease.
         cLog->LogWarningExSafe("System detected another instance of this "
-          "application running at pid $.", *pProcessId);
+          "application running at pid $.", pPId);
+        // Disable deprecation warnings as we need to use this
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+        // Get process serial number from pid and show error if failed
+        ProcessSerialNumber psnApp;
+        if(const OSStatus ossErr = GetProcessForPID(pPId, &psnApp))
+          cLog->LogErrorExSafe("System can't get serial for pid $ (code $)!",
+            pPId, ossErr);
+        // Try to activate the app with specified serial number
+        else if(const OSStatus ossErr = SetFrontProcess(&psnApp))
+          cLog->LogErrorExSafe(
+            "System can't activate app with pid $ (code $)!", pPId, ossErr);
+        // Success
+        else cLog->LogInfoExSafe("System activated application at pid $.",
+          pPId);
+        // Restore deprecation warning
+#pragma clang diagnostic pop
+        // Done
         return false;
       } // Put in log that another instance of this application is running.
       cLog->LogWarningExSafe(
-        "Previous pid of $ not valid so assuming no previous instance.",
-        *pProcessId);
+        "Previous pid of $ not valid so assuming no previous instance.", pPId);
       // Unmap previous shared memory
-      if(munmap(pProcessId, stPidSize))
+      if(munmap(pipProcessId, stPidSize))
         XCL("Failed to unmap shared memory from reading!", "Name", strvTitle);
       // Try reopening for exclusive writing again
       if(!shmShm.Open(O_WRONLY|O_EXCL))
@@ -131,20 +149,20 @@ class SysProcess :                     // Need this before of System init order
       XCL("Failed to truncate shared memory object!",
           "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
     // Initialise memory
-    pProcessId = StdMMap<pid_t>
+    pipProcessId = StdMMap<pid_t>
       (nullptr, stPidSize, PROT_WRITE, MAP_SHARED, shmShm.Get(), 0);
-    if(pProcessId == MAP_FAILED)
+    if(pipProcessId == MAP_FAILED)
       XCL("Failed to setup shared memory for writing!",
           "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
     // Write the current PID to shared memory
-    *pProcessId = ullProcessId;
+    *pipProcessId = piProcessId;
     // Execution can continue
     return true;
   }
   /* -- Destructor --------------------------------------------------------- */
   ~SysProcess(void)
   { // Unmap the memory containing the pid and reset the pid memory address
-    if(pProcessId && munmap(pProcessId, stPidSize))
+    if(pipProcessId && munmap(pipProcessId, stPidSize))
       cLog->LogWarningExSafe("System failed to unmap shared memory of size "
         "$ bytes! $", stPidSize, SysError());
     // Unlink the shared memory object if data is set
@@ -155,13 +173,13 @@ class SysProcess :                     // Need this before of System init order
   /* -- Constructor -------------------------------------------------------- */
   SysProcess(void) :
     /* -- Initialisers ----------------------------------------------------- */
-    ullProcessId(getpid()),            // Initialise process id number
+    piProcessId(getpid()),             // Initialise process id number
     vpThreadId(pthread_self()),        // Initialise main thread id number
     qwPageSize(static_cast<uint64_t>   // Initialise memory page size
       (sysconf(_SC_PAGESIZE))),        // Usually 16k on M1 or 4k on Intel
     mptHost(mach_host_self()),         // Initialise host task
     mptTask(mach_task_self()),         // Initialise self task
-    pProcessId(nullptr)                // Process id memory not available
+    pipProcessId(nullptr)              // Process id memory not available
     /* -- No code ---------------------------------------------------------- */
     { }
 };/* == Class ============================================================== */
@@ -203,22 +221,64 @@ class SysCore :
     UpdateMemoryUsageData();
     memData.qMTotal = memData.qMFree + memData.qMUsed;
   }
-  /* --------------------------------------------------------------- */ public:
-  void UpdateMemoryUsageData(void)
-  { // More containers
-    vm_statistics64_data_t vmsData;
-    mach_msg_type_number_t mmtnType = sizeof(vmsData) / sizeof(natural_t);
-    // Get total physical memory and if succeeded?
-    if(host_statistics64(mptHost, HOST_VM_INFO64,
-       reinterpret_cast<host_info_t>(&vmsData), &mmtnType) == KERN_SUCCESS)
-    { // Succeeded getting info, now set the counters
-      memData.qMFree = static_cast<uint64_t>(vmsData.free_count)
-                     * qwPageSize;
-      memData.qMUsed = (static_cast<uint64_t>(vmsData.active_count)
-                     +  static_cast<uint64_t>(vmsData.inactive_count)
-                     +  static_cast<uint64_t>(vmsData.wire_count))
-                     * qwPageSize;
-    } // For getting process info
+  /* ----------------------------------------------------------------------- */
+  void UpdateProcessCpuUsage(void)
+  { // For cpu information directly from operating system
+    struct task_thread_times_info ttiInfo;
+    mach_msg_type_number_t mmtnCount = TASK_THREAD_TIMES_INFO_COUNT;
+    // Get process info and return if we can't
+    if(task_info(mptTask, TASK_THREAD_TIMES_INFO,
+         reinterpret_cast<task_info_t>(&ttiInfo), &mmtnCount) != KERN_SUCCESS)
+      return;
+    // Do cpu time calculations
+    const uint64_t
+      uqUserTime = static_cast<uint64_t>(ttiInfo.user_time.seconds) *
+        1000000ULL + static_cast<uint64_t>(ttiInfo.user_time.microseconds),
+      uqSystemTime = static_cast<uint64_t>(ttiInfo.system_time.seconds) *
+        1000000ULL + static_cast<uint64_t>(ttiInfo.system_time.microseconds),
+      uqTotalTime = uqUserTime + uqSystemTime,
+      uqTimeNow = cmHiRes.GetTimeUS();
+    // Persistent last times
+    static uint64_t uqTimeNowL = 0, uqTotalTimeL = 0;
+    // Calculate cpu usage. Sometimes total time can be less.
+    if(uqTotalTime >= uqTotalTimeL)
+      cpuUData.dProcess = UtilMakePercentage(uqTotalTime - uqTotalTimeL,
+        uqTimeNow - uqTimeNowL) / StdThreadMax();
+    // Update times for next query
+    uqTotalTimeL = uqTotalTime;
+    uqTimeNowL = uqTimeNow;
+  }
+  /* ----------------------------------------------------------------------- */
+  void UpdateSystemCpuUsage(void)
+  { // For cpu information directly from operating system
+    mach_msg_type_number_t mmtnType = HOST_CPU_LOAD_INFO_COUNT;
+    host_cpu_load_info_data_t hclidData;
+    // Get the usage and if succeeded?
+    if(host_statistics(mptHost, HOST_CPU_LOAD_INFO,
+         reinterpret_cast<host_info_t>(&hclidData), &mmtnType) != KERN_SUCCESS)
+      return;
+    // Calculate the total ticks
+    uint64_t uqTotalTicks = 0;
+    for(size_t stIndex = 0; stIndex < CPU_STATE_MAX; ++stIndex)
+      uqTotalTicks += hclidData.cpu_ticks[stIndex];
+    // Persistent last times
+    static uint64_t uqTotalTicksL = 0, uqIdleTicksL = 0;
+    // Do calculations
+    const uint64_t
+      uqIdleTicks = hclidData.cpu_ticks[CPU_STATE_IDLE],
+      uqTotalTicksSinceLastTime = uqTotalTicks - uqTotalTicksL,
+      uqIdleTicksSinceLastTime = uqIdleTicks - uqIdleTicksL;
+    // Set previous values
+    uqTotalTicksL = uqTotalTicks;
+    uqIdleTicksL = uqIdleTicks;
+    // Final calculation
+    cpuUData.dSystem = (1.0 - ((uqTotalTicksSinceLastTime > 0) ?
+      (static_cast<double>(uqIdleTicksSinceLastTime)) /
+      uqTotalTicksSinceLastTime : 0)) * 100;
+  }
+  /* ----------------------------------------------------------------------- */
+  void UpdateProcessMemoryUsage(void)
+  { // For getting process info
     task_vm_info_data_t tvidData;
     mach_msg_type_number_t mmtnCount = TASK_VM_INFO_COUNT;
     // Get process memory usage
@@ -228,10 +288,30 @@ class SysCore :
     // Set peak if breached
     if(memData.stMProcUse > memData.stMProcPeak)
       memData.stMProcPeak = memData.stMProcUse;
-    // Calculate usage
-    memData.dMLoad =
-      static_cast<double>(memData.qMUsed) / memData.qMTotal * 100;
   }
+  /* ----------------------------------------------------------------------- */
+  void UpdateSystemMemoryUsage(void)
+  { // More containers
+		vm_statistics64 vmsData;
+    mach_msg_type_number_t mmtnType = HOST_VM_INFO64_COUNT;
+    // Get total physical memory and if succeeded?
+    if(host_statistics64(mptHost, HOST_VM_INFO64,
+         reinterpret_cast<host_info_t>(&vmsData), &mmtnType) != KERN_SUCCESS)
+      return;
+    // Succeeded getting info, now set the counters
+    memData.qMUsed =
+      (static_cast<uint64_t>(vmsData.active_count) +
+       static_cast<uint64_t>(vmsData.wire_count)) * qwPageSize;
+    memData.qMFree = memData.qMTotal - memData.qMUsed;
+    // Calculate usage percentage
+    memData.dMLoad = UtilMakePercentage(memData.qMUsed, memData.qMTotal);
+  }
+  /* --------------------------------------------------------------- */ public:
+  void UpdateMemoryUsageData(void)
+    { UpdateSystemMemoryUsage(); UpdateProcessMemoryUsage(); }
+  /* ----------------------------------------------------------------------- */
+  void UpdateCPUUsageData(void)
+    { UpdateSystemCpuUsage(); UpdateProcessCpuUsage(); }
   /* -- Get uptime from clock class ---------------------------------------- */
   StdTimeT GetUptime(void) const { return cmHiRes.GetTimeS(); }
   /* -- Send signal -------------------------------------------------------- */
@@ -266,74 +346,6 @@ class SysCore :
       XCL("Failed to read info about shared object!", "File", cpAltName);
     // Get full pathname of file
     return StdMove(PathSplit{ dlData.dli_fname, true }.strFull);
-  }
-  /* ----------------------------------------------------------------------- */
-  void UpdateCPUUsageData(void)
-  { // For cpu information directly from operating system
-    static mach_msg_type_number_t mmtnType = HOST_CPU_LOAD_INFO_COUNT;
-    static host_cpu_load_info_data_t hclidData;
-    // Get the usage and if succeeded?
-    if(host_statistics(mptHost, HOST_CPU_LOAD_INFO,
-      reinterpret_cast<host_info_t>(&hclidData), &mmtnType) == KERN_SUCCESS)
-    { // Tick counters
-      static unsigned long long qTotalTicksL, qIdleTicksL;
-      // Calculate the total ticks
-      unsigned long long qTotalTicks = 0;
-      for(unsigned int uiI = 0; uiI < CPU_STATE_MAX; ++uiI)
-        qTotalTicks += hclidData.cpu_ticks[uiI];
-      // Do calculations
-      unsigned long long
-        qIdleTicks = hclidData.cpu_ticks[CPU_STATE_IDLE],
-        qTotalTicksSinceLastTime = qTotalTicks - qTotalTicksL,
-        qIdleTicksSinceLastTime = qIdleTicks - qIdleTicksL;
-      // Set previous values
-      qTotalTicksL = qTotalTicks;
-      qIdleTicksL = qIdleTicks;
-      // Final calculation
-      cpuUData.dSystem = (1.0 - ((qTotalTicksSinceLastTime > 0) ?
-        (static_cast<double>(qIdleTicksSinceLastTime)) /
-        qTotalTicksSinceLastTime : 0)) * 100;
-    } // For retrieving CPU information about the process
-    task_info_data_t tinfo;
-    mach_msg_type_number_t task_info_count = TASK_INFO_MAX;
-    // Get basic information about the current process
-    if(task_info(mptTask, TASK_BASIC_INFO,
-      static_cast<task_info_t>(tinfo), &task_info_count) != KERN_SUCCESS)
-        return;
-    // We have to calculate process CPU usage from all the threads
-    thread_array_t         taThreads;
-    mach_msg_type_number_t numThreads;
-    thread_info_data_t     tidThread;
-    mach_msg_type_number_t numThread;
-    thread_basic_info_t    tbiInfo;
-    // Get process thread list and if succeeded?
-    if(task_threads(mptTask, &taThreads, &numThreads) != KERN_SUCCESS)
-      return;
-    // Cpu counters
-    cpuUData.dProcess = 0;
-    // For each thread
-    for(int iIndex = 0, iMax = UtilIntOrMax<int>(numThreads);
-            iIndex < iMax;
-          ++iIndex)
-    { // Set size of structure
-      numThread = THREAD_INFO_MAX;
-      // Get thread information and enumerate next thread if failed
-      if(thread_info(taThreads[iIndex], THREAD_BASIC_INFO,
-        static_cast<thread_info_t>(tidThread), &numThread) != KERN_SUCCESS)
-          continue;
-      // Set thread information
-      tbiInfo = reinterpret_cast<thread_basic_info_t>(tidThread);
-      // Ignore if thread not idle
-      if(tbiInfo->flags & TH_FLAGS_IDLE) continue;
-      // Now we can calculate cpu usage
-      cpuUData.dProcess += static_cast<double>(
-        tbiInfo->cpu_usage / static_cast<double>(TH_USAGE_SCALE) *
-          100.0);
-    } // Deallocate thread list
-    vm_deallocate(mptTask, reinterpret_cast<vm_offset_t>(taThreads),
-      numThreads * sizeof(thread_t));
-    // Divide by CPU thread count to make the value read like Windows and Linux
-    cpuUData.dProcess /= numThreads;
   }
   /* -- Seek to position in specified handle ------------------------------- */
   template<typename IntType>
@@ -784,7 +796,7 @@ class SysCore :
                    uipM2{ { 2420, 3480 } }, // Apple M2
                    uipM3{ { 2748, 4056 } }, // Apple M3
                    uipM4{ { 2896, 4464 } }, // Apple M4
-                   uipM5{ { 3000, 5000 } }; // Apple M5 (Guess)
+                   uipM5{ { 2896, 4600 } }; // Apple M5 (Est.)
     // Processor table with speeds. This is because there is no API to get
     // the speed of Apple branded processors.
     typedef pair<const string, const UIntPair &> MacCpuListMapPair;

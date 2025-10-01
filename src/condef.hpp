@@ -77,7 +77,8 @@ enum ConCmdEnums : unsigned int
   CC_SHOT,      CC_SOCKETS, CC_SOCKRESET, CC_SOURCES,  CC_SQLCHECK,
   CC_SQLDEFRAG, CC_SQLEND,  CC_SQLEXEC,   CC_STATS,    CC_STOPALL,
   CC_STREAMS,   CC_SYSTEM,  CC_TEXTURES,  CC_THREADS,  CC_TIME,
-  CC_VERSION,   CC_VIDEOS,  CC_VMLIST,    CC_VRESET,   CC_WRESET,
+  CC_URLS,      CC_VERSION, CC_VIDEOS,    CC_VMLIST,   CC_VRESET,
+  CC_WRESET,
   /* ----------------------------------------------------------------------- */
   MAX_CONCMD                           // Maximum console commands
 };/* ======================================================================= */

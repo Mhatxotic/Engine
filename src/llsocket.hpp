@@ -419,13 +419,6 @@ LLFUNC(TotalRXPackets, 1, LuaUtilPushVar(lS, cSockets->qRXp.load()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(TotalTXPackets, 1, LuaUtilPushVar(lS, cSockets->qTXp.load()))
 /* ========================================================================= */
-// $ Socket.ValidAddress
-// > Address:string=The address to check.
-// < State:boolean=The address is valid or not.
-// ? Returns if the specified hostname or IP address is valid.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ValidAddress, 1, LuaUtilPushVar(lS, LuaUtilValidHostname(lS, 1)))
-/* ========================================================================= */
 // $ Socket.SocketWaitAsync
 // < Count:integer=Total number of sockets disconnected.
 // ? Disconnects all active Sockets and waits until all sockets are closed.
@@ -440,7 +433,7 @@ LLRSBEGIN                              // Socket.* namespace functions begin
   LLRSFUNC(Create),         LLRSFUNC(CreateHTTP),     LLRSFUNC(Count),
   LLRSFUNC(Connected),      LLRSFUNC(Flush),          LLRSFUNC(TotalRXBytes),
   LLRSFUNC(TotalTXBytes),   LLRSFUNC(TotalRXPackets), LLRSFUNC(TotalTXPackets),
-  LLRSFUNC(WaitAsync),      LLRSFUNC(ValidAddress),
+  LLRSFUNC(WaitAsync),
 LLRSEND                                // Socket.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

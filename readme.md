@@ -46,6 +46,7 @@ You also need to set the `app_cflags` cvar properly in the `app.cfg` to specify 
 | `0x1` | Yes | Enable Win32 or NCurses Terminal. |
 | `0x2` | No | Enable OpenAL subsystem. | `Audio`, `Source`, `Sample` and `Stream`. |
 | `0x4` | Yes | Enable OpenGL subsystem. | `Clip`, `Cursor`, `Display`, `Fbo`, `Font`, `Input`, `Palette` and `Texture`. |
+| `0x8` | No | Enable frame limiter. | |
 
 Combining certain flags unlocks additional namespaces…
 

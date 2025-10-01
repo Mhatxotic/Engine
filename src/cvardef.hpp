@@ -60,10 +60,12 @@ BUILD_FLAGS(Core,
   // No flags?                         Want text mode console?
   CFL_BASIC                 {Flag(0)}, CFL_TEXT              {Flag(1)},
   // Want audio sub-system?            Want opengl window?
-  CFL_AUDIO                 {Flag(2)}, CFL_VIDEO                 {Flag(3)},
+  CFL_AUDIO                 {Flag(2)}, CFL_VIDEO             {Flag(3)},
+  // Want frame limiter?
+  CFL_TIMER                 {Flag(4)},
   /* ----------------------------------------------------------------------- */
   CFL_AUDIOVIDEO{ CFL_AUDIO|CFL_VIDEO },
-  CFL_MASK{ CFL_TEXT|CFL_AUDIOVIDEO }
+  CFL_MASK{ CFL_TEXT|CFL_AUDIOVIDEO|CFL_TIMER }
 );/* -- CVar flags --------------------------------------------------------- */
 BUILD_FLAGS(CVar,
   /* -- Types (T) ---------------------------------------------------------- */
@@ -155,13 +157,13 @@ enum CVarEnums : size_t
   SQL_DEFAULTS,     SQL_LOADCONFIG,    APP_CFLAGS,          LOG_LINES,
   LOG_FILE,         APP_LONGNAME,      ERR_INSTANCE,
   /* -- Object cvars ------------------------------------------------------- */
-  OBJ_CLIPMAX,      OBJ_CMDMAX,        OBJ_CVARMAX,         OBJ_CVARIMAX,
-  OBJ_ARCHIVEMAX,   OBJ_ASSETMAX,      OBJ_BINMAX,          OBJ_FBOMAX,
-  OBJ_FONTMAX,      OBJ_FILEMAX,       OBJ_FTFMAX,          OBJ_FUNCMAX,
-  OBJ_IMGMAX,       OBJ_JSONMAX,       OBJ_MASKMAX,         OBJ_PCMMAX,
-  OBJ_SAMPLEMAX,    OBJ_SHADERMAX,     OBJ_SOCKETMAX,       OBJ_SOURCEMAX,
-  OBJ_STATMAX,      OBJ_STREAMMAX,     OBJ_TEXTUREMAX,      OBJ_THREADMAX,
-  OBJ_VIDEOMAX,
+  OBJ_ARCHIVEMAX,   OBJ_ASSETMAX,      OBJ_ATLASMAX,        OBJ_BINMAX,
+  OBJ_CLIPMAX,      OBJ_CMDMAX,        OBJ_CVARIMAX,        OBJ_CVARMAX,
+  OBJ_FBOMAX,       OBJ_FILEMAX,       OBJ_FONTMAX,         OBJ_FTFMAX,
+  OBJ_FUNCMAX,      OBJ_IMGMAX,        OBJ_JSONMAX,         OBJ_MASKMAX,
+  OBJ_PCMMAX,       OBJ_SAMPLEMAX,     OBJ_SHADERMAX,       OBJ_SOCKETMAX,
+  OBJ_SOURCEMAX,    OBJ_SSHOTMAX,      OBJ_STATMAX,         OBJ_STREAMMAX,
+  OBJ_TEXTUREMAX,   OBJ_THREADMAX,     OBJ_URLMAX,          OBJ_VIDEOMAX,
   /* -- Base cvars --------------------------------------------------------- */
   APP_DESCRIPTION,  APP_VERSION,       APP_ICON,            APP_COPYRIGHT,
   APP_WEBSITE,      APP_TICKRATE,      APP_DELAY,           APP_TITLE,

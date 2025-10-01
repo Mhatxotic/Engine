@@ -40,11 +40,11 @@ class SysProcess :                     // Need this before of System init order
   /* -- Process ------------------------------------------------------------ */
   const size_t     stPageSize;         // Memory page size
   /* -------------------------------------------------------------- */ private:
-  const pid_t      ullProcessId;       // Process id
+  const pid_t      piProcessId;        // Process id
   const pthread_t  vpThreadId;         // Thread id
   /* -- Return process and thread id ---------------------------- */ protected:
-  template<typename IntType=decltype(ullProcessId)>IntType GetPid(void) const
-    { return static_cast<IntType>(ullProcessId); }
+  template<typename IntType=decltype(piProcessId)>IntType GetPid(void) const
+    { return static_cast<IntType>(piProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid(void) const
     { return static_cast<IntType>(vpThreadId); }
   /* -- Initialise global mutex ------------------------------------ */ public:
@@ -89,7 +89,7 @@ class SysProcess :                     // Need this before of System init order
     ctProcUser(0),                     // Init user process cpu time
     ctProcSys(0),                      // Init system process cpu time
     stPageSize(sysconf(_SC_PAGESIZE)), // Get memory page size
-    ullProcessId(getpid()),            // Get native process id
+    piProcessId(getpid()),             // Get native process id
     vpThreadId(pthread_self())         // Get native thread id
     /* -- No code ---------------------------------------------------------- */
     { }

@@ -823,7 +823,22 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // Load succeeded so register the block
     CollectorRegister();
   }
-  /* -- Load image from a raw image ---------------------------------------- */
+  /* -- Replace image from a raw image data -------------------------------- */
+  void InitReplace(Memory &mSrc)
+  { // Take ownership current slots list and make a blank new one.
+    if(slSlots.empty()) XC("No slots in image!", "Identifier", IdentGet());
+    // Get first image slot
+    ImageSlot &isFirst = slSlots.front();
+    // Simple check to make sure the sizes are same
+    if(isFirst.MemSize() != mSrc.MemSize())
+      XC("Pixel data buffer size mismatch!",
+         "Identifier", IdentGet(),
+         "Expected",   isFirst.MemSize(),
+         "Actual",     mSrc.MemSize());
+    // Now just move it over
+    isFirst.MemSwap(mSrc);
+  }
+  /* -- Load image from a raw image data ----------------------------------- */
   void InitRaw(const string &strName, Memory &mSrc,
     const unsigned int uiBWidth, const unsigned int uiBHeight,
     const BitDepth bdBitsPP)

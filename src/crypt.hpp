@@ -124,8 +124,8 @@ template<typename StrType>void CryptAddEntropyStr(const StrType &strValue)
 /* ------------------------------------------------------------------------- */
 static void CryptAddEntropy(void)
 { // Grab some data from the system
-  CryptAddEntropyInt(cmSys.GetTimeNS());
-  CryptAddEntropyInt(cmHiRes.GetTimeNS());
+  CryptAddEntropyInt(cmSys.GetTimeUS());
+  CryptAddEntropyInt(cmHiRes.GetTimeUS());
   CryptAddEntropyInt(cLog->CCDeltaUS());
   cSystem->UpdateCPUUsage();
   CryptAddEntropyInt(cSystem->CPUUsage());

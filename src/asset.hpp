@@ -237,6 +237,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     FlagSet(aCref.FlagGet());
     // Then copy the memory over
     MemInitCopy(aCref);
+    // Register the object in asset collector list
+    CollectorRegister();
   }
   /* -- Init blank asset --------------------------------------------------- */
   void AssetInitBlank(const string &strName, const size_t stBytes)
@@ -244,6 +246,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     IdentSet(StdMove(strName));
     // Allocate the memory and fill it
     MemInitSafe(stBytes);
+    // Register the object in asset collector list
+    CollectorRegister();
   }
   /* -- Init from string --------------------------------------------------- */
   void AssetInitArray(const string &strName, Asset &aRef,

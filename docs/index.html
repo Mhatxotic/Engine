@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.9.30.67 -->
-<!-- Automatically built at Wed Oct 01 01:31:01 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.9.30.67 -->
+<!-- Reference for the Mhatxotic Engine API version 25.10.30.4 -->
+<!-- Automatically built at Thu Oct 30 16:10:24 2025 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.10.30.4 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.9.30.67">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.10.30.4">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.9.30.67">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.10.30.4">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.9.30.67">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.10.30.4">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.9.30.67 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.10.30.4 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 25.9.30.67 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.10.30.4 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.9.30.67 API reference</H1>
+	<H1>Mhatxotic Engine 25.10.30.4 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,12 +100,12 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 878 functions (403 members, 475 methods) and 29 consts in 30 namespaces with 85 commands and 212 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 899 functions (407 members, 492 methods) and 30 consts in 31 namespaces with 86 commands and 215 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
 					<DIV>
-						<A href="#idx.ns">Namespaces</A> <I>(30 namespaces)</I>
+						<A href="#idx.ns">Namespaces</A> <I>(31 namespaces)</I>
 						<OL>
 							<LI><P>Categorised functions that interact with the engine.</P></LI>
 							<LI>
@@ -137,6 +137,7 @@
 									<LI><A href="#idx:Stat">Stat</A></LI>
 									<LI><A href="#idx:Stream">Stream</A></LI>
 									<LI><A href="#idx:Texture">Texture</A></LI>
+									<LI><A href="#idx:Url">Url</A></LI>
 									<LI><A href="#idx:Util">Util</A></LI>
 									<LI><A href="#idx:Variable">Variable</A></LI>
 									<LI><A href="#idx:Video">Video</A></LI>
@@ -823,7 +824,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(9 methods)</I>
+								<B>Methods</B> <I>(10 methods)</I>
 								<OL>
 									<LI><A href="#Image:Depth">Depth</A></LI>
 									<LI><A href="#Image:Destroy">Destroy</A></LI>
@@ -832,6 +833,7 @@
 									<LI><A href="#Image:Height">Height</A></LI>
 									<LI><A href="#Image:Id">Id</A></LI>
 									<LI><A href="#Image:Name">Name</A></LI>
+									<LI><A href="#Image:Replace">Replace</A></LI>
 									<LI><A href="#Image:Save">Save</A></LI>
 									<LI><A href="#Image:Width">Width</A></LI>
 								</OL>
@@ -1141,7 +1143,7 @@
 						<OL>
 							<LI><P>The socket class allows the programmer to connect to a remote network using OpenSSL encryption or unencrypted connection. There is also basic support for HTTP connections, or you can write your own routines for that or any other protocol in Lua!</P></LI>
 							<LI>
-								<B>Members</B> <I>(11 members)</I>
+								<B>Members</B> <I>(10 members)</I>
 								<OL>
 									<LI><A href="#Socket.Connected">Connected</A></LI>
 									<LI><A href="#Socket.Count">Count</A></LI>
@@ -1153,7 +1155,6 @@
 									<LI><A href="#Socket.TotalRXPackets">TotalRXPackets</A></LI>
 									<LI><A href="#Socket.TotalTXBytes">TotalTXBytes</A></LI>
 									<LI><A href="#Socket.TotalTXPackets">TotalTXPackets</A></LI>
-									<LI><A href="#Socket.ValidAddress">ValidAddress</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1495,6 +1496,54 @@
 					</DIV>
 				</DIV>
 			</LI>
+			<LI id="idx:Url">
+				<DIV>
+					<DIV>
+						<A href="#idx:Url">Url namespace</A>
+						<OL>
+							<LI><P>This class gives the guest parsing and validation of Uniform Resource Locators (or URLs).</P></LI>
+							<LI>
+								<B>Members</B> <I>(5 members)</I>
+								<OL>
+									<LI><A href="#Url.Blank">Blank</A></LI>
+									<LI><A href="#Url.Count">Count</A></LI>
+									<LI><A href="#Url.IsHost">IsHost</A></LI>
+									<LI><A href="#Url.Url">Url</A></LI>
+									<LI><A href="#Url.UrlEx">UrlEx</A></LI>
+								</OL>
+							</LI>
+							<LI>
+								<B>Methods</B> <I>(16 methods)</I>
+								<OL>
+									<LI><A href="#Url:Bookmark">Bookmark</A></LI>
+									<LI><A href="#Url:Destroy">Destroy</A></LI>
+									<LI><A href="#Url:Destroyed">Destroyed</A></LI>
+									<LI><A href="#Url:Final">Final</A></LI>
+									<LI><A href="#Url:Host">Host</A></LI>
+									<LI><A href="#Url:Id">Id</A></LI>
+									<LI><A href="#Url:Params">Params</A></LI>
+									<LI><A href="#Url:Parse">Parse</A></LI>
+									<LI><A href="#Url:ParseEx">ParseEx</A></LI>
+									<LI><A href="#Url:Password">Password</A></LI>
+									<LI><A href="#Url:Port">Port</A></LI>
+									<LI><A href="#Url:Resource">Resource</A></LI>
+									<LI><A href="#Url:Result">Result</A></LI>
+									<LI><A href="#Url:Scheme">Scheme</A></LI>
+									<LI><A href="#Url:Secure">Secure</A></LI>
+									<LI><A href="#Url:Username">Username</A></LI>
+								</OL>
+							</LI>
+							<LI>
+								<B>Consts</B> <I>(1 const)</I>
+								<OL>
+									<LI><A href="#Url.Codes">Codes</A></LI>
+								</OL>
+							</LI>
+							<LI><A href="#idx:Url">&#x25B2; Return to summary</A> / <A href="#idx.top">top</A></LI>
+						</OL>
+					</DIV>
+				</DIV>
+			</LI>
 			<LI id="idx:Util">
 				<DIV>
 					<DIV>
@@ -1572,7 +1621,6 @@
 									<LI><A href="#Util.ParseTime">ParseTime</A></LI>
 									<LI><A href="#Util.ParseTime2">ParseTime2</A></LI>
 									<LI><A href="#Util.ParseTimeEx">ParseTimeEx</A></LI>
-									<LI><A href="#Util.ParseUrl">ParseUrl</A></LI>
 									<LI><A href="#Util.Pluralise">Pluralise</A></LI>
 									<LI><A href="#Util.PluraliseEx">PluraliseEx</A></LI>
 									<LI><A href="#Util.PlusOrMinus">PlusOrMinus</A></LI>
@@ -1589,6 +1637,7 @@
 									<LI><A href="#Util.RoundMul">RoundMul</A></LI>
 									<LI><A href="#Util.RoundPow2">RoundPow2</A></LI>
 									<LI><A href="#Util.Sanitise">Sanitise</A></LI>
+									<LI><A href="#Util.Sign">Sign</A></LI>
 									<LI><A href="#Util.StretchInner">StretchInner</A></LI>
 									<LI><A href="#Util.StretchOuter">StretchOuter</A></LI>
 									<LI><A href="#Util.TableSize">TableSize</A></LI>
@@ -1729,7 +1778,7 @@
 			<LI id="idx.cc">
 				<DIV>
 					<DIV>
-						<A href="#cmds">Commands</A> <I>(85 commands)</I>
+						<A href="#cmds">Commands</A> <I>(86 commands)</I>
 						<OL>
 							<LI><P>Console commands that can see and manipulate all the data in the engine.</P></LI>
 							<LI>
@@ -1814,6 +1863,7 @@
 									<LI><A href="#cc.textures">textures</A></LI>
 									<LI><A href="#cc.threads">threads</A></LI>
 									<LI><A href="#cc.time">time</A></LI>
+									<LI><A href="#cc.urls">urls</A></LI>
 									<LI><A href="#cc.version">version</A></LI>
 									<LI><A href="#cc.videos">videos</A></LI>
 									<LI><A href="#cc.vmlist">vmlist</A></LI>
@@ -1829,7 +1879,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(212 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(215 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -1949,6 +1999,7 @@
 									<LI><A href="#cv.net_useragent">net_useragent</A></LI>
 									<LI><A href="#cv.obj_archivemax">obj_archivemax</A></LI>
 									<LI><A href="#cv.obj_assetmax">obj_assetmax</A></LI>
+									<LI><A href="#cv.obj_atlasmax">obj_atlasmax</A></LI>
 									<LI><A href="#cv.obj_binmax">obj_binmax</A></LI>
 									<LI><A href="#cv.obj_clipmax">obj_clipmax</A></LI>
 									<LI><A href="#cv.obj_cmdmax">obj_cmdmax</A></LI>
@@ -1967,10 +2018,12 @@
 									<LI><A href="#cv.obj_shadermax">obj_shadermax</A></LI>
 									<LI><A href="#cv.obj_socketmax">obj_socketmax</A></LI>
 									<LI><A href="#cv.obj_sourcemax">obj_sourcemax</A></LI>
+									<LI><A href="#cv.obj_sshotmax">obj_sshotmax</A></LI>
 									<LI><A href="#cv.obj_statmax">obj_statmax</A></LI>
 									<LI><A href="#cv.obj_streammax">obj_streammax</A></LI>
 									<LI><A href="#cv.obj_texturemax">obj_texturemax</A></LI>
 									<LI><A href="#cv.obj_threadmax">obj_threadmax</A></LI>
+									<LI><A href="#cv.obj_urlmax">obj_urlmax</A></LI>
 									<LI><A href="#cv.obj_videomax">obj_videomax</A></LI>
 									<LI><A href="#cv.sql_autovacuum">sql_autovacuum</A></LI>
 									<LI><A href="#cv.sql_db">sql_db</A></LI>
@@ -5971,6 +6024,16 @@
 		<PRE>If this font was loaded by a filename or it was set with a custom id&#x2e;<BR>This function returns that name which was assigned to it&#x2e;<BR></PRE>
 		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Image:Replace" style="display:none">
+		<H3>Image:Replace</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Image:Replace(<I><U>Data</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Data</U> <I>(Asset)</I> = The new pixel data to replace with.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Swaps out the unpacked raw pixel data in the image with the new raw pixel data and ONLY raw pixel data&#x2e; The size of the memory must be equal to the memory already in the image and the pixel data obviously must match the properties of the image although this cannot be verified and only would cause visual issues&#x2e;<BR></PRE>
+		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Image:Save" style="display:none">
 		<H3>Image:Save</H3>
 		<H4>Syntax:-</H4>
@@ -7503,18 +7566,6 @@
 		<PRE>Returns the total number of packets written to all sockets&#x2e;<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Socket.ValidAddress" style="display:none">
-		<H3>Socket.ValidAddress</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Socket.ValidAddress(<I><U>Address</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Address</U> <I>(string)</I> = The address to check.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The address is valid or not.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns if the specified hostname or IP address is valid&#x2e;<BR></PRE>
-		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Socket:Callback" style="display:none">
 		<H3>Socket:Callback</H3>
 		<H4>Syntax:-</H4>
@@ -8800,11 +8851,9 @@
 	<DIV id="Stream:Play" style="display:none">
 		<H3>Stream:Play</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Stream:Play(<I><U>Loops</U>, <U>Volume</U>, <U>Position</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Loops</U> <I>(integer)</I> = Number of loops.<BR><U>Volume</U> <I>(number)</I> = Stream volume (0 to 1).<BR><U>Position</U> <I>(integer)</I> = Sample position.<BR></PRE>
+		<PRE>Stream:Play()</PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Plays the specified stream at the specified sample position&#x2e;<BR></PRE>
+		<PRE>Plays the specified stream&#x2e;<BR></PRE>
 		<H4><A href="#idx:Stream">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Stream:SetElapsed" style="display:none">
@@ -9638,12 +9687,234 @@
 	<DIV id="Texture:UploadEx" style="display:none">
 		<H3>Texture:UploadEx</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Texture:UploadEx(<I><U>TexId</U>, <U>Data</U>, <U>OffsetX</U>, <U>OffsetY</U>, <U>Width</U>, <U>Height</U>, <U>Alpha</U></I>)</PRE>
+		<PRE>Texture:UploadEx(<I><U>TexId</U>, <U>Data</U>, <U>OffsetX</U>, <U>OffsetY</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>TexId</U> <I>(Integer)</I> = The sub-id of the texture to download<BR><U>Data</U> <I>(Image)</I> = The image to upload to the texture<BR><U>OffsetX</U> <I>(Integer)</I> = The X position on the destination texture where to place<BR><U>OffsetY</U> <I>(Integer)</I> = The Y position on the destination texture where to place<BR><U>Width</U> <I>(Integer)</I> = The width of the image stored in the 'Data' array<BR><U>Height</U> <I>(Integer)</I> = The height of the image stored in the 'Data' array<BR><U>Alpha</U> <I>(boolean)</I> = The source image is RGBA 32bpp? Else it is RGB 24bpp.<BR></PRE>
+		<PRE><U>TexId</U> <I>(Integer)</I> = The sub-id of the texture to download<BR><U>Data</U> <I>(Image)</I> = The image to upload to the texture<BR><U>OffsetX</U> <I>(Integer)</I> = The X position on the destination texture where to place<BR><U>OffsetY</U> <I>(Integer)</I> = The Y position on the destination texture where to place<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Updates a partial area of the supplied texture in VRAM with the texture data specified in the array&#x2e; Only sources and destinations of 24 and 32 bits per pixel are supported&#x2e;<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url.Blank" style="display:none">
+		<H3>Url.Blank</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Url.Blank()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(Url)</I> = The unparsed url class.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns an empty Url class which you will populate with the &#x27;Url&#x3a;Parse&#x2a;&#x27; methods&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url.Count" style="display:none">
+		<H3>Url.Count</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Url.Count()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = Total number of bins created.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of bin classes currently active&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url.IsHost" style="display:none">
+		<H3>Url.IsHost</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>State</U> = Url.IsHost(<I><U>Hostname</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Hostname</U> <I>(string)</I> = The hostname to check.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = The hostname is valid or not.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the specified hostname or IP address is valid&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url.Url" style="display:none">
+		<H3>Url.Url</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Url.Url(<I><U>URL</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>URL</U> <I>(string)</I> = The url to parse.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(Url)</I> = The parsed url class.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Return an Url class and parses the address&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url.UrlEx" style="display:none">
+		<H3>Url.UrlEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Url.UrlEx(<I><U>URL</U>, <U>Mode</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>URL</U> <I>(string)</I> = The url to parse.<BR><U>Mode</U> <I>(integer)</I> = Post processing requirement.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(Url)</I> = The parsed url class.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Parses the specified url and returns all the information about it&#x2e; The &#x27;Post&#x27; argument refers to one of the following&#x2e;&#x2e;&#x2e;<BR>[0] Don&#x27;t modify parameters&#x2e;<BR>[1] URL Encode parameters &#x28;URL passed is not properly URL encoded&#x29;&#x2e;<BR>[2] URL Decode parameters &#x28;URL passed is already properly encoded&#x29;&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Bookmark" style="display:none">
+		<H3>Url:Bookmark</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>String</U> = Url:Bookmark()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>String</U> <I>(string)</I> = The bookmark part of the url.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the bookmark part of the parsed url&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Destroy" style="display:none">
+		<H3>Url:Destroy</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Url:Destroy()</PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Destroys the bin and frees all the memory associated with it&#x2e; The object will no longer be useable after this call and an error will be generated if accessed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Destroyed" style="display:none">
+		<H3>Url:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Url:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Url class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Url class is destroyed&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Final" style="display:none">
+		<H3>Url:Final</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Scheme</U> = Url:Final()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Scheme</U> <I>(string)</I> = The final url.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the final part of the Url object after the parse&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Host" style="display:none">
+		<H3>Url:Host</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>String</U> = Url:Host()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>String</U> <I>(string)</I> = The hostname part of the url.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the hostname part of the parsed url&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Id" style="display:none">
+		<H3>Url:Id</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Id</U> = Url:Id()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Id</U> <I>(integer)</I> = The id number of the Url object.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the unique id of the Url object&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Params" style="display:none">
+		<H3>Url:Params</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Params</U> = Url:Params()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Params</U> <I>(table)</I> = The parameters as a table<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the parameters of the parsed url&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Parse" style="display:none">
+		<H3>Url:Parse</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Url:Parse(<I><U>URL</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>URL</U> <I>(string)</I> = The url to parse.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Reparses the specified address&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:ParseEx" style="display:none">
+		<H3>Url:ParseEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Url:ParseEx(<I><U>URL</U>, <U>Mode</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>URL</U> <I>(string)</I> = The url to parse.<BR><U>Mode</U> <I>(integer)</I> = Post processing requirement.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Reparses the specified address with the specified reprocessing mode&#x2e; The &#x27;Post&#x27; argument refers to one of the values in the Url&#x2e;CreateEx function&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Password" style="display:none">
+		<H3>Url:Password</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Password</U> = Url:Password()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Password</U> <I>(string)</I> = The password part of the url.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the password part of the Url object&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Port" style="display:none">
+		<H3>Url:Port</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Port</U> = Url:Port()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Port</U> <I>(integer)</I> = The port number of the url.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the port part of the parsed url&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Resource" style="display:none">
+		<H3>Url:Resource</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Resource</U> = Url:Resource()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Resource</U> <I>(string)</I> = The resource of the url.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the resource part of the Url object&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Result" style="display:none">
+		<H3>Url:Result</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Code</U> = Url:Result()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Code</U> <I>(integer)</I> = The result of the last parse.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the hostname part of the parsed url&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Scheme" style="display:none">
+		<H3>Url:Scheme</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Scheme</U> = Url:Scheme()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Scheme</U> <I>(string)</I> = The scheme of the url.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the scheme part of the Url object&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Secure" style="display:none">
+		<H3>Url:Secure</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Secure</U> = Url:Secure()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Secure</U> <I>(boolean)</I> = Does the url define a secure url?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the scheme would use SSL&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url:Username" style="display:none">
+		<H3>Url:Username</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Username</U> = Url:Username()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Username</U> <I>(string)</I> = The username part of the url.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the username part of the Url object&#x2e;<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Url.Codes" style="display:none">
+		<H3>Url.Codes</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Codes</U> = Url.Codes</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Codes</U> <I>(table)</I> = The result codes of the Parse operation.<BR></PRE>
+		<H4><A href="#idx:Url">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.AscNTime" style="display:none">
 		<H3>Util.AscNTime</H3>
@@ -10453,18 +10724,6 @@
 		<PRE>Converts the specified specially formatted string to a numerical timestamp&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Util.ParseUrl" style="display:none">
-		<H3>Util.ParseUrl</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U>, <U>Url</U>, <U>Scheme</U>, <U>Secure</U>, <U>Host</U>, <U>Port</U>, <U>Resource</U>, <U>Bookmark</U>, <U>Username</U>, <U>Password</U>, <U>Params</U> = Util.ParseUrl(<I><U>String</U>, <U>Post</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>String</U> <I>(string)</I> = The url to parse<BR><U>Post</U> <I>(integer)</I> = Encode, decode or none<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(integer)</I> = The result code of the parse<BR><U>Url</U> <I>(string)</I> = The canonicalised url<BR><U>Scheme</U> <I>(string)</I> = The scheme string 'http' or 'https'<BR><U>Secure</U> <I>(boolean)</I> = The conneciton would need to use SSL?<BR><U>Host</U> <I>(string)</I> = The hostname to connect to<BR><U>Port</U> <I>(integer)</I> = The port number to connect to<BR><U>Resource</U> <I>(string)</I> = The resource to request<BR><U>Bookmark</U> <I>(string)</I> = The bookmark part of the request<BR><U>Username</U> <I>(string)</I> = The username part of the request<BR><U>Password</U> <I>(string)</I> = The password part of the request<BR><U>Params</U> <I>(table)</I> = The key/value table of parameters parsed<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Parses the specified url and returns all the information about it&#x2e; The &#x27;Post&#x27; argument refers to one of the following&#x2e;&#x2e;&#x2e;<BR>[0] Don&#x27;t modify parameters&#x2e;<BR>[1] URL Encode parameters &#x28;URL passed is not properly URL encoded&#x29;&#x2e;<BR>[2] URL Decode parameters &#x28;URL passed is already properly encoded&#x29;&#x2e;<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Util.Pluralise" style="display:none">
 		<H3>Util.Pluralise</H3>
 		<H4>Syntax:-</H4>
@@ -10592,7 +10851,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Result</U> <I>(string)</I> = The resulting string<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Same as Replace but takes an object table as argument which has key value pairs which are the text to replace &#x28;as key&#x29; and the text to replace to &#x28;as value&#x29;&#x2e;<BR></PRE>
+		<PRE>Same as Replace but takes an object table as argument which has key value pairs which are the text to replace &#x28;as key&#x29; and the text to replace to &#x28;as value&#x29;&#x2e; The function can also take a indexed array where key and value are specified one after the other as strings&#x2e; An odd array size will throw an exception&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Round" style="display:none">
@@ -10653,6 +10912,18 @@
 		<PRE><U>Text</U> <I>(string)</I> = The modified string.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Tries to remove repetitions in the specified string&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.Sign" style="display:none">
+		<H3>Util.Sign</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Value</U> = Util.Sign(<I><U>Value</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Value</U> <I>(integer)</I> = The value to sign.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Value</U> <I>(integer)</I> = The value returned.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns 1 or &#x2d;1&#x2c; indicating the sign of the number passed as argument&#x2e; If the input is 0 or &#x2d;0&#x2c; it will be returned as&#x2d;is&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.StretchInner" style="display:none">
@@ -11851,6 +12122,11 @@
 		<PRE>Displays the current local and UTC time &#x28;if different&#x29;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cc.urls" style="display:none">
+		<H3>urls</H3>
+		<PRE>Shows the current url object count&#x2e;<BR></PRE>
+		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cc.version" style="display:none">
 		<H3>version</H3>
 		<PRE>Shows the current engine version&#x2e;<BR></PRE>
@@ -11883,7 +12159,7 @@
 	</DIV>
 	<DIV id="cv.app_cflags" style="display:none">
 		<H3>app_cflags</H3>
-		<PRE>Specifies how the host wants to be run with the following flags&#x2e;&#x2e;&#x2e;<BR>[0x0] CFL_BASIC &#x3d; Only output to stdout with no input &#x28;Ctrl&#x2b;C aborts&#x29;&#x2e;<BR>[0x1] CFL_TEXT  &#x3d; Inits a Win32 or NCurses console window&#x2e;<BR>[0x2] CFL_AUDIO &#x3d; Inits an OpenAL audio context and API&#x2e;<BR>[0x4] CFL_VIDEO &#x3d; Inits an OpenGL context&#x2b;window and API&#x2e;<BR></PRE>
+		<PRE>Specifies how the host wants to be run with the following flags&#x2e;&#x2e;&#x2e;<BR>[0x0] CFL_BASIC &#x3d; Only output to stdout with no input &#x28;Ctrl&#x2b;C aborts&#x29;&#x2e;<BR>[0x1] CFL_TEXT  &#x3d; Inits a Win32 or NCurses console window&#x2e;<BR>[0x2] CFL_AUDIO &#x3d; Inits an OpenAL audio context and API&#x2e;<BR>[0x4] CFL_VIDEO &#x3d; Inits an OpenGL context&#x2b;window and API&#x2e;<BR>[0x8] CFL_TIMER &#x3d; Limit engine framerate to cvar value &#x27;app_tickrate&#x27;&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.app_cmdline" style="display:none">
@@ -12451,6 +12727,11 @@
 		<PRE>Specifies the maximum number of asset objects allowed to be registered by the engine&#x2e; An exception is generated if more cvars than this are allocated&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.obj_atlasmax" style="display:none">
+		<H3>obj_atlasmax</H3>
+		<PRE>Specifies the maximum number of atlas objects allowed to be registered by the engine&#x2e; An exception is generated if more objects than this are allocated&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.obj_binmax" style="display:none">
 		<H3>obj_binmax</H3>
 		<PRE>Specifies the maximum number of bin objects allowed to be registered by the engine&#x2e; An exception is generated if more cvars than this are allocated&#x2e;<BR></PRE>
@@ -12541,6 +12822,11 @@
 		<PRE>Specifies the maximum number of source objects allowed to be registered by the engine&#x2e; An exception is generated if more objects than this are allocated&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.obj_sshotmax" style="display:none">
+		<H3>obj_sshotmax</H3>
+		<PRE>Specifies the maximum number of sshot objects allowed to be registered by the engine&#x2e; An exception is generated if more objects than this are allocated&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.obj_statmax" style="display:none">
 		<H3>obj_statmax</H3>
 		<PRE>Specifies the maximum number of stat objects allowed to be registered by the engine&#x2e; An exception is generated if more objects than this are allocated&#x2e;<BR></PRE>
@@ -12559,6 +12845,11 @@
 	<DIV id="cv.obj_threadmax" style="display:none">
 		<H3>obj_threadmax</H3>
 		<PRE>Specifies the maximum number of thread objects allowed to be registered by the engine&#x2e; An exception is generated if more objects than this are allocated&#x2e;<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.obj_urlmax" style="display:none">
+		<H3>obj_urlmax</H3>
+		<PRE>Specifies the maximum number of url objects allowed to be registered by the engine&#x2e; An exception is generated if more objects than this are allocated&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.obj_videomax" style="display:none">
@@ -12823,7 +13114,7 @@
 	</DIV>
 	<DIV id="cv.vid_srgb" style="display:none">
 		<H3>vid_srgb</H3>
-		<PRE>Enables SRGB colour space&#x2e;<BR></PRE>
+		<PRE>This specifies whether the framebuffer should be sRGB capable&#x2e; Possible values are &#x27;1&#x27; &#x28;enabled&#x29; and &#x27;0&#x27; &#x28;disabled&#x2c; default&#x29;&#x2e; This value is saved to the configuration database&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.vid_sstype" style="display:none">
@@ -12937,6 +13228,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Wed Oct 01 01:31:01 2025 +0100</ADDRESS>
+	This document was generated at Thu Oct 30 16:10:24 2025 +0000</ADDRESS>
 </BODY>
 </HTML>

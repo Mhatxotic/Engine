@@ -683,9 +683,9 @@ template<typename IntType>
   if constexpr(sizeof(IntType) == sizeof(uint64_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer
     static const array<const ByteValue,6> bvLookup{ {
-      { 0x1000000000000000, "EB" }, { 0x0004000000000000, "PB" },
-      { 0x0000010000000000, "TB" }, { 0x0000000040000000, "GB" },
-      { 0x0000000000100000, "MB" }, { 0x0000000000000400, "KB" }
+      { 0x1000000000000000ULL, "EB" }, { 0x0004000000000000ULL, "PB" },
+      { 0x0000010000000000ULL, "TB" }, { 0x0000000040000000ULL, "GB" },
+      { 0x0000000000100000ULL, "MB" }, { 0x0000000000000400ULL, "KB" }
     } };
     // Return result
     return StrToReadableSuffix<double>(itBytes,
@@ -694,7 +694,7 @@ template<typename IntType>
   else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer
     static const array<const ByteValue,3> bvLookup{ {
-      { 0x40000000, "GB" }, { 0x00100000, "MB" }, { 0x00000400, "KB" }
+      { 0x40000000UL, "GB" }, { 0x00100000UL, "MB" }, { 0x00000400UL, "KB" }
     } };
     // Return result
     return StrToReadableSuffix<double>(itBytes,
@@ -706,11 +706,14 @@ template<typename IntType>
     // Return result
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
-  } // Input value is not 64, 32 nor 16 bit? Use a empty table
-  static const array<const ByteValue,0> bvLookup{ { } };
-  // Show error
-  return StrToReadableSuffix<double>(itBytes,
-    cpSuffix, iPrecision, bvLookup, "B");
+  } // Else needed on MSVC
+  else
+  { // Input value is not 64, 32 nor 16 bit? Use a empty table
+    static const array<const ByteValue,0> bvLookup{ { } };
+    // Show error
+    return StrToReadableSuffix<double>(itBytes,
+      cpSuffix, iPrecision, bvLookup, "B");
+  }
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
@@ -743,9 +746,9 @@ template<typename IntType>
   if constexpr(sizeof(IntType) == sizeof(uint64_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
     static const array<const BitValue,6> bvLookup{ {
-      { 1000000000000000000, "Eb" }, { 1000000000000000, "Pb" },
-      {       1000000000000, "Tb" }, {       1000000000, "Gb" },
-      {             1000000, "Mb" }, {             1000, "Kb" },
+      { 1000000000000000000ULL, "Eb" }, { 1000000000000000ULL, "Pb" },
+      {       1000000000000ULL, "Tb" }, {       1000000000ULL, "Gb" },
+      {             1000000ULL, "Mb" }, {             1000ULL, "Kb" },
     } };
     // Return result
     return StrToReadableSuffix<double>(itBits,
@@ -754,7 +757,7 @@ template<typename IntType>
   else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer.
     static const array<const BitValue,3> bvLookup{ {
-      { 1000000000, "Gb" }, { 1000000, "Mb" }, { 1000, "Kb" },
+      { 1000000000UL, "Gb" }, { 1000000UL, "Mb" }, { 1000UL, "Kb" },
     } };
     // Return result
     return StrToReadableSuffix<double>(itBits,
@@ -766,11 +769,14 @@ template<typename IntType>
     // Return result
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
-  } // Input value is not 64, 32 nor 16 bit? Use a empty table
-  static const array<const BitValue,0> bvLookup{ { } };
-  // Show error
-  return StrToReadableSuffix<double>(itBits,
-    cpSuffix, iPrecision, bvLookup, "b");
+  } // Else needed on MSVC
+  else
+  { // Input value is not 64, 32 nor 16 bit? Use a empty table
+    static const array<const BitValue,0> bvLookup{ { } };
+    // Show error
+    return StrToReadableSuffix<double>(itBits,
+      cpSuffix, iPrecision, bvLookup, "b");
+  }
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
@@ -802,8 +808,8 @@ template<typename IntType>
   if constexpr(sizeof(IntType) == sizeof(uint64_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
     static const array<const Value,4> vLookup{ {
-      { 1000000000000, "T" }, { 1000000000, "B" },
-      { 1000000,       "M" }, { 1000,       "K" }
+      { 1000000000000ULL, "T" }, { 1000000000ULL, "B" },
+      { 1000000ULL,       "M" }, { 1000ULL,       "K" }
     } };
     // Return result
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
@@ -811,7 +817,7 @@ template<typename IntType>
   else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
     static const array<const Value,3> vLookup{ {
-      { 1000000000, "B" }, { 1000000, "M" }, { 1000, "K" }
+      { 1000000000UL, "B" }, { 1000000UL, "M" }, { 1000UL, "K" }
     } };
     // Return result
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
@@ -821,10 +827,13 @@ template<typename IntType>
     static const array<const Value,1> vLookup{ { { 1000, "K" } } };
     // Return result
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
-  } // Input value is not 64, 32 nor 16 bit? Use a empty table
-  static const array<const Value,0> vLookup{ { } };
-  // Show error
-  return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
+  } // Else needed on MSVC
+  else
+  { // Input value is not 64, 32 nor 16 bit? Use a empty table
+    static const array<const Value,0> vLookup{ { } };
+    // Show error
+    return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
+  }
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>

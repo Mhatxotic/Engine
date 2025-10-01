@@ -10,9 +10,10 @@
 /* ------------------------------------------------------------------------- */
 namespace ISysUtil {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IStd::P;               using namespace IString::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS;
+using namespace ICommon	::P;
+using namespace IDir::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -196,10 +197,50 @@ static bool SysSetThreadPriority(const SysThread stLevel)
 /* -- Actual interface to show a message box ------------------------------- */
 static unsigned int SysMessage(void*const, const string &strTitle,
   const string &strMessage, const unsigned int uiFlags)
-{ // Print the error first
-  fwprintf(stderr, L"%ls: %ls\n", UtfDecoder{ strTitle }.Wide().c_str(),
-                                  UtfDecoder{ strMessage }.Wide().c_str());
-  // Return status code
+{ // Print the error in console
+  fprintf(stderr, "%s: %s\n", strTitle.c_str(), strMessage.c_str());
+  // Eligable directories for dialog box elf binaries
+  const array<const string_view, 10> strvaDirPrefixes{
+    "/bin/",             "/usr/bin/",        "/usr/sbin/",
+    "/usr/local/bin/",   "/usr/local/sbin/", "/usr/games/",
+    "/usr/local/games/", "/snap/bin/",       "/var/lib/flatpak/exports/bin/",
+    "/run/current-system/sw/bin/" };
+  // Dialog box applications we can use
+  struct DlgBoxApplication {
+    const string_view strvElf, strvCompulsoryParam,
+                      strvTitleParam, strvMessageParam; };
+  // The dialog box elf binary database
+  const array<const DlgBoxApplication, 5> dbaaApps{ {
+    { "yad",                   cCommon->CommonBlank(),
+      "--title=",              "--text=" },
+    { "zenity",                "--info --no-markup",
+      "--title=",              "--text=" },
+    { "kdialog",               cCommon->CommonBlank(),
+      "--title ",              "--msgbox " },
+    { "gxmessage",             "-center -buttons OK:0",
+      cCommon->CommonBlank(),  cCommon->CommonSpace() },
+    { "xmessage",              "-center",
+      cCommon->CommonBlank(),  cCommon->CommonSpace() }
+  } }; // Search for one of these apps now
+  for(const DlgBoxApplication &dbaApp : dbaaApps)
+  { // In one of these directories
+    for(const string_view &strvDir : strvaDirPrefixes)
+    { // Build filename and ignore if not exist, readable or executable
+      const string strPath{ StrAppend(strvDir, dbaApp.strvElf) };
+      if(!DirCheckFileAccess(strPath, F_OK|R_OK|X_OK)) continue;
+      // Build command line
+      const string strCmdLine{ StrFormat("$ $ $ $",
+        strPath, dbaApp.strvCompulsoryParam,
+       (dbaApp.strvTitleParam.empty() ?
+          cCommon->CommonBlank() : StrFormat("$\"$\"",
+            dbaApp.strvTitleParam, strTitle)),
+       (dbaApp.strvMessageParam.empty() ?
+          cCommon->CommonBlank() : StrFormat("$\"$\"",
+            dbaApp.strvMessageParam, strMessage))) };
+      // Now execute and break if successful
+      if(!system(strCmdLine.c_str())) return 0;
+    }
+  } // Return status code
   return 0;
 }
 /* -- Set thread priority -------------------------------------------------- */

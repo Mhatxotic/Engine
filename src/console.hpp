@@ -764,7 +764,7 @@ class Console :                        // Members initially private
       cSystem->UpdateMemoryUsageData();
       cSystem->UpdateCPUUsage();
       // Redraw title
-      cSystem->RedrawTitleBar(StrFormat("CPU:$$$%  FPS:$$  MEM:$  NET:$  UP:$",
+      cSystem->RedrawTitleBar(StrFormat("CPU:$$$%$  FPS:$  MEM:$  NET:$  UP:$",
         fixed, setprecision(1), cSystem->CPUUsage(), setprecision(0),
         cTimer->TimerGetFPS(), StrToBytes(cSystem->RAMProcUse(), 0),
         cSockets->stConnected.load(),

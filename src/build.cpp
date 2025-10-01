@@ -2225,27 +2225,6 @@ static void BuildExecutable(const string &strTmp, const string &strOS,
 }
 #endif
 /* ------------------------------------------------------------------------- */
-static const StrStrMap LoadVars(const string &strCfg)
-{ // Open file and if succeeded?
-  if(FStream fsVars{ strCfg, FM_R_B })
-  { // Read filee
-    const string strBuffer{ fsVars.FStreamReadStringSafe() };
-    // Bail if size not acceptable
-    if(strBuffer.length() <= 2)
-      XCL("Config file has no data!", "File", strCfg);
-    // Split characters and if nothing found?
-    const string strSplit{ StrGetReturnFormat(strBuffer) };
-    if(strSplit.empty())
-      XCL("Failed to detect config file type!", "File", strCfg);
-    // Initialise it and return if we have entries
-    if(const ParserConst<> pVars{ strBuffer, strSplit, '=' })
-      return reinterpret_cast<const StrStrMap&>(pVars);
-    // No entries so log and return failed if there are no lines
-    XCL("Failed to read any useful variables!", "File", strCfg);
-  } // Failure to open file
-  XCL("Failed to open vars file!", "File", strCfg);
-}
-/* ------------------------------------------------------------------------- */
 static int BuildDistro(void)
 { // Get and make temporary directory and if it failed?
   const string strTmp{ StrAppend(GetTempDir(), '/', UuId().UuIdToString()) };

@@ -64,8 +64,17 @@
 #  if _MSC_VER < 1911                  // Is correct version?
 #   error Must use Microsoft C++ Compiler v19.11 or better!
 #  endif                               // Microsoft version check
-#  define COMPILER_NAME                "MSVisualC"
-#  define COMPILER_VERSION             STR(_MSC_VER)
+#  if defined(__clang__)               // Actually using CLANG-CL?
+#   define MSVC_CLANGCL                // Using CLANG-CL compiler
+#   define COMPILER_NAME               "CLangCL"
+#   define COMPILER_VERSION            STR(__clang_major__) "." \
+                                       STR(__clang_minor__) "." \
+                                       STR(__clang_patchlevel__)
+#  else                                // Using vanilla MSVC?
+#   define MSVC_VANILLA                // Using MS compiler
+#   define COMPILER_NAME               "MSVisualC"
+#   define COMPILER_VERSION            STR(_MSC_VER)
+#  endif                               // Actual compiler check
 # else                                 // Unsupported compiler?
 #  error This compiler is not recognised. Please use clang or msvc!
 # endif                                // Check actual compiler

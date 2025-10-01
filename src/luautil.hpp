@@ -27,8 +27,9 @@ static void LuaUtilPruneStack(lua_State*const lS, const int iParam)
 /* -- Return items in stack ------------------------------------------------ */
 static int LuaUtilStackSize(lua_State*const lS) { return lua_gettop(lS); }
 /* -- Get length of a table ------------------------------------------------ */
-static lua_Unsigned LuaUtilGetSize(lua_State*const lS, const int iParam)
-  { return lua_rawlen(lS, iParam); }
+template<typename IntType=lua_Unsigned>
+  static IntType LuaUtilGetSize(lua_State*const lS, const int iParam)
+    { return static_cast<IntType>(lua_rawlen(lS, iParam)); }
 /* -- Position on the stack doesn't exist? --------------------------------- */
 static bool LuaUtilIsNone(lua_State*const lS, const int iParam)
   { return lua_isnone(lS, iParam) != 0; }
@@ -312,8 +313,16 @@ template<typename ...VarArgs, typename AnyType>
     LuaUtilPushInt(lS, atVal);
   // Type is float or double?
   else if constexpr(is_floating_point_v<AnyType>) LuaUtilPushNum(lS, atVal);
-  // Just push nil otherwise
+  // Strange bug in MSVC which shows no compile time stack trace
+#if defined(MSVC_VANILLA)
+  // Just push nil
   else LuaUtilPushNil(lS);
+  // A real compiler?
+#else
+  // Just push nil otherwise
+  else static_assert(false, "Unknown type sent in function call!");
+  // Compiler check
+#endif
   // Shift to next variable
   LuaUtilPushVar(lS, vaVars...);
 }
@@ -605,7 +614,7 @@ static const string LuaUtilGetCppDir(lua_State*const lS, const int iParam)
 static bool LuaUtilValidHostname(lua_State*const lS, const int iParam)
 { // Return if parameter is a string and not empty else break execution
   LuaUtilCheckStr(lS, iParam);
-  const size_t stSize = LuaUtilGetSize(lS, iParam);
+  const size_t stSize = LuaUtilGetSize<size_t>(lS, iParam);
   if(stSize < 1 || stSize > 253) return false;
   // Get the string
   const char*const cpStr = LuaUtilToString<char>(lS, iParam);
@@ -636,7 +645,7 @@ static const string LuaUtilGetCppHostname(lua_State*const lS, const int iParam)
 { // Return if parameter is a string and not empty else break execution
   LuaUtilCheckStr(lS, iParam);
   // Get size and verify it
-  const size_t stSize = LuaUtilGetSize(lS, iParam);
+  const size_t stSize = LuaUtilGetSize<size_t>(lS, iParam);
   constexpr size_t stMinimum = 1, stMaximum = 253;
   if(stSize < stMinimum || stSize > stMaximum)
     XC("Invalid hostname length!",
@@ -1257,26 +1266,44 @@ static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS)
   return uiCount - uiIndexedCount;
 }
 /* -- Replace text with values from specified LUA table -------------------- */
-static void LuaUtilReplaceMulti(lua_State*const lS)
-{ // Get string to replace
-  string strDest{ LuaUtilGetCppStr(lS, 1) };
-  // Check that we have a table of strings
-  LuaUtilCheckTable(lS, 2);
-  // Source string is empty or there are indexed items in the table? Remove
-  // table and return original blank string
-  if(strDest.empty() || LuaUtilGetSize(lS, 2)) return LuaUtilRmStack(lS);
-  // Build table
+static const string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
+{ // Return if source string is empty?
+  if(strDest.empty()) return {};
+  // Table for replacements
   StrPairList lList;
-  // Until there are no more items, add value if key is a string
-  for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
-    if(LuaUtilIsString(lS, -1))
-      lList.push_back({ LuaUtilToCppString(lS, -2), LuaUtilToCppString(lS) });
-  // Return original string if nothing added
-  if(lList.empty()) return LuaUtilRmStack(lS);
-  // Remove table and string parameter
-  lua_pop(lS, 2);
-  // Execute replacements and return newly made string
-  LuaUtilPushStr(lS, StrReplaceEx(strDest, lList));
+  // Prepare table for implosion and return if more than 1 entry in table?
+  if(const lua_Unsigned luiLen = LuaUtilGetSize(lS, 2))
+  { // Must have even number of parameters
+    if(luiLen % 2) XC("Array size invalid!", "Size", luiLen);
+    // Iterate through rest of table and implode the items
+    for(lua_Integer liIndex = 1,
+                    liMax = static_cast<lua_Integer>(
+                      UtilIntWillOverflow<lua_Integer>(luiLen) ?
+                        numeric_limits<lua_Integer>::max() - 1 : luiLen);
+                    liIndex <= liMax;
+                    liIndex += 2)
+    { // Get key from table
+      LuaUtilGetRefEx(lS, 2, liIndex);
+      const string strKey{ LuaUtilToCppString(lS) };
+      LuaUtilRmStack(lS);
+      // Get value from table
+      LuaUtilGetRefEx(lS, 2, liIndex + 1);
+      lList.push_back({ strKey, LuaUtilToCppString(lS) });
+      LuaUtilRmStack(lS);
+    }
+  } // Until there are no more items, add value if key is a string
+  else
+  { // Push key/values into replacement table
+    for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
+      if(LuaUtilIsString(lS, -1))
+        lList.push_back({ LuaUtilToCppString(lS, -2),
+                          LuaUtilToCppString(lS) });
+    // Remove string parameter
+    LuaUtilRmStack(lS);
+  } // Return nothing if empty
+  if(lList.empty()) return {};
+  // Do the replacement and return the string
+  return StrReplaceEx(strDest, lList);
 }
 /* -- Convert string/uint map to table ------------------------------------- */
 static void LuaUtilToTable(lua_State*const lS, const StrUIntMap &suimRef)

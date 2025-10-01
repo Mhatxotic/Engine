@@ -413,7 +413,7 @@ class System :                         // The main system class
   /* -- Base classes ------------------------------------------------------- */
   public SysCore                       // Defined in 'sys*.hpp' headers
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef IdList<8> ModeList;          // List of possible combinations
+  typedef IdList<16> ModeList;         // List of possible combinations
   /* ----------------------------------------------------------------------- */
   const ModeList   mList;              // Modes list
   CoreFlags        cfMode;             // Requested core subsystem flags
@@ -473,6 +473,9 @@ class System :                         // The main system class
   bool IsAudioMode(void) const
     { return GetCoreFlags().FlagIsSet(CFL_AUDIO); }
   bool IsNotAudioMode(void) const { return !IsAudioMode(); }
+  bool IsTimerMode(void) const
+    { return GetCoreFlags().FlagIsSet(CFL_TIMER); }
+  bool IsNotTimerMode(void) const { return !IsTimerMode(); }
   /* -- Return users roaming directory ------------------------------------- */
   const string &GetRoamingDir(void) const { return strRoamingDir; }
   /* ----------------------------------------------------------------------- */
@@ -494,14 +497,22 @@ class System :                         // The main system class
   System(void) :
     /* -- Initialisers ----------------------------------------------------- */
     mList{{                            // Initialise mode strings list
-      "nothing",                       // [0<    0>] (nothing)
-      "text",                          // [1<    1>] (text)
-      "audio",                         // [2<    2>] (audio)
-      "text+audio",                    // [3<  1|2>] (text+audio)
-      "video",                         // [4<    4>] (video)
-      "text+video",                    // [5<  1|4>] (video+text)
-      "audio+video",                   // [6<  2|4>] (video+audio)
-      "text+audio+video",              // [7<1|2|4>] (text+audio+video)
+      "nothing",                       // [00<      0>] (nothing)
+      "text",                          // [01<      1>] (text)
+      "audio",                         // [02<      2>] (audio)
+      "text+audio",                    // [03<    1|2>] (text+audio)
+      "video",                         // [04<      4>] (video)
+      "text+video",                    // [05<    1|4>] (video+text)
+      "audio+video",                   // [06<    2|4>] (video+audio)
+      "text+audio+video",              // [07<  1|2|4>] (text+audio+video)
+      "timer",                         // [08<      8>] (timer)
+      "text+timer",                    // [09<    1|8>] (text+timer)
+      "audio+timer",                   // [10<    2|8>] (audio+timer)
+      "text+audio+timer",              // [11<  1|2|8>] (text+audio+timer)
+      "video+timer",                   // [12<    4|8>] (video+timer)
+      "text+video+timer",              // [13<  1|4|8>] (video+text+timer)
+      "audio+video+timer",             // [14<  2|4|8>] (video+audio+timer)
+      "text+audio+video+timer",        // [15<1|2|4|8>] (text+audio+video+timr)
     }},                                // Mode strings list initialised
     cfMode{ CFL_MASK },                // Guimode initially set by cvars
     ciCpu{ seconds{ 1 } },             // Cpu refresh time is one seconds
@@ -584,36 +595,25 @@ class System :                         // The main system class
   CVarReturn SetMinRAM(const uint64_t qwMinValue)
   { // If we're to check for minimum memory free
     if(const size_t stMemory = UtilIntOrMax<size_t>(qwMinValue))
-    { // Store duration of fill here later
-      double dDuration;
-      // Update memory usage data
+    { // Update memory usage data
       UpdateMemoryUsageData();
-      // Take away current process memory usage. We'll do a underflow check
-      // because utilities like valgrind can mess with this.
-      const size_t stActualMemory =
-        RAMProcUse() > stMemory ? stMemory : stMemory - RAMProcUse();
-      { // Memory block for data
-        Memory mbData;
-        // Try to allocate the memory and if succeeded
-        try { mbData.MemInitBlank(stActualMemory); }
-        // Allocation failed?
-        catch(const exception &eReason)
-        { // Throw memory error
-          XC("There is not enough system memory available. Close any "
-            "running applications consuming it and try running again!",
-            "Error",   eReason,    "Available", RAMFree(),
-            "Total",   RAMTotal(), "Required",  stMemory,
-            "Percent", UtilMakePercentage(RAMFree(), RAMTotal()),
-            "Needed",  stMemory - RAMFree());
-        } // Initialise the memory and record time spent
-        const ClockChrono<CoreClock> tpStart;
-        mbData.MemFill();
-        dDuration = tpStart.CCDeltaToDouble();
-      } // Show result of test in log
-      cLog->LogInfoExSafe("System heap init of $ ($+$) in $ ($/s).",
-        StrToBytes(stMemory), StrToBytes(RAMProcUse()),
-        StrToBytes(stActualMemory), StrShortFromDuration(dDuration),
-          StrToBytes(static_cast<uint64_t>(1.0 / dDuration * stActualMemory)));
+      // Capture allocation error
+      try
+      { // Try to allocate the memory. Take away current process memory usage.
+        // We'll do a underflow check because utilities like valgrind can mess
+        // with this.
+        Memory{}.MemInitSafe(RAMProcUse() > stMemory ?
+          stMemory : stMemory - RAMProcUse());
+      } // Allocation failed?
+      catch(const exception &eReason)
+      { // Throw memory error
+        XC("There is not enough system memory available. Close any "
+          "running applications consuming it and try running again!",
+          "Error",   eReason,    "Available", RAMFree(),
+          "Total",   RAMTotal(), "Required",  stMemory,
+          "Percent", UtilMakePercentage(RAMFree(), RAMTotal()),
+          "Needed",  stMemory - RAMFree());
+      }
     } // Success
     return ACCEPT;
   }

@@ -75,7 +75,8 @@ string strAscii; strAscii.reserve(stCount);
 // Memory data
 Statistic sTable;
 sTable.Header("ID").Header("BYTES").Header("PREVIEW", false)
-      .Header("ASCII", false).Reserve(cAssets->size());
+      .Header("ASCII", false).Header("IDENTIFIER", false)
+      .Reserve(cAssets->size());
 // Walk mask list and add size of it
 for(const Asset *aPtr : *cAssets)
 { // Get reference to class
@@ -103,7 +104,7 @@ for(const Asset *aPtr : *cAssets)
   // Remove space on hex
   strHex.pop_back();
   // Write line to log
-  sTable.Data(strHex).Data(strAscii);
+  sTable.Data(strHex).Data(strAscii).Data(aRef.IdentGet());
   // Add size of this array to the total size of all arrays
   stTotal += aRef.MemSize();
 } // Number of items in buffer. We're not showing data in release mode.
@@ -829,8 +830,8 @@ cConsole->AddLineF(
     cFboCore->fboMain.FboGetTrisReserved(),
     cFboCore->fboMain.FboGetCmds(),
     cFboCore->fboMain.FboGetCmdsReserved(),
-  fixed, cFboCore->dRTFPS, cDisplay->GetRefreshRate(),
-  UtilMakePercentage(cFboCore->dRTFPS, cDisplay->GetRefreshRate()),
+  fixed, cFboCore->uiFPS, cDisplay->GetRefreshRate(),
+  UtilMakePercentage(cFboCore->uiFPS, cDisplay->GetRefreshRate()),
   cOgl->GetLimit());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'gpu' function
@@ -1467,14 +1468,15 @@ const MemoryUsageItems muiList{ {
   MSS(Ftf),      MSS(Image),    MSS(ImageLib), MSS(Json),     MSS(LuaFunc),
   MSS(Mask),     MSS(Palette),  MSS(Pcm),      MSS(PcmLib),   MSS(Sample),
   MSS(Shader),   MSS(Socket),   MSS(Source),   MSS(SShot),    MSS(Stat),
-  MSS(Stream),   MSS(Texture),  MSS(Thread),   MSS(Variable), MSS(Video)
+  MSS(Stream),   MSS(Texture),  MSS(Thread),   MSS(Url),      MSS(Variable),
+  MSS(Video)
 } };
 // Done with these macros
 #undef MSS
 #undef MSSX
 // Prepare statistics data
 Statistic stData;
-stData.Header("TYPE").Header("#").Header("STACK").Header().DupeHeader(2)
+stData.Header("TYPE").Header("#").Header("CMEM").Header().DupeHeader(2)
       .Reserve(10);
 // Add entries
 for(const MemoryUsageItem &muiRef : muiList)
@@ -2194,6 +2196,17 @@ else cConsole->AddLineF("Local time is $.\nUniversal time is $.",
 cConsole->PrintVersion();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'version' function
+/* ========================================================================= */
+// ! urls
+// ? Shows the current url object count.
+/* ========================================================================= */
+{ "urls", 1, 1, CFL_BASIC, [](const Args &){
+/* ------------------------------------------------------------------------- */
+// Log event counts
+cConsole->AddLine(StrCPluraliseNum(cUrls->size(),
+  "url class.", "url classes."));
+/* ------------------------------------------------------------------------- */
+} },                                   // End of 'events' function
 /* ========================================================================= */
 // ! videos
 // ? Shows all created motion 'Video' object classes created by LUA.

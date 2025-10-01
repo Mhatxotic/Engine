@@ -89,6 +89,19 @@ LLFUNC(Id, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().CtrGet()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Name, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().IdentGet()))
 /* ========================================================================= */
+// $ Image:Replace
+// > Data:Asset=The new pixel data to replace with.
+// ? Swaps out the unpacked raw pixel data in the image with the new raw pixel
+// ? data and ONLY raw pixel data. The size of the memory must be equal to the
+// ? memory already in the image and the pixel data obviously must match the
+// ? properties of the image although this cannot be verified and only would
+// ? cause visual issues.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Replace, 0,
+  const AgImage aImage{lS, 1};
+  const AgAsset aAsset{lS, 2};
+  aImage().InitReplace(aAsset))
+/* ========================================================================= */
 // $ Image:Save
 // < File:string=The filename to save to.
 // ? Saves the file to disk.
@@ -110,8 +123,8 @@ LLFUNC(Width, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().DimGetWidth()))
 ** ========================================================================= */
 LLRSMFBEGIN                            // Image:* member functions begin
   LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Depth), LLRSFUNC(Flags),
-  LLRSFUNC(Height),  LLRSFUNC(Id),        LLRSFUNC(Name),  LLRSFUNC(Save),
-  LLRSFUNC(Width),
+  LLRSFUNC(Height),  LLRSFUNC(Id),        LLRSFUNC(Name),  LLRSFUNC(Replace),
+  LLRSFUNC(Save),    LLRSFUNC(Width),
 LLRSEND                                // Image:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

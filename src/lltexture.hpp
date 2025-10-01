@@ -942,9 +942,6 @@ LLFUNC(Upload, 0, AgTexture{lS, 1}().Update(AgImage{lS,2}()))
 // > Data:Image=The image to upload to the texture
 // > OffsetX:Integer=The X position on the destination texture where to place
 // > OffsetY:Integer=The Y position on the destination texture where to place
-// > Width:Integer=The width of the image stored in the 'Data' array
-// > Height:Integer=The height of the image stored in the 'Data' array
-// > Alpha:boolean=The source image is RGBA 32bpp? Else it is RGB 24bpp.
 // ? Updates a partial area of the supplied texture in VRAM with the texture
 // ? data specified in the array. Only sources and destinations of 24 and 32
 // ? bits per pixel are supported.

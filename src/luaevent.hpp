@@ -50,8 +50,8 @@ class LuaEvts :
     if(emaArgs.size() >= 2) LuaEvtsRemoveIterator(emaArgs[1].SizeT());
     // Return true if required args is 2 because we've already checked that
     if constexpr(stMinimum == 2) return true;
-    // Return success if we have enough parameters
-    return emaArgs.size() >= stMinimum;
+    // Return success if we have enough parameters (else needed on MSVC)
+    else return emaArgs.size() >= stMinimum;
   }
   /* -- Add a new event and stab iterator ---------------------------------- */
   template<typename ...VarArgs>void LuaEvtsDispatch(const EvtMainCmd emcCmd,

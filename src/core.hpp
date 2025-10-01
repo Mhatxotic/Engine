@@ -50,9 +50,10 @@ using namespace IStream::P;            using namespace IString::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace ISystem::P;            using namespace ITexture::P;
 using namespace IThread::P;            using namespace ITimer::P;
-using namespace IToken::P;             using namespace IUtil::P;
-using namespace IVideo::P;             using namespace Lib::OS::GlFW::Types;
-using namespace Lib::OpenAL::Types;    using namespace Lib::Sqlite::Types;
+using namespace IToken::P;             using namespace IUrl::P;
+using namespace IUtil::P;              using namespace IVideo::P;
+using namespace Lib::OS::GlFW::Types;  using namespace Lib::OpenAL::Types;
+using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -60,26 +61,26 @@ class Core;                            // Core class prototype
 static Core *cCore = nullptr;          // Pointer to static class
 class Core final :                     // Members initially private
   /* -- Base classes (order is critical!) ---------------------------------- */
-  private Stats,          private Threads,          private EvtMain,
-  private System,         private LuaFuncs,         private Archives,
-  private Assets,         private Crypt,            private Timer,
-  private Sql,            private Jsons,            private CVarItemStaticList,
-  private CVars,          private Sockets,          private ConCmdStaticList,
-  private Console,        private GlFW,             private Credits,
-  private FreeType,       private Ftfs,             private Files,
-  private Masks,          private Bins,             private Oal,
-  private PcmLibs,        private CodecWAV,         private CodecCAF,
-  private CodecOGG,       private CodecMP3,         private Pcms,
-  private Audio,          private Sources,          private Samples,
-  private Streams,        private EvtWin,           private Ogl,
-  private ImageLibs,      private CodecPNG,         private CodecJPG,
-  private CodecGIF,       private CodecDDS,         private Images,
-  private Shaders,        private Clips,            private Display,
-  private Input,          private ShaderCore,       private Fbos,
-  private FboCore,        private SShots,           private Textures,
-  private Palettes,       private Atlases,          private Fonts,
-  private Videos,         private ConGraphics,      private Variables,
-  private Commands,       private Lua
+  private Stats,          private Threads,        private EvtMain,
+  private System,         private LuaFuncs,       private Archives,
+  private Assets,         private Crypt,          private Urls,
+  private Timer,          private Sql,            private Jsons,
+  private CVarItemStaticList, private CVars,      private Sockets,
+  private ConCmdStaticList,   private Console,    private GlFW,
+  private Credits,        private FreeType,       private Ftfs,
+  private Files,          private Masks,          private Bins,
+  private Oal,            private PcmLibs,        private CodecWAV,
+  private CodecCAF,       private CodecOGG,       private CodecMP3,
+  private Pcms,           private Audio,          private Sources,
+  private Samples,        private Streams,        private EvtWin,
+  private Ogl,            private ImageLibs,      private CodecPNG,
+  private CodecJPG,       private CodecGIF,       private CodecDDS,
+  private Images,         private Shaders,        private Clips,
+  private Display,        private Input,          private ShaderCore,
+  private Fbos,           private FboCore,        private SShots,
+  private Textures,       private Palettes,       private Atlases,
+  private Fonts,          private Videos,         private ConGraphics,
+  private Variables,      private Commands,       private Lua
 { /* -- Private Variables ------------------------------------------------- */
   enum CoreErrorReason                 // Lua error mode behaviour options
   { CER_IGNORE,                        // [0] Ignore errors and try to continue
@@ -139,12 +140,12 @@ class Core final :                     // Members initially private
 #define RSCEX(x,v) x->CounterReset(x->CollectorCount() + v)
 #define RSCX(x,v) RSCEX(c ## x, v)
 #define RSC(x) RSCX(x, 0)
-    RSC(Archives); RSC(Assets);    RSC(Atlases);   RSC(Bins);     RSC(Clips);
-    RSC(Commands); RSCX(Fbos,2);   RSC(Files);     RSC(Fonts);    RSC(Ftfs);
-    RSC(Images);   RSC(ImageLibs); RSC(Jsons);     RSC(LuaFuncs); RSC(Masks);
-    RSC(Palettes); RSC(Pcms);      RSC(PcmLibs);   RSC(Samples);  RSC(Shaders);
-    RSC(Sockets);  RSC(Sources);   RSC(SShots);    RSC(Stats);    RSC(Streams);
-    RSC(Textures); RSC(Threads);   RSC(Variables); RSC(Videos);
+    RSC(Archives); RSC(Assets);    RSC(Atlases); RSC(Bins);      RSC(Clips);
+    RSC(Commands); RSCX(Fbos,2);   RSC(Files);   RSC(Fonts);     RSC(Ftfs);
+    RSC(Images);   RSC(ImageLibs); RSC(Jsons);   RSC(LuaFuncs);  RSC(Masks);
+    RSC(Palettes); RSC(Pcms);      RSC(PcmLibs); RSC(Samples);   RSC(Shaders);
+    RSC(Sockets);  RSC(Sources);   RSC(SShots);  RSC(Stats);     RSC(Streams);
+    RSC(Textures); RSC(Threads);   RSC(Urls);    RSC(Variables); RSC(Videos);
 #undef RSC
 #undef RSCX
 #undef RSCEX
@@ -154,39 +155,57 @@ class Core final :                     // Members initially private
     // the last sandbox may contain invalidated pointers and as long as they
     // don't reach the 'cEvtMain->ManageSafe()' function we're fine.
     cEvtMain->Flush();
+    // Reset tick count and catchup
+    TimerCatchup();
+    TimerResetTicks();
     // Log that we've reset the environment
     cLog->LogDebugExSafe("Core environment $.",
       bLeaving ? "reset" : "prepared");
   }
-  /* -- Graphical core window thread tick ---------------------------------- */
-  void CoreTick(void)
-  { // Is it time to execute a game tick?
-    if(cTimer->TimerShouldTick())
-    { // Render the console fbo (if update requested)
-      cConGraphics->Render();
-      // Render video textures (if any)
-      VideoRender();
-      // Loop point incase we need to catchup game ticks
-      for(;;)
-      { // Set main fbo by default on each frame
-        cFboCore->ActivateMain();
-        // Poll joysticks
-        cInput->JoyPoll();
-        // Execute a tick for each frame missed
-        cLua->ExecuteMain();
-        // Break if we've caught up
-        if(cTimer->TimerShouldNotTick()) break;
-        // Flush the main fbo as we're not drawing it yet
-        cFboCore->RenderFbosAndFlushMain();
-        // Render again until we've caught up
-      } // Add console fbo to render list
-      cConGraphics->RenderToMain();
-      // Render all fbos and copy the main fbo to screen
-      cFboCore->Render();
-      // Update timer
-      cTimer->TimerUpdateInteractive();
-    } // Update interim timer without storing entire duration
-    else cTimer->TimerUpdateInteractiveInterim();
+  /* -- Graphical core window thread tick without frame limiter ------------ */
+  void CoreTickNoFrameLimiter(void)
+  { // Update timer
+    cTimer->TimerUpdateBot();
+    // Render the console fbo (if update requested)
+    cConGraphics->Render();
+    // Render video textures (if any)
+    VideoRender();
+    // Set main fbo by default on each frame
+    cFboCore->ActivateMain();
+    // Poll joysticks
+    cInput->JoyPoll();
+    // Execute a tick for each frame missed
+    cLua->ExecuteMain();
+    // Add console fbo to render list
+    cConGraphics->RenderToMain();
+    // Render all fbos and copy the main fbo to screen
+    cFboCore->Render();
+  }
+  /* -- Graphical core window thread tick with frame limiter --------------- */
+  void CoreTickFrameLimiter(void)
+  { // Return if it is not time to execute a game tick
+    if(cTimer->TimerShouldNotTick()) return;
+    // Render the console fbo (if update requested)
+    cConGraphics->Render();
+    // Render video textures (if any)
+    VideoRender();
+    // Loop point incase we need to catchup game ticks
+    for(;;)
+    { // Set main fbo by default on each frame
+      cFboCore->ActivateMain();
+      // Poll joysticks
+      cInput->JoyPoll();
+      // Execute a tick for each frame missed
+      cLua->ExecuteMain();
+      // Break if we've caught up
+      if(cTimer->TimerShouldNotTick()) break;
+      // Flush the main fbo as we're not drawing it yet
+      cFboCore->RenderFbosAndFlushMain();
+      // Render again until we've caught up
+    } // Add console fbo to render list
+    cConGraphics->RenderToMain();
+    // Render all fbos and copy the main fbo to screen
+    cFboCore->Render();
   }
   /* -- Fired when Lua enters the sandbox ---------------------------------- */
   int CoreThreadSandbox(lua_State*const lS)
@@ -236,12 +255,19 @@ class Core final :                     // Members initially private
       if(cSystem->IsTextMode())
       { // Graphical mode requested too?
         if(cSystem->IsGraphicalMode())
-        { // Initialise accumulator for first time
-          cTimer->TimerUpdateInteractive();
-          // Loop until event manager says we should break
-          while(cEvtMain->HandleSafe())
+        { // Frame limiter enabled?
+          if(cSystem->IsTimerMode())
+          { // Loop until event manager emits break
+            while(cEvtMain->HandleSafe())
+            { // Execute unthreaded tick
+              CoreTickFrameLimiter();
+              // Process bot console
+              cConsole->FlushToLog();
+            }
+          } // Frame limiter disabled so loop until event manager emits break
+          else while(cEvtMain->HandleSafe())
           { // Execute unthreaded tick
-            CoreTick();
+            CoreTickNoFrameLimiter();
             // Process bot console
             cConsole->FlushToLog();
           }
@@ -256,10 +282,12 @@ class Core final :                     // Members initially private
         }
       } // Graphical mode requested?
       else if(cSystem->IsGraphicalMode())
-      { // Initialise accumulator for first time
-        cTimer->TimerUpdateInteractive();
-        // Loop until event manager says we should break
-        while(cEvtMain->HandleSafe()) CoreTick();
+      { // Frame limiter enabled?
+        if(cSystem->IsTimerMode())
+        { // Loop until event manager says we should break
+          while(cEvtMain->HandleSafe()) CoreTickFrameLimiter();
+        } // Frame limiter disabled so loop without frame limiting
+        else while(cEvtMain->HandleSafe()) CoreTickNoFrameLimiter();
       } // No mode set
       else while(cEvtMain->HandleSafe())
       { // Calculate time elapsed in this tick

@@ -72,6 +72,12 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     void Param(const char*const cpName, const long long int lliVal,
       const VarArgs &...vaVars)
   { Int<long long int>(cpName, "LongLongInt", lliVal); Param(vaVars...); }
+  /* -- Process unsigned long long int ------------------------------------- */
+  template<typename ...VarArgs>        // (Lua_Integer)
+    void Param(const char*const cpName, const unsigned long long int ulliVal,
+      const VarArgs &...vaVars)
+  { Int<unsigned long long int>(cpName, "ULongLongInt", ulliVal); 
+    Param(vaVars...); }
   /* ----------------------------------------------------------------------- */
 #elif defined(MACOS)                   // Targeting Apple device?
   /* -- Process signed long ------------------------------------------------ */
