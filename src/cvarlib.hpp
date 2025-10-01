@@ -281,40 +281,6 @@ CVarItemStaticList{{
 { CFL_BASIC, "err_instance", cCommon->CommonOne(),
   CB(cCore->CoreSetOneInstance, bool), TBOOLEAN|PAPPCFG },
 /* == Object cvars ========================================================= */
-// ! OBJ_CLIPMAX
-// ? Specifies the maximum number of clipboard objects allowed to be registered
-// ? by the engine. An exception is generated if more cvars than this are
-// ? allocated.
-/* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_clipmax", "100",
-  CB(cClips->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
-/* ------------------------------------------------------------------------- */
-// ! OBJ_CMDMAX
-// ? Specifies the maximum number of Lua console commands allowed to be
-// ? registered by the engine.
-/* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_cmdmax", "1000",
-  CB(cCommands->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
-/* ------------------------------------------------------------------------- */
-// ! OBJ_CVARMAX
-// ? Specifies the maximum number of cvars allowed to be registered by the
-// ? engine. This includes the internal default cvars. An exception is
-// ? generated if more cvars than this are allocated.
-/* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_cvarmax", "1000",
-  CB(cVariables->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
-/* ------------------------------------------------------------------------- */
-// ! OBJ_CVARIMAX
-// ? Specifies the maximum number of initial cvars allowed to be registered by
-// ? the engine. Initial cvars are in a temporary state, they are used when
-// ? the corresponding cvar is registered, and passed back to this temporary
-// ? state when the cvar is unregistered. The temporary state of all initial
-// ? cvars are then commited to database at exit and on-demand. An exception is
-// ? generated if more initial cvars than this are allocated.
-/* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_cvarimax", "1000",
-  CB(cCVars->MaxICountModified, size_t), TUINTEGER|PAPPCFG },
-/* ------------------------------------------------------------------------- */
 // ! OBJ_ARCHIVEMAX
 // ? Specifies the maximum number of archive objects allowed to be registered
 // ? by the engine. This includes the archives that are loaded at startup
@@ -331,6 +297,14 @@ CVarItemStaticList{{
 { CFL_BASIC, "obj_assetmax", "1000",
   CB(cAssets->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
+// ! OBJ_ATLASMAX
+// ? Specifies the maximum number of atlas objects allowed to be registered by
+// ? the engine. An exception is generated if more objects than this are
+// ? allocated.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "obj_atlasmax", "1000",
+  CB(cAtlases->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
 // ! OBJ_BINMAX
 // ? Specifies the maximum number of bin objects allowed to be registered by
 // ? the engine. An exception is generated if more cvars than this are
@@ -338,6 +312,40 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "obj_binmax", "1000",
   CB(cBins->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
+// ! OBJ_CLIPMAX
+// ? Specifies the maximum number of clipboard objects allowed to be registered
+// ? by the engine. An exception is generated if more cvars than this are
+// ? allocated.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "obj_clipmax", "100",
+  CB(cClips->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
+// ! OBJ_CMDMAX
+// ? Specifies the maximum number of Lua console commands allowed to be
+// ? registered by the engine.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "obj_cmdmax", "1000",
+  CB(cCommands->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
+// ! OBJ_CVARIMAX
+// ? Specifies the maximum number of initial cvars allowed to be registered by
+// ? the engine. Initial cvars are in a temporary state, they are used when
+// ? the corresponding cvar is registered, and passed back to this temporary
+// ? state when the cvar is unregistered. The temporary state of all initial
+// ? cvars are then commited to database at exit and on-demand. An exception is
+// ? generated if more initial cvars than this are allocated.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "obj_cvarimax", "1000",
+  CB(cCVars->MaxICountModified, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
+// ! OBJ_CVARMAX
+// ? Specifies the maximum number of cvars allowed to be registered by the
+// ? engine. This includes the internal default cvars. An exception is
+// ? generated if more cvars than this are allocated.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "obj_cvarmax", "1000",
+  CB(cVariables->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FBOMAX
 // ? Specifies the maximum number of framebuffer objects allowed to be
@@ -347,14 +355,6 @@ CVarItemStaticList{{
 { CFL_VIDEO, "obj_fbomax", "1000",
   CB(cFbos->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
-// ! OBJ_FONTMAX
-// ? Specifies the maximum number of font objects allowed to be registered by
-// ? the engine. An exception is generated if more cvars than this are
-// ? allocated.
-/* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "obj_fontmax", "1000",
-  CB(cFonts->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
-/* ------------------------------------------------------------------------- */
 // ! OBJ_FILEMAX
 // ? Specifies the maximum number of file objects allowed to be registered by
 // ? the engine. An exception is generated if more cvars than this are
@@ -362,6 +362,14 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "obj_filemax", "1000",
   CB(cFiles->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
+// ! OBJ_FONTMAX
+// ? Specifies the maximum number of font objects allowed to be registered by
+// ? the engine. An exception is generated if more cvars than this are
+// ? allocated.
+/* ------------------------------------------------------------------------- */
+{ CFL_VIDEO, "obj_fontmax", "1000",
+  CB(cFonts->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FTFMAX
 // ? Specifies the maximum number of freetype objects allowed to be registered
@@ -443,6 +451,14 @@ CVarItemStaticList{{
 { CFL_AUDIO, "obj_sourcemax", "1000",
   CB(cSources->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
+// ! OBJ_SSHOTMAX
+// ? Specifies the maximum number of sshot objects allowed to be
+// ? registered by the engine. An exception is generated if more objects than
+// ? this are allocated.
+/* ------------------------------------------------------------------------- */
+{ CFL_VIDEO, "obj_sshotmax", "100",
+  CB(cSShots->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
 // ! OBJ_STATMAX
 // ? Specifies the maximum number of stat objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
@@ -474,6 +490,14 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "obj_threadmax", "1000",
   CB(cThreads->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
+// ! OBJ_URLMAX
+// ? Specifies the maximum number of url objects allowed to be
+// ? registered by the engine. An exception is generated if more objects than
+// ? this are allocated.
+/* ------------------------------------------------------------------------- */
+{ CFL_VIDEO, "obj_urlmax", "1000",
+  CB(cUrls->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_VIDEOMAX
 // ? Specifies the maximum number of video objects allowed to be

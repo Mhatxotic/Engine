@@ -68,6 +68,7 @@ template<typename AnyType, int itSize>
 #include "llstream.hpp"                // Stream namespace functions
 #include "lltexture.hpp"               // Texture namespace functions
 #include "llpalette.hpp"               // Palette namespace functions
+#include "llurl.hpp"                   // Url namespace functions
 #include "llutil.hpp"                  // Util namespace functions
 #include "llvar.hpp"                   // Variable namespace functions
 #include "llvideo.hpp"                 // Video namespace functions
@@ -153,8 +154,9 @@ const LuaLibStaticArray llsaAPI{{
   LLFMx(SShot, VIDEO, SSHOT),          LLFMx(Stat, BASIC, STAT),
   LLFMC(Socket, BASIC, SOCKET),        LLFMx(Source, AUDIO, SOURCE),
   LLFxC(Sql, BASIC),                   LLFMC(Stream, AUDIO, STREAM),
-  LLFMx(Texture, VIDEO, TEXTURE),      LLFxx(Util, BASIC),
-  LLFMC(Variable, BASIC, VARIABLE),    LLFMC(Video, AUDIOVIDEO, VIDEO),
+  LLFMx(Texture, VIDEO, TEXTURE),      LLFMC(Url, BASIC, URL),
+  LLFxx(Util, BASIC),                  LLFMC(Variable, BASIC, VARIABLE),
+  LLFMC(Video, AUDIOVIDEO, VIDEO),
 }};/* -- Done with these macros -------------------------------------------- */
 #undef LLFMC
 #undef LLFxC

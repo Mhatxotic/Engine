@@ -1467,14 +1467,15 @@ const MemoryUsageItems muiList{ {
   MSS(Ftf),      MSS(Image),    MSS(ImageLib), MSS(Json),     MSS(LuaFunc),
   MSS(Mask),     MSS(Palette),  MSS(Pcm),      MSS(PcmLib),   MSS(Sample),
   MSS(Shader),   MSS(Socket),   MSS(Source),   MSS(SShot),    MSS(Stat),
-  MSS(Stream),   MSS(Texture),  MSS(Thread),   MSS(Variable), MSS(Video)
+  MSS(Stream),   MSS(Texture),  MSS(Thread),   MSS(Url),      MSS(Variable),
+  MSS(Video)
 } };
 // Done with these macros
 #undef MSS
 #undef MSSX
 // Prepare statistics data
 Statistic stData;
-stData.Header("TYPE").Header("#").Header("STACK").Header().DupeHeader(2)
+stData.Header("TYPE").Header("#").Header("CMEM").Header().DupeHeader(2)
       .Reserve(10);
 // Add entries
 for(const MemoryUsageItem &muiRef : muiList)
@@ -2194,6 +2195,17 @@ else cConsole->AddLineF("Local time is $.\nUniversal time is $.",
 cConsole->PrintVersion();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'version' function
+/* ========================================================================= */
+// ! urls
+// ? Shows the current url object count.
+/* ========================================================================= */
+{ "urls", 1, 1, CFL_BASIC, [](const Args &){
+/* ------------------------------------------------------------------------- */
+// Log event counts
+cConsole->AddLine(StrCPluraliseNum(cUrls->size(),
+  "url class.", "url classes."));
+/* ------------------------------------------------------------------------- */
+} },                                   // End of 'events' function
 /* ========================================================================= */
 // ! videos
 // ? Shows all created motion 'Video' object classes created by LUA.

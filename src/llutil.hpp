@@ -737,38 +737,6 @@ LLFUNC(ParseTimeEx, 1,
   const AgCStringChar aFormat{lS, 2};
   LuaUtilPushVar(lS, StrParseTime(aTimestamp, aFormat)))
 /* ========================================================================= */
-// $ Util.ParseUrl
-// > String:string=The url to parse
-// > Post:integer=Encode, decode or none
-// < Result:integer=The result code of the parse
-// < Url:string=The canonicalised url
-// < Scheme:string=The scheme string 'http' or 'https'
-// < Secure:boolean=The conneciton would need to use SSL?
-// < Host:string=The hostname to connect to
-// < Port:integer=The port number to connect to
-// < Resource:string=The resource to request
-// < Bookmark:string=The bookmark part of the request
-// < Username:string=The username part of the request
-// < Password:string=The password part of the request
-// < Params:table=The key/value table of parameters parsed
-// ? Parses the specified url and returns all the information about it. The
-// ? 'Post' argument refers to one of the following...
-// ? [0] Don't modify parameters.
-// ? [1] URL Encode parameters (URL passed is not properly URL encoded).
-// ? [2] URL Decode parameters (URL passed is already properly encoded).
-/* ------------------------------------------------------------------------- */
-LLFUNC(ParseUrl, 11,
-  const AgString aUrl{lS, 1};
-  const AgUIntLG aEncode{lS, 2, 0, 2};
-  const Url uParsed{aUrl, aEncode};
-  LuaUtilPushVar(lS, uParsed.GetResult());
-  if(uParsed.GetResult() != Url::R_GOOD) return 1;
-  LuaUtilPushVar(lS, uParsed.GetUrl(), uParsed.GetScheme(),
-    uParsed.GetSecure(), uParsed.GetHost(), uParsed.GetPort(),
-    uParsed.GetResource(), uParsed.GetBookmark(), uParsed.GetUsername(),
-    uParsed.GetPassword());
-  LuaUtilToTableEx(lS, uParsed))
-/* ========================================================================= */
 // $ Util.Pluralise
 // > Count:integer=The number to check
 // > Singular:string=The word to suffix if the number is singular
@@ -1084,36 +1052,36 @@ LLRSBEGIN                              // Util.* namespace functions begin
   LLRSFUNC(LowByte),       LLRSFUNC(LowDWord),       LLRSFUNC(LowWord),
   LLRSFUNC(MakeDWord),     LLRSFUNC(MakeQWord),      LLRSFUNC(MakeWord),
   LLRSFUNC(ParseArgs),     LLRSFUNC(ParseTime),      LLRSFUNC(ParseTime2),
-  LLRSFUNC(ParseTimeEx),   LLRSFUNC(ParseUrl),       LLRSFUNC(Pluralise),
-  LLRSFUNC(PluraliseEx),   LLRSFUNC(PlusOrMinus),    LLRSFUNC(PlusOrMinusEx),
-  LLRSFUNC(Position),      LLRSFUNC(Random),         LLRSFUNC(RandomA),
-  LLRSFUNC(RelTime),       LLRSFUNC(RelTimeEx),     LLRSFUNC(Replace),
-  LLRSFUNC(ReplaceEx),     LLRSFUNC(Round),         LLRSFUNC(RoundInt),
-  LLRSFUNC(RoundMul),      LLRSFUNC(RoundPow2),     LLRSFUNC(SHA1AA),
-  LLRSFUNC(SHA1AAA),       LLRSFUNC(SHA1AAS),       LLRSFUNC(SHA1AS),
-  LLRSFUNC(SHA1ASA),       LLRSFUNC(SHA1ASS),       LLRSFUNC(SHA1SA),
-  LLRSFUNC(SHA1SAA),       LLRSFUNC(SHA1SAS),       LLRSFUNC(SHA1SS),
-  LLRSFUNC(SHA1SSA),       LLRSFUNC(SHA1SSS),       LLRSFUNC(SHA224AA),
-  LLRSFUNC(SHA224AAA),     LLRSFUNC(SHA224AAS),     LLRSFUNC(SHA224AS),
-  LLRSFUNC(SHA224ASA),     LLRSFUNC(SHA224ASS),     LLRSFUNC(SHA224SA),
-  LLRSFUNC(SHA224SAA),     LLRSFUNC(SHA224SAS),     LLRSFUNC(SHA224SS),
-  LLRSFUNC(SHA224SSA),     LLRSFUNC(SHA224SSS),     LLRSFUNC(SHA256AA),
-  LLRSFUNC(SHA256AAA),     LLRSFUNC(SHA256AAS),     LLRSFUNC(SHA256AS),
-  LLRSFUNC(SHA256ASA),     LLRSFUNC(SHA256ASS),     LLRSFUNC(SHA256SA),
-  LLRSFUNC(SHA256SAA),     LLRSFUNC(SHA256SAS),     LLRSFUNC(SHA256SS),
-  LLRSFUNC(SHA256SSA),     LLRSFUNC(SHA256SSS),     LLRSFUNC(SHA384AA),
-  LLRSFUNC(SHA384AAA),     LLRSFUNC(SHA384AAS),     LLRSFUNC(SHA384AS),
-  LLRSFUNC(SHA384ASA),     LLRSFUNC(SHA384ASS),     LLRSFUNC(SHA384SA),
-  LLRSFUNC(SHA384SAA),     LLRSFUNC(SHA384SAS),     LLRSFUNC(SHA384SS),
-  LLRSFUNC(SHA384SSA),     LLRSFUNC(SHA384SSS),     LLRSFUNC(SHA512AA),
-  LLRSFUNC(SHA512AAA),     LLRSFUNC(SHA512AAS),     LLRSFUNC(SHA512AS),
-  LLRSFUNC(SHA512ASA),     LLRSFUNC(SHA512ASS),     LLRSFUNC(SHA512SA),
-  LLRSFUNC(SHA512SAA),     LLRSFUNC(SHA512SAS),     LLRSFUNC(SHA512SS),
-  LLRSFUNC(SHA512SSA),     LLRSFUNC(SHA512SSS),     LLRSFUNC(Sanitise),
-  LLRSFUNC(StretchInner),  LLRSFUNC(StretchOuter),  LLRSFUNC(TableSize),
-  LLRSFUNC(Trim),          LLRSFUNC(UrlDecode),     LLRSFUNC(UrlEncode),
-  LLRSFUNC(UTF8Char),      LLRSFUNC(UUIDDecode),    LLRSFUNC(UUIDEncode),
-  LLRSFUNC(UUIDRandom),    LLRSFUNC(WordWrap),
+  LLRSFUNC(ParseTimeEx),   LLRSFUNC(Pluralise),      LLRSFUNC(PluraliseEx),
+  LLRSFUNC(PlusOrMinus),   LLRSFUNC(PlusOrMinusEx),  LLRSFUNC(Position),
+  LLRSFUNC(Random),        LLRSFUNC(RandomA),        LLRSFUNC(RelTime),
+  LLRSFUNC(RelTimeEx),     LLRSFUNC(Replace),        LLRSFUNC(ReplaceEx),
+  LLRSFUNC(Round),         LLRSFUNC(RoundInt),       LLRSFUNC(RoundMul),
+  LLRSFUNC(RoundPow2),     LLRSFUNC(SHA1AA),         LLRSFUNC(SHA1AAA),
+  LLRSFUNC(SHA1AAS),       LLRSFUNC(SHA1AS),         LLRSFUNC(SHA1ASA),
+  LLRSFUNC(SHA1ASS),       LLRSFUNC(SHA1SA),         LLRSFUNC(SHA1SAA),
+  LLRSFUNC(SHA1SAS),       LLRSFUNC(SHA1SS),         LLRSFUNC(SHA1SSA),
+  LLRSFUNC(SHA1SSS),       LLRSFUNC(SHA224AA),       LLRSFUNC(SHA224AAA),
+  LLRSFUNC(SHA224AAS),     LLRSFUNC(SHA224AS),       LLRSFUNC(SHA224ASA),
+  LLRSFUNC(SHA224ASS),     LLRSFUNC(SHA224SA),       LLRSFUNC(SHA224SAA),
+  LLRSFUNC(SHA224SAS),     LLRSFUNC(SHA224SS),       LLRSFUNC(SHA224SSA),
+  LLRSFUNC(SHA224SSS),     LLRSFUNC(SHA256AA),       LLRSFUNC(SHA256AAA),
+  LLRSFUNC(SHA256AAS),     LLRSFUNC(SHA256AS),       LLRSFUNC(SHA256ASA),
+  LLRSFUNC(SHA256ASS),     LLRSFUNC(SHA256SA),       LLRSFUNC(SHA256SAA),
+  LLRSFUNC(SHA256SAS),     LLRSFUNC(SHA256SS),       LLRSFUNC(SHA256SSA),
+  LLRSFUNC(SHA256SSS),     LLRSFUNC(SHA384AA),       LLRSFUNC(SHA384AAA),
+  LLRSFUNC(SHA384AAS),     LLRSFUNC(SHA384AS),       LLRSFUNC(SHA384ASA),
+  LLRSFUNC(SHA384ASS),     LLRSFUNC(SHA384SA),       LLRSFUNC(SHA384SAA),
+  LLRSFUNC(SHA384SAS),     LLRSFUNC(SHA384SS),       LLRSFUNC(SHA384SSA),
+  LLRSFUNC(SHA384SSS),     LLRSFUNC(SHA512AA),       LLRSFUNC(SHA512AAA),
+  LLRSFUNC(SHA512AAS),     LLRSFUNC(SHA512AS),       LLRSFUNC(SHA512ASA),
+  LLRSFUNC(SHA512ASS),     LLRSFUNC(SHA512SA),       LLRSFUNC(SHA512SAA),
+  LLRSFUNC(SHA512SAS),     LLRSFUNC(SHA512SS),       LLRSFUNC(SHA512SSA),
+  LLRSFUNC(SHA512SSS),     LLRSFUNC(Sanitise),       LLRSFUNC(StretchInner),
+  LLRSFUNC(StretchOuter),  LLRSFUNC(TableSize),      LLRSFUNC(Trim),
+  LLRSFUNC(UrlDecode),     LLRSFUNC(UrlEncode),      LLRSFUNC(UTF8Char),
+  LLRSFUNC(UUIDDecode),    LLRSFUNC(UUIDEncode),     LLRSFUNC(UUIDRandom),
+  LLRSFUNC(WordWrap),
 LLRSEND                                // Util.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Util namespace
