@@ -22,6 +22,12 @@ struct AgString { const string strString;
   operator const string&(void) const { return operator()(); }
   explicit AgString(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppStr(lS, iArg)}{} };
+/* -- Get modifyable string ------------------------------------------------ */
+struct AgNcString { string strString;
+  string &operator()(void) { return strString; }
+  operator string&(void) { return operator()(); }
+  explicit AgNcString(lua_State*const lS, const int iArg) :
+    strString{LuaUtilGetCppStr(lS, iArg)}{} };
 /* -- Get non-empty string ------------------------------------------------- */
 struct AgNeString { const string strNeString;
   const string &operator()(void) const { return strNeString; }

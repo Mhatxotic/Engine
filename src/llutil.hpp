@@ -161,9 +161,7 @@ LLFUNC(Capitalise, 1, LuaUtilPushVar(lS, StrCapitalise(AgString{lS, 1})))
 // < Result:string=The chopped string
 // ? Removes carriage returns from the beginning and end of the string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Chop, 1,
-  AgString aString{lS, 1};
-  LuaUtilPushVar(lS, StrChop(const_cast<string&>(aString()))))
+LLFUNC(Chop, 1, LuaUtilPushVar(lS, StrChop(AgNcString{lS, 1})))
 /* ========================================================================= */
 // $ Util.Clamp
 // > Value:number=The current number.
@@ -173,7 +171,10 @@ LLFUNC(Chop, 1,
 // ? Makes sure the specified number does not go under the minimum or maximum
 // ? numbers specified.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Clamp, 1, const AgLuaNumber aValue{lS, 1}, aMin{lS, 2}, aMax{lS, 3};
+LLFUNC(Clamp, 1,
+  const AgLuaNumber aValue{lS, 1};
+  const AgLuaNumber aMin{lS, 2};
+  const AgLuaNumber aMax{lS, 3};
   LuaUtilPushVar(lS, UtilClamp(aValue(), aMin(), aMax())))
 /* ========================================================================= */
 // $ Util.ClampInt
@@ -185,7 +186,9 @@ LLFUNC(Clamp, 1, const AgLuaNumber aValue{lS, 1}, aMin{lS, 2}, aMax{lS, 3};
 // ? numbers specified.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ClampInt, 1,
-  const AgLuaInteger aValue{lS, 1}, aMin{lS, 2}, aMax{lS, 3};
+  const AgLuaInteger aValue{lS, 1};
+  const AgLuaInteger aMin{lS, 2};
+  const AgLuaInteger aMax{lS, 3};
   LuaUtilPushVar(lS, UtilClamp(aValue(), aMin(), aMax())))
 /* ========================================================================= */
 // $ Util.Compact
@@ -202,7 +205,9 @@ LLFUNC(Compact, 1, LuaUtilPushVar(lS, StrCompact(AgCStringChar{lS, 1})))
 // < Count:integer=Number of occurences in the string
 // ? A fast way of counting the number of occurences in a string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CountOf, 1, const AgString aSource{lS, 1}, aWhat{lS, 2};
+LLFUNC(CountOf, 1,
+  const AgString aSource{lS, 1};
+  const AgString aWhat{lS, 2};
   LuaUtilPushVar(lS, StrCountOccurences(aSource, aWhat)))
 /* ========================================================================= */
 // $ Util.Duration
@@ -282,7 +287,7 @@ LLFUNC(FormatNTimeUTC, 1,
 LLFUNC(FormatNumber, 1,
   const AgDouble aValue{lS, 1};
   const AgInt aDigits{lS, 2};
-  LuaUtilPushVar(lS, StrReadableFromNum(aValue(), aDigits)))
+  LuaUtilPushVar(lS, StrReadableFromNum(aValue, aDigits)))
 /* ========================================================================= */
 // $ Util.FormatNumberI
 // > Value:integer=A integer value, it will be converted to a string.
@@ -292,7 +297,7 @@ LLFUNC(FormatNumber, 1,
 // ? thousand separators.
 /* ------------------------------------------------------------------------- */
 LLFUNC(FormatNumberI, 1,
-  LuaUtilPushVar(lS, StrReadableFromNum(AgUInt64{lS, 1}(), 0)))
+  LuaUtilPushVar(lS, StrReadableFromNum(AgUInt64{lS, 1}, 0)))
 /* ========================================================================= */
 // $ Util.FormatTime
 // > Timestamp:integer=The timestamp to convert to string
@@ -327,7 +332,9 @@ LLFUNC(FormatTimeUTC, 1,
 // ? Caclulates the ratio between the two numbers and returns a string in the
 // ? format of "n:n".
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetRatio, 1, const AgLuaIntegerL aWidth{lS, 1, 1}, aHeight{lS, 2, 1};
+LLFUNC(GetRatio, 1,
+  const AgLuaIntegerL aWidth{lS, 1, 1};
+  const AgLuaIntegerL aHeight{lS, 2, 1};
   LuaUtilPushVar(lS, StrFromRatio(aWidth(), aHeight())))
 /* ========================================================================= */
 // $ Util.Grouped
@@ -677,7 +684,9 @@ LLFUNC(LowWord, 1, LuaUtilPushVar(lS, UtilLowWord(AgUInt32{lS, 1})))
 // ? Joins two integers in the 16-bit range to return one integer in the 32-bit
 // ? range.
 /* ------------------------------------------------------------------------- */
-LLFUNC(MakeDWord, 1, const AgUInt16 aHigh{lS, 1}, aLow{lS, 2};
+LLFUNC(MakeDWord, 1,
+  const AgUInt16 aHigh{lS, 1};
+  const AgUInt16 aLow{lS, 2};
   LuaUtilPushVar(lS, UtilMakeDWord(aHigh, aLow)))
 /* ========================================================================= */
 // $ Util.MakeWord
@@ -687,7 +696,9 @@ LLFUNC(MakeDWord, 1, const AgUInt16 aHigh{lS, 1}, aLow{lS, 2};
 // ? Joins two integers in the 8-bit range to return one integer in the 16-bit
 // ? range.
 /* ------------------------------------------------------------------------- */
-LLFUNC(MakeWord, 1, const AgUInt8 aHigh{lS, 1}, aLow{lS, 2};
+LLFUNC(MakeWord, 1,
+  const AgUInt8 aHigh{lS, 1};
+  const AgUInt8 aLow{lS, 2};
   LuaUtilPushVar(lS, UtilMakeWord(aHigh, aLow)))
 /* ========================================================================= */
 // $ Util.MakeQWord
@@ -697,7 +708,9 @@ LLFUNC(MakeWord, 1, const AgUInt8 aHigh{lS, 1}, aLow{lS, 2};
 // ? Joins two integers in the 32-bit range to return one integer in the 64-bit
 // ? range.
 /* ------------------------------------------------------------------------- */
-LLFUNC(MakeQWord, 1, const AgUInt32 aHigh{lS, 1}, aLow{lS, 2};
+LLFUNC(MakeQWord, 1,
+  const AgUInt32 aHigh{lS, 1};
+  const AgUInt32 aLow{lS, 2};
   LuaUtilPushVar(lS, UtilMakeQWord(aHigh, aLow)))
 /* ========================================================================= */
 // $ Util.ParseArgs
@@ -849,9 +862,14 @@ LLFUNC(Replace, 1,
 // < Result:string=The resulting string
 // ? Same as Replace but takes an object table as argument which has key
 // ? value pairs which are the text to replace (as key) and the text to replace
-// ? to (as value).
+// ? to (as value). The function can also take a indexed array where key and
+// ? value are specified one after the other as strings. An odd array size
+// ? will throw an exception.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ReplaceEx, 1, LuaUtilReplaceMulti(lS))
+LLFUNC(ReplaceEx, 1,
+  AgNcString aDest{lS, 1};
+  LuaUtilCheckTable(lS, 2);
+  LuaUtilPushVar(lS, LuaUtilReplaceMulti(lS, aDest)))
 /* ========================================================================= */
 // $ Util.Round
 // > Value:string=A number value
@@ -882,7 +900,9 @@ LLFUNC(RoundInt, 1,
 // ? Rounds the specified integer up to the nearest multiple of the specified
 // ? multiplier.
 /* ------------------------------------------------------------------------- */
-LLFUNC(RoundMul, 1, const AgLuaNumber aValue{lS, 1}, aMultiplier{lS, 2};
+LLFUNC(RoundMul, 1,
+  const AgLuaNumber aValue{lS, 1};
+  const AgLuaNumber aMultiplier{lS, 2};
   LuaUtilPushVar(lS, UtilNearest(aValue(), aMultiplier())))
 /* ========================================================================= */
 // $ Util.RoundPow2
