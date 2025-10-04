@@ -368,7 +368,7 @@ class Lua :                            // Actual class body
         liSeed, hex, liSeed);
     } // Use a random number instead
     else
-    { // Get the random number seed
+    { // Get the new random number seed
       const lua_Integer liRandSeed = CryptRandom<lua_Integer>();
       // Set the random number seed
       LuaUtilInitRNGSeed(GetState(), liRandSeed);
