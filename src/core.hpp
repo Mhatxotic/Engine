@@ -159,8 +159,27 @@ class Core final :                     // Members initially private
     cLog->LogDebugExSafe("Core environment $.",
       bLeaving ? "reset" : "prepared");
   }
-  /* -- Graphical core window thread tick ---------------------------------- */
-  void CoreTick(void)
+  /* -- Graphical core window thread tick without frame limiter ------------ */
+  void CoreTickNoFrameLimiter(void)
+  { // Update timer
+    cTimer->TimerUpdateBot();
+    // Render the console fbo (if update requested)
+    cConGraphics->Render();
+    // Render video textures (if any)
+    VideoRender();
+    // Set main fbo by default on each frame
+    cFboCore->ActivateMain();
+    // Poll joysticks
+    cInput->JoyPoll();
+    // Execute a tick for each frame missed
+    cLua->ExecuteMain();
+    // Add console fbo to render list
+    cConGraphics->RenderToMain();
+    // Render all fbos and copy the main fbo to screen
+    cFboCore->Render();
+  }
+  /* -- Graphical core window thread tick with frame limiter --------------- */
+  void CoreTickFrameLimiter(void)
   { // Is it time to execute a game tick?
     if(cTimer->TimerShouldTick())
     { // Render the console fbo (if update requested)
@@ -237,12 +256,21 @@ class Core final :                     // Members initially private
       if(cSystem->IsTextMode())
       { // Graphical mode requested too?
         if(cSystem->IsGraphicalMode())
-        { // Initialise accumulator for first time
-          cTimer->TimerUpdateInteractive();
-          // Loop until event manager says we should break
-          while(cEvtMain->HandleSafe())
+        { // Frame limiter enabled?
+          if(cSystem->IsTimerMode())
+          { // Initialise accumulator for first time
+            cTimer->TimerUpdateInteractive();
+            // Loop until event manager emits break
+            while(cEvtMain->HandleSafe())
+            { // Execute unthreaded tick
+              CoreTickFrameLimiter();
+              // Process bot console
+              cConsole->FlushToLog();
+            }
+          } // Frame limiter disabled so loop until event manager emits break
+          else while(cEvtMain->HandleSafe())
           { // Execute unthreaded tick
-            CoreTick();
+            CoreTickNoFrameLimiter();
             // Process bot console
             cConsole->FlushToLog();
           }
@@ -257,10 +285,14 @@ class Core final :                     // Members initially private
         }
       } // Graphical mode requested?
       else if(cSystem->IsGraphicalMode())
-      { // Initialise accumulator for first time
-        cTimer->TimerUpdateInteractive();
-        // Loop until event manager says we should break
-        while(cEvtMain->HandleSafe()) CoreTick();
+      { // Frame limiter enabled?
+        if(cSystem->IsTimerMode())
+        { // Initialise accumulator for first time
+          cTimer->TimerUpdateInteractive();
+          // Loop until event manager says we should break
+          while(cEvtMain->HandleSafe()) CoreTickFrameLimiter();
+        } // Frame limiter disabled so loop without frame limiting
+        else while(cEvtMain->HandleSafe()) CoreTickNoFrameLimiter();
       } // No mode set
       else while(cEvtMain->HandleSafe())
       { // Calculate time elapsed in this tick

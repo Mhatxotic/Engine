@@ -246,6 +246,7 @@ CVarItemStaticList{{
 // ? [0x1] CFL_TEXT  = Inits a Win32 or NCurses console window.
 // ? [0x2] CFL_AUDIO = Inits an OpenAL audio context and API.
 // ? [0x4] CFL_VIDEO = Inits an OpenGL context+window and API.
+// ? [0x8] CFL_TIMER = Limit engine framerate to cvar value 'app_tickrate'.
 { CFL_BASIC, "app_cflags", cCommon->CommonZero(),
   CB(cSystem->SetCoreFlags, CoreFlagsType), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */

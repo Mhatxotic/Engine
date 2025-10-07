@@ -413,7 +413,7 @@ class System :                         // The main system class
   /* -- Base classes ------------------------------------------------------- */
   public SysCore                       // Defined in 'sys*.hpp' headers
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef IdList<8> ModeList;          // List of possible combinations
+  typedef IdList<16> ModeList;         // List of possible combinations
   /* ----------------------------------------------------------------------- */
   const ModeList   mList;              // Modes list
   CoreFlags        cfMode;             // Requested core subsystem flags
@@ -473,6 +473,9 @@ class System :                         // The main system class
   bool IsAudioMode(void) const
     { return GetCoreFlags().FlagIsSet(CFL_AUDIO); }
   bool IsNotAudioMode(void) const { return !IsAudioMode(); }
+  bool IsTimerMode(void) const
+    { return GetCoreFlags().FlagIsSet(CFL_TIMER); }
+  bool IsNotTimerMode(void) const { return !IsTimerMode(); }
   /* -- Return users roaming directory ------------------------------------- */
   const string &GetRoamingDir(void) const { return strRoamingDir; }
   /* ----------------------------------------------------------------------- */
@@ -494,14 +497,22 @@ class System :                         // The main system class
   System(void) :
     /* -- Initialisers ----------------------------------------------------- */
     mList{{                            // Initialise mode strings list
-      "nothing",                       // [0<    0>] (nothing)
-      "text",                          // [1<    1>] (text)
-      "audio",                         // [2<    2>] (audio)
-      "text+audio",                    // [3<  1|2>] (text+audio)
-      "video",                         // [4<    4>] (video)
-      "text+video",                    // [5<  1|4>] (video+text)
-      "audio+video",                   // [6<  2|4>] (video+audio)
-      "text+audio+video",              // [7<1|2|4>] (text+audio+video)
+      "nothing",                       // [00<      0>] (nothing)
+      "text",                          // [01<      1>] (text)
+      "audio",                         // [02<      2>] (audio)
+      "text+audio",                    // [03<    1|2>] (text+audio)
+      "video",                         // [04<      4>] (video)
+      "text+video",                    // [05<    1|4>] (video+text)
+      "audio+video",                   // [06<    2|4>] (video+audio)
+      "text+audio+video",              // [07<  1|2|4>] (text+audio+video)
+      "timer",                         // [08<      8>] (timer)
+      "text+timer",                    // [09<    1|8>] (text+timer)
+      "audio+timer",                   // [10<    2|8>] (audio+timer)
+      "text+audio+timer",              // [11<  1|2|8>] (text+audio+timer)
+      "video+timer",                   // [12<    4|8>] (video+timer)
+      "text+video+timer",              // [13<  1|4|8>] (video+text+timer)
+      "audio+video+timer",             // [14<  2|4|8>] (video+audio+timer)
+      "text+audio+video+timer",        // [15<1|2|4|8>] (text+audio+video+timr)
     }},                                // Mode strings list initialised
     cfMode{ CFL_MASK },                // Guimode initially set by cvars
     ciCpu{ seconds{ 1 } },             // Cpu refresh time is one seconds

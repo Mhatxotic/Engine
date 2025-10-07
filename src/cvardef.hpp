@@ -60,10 +60,12 @@ BUILD_FLAGS(Core,
   // No flags?                         Want text mode console?
   CFL_BASIC                 {Flag(0)}, CFL_TEXT              {Flag(1)},
   // Want audio sub-system?            Want opengl window?
-  CFL_AUDIO                 {Flag(2)}, CFL_VIDEO                 {Flag(3)},
+  CFL_AUDIO                 {Flag(2)}, CFL_VIDEO             {Flag(3)},
+  // Want frame limiter?
+  CFL_TIMER                 {Flag(4)},
   /* ----------------------------------------------------------------------- */
   CFL_AUDIOVIDEO{ CFL_AUDIO|CFL_VIDEO },
-  CFL_MASK{ CFL_TEXT|CFL_AUDIOVIDEO }
+  CFL_MASK{ CFL_TEXT|CFL_AUDIOVIDEO|CFL_TIMER }
 );/* -- CVar flags --------------------------------------------------------- */
 BUILD_FLAGS(CVar,
   /* -- Types (T) ---------------------------------------------------------- */

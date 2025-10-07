@@ -206,19 +206,19 @@ class SysCore :
   /* --------------------------------------------------------------- */ public:
   void UpdateMemoryUsageData(void)
   { // More containers
-    vm_statistics64_data_t vmsData;
-    mach_msg_type_number_t mmtnType = sizeof(vmsData) / sizeof(natural_t);
+		vm_statistics64 vmsData;
+    mach_msg_type_number_t mmtnType = HOST_VM_INFO64_COUNT;
     // Get total physical memory and if succeeded?
     if(host_statistics64(mptHost, HOST_VM_INFO64,
        reinterpret_cast<host_info_t>(&vmsData), &mmtnType) == KERN_SUCCESS)
     { // Succeeded getting info, now set the counters
-      memData.qMFree = static_cast<uint64_t>(vmsData.free_count)
-                     * qwPageSize;
-      memData.qMUsed = (static_cast<uint64_t>(vmsData.active_count)
-                     +  static_cast<uint64_t>(vmsData.inactive_count)
-                     +  static_cast<uint64_t>(vmsData.wire_count))
-                     * qwPageSize;
-    } // For getting process info
+      memData.qMUsed =
+        (static_cast<uint64_t>(vmsData.active_count) +
+         static_cast<uint64_t>(vmsData.wire_count)) * qwPageSize;
+      memData.qMFree = memData.qMTotal - memData.qMUsed;
+    } // Calculate usage
+    memData.dMLoad = UtilMakePercentage(memData.qMUsed, memData.qMTotal);
+    // For getting process info
     task_vm_info_data_t tvidData;
     mach_msg_type_number_t mmtnCount = TASK_VM_INFO_COUNT;
     // Get process memory usage
@@ -228,9 +228,6 @@ class SysCore :
     // Set peak if breached
     if(memData.stMProcUse > memData.stMProcPeak)
       memData.stMProcPeak = memData.stMProcUse;
-    // Calculate usage
-    memData.dMLoad =
-      static_cast<double>(memData.qMUsed) / memData.qMTotal * 100;
   }
   /* -- Get uptime from clock class ---------------------------------------- */
   StdTimeT GetUptime(void) const { return cmHiRes.GetTimeS(); }
