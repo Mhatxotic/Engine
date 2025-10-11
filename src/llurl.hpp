@@ -166,7 +166,7 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cUrls->CollectorCount()))
 // ? Returns an empty Url class which you will populate with the 'Url:Parse*'
 // ? methods.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Blank, 1, AcUrl{lS});
+LLFUNC(Blank, 1, AcUrl{lS});           // cppcheck-suppress unusedScopedObject
 /* ========================================================================= */
 // $ Url.IsHost
 // > Hostname:string=The hostname to check.

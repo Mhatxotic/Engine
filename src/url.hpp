@@ -21,9 +21,9 @@ typedef ParserBase<ParamMap> ParamParser;
 typedef ParamMap::const_iterator ParamIt;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* --------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 enum Result : unsigned int             // Result codes
-{/* ---------------------------------------------------------------------- */
+{/* ------------------------------------------------------------------------ */
   R_GOOD,                              // Url is good
   R_TOOLONG,                           // Url is too long
   R_EMURL,                             // Empty URL specified

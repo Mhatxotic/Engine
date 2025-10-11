@@ -83,10 +83,7 @@ LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cStreams)))
 LLFUNC(OnEvent, 0, AgStream{lS, 1}().LuaEvtInit(lS))
 /* ========================================================================= */
 // $ Stream:Play
-// > Loops:integer=Number of loops.
-// > Volume:number=Stream volume (0 to 1).
-// > Position:integer=Sample position.
-// ? Plays the specified stream at the specified sample position.
+// ? Plays the specified stream.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Play, 0, AgStream{lS, 1}().PlaySafe())
 /* ========================================================================= */

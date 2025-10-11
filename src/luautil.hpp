@@ -1263,11 +1263,16 @@ static const string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
   // Table for replacements
   StrPairList lList;
   // Prepare table for implosion and return if more than 1 entry in table?
-  if(const lua_Integer liLen = LuaUtilGetSize(lS, 2))
+  if(const lua_Unsigned luiLen = LuaUtilGetSize(lS, 2))
   { // Must have even number of parameters
-    if(liLen % 2) XC("Array size invalid!", "Size", liLen);
+    if(luiLen % 2) XC("Array size invalid!", "Size", luiLen);
     // Iterate through rest of table and implode the items
-    for(lua_Integer liIndex = 1; liIndex <= liLen; liIndex += 2)
+    for(lua_Integer liIndex = 1,
+                    liMax = static_cast<lua_Integer>(
+                      UtilIntWillOverflow<lua_Integer>(luiLen) ?
+                        numeric_limits<lua_Integer>::max() - 1 : luiLen);
+                    liIndex <= liMax;
+                    liIndex += 2)
     { // Get key from table
       LuaUtilGetRefEx(lS, 2, liIndex);
       const string strKey{ LuaUtilToCppString(lS) };
@@ -1282,7 +1287,8 @@ static const string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
   { // Push key/values into replacement table
     for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
       if(LuaUtilIsString(lS, -1))
-        lList.push_back({ LuaUtilToCppString(lS, -2), LuaUtilToCppString(lS) });
+        lList.push_back({ LuaUtilToCppString(lS, -2),
+                          LuaUtilToCppString(lS) });
     // Remove string parameter
     LuaUtilRmStack(lS);
   } // Return nothing if empty
