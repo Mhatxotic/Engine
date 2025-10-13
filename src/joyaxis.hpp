@@ -54,7 +54,7 @@ class JoyAxisInfo                      // Axis class
     else if(fUnbuffered > fDeadZoneF)
     { // Released or already in forward position?
       if(iBuffered >= GLFW_RELEASE)
-      { // Set to GLFW_REPEAT if currentl GLFW_PRESSED or
+      { // Set to GLFW_REPEAT if currently GLFW_PRESSED or
         //        GLFW_PRESSED if currently GLFW_RELEASE
         if(iBuffered < GLFW_REPEAT) ++iBuffered;
         // State changed
@@ -100,8 +100,8 @@ class JoyAxisList :                    // Axis data list type
   /* -- Refresh button data ------------------------------------------------ */
   void JoyAxisListRefresh(const int iJId)
   { // Get joystick axes and if found? Refresh axes data for each one
-    if(const float *fpData = GlFWGetJoystickAxes(iJId, iAxes))
-      StdForEach(seq, this->begin(),
+    if(const float*const fpData = GlFWGetJoystickAxes(iJId, iAxes))
+      StdForEach(par_unseq, this->begin(),
         this->begin() + JoyAxisListSizeCountClamped(),
       [fpData](JoyAxisInfo &jaiData){ jaiData.AxisSetState(fpData); });
     else iAxes = 0;

@@ -115,7 +115,7 @@ LLFUNC(GPU, 3, LuaUtilPushVar(lS,
 // < FPS:number=Frames per second.
 // ? Get GPU frames rendered in the second. Should be 60 for most people.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GPUFPS, 1, LuaUtilPushVar(lS, cFboCore->dRTFPS))
+LLFUNC(GPUFPS, 1, LuaUtilPushVar(lS, cFboCore->uiFPS))
 /* ========================================================================= */
 // $ Display.Hovered
 // < State:boolean=Mouse is over the window?

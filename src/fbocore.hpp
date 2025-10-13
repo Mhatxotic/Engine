@@ -44,8 +44,8 @@ class FboCore :                        // The main fbo operations manager
   Fbo              fboConsole,         // Console fbo class
                    fboMain;            // Primary fbo class
   /* -- Render timings ----------------------------------------------------- */
-  ClkTimePoint     ctpStart, ctpEnd;   // Rendering frame start/end time
-  double           dRTFPS;             // Rendered frames per second
+  ClockInterval<>  ciCurrent;          // Frames rendered per last second
+  unsigned int     uiFPS, uiFPSCur;    // Frames per second
   /* -- Draw flags --------------------------------------------------------- */
   bool CanDraw(void) const { return bDraw; }
   bool CannotDraw(void) const { return !CanDraw(); }
@@ -125,10 +125,14 @@ class FboCore :                        // The main fbo operations manager
     cOgl->UpdateVRAMAvailable();
     // Clear any existing errors
     cOgl->GetError();
-    // Grab end rendering time, calc fps and then reset starting render time
-    ctpEnd = cmHiRes.GetTime();
-    dRTFPS = 1.0 / ClockTimePointRangeToDouble(ctpEnd, ctpStart);
-    ctpStart = ctpEnd;
+    // Frames rendered
+    ++uiFPSCur;
+    // Return if we've not reached one second yet
+    if(!ciCurrent.CITriggerStrict()) return;
+    // Set frames per second
+    uiFPS = uiFPSCur;
+    // Reset frames per second this frame
+    uiFPSCur = 0;
   }
   /* -- Blits the console fbo to main fbo ---------------------------------- */
   void BlitConsoleToMain(void) { fboMain.FboBlit(fboConsole); }
@@ -284,7 +288,8 @@ class FboCore :                        // The main fbo operations manager
     bDraw(false),                      bSimpleMatrix(false),
     bLockViewport(false),              bClearBuffer(false),
     fboConsole{ GL_RGBA8, true },      fboMain{ GL_RGB8, true },
-    dRTFPS(0)
+    ciCurrent{ seconds{ 1 } },         uiFPS(0),
+    uiFPSCur(0)
     /* -- Set pointer to global class and main fbo ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }
   /* -- Set main fbo float reserve --------------------------------- */ public:

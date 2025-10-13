@@ -829,8 +829,8 @@ cConsole->AddLineF(
     cFboCore->fboMain.FboGetTrisReserved(),
     cFboCore->fboMain.FboGetCmds(),
     cFboCore->fboMain.FboGetCmdsReserved(),
-  fixed, cFboCore->dRTFPS, cDisplay->GetRefreshRate(),
-  UtilMakePercentage(cFboCore->dRTFPS, cDisplay->GetRefreshRate()),
+  fixed, cFboCore->uiFPS, cDisplay->GetRefreshRate(),
+  UtilMakePercentage(cFboCore->uiFPS, cDisplay->GetRefreshRate()),
   cOgl->GetLimit());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'gpu' function

@@ -155,6 +155,9 @@ class Core final :                     // Members initially private
     // the last sandbox may contain invalidated pointers and as long as they
     // don't reach the 'cEvtMain->ManageSafe()' function we're fine.
     cEvtMain->Flush();
+    // Reset tick count and catchup
+    TimerCatchup();
+    TimerResetTicks();
     // Log that we've reset the environment
     cLog->LogDebugExSafe("Core environment $.",
       bLeaving ? "reset" : "prepared");
@@ -180,33 +183,29 @@ class Core final :                     // Members initially private
   }
   /* -- Graphical core window thread tick with frame limiter --------------- */
   void CoreTickFrameLimiter(void)
-  { // Is it time to execute a game tick?
-    if(cTimer->TimerShouldTick())
-    { // Render the console fbo (if update requested)
-      cConGraphics->Render();
-      // Render video textures (if any)
-      VideoRender();
-      // Loop point incase we need to catchup game ticks
-      for(;;)
-      { // Set main fbo by default on each frame
-        cFboCore->ActivateMain();
-        // Poll joysticks
-        cInput->JoyPoll();
-        // Execute a tick for each frame missed
-        cLua->ExecuteMain();
-        // Break if we've caught up
-        if(cTimer->TimerShouldNotTick()) break;
-        // Flush the main fbo as we're not drawing it yet
-        cFboCore->RenderFbosAndFlushMain();
-        // Render again until we've caught up
-      } // Add console fbo to render list
-      cConGraphics->RenderToMain();
-      // Render all fbos and copy the main fbo to screen
-      cFboCore->Render();
-      // Update timer
-      cTimer->TimerUpdateInteractive();
-    } // Update interim timer without storing entire duration
-    else cTimer->TimerUpdateInteractiveInterim();
+  { // Return if it is not time to execute a game tick
+    if(cTimer->TimerShouldNotTick()) return;
+    // Render the console fbo (if update requested)
+    cConGraphics->Render();
+    // Render video textures (if any)
+    VideoRender();
+    // Loop point incase we need to catchup game ticks
+    for(;;)
+    { // Set main fbo by default on each frame
+      cFboCore->ActivateMain();
+      // Poll joysticks
+      cInput->JoyPoll();
+      // Execute a tick for each frame missed
+      cLua->ExecuteMain();
+      // Break if we've caught up
+      if(cTimer->TimerShouldNotTick()) break;
+      // Flush the main fbo as we're not drawing it yet
+      cFboCore->RenderFbosAndFlushMain();
+      // Render again until we've caught up
+    } // Add console fbo to render list
+    cConGraphics->RenderToMain();
+    // Render all fbos and copy the main fbo to screen
+    cFboCore->Render();
   }
   /* -- Fired when Lua enters the sandbox ---------------------------------- */
   int CoreThreadSandbox(lua_State*const lS)
@@ -258,9 +257,7 @@ class Core final :                     // Members initially private
         if(cSystem->IsGraphicalMode())
         { // Frame limiter enabled?
           if(cSystem->IsTimerMode())
-          { // Initialise accumulator for first time
-            cTimer->TimerUpdateInteractive();
-            // Loop until event manager emits break
+          { // Loop until event manager emits break
             while(cEvtMain->HandleSafe())
             { // Execute unthreaded tick
               CoreTickFrameLimiter();
@@ -287,9 +284,7 @@ class Core final :                     // Members initially private
       else if(cSystem->IsGraphicalMode())
       { // Frame limiter enabled?
         if(cSystem->IsTimerMode())
-        { // Initialise accumulator for first time
-          cTimer->TimerUpdateInteractive();
-          // Loop until event manager says we should break
+        { // Loop until event manager says we should break
           while(cEvtMain->HandleSafe()) CoreTickFrameLimiter();
         } // Frame limiter disabled so loop without frame limiting
         else while(cEvtMain->HandleSafe()) CoreTickNoFrameLimiter();
