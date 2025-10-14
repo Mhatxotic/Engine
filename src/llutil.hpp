@@ -920,6 +920,14 @@ LLFUNC(RoundPow2, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Sanitise, 1, LuaUtilPushVar(lS, CryptSanitise(AgString{lS, 1}())))
 /* ========================================================================= */
+// $ Util.Sign
+// > Value:integer=The value to sign.
+// < Value:integer=The value returned.
+// ? Returns 1 or -1, indicating the sign of the number passed as argument. If
+// ? the input is 0 or -0, it will be returned as-is.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Sign, 1, LuaUtilPushVar(lS, UtilSign(AgLuaInteger{lS, 1}())))
+/* ========================================================================= */
 // $ Util.StretchInner
 // > OuterWidth:number=Outer width of the rectangle to adjust
 // > OuterHeight:number=Outer height of the rectangle to adjust
@@ -1097,11 +1105,11 @@ LLRSBEGIN                              // Util.* namespace functions begin
   LLRSFUNC(SHA512AAS),     LLRSFUNC(SHA512AS),       LLRSFUNC(SHA512ASA),
   LLRSFUNC(SHA512ASS),     LLRSFUNC(SHA512SA),       LLRSFUNC(SHA512SAA),
   LLRSFUNC(SHA512SAS),     LLRSFUNC(SHA512SS),       LLRSFUNC(SHA512SSA),
-  LLRSFUNC(SHA512SSS),     LLRSFUNC(Sanitise),       LLRSFUNC(StretchInner),
-  LLRSFUNC(StretchOuter),  LLRSFUNC(TableSize),      LLRSFUNC(Trim),
-  LLRSFUNC(UrlDecode),     LLRSFUNC(UrlEncode),      LLRSFUNC(UTF8Char),
-  LLRSFUNC(UUIDDecode),    LLRSFUNC(UUIDEncode),     LLRSFUNC(UUIDRandom),
-  LLRSFUNC(WordWrap),
+  LLRSFUNC(SHA512SSS),     LLRSFUNC(Sanitise),       LLRSFUNC(Sign),
+  LLRSFUNC(StretchInner),  LLRSFUNC(StretchOuter),   LLRSFUNC(TableSize),
+  LLRSFUNC(Trim),          LLRSFUNC(UrlDecode),      LLRSFUNC(UrlEncode),
+  LLRSFUNC(UTF8Char),      LLRSFUNC(UUIDDecode),     LLRSFUNC(UUIDEncode),
+  LLRSFUNC(UUIDRandom),    LLRSFUNC(WordWrap),
 LLRSEND                                // Util.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Util namespace

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.10.11.71 -->
-<!-- Automatically built at Sun Oct 12 00:14:33 2025 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.10.11.71 -->
+<!-- Reference for the Mhatxotic Engine API version 25.10.14.10 -->
+<!-- Automatically built at Wed Oct 15 00:03:57 2025 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.10.14.10 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.10.11.71">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.10.14.10">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.10.11.71">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.10.14.10">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.10.11.71">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.10.14.10">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.10.11.71 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.10.14.10 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 25.10.11.71 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.10.14.10 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.10.11.71 API reference</H1>
+	<H1>Mhatxotic Engine 25.10.14.10 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 897 functions (406 members, 491 methods) and 30 consts in 31 namespaces with 86 commands and 215 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 898 functions (407 members, 491 methods) and 30 consts in 31 namespaces with 86 commands and 215 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1550,7 +1550,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(95 members)</I>
+								<B>Members</B> <I>(96 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1636,6 +1636,7 @@
 									<LI><A href="#Util.RoundMul">RoundMul</A></LI>
 									<LI><A href="#Util.RoundPow2">RoundPow2</A></LI>
 									<LI><A href="#Util.Sanitise">Sanitise</A></LI>
+									<LI><A href="#Util.Sign">Sign</A></LI>
 									<LI><A href="#Util.StretchInner">StretchInner</A></LI>
 									<LI><A href="#Util.StretchOuter">StretchOuter</A></LI>
 									<LI><A href="#Util.TableSize">TableSize</A></LI>
@@ -10902,6 +10903,18 @@
 		<PRE>Tries to remove repetitions in the specified string&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.Sign" style="display:none">
+		<H3>Util.Sign</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Value</U> = Util.Sign(<I><U>Value</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Value</U> <I>(integer)</I> = The value to sign.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Value</U> <I>(integer)</I> = The value returned.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns 1 or &#x2d;1&#x2c; indicating the sign of the number passed as argument&#x2e; If the input is 0 or &#x2d;0&#x2c; it will be returned as&#x2d;is&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.StretchInner" style="display:none">
 		<H3>Util.StretchInner</H3>
 		<H4>Syntax:-</H4>
@@ -13204,6 +13217,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sun Oct 12 00:14:33 2025 +0100</ADDRESS>
+	This document was generated at Wed Oct 15 00:03:57 2025 +0100</ADDRESS>
 </BODY>
 </HTML>
