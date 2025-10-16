@@ -796,7 +796,7 @@ class SysCore :
                    uipM2{ { 2420, 3480 } }, // Apple M2
                    uipM3{ { 2748, 4056 } }, // Apple M3
                    uipM4{ { 2896, 4464 } }, // Apple M4
-                   uipM5{ { 3000, 5000 } }; // Apple M5 (Guess)
+                   uipM5{ { 2896, 4600 } }; // Apple M5 (Est.)
     // Processor table with speeds. This is because there is no API to get
     // the speed of Apple branded processors.
     typedef pair<const string, const UIntPair &> MacCpuListMapPair;

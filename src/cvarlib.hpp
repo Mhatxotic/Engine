@@ -40,7 +40,7 @@ CVarItemStaticList{{
 // ? [4] LH_DEBUG    = For reporitng other information (debugging).
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "log_level",
-/* ------------------------------------------------------------------------- */
+  /* ----------------------------------------------------------------------- */
 #if !defined(RELEASE)                  // Not release version?
   "4",                                 // Default of DEBUG for log level
 #else                                  // Release version?
@@ -1592,7 +1592,14 @@ CVarItemStaticList{{
 // ! VID_SRGB
 // ? Enables SRGB colour space.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_srgb", cCommon->CommonOne(),
+{ CFL_VIDEO, "vid_srgb",
+  /* ----------------------------------------------------------------------- */
+#if defined(LINUX)
+  cCommon->CommonZero(),
+#else
+  cCommon->CommonOne(),
+#endif
+  /* ----------------------------------------------------------------------- */
   CB(cDisplay->SRGBColourSpaceChanged, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_SSTYPE

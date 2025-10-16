@@ -126,7 +126,8 @@ class Timer                            // Members initially private
   double TimerGetTimeOut(void) const
     { return ClockDurationToDouble(cdTimeOut); }
   /* -- Return the duration of the last frame ------------------------------ */
-  double TimerGetDuration(void) const { return ClockDurationToDouble(cdFrame); }
+  double TimerGetDuration(void) const
+    { return ClockDurationToDouble(cdFrame); }
   /* -- Return the current engine target tick time ------------------------- */
   double TimerGetLimit(void) const { return ClockDurationToDouble(cdLimit); }
   /* -- Return the current accumulated frame time -------------------------- */
