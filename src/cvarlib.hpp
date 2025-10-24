@@ -1590,16 +1590,11 @@ CVarItemStaticList{{
   CB(cFboCore->SetSimpleMatrix, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_SRGB
-// ? Enables SRGB colour space.
+// ? This specifies whether the framebuffer should be sRGB capable. Possible
+// ? values are '1' (enabled) and '0' (disabled, default). This value is saved
+// ? to the configuration database.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_srgb",
-  /* ----------------------------------------------------------------------- */
-#if defined(LINUX)
-  cCommon->CommonZero(),
-#else
-  cCommon->CommonOne(),
-#endif
-  /* ----------------------------------------------------------------------- */
+{ CFL_VIDEO, "vid_srgb", cCommon->CommonZero(),
   CB(cDisplay->SRGBColourSpaceChanged, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_SSTYPE

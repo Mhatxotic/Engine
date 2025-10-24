@@ -595,36 +595,25 @@ class System :                         // The main system class
   CVarReturn SetMinRAM(const uint64_t qwMinValue)
   { // If we're to check for minimum memory free
     if(const size_t stMemory = UtilIntOrMax<size_t>(qwMinValue))
-    { // Store duration of fill here later
-      double dDuration;
-      // Update memory usage data
+    { // Update memory usage data
       UpdateMemoryUsageData();
-      // Take away current process memory usage. We'll do a underflow check
-      // because utilities like valgrind can mess with this.
-      const size_t stActualMemory =
-        RAMProcUse() > stMemory ? stMemory : stMemory - RAMProcUse();
-      { // Memory block for data
-        Memory mbData;
-        // Try to allocate the memory and if succeeded
-        try { mbData.MemInitBlank(stActualMemory); }
-        // Allocation failed?
-        catch(const exception &eReason)
-        { // Throw memory error
-          XC("There is not enough system memory available. Close any "
-            "running applications consuming it and try running again!",
-            "Error",   eReason,    "Available", RAMFree(),
-            "Total",   RAMTotal(), "Required",  stMemory,
-            "Percent", UtilMakePercentage(RAMFree(), RAMTotal()),
-            "Needed",  stMemory - RAMFree());
-        } // Initialise the memory and record time spent
-        const ClockChrono<CoreClock> tpStart;
-        mbData.MemFill();
-        dDuration = tpStart.CCDeltaToDouble();
-      } // Show result of test in log
-      cLog->LogInfoExSafe("System heap init of $ ($+$) in $ ($/s).",
-        StrToBytes(stMemory), StrToBytes(RAMProcUse()),
-        StrToBytes(stActualMemory), StrShortFromDuration(dDuration),
-          StrToBytes(static_cast<uint64_t>(1.0 / dDuration * stActualMemory)));
+      // Capture allocation error
+      try
+      { // Try to allocate the memory. Take away current process memory usage.
+        // We'll do a underflow check because utilities like valgrind can mess
+        // with this.
+        Memory{}.MemInitSafe(RAMProcUse() > stMemory ?
+          stMemory : stMemory - RAMProcUse());
+      } // Allocation failed?
+      catch(const exception &eReason)
+      { // Throw memory error
+        XC("There is not enough system memory available. Close any "
+          "running applications consuming it and try running again!",
+          "Error",   eReason,    "Available", RAMFree(),
+          "Total",   RAMTotal(), "Required",  stMemory,
+          "Percent", UtilMakePercentage(RAMFree(), RAMTotal()),
+          "Needed",  stMemory - RAMFree());
+      }
     } // Success
     return ACCEPT;
   }
