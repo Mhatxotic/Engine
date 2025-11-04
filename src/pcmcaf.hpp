@@ -178,7 +178,7 @@ class CodecCAF :                       // CAF codec object
     return true;
   }
   /* -- Constructor --------------------------------------------- */ protected:
-  CodecCAF(void) :
+  CodecCAF() :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_CAF, "CoreAudio Format", "CAF",
       bind(&CodecCAF::Decode, this, _1, _2) }

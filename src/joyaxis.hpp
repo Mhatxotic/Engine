@@ -22,21 +22,21 @@ class JoyAxisInfo                      // Axis class
                    fUnbuffered;        // Current unbuffered axis press state
   int              iBuffered;          // Current buffered axis press state
   /* -- Get axis identifier ---------------------------------------- */ public:
-  int AxisGetId(void) const { return iId; }
+  int AxisGetId() const { return iId; }
   /* -- Get reverse deadzone value ----------------------------------------- */
-  float AxisGetReverseDeadZone(void) const { return fDeadZoneR; }
+  float AxisGetReverseDeadZone() const { return fDeadZoneR; }
   /* -- Get forward deadzone value ----------------------------------------- */
-  float AxisGetForwardDeadZone(void) const { return fDeadZoneF; }
+  float AxisGetForwardDeadZone() const { return fDeadZoneF; }
   /* -- Set reverse deadzone value ----------------------------------------- */
   void AxisSetReverseDeadZone(const float fDZ) { fDeadZoneR = -fDZ; }
   /* -- Set forward deadzone value ----------------------------------------- */
   void AxisSetForwardDeadZone(const float fDZ) { fDeadZoneF = fDZ; }
   /* -- Get unbuffered state ----------------------------------------------- */
-  float AxisGetUnbufferedState(void) const { return fUnbuffered; }
+  float AxisGetUnbufferedState() const { return fUnbuffered; }
   /* -- Get buffered state ------------------------------------------------- */
-  int AxisGetBufferedState(void) const { return iBuffered; }
+  int AxisGetBufferedState() const { return iBuffered; }
   /* -- Clear button state ------------------------------------------------- */
-  void AxisClearState(void) { fUnbuffered = 0.0f; iBuffered = GLFW_RELEASE; }
+  void AxisClearState() { fUnbuffered = 0.0f; iBuffered = GLFW_RELEASE; }
   /* -- Set axis state ----------------------------------------------------- */
   void AxisSetState(const float*const fpData)
   { // Get the axis reading and if it's moving negatively?
@@ -72,7 +72,7 @@ class JoyAxisInfo                      // Axis class
     fUnbuffered(0.0f),                 // Set default unbuffered state
     iBuffered(GLFW_RELEASE)            // Set default state
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 template<class Container = array<JoyAxisInfo, 8>,
          class Iterator = typename Container::const_iterator>
@@ -82,18 +82,18 @@ class JoyAxisList :                    // Axis data list type
 { /* -------------------------------------------------------------- */ private:
   int              iAxes;              // Button count as int
   /* -- Return axes count clamped ------------------------------------------ */
-  int JoyAxisListSizeCountClamped(void) const { return iAxes & 0x7f; }
+  int JoyAxisListSizeCountClamped() const { return iAxes & 0x7f; }
   /* -- Return button class ------------------------------------------------ */
   JoyAxisInfo &JoyAxisListGetMod(const size_t stId) { return (*this)[stId]; }
   /* -- Return axes array size ------------------------------------- */ public:
-  size_t JoyAxisListSize(void) const { return this->size(); }
+  size_t JoyAxisListSize() const { return this->size(); }
   /* -- Return axes count -------------------------------------------------- */
-  size_t JoyAxisListCount(void) const { return static_cast<size_t>(iAxes); }
+  size_t JoyAxisListCount() const { return static_cast<size_t>(iAxes); }
   /* -- Return button class ------------------------------------------------ */
   const JoyAxisInfo &JoyAxisListGet(const size_t stId) const
     { return (*this)[stId]; }
   /* -- Clear button data -------------------------------------------------- */
-  void JoyAxisListClear(void)
+  void JoyAxisListClear()
     { StdForEach(par_unseq, this->begin(),
         this->begin() + JoyAxisListSizeCountClamped(),
           [](JoyAxisInfo& jaiRef) { jaiRef.AxisClearState(); }); }
@@ -131,17 +131,17 @@ class JoyAxisList :                    // Axis data list type
           [fDZ](JoyAxisInfo &jaiItem)
             { jaiItem.AxisSetForwardDeadZone(fDZ); }); }
   /* -- Iterators ---------------------------------------------------------- */
-  Iterator JoyAxisListBegin(void) const
+  Iterator JoyAxisListBegin() const
     { return this->cbegin(); }
-  Iterator JoyAxisListEnd(void) const
+  Iterator JoyAxisListEnd() const
     { return this->cbegin() + JoyAxisListSizeCountClamped(); }
   /* -- Default constructor ------------------------------------- */ protected:
-  JoyAxisList(void) :
+  JoyAxisList() :
     /* -- Initialisers ----------------------------------------------------- */
     Container{ UtilMkFilledClassContainer<Container,int>() },
     iAxes(0)                           // Initialise axes count
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -18,30 +18,30 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 enum ValidResult : unsigned int        // Return values for ValidName()
 { /* ----------------------------------------------------------------------- */
-  VR_OK,                               // 00: The filename is valid!
-  VR_EMPTY,                            // 01: The filename is empty!
-  VR_TOOLONG,                          // 02: The filename is too long!
-  VR_NOROOT,                           // 03: Root directory not allowed
-  VR_NODRIVE,                          // 04: Drive letter not allowed
-  VR_INVDRIVE,                         // 05: Invalid drive letter
-  VR_INVALID,                          // 06: Invalid trust parameter
-  VR_RESERVED,                         // 07: No reserved names
-  VR_INVCHAR,                          // 08: Invalid character in part
-  VR_CSUBDIR,                          // 09: As above but as a a sub-dir
-  VR_CURRENT,                          // 10: Current directory not allowed
-  VR_EXPLODE,                          // 11: String failed to explode
-  VR_NOTRAILWS,                        // 12: No trailing whitespace
-  VR_NOLEADWS,                         // 13: No leading whitespace
+  VR_OK,                               // [00] The filename is valid!
+  VR_EMPTY,                            // [01] The filename is empty!
+  VR_TOOLONG,                          // [02] The filename is too long!
+  VR_NOROOT,                           // [03] Root directory not allowed
+  VR_NODRIVE,                          // [04] Drive letter not allowed
+  VR_INVDRIVE,                         // [05] Invalid drive letter
+  VR_INVALID,                          // [06] Invalid trust parameter
+  VR_RESERVED,                         // [07] No reserved names
+  VR_INVCHAR,                          // [08] Invalid character in part
+  VR_CSUBDIR,                          // [09] As above but as a a sub-dir
+  VR_CURRENT,                          // [10] Current directory not allowed
+  VR_EXPLODE,                          // [11] String failed to explode
+  VR_NOTRAILWS,                        // [12] No trailing whitespace
+  VR_NOLEADWS,                         // [13] No leading whitespace
   /* ----------------------------------------------------------------------- */
-  VR_MAX                               // 14: Maximum number of errors
+  VR_MAX                               // [14] Maximum number of errors
 };/* ----------------------------------------------------------------------- */
 enum ValidType : unsigned int          // Types for ValidName()
 { /* ----------------------------------------------------------------------- */
-  VT_NOTHING,                          // 0: Absolutely no safety whatsoever
-  VT_TRUSTED,                          // 1: Trusted caller
-  VT_UNTRUSTED,                        // 2: Untrusted caller (chroot-like)
+  VT_NOTHING,                          // [0] Absolutely no safety whatsoever
+  VT_TRUSTED,                          // [1] Trusted caller
+  VT_UNTRUSTED,                        // [2] Untrusted caller (chroot-like)
   /* ----------------------------------------------------------------------- */
-  VT_MAX                               // 3: Maximum trust modes
+  VT_MAX                               // [3] Maximum trust modes
 };/* ----------------------------------------------------------------------- */
 class DirBase;                         // Prototype to class
 static DirBase *cDirBase = nullptr;    // Pointer to global class
@@ -59,9 +59,9 @@ class DirBase                          // Members initially private
   bool DirBaseIsReservedName(const string &strName) const
     { return svusReserved.contains(strName); }
   /* -- Return safety mode ------------------------------------------------- */
-  ValidType DirBaseGetSafetyMode(void) const { return vtMode; }
+  ValidType DirBaseGetSafetyMode() const { return vtMode; }
   /* -- Default constructor ------------------------------------- */ protected:
-  DirBase(void) :                      // No parameters
+  DirBase() :
     /* -- Initialisers ----------------------------------------------------- */
     vrlStrings{{                       // Init ValidNameResult strings
       "Pathname is valid",         /*0001*/ "Empty pathname denied",
@@ -274,15 +274,15 @@ class DirItem                          // File information structure
       { tCreate = tNCreate; tAccess = tNAccess; tWrite = tNWrite;
           uqSize = uqNSize; uqFlags = uqNFlags; }
   /* -- Clear members ------------------------------------------------------ */
-  void Clear(void) { tCreate = tAccess = tWrite = 0; uqSize = uqFlags = 0; }
+  void Clear() { tCreate = tAccess = tWrite = 0; uqSize = uqFlags = 0; }
   /* -- Get members ------------------------------------------------ */ public:
-  StdTimeT Created(void) const { return tCreate; }
-  StdTimeT Accessed(void) const { return tAccess; }
-  StdTimeT Written(void) const { return tWrite; }
-  uint64_t Size(void) const { return uqSize; }
-  uint64_t Attributes(void) const { return uqFlags; }
+  StdTimeT Created() const { return tCreate; }
+  StdTimeT Accessed() const { return tAccess; }
+  StdTimeT Written() const { return tWrite; }
+  uint64_t Size() const { return uqSize; }
+  uint64_t Attributes() const { return uqFlags; }
   /* -- Default constructor ------------------------------------------------ */
-  DirItem(void) :
+  DirItem() :
     /* -- Initialisers ----------------------------------------------------- */
     tCreate(0),                        // Clear file creation time
     tAccess(0),                        // Clear file access time
@@ -290,14 +290,14 @@ class DirItem                          // File information structure
     uqSize(0),                         // Clear file size
     uqFlags(0)                         // Clear file attributes
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Copy constructor --------------------------------------------------- */
   DirItem(const DirItem &diOther) :
     /* -- Initialisers ----------------------------------------------------- */
     DirItem{ diOther.Created(), diOther.Accessed(), diOther.Written(),
              diOther.Size(), diOther.Attributes() }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Assignment operator ------------------------------------------------ */
   DirItem operator=                    // cppcheck-suppress operatorEqVarError
     (const DirItem &diRHS) const       // False positive as copy ctor used
@@ -312,7 +312,7 @@ class DirItem                          // File information structure
     uqSize(uqNSize),                   // Initialise file size
     uqFlags(uqNFlags)                  // Initialise file attributes
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(DirEnt, const string, const DirItem) // Build DirItem map types
 /* -- DirFile class -------------------------------------------------------- */
@@ -328,44 +328,40 @@ class DirFile                          // Files container class
     return ssFiles;
   }
   /* -- Convert to set --------------------------------------------- */ public:
-  const StrSet DirsToSet(void) const { return Export(demDirs); }
-  const StrSet FilesToSet(void) const { return Export(demFiles); }
+  const StrSet DirsToSet() const { return Export(demDirs); }
+  const StrSet FilesToSet() const { return Export(demFiles); }
   /* -- Get lists ---------------------------------------------------------- */
-  const DirEntMap &GetDirs(void) const { return demDirs; }
-  const DirEntMap &GetFiles(void) const { return demFiles; }
+  const DirEntMap &GetDirs() const { return demDirs; }
+  const DirEntMap &GetFiles() const { return demFiles; }
   /* -- Get lists iterators ------------------------------------------------ */
-  const DirEntMapConstIt GetDirsBegin(void) const
-    { return GetDirs().cbegin(); }
-  const DirEntMapConstIt GetFilesBegin(void) const
-    { return GetFiles().cbegin(); }
-  const DirEntMapConstIt GetDirsEnd(void) const
-    { return GetDirs().cend(); }
-  const DirEntMapConstIt GetFilesEnd(void) const
-    { return GetFiles().cend(); }
+  const DirEntMapConstIt GetDirsBegin() const { return GetDirs().cbegin(); }
+  const DirEntMapConstIt GetFilesBegin() const { return GetFiles().cbegin(); }
+  const DirEntMapConstIt GetDirsEnd() const { return GetDirs().cend(); }
+  const DirEntMapConstIt GetFilesEnd() const { return GetFiles().cend(); }
   /* -- Get elements in lists ---------------------------------------------- */
-  size_t GetDirsSize(void) const { return GetDirs().size(); }
-  size_t GetFilesSize(void) const { return GetFiles().size(); }
+  size_t GetDirsSize() const { return GetDirs().size(); }
+  size_t GetFilesSize() const { return GetFiles().size(); }
   /* -- Get if lists are empty or not -------------------------------------- */
-  bool IsDirsEmpty(void) const { return GetDirs().empty(); }
-  bool IsDirsNotEmpty(void) const { return !IsDirsEmpty(); }
-  bool IsFilesEmpty(void) const { return GetFiles().empty(); }
-  bool IsFilesNotEmpty(void) const { return !IsFilesEmpty(); }
+  bool IsDirsEmpty() const { return GetDirs().empty(); }
+  bool IsDirsNotEmpty() const { return !IsDirsEmpty(); }
+  bool IsFilesEmpty() const { return GetFiles().empty(); }
+  bool IsFilesNotEmpty() const { return !IsFilesEmpty(); }
   /* -- Default constructor ------------------------------------------------ */
-  DirFile(void) = default;
+  DirFile() = default;
   /* -- Move constructor --------------------------------------------------- */
   DirFile(DirEntMap &&demNDirs, DirEntMap &&demNFiles) :
     /* -- Initialisers ----------------------------------------------------- */
     demDirs{ StdMove(demNDirs) },
     demFiles{ StdMove(demNFiles) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Move constructor --------------------------------------------------- */
   DirFile(DirFile &&dfOther) :
     /* -- Initialisers ----------------------------------------------------- */
     demDirs{ StdMove(dfOther.demDirs) },
     demFiles{ StdMove(dfOther.demFiles) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- DirCore class ------------------------------------------------------ */
 class DirCore :                        // System specific implementation
   /* -- Base classes ------------------------------------------------------- */
@@ -380,7 +376,7 @@ class DirCore :                        // System specific implementation
   const intptr_t   iHandle;            // Context handle
   bool             bMore;              // If we have more files
   /* -- Process current match ---------------------------------------------- */
-  void ProcessItem(void)
+  void ProcessItem()
   { // Set if this is a directory
     bIsDir = wfData.attrib & _A_SUBDIR;
     // Set filename
@@ -392,9 +388,9 @@ class DirCore :                        // System specific implementation
     bMore = _wfindnext64(iHandle, &wfData) != -1;
   }
   /* -- Return if directory was opened on WIN32 system ------------- */ public:
-  bool IsOpened(void) const { return iHandle != -1; }
+  bool IsOpened() const { return iHandle != -1; }
   /* -- Prepare next file for WIN32 system --------------------------------- */
-  bool GetNextFile(void)
+  bool GetNextFile()
   { // If there are no more files then we are done
     if(!bMore) return false;
     // Process the current item
@@ -408,13 +404,13 @@ class DirCore :                        // System specific implementation
     iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ?
       cCommon->CommonAsterisk() :
         StrAppend(StrTrimSuffix(strDir, '/'), '/',
-          cCommon->CommonAsterisk())).c_str(),
+          cCommon->CommonAsterisk())).data(),
       &wfData)),
     bMore(iHandle != -1)
     /* -- Process file if there are more ----------------------------------- */
     { if(bMore) ProcessItem(); }
   /* -- Destructor for WIN32 system ---------------------------------------- */
-  ~DirCore(void) { if(iHandle != -1) _findclose(iHandle); }
+  ~DirCore() { if(iHandle != -1) _findclose(iHandle); }
   /* ----------------------------------------------------------------------- */
 #else                                  // Using anything but Windows?
   /* -- Private typedefs ------------------------------------------ */ private:
@@ -428,13 +424,13 @@ class DirCore :                        // System specific implementation
   const string    strPrefix;           // Prefix for filenames with stat()
   DirUPtr         dupHandle;           // Context for opendir()
   /* -- Return if directory was opened on POSIX system ------------- */ public:
-  bool IsOpened(void) const { return !!dupHandle; }
+  bool IsOpened() const { return !!dupHandle; }
   /* ----------------------------------------------------------------------- */
 # if defined(MACOS)                    // Must use readdir_r on MacOS
   /* -- Private variables ----------------------------------------- */ private:
   struct dirent   dePtr, *dePtrNext;   // Directory entry struct + next ptr
   /* -- Prepare next file for POSIX system ------------------------- */ public:
-  bool GetNextFile(void)
+  bool GetNextFile()
   { // Read the filename and if failed
     if(readdir_r(dupHandle.get(), &dePtr, &dePtrNext) || !dePtrNext)
       return false;
@@ -445,7 +441,7 @@ class DirCore :                        // System specific implementation
     // Data for stat
     struct stat sfssData;
     // Get information about the filename
-    if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData))
+    if(stat(StrAppend(strPrefix, strFile).data(), &sfssData))
     { // Not a directory (unknown)
       bIsDir = false;
       // Set the file data as blank
@@ -463,7 +459,7 @@ class DirCore :                        // System specific implementation
   /* ----------------------------------------------------------------------- */
 # else                                 // POSIX implementation?
   /* -- Prepare next file for POSIX system --------------------------------- */
-  bool GetNextFile(void)
+  bool GetNextFile()
   { // Read the filename and if failed
     if(dirent*const dePtr = readdir(dupHandle.get()))
     { // Data for stat
@@ -471,7 +467,7 @@ class DirCore :                        // System specific implementation
       // Set filename
       strFile = dePtr->d_name;
       // Get information about the filename
-      if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData))
+      if(stat(StrAppend(strPrefix, strFile).data(), &sfssData))
       { // Not a directory (unknown)
         bIsDir = false;
         // Set the file data as blank
@@ -499,7 +495,7 @@ class DirCore :                        // System specific implementation
         StrTrimSuffix(strDir, '/'),    // Trim forward-slash trailing slashes
       cCommon->CommonFSlash()) },      // Add our own slash at the end
     dupHandle{                         // Initialise directory handle
-      opendir(strPrefix.c_str()) }     // Open the directory and store handle
+      opendir(strPrefix.data()) }     // Open the directory and store handle
     /* -- MacOS initialisers ----------------------------------------------- */
 # if defined(MACOS)                    // Initialise other vars on MacOS
     /* --------------------------------------------------------------------- */
@@ -572,17 +568,17 @@ class Dir :                            // Directory information class
     return { StdMove(demNDirs), StdMove(demNFiles) };
   }
   /* -- Constructor of current directory ------------------------ */ protected:
-  explicit Dir(DirFile &&dfOther) : DirFile{ StdMove(dfOther) } { }
+  explicit Dir(DirFile &&dfOther) : DirFile{ StdMove(dfOther) } {}
   /* -- Constructor of current directory --------------------------- */ public:
-  Dir(void) : DirFile{ ScanDir() } { }
+  Dir() : DirFile{ ScanDir() } {}
   /* -- Constructor of specified directory --------------------------------- */
-  explicit Dir(const string &strDir) : DirFile{ ScanDir(strDir) } { }
+  explicit Dir(const string &strDir) : DirFile{ ScanDir(strDir) } {}
   /* -- Scan specified directory for files with specified extension -------- */
   Dir(const string &strDir, const string &strExt) :
-    DirFile{ ScanDirExt(strDir, strExt) } { }
+    DirFile{ ScanDirExt(strDir, strExt) } {}
 };/* ----------------------------------------------------------------------- */
 /* -- Get current directory ------------------------------------------------ */
-static const string DirGetCWD(void)
+static const string DirGetCWD()
 { // On windows, we need to use unicode
 #if defined(WINDOWS)
   // Storage of filename and initialise it to maximum path length
@@ -592,7 +588,7 @@ static const string DirGetCWD(void)
     static_cast<int>(wstrDir.capacity())))
       throw runtime_error{ "getcwd() failed!" };
   // Resize and recover memory
-  wstrDir.resize(wcslen(wstrDir.c_str()));
+  wstrDir.resize(wcslen(wstrDir.data()));
   // Return directory replacing backslashes for forward slashes
   return PSplitBackToForwardSlashes(WS16toUTF(wstrDir));
 #else
@@ -602,7 +598,7 @@ static const string DirGetCWD(void)
   if(!getcwd(const_cast<char*>(strDir.data()), strDir.capacity()))
     throw runtime_error{ "getcwd() failed!" };
   // Resize and recover memory
-  strDir.resize(strlen(strDir.c_str()));
+  strDir.resize(strlen(strDir.data()));
   strDir.shrink_to_fit();
   // Return directory
   return strDir;
@@ -647,15 +643,15 @@ static bool DirMkDirEx(const string &strDir)
       // directory doesn't already exist
       if(!DirMkDir(strFirst) && StdIsNotError(EEXIST)) return false;
       // Move first item. It will be empty if directory started with a slash
-      osS << StdMove(strFirst);
+      osS << strFirst;
     } // If there are more directories?
     if(tParts.size() >= 2)
     { // Create all the other directories
-      for(StrVectorConstIt svI{ next(tParts.cbegin(), 1) };
+      for(StrVectorConstIt svI{ next(tParts.cbegin()) };
                            svI != tParts.cend();
                          ++svI)
       { // Append next directory
-        osS << '/' << StdMove(*svI);
+        osS << '/' << *svI;
         // Make the directory and if failed and it doesn't exist return error
         if(!DirMkDir(osS.str()) && StdIsNotError(EEXIST)) return false;
       }
@@ -682,10 +678,8 @@ static bool DirRmDirEx(const string &strDir)
     if(!strFirst.empty()) osS << strFirst;
     // If there are more directories? Build directory structure
     if(tParts.size() >= 2)
-      for(StrVectorConstIt svI{ next(tParts.begin(), 1) };
-                           svI != tParts.end();
-                         ++svI)
-        osS << '/' << *svI;
+      StdForEach(seq, next(tParts.cbegin()), tParts.cend(),
+        [&osS](const string &strPart) { osS << '/' << strPart; });
     // Make the directory and if failed and it doesn't exist return error
     if(!DirRmDir(osS.str()) && StdIsNotError(EEXIST)) return false;
     // Remove the last item
@@ -759,13 +753,13 @@ class DirSaver
     /* -- Set new directory ------------------------------------------------ */
     { DirSetCWD(strNWD); }
   /* -- Default constructor ------------------------------------------------ */
-  DirSaver(void) :                     // Save current working directory
+  DirSaver() :                         // Save current working directory
     /* -- Initialisers ----------------------------------------------------- */
     strCWD{ DirGetCWD() }              // Initialise current working directory
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~DirSaver(void) noexcept(false)
+  ~DirSaver() noexcept(false)
     /* -- Restore current working directory -------------------------------- */
     { DirSetCWD(strCWD); }
 };/* ----------------------------------------------------------------------- */

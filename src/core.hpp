@@ -38,22 +38,22 @@ using namespace ILog::P;               using namespace ILua::P;
 using namespace ILuaCode::P;           using namespace ILuaCommand::P;
 using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
 using namespace ILuaVariable::P;       using namespace IMask::P;
-using namespace IMemory::P;            using namespace IOal::P;
-using namespace IOgl::P;               using namespace IPSplit::P;
-using namespace IPalette::P;           using namespace IPcm::P;
-using namespace IPcmLib::P;            using namespace ISShot::P;
-using namespace ISample::P;            using namespace IShader::P;
-using namespace IShaders::P;           using namespace ISocket::P;
-using namespace ISource::P;            using namespace ISql::P;
-using namespace IStat::P;              using namespace IStd::P;
-using namespace IStream::P;            using namespace IString::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace ISystem::P;            using namespace ITexture::P;
-using namespace IThread::P;            using namespace ITimer::P;
-using namespace IToken::P;             using namespace IUrl::P;
-using namespace IUtil::P;              using namespace IVideo::P;
-using namespace Lib::OS::GlFW::Types;  using namespace Lib::OpenAL::Types;
-using namespace Lib::Sqlite::Types;
+using namespace IMemory::P;            using namespace IMutex::P;
+using namespace IOal::P;               using namespace IOgl::P;
+using namespace IPSplit::P;            using namespace IPalette::P;
+using namespace IPcm::P;               using namespace IPcmLib::P;
+using namespace ISShot::P;             using namespace ISample::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace ISocket::P;            using namespace ISource::P;
+using namespace ISql::P;               using namespace IStat::P;
+using namespace IStd::P;               using namespace IStream::P;
+using namespace IString::P;            using namespace IString::P;
+using namespace ISysUtil::P;           using namespace ISystem::P;
+using namespace ITexture::P;           using namespace IThread::P;
+using namespace ITimer::P;             using namespace IToken::P;
+using namespace IUrl::P;               using namespace IUtil::P;
+using namespace IVideo::P;             using namespace Lib::OS::GlFW::Types;
+using namespace Lib::OpenAL::Types;    using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -163,7 +163,7 @@ class Core final :                     // Members initially private
       bLeaving ? "reset" : "prepared");
   }
   /* -- Graphical core window thread tick without frame limiter ------------ */
-  void CoreTickNoFrameLimiter(void)
+  void CoreTickNoFrameLimiter()
   { // Update timer
     cTimer->TimerUpdateBot();
     // Render the console fbo (if update requested)
@@ -182,7 +182,7 @@ class Core final :                     // Members initially private
     cFboCore->Render();
   }
   /* -- Graphical core window thread tick with frame limiter --------------- */
-  void CoreTickFrameLimiter(void)
+  void CoreTickFrameLimiter()
   { // Return if it is not time to execute a game tick
     if(cTimer->TimerShouldNotTick()) return;
     // Render the console fbo (if update requested)
@@ -236,6 +236,13 @@ class Core final :                     // Members initially private
           cEvtMain->SetExitReason(EMC_LUA_ERROR);
           // Done
           break;
+        // Lua executing was reinitialised?
+        case EMC_LUA_REINIT:
+          // Commit modified cvars. We know if we get this far, all the
+          // configurations are valid so let's make sure they're saved!
+          cCVars->Save();
+          // Fall through to default
+          [[fallthrough]];
         // For anything else
         default:
           // Reset environment (entering)
@@ -316,14 +323,14 @@ class Core final :                     // Members initially private
     return cPtr->CoreThreadSandbox(lS);
   }
   /* -- Lua deinitialiser helper which updates all the classes that use it - */
-  void CoreLuaDeInitHelper(void)
+  void CoreLuaDeInitHelper()
   { // De-init lua and update systems that use Lua
     cLua->DeInit();
     // Reset environment (leaving)
     CoreResetEnvironment(true);
   }
   /* -- DeInitialise engine components ------------------------------------- */
-  void CoreDeInitComponents(void) try
+  void CoreDeInitComponents() try
   { // Log reason for deinit
     cLog->LogDebugExSafe("Engine de-initialising interfaces with code $.",
       cEvtMain->GetExitReason());
@@ -385,7 +392,7 @@ class Core final :                     // Members initially private
     cFboCore->Render();
   }
   /* -- De-initialise everything ------------------------------------------- */
-  void CoreDeInitEverything(void)
+  void CoreDeInitEverything()
   { // De-initialise components
     CoreDeInitComponents();
     // If not in graphical mode, we're done
@@ -396,7 +403,7 @@ class Core final :                     // Members initially private
     GlFWForceEventHack();
   }
   /* -- Initoialise graphics subsystems ------------------------------------ */
-  void CoreInitGraphicalSubsystems(void)
+  void CoreInitGraphicalSubsystems()
   { // Set context current and pass selected refresh rate
     cOgl->Init(cDisplay->GetRefreshRate());
     // Initialise core shaders
@@ -630,7 +637,7 @@ class Core final :                     // Members initially private
     return TS_ERROR;
   }
   /* -- Engine should continue? -------------------------------------------- */
-  bool CoreShouldEngineContinue(void)
+  bool CoreShouldEngineContinue()
   { // Compare exit value
     switch(cEvtMain->GetExitReason())
     { // Engine was requested to quit or restart? NO!
@@ -642,7 +649,7 @@ class Core final :                     // Members initially private
     }
   }
   /* -- Initialise graphical mode ------------------------------------------ */
-  void CoreEnterGraphicalMode(void)
+  void CoreEnterGraphicalMode()
   { // Initialise Glfw mode and de-init it when exiting
     INITHELPER(GlFWIH, cGlFW->Init(), cGlFW->DeInit());
     // Until engine should terminate.
@@ -656,7 +663,7 @@ class Core final :                     // Members initially private
       // Loop until window should close
       while(cGlFW->WinShouldNotClose())
       { // Process window event manager commands from other threads
-        cEvtWin->ManageSafe();
+        cEvtWin->Manage();
         // Wait for more window events
         GlFWWaitEvents();
       } // Restart to hard reinit the window if not doing a soft reinit
@@ -679,18 +686,19 @@ class Core final :                     // Members initially private
    } // Engine should terminate from here-on
   }
   /* -- Wait async on all systems ---------------------------------- */ public:
-  void CoreWaitAllAsync(void)
+  void CoreWaitAllAsync()
   { // Wait for all asynchronous operations to complete.
-    const scoped_lock slCollectorMutexes{
-      cArchives->CollectorGetMutex(), cAssets->CollectorGetMutex(),
-      cFtfs->CollectorGetMutex(),     cImages->CollectorGetMutex(),
-      cJsons->CollectorGetMutex(),    cPcms->CollectorGetMutex(),
-      cSources->CollectorGetMutex(),  cStreams->CollectorGetMutex(),
-      cVideos->CollectorGetMutex()
-    };
+    cArchives->MutexScopedCall([](){
+      // Log sychronisation result
+      cLog->LogDebugExSafe("Core synchronised $ objects.", cArchives->size() +
+        cAssets->size() + cFtfs->size() + cImages->size() + cJsons->size() +
+        cPcms->size() + cSources->size() + cStreams->size() + cVideos->size());
+    }, cAssets->MutexGet(), cFtfs->MutexGet(), cImages->MutexGet(),
+    cJsons->MutexGet(), cPcms->MutexGet(), cSources->MutexGet(),
+    cStreams->MutexGet(), cVideos->MutexGet());
   }
   /* -- Main function ------------------------------------------------------ */
-  int CoreMain(void)
+  int CoreMain()
   { // Register default cvars and pass over the current gui mode by ref. All
     // the core parts of the engine are initialised from cvar callbacks.
     cCVars->Init();
@@ -795,7 +803,7 @@ class Core final :                     // Members initially private
     return 0;
   }
   /* -- Default constructor ------------------------------------------------ */
-  Core(void) :
+  Core() :
     /* -- Initialisers ----------------------------------------------------- */
 #include "cvarlib.hpp"                 // Defines cvar list
     CVars{                             // Initialise cvars list

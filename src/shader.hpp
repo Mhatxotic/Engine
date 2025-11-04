@@ -43,15 +43,15 @@ class ShaderCell :                     // Members initially private
   const GLenum     eType;              // Shader type
   const GLuint     uiShader;           // Created shader id
   /* -- Return code of shader -------------------------------------- */ public:
-  const string &GetCode(void) const { return strCode; }
+  const string &GetCode() const { return strCode; }
   /* -- Return length of shader code --------------------------------------- */
-  size_t GetCodeLength(void) const { return GetCode().length(); }
+  size_t GetCodeLength() const { return GetCode().length(); }
   /* -- Return name of shader as C-String ---------------------------------- */
-  const char *GetCodeCStr(void) const { return GetCode().c_str(); }
+  const char *GetCodeCStr() const { return GetCode().data(); }
   /* -- Return type of shader ---------------------------------------------- */
-  GLenum GetType(void) const { return eType; }
+  GLenum GetType() const { return eType; }
   /* -- Return shader id --------------------------------------------------- */
-  GLuint GetHandle(void) const { return uiShader; }
+  GLuint GetHandle() const { return uiShader; }
   /* -- Default constructor ------------------------------------------------ */
   ShaderCell(const string &strNName,   // Specified new identifier
              const string &strNCode,   // Specified code to copmile
@@ -63,7 +63,7 @@ class ShaderCell :                     // Members initially private
     eType{ eNType },                   // Set type of shader
     uiShader{ uiNShader }              // Set shader handle
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 typedef list<ShaderCell> ShaderList;   // Shader cell list
 /* ------------------------------------------------------------------------- */
@@ -78,9 +78,9 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   UniList          aUniforms;          // Ids of mandatory uniforms we need
   bool             bLinked;            // Shader program has been linked
   /* -- Get program id number -------------------------------------- */ public:
-  GLuint GetProgramId(void) const { return uiProgram; }
+  GLuint GetProgramId() const { return uiProgram; }
   /* -- SHader is linked? -------------------------------------------------- */
-  bool IsLinked(void) const { return bLinked; }
+  bool IsLinked() const { return bLinked; }
   /* -- Verify the specified attribute is at the specified location -------- */
   void VerifyAttribLocation(const char *cpAttr, const ShaderAttributeId saiId)
   { // Get attribute location
@@ -124,7 +124,7 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
       friRef.GetCoTop(), friRef.GetCoRight(), friRef.GetCoBottom());
   }
   /* -- Linkage ------------------------------------------------------------ */
-  void Link(void)
+  void Link()
   { // We want to make things simple and make sure every shader has a specific
     // attribute at a specific index so make sure these are in the correct
     // positions. This has to be done before the link.
@@ -146,18 +146,18 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     VerifyUniformLocation("matrix", U_MATRIX);
   }
   /* -- Activate program --------------------------------------------------- */
-  void Activate(void)
+  void Activate()
   { // Do activate the program
     GL(cOgl->UseProgram(uiProgram), "Failed to select shader program!",
       "Program", uiProgram);
   }
   /* -- Deselect program --------------------------------------------------- */
-  void Deactivate(void)
+  void Deactivate()
     { if(cOgl->GetProgram() == uiProgram)
         GLL(cOgl->UseProgram(0), "Failed to deselect active program!",
           "Program", uiProgram); }
   /* -- Get shader program name -------------------------------------------- */
-  GLuint GetProgram(void) const { return uiProgram; }
+  GLuint GetProgram() const { return uiProgram; }
   /* -- Uniform value ------------------------------------------------------ */
   GLint GetUID(const ShaderUniformId suiId) const { return aUniforms[suiId]; }
   /* -- Variable location -------------------------------------------------- */
@@ -211,10 +211,11 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Shader initialiser helper ------------------------------------------ */
   template<typename ...VarArgs>
     void AddShaderEx(const string &strName, const GLenum eT,
-      const char*const cpFormat, const VarArgs &...vaArgs)
-  { AddShader(strName, eT, StrFormat(cpFormat, vaArgs...)); }
+      const char*const cpFormat, VarArgs &&...vaArgs)
+  { AddShader(strName, eT,
+      StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Detach and unlink shaders ------------------------------------------ */
-  void DeInitShaders(void)
+  void DeInitShaders()
   { // Ignore if nothing in list
     if(empty()) return;
     // Until shader list is empty
@@ -238,7 +239,7 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
       "Shader program $ could not be deleted!", uiProgram);
   }
   /* -- Shader deinitialiser ----------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Detatch, unlink and clear shaders list and program
     DeInitShaders();
     // Reset the identifier
@@ -249,16 +250,16 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     clear();
   }
   /* -- Constructor -------------------------------------------------------- */
-  Shader(void) :                       // No parameters
+  Shader() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperShader{ cShaders, this },  // Register in Shaders list
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     uiProgram(0),                      // No program set
     bLinked(false)                     // Not linked
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Shader(void) { DeInitShaders(); }
+  ~Shader() { DeInitShaders(); }
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Shaders, Shader, SHADER) // Finish shaders collector
 /* ------------------------------------------------------------------------- */

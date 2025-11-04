@@ -11,13 +11,14 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaEvt {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ILuaRef::P;            using namespace ILuaUtil::P;
 using namespace IError::P;             using namespace IEvtCore::P;
 using namespace IEvtMain::P;           using namespace ILog::P;
-using namespace IStd::P;               using namespace IToggler::P;
+using namespace ILuaRef::P;            using namespace ILuaUtil::P;
+using namespace IMutex::P;             using namespace IRefCtr::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Private typedefs ----------------------------------------------------- */
+/* -- Public typedefs ------------------------------------------------------ */
 // We need to collect the event ids of the events we dispatch so we can
 // remove these events when the class is destroyed, or events that reference
 // derived classes which have been destroyed will crash the engine.
@@ -25,21 +26,21 @@ typedef deque<EvtMain::QueueConstIt> LuaEvtsList;
 /* == Class type for storing an event iterator and removing it ============= */
 class LuaEvts :
   /* -- Initialisers ------------------------------------------------------- */
-  private LuaEvtsList,                 // list of added event iterators
-  protected mutex                      // To serialise access to the list
-{ /* -- Return mutex ------------------------------------------------------- */
-  mutex &LuaEvtsGetMutex(void) { return *this; }
+  private LuaEvtsList                  // list of added event iterators
+{ /* -- Private variables -------------------------------------------------- */
+  Mutex            mMutex;             // To serialise access to the list
   /* -- Remove iterator by id -------------------------------------- */ public:
   void LuaEvtsRemoveIterator(const size_t stId)
   { // Lock access to the list
-    const LockGuard lgLuaEvtsSync{ LuaEvtsGetMutex() };
-    // Throw error if the id is invalid
-    if(stId >= size())
-      XC("Invalid event index to remove!",
-         "Requested", stId, "Maximum", size());
-    // Clear stored event and remove all empty events from the end
-    at(stId) = cEvtMain->Last();
-    while(!empty() && back() == cEvtMain->Last()) pop_back();
+    mMutex.MutexCall([this, stId](){
+      // Throw error if the id is invalid
+      if(stId >= size())
+        XC("Invalid event index to remove!",
+           "Requested", stId, "Maximum", size());
+      // Clear stored event and remove all empty events from the end
+      at(stId) = cEvtMain->Last();
+      while(!empty() && back() == cEvtMain->Last()) pop_back();
+    });
   }
   /* -- Check if enough parameters ----------------------------------------- */
   template<size_t stMinimum>
@@ -55,42 +56,43 @@ class LuaEvts :
   }
   /* -- Add a new event and stab iterator ---------------------------------- */
   template<typename ...VarArgs>void LuaEvtsDispatch(const EvtMainCmd emcCmd,
-    const void*const vpClass, const VarArgs &...vaArgs)
-  { // Iterator to return
-    EvtMain::QueueConstIt qciItem;
-    // Lock access to the list
-    const LockGuard lgLuaEvtsSync{ LuaEvtsGetMutex() };
-    // Current parameters list for event
+    const void*const vpClass, const VarArgs ...vaArgs)
+  { // Reserve memory for current parameters list for event
     EvtMainArgs emaArgs;
-    // Reserve memory for parameters
     emaArgs.reserve(sizeof...(VarArgs));
-    // Create a new params list with the class and the events list size
-    cEvtMain->AddExParam(emcCmd, qciItem, emaArgs, vpClass, size(), vaArgs...);
-    // Insert the iterator the new event.
-    emplace_back(StdMove(qciItem));
+    // Lock access to the list
+    mMutex.MutexCall([this, &emaArgs, &emcCmd, vpClass, &vaArgs...]{
+      // Iterator to return
+      EvtMain::QueueConstIt qciItem;
+      // Create a new params list with the class and the events list size
+      cEvtMain->AddExParam(emcCmd, qciItem, emaArgs, vpClass, size(),
+        vaArgs...);
+      // Insert the iterator the new event.
+      emplace_back(StdMove(qciItem));
+    });
   }
   /* -- Deinit event store-------------------------------------------------- */
-  void LuaEvtsDeInit(void)
-  { // Lock access to the list
-    const LockGuard lgLuaEvtsSync{ LuaEvtsGetMutex() };
-    // Done if no events lingering
-    if(empty()) return;
-    // Remove any queued events dispatched by this class as if they fire, the
-    // app will crash because the class may have been destroyed.
-    while(!empty())
-    { // Get interator to the stored iterators
-      const LuaEvtsList::const_iterator lelciIt{ cbegin() };
-      // Get iterator to the event iterator and remove it if valid
-      const EvtMain::QueueConstIt qciIt{ *lelciIt };
-      if(qciIt != cEvtMain->Last()) cEvtMain->Remove(qciIt);
-      // Erase the queue iterator from the queue
-      erase(lelciIt);
-    }
+  void LuaEvtsDeInit()
+  { // Lock access to the queued events list
+    mMutex.MutexCall([this](){
+      // Return if there are no queued events
+      if(empty()) return;
+      // Lock engine thread events list
+      cEvtMain->MutexCall([this](){
+        // Remove any queued events dispatched by this class as if they fire,
+        // the app will crash because the class may have been destroyed.
+        StdForEach(seq, cbegin(), cend(),
+          [](const EvtMain::QueueConstIt &qciIt)
+            { if(qciIt != cEvtMain->Last()) cEvtMain->RemoveUnsafe(qciIt); });
+        // Clear the list
+        clear();
+      });
+    });
   }
   /* -- Constructor -------------------------------------------------------- */
-  LuaEvts(void) = default;
+  LuaEvts() = default;
   /* -- Destructor --------------------------------------------------------- */
-  ~LuaEvts(void) { LuaEvtsDeInit(); }
+  ~LuaEvts() { LuaEvtsDeInit(); }
 };/* ----------------------------------------------------------------------- */
 /* == Class type for master class (send parameters on event trigger) ======= */
 template<class MemberType>struct LuaEvtTypeParam
@@ -113,7 +115,7 @@ template<class MemberType>struct LuaEvtTypeParam
         emeEvent.cCmd, emaArgs.size());
   }
   /* -- Constructor (not interested) --------------------------------------- */
-  LuaEvtTypeParam(void) = default;
+  LuaEvtTypeParam() = default;
 };/* ----------------------------------------------------------------------- */
 /* == Class type for master class (send no parameters on event trigger) ==== */
 template<class MemberType>struct LuaEvtTypeAsync // Used in async class
@@ -136,7 +138,7 @@ template<class MemberType>struct LuaEvtTypeAsync // Used in async class
         emeEvent.cCmd, emaArgs.size());
   }
   /* -- Constructor (not interested) --------------------------------------- */
-  LuaEvtTypeAsync(void) = default;
+  LuaEvtTypeAsync() = default;
 };/* ----------------------------------------------------------------------- */
 /* == Class for master class =============================================== */
 template<class MemberType,             // Member object type
@@ -153,7 +155,7 @@ class LuaEvtMaster :
     /* -- Register the event ----------------------------------------------- */
     { cEvtMain->Register(emcCmd, this->OnEvent); }
   /* -- Unregister the event ----------------------------------------------- */
-  ~LuaEvtMaster(void) { cEvtMain->Unregister(emcCmd); }
+  ~LuaEvtMaster() { cEvtMain->Unregister(emcCmd); }
 };/* == Routines for a collectors child class ============================== */
 template<class MemberType,             // Member object type
          size_t stRefs=1>              // Number of references to store
@@ -165,7 +167,7 @@ class LuaEvtSlave :
   EvtMainCmd       emcCmd;             // Event associated with this
   MemberType*const mtPtr;              // Parent of this class
   /* -- Event dispatch --------------------------------------------- */ public:
-  template<typename ...VarArgs>void LuaEvtDispatch(const VarArgs &...vaArgs)
+  template<typename ...VarArgs>void LuaEvtDispatch(const VarArgs ...vaArgs)
   { // Return if no callback is set. No point firing an event!
     if(!this->LuaRefIsSet()) return;
     // Insert a new event. We need to store the id of the iterator too so we
@@ -256,12 +258,12 @@ class LuaEvtSlave :
           break;
       }
     } // Call the callback function.
-    LuaUtilCallFuncTogglerEx(this->LuaRefGetState(), mtPtr,
+    LuaUtilCallFuncRefCtrEx(this->LuaRefGetState(), mtPtr,
       static_cast<int>(emaArgs.size() - stMandatory));
   } // Exception occured? Disable lua callback and rethrow
   catch(const exception&) { this->LuaRefDeInit(); throw; }
   /* ----------------------------------------------------------------------- */
-  void LuaEvtDeInit(void)
+  void LuaEvtDeInit()
   { // De-initialise reference state
     this->LuaRefDeInit();
     // De-init event store
@@ -303,9 +305,9 @@ class LuaEvtSlave :
     emcCmd(emcNCmd),                   // Command event id
     mtPtr(mtNPtr)                      // Set pointer to member object
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor to clean up any leftover events and references ---------- */
-  ~LuaEvtSlave(void) { LuaEvtDeInit(); }
+  ~LuaEvtSlave() { LuaEvtDeInit(); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

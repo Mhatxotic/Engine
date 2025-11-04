@@ -28,31 +28,31 @@ namespace H                            // Private functions
   /* -- Append functions --------------------------------------------------- */
   namespace Append                     // Private functions
   { /* -- Append final parameter ------------------------------------------- */
-    static void Param(ostringstream&) { }
+    static void Param(ostringstream&) {}
     /* -- Append a parameter ----------------------------------------------- */
     template<typename AnyType, typename ...VarArgs>
       static void Param(ostringstream &osS, const AnyType &atVal,
-        const VarArgs &...vatArgs)
+        VarArgs &&...vaArgs)
     { // Push the specified value
       Value(osS, atVal);
       // Process next argument
-      Param(osS, vatArgs...);
+      Param(osS, StdForward<VarArgs>(vaArgs)...);
     }
     /* -- Append main function --------------------------------------------- */
     template<typename ...VarArgs>
-      static const string StrAppend(const VarArgs &...vaVars)
+      static const string StrAppend(VarArgs &&...vaArgs)
     { // Theres no need to call this if theres no parameters
       static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
       // Stream to write to
       ostringstream osS;
       // Build string
-      Param(osS, vaVars...);
+      Param(osS, StdForward<VarArgs>(vaArgs)...);
       // Return string
       return osS.str();
     }
     /* -- Append with formatted numbers ------------------------------------ */
     template<typename ...VarArgs>
-      static const string StrAppendImbue(const VarArgs &...vaVars)
+      static const string StrAppendImbue(VarArgs &&...vaArgs)
     { // Theres no need to call this if theres no parameters
       static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
       // Stream to write to
@@ -60,7 +60,7 @@ namespace H                            // Private functions
       // Imbue current locale
       osS.imbue(cCommon->CommonLocale());
       // Build string
-      Param(osS, vaVars...);
+      Param(osS, StdForward<VarArgs>(vaArgs)...);
       // Return appended string
       return osS.str();
     }
@@ -72,7 +72,7 @@ namespace H                            // Private functions
     /* -- Process any value ------------------------------------------------ */
     template<typename AnyType, typename ...VarArgs>
       static void Param(ostringstream &osS, const char *cpPos,
-        const AnyType &atVal, const VarArgs &...vaVars)
+        const AnyType &atVal, VarArgs &&...vaArgs)
     { // Find the mark that will be replaced by this parameter and if we
       // find the character?
       if(const char*const cpNewPos = strchr(cpPos, '$'))
@@ -92,14 +92,14 @@ namespace H                            // Private functions
         } // Push the value we are supposed to replace the matched '$' with.
         Value(osS, atVal);
         // Process more parameters if we can.
-        Param(osS, cpPos, vaVars...);
+        Param(osS, cpPos, StdForward<VarArgs>(vaArgs)...);
       } // Return the rest of the string.
       else Param(osS, cpPos);
     }
     /* -- Prepare message from c-string format ----------------------------- */
     template<typename ...VarArgs>
       static const string StrFormat(const char*const cpFmt,
-        const VarArgs &...vaVars)
+        VarArgs &&...vaArgs)
     { // Theres no need to call this if theres no parameters
       static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
       // Return if string empty of invalid
@@ -107,20 +107,20 @@ namespace H                            // Private functions
       // Stream to write to
       ostringstream osS;
       // Format the text
-      Param(osS, cpFmt, vaVars...);
+      Param(osS, cpFmt, StdForward<VarArgs>(vaArgs)...);
       // Return formated text
       return osS.str();
     }
     /* -- Prepare message from string format ------------------------------- */
     template<typename ...VarArgs>
       static const string StrFormat[[maybe_unused]](const string &strS,
-        const VarArgs &...vaVars)
+        VarArgs &&...vaArgs)
     { // Return if string empty of invalid
       if(strS.empty()) return {};
       // Stream to write to
       ostringstream osS;
       // StrFormat the text
-      Param(osS, strS.c_str(), vaVars...);
+      Param(osS, strS.data(), StdForward<VarArgs>(vaArgs)...);
       // Return formated text
       return osS.str();
     }
@@ -230,24 +230,24 @@ static const string StrFromErrNo(const int iErrNo=errno)
 #if defined(WINDOWS)
   // 'https://msdn.microsoft.com/en-us/library/51sah927.aspx' says:
   // "Your string message can be, at most, 94 characters long."
-  if(strerror_s(const_cast<char*>(strErr.c_str()), strErr.capacity(), iErrNo))
+  if(strerror_s(const_cast<char*>(strErr.data()), strErr.capacity(), iErrNo))
     strErr.assign(StrAppend("Error ", iErrNo));
   // Targeting MacOS?
 #elif defined(MACOS)
   // Grab the error result and if failed? Just put in the error number continue
-  if(strerror_r(iErrNo, const_cast<char*>(strErr.c_str()), strErr.capacity()))
+  if(strerror_r(iErrNo, const_cast<char*>(strErr.data()), strErr.capacity()))
     strErr.assign(StrAppend("Error ", iErrNo));
   // Linux?
 #elif defined(LINUX)
   // Grab the error result and if failed? Set a error and continue
   const char*const cpResult =
-    strerror_r(iErrNo, const_cast<char*>(strErr.c_str()), strErr.capacity());
+    strerror_r(iErrNo, const_cast<char*>(strErr.data()), strErr.capacity());
   if(!cpResult) strErr = StrAppend("Error ", iErrNo);
   // We got a message but if was not put in our buffer just return as is
-  else if(cpResult != strErr.c_str()) return cpResult;
+  else if(cpResult != strErr.data()) return cpResult;
 #endif
   // Resize and compact the buffer
-  strErr.resize(strlen(strErr.c_str()));
+  strErr.resize(strlen(strErr.data()));
   strErr.shrink_to_fit();
   // Have to do this because the string is still actually 94 bytes long
   return strErr;
@@ -355,7 +355,7 @@ template<class ListType=StrPairList>
     { // Get string to find
       const string &strWhat = ltiItem.first;
       // Last cut position and current character index
-      if(strncmp(strDest.c_str()+stPos, strWhat.data(), strWhat.length()))
+      if(strncmp(strDest.data()+stPos, strWhat.data(), strWhat.length()))
         continue;
       // Get string to replace with
       const string &strWith = ltiItem.second;
@@ -598,8 +598,8 @@ template<class AnyArray, class CtrType = typename AnyArray::value_type>
   // How many items do we have? Have more than 1?
   if(sstSize - sstBegin != 1)
   { // Build command string from vector
-    copy(next(aArray.cbegin(), sstBegin), prev(aArray.cend(), 1),
-      ostream_iterator<CtrType>(osS, strSep.c_str()));
+    copy(next(aArray.cbegin(), sstBegin), prev(aArray.cend()),
+      ostream_iterator<CtrType>(osS, strSep.data()));
     // Add final item
     osS << *aArray.crbegin();
   } // Just access the one directly
@@ -709,7 +709,7 @@ template<typename IntType>
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const array<const ByteValue,0> bvLookup{ { } };
+    static const array<const ByteValue,0> bvLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
@@ -772,7 +772,7 @@ template<typename IntType>
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const array<const BitValue,0> bvLookup{ { } };
+    static const array<const BitValue,0> bvLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
@@ -830,7 +830,7 @@ template<typename IntType>
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const array<const Value,0> vLookup{ { } };
+    static const array<const Value,0> vLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   }
@@ -997,7 +997,7 @@ template<class ListType>
              typedef typename ListType::value_type ListTypeValue;
              // Write the rest but one prefixed with the separator
              StdForEach(seq,
-               next(lType.cbegin(), 1), next(lType.crbegin(), 1).base(),
+               next(lType.cbegin()), next(lType.crbegin()).base(),
                  [&ossOut, &strSep](const ListTypeValue &strStr)
                    { ossOut << strSep << strStr; });
              // and now append the last separator and string from list

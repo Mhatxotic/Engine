@@ -18,8 +18,8 @@ using namespace IGlFW::P;              using namespace IIdent::P;
 using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IToggler::P;
+using namespace IRefCtr::P;            using namespace IStd::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Clipboard collector and lua interface class -------------------------- */
@@ -31,24 +31,24 @@ CTOR_BEGIN(Clips, Clip, CLHelperUnsafe,,,
 CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public LuaEvtSlave<Clip, 2>,         // Need to store callback and class
-  public TogglerMaster<>,              // Boolean to protect from destruction
+  public RefCtrMaster<>,               // Ref counter to protect from destructs
   public Lockable,                     // Lua garbage collector instruction
   public Ident                         // Name of this clipboard event
 { /* -- Private variables -------------------------------------------------- */
   string           strClipboard;       // Clipboard string
   /* -- Window set clipboard request --------------------------------------- */
-  void ClipOnSetNRCbT(void) { cGlFW->WinSetClipboardString(strClipboard); }
+  void ClipOnSetNRCbT() { cGlFW->WinSetClipboardString(strClipboard); }
   /* -- Window set clipboard request --------------------------------------- */
-  void ClipOnSetCbT(void) { ClipOnSetNRCbT(); LuaEvtDispatch(); }
+  void ClipOnSetCbT() { ClipOnSetNRCbT(); LuaEvtDispatch(); }
   /* -- Window get clipboard request in window thread ---------------------- */
-  void ClipOnGetCbT(void)
+  void ClipOnGetCbT()
   { // Grab the string to clipboard
     strClipboard = cGlFW->WinGetClipboardString();
     // Pass the string back to the engine thread and Lua
     LuaEvtDispatch();
   }
   /* -- Get string sent or retrieved ------------------------------- */ public:
-  const string &ClipGet(void) const { return strClipboard; }
+  const string &ClipGet() const { return strClipboard; }
   /* -- Get string sent or retrieved --------------------------------------- */
   void ClipSet(const string &strText)
   { // Set clipboard string to set
@@ -85,7 +85,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
         XC("Clipboard second argument not a class!",
            "Identifier", IdentGet());
       // Call callback with class
-      LuaUtilCallFuncTogglerEx(lsState, this, 1);
+      LuaUtilCallFuncRefCtrEx(lsState, this, 1);
     } // Done with references. We won't be using them anymore.
     return LuaEvtDeInit();
   } // Exception occured? Cleanup and rethrow exception
@@ -111,13 +111,13 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     cEvtWin->Add(EWC_CB_GET, this);
   }
   /* -- Default constructor ------------------------------------------------ */
-  Clip(void) :
+  Clip() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperClip{ cClips },            // Initially unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     LuaEvtSlave{ this, EMC_CB_EVENT }  // Register Clip async event
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END(Clips, Clip, CLIP,,,,         // Finish 'Clips' class body
   /* -- Collector initialisers --------------------------------------------- */

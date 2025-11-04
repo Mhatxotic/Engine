@@ -12,8 +12,9 @@ namespace ICert {                      // Start of private module namespace
 using namespace IAsset::P;             using namespace IClock::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace Lib::OS::OpenSSL;
+using namespace ILog::P;               using namespace IMutex::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -33,21 +34,22 @@ class Certs                            // Certificates store
   /* -- Class to serialise load of certificates ---------------------------- */
   struct LoadSerialised                // Serialised certificate installation
   { /* -- Lock/Unlock ------------------------------------------------------ */
-    void LockFunction(void) { }        // Lock function not used
-    void UnlockFunction(void) { }      // Unlock function not used
+    void LockFunction() {}             // Lock function not used
+    void UnlockFunction() {}           // Unlock function not used
     /* -- Destructor/Constructor ------------------------------------------- */
-    LoadSerialised(void) { }           // Constructor not used
+    LoadSerialised() {}                // Constructor not used
   };/* -- Class to load certificates in parallel --------------------------- */
-  class LoadParallel                   // Parallel certificate installation
+  class LoadParallel :                 // Parallel certificate installation
+    /* -- Base classes ----------------------------------------------------- */
+    private Mutex                      // Mutex
   { /* --------------------------------------------------------------------- */
     bool           bLocked;            // Locked flag
-    mutex          mMutex;             // Mutex
     /* -- Lock/Unlock ---------------------------------------------- */ public:
-    void LockFunction(void) { mMutex.lock(); bLocked = true; }
-    void UnlockFunction(void) { mMutex.unlock(); bLocked = false; }
+    void LockFunction() { MutexGet().lock(); bLocked = true; }
+    void UnlockFunction() { MutexGet().unlock(); bLocked = false; }
     /* -- Destructor/Constructor ------------------------------------------- */
-    ~LoadParallel(void) { if(bLocked) UnlockFunction(); }
-    LoadParallel(void) : bLocked(false) { }
+    ~LoadParallel() { if(bLocked) UnlockFunction(); }
+    LoadParallel() : bLocked(false) {}
   };/* -- Variables -------------------------------------------------------- */
   SSL_CTX           *scStore;          // Context used for cerificate store
   X509_STORE        *xsCerts;          // Certificate store inside OpenSSL
@@ -107,7 +109,7 @@ class Certs                            // Certificates store
       strD, strF, eReason);
   }
   /* -- Unload open ssl certificate store ---------------------------------- */
-  void CertsUnload(void)
+  void CertsUnload()
   { // If there are certificates in the list then clear them
     if(!lCAStore.empty())
     { // Write that we're clearing them
@@ -177,12 +179,12 @@ class Certs                            // Certificates store
     }
   }
   /* --------------------------------------------------------------- */ public:
-  X509_STORE *CertsGetStore(void) const { return xsCerts; }
+  X509_STORE *CertsGetStore() const { return xsCerts; }
   /* ----------------------------------------------------------------------- */
-  const X509List &GetCertList(void) const { return lCAStore; }
-  size_t GetCertListSize(void) const { return GetCertList().size(); }
+  const X509List &GetCertList() const { return lCAStore; }
+  size_t GetCertListSize() const { return GetCertList().size(); }
   /* ----------------------------------------------------------------------- */
-  bool CertsIsStoreAvailable(void) const { return !!CertsGetStore(); }
+  bool CertsIsStoreAvailable() const { return !!CertsGetStore(); }
   /* -- Find a X509 error -------------------------------------------------- */
   auto CertsGetError(const size_t stId) const { return xErrDB.find(stId); }
   /* -- Is X509 error valid ------------------------------------------------ */
@@ -196,7 +198,7 @@ class Certs                            // Certificates store
   bool CertsIsNotX509BypassFlagSet(const size_t stBank, uint64_t qFlag)
     { return !CertsIsX509BypassFlagSet(stBank, qFlag); }
   /* -- Constructor --------------------------------------------- */ protected:
-  Certs(void) :
+  Certs() :
     /* -- Initialisers ----------------------------------------------------- */
     scStore(nullptr),                  // No store initialised
     xsCerts(nullptr),                  // No certificate chain initialised
@@ -279,9 +281,9 @@ class Certs                            // Certificates store
     }
 #undef X509ERR
   /* -- No code ------------------------------------------------------------ */
-  { }
+  {}
   /* -- Destructor that unloads all x509 certificates ---------------------- */
-  ~Certs(void) { CertsUnload(); }
+  ~Certs() { CertsUnload(); }
   /* --------------------------------------------------------------- */ public:
   CVarReturn CertsSetBypassFlags1(const uint64_t uiFlags)
     { return CVarSimpleSetInt(qCertBypass.front(), uiFlags); }
@@ -369,7 +371,7 @@ static const string CertGetSubject(const Certs::X509Pair &caPair)
     const_cast<char*>(strD.data()), static_cast<int>(strD.length())))
       return {};
   // Resize and return string
-  strD.resize(strlen(strD.c_str()));
+  strD.resize(strlen(strD.data()));
   return strD;
 }
 /* ------------------------------------------------------------------------- */

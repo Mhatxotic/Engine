@@ -39,14 +39,14 @@ struct AgPort : public AgUIntLG {
     AgUIntLG{ lS, iParam, 1, 65535 }{} };
 /* -- Create http method class argument ------------------------------------ */
 struct AgAddress { string strString;
-  string &operator()(void) { return strString; }
-  operator string&(void) { return operator()(); }
+  string &operator()() { return strString; }
+  operator string&() { return operator()(); }
   explicit AgAddress(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppHostname(lS, iArg)}{} };
 /* -- Create http method class argument ------------------------------------ */
 struct AgMethod { string strString;
-  string &operator()(void) { return strString; }
-  operator string&(void) { return operator()(); }
+  string &operator()() { return strString; }
+  operator string&() { return operator()(); }
   explicit AgMethod(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppStrUpper(lS, iArg)}{} };
 /* ========================================================================= **

@@ -42,14 +42,14 @@ class ConGraphics :                    // Members initially private
   Font             cfConsole;          // Console font
   char             cCursor;            // Cursor character to use
   /* -- Toggle insert and overwrite mode ----------------------------------- */
-  void ToggleCursorMode(void)
+  void ToggleCursorMode()
   { // Toggle cursor mode, set new cursor to display and redraw the console
     cConsole->ToggleCursorMode();
     cCursor = cConsole->FlagIsSet(CF_INSERT) ? '|' : '_';
     cConsole->SetRedraw();
   }
   /* -- Calculate the number of triangles and commands for console fbo ----- */
-  void RecalculateFboListReserves(void)
+  void RecalculateFboListReserves()
   { // Ignore if font not available (not in graphical mode).
     if(GetFontRef().IsNotInitialised()) return;
     // Get console fbo and font
@@ -69,7 +69,7 @@ class ConGraphics :                    // Members initially private
           stTriangles);
   }
   /* -- Init console font -------------------------------------------------- */
-  void InitConsoleFont(void)
+  void InitConsoleFont()
   { // Load font. Cvars won't set the font size initially so we have to do
     // it manually. If we init cvars after, then destructor will crash because
     // the cvars havn't been initialised
@@ -95,7 +95,7 @@ class ConGraphics :                    // Members initially private
     GetFontRef().LockSet();
   }
   /* -- Init console texture ----------------------------------------------- */
-  void InitConsoleTexture(void)
+  void InitConsoleTexture()
   { // Get console texture filename, use a solid if not specified
     const string strCT{ cCVars->GetStrInternal(CON_BGTEXTURE) };
     if(strCT.empty())
@@ -111,31 +111,31 @@ class ConGraphics :                    // Members initially private
     GetTextureRef().LockSet();
   }
   /* -- Commit default text scale ------------------------------------------ */
-  void CommitScale(void)
+  void CommitScale()
     { GetFontRef().SetSize(fTextScale); }
   /* -- Commit default letter spacing -------------------------------------- */
-  void CommitLetterSpacing(void)
+  void CommitLetterSpacing()
     { GetFontRef().SetCharSpacing(fTextLetterSpacing); }
   /* -- Commit default line spacing ---------------------------------------- */
-  void CommitLineSpacing(void)
+  void CommitLineSpacing()
     { GetFontRef().SetLineSpacing(fTextLineSpacing); }
   /* -- Reset defaults (for lreset) ---------------------------------------- */
-  void RestoreDefaultProperties(void)
+  void RestoreDefaultProperties()
   { // Restore default settings from cvar registry
     CommitLetterSpacing();
     CommitScale();
     CommitLineSpacing();
   }
   /* -- Get console textures --------------------------------------- */ public:
-  Texture &GetTextureRef(void) { return ctConsole; }
-  Font &GetFontRef(void) { return cfConsole; }
-  Texture *GetTexture(void) { return &GetTextureRef(); }
-  Font *GetFont(void) { return &GetFontRef(); }
+  Texture &GetTextureRef() { return ctConsole; }
+  Font &GetFontRef() { return cfConsole; }
+  Texture *GetTexture() { return &GetTextureRef(); }
+  Font *GetFont() { return &GetFontRef(); }
   /* -- Do set visibility -------------------------------------------------- */
   bool SetVisible(const bool bState)
-  { // Set the visibility state and draw the fbo if enabled and visible
+  { // Set the visibility state and redraw the main fbo if not visible
     const bool bResult = cConsole->SetVisible(bState);
-    if(bResult) cFboCore->SetDraw();
+    if(!bResult) cFboCore->SetDraw();
     return bResult;
   }
   /* -- Set console visibility lock status --------------------------------- */
@@ -158,7 +158,7 @@ class ConGraphics :                    // Members initially private
     cLog->LogDebugSafe("Console visibility control has been enabled.");
   }
   /* -- Reset leaving defaults (for lreset) -------------------------------- */
-  void LeaveResetEnvironment(void)
+  void LeaveResetEnvironment()
   { // Enable and show console, and set full-screen
     SetVisible(true);
     SetLocked(true);
@@ -167,7 +167,7 @@ class ConGraphics :                    // Members initially private
     RestoreDefaultProperties();
   }
   /* -- Reset entering defaults (for lreset) ------------------------------- */
-  void EnterResetEnvironment(void)
+  void EnterResetEnvironment()
   { // Disable and hide console, and restore size
     SetLocked(cConsole->FlagIsSet(CF_LOCKEDGLOBAL));
     SetVisible(false);
@@ -234,7 +234,7 @@ class ConGraphics :                    // Members initially private
     return true;
   }
   /* -- Redraw the console fbo if the console contents changed ------------- */
-  void Render(void)
+  void Render()
   { // Shift queued console lines
     cConsole->MoveQueuedLines();
     // Return if theres nothing to redraw else clear redraw flag
@@ -273,7 +273,7 @@ class ConGraphics :                    // Members initially private
       fboC.ffcStage.GetCoRight(), GetFontRef().dfScale.DimGetWidth(),
         reinterpret_cast<const GLubyte*>(StrFormat(">$\rc000000ff$\rr$",
         cConsole->GetConsoleBegin(), cCursor,
-        cConsole->GetConsoleEnd()).c_str()));
+        cConsole->GetConsoleEnd()).data()));
     // For each line or until we clip the top of the screen, print the text
     for(ConLinesConstRevIt clI{ cConsole->GetConBufPos() };
                            clI != cConsole->GetConBufPosEnd() && fY > 0.0f;
@@ -286,17 +286,17 @@ class ConGraphics :                    // Members initially private
       fY -= GetFontRef().PrintWU(fboC.ffcStage.GetCoLeft(), fY,
         fboC.ffcStage.GetCoRight(),
           GetFontRef().dfScale.DimGetWidth(), reinterpret_cast<const GLubyte*>
-            (clD.strLine.c_str()));
+            (clD.strLine.data()));
     } // Finish and render
     fboC.FboFinishAndRender();
     // Make sure the main fbo is updated
     cFboCore->SetDraw();
   }
   /* -- Render the console to main fbo if visible -------------------------- */
-  void RenderToMain(void)
+  void RenderToMain()
     { if(cConsole->IsVisible()) cFboCore->BlitConsoleToMain(); }
   /* -- Show the console and render it and render the fbo to main fbo ------ */
-  void RenderNow(void)
+  void RenderNow()
   { // Show the console, render it to main frame buffer and blit it
     SetVisible(true);
     // Redraw console if not redrawn
@@ -305,13 +305,13 @@ class ConGraphics :                    // Members initially private
     cFboCore->BlitConsoleToMain();
   }
   /* -- DeInit console texture and font ------------------------------------ */
-  void DeInitTextureAndFont(void)
+  void DeInitTextureAndFont()
     { GetTextureRef().DeInit(); GetFontRef().DeInit(); }
   /* -- Reload console texture and font ------------------------------------ */
-  void ReInitTextureAndFont(void)
+  void ReInitTextureAndFont()
     { GetTextureRef().ReloadTexture(); GetFontRef().ReloadTexture(); }
   /* -- Init framebuffer object -------------------------------------------- */
-  void InitFBO(void)
+  void InitFBO()
   { // Ignore if terminal mode
     if(GetFontRef().IsNotInitialised()) return;
     // Get reference to main FBO and initialise it
@@ -320,10 +320,10 @@ class ConGraphics :                    // Members initially private
     cConsole->SetRedraw();
   }
   /* -- Init console font and texture -------------------------------------- */
-  void InitConsoleFontAndTexture(void)
+  void InitConsoleFontAndTexture()
     { InitConsoleFont(); InitConsoleTexture(); }
   /* -- Print a string using textures -------------------------------------- */
-  void Init(void)
+  void Init()
   { // Class intiialised
     IHInitialise();
     // Log progress
@@ -338,7 +338,7 @@ class ConGraphics :                    // Members initially private
     cLog->LogDebugSafe("ConGraph initialised.");
   }
   /* -- DeInit ------------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Ignore if already deinitialised
     if(IHNotDeInitialise()) return;
     // Log progress
@@ -353,7 +353,7 @@ class ConGraphics :                    // Members initially private
     cLog->LogInfoSafe("ConGraph de-initialised.");
   }
   /* -- Constructor --------------------------------------------- */ protected:
-  explicit ConGraphics(void) :
+  explicit ConGraphics() :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Init helper function name
     ulFgColour(                        // Set input text colour

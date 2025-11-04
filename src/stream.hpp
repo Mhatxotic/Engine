@@ -22,10 +22,11 @@ using namespace IIdent::P;             using namespace ILog::P;
 using namespace ILockable::P;          using namespace ILuaEvt::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IOal::P;               using namespace ISource::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::Ogg;              using namespace Lib::OpenAL::Types;
+using namespace IMutex::P;             using namespace IOal::P;
+using namespace ISource::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::Ogg;
+using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -33,24 +34,26 @@ enum StreamEvents : unsigned int { SE_PLAY, SE_STOP }; // Playback events
 /* ------------------------------------------------------------------------- */
 enum StreamPlayState : unsigned int    // Current playback state
 { /* ----------------------------------------------------------------------- */
-  PS_STANDBY,                          // Is not playing?
-  PS_PLAYING,                          // Is playing?
-  PS_FINISHING,                        // Was stopping? (no more data)
-  PS_WASPLAYING,                       // Was playing? (audio reinit)
-  PS_MAX                               // Maximum number of states
+  PS_STANDBY,                          // [0] Is not playing?
+  PS_PLAYING,                          // [1] Is playing?
+  PS_FINISHING,                        // [2] Was stopping? (no more data)
+  PS_WASPLAYING,                       // [3] Was playing? (audio reinit)
+  /* ----------------------------------------------------------------------- */
+  PS_MAX                               // [4] Maximum number of states
 };/* ----------------------------------------------------------------------- */
 typedef IdList<PS_MAX> PSList;         // Play state strings
 /* ------------------------------------------------------------------------- */
 enum StreamStopReason : unsigned int   // Reason playback stopped
 { /* ----------------------------------------------------------------------- */
-  SR_STOPNOUNQ,                        // Successful stop with no unqueue
-  SR_STOPUNQ,                          // Successful stop with unqueue
-  SR_REBUFFAIL,                        // Rebuffer failed
-  SR_RWREBUFFAIL,                      // Rewind/Rebuffer failed
-  SR_GENBUFFAIL,                       // Generate source and buffer failed
-  SR_STOPALL,                          // Stopping all buffers (reset/quit)
-  SR_LUA,                              // Requested by Lua (guest).
-  SR_MAX                               // Maximum number of stop reasons
+  SR_STOPNOUNQ,                        // [0] Successful stop with no unqueue
+  SR_STOPUNQ,                          // [1] Successful stop with unqueue
+  SR_REBUFFAIL,                        // [2] Rebuffer failed
+  SR_RWREBUFFAIL,                      // [3] Rewind/Rebuffer failed
+  SR_GENBUFFAIL,                       // [4] Generate source and buffer failed
+  SR_STOPALL,                          // [5] Stopping all buffers (reset/quit)
+  SR_LUA,                              // [6] Requested by Lua (guest).
+  /* ----------------------------------------------------------------------- */
+  SR_MAX                               // [7] Maximum number of stop reasons
 };/* ----------------------------------------------------------------------- */
 typedef IdList<SR_MAX> SRList;         // Stop reason strings
 /* -- Stream collector class for collector data and custom variables ------- */
@@ -68,7 +71,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   public Ident,                        // Stream file name
   public AsyncLoaderStream,            // Asynchronous loading of Streams
   public LuaEvtSlave<Stream>,          // Lua event system for Stream
-  public Lockable                      // Lua garbage collector instruction
+  public Lockable,                     // Lua garbage collector instruction
+  protected Mutex                      // Mutex helper object
 { /* -- Variables ---------------------------------------------------------- */
   FileMap          fmFile;             // FileMap class
   OggVorbis_File   ovfContext;         // Ogg vorbis file context
@@ -85,11 +89,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   StreamPlayState  psState;            // Play state
   ALfloat          fVolume;            // Saved volume
   StrNCStrMap      ssMetaData;         // Metadata strings
-  mutex            mMutex;             // Mutex for thread safety
   /* -- Updates the PCM position ------------------------------------------- */
-  void UpdatePosition(void) { qDecPos = qLivePos = ov_pcm_tell(&ovfContext); }
+  void UpdatePosition() { qDecPos = qLivePos = ov_pcm_tell(&ovfContext); }
   /* -- Get time elapsed --------------------------------------------------- */
-  ALdouble GetElapsed(void) { return ov_time_tell(&ovfContext); }
+  ALdouble GetElapsed() { return ov_time_tell(&ovfContext); }
   /* -- Set time elapsed --------------------------------------------------- */
   void SetElapsed(const ALdouble dElapsed)
     { ov_time_seek(&ovfContext, dElapsed); UpdatePosition(); }
@@ -97,9 +100,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   void SetElapsedFast(const ALdouble dElapsed)
     { ov_time_seek_page(&ovfContext, dElapsed); UpdatePosition(); }
   /* -- Get total time ----------------------------------------------------- */
-  ALdouble GetDuration(void) { return ov_time_total(&ovfContext, -1); }
+  ALdouble GetDuration() { return ov_time_total(&ovfContext, -1); }
   /* -- Get PCM bytes duration --------------------------------------------- */
-  ogg_int64_t GetPosition(void) const { return qLivePos; }
+  ogg_int64_t GetPosition() const { return qLivePos; }
   /* -- Set PCM byte position ---------------------------------------------- */
   void SetPosition(const ogg_int64_t qNewPos)
     { ov_pcm_seek(&ovfContext, qNewPos); UpdatePosition(); }
@@ -107,7 +110,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   void SetPositionFast(const ogg_int64_t qPosition)
     { ov_pcm_seek_page(&ovfContext, qPosition); UpdatePosition(); }
   /* -- Get total PCM samples ---------------------------------------------- */
-  ogg_int64_t GetSamples(void) { return ov_pcm_total(&ovfContext, -1); }
+  ogg_int64_t GetSamples() { return ov_pcm_total(&ovfContext, -1); }
   /* -- Convert stop reason to string -------------------------------------- */
   const string_view &StopReasonToString(const StreamStopReason srReason) const
     { return cParent->srStrings.Get(srReason); }
@@ -138,7 +141,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     }
   }
   /* -- Play (without locks) ----------------------------------------------- */
-  void Play(void)
+  void Play()
   { // If we already have a source? Stop and unqueue all buffers
     if(sCptr) sCptr->StopAndUnQueueAllBuffers();
     // Grab and lock a new free source if need be return if we can't
@@ -240,7 +243,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     return true;
   }
   /* -- Unload buffers ----------------------------------------------------- */
-  void UnloadBuffers(void)
+  void UnloadBuffers()
   { // If buffers allocated
     if(vBuffers.empty()) return;
     // Unload the source, delete and free the buffers
@@ -250,7 +253,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
       "Stream '$' failed to delete $ buffers!", IdentGet(), vBuffers.size());
   }
   /* -- Unload source ------------------------------------------------------ */
-  void UnloadSource(void)
+  void UnloadSource()
   { // If source is not available, bail
     if(!sCptr) return;
     // Save current state. Use our internal state to decide if we should replay
@@ -265,7 +268,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     sCptr = nullptr;
   }
   /* -- Load and lock source ----------------------------------------------- */
-  void GenerateBuffers(void)
+  void GenerateBuffers()
   { // Ignore if we already have buffers
     if(vBuffers.empty())
       XC("Empty sources list!",
@@ -278,7 +281,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     vUnQBuffers.resize(vBuffers.size());
   }
   /* -- Lock source buffer ------------------------------------------------- */
-  bool LockSource(void)
+  bool LockSource()
   { // We already have a source locked or we can get a new source? Ignore
     if(sCptr) return true;
     sCptr = GetSource();
@@ -300,182 +303,187 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     if(!qLoop) SetLoopEnd(GetSamples());
   }
   /* -- Get functions with safe versions---------------------------- */ public:
-  bool IsPlaying(void) const
+  bool IsPlaying() const
     { return sCptr && sCptr->GetState() == AL_PLAYING; }
-  ALfloat GetVolume(void) const { return fVolume; }
+  ALfloat GetVolume() const { return fVolume; }
   /* -- Get info (safe functions) ------------------------------------------ */
-  long GetRate(void) const { return viData.rate; }
-  int GetChannels(void) const { return viData.channels; }
-  int GetVersion(void) const { return viData.version; }
-  long GetBitRateUpper(void) const { return viData.bitrate_upper; }
-  long GetBitRateNominal(void) const { return viData.bitrate_nominal; }
-  long GetBitRateLower(void) const { return viData.bitrate_lower; }
-  long GetBitRateWindow(void) const { return viData.bitrate_window; }
+  long GetRate() const { return viData.rate; }
+  int GetChannels() const { return viData.channels; }
+  int GetVersion() const { return viData.version; }
+  long GetBitRateUpper() const { return viData.bitrate_upper; }
+  long GetBitRateNominal() const { return viData.bitrate_nominal; }
+  long GetBitRateLower() const { return viData.bitrate_lower; }
+  long GetBitRateWindow() const { return viData.bitrate_window; }
   /* -- Get loop (unsafe functions) ---------------------------------------- */
-  ogg_int64_t GetLoop(void) const { return qLoop; }
-  ogg_int64_t GetLoopBegin(void) const { return qLoopBegin; }
-  ogg_int64_t GetLoopEnd(void) const { return qLoopEnd; }
+  ogg_int64_t GetLoop() const { return qLoop; }
+  ogg_int64_t GetLoopBegin() const { return qLoopBegin; }
+  ogg_int64_t GetLoopEnd() const { return qLoopEnd; }
   /* -- Seek and tell functions (with locks) ------------------------------- */
   void SetLoopSafe(const ogg_int64_t qLoopCount)
-    { const LockGuard lgStreamSync{ mMutex }; SetLoop(qLoopCount); }
-  ogg_int64_t GetLoopSafe(void)
-    { const LockGuard lgStreamSync{ mMutex }; return GetLoop(); }
-  ogg_int64_t GetLoopBeginSafe(void)
-    { const LockGuard lgStreamSync{ mMutex }; return GetLoopBegin(); }
-  ogg_int64_t GetLoopEndSafe(void)
-    { const LockGuard lgStreamSync{ mMutex }; return GetLoopEnd(); }
+    { MutexCall([this, qLoopCount](){ SetLoop(qLoopCount); }); }
+  ogg_int64_t GetLoopSafe()
+    { return MutexCall([this](){ return GetLoop(); }); }
+  ogg_int64_t GetLoopBeginSafe()
+    { return MutexCall([this](){ return GetLoopBegin(); }); }
+  ogg_int64_t GetLoopEndSafe()
+    { return MutexCall([this](){ return GetLoopEnd(); }); }
   void SetLoopBeginSafe(const ogg_int64_t qNewPos)
-    { const LockGuard lgStreamSync{ mMutex }; SetLoopBegin(qNewPos); }
+    { MutexCall([this, qNewPos](){ SetLoopBegin(qNewPos); }); }
   void SetLoopEndSafe(const ogg_int64_t qNewPos)
-    { const LockGuard lgStreamSync{ mMutex }; SetLoopEnd(qNewPos); }
+    { MutexCall([this, qNewPos](){ SetLoopEnd(qNewPos); }); }
   void SetLoopRangeSafe(const ogg_int64_t qNBPos, const ogg_int64_t qNEPos)
-    { const LockGuard lgStreamSync{ mMutex }; SetLoopRange(qNBPos, qNEPos); }
-  ALdouble GetElapsedSafe(void)
-    { const LockGuard lgStreamSync{ mMutex }; return GetElapsed(); }
+    { MutexCall([this, qNBPos, qNEPos](){ SetLoopRange(qNBPos, qNEPos); }); }
+  ALdouble GetElapsedSafe()
+    { return MutexCall([this](){ return GetElapsed(); }); }
   void SetElapsedSafe(const ALdouble dElapsed)
-    { const LockGuard lgStreamSync{ mMutex }; SetElapsed(dElapsed); }
+    { MutexCall([this, dElapsed](){ SetElapsed(dElapsed); }); }
   void SetElapsedFastSafe(const ALdouble dElapsed)
-    { const LockGuard lgStreamSync{ mMutex }; SetElapsedFast(dElapsed); }
-  ALdouble GetDurationSafe(void)
-    { const LockGuard lgStreamSync{ mMutex }; return GetDuration(); }
-  ogg_int64_t GetPositionSafe(void)
-    { const LockGuard lgStreamSync{ mMutex }; return GetPosition(); }
+    { MutexCall([this, dElapsed](){ SetElapsedFast(dElapsed); }); }
+  ALdouble GetDurationSafe()
+    { return MutexCall([this](){ return GetDuration(); }); }
+  ogg_int64_t GetPositionSafe()
+    { return MutexCall([this](){ return GetPosition(); }); }
   void SetPositionSafe(const ogg_int64_t qNewPos)
-    { const LockGuard lgStreamSync{ mMutex }; SetPosition(qNewPos); }
+    { MutexCall([this, qNewPos](){ SetPosition(qNewPos); }); }
   void SetPositionFastSafe(const ogg_int64_t qPosition)
-    { const LockGuard lgStreamSync{ mMutex }; SetPositionFast(qPosition); }
-  ogg_int64_t GetSamplesSafe(void)
-    { const LockGuard lgStreamSync{ mMutex }; return GetSamples(); }
+    { MutexCall([this, qPosition](){ SetPositionFast(qPosition); }); }
+  ogg_int64_t GetSamplesSafe()
+    { return MutexCall([this](){ return GetSamples(); }); }
   /* ----------------------------------------------------------------------- */
-  ogg_int64_t GetOggBytes(void) const { return fmFile.MemSize<ogg_int64_t>(); }
+  ogg_int64_t GetOggBytes() const { return fmFile.MemSize<ogg_int64_t>(); }
   /* -- GetFormat ---------------------------------------------------------- */
-  ALenum GetFormat(void) const { return eFormat; }
-  const string_view GetFormatName(void) const
+  ALenum GetFormat() const { return eFormat; }
+  const string_view GetFormatName() const
     { return cOal->GetALFormat(eFormat); }
   /* -- Main (from audio thread) ------------------------------------------- */
-  void Main(void)
+  void Main()
   { // Wait for audio thread and lock access to stream buffers
-    const LockGuard lgStreamSync{ mMutex };
-    // Compare state
-    switch(psState)
-    { // Don't care if on stand by
-      case PS_STANDBY: break;
-      // Is finishing playing?
-      case PS_FINISHING:
-      { // Ignore if there is no source
-        if(!sCptr) { psState = PS_STANDBY; return; }
-        // Return and stop if no buffers are queued
-        if(!sCptr->GetBuffersQueued()) return Stop(SR_STOPNOUNQ);
-        // Unqueue all the buffers
-        sCptr->UnQueueAllBuffers();
-        // Return if theres still buffers queued
-        if(sCptr->GetBuffersQueued()) return;
-        // Full stop
-        return Stop(SR_STOPUNQ);
-      } // Is playing?
-      case PS_PLAYING:
-      { // Ignore if there is no source
-        if(!sCptr) { psState = PS_STANDBY; return; }
-        // Stopped playing and should be playing? Start playing again.
-        if(!IsPlaying())
-        { // Unqueue all buffers
+    MutexCall([this](){
+      // Compare state
+      switch(psState)
+      { // Don't care if on stand by
+        case PS_STANDBY: break;
+        // Is finishing playing?
+        case PS_FINISHING:
+        { // Ignore if there is no source
+          if(!sCptr) { psState = PS_STANDBY; return; }
+          // Return and stop if no buffers are queued
+          if(!sCptr->GetBuffersQueued()) return Stop(SR_STOPNOUNQ);
+          // Unqueue all the buffers
           sCptr->UnQueueAllBuffers();
-          // Do a full rebuffer of those buffers and if we can't rebuffer
-          if(!FullRebuffer())
-          { // Full stop!
-            Stop(SR_REBUFFAIL);
-            // Log problem
+          // Return if theres still buffers queued
+          if(sCptr->GetBuffersQueued()) return;
+          // Full stop
+          return Stop(SR_STOPUNQ);
+        } // Is playing?
+        case PS_PLAYING:
+        { // Ignore if there is no source
+          if(!sCptr) { psState = PS_STANDBY; return; }
+          // Stopped playing and should be playing? Start playing again.
+          if(!IsPlaying())
+          { // Unqueue all buffers
+            sCptr->UnQueueAllBuffers();
+            // Do a full rebuffer of those buffers and if we can't rebuffer
+            if(!FullRebuffer())
+            { // Full stop!
+              Stop(SR_REBUFFAIL);
+              // Log problem
+              cLog->LogWarningExSafe(
+                "Stream '$' was stopped and was unable to be rebuffered!",
+                fmFile.IdentGet());
+              // Done
+              return;
+            } // Log problem
             cLog->LogWarningExSafe(
-              "Stream '$' was stopped and was unable to be rebuffered!",
+              "Stream '$' stopped unexpectedly and is being replayed!",
               fmFile.IdentGet());
+            // Replay the buffers
+            sCptr->Play();
             // Done
             return;
-          } // Log problem
-          cLog->LogWarningExSafe(
-            "Stream '$' stopped unexpectedly and is being replayed!",
-            fmFile.IdentGet());
-          // Replay the buffers
-          sCptr->Play();
-          // Done
-          return;
-        } // Until all the buffers have finished processing
-        if(const ALsizei stBuffersProcessed = sCptr->GetBuffersProcessed())
-        { // Unqueue the buffers and enumerate through each unqueued buffer
-          sCptr->UnQueueBuffers(vUnQBuffers.data(), stBuffersProcessed);
-          for(ALsizei stIndex = 0; stIndex < stBuffersProcessed; ++stIndex)
-          { // Get buffer index
-            const ALuint uiBuffer = vUnQBuffers[static_cast<size_t>(stIndex)];
-            // Progress live position. This is so if the guest is saving the
-            // position to replay at a later time, this position will be on or
-            // slightly before the decoder position instead of at the decoder
-            // position which will be way after the live playback position.
-            qLivePos += cOal->GetBufferInt<ogg_int64_t>(uiBuffer, AL_SIZE) /
-              // This could be 16 (if no AL_EXT_FLOAT32) or 32.
-              (cOal->GetBufferInt<ogg_int64_t>(uiBuffer, AL_BITS)/8) /
-              // This should always be 1 or 2.
-              (cOal->GetBufferInt<ogg_int64_t>(uiBuffer, AL_CHANNELS));
-            // Try to rebuffer data to it and if failed?
-            if(Rebuffer(uiBuffer)) continue;
-            // Run out of loops? Finish playing and stop
-            if(!qLoop)
-            { // Finish playing, reset position and break
-              psState = PS_FINISHING;
-              SetPosition(0);
-              break;
-            } // Seek to start and try rebuffering again and if failed still?
-            SetPosition(qLoopBegin);
-            if(!Rebuffer(uiBuffer))
-            { // Stop playing, reset position and break
-              Stop(SR_RWREBUFFAIL);
-              SetPosition(0);
-              break;
-            } // If not looping forever? Reduce count and if zero play to end
-            if(qLoop != -1 && !--qLoop) SetLoopEnd(GetSamples());
-          } // Requeue the buffers
-          sCptr->QueueBuffers(vUnQBuffers.data(), stBuffersProcessed);
-          // Done
-          break;
-        }
-      } // Other state (ignore)
-      default: break;
-    }
+          } // Until all the buffers have finished processing
+          if(const ALsizei stBuffersProcessed = sCptr->GetBuffersProcessed())
+          { // Unqueue the buffers and enumerate through each unqueued buffer
+            sCptr->UnQueueBuffers(vUnQBuffers.data(), stBuffersProcessed);
+            for(ALsizei stIndex = 0; stIndex < stBuffersProcessed; ++stIndex)
+            { // Get buffer index
+              const ALuint uiBuffer =
+                vUnQBuffers[static_cast<size_t>(stIndex)];
+              // Progress live position. This is so if the guest is saving the
+              // position to replay at a later time, this position will be on
+              // or slightly before the decoder position instead of at the
+              // decoder position which will be way after the live playback
+              // position.
+              qLivePos += cOal->GetBufferInt<ogg_int64_t>(uiBuffer, AL_SIZE) /
+                // This could be 16 (if no AL_EXT_FLOAT32) or 32.
+                (cOal->GetBufferInt<ogg_int64_t>(uiBuffer, AL_BITS)/8) /
+                // This should always be 1 or 2.
+                (cOal->GetBufferInt<ogg_int64_t>(uiBuffer, AL_CHANNELS));
+              // Try to rebuffer data to it and if failed?
+              if(Rebuffer(uiBuffer)) continue;
+              // Run out of loops? Finish playing and stop
+              if(!qLoop)
+              { // Finish playing, reset position and break
+                psState = PS_FINISHING;
+                SetPosition(0);
+                break;
+              } // Seek to start and try rebuffering again and if failed still?
+              SetPosition(qLoopBegin);
+              if(!Rebuffer(uiBuffer))
+              { // Stop playing, reset position and break
+                Stop(SR_RWREBUFFAIL);
+                SetPosition(0);
+                break;
+              } // If not looping forever? Reduce count and if zero play to end
+              if(qLoop != -1 && !--qLoop) SetLoopEnd(GetSamples());
+            } // Requeue the buffers
+            sCptr->QueueBuffers(vUnQBuffers.data(), stBuffersProcessed);
+            // Done
+            break;
+          }
+        } // Other state (ignore)
+        default: break;
+      }
+    });
   }
   /* -- Load source and buffers during a reinit ---------------------------- */
-  void GenerateSourceAndBuffers(void)
+  void GenerateSourceAndBuffers()
   { // Protect modifications from audio main thread
-    const LockGuard lgStreamSync{ mMutex };
-    // Generate buffer id's
-    GenerateBuffers();
-    // Ignore and set to standby if wasn't playing before
-    if(psState != PS_WASPLAYING) { psState = PS_STANDBY; return; }
-    // Lock the source and return with message if we can't
-    if(!LockSource())
-    { // Log problem
-      cLog->LogWarningExSafe(
-        "Stream '$' could not be allocated a source after reset!",
-        fmFile.IdentGet());
-      // Set internal state to standby
-      psState = PS_STANDBY;
-      // Done
-      return;
-    } // If we didn't rebuffer anything then no point playing
-    if(!FullRebuffer())
-    { // Log problem
-      cLog->LogWarningExSafe("Stream '$' could not be rebuffered after reset!",
-        fmFile.IdentGet());
-      // Set fully stopped and return
-      return Stop(SR_GENBUFFAIL);
-    } // Update volume
-    UpdateVolume();
-    // Play the buffers
-    sCptr->Play();
-    // Set internal state to playing
-    psState = PS_PLAYING;
+    MutexCall([this](){
+      // Generate buffer id's
+      GenerateBuffers();
+      // Ignore and set to standby if wasn't playing before
+      if(psState != PS_WASPLAYING) { psState = PS_STANDBY; return; }
+      // Lock the source and return with message if we can't
+      if(!LockSource())
+      { // Log problem
+        cLog->LogWarningExSafe(
+          "Stream '$' could not be allocated a source after reset!",
+          fmFile.IdentGet());
+        // Set internal state to standby
+        psState = PS_STANDBY;
+        // Done
+        return;
+      } // If we didn't rebuffer anything then no point playing
+      if(!FullRebuffer())
+      { // Log problem
+        cLog->LogWarningExSafe(
+          "Stream '$' could not be rebuffered after reset!",
+            fmFile.IdentGet());
+        // Set fully stopped and return
+        return Stop(SR_GENBUFFAIL);
+      } // Update volume
+      UpdateVolume();
+      // Play the buffers
+      sCptr->Play();
+      // Set internal state to playing
+      psState = PS_PLAYING;
+    });
   }
   /* -- Unload source and buffers ------------------------------------------ */
-  void UnloadSourceAndBuffers(void) { UnloadSource(); UnloadBuffers(); }
+  void UnloadSourceAndBuffers() { UnloadSource(); UnloadBuffers(); }
   /* -- Update volume ------------------------------------------------------ */
-  void UpdateVolume(void)
+  void UpdateVolume()
   {  // Ignore if no source
     if(!sCptr) return;
     // Set volume
@@ -485,7 +493,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   void SetVolume(const ALfloat fNewVolume)
     { fVolume = fNewVolume; UpdateVolume(); }
   /* -- Fully rebuffer stream data ----------------------------------------- */
-  bool FullRebuffer(void)
+  bool FullRebuffer()
   { // Start from buffer at index 0
     size_t stIndex = 0;
     // Until we run out of buffers allocated
@@ -509,10 +517,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     return true;
   }
   /* -- Play with lock ----------------------------------------------------- */
-  void PlaySafe(void) { const LockGuard lgStreamSync{ mMutex }; Play(); }
+  void PlaySafe() { MutexCall([this](){ Play(); }); }
   /* -- Stop with lock ----------------------------------------------------- */
   void StopSafe(const StreamStopReason srReason)
-    { const LockGuard lgStreamSync{ mMutex }; Stop(srReason); }
+    { MutexCall([this, srReason](){ Stop(srReason); }); }
   /* -- Load from memory --------------------------------------------------- */
   void AsyncReady(FileMap &fmData)
   { // Set file class
@@ -569,9 +577,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
       fixed, GetDuration(), vBuffers.size(), MemSize(), hex, GetVersion());
   }
   /* -- Return metadata as table ------------------------------------------- */
-  const StrNCStrMap &GetMetaData(void) const { return ssMetaData; }
+  const StrNCStrMap &GetMetaData() const { return ssMetaData; }
   /* -- Constructor -------------------------------------------------------- */
-  Stream(void) :                       // No parameters
+  Stream() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperStream{ cStreams },        // Initialise collector unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
@@ -589,18 +597,22 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     psState(PS_STANDBY),               // Current state to standby
     fVolume(1.0f)                      // No volume yet
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Stream(void)
+  ~Stream()
   { // Stop any pending async operations
     AsyncCancel();
-    // Synchronise from sources management and audio thread
-    const scoped_lock slCollectorAndStream{
-      cParent->CollectorGetMutex(), mMutex };
-    // Unload source and buffers
-    UnloadSourceAndBuffers();
-    // If stream opened? Clear ogg state
-    if(ovfContext.datasource) ov_clear(&ovfContext);
+    // Remove the registration now so it is no longer polled
+    ICHelperStream::CollectorUnregister();
+    // Ignore if file data not initialised
+    if(fmFile.FileMapClosed()) return;
+    // Synchronise from audio thread and sources management
+    MutexScopedCall([this](){
+      // Unload source and buffers
+      UnloadSourceAndBuffers();
+      // If stream opened? Clear ogg state
+      if(ovfContext.datasource) ov_clear(&ovfContext);
+    }, cParent->MutexGet());
     // Log that the stream was unloaded
     cLog->LogDebugExSafe("Stream unloaded '$'!", IdentGet());
   }
@@ -625,41 +637,47 @@ CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
   }},                                  // Play state strings initialised
   stBufCount(0),                       // No buffers count yet
   stBufSize(0)                         // No buffer size yet
-) /* == Manage streams ===================================================== */
-static void StreamManage(void)
-{ // Lock access to bitmap collector list and process each stream
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->Main();
+) /* == Manage streams for audio thread ==================================== */
+static void StreamManage()
+{ // Lock access to streams collector list and process logic for each stream
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->Main();
+  });
 }
 /* == Unload all source and buffers ======================================== */
-static void StreamDeInit(void)
-{ // Lock access to bitmap collector list and unload each stream
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->UnloadSourceAndBuffers();
+static void StreamDeInit()
+{ // Lock access to streams collector list and uninitialise all buffers
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->UnloadSourceAndBuffers();
+  });
 }
 /* == Clear event callbacks on all streams ================================= */
-static void StreamClearEvents(void)
-{ // Lock access to bitmap collector list and clear event callbacks
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->LuaEvtDeInit();
+static void StreamClearEvents()
+{ // Lock access to streams collector list and uninitialise all stream events
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->LuaEvtDeInit();
+  });
 }
 /* == Generate all source and buffers ====================================== */
-static void StreamReInit(void)
-{ // Lock access to bitmap collector list and reinit source/buffers
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->GenerateSourceAndBuffers();
+static void StreamReInit()
+{ // Lock access to bitmap collector list and uninitialise source/buffers
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->GenerateSourceAndBuffers();
+  });
 }
 /* == Stop all streams ===================================================== */
-static void StreamStop(void)
+static void StreamStop()
 { // Lock access to bitmap collector list and stop all streams
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->StopSafe(SR_STOPALL);
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->StopSafe(SR_STOPALL);
+  });
 }
 /* == Update all streams base volume======================================== */
-static void StreamCommitVolume(void)
+static void StreamCommitVolume()
 { // Lock access to bitmap collector list and update all stream volumes
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->UpdateVolume();
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->UpdateVolume();
+  });
 }
 /* == Set number of buffers to allocate per stream ========================= */
 static CVarReturn StreamSetBufferCount(const size_t stNewCount)

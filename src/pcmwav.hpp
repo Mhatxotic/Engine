@@ -172,7 +172,7 @@ class CodecWAV :                       // WAV codec object
     return true;
   }
   /* -- Constructor --------------------------------------------- */ protected:
-  CodecWAV(void) :
+  CodecWAV() :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_WAV, "Windows Wave Audio", "WAV",
       bind(&CodecWAV::Decode, this, _1, _2), }

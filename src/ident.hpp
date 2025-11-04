@@ -19,34 +19,34 @@ template<class StringType>             // STL string type to use
 { /* -- Private variables --------------------------------------- */ protected:
   StringType       strIdentifier;      // The identifier
   /* -- Identifier is set? ----------------------------------------- */ public:
-  bool IdentIsSet(void) const { return !strIdentifier.empty(); }
-  bool IdentIsNotSet(void) const { return !IdentIsSet(); }
+  bool IdentIsSet() const { return !strIdentifier.empty(); }
+  bool IdentIsNotSet() const { return !IdentIsSet(); }
   /* -- Get identifier ----------------------------------------------------- */
-  const StringType &IdentGet(void) const { return strIdentifier; }
+  const StringType &IdentGet() const { return strIdentifier; }
   /* -- Get identifier by address ------------------------------------------ */
-  const char *IdentGetCStr(void) const { return IdentGet().c_str(); }
-  const char *IdentGetData(void) const { return IdentGet().data(); }
+  const char *IdentGetCStr() const { return IdentGet().data(); }
+  const char *IdentGetData() const { return IdentGet().data(); }
   /* -- Move constructor from another rvalue string ------------- */ protected:
   explicit IdentBase(StringType &&strId) :
     /* -- Initialisers ----------------------------------------------------- */
     strIdentifier{ StdMove(strId) }       // Move supplied string
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Move constructor from rvalue identifier ---------------------------- */
   explicit IdentBase(IdentBase &&idOther) :
     /* -- Initialisers ----------------------------------------------------- */
     strIdentifier{                     // Initialise string
       StdMove(idOther.strIdentifier) }    // Move supplied string
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Copy constructor from another lvalue string ------------------------ */
   explicit IdentBase(const StringType &strId) :
     /* -- Initialisers ----------------------------------------------------- */
     strIdentifier{ strId }             // Copy supplied name
     /* -- Noi code --------------------------------------------------------- */
-    { }
+    {}
   /* -- Standby constructor ------------------------------------------------ */
-  IdentBase(void) = default;
+  IdentBase() = default;
 };/* -- Identifier class --------------------------------------------------- */
 struct Ident :                         // Members initially public
   /* -- Base classes ------------------------------------------------------- */
@@ -63,38 +63,37 @@ struct Ident :                         // Members initially public
   void IdentSet(const IdentBase &ibO) { strIdentifier = ibO.IdentGet(); }
   /* -- Formatted set using StrFormat() ------------------------------------ */
   template<typename ...VarArgs>
-    void IdentSetEx(const char*const cpFormat, const VarArgs &...vaArgs)
-      { IdentSet(StrFormat(cpFormat, vaArgs...)); }
+    void IdentSetEx(const char*const cpFormat, VarArgs &&...vaArgs)
+  { IdentSet(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted set using StrAppend() ------------------------------------ */
-  template<typename ...VarArgs>
-    void IdentSetA(const VarArgs &...vaArgs)
-      { IdentSet(StrAppend(vaArgs...)); }
+  template<typename ...VarArgs>void IdentSetA(VarArgs &&...vaArgs)
+    { IdentSet(StrAppend(StdForward<VarArgs>(vaArgs)...)); }
   /* -- Clear identifier --------------------------------------------------- */
-  void IdentClear(void) { strIdentifier.clear(); }
+  void IdentClear() { strIdentifier.clear(); }
   /* -- Swap identifier ---------------------------------------------------- */
   void IdentSwap(Ident &idOther) { strIdentifier.swap(idOther.strIdentifier); }
   /* -- Move constructor from another rvalue string ------------------------ */
   explicit Ident(string &&strId) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdentBase{ StdMove(strId) }           // Move supplied name
+    IdentBase{ StdMove(strId) }        // Move supplied name
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Move constructor from rvalue identifier ---------------------------- */
   explicit Ident(Ident &&idO) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdentBase{ StdMove(idO.IdentGet()) }  //  Move string
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // No code
+    IdentBase{ StdMove(idO.IdentGet()) } //  Move string
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Copy constructor from another lvalue string ------------------------ */
   explicit Ident(const string &strId) :
     /* -- Initialisers ----------------------------------------------------- */
     IdentBase{ strId }                 // Copy name
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Standby constructor ------------------------------------------------ */
-  Ident(void)
+  Ident()
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 typedef IdentBase<const string_view> IdentConst; // Const type of Ident
 /* == Id to string list helper class ======================================= */
@@ -110,16 +109,16 @@ struct IdList :                        // Members initially public
 { /* -- Constructor with alternative string -------------------------------- */
   public: IdList(const List &lNI, const string_view &strNU) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdentConst{ StdMove(strNU) },       // Unknown item string
-    List{ StdMove(lNI) }                // Items
+    IdentConst{ StdMove(strNU) },      // Unknown item string
+    List{ StdMove(lNI) }               // Items
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with blank alternative string -------------------------- */
   explicit IdList(const List &lNI) :
     /* -- Initialisers ----------------------------------------------------- */
     IdList{ lNI, cCommon->CommonBlank() }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Get name from id --------------------------------------------------- */
   template<typename IntType=size_t>
     const string_view &Get(const IntType itId) const
@@ -151,13 +150,13 @@ struct IdMap :                         // Members initially public
     IdentConst{ StdMove(strvIdent) },  // Unknown item string
     MapType{ StdMove(mtList) }         // Items map
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with no alternative string ----------------------------- */
   explicit IdMap(const MapType &mtList) :
     /* -- Initialisers ----------------------------------------------------- */
     IdMap(mtList, cCommon->CommonBlank())
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Test all items as flags and return a list of strings set ----------- */
   const StrViewVector Test(const KeyType ktValue) const
   { // The destination for the string views
@@ -189,9 +188,9 @@ template<typename IntType = const uint64_t>class IdentCSlave
     /* -- Initialisers ----------------------------------------------------- */
     itCounter(itId)                    // Initialise id
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Public functions ------------------------------------------- */ public:
-  IntType CtrGet(void) const { return itCounter; }
+  IntType CtrGet() const { return itCounter; }
 };/* ----------------------------------------------------------------------- */
 template<typename IntType = uint64_t,             // Counter integer type
          class SlaveClass = IdentCSlave<IntType>> // Slave class type
@@ -205,9 +204,9 @@ class IdentCMaster :
     /* -- Initialisers ----------------------------------------------------- */
     SlaveClass(0)                      // Initialise id at zero
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Public functions ------------------------------------------- */ public:
-  IntType CtrNext(void) { return this->itCounter++; }
+  IntType CtrNext() { return this->itCounter++; }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

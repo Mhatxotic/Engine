@@ -180,7 +180,7 @@ LLFUNC(Register, 1, cLua->StateAssert(lS);AcVariable{lS}().Init(lS))
 // ? Returns if the specified console command is registered which includes
 // ? the built-in engine console commands too.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Exists, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS,1})))
+LLFUNC(Exists, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS, 1})))
 /* ========================================================================= */
 // $ Variable.Save
 // < Count:number=Number of items saved
@@ -188,6 +188,16 @@ LLFUNC(Exists, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS,1})))
 // ? written.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->Save()))
+/* ========================================================================= */
+// $ Variable.Valid
+// > Var:string=Cvar name to test.
+// < Valid:boolean=Cvar name is valid.
+// ? Returns true if the given string has valid characters, false if not. CVars
+// ? must begin with a letter but subsequent characters can be underscores and
+// ? numbers. The name must also be between 5 and 255 characters in length.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Valid, 1, LuaUtilPushVar(lS,
+  cCVars->IsValidVariableName(AgString{lS, 1})))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Variable.* namespace functions structure                            ## **
@@ -195,6 +205,7 @@ LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->Save()))
 ** ========================================================================= */
 LLRSBEGIN                              // Variable.* namespace functions begin
   LLRSFUNC(Count), LLRSFUNC(Exists), LLRSFUNC(Register), LLRSFUNC(Save),
+  LLRSFUNC(Valid),
 LLRSEND                                // Variable.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

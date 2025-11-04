@@ -37,9 +37,9 @@ class SysProcess :                     // Need this before of System init order
   pid_t           *pipProcessId;       // Process id (OS level memory)
   static constexpr size_t stPidSize = sizeof(piProcessId); // Size of a pid
   /* -- Return process and thread id --------------------------------------- */
-  template<typename IntType=decltype(piProcessId)>IntType GetPid(void) const
+  template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
-  template<typename IntType=decltype(vpThreadId)>IntType GetTid(void) const
+  template<typename IntType=decltype(vpThreadId)>IntType GetTid() const
     { return static_cast<IntType>(UtilBruteCast<const size_t>(vpThreadId)); }
   /* -- Initialise global mutex ------------------------------------ */ public:
   bool InitGlobalMutex(const string_view &strvTitle)
@@ -52,14 +52,14 @@ class SysProcess :                     // Need this before of System init order
       int               iFd,        // The file descriptor of the shm object
                         iMode;      // Requested mode for the shm object
       /* -- Return mode -------------------------------------------- */ public:
-      int Mode(void) const { return iMode; }
+      int Mode() const { return iMode; }
       /* -- Get file descriptor -------------------------------------------- */
-      int Get(void) const { return iFd; }
+      int Get() const { return iFd; }
       /* -- Resize file descriptor content --------------------------------- */
       bool Truncate(const size_t stSize) const
         { return !ftruncate(Get(), static_cast<off_t>(stSize)); }
       /* -- Close the file descriptor -------------------------------------- */
-      bool Close(void)
+      bool Close()
       { // Return success if already closed
         if(Get() < 0) return true;
         // Do the close and return failure if failed
@@ -81,7 +81,7 @@ class SysProcess :                     // Need this before of System init order
         return Get() >= 0;
       }
       /* -- Destructor that closes the file descriptor --------------------- */
-      ~Shm(void) { if(Get() >= 0) close(Get()); }
+      ~Shm() { if(Get() >= 0) close(Get()); }
       /* -- Constructor that initialises variables ------------------------- */
       explicit Shm(const string_view &strvNTitle) :
         /* -- Initialisers ------------------------------------------------- */
@@ -89,7 +89,7 @@ class SysProcess :                     // Need this before of System init order
         iFd(-1),                       // File descriptor uninitialised
         iMode(0)                       // Mode uninitialised
         /* -- No code ------------------------------------------------------ */
-        { }
+        {}
       /* -- Initialise a single object that automatically cleans up -------- */
     } shmShm{ strvTitle };
     // Create the semaphore and if an error occurs?
@@ -160,7 +160,7 @@ class SysProcess :                     // Need this before of System init order
     return true;
   }
   /* -- Destructor --------------------------------------------------------- */
-  ~SysProcess(void)
+  ~SysProcess()
   { // Unmap the memory containing the pid and reset the pid memory address
     if(pipProcessId && munmap(pipProcessId, stPidSize))
       cLog->LogWarningExSafe("System failed to unmap shared memory of size "
@@ -171,7 +171,7 @@ class SysProcess :                     // Need this before of System init order
         "'$'! $", IdentGet(), SysError());
   }
   /* -- Constructor -------------------------------------------------------- */
-  SysProcess(void) :
+  SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
     piProcessId(getpid()),             // Initialise process id number
     vpThreadId(pthread_self()),        // Initialise main thread id number
@@ -181,7 +181,7 @@ class SysProcess :                     // Need this before of System init order
     mptTask(mach_task_self()),         // Initialise self task
     pipProcessId(nullptr)              // Process id memory not available
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Dependency classes ------------------------------------------------- */
@@ -197,14 +197,14 @@ class SysCore :
     if(sysctlbyname(cpS, nullptr, &stSize, nullptr, 0) < 0) return "#ERR1#";
     // Resize and fill string
     string strOut; strOut.resize(stSize - 1);
-    if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.c_str()),
+    if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.data()),
       &stSize, nullptr, 0) < 0)
         return cCommon->CommonBlank();
     // Return the string
     return strOut;
   }
   /* ----------------------------------------------------------------------- */
-  template<typename T>const T GetSysCTLInfoNum(const char *cpS)
+  template<typename T>const T GetSysCTLInfoNum(const char*const cpS)
   { // Resize
     T tOut;
     // Size
@@ -213,7 +213,7 @@ class SysCore :
     return sysctlbyname(cpS, &tOut, &stOut, nullptr, 0) < 0 ? 0 : tOut;
   }
   /* ----------------------------------------------------------------------- */
-  void InitMemorySize(void)
+  void InitMemorySize()
   { // Store real total memory and return if succesful
     memData.qMTotal = GetSysCTLInfoNum<uint64_t>("hw.memsize");
     if(memData.qMTotal) return;
@@ -222,7 +222,7 @@ class SysCore :
     memData.qMTotal = memData.qMFree + memData.qMUsed;
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateProcessCpuUsage(void)
+  void UpdateProcessCpuUsage()
   { // For cpu information directly from operating system
     struct task_thread_times_info ttiInfo;
     mach_msg_type_number_t mmtnCount = TASK_THREAD_TIMES_INFO_COUNT;
@@ -249,7 +249,7 @@ class SysCore :
     uqTimeNowL = uqTimeNow;
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateSystemCpuUsage(void)
+  void UpdateSystemCpuUsage()
   { // For cpu information directly from operating system
     mach_msg_type_number_t mmtnType = HOST_CPU_LOAD_INFO_COUNT;
     host_cpu_load_info_data_t hclidData;
@@ -277,7 +277,7 @@ class SysCore :
       uqTotalTicksSinceLastTime : 0)) * 100;
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateProcessMemoryUsage(void)
+  void UpdateProcessMemoryUsage()
   { // For getting process info
     task_vm_info_data_t tvidData;
     mach_msg_type_number_t mmtnCount = TASK_VM_INFO_COUNT;
@@ -290,7 +290,7 @@ class SysCore :
       memData.stMProcPeak = memData.stMProcUse;
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateSystemMemoryUsage(void)
+  void UpdateSystemMemoryUsage()
   { // More containers
 		vm_statistics64 vmsData;
     mach_msg_type_number_t mmtnType = HOST_VM_INFO64_COUNT;
@@ -307,13 +307,13 @@ class SysCore :
     memData.dMLoad = UtilMakePercentage(memData.qMUsed, memData.qMTotal);
   }
   /* --------------------------------------------------------------- */ public:
-  void UpdateMemoryUsageData(void)
+  void UpdateMemoryUsageData()
     { UpdateSystemMemoryUsage(); UpdateProcessMemoryUsage(); }
   /* ----------------------------------------------------------------------- */
-  void UpdateCPUUsageData(void)
+  void UpdateCPUUsageData()
     { UpdateSystemCpuUsage(); UpdateProcessCpuUsage(); }
   /* -- Get uptime from clock class ---------------------------------------- */
-  StdTimeT GetUptime(void) const { return cmHiRes.GetTimeS(); }
+  StdTimeT GetUptime() const { return cmHiRes.GetTimeS(); }
   /* -- Send signal -------------------------------------------------------- */
   static int SendSignal(const unsigned int uiPid, const int iSignal)
     { return kill(static_cast<pid_t>(uiPid), iSignal); }
@@ -324,7 +324,7 @@ class SysCore :
   bool IsPidRunning(const unsigned int uiPid) const
     { return !SendSignal(uiPid, 0); }
   /* -- GLFW handles the icons on this ------------------------------------- */
-  void UpdateIcons(void) { }
+  void UpdateIcons() {}
   /* ----------------------------------------------------------------------- */
   static bool LibFree(void*const vpModule)
     { return vpModule && !dlclose(vpModule); }
@@ -575,22 +575,22 @@ class SysCore :
     XCL("Failed to open MACH-O executable!", "File", strFile);
   }
   /* -- Get executable file name ------------------------------------------- */
-  const string GetExeName(void)
+  const string GetExeName()
   { // Setup executable pathname
     string strExe; strExe.resize(PROC_PIDPATHINFO_MAXSIZE);
     // Get path to executable
     if(proc_pidpath(GetPid(),
-      const_cast<char*>(strExe.c_str()), PROC_PIDPATHINFO_MAXSIZE) <= 0)
+      const_cast<char*>(strExe.data()), PROC_PIDPATHINFO_MAXSIZE) <= 0)
         XCS("Failed to get path to executable!",
             "Pid", GetPid(), "Buffer", strExe.capacity());
     // Set real size and trim the memory usage
-    strExe.resize(strlen(strExe.c_str()));
+    strExe.resize(strlen(strExe.data()));
     strExe.shrink_to_fit();
     // Return executable name
     return strExe;
   }
   /* -- Enum modules ------------------------------------------------------- */
-  SysModMap EnumModules(void)
+  SysModMap EnumModules()
   { // Make verison string
     const string strVersion{ StrAppend(sizeof(void*)*8, "-bit version") };
     // Mod list
@@ -629,11 +629,11 @@ class SysCore :
       else continue;
       // Now we can get the version and if we got it?
       unsigned int uiVer = static_cast<unsigned int>
-        (NSVersionOfLinkTimeLibrary(strPathName.c_str()));
+        (NSVersionOfLinkTimeLibrary(strPathName.data()));
       // Try another function if failed
       if(uiVer == StdMaxUInt)
         uiVer = static_cast<unsigned int>
-          (NSVersionOfRunTimeLibrary(strPathName.c_str()));
+          (NSVersionOfRunTimeLibrary(strPathName.data()));
       // Worked this time?
       if(uiVer != StdMaxUInt)
       { // Fill in the bkanks
@@ -645,14 +645,14 @@ class SysCore :
       // Add it to mods list
       smmMap.emplace(make_pair(static_cast<size_t>(ulIndex),
         SysModule{ StdMove(strFullPath), uiMajor, uiMinor, uiBuild,
-          0, strPathName.c_str(), strPathName.c_str(),
+          0, strPathName.data(), strPathName.data(),
           string(strVersion), string(StrFormat("$.$.$.0",
             uiMajor, uiMinor, uiBuild)) }));
     } // Module list which includes the executable module
     return smmMap;
   }
   /* ----------------------------------------------------------------------- */
-  OSData GetOperatingSystemData(void)
+  OSData GetOperatingSystemData()
   { // Get operating system name
     const Token tVersion{ GetSysCTLInfoString("kern.osproductversion"),
       cCommon->CommonPeriod() };
@@ -739,7 +739,7 @@ class SysCore :
       // Update and set global locale
       cCommon->CommonSetLocale(strCode);
     } // Set global locale and show error if failed
-    if(!setlocale(LC_ALL, strCode.c_str()))
+    if(!setlocale(LC_ALL, strCode.data()))
       XCL("Failed to initialise default locale!", "Locale", strCode);
     // Replace underscore with dash to be consistent with Windows
     if(strCode[2] == '_') strCode[2] = '-';
@@ -762,7 +762,7 @@ class SysCore :
     };
   }
   /* ----------------------------------------------------------------------- */
-  ExeData GetExecutableData(void)
+  ExeData GetExecutableData()
   { // Suffix to test against
     const string strMacSig{ ".app/Contents/MacOS/" };
     // Get engine directory
@@ -777,7 +777,7 @@ class SysCore :
     return { 0, 0, false, bIsBundled };
   }
   /* ----------------------------------------------------------------------- */
-  CPUData GetProcessorData(void)
+  CPUData GetProcessorData()
   { // Using arm cpu?
 #if defined(RISC)
     // Get family model and stepping (improvised for X-platform consistency)
@@ -846,7 +846,7 @@ class SysCore :
       StdMove(strProcessorName) };
   }
   /* ----------------------------------------------------------------------- */
-  bool DebuggerRunning(void) const
+  bool DebuggerRunning() const
   { // Kernel process info
     struct kinfo_proc kipInfo;
     kipInfo.kp_proc.p_flag = 0;
@@ -860,37 +860,35 @@ class SysCore :
   }
   /* -- Get process affinity masks ----------------------------------------- */
   uint64_t GetAffinity(const bool) const { return Flag(StdThreadMax()); }
-  /* ----------------------------------------------------------------------- */
-  int GetPriority(void) const
-  { // Get priority value and throw if failed
+  /* -- Return process priority -------------------------------------------- */
+  int GetPriority() const
+  { // Get priority value and return if succeeded
     const int iNice = getpriority(PRIO_PROCESS, GetPid<unsigned int>());
-    if(iNice == -1)
-      XCS("Failed to acquire process priority!", "Pid", GetPid());
-    // Return priority
-    return iNice;
+    if(iNice != -1) return iNice;
+    XCS("Failed to acquire process priority!", "Pid", GetPid());
    }
-  /* -- Return if running as root ----------------------------------------- */
-  bool DetectElevation(void) { return getuid() == 0; }
-  /* -- Return data from /dev/random -------------------------------------- */
-  Memory GetEntropy(void) const
+  /* -- Return if running as root ------------------------------------------ */
+  bool DetectElevation() const { return getuid() == 0; }
+  /* -- Return data from /dev/random --------------------------------------- */
+  Memory GetEntropy() const
     { return FStream{ "/dev/random", FM_R_B }.FStreamReadBlockSafe(1024); }
-  /* ----------------------------------------------------------------------- */
-  void *GetWindowHandle(void) const { return nullptr; }
+  /* -- Return window handle (n/a) ----------------------------------------- */
+  void *GetWindowHandle() const { return nullptr; }
   /* -- A window was created ----------------------------------------------- */
   void WindowInitialised(GlFW::GLFWwindow*const gwWindow)
     { bWindowInitialised = !!gwWindow; }
   /* -- Window was destroyed, nullify handles ------------------------------ */
-  void SetWindowDestroyed(void) { bWindowInitialised = false; }
+  void SetWindowDestroyed() { bWindowInitialised = false; }
   /* -- Help with debugging ------------------------------------------------ */
-  const char *HeapCheck(void) const { return "Not implemented!"; }
+  const char *HeapCheck() const { return "Not implemented!"; }
   /* ----------------------------------------------------------------------- */
-  int LastSocketOrSysError(void) const { return StdGetError(); }
+  int LastSocketOrSysError() const { return StdGetError(); }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const string BuildRoamingDir(void) const
+  const string BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("HOME",
         "/Library/Application Support"); }
   /* -- Default constructor ------------------------------------------------ */
-  SysCore(void) :                      // No parameters
+  SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
     SysCon{ EnumModules(), 0 },        // Build system module dependencies
     SysCommon{ GetExecutableData(),    // Build data about the executable

@@ -21,7 +21,7 @@ class SysModule :                      // Members initially private
       UINT uiLength = 0;
       // Get version info. Return cleared information if failed.
       VS_FIXEDFILEINFO *lpFfi = nullptr;
-      if(!VerQueryValueW(wstrValue.c_str(), L"\\",
+      if(!VerQueryValueW(wstrValue.data(), L"\\",
         reinterpret_cast<LPVOID*>(&lpFfi), &uiLength))
       { // Clear version numbers
         uiMajor = SysErrorCode();
@@ -54,7 +54,7 @@ class SysModule :                      // Members initially private
       wchar_t *wcpStr = nullptr;
       // Return the result of the string resource lookup or return the system
       // error code string instead.
-      return VerQueryValueW(wstrBlock.data(), wstrValue.c_str(),
+      return VerQueryValueW(wstrBlock.data(), wstrValue.data(),
            reinterpret_cast<LPVOID*>(&wcpStr), &uiStrSize) ?
         S16toUTF(wcpStr) : SysError();
     }
@@ -107,7 +107,7 @@ class SysModule :                      // Members initially private
   { // Get size of version info structure. Done if succeeded
     DWORD dwDummy = 0;
     if(const DWORD dwSize =
-      GetFileVersionInfoSizeW(UTFtoS16(strModule).c_str(), &dwDummy))
+      GetFileVersionInfoSizeW(UTFtoS16(strModule).data(), &dwDummy))
         return dwSize;
     // Ignore if module has no resource section. This can be triggered when
     // using Wine as their DLL's don't have resource data sections.
@@ -120,7 +120,7 @@ class SysModule :                      // Members initially private
   const wstring ReadInfo(const string &strModule, const DWORD dwSize)
   { // Allocate memory for string and read data. Return string if succeeded!
     wstring wstrVI(dwSize, 0);
-    if(GetFileVersionInfoW(UTFtoS16(strModule).c_str(), 0, dwSize,
+    if(GetFileVersionInfoW(UTFtoS16(strModule).data(), 0, dwSize,
       UtfToNonConstCast<LPVOID>(wstrVI.data())))
         return wstrVI;
     // Failed to throw error
@@ -170,12 +170,12 @@ class SysModule :                      // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     SysModuleData{ Load(strModule) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Return data (move filename) ---------------------------------------- */
   explicit SysModule(string &&strModule) :
     /* -- Initialisers ----------------------------------------------------- */
     SysModuleData{ Load(StdMove(strModule)) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

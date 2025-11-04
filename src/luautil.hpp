@@ -11,8 +11,8 @@ namespace ILuaUtil {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IDir::P;
 using namespace IError::P;             using namespace ILuaIdent::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace IToggler::P;
+using namespace IMemory::P;            using namespace IRefCtr::P;
+using namespace IStd::P;               using namespace IString::P;
 using namespace IToken::P;             using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -138,14 +138,14 @@ class LuaStackSaver                    // Lua stack saver class
   const int        iTop;               // Current stack position
   lua_State*const  lState;             // State to use
   /* -- Return stack position -------------------------------------- */ public:
-  int Value(void) const { return iTop; }
+  int Value() const { return iTop; }
   /* -- Restore stack position --------------------------------------------- */
-  void Restore(void) const { LuaUtilPruneStack(lState, Value()); }
+  void Restore() const { LuaUtilPruneStack(lState, Value()); }
   /* -- Constructor -------------------------------------------------------- */
   explicit LuaStackSaver(lua_State*const lS) :
-    iTop(LuaUtilStackSize(lS)), lState(lS) { }
+    iTop(LuaUtilStackSize(lS)), lState(lS) {}
   /* -- Destructor --------------------------------------------------------- */
-  ~LuaStackSaver(void) { Restore(); }
+  ~LuaStackSaver() { Restore(); }
 };/* ----------------------------------------------------------------------- */
 /* -- Remove item from stack ----------------------------------------------- */
 static void LuaUtilRmStack(lua_State*const lS, const int iParam=-1)
@@ -295,10 +295,10 @@ static void LuaUtilPushStrView(lua_State*const lS, const string_view &strvStr)
 static void LuaUtilPushPtr(lua_State*const lS, void*const vpPtr)
   { lua_pushlightuserdata(lS, vpPtr); }
 /* -- Push multiple values of different types (use in ll*.hpp sources) ----- */
-static void LuaUtilPushVar(lua_State*const) { }
+static void LuaUtilPushVar(lua_State*const) {}
 template<typename ...VarArgs, typename AnyType>
   static void LuaUtilPushVar(lua_State*const lS, const AnyType &atVal,
-    const VarArgs &...vaVars)
+    VarArgs &&...vaArgs)
 { // Type is STL string?
   if constexpr(is_same_v<AnyType, string>) LuaUtilPushStr(lS, atVal);
   // Type is STL string_view?
@@ -324,7 +324,7 @@ template<typename ...VarArgs, typename AnyType>
   // Compiler check
 #endif
   // Shift to next variable
-  LuaUtilPushVar(lS, vaVars...);
+  LuaUtilPushVar(lS, StdForward<VarArgs>(vaArgs)...);
 }
 /* -- Throw error ---------------------------------------------------------- */
 static void LuaUtilErrThrow(lua_State*const lS) { lua_error(lS); }
@@ -353,7 +353,7 @@ static void LuaUtilCopyValue(lua_State*const lS, const int iIndex)
 /* -- Do the equivalent t[k] = v ------------------------------------------- */
 static void LuaUtilSetField(lua_State*const lS, const int iIndex,
   const char*const cpKey)
-    { lua_setfield(lS, iIndex, cpKey); }
+{ lua_setfield(lS, iIndex, cpKey); }
 /* -- Raw assignment without meta methods ---------------------------------- */
 static void LuaUtilSetRaw(lua_State*const lS, const int iIndex=1)
   { lua_rawset(lS, iIndex); }
@@ -694,12 +694,12 @@ static void LuaUtilCheckParams(lua_State*const lS, const int iCount)
     "Supplied", iTop, "Required", iCount);
 }
 /* -- Check multiple functions are valid ----------------------------------- */
-static void LuaUtilCheckFunc(lua_State*const) { }
+static void LuaUtilCheckFunc(lua_State*const) {}
 template<typename ...VarArgs>
   static void LuaUtilCheckFunc(lua_State*const lS, const int iIndex,
-    const VarArgs &...vaVars)
-      { LuaUtilAssert(lS, LuaUtilIsFunction(lS, iIndex), iIndex, "function");
-        LuaUtilCheckFunc(lS, vaVars...); }
+    VarArgs &&...vaArgs)
+{ LuaUtilAssert(lS, LuaUtilIsFunction(lS, iIndex), iIndex, "function");
+  LuaUtilCheckFunc(lS, StdForward<VarArgs>(vaArgs)...); }
 /* -- Get and return a boolean and throw exception if not a boolean -------- */
 static bool LuaUtilGetBool(lua_State*const lS, const int iIndex)
 { // Throw if requested parameter isn't a boolean else return it
@@ -810,7 +810,6 @@ template<typename IntType>
 { // Return integer if valid and in range else break execution
   const IntType itVal = LuaUtilGetInt<IntType>(lS, iIndex);
   if(itVal > itMin && itVal <= itMax) return itVal;
-  // Throw error
   XC("Integer out of range!",
      "Parameter",      iIndex, "Supplied", itVal,
      "NotLesserEqual", itMin,  "NotGreater", itMax);
@@ -836,10 +835,9 @@ static LuaUtilClass *LuaUtilGetBasePtr(lua_State*const lS, const int iParam,
 /* -- Get a LuaUtilClass pointer from userdata and throw if null ----------- */
 static LuaUtilClass *LuaUtilGetCheckedBasePtr(lua_State*const lS,
   const int iParam, const LuaIdent &liParent)
-{ // Get lua data class and if it is valid
+{ // Get lua data class and if it is valid else lua data class not valid
   if(LuaUtilClass*const lucPtr = LuaUtilGetBasePtr(lS, iParam, liParent))
     return lucPtr;
-  // lua data class not valid
   XC("Null class parameter!",
      "Parameter", iParam, "Type", liParent.LuaIdentStr());
 }
@@ -901,7 +899,7 @@ template<class ClassType>
   { // Get address to the C++ class and if that is valid?
     if(ClassType*const ctPtr = reinterpret_cast<ClassType*>(lucPtr->vpPtr))
     { // Throw error if destruction attempted in protected callback
-      if(ctPtr->TogglerIsEnabled())
+      if(ctPtr->RefCtrIsEnabled())
         XC("Call not allowed in protected callback!",
            "Type", liRef.LuaIdentStr());
       // Clear the pointer to the C++ class and destroy it if not locked
@@ -1017,10 +1015,10 @@ static void LuaUtilCallFuncEx(lua_State*const lS, const int iParams=0,
   const int iReturns=0)
     { lua_call(lS, iParams, iReturns); }
 /* -- Standard in-sandbox call function with toggler ref ctr (unmanaged) --- */
-static void LuaUtilCallFuncTogglerEx(lua_State*const lS,
-  TogglerMaster<>*const tmMaster, const int iParams=0, const int iReturns=0)
+static void LuaUtilCallFuncRefCtrEx(lua_State*const lS,
+  RefCtrMaster<>*const rcmMaster, const int iParams=0, const int iReturns=0)
 { // Set a 'protect' flag and then unset it when leaving this scope
-  const TogglerSlave<> tsProtect{ tmMaster };
+  const RefCtrSlave<> rcsProtect{ rcmMaster };
   // Do the call
   LuaUtilCallFuncEx(lS, iParams, iReturns);
 }
@@ -1043,8 +1041,7 @@ static int LuaUtilPCallExSafe(lua_State*const lS, const int iParams=0,
 }
 /* -- Handle LuaUtilPCall result ------------------------------------------- */
 static void LuaUtilPCallResultHandle(lua_State*const lS, const int iResult)
-{ // Function to call lookup table
-  // Compare error code
+{ // Compare error code
   switch(iResult)
   { // No error
     case LUA_OK: return;
@@ -1093,7 +1090,7 @@ template<class MapClassType>static void LuaUtilToTableEx(lua_State*const lS,
   for(auto &mctPair : mctData)
   { // Push value and key name
     LuaUtilPushStr(lS, mctPair.second);
-    LuaUtilSetField(lS, -2, mctPair.first.c_str());
+    LuaUtilSetField(lS, -2, mctPair.first.data());
   }
 }
 /* -- Push the specified string at the specified index --------------------- */
@@ -1157,7 +1154,7 @@ static void LuaUtilExplode(lua_State*const lS)
   // Create empty table if string invalid
   if(!stStr || !stSep) { LuaUtilPushTable(lS); return; }
   // Else convert whats in the string
-  LuaUtilToTable(lS, Token({cpStr, stStr}, {cpSep, stSep}));
+  LuaUtilToTable(lS, Token{{cpStr, stStr}, {cpSep, stSep}});
 }
 /* -- Explode LUA string into table ---------------------------------------- */
 static void LuaUtilExplodeEx(lua_State*const lS)
@@ -1169,7 +1166,7 @@ static void LuaUtilExplodeEx(lua_State*const lS)
   // Create empty table if string invalid
   if(!stStr || !stSep || !stMax) { LuaUtilPushTable(lS); return; }
   // Else convert whats in the string
-  LuaUtilToTable(lS, Token({cpStr, stStr}, {cpSep, stSep}, stMax));
+  LuaUtilToTable(lS, Token{{cpStr, stStr}, {cpSep, stSep}, stMax});
 }
 /* -- Process initial implosion a table ------------------------------------ */
 static lua_Integer LuaUtilImplodePrepare(lua_State*const lS,
@@ -1265,6 +1262,63 @@ static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS)
   // Return count of key/value pairs in table
   return uiCount - uiIndexedCount;
 }
+/* -- Clear a table of key pairs ------------------------------------------- */
+static void LuaUtilClearObject(lua_State*const lS, const int iIndex)
+{ // Create a new table which will hold keys to delete
+  lua_newtable(lS);
+  const int iKIndex = LuaUtilStackSize(lS);
+  int iKCount = 0;
+  // First key pair for lua_next()
+  LuaUtilPushNil(lS);
+  // For each key pair
+  while(lua_next(lS, iIndex))
+  { // Copy the key name into the array
+    LuaUtilCopyValue(lS, -2);
+    lua_rawseti(lS, iKIndex, ++iKCount);
+    lua_pop(lS, 1);
+  } // For each key in the table
+  for(;iKCount > 0; --iKCount)
+  { // Nil out each collected key using rawset (avoids metamethods)
+    LuaUtilGetRefEx(lS, iKIndex, iKCount);
+    LuaUtilPushNil(lS);
+    LuaUtilSetRaw(lS, iIndex);
+  } // Remove keys table we created
+  lua_pop(lS, 1);
+}
+/* -- Clear a table of key pairs with check -------------------------------- */
+static void LuaUtilClearObjectSafe(lua_State*const lS, const int iIndex)
+  { LuaUtilCheckTable(lS, iIndex); LuaUtilClearObject(lS, iIndex); }
+/* -- Clear multiple tables of key pairs with check ------------------------ */
+static void LuaUtilClearObjects(lua_State*const lS, int iStart)
+  { for(const int iEnd = LuaUtilStackSize(lS); iStart <= iEnd; ++iStart)
+      LuaUtilClearObjectSafe(lS, iStart); }
+/* -- Clear a table of indicies -------------------------------------------- */
+static void LuaUtilClearArray(lua_State*const lS, const int iIndex)
+{ // If table array has size?
+  if(lua_Unsigned luSize = LuaUtilGetSize(lS, iIndex)) do
+  { // Push a nil and set it to the indice
+    LuaUtilPushNil(lS);
+    lua_rawseti(lS, iIndex, luSize);
+  } // Until all indicies removed
+  while(--luSize > 0);
+}
+/* -- Clear a table of indices with check ---------------------------------- */
+static void LuaUtilClearArraySafe(lua_State*const lS, const int iIndex)
+  { LuaUtilCheckTable(lS, iIndex); LuaUtilClearArray(lS, iIndex); }
+/* -- Clear multiple tables of indicies with check ------------------------- */
+static void LuaUtilClearArrays(lua_State*const lS, int iStart)
+  { for(const int iEnd = LuaUtilStackSize(lS); iStart <= iEnd; ++iStart)
+      LuaUtilClearArraySafe(lS, iStart); }
+/* -- Clear a table of both key pairs and indicies ------------------------- */
+static void LuaUtilClearTable(lua_State*const lS, const int iIndex)
+  { LuaUtilClearArray(lS, iIndex); LuaUtilClearObject(lS, iIndex); }
+/* -- Clear a table of both key pairs and indicies with check -------------- */
+static void LuaUtilClearTableSafe(lua_State*const lS, const int iIndex)
+  { LuaUtilCheckTable(lS, iIndex); LuaUtilClearTable(lS, iIndex); }
+/* -- Clear multiple tables of both key pairs and indicies with check ------ */
+static void LuaUtilClearTables(lua_State*const lS, int iStart)
+  { for(const int iEnd = LuaUtilStackSize(lS); iStart <= iEnd; ++iStart)
+      LuaUtilClearTableSafe(lS, iStart); }
 /* -- Replace text with values from specified LUA table -------------------- */
 static const string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
 { // Return if source string is empty?
@@ -1305,39 +1359,39 @@ static const string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
   // Do the replacement and return the string
   return StrReplaceEx(strDest, lList);
 }
+/* -- Convert map tp table ------------------------------------------------- */
+template<class MapType, class FuncType>
+  static void LuaUtilToTable(lua_State*const lS, const MapType &mtRef,
+    FuncType &&ftFunc)
+{ // Create the table, we're creating non-indexed key/value pairs
+  LuaUtilPushTable(lS, 0, mtRef.size());
+  // For each table item
+  for(const typename MapType::value_type &mtvtRef : mtRef)
+  { // Push value and key name
+    ftFunc(mtvtRef.second);
+    LuaUtilSetField(lS, -2, mtvtRef.first.data());
+  }
+}
 /* -- Convert string/uint map to table ------------------------------------- */
 static void LuaUtilToTable(lua_State*const lS, const StrUIntMap &suimRef)
-{ // Create the table, we're creating non-indexed key/value pairs
-  LuaUtilPushTable(lS, 0, suimRef.size());
-  // For each table item
-  for(const StrUIntMapPair &suimpRef : suimRef)
-  { // Push value and key name
-    LuaUtilPushInt(lS, suimpRef.second);
-    LuaUtilSetField(lS, -2, suimpRef.first.c_str());
-  }
-}
-/* -- Convert varlist to lua table and put it on stack --------------------- */
+  { LuaUtilToTable(lS, suimRef, [lS](const unsigned int uiValue)
+      { LuaUtilPushInt(lS, uiValue); }); }
+/* -- Convert string/string map to table ----------------------------------- */
 static void LuaUtilToTable(lua_State*const lS, const StrNCStrMap &sncsmMap)
-{ // Create the table, we're creating non-indexed key/value pairs
-  LuaUtilPushTable(lS, 0, sncsmMap.size());
-  // For each table item
-  for(const StrNCStrMapPair &sncsmpPair : sncsmMap)
-  { // Push value and key name
-    LuaUtilPushStr(lS, sncsmpPair.second);
-    LuaUtilSetField(lS, -2, sncsmpPair.first.c_str());
-  }
-}
+  { LuaUtilToTable(lS, sncsmMap, [lS](const string &strValue)
+      { LuaUtilPushStr(lS, strValue); }); }
 /* -- Convert varlist to lua table and put it on stack --------------------- */
-template<class VectorType,
-         typename VectorValueType = typename VectorType::value_type>
-  static VectorType LuaUtilToNumVector(lua_State*const lS, const int iArg)
+template<class VecType, typename VecValType = typename VecType::value_type,
+  typename FuncType>
+static VecType LuaUtilToVector(lua_State*const lS, const int iArg,
+  FuncType &&ftFunc)
 { // Create the table, we're creating non-indexed key/value pairs
   LuaUtilCheckTable(lS, iArg);
   // Get maximums
   const size_t stMax = UtilIntOrMax<size_t>(LuaUtilGetSize(lS, iArg));
   const lua_Integer liMax = static_cast<lua_Integer>(stMax) + 1;
   // Preallocate the table
-  VectorType vtArray;
+  VecType vtArray;
   vtArray.reserve(stMax);
   // Walk the array
   for(lua_Integer liI = 1; liI < liMax; ++liI)
@@ -1345,42 +1399,29 @@ template<class VectorType,
     LuaUtilPushInt(lS, liI);
     lua_gettable(lS, -2);
     // Get the string from Lua stack and save the length
-    vtArray.push_back(LuaUtilGetNum<VectorValueType>(lS, -1));
+    vtArray.push_back(ftFunc());
     // Remove item from stack
     LuaUtilRmStack(lS);
-  } // Return the container
+  } // Recover memory
+  vtArray.shrink_to_fit();
+  // Return the container
   return vtArray;
 }
-/* -- Convert varlist to lua table and put it on stack --------------------- */
-template<class VectorType,
-         typename VectorValueType = typename VectorType::value_type>
-  static VectorType LuaUtilToIntVector(lua_State*const lS, const int iArg)
-{ // Create the table, we're creating non-indexed key/value pairs
-  LuaUtilCheckTable(lS, iArg);
-  // Get maximums
-  const size_t stMax = UtilIntOrMax<size_t>(LuaUtilGetSize(lS, iArg));
-  const lua_Integer liMax = static_cast<lua_Integer>(stMax) + 1;
-  // Preallocate the table
-  VectorType vtArray;
-  vtArray.reserve(stMax);
-  // Walk the array
-  for(lua_Integer liI = 1; liI < liMax; ++liI)
-  { // Get item from table
-    LuaUtilPushInt(lS, liI);
-    lua_gettable(lS, -2);
-    // Get the string from Lua stack and save the length
-    vtArray.push_back(LuaUtilGetInt<VectorValueType>(lS, -1));
-    // Remove item from stack
-    LuaUtilRmStack(lS);
-  } // Return the container
-  return vtArray;
-}
-/* -- Set a global variable ------------------------------------------------ */
-static void LuaUtilSetGlobal(lua_State*const lS, const char*const cpKey)
-  { lua_setglobal(lS, cpKey); }
-/* -- Get a global variable ------------------------------------------------ */
+/* -- Convert a table of numbers to vector --------------------------------- */
+template<class VecType, typename VecValType = typename VecType::value_type>
+  static VecType LuaUtilToNumVector(lua_State*const lS, const int iArg)
+{ return LuaUtilToVector<VecType, VecValType>(lS, iArg, [lS](){
+    return LuaUtilGetNum<VecValType>(lS, -1); }); }
+/* -- Convert a table of integers to vector -------------------------------- */
+template<class VecType, typename VecValType = typename VecType::value_type>
+  static VecType LuaUtilToIntVector(lua_State*const lS, const int iArg)
+{ return LuaUtilToVector<VecType, VecValType>(lS, iArg, [lS](){
+    return LuaUtilGetInt<VecValType>(lS, -1); }); }
+/* -- Get and set a global variable ---------------------------------------- */
 static void LuaUtilGetGlobal(lua_State*const lS, const char*const cpKey)
   { lua_getglobal(lS, cpKey); }
+static void LuaUtilSetGlobal(lua_State*const lS, const char*const cpKey)
+  { lua_setglobal(lS, cpKey); }
 /* -- Returns t[k] --------------------------------------------------------- */
 static void LuaUtilGetField(lua_State*const lS, const int iIndex,
   const char*const cpKey)

@@ -28,7 +28,7 @@ struct AcJson : public ArClass<Json> {
     ArClass{*LuaUtilClassCreate<Json>(lS, *cJsons)}{} };
 /* -- Get string from memory ----------------------------------------------- */
 struct AgMbString : public Memory {
-  const MemConst &operator()(void) const { return *this; }
+  const MemConst &operator()() const { return *this; }
   explicit AgMbString(lua_State*const lS, const int iArg) :
     Memory{LuaUtilGetMBfromLStr(lS, iArg)}{} };
 /* ========================================================================= **

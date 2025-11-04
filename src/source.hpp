@@ -23,12 +23,12 @@ using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Source flags --------------------------------------------------------- */
-BUILD_FLAGS(Source,
-  // No flags                          // Source is managed externally
-  SF_NONE{Flag(0)},                    SF_EXTERNAL{Flag(1)},
-  // Source is managed by LUA
-  SF_CLASS{Flag(2)}
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Source,                    // Source flags
+  /* ----------------------------------------------------------------------- */
+  SF_NONE                   {Flag(0)}, // No flags
+  SF_EXTERNAL               {Flag(1)}, // Source is managed externally
+  SF_CLASS                  {Flag(2)}  // Source is managed by LUA
 );/* -- Source collector class for collector data and custom variables ----- */
 CTOR_BEGIN(Sources, Source, CLHelperSafe,
 /* ------------------------------------------------------------------------- */
@@ -84,7 +84,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
           "Set source vector failed!",
           "Index", uiId, "Param", eP, "X", fX, "Y", fY, "Z", fZ); }
   /* -- Reset parameters ------------------------------------------- */ public:
-  void Init(void)
+  void Init()
   { // Reset each property of the source since there is no function to do it
     Rewind();                          // Rewind the source
     ClearBuffer();                     // Reset bound buffer id
@@ -102,62 +102,62 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
     SetLooping(false);                 // Reset looping flag
   }
   /* -- Reset parameters --------------------------------------------------- */
-  void Reset(void) { Init(); SetExternal(true); }
+  void Reset() { Init(); SetExternal(true); }
   /* -- Reinitialise the source id ----------------------------------------- */
-  void ReInit(void) { uiId = cOal->CreateSource(); Reset(); }
+  void ReInit() { uiId = cOal->CreateSource(); Reset(); }
   /* -- Unlock a source so it can be recycled ------------------------------ */
-  void Unlock(void)
+  void Unlock()
   { // Clear the attached buffer
     ClearBuffer();
     // Unlock the source so it can be recycled by the audio thread
     FlagReset(SF_NONE);
   }
   /* -- Get/set externally managed source ---------------------------------- */
-  bool GetExternal(void) const { return FlagIsSet(SF_EXTERNAL); }
+  bool GetExternal() const { return FlagIsSet(SF_EXTERNAL); }
   void SetExternal(const bool bState) { FlagSetOrClear(SF_EXTERNAL, bState); }
   /* -- Get/set externally managed by LUA source --------------------------- */
-  bool GetClass(void) const { return FlagIsSet(SF_CLASS); }
+  bool GetClass() const { return FlagIsSet(SF_CLASS); }
   void SetClass(const bool bState) { FlagSetOrClear(SF_CLASS, bState); }
   /* -- Get/set elapsed time ----------------------------------------------- */
-  ALfloat GetElapsed(void) const { return GetSourceFloat(AL_SEC_OFFSET); }
+  ALfloat GetElapsed() const { return GetSourceFloat(AL_SEC_OFFSET); }
   void SetElapsed(const ALfloat fSeconds) const
     { SetSourceFloat(AL_SEC_OFFSET, fSeconds); }
   /* -- Get/set gain ------------------------------------------------------- */
-  ALfloat GetGain(void) const { return GetSourceFloat(AL_GAIN); }
+  ALfloat GetGain() const { return GetSourceFloat(AL_GAIN); }
   void SetGain(const ALfloat fGain) const { SetSourceFloat(AL_GAIN, fGain); }
   /* -- Get/set minimum gain ----------------------------------------------- */
-  ALfloat GetMinGain(void) const { return GetSourceFloat(AL_MIN_GAIN); }
+  ALfloat GetMinGain() const { return GetSourceFloat(AL_MIN_GAIN); }
   void SetMinGain(const ALfloat fMinGain) const
     { SetSourceFloat(AL_MIN_GAIN, fMinGain); }
   /* -- Get/set maximum gain ----------------------------------------------- */
-  ALfloat GetMaxGain(void) const { return GetSourceFloat(AL_MAX_GAIN); }
+  ALfloat GetMaxGain() const { return GetSourceFloat(AL_MAX_GAIN); }
   void SetMaxGain(const ALfloat fMaxGain) const
     { SetSourceFloat(AL_MAX_GAIN, fMaxGain); }
   /* -- Get/set pitch ------------------------------------------------------ */
-  ALfloat GetPitch(void) const { return GetSourceFloat(AL_PITCH); }
+  ALfloat GetPitch() const { return GetSourceFloat(AL_PITCH); }
   void SetPitch(const ALfloat fPitch) const
     { SetSourceFloat(AL_PITCH, fPitch); }
   /* -- Get/set reference distance ----------------------------------------- */
-  ALfloat GetRefDist(void) const
+  ALfloat GetRefDist() const
     { return GetSourceFloat(AL_REFERENCE_DISTANCE); }
   void SetRefDist(const ALfloat fRefDist) const
     { SetSourceFloat(AL_REFERENCE_DISTANCE, fRefDist); }
   /* -- Get/set roll off --------------------------------------------------- */
-  ALfloat GetRollOff(void) const { return GetSourceFloat(AL_ROLLOFF_FACTOR); }
+  ALfloat GetRollOff() const { return GetSourceFloat(AL_ROLLOFF_FACTOR); }
   void SetRollOff(const ALfloat fRollOff) const
     { SetSourceFloat(AL_ROLLOFF_FACTOR, fRollOff); }
   /* -- Get/set maximum distance ------------------------------------------- */
-  ALfloat GetMaxDist(void) const
+  ALfloat GetMaxDist() const
     { return GetSourceFloat(AL_MAX_DISTANCE); }
   void SetMaxDist(const ALfloat fMaxDist) const
     { SetSourceFloat(AL_MAX_DISTANCE, fMaxDist); }
   /* -- Get/set looping ---------------------------------------------------- */
-  bool GetLooping(void) const
+  bool GetLooping() const
     { return GetSourceInt<ALuint>(AL_LOOPING) == AL_TRUE; }
   void SetLooping(const bool bLooping) const
     { SetSourceInt(AL_LOOPING, bLooping ? AL_TRUE : AL_FALSE); }
   /* -- Get/set relative --------------------------------------------------- */
-  bool GetRelative(void) const
+  bool GetRelative() const
     { return GetSourceInt<ALuint>(AL_SOURCE_RELATIVE) == AL_TRUE; }
   void SetRelative(const ALenum bRelative) const
     { SetSourceInt(AL_SOURCE_RELATIVE, bRelative ? AL_TRUE : AL_FALSE); }
@@ -177,21 +177,21 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   void SetVelocity(const ALfloat fX, const ALfloat fY,
     const ALfloat fZ) const { SetSource3Float(AL_VELOCITY, fX, fY, fZ); }
   /* -- Get source id ------------------------------------------------------ */
-  ALuint GetSource(void) const { return uiId; }
+  ALuint GetSource() const { return uiId; }
   /* -- Get/set/clear buffer id -------------------------------------------- */
-  ALuint GetBuffer(void) const { return GetSourceInt<ALuint>(AL_BUFFER); }
+  ALuint GetBuffer() const { return GetSourceInt<ALuint>(AL_BUFFER); }
   void SetBuffer(const ALint iBufferId) const
     { SetSourceInt(AL_BUFFER, iBufferId); }
-  void ClearBuffer(void) { SetBuffer(0); }
+  void ClearBuffer() { SetBuffer(0); }
   /* -- Get* --------------------------------------------------------------- */
-  ALenum GetState(void) const { return GetSourceInt<ALenum>(AL_SOURCE_STATE); }
-  ALsizei GetBuffersProcessed(void) const
+  ALenum GetState() const { return GetSourceInt<ALenum>(AL_SOURCE_STATE); }
+  ALsizei GetBuffersProcessed() const
     { return GetSourceInt<ALsizei>(AL_BUFFERS_PROCESSED); }
-  ALsizei GetBuffersQueued(void) const
+  ALsizei GetBuffersQueued() const
     { return GetSourceInt<ALsizei>(AL_BUFFERS_QUEUED); }
-  ALsizei GetBuffersTotal(void) const
+  ALsizei GetBuffersTotal() const
     { return GetBuffersProcessed() + GetBuffersQueued(); }
-  ALuint GetType(void) const { return GetSourceInt<ALuint>(AL_SOURCE_TYPE); }
+  ALuint GetType() const { return GetSourceInt<ALuint>(AL_SOURCE_TYPE); }
   /* -- QueueBuffers ----------------------------------------------- */
   void QueueBuffers(ALuint *puiBuffers, const ALsizei stCount) const
   { // Queue buffers
@@ -219,9 +219,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
       "Source unqueue on $ failed with buffer $!", uiId, uiBuffer);
   }
   /* -- UnQueue one buffer ------------------------------------------------- */
-  ALuint UnQueueBuffer(void) { return cOal->UnQueueBuffer(uiId); }
+  ALuint UnQueueBuffer() { return cOal->UnQueueBuffer(uiId); }
   /* -- UnQueueAlLBuffers -------------------------------------------------- */
-  void UnQueueAllBuffers(void)
+  void UnQueueAllBuffers()
   { // Get number of buffers and if we have some to unqueue?
     if(const ALsizei stBuffersProcessed = GetBuffersProcessed())
     { // Create memory for these buffers and get the pointer to its memory.
@@ -233,14 +233,14 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
     }
   }
   /* -- StopAndUnQueueAlLBuffers ------------------------------------------- */
-  void StopAndUnQueueAllBuffers(void)
+  void StopAndUnQueueAllBuffers()
   { // Stop the playback
     Stop();
     // Unqueue all the buffers
     UnQueueAllBuffers();
   }
   /* -- UnQueueAndDeleteAllBuffers ----------------------------------------- */
-  void UnQueueAndDeleteAllBuffers(void)
+  void UnQueueAndDeleteAllBuffers()
   { // Clear the buffer from the source. Apple AL needs this or
     // alDeleteBuffers() returns AL_INVALID_OPERATION.
     ClearBuffer();
@@ -259,14 +259,14 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
     }
   }
   /* -- StopUnQueueAndDeleteAllBuffers ------------------------------------- */
-  void StopUnQueueAndDeleteAllBuffers(void)
+  void StopUnQueueAndDeleteAllBuffers()
   { // Stop playback
     Stop();
     // Unqueue and delete all buffers
     UnQueueAndDeleteAllBuffers();
   }
   /* -- Stop --------------------------------------------------------------- */
-  bool Stop(void)
+  bool Stop()
   { // If source already stopped? return!
     if(IsStopped()) return false;
     // Stop it
@@ -275,16 +275,16 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
     return true;
   }
   /* -- IsStopped ---------------------------------------------------------- */
-  bool IsStopped(void) const { return GetState() == AL_STOPPED; }
+  bool IsStopped() const { return GetState() == AL_STOPPED; }
   /* -- IsPlaying ---------------------------------------------------------- */
-  bool IsPlaying(void) const { return GetState() == AL_PLAYING; }
+  bool IsPlaying() const { return GetState() == AL_PLAYING; }
   /* -- Rewind ------------------------------------------------------------- */
-  void Rewind(void)
+  void Rewind()
   { // Play the source
     AL(cOal->RewindSource(uiId), "Rewind failed on source!", "Index", uiId);
   }
   /* -- Play --------------------------------------------------------------- */
-  void Play(void)
+  void Play()
   { // If playing return
     if(IsPlaying()) return;
     // Play the source
@@ -306,7 +306,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
       Init();
     }
   /* -- Destructor --------------------------------------------------------- */
-  ~Source(void)
+  ~Source()
   { // Delete the sourcess if id allocated
     if(uiId) ALL(cOal->DeleteSource(uiId), "Source failed to delete $!", uiId);
   }
@@ -338,7 +338,7 @@ static unsigned int SourceStop(const ALUIntVector &uiBuffers)
   return uiStopped;
 }
 /* == Destroy all sources (except LUA ones) ================================ */
-static void SourceDeInit(void)
+static void SourceDeInit()
 { // Done if empty
   if(cSources->empty()) return;
   // Walk through the sources, only deleting the ones that aren't LUA owned
@@ -363,7 +363,7 @@ static void SourceDeInit(void)
     stSources - cSources->size());
 }
 /* ========================================================================= */
-static void SourceReInit(void)
+static void SourceReInit()
 { // Done if empty
   if(cSources->empty()) return;
   // Re-create buffers for all the samples and log pre/post reinit
@@ -373,7 +373,7 @@ static void SourceReInit(void)
   cLog->LogInfoExSafe("Sources reinitialised $ objects.", cSources->size());
 }
 /* == Manage sources (from audio thread) =================================== */
-static Source *SourceGetFree(void)
+static Source *SourceGetFree()
 { // Iterate through available sources
   for(Source*const sCptr : *cSources)
   { // Is a locked stream? Then it's active and locked!
@@ -385,7 +385,7 @@ static Source *SourceGetFree(void)
   return nullptr;
 }
 /* == Returns if we can make a new source ================================== */
-static bool SourceCanMakeNew(void)
+static bool SourceCanMakeNew()
   { return cSources->size() < cOal->GetMaxMonoSources(); }
 /* == Get a source using Lua to allocate it ================================ */
 static Source *SourceGetFromLua(lua_State*const lS)
@@ -405,7 +405,7 @@ static Source *SourceGetFromLua(lua_State*const lS)
   return soNew;
 }
 /* == Return a free source ================================================= */
-static Source *GetSource(void)
+static Source *GetSource()
 { // Try to get an idle source and return it if possible
   if(Source*const soNew = SourceGetFree()) return soNew;
   // Else return a brand new source
@@ -413,16 +413,17 @@ static Source *GetSource(void)
 }
 /* == SourceAlloc ========================================================== */
 static void SourceAlloc(const size_t stCount)
-{ // Set the value we can actually use
-  const size_t stUsable = UtilClamp(stCount, 0, cOal->GetMaxMonoSources());
-  // Get size and return if no new static sources needed to be created
-  const size_t stSize = cSources->size();
+{ // Get the value we can actually use and the number of sources currently
+  // allocated and return if no new static sources are needed to be created.
+  const size_t stUsable = UtilClamp(stCount, 0, cOal->GetMaxMonoSources()),
+               stSize = cSources->size();
   if(stSize >= stUsable) return;
   // Create new sources until we've reached the maximum and mark as usable
-  for(size_t stI = stSize; stI < stUsable; ++stI) new Source{ SF_NONE };
+  for(size_t stIndex = stSize; stIndex < stUsable; ++stIndex)
+    new Source{ SF_NONE };
   // Log count
-  cLog->LogDebugExSafe("Audio added new sources [$:$$].",
-    cSources->size(), hex, cOal->GetError());
+  cLog->LogDebugExSafe("Audio added $ new stand-by sources [$:$$].",
+    stUsable - stSize, cSources->size(), hex, cOal->GetError());
 }
 /* == Set number of sources ================================================ */
 static CVarReturn SourceSetCount(const size_t stCount)

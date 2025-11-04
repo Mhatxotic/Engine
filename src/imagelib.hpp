@@ -40,7 +40,7 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     DataFormat{ ifNId, strvNName, strvNExt, cfdNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with saver function only ------------------------------- */
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
@@ -54,7 +54,7 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     DataFormat{ ifNId, strvNName, strvNExt, cfeNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with both loader and saver functions ------------------- */
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
@@ -70,7 +70,7 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     DataFormat{ ifNId, strvNName, strvNExt, cfdNFunc, cfeNFunc,
       cParent->size() }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- End of objects collector (reserve and set limit for formats) ------- */
 CTOR_END(ImageLibs, ImageLib, IMAGELIB,
   reserve(IFMT_MAX); CollectorSetLimit(IFMT_MAX),)

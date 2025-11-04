@@ -24,33 +24,33 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 enum Result : unsigned int             // Result codes
 {/* ------------------------------------------------------------------------ */
-  R_GOOD,                              // Url is good
-  R_TOOLONG,                           // Url is too long
-  R_EMURL,                             // Empty URL specified
-  R_EMSCHEME,                          // Empty scheme after processing
-  R_EMHOSTUSERPASSPORT,                // Empty hostname/username/password/port
-  R_EMUSERPASS,                        // Empty username and password
-  R_EMUSER,                            // Empty username
-  R_EMPASS,                            // Empty password
-  R_EMHOSTPORT,                        // Empty hostname/port
-  R_EMHOST,                            // Empty hostname
-  R_EMPORT,                            // Empty port number
-  R_NOSCHEME,                          // No scheme delimiter ':'
-  R_INVSCHEME,                         // Invalid scheme (not ://)
-  R_INVPORT,                           // Invalid port number (1-65535)
-  R_UNKSCHEME,                         // Unknown scheme without port
-  R_EMPARAMS,                          // Bad parameters
-  R_MAX                                // Maximum number of codes
+  R_GOOD,                              // [00] Url is good
+  R_TOOLONG,                           // [01] Url is too long
+  R_EMURL,                             // [02] Empty URL specified
+  R_EMSCHEME,                          // [03] Empty scheme after processing
+  R_EMHOSTUSERPASSPORT,                // [04] Empty host/user/pass/port
+  R_EMUSERPASS,                        // [05] Empty username and password
+  R_EMUSER,                            // [06] Empty username
+  R_EMPASS,                            // [07] Empty password
+  R_EMHOSTPORT,                        // [08] Empty hostname/port
+  R_EMHOST,                            // [09] Empty hostname
+  R_EMPORT,                            // [10] Empty port number
+  R_NOSCHEME,                          // [11] No scheme delimiter ':'
+  R_INVSCHEME,                         // [12] Invalid scheme (not ://)
+  R_INVPORT,                           // [13] Invalid port number (1-65535)
+  R_UNKSCHEME,                         // [14] Unknown scheme without port
+  R_EMPARAMS,                          // [15] Bad parameters
+  R_MAX                                // [16] Maximum number of codes
 };/* ----------------------------------------------------------------------- */
 /* == Class to break apart urls ============================================ */
 struct UrlBase : public ParamParser    // Members initially public
 { /* ----------------------------------------------------------------------- */
   enum Port : unsigned int             // Frequently used ports
   { /* --------------------------------------------------------------------- */
-    P_MIN   = 1,                       // Minimum port number
-    P_HTTP  = 80,                      // Insecure http port number
-    P_HTTPS = 443,                     // Secure http port number
-    P_MAX   = 65536                    // Maximum port number
+    P_MIN                     =     1, // Minimum port number
+    P_HTTP                    =    80, // Insecure http port number
+    P_HTTPS                   =   443, // Secure http port number
+    P_MAX                     = 65536  // Maximum port number
   };/* --------------------------------------------------------------------- */
   /* -- Private variables ----------------------------------------- */ private:
   Result           rResult;            // Result
@@ -66,16 +66,16 @@ struct UrlBase : public ParamParser    // Members initially public
   /* -- Code setter and returner ------------------------------------------- */
   void SetCode(const Result rNResult) { rResult = rNResult; }
   /* -- Return data ------------------------------------------------ */ public:
-  Result GetResult(void) const { return rResult; }
-  const string &GetUrl(void) const { return strCanonicalised; }
-  const string &GetScheme(void) const { return strScheme; }
-  const string &GetUsername(void) const { return strUsername; }
-  const string &GetPassword(void) const { return strPassword; }
-  const string &GetHost(void) const { return strHost; }
-  const string &GetResource(void) const { return strResource; }
-  const string &GetBookmark(void) const { return strBookmark; }
-  Port GetPort(void) const { return pPort; }
-  bool GetSecure(void) const { return bSecure; }
+  Result GetResult() const { return rResult; }
+  const string &GetUrl() const { return strCanonicalised; }
+  const string &GetScheme() const { return strScheme; }
+  const string &GetUsername() const { return strUsername; }
+  const string &GetPassword() const { return strPassword; }
+  const string &GetHost() const { return strHost; }
+  const string &GetResource() const { return strResource; }
+  const string &GetBookmark() const { return strBookmark; }
+  Port GetPort() const { return pPort; }
+  bool GetSecure() const { return bSecure; }
   /* -- Parse -------------------------------------------------------------- */
   void Parse(const string &strUrl, const unsigned int uiMode=0)
   { // Error if string is empty
@@ -228,19 +228,19 @@ struct UrlBase : public ParamParser    // Members initially public
   explicit UrlBase(const string &strUrl, const unsigned int uiMode=0)
     { Parse(strUrl, uiMode); }
   /* -- Default constructor that does nothing ------------------------------ */
-  UrlBase(void) { }
+  UrlBase() {}
 };/* == Url collector and member class ===================================== */
 CTOR_BEGIN_DUO(Urls, Url, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable,                     // Lua garbage collector instruction
   public UrlBase                       // Url class
-{ /* -- Basic constructor with no init ----------------------------- */ public:
-  Url(void) :
+{ /* -- Default constructor with no init --------------------------- */ public:
+  Url() :
     /* -- Initialisers ----------------------------------------------------- */
-    ICHelperUrl{ cUrls, this },       // Register the object in collector
+    ICHelperUrl{ cUrls, this },        // Register the object in collector
     IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* --------------------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Urls, Url, URL)       // Finish global Files collector
 /* ------------------------------------------------------------------------- */

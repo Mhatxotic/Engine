@@ -13,7 +13,8 @@ namespace ICollector {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICVarDef::P;           using namespace IError::P;
 using namespace IHelper::P;            using namespace IIdent::P;
-using namespace ILog::P;               using namespace IStd::P;
+using namespace ILog::P;               using namespace IMutex::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Static class try/catch helpers ======================================= **
@@ -44,8 +45,8 @@ namespace P {                          // Start of public module namespace
     public LuaIdent,                   /* Name of object for Lua            */\
     public hn                          /* Derived by our collector class    */\
     __VA_ARGS__                        /* Any other custom class derives    */\
-  { protected: p(void);                /* Constructor prototype             */\
-    ~p(void) noexcept(false);          /* Destructor prototype              */\
+  { protected: p();                    /* Constructor prototype             */\
+    ~p() noexcept(false);              /* Destructor prototype              */\
     public: x                          /* Any extra variables? (no comma!)  */
 /* -- Collector header that lets you use a custom container ---------------- */
 #define CTOR_HDR_CUSTCTR(p,m,l,h,s,x,...) \
@@ -85,7 +86,7 @@ namespace P {                          // Start of public module namespace
                     d,                 /* Destructor de-initialisation code */\
                     ...)               /* Constructor initialisers code     */\
   DTORHELPER(p::~p, if(IHDeInitialise()){d;} ) \
-  p::p(void) : LuaIdent{#m, LMT_ ## e}, __VA_ARGS__ \
+  p::p() : LuaIdent{#m, LMT_ ## e}, __VA_ARGS__ \
     { c ## p=this; IHInitialise(); i; }
 /* -- Tailing collector class macro that inits a collector helper ---------- */
 #define CTOR_END(p,m,c,i,d,...) \
@@ -151,16 +152,16 @@ class CLHelperBase :
 { /* -- Private variables -------------------------------------------------- */
   size_t           stMaximum;          // Maximum children allowed
   /* -- Return last item in the list ------------------------------- */ public:
-  IteratorType CLBaseGetLastItemUnsafe(void) { return this->end(); }
+  IteratorType CLBaseGetLastItemUnsafe() { return this->end(); }
   /* -- Return if collector is empty --------------------------------------- */
-  bool CLBaseIsEmptyUnsafe(void) {  return this->empty(); }
+  bool CLBaseIsEmptyUnsafe() {  return this->empty(); }
   /* -- Destroy all objects (clear() doesn't do this!) --------------------- */
-  void CLBaseDestroyUnsafe(void)
+  void CLBaseDestroyUnsafe()
     { while(!CLBaseIsEmptyUnsafe()) delete this->back(); }
   /* -- Return number of registered items ---------------------------------- */
-  size_t CLBaseCountUnsafe(void) { return this->size(); }
+  size_t CLBaseCountUnsafe() { return this->size(); }
   /* -- Reference counter increment ---------------------------------------- */
-  void CLBaseCheckUnsafe(void)
+  void CLBaseCheckUnsafe()
   { // Throw error if at limit. This check is only performed during
     // construction of an object. Construction should never occur off-thread or
     // we will need to serialise this access.
@@ -175,7 +176,7 @@ class CLHelperBase :
   IteratorType CLBaseEraseUnsafe(IteratorType &itObj)
     { this->erase(itObj); return CLBaseGetLastItemUnsafe(); }
   /* -- Check and destroy -------------------------------------------------- */
-  void CLBaseCheckAndDestroyUnsafe(void)
+  void CLBaseCheckAndDestroyUnsafe()
   { // Return if class was initialised and there are no children left
     if(CLBaseIsEmptyUnsafe()) return;
     // Show message box to say we have items remaining
@@ -191,7 +192,7 @@ class CLHelperBase :
     InitHelper{ strvName },            // Set initialisation helper name
     stMaximum(StdMaxSizeT)             // Initialise maximum objects
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Set limit ---------------------------------------------------------- */
   CVarReturn CLBaseSetLimitUnsafe(const size_t stLimit)
     { return CVarSimpleSetInt(stMaximum, stLimit); }
@@ -201,57 +202,46 @@ template<class MemberType, class ListType, class IteratorType,
 class CLHelperSafe :
   /* -- Base classes ------------------------------------------------------- */
   public BaseType,                     // The collector base type
-  private mutex                        // Member list locking protection
-{ /* -- Protected functions ------------------------------------- */ protected:
-  void CLLock(void) { CollectorGetMutex().lock(); }
-  void CLUnlock(void) { CollectorGetMutex().unlock(); }
-  /* -- Lock the mutex and return if empty --------------------------------- */
-  bool CLEmpty(void)
-    { const LockGuard lgGuardEmpty{ CollectorGetMutex() };
-      return this->CLBaseIsEmptyUnsafe(); }
+  public Mutex                         // Mutex helper
+{ /* -- Lock the mutex and return if empty ---------------------- */ protected:
+  bool CLEmpty()
+    { return MutexCall([this](){ return this->CLBaseIsEmptyUnsafe(); }); }
   /* -- Lock the mutex and check size -------------------------------------- */
-  void CLCheck(void)
-    { const LockGuard lgGuardCheck{ CollectorGetMutex() };
-      this->CLBaseCheckUnsafe(); }
+  void CLCheck()
+    { return MutexCall([this](){ return this->CLBaseCheckUnsafe(); }); }
   /* -- Lock the mutex and return size ------------------------------------- */
-  size_t CLCount(void)
-    { const LockGuard lgGuardCount{ CollectorGetMutex() };
-      return this->CLBaseCountUnsafe(); }
+  size_t CLCount()
+    { return MutexCall([this](){ return this->CLBaseCountUnsafe(); }); }
   /* -- Lock the mutex and return newly added object ----------------------- */
   IteratorType CLAdd(MemberType*const mtObj)
-    { const LockGuard lgGuardAdd{ CollectorGetMutex() };
-      return this->CLBaseAddUnsafe(mtObj); }
+    { return MutexCall([this, mtObj](){
+        return this->CLBaseAddUnsafe(mtObj); }); }
   /* -- Lock the mutex and return the removed iterator --------------------- */
   IteratorType CLErase(IteratorType &itObj)
-    { const LockGuard lgGuardErase{ CollectorGetMutex() };
-      return this->CLBaseEraseUnsafe(itObj); }
+    { return MutexCall([this, &itObj](){
+        return this->CLBaseEraseUnsafe(itObj);}); }
   /* -- Constructor -------------------------------------------------------- */
   explicit CLHelperSafe(const char*const cpT) :
     /* -- Initialisers ----------------------------------------------------- */
     BaseType{ cpT }                    // Initialise base type with name
     /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Return the mutex ------------------------------------------- */ public:
-  mutex &CollectorGetMutex(void) { return *this; }
+    {}
   /* -- Lock the mutex and return the removed iterator --------------------- */
   CVarReturn CLSetLimit(const size_t stLimit)
-    { const LockGuard lgGuardSetLimit{ CollectorGetMutex() };
-      return this->CLBaseSetLimitUnsafe(stLimit); }
+    { return MutexCall([this, stLimit](){
+        return this->CLBaseSetLimitUnsafe(stLimit);}); }
 };/* ----------------------------------------------------------------------- */
 template<class MemberType, class ListType, class IteratorType,
          class BaseType = CLHelperBase<MemberType, ListType, IteratorType>>
 class CLHelperUnsafe :                 // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public BaseType                      // The collector base type
-{ /* -- (Un)Lock the mutex (nope) ------------------------------- */ protected:
-  void CLLock(void) { }
-  void CLUnlock(void) { }
-  /* -- Return if collector is empty --------------------------------------- */
-  bool CLEmpty(void) { return this->CLBaseIsEmptyUnsafe(); }
+{ /* -- Return if collector is empty ---------------------------- */ protected:
+  bool CLEmpty() { return this->CLBaseIsEmptyUnsafe(); }
   /* -- Check for overflow ------------------------------------------------- */
-  void CLCheck(void) { this->CLBaseCheckUnsafe(); }
+  void CLCheck() { this->CLBaseCheckUnsafe(); }
   /* -- Return number of registered items ---------------------------------- */
-  size_t CLCount(void) { return this->CLBaseCountUnsafe(); }
+  size_t CLCount() { return this->CLBaseCountUnsafe(); }
   /* -- Add/remove object to the list -------------------------------------- */
   IteratorType CLAdd(MemberType*const mtObj)
     { return this->CLBaseAddUnsafe(mtObj); }
@@ -262,7 +252,7 @@ class CLHelperUnsafe :                 // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     BaseType{ cpT }                    // Initialise base type with name
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Set maximum objects ------------------------------------------------ */
   CVarReturn CLSetLimit(const size_t stLimit)
     { return this->CLBaseSetLimitUnsafe(stLimit); }
@@ -271,23 +261,20 @@ template<class MemberType, class LockType, class ListType, class IteratorType>
 struct CLHelper :                      // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public LockType                      // CLHelperSafe or CLHelperUnsafe
-{ /* -- (Un)Lock the mutex (nope) ------------------------------------------ */
-  void CollectorLock(void) { this->CLLock(); }
-  void CollectorUnlock(void) { this->CLUnlock(); }
-  /* -- Return last item in list ------------------------------------------- */
-  IteratorType CollectorGetLastItemUnsafe(void)
+{ /* -- Return last item in list ------------------------------------------- */
+  IteratorType CollectorGetLastItemUnsafe()
     { return this->CLBaseGetLastItemUnsafe(); }
   /* -- Destory all members ------------------------------------------------ */
-  void CollectorDestroyUnsafe(void) { this->CLBaseDestroyUnsafe(); }
+  void CollectorDestroyUnsafe() { this->CLBaseDestroyUnsafe(); }
   /* -- Return if collector is empty --------------------------------------- */
-  bool CollectorEmpty(void) { return this->CLEmpty(); }
-  bool CollectorNotEmpty(void) { return !CollectorEmpty(); }
+  bool CollectorEmpty() { return this->CLEmpty(); }
+  bool CollectorNotEmpty() { return !CollectorEmpty(); }
   /* -- Check for overflow ------------------------------------------------- */
-  void CollectorCheck(void) { this->CLCheck(); }
-  void CollectorCheckUnsafe(void) { this->CLBaseCheckUnsafe(); }
+  void CollectorCheck() { this->CLCheck(); }
+  void CollectorCheckUnsafe() { this->CLBaseCheckUnsafe(); }
   /* -- Return number of registered items ---------------------------------- */
-  size_t CollectorCount(void) { return this->CLCount(); }
-  size_t CollectorCountUnsafe(void) { return this->CLBaseCountUnsafe(); }
+  size_t CollectorCount() { return this->CLCount(); }
+  size_t CollectorCountUnsafe() { return this->CLBaseCountUnsafe(); }
   /* -- Add/remove object to the list (ICHelper needs these) --------------- */
   IteratorType CollectorAddUnsafe(MemberType*const mtObj)
     { return this->CLBaseAddUnsafe(mtObj); }
@@ -303,9 +290,9 @@ struct CLHelper :                      // Members initially public
     /* -- Initialisers ----------------------------------------------------- */
     LockType{ cpT }                    // Initialise lock type with name
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~CLHelper(void) { this->CLBaseCheckAndDestroyUnsafe(); }
+  ~CLHelper() { this->CLBaseCheckAndDestroyUnsafe(); }
   /* -- Set maximum objects ------------------------------------------------ */
   CVarReturn CollectorSetLimit(const size_t stLimit)
     { return this->CLSetLimit(stLimit); }
@@ -324,14 +311,14 @@ struct ICHelperBase                    // Members initially public
   /* -- Protected variables ------------------------------------- */ protected:
   IteratorType     cIterator;          // Iterator to this object in parent
   /* -- Add from collector with set parent --------------------------------- */
-  void ICHelperBaseRegister(void)
+  void ICHelperBaseRegister()
   { // Return if already registered else check count and add to collector
     if(cIterator != cParent->CollectorGetLastItemUnsafe()) return;
     cParent->CollectorCheckUnsafe();
     cIterator = cParent->CollectorAddUnsafe(static_cast<MemberType*>(this));
   }
   /* -- Erase from collector with set parent ------------------------------- */
-  void ICHelperBaseUnregister(void)
+  void ICHelperBaseUnregister()
   { // Return if not registered otherwise unregister from collector
     if(cIterator == cParent->CollectorGetLastItemUnsafe()) return;
     cIterator = cParent->CollectorEraseUnsafe(cIterator);
@@ -390,7 +377,7 @@ struct ICHelperBase                    // Members initially public
     cParent{ ctPtr },                  // Initialise pointer to collector class
     cIterator{ StdMove(itObj) }        // Initialise iterator
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == Collector class helper WITH locks ==================================== **
 ** ######################################################################### **
@@ -408,27 +395,25 @@ class ICHelperSafe :                   // Members initially private
 { /* -- Initialise (un)registered entry with synchronisation --------------- */
   IteratorType ICHelperInit(CollectorType*const ctPtr,
     MemberType*const mtPtr) const
-      { const LockGuard lgInitRegistered{ ctPtr->CollectorGetMutex() };
-        return this->ICHelperBaseInit(ctPtr, mtPtr); }
+      { return ctPtr->MutexCall([this, ctPtr, mtPtr](){
+          return this->ICHelperBaseInit(ctPtr, mtPtr);}); }
   IteratorType ICHelperInit(CollectorType*const ctPtr) const
-    { const LockGuard lgInitUnregistered{ ctPtr->CollectorGetMutex() };
-      return this->ICHelperBaseInit(ctPtr); }
+    { return ctPtr->MutexCall([this, ctPtr](){
+        return this->ICHelperBaseInit(ctPtr);}); }
   /* -- Insert/Remove from collector list with synchronisation -- */ protected:
-  void ICHelperPush(void)
-    { const LockGuard lgPush{ this->cParent->CollectorGetMutex() };
-      this->ICHelperBaseRegister(); }
-  void ICHelperErase(void)
-    { const LockGuard lgErase{ this->cParent->CollectorGetMutex() };
-      this->ICHelperBaseUnregister(); }
+  void ICHelperPush()
+    { this->cParent->MutexCall([this](){ this->ICHelperBaseRegister(); }); }
+  void ICHelperErase()
+    { this->cParent->MutexCall([this](){ this->ICHelperBaseUnregister(); }); }
   /* -- Swap to objects ---------------------------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
-    { const LockGuard lgSwap{ this->cParent->CollectorGetMutex() };
-      this->ICHelperBaseSwapRegistration(mtObj); }
+    { this->cParent->MutexCall([this, &mtObj](){
+        this->ICHelperBaseSwapRegistration(mtObj);}); }
   /* -- Constructors ------------------------------------------------------- */
   explicit ICHelperSafe(CollectorType*const ctPtr) :
-    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr))) { }
+    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr))) {}
   explicit ICHelperSafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
-    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr))) { }
+    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr))) {}
 };/* ----------------------------------------------------------------------- */
 /* == Collector class helper without locks ================================= **
 ** ######################################################################### **
@@ -450,8 +435,8 @@ class ICHelperUnsafe :                 // Members initially private
   IteratorType ICHelperInit(CollectorType*const ctPtr) const
     { return this->ICHelperBaseInit(ctPtr); }
   /* -- Push/Remove object into collector list ------------------ */ protected:
-  void ICHelperPush(void) { this->ICHelperBaseRegister(); }
-  void ICHelperErase(void) { this->ICHelperBaseUnregister(); }
+  void ICHelperPush() { this->ICHelperBaseRegister(); }
+  void ICHelperErase() { this->ICHelperBaseUnregister(); }
   /* -- Remove object from collector list ---------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
     { this->ICHelperBaseSwapRegistration(mtObj); }
@@ -460,13 +445,13 @@ class ICHelperUnsafe :                 // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr)) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with registration -------------------------------------- */
   explicit ICHelperUnsafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
     /* -- Initialisers ----------------------------------------------------- */
     BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr)) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == Collector class ====================================================== **
 ** ######################################################################### **
@@ -486,22 +471,22 @@ struct ICHelper :                      // Members initially public
   void CollectorSwapRegistration(const MemberType &mtObj)
     { this->ICHelperSwap(mtObj); }
   /* -- Register to list --------------------------------------------------- */
-  void CollectorRegister(void) { this->ICHelperPush(); }
-  void CollectorUnregister(void) { this->ICHelperErase(); }
+  void CollectorRegister() { this->ICHelperPush(); }
+  void CollectorUnregister() { this->ICHelperErase(); }
   /* -- Destructor (unregister if registered) ------------------- */ protected:
-  ~ICHelper(void) { CollectorUnregister(); }
+  ~ICHelper() { CollectorUnregister(); }
   /* -- Constructor (move) ------------------------------------------------- */
   explicit ICHelper(ICHelper &&icOther) :
     /* -- Initialisers ----------------------------------------------------- */
     LockType{ StdMove(icOther) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor (manual registration) ---------------------------------- */
   explicit ICHelper(CollectorType*const ctPtr) :
     /* -- Initialisers ----------------------------------------------------- */
     LockType{ ctPtr }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with automatic registration ---------------------------- */
   explicit ICHelper(
     /* -- Parameters ------------------------------------------------------- */
@@ -510,7 +495,7 @@ struct ICHelper :                      // Members initially public
     ): /* -- Initialisers -------------------------------------------------- */
     LockType{ ctPtr, mtPtr }           // Initialise lock type
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 };                                     // End of private module namespace
 /* ------------------------------------------------------------------------- */

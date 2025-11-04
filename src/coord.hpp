@@ -19,15 +19,15 @@ struct Coordinates :                   // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   private Base                         // Base double value class
 { /* -- Get ---------------------------------------------------------------- */
-  template<typename RInt=Int>RInt CoordGetX(void) const
+  template<typename RInt=Int>RInt CoordGetX() const
     { return this->template IPGetOne<RInt>(); }
-  template<typename RInt=Int>RInt CoordGetY(void) const
+  template<typename RInt=Int>RInt CoordGetY() const
     { return this->template IPGetTwo<RInt>(); }
-  template<typename RInt=Int>RInt CoordDefGet(void) const
+  template<typename RInt=Int>RInt CoordDefGet() const
     { return this->template IPDefGet<RInt>(); }
   /* -- Get reference ------------------------------------------------------ */
-  Int &CoordGetXRef(void) { return this->IPGetOneRef(); }
-  Int &CoordGetYRef(void) { return this->IPGetTwoRef(); }
+  Int &CoordGetXRef() { return this->IPGetOneRef(); }
+  Int &CoordGetYRef() { return this->IPGetTwoRef(); }
   /* -- Set ---------------------------------------------------------------- */
   void CoordSetX(const Int iV) { this->IPSetOne(iV); }
   void CoordSetY(const Int iV) { this->IPSetTwo(iV); }
@@ -45,33 +45,33 @@ struct Coordinates :                   // Members initially public
   void CoordDecX(const Int iV = Base::iD1) { this->IPDecOne(iV); }
   void CoordDecY(const Int iV = Base::iD1) { this->IPDecTwo(iV); }
   /* -- Test --------------------------------------------------------------- */
-  bool CoordIsXSet(void) const { return this->IPIsOneSet(); }
-  bool CoordIsNotXSet(void) const { return this->IPIsNotOneSet(); }
-  bool CoordIsYSet(void) const { return this->IPIsTwoSet(); }
-  bool CoordIsNotYSet(void) const { return this->IPIsNotTwoSet(); }
-  bool CoordIsSet(void) const { return this->IPIsSet(); }
-  bool CoordIsNotSet(void) const { return this->IPIsNotSet(); }
+  bool CoordIsXSet() const { return this->IPIsOneSet(); }
+  bool CoordIsNotXSet() const { return this->IPIsNotOneSet(); }
+  bool CoordIsYSet() const { return this->IPIsTwoSet(); }
+  bool CoordIsNotYSet() const { return this->IPIsNotTwoSet(); }
+  bool CoordIsSet() const { return this->IPIsSet(); }
+  bool CoordIsNotSet() const { return this->IPIsNotSet(); }
   bool CoordIsEqual(const Coordinates &cOther) const
     { return this->IPIsEqual(cOther); }
   bool CoordIsNotEqual(const Coordinates &cOther) const
     { return this->IPIsNotEqual(cOther); }
   /* -- Test operator ------------------------------------------------------ */
-  operator bool(void) const { return CoordIsSet(); }
+  operator bool() const { return CoordIsSet(); }
   /* -- Initialisation of one value constructor ---------------------------- */
   explicit Coordinates(const Int itV) : // Specified value to initialise to
     /* -- Initialisers ----------------------------------------------------- */
     Base{ itV }                        // Initialise specified values
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Initialisation of both values constructor -------------------------- */
   Coordinates(const Int itX,           // Specified X coord to initialise to
               const Int itY) :         // Specified Y coord to initialise to
     /* -- Initialisers ----------------------------------------------------- */
     Base{ itX, itY }                   // Initialise specified values
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Default constructor that does not need to do anything -------------- */
-  Coordinates(void) = default;
+  Coordinates() = default;
 };/* ----------------------------------------------------------------------- */
 typedef Coordinates<int> CoordInt;     // Cordinates typedef
 /* ------------------------------------------------------------------------- */

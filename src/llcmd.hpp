@@ -104,13 +104,24 @@ LLFUNC(Register, 1,
   LuaUtilCheckFunc(lS, 4);
   cLua->StateAssert(lS);
   AcCommand{lS}().Init(lS, aIdentifier, aMinimum, aMaximum))
+/* ========================================================================= */
+// $ Command.Valid
+// > Cmd:string=Command name to test.
+// < Valid:boolean=Command name is valid.
+// ? Returns true if the given string has valid characters, false if not.
+// ? Console commands must begin with a letter but subsequent characters can
+// ? be underscores and numbers. The command must also be between 1 and 255
+// ? characters in length.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Valid, 1, LuaUtilPushVar(lS,
+  cConsole->IsValidConsoleCommandName(AgString{lS, 1})))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Command.* namespace functions structure                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Command.* namespace functions begin
-  LLRSFUNC(Count), LLRSFUNC(Exists), LLRSFUNC(Register),
+  LLRSFUNC(Count), LLRSFUNC(Exists), LLRSFUNC(Register), LLRSFUNC(Valid),
 LLRSEND                                // Command.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Console namespace

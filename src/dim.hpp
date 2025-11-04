@@ -21,17 +21,17 @@ struct Dimensions :                    // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   private Base                         // Base double value class
 { /* -- Get ---------------------------------------------------------------- */
-  template<typename RInt=Int>RInt DimGetWidth(void) const
+  template<typename RInt=Int>RInt DimGetWidth() const
     { return this->template IPGetOne<RInt>(); }
-  template<typename RInt=Int>RInt DimGetHeight(void) const
+  template<typename RInt=Int>RInt DimGetHeight() const
     { return this->template IPGetTwo<RInt>(); }
-  template<typename RInt,class RBase=Dimensions<RInt>>RBase DimGet(void) const
+  template<typename RInt,class RBase=Dimensions<RInt>>RBase DimGet() const
     { return this->template IPGet<RInt,RBase>(); }
-  template<typename RInt=Int>RInt DimDefGet(void) const
+  template<typename RInt=Int>RInt DimDefGet() const
     { return this->template IPDefGet<RInt>(); }
   /* -- Get reference ------------------------------------------------------ */
-  Int &DimGetWidthRef(void) { return this->IPGetOneRef(); }
-  Int &DimGetHeightRef(void) { return this->IPGetTwoRef(); }
+  Int &DimGetWidthRef() { return this->IPGetOneRef(); }
+  Int &DimGetHeightRef() { return this->IPGetTwoRef(); }
   /* -- Set ---------------------------------------------------------------- */
   void DimSetWidth(const Int iV) { this->IPSetOne(iV); }
   void DimSetHeight(const Int iV) { this->IPSetTwo(iV); }
@@ -47,12 +47,12 @@ struct Dimensions :                    // Members initially public
   void DimDecHeight(const Int iV = Base::iD1) { this->IPDecTwo(iV); }
   void DimDec(const Int iV = Base::iD1) { this->IPDec(iV); }
   /* -- Test --------------------------------------------------------------- */
-  bool DimIsWidthSet(void) const { return this->IPIsOneSet(); }
-  bool DimIsNotWidthSet(void) const { return this->IPIsNotOneSet(); }
-  bool DimIsHeightSet(void) const { return this->IPIsTwoSet(); }
-  bool DimIsNotHeightSet(void)const { return this->IPIsNotTwoSet(); }
-  bool DimIsSet(void) const { return this->IPIsSet(); }
-  bool DimIsNotSet(void) const { return this->IPIsNotSet(); }
+  bool DimIsWidthSet() const { return this->IPIsOneSet(); }
+  bool DimIsNotWidthSet() const { return this->IPIsNotOneSet(); }
+  bool DimIsHeightSet() const { return this->IPIsTwoSet(); }
+  bool DimIsNotHeightSet()const { return this->IPIsNotTwoSet(); }
+  bool DimIsSet() const { return this->IPIsSet(); }
+  bool DimIsNotSet() const { return this->IPIsNotSet(); }
   bool DimIsEqual(const Dimensions &dOther) const
     { return this->IPIsEqual(dOther); }
   bool DimIsNotEqual(const Dimensions &dOther) const
@@ -62,16 +62,16 @@ struct Dimensions :                    // Members initially public
     /* -- Initialisers ----------------------------------------------------- */
     Base{ itV }                        // Initialise specified values
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Initialisation of both values constructor -------------------------- */
   Dimensions(const Int itW,            // Specified width to initialise to
              const Int itH) :          // Specified height to initialise to
     /* -- Initialisers ----------------------------------------------------- */
     Base{ itW, itH }                   // Initialise specified values
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Default constructor that does not need to do anything -------------- */
-  Dimensions(void) = default;
+  Dimensions() = default;
 };/* ----------------------------------------------------------------------- */
 typedef Dimensions<GLfloat>      DimGLFloat; // Dimension of GLfloats
 typedef Dimensions<GLsizei>      DimGLSizei; // Dimension of GLsizeis

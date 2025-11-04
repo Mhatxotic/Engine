@@ -19,13 +19,13 @@ using namespace IFlags;                using namespace IIdent::P;
 using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IPSplit::P;            using namespace IMemory::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS::SevenZip;
+using namespace IMutex::P;             using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == Archive collector with extract buffer size =========================== */
+/* -- Public typedefs ------------------------------------------------------ */
 CTOR_BEGIN_ASYNC(Archives, Archive, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
   string           strArchiveExt;      // Archive extension
@@ -38,20 +38,20 @@ CTOR_BEGIN_ASYNC(Archives, Archive, CLHelperSafe,
   static void Free(ISzAllocPtr, void*const vpAddress)
     { StdFree(vpAddress); }
 );/* ----------------------------------------------------------------------- */
-BUILD_FLAGS(Archive,
+BUILD_FLAGS(Archive,                   // Archive flags
   /* ----------------------------------------------------------------------- */
-  // Archive on standby?             Archive file handle opened?
-  AE_STANDBY              {Flag(0)}, AE_FILEOPENED           {Flag(1)},
-  // Allocated look2read structs?    Allocated archive structs?
-  AE_SETUPL2R             {Flag(2)}, AE_ARCHIVEINIT          {Flag(3)}
-);/* == Archive object class =============================================== */
+  AE_STANDBY                {Flag(0)}, // Archive on standby?
+  AE_FILEOPENED             {Flag(1)}, // Archive file handle opened?
+  AE_SETUPL2R               {Flag(2)}, // Allocated look2read structs?
+  AE_ARCHIVEINIT            {Flag(3)}  // Allocated archive structs?
+);/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Ident,                        // Archive file name
   public AsyncLoaderArchive,           // Async manager for off-thread loading
   public Lockable,                     // Lua garbage collect instruction
   public ArchiveFlags,                 // Archive initialisation flags
-  private mutex,                       // Mutex for condition variable
+  private Mutex,                       // Mutex for condition variable
   private condition_variable           // Waiting for async ops to complete
 { /* -- Private Variables -------------------------------------------------- */
   SafeSizeT        stInUse;            // API in use reference count
@@ -70,7 +70,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
 #if defined(WINDOWS)                   // Using Windows?
   /* -- Open a stream ------------------------------------------------------ */
   WRes ArchiveOpenFile(CSzFile*const csfStream) const
-    { return InFile_OpenW(csfStream, UTFtoS16(IdentGet()).c_str()); }
+    { return InFile_OpenW(csfStream, UTFtoS16(IdentGet()).data()); }
   /* -- Get operating system specific handle ------------------------------- */
   Lib::OS::HANDLE ArchiveCFISToOSHandle(const CFileInStream &cfisStream) const
     { return cfisStream.file.handle; }
@@ -78,7 +78,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
 #else                                  // Linux or MacOS?
   /* -- Open a stream ------------------------------------------------------ */
   WRes ArchiveOpenFile(CSzFile*const csfStream) const
-    { return InFile_Open(csfStream, IdentGet().c_str()); }
+    { return InFile_Open(csfStream, IdentGet().data()); }
   /* -- Get operating system specific handle ------------------------------- */
   int ArchiveCFISToOSHandle(const CFileInStream &cfisStream) const
     { return cfisStream.file.fd; }
@@ -185,19 +185,19 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Get archive file/dir count as human readable string ---------------- */
   const string ArchiveGetFilesString(const auto iFiles) const
     { return StrCPluraliseNum(iFiles, "file", "files"); }
-  const string ArchiveGetNumFilesString(void) const
+  const string ArchiveGetNumFilesString() const
     { return ArchiveGetFilesString(ArchiveGetNumFiles()); }
   const string ArchiveGetDirsString(const auto iDirs) const
     { return StrCPluraliseNum(iDirs, "directory", "directories"); }
-  const string ArchiveGetNumDirsString(void) const
+  const string ArchiveGetNumDirsString() const
     { return ArchiveGetDirsString(ArchiveGetNumDirs()); }
   /* -- Get archive file/dir as table ------------------------------ */ public:
-  const StrUIntMap &ArchiveGetFileList(void) const { return suimFiles; }
-  const StrUIntMap &ArchiveGetDirList(void) const { return suimDirs; }
+  const StrUIntMap &ArchiveGetFileList() const { return suimFiles; }
+  const StrUIntMap &ArchiveGetDirList() const { return suimDirs; }
   /* -- Get archive file/dir counts ---------------------------------------- */
-  size_t ArchiveGetNumFiles(void) const { return suimFiles.size(); }
-  size_t ArchiveGetNumDirs(void) const { return suimDirs.size(); }
-  size_t ArchiveGetTotal(void) const { return csaeData.NumFiles; }
+  size_t ArchiveGetNumFiles() const { return suimFiles.size(); }
+  size_t ArchiveGetNumDirs() const { return suimDirs.size(); }
+  size_t ArchiveGetTotal() const { return csaeData.NumFiles; }
   /* -- Returns modified or creation time of specified file ---------------- */
   StdTimeT ArchiveGetModifiedTime(const size_t stId) const
     { return ArchiveSzTimeToStdTime(stId, csaeData.MTime); }
@@ -212,7 +212,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   const StrUIntMapConstIt &ArchiveGetDir(const size_t stIndex) const
     { return suimcivDirs[stIndex]; }
   /* -- Return number of extra archives opened ----------------------------- */
-  size_t ArchiveGetInUse(void) const { return stInUse; }
+  size_t ArchiveGetInUse() const { return stInUse; }
   /* -- Return if iterator is valid ---------------------------------------- */
   bool ArchiveIsFileIteratorValid(const StrUIntMapConstIt &suimciIt) const
     { return suimciIt != suimFiles.cend(); }
@@ -223,82 +223,83 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   FileMap ArchiveExtract(const StrUIntMapConstIt &suimciIt)
   { // Lock mutex. We don't care if we can't lock it though because we will
     // open another archive if we cannot lock it.
-    const UniqueLock ulDecoder{ *this, try_to_lock };
-    // Create class to notify destructor when leaving this scope
-    const class Notify { public: Archive &aRef;
-      explicit Notify(Archive &aNRef) : aRef(aNRef) { }
-      ~Notify(void) { aRef.notify_one(); } } cNotify(*this);
-    // Get filename and filename id from iterator
-    const string &strFile = suimciIt->first;
-    const unsigned int &uiSrcId = suimciIt->second;
-    // If the base archive file is in use?
-    if(!ulDecoder.owns_lock())
-    { // We need to adjust in-use counter when joining and leaving this scope
-      // This tells the destructor to wait until it is zero.
-      const class Counter { public: Archive &aRef;
-        explicit Counter(Archive &aNRef) : aRef(aNRef) { ++aRef.stInUse; }
-        ~Counter(void) { --aRef.stInUse; } } cCounter(*this);
-      // Because the API doesn't support sharing file handles, we will need
-      // to re-open the archive again with new data. We don't need to collect
-      // any filename data again though thankfully so this should still be
-      // quite a speedy process.
-      CFileInStream cfisData2{};
-      CSzArEx csaeData2{};
-      CLookToRead2 cltrData2{};
-      // Capture exceptions so we can clean up 7zip api
-      try
-      { // Open new archive and throw error if it failed
-        if(const int iCode = ArchiveOpenFile(&cfisData2.file))
-          XC("Failed to open archive!",
-            "Archive", IdentGet(),      "Index", suimciIt->second,
-            "File",    suimciIt->first, "Code",  iCode,
-            "Reason",  CodecGetLzmaErrString(iCode));
-        // Custom start position specified
-        if(uqArchPos > 0 &&
-           cSystem->SeekFile(ArchiveCFISToOSHandle(cfisData),
-             uqArchPos) != uqArchPos)
-          XC("Failed to seek in archive!",
-            "Archive", IdentGet(),      "Index",    suimciIt->second,
-            "File",    suimciIt->first, "Position", uqArchPos);
-        // Load archive
-        ArchiveSetupLookToRead(cfisData2, cltrData2);
-        // Init lzma data
-        SzArEx_Init(&csaeData2);
-        // Initialise archive database and if failed, just log it
-        if(const int iCode = SzArEx_Open(&csaeData2,
-          &cltrData2.vt, &cParent->isaData, &cParent->isaData))
-            XC("Failed to load archive!",
-               "Archive", IdentGet(),      "Index", suimciIt->second,
-               "File",    suimciIt->first, "Code",  iCode,
-               "Reason",  CodecGetLzmaErrString(iCode));
-        // Decompress the buffer using our duplicated handles
-        FileMap fmFile{
-          ArchiveExtract(strFile, uiSrcId, cltrData2, csaeData2) };
-        // Clean up look to read
-        ArchiveCleanupLookToRead(cltrData2);
-        // Free memory
-        SzArEx_Free(&csaeData2, &cParent->isaData);
-        // Close archive
-        if(File_Close(&cfisData2.file))
-          cLog->LogWarningExSafe("Archive failed to close archive '$': $!",
-            IdentGet(), SysError());
-        // Done
-        return fmFile;
-      } // exception occured
-      catch(const exception&)
-      { // Clean up look to read
-        ArchiveCleanupLookToRead(cltrData2);
-        // Free memory
-        SzArEx_Free(&csaeData2, &cParent->isaData);
-        // Close archive
-        if(File_Close(&cfisData2.file))
-          cLog->LogWarningExSafe("Archive failed to close archive '$': $!",
-            IdentGet(), SysError());
-        // Show new exception for plain error message
-        throw;
-      } // Extract block
-    } // Extract and return decompressed file
-    else return ArchiveExtract(strFile, uiSrcId, cltrData, csaeData);
+    return MutexUniqueCall([this, &suimciIt](UniqueLock &ulLock){
+      // Create class to notify destructor when leaving this scope
+      const class Notify { public: Archive &aRef;
+        explicit Notify(Archive &aNRef) : aRef(aNRef) {}
+        ~Notify() { aRef.notify_one(); } } cNotify(*this);
+      // Get filename and filename id from iterator
+      const string &strFile = suimciIt->first;
+      const unsigned int &uiSrcId = suimciIt->second;
+      // If the base archive file is in use?
+      if(!ulLock.owns_lock())
+      { // We need to adjust in-use counter when joining and leaving this scope
+        // This tells the destructor to wait until it is zero.
+        const class Counter { public: Archive &aRef;
+          explicit Counter(Archive &aNRef) : aRef(aNRef) { ++aRef.stInUse; }
+          ~Counter() { --aRef.stInUse; } } cCounter(*this);
+        // Because the API doesn't support sharing file handles, we will need
+        // to re-open the archive again with new data. We don't need to collect
+        // any filename data again though thankfully so this should still be
+        // quite a speedy process.
+        CFileInStream cfisData2{};
+        CSzArEx csaeData2{};
+        CLookToRead2 cltrData2{};
+        // Capture exceptions so we can clean up 7zip api
+        try
+        { // Open new archive and throw error if it failed
+          if(const int iCode = ArchiveOpenFile(&cfisData2.file))
+            XC("Failed to open archive!",
+              "Archive", IdentGet(),      "Index", suimciIt->second,
+              "File",    suimciIt->first, "Code",  iCode,
+              "Reason",  CodecGetLzmaErrString(iCode));
+          // Custom start position specified
+          if(uqArchPos > 0 &&
+             cSystem->SeekFile(ArchiveCFISToOSHandle(cfisData),
+               uqArchPos) != uqArchPos)
+            XC("Failed to seek in archive!",
+              "Archive", IdentGet(),      "Index",    suimciIt->second,
+              "File",    suimciIt->first, "Position", uqArchPos);
+          // Load archive
+          ArchiveSetupLookToRead(cfisData2, cltrData2);
+          // Init lzma data
+          SzArEx_Init(&csaeData2);
+          // Initialise archive database and if failed, just log it
+          if(const int iCode = SzArEx_Open(&csaeData2,
+            &cltrData2.vt, &cParent->isaData, &cParent->isaData))
+              XC("Failed to load archive!",
+                 "Archive", IdentGet(),      "Index", suimciIt->second,
+                 "File",    suimciIt->first, "Code",  iCode,
+                 "Reason",  CodecGetLzmaErrString(iCode));
+          // Decompress the buffer using our duplicated handles
+          FileMap fmFile{
+            ArchiveExtract(strFile, uiSrcId, cltrData2, csaeData2) };
+          // Clean up look to read
+          ArchiveCleanupLookToRead(cltrData2);
+          // Free memory
+          SzArEx_Free(&csaeData2, &cParent->isaData);
+          // Close archive
+          if(File_Close(&cfisData2.file))
+            cLog->LogWarningExSafe("Archive failed to close archive '$': $!",
+              IdentGet(), SysError());
+          // Done
+          return fmFile;
+        } // exception occured
+        catch(const exception&)
+        { // Clean up look to read
+          ArchiveCleanupLookToRead(cltrData2);
+          // Free memory
+          SzArEx_Free(&csaeData2, &cParent->isaData);
+          // Close archive
+          if(File_Close(&cfisData2.file))
+            cLog->LogWarningExSafe("Archive failed to close archive '$': $!",
+              IdentGet(), SysError());
+          // Show new exception for plain error message
+          throw;
+        } // Extract block
+      } // Extract and return decompressed file
+      else return ArchiveExtract(strFile, uiSrcId, cltrData, csaeData);
+    }, try_to_lock);
   }
   /* -- Loads a file from archive by filename ------------------------------ */
   FileMap ArchiveExtract(const string &strFile)
@@ -347,10 +348,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // how many files and directories there are individually so we'll reserve
     // memory for the maximum amount of entries in the 7-zip file. We'll shrink
     // this after to reclaim the memory
-    const size_t stFilesMaximum = suimcivFiles.max_size();
-    if(csaeData.NumFiles > stFilesMaximum)
+    if(csaeData.NumFiles > suimcivFiles.max_size())
       XC("Insufficient storage for file list!",
-         "Current", csaeData.NumFiles, "Maximum", stFilesMaximum);
+         "Current", csaeData.NumFiles, "Maximum", suimcivFiles.max_size());
     suimcivFiles.reserve(csaeData.NumFiles);
     // ...and same for the directories too.
     const size_t stDirsMaximum = suimcivDirs.max_size();
@@ -407,8 +407,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // Set filename without filename checking
     SyncInitFileDisk(strFile);
   }
-  /* -- For loading via lua ------------------------------------------------ */
-  Archive(void) :
+  /* -- Default constructor ------------------------------------------------ */
+  Archive() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperArchive{ cArchives },      // Initialise collector with this obj
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
@@ -421,9 +421,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     cltrData{},                        // Clear lookup stream data
     csaeData{}                         // Clear archive stream data
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Unloads the archive ------------------------------------------------ */
-  ~Archive(void)
+  ~Archive()
   { // Done if a filename is not set
     if(IdentIsNotSet()) return;
     // Wait for archive loading async operations to complete
@@ -438,8 +438,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       cLog->LogInfoExSafe("Archive '$' waiting for $ async ops to complete...",
         IdentGet(), static_cast<size_t>(stInUse));
       // Wait for base and spawned file operations to finish
-      UniqueLock ulDecoder{ *this };
-      wait(ulDecoder, [this]{ return !stInUse; });
+      MutexUniqueCall([this](UniqueLock &ulLock){
+        wait(ulLock, [this]{ return !stInUse; }); });
     } // Free archive structs if allocated
     if(FlagIsSet(AE_ARCHIVEINIT)) SzArEx_Free(&csaeData, &cParent->isaData);
     // Memory allocated? Free memory allocated for buffer
@@ -459,11 +459,12 @@ CTOR_END_ASYNC_NOFUNCS(Archives, Archive, ARCHIVE, ARCHIVE, // Finish collector
 );/* == Look if a file exists in archives ================================== */
 static bool ArchiveFileExists(const string &strFile)
 { // Lock archive list so it cannot be modified and iterate through the list
-  const LockGuard lgArchivesSync{ cArchives->CollectorGetMutex() };
-  // For each archive. Return if the specified file exists in it.
-  return any_of(cArchives->cbegin(), cArchives->cend(),
-    [&strFile](const Archive*const aPtr)
-      { return aPtr->ArchiveFileExists(strFile); });
+  return cArchives->MutexCall([&strFile](){
+    // For each archive. Return if the specified file exists in it.
+    return any_of(cArchives->cbegin(), cArchives->cend(),
+      [&strFile](const Archive*const aPtr)
+        { return aPtr->ArchiveFileExists(strFile); });
+  });
 }
 /* -- Create and check a dynamic archive ----------------------------------- */
 static Archive *ArchiveInitNew(const string &strFile, const size_t stSize=0)
@@ -562,7 +563,7 @@ static CVarReturn ArchiveInitPersist(const bool bState)
 }
 /* -- Parallel enumeration ------------------------------------------------- */
 static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
-  StrSet &ssFiles, mutex &mLock)
+  StrSet &ssFiles, Mutex &mLock)
 { // For each directory in archive. Try to use multi-threading.
   StdForEach(par_unseq, suimList.cbegin(), suimList.cend(),
     [&strDir, &ssFiles, &mLock](const StrUIntMapPair &suimpRef)
@@ -571,20 +572,21 @@ static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
       suimpRef.first.find('/', strDir.length() + 1) != StdNPos) return;
     // Split file path
     const PathSplit psParts{ suimpRef.first };
-    // Lock access to archives list
-    const LockGuard lgLock{ mLock };
-    // Split path parts, lock mutex, and move into list
-    ssFiles.emplace(StdMove(psParts.strFileExt));
+    // Lock access to archives list and split path parts and move into list
+    mLock.MutexCall([&ssFiles, &psParts](){
+      ssFiles.emplace(StdMove(psParts.strFileExt)); });
   });
 }
 /* -- Return files in directories and archives with empty check ------------ */
 static const StrSet &ArchiveEnumerate(const string &strDir,
   const string &strExt, const bool bOnlyDirs, StrSet &ssFiles)
-{ // Lock archive list so it cannot be modified and if we have archives?
-  const LockGuard lgArchivesSync{ cArchives->CollectorGetMutex() };
-  if(!cArchives->empty())
-  { // Lock for file list
-    mutex mLock;
+{ // Lock archive list so it cannot be modified
+  return cArchives->MutexCall(
+    [&strDir, &strExt, bOnlyDirs, &ssFiles]()->StrSet&{
+    // Return if no archives
+    if(cArchives->empty()) return ssFiles;
+    // Lock for file list
+    Mutex mLock;
     // If only dirs requested? For each archive.
     if(bOnlyDirs)
       StdForEach(par, cArchives->cbegin(), cArchives->cend(),
@@ -612,40 +614,39 @@ static const StrSet &ArchiveEnumerate(const string &strDir,
         const PathSplit psParts{ suimpRef.first };
         if(psParts.strExt != strExt) return;
         // Lock the mutex and insert into list
-        const LockGuard lgLock{ mLock };
-        ssFiles.emplace(StdMove(psParts.strFileExt));
+        mLock.MutexCall([&ssFiles, &psParts](){
+          ssFiles.emplace(StdMove(psParts.strFileExt)); });
       });
     });
-  } // Return file list
-  return ssFiles;
+    // Return file list
+    return ssFiles;
+  });
 }
 /* -- Extract -------------------------------------------------------------- */
 static FileMap ArchiveExtract(const string &strFile)
-{ // Lock archive list so it cannot be modified and iterate through the list
-  UniqueLock ulLock{ cArchives->CollectorGetMutex() };
-  // Enumerate each archive from last to first because the latest-most loaded
-  // archive should always have priority if multiple archives have the same
-  // filename, just like game engines do.
-  for(Archives::const_reverse_iterator cArchIt{ cArchives->crbegin() };
-                                       cArchIt != cArchives->crend();
-                                     ++cArchIt)
-  { // Get reference to archive and find file, try next file if file not found
-    Archive &aRef = **cArchIt;
-    const StrUIntMapConstIt suimciIt{ aRef.ArchiveGetFileIterator(strFile) };
-    if(!aRef.ArchiveIsFileIteratorValid(suimciIt)) continue;
-    // Unlock the mutex because we don't need access to the list anymore
-    ulLock.unlock();
-    // Try to extract file and return it if succeeded!
-    FileMap fmFile{ aRef.ArchiveExtract(suimciIt) };
-    if(fmFile.FileMapOpened()) return fmFile;
-    // Something bad happened so relock the mutex and keep trying other
-    // archives anyway.
-    ulLock.lock();
-  } // File not found
-  return {};
+{ // Lock archive list so it cannot be modified
+  return cArchives->MutexUniqueCall([&strFile](UniqueLock &ulLock)->FileMap{
+    // Enumerate each archive from last to first because the latest-most loaded
+    // archive should always have priority if multiple archives have the same
+    // filename, just like game engines do.
+    for(Archives::const_reverse_iterator cArchIt{ cArchives->crbegin() };
+                                         cArchIt != cArchives->crend();
+                                       ++cArchIt)
+    { // Get reference to archive and find file, try next file if not found
+      Archive &aRef = **cArchIt;
+      const StrUIntMapConstIt suimciIt{ aRef.ArchiveGetFileIterator(strFile) };
+      if(!aRef.ArchiveIsFileIteratorValid(suimciIt)) continue;
+      // Unlock the mutex because we don't need access to the list anymore
+      const UniqueRelock urLock{ ulLock };
+      // Try to extract file and return it if succeeded!
+      FileMap fmFile{ aRef.ArchiveExtract(suimciIt) };
+      if(fmFile.FileMapOpened()) return fmFile;
+    } // File not found
+    return {};
+  });
 }
 /* -- ArchiveGetNames ------------------------------------------------------ */
-static const string ArchiveGetNames(void)
+static const string ArchiveGetNames()
 { // Set default archive name if no archives
   if(cArchives->empty()) return {};
   // Get first archive

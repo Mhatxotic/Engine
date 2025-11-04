@@ -60,7 +60,7 @@ class FileParts                        // Contains parts of a filename
     strFull{ StdMove(strFullNew) },
     strLoc{ strDrive+strDir }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- MOVE assign constructor on class creation -------------------------- */
   FileParts(FileParts &&pspOther) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -72,7 +72,7 @@ class FileParts                        // Contains parts of a filename
     strFull{ StdMove(pspOther.strFull) },
     strLoc{ StdMove(pspOther.strLoc) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- PathSplit class ---------------------------------------------------- */
 class PathSplit :
   /* -- Base classes ------------------------------------------------------- */
@@ -90,7 +90,7 @@ class PathSplit :
     wstring wstrSrc{ UTFtoS16(strSrc) };
     // Build full path name and use requested pathname if not wanted or failed?
     if(!bUseFullPath || !_wfullpath(const_cast<wchar_t*>(wstrFull.data()),
-      wstrSrc.c_str(), wstrFull.length()))
+      wstrSrc.data(), wstrFull.length()))
         wstrFull = StdMove(wstrSrc);
     // Split the executable path name into bits and if failed?
     _wsplitpath_s(const_cast<wchar_t*>(wstrFull.data()),
@@ -112,7 +112,7 @@ class PathSplit :
     string strExt; strExt.resize(_MAX_EXT);
     string strFile; strFile.resize(_MAX_FNAME);
     // If a full path name build is requested? Set original string
-    if(!bUseFullPath || !realpath(const_cast<char*>(strSrc.c_str()),
+    if(!bUseFullPath || !realpath(const_cast<char*>(strSrc.data()),
       const_cast<char*>(strFull.data())))
         strFull.assign(strSrc);
     // Succeeded? Resize the string
@@ -123,16 +123,16 @@ class PathSplit :
     // dirname() MODIFIES the original argument. We use memcpy because we
     // Don't want to resize the string. Also let us be careful of how many
     // bytes we should copy. Copy the lowest allocated string
-    strncpy(const_cast<char*>(strDir.data()), strFull.c_str(),
+    strncpy(const_cast<char*>(strDir.data()), strFull.data(),
       strDir.capacity() < strFull.capacity() ?
         strDir.capacity() : strFull.capacity());
-    if(const char*const cpDir = dirname(const_cast<char*>(strDir.c_str())))
+    if(const char*const cpDir = dirname(const_cast<char*>(strDir.data())))
     { // If the directory is not just a dot (current dir)?
       if(cpDir[0] != '.' || cpDir[1] != '\0')
       { // If the pointer is not the same as our string? Copy it.
-        if(cpDir != strDir.c_str()) strDir.assign(cpDir);
+        if(cpDir != strDir.data()) strDir.assign(cpDir);
         // Finalise the size of the original directory name
-        else strDir.resize(strlen(strDir.c_str()));
+        else strDir.resize(strlen(strDir.data()));
         // Finalise directory and append slash if there is not one to match how
         // Win32's splitpath works which is better really.
         if(strDir.back() != '/')
@@ -144,14 +144,14 @@ class PathSplit :
     // This is the final directory string so compact it
     strDir.shrink_to_fit();
     // Prepare filename. Again basename() can modify the argument on linux.
-    strncpy(const_cast<char*>(strFile.data()), strFull.c_str(),
+    strncpy(const_cast<char*>(strFile.data()), strFull.data(),
       strFile.capacity() < strFull.capacity() ?
         strFile.capacity() : strFull.capacity());
-    if(const char*const cpFile = basename(const_cast<char*>(strFull.c_str())))
+    if(const char*const cpFile = basename(const_cast<char*>(strFull.data())))
     { // If the pointer is not the same as our string? Copy it.
-      if(cpFile != strFile.c_str()) strFile.assign(cpFile);
+      if(cpFile != strFile.data()) strFile.assign(cpFile);
       // Finalise the size of the original file name
-      else strFile.resize(strlen(strFile.c_str()));
+      else strFile.resize(strlen(strFile.data()));
     } // Failed so clear the filename
     else strFile.clear();
     // Prepare extension and save extension and if found?
@@ -178,13 +178,13 @@ class PathSplit :
     /* -- Initialisers ----------------------------------------------------- */
     FileParts{ Init(strSrc, bUseFullPath) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- MOVE assign constructor on class creation -------------------------- */
   PathSplit(PathSplit &&psOther) :
     /* -- Initialisers ----------------------------------------------------- */
     FileParts{ StdMove(psOther) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

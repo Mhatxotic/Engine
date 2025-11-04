@@ -17,11 +17,11 @@ class Lockable                         // Lua lock class
   /* -- Set locked status -------------------------------------------------- */
   void LockSet(const bool bState) { bLocked = bState; }
   /* -- Return true if lock is (not) set --------------------------- */ public:
-  bool LockIsSet(void) const { return bLocked; }
-  bool LockIsNotSet(void) const { return !LockIsSet(); }
+  bool LockIsSet() const { return bLocked; }
+  bool LockIsNotSet() const { return !LockIsSet(); }
   /* -- Set/clear locked status -------------------------------------------- */
-  void LockSet(void) { LockSet(true); }
-  void LockClear(void) { LockSet(false); }
+  void LockSet() { LockSet(true); }
+  void LockClear() { LockSet(false); }
   /* -- Swap lock status with another class -------------------------------- */
   void LockSwap(Lockable &lOther) { swap(bLocked, lOther.bLocked); }
   /* -- (Default) constructor ----------------------------------- */ protected:
@@ -31,7 +31,7 @@ class Lockable                         // Lua lock class
     ): /* -- Initialisers -------------------------------------------------- */
     bLocked(bState)                    // Set the initial lock state
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- End ---------------------------------------------------------------- */
 };                                     // End of private module namespace
 /* ------------------------------------------------------------------------- */

@@ -104,8 +104,8 @@ class GlFWUtil                         // Members initially private
   /* ---------------------------------------------------------------------- */\
   void GlFWSet ## nc(const bool bState) \
     { GlFWSetHintBoolean(GLFW_ ## nu, bState); } \
-  void GlFWSet ## nc ## Enabled(void) { GlFWSetHintEnabled(GLFW_ ## nu); } \
-  void GlFWSet ## nc ## Disabled(void) { GlFWSetHintDisabled(GLFW_ ## nu); }
+  void GlFWSet ## nc ## Enabled() { GlFWSetHintEnabled(GLFW_ ## nu); } \
+  void GlFWSet ## nc ## Disabled() { GlFWSetHintDisabled(GLFW_ ## nu); }
   /* ----------------------------------------------------------------------- */
   SET(AutoIconify, AUTO_ICONIFY)       // Set window auto-minimise state
   SET(CentreCursor, CENTER_CURSOR)     // Set window cursor centre state
@@ -130,7 +130,7 @@ class GlFWUtil                         // Members initially private
   /* ----------------------------------------------------------------------- */
 #undef SET                             // Done with this macro
   /* -- Default constructor ------------------------------------------------ */
-  GlFWUtil(void) :
+  GlFWUtil() :
     /* -- Initialisers ----------------------------------------------------- */
     hsStrings{{                        // Initialise hint strings
       IDMAPSTR(GLFW_ACCUM_ALPHA_BITS), IDMAPSTR(GLFW_ACCUM_BLUE_BITS),
@@ -159,7 +159,7 @@ class GlFWUtil                         // Members initially private
       IDMAPSTR(GLFW_CONNECTED), IDMAPSTR(GLFW_DISCONNECTED),
     }, "GLFW_UNKNOWN" }                // End of initialisation of hint strings
   /* -- No code ------------------------------------------------------------ */
-  { }
+  {}
 };/* ----------------------------------------------------------------------- */
 /* -- Get monitor data pointer --------------------------------------------- */
 template<typename AnyCast=void*>
@@ -174,7 +174,7 @@ template<typename AnyCast=void*const>
   static void GlFWSetWindowUserPointer(GLFWwindow*const wC, AnyCast acData)
     { glfwSetWindowUserPointer(wC, reinterpret_cast<void*>(acData)); }
 /* ------------------------------------------------------------------------- */
-static void GlFWForceEventHack(void) { glfwPostEmptyEvent(); }
+static void GlFWForceEventHack() { glfwPostEmptyEvent(); }
 /* -- Joystick axes -------------------------------------------------------- */
 static const float *GlFWGetJoystickAxes(int iJ, int &iJAC)
   { return glfwGetJoystickAxes(iJ, &iJAC); }
@@ -205,7 +205,7 @@ static GLFWmonitorfun GlFWSetMonitorCallback(GLFWmonitorfun gmfCb)
 /* -- Set swap interval ---------------------------------------------------- */
 static void GlFWSetVSync(const int iI) { glfwSwapInterval(iI); }
 /* -- Wait for window event ------------------------------------------------ */
-static void GlFWWaitEvents(void) { glfwWaitEvents(); }
+static void GlFWWaitEvents() { glfwWaitEvents(); }
 /* -- Release current context ---------------------------------------------- */
 static void GlFWSetContext(GLFWwindow*const wWindow=nullptr)
   { glfwMakeContextCurrent(wWindow); }
@@ -219,13 +219,13 @@ static bool GlFWProcExists(const char*const cpFunction)
 static const char *GlFWGetKeyName(const int iK, const int iSC)
   { return glfwGetKeyName(iK, iSC); }
 /* -- Return if raw mouse is supported? ------------------------------------ */
-static bool GlFWIsRawMouseMotionSupported(void)
+static bool GlFWIsRawMouseMotionSupported()
   { return GlFWGBooleanToBoolean(glfwRawMouseMotionSupported()); }
 /* -- Return monitor name -------------------------------------------------- */
 static const char *GlFWGetMonitorName(GLFWmonitor*const mDevice)
   { return glfwGetMonitorName(mDevice); }
 /* -- Is the context not set ----------------------------------------------- */
-static GLFWwindow *GlFWContext(void) { return glfwGetCurrentContext(); }
+static GLFWwindow *GlFWContext() { return glfwGetCurrentContext(); }
 /* ------------------------------------------------------------------------- */
 static void GlFWSetCursor(GLFWwindow*const gwCtx, GLFWcursor*const gcCtx)
   { glfwSetCursor(gwCtx, gcCtx); }

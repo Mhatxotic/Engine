@@ -25,12 +25,12 @@ class GlFWWindow :                     // GLFW window class
   GLFWwindow      *wClass;             // GLFW window context
   StrVector        svFiles;            // Drag and drop file list
   /* -- Return the window handle ------------------------------------------- */
-  GLFWwindow *WinGetHandle(void) const { return wClass; }
+  GLFWwindow *WinGetHandle() const { return wClass; }
   /* -- Set window data pointer -------------------------------------------- */
   template<typename AnyCast=void*const>void WinSetData(AnyCast acData) const
     { GlFWSetWindowUserPointer<AnyCast>(WinGetHandle(), acData); }
   /* -- Clear the window handle -------------------------------------------- */
-  void WinClearHandle(void) { WinSetHandle(nullptr); }
+  void WinClearHandle() { WinSetHandle(nullptr); }
   /* -- Assign a new window handle ----------------------------------------- */
   void WinSetHandle(GLFWwindow*const wNewClass) { wClass = wNewClass; }
   /* -- Check if window handle is set and copy it or return failure -------- */
@@ -140,7 +140,7 @@ class GlFWWindow :                     // GLFW window class
   static void WinOnWindowResize(GLFWwindow*const wC, int iW, int iH)
     { cEvtMain->Add(EMC_WIN_RESIZED, reinterpret_cast<void*>(wC), iW, iH); }
   /* -- Register window events --------------------------------------------- */
-  void WinRegisterEvents(void) const
+  void WinRegisterEvents() const
   { // Register glfw event callbacks which will use our event system to
     // process these events.
     glfwSetCharCallback(WinGetHandle(), WinOnInputChar);
@@ -160,7 +160,7 @@ class GlFWWindow :                     // GLFW window class
     glfwSetWindowSizeCallback(WinGetHandle(), WinOnWindowResize);
   }
   /* -- Unregister window events ------------------------------------------- */
-  void WinUnregisterEvents(void) const
+  void WinUnregisterEvents() const
   { // Done if theres no window class
     if(WinIsNotAvailable()) return;
     // Remove other callbacks
@@ -181,10 +181,10 @@ class GlFWWindow :                     // GLFW window class
     glfwSetCharCallback(WinGetHandle(), nullptr);
   }
   /* -- Get files -------------------------------------------------- */ public:
-  StrVector &WinGetFiles(void) { return svFiles; }
+  StrVector &WinGetFiles() { return svFiles; }
   /* -- Is the window handle set? ------------------------------------------ */
-  bool WinIsAvailable(void) const { return !!WinGetHandle(); }
-  bool WinIsNotAvailable(void) const { return !WinIsAvailable(); }
+  bool WinIsAvailable() const { return !!WinGetHandle(); }
+  bool WinIsNotAvailable() const { return !WinIsAvailable(); }
   /* -- Set window icon ---------------------------------------------------- */
   void WinSetIcon(const int iCount, const GLFWimage*const giImages) const
     { glfwSetWindowIcon(WinGetHandle(), iCount, giImages); }
@@ -198,33 +198,33 @@ class GlFWWindow :                     // GLFW window class
   void WinSetClose(const int iS) const
     { glfwSetWindowShouldClose(WinGetHandle(), iS); }
   /* -- Returns if the window should close --------------------------------- */
-  bool WinShouldClose(void) const
+  bool WinShouldClose() const
     { return !WinIsAvailable() || glfwWindowShouldClose(WinGetHandle()); }
-  bool WinShouldNotClose(void) const
+  bool WinShouldNotClose() const
     { return !WinShouldClose(); }
   /* -- Restore the window from being minimised ---------------------------- */
-  void WinRestore(void) const { glfwRestoreWindow(WinGetHandle()); }
+  void WinRestore() const { glfwRestoreWindow(WinGetHandle()); }
   /* -- Minimise/Iconify the window ---------------------------------------- */
-  void WinMinimise(void) const { glfwIconifyWindow(WinGetHandle()); }
+  void WinMinimise() const { glfwIconifyWindow(WinGetHandle()); }
   /* -- Maximise the window ------------------------------------------------ */
-  void WinMaximise(void) const { glfwMaximizeWindow(WinGetHandle()); }
+  void WinMaximise() const { glfwMaximizeWindow(WinGetHandle()); }
   /* -- Set focus on the window -------------------------------------------- */
-  void WinFocus(void) const { glfwFocusWindow(WinGetHandle()); }
+  void WinFocus() const { glfwFocusWindow(WinGetHandle()); }
   /* -- Show a window and register events ---------------------------------- */
-  void WinShow(void) const
+  void WinShow() const
     { glfwShowWindow(WinGetHandle()); WinRegisterEvents(); }
   /* -- Hide a window and register events ---------------------------------- */
-  void WinHide(void) const
+  void WinHide() const
     { WinUnregisterEvents(); glfwHideWindow(WinGetHandle()); }
   /* -- Send dummy mouse position ------------------------------------------ */
-  void WinSendMousePosition(void) const
+  void WinSendMousePosition() const
   { // Get current cursor position
     double dX; double dY; WinGetCursorPos(dX, dY);
     // Dispatch it to the engine thread
     WinOnMouseMove(WinGetHandle(), dX, dY);
   }
   /* -- Get window size ---------------------------------------------------- */
-  DimInt WinGetSize(void) const
+  DimInt WinGetSize() const
   { // Put window dimensions inside the dimensions class and return it
     DimInt diDimensions;
     glfwGetWindowSize(WinGetHandle(), &diDimensions.DimGetWidthRef(),
@@ -236,7 +236,7 @@ class GlFWWindow :                     // GLFW window class
     { glfwSetWindowSize(WinGetHandle(), diSize.DimGetWidth(),
                                         diSize.DimGetHeight()); }
   /* -- Get window DPI scale ----------------------------------------------- */
-  DimFloat WinGetScale(void) const
+  DimFloat WinGetScale() const
   { // Put window scale inside the dimensions class and return it
     DimFloat dfScale;
     glfwGetWindowContentScale(WinGetHandle(), &dfScale.DimGetWidthRef(),
@@ -263,9 +263,9 @@ class GlFWWindow :                     // GLFW window class
     { glfwSetClipboardString(WinGetHandle(), cpT); }
   /* -- Set clipboard c++ string ------------------------------------------- */
   void WinSetClipboardString(const string &strT) const
-    { WinSetClipboard(strT.c_str()); }
+    { WinSetClipboard(strT.data()); }
   /* -- Get clipboard c-string --------------------------------------------- */
-  const char *WinGetClipboard(void) const
+  const char *WinGetClipboard() const
   { // Return clipboard string if available
     if(const char*const cpData =
       glfwGetClipboardString(WinGetHandle())) return cpData;
@@ -273,7 +273,7 @@ class GlFWWindow :                     // GLFW window class
     return cCommon->CommonCBlank();
   }
   /* -- Get clipboard C++ string ------------------------------------------- */
-  const string WinGetClipboardString(void) const
+  const string WinGetClipboardString() const
     { return WinGetClipboard(); }
   /* -- Get mouse/key button state ----------------------------------------- */
   int WinGetMouse(const int iB) const
@@ -297,7 +297,7 @@ class GlFWWindow :                     // GLFW window class
   /* -- Set window aspect ratio -------------------------------------------- */
   void WinSetAspectRatio(const int iNumeric, const int iDenominator) const
     { glfwSetWindowAspectRatio(WinGetHandle(), iNumeric, iDenominator); }
-  void WinSetFreeAspectRatio(void) const
+  void WinSetFreeAspectRatio() const
     { WinSetAspectRatio(GLFW_DONT_CARE, GLFW_DONT_CARE); }
   /* -- Set window aspect ratio with a float or double --------------------- */
   void WinSetAspectRatio(const string &strVal) const
@@ -318,7 +318,7 @@ class GlFWWindow :                     // GLFW window class
     { glfwSetWindowPos(WinGetHandle(), ciPosition.CoordGetX(),
                                        ciPosition.CoordGetY()); }
   /* -- Get window size ---------------------------------------------------- */
-  CoordInt WinGetPos(void) const
+  CoordInt WinGetPos() const
   { // Put window position inside the coordinates class and return it
     CoordInt ciCoordinates;
     glfwGetWindowPos(WinGetHandle(), &ciCoordinates.CoordGetXRef(),
@@ -326,7 +326,7 @@ class GlFWWindow :                     // GLFW window class
     return ciCoordinates;
   }
   /* -- Swap GL buffers ---------------------------------------------------- */
-  void WinSwapGLBuffers(void) const { glfwSwapBuffers(WinGetHandle()); }
+  void WinSwapGLBuffers() const { glfwSwapBuffers(WinGetHandle()); }
   /* -- Set window attribute core functions -------------------------------- */
   void WinSetAttribBoolean(const int iVar, const bool bVal) const
     { WinSetAttrib(iVar, GlFWBooleanToGBoolean(bVal)); }
@@ -339,13 +339,13 @@ class GlFWWindow :                     // GLFW window class
   /* ---------------------------------------------------------------------- */\
   void WinSet ## nc ## Attrib[[maybe_unused]](const bool bState) const \
     { WinSetAttribBoolean(GLFW_ ## nu, bState); } \
-  void WinSet ## nc ## AttribEnabled[[maybe_unused]](void) const \
+  void WinSet ## nc ## AttribEnabled[[maybe_unused]]() const \
     { WinSetAttribEnabled(GLFW_ ## nu); } \
-  void WinSet ## nc ## AttribDisabled[[maybe_unused]](void) const \
+  void WinSet ## nc ## AttribDisabled[[maybe_unused]]() const \
     { WinSetAttribDisabled(GLFW_ ## nu); } \
-  bool WinIs ## nc ## AttribEnabled[[maybe_unused]](void) const \
+  bool WinIs ## nc ## AttribEnabled[[maybe_unused]]() const \
     { return GlFWGBooleanToBoolean(WinGetAttrib(GLFW_ ## nu)); } \
-  bool WinIs ## nc ## AttribDisabled[[maybe_unused]](void) const \
+  bool WinIs ## nc ## AttribDisabled[[maybe_unused]]() const \
     { return !WinIs ## nc ## AttribEnabled(); }
   /* ----------------------------------------------------------------------- */
   SET(AutoIconify, AUTO_ICONIFY)       // Set window auto-minimise state
@@ -376,17 +376,17 @@ class GlFWWindow :                     // GLFW window class
   /* ----------------------------------------------------------------------- */
 #undef SET                             // Done with this macro
   /* -- Check current context ---------------------------------------------- */
-  bool WinIsCurrentContext(void) const
+  bool WinIsCurrentContext() const
     { return GlFWContext() == WinGetHandle(); }
   /* -- Make current context ----------------------------------------------- */
-  void WinSetContext(void) const { GlFWSetContext(WinGetHandle()); }
+  void WinSetContext() const { GlFWSetContext(WinGetHandle()); }
   /* -- Set window size limits --------------------------------------------- */
   void WinSetLimits(const int iMinW, const int iMinH,
     const int iMaxW, const int iMaxH) const
       { glfwSetWindowSizeLimits(WinGetHandle(),
           iMinW, iMinH, iMaxW, iMaxH); }
   /* -- Request window attention ------------------------------------------- */
-  void WinRequestAttention(void) const
+  void WinRequestAttention() const
     { glfwRequestWindowAttention(WinGetHandle()); }
   /* -- Get or set input mode ---------------------------------------------- */
   int WinGetInputMode(const int iM) const
@@ -400,28 +400,28 @@ class GlFWWindow :                     // GLFW window class
   /* -- Set/get raw mouse motion ------------------------------------------- */
   void WinSetRawMouseMotion(const bool bS) const
     { WinSetInputModeBoolean(GLFW_RAW_MOUSE_MOTION, bS); }
-  bool WinGetRawMouseMotion(void) const
+  bool WinGetRawMouseMotion() const
     { return WinGetInputModeBoolean(GLFW_RAW_MOUSE_MOTION); }
   /* -- Set/get lock key mods ---------------------------------------------- */
   void WinSetLockKeyMods(const bool bS) const
     { WinSetInputModeBoolean(GLFW_LOCK_KEY_MODS, bS); }
-  bool WinGetLockKeyMods(void) const
+  bool WinGetLockKeyMods() const
     { return WinGetInputModeBoolean(GLFW_LOCK_KEY_MODS); }
   /* -- Set/get sticky mouse buttons --------------------------------------- */
   void WinSetStickyMouseButtons(const bool bS) const
     { WinSetInputModeBoolean(GLFW_STICKY_MOUSE_BUTTONS, bS); }
-  bool WinGetStickyMouseButtons(void) const
+  bool WinGetStickyMouseButtons() const
     { return WinGetInputModeBoolean(GLFW_STICKY_MOUSE_BUTTONS); }
   /* -- Set/get sticky keys ------------------------------------------------ */
   void WinSetStickyKeys(const bool bS) const
     { WinSetInputModeBoolean(GLFW_STICKY_KEYS, bS); }
-  bool WinGetStickyKeys(void) const
+  bool WinGetStickyKeys() const
     { return WinGetInputModeBoolean(GLFW_STICKY_KEYS); }
   /* -- Get mouse buttons tatus--------------------------------------------- */
   int WinGetMouseButton(const int iB) const
     { return glfwGetMouseButton(this->WinGetHandle(), iB); }
   /* -- Destroy the GLFW window -------------------------------------------- */
-  void WinDeInit(void)
+  void WinDeInit()
   { // Done if theres no window class
     if(WinIsNotAvailable()) return;
     // Destroy the window
@@ -446,11 +446,11 @@ class GlFWWindow :                     // GLFW window class
     return WinGetHandle();
   }
   /* -- Constructor --------------------------------------------- */ protected:
-  GlFWWindow(void) :                   // Default constructor (no arguments)
+  GlFWWindow() :                       // Default constructor (no arguments)
     /* -- Initialisers ----------------------------------------------------- */
     wClass{ nullptr }                  // Uninitialised window context
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

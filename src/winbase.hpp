@@ -28,7 +28,7 @@ class SysBase :                        // Members initially private
                    fcbIllegalStorageAccess,   // " illegal storage access cb
                    fcbFloatingPointException; // " float point exception cb
   /* == Get environment ==================================================== */
-  void SEHDumpEnvironment(void) try
+  void SEHDumpEnvironment() try
   { // Prepare formatted data
     Statistic tD;
     tD.Header("Variable").Header("Value", false).Reserve(10);
@@ -55,7 +55,7 @@ class SysBase :                        // Members initially private
   } // Shouldn't happen but just incase
   catch(const exception &eReason) { osS << eReason.what(); }
   /* == Get memory information ============================================= */
-  void SEHDumpMemoryStatus(void) try
+  void SEHDumpMemoryStatus() try
   { // Get process memory info
     PROCESS_MEMORY_COUNTERS pD;
     pD.cb = sizeof(pD);
@@ -99,12 +99,12 @@ class SysBase :                        // Members initially private
   } // Shouldn't happen but just incase
   catch(const exception &eReason) { osS << eReason.what(); }
   /* == Get executable filename ============================================ */
-  const wstring SEHGetExecutableFileNameWithoutExtension(void)
+  const wstring SEHGetExecutableFileNameWithoutExtension()
   { // Storage for executable and crash log file name
     wstring wstrExe; wstrExe.resize(MAX_PATH);
     // Get executable file name
     wstrExe.resize(GetModuleFileName(nullptr,
-      const_cast<wchar_t*>(wstrExe.c_str()), MAX_PATH));
+      const_cast<wchar_t*>(wstrExe.data()), MAX_PATH));
     // Remove extension if we can
     if(wstrExe.length() >= 4 && wstrExe[wstrExe.length() - 4] == '.')
       wstrExe.resize(wstrExe.length() - 4);
@@ -300,7 +300,7 @@ class SysBase :                        // Members initially private
   } // Shouldn't happen but just incase
   catch(const exception &eReason) { osS << eReason.what(); }
   /* == Perform process dump =============================================== */
-  void SEHProcessDump(void) try
+  void SEHProcessDump() try
   { // Prepare formatted data
     Statistic tData;
     tData.Header("Name").Header("Pid").Header("PPid").Header("Thr")
@@ -347,10 +347,10 @@ class SysBase :                        // Members initially private
             &dwMask, &dwSys) ? dwMask : 0);
           // Get module file name and if succeeded?
           if(GetModuleFileNameEx(hProcess, nullptr,
-            const_cast<LPWSTR>(wstrFN.c_str()), MAX_PATH))
+            const_cast<LPWSTR>(wstrFN.data()), MAX_PATH))
           { // Get version information
             const SysModuleData vD{ StdMove(SysModule(WS16toUTF(wstrFN))) };
-            // Push version, description vendor and filename (use .c_str())
+            // Push version, description vendor and filename (use .data())
             tData.DataF("$.$.$.$", vD.GetMajor(), vD.GetMinor(),
                     vD.GetRevision(), vD.GetBuild())
                  .Data(StdMove(vD.GetDesc()))
@@ -385,7 +385,7 @@ class SysBase :                        // Members initially private
   } // Shouldn't happen but just incase
   catch(const exception &eReason) { osS << eReason.what(); }
   /* == Perform module dump ================================================ */
-  void SEHModuleDump(void) try
+  void SEHModuleDump() try
   { // Prepare formatted data
     Statistic tD;
     tD.Header("Description").Header("Version", false)
@@ -567,7 +567,7 @@ class SysBase :                        // Members initially private
     const wstring wstrFile{ SEHGetExecutableFileNameWithoutExtension() +
       L".dbg" };
     // Open dump file and return if failed
-    const HANDLE hFile = CreateFile(wstrFile.c_str(), GENERIC_WRITE, 0, 0,
+    const HANDLE hFile = CreateFile(wstrFile.data(), GENERIC_WRITE, 0, 0,
       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
     if(hFile == INVALID_HANDLE_VALUE) return;
     // Capture exceptions so we can close the file
@@ -595,7 +595,7 @@ class SysBase :                        // Members initially private
       throw;
     }
   } // Shouldn't happen but just incase
-  catch(const exception&) { }
+  catch(const exception&) {}
   /* == Build summary ====================================================== */
   const string SEHGetSummary(const EXCEPTION_POINTERS &epData) try
   { // Get exception record
@@ -649,14 +649,14 @@ class SysBase :                        // Members initially private
     // No need to show anything if we're in a debugger
     if(IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH;
     // Show message box
-    MessageBox(hwndWindow, UTFtoS16(strDialog).c_str(),
+    MessageBox(hwndWindow, UTFtoS16(strDialog).data(),
       L"Unhandled exception", MB_ICONSTOP);
     // We handled the exception
     return EXCEPTION_EXECUTE_HANDLER;
   } // This shouldn't happen but just incase
   catch(const exception &eReason)
   { // Show message box
-    MessageBox(hwndWindow, UTFtoS16(eReason.what()).c_str(),
+    MessageBox(hwndWindow, UTFtoS16(eReason.what()).data(),
       L"exception in unhandled exception", MB_ICONSTOP);
     // We handled the exception
     return EXCEPTION_EXECUTE_HANDLER;
@@ -693,14 +693,14 @@ class SysBase :                        // Members initially private
     RaiseException(dwId, 0, 0, nullptr);
   }
   /* --------------------------------------------------------------- */ public:
-  HWND GetWindowHandle(void) const { return hwndWindow; }
-  bool IsWindowHandleSet(void) const { return GetWindowHandle() != nullptr; }
-  bool IsNotWindowHandleSet(void) const { return !IsWindowHandleSet(); }
-  void SetWindowDestroyed(void) { SetWindowHandle(nullptr); }
+  HWND GetWindowHandle() const { return hwndWindow; }
+  bool IsWindowHandleSet() const { return GetWindowHandle() != nullptr; }
+  bool IsNotWindowHandleSet() const { return !IsWindowHandleSet(); }
+  void SetWindowDestroyed() { SetWindowHandle(nullptr); }
   /* ------------------------------------------------------------ */ protected:
   void SetWindowHandle(HWND hwndNew) { hwndWindow = hwndNew; }
   /* -- Destructor --------------------------------------------------------- */
-  ~SysBase(void)
+  ~SysBase()
   { // Restore original signal handlers
     if(fcbFloatingPointException) signal(SIGFPE, fcbFloatingPointException);
     if(fcbIllegalStorageAccess) signal(SIGSEGV, fcbIllegalStorageAccess);
@@ -711,7 +711,7 @@ class SysBase :                        // Members initially private
     SetErrorMode(uiOldErrorMode);
   }
   /* -- Constructor (install exception filter) ----------------------------- */
-  SysBase(void) :
+  SysBase() :
     /* -- Initialisers ----------------------------------------------------- */
     hwndWindow(nullptr),
     // Set no dialogues for system errors and save code

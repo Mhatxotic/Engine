@@ -24,15 +24,15 @@ class SysPipe :
     /* --------------------------------------------------------------------- */
     private HandlesArray               // Handles (stdout/stdin)
   { /* -- Return handles array class --------------------------------------- */
-    HandlesArray &GetHandles(void) { return *this; }
+    HandlesArray &GetHandles() { return *this; }
     /* -- Return reference to fd at specified location ------------- */ public:
     int &GetFd(const Handle hFd) { return GetHandles()[hFd]; }
     /* -- Return reference to read fd -------------------------------------- */
-    int &GetReadFd(void) { return GetFd(READ_HANDLE); }
+    int &GetReadFd() { return GetFd(READ_HANDLE); }
     /* -- Close fd and reset it -------------------------------------------- */
     void CloseFd(int &iFd) { if(iFd != -1) { close(iFd); iFd = -1; } }
     /* -- Close read fd and reset it --------------------------------------- */
-    void CloseReadFd(void) { CloseFd(GetReadFd()); }
+    void CloseReadFd() { CloseFd(GetReadFd()); }
     /* -- Duplicate the read fd handle ------------------------------------- */
     void DupeReadFd(const int iFd) { dup2(GetReadFd(), iFd); }
     /* --------------------------------------------------------------------- */
@@ -40,13 +40,13 @@ class SysPipe :
     /* --------------------------------------------------------------------- */
     bool IsNotReadFd(const int iFd) { return !IsReadFd(iFd); }
     /* --------------------------------------------------------------------- */
-    bool IsValidReadFd(void) { return IsNotReadFd(-1); }
+    bool IsValidReadFd() { return IsNotReadFd(-1); }
     /* --------------------------------------------------------------------- */
-    bool IsNotValidReadFd(void) { return !IsValidReadFd(); }
+    bool IsNotValidReadFd() { return !IsValidReadFd(); }
     /* --------------------------------------------------------------------- */
-    int &GetWriteFd(void) { return GetFd(WRITE_HANDLE); }
+    int &GetWriteFd() { return GetFd(WRITE_HANDLE); }
     /* --------------------------------------------------------------------- */
-    void CloseWriteFd(void) { CloseFd(GetWriteFd()); }
+    void CloseWriteFd() { CloseFd(GetWriteFd()); }
     /* --------------------------------------------------------------------- */
     void DupeWriteFd(const int iFd) { dup2(GetWriteFd(), iFd); }
     /* --------------------------------------------------------------------- */
@@ -54,26 +54,26 @@ class SysPipe :
     /* --------------------------------------------------------------------- */
     bool IsNotWriteFd(const int iFd) { return !IsWriteFd(iFd); }
     /* --------------------------------------------------------------------- */
-    bool IsValidWriteFd(void) { return IsNotWriteFd(-1); }
+    bool IsValidWriteFd() { return IsNotWriteFd(-1); }
     /* --------------------------------------------------------------------- */
-    bool IsNotValidWriteFd(void) { return !IsValidWriteFd(); }
+    bool IsNotValidWriteFd() { return !IsValidWriteFd(); }
     /* --------------------------------------------------------------------- */
-    void CloseHandles(void) { CloseReadFd(); CloseWriteFd(); }
+    void CloseHandles() { CloseReadFd(); CloseWriteFd(); }
     /* -- Return new IPC pipe handles -------------------------------------- */
-    bool GenerateHandles(void) { return !pipe(data()); }
+    bool GenerateHandles() { return !pipe(data()); }
     /* -- Constructor ------------------------------------------------------ */
-    Handles(void) :
+    Handles() :
       /* -- Initialisers --------------------------------------------------- */
       HandlesArray{ -1, -1 }           // Initially set to error status
       /* -- No code -------------------------------------------------------- */
-      { }
+      {}
     /* --------------------------------------------------------------------- */
-    ~Handles(void) { CloseHandles(); }
+    ~Handles() { CloseHandles(); }
   } /* --------------------------------------------------------------------- */
   haChildToParent,                     // Child-to-parent handles
   haParentToChild;                     // Parent-to-child handles
   /* -- Kill an wait for pid ----------------------------------------------- */
-  int DeInit(void)
+  int DeInit()
   { // Return result
     int iResult;
     // If we have a spawned process?
@@ -125,7 +125,7 @@ class SysPipe :
     char**const cpaArgV = cvArgs.data(), **cpaArgVPtr = cpaArgV;
     for(const string &strArg : aList)
     { // Set address of argument string
-      *cpaArgVPtr = const_cast<char*>(strArg.c_str());
+      *cpaArgVPtr = const_cast<char*>(strArg.data());
       // Goto next argument to write to
       ++cpaArgVPtr;
     } // De-init existing process
@@ -182,7 +182,7 @@ class SysPipe :
     }
   }
   /* -- DeInit pipe ------------------------------------------------ */ public:
-  void Finish(void)
+  void Finish()
   { // Kill and wait for pid
     DeInit();
     // Pid now invalid
@@ -198,7 +198,7 @@ class SysPipe :
   void Init(const string &strCmdLine)
     { Init(strCmdLine, cDirBase->DirBaseGetSafetyMode()); }
   /* -- Finished sending --------------------------------------------------- */
-  void SendFinish(void)
+  void SendFinish()
   { // Ignore if write handle already closed
     if(haParentToChild.IsNotValidWriteFd()) return;
     // Close unused write handle
@@ -256,14 +256,14 @@ class SysPipe :
     } // Don't get here
   }
   /* -- Return pid --------------------------------------------------------- */
-  unsigned int GetPid(void) { return uiPid; }
+  unsigned int GetPid() { return uiPid; }
   /* -- Constructor with init ---------------------------------------------- */
-  SysPipe(void) :
+  SysPipe() :
     /* -- Initialisers ----------------------------------------------------- */
     uiPid(0),                          // No external pid
     pPid(0)                            // No internal pid
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with init ---------------------------------------------- */
   explicit SysPipe(const string &strF) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -271,6 +271,6 @@ class SysPipe :
     /* -- Initialise pipe -------------------------------------------------- */
     { Init(strF); }
   /* -- Destructor to kill and wait for process to exit -------------------- */
-  ~SysPipe(void) { DeInit(); }
+  ~SysPipe() { DeInit(); }
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

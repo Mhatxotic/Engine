@@ -15,14 +15,13 @@ using namespace IJoyAxis::P;           using namespace IJoyButton::P;
 using namespace ILog::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Joystick type typedef ------------------------------------------------ */
-BUILD_FLAGS(Joy,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Joy,                       // Joystick state flags
   /* ----------------------------------------------------------------------- */
-  // No flags                          Joystick is connnected?
-  JF_NONE                   {Flag(0)}, JF_CONNECTED              {Flag(1)},
-  // Joystick is actually a gamepad
-  JF_GAMEPAD                {Flag(2)}
-);
+  JF_NONE                   {Flag(0)}, // No flags?
+  JF_CONNECTED              {Flag(1)}, // Joystick is connnected?
+  JF_GAMEPAD                {Flag(2)}  // Joystick is actually a gamepad?
+);/* ----------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 class JoyInfo :                        // Joystick class
   /* -- Base classes ------------------------------------------------------- */
@@ -35,36 +34,36 @@ class JoyInfo :                        // Joystick class
   string         strName,              // Name of controller
                  strGuid;              // Guid of controller
   /* -- Return joystick id ----------------------------------------- */ public:
-  int JoyGetId(void) const { return iId; }
+  int JoyGetId() const { return iId; }
   /* -- Return type of joystick -------------------------------------------- */
-  const string_view &JoyGetGamepadOrJoystickString(void) const
+  const string_view &JoyGetGamepadOrJoystickString() const
   { // Return if it is a gamepad or a joystick
     static const string_view svGamepad{ "gamepad" },
                              svJoystick{ "joystick" };
     return FlagIsSet(JF_GAMEPAD) ? svGamepad : svJoystick;
   }
   /* -- Refresh data ------------------------------------------------------- */
-  void JoyRefreshData(void)
+  void JoyRefreshData()
     { JoyAxisListRefresh(JoyGetId()); JoyButtonListRefresh(JoyGetId()); }
   /* -- Joystick is connected/disconnected? -------------------------------- */
-  bool JoyIsConnected(void) const { return FlagIsSet(JF_CONNECTED); }
-  bool JoyIsDisconnected(void) const { return !JoyIsConnected(); }
+  bool JoyIsConnected() const { return FlagIsSet(JF_CONNECTED); }
+  bool JoyIsDisconnected() const { return !JoyIsConnected(); }
   /* -- Clear button state if connected ------------------------------------ */
-  void JoyClearButtonStateIfConnected(void)
+  void JoyClearButtonStateIfConnected()
     { if(JoyIsConnected()) JoyButtonListClear(); }
   /* -- Clear buttons and axis state --------------------------------------- */
-  void JoyClearState(void) { JoyAxisListClear(); JoyButtonListClear(); }
+  void JoyClearState() { JoyAxisListClear(); JoyButtonListClear(); }
   /* -- Refresh data if connected ------------------------------------------ */
-  void JoyRefreshDataIfConnected(void)
+  void JoyRefreshDataIfConnected()
     { if(JoyIsConnected()) JoyRefreshData(); }
   /* -- Return gamepad name ------------------------------------------------ */
-  const string &JoyGamePadName(void) const { return strName; }
+  const string &JoyGamePadName() const { return strName; }
   /* -- Return guid name --------------------------------------------------- */
-  const string &JoyGUID(void) const { return strGuid; }
+  const string &JoyGUID() const { return strGuid; }
   /* -- Return if joystick is a gamepad ------------------------------------ */
-  bool JoyIsGamepad(void) const { return FlagIsSet(JF_GAMEPAD); }
+  bool JoyIsGamepad() const { return FlagIsSet(JF_GAMEPAD); }
   /* -- Get/Set gamepad status --------------------------------------------- */
-  void JoyConnect(void)
+  void JoyConnect()
   { // Now connected
     FlagSet(JF_CONNECTED);
     // Set gamepad status
@@ -101,9 +100,9 @@ class JoyInfo :                        // Joystick class
     else strName.clear();
   }
   /* -- Remove connected flag ---------------------------------------------- */
-  void JoyDoDisconnect(void) { FlagClear(JF_CONNECTED); }
+  void JoyDoDisconnect() { FlagClear(JF_CONNECTED); }
   /* -- Reset data --------------------------------------------------------- */
-  void JoyDisconnect(void)
+  void JoyDisconnect()
   { // Ignore if already disconnected
     if(JoyIsDisconnected()) return;
     // No longer connected
@@ -113,7 +112,7 @@ class JoyInfo :                        // Joystick class
       JoyGetGamepadOrJoystickString(), IdentGet(), JoyGetId());
   }
   /* -- Detect joystick ---------------------------------------------------- */
-  bool JoyIsPresent(void) { return GlFWJoystickPresent(JoyGetId()); }
+  bool JoyIsPresent() { return GlFWJoystickPresent(JoyGetId()); }
   /* -- Constructor -------------------------------------------------------- */
   explicit JoyInfo(const int iNId) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -121,7 +120,7 @@ class JoyInfo :                        // Joystick class
     /* -- Other initialisers ----------------------------------------------- */
     iId(iNId)                          // Set unique joystick id
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- Joystick state typedefs -------------------------------------------- */
 typedef array<JoyInfo, GLFW_JOYSTICK_LAST+1> JoyList; // Actual joystick data
 typedef JoyList::const_iterator JoyListIt; // Iterator for vector of joys

@@ -15,29 +15,34 @@ using namespace ICVarDef::P;           using namespace ILuaUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Macros to simplify creating lualib functions ------------------------- */
-#define LLFUNCBEGIN(n)         static int Cb ## n(lua_State*const lS) {
-#define LLFUNCBEGINTMPL(n)     template<typename IntType>LLFUNCBEGIN(n)
-#define LLFUNCEND              LLFUNCENDEX(0)
-#define LLFUNCENDEX(x)         static_cast<void>(lS); return x; }
-#define LLFUNCTMPL(n,x,...)    LLFUNCBEGINTMPL(n) __VA_ARGS__; LLFUNCENDEX(x)
-#define LLFUNC(n,x,...)        LLFUNCBEGIN(n) __VA_ARGS__; LLFUNCENDEX(x)
+#define LLFUNCBEGIN(n)       static int Cb ## n(lua_State*const lS) {
+#define LLFUNCBEGINTMPL(n)   template<typename IntType>LLFUNCBEGIN(n)
+#define LLFUNCEND            LLFUNCENDEX(0)
+#define LLFUNCENDEX(x)       static_cast<void>(lS); return x; }
+#define LLFUNCTMPL(n,x,...)  LLFUNCBEGINTMPL(n) __VA_ARGS__; LLFUNCENDEX(x)
+#define LLFUNC(n,x,...)      LLFUNCBEGIN(n) __VA_ARGS__; LLFUNCENDEX(x)
 /* -- Macros to simplify definition of lualib reg func structures ---------- */
-#define LLRSBEGIN              static const luaL_Reg llrFunctions[]{
-#define LLRSCONST(n)           { #n, lkiConsts ## n, LLArrLen(lkiConsts ## n) }
-#define LLRSCONSTBEGIN         static const LuaTable ltConsts[]{
-#define LLRSCONSTEND           { nullptr, nullptr, 0 } };
-#define LLRSEND                { nullptr, nullptr } };
-#define LLRSFUNC(n)            { #n, Cb ## n }
-#define LLRSFUNCEX(n,f)        { #n, Cb ## f }
-#define LLRSKTBEGIN(n)         static const LuaKeyInt lkiConsts ## n[]{
-#define LLRSKTEND              { nullptr, 0 } };
-#define LLRSKTITEM(p,n)        LLRSKTITEMEX2(#n, p ## n)
-#define LLRSKTITEMEX(p,n,u)    LLRSKTITEMEX2(#n, p ## n ## u)
-#define LLRSKTITEMEX2(k,v)     { k, static_cast<lua_Integer>(v) }
-#define LLRSMFBEGIN            static const luaL_Reg llrMethods[]{
+#define LLRSBEGIN            static const luaL_Reg llrFunctions[]{
+#define LLRSCONST(n)         { #n, lkiConsts ## n, LLArrLen(lkiConsts ## n) }
+#define LLRSCONSTBEGIN       static const LuaTable ltConsts[]{
+#define LLRSCONSTEND         ltLast };
+#define LLRSEND              llrLast };
+#define LLRSFUNC(n)          { #n, Cb ## n }
+#define LLRSFUNCEX(n,f)      { #n, Cb ## f }
+#define LLRSKTBEGIN(n)       static const LuaKeyInt lkiConsts ## n[]{
+#define LLRSKTEND            lkiLast };
+#define LLRSKTITEM(p,n)      LLRSKTITEMEX2(#n, p ## n)
+#define LLRSKTITEMEX(p,n,u)  LLRSKTITEMEX2(#n, p ## n ## u)
+#define LLRSKTITEMEX2(k,v)   { k, static_cast<lua_Integer>(v) }
+#define LLRSMFBEGIN          static const luaL_Reg llrMethods[]{
 /* -- Get length of an array ignoring the final NULL entry ----------------- */
 template<typename AnyType, int itSize>
-  constexpr int LLArrLen(AnyType (&)[itSize]) { return itSize - 1; };
+  constexpr static int LLArrLen(AnyType (&)[itSize])
+    { return itSize - 1; };
+/* -- Empty last entries --------------------------------------------------- */
+constexpr static const LuaTable ltLast{ nullptr, nullptr, 0 };
+constexpr static const LuaKeyInt lkiLast{ nullptr, 0 };
+constexpr static const luaL_Reg llrLast{ nullptr, nullptr };
 /* -- Dependencies --------------------------------------------------------- */
 #include "llcommon.hpp"                // Common helper classes (always first)
 /* -- API includes --------------------------------------------------------- */
@@ -115,25 +120,25 @@ template<typename AnyType, int itSize>
                cc)                     /* " items in above array            */\
   { LMT_ ## lmt, #ns, CFL_ ## cfl, sa, sc, ma, mc, mf, ca, cc, sc+mc+cc }
 /* -- Helper macros to use when actually defining the main API array ------- */
-#define LLFxx(n,f) \
+#define LLFxx(n,f)                                   /* Function only       */\
   LLITEM(CLASSES, n, f,                              /* Just a namespace    */\
     LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
     nullptr, 0, nullptr,                             /* No methods          */\
     nullptr, 0)                                      /* No statics           */
 /* ------------------------------------------------------------------------- */
-#define LLFMx(n,f,t) \
+#define LLFMx(n,f,t)                                 /* Function + method   */\
   LLITEM(t, n, f,                                    /* Is a class          */\
     LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
     LLNS(n, lrMethods), LLAL(n, lrMethods), LLDF(n), /* Have methods        */\
     nullptr, 0)                                      /* No statics           */
 /* ------------------------------------------------------------------------- */
-#define LLFxC(n,f) \
+#define LLFxC(n,f)                                   /* Function + const    */\
   LLITEM(CLASSES, n, f,                              /* Just a namespace    */\
     LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
     nullptr, 0, nullptr,                             /* No methods          */\
     LLNS(n, tConsts), LLAL(n, tConsts))              /* Have statics         */
 /* ------------------------------------------------------------------------- */
-#define LLFMC(n,f,t) \
+#define LLFMC(n,f,t)                                 /* Func + meth + const */\
   LLITEM(t, n, f,                                    /* Is a class          */\
     LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
     LLNS(n, lrMethods), LLAL(n, lrMethods), LLDF(n), /* Have methods        */\

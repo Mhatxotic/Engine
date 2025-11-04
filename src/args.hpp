@@ -47,22 +47,26 @@ struct Args :                          // Arguments list class
         // Set next argument starting position
         stStart = stPos + 1;
       } // if it's a argument separator?
-      else if(cChar == '\'' || cChar == '"')
-      { // If in quotes and it's the ending quotation mark?
-        if(bInQuotes && cChar == cQuoteChar)
-        { // If we want the quotation? Not anymore
-          if(bWantQuote) bWantQuote = false;
-          // We don't want it?
-          else
-          { // Extract new argument
-            emplace_back(strTrimmed.substr(stStart, stPos - stStart));
-            // Set next argument starting position
-            stStart = stPos + 1;
-          } // No longer in quotes
-          bInQuotes = false;
-        } // Not in quotes and at start of argument?
-        else if(!bInQuotes)
-        { // We're now in quotes
+      else switch(cChar)
+      { // A recognised argument delimiter?
+        case '\'': case '"': case '`':
+          // If in quotes and it's the ending quotation mark?
+          if(bInQuotes && cChar == cQuoteChar)
+          { // If we want the quotation? Not anymore
+            if(bWantQuote) bWantQuote = false;
+            // We don't want it?
+            else
+            { // Extract new argument
+              emplace_back(strTrimmed.substr(stStart, stPos - stStart));
+              // Set next argument starting position
+              stStart = stPos + 1;
+            } // No longer in quotes
+            bInQuotes = false;
+            // Done
+            break;
+          } // Ignore if in quotes
+          if(bInQuotes) break;
+          // We're now in quotes
           bInQuotes = true;
           // Set quote character used
           cQuoteChar = cChar;
@@ -70,15 +74,18 @@ struct Args :                          // Arguments list class
           if(stStart == stPos) stStart = stPos + 1;
           // Else ignore the ending quotation
           else bWantQuote = true;
-        }
+          // Done
+          break;
+        // Anything else just ignore
+        default: break;
       }
     } // If there are remaining characters to add? Extract the string
     if(stStart < stLength) emplace_back(strTrimmed.substr(stStart));
   }
   /* -- Constructor that does nothing -------------------------------------- */
-  Args(void) = default;
+  Args() = default;
   /* -- Return if list is empty -------------------------------------------- */
-  operator bool(void) const { return !empty(); }
+  operator bool() const { return !empty(); }
 };/* -- Build an array of arguments from a string -------------------------- */
 static const Args ArgsBuildSafe(const string &strArgs)
   { return strArgs.empty() ? Args{} : Args{ strArgs }; }

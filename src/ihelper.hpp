@@ -23,13 +23,13 @@ class InitHelper :                     // The Init Helper class
   ClkTimePoint     ctInitialised,      // Time class was initialised
                    ctDeinitialised;    // Time class was deinitialised
   /* ----------------------------------------------------------------------- */
-  void IHSetInitialised(void) { ctInitialised = cmHiRes.GetTime(); }
-  void IHSetDeInitialised(void) { ctDeinitialised = cmHiRes.GetTime(); }
+  void IHSetInitialised() { ctInitialised = cmHiRes.GetTime(); }
+  void IHSetDeInitialised() { ctDeinitialised = cmHiRes.GetTime(); }
   /* --------------------------------------------------------------- */ public:
-  bool IHIsInitialised(void) const { return ctInitialised > ctDeinitialised; }
-  bool IHIsNotInitialised(void) const { return !IHIsInitialised(); }
+  bool IHIsInitialised() const { return ctInitialised > ctDeinitialised; }
+  bool IHIsNotInitialised() const { return !IHIsInitialised(); }
   /* ----------------------------------------------------------------------- */
-  void IHInitialise(void)
+  void IHInitialise()
   { // Raise exception if object already initialised
     if(IHIsInitialised())
       XC("Object already initialised!",
@@ -40,7 +40,7 @@ class InitHelper :                     // The Init Helper class
     IHSetInitialised();
   }
   /* ----------------------------------------------------------------------- */
-  bool IHDeInitialise(void)
+  bool IHDeInitialise()
   { // Return if class already initialised
     if(IHIsNotInitialised()) return false;
     // Class now de-initialised
@@ -49,15 +49,15 @@ class InitHelper :                     // The Init Helper class
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  bool IHNotDeInitialise(void) { return !IHDeInitialise(); }
+  bool IHNotDeInitialise() { return !IHDeInitialise(); }
   /* -- Constructors -------------------------------------------- */ protected:
   explicit InitHelper(const string_view &strvName) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdentConst{strvName},              // Initialise name
-    ctInitialised{seconds{0}},         // Clear initialised time
-    ctDeinitialised{cmHiRes.GetTime()} // Set deinitialised time
+    IdentConst{ strvName },            // Initialise name
+    ctInitialised{ cd0 },              // Clear initialised time
+    ctDeinitialised{ cmHiRes.GetTime() } // Set deinitialised time
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 };                                     // End of private module namespace
 /* ------------------------------------------------------------------------- */

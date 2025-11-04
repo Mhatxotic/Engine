@@ -31,7 +31,7 @@ struct UuId                            // Members initially public
     /* --------------------------------------------------------------------- */
   } d;                                 // Member to hold uuid data
   /* -- Initialise randomised UUID -------------------------------- */ private:
-  const Struct UuIdRandom(void) const
+  const Struct UuIdRandom() const
   { // Initialise a random struct
     Struct uuidData;
     CryptRandomPtr(&uuidData.ucRandom, sizeof(uuidData.ucRandom));
@@ -85,7 +85,7 @@ struct UuId                            // Members initially public
     } };
   }
   /* -- Convert UUID to string ------------------------------------- */ public:
-  const string UuIdToString(void) const
+  const string UuIdToString() const
   { // Return result
     return StrAppend(hex, setfill('0'), right,
       setw(8), d.p.dwTimeLow,                                '-', // %08x-
@@ -105,19 +105,19 @@ struct UuId                            // Members initially public
     /* -- Initialisers ----------------------------------------------------- */
     d{ UuIdReadString(strUUID) }       // Read STL string and store result
     /* -- No code ---------------------------------------------------------- */
-    { }
-  /* -- Constructor to initialise random uuid ------------------------------ */
-  UuId(void) :
+    {}
+  /* -- Default constructor to initialise random uuid ---------------------- */
+  UuId() :
     /* -- Initialisers ----------------------------------------------------- */
     d{ UuIdRandom() }                  // Generate random UUID and store result
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor to intiialise from two quads --------------------------- */
   UuId(const uint64_t q1, const uint64_t q2) :
     /* -- Initialisers ----------------------------------------------------- */
     d{ UuIdReadTwoQuads(q1, q2) }      // Read two integers and store result
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

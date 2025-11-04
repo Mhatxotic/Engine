@@ -13,8 +13,9 @@ using ::std::array;                    using ::std::deque;
 using ::std::list;                     using ::std::map;
 using ::std::queue;                    using ::std::pair;
 using ::std::set;                      using ::std::string;
-using ::std::string_view;              using ::std::unordered_set;
-using ::std::vector;                   using ::std::wstring;
+using ::std::string_view;              using ::std::unique_ptr;
+using ::std::unordered_set;            using ::std::vector;
+using ::std::wstring;
 /* -- Exceptions ----------------------------------------------------------- */
 using ::std::exception;                using ::std::runtime_error;
 /* -- Other ---------------------------------------------------------------- */
@@ -43,31 +44,16 @@ using ::std::setfill;                  using ::std::setprecision;
 using ::std::setw;                     using ::std::showpos;
 using ::std::uppercase;
 /* -- Constexpr functions -------------------------------------------------- */
-using ::std::is_class_v;               using ::std::is_floating_point_v;
-using ::std::is_integral_v;            using ::std::is_pointer_v;
-using ::std::is_signed_v;              using ::std::is_enum_v;
-using ::std::is_same_v;                using ::std::is_trivially_copyable_v;
-using ::std::underlying_type_t;
+using ::std::is_class_v;               using ::std::is_enum_v;
+using ::std::is_floating_point_v;      using ::std::is_integral_v;
+using ::std::is_null_pointer_v;        using ::std::is_pointer_v;
+using ::std::is_same_v;                using ::std::is_signed_v;
+using ::std::is_trivially_copyable_v;  using ::std::underlying_type_t;
 /* -- Bind class function argument namespaces ------------------------------ */
 using ::std::placeholders::_1;         using ::std::placeholders::_2;
 using ::std::placeholders::_3;
-/* -- Times ---------------------------------------------------------------- */
-using ::std::chrono::duration_cast;    using ::std::chrono::duration;
-using ::std::chrono::microseconds;     using ::std::chrono::milliseconds;
-using ::std::chrono::nanoseconds;      using ::std::chrono::seconds;
-using ::std::chrono::system_clock;
-/* -- Operating system specific -------------------------------------------- */
-using ::std::terminate_handler;        using ::std::set_terminate;
-#if !defined(MACOS)                    // Not using apple compiler?
-using ::std::execution::par_unseq;     using ::std::execution::par;
-using ::std::execution::seq;
-#endif                                 // Apple check
 /* -- Asynchronisation ----------------------------------------------------- */
-using ::std::atomic;                   using ::std::condition_variable;
-using ::std::lock_guard;               using ::std::mutex;
-using ::std::scoped_lock;              using ::std::thread;
-using ::std::try_to_lock;              using ::std::unique_lock;
-using ::std::unique_ptr;
+using ::std::atomic;
 typedef atomic<bool>       SafeBool;   // Thread safe boolean
 typedef atomic<double>     SafeDouble; // Thread safe double
 typedef atomic<int>        SafeInt;    // Thread safe integer
@@ -75,14 +61,8 @@ typedef atomic<long>       SafeLong;   // Thread safe long
 typedef atomic<size_t>     SafeSizeT;  // Thread safe size_t
 typedef atomic<uint64_t>   SafeUInt64; // Thread safe 64-bit integer
 typedef atomic<unsigned int> SafeUInt; // Thread safe unsigned integer
-typedef lock_guard<mutex>  LockGuard;  // Shortcut to a mutex lock guard
-typedef unique_lock<mutex> UniqueLock; // SHortcut to a mutex unique lock
-/* -- Clocks --------------------------------------------------------------- */
-using CoreClock = ::std::chrono::high_resolution_clock; // Using HRC
-typedef CoreClock::time_point ClkTimePoint;             // Holds a time
-typedef CoreClock::duration   ClkDuration;              // Holds a duration
-typedef atomic<ClkDuration>   SafeClkDuration;          // Thread safe duration
 /* -- Indexed vector list types -------------------------------------------- */
+typedef string::const_iterator            StringConstIt;
 typedef vector<const char*>               CStrVector;
 typedef CStrVector::const_iterator        CStrVectorConstIt;
 typedef vector<float>                     FloatVector;

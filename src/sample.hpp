@@ -41,19 +41,19 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     return static_cast<IntType>(iValue);
   }
   /* -- Get buffer information --------------------------------------------- */
-  ALsizei GetALFrequency(void) const
+  ALsizei GetALFrequency() const
     { return GetBufferInt<ALsizei>(AL_FREQUENCY); }
-  ALsizei GetALBits(void) const
+  ALsizei GetALBits() const
     { return GetBufferInt<ALsizei>(AL_BITS); }
-  ALsizei GetALChannels(void) const
+  ALsizei GetALChannels() const
     { return GetBufferInt<ALsizei>(AL_CHANNELS); }
-  ALsizei GetALSize(void) const
+  ALsizei GetALSize() const
     { return GetBufferInt<ALsizei>(AL_SIZE); }
-  ALdouble GetDuration(void) const
+  ALdouble GetDuration() const
     { return static_cast<ALdouble>(GetALSize()) * 8 /
         GetALChannels() / GetALBits() / GetALFrequency(); }
   /* -- Unload buffers ----------------------------------------------------- */
-  void UnloadBuffer(void)
+  void UnloadBuffer()
   { // Bail if buffers not allocated
     if(uivNames.empty()) return;
     // Stop this sample from playing in its entirety
@@ -206,7 +206,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     } // Remember two 'Source' classes are left on the Lua stack on success.
   }
   /* == Stop the buffer ==================================================== */
-  unsigned int Stop(void) const { return SourceStop(uivNames); }
+  unsigned int Stop() const { return SourceStop(uivNames); }
   /* -- Load a single buffer from memory ----------------------------------- */
   void LoadSample(Pcm &pcmSrc)
   { // Allocate and generate openal buffers
@@ -242,7 +242,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
       cOal->GetALFormat(pcmSrc.GetFormat()));
   }
   /* -- Load a single buffer ----------------------------------------------- */
-  void ReloadSample(void)
+  void ReloadSample()
   { // If pcm sample was not loaded from disk? Just (re)load the bitmap data
     // that already should be there and should NEVER be released.
     if(IsDynamic()) LoadSample(*this);
@@ -279,23 +279,23 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     if(IsNotDynamic()) ClearData();
   }
   /* -- Constructor -------------------------------------------------------- */
-  Sample(void) :
+  Sample() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperSample{ cSamples, this }   // Initialise collector class
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Sample(void) { UnloadBuffer(); }
+  ~Sample() { UnloadBuffer(); }
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_NOINITS(Samples, Sample, SAMPLE) // Finish collector class
 /* ========================================================================= */
-static void SampleStop(void)
+static void SampleStop()
 { // Stop all samples from playing
   if(cSamples->empty()) return;
   for(const Sample*const scPtr : *cSamples) scPtr->Stop();
 }
 /* ========================================================================= */
-static void SampleDeInit(void)
+static void SampleDeInit()
 { // Done if empty
   if(cSamples->empty()) return;
   // Re-create buffers for all the samples and log pre/post de-init
@@ -306,7 +306,7 @@ static void SampleDeInit(void)
     cSamples->size());
 }
 /* ========================================================================= */
-static void SampleReInit(void)
+static void SampleReInit()
 { // Done if empty
   if(cSamples->empty()) return;
   // Re-create buffers for all the samples and log pre/post reinit
@@ -316,18 +316,19 @@ static void SampleReInit(void)
   cLog->LogInfoExSafe("Samples reinitialised $ objects.", cSamples->size());
 }
 /* == Update all streams base volume======================================== */
-static void SampleUpdateVolume(void)
+static void SampleUpdateVolume()
 { // Lock source list so it cannot be modified
-  const LockGuard lgCollectorLock{ cSources->CollectorGetMutex() };
-  // Walk through sources
-  for(const Source*const scPtr : *cSources)
-  { // Get class
-    const Source &scRef = *scPtr;
-    // If it is locked then its a sample so ignore it
-    if(scRef.GetExternal()) continue;
-    // Set new sample volume
-    scRef.SetGain(cSources->fGVolume * cSources->fSVolume);
-  }
+  cSources->MutexCall([](){
+    // Walk through sources
+    for(const Source*const scPtr : *cSources)
+    { // Get class
+      const Source &scRef = *scPtr;
+      // If it is locked then its a sample so ignore it
+      if(scRef.GetExternal()) continue;
+      // Set new sample volume
+      scRef.SetGain(cSources->fGVolume * cSources->fSVolume);
+    }
+  });
 }
 /* == Set all streams base volume ========================================== */
 static CVarReturn SampleSetVolume(const ALfloat fVolume)

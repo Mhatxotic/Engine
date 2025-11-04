@@ -40,7 +40,7 @@ class CodecPNG :                       // PNG codec object
     if(stRead == stC) return;
     // Error occured so longjmp()
     png_error(psD, StrFormat("Read only $ of the $ requested bytes",
-      stRead, stC).c_str());
+      stRead, stC).data());
   }
   /* -- Save png file ---------------------------------------------- */ public:
   bool Encode(const FStream &fmData, const ImageData &idData,
@@ -90,7 +90,7 @@ class CodecPNG :                       // PNG codec object
       void Meta(const char*const cpK, const char*cpV)
         { Meta(cpK, cpV, strlen(cpV)); }
       void Meta(const char*const cpK, const string &strV)
-        { Meta(cpK, strV.c_str(), strV.length()); }
+        { Meta(cpK, strV.data(), strV.length()); }
       void Meta(const char*const cpK, const string_view &strvV)
         { Meta(cpK, strvV.data(), strvV.length()); }
       // Constructor
@@ -111,7 +111,7 @@ class CodecPNG :                       // PNG codec object
         // Assign file stream handle
         png_init_io(psData, fsC.FStreamGetCtx());
       } // Destructor that cleans up the libpng context
-      ~PngWriter(void) { png_destroy_write_struct(&psData, &piData); }
+      ~PngWriter() { png_destroy_write_struct(&psData, &piData); }
     } // Send file stream to constructor
     pwC{ fmData };
     // Set system data in metadata
@@ -212,7 +212,7 @@ class CodecPNG :                       // PNG codec object
         png_set_sig_bytes(psData, 8);
         png_read_info(psData, piData);
       } // Destructor that cleans up the libpng context
-      ~PngReader(void) { png_destroy_read_struct(&psData, &piData, nullptr); }
+      ~PngReader() { png_destroy_read_struct(&psData, &piData, nullptr); }
     } // Send file map class to constructor
     prC{ fmData };
     // Get pointers to created addresses
@@ -406,7 +406,7 @@ class CodecPNG :                       // PNG codec object
     return true;
   }
   /* -- Default constructor ------------------------------------- */ protected:
-  CodecPNG(void) :
+  CodecPNG() :
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_PNG, "Portable Network Graphics", "PNG",
       bind(&CodecPNG::Decode, this, _1, _2),

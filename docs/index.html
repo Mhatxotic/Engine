@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.10.30.4 -->
-<!-- Automatically built at Thu Oct 30 16:10:24 2025 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.10.30.4 -->
+<!-- Reference for the Mhatxotic Engine API version 25.11.26.11 -->
+<!-- Automatically built at Mon Dec 01 00:21:16 2025 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.11.26.11 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.10.30.4">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.11.26.11">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.10.30.4">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.11.26.11">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.10.30.4">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.11.26.11">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.10.30.4 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.11.26.11 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 25.10.30.4 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.11.26.11 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.10.30.4 API reference</H1>
+	<H1>Mhatxotic Engine 25.11.26.11 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 899 functions (407 members, 492 methods) and 30 consts in 31 namespaces with 86 commands and 215 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 907 functions (415 members, 492 methods) and 30 consts in 31 namespaces with 87 commands and 215 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -382,11 +382,12 @@
 						<OL>
 							<LI><P>The Command class allows creation and manipulation of console commands</P></LI>
 							<LI>
-								<B>Members</B> <I>(3 members)</I>
+								<B>Members</B> <I>(4 members)</I>
 								<OL>
 									<LI><A href="#Command.Count">Count</A></LI>
 									<LI><A href="#Command.Exists">Exists</A></LI>
 									<LI><A href="#Command.Register">Register</A></LI>
+									<LI><A href="#Command.Valid">Valid</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1551,7 +1552,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(96 members)</I>
+								<B>Members</B> <I>(102 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1577,6 +1578,12 @@
 									<LI><A href="#Util.EntEncode">EntEncode</A></LI>
 									<LI><A href="#Util.Explode">Explode</A></LI>
 									<LI><A href="#Util.ExplodeEx">ExplodeEx</A></LI>
+									<LI><A href="#Util.FlushArray">FlushArray</A></LI>
+									<LI><A href="#Util.FlushArrays">FlushArrays</A></LI>
+									<LI><A href="#Util.FlushObject">FlushObject</A></LI>
+									<LI><A href="#Util.FlushObjects">FlushObjects</A></LI>
+									<LI><A href="#Util.FlushTable">FlushTable</A></LI>
+									<LI><A href="#Util.FlushTables">FlushTables</A></LI>
 									<LI><A href="#Util.FormatNTime">FormatNTime</A></LI>
 									<LI><A href="#Util.FormatNTimeUTC">FormatNTimeUTC</A></LI>
 									<LI><A href="#Util.FormatNumber">FormatNumber</A></LI>
@@ -1663,12 +1670,13 @@
 						<OL>
 							<LI><P>The Variable class allows creation and manipulation of console commands</P></LI>
 							<LI>
-								<B>Members</B> <I>(4 members)</I>
+								<B>Members</B> <I>(5 members)</I>
 								<OL>
 									<LI><A href="#Variable.Count">Count</A></LI>
 									<LI><A href="#Variable.Exists">Exists</A></LI>
 									<LI><A href="#Variable.Register">Register</A></LI>
 									<LI><A href="#Variable.Save">Save</A></LI>
+									<LI><A href="#Variable.Valid">Valid</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1778,7 +1786,7 @@
 			<LI id="idx.cc">
 				<DIV>
 					<DIV>
-						<A href="#cmds">Commands</A> <I>(86 commands)</I>
+						<A href="#cmds">Commands</A> <I>(87 commands)</I>
 						<OL>
 							<LI><P>Console commands that can see and manipulate all the data in the engine.</P></LI>
 							<LI>
@@ -1802,6 +1810,7 @@
 									<LI><A href="#cc.credits">credits</A></LI>
 									<LI><A href="#cc.cvars">cvars</A></LI>
 									<LI><A href="#cc.cvclr">cvclr</A></LI>
+									<LI><A href="#cc.cvi">cvi</A></LI>
 									<LI><A href="#cc.cvload">cvload</A></LI>
 									<LI><A href="#cc.cvnpk">cvnpk</A></LI>
 									<LI><A href="#cc.cvpend">cvpend</A></LI>
@@ -3172,6 +3181,18 @@
 		<PRE><U>Object</U> <I>(Command)</I> = The class object created.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Registers the specified console command and returns a reference to the newly created object which unregisters the console command when garbage collected&#x2e;<BR></PRE>
+		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Command.Valid" style="display:none">
+		<H3>Command.Valid</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Valid</U> = Command.Valid(<I><U>Cmd</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Cmd</U> <I>(string)</I> = Command name to test.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Valid</U> <I>(boolean)</I> = Command name is valid.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns true if the given string has valid characters&#x2c; false if not&#x2e;<BR>Console commands must begin with a letter but subsequent characters can be underscores and numbers&#x2e; The command must also be between 1 and 255 characters in length&#x2e;<BR></PRE>
 		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Command:Destroy" style="display:none">
@@ -10196,6 +10217,66 @@
 		<PRE>Splits the specified string into table entries on each matching interation of the specified separator&#x2e; The maximum value is the maximum number of tokens allowed so further occurences of the separator are not tokenised and included in the final tokens string&#x2e;<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.FlushArray" style="display:none">
+		<H3>Util.FlushArray</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Util.FlushArray(<I><U>Array</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Array</U> <I>(table)</I> = The array table of indices to flush.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Clears the specified array table of indices from end to start&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.FlushArrays" style="display:none">
+		<H3>Util.FlushArrays</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Util.FlushArrays(<I><U>Array</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Array</U> <I>(table...)</I> = A sequence of tables with indices to flush.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Clears the multiple specified array tables of indices&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.FlushObject" style="display:none">
+		<H3>Util.FlushObject</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Util.FlushObject(<I><U>Object</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Object</U> <I>(table)</I> = The object table of key pairs to flush.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Clears the specified object table of key pairs&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.FlushObjects" style="display:none">
+		<H3>Util.FlushObjects</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Util.FlushObjects(<I><U>Object</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Object</U> <I>(table...)</I> = A sequence of tables with key pairs to flush.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Clears the multiple specified tables of key pairs&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.FlushTable" style="display:none">
+		<H3>Util.FlushTable</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Util.FlushTable(<I><U>Table</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Table</U> <I>(table)</I> = The table of indices and key pairs to flush.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Clears the specified hybrid table of both indices first and then key pairs&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.FlushTables" style="display:none">
+		<H3>Util.FlushTables</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Util.FlushTables(<I><U>Table</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Table</U> <I>(table...)</I> = A sequence of tables with indices and key pairs to flush.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Clears the multiple specified hybrid tables of both indices first and then key pairs&#x2e;<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.FormatNTime" style="display:none">
 		<H3>Util.FormatNTime</H3>
 		<H4>Syntax:-</H4>
@@ -11100,6 +11181,18 @@
 		<PRE>Commits all modified variables to database&#x2e; Returns number of items written&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Variable.Valid" style="display:none">
+		<H3>Variable.Valid</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Valid</U> = Variable.Valid(<I><U>Var</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Var</U> <I>(string)</I> = Cvar name to test.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Valid</U> <I>(boolean)</I> = Cvar name is valid.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns true if the given string has valid characters&#x2c; false if not&#x2e; CVars must begin with a letter but subsequent characters can be underscores and numbers&#x2e; The name must also be between 5 and 255 characters in length&#x2e;<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Variable:Boolean" style="display:none">
 		<H3>Variable:Boolean</H3>
 		<H4>Syntax:-</H4>
@@ -11815,6 +11908,11 @@
 	<DIV id="cc.cvclr" style="display:none">
 		<H3>cvclr</H3>
 		<PRE>Purges all currently unrecognised orphan cvars from the database&#x2e;<BR></PRE>
+		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cc.cvi" style="display:none">
+		<H3>cvi</H3>
+		<PRE>Places the value of the specified cvar on the input line&#x2e;<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cc.cvload" style="display:none">
@@ -13228,6 +13326,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Thu Oct 30 16:10:24 2025 +0000</ADDRESS>
+	This document was generated at Mon Dec 01 00:21:16 2025 +0000</ADDRESS>
 </BODY>
 </HTML>

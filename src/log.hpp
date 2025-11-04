@@ -12,9 +12,9 @@ namespace ILog {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICommon::P;
 using namespace ICVarDef::P;           using namespace IFStream::P;
-using namespace IIdent::P;             using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;
+using namespace IIdent::P;             using namespace IMutex::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Log levels ----------------------------------------------------------- */
@@ -43,7 +43,7 @@ class Log :                            // The actual class body
   public LogLines,                     // Holds info about every log line
   private FStream,                     // Output log file if needed
   public ClockChrono<CoreClock>,       // Holds the current log time
-  private mutex                        // Because logger needs thread safe
+  public Mutex                         // Because logger needs thread safe
 { /* -- Private typedefs --------------------------------------------------- */
   typedef IdList<LH_MAX> LogLevels;    // Log levels as human readable strings
   /* -- Private variables -------------------------------------------------- */
@@ -65,7 +65,7 @@ class Log :                            // The actual class body
     erase(begin(), next(begin(), static_cast<ssize_t>(stTotal - stMaximum)));
   }
   /* ----------------------------------------------------------------------- */
-  void FlushLog(void)
+  void FlushLog()
   { // Ignore if file not opened or there is nothing to write
     if(empty() || FStreamClosed()) return;
     // Get start of log
@@ -118,7 +118,7 @@ class Log :                            // The actual class body
   /* ----------------------------------------------------------------------- */
   void WriteString(const string &strL) { WriteString(LH_CRITICAL, strL); }
   /* ----------------------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Bail if initialised
     if(FStreamClosed()) return;
     // Log file closure
@@ -148,7 +148,7 @@ class Log :                            // The actual class body
     return ACCEPT;
   }
   /* ----------------------------------------------------------------------- */
-  size_t Clear(void)
+  size_t Clear()
   { // Get num log lines for returning
     const size_t stSize = size();
     // Clear the log
@@ -161,24 +161,20 @@ class Log :                            // The actual class body
   /* ----------------------------------------------------------------------- */
   bool NotHasLevel(const LHLevel lhReq) const { return !HasLevel(lhReq); }
   /* ----------------------------------------------------------------------- */
-  LHLevel GetLevel(void) const { return lhlLevel; }
+  LHLevel GetLevel() const { return lhlLevel; }
   /* ----------------------------------------------------------------------- */
-  mutex &GetMutex(void) { return *this; }
+  bool IsRedirectedToDevice()
+    { return MutexCall([this](){ return FStreamIsHandleStd(); }); }
   /* ----------------------------------------------------------------------- */
-  bool IsRedirectedToDevice(void)
-    { const LockGuard lgLogSync{ GetMutex() }; return FStreamIsHandleStd(); }
+  bool OpenedSafe() { return MutexCall([this](){ return FStreamOpened(); }); }
   /* ----------------------------------------------------------------------- */
-  bool OpenedSafe(void)
-    { const LockGuard lgLogSync{ GetMutex() }; return FStreamOpened(); }
+  void DeInitSafe() { MutexCall([this](){ DeInit(); }); }
   /* ----------------------------------------------------------------------- */
-  void DeInitSafe(void)
-    { const LockGuard lgLogSync{ GetMutex() }; DeInit(); }
-  /* ----------------------------------------------------------------------- */
-  const string GetNameSafe(void)
-    { const LockGuard lgLogSync{ GetMutex() }; return IdentGet(); }
+  const string GetNameSafe()
+    { return MutexCall([this](){ return IdentGet(); }); }
   /* -- Unformatted logging without level check (specified level) ---------- */
   void LogNLCSafe(const LHLevel lhL, const string& strLine)
-    { const LockGuard lgLogSync{ GetMutex() }; WriteString(lhL, strLine); }
+    { MutexCall([this, lhL, &strLine](){ WriteString(lhL, strLine); }); }
   /* -- Unformatted logging without level check (error level) -------------- */
   void LogNLCErrorSafe(const string& strLine)
     { LogNLCSafe(LH_ERROR, strLine); }
@@ -193,49 +189,49 @@ class Log :                            // The actual class body
     { LogNLCSafe(LH_DEBUG, strLine); }
   /* -- Formatted logging without level check (specified level) ------------ */
   template<typename ...VarArgs>void LogNLCExSafe(const LHLevel lhLev,
-    const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogNLCSafe(lhLev, StrFormat(cpFormat, vaArgs...)); }
+    const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogNLCSafe(lhLev,
+          StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted logging without level check (error level) ---------------- */
   template<typename ...VarArgs>
-    void LogNLCErrorExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogNLCExSafe(LH_ERROR, cpFormat, vaArgs...); }
+    void LogNLCErrorExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogNLCExSafe(LH_ERROR, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging without level check (warning level) -------------- */
   template<typename ...VarArgs>
-    void LogNLCWarningExSafe(const char*const cpFormat,
-      const VarArgs &...vaArgs)
-        { LogNLCExSafe(LH_WARNING, cpFormat, vaArgs...); }
+    void LogNLCWarningExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+        { LogNLCExSafe(LH_WARNING, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging without level check (info level) ----------------- */
   template<typename ...VarArgs>
-    void LogNLCInfoExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogNLCExSafe(LH_INFO, cpFormat, vaArgs...); }
+    void LogNLCInfoExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogNLCExSafe(LH_INFO, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging without level check (debug level) ---------------- */
   template<typename ...VarArgs>
-    void LogNLCDebugExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogNLCExSafe(LH_DEBUG, cpFormat, vaArgs...); }
+    void LogNLCDebugExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogNLCExSafe(LH_DEBUG, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging with level check (specified level) --------------- */
   template<typename ...VarArgs>void LogExSafe(const LHLevel lhL,
-    const char*const cpFormat, const VarArgs &...vaArgs)
+    const char*const cpFormat, VarArgs &&...vaArgs)
   { // Return if we don't have this level
     if(NotHasLevel(lhL)) return;
     // Write formatted string
-    LogNLCExSafe(lhL, cpFormat, vaArgs...);
+    LogNLCExSafe(lhL, cpFormat, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Formatted logging with level check (error level) ------------------- */
   template<typename ...VarArgs>
-    void LogErrorExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogExSafe(LH_ERROR, cpFormat, vaArgs...); }
+    void LogErrorExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogExSafe(LH_ERROR, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging with level check (warning level) ----------------- */
   template<typename ...VarArgs>
-    void LogWarningExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogExSafe(LH_WARNING, cpFormat, vaArgs...); }
+    void LogWarningExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogExSafe(LH_WARNING, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging with level check (info level) -------------------- */
   template<typename ...VarArgs>
-    void LogInfoExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogExSafe(LH_INFO, cpFormat, vaArgs...); }
+    void LogInfoExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogExSafe(LH_INFO, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging with level check --------------------------------- */
   template<typename ...VarArgs>
-    void LogDebugExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogExSafe(LH_DEBUG, cpFormat, vaArgs...); }
+    void LogDebugExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogExSafe(LH_DEBUG, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Unformatted logging with level check (specified level) ------------- */
   void LogSafe(const LHLevel lhL, const string& strLine)
     { if(NotHasLevel(lhL)) return; LogNLCSafe(lhL, strLine); }
@@ -250,11 +246,12 @@ class Log :                            // The actual class body
   /* -- Return buffer lines for debugger ----------------------------------- */
   void GetBufferLines(ostringstream &osS)
   { // Gain exclusive access to log lines
-    const LockGuard lgLogSync{ GetMutex() };
-    // For each log entry, write the line to the buffer
-    for(const LogLine &llLine : *this) osS
-      << '[' << fixed << setprecision(6) << llLine.dTime << "] "
-      << llLine.strLine << '\n';
+    MutexCall([this, &osS](){
+      // For each log entry, write the line to the buffer
+      for(const LogLine &llLine : *this) osS
+        << '[' << fixed << setprecision(6) << llLine.dTime << "] "
+        << llLine.strLine << '\n';
+    });
   }
   /* -- Initialise log to built-in standard output ------------------------- */
   void Init(FILE*const fpDevice, const string &strLabel)
@@ -273,7 +270,7 @@ class Log :                            // The actual class body
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Log, DeInitSafe())
   /* -- Constructor -------------------------------------------------------- */
-  Log(void) :
+  Log() :
     /* -- Initialisers ----------------------------------------------------- */
     llLevels{{                         // Initialise log level strings
       "Critical",                      // Log line is critical
@@ -291,46 +288,49 @@ class Log :                            // The actual class body
   /* -- Conlib callback function for APP_LOG variable -------------- */ public:
   CVarReturn LogFileModified(const string &strFN, string &strCV)
   { // Lock mutex
-    const LockGuard lgLogSync{ GetMutex() };
-    // Close log if opened
-    if(FStreamOpened()) DeInit();
-    // Check for special character
-    switch(strFN.length())
-    { // Empty? Ignore
-      case 0: return ACCEPT;
-      // If not on Windows?
+    return MutexCall([this, &strFN, &strCV](){
+      // Close log if opened
+      if(FStreamOpened()) DeInit();
+      // Check for special character
+      switch(strFN.length())
+      { // Empty? Ignore
+        case 0: return ACCEPT;
+        // If not on Windows?
 #if !defined(WINDOWS)
-      // One character was specified?
-      case 1:
-        // Compare the character
-        switch(strFN.front())
-        { // Check for requested use of stderr or stdout
-          case '!': Init(stderr, strStdErr); return ACCEPT;
-          case '-': Init(stdout, strStdOut); return ACCEPT;
-          // Anything else ignore and open the file normally
-          default: break;
-        } // Done
-        break;
+        // One character was specified?
+        case 1:
+          // Compare the character
+          switch(strFN.front())
+          { // Check for requested use of stderr or stdout
+            case '!': Init(stderr, strStdErr); return ACCEPT;
+            case '-': Init(stdout, strStdOut); return ACCEPT;
+            // Anything else ignore and open the file normally
+            default: break;
+          } // Done
+          break;
 #endif
-      // Anything else just break.
-      default: break;
-    } // Create new filename and set filename on success and return success
-    if(!Init(StrAppend(strFN, "." LOG_EXTENSION))) return DENY;
-    strCV = IdentGet();
-    return ACCEPT_HANDLED;
+        // Anything else just break.
+        default: break;
+      } // Create new filename and set filename on success and return success
+      if(!Init(StrAppend(strFN, "." LOG_EXTENSION))) return DENY;
+      strCV = IdentGet();
+      return ACCEPT_HANDLED;
+    });
   }
   /* -- Conlib callback function for APP_LOGLINES variable ----------------- */
   CVarReturn LogLinesModified(const size_t stL)
   { // Must have at least one line and lets also set a safe maximum
     if(stL < 1 || stL > 1000000 || stL > max_size()) return DENY;
     // Prevent use of variables off the main thread
-    const LockGuard lgLogSync{ GetMutex() };
-    // Current size is over the new maximum? Trim the oldest entries out
-    if(size() > stMaximum)
-      erase(begin(), next(begin(), static_cast<ssize_t>(size() - stMaximum)));
-    // Set new maximum and return success
-    stMaximum = stL;
-    return ACCEPT;
+    return MutexCall([this, stL](){
+      // Current size is over the new maximum? Trim the oldest entries out
+      if(size() > stMaximum)
+        erase(begin(),
+          next(begin(), static_cast<ssize_t>(size() - stMaximum)));
+      // Set new maximum and return success
+      stMaximum = stL;
+      return ACCEPT;
+    });
   }
 };/* ----------------------------------------------------------------------- */
 };                                     // End of public module namespace

@@ -19,11 +19,11 @@ class JoyButtonInfo
   const int        iId;                // Button unique identifier
   unsigned int     uiState;            // Current buffered butn press state
   /* -- Get button id ---------------------------------------------- */ public:
-  int ButtonGetId(void) const { return iId; }
+  int ButtonGetId() const { return iId; }
   /* -- Get buffered state (GLFW_RELEASE, GLFW_PRESS or GLFW_REPEAT) ------- */
-  unsigned int ButtonGetState(void) const { return uiState; }
+  unsigned int ButtonGetState() const { return uiState; }
   /* -- Clear button state ------------------------------------------------- */
-  void ButtonClearState(void) { uiState = GLFW_RELEASE; }
+  void ButtonClearState() { uiState = GLFW_RELEASE; }
   /* -- Set button state --------------------------------------------------- */
   void ButtonSetState(const unsigned char*const ucpState)
   { // Save unbuffered state and compare it
@@ -55,7 +55,7 @@ class JoyButtonInfo
     iId(iNId),                         // Set unique id
     uiState(GLFW_RELEASE)              // Set default buffered state
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- Button data list --------------------------------------------------- */
 template<class Container = array<JoyButtonInfo, 128>,
          class Iterator = typename Container::const_iterator>
@@ -65,17 +65,17 @@ class JoyButtonList :
 { /* ----------------------------------------------------------------------- */
   int              iButtons;           // Button count as int
   /* -- Return button array size ----------------------------------- */ public:
-  int JoyButtonListSizeCountClamped(void) const { return iButtons & 0x7f; }
+  int JoyButtonListSizeCountClamped() const { return iButtons & 0x7f; }
   /* -- Return button array size ------------------------------------------- */
-  size_t JoyButtonListSize(void) const { return this->size(); }
+  size_t JoyButtonListSize() const { return this->size(); }
   /* -- Return button count ------------------------------------------------ */
-  size_t JoyButtonListCount(void) const
+  size_t JoyButtonListCount() const
     { return static_cast<size_t>(iButtons); }
   /* -- Return button class ------------------------------------------------ */
   const JoyButtonInfo &JoyButtonListGet(const size_t stId) const
     { return (*this)[stId]; }
   /* -- Clear button data -------------------------------------------------- */
-  void JoyButtonListClear(void)
+  void JoyButtonListClear()
     { StdForEach(par_unseq, this->begin(),
         this->begin() + JoyButtonListSizeCountClamped(),
           [](JoyButtonInfo& jbiRef) { jbiRef.ButtonClearState(); }); }
@@ -90,17 +90,17 @@ class JoyButtonList :
     else iButtons = 0;
   }
   /* -- Iterators ---------------------------------------------------------- */
-  Iterator JoyButtonListBegin(void) const
+  Iterator JoyButtonListBegin() const
     { return this->cbegin(); }
-  Iterator JoyButtonListEnd(void) const
+  Iterator JoyButtonListEnd() const
     { return this->cbegin() + JoyButtonListSizeCountClamped(); }
   /* -- Default constructor ------------------------------------- */ protected:
-  JoyButtonList(void) :
+  JoyButtonList() :
     /* -- Initialisers ----------------------------------------------------- */
     Container{ UtilMkFilledClassContainer<Container,int>() },
     iButtons(0)                        // Initialise button count
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

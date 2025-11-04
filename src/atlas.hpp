@@ -52,7 +52,7 @@ class AtlasBase :                      // Members initially private
       numeric_limits<GLuint>::max(),   // Highest possible
       0, 0 }                           // Lowest possible
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == Atlas Class (which inherits a Texture) =============================== */
 CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
@@ -65,7 +65,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
                                  const size_t stBytesPerColumn=1)
     { return ((stPosY * stWidth) + stPosX) * stBytesPerColumn; }
   /* -- Check if texture reload required ----------------------------------- */
-  void AtlasCheckReloadTexture(void)
+  void AtlasCheckReloadTexture()
   { // Check reload command
     switch(rtCmd)
     { // No reload so just return
@@ -186,7 +186,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     /* -- Initialse memory area of image ----------------------------------- */
     void Init(Memory &mPixels) { mPixels.MemFill(uqInitVal); }
     /* -- Constructor that does nothing ------------------------------------ */
-    ImageTypeGrayAlpha(void) = default;
+    ImageTypeGrayAlpha() = default;
   };/* --------------------------------------------------------------------- */
   /* -- Render texture data to memory -------------------------------------- */
   template<class ImageType>
@@ -392,18 +392,18 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       uiTWidth, uiTHeight, uiPadding, uiPadding, ofeFilter, false);
   }
   /* -- Constructor (Initialisation then registration) --------------------- */
-  Atlas(void) :                        // No parameters
+  Atlas() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperAtlas{ cAtlases, this }    // Initially registered
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor (without registration) --------------------------------- */
   explicit Atlas(const ImageFlagsConst ifcPurpose) :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperAtlas{ cAtlases },         // Initially unregistered
     AtlasBase{ ifcPurpose }            // Initialise purpose of atlas
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Atlases, Atlas, ATLAS) // End of collector class
 /* ------------------------------------------------------------------------- */

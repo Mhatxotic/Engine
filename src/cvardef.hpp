@@ -13,13 +13,13 @@ namespace ICVarDef {                   // Start of private module namespace
 using namespace IFlags;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Public typedefs ------------------------------------------------------ */
 enum CVarReturn : unsigned int         // Callback return values
 { /* ----------------------------------------------------------------------- */
-  DENY,                                // The new cvar value is not acceptable
-  ACCEPT,                              // The new var value is acceptable
-  ACCEPT_HANDLED,                      // The CBfunc changes cvarData.strValue
-  ACCEPT_HANDLED_FORCECOMMIT,          // Same as above and mark to commit
+  DENY,                                // [0] New cvar value is not acceptable
+  ACCEPT,                              // [1] New var value is acceptable
+  ACCEPT_HANDLED,                      // [2] CBfunc changes cvarData.strValue
+  ACCEPT_HANDLED_FORCECOMMIT,          // [3] Same as above but mark to commit
 };/* == Convert bool result cvar accept or deny ============================ */
 static CVarReturn BoolToCVarReturn(const bool bState)
   { return bState ? ACCEPT : DENY; }
@@ -54,73 +54,70 @@ template<typename AnyToType, typename AnyFromType, typename AnyRangeType>
     const AnyRangeType artNGE)
       { return atFrom < artNL || atFrom >= artNGE ?
           DENY : CVarSimpleSetInt(atTo, atFrom); }
-/* -- Gui mode flags ------------------------------------------------------- */
-BUILD_FLAGS(Core,
+/* ------------------------------------------------------------------------- */
+BUILD_FLAGS(Core,                      // Engine mode flags
   /* ----------------------------------------------------------------------- */
-  // No flags?                         Want text mode console?
-  CFL_BASIC                 {Flag(0)}, CFL_TEXT              {Flag(1)},
-  // Want audio sub-system?            Want opengl window?
-  CFL_AUDIO                 {Flag(2)}, CFL_VIDEO             {Flag(3)},
-  // Want frame limiter?
-  CFL_TIMER                 {Flag(4)},
+  CFL_BASIC                 {Flag(0)}, // No flags?
+  CFL_TEXT                  {Flag(1)}, // Want text mode console?
+  CFL_AUDIO                 {Flag(2)}, // Want audio sub-system?
+  CFL_VIDEO                 {Flag(3)}, // Want opengl window?
+  CFL_TIMER                 {Flag(4)}, // Want frame limiter?
   /* ----------------------------------------------------------------------- */
   CFL_AUDIOVIDEO{ CFL_AUDIO|CFL_VIDEO },
   CFL_MASK{ CFL_TEXT|CFL_AUDIOVIDEO|CFL_TIMER }
-);/* -- CVar flags --------------------------------------------------------- */
-BUILD_FLAGS(CVar,
+);/* ----------------------------------------------------------------------- */
+BUILD_FLAGS(CVar,                      // CVar flags
   /* -- Types (T) ---------------------------------------------------------- */
-  // Variable is a string?             Variable is a integer?
-  TSTRING                   {Flag(8)}, TINTEGER                  {Flag(9)},
-  // Variable is a float?              Variable is a boolean
-  TFLOAT                   {Flag(10)}, TBOOLEAN                 {Flag(11)},
+  TSTRING                   {Flag(8)}, // Variable is a string?
+  TINTEGER                  {Flag(9)}, // Variable is a integer?
+  TFLOAT                   {Flag(10)}, // Variable is a float?
+  TBOOLEAN                 {Flag(11)}, // Variable is a boolean?
   /* -- Conditional (C) ---------------------------------------------------- */
-  // Var string can contain letters?   Variable string can contain numerics?
-  CALPHA                   {Flag(16)}, CNUMERIC                 {Flag(17)},
-  // Variable is written to database?  Variable is protected?
-  CSAVEABLE                {Flag(18)}, CPROTECTED               {Flag(19)},
-  // Variable is compressed?           Var cannot be empty (str) or zero? (int)
-  CDEFLATE                 {Flag(20)}, CNOTEMPTY                {Flag(21)},
-  // Variable must be unsigned?        Variable integer must be power of two?
-  CUNSIGNED                {Flag(22)}, CPOW2                    {Flag(23)},
-  // Variable must be a valid filename?
-  CFILENAME                {Flag(24)},
+  CALPHA                   {Flag(16)}, // Var string can contain letters?
+  CNUMERIC                 {Flag(17)}, // Variable string can contain numerics?
+  CSAVEABLE                {Flag(18)}, // Variable is written to database?
+  CPROTECTED               {Flag(19)}, // Variable is protected?
+  CDEFLATE                 {Flag(20)}, // Variable is compressed?
+  CNOTEMPTY                {Flag(21)}, // Var can't be empty (str) or 0? (int)
+  CUNSIGNED                {Flag(22)}, // Variable must be unsigned?
+  CPOW2                    {Flag(23)}, // Variable integer must be power of 2?
+  CFILENAME                {Flag(24)}, // Variable must be a valid filename?
   /* -- Manipulation (M) --------------------------------------------------- */
-  MTRIM                    {Flag(32)}, // Variable string should be trimmed
+  MTRIM                    {Flag(32)}, // Variable string should be trimmed?
   /* -- Privates (Used internally) ----------------------------------------- */
-  // Variable was created by LUA?      Variable is a trusted filename
-  TLUA                     {Flag(48)}, CTRUSTEDFN               {Flag(49)},
-  // Cannot unreg this in callback?    Variable should be committed to DB?
-  LOCKED                   {Flag(50)}, COMMIT                   {Flag(51)},
-  // Var should be purged from DB?     Variable not readable by lua?
-  PURGE                    {Flag(52)}, CONFIDENTIAL             {Flag(53)},
-  // Variable value was loaded from db Commit even if default/value match
-  LOADED                   {Flag(54)}, COMMITNOCHECK            {Flag(55)},
+  TLUA                     {Flag(48)}, // Variable was created by LUA?
+  CTRUSTEDFN               {Flag(49)}, // Variable is a trusted filename?
+  LOCKED                   {Flag(50)}, // Cannot unreg this in callback?
+  COMMIT                   {Flag(51)}, // Variable should be committed to DB?
+  PURGE                    {Flag(52)}, // Var should be purged from DB?
+  CONFIDENTIAL             {Flag(53)}, // Variable not readable by lua?
+  LOADED                   {Flag(54)}, // Variable value was loaded from db?
+  COMMITNOCHECK            {Flag(55)}, // Commit even if default/value match?
   /* -- Sources (S) [Private] ---------------------------------------------- */
-  // Set from command-line?            Set from database?
-  SCMDLINE                 {Flag(57)}, SUDB                     {Flag(58)},
-  // Set from application manifest?
-  SAPPCFG                  {Flag(59)},
+  SCMDLINE                 {Flag(57)}, // Set from command-line?
+  SUDB                     {Flag(58)}, // Set from database?
+  SAPPCFG                  {Flag(59)}, // Set from application manifest?
   /* -- Permissions (P) [Private] ------------------------------------------ */
-  // Variable can be changed at boot?  Variable can be changed by system
-  PCMDLINE                 {Flag(61)}, PAPPCFG                  {Flag(62)},
-  // Variable can be changed by udb?   Variable can be changed by user?
-  PUDB                     {Flag(63)}, PCONSOLE                 {Flag(64)},
+  PCMDLINE                 {Flag(61)}, // Variable can be changed at boot?
+  PAPPCFG                  {Flag(62)}, // Variable can be changed by system?
+  PUDB                     {Flag(63)}, // Variable can be changed by udb?
+  PCONSOLE                 {Flag(64)}, // Variable can be changed by user?
   /* -- Other -------------------------------------------------------------- */
-  // No flags                          Private vars begin after here
-  NONE                      {Flag(0)}, PRIVATE                  {TLUA},
+  NONE                      {Flag(0)}, // No flags?
+  PRIVATE                      {TLUA}, // Private vars begin after here?
   /* -- Collections -------------------------------------------------------- */
-  // Shortcut to unsigned int type     Shortcut to 'unsigned float' type
-  TUINTEGER{ TINTEGER|CUNSIGNED },     TUFLOAT{ TFLOAT|CUNSIGNED },
-  // Shortcut to int + saveable        Shortcut to float + saveable
-  TINTEGERSAVE{ TINTEGER|CSAVEABLE },  TFLOATSAVE{ TFLOAT|CSAVEABLE },
-  // Shortcut to uint + saveable       Shortcut to unsigned float + saveable
-  TUINTEGERSAVE{ TUINTEGER|CSAVEABLE },TUFLOATSAVE{ TUFLOAT|CSAVEABLE },
-  // Shortcut to string + saveable     Shortcut to boolean + saveable
-  TSTRINGSAVE{ TSTRING|CSAVEABLE },    TBOOLEANSAVE{ TBOOLEAN|CSAVEABLE },
-  // Only alphanumeric characeters     Any source
-  CALPHANUMERIC{ CALPHA|CNUMERIC },    SANY{ SCMDLINE|SAPPCFG|SUDB },
-  // Registration mask bits            All perms granted to modify
-  CVREGMASK{ COMMIT|SANY },            PANY{ PCMDLINE|PAPPCFG|PUDB|PCONSOLE },
+  TUINTEGER{ TINTEGER|CUNSIGNED },     // Shortcut to unsigned int type
+  TUFLOAT{ TFLOAT|CUNSIGNED },         // Shortcut to 'unsigned float' type
+  TINTEGERSAVE{ TINTEGER|CSAVEABLE },  // Shortcut to int + saveable
+  TFLOATSAVE{ TFLOAT|CSAVEABLE },      // Shortcut to float + saveable
+  TUINTEGERSAVE{ TUINTEGER|CSAVEABLE },// Shortcut to uint + saveable
+  TUFLOATSAVE{ TUFLOAT|CSAVEABLE },    // Shortcut to unsigned float + saveable
+  TSTRINGSAVE{ TSTRING|CSAVEABLE },    // Shortcut to string + saveable
+  TBOOLEANSAVE{ TBOOLEAN|CSAVEABLE },  // Shortcut to boolean + saveable
+  CALPHANUMERIC{ CALPHA|CNUMERIC },    // Only alphanumeric characeters
+  SANY{ SCMDLINE|SAPPCFG|SUDB },       // Any source
+  CVREGMASK{ COMMIT|SANY },            // Registration mask bits
+  PANY{PCMDLINE|PAPPCFG|PUDB|PCONSOLE},// All perms granted to modify
   /* -- Allowed bits ------------------------------------------------------- */
   CVMASK{ TSTRING|TINTEGER|TFLOAT|TBOOLEAN|CALPHA|CNUMERIC|CSAVEABLE|
           CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM }

@@ -142,7 +142,7 @@ class CodecGIF :                       // GIF codec object
     } // Never gets here
   }
   /* -- Default constructor ------------------------------------- */ protected:
-  CodecGIF(void) :
+  CodecGIF() :
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_GIF, "Graphics Interchange Format", "GIF",
       bind(&CodecGIF::Decode, this, _1, _2) }

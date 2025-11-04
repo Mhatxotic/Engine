@@ -70,7 +70,7 @@ class SysCon :                         // All members initially private
     }
   }
   /* -- Redraw screen and check for error ---------------------------------- */
-  void CommitScreen(void)
+  void CommitScreen()
   { // Commit all settings and buffer
     switch(const int iResult = ICurses::refresh())
     { // Unknown result?
@@ -84,9 +84,9 @@ class SysCon :                         // All members initially private
     }
   }
   /* -- Return console window handle --------------------------------------- */
-  void *GetHandle(void) { return nullptr; }
+  void *GetHandle() { return nullptr; }
   /* -- Check for and update size ------------------------------------------ */
-  void CheckAndUpdateSize(void)
+  void CheckAndUpdateSize()
   { // Include curses namespace
     using namespace ICurses;
     // am just going to put this here just incase.
@@ -201,7 +201,7 @@ class SysCon :                         // All members initially private
     }
   }
   /* -- Commit argument for curs_set() ------------------------------------- */
-  void CommitCursor(void)
+  void CommitCursor()
   { // Change it and save new cursor setting
     switch(const int iResult = ICurses::curs_set(iCursor))
     { // Anything else report in log?
@@ -214,7 +214,7 @@ class SysCon :                         // All members initially private
     }
   }
   /* -- Update argument for curs_set() ------------------------------------- */
-  void UpdateCursorId(void)
+  void UpdateCursorId()
     { iCursor = FlagIsSet(SCO_CURVISIBLE) ?
         (FlagIsSet(SCO_CURINSERT) ? 2 : 1) : 0; }
   /* -- Set colour --------------------------------------------------------- */
@@ -236,7 +236,7 @@ class SysCon :                         // All members initially private
   /* -- Set cursor position ------------------------------------------------ */
   void SetCursor(const int iNX, const int iNY) { CoordSet(iNX, iNY); }
   /* -- Commit buffer ------------------------------------------------------ */
-  void CommitBuffer(void)
+  void CommitBuffer()
   { // Include curses namespace
     using namespace ICurses;
     switch(const int iResult =
@@ -285,10 +285,10 @@ class SysCon :                         // All members initially private
   /* -- Do set characters until we reach the maximum ----------------------- */
   void ClearLine(const int iMax)
     { for(; CoordGetX() < iMax; CoordIncX()) SetChar(); }
-  void ClearLine(void) { ClearLine(DimGetWidth()); }
+  void ClearLine() { ClearLine(DimGetWidth()); }
   /* -- Save and restore colour -------------------------------------------- */
-  void PushColour(void) { aColourSaved = aColour; }
-  void PopColour(void) { aColour = aColourSaved; }
+  void PushColour() { aColourSaved = aColour; }
+  void PopColour() { aColour = aColourSaved; }
   /* -- Distance ----------------------------------------------------------- */
   unsigned int Distance(const unsigned int uiD1, const unsigned int uiD2)
   { // Calculate deltas of components
@@ -527,8 +527,9 @@ class SysCon :                         // All members initially private
       // Set length
       iLen = static_cast<int>(utfString.Length());
       // Reset at scrolled position
-      utfString.Reset(strIL.c_str() +
-        abs(UtilMaximum(0, iLen - diSizeM2.DimGetWidth())));
+      utfString.Reset(strIL.data());
+      // Skip characters to the point we're scrolled at
+      utfString.Skip(UtilMaximum(0, iLen - diSizeM2.DimGetWidth()));
       // Draw start of input text
       WriteLine(StdMove(utfString), diSizeM1.DimGetWidth(), false);
     } // Left size of text is zero long
@@ -641,7 +642,7 @@ class SysCon :                         // All members initially private
     while(CoordGetY() > 1) { CoordSetX(0); CoordDecY(); ClearLine(); }
   }
   /* -- DeInitialise ------------------------------------------------------- */
-  void SysConDeInit(void)
+  void SysConDeInit()
   { // Include curses namespace
     using namespace ICurses;
     if(IHNotDeInitialise()) return;
@@ -674,7 +675,7 @@ class SysCon :                         // All members initially private
     cLog->LogDebugSafe("SysCon de-initialised.");
   }
   /* -- Reinitialise ------------------------------------------------------- */
-  void SysConReInit(void)
+  void SysConReInit()
   { // Ignore if not enabled
     using namespace ICurses;
     // Return if already de-initialised
@@ -801,7 +802,7 @@ class SysCon :                         // All members initially private
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~SysCon, SysConDeInit())
   /* -- Constructor -------------------------------------------------------- */
-  SysCon(SysModMap &&smmMap, const size_t stI) : // No parameters
+  SysCon(SysModMap &&smmMap, const size_t stI) :
     /* -- Initialisers ----------------------------------------------------- */
     SysBase{ StdMove(smmMap), stI },   // Initialise base with module info
     InitHelper{ __FUNCTION__ },        // Initialise init helper
@@ -813,7 +814,7 @@ class SysCon :                         // All members initially private
     diSizeM2{ -2, -2 },                // Init screen dimensions minus 2
     iCursor(-1)                        // Current cursor setting uninitialised
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Set maximum console line length ---------------------------- */ public:
   CVarReturn RowsModified(const size_t stRows)
   { // Deny if out of range. The maximum value is a SHORT from Win32 API.

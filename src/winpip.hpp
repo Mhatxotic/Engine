@@ -20,7 +20,7 @@ class SysPipe :                        // Members initially private
                    hThread;            // Handle to process main thread
   DWORD            dwPid;              // Process id
   /* -- DeInit pipe -------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // If we have the process handle
     if(hProcess != INVALID_HANDLE_VALUE)
     { // Close thread handle as we are done with it
@@ -117,8 +117,8 @@ class SysPipe :                        // Members initially private
       hStdoutWrite                     // HANDLE hStdError (Using ours/stdout)
     };
     // Create the child process and if succeeded?
-    if(CreateProcess(UtfToNonConstCast<LPCWSTR>(UTFtoS16(strApp).c_str()),
-      UtfToNonConstCast<LPWSTR>(UTFtoS16(strCmdLine).c_str()), nullptr,
+    if(CreateProcess(UtfToNonConstCast<LPCWSTR>(UTFtoS16(strApp).data()),
+      UtfToNonConstCast<LPWSTR>(UTFtoS16(strCmdLine).data()), nullptr,
       nullptr, TRUE, CREATE_SUSPENDED|CREATE_NO_WINDOW, nullptr, nullptr,
       &siStartInfo, &piProcInfo)) try
     { // Store name of executable
@@ -167,15 +167,15 @@ class SysPipe :                        // Members initially private
     }
   }
   /* -- Set socket timeout ----------------------------------------- */ public:
-  void Finish(void)
+  void Finish()
   { // De-init all the handles
     DeInit();
     // Clear variables
-    hProcess = hThread = hStdinRead =  hStdinWrite =
+    hProcess = hThread = hStdinRead = hStdinWrite =
       hStdoutRead = hStdoutWrite = INVALID_HANDLE_VALUE;
   }
   /* -- Finished sending --------------------------------------------------- */
-  void SendFinish(void)
+  void SendFinish()
   { // Return if handle not available
     if(hStdinWrite == INVALID_HANDLE_VALUE) return;
     // Close the pipe handle so the child process stops reading.
@@ -240,7 +240,7 @@ class SysPipe :                        // Members initially private
   void Init(const string &strCmdLine)
     { Init(strCmdLine, cDirBase->DirBaseGetSafetyMode()); }
   /* -- Return pid --------------------------------------------------------- */
-  unsigned int GetPid(void) { return static_cast<unsigned int>(dwPid); }
+  unsigned int GetPid() { return static_cast<unsigned int>(dwPid); }
   /* -- Constructor with init ---------------------------------------------- */
   explicit SysPipe(const string &strF) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -248,7 +248,7 @@ class SysPipe :                        // Members initially private
     /* --------------------------------------------------------------------- */
     { Init(strF); }                    // Initialise with filename
   /* -- Constructor with init ---------------------------------------------- */
-  SysPipe(void) :                      // No parameters
+  SysPipe() :
     /* -- Initialisers ----------------------------------------------------- */
     hStdinRead(INVALID_HANDLE_VALUE),  // Stdin read handle uninitialised
     hStdinWrite(INVALID_HANDLE_VALUE), // Stdin write handle uninitialised
@@ -258,8 +258,8 @@ class SysPipe :                        // Members initially private
     hThread(INVALID_HANDLE_VALUE),     // Main thread handle uninitialised
     dwPid(0)                           // No pid
     /* --------------------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~SysPipe(void) { DeInit(); }
+  ~SysPipe() { DeInit(); }
 };/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

@@ -129,7 +129,7 @@ class Pack :
            rDest.CoordGetY() + rDest.DimGetHeight();
   }
   /* -- Goes through free rectangle list and removes any redundant rects --- */
-  void PruneFreeList(void)
+  void PruneFreeList()
   { // Go through each free rectangle
     for(size_t stIndex = 0; stIndex < rlFree.size(); ++stIndex)
     { // Compare with all other rectangles
@@ -245,7 +245,7 @@ class Pack :
     return rNew;
   }
   /* -- Returns the % total filled ----------------------------------------- */
-  double Occupancy(void) const
+  double Occupancy() const
   { // Return the ratio of used surface area to the total bin area.
     return accumulate(rlUsed.cbegin(), rlUsed.cend(), 0.0,
       [](double dUsed, const Rect &rNode)
@@ -254,15 +254,15 @@ class Pack :
       (this->template DimGetWidth<double>() * this->DimGetHeight());
   }
   /* -- Return number of rectangles created in the used list --------------- */
-  size_t Used(void) const { return rlUsed.size(); }
+  size_t Used() const { return rlUsed.size(); }
   /* -- Return number of rectangles created in the free list --------------- */
-  size_t Free(void) const { return rlFree.size(); }
+  size_t Free() const { return rlFree.size(); }
   /* -- Return number of total rectangles created -------------------------- */
-  size_t Total(void) const { return rlFree.size() + rlUsed.size(); }
+  size_t Total() const { return rlFree.size() + rlUsed.size(); }
   /* -- Default constructor that instantiates an empty bin of size 0x0 ----- */
-  Pack(void)
-    /* -- Do nothing ------------------------------------------------------- */
-    { }
+  Pack()
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Instantiates a bin of the given size with pre-reserved memory ------ */
   Pack(const UInt   uiNWidth,          // Set width of new pack
        const UInt   uiNHeight,         // Set height of new pack
@@ -281,8 +281,8 @@ class Pack :
     rlFree{{ 0, 0,                     // Initialise co-ordinates
       this->DimGetWidth(),             // Initialise specified width
       this->DimGetHeight() }}          // Initialise specified height
-    /* -- Do nothing ------------------------------------------------------- */
-    { }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == Bin object collector and member class ================================ */
 CTOR_BEGIN_DUO(Bins, Bin, CLHelperUnsafe, ICHelperUnsafe),
@@ -290,12 +290,12 @@ CTOR_BEGIN_DUO(Bins, Bin, CLHelperUnsafe, ICHelperUnsafe),
   public Lockable,                     // Lua garbage collector instruction
   public Pack<int>                     // Base Pack class with GLint's
 { /* -- Default constructor ---------------------------------------- */ public:
-  Bin(void) :
+  Bin() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperBin{ cBins, this },        // Register the object in collector
     IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* --------------------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Bins, Bin, BIN)       // End of bin objects collector
 /* ------------------------------------------------------------------------- */

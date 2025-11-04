@@ -26,7 +26,7 @@ namespace P {                          // Start of public module namespace
 /* -- Prototypes ----------------------------------------------------------- */
 static FileMap AssetExtract(const string&);      // Extract files from archives
 static FileMap AssetLoadFromDisk(const string&); // Load file from disk
-static size_t AssetGetPipeBufferSize(void);      // Get pipe buffer size
+static size_t AssetGetPipeBufferSize();          // Get pipe buffer size
 /* ------------------------------------------------------------------------- */
 }                                      // End of public namespace
 /* ------------------------------------------------------------------------- */
@@ -39,10 +39,10 @@ using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
 using namespace IIdent::P;             using namespace ILog::P;
 using namespace ILuaEvt::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace IToggler::P;
+using namespace IMemory::P;            using namespace IRefCtr::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -55,7 +55,7 @@ enum ASyncProgressCommand : unsigned int // For lua callback events
 template<class MemberType, class ColType>class AsyncLoader :
   /* -- Base classes ------------------------------------------------------- */
   public Memory,                       // Loading from memory data (reusable)
-  public TogglerMaster<>               // Boolean to protect from destruction
+  public RefCtrMaster<>                // Ref counter to protect from destructs
 { /* -- Private typedefs ------------------------------------------ */ private:
   enum AsyncResult : unsigned int      // Async loading results
   { /* --------------------------------------------------------------------- */
@@ -102,7 +102,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       reinterpret_cast<void*>(&mtAsyncOwner), arResult);
   }
   /* -- Send completion ---------------------------------------------------- */
-  void AsyncCompletion(void)
+  void AsyncCompletion()
   { // Dispatch the result of the asynchronous event. Send a cancel instead if
     // the thread wants to terminate.
     AsyncCompletionDispatch(tAsyncThread.ThreadShouldExit() ?
@@ -123,10 +123,10 @@ template<class MemberType, class ColType>class AsyncLoader :
   /* -- Send progress event ------------------------------------------------ */
   template<typename ...VarArgs>
     void AsyncProgress(const ASyncProgressCommand apcCmd,
-      const VarArgs &...vaVars)
+      const VarArgs ...vaArgs)
   { lecAsync.LuaEvtsDispatch(emcAsyncCmd,
       reinterpret_cast<void*>(&mtAsyncOwner), AR_LOADING,
-      static_cast<uint64_t>(apcCmd), vaVars...); }
+      static_cast<uint64_t>(apcCmd), vaArgs...); }
   /* -- Write to pipe assistant -------------------------------------------- */
   void AsyncWriteToPipe(SysPipe &spProcess, size_t &stPosition,
     const size_t stBuffer)
@@ -145,7 +145,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       static_cast<uint64_t>(stPosition), static_cast<uint64_t>(MemSize()));
   }
   /* ----------------------------------------------------------------------- */
-  void AsyncCleanup(void)
+  void AsyncCleanup()
   { // Wait for thread to finish if not already
     AsyncStop();
     // Clear Lua stack string and recover memory as we are done with it. If
@@ -159,7 +159,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     lecAsync.LuaRefDeInit();
   }
   /* -- Get thread ---------------------------------------------- */ protected:
-  bool AsyncThreadIsCurrent(void) const
+  bool AsyncThreadIsCurrent() const
     { return tAsyncThread.ThreadIsCurrent(); }
   /* -- Prepend message to the full stack message -------------------------- */
   void AsyncDoAddStackMessage(const char*const cpMsg)
@@ -167,7 +167,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   void AsyncDoAddStackMessage(const string &strMsg)
     { strAsyncError.insert(0, strMsg); }
   /* -- Execute function (returns exit code) ----------------------- */ public:
-  int64_t AsyncExecute(void)
+  int64_t AsyncExecute()
   { // Duration of execution
     const ClockChrono<> ccExecute;
     // Open pipe to application
@@ -253,11 +253,11 @@ template<class MemberType, class ColType>class AsyncLoader :
     mtAsyncOwner.AsyncReady(fmData);
   }
   /* -- Move the stored memory block into a new filemap and parse it ------- */
-  void AsyncParseMemory(void)
+  void AsyncParseMemory()
     { FileMap fmData{ idName.IdentGet(), StdMove(*this), cmSys.GetTimeS() };
       AsyncParseFileMap(fmData); }
   /* -- Load the specified file and parse it ------------------------------- */
-  void AsyncParseFile(void)
+  void AsyncParseFile()
     { FileMap fmData{ AssetExtract(idName.IdentGet()) };
       AsyncParseFileMap(fmData); }
   /* -- Async off-main thread function ------------------------------------- */
@@ -327,14 +327,14 @@ template<class MemberType, class ColType>class AsyncLoader :
         this);
   }
   /* ----------------------------------------------------------------------- */
-  void AsyncStop(void)
+  void AsyncStop()
   { // If a pid is set then we need to kill it
     if(uiAsyncPid) { cSystem->TerminatePid(uiAsyncPid); uiAsyncPid = 0; }
     // Wait for thread to terminate
     tAsyncThread.ThreadDeInit();
   }
   /* -- Push generic error handler ----------------------------------------- */
-  int AsyncPushErrorHandler(void) const
+  int AsyncPushErrorHandler() const
     { return LuaUtilPushAndGetGenericErrId(lecAsync.LuaRefGetState()); }
   /* -- Async do protected dispatch (assumes params already on lua stack) -- */
   void AsyncDoLuaThrowErrorHandler(const EvtMainEvent &emeEvent)
@@ -358,7 +358,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   void AsyncDoLuaProtectedDispatch(const EvtMainEvent &emeEvent,
     const int iParams, const int iHandler)
   { // Set a 'protect' flag and then unset it when leaving this scope
-    const TogglerSlave<> tsProtect{ this };
+    const RefCtrSlave<> rcsProtect{ this };
     // Compare error code
     switch(LuaUtilPCallExSafe(lecAsync.LuaRefGetState(), iParams, 0, iHandler))
     { // No error so remove error handler value and return
@@ -391,9 +391,9 @@ template<class MemberType, class ColType>class AsyncLoader :
     AsyncDoLuaProtectedDispatch(emeEvent, iParam, iHandler);
   }
   /* --------------------------------------------------------------- */ public:
-  void AsyncWait(void) { tAsyncThread.ThreadWait(); }
+  void AsyncWait() { tAsyncThread.ThreadWait(); }
   /* ----------------------------------------------------------------------- */
-  void AsyncCancel(void)
+  void AsyncCancel()
   { // Wait for the thread to stop
     AsyncStop();
     // Dereference the class
@@ -606,7 +606,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   }
   /* -- Main constructor --------------------------------------------------- */
   AsyncLoader(                         // Initialise with derived class
-    Ident &idNName,                      // Reference to identified
+    Ident &idNName,                    // Reference to identified
     MemberType*const mtNAsyncOwner,    // The pointer to the class
     const EvtMainCmd emcNAsyncCmd) :   // The event id to use
     /* -- Initialisers ----------------------------------------------------- */
@@ -618,14 +618,14 @@ template<class MemberType, class ColType>class AsyncLoader :
     tAsyncThread{ STP_LOW },           // Initialise low priority thread
     asctAsyncType(BA_NONE),            // Initialise load source type
     uiAsyncPid(0)                      // Initialise pid for BA_EXECUTE
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* ----------------------------------------------------------------------- */
   // NOTE: This is here for convenience only. ALWAYS call AsyncCancel() in your
   // derived classes because static objects created in the event callback while
   // waiting for it to be called will NOT be cleaned up properly and cause
   // memory leaks.
-  ~AsyncLoader(void)
+  ~AsyncLoader()
   { // Ignore if thread isn't running
     if(tAsyncThread.ThreadIsNotJoinable()) return;
     // Print a warning to say that we should not be allowing this destructor
@@ -651,11 +651,11 @@ class CLHelperAsync :
 { /* -- Functions -------------------------------------------------- */ public:
   const LuaEvtMasterType lemAsync;     // Event name id
   /* -- Functions ---------------------------------------------------------- */
-  void WaitAsync(void)
-  { // Lock the collector's mutex
-    const LockGuard lgSync{ this->CollectorGetMutex() };
-    // Sync all members
-    for(MemberType*const cChild : *this) cChild->AsyncWait();
+  void WaitAsync()
+  { // Lock the collector's mutex and sync all members
+    this->MutexCall([this](){
+      for(MemberType*const cChild : *this) cChild->AsyncWait();
+    });
   }
   /* -- Constructor -------------------------------------------------------- */
   CLHelperAsync(const char*const cpName, const EvtMainCmd emcCmd) :
@@ -663,7 +663,7 @@ class CLHelperAsync :
     BaseType{ cpName },                // Initialise name of base tpye
     lemAsync{ emcCmd }                 // Initialise event name
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -23,25 +23,25 @@ class GlFWRes                          // Members initially private
   const GLFWvidmode vmData;            // Video mode data (C struct)
   const int      iDepth;               // Total bits
   /* -- Get video mode data ---------------------------------------- */ public:
-  const GLFWvidmode &Data(void) const { return vmData; }
+  const GLFWvidmode &Data() const { return vmData; }
   /* -- Get resolution id -------------------------------------------------- */
-  int Index(void) const { return iIndex; }
+  int Index() const { return iIndex; }
   /* -- Get resolution width/height in pixels ------------------------------ */
-  int Width(void) const { return vmData.width; }
-  int Height(void) const { return vmData.height; }
+  int Width() const { return vmData.width; }
+  int Height() const { return vmData.height; }
   /* -- Helpful checks ----------------------------------------------------- */
   bool IsWidth(const int iWidth) const { return Width() == iWidth; }
   bool IsHeight(const int iHeight) const { return Height() == iHeight; }
   bool IsDim(const int iWidth, const int iHeight) const
     { return IsWidth(iWidth) && IsHeight(iHeight); }
   /* -- Get resolution depth r/g/b component bits -------------------------- */
-  int Red(void) const { return vmData.redBits; }
-  int Green(void) const { return vmData.greenBits; }
-  int Blue(void) const { return vmData.blueBits; }
+  int Red() const { return vmData.redBits; }
+  int Green() const { return vmData.greenBits; }
+  int Blue() const { return vmData.blueBits; }
   /* -- Get resolution depth total component bits -------------------------- */
-  int Depth(void) const { return iDepth; }
+  int Depth() const { return iDepth; }
   /* -- Get resolution refresh rate ---------------------------------------- */
-  int Refresh(void) const { return vmData.refreshRate; }
+  int Refresh() const { return vmData.refreshRate; }
   /* -- Are two resolutions the same? -------------------------------------- */
   bool Same(const GLFWvidmode &vmOther) const
     { return !StdCompare(&vmData, &vmOther, sizeof(vmData)); }
@@ -52,7 +52,7 @@ class GlFWRes                          // Members initially private
     vmData(vmD),                       // Initialise video mode data
     iDepth(Red() + Green() + Blue())   // Initialise video mode total bits
     /* -- Update unique identifier of monitor ------------------------------ */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 typedef vector<GlFWRes> GlFWResList;   // Vector of resolution classes
 typedef GlFWResList::const_iterator GlFWResListConstIt;
@@ -88,26 +88,26 @@ class GlFWMonitor :                    // Members initially private
     return cCommon->CommonNull();
   }
   /* -- Get monitor context ---------------------------------------- */ public:
-  GLFWmonitor *Context(void) const { return mContext; }
+  GLFWmonitor *Context() const { return mContext; }
   /* -- Get glfw monitor id ------------------------------------------------ */
-  int Index(void) const { return iIndex; }
+  int Index() const { return iIndex; }
   /* -- Get monitor name --------------------------------------------------- */
-  const string &Name(void) const { return strName; }
+  const string &Name() const { return strName; }
   /* -- Return diagonal size ----------------------------------------------- */
-  double Diagonal(void) const { return dDiagonal; }
-  double DiagonalInch(void) const { return dDiagonalInches; }
+  double Diagonal() const { return dDiagonal; }
+  double DiagonalInch() const { return dDiagonalInches; }
   /* -- Return size -------------------------------------------------------- */
-  double WidthInch(void) const { return ddInches.DimGetWidth(); }
-  double HeightInch(void) const { return ddInches.DimGetHeight(); }
+  double WidthInch() const { return ddInches.DimGetWidth(); }
+  double HeightInch() const { return ddInches.DimGetHeight(); }
   /* -- Get primary resolution --------------------------------------------- */
-  const GlFWRes *PrimaryPtr(void) const { return rPrimary; }
-  const GlFWRes &Primary(void) const { return *rPrimary; }
+  const GlFWRes *PrimaryPtr() const { return rPrimary; }
+  const GlFWRes &Primary() const { return *rPrimary; }
   /* -- Resolution list access --------------------------------------------- */
   const GlFWRes &Get(const size_t stIndex) const { return (*this)[stIndex]; }
   const GlFWRes *GetPtr(const size_t stIndex) const { return &Get(stIndex); }
-  const GlFWResListConstIt Begin(void) const { return cbegin(); }
-  const GlFWResListConstIt End(void) const { return cend(); }
-  size_t Count(void) const { return size(); }
+  const GlFWResListConstIt Begin() const { return cbegin(); }
+  const GlFWResListConstIt End() const { return cend(); }
+  size_t Count() const { return size(); }
   /* -- Constructor -------------------------------------------------------- */
   GlFWMonitor(const int iId, GLFWmonitor*const mC) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -180,7 +180,7 @@ class GlFWMonitors :
 { /* ----------------------------------------------------------------------- */
   const GlFWMonitor *moPrimary;        // Primary monitor
   /* --------------------------------------------------------------- */ public:
-  void MonitorsRefresh(void)
+  void MonitorsRefresh()
   { // Reset primary monitor
     moPrimary = nullptr;
     // Clear monitor list and free memory because we're using pointers to
@@ -225,18 +225,18 @@ class GlFWMonitors :
     else XC("Could not detect primary monitor!");
   }
   /* -- Get primary monitor ------------------------------------------------ */
-  const GlFWMonitor *MonitorsPrimaryPtr(void) const { return moPrimary; }
-  const GlFWMonitor &MonitorsPrimary(void) const { return *moPrimary; }
+  const GlFWMonitor *MonitorsPrimaryPtr() const { return moPrimary; }
+  const GlFWMonitor &MonitorsPrimary() const { return *moPrimary; }
   /* -- Monitor list access ------------------------------------------------ */
   const GlFWMonitor &MonitorsGet(const size_t stIndex) const
     { return (*this)[stIndex]; }
   const GlFWMonitor *MonitorsGetPtr(const size_t stIndex) const
     { return &MonitorsGet(stIndex); }
-  const GlFWMonitorListConstIt MonitorsBegin(void) const { return cbegin(); }
-  const GlFWMonitorListConstIt MonitorsEnd(void) const { return cend(); }
-  size_t MonitorsCount(void) const { return size(); }
+  const GlFWMonitorListConstIt MonitorsBegin() const { return cbegin(); }
+  const GlFWMonitorListConstIt MonitorsEnd() const { return cend(); }
+  size_t MonitorsCount() const { return size(); }
   /* ----------------------------------------------------------------------- */
-  GlFWMonitors(void) : moPrimary(nullptr) { }
+  GlFWMonitors() : moPrimary(nullptr) {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

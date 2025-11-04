@@ -20,7 +20,7 @@ class SysMap :                         // Members initially private
   char            *cpMem;              // Handle to memory
   TwoTime          atTime;             // File times (0=creation,1=time)
   /* -- De-init the file map ----------------------------------------------- */
-  void SysMapDeInitInternal(void)
+  void SysMapDeInitInternal()
   { // Have mapped file in memory and if it is not a zero sized map then unmap
     // the file
     if(SysMapIsAvailable() && SysMapIsNotEmpty() &&
@@ -37,7 +37,7 @@ class SysMap :                         // Members initially private
         IdentGet(), SysError());
   }
   /* -- Clear variables ---------------------------------------------------- */
-  void SysMapClearVarsInternal(void)
+  void SysMapClearVarsInternal()
   { // Clear mapped memory to file data
     cpMem = nullptr;
     // Clear handle to map
@@ -46,16 +46,16 @@ class SysMap :                         // Members initially private
     hFile = INVALID_HANDLE_VALUE;
   }
   /* -- Get file handle ---------------------------------------------------- */
-  HANDLE SysMapSetupFile(void)
+  HANDLE SysMapSetupFile()
   { // Open file and return if opened
-    HANDLE hF = CreateFile(UTFtoS16(IdentGetCStr()).c_str(), GENERIC_READ,
+    HANDLE hF = CreateFile(UTFtoS16(IdentGetCStr()).data(), GENERIC_READ,
       FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
     if(hF != INVALID_HANDLE_VALUE) return hF;
     // Failed
     XCS("Open file for mapping failed!", "File", IdentGet());
   }
   /* -- Get size of file --------------------------------------------------- */
-  uint64_t SysMapSetupSize(void)
+  uint64_t SysMapSetupSize()
   { // Get file size and throw exception if failed
     LARGE_INTEGER liSize;
     if(GetFileSizeEx(hFile, &liSize))
@@ -63,7 +63,7 @@ class SysMap :                         // Members initially private
     XCS("Failed to query file size!", "File", IdentGet(), "Handle", hFile);
   }
   /* -- Get handle to map -------------------------------------------------- */
-  HANDLE SysMapSetupMap(void)
+  HANDLE SysMapSetupMap()
   {  // The file is not empty?
     if(SysMapGetSize())
     { // Create the file mapping and return it if successful
@@ -80,7 +80,7 @@ class SysMap :                         // Members initially private
     return INVALID_HANDLE_VALUE;
   }
   /* -- Get pointer to memory ---------------------------------------------- */
-  char *SMSetupMemory(void)
+  char *SMSetupMemory()
   { // Return a blank string if file is empty
     if(!qSize) return const_cast<char*>(cCommon->CommonCBlank());
     // Get pointer to mapped memory and return it if successful
@@ -90,7 +90,7 @@ class SysMap :                         // Members initially private
     XCS("Map view of file failed!", "File", IdentGet(), "Handle", hMap);
   }
   /* -- Get file creation time --------------------------------------------- */
-  TwoTime SysMapSetupTimes(void)
+  TwoTime SysMapSetupTimes()
   { // Get file times and return filetime if successful
     FILETIME ftC, ftM;
     if(GetFileTime(hFile, &ftC, nullptr, &ftM))
@@ -100,15 +100,15 @@ class SysMap :                         // Members initially private
       "File", IdentGet(), "Handle", hFile);
   }
   /* -- Get members ------------------------------------------------ */ public:
-  template<typename RT=char>RT *SysMapGetMemory(void) const
+  template<typename RT=char>RT *SysMapGetMemory() const
     { return reinterpret_cast<RT*>(cpMem); }
-  bool SysMapIsEmpty(void) const { return cpMem == cCommon->CommonCBlank(); }
-  bool SysMapIsNotEmpty(void) const { return !SysMapIsEmpty(); }
-  bool SysMapIsAvailable(void) const { return !!SysMapGetMemory(); }
-  bool SysMapIsNotAvailable(void) const { return !SysMapIsAvailable(); }
-  uint64_t SysMapGetSize(void) const { return qSize; }
-  StdTimeT SysMapGetCreation(void) const { return atTime.front(); }
-  StdTimeT SysMapGetModified(void) const { return atTime.back(); }
+  bool SysMapIsEmpty() const { return cpMem == cCommon->CommonCBlank(); }
+  bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
+  bool SysMapIsAvailable() const { return !!SysMapGetMemory(); }
+  bool SysMapIsNotAvailable() const { return !SysMapIsAvailable(); }
+  uint64_t SysMapGetSize() const { return qSize; }
+  StdTimeT SysMapGetCreation() const { return atTime.front(); }
+  StdTimeT SysMapGetModified() const { return atTime.back(); }
   /* -- Init object from class --------------------------------------------- */
   void SysMapSwap(SysMap &smOther)
   { // Swap members
@@ -120,7 +120,7 @@ class SysMap :                         // Members initially private
     atTime.swap(smOther.atTime);
   }
   /* -- Assign constructor ------------------------------------------------- */
-  void SysMapDeInit(void)
+  void SysMapDeInit()
   { // De-init the map
     SysMapDeInitInternal();
     // Clear the variables
@@ -137,18 +137,18 @@ class SysMap :                         // Members initially private
     hMap(nullptr),                     // No map handle
     cpMem(nullptr),                    // No memory pointer
     atTime{ tC, tM }                   // Set file times
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor on standby --------------------------------------------- */
-  SysMap(void) :
+  SysMap() :
     /* -- Initialisers ----------------------------------------------------- */
     hFile(INVALID_HANDLE_VALUE),       // No file handle
     qSize(0),                          // No size
     hMap(nullptr),                     // No map handle
     cpMem(nullptr),                    // No pointer to memory
     atTime{ 0, 0 }                     // No file times
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Move constructor --------------------------------------------------- */
   SysMap(SysMap &&smOther) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -169,9 +169,9 @@ class SysMap :                         // Members initially private
     hMap(SysMapSetupMap()),            // Get map handle
     cpMem(SMSetupMemory()),            // Get pointer to file in memory
     atTime{ SysMapSetupTimes() }       // Get times of file
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~SysMap(void) { SysMapDeInitInternal(); }
+  ~SysMap() { SysMapDeInitInternal(); }
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

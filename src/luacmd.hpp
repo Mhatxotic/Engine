@@ -30,15 +30,11 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable                      // Lua garbage collector instruction
 { /* -- Private variables -------------------------------------------------- */
-  constexpr static const size_t
-    stConCmdMinLength = 1,             // Minimum length of a console command
-    stConCmdMaxLength = 255;           // Maximum length of a console command
-  /* -- Private variables -------------------------------------------------- */
   LuaCmdMapIt      lcmiIt;             // Iterator to command Console gives us
   /* -- Returns the lua command list --------------------------------------- */
-  LuaCmdMap &GetLuaCmdsList(void) { return cParent->lcmMap; }
+  LuaCmdMap &GetLuaCmdsList() { return cParent->lcmMap; }
   /* -- Returns the end of the lua command list ---------------------------- */
-  LuaCmdMapIt GetLuaCmdsListEnd(void) { return GetLuaCmdsList().end(); }
+  LuaCmdMapIt GetLuaCmdsListEnd() { return GetLuaCmdsList().end(); }
   /* -- Push and get error callback function id ---------------------------- */
   static void LuaCallbackStatic(const Args &aArgs)
   { // Find command in console command list and log if not found (impossible)
@@ -49,32 +45,16 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     // Call the function callback in Lua
     else lcmiIt->second.first.LuaFuncProtectedDispatch(0, aArgs);
   }
-  /* -- Check that the console variable name is valid ---------------------- */
-  bool IsValidConsoleCommandName(const string &strName)
-  { // Check minimum name length
-    if(strName.length() < stConCmdMinLength ||
-       strName.length() > stConCmdMaxLength) return false;
-    // Get address of string. The first character must be a letter
-    const unsigned char *ucpPtr =
-      reinterpret_cast<const unsigned char*>(strName.c_str());
-    if(StdIsNotAlpha(*ucpPtr)) return false;
-    // For each character in cvar name until end of string...
-    for(const unsigned char*const ucpPtrEnd = ucpPtr + strName.length();
-                                   ++ucpPtr < ucpPtrEnd;)
-      if(StdIsNotAlnum(*ucpPtr) && *ucpPtr != '_') return false;
-    // Success!
-    return true;
-  }
   /* -- Unregister the console command from lua -------------------- */ public:
-  const string &Name(void) const { return lcmiIt->first; }
+  const string &Name() const { return lcmiIt->first; }
   /* -- Register user console command from lua ----------------------------- */
   void Init(lua_State*const lS, const string &strName,
     const unsigned int uiMinimum, const unsigned int uiMaximum)
   { // Check that the console command is valid
-    if(!IsValidConsoleCommandName(strName))
+    if(!cConsole->IsValidConsoleCommandName(strName))
       XC("Console command name is invalid!",
-         "Command", strName, "Minimum", stConCmdMinLength,
-         "Maximum", stConCmdMaxLength);
+         "Command", strName, "Minimum", cConsole->stConCmdMinLength,
+         "Maximum", cConsole->stConCmdMaxLength);
     // Check min/Max params and that they're valid
     if(uiMinimum && uiMaximum && uiMaximum < uiMinimum)
       XC("Minimum greater than maximum!",
@@ -90,13 +70,14 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     // forget the lua reference needs to be in place for when the callback
     // is called. Create a function and reference the function on the lua
     // stack and insert the reference into the list
-    lcmiIt = GetLuaCmdsList().insert(GetLuaCmdsListEnd(), { StdMove(strName),
-      make_pair(LuaFunc{ StrAppend("CC:", strName), true },
-        cConsole->RegisterCommand(strName,
-          uiMinimum, uiMaximum, LuaCallbackStatic)) });
+    lcmiIt = GetLuaCmdsList().insert(GetLuaCmdsListEnd(),
+      { StdMove(strName),
+        make_pair(LuaFunc{ StrAppend("CC:", strName), true },
+          cConsole->RegisterCommand(strName,
+            uiMinimum, uiMaximum, LuaCallbackStatic)) });
   }
   /* -- Destructor that unregisters the cvar ------------------------------- */
-  ~Command(void)
+  ~Command()
   { // Return if iterator is not registered
     if(lcmiIt == GetLuaCmdsListEnd()) return;
     // Unregister the command if set
@@ -106,14 +87,14 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     GetLuaCmdsList().erase(lcmiIt);
   }
   /* -- Basic constructor with no init ----------------------------- */ public:
-  Command(void) :
+  Command() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperCommand{                   // Initialise and register the object
       cCommands, this },
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     lcmiIt{ GetLuaCmdsListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Commands, Command, COMMAND) // Finish global Files collector
 /* -- Build a command list (for conlib) ------------------------------------ */

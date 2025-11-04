@@ -16,6 +16,21 @@ using namespace IStd::P;               using namespace IString::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using ::std::chrono::duration_cast;    using ::std::chrono::duration;
+using ::std::chrono::microseconds;     using ::std::chrono::milliseconds;
+using ::std::chrono::nanoseconds;      using ::std::chrono::seconds;
+using ::std::chrono::system_clock;
+using CoreClock = ::std::chrono::high_resolution_clock; // Using HRC
+/* -- Typedefs ------------------------------------------------------------- */
+typedef CoreClock::time_point ClkTimePoint;    // Holds a time
+typedef CoreClock::duration   ClkDuration;     // Holds a duration
+typedef atomic<ClkDuration>   SafeClkDuration; // Thread safe duration
+/* -- Common duration values ----------------------------------------------- */
+static constexpr ClkDuration
+  cd0{ nanoseconds{ 0 } },             cd1MS{ milliseconds{ 1 } },
+  cd10MS{ milliseconds{ 10 } },        cd100MS{ milliseconds{ 100 } },
+  cd1S{ seconds{ 1 } },                cd60S{ seconds{ 60 } };
 /* -- Get count from a duration -------------------------------------------- */
 template<typename DurType>
   static auto ClockGetCount(const ClkDuration &cdDuration)
@@ -34,28 +49,28 @@ static double ClockTimePointRangeToClampedDouble
 /* -- Clock manager -------------------------------------------------------- */
 template<class ClockType = CoreClock>struct ClockManager
 { /* -- Get current time --------------------------------------------------- */
-  auto GetTime(void) const { return ClockType::now(); }
+  auto GetTime() const { return ClockType::now(); }
   /* -- Get time since epoch ----------------------------------------------- */
-  const ClkDuration GetEpochTime(void) const
+  const ClkDuration GetEpochTime() const
     { return GetTime().time_since_epoch(); }
   /* -- Get current time since epoch casted and counted -------------------- */
   template<typename Type,typename ReturnType>
-    const ReturnType GetTimeEx(void) const
+    const ReturnType GetTimeEx() const
       { return static_cast<ReturnType>(ClockGetCount<Type>(GetEpochTime())); }
   /* -- Return time as double ---------------------------------------------- */
-  double GetTimeDouble(void) const
+  double GetTimeDouble() const
     { return ClockDurationToDouble(GetEpochTime()); }
   /* -- Return time since epoch count as integer --------------------------- */
-  template<typename Type=StdTimeT>const Type GetTimeS(void) const
+  template<typename Type=StdTimeT>const Type GetTimeS() const
     { return GetTimeEx<duration<Type>,Type>(); }
   /* -- Return time in microseconds ---------------------------------------- */
-  template<typename Type=uint64_t>const Type GetTimeUS(void) const
+  template<typename Type=uint64_t>const Type GetTimeUS() const
     { return GetTimeEx<microseconds,Type>(); }
   /* -- Return time in milliseconds ---------------------------------------- */
-  template<typename Type=uint64_t>const Type GetTimeMS(void) const
+  template<typename Type=uint64_t>const Type GetTimeMS() const
     { return GetTimeEx<milliseconds,Type>(); }
   /* -- Return time in nanoseconds ----------------------------------------- */
-  template<typename Type=uint64_t>const Type GetTimeNS(void) const
+  template<typename Type=uint64_t>const Type GetTimeNS() const
     { return GetTimeEx<nanoseconds,Type>(); }
   /* -- Get offset time ---------------------------------------------------- */
   const ClkDuration GetDuration(const ClkTimePoint &ctpCurrent) const
@@ -87,7 +102,7 @@ template<class ClockType = CoreClock>struct ClockManager
   const string ToDurationLongString(unsigned int uiCompMax = StdMaxUInt) const
     { return ToDurationRel(0, uiCompMax); }
   /* -- Unused constructor ------------------------------------------------- */
-  ClockManager(void) = default;
+  ClockManager() = default;
 };/* -- Global functors / System time clock functor ------------------------ */
 static const ClockManager<system_clock> cmSys;
 /* -- High resolution clock functor ---------------------------------------- */
@@ -108,14 +123,14 @@ class ClockInterval :                  // Members initially private
   bool CIIsNotTriggered(const ClkTimePoint &ctpT) const
     { return ctpT < ctpNext; }
   /* -- Returns if current timepoint not elapsed yet ----------------------- */
-  bool CIIsNotTriggered(void) const
+  bool CIIsNotTriggered() const
     { return CIIsNotTriggered(this->GetTime()); }
   /* -- Returns if current timepoint elapsed ------------------------------- */
-  bool CIIsTriggered(void) const { return !CIIsNotTriggered(); }
+  bool CIIsTriggered() const { return !CIIsNotTriggered(); }
   /* -- Add time to next limit --------------------------------------------- */
-  void CIAccumulate(void) { ctpNext += cdLimit; }
+  void CIAccumulate() { ctpNext += cdLimit; }
   /* -- Time elapsed? ------------------------------------------------------ */
-  bool CITrigger(void)
+  bool CITrigger()
   { // Return false if time hasn't elapsed yet
     if(CIIsNotTriggered()) return false;
     // Set next time
@@ -124,7 +139,7 @@ class ClockInterval :                  // Members initially private
     return true;
   }
   /* -- Time elapsed? ------------------------------------------------------ */
-  bool CITriggerStrict(void)
+  bool CITriggerStrict()
   { // Get current high res time
     const ClkTimePoint ctpNow{ this->GetTime() };
     // Return false if time hasn't elapsed yet
@@ -135,29 +150,29 @@ class ClockInterval :                  // Members initially private
     return true;
   }
   /* -- Reset trigger ------------------------------------------------------ */
-  void CIReset(void) { ctpNext = this->GetTime() + cdLimit; }
+  void CIReset() { ctpNext = this->GetTime() + cdLimit; }
   /* -- Return time left --------------------------------------------------- */
-  const ClkDuration CIDelta(void) const { return this->GetTime() - ctpNext; }
+  const ClkDuration CIDelta() const { return this->GetTime() - ctpNext; }
   /* -- Sync now ----------------------------------------------------------- */
-  void CISync(void) { ctpNext = this->GetTime(); }
+  void CISync() { ctpNext = this->GetTime(); }
   /* -- Update limit and time now do a duration object --------------------- */
   void CISetLimit(const ClkDuration &duL) { cdLimit = duL; CISync(); }
   /* -- Update limit and time now to a double ------------------------------ */
   void CISetLimit(const double dL)
     { CISetLimit(duration_cast<ClkDuration>(duration<double>(dL))); }
   /* -- Constructor -------------------------------------------------------- */
-  ClockInterval(void) :
+  ClockInterval() :
     /* -- Initialisers ----------------------------------------------------- */
     ctpNext{ this->GetTime() }         // Will trigger next check
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor (set limit by lvalue) ---------------------------------- */
   explicit ClockInterval(const ClkDuration &duL) :
     /* -- Initialisers ----------------------------------------------------- */
     cdLimit{ duL },                    // Copy limit from other class
     ctpNext{ this->GetTime() }         // Will trigger next check
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 }; /* -- End --------------------------------------------------------------- */
 /* == Chronometer ========================================================== */
 template<class CoreClockType = CoreClock,
@@ -174,28 +189,28 @@ class ClockChrono :                    // Members intially private
   double CCDeltaToClampedDouble(const ClkTimePoint &ctpEnd) const
     { return UtilMaximum(CCDeltaRangeToDouble(ctpEnd), 0); }
   /* -- Return uptime as milliseconds in a 64-bit uint --------------------- */
-  uint64_t CCDeltaMS(void) const
+  uint64_t CCDeltaMS() const
     { return static_cast<uint64_t>(
         this->template GetDurationCount<milliseconds>(ctpStart)); }
   /* -- Return uptime as nanoseconds in a 64-bit uint ---------------------- */
-  uint64_t CCDeltaNS(void) const
+  uint64_t CCDeltaNS() const
     { return static_cast<uint64_t>(
         this->template GetDurationCount<nanoseconds>(ctpStart)); }
   /* -- Return uptime as microseconds in a 64-bit uint --------------------- */
-  uint64_t CCDeltaUS(void) const
+  uint64_t CCDeltaUS() const
     { return static_cast<uint64_t>(
         this->template GetDurationCount<microseconds>(ctpStart)); }
   /* -- Return uptime as a double ------------------------------------------ */
-  double CCDeltaToDouble(void) const
+  double CCDeltaToDouble() const
     { return this->TimePointToDouble(ctpStart); }
   /* -- Reset the start time ----------------------------------------------- */
-  void CCReset(void) { ctpStart = this->GetTime(); }
+  void CCReset() { ctpStart = this->GetTime(); }
   /* -- Constructor. Just initialise current time -------------------------- */
-  ClockChrono(void) :        // No parameters
+  ClockChrono() :
     /* -- Initialisers ----------------------------------------------------- */
     ctpStart{ this->GetTime() }        // Set start time
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

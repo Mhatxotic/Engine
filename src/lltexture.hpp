@@ -38,8 +38,8 @@ typedef AgInteger<GLint> AgGLint;
 /* -- Read vector of the specified integer type ---------------------------- */
 template<class VectorValueType, class VectorType = vector<VectorValueType>>
   struct AgIntegerVector : public VectorType
-{ const VectorType &operator()(void) const { return *this; }
-  operator const VectorType&(void) const { return operator()(); }
+{ const VectorType &operator()() const { return *this; }
+  operator const VectorType&() const { return operator()(); }
   explicit AgIntegerVector(lua_State*const lS, const int iArg) :
     VectorType{ LuaUtilToIntVector<VectorType>(lS, iArg)}{} };
 /* ========================================================================= **

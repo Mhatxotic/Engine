@@ -28,9 +28,9 @@ template<typename IntType>class FlagsStorageUnsafe
     /* -- Initialisers ----------------------------------------------------- */
     itV{ itValue }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>constexpr AnyType FlagGet(void) const
+  template<typename AnyType=IntType>constexpr AnyType FlagGet() const
     { return static_cast<AnyType>(itV); }
 };/* ----------------------------------------------------------------------- */
 /* == Atomic storage for flags ============================================= **
@@ -50,7 +50,7 @@ class FlagsStorageSafe :
   /* -- Implicit init constructor (todo, make explicit but many errors!) --- */
   explicit FlagsStorageSafe(const IntType itValue) : SafeType{ itValue } {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>AnyType FlagGet(void) const
+  template<typename AnyType=IntType>AnyType FlagGet() const
     { return static_cast<AnyType>(this->load()); }
 };/* ----------------------------------------------------------------------- */
 /* == Read-only flags helper class ========================================= **
@@ -75,10 +75,10 @@ class FlagsConst :
   constexpr bool FlagIsGreaterEqual(const FlagsConst &fcValue) const
     { return this->FlagGet() >= fcValue.FlagGet(); }
   /* -- Are there not any flags set? --------------------------------------- */
-  constexpr bool FlagIsZero(void) const
+  constexpr bool FlagIsZero() const
     { return this->FlagGet() == static_cast<IntType>(0); }
   /* -- Are any flags actually set? ---------------------------------------- */
-  constexpr bool FlagIsNonZero(void) const { return !FlagIsZero(); }
+  constexpr bool FlagIsNonZero() const { return !FlagIsZero(); }
   /* -- Is flag set with specified value? ---------------------------------- */
   constexpr bool FlagIsSet(const FlagsConst &fcValue) const
     { return (this->FlagGet() & fcValue.FlagGet()) == fcValue.FlagGet(); }
@@ -102,12 +102,12 @@ class FlagsConst :
   constexpr bool FlagIsInMask(const FlagsConst &fcValue) const
     { return !FlagIsNotInMask(fcValue); }
   /* -- Is any of these flags set and cleared? ----------------------------- */
-  constexpr bool FlagIsAnyOfSetAndClear(void) const { return false; }
+  constexpr bool FlagIsAnyOfSetAndClear() const { return false; }
   template<typename ...VarArgs>
     constexpr bool FlagIsAnyOfSetAndClear(const FlagsConst &fcSet,
-      const FlagsConst &fcClear, const VarArgs &...vaVars) const
+      const FlagsConst &fcClear, const VarArgs ...vaArgs) const
   { return FlagIsSetAndClear(fcSet, fcClear) ?
-      true : FlagIsAnyOfSetAndClear(vaVars...); }
+      true : FlagIsAnyOfSetAndClear(vaArgs...); }
   /* -- Is bits set? ------------------------------------------------------- */
   constexpr bool FlagIsEqualToBool(const FlagsConst &fcValue,
     const bool bState) const
@@ -124,9 +124,9 @@ class FlagsConst :
   /* -- Init constructors -------------------------------------------------- */
   template<typename AnyType>
     constexpr explicit FlagsConst(const AnyType atValue) :
-      StorageType{ static_cast<IntType>(atValue) } { }
+      StorageType{ static_cast<IntType>(atValue) } {}
   /* -- Operators ---------------------------------------------------------- */
-  constexpr const FlagsConst operator~(void) const
+  constexpr const FlagsConst operator~() const
     { return FlagsConst{ ~this->template FlagGet<IntType>() }; }
   constexpr const FlagsConst operator|(const FlagsConst &fcRHS) const
     { return FlagsConst{ this->template FlagGet<IntType>() |
@@ -138,7 +138,7 @@ class FlagsConst :
     { return FlagsConst{ this->template FlagGet<IntType>() ^
                          fcRHS.template FlagGet<IntType>() }; }
   /* -- Direct access using class variable name which returns value -------- */
-  constexpr operator IntType(void) const
+  constexpr operator IntType() const
     { return this->template FlagGet<IntType>(); }
 };/* ----------------------------------------------------------------------- */
 /* == Flags helper class =================================================== **
@@ -163,7 +163,7 @@ struct Flags :
     { this->FlagSetInt(itOther); }
   constexpr void FlagReset(const ConstType &ctValue)
     { this->FlagSetInt(ctValue.FlagGet()); }
-  constexpr void FlagReset(void) { this->FlagSetInt(0); }
+  constexpr void FlagReset() { this->FlagSetInt(0); }
   /* -- Not specified bits ------------------------------------------------- */
   constexpr void FlagNot(const ConstType &ctValue)
     { this->FlagSetInt(this->FlagGet() & ~ctValue.FlagGet()); }
@@ -192,7 +192,7 @@ struct Flags :
   constexpr explicit Flags(const IntType &itOther) : ConstType{ itOther } {}
   constexpr explicit Flags(const ConstType &ctOther) : ConstType{ ctOther } {}
   /* -- Default constructor ------------------------------------------------ */
-  constexpr Flags(void) : ConstType{ 0 } {}
+  constexpr Flags() : ConstType{ 0 } {}
 };/* ----------------------------------------------------------------------- */
 /* == Safe flags helper class ============================================== **
 ** ######################################################################### **

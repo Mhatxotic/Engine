@@ -280,7 +280,7 @@ CVarItemStaticList{{
 // ? /dev/shm and the engine should run again.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "err_instance", cCommon->CommonOne(),
-  CB(cCore->CoreSetOneInstance, bool), TBOOLEAN|PAPPCFG },
+  CB(cCore->CoreSetOneInstance, bool), TBOOLEAN|PAPPCFG|PCMDLINE },
 /* == Object cvars ========================================================= */
 // ! OBJ_ARCHIVEMAX
 // ? Specifies the maximum number of archive objects allowed to be registered

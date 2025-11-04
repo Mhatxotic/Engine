@@ -29,11 +29,11 @@ class CreditLib :                      // Members initially private
                    strvAuthor;         // Author of library
   const bool       bCopyright;         // Is copyrighted library
   /* --------------------------------------------------------------- */ public:
-  const size_t &GetID(void) const { return stId; }
-  const string_view &GetName(void) const { return strvName; }
-  const string_view &GetVersion(void) const { return strvVersion; }
-  const string_view &GetAuthor(void) const { return strvAuthor; }
-  bool IsCopyright(void) const { return bCopyright; }
+  const size_t &GetID() const { return stId; }
+  const string_view &GetName() const { return strvName; }
+  const string_view &GetVersion() const { return strvVersion; }
+  const string_view &GetAuthor() const { return strvAuthor; }
+  bool IsCopyright() const { return bCopyright; }
   /* ----------------------------------------------------------------------- */
   CreditLib(const size_t stCreditId, const string_view &strvNName,
     const string_view &strvNVersion, const string_view &strvNAuthor,
@@ -46,7 +46,7 @@ class CreditLib :                      // Members initially private
     strvAuthor{ strvNAuthor },         // Init credit author
     bCopyright{ bNCopyright }          // Init credit copyright status
     /* -- Increment credit id counter -------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* -- Credits list lookup table -------------------------------------------- */
 enum CreditEnums : size_t              // Credit ids
@@ -91,9 +91,9 @@ class Credits                          // Members initially private
   const string strTheoraVersion;       // The only string that needs generating
   const CreditLibList cllCredits;      // Credits list
   /* -- Get credits class ------------------------------------------ */ public:
-  const CreditLibList &CreditGetLibList(void) const { return cllCredits; }
+  const CreditLibList &CreditGetLibList() const { return cllCredits; }
   /* -- Get credits count -------------------------------------------------- */
-  size_t CreditGetItemCount(void) const { return CreditGetLibList().size(); }
+  size_t CreditGetItemCount() const { return CreditGetLibList().size(); }
   /* -- Get credit item ---------------------------------------------------- */
   const CreditLib &CreditGetItem(const CreditEnums ceIndex) const
     { return CreditGetLibList()[ceIndex]; }
@@ -113,7 +113,7 @@ class Credits                          // Members initially private
   const string CreditGetItemText(const CreditEnums ceIndex) const
     { return CreditGetItemText(CreditGetItem(ceIndex)); }
   /* -- Dump credits to log ------------------------------------------------ */
-  void CreditDumpList(void) const
+  void CreditDumpList() const
   { // Iterate through each entry and send library information to log
     cLog->LogNLCInfoExSafe("Credits enumerating $ external libraries...",
       CreditGetItemCount());
@@ -126,7 +126,7 @@ class Credits                          // Members initially private
   CVarReturn CreditDumpList(const bool bDoIt) const
     { if(bDoIt) CreditDumpList(); return ACCEPT; }
   /* -- Default constructor ------------------------------------- */ protected:
-  Credits(void) :                      // No parameters
+  Credits() :
     /* -- Initialisers ----------------------------------------------------- */
     strTheoraVersion{ StrFormat("$.$.$", // Generate Theora version string
       theora_version_number()       & 0x00FF,

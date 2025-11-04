@@ -17,24 +17,23 @@ using namespace ILuaLib::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Class for collector class name in LUA -------------------------------- */
-class LuaIdent {
-  /* -- Private variables -------------------------------------------------- */
+class LuaIdent
+{ /* -- Private variables -------------------------------------------------- */
   const string_view svName;            // Name of class
-  /* -- Private variables ----------------------------------------- */ private:
   const int        &iRef;              // Reference to namespace in Lua
   /* -- Get reference ---------------------------------------------- */ public:
-  int LuaIdentGetRef(void) const { return iRef; }
+  int LuaIdentGetRef() const { return iRef; }
   /* -- Get name of class -------------------------------------------------- */
-  const char* LuaIdentCStr(void) const { return svName.data(); }
+  const char* LuaIdentCStr() const { return svName.data(); }
   /* -- Get string view name of class -------------------------------------- */
-  const string_view &LuaIdentStr(void) const { return svName; }
+  const string_view &LuaIdentStr() const { return svName; }
   /* -- Constructor --------------------------------------------- */ protected:
-  explicit LuaIdent(const string_view svNName, const LuaClassId lciId) :
+  LuaIdent(const string_view svNName, const LuaClassId lciId) :
     /* --------------------------------------------------------------------- */
     svName{ svNName },                 // Set name of class
     iRef(llcirAPI[lciId])              // Alias Lua class reference storage
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 };                                     // End of private module namespace
 /* ------------------------------------------------------------------------- */

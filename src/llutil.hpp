@@ -257,6 +257,44 @@ LLFUNC(Explode, 1, LuaUtilExplode(lS))
 /* ------------------------------------------------------------------------- */
 LLFUNC(ExplodeEx, 1, LuaUtilExplodeEx(lS))
 /* ========================================================================= */
+// $ Util.FlushArray
+// > Array:table=The array table of indices to flush.
+// ? Clears the specified array table of indices from end to start.
+/* ------------------------------------------------------------------------- */
+LLFUNC(FlushArray, 0, LuaUtilClearArraySafe(lS, 1));
+/* ========================================================================= */
+// $ Util.FlushArrays
+// > Array:table...=A sequence of tables with indices to flush.
+// ? Clears the multiple specified array tables of indices.
+/* ------------------------------------------------------------------------- */
+LLFUNC(FlushArrays, 0, LuaUtilClearArrays(lS, 1));
+/* ========================================================================= */
+// $ Util.FlushObject
+// > Object:table=The object table of key pairs to flush.
+// ? Clears the specified object table of key pairs.
+/* ------------------------------------------------------------------------- */
+LLFUNC(FlushObject, 0, LuaUtilClearObjectSafe(lS, 1));
+/* ========================================================================= */
+// $ Util.FlushObjects
+// > Object:table...=A sequence of tables with key pairs to flush.
+// ? Clears the multiple specified tables of key pairs.
+/* ------------------------------------------------------------------------- */
+LLFUNC(FlushObjects, 0, LuaUtilClearObjects(lS, 1));
+/* ========================================================================= */
+// $ Util.FlushTable
+// > Table:table=The table of indices and key pairs to flush.
+// ? Clears the specified hybrid table of both indices first and then key
+// ? pairs.
+/* ------------------------------------------------------------------------- */
+LLFUNC(FlushTable, 0, LuaUtilClearTableSafe(lS, 1));
+/* ========================================================================= */
+// $ Util.FlushTables
+// > Table:table...=A sequence of tables with indices and key pairs to flush.
+// ? Clears the multiple specified hybrid tables of both indices first and
+// ? then key pairs.
+/* ------------------------------------------------------------------------- */
+LLFUNC(FlushTables, 0, LuaUtilClearTables(lS, 1));
+/* ========================================================================= */
 // $ Util.FormatNTime
 // > Format:stringr=The strftime format string.
 // < Date:string=The timestamp converted to a string.
@@ -1066,6 +1104,8 @@ LLRSBEGIN                              // Util.* namespace functions begin
   LLRSFUNC(Compact),       LLRSFUNC(CountOf),        LLRSFUNC(CRC),
   LLRSFUNC(CRCA),          LLRSFUNC(Duration),       LLRSFUNC(EntDecode),
   LLRSFUNC(EntEncode),     LLRSFUNC(Explode),        LLRSFUNC(ExplodeEx),
+  LLRSFUNC(FlushArray),    LLRSFUNC(FlushObject),    LLRSFUNC(FlushTable),
+  LLRSFUNC(FlushArrays),   LLRSFUNC(FlushObjects),   LLRSFUNC(FlushTables),
   LLRSFUNC(FormatNTime),   LLRSFUNC(FormatNTimeUTC), LLRSFUNC(FormatNumber),
   LLRSFUNC(FormatNumberI), LLRSFUNC(FormatTime),     LLRSFUNC(FormatTimeUTC),
   LLRSFUNC(GetRatio),      LLRSFUNC(Grouped),        LLRSFUNC(Hex),

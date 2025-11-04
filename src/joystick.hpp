@@ -17,16 +17,16 @@ using namespace IStd::P;               using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == Input flags ========================================================== */
-BUILD_FLAGS(Input,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Input,                     // Input flags
   /* ----------------------------------------------------------------------- */
-  // No flags                          Mouse cursor is enabled?
-  IF_NONE                   {Flag(0)}, IF_CURSOR                 {Flag(1)},
-  // Full-screen toggler enabled?      Mouse cursor has focus?
-  IF_FSTOGGLER              {Flag(2)}, IF_MOUSEFOCUS             {Flag(3)},
-  // Send events at startup            Do joystick polling?
-  IF_INITEVENTS             {Flag(4)}, IF_POLLJOYSTICKS          {Flag(5)}
-);
+  IF_NONE                   {Flag(0)}, // No flags
+  IF_CURSOR                 {Flag(1)}, // Mouse cursor is enabled?
+  IF_FSTOGGLER              {Flag(2)}, // Full-screen toggler enabled?
+  IF_MOUSEFOCUS             {Flag(3)}, // Mouse cursor has focus?
+  IF_INITEVENTS             {Flag(4)}, // Send events at startup?
+  IF_POLLJOYSTICKS          {Flag(5)}  // Do joystick polling?
+);/* ----------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 class Joystick :
   /* -- Base classes ------------------------------------------------------- */
@@ -39,8 +39,8 @@ class Joystick :
   static void OnGamePad(int iJId, int iEvent)
     { cEvtMain->Add(EMC_INP_JOY_STATE, iJId, iEvent); }
   /* -- Enable or disable joystick polling --------------------------------- */
-  void JoyEnablePoll(void) { bPoll = true; }
-  void JoyDisablePoll(void) { bPoll = false; }
+  void JoyEnablePoll() { bPoll = true; }
+  void JoyDisablePoll() { bPoll = false; }
   /* -- Dispatch connected event to lua ------------------------------------ */
   void JoyDispatchLuaEvent(const size_t stJoystickId, const bool bConnected)
     { lfOnJoyState.LuaFuncDispatch(static_cast<lua_Integer>(stJoystickId),
@@ -79,27 +79,27 @@ class Joystick :
     }
   }
   /* -- Poll joysticks if enabled ------------------------------------------ */
-  void JoyPoll(void)
+  void JoyPoll()
     { if(bPoll)
         for(JoyInfo &jiRef : *this) jiRef.JoyRefreshDataIfConnected(); }
   /* -- Return event ------------------------------------------------------- */
-  LuaFunc &JoyGetLuaEvent(void) { return lfOnJoyState; }
+  LuaFunc &JoyGetLuaEvent() { return lfOnJoyState; }
   /* -- Return writable joystick data -------------------------------------- */
   JoyInfo &JoyGet(const size_t stJId) { return (*this)[stJId]; }
   /* -- Return read-only joystick data ------------------------------------- */
   const JoyInfo &JoyGetConst(const size_t stJId) const
     { return (*this)[stJId]; }
   /* -- Get read-only acess to joystick list ------------------------------- */
-  const JoyList &JoyListGetConst(void) const { return *this; }
+  const JoyList &JoyListGetConst() const { return *this; }
   /* -- Get connected count ----------------------------------------------- */
-  size_t JoyGetConnected(void) const { return stConnected; }
+  size_t JoyGetConnected() const { return stConnected; }
   /* -- Return joysticks count --------------------------------------------- */
-  size_t JoyGetCount(void) const { return JoyListGetConst().size(); }
+  size_t JoyGetCount() const { return JoyListGetConst().size(); }
   /* -- Return if joystick is connected ------------------------------------ */
   bool JoyIsConnected(const size_t stId)
     { return JoyGetConst(stId).JoyIsConnected(); }
   /* -- Clear buttons and axis state --------------------------------------- */
-  void JoyClearStates(void)
+  void JoyClearStates()
     { StdForEach(par_unseq, this->begin(), this->end(),
         [](JoyInfo &jiRef) { jiRef.JoyClearButtonStateIfConnected(); }); }
   /* -- DeInitialise a joystick -------------------------------------------- */
@@ -125,7 +125,7 @@ class Joystick :
     JoyDispatchLuaEvent(stJoystickId, true);
   }
   /* -- Return a joystick is present? -------------------------------------- */
-  void JoyDetect(void)
+  void JoyDetect()
   { // Reset connected count
     stConnected = 0;
     // Enumerate joysticks and if joystick is present?
@@ -152,7 +152,7 @@ class Joystick :
       JoyGetConnected());
   }
   /* -- Reset environment -------------------------------------------------- */
-  void JoyReset(void)
+  void JoyReset()
   { // For each joystick
     for(JoyInfo &jiRef : *this)
     { // Clear the connected flag and clear the state
@@ -164,19 +164,19 @@ class Joystick :
     JoyDisablePoll();
   }
   /* -- Init/DeInit joystick callback -------------------------------------- */
-  void JoyInit(void) const { GlFWSetJoystickCallback(OnGamePad); }
-  void JoyDeInit(void) const { GlFWSetJoystickCallback(nullptr); }
+  void JoyInit() const { GlFWSetJoystickCallback(OnGamePad); }
+  void JoyDeInit() const { GlFWSetJoystickCallback(nullptr); }
   /* -- Constructor --------------------------------------------- */ protected:
-  Joystick(void) :
+  Joystick() :
     /* -- Initialisers ----------------------------------------------------- */
     JoyList{ UtilMkFilledClassContainer<JoyList,int>() },
     bPoll(false),                      // Init disabled polling
     lfOnJoyState{ "OnJoyState" },      // Init joy state lua event
     stConnected(0)                     // Init joystick count to zero
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Joystick(void) { JoyDeInit(); }
+  ~Joystick() { JoyDeInit(); }
   /* -- Handle a deadzone change ----------------------------------- */ public:
   CVarReturn SetDefaultJoyDZ(const float fDZ,
     const function<void(JoyInfo&)> &fcbCallBack)

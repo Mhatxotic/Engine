@@ -14,7 +14,7 @@ class SysBase :                        // Safe exception handler namespace
   /* -- Base classes ------------------------------------------------------- */
   public SysVersion                    // Version information class
 { /* -- Class to rebuffer system generated output to log ------------------- */
-#if !defined(BUILD) && defined(MACOS)  // Not applicable on build or not MacOS
+#if !defined(BUILD) && defined(MACOS)  // Not applicable on command-line tool
   class Redirect final :               // Linux: close() doesn't unblock read()
     /* -- Base classes ----------------------------------------------------- */
     private Thread,                    // Thread to monitor file descriptor
@@ -56,9 +56,9 @@ class SysBase :                        // Safe exception handler namespace
       return TS_OK;
     }
     /* --------------------------------------------------------------------- */
-    void CloseRead(void) { if(iRead) close(iRead); }
+    void CloseRead() { if(iRead) close(iRead); }
     /* --------------------------------------------------------------------- */
-    void Reset(void)
+    void Reset()
     { // Close write pipe handle if opened
       if(iWrite != iInvalid) close(iWrite);
       // Thread is running?
@@ -75,7 +75,7 @@ class SysBase :                        // Safe exception handler namespace
       if(iSaved != iInvalid) dup2(iSaved, iRequested);
     }
     /* ------------------------------------------------------------- */ public:
-    void ResetSafe(void)
+    void ResetSafe()
     { // Do the reset
       Reset();
       // Reset the handles so shutdown doesn't trigger on destruction
@@ -110,7 +110,7 @@ class SysBase :                        // Safe exception handler namespace
         ThreadInit(bind(&Redirect::ThreadMain, this, _1), this);
     }
     /* --------------------------------------------------------------------- */
-    ~Redirect(void)
+    ~Redirect()
     { // Close the handles
       Reset();
       // Close the duplicated std handle in the constructor
@@ -274,12 +274,12 @@ class SysBase :                        // Safe exception handler namespace
     // Add extra information if set
     if(*cpExtra) osS << cCommon->CommonLf() << cpExtra << cCommon->CommonLf();
  // Not building the command line too?
-#if !defined(BUILD) && defined(MACOS)
+#if !defined(BUILD) && defined(MACOS)  // Not applicable on command-line tool
     // Shut down the stderr monitoring thread
     rStdErr.ResetSafe();
 #endif
     // Print it to stderr
-    fputs(osS.str().c_str(), stderr);
+    fputs(osS.str().data(), stderr);
     // Dump mods to log
     DumpMods(osS);
     // Add trace header
@@ -438,7 +438,7 @@ class SysBase :                        // Safe exception handler namespace
       // Sent when we grow a file larger than the maximum allowed size.
       case SIGXFSZ: return DebugMessage("XFSZ (File size threshold)");
       // Unrecognised signal?
-      default: return DebugMessage(StrFormat("UNKNOWN<$>", iSignal).c_str());
+      default: return DebugMessage(StrFormat("UNKNOWN<$>", iSignal).data());
     }
   }
   /* ----------------------------------------------------------------------- */
@@ -471,14 +471,14 @@ class SysBase :                        // Safe exception handler namespace
               reinterpret_cast<void*>(&tWT), sizeof(tWT)) < 0 ? 2 : 0);
   }
   /* -- Check if process is in background ---------------------------------- */
-  static bool IsInBackground(void)
+  static bool IsInBackground()
   { // Get terminal foreground process and return if in backround
     const pid_t pTerminal = tcgetpgrp(STDOUT_FILENO), pParent = getpgrp();
     return pTerminal != pParent;
   }
   /* ------------------------------------------------------------ */ protected:
-  ~SysBase(void) noexcept(true)
-  { // Uninstall safe signals
+  ~SysBase() noexcept(true)
+  { // Uninstall safe signals (signal() is not thread safe)
     for(SignalPair &spPair : slSignals)
       if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)
         cLog->LogWarningExSafe("Failed to restore signal $ handler! $.",
@@ -514,18 +514,19 @@ class SysBase :                        // Safe exception handler namespace
       { SIGXCPU, HandleSignalStatic }, { SIGXFSZ, HandleSignalStatic },
     }}
     /* --------------------------------------------------------------------- */
-  { // Install all those signal handlers
+  { // Install all those signal handlers (signal() is not thread safe.)
     for(SignalPair &spPair : slSignals)
     { // Set the signal and check for error
       spPair.second = signal(spPair.first, spPair.second);
       if(spPair.second == SIG_ERR)
         XCL("Failed to install signal handler!", "Id", spPair.first);
     } // Increase resource limits we can change so the engine can do more
-    for(ResourceLimitMapPair &rlmpPair : rlmLimits)
+    StdForEach(par_unseq, rlmLimits.begin(), rlmLimits.end(),
+      [](ResourceLimitMapPair &rlmpPair)
     { // Get the limit for this resource
       if(!getrlimit(rlmpPair.first, &rlmpPair.second))
       { // Ignore if value doesn't need to change
-        if(rlmpPair.second.rlim_cur >= rlmpPair.second.rlim_max) continue;
+        if(rlmpPair.second.rlim_cur >= rlmpPair.second.rlim_max) return;
         // Set maximum allowed and if failed?
         const rlim_t rtOld = rlmpPair.second.rlim_cur;
         rlmpPair.second.rlim_cur = rlmpPair.second.rlim_max;
@@ -544,7 +545,7 @@ class SysBase :                        // Safe exception handler namespace
       else cLog->LogWarningExSafe(
         "System failed to get limit for resource $<0x$$$>: $!",
         rlmpPair.first, hex, rlmpPair.first, dec, SysError());
-    }
+    });
   }
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \

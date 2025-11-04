@@ -21,12 +21,13 @@ using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFlags;                using namespace IFStream::P;
 using namespace IHelper::P;            using namespace IIdent::P;
 using namespace ILog::P;               using namespace IMemory::P;
-using namespace IParser::P;            using namespace IPSplit::P;
-using namespace IStat::P;              using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IThread::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS;
+using namespace IMutex::P;             using namespace IParser::P;
+using namespace IPSplit::P;            using namespace IStat::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IThread::P;            using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS;
+using ::std::terminate_handler;        using ::std::set_terminate;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == System module data =================================================== **
@@ -45,21 +46,21 @@ class SysModuleData :                  // Members initially private
                    strComments,        // Comments of module
                    strVersion;         // Version as string
   /* --------------------------------------------------------------- */ public:
-  const string &GetDrive(void) const { return strDrive; }
-  const string &GetDir(void) const { return strDir; }
-  const string &GetFile(void) const { return strFile; }
-  const string &GetExt(void) const { return strExt; }
-  const string &GetFileExt(void) const { return strFileExt; }
-  const string &GetFull(void) const { return strFull; }
-  const string &GetLoc(void) const { return strLoc; }
-  unsigned int GetMajor(void) const { return uiMajor; }
-  unsigned int GetMinor(void) const { return uiMinor; }
-  unsigned int GetBuild(void) const { return uiBuild; }
-  unsigned int GetRevision(void) const { return uiRevision; }
-  const string &GetVendor(void) const { return strVendor; }
-  const string &GetDesc(void) const { return strDesc; }
-  const string &GetComments(void) const { return strComments; }
-  const string &GetVersion(void) const { return strVersion; }
+  const string &GetDrive() const { return strDrive; }
+  const string &GetDir() const { return strDir; }
+  const string &GetFile() const { return strFile; }
+  const string &GetExt() const { return strExt; }
+  const string &GetFileExt() const { return strFileExt; }
+  const string &GetFull() const { return strFull; }
+  const string &GetLoc() const { return strLoc; }
+  unsigned int GetMajor() const { return uiMajor; }
+  unsigned int GetMinor() const { return uiMinor; }
+  unsigned int GetBuild() const { return uiBuild; }
+  unsigned int GetRevision() const { return uiRevision; }
+  const string &GetVendor() const { return strVendor; }
+  const string &GetDesc() const { return strDesc; }
+  const string &GetComments() const { return strComments; }
+  const string &GetVersion() const { return strVersion; }
   /* -- Move constructor --------------------------------------------------- */
   SysModuleData(SysModuleData &&smdO) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -73,7 +74,7 @@ class SysModuleData :                  // Members initially private
     strComments{ StdMove(smdO.GetComments()) }, // Move comments string
     strVersion{ StdMove(smdO.GetVersion()) }    // Move version string
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Initialise all members contructor ---------------------------------- */
   explicit SysModuleData(const string &strF, const unsigned int uiMa,
     const unsigned int uiMi, const unsigned int uiBu, const unsigned int uiRe,
@@ -89,7 +90,7 @@ class SysModuleData :                  // Members initially private
     strComments{ StdMove(strCo) },     // Move comments string
     strVersion{ StdMove(strVer) }      // Move version string
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Initialise filename only constructor ------------------------------- */
   explicit SysModuleData(const string &strF) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -99,7 +100,7 @@ class SysModuleData :                  // Members initially private
     uiBuild(0),                        // Build version not initialised yet
     uiRevision(0)                      // Revision not initialised yet
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == System modules ======================================================= **
 ** ######################################################################### **
@@ -116,13 +117,13 @@ struct SysModules :
     /* -- Initialisers ----------------------------------------------------- */
     SysModMap{ StdMove(smOther) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Init from SysModMap ----------------------------------------------- */
   explicit SysModules(SysModMap &&smlOther) :
     /* -- Initialisers ----------------------------------------------------- */
     SysModMap{ StdMove(smlOther) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Dump module list ------------------------------------------- */ public:
   CVarReturn DumpModuleList(const unsigned int uiShow)
   { // No modules? Return okay
@@ -162,27 +163,27 @@ class SysVersion :
                     strvCompiler,      // Compiler name
                     strvBuildTarget;   // Target architechture
   /* -- Access to engine version data ------------------------------ */ public:
-  const string_view &ENGBuildType(void) const { return strvBuildType; }
-  const string_view &ENGCompVer(void) const { return strvCompVer; }
-  const string_view &ENGCompiled(void) const { return strvCompiled; }
-  const string_view &ENGCompiler(void) const { return strvCompiler; }
-  const string_view &ENGTarget(void) const { return strvBuildTarget; }
-  const string &ENGAuthor(void) const { return smdEng.GetVendor(); }
-  const string &ENGComments(void) const { return smdEng.GetComments(); }
-  const string &ENGDir(void) const { return smdEng.GetDir(); }
-  const string &ENGDrive(void) const { return smdEng.GetDrive(); }
-  const string &ENGExt(void) const { return smdEng.GetExt(); }
-  const string &ENGFile(void) const { return smdEng.GetFile(); }
-  const string &ENGFileExt(void) const { return smdEng.GetFileExt(); }
-  const string &ENGFull(void) const { return smdEng.GetFull(); }
-  const string &ENGLoc(void) const { return smdEng.GetLoc(); }
-  const string &ENGName(void) const { return smdEng.GetDesc(); }
-  const string &ENGVersion(void) const { return smdEng.GetVersion(); }
-  unsigned int ENGBits(void) const { return sizeof(void*)<<3; }
-  unsigned int ENGBuild(void) const { return smdEng.GetBuild(); }
-  unsigned int ENGMajor(void) const { return smdEng.GetMajor(); }
-  unsigned int ENGMinor(void) const { return smdEng.GetMinor(); }
-  unsigned int ENGRevision(void) const { return smdEng.GetRevision(); }
+  const string_view &ENGBuildType() const { return strvBuildType; }
+  const string_view &ENGCompVer() const { return strvCompVer; }
+  const string_view &ENGCompiled() const { return strvCompiled; }
+  const string_view &ENGCompiler() const { return strvCompiler; }
+  const string_view &ENGTarget() const { return strvBuildTarget; }
+  const string &ENGAuthor() const { return smdEng.GetVendor(); }
+  const string &ENGComments() const { return smdEng.GetComments(); }
+  const string &ENGDir() const { return smdEng.GetDir(); }
+  const string &ENGDrive() const { return smdEng.GetDrive(); }
+  const string &ENGExt() const { return smdEng.GetExt(); }
+  const string &ENGFile() const { return smdEng.GetFile(); }
+  const string &ENGFileExt() const { return smdEng.GetFileExt(); }
+  const string &ENGFull() const { return smdEng.GetFull(); }
+  const string &ENGLoc() const { return smdEng.GetLoc(); }
+  const string &ENGName() const { return smdEng.GetDesc(); }
+  const string &ENGVersion() const { return smdEng.GetVersion(); }
+  unsigned int ENGBits() const { return sizeof(void*)<<3; }
+  unsigned int ENGBuild() const { return smdEng.GetBuild(); }
+  unsigned int ENGMajor() const { return smdEng.GetMajor(); }
+  unsigned int ENGMinor() const { return smdEng.GetMinor(); }
+  unsigned int ENGRevision() const { return smdEng.GetRevision(); }
   /* -- Find executable module info and return reference to it -- */ protected:
   const SysModuleData &FindBaseModuleInfo(const size_t stId) const
   { // Find the module, we stored it as a zero, if not found?
@@ -205,7 +206,7 @@ class SysVersion :
     strvCompiler{ COMPILER_NAME },              // Compiler name
     strvBuildTarget{ BUILD_TARGET }             // Target architechture
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == System common ======================================================== **
 ** ######################################################################### **
@@ -254,12 +255,12 @@ class SysCommon                        // Common system structs and funcs
     double         dProcess,           // Process cpu usage
                    dSystem;            // System cpu usage
     /* -- Default constructor ---------------------------------------------- */
-    CPUUseData(void) :
+    CPUUseData() :
       /* -- Initialisers --------------------------------------------------- */
       dProcess(0.0),                   // Zero process cpu usage
       dSystem(0.0)                     // Zero system cpu usage
       /* -- No code -------------------------------------------------------- */
-      { }
+      {}
   } /* --------------------------------------------------------------------- */
   cpuUData;                            // Processor usage data
   /* ----------------------------------------------------------------------- */
@@ -273,7 +274,7 @@ class SysCommon                        // Common system structs and funcs
                    stMProcUse,         // Process memory usage
                    stMProcPeak;        // Peak process memory usage
     /* -- Default constructor ---------------------------------------------- */
-    MemData(void) :
+    MemData() :
       /* -- Initialisers --------------------------------------------------- */
       qMTotal(0),                      // Zero total memory
       qMFree(0),                       // Zero free memory
@@ -283,50 +284,50 @@ class SysCommon                        // Common system structs and funcs
       stMProcUse(0),                   // Zero process usage
       stMProcPeak(0)                   // Zero process peak usage
       /* -- No code -------------------------------------------------------- */
-      { }
+      {}
   } /* --------------------------------------------------------------------- */
   memData;                             // Memory data
   /* --------------------------------------------------------------- */ public:
-  bool EXEModified(void) const { return exeData.bExeIsModified; }
-  unsigned int EXEHeaderSum(void) const { return exeData.ulHeaderSum; }
-  unsigned int EXECheckSum(void) const { return exeData.ulCheckSum; }
-  bool EXEBundled(void) const { return exeData.bExeIsBundled; }
+  bool EXEModified() const { return exeData.bExeIsModified; }
+  unsigned int EXEHeaderSum() const { return exeData.ulHeaderSum; }
+  unsigned int EXECheckSum() const { return exeData.ulCheckSum; }
+  bool EXEBundled() const { return exeData.bExeIsBundled; }
   /* ----------------------------------------------------------------------- */
-  const string &OSName(void) const { return osData.strName; }
-  const string &OSNameEx(void) const { return osData.strNameEx; }
-  bool IsOSNameExSet(void) const { return !OSNameEx().empty(); }
-  unsigned int OSMajor(void) const { return osData.uiMajor; }
-  unsigned int OSMinor(void) const { return osData.uiMinor; }
-  unsigned int OSBuild(void) const { return osData.uiBuild; }
-  unsigned int OSBits(void) const { return osData.uiBits; }
-  const string &OSLocale(void) const { return osData.strLocale; }
-  bool OSIsAdmin(void) const { return osData.bIsAdmin; }
-  bool OSIsAdminDefault(void) const { return osData.bIsAdminDef; }
+  const string &OSName() const { return osData.strName; }
+  const string &OSNameEx() const { return osData.strNameEx; }
+  bool IsOSNameExSet() const { return !OSNameEx().empty(); }
+  unsigned int OSMajor() const { return osData.uiMajor; }
+  unsigned int OSMinor() const { return osData.uiMinor; }
+  unsigned int OSBuild() const { return osData.uiBuild; }
+  unsigned int OSBits() const { return osData.uiBits; }
+  const string &OSLocale() const { return osData.strLocale; }
+  bool OSIsAdmin() const { return osData.bIsAdmin; }
+  bool OSIsAdminDefault() const { return osData.bIsAdminDef; }
   /* ----------------------------------------------------------------------- */
-  size_t CPUCount(void) const { return cpuData.stCpuCount; }
-  unsigned int CPUSpeed(void) const { return cpuData.ulSpeed; }
-  unsigned int CPUFamily(void) const { return cpuData.ulFamily; }
-  unsigned int CPUModel(void) const { return cpuData.ulModel; }
-  unsigned int CPUStepping(void) const { return cpuData.ulStepping; }
-  const string &CPUName(void) const { return cpuData.sProcessorName; }
-  double CPUUsage(void) const { return cpuUData.dProcess; }
-  double CPUUsageSystem(void) const { return cpuUData.dSystem; }
+  size_t CPUCount() const { return cpuData.stCpuCount; }
+  unsigned int CPUSpeed() const { return cpuData.ulSpeed; }
+  unsigned int CPUFamily() const { return cpuData.ulFamily; }
+  unsigned int CPUModel() const { return cpuData.ulModel; }
+  unsigned int CPUStepping() const { return cpuData.ulStepping; }
+  const string &CPUName() const { return cpuData.sProcessorName; }
+  double CPUUsage() const { return cpuUData.dProcess; }
+  double CPUUsageSystem() const { return cpuUData.dSystem; }
   /* ----------------------------------------------------------------------- */
-  uint64_t RAMTotal(void) const { return memData.qMTotal; }
-  double RAMTotalMegs(void) const
+  uint64_t RAMTotal() const { return memData.qMTotal; }
+  double RAMTotalMegs() const
     { return static_cast<double>(RAMTotal()) / 1048576; }
-  uint64_t RAMFree(void) const { return memData.qMFree; }
-  double RAMFreeMegs(void) const
+  uint64_t RAMFree() const { return memData.qMFree; }
+  double RAMFreeMegs() const
     { return static_cast<double>(RAMFree()) / 1048576; }
-  uint64_t RAMUsed(void) const { return memData.qMUsed; }
-  size_t RAMFree32(void) const { return memData.stMFree; }
-  double RAMFree32Megs(void) const
+  uint64_t RAMUsed() const { return memData.qMUsed; }
+  size_t RAMFree32() const { return memData.stMFree; }
+  double RAMFree32Megs() const
     { return static_cast<double>(RAMFree32()) / 1048576; }
-  double RAMLoad(void) const { return memData.dMLoad; }
-  size_t RAMProcUse(void) const { return memData.stMProcUse; }
-  double RAMProcUseMegs(void) const
+  double RAMLoad() const { return memData.dMLoad; }
+  size_t RAMProcUse() const { return memData.stMProcUse; }
+  double RAMProcUseMegs() const
     { return static_cast<double>(RAMProcUse()) / 1048576; }
-  size_t RAMProcPeak(void) const { return memData.stMProcPeak; }
+  size_t RAMProcPeak() const { return memData.stMProcPeak; }
   /* -- Constructor --------------------------------------------- */ protected:
   SysCommon(ExeData &&edExe, OSData &&osdOS, CPUData &&cpudCPU) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -334,7 +335,7 @@ class SysCommon                        // Common system structs and funcs
     osData{ StdMove(osdOS) },           // Move operating system data
     cpuData{ StdMove(cpudCPU) }         // Move processor data
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == SysPipeBase class ==================================================== **
 ** ######################################################################### **
@@ -350,13 +351,13 @@ class SysPipeBase :
   void SysPipeBaseSetStatus(const int64_t qwNewCode)
     { qwExitCode = qwNewCode; }
   /* -- Return status code ----------------------------------------- */ public:
-  int64_t SysPipeBaseGetStatus(void) const { return qwExitCode; }
+  int64_t SysPipeBaseGetStatus() const { return qwExitCode; }
   /* -- Constructor with init ---------------------------------------------- */
-  SysPipeBase(void) :
+  SysPipeBase() :
     /* -- Initialisers ----------------------------------------------------- */
     qwExitCode(127)                    // Standard exit code
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- End ---------------------------------------------------------------- */
 /* == SysConBase class ===================================================== **
 ** ######################################################################### **
@@ -365,10 +366,10 @@ class SysPipeBase :
 ** -- Typedefs ------------------------------------------------------------- */
 BUILD_FLAGS(SysCon,                    // Console flags classes
   /* ----------------------------------------------------------------------- */
-  // No settings?                      Cursor is visible?
-  SCO_NONE                  {Flag(0)}, SCO_CURVISIBLE            {Flag(1)},
-  // Cursor is in insert mode?         Exit requested?
-  SCO_CURINSERT             {Flag(2)}, SCO_EXIT                  {Flag(3)}
+  SCO_NONE                  {Flag(0)}, // No settings?
+  SCO_CURVISIBLE            {Flag(1)}, // Cursor is visible?
+  SCO_CURINSERT             {Flag(2)}, // Cursor is in insert mode?
+  SCO_EXIT                  {Flag(3)}  // Exit requested?
 );/* ----------------------------------------------------------------------- */
 class SysConBase :
   /* -- Base classes ------------------------------------------------------- */
@@ -377,17 +378,16 @@ class SysConBase :
   enum KeyType { KT_NONE, KT_KEY, KT_CHAR, KT_RESET }; // GetKey return types
   /* -- For handling CTRL_CLOSE_EVENT --------------------------- */ protected:
   condition_variable cvExit;           // Exit condition variable
-  mutex            mExit;              // Exit mutex
   /* -- Handle CTRL_CLOSE_EVENT ------------------------------------ */ public:
-  bool SysConIsClosing(void) const { return FlagIsSet(SCO_EXIT); }
-  bool SysConIsNotClosing(void) const { return !SysConIsClosing(); }
-  void SysConCanCloseNow(void) { cvExit.notify_one(); }
+  bool SysConIsClosing() const { return FlagIsSet(SCO_EXIT); }
+  bool SysConIsNotClosing() const { return !SysConIsClosing(); }
+  void SysConCanCloseNow() { cvExit.notify_one(); }
   /* -- Constructor --------------------------------------------- */ protected:
-  SysConBase(void) :
+  SysConBase() :
     /* -- Initialisers ----------------------------------------------------- */
     SysConFlags{ SCO_NONE }            // Current flags
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == Includes ============================================================= **
 ** ######################################################################### **
@@ -432,18 +432,18 @@ class System :                         // The main system class
   /* ----------------------------------------------------------------------- */
   const string     strRoamingDir;      // Roaming directory
   /* -- Callback for set_terminate() defined later ------------------------- */
-  static void TerminateHandler[[noreturn]](void);
+  static void TerminateHandler[[noreturn]]();
   /* -- Return readable process and thread id ---------------------- */ public:
-  size_t GetReadablePid(void) const { return stProcessId; }
-  size_t GetReadableTid(void) const { return stThreadId; }
+  size_t GetReadablePid() const { return stProcessId; }
+  size_t GetReadableTid() const { return stThreadId; }
   /* -- Update CPU usage information --------------------------------------- */
-  void UpdateCPUUsage(void)
+  void UpdateCPUUsage()
     { if(ciCpu.CITriggerStrict()) UpdateCPUUsageData(); }
   /* -- Update and return process CPU usage -------------------------------- */
-  double UpdateAndGetCPUUsage(void)
+  double UpdateAndGetCPUUsage()
     { UpdateCPUUsage(); return CPUUsage(); }
   /* -- Update and return system CPU usage --------------------------------- */
-  double UpdateAndGetCPUUsageSystem(void)
+  double UpdateAndGetCPUUsageSystem()
     { UpdateCPUUsage(); return CPUUsageSystem(); }
   /* -- Show message box with window handle (thiscall) --------------------- */
   unsigned int SysMsgEx(const string &strReason, const string &strMessage,
@@ -451,38 +451,38 @@ class System :                         // The main system class
       { return SysMessage(GetWindowHandle(),
           StrAppend(ENGName(), ' ', strReason), strMessage, uiFlags); }
   /* -- Get descriptor strings --------------------------------------------- */
-  const string_view &GetGuestTitle(void) const { return strvTitle; }
-  const string_view &GetGuestShortTitle(void) const { return strvShortTitle; }
-  const string_view &GetGuestVersion(void) const { return strvVersion; }
-  const string_view &GetGuestAuthor(void) const { return strvAuthor; }
-  const string_view &GetGuestCopyright(void) const { return strvCopyright; }
-  const string_view &GetGuestDescription(void) const {return strvDescription; }
-  const string_view &GetGuestWebsite(void) const { return strvWebsite; }
+  const string_view &GetGuestTitle() const { return strvTitle; }
+  const string_view &GetGuestShortTitle() const { return strvShortTitle; }
+  const string_view &GetGuestVersion() const { return strvVersion; }
+  const string_view &GetGuestAuthor() const { return strvAuthor; }
+  const string_view &GetGuestCopyright() const { return strvCopyright; }
+  const string_view &GetGuestDescription() const {return strvDescription; }
+  const string_view &GetGuestWebsite() const { return strvWebsite; }
   /* ----------------------------------------------------------------------- */
-  const CoreFlagsConst GetCoreFlags(void) const { return cfMode; }
+  const CoreFlagsConst GetCoreFlags() const { return cfMode; }
   bool IsCoreFlagsHave(const CoreFlagsConst cfFlags) const
     { return !cfFlags || GetCoreFlags().FlagIsSet(cfFlags); }
   bool IsCoreFlagsNotHave(const CoreFlagsConst cfFlags) const
     { return !IsCoreFlagsHave(cfFlags); }
-  bool IsGraphicalMode(void) const
+  bool IsGraphicalMode() const
     { return GetCoreFlags().FlagIsSet(CFL_VIDEO); }
-  bool IsNotGraphicalMode(void) const { return !IsGraphicalMode(); }
-  bool IsTextMode(void) const
+  bool IsNotGraphicalMode() const { return !IsGraphicalMode(); }
+  bool IsTextMode() const
     { return GetCoreFlags().FlagIsSet(CFL_TEXT); }
-  bool IsNotTextMode(void) const { return !IsTextMode(); }
-  bool IsAudioMode(void) const
+  bool IsNotTextMode() const { return !IsTextMode(); }
+  bool IsAudioMode() const
     { return GetCoreFlags().FlagIsSet(CFL_AUDIO); }
-  bool IsNotAudioMode(void) const { return !IsAudioMode(); }
-  bool IsTimerMode(void) const
+  bool IsNotAudioMode() const { return !IsAudioMode(); }
+  bool IsTimerMode() const
     { return GetCoreFlags().FlagIsSet(CFL_TIMER); }
-  bool IsNotTimerMode(void) const { return !IsTimerMode(); }
+  bool IsNotTimerMode() const { return !IsTimerMode(); }
   /* -- Return users roaming directory ------------------------------------- */
-  const string &GetRoamingDir(void) const { return strRoamingDir; }
+  const string &GetRoamingDir() const { return strRoamingDir; }
   /* ----------------------------------------------------------------------- */
   const string_view &GetCoreFlagsString(const CoreFlagsConst cfFlags) const
     { return mList.Get(cfFlags); }
   /* ----------------------------------------------------------------------- */
-  const string_view &GetCoreFlagsString(void) const
+  const string_view &GetCoreFlagsString() const
     { return GetCoreFlagsString(GetCoreFlags()); }
   /* -- Default error handler ---------------------------------------------- */
   static void CriticalHandler[[noreturn]](const char*const cpMessage)
@@ -494,7 +494,7 @@ class System :                         // The main system class
   /* -- Restore old unexpected and termination handlers --------- */ protected:
   DTORHELPER(~System, set_terminate(thHandler))
   /* -- Default constructor ------------------------------------------------ */
-  System(void) :
+  System() :
     /* -- Initialisers ----------------------------------------------------- */
     mList{{                            // Initialise mode strings list
       "nothing",                       // [00<      0>] (nothing)
@@ -515,7 +515,7 @@ class System :                         // The main system class
       "text+audio+video+timer",        // [15<1|2|4|8>] (text+audio+video+timr)
     }},                                // Mode strings list initialised
     cfMode{ CFL_MASK },                // Guimode initially set by cvars
-    ciCpu{ seconds{ 1 } },             // Cpu refresh time is one seconds
+    ciCpu{ cd1S },                     // Cpu refresh time is one seconds
     stProcessId(GetPid<size_t>()),     // Init readable proceess id
     stThreadId(GetTid<size_t>()),      // Init readable thread id
     thHandler(set_terminate(           // Store current termination handler
@@ -704,7 +704,7 @@ class System :                         // The main system class
   }
 };/* ----------------------------------------------------------------------- */
 /* -- Callback for set_terminate() ----------------------------------------- */
-void System::TerminateHandler(void)
+void System::TerminateHandler()
 { // Show message box to user
   cSystem->SysMsgEx("Abnormal program termination!",
     "An unexpected error has occurred and the engine "

@@ -22,18 +22,18 @@ using namespace ISysUtil::P;           using namespace IUtf::P;
 using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == Input flags ========================================================== */
-BUILD_FLAGS(Input,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Input,                     // Input flags
   /* ----------------------------------------------------------------------- */
-  // No flags                          Mouse cursor is enabled?
-  IF_NONE                   {Flag(0)}, IF_CURSOR                 {Flag(1)},
-  // Full-screen toggler enabled?      Mouse cursor has focus?
-  IF_FSTOGGLER              {Flag(2)}, IF_MOUSEFOCUS             {Flag(3)},
-  // Send events at startup?           Do joystick polling?
-  IF_INITEVENTS             {Flag(4)}, IF_POLLJOYSTICKS          {Flag(5)},
-  // Ignore input on focus loss?       Clamp mouse cursor? (MacOS only)
-  IF_RESTORE                {Flag(6)}, IF_CLAMPMOUSE             {Flag(7)}
-);/* == Input class ======================================================== */
+  IF_NONE                   {Flag(0)}, // No flags?
+  IF_CURSOR                 {Flag(1)}, // Mouse cursor is enabled?
+  IF_FSTOGGLER              {Flag(2)}, // Full-screen toggler enabled?
+  IF_MOUSEFOCUS             {Flag(3)}, // Mouse cursor has focus?
+  IF_INITEVENTS             {Flag(4)}, // Send events at startup?
+  IF_POLLJOYSTICKS          {Flag(5)}, // Do joystick polling?
+  IF_RESTORE                {Flag(6)}, // Ignore input on focus loss?
+  IF_CLAMPMOUSE             {Flag(7)}  // Clamp mouse cursor? (MacOS only)
+);/* ----------------------------------------------------------------------- */
 class Input;                           // Class prototype
 static Input *cInput = nullptr;        // Pointer to global class
 class Input :                          // Handles keyboard, mouse & controllers
@@ -219,7 +219,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       if(uiChar >= 32) cConsole->OnCharPress(uiChar);
   }
   /* -- Commit cursor visibility ------------------------------------------- */
-  void CommitCursor(void)
+  void CommitCursor()
     { cEvtWin->AddUnblock(EWC_WIN_CURSETVIS, FlagIsSet(IF_CURSOR)); }
   /* -- Set visibility of mouse cursor ------------------------------------- */
   void SetCursor(const bool bState)
@@ -230,16 +230,16 @@ class Input :                          // Handles keyboard, mouse & controllers
     CommitCursor();
   }
   /* -- Reset environment -------------------------------------------------- */
-  void ResetEnvironment(void)
+  void ResetEnvironment()
   { // Reset cursor visibility
     SetCursor(true);
     // Reset joystick environment
     JoyReset();
   }
   /* -- Update window size from actual glfw window ------------------------- */
-  void UpdateWindowSize(void) { DimSet(cGlFW->WinGetSize()); }
+  void UpdateWindowSize() { DimSet(cGlFW->WinGetSize()); }
   /* -- Request input state ------------------------------------------------ */
-  void RequestMousePosition(void) const
+  void RequestMousePosition() const
     { cEvtWin->AddUnblock(EWC_WIN_CURPOSGET); }
   /* -- Forcefully move the cursor ----------------------------------------- */
   void SetCursorPos(const GLfloat fX, const GLfloat fY)
@@ -260,11 +260,11 @@ class Input :                          // Handles keyboard, mouse & controllers
       static_cast<double>(fY));
   }
   /* -- Forcefully move the cursor to the centre --------------------------- */
-  void SetCursorCentre(void)
+  void SetCursorCentre()
     { SetCursorPos(cFboCore->GetMatrixWidth() / 2.0f,
                    cFboCore->GetMatrixHeight() / 2.0f); }
   /* -- Init --------------------------------------------------------------- */
-  void Init(void)
+  void Init()
   { // if window not available? This should never happen but we will put
     // this here just incase. The subsequent operations are pointless without
     // a valid GLFW window. Log that initialisation is being skipped and return
@@ -290,7 +290,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       StrFromBoolTF(GlFWIsRawMouseMotionSupported()), JoyGetCount());
   }
   /* -- DeInit ------------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Ignore if class not initialised
     if(IHNotDeInitialise()) return;
     // Log progress
@@ -303,7 +303,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Input, DeInit())
   /* -- Constructor -------------------------------------------------------- */
-  Input(void) :
+  Input() :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Init initialisation helper class
     InputFlags{ IF_NONE },             // No flags set initially

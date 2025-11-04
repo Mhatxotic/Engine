@@ -13,6 +13,23 @@ namespace IToken {                     // Start of module namespace
 using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* -- Simple constructor with no restriction on token count ---------------- */
+template<class StrType, class StrSepType>
+  static void Tokeniser(const StrType &strStr, const StrSepType &strSep,
+    auto &&fFunc)
+{ // Return if string or separator is empty
+  if(strStr.empty() || strSep.empty()) return;
+  // Get length of separator
+  const size_t stSepLen = strSep.length();
+  size_t stStart = 0;
+  // Extract each word and emplace it into our vector of strings
+  for(size_t stLoc; (stLoc = strStr.find(strSep, stStart)) != StdNPos;
+        stStart = stLoc + stSepLen)
+    fFunc({ strStr.data() + stStart, stLoc - stStart });
+  // Theres one left? Make sure it's inserted
+  if(stStart <= strStr.length())
+    fFunc({ strStr.data() + stStart, strStr.size() - stStart });
+};
 /* -- Token class with permission to modify the original string ------------ */
 struct TokenListNC :
   /* -- Base classes ------------------------------------------------------- */
@@ -26,7 +43,7 @@ struct TokenListNC :
     { // None? Return nothing
       case 0: return;
       // One? Return original string.
-      case 1: emplace_back(strStr.c_str()); return;
+      case 1: emplace_back(strStr.data()); return;
       // Something else?
       default:
       { // Reserve memory for all the specified items that are expected
@@ -47,19 +64,21 @@ struct TokenListNC :
           emplace_back(&strStr[stStart]);
         } // Push remainder of string if there is a remainder
         if(stStart < strStr.length()) emplace_back(&strStr[stStart]);
+        // Compact memory
+        shrink_to_fit();
         // Done
         break;
       }
     }
   }
   /* -- Direct conditional access ------------------------------------------ */
-  operator bool(void) const { return !empty(); }
+  operator bool() const { return !empty(); }
   /* -- MOVE assignment constructor ---------------------------------------- */
   TokenListNC(TokenListNC &&tlOther) :
     /* -- Initialisers ----------------------------------------------------- */
     CStrVector{ StdMove(tlOther) }     // Move vector of C-Strings over
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 struct TokenList :                     // Token class with line limit
   /* -- Base classes ------------------------------------------------------- */
@@ -101,13 +120,13 @@ struct TokenList :                     // Token class with line limit
     }
   }
   /* -- Direct conditional access ------------------------------------------ */
-  operator bool(void) const { return !empty(); }
+  operator bool() const { return !empty(); }
   /* -- MOVE assignment constructor ---------------------------------------- */
   TokenList(TokenList &&tlOther) :
     /* -- Initialisers ----------------------------------------------------- */
     StrList{ StdMove(tlOther) }            // Move list of strings over
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 }; /* ---------------------------------------------------------------------- */
 struct Token :                         // Tokeniser class
   /* -- Base classes ------------------------------------------------------- */
@@ -138,6 +157,8 @@ struct Token :                         // Tokeniser class
           emplace_back(strStr.substr(stStart, stLoc - stStart));
         // More text left? Make sure to insert that
         if(stStart < strStr.length()) emplace_back(strStr.substr(stStart));
+        // Compact memory
+        shrink_to_fit();
         // Done
         break;
       }
@@ -145,26 +166,18 @@ struct Token :                         // Tokeniser class
   }
   /* -- Simple constructor with no restriction on token count -------------- */
   Token(const string &strStr, const string &strSep)
-  { // Return if string or separator is empty
-    if(strStr.empty() || strSep.empty()) return;
-    // Get length of separator
-    const size_t stSepLen = strSep.length();
-    size_t stStart = 0;
-    // Extract each word and emplace it into our vector of strings
-    for(size_t stLoc; (stLoc = strStr.find(strSep, stStart)) != StdNPos;
-          stStart = stLoc + stSepLen)
-      emplace_back(strStr.substr(stStart, stLoc - stStart));
-    // Theres one left? Make sure it's inserted
-    if(stStart <= strStr.length()) emplace_back(strStr.substr(stStart));
+  { // Run the generic tokeniser function to split apart the stirng
+    Tokeniser(strStr, strSep, [this](string &&svStr)
+      { emplace_back(StdMove(svStr)); });
   }
   /* -- Direct conditional access ------------------------------------------ */
-  operator bool(void) const { return !empty(); }
+  operator bool() const { return !empty(); }
   /* -- MOVE constructor --------------------------------------------------- */
   Token(Token &&tlOther) :
     /* -- Initialisers ----------------------------------------------------- */
     StrVector{ StdMove(tlOther) }      // Move vector of strings over
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -42,7 +42,8 @@ static const ColourList wNDXtoW32BC{
 class SysCon :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public SysBase,                      // Defined in 'winbase.hpp'
-  public SysConBase                    // Defined in 'syscore.hpp'
+  public SysConBase,                   // Defined in 'syscore.hpp'
+  private Mutex                        // Exit mutex
 { /* -- Private typedefs --------------------------------------------------- */
   typedef vector<CHAR_INFO> CharInfoVec;
   /* -- Private variables -------------------------------------------------- */
@@ -64,8 +65,7 @@ class SysCon :                         // Members initially private
                    stX1, stY1,         // These are the bounds that have
                    stX2, stY2;         // been updated in the last frame
   /* -- Reset drawing bounds ----------------------------------------------- */
-  void ResetDrawingBounds(void)
-    { stX1 = stY1 = StdMaxSizeT; stX2 = stY2 = 0; }
+  void ResetDrawingBounds() { stX1 = stY1 = StdMaxSizeT; stX2 = stY2 = 0; }
   /* -- Control and break handler (thiscall) ------------------------------- */
   static BOOL WINAPI CtrlHandlerStatic(DWORD);
   BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
@@ -89,11 +89,11 @@ class SysCon :                         // Members initially private
     // We'll need to wait for the exit
     if(*cpEvent == '!')
     { // Lock mutex
-      UniqueLock ulExit{ mExit };
-      // Ignore if we've already exited which can happen if shutdown and break
-      // events occur at the same time.
-      if(FlagIsClear(SCO_EXIT))
-      { // Set exit flag so when main loop informs us that it cleaned up
+      MutexUniqueCall([this](UniqueLock &ulLock){
+        // Ignore if we've already exited which can happen if shutdown and
+        // break events occur at the same time.
+        if(FlagIsSet(SCO_EXIT)) return;
+        // Set exit flag so when main loop informs us that it cleaned up
         // properly, it can exit immediately cleaning everything up.
         FlagSet(SCO_EXIT);
         // Show warning
@@ -106,8 +106,8 @@ class SysCon :                         // Members initially private
         // Send logout event
         cEvtMain->RequestQuit();
         // Wait for main thread to clean up so we can exit
-        cvExit.wait(ulExit);
-      }
+        cvExit.wait(ulLock);
+      });
     } // Send normal exit event
     else cEvtMain->RequestQuit();
     // Block default event
@@ -203,11 +203,11 @@ class SysCon :                         // Members initially private
     return ktType;
   }
   /* -- Drawing attributes ------------------------------------------------- */
-  size_t GetPos(void) const { return (stY * stW) + stX; }
-  size_t GetPosEOL(void) const { return (stY * stW) + stW; }
-  size_t EndPos(void) const { return stEndPos; }
+  size_t GetPos() const { return (stY * stW) + stX; }
+  size_t GetPosEOL() const { return (stY * stW) + stW; }
+  size_t EndPos() const { return stEndPos; }
   size_t SafeEnd(const size_t _stP) const
-    { return UtilMinimum(_stP, EndPos()); }
+   { return UtilMinimum(_stP, EndPos()); }
   void SetColour(const WORD wNewCol) { wColour = wNewCol; }
   /* -- Set cursor size ---------------------------------------------------- */
   void SetCursorMode(const bool bInsert)
@@ -253,7 +253,7 @@ class SysCon :                         // Members initially private
     else sCurX = cData.X, sCurY = cData.Y;
   }
   /* -- Commit buffer ------------------------------------------------------ */
-  void CommitBuffer(void)
+  void CommitBuffer()
   { // Done if no bounds changed
     if(stX1 == StdMaxSizeT || stY1 == StdMaxSizeT) return;
     // Set drawing region
@@ -298,15 +298,15 @@ class SysCon :                         // Members initially private
   /* -- Set a character at the current position ---------------------------- */
   void SetChar(const unsigned int uiC=' ') { SetCharPos(GetPos(), uiC); }
   /* -- Clear to end of line ----------------------------------------------- */
-  void ClearLine(void)
+  void ClearLine()
   { // Get number of chars to write
     const size_t stEnd = SafeEnd(GetPosEOL());
     // For each character index in the buffer
     for(size_t stPos = GetPos(); stPos < stEnd; ++stPos) SetCharPos(stPos);
   }
   /* -- Save and restore colour -------------------------------------------- */
-  void PushColour(void) { wColourSaved = wColour; }
-  void PopColour(void) { wColour = wColourSaved; }
+  void PushColour() { wColourSaved = wColour; }
+  void PopColour() { wColour = wColourSaved; }
   /* -- Distance ----------------------------------------------------------- */
   unsigned int Distance(const unsigned int uiD1, const unsigned int uiD2)
   { // Calculate deltas of components
@@ -551,8 +551,9 @@ class SysCon :                         // Members initially private
       // Set length
       stLen = utfString.Length();
       // Reset at scrolled position
-      utfString.Reset(strIL.c_str() +
-        abs(UtilMaximum(0, (int)stLen-(int)stWm2)));
+      utfString.Reset(strIL.data());
+      // Skip characters to the point we're scrolled at
+      utfString.Skip(UtilMaximum(0, stLen - stWm2));
       // Draw start of input text
       WriteLine(StdMove(utfString), stWm2, false);
     } // Left size of text is zero long
@@ -687,7 +688,7 @@ class SysCon :                         // Members initially private
         cSize.X, cSize.Y, SysError());
   }
   /* -- Size updated event (unused on win32) ------------------------------- */
-  void OnResize(void) { }
+  void OnResize() {}
   /* -- Update size -------------------------------------------------------- */
   void UpdateSize(const size_t _stW, const size_t _stH)
   { // Set new bounds minus one and two.
@@ -735,7 +736,7 @@ class SysCon :                         // Members initially private
     cEvtMain->Add(EMC_CON_UPDATE, stW, stH);
   }
   /* -- Initialise --------------------------------------------------------- */
-  void LoadDefaults(void)
+  void LoadDefaults()
   { // Get console screen buffer window info
     CONSOLE_SCREEN_BUFFER_INFO csbInfo;
     if(!GetConsoleScreenBufferInfo(hOut, &csbInfo))
@@ -753,7 +754,7 @@ class SysCon :                         // Members initially private
     FlagSetOrClear(SCO_CURVISIBLE, cciData.bVisible);
   }
   /* -- DeInitialise ------------------------------------------------------- */
-  void SysConDeInit(void)
+  void SysConDeInit()
   { // Done if console not opened
     if(IsNotWindowHandleSet()) return;
     // System console is de-initialising
@@ -795,7 +796,7 @@ class SysCon :                         // Members initially private
       // Throw the error
       XCS("Failed to retrieve console window handle!");
     } // Set console window title (doesn't matter if failed)
-    if(!SetConsoleTitleW(UTFtoS16(cpTitle).c_str()))
+    if(!SetConsoleTitleW(UTFtoS16(cpTitle).data()))
       XCS("Failed to set window title!", "Title", cpTitle);
     // Get output handle
     hOut = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -822,7 +823,7 @@ class SysCon :                         // Members initially private
     cLog->LogDebugSafe("SysCon initialised.");
   }
   /* -- Destructor ---------------------------------------------- */ protected:
-  ~SysCon(void) noexcept(false) { SysConDeInit(); }
+  ~SysCon() noexcept(false) { SysConDeInit(); }
   /* -- Constructor -------------------------------------------------------- */
   explicit SysCon(const string &strW): // Wine version if applicable
     /* -- Initialisers ----------------------------------------------------- */

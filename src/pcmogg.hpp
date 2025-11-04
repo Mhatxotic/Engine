@@ -43,7 +43,7 @@ class CodecOGG :                       // OGG codec object
     { return static_cast<long>(reinterpret_cast<FileMap*>(vFmClassPtr)->
         FileMapTell()); }
   /* -- Return generic ogg callback functions ------------------------------ */
-  const ov_callbacks &GetCallbacks(void) { return ovcCallbacks; }
+  const ov_callbacks &GetCallbacks() { return ovcCallbacks; }
   /* -- Convert vorbis encoded frames to 32-bit floating point PCM audio --- */
   void F32FromVorbisFrames(const ALfloat*const*const fpFramesIn,
     const size_t stFrames, const size_t stChannels, ALfloat *fpPCMOut)
@@ -142,7 +142,7 @@ class CodecOGG :                       // OGG codec object
     return true;
   }
   /* -- Constructor --------------------------------------------- */ protected:
-  CodecOGG(void) :
+  CodecOGG() :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_OGG, "Xiph.Org OGG Audio", "OGG",
       bind(&CodecOGG::Decode, this, _1, _2) },

@@ -47,15 +47,15 @@ class FboCore :                        // The main fbo operations manager
   ClockInterval<>  ciCurrent;          // Frames rendered per last second
   unsigned int     uiFPS, uiFPSCur;    // Frames per second
   /* -- Draw flags --------------------------------------------------------- */
-  bool CanDraw(void) const { return bDraw; }
-  bool CannotDraw(void) const { return !CanDraw(); }
-  void SetDraw(void) { bDraw = true; }
-  void ClearDraw(void) { bDraw = false; }
+  bool CanDraw() const { return bDraw; }
+  bool CannotDraw() const { return !CanDraw(); }
+  void SetDraw() { bDraw = true; }
+  void ClearDraw() { bDraw = false; }
   /* -- Get members -------------------------------------------------------- */
-  GLfloat GetMatrixWidth(void) const { return fMatrixWidth; }
-  GLfloat GetMatrixHeight(void) const { return fMatrixHeight; }
+  GLfloat GetMatrixWidth() const { return fMatrixWidth; }
+  GLfloat GetMatrixHeight() const { return fMatrixHeight; }
   /* -- Reset backbuffer clear colour to colour stored in cvar ------------- */
-  void ResetClearColour(void)
+  void ResetClearColour()
   { // Set main backbuffer colour
     fboMain.FboResetClearColour();
     fboConsole.FboResetClearColour();
@@ -64,16 +64,13 @@ class FboCore :                        // The main fbo operations manager
       cCVars->GetInternal<unsigned int>(VID_CLEARCOLOUR));
   }
   /* -- Render the main fbo from the engine thread ------------------------- */
-  void Render(void)
+  void Render()
   { // Finish and render the main fbo
     FinishMain();
     // Render all the fbos
     FboRender();
-    // We don't want to swap if the guest has chosen not to draw but we should
-    // at least wait if the timer isn't already waiting or the GPU is going to
-    // be locked at 100% in situations where the engine is in standby mode with
-    // an empty tick function.
-    if(CannotDraw()) return cTimer->TimerForceWait();
+    // Flush the pipeline to prevent memory leak and wait if not drawing
+    if(CannotDraw()) { cOgl->Flush(); return cTimer->TimerForceWait(); }
     // Clear redraw flag
     ClearDraw();
     // Unbind current FBO so we select the back buffer to draw to
@@ -135,20 +132,20 @@ class FboCore :                        // The main fbo operations manager
     uiFPSCur = 0;
   }
   /* -- Blits the console fbo to main fbo ---------------------------------- */
-  void BlitConsoleToMain(void) { fboMain.FboBlit(fboConsole); }
+  void BlitConsoleToMain() { fboMain.FboBlit(fboConsole); }
   /* -- Finish main fbo and add it to render list -------------------------- */
-  void FinishMain(void) { fboMain.FboFinishAndRender(); }
+  void FinishMain() { fboMain.FboFinishAndRender(); }
   /* -- Set main fbo as active fbo to draw too ----------------------------- */
-  void ActivateMain(void) { fboMain.FboSetActive(); }
+  void ActivateMain() { fboMain.FboSetActive(); }
   /* -- Called from main tick incase we need to keep catching up frames ---- */
-  void RenderFbosAndFlushMain(void)
+  void RenderFbosAndFlushMain()
   { // Render all the user queud fbos and flush them
     FboRender();
     // Flush main fbo
     fboMain.FboFlush();
   }
   /* -- De-initialise all fbos --------------------------------------------- */
-  void DeInitAllObjectsAndBuiltIns(void)
+  void DeInitAllObjectsAndBuiltIns()
   { // Temporary de-init all user objects
     FboDeInit();
     // Temporary de-init the console and main static fbo classes too
@@ -156,7 +153,7 @@ class FboCore :                        // The main fbo operations manager
     fboMain.FboDeInit();
   }
   /* -- Destroy all fbo's -------------------------------------------------- */
-  void DestroyAllObjectsAndBuiltIns(void)
+  void DestroyAllObjectsAndBuiltIns()
   { // Destroy all the fbos. Note this doesn't destroy the static fbo's as they
     // were unregistered in the init function below.
     cFbos->CollectorDestroyUnsafe();
@@ -187,15 +184,15 @@ class FboCore :                        // The main fbo operations manager
       // within the specified multiple value to prevent cracks appearing in
       // between tiles.
       fAspect = UtilClamp(DimGetWidth<GLfloat>() / DimGetHeight<GLfloat>(),
-        fAspectMin, fAspectMax) / 1.333333f;
+        fAspectMin, fAspectMax) / 1.33333333333333333333333f;
       // For some unknown reason we could be sent invalid values so we need to
       // make sure we ignore this value to prevent error handlers triggering.
       if(fAspect != fAspect) fAspect = 1.0f;
       // Calculate additional width over the 4:3 aspect ratio
       fAddWidth = UtilMaximum(((fWidth * fAspect) - fWidth) / 2.0f, 0.0f);
       // Calculate bounds for stage
-      fLeft = ceilf(-fAddWidth);
-      fRight = floorf(fWidth + fAddWidth);
+      fLeft = floorf(-fAddWidth);
+      fRight = ceilf(fWidth + fAddWidth);
       // Set top and bottom stage bounds
       fTop = 0.0f;
       fBottom = fHeight;
@@ -213,6 +210,24 @@ class FboCore :                        // The main fbo operations manager
       fMatrixHeight = fHeight;
       // Set stage bounds for drawing
       fboMain.FboSetMatrix(fLeft, fTop, fRight, fBottom);
+      // Calculate matrix dimensions
+      double dIW = static_cast<double>(fRight) - static_cast<double>(fLeft),
+             dIH = static_cast<double>(fBottom) - static_cast<double>(fTop),
+             // Viewport dimensions as double
+             dOW = DimGetWidth<double>(),
+             dOH = DimGetHeight<double>();
+      // Stretch matrix into viewport to reveal discardable pixels
+      UtilStretchToOuter(dOW, dOH, dIW, dIH);
+      // Calculate effective scaled viewport width
+      const double dW = dIW - dOW;
+      // Update the drawing position so the main fbo triangles are in the
+      // centre of the screen to try and maintain 1:1 pixel ratio even though
+      // on non-4:3 resolutions, you might not be able to scale the matrix
+      // width into a scaled 16:9 aspect ratio (e.g. 426x240 isn't exactly
+      // 16:9 and would cause one or two extra pixels on 2560x1440).
+      fboMain.FboItemSetVertex(
+        static_cast<GLfloat>(-1.0 - (-dOW        / dW)),  1.0f,
+        static_cast<GLfloat>( 1.0 + (-(dIW - dW) / dW)), -1.0f);
     } // Calculate new fbo width and height
     const GLsizei siFBOWidth = static_cast<GLsizei>(fRight - fLeft),
                   siFBOHeight = static_cast<GLsizei>(fBottom - fTop);
@@ -273,7 +288,7 @@ class FboCore :                        // The main fbo operations manager
     return bResult;
   }
   /* -- Init console fbo --------------------------------------------------- */
-  void InitConsoleFBO(void)
+  void InitConsoleFBO()
   { // Initialise the console fbo for the console object
     fboConsole.FboInit("console",
       fboMain.DimGetWidth(), fboMain.DimGetHeight());
@@ -281,14 +296,14 @@ class FboCore :                        // The main fbo operations manager
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~FboCore, DestroyAllObjectsAndBuiltIns())
   /* -- Initialise fbos using a different constructor ---------------------- */
-  FboCore(void) :
+  FboCore() :
     /* -- Initialisers ----------------------------------------------------- */
     fAspectMin(1.0f),                  fAspectMax(2.0f),
     fMatrixWidth(0.0f),                fMatrixHeight(0.0f),
     bDraw(false),                      bSimpleMatrix(false),
     bLockViewport(false),              bClearBuffer(false),
     fboConsole{ GL_RGBA8, true },      fboMain{ GL_RGB8, true },
-    ciCurrent{ seconds{ 1 } },         uiFPS(0),
+    ciCurrent{ cd1S },                 uiFPS(0),
     uiFPSCur(0)
     /* -- Set pointer to global class and main fbo ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }

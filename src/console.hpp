@@ -25,43 +25,41 @@ using namespace IToken::P;             using namespace IUtf::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
-/* == Typedefs ============================================================= */
-BUILD_FLAGS(Console,                   // Console flags classes
-  /* --------------------------------------------------------------------- */
-  // No settings?                      Can't disable console? (temporary)
-  CF_NONE                   {Flag(0)}, CF_LOCKED                 {Flag(1)},
-  // Ignore first key on show console? Autoscroll on message?
-  CF_IGNOREKEY              {Flag(2)}, CF_AUTOSCROLL             {Flag(3)},
-  // Automatically copy cvar on check? Character insert mode?
-  CF_AUTOCOPYCVAR           {Flag(4)}, CF_INSERT                 {Flag(5)},
-  // Console displayed?                Ignore escape key?
-  CF_ENABLED                {Flag(6)}, CF_IGNOREESC              {Flag(7)},
-  // Can't disable console?            Block output position update?
-  CF_LOCKEDGLOBAL           {Flag(8)}, CF_BLOCKOUTPUTUPDATE      {Flag(9)}
-);/* ======================================================================= */
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Console,                   // Console flags
+  /* ----------------------------------------------------------------------- */
+  CF_NONE                   {Flag(0)}, // No settings?
+  CF_LOCKED                 {Flag(1)}, // Can't disable console (temporary)?
+  CF_IGNOREKEY              {Flag(2)}, // Ignore first key on show console?
+  CF_AUTOSCROLL             {Flag(3)}, // Autoscroll on message?
+  CF_AUTOCOPYCVAR           {Flag(4)}, // Automatically copy cvar on check?
+  CF_INSERT                 {Flag(5)}, // Character insert mode?
+  CF_ENABLED                {Flag(6)}, // Console displayed?
+  CF_IGNOREESC              {Flag(7)}, // Ignore escape key?
+  CF_LOCKEDGLOBAL           {Flag(8)}, // Can't disable console?
+  CF_BLOCKOUTPUTUPDATE      {Flag(9)}  // Block output position update?
+);/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(AutoComplete,              // Autocomplete flags classes
   /* ----------------------------------------------------------------------- */
-  // No autocompletion?                Autocomplete command names?
-  AC_NONE                   {Flag(0)}, AC_COMMANDS               {Flag(1)},
-  // Autocomplete cvar names?
-  AC_CVARS                  {Flag(2)},
+  AC_NONE                   {Flag(0)}, // No autocompletion?
+  AC_COMMANDS               {Flag(1)}, // Autocomplete command names?
+  AC_CVARS                  {Flag(2)}, // Autocomplete cvar names?
   /* ----------------------------------------------------------------------- */
   AC_MASK{ AC_COMMANDS|AC_CVARS }      // All flags
-);/* ======================================================================= */
+);/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(Redraw,                    // Redraw terminal or graphical console
   /* ----------------------------------------------------------------------- */
-  // Redraw nothing                    Redraw text console
-  RD_NONE                   {Flag(0)}, RD_TEXT                   {Flag(1)},
-  // Redraw graphical console
-  RD_GRAPHICS               {Flag(2)},
+  RD_NONE                   {Flag(0)}, // Redraw nothing?
+  RD_TEXT                   {Flag(1)}, // Redraw text console?
+  RD_GRAPHICS               {Flag(2)}, // Redraw graphical console?
   /* ----------------------------------------------------------------------- */
   RD_BOTH{ RD_TEXT|RD_GRAPHICS }       // All flags
 );/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(Cmd, const string, const ConLib) // Map of commands type
 /* ========================================================================= */
-class Console;                         // Class prototype
+struct Console;                        // Class prototype
 static Console *cConsole = nullptr;    // Pointer to global class
-class Console :                        // Members initially private
+struct Console :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public ConLines,                     // Console text lines list
   private ConLinesConstIt,             // Text lines forward iterator
@@ -69,7 +67,11 @@ class Console :                        // Members initially private
   private InitHelper,                  // Initialisation helper
   public ConsoleFlags,                 // Console flags
   private EvtMainRegAuto               // Events list to register
-{ /* -- Private typedefs --------------------------------------------------- */
+{ /* -- Settings ----------------------------------------------------------- */
+  constexpr static const size_t
+    stConCmdMinLength = 1,             // Minimum length of a console command
+    stConCmdMaxLength = 255;           // Maximum length of a console command
+  /* -- Private typedefs ------------------------------------------ */ private:
   typedef queue<ConLine> ConLineQueue; // Pending console lines
   /* -- Input -------------------------------------------------------------- */
   ConLineQueue     clqOutput;          // Console lines pending
@@ -104,7 +106,7 @@ class Console :                        // Members initially private
   const ConCmdStaticList &ccslInt;     // Default console cmds list
   CmdMap           cmMap;              // Console commands list
   /* -- Do clear console, clear history and reset position ----------------- */
-  void DoFlush(void)
+  void DoFlush()
   { // Do clear the console output lines
     clear();
     // Reset position
@@ -120,7 +122,7 @@ class Console :                        // Members initially private
     // Return if we don't need to remove lines
     if(stTotal <= GetInputMaximum()) return;
     // If too many lines would be written?
-    if(stLines >= GetInputMaximum()) return ClearHistory();
+    if(stLines >= GetInputMaximum()) return ClearInputHistory();
     // Iterator to find
     const StrListConstIt slciIt{ slriInputPosition.base() };
     // Lines to prune to
@@ -139,25 +141,25 @@ class Console :                        // Members initially private
     while(size() > stRemove);
   }
   /* -- Clear console line ------------------------------------------------- */
-  void DoClearInput(void) { strConsoleBegin.clear(); strConsoleEnd.clear(); }
+  void DoClearInput() { strConsoleBegin.clear(); strConsoleEnd.clear(); }
   /* -- Return commands list --------------------------------------- */ public:
-  const CmdMap &GetCmdsList(void) const { return cmMap; }
-  CmdMapIt GetCmdsListEnd(void) { return cmMap.end(); }
+  const CmdMap &GetCmdsList() const { return cmMap; }
+  CmdMapIt GetCmdsListEnd() { return cmMap.end(); }
   /* -- Get redraw flags --------------------------------------------------- */
-  RedrawFlags &GetRedrawFlags(void) { return rfFlags; }
-  RedrawFlags &GetDefaultRedrawFlags(void) { return rfDefault; }
+  RedrawFlags &GetRedrawFlags() { return rfFlags; }
+  RedrawFlags &GetDefaultRedrawFlags() { return rfDefault; }
   /* -- Get input strings -------------------------------------------------- */
-  string &GetConsoleBegin(void) { return strConsoleBegin; }
-  string &GetConsoleEnd(void) { return strConsoleEnd; }
+  string &GetConsoleBegin() { return strConsoleBegin; }
+  string &GetConsoleEnd() { return strConsoleEnd; }
   /* -- Return maximum number of output history lines ---------------------- */
-  size_t GetOutputMaximum(void) const { return stOutputMaximum; }
+  size_t GetOutputMaximum() const { return stOutputMaximum; }
   /* -- Return maximum number of input history lines ----------------------- */
-  size_t GetInputMaximum(void) const { return stInputMaximum; }
+  size_t GetInputMaximum() const { return stInputMaximum; }
   /* -- Return information about a console command ------------------------- */
   const ConLibStatic &GetCommand(const ConCmdEnums cceId) const
     { return ccslInt[cceId]; }
   /* -- Clear console and redraw ------------------------------------------- */
-  void Flush(void) { DoFlush(); SetRedraw(); }
+  void Flush() { DoFlush(); SetRedraw(); }
   /* -- Add specified command line to history ------------------------------ */
   void AddHistory(const string &strCmdLine)
   { // Service room for one more input line
@@ -168,7 +170,7 @@ class Console :                        // Members initially private
     slriInputPosition = slHistory.crend();
   }
   /* -- Reset auto complete ------------------------------------------------ */
-  void AutoCompleteReset(void)
+  void AutoCompleteReset()
   { // Return if already reset
     if(acisList.empty()) return;
     // Clear the auto-complete string list
@@ -177,7 +179,7 @@ class Console :                        // Members initially private
     acisciCurrent = acisList.cend();
   }
   /* -- AutoComplete ------------ Auto complete the word under the cursor -- */
-  bool AutoComplete(void)
+  bool AutoComplete()
   { // Do not attempt to autocomplete if disabled
     if(acFlags == AC_NONE) return false;
     // Grab the word where the cursor is in line to autocomplete
@@ -221,9 +223,8 @@ class Console :                        // Members initially private
     } // Get reference name of item and return failed if comparison failed
     const string &strKey = *acisciCurrent;
     // We found the word so now we need to replace it with the actual command.
-    if(stBPos == StdNPos) strConsoleBegin = strKey;
-    else strConsoleBegin =
-      StrAppend(strConsoleBegin.substr(0, stBPos+1), strKey);
+    strConsoleBegin = stBPos == StdNPos ?
+      strKey : StrAppend(strConsoleBegin.substr(0, stBPos + 1), strKey);
     if(stEPos == StdNPos) strConsoleEnd.clear();
     else strConsoleEnd = strConsoleEnd.substr(stEPos);
     // Redraw console and return success
@@ -231,13 +232,13 @@ class Console :                        // Members initially private
     return true;
   }
   /* -- Return text input -------------------------------------------------- */
-  bool InputEmpty(void)
+  bool InputEmpty()
     { return strConsoleBegin.empty() && strConsoleEnd.empty(); }
   /* -- Return text input -------------------------------------------------- */
-  const string InputText(void)
+  const string InputText()
     { return StrAppend(strConsoleBegin, strConsoleEnd); }
   /* -- OnExecute event ------------------------ Execute inputted command -- */
-  void Execute(void)
+  void Execute()
   { // Do not proceed further if no text is inputted
     if(InputEmpty()) return;
     // Build command by appending text before and after the cursor.
@@ -302,19 +303,19 @@ class Console :                        // Members initially private
     AutoCompleteReset();
   }
   /* -- Pop the back of the before cursor string --------------------------- */
-  void PopInputBeforeCursor(void)
+  void PopInputBeforeCursor()
     { if(UtfPopBack(strConsoleBegin)) SetRedraw(); }
   /* -- Pop the front the after cursor string ------------------------------ */
-  void PopInputAfterCursor(void)
+  void PopInputAfterCursor()
     { if(UtfPopFront(strConsoleEnd)) SetRedraw(); }
   /* -- Move cursor left --------------------------------------------------- */
-  void CursorLeft(void)
+  void CursorLeft()
     { if(UtfMoveBackToFront(strConsoleBegin, strConsoleEnd)) SetRedraw(); }
   /* -- Move cursor right -------------------------------------------------- */
-  void CursorRight(void)
+  void CursorRight()
     { if(UtfMoveFrontToBack(strConsoleEnd, strConsoleBegin)) SetRedraw(); }
   /* -- Move cursor to beginning of line ----------------------------------- */
-  void CursorHome(void)
+  void CursorHome()
   { // Ignore if no end text
     if(strConsoleBegin.empty()) return;
     // Prepend before cursor text to after cursor text and clear before text
@@ -325,7 +326,7 @@ class Console :                        // Members initially private
     SetRedraw();
   }
   /* -- Move cursor to end of line ----------------------------------------- */
-  void CursorEnd(void)
+  void CursorEnd()
   { // Ignore if no end text
     if(strConsoleEnd.empty()) return;
     // Set beginning of text to end of text and clear after cursor text
@@ -340,7 +341,7 @@ class Console :                        // Members initially private
     if(empty() || clriPosition == crend()) return false;
     // Find string in list and return if not found
     const ConLinesConstRevIt clcriIt{
-      StdFindIf(seq, next(clriPosition, 1), crend(),
+      StdFindIf(seq, next(clriPosition), crend(),
         [&strWhat](const ConLine &clLine)->bool
           { return clLine.strLine.find(strWhat) != StdNPos; }) };
     if(clcriIt == crend()) return false;
@@ -368,38 +369,52 @@ class Console :                        // Members initially private
     else advance(clriPosition, sstMove);
   }
   /* -- Functions to move the active console line -------------------------- */
-  void MoveLogHome(void)
+  void MoveLogHome()
     { if(clriPosition != crend()){ SetRedraw(); clriPosition = crend(); } }
-  void MoveLogEnd(void)
+  void MoveLogEnd()
     { if(clriPosition != crbegin()){ SetRedraw(); clriPosition = crbegin(); }}
-  void MoveLogUp(void)
+  void MoveLogUp()
     { if(clriPosition != crend()){ SetRedraw(); ++clriPosition; }}
-  void MoveLogDown(void)
+  void MoveLogDown()
     { if(clriPosition != crbegin()){ SetRedraw(); --clriPosition; }}
-  void MoveLogPageUp(void)
+  void MoveLogPageUp()
     { MoveLogPage(clriPosition, crend(), crend(),
         sstPageLines, sstPageLines); }
-  void MoveLogPageDown(void)
+  void MoveLogPageDown()
     { MoveLogPage(crbegin(), clriPosition, crbegin(),
         sstPageLines, sstPageLinesNeg); }
+  /* -- Set console input -------------------------------------------------- */
+  void SetInput(const string &strInput)
+  { // Set requested line
+    strConsoleBegin = strInput;
+    strConsoleEnd.clear();
+    // Redraw the buffer, it changed
+    SetRedraw();
+  }
+  /* -- Set input buffer of specified cvar --------------------------------- */
+  void SetVarInput(const string &strVar)
+  { // Return if the cvar doesn't exist
+    const CVarMapIt cvmMapIt{ cCVars->FindVariable(strVar) };
+    if(cvmMapIt == cCVars->GetVarListEnd()) return AddLine("No such cvar!");
+    // Get cvar item data and copy it to input buffer
+    const CVarItem &cviItem = cvmMapIt->second;
+    SetInput(StrFormat("$ \"$\"", cviItem.GetVar(), cviItem.GetValue()));
+  }
   /* -- OnLastItem event ---------------------- Selects last console item -- */
-  void HistoryMoveBack(void)
+  void HistoryMoveBack()
   { // Ignore if no history lines or there is text after the cursor
     if(slHistory.empty() || !strConsoleEnd.empty()) return;
     // Set last typed item if not initialised
     if(slriInputPosition == slHistory.crend())
       slriInputPosition = slHistory.crbegin();
     // Move back towards beginning of list if we can
-    else if(next(slriInputPosition, 1) != slHistory.crend())
+    else if(next(slriInputPosition) != slHistory.crend())
       ++slriInputPosition;
-    // Set line from history
-    strConsoleBegin = *slriInputPosition;
-    strConsoleEnd.clear();
-    // Redraw the buffer, it changed
-    SetRedraw();
+    // Set new input
+    SetInput(*slriInputPosition);
   }
   /* -- OnNextItem event --------------------- Selects ntext console item -- */
-  void HistoryMoveForward(void)
+  void HistoryMoveForward()
   { // Ignore if no history lines, history not initialised or there is text
     // after the cursor
     if(slHistory.empty() || !strConsoleEnd.empty() ||
@@ -407,20 +422,26 @@ class Console :                        // Members initially private
     // Move forward towards end if we can
     if(slriInputPosition != slHistory.crbegin()) --slriInputPosition;
     // Set line from history
-    strConsoleBegin = *slriInputPosition;
-    strConsoleEnd.clear();
-    // Redraw the buffer, it changed
-    SetRedraw();
+    SetInput(*slriInputPosition);
   }
   /* -- Clear console input history ---------------------------------------- */
-  void ClearHistory(void)
+  void ClearInputHistory()
   { // Clear history list
     slHistory.clear();
     // No history selected
     slriInputPosition = slHistory.crend();
   }
+  /* -- Clear console input history and return size ------------------------ */
+  size_t ClearInputHistoryReturnSize()
+  { // Record number of lines in input history
+    const size_t stLines = slHistory.size();
+    // Clear history list
+    ClearInputHistory();
+    // Return items cleared
+    return stLines;
+  }
   /* -- Clear console line ------------------------------------------------- */
-  void ClearInput(void)
+  void ClearInput()
   { // Clear text before and after cursor
     DoClearInput();
     // Redraw the buffer, it changed
@@ -448,21 +469,21 @@ class Console :                        // Members initially private
     SetRedraw();
   }
   /* -- Toggle insert and overwrite mode ----------------------------------- */
-  void ToggleCursorMode(void)
+  void ToggleCursorMode()
   { // Toggle cursor mode
     FlagToggle(CF_INSERT);
     // Tell SysCon that the cursor changed if needed and return
     cSystem->SetCursorMode(FlagIsSet(CF_INSERT));
   }
   /* -- Returns if the console should be visible --------------------------- */
-  bool IsVisible(void) { return FlagIsSet(CF_ENABLED); }
-  bool IsNotVisible(void) { return !IsVisible(); }
+  bool IsVisible() { return FlagIsSet(CF_ENABLED); }
+  bool IsNotVisible() { return !IsVisible(); }
   /* -- Sets redraw flag so the console fbo or terminal buffer is redrawn -- */
-  void SetRedraw(void)
+  void SetRedraw()
     { GetRedrawFlags().FlagReset(GetDefaultRedrawFlags().FlagIsSet(RD_TEXT) ||
         IsVisible() ? GetDefaultRedrawFlags() : RD_NONE); }
   /* -- Returns if we should be hiding the graphical console --------------- */
-  bool IsHidingGraphicalConsole(void)
+  bool IsHidingGraphicalConsole()
     { return cSystem->IsTextMode() &&
              !cCVars->GetInternal<bool>(CON_GCWTERM); }
   /* -- Do Set Console status ---------------------------------------------- */
@@ -633,7 +654,7 @@ class Console :                        // Members initially private
     }
   }
   /* -- Process queued console lines --------------------------------------- */
-  void MoveQueuedLines(void)
+  void MoveQueuedLines()
   { // If there are console lines in the queue?
     if(clqOutput.empty()) return;
     // Stagger the queue to the output buffer but enough so it completes fast
@@ -687,18 +708,18 @@ class Console :                        // Members initially private
     SetRedraw();
   }
   /* -- SetRedraw -------------------------------------------------- */ public:
-  void SetRedrawIfEnabled(void) { if(IsVisible()) SetRedraw(); }
+  void SetRedrawIfEnabled() { if(IsVisible()) SetRedraw(); }
   /* -- Get console lines -------------------------------------------------- */
-  size_t GetOutputCount(void) { return size(); }
-  size_t GetInputCount(void) { return slHistory.size(); }
+  size_t GetOutputCount() { return size(); }
+  size_t GetInputCount() { return slHistory.size(); }
   /* -- Get buffer position ------------------------------------------------ */
-  const ConLinesConstRevIt GetConBufPos(void) const { return clriPosition; }
-  const ConLinesConstRevIt GetConBufPosEnd(void) { return rend(); }
+  const ConLinesConstRevIt GetConBufPos() const { return clriPosition; }
+  const ConLinesConstRevIt GetConBufPosEnd() { return rend(); }
   /* -- Set console input status bar (left and right) ---------------------- */
   void SetStatusLeft(const string &strValue) { strStatusLeft = strValue; }
   void SetStatusRight(const string &strValue) { strStatusRight = strValue; }
   /* -- Clear both statuses ------------------------------------------------ */
-  void ClearStatus(void)
+  void ClearStatus()
   { // Clear left if empty
     if(!strStatusLeft.empty())
     { // Clear left and right side text
@@ -712,7 +733,7 @@ class Console :                        // Members initially private
     SetRedraw();
   }
   /* -- Tick for stdout render --------------------------------------------- */
-  void FlushToTerminal(void)
+  void FlushToTerminal()
   { // If there are console lines in the queue?
     while(!clqOutput.empty())
     { // Get next item
@@ -720,13 +741,13 @@ class Console :                        // Members initially private
       // Print line to output
       fwprintf(stdout, L"\033[%um[%.6f]<!> %ls\033[0m\n",
         clLine.cColour, clLine.dTime,
-          UtfDecoder{ clLine.strLine }.Wide().c_str());
+          UtfDecoder{ clLine.strLine }.Wide().data());
       // remove the old item
       clqOutput.pop();
     }
   }
   /* -- Tick for bot render ------------------------------------------------ */
-  void FlushToLog(void)
+  void FlushToLog()
   { // Process queued console log lines
     MoveQueuedLines();
     // If thread delay enabled and input polling interval ready to poll?
@@ -792,7 +813,7 @@ class Console :                        // Members initially private
     cSystem->CommitBuffer();
   }
   /* -- Copy all console lines to log -------------------------------------- */
-  size_t ToLog(void)
+  size_t ToLog() const
   { // Write all console lines to log and return lines in buffer
     for(const ConLine &clItem : *this) cLog->LogNLCDebugSafe(clItem.strLine);
     return size();
@@ -800,6 +821,18 @@ class Console :                        // Members initially private
   /* -- Command exists? ---------------------------------------------------- */
   bool CommandIsRegistered(const string &strName) const
     { return cmMap.contains(strName); }
+  /* -- Check that the console variable name is valid ---------------------- */
+  bool IsValidConsoleCommandName(const string &strName) const
+  { // Return true if length is over or equal minimum allowed and length is
+    // under or equal maximum allowed and first character is valid and the rest
+    // of the characters are valid.
+    return strName.length() >= stConCmdMinLength &&
+      strName.length() <= stConCmdMaxLength &&
+      StdIsAlpha(strName.front()) &&
+      StdFindIf(par_unseq, next(strName.cbegin()), strName.cend(),
+        [](const char cC) { return StdIsNotAlnum(cC) && cC != '_'; })
+          == strName.cend();
+  }
   /* -- Register console command ------------------------------------------- */
   const CmdMapIt RegisterCommand(const string &strName,
     const unsigned int uiMin, const unsigned int uiMax,
@@ -831,22 +864,23 @@ class Console :                        // Members initially private
   void AddLine(const string &strText) { AddLine(cTextColour, strText); }
   /* -- Formatted console output ------------------------------------------- */
   template<typename ...VarArgs>
-    void AddLineF(const char*const cpFormat, const VarArgs &...vaArgs)
-      { AddLine(StrFormat(cpFormat, vaArgs...)); }
+    void AddLineF(const char*const cpFormat, VarArgs &&...vaArgs)
+      { AddLine(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output with colour ------------------------------- */
   template<typename ...VarArgs>
     void AddLineF(const Colour cColour, const char*const cpFormat,
-      const VarArgs &...vaArgs)
-        { AddLine(cColour, StrFormat(cpFormat, vaArgs...)); }
+      VarArgs &&...vaArgs)
+        { AddLine(cColour,
+            StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output using StrAppend() ------------------------- */
   template<typename ...VarArgs>
-    void AddLineAC(const Colour cColour, const VarArgs &...vaArgs)
-      { AddLine(cColour, StrAppend(vaArgs...)); }
+    void AddLineAC(const Colour cColour, VarArgs &&...vaArgs)
+      { AddLine(cColour, StrAppend(StdForward<VarArgs>(vaArgs)...)); }
   template<typename ...VarArgs>
-    void AddLineA(const VarArgs &...vaArgs)
-      { AddLineAC(cTextColour, vaArgs...); }
+    void AddLineA(VarArgs &&...vaArgs)
+      { AddLineAC(cTextColour, StdForward<VarArgs>(vaArgs)...); }
   /* -- Print version information ------------------------------------------ */
-  void PrintVersion(void)
+  void PrintVersion()
   { // Show engine version
     AddLineF(
       "$ ($) version $.$.$ build $ for $.\n"
@@ -881,7 +915,7 @@ class Console :                        // Members initially private
         cSystem->GetGuestWebsite());
   }
   /* -- Print a string using textures -------------------------------------- */
-  void Init(void)
+  void Init()
   { // Class intiialised
     IHInitialise();
     // Log progress
@@ -910,7 +944,7 @@ class Console :                        // Members initially private
       cmMap.size(), ccslInt.size());
   }
   /* -- DeInit ------------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Ignore if already deinitialised
     if(IHNotDeInitialise()) return;
     // Log progress
@@ -931,7 +965,7 @@ class Console :                        // Members initially private
         break;
     } // Clear console input, output and input history
     DoClearInput();
-    ClearHistory();
+    ClearInputHistory();
     DoFlush();
     // Log progress
     cLog->LogInfoSafe("Console de-initialised successfully.");
@@ -976,7 +1010,7 @@ class Console :                        // Members initially private
   CVarReturn SetTimeFormat(const string &strFmt, const string &strV)
   { // Verify the new time format and log it
     cLog->LogInfoExSafe("Console time from format '$' is '$'.",
-      strFmt, cmSys.FormatTime(strFmt.c_str()));
+      strFmt, cmSys.FormatTime(strFmt.data()));
     // Accept the new time format
     strvTimeFormat = strV;
     // Done

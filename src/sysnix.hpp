@@ -43,9 +43,9 @@ class SysProcess :                     // Need this before of System init order
   const pid_t      piProcessId;        // Process id
   const pthread_t  vpThreadId;         // Thread id
   /* -- Return process and thread id ---------------------------- */ protected:
-  template<typename IntType=decltype(piProcessId)>IntType GetPid(void) const
+  template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
-  template<typename IntType=decltype(vpThreadId)>IntType GetTid(void) const
+  template<typename IntType=decltype(vpThreadId)>IntType GetTid() const
     { return static_cast<IntType>(vpThreadId); }
   /* -- Initialise global mutex ------------------------------------ */ public:
   bool InitGlobalMutex(const string_view &strvTitle)
@@ -66,14 +66,14 @@ class SysProcess :                     // Need this before of System init order
     return true;
   }
   /* -- Destructor --------------------------------------------------------- */
-  ~SysProcess(void)
+  ~SysProcess()
   { // Unlink the mutex and show warning in log if failed
     if(IdentIsSet() && shm_unlink(IdentGetData()))
       cLog->LogWarningExSafe("SysMutex could not delete old mutex '$': $",
         IdentGet(), SysError());
   }
   /* -- Constructor -------------------------------------------------------- */
-  SysProcess(void) :
+  SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
     fsDevRandom{ "/dev/random",        // Open dev random garbage stream
                  FM_R_B },             // - Read/Binary mode
@@ -92,7 +92,7 @@ class SysProcess :                     // Need this before of System init order
     piProcessId(getpid()),             // Get native process id
     vpThreadId(pthread_self())         // Get native thread id
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
@@ -102,7 +102,7 @@ class SysCore :
 { /* -- Variables ---------------------------------------------------------- */
   bool             bWindowInitialised; // Is window initialised?
   /* --------------------------------------------------------------- */ public:
-  void UpdateMemoryUsageData(void)
+  void UpdateMemoryUsageData()
   { // If the stat file is opened
     if(fsProcStatM.FStreamIsReadyRead())
     { // Read string from stat
@@ -144,7 +144,7 @@ class SysCore :
          memData.dMLoad = 0;
   }
   /* -- Return operating system uptime (cmHiRes.GetTimeS() doesn't work!) -- */
-  StdTimeT GetUptime(void)
+  StdTimeT GetUptime()
   { // Get uptime
     struct timespec tsData;
     clock_gettime(CLOCK_MONOTONIC, &tsData);
@@ -158,7 +158,7 @@ class SysCore :
   bool IsPidRunning(const unsigned int uiPid) const
     { return !kill(uiPid, 0); }
   /* -- GLFW handles the icons on this ------------------------------------- */
-  void UpdateIcons(void) { }
+  void UpdateIcons() {}
   /* ----------------------------------------------------------------------- */
   static bool LibFree(void*const vpModule)
     { return vpModule && !dlclose(vpModule); }
@@ -181,7 +181,7 @@ class SysCore :
     return StdMove(PathSplit{ lmData->l_name, true }.strFull);
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateCPUUsageData(void)
+  void UpdateCPUUsageData()
   { // If the stat file is opened
     if(fsProcStatM.FStreamIsReadyRead())
     { // Read string from stat and if succeeded?
@@ -234,23 +234,21 @@ class SysCore :
     // Get cpu times
     struct tms tmsData;
     const clock_t cProcNow = times(&tmsData);
-    // If times are not valid? Show percent as error
+    // If times are not valid? Show percent as error and return
     if(cProcNow <= ctProc || tmsData.tms_stime < ctProcSys ||
                              tmsData.tms_utime < ctProcUser)
-      cpuUData.dProcess = -1;
-    // Times are valid
-    else
-    { // Caclulate total time
-      cpuUData.dProcess = (tmsData.tms_stime - ctProcSys) +
-                           (tmsData.tms_utime - ctProcUser);
-      // Divide by total cpu time
-      cpuUData.dProcess /= (cProcNow - ctProc);
-      cpuUData.dProcess /= StdThreadMax();
-      cpuUData.dProcess *= 100;
-      // Update times
-      ctProc = cProcNow, ctProcSys = tmsData.tms_stime,
-        ctProcUser = tmsData.tms_utime;
-    }
+      { cpuUData.dProcess = -1; return; }
+    // Times are valid. Caclulate total time
+    cpuUData.dProcess =
+      (tmsData.tms_stime - ctProcSys) + (tmsData.tms_utime - ctProcUser);
+    // Divide by total cpu time
+    cpuUData.dProcess /= (cProcNow - ctProc);
+    cpuUData.dProcess /= StdThreadMax();
+    cpuUData.dProcess *= 100;
+    // Update times
+    ctProc = cProcNow;
+    ctProcSys = tmsData.tms_stime;
+    ctProcUser = tmsData.tms_utime;
   }
   /* -- Seek to position in specified handle ------------------------------- */
   template<typename IntType>
@@ -271,75 +269,76 @@ class SysCore :
     { // Read in the header
       Elf64_Ehdr ehData;
       if(const size_t stRead = fExe.FStreamReadSafe(&ehData, sizeof(ehData)))
-      { // We read enough bytes?
-        if(stRead == sizeof(ehData))
-        { // Rewind back to start
-          if(!fExe.FStreamRewind())
-            XCL("Failed to rewind executable file!", "File", strFile);
-          // Get ELF data order type and if correct byte order?
-          const unsigned int uiType = ehData.e_ident[EI_DATA];
-          if(uiType == ELFDATA2LSB || uiType == ELFDATA2MSB)
-          { // Is a 32-bit executable?
-            const unsigned int uiClass = ehData.e_ident[EI_CLASS];
-            if(uiClass == ELFCLASS32)
-            { // Read in 32-bit header
-              Elf32_Ehdr ehData32;
-              if(const size_t stRead2 =
-                fExe.FStreamReadSafe(&ehData32, sizeof(ehData32)))
-              { // We read enough bytes?
-                if(stRead2 == sizeof(ehData32))
-                { // Reverse bytes if not native
-                  if(uiType != uiELFDataNative)
-                    ehData.e_shoff = SWAP_U32(ehData32.e_shoff),
-                    ehData.e_shentsize = SWAP_U16(ehData32.e_shentsize),
-                    ehData.e_shnum = SWAP_U16(ehData32.e_shnum);
-                  else ehData.e_shoff = ehData32.e_shoff,
-                       ehData.e_shentsize = ehData32.e_shentsize,
-                       ehData.e_shnum = ehData32.e_shnum;
-                } // Failed to read enough bytes for ELF32 header
-                else XC("Failed to read enough bytes for ELF32 header!",
-                        "Requested", sizeof(ehData32), "Actual", stRead,
-                        "File", strFile);
-              } // Failed to read enough bytes for ELF32 header
-              else XCL("Failed to read ELF32 header!",
-                       "Requested", sizeof(ehData32), "File", strFile);
-            } // Or is a 64-bit executable?
-            else if(uiClass == ELFCLASS64)
-            { // Read in 64-bit header
-              Elf64_Ehdr ehData64;
-              if(const size_t stRead2 =
-                fExe.FStreamReadSafe(&ehData64, sizeof(ehData64)))
-              { // We read enough bytes?
-                if(stRead2 == sizeof(ehData64))
-                { // Reverse bytes if not native
-                  if(uiType != uiELFDataNative)
-                    ehData.e_shoff = SWAP_U64(ehData64.e_shoff),
-                    ehData.e_shentsize = SWAP_U16(ehData64.e_shentsize),
-                    ehData.e_shnum = SWAP_U16(ehData64.e_shnum);
-                  else ehData.e_shoff = ehData64.e_shoff,
-                       ehData.e_shentsize = ehData64.e_shentsize,
-                       ehData.e_shnum = ehData64.e_shnum;
-                } // Failed to read enough bytes for ELF64 header
-                else XC("Failed to read enough bytes for ELF64 header!",
-                        "Requested", sizeof(ehData64), "Actual", stRead,
-                        "File", strFile);
-              } // Failed to read enough bytes for 64-bit header
-              else XCL("Failed to read ELF64 header!",
-                       "Requested", sizeof(ehData64), "File", strFile);
-            } // Unknown executable type
-            else XC("Invalid ELF header architecture!",
-                  "Requested", ELFCLASS32, "OrRequested", ELFCLASS64,
-                  "Actual", uiClass, "File", strFile);
-            // Now we can return result
-            return ehData.e_shoff + (ehData.e_shentsize * ehData.e_shnum);
-          } // Failed to detect executable type
-          else XC("Invalid ELF executable type!",
-                  "Requested", ELFDATA2LSB, "OrRequested", ELFDATA2MSB,
-                  "Actual", uiType, "File", strFile);
-        } // Failed to read enough bytes
-        else XC("Failed to read enough bytes for ELF header!",
-                "Requested", sizeof(ehData), "Actual", stRead,
-                "File", strFile);
+      { // Throw error if we did not read enough bytes
+        if(stRead != sizeof(ehData))
+          XC("Failed to read enough bytes for ELF header!",
+             "Requested", sizeof(ehData), "Actual", stRead,
+             "File", strFile);
+        // Rewind back to start
+        if(!fExe.FStreamRewind())
+          XCL("Failed to rewind executable file!", "File", strFile);
+        // Get ELF data order type and throw if not correct byte order
+        const unsigned int uiType = ehData.e_ident[EI_DATA];
+        if(uiType != ELFDATA2LSB && uiType != ELFDATA2MSB)
+          XC("Invalid ELF executable type!",
+             "Requested", ELFDATA2LSB, "OrRequested", ELFDATA2MSB,
+             "Actual",    uiType,      "File",        strFile);
+        // Check bits-type
+        switch(const unsigned int uiClass = ehData.e_ident[EI_CLASS])
+        { // Is a 32-bit executable?
+          case ELFCLASS32:
+          { // Read in 32-bit header
+            Elf32_Ehdr ehData32;
+            if(const size_t stRead2 =
+              fExe.FStreamReadSafe(&ehData32, sizeof(ehData32)))
+            { // Throw if we didn't read enough bytes
+              if(stRead2 != sizeof(ehData32))
+                XC("Failed to read enough bytes for ELF32 header!",
+                   "Requested", sizeof(ehData32), "Actual", stRead,
+                   "File",      strFile);
+              // Reverse bytes if not native
+              if(uiType != uiELFDataNative)
+                ehData.e_shoff = SWAP_U32(ehData32.e_shoff),
+                ehData.e_shentsize = SWAP_U16(ehData32.e_shentsize),
+                ehData.e_shnum = SWAP_U16(ehData32.e_shnum);
+              else ehData.e_shoff = ehData32.e_shoff,
+                   ehData.e_shentsize = ehData32.e_shentsize,
+                   ehData.e_shnum = ehData32.e_shnum;
+              // Success
+              break;
+            } // Failed to read enough bytes for ELF32 header
+            XCL("Failed to read ELF32 header!",
+                "Requested", sizeof(ehData32), "File", strFile);
+          } // Is a 64-bit executable?
+          case ELFCLASS64:
+          { // Read in 64-bit header
+            Elf64_Ehdr ehData64;
+            if(const size_t stRead2 =
+              fExe.FStreamReadSafe(&ehData64, sizeof(ehData64)))
+            { // Throw if we didn't read enough bytes?
+              if(stRead2 != sizeof(ehData64))
+                XC("Failed to read enough bytes for ELF64 header!",
+                   "Requested", sizeof(ehData64), "Actual", stRead,
+                   "File",      strFile);
+              // Reverse bytes if not native
+              if(uiType != uiELFDataNative)
+                ehData.e_shoff = SWAP_U64(ehData64.e_shoff),
+                ehData.e_shentsize = SWAP_U16(ehData64.e_shentsize),
+                ehData.e_shnum = SWAP_U16(ehData64.e_shnum);
+              else ehData.e_shoff = ehData64.e_shoff,
+                   ehData.e_shentsize = ehData64.e_shentsize,
+                   ehData.e_shnum = ehData64.e_shnum;
+              // Success
+              break;
+            } // Failed to read enough bytes for 64-bit header
+            XCL("Failed to read ELF64 header!",
+                "Requested", sizeof(ehData64), "File", strFile);
+          } // Unknown executable type
+          default: XC("Invalid ELF header architecture!",
+                      "Requested", ELFCLASS32, "OrRequested", ELFCLASS64,
+                      "Actual",    uiClass,    "File",        strFile);
+        } // Now we can return the size
+        return ehData.e_shoff + (ehData.e_shentsize * ehData.e_shnum);
       } // Failed to read elf ident
       else XCL("Failed to read ELF header!",
                "Requested", sizeof(ehData), "File", strFile);
@@ -347,7 +346,7 @@ class SysCore :
     else XCL("Failed to open executable!", "File", strFile);
   }
   /* -- Get executable file name ------------------------------------------- */
-  const string GetExeName(void)
+  const string GetExeName()
   { // Storage for executable name
     string strName; strName.resize(PATH_MAX);
     strName.resize(readlink("/proc/self/exe",
@@ -355,10 +354,9 @@ class SysCore :
     return strName;
   }
   /* -- Enum modules ------------------------------------------------------- */
-  SysModMap EnumModules(void)
+  SysModMap EnumModules()
   { // Make verison string
-    string strVersion{ StrAppend(numeric_limits<void*>::digits,
-      "-bit version") };
+    string strVersion{ StrAppend(sizeof(void*)*8, "-bit version") };
     // Mod list
     SysModMap smmMap;
     smmMap.emplace(make_pair(0UL, SysModule{ GetExeName(), VER_MAJOR,
@@ -368,7 +366,7 @@ class SysCore :
     return smmMap;
   }
   /* ----------------------------------------------------------------------- */
-  OSData GetOperatingSystememData(void)
+  OSData GetOperatingSystememData()
   { // Get operating system name
     struct utsname utsnData;
     if(uname(&utsnData)) XCS("Failed to read operating system information!");
@@ -381,7 +379,7 @@ class SysCore :
       strCode = cCmdLine->CmdLineGetEnv("LANG");
       if(strCode.size() < 5) strCode = "en_GB.UTF8";
     } // Set global locale and show error if failed
-    if(!setlocale(LC_ALL, strCode.c_str()))
+    if(!setlocale(LC_ALL, strCode.data()))
       XCL("Failed to initialise default locale!", "Locale", strCode);
     // Replace underscore with dash to be consistent with Windows
     if(strCode[2] == '_') strCode[2] = '-';
@@ -396,9 +394,9 @@ class SysCore :
       sizeof(void*)<<3, StdMove(strCode), DetectElevation(), false };
   }
   /* ----------------------------------------------------------------------- */
-  ExeData GetExecutableData(void) { return { 0, 0, false, false }; }
+  ExeData GetExecutableData() { return { 0, 0, false, false }; }
   /* ----------------------------------------------------------------------- */
-  CPUData GetProcessorData(void)
+  CPUData GetProcessorData()
   {  // Open cpu information file
     if(FStream fsCpuInfo{ "/proc/cpuinfo", FM_R_B })
     { // Read file and if we got data?
@@ -448,7 +446,7 @@ class SysCore :
     return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
   }
   /* ----------------------------------------------------------------------- */
-  bool DebuggerRunning(void) const { return false; }
+  bool DebuggerRunning() const { return false; }
   /* -- Get process affinity masks ----------------------------------------- */
   uint64_t GetAffinity(const bool bS)
   { // Get the process affinity mask
@@ -467,7 +465,7 @@ class SysCore :
     return qwAffinity;
   }
   /* ----------------------------------------------------------------------- */
-  int GetPriority(void)
+  int GetPriority()
   { // Get priority value and throw if failed
     const int iNice = getpriority(PRIO_PROCESS, GetPid());
     if(iNice == -1) XCS("Failed to acquire process priority!");
@@ -475,26 +473,26 @@ class SysCore :
     return iNice;
    }
   /* -- Return if running as root ------------------------------------------ */
-  bool DetectElevation(void) { return getuid() == 0; }
+  bool DetectElevation() { return getuid() == 0; }
   /* -- Return data from /dev/urandom -------------------------------------- */
-  Memory GetEntropy(void)
+  Memory GetEntropy()
     { return fsDevRandom.FStreamReadBlockSafe(stPageSize); }
   /* ----------------------------------------------------------------------- */
-  void *GetWindowHandle(void) const { return nullptr; }
+  void *GetWindowHandle() const { return nullptr; }
   /* -- A window was created ----------------------------------------------- */
   void WindowInitialised(GlFW::GLFWwindow*const gwWindow)
     { bWindowInitialised = !!gwWindow; }
   /* -- Window was destroyed, nullify handles ------------------------------ */
-  void SetWindowDestroyed(void) { bWindowInitialised = false; }
+  void SetWindowDestroyed() { bWindowInitialised = false; }
   /* -- Help with debugging ------------------------------------------------ */
-  const char *HeapCheck(void) const { return "Not implemented!"; }
+  const char *HeapCheck() const { return "Not implemented!"; }
   /* ----------------------------------------------------------------------- */
-  int LastSocketOrSysError(void) const { return StdGetError(); }
+  int LastSocketOrSysError() const { return StdGetError(); }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const string BuildRoamingDir(void) const
+  const string BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("HOME", "/.local"); }
   /* -- Constructor -------------------------------------------------------- */
-  SysCore(void) :
+  SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
     SysCon{ EnumModules(), 0 },
     SysCommon{ GetExecutableData(),
@@ -502,6 +500,6 @@ class SysCore :
                GetProcessorData() },
     bWindowInitialised(false)
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

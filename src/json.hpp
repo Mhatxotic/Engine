@@ -112,7 +112,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     // and then place that into a CSW object so we can track the source
     // information when a parse error occurs.
     const string strJson{ fmData.MemToString() };
-    StringStream ssStream{ strJson.c_str() };
+    StringStream ssStream{ strJson.data() };
     CursorStreamWrapper<StringStream> cswStream{ ssStream };
     // Parse the text and if there is a parse error? Break execution
     if(ParseStream(cswStream).HasParseError())
@@ -128,7 +128,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   Value ParseTable(lua_State*const lS, const int iId, const int iObjId)
   { // Check table
     LuaUtilCheckTable(lS, iId);
-    // Test: lexec Console.Write(Json.Table({ }):ToString());
+    // Test: lexec Console.Write(Json.Table({}):ToString());
     // Get size of table and if we have length then we need to create an array
     if(const lua_Integer liLen =
       UtilIntOrMax<lua_Integer>(LuaUtilGetSize(lS, iId)))
@@ -328,7 +328,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   typedef Writer<StringBuffer, UTF8<>, UTF8<>> RJCompactWriter;
   typedef PrettyWriter<StringBuffer, UTF8<>, UTF8<>> RJPrettyWriter;
   /* ----------------------------------------------------------------------- */
-  template<typename WriterType>const string ToString(void) const
+  template<typename WriterType>const string ToString() const
   { // Output buffer
     StringBuffer rsbOut;
     WriterType rwWriter{ rsbOut };
@@ -340,16 +340,16 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     { return FStream{ strFile, FM_W_T }.
         FStreamWriteStringSafe(ToString<T>()) ? 0 : StdGetError(); }
   /* ----------------------------------------------------------------------- */
-  ~Json(void) { AsyncCancel(); }
+  ~Json() { AsyncCancel(); }
   /* -- Default constructor ------------------------------------------------ */
-  Json(void) :
+  Json() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperJson{ cJsons },            // Initialise collector
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     AsyncLoaderJson{ *this, this,      // Initialise async loader with this
       EMC_MP_JSON }                    // ...and the event id
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor from a filename ---------------------------------------- */
   explicit Json(const string &strFile) :
     /* -- Initialisers ----------------------------------------------------- */

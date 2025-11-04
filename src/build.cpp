@@ -45,6 +45,7 @@ namespace E {                          // Put everything in engine namespace
 #include "cmdline.hpp"                 // Command-line class header
 #include "memory.hpp"                  // Memory management utilities header
 #include "fstream.hpp"                 // File IO utility header
+#include "mutex.hpp"                   // Mutex helper class header
 #include "log.hpp"                     // Logging helper class header
 #include "luadef.hpp"                  // Lua definitions header
 #include "collect.hpp"                 // Class collector utility header
@@ -61,7 +62,7 @@ namespace E {                          // Put everything in engine namespace
 #include "dimcoord.hpp"                // DimensionCoord class header
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
-#include "toggler.hpp"                 // Toggler class header
+#include "refctr.hpp"                  // Reference counter class header
 #include "luautil.hpp"                 // Lua utility functions header
 #include "luaref.hpp"                  // Lua reference helper class header
 #include "luaevent.hpp"                // Lua event helper class header
@@ -577,9 +578,9 @@ static const string StrGetReturnFormat(const string &strIn)
 { // String is not empty?
   if(!strIn.empty())
   { // Enumerate each character...
-    for(string::const_iterator ciC{ strIn.cbegin() };
-                               ciC != strIn.cend();
-                             ++ciC)
+    for(StringConstIt ciC{ strIn.cbegin() };
+                      ciC != strIn.cend();
+                    ++ciC)
     { // Test character
       switch(*ciC)
       { // Carriage-return found
@@ -598,7 +599,7 @@ static const string StrGetReturnFormat(const string &strIn)
   return {};
 }
 /* ------------------------------------------------------------------------- */
-static int CheckSources(void)
+static int CheckSources()
 { // Number of warnings
   size_t stWarnings = 0, stTotal = 0;
   // Read source files directory
@@ -713,7 +714,7 @@ static int CheckSources(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static int GenDoc(void)
+static int GenDoc()
 { // Typedefs
   struct StrStrStr { string strName, strType, strDesc; };
   typedef list<StrStrStr> StrStrStrList;
@@ -1785,7 +1786,7 @@ static void PatchIcon(const string &strIco, const string &strOut)
     stPos += sizeof(ICONDIRENT);
   }
   // Open executable for resource writing
-  HANDLE hExeFile = BeginUpdateResourceW(UTFtoS16(strOut).c_str(), FALSE);
+  HANDLE hExeFile = BeginUpdateResourceW(UTFtoS16(strOut).data(), FALSE);
   if(hExeFile == INVALID_HANDLE_VALUE)
     XCS("Failed to open executable for updating resource!",
         "File", strOut);
@@ -1813,7 +1814,7 @@ static void PatchIcon(const string &strIco, const string &strOut)
 }
 #endif
 /* ------------------------------------------------------------------------- */
-static const string GetTempDir(void)
+static const string GetTempDir()
 { // Get temporary directory and remove trailing slash
 #if defined(WINDOWS)
   string strTmp{ cCmdLine->CmdLineGetEnv("TMP") };
@@ -1831,7 +1832,7 @@ static const string GetTempDir(void)
 #endif
 }
 /* ------------------------------------------------------------------------- */
-static void DoCleanCompilerTempFiles(void)
+static void DoCleanCompilerTempFiles()
 { // Get files
 #if defined(WINDOWS)
   const string strTmp{ StrAppend(GetTempDir(), '/') };
@@ -1958,7 +1959,7 @@ static int SpecialExecute(const string strCmd, const size_t stML,
       XCL("Could not read pipe to execute process!",
           "CmdLine", strCmd, "Directory", DirGetCWD());
   } // exception occured? Just ignore it and close handle
-  catch(const exception&) { }
+  catch(const exception&) {}
   // Close pipe and return result
   const int iR = PClose(fpPipe);
   // Print result if not successful
@@ -2176,7 +2177,7 @@ static void PatchChecksum(const string &strOut)
        "Actual", static_cast<unsigned int>(PEHDR.Signature));
   // Get actual CRC of executable. If call failed? Bail
   DWORD HS, CS;
-  if(MapFileAndCheckSumW(UTFtoS16(strOut).c_str(), &HS, &CS) != S_OK)
+  if(MapFileAndCheckSumW(UTFtoS16(strOut).data(), &HS, &CS) != S_OK)
     XCS("Failed to map executable file and checksum!",
         "File", strOut, "Headersum", static_cast<unsigned int>(HS),
                         "Checksum",  static_cast<unsigned int>(CS));
@@ -2225,7 +2226,7 @@ static void BuildExecutable(const string &strTmp, const string &strOS,
 }
 #endif
 /* ------------------------------------------------------------------------- */
-static int BuildDistro(void)
+static int BuildDistro()
 { // Get and make temporary directory and if it failed?
   const string strTmp{ StrAppend(GetTempDir(), '/', UuId().UuIdToString()) };
   MakeDirectory(strTmp);
@@ -2322,7 +2323,7 @@ static int BuildDistro(void)
       "</plist>\n",
       strName, ENGINENAME, strName, strTitle, strVer, uiVer[3],
       strAuthor, cmSys.FormatTime("%Y")))
-        throw runtime_error{ strPList.c_str() };
+        throw runtime_error{ strPList.data() };
     // Convert icons
     const struct _iconlist { const int i; const char *s; } iconlist[] = {
       {  16,"icon_16x16.png"   }, {   32,"icon_16x16@2x.png"   },
@@ -2363,7 +2364,7 @@ static int BuildDistro(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static int CertGen(void)
+static int CertGen()
 { // Need openssl library
   using namespace Lib::OS::OpenSSL;
   // Switch to resources directory. Create it if not exists
@@ -2398,7 +2399,7 @@ static int CertGen(void)
           static_cast<int>(strLine.capacity()), fp);
     strLine.resize(strLine.capacity()))
   { // Update size of string because we bypassed C++ functions
-    strLine.resize(strlen(strLine.c_str()));
+    strLine.resize(strlen(strLine.data()));
     // Remove any extra suffixed control characters
     while(!strLine.empty() && strLine[strLine.length()-1] < 32)
       strLine.pop_back();
@@ -2407,7 +2408,7 @@ static int CertGen(void)
     // First character is a hash? Ignore it
     if(strLine[0] == '#') continue;
     // Need title?
-    if(bGetTitle && StdIsAlnum(strLine[0]))
+    if(bGetTitle)
     { // Set name
       strFilename = strLine;
       // Set certificate being processed
@@ -2580,7 +2581,7 @@ static void ReplaceTextMulti(const string &strFile,
        "File", strFile, "Entries", ssplPairs.size());
   // Write file with new changes and close it
   fsFile.FStreamOpen(strFile, FM_W_B);
-  if(!fsFile.FStreamOpened()) throw runtime_error{ strFile.c_str() };
+  if(!fsFile.FStreamOpened()) throw runtime_error{ strFile.data() };
   fsFile.FStreamWriteString(strNew);
   fsFile.FStreamClose();
   // Write what we found
@@ -2618,7 +2619,7 @@ static const string BuildHPPHeader(const string &strFileName,
   return strLines;
 }
 /* ------------------------------------------------------------------------- */
-static int BuildLicenses(void)
+static int BuildLicenses()
 { // Find license files
   const Dir dLicenses{ LICDIR, ".txt" };
   if(dLicenses.IsFilesEmpty())
@@ -2888,7 +2889,7 @@ static void SetupTarRepoNSD(const string &strLibPath, const string &strTmp,
 { // Must have .tar. in filename
   if(strLibPath.find(".tar.") == StdNPos)
     throw runtime_error{
-      StrFormat("Archive '$' must contain '.tar.'!", strLibPath).c_str() };
+      StrFormat("Archive '$' must contain '.tar.'!", strLibPath).data() };
   // Make .tar file name
   const string strTar{ StrAppend(strTmp, '/', strPSFile) };
   // Extract the .gz to the temporary directory
@@ -3397,9 +3398,9 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Remove some sources we don't need
     System("rm -rf core/mixer/mixer_neon.cpp core/rtkit.* core/dbus_wrap.*");
     // Don't put messages in debugger
-    ReplaceText("core/logging.cpp", "OutputDebugStringW(wstr.c_str());",
+    ReplaceText("core/logging.cpp", "OutputDebugStringW(wstr.data());",
       "\n#ifdef _DEBUG\n"
-      "  OutputDebugStringW(wstr.c_str());\n"
+      "  OutputDebugStringW(wstr.data());\n"
       "#endif");
     // Rename mixer_inc.cpp to h
     ReplaceText("core/mixer/mixer_c.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
@@ -3864,7 +3865,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static int CppCheck(void)
+static int CppCheck()
 { // Do exec, if succeeded no more code is executed
   SystemF("$ "                         "--inline-suppr "
     "--suppress=missingIncludeSystem " "--exception-handling "
@@ -3893,7 +3894,7 @@ static int CppCheck(void)
 static void GotNewBuildExecutable(const string &strOldExe,
   const string &strNewExe)
 { // Wait for the compiled file to be readable and writable just incase
-  while(!DirCheckFileAccess(strNewExe, 6)) StdSuspend(milliseconds{ 100 });
+  while(!DirCheckFileAccess(strNewExe, 6)) StdSuspend(cd100MS);
   // Open the new executable and if succeeded?
   if(FStream fsNewExe{ strNewExe, FM_R_B })
   { // Read the new executable and its checksum
@@ -3922,7 +3923,7 @@ static void GotNewBuildExecutable(const string &strOldExe,
       { // Convert new exe to widestring
         const wstring wstrNewExe{ UTFtoS16(strNewExe) };
         // Get environment and modify first parameter
-        const ArgType *const lArgs[] = { wstrNewExe.c_str(), L"!", nullptr };
+        const ArgType *const lArgs[] = { wstrNewExe.data(), L"!", nullptr };
         const ArgType *const *lEnv = cCmdLine->CmdLineGetCEnv();
         // Execute the new program
         const int iCode = StdExecVE(lArgs, lEnv);
@@ -3931,11 +3932,9 @@ static void GotNewBuildExecutable(const string &strOldExe,
       } // Else if we're calling from the .x extension?
       if(cSystem->ENGExt() == ".x")
       { // Unlink the new executable
-        while(!DirFileUnlink(strOldExe))
-          StdSuspend(milliseconds{ 100 });
+        while(!DirFileUnlink(strOldExe)) StdSuspend(cd100MS);
         // Move the executable over
-        while(!DirFileRename(strNewExe, strOldExe))
-          StdSuspend(milliseconds{ 100 });
+        while(!DirFileRename(strNewExe, strOldExe)) StdSuspend(cd100MS);
         // Exit as normal if we were asked to or just return
         if(cCmdLine->CmdLineGetTotalCArgs() >= 2 &&
           !wcscmp(cCmdLine->CmdLineGetCArgs()[1], L"!")) exit(0);
@@ -3949,7 +3948,7 @@ static void GotNewBuildExecutable(const string &strOldExe,
 }
 #endif
 /* ------------------------------------------------------------------------- */
-static void CheckForNewBuildExecutable(void)
+static void CheckForNewBuildExecutable()
 { // Build executable filename and temp filename
 #if defined(WINDOWS)
   // Make filename to new executable in current directory and if we have it?
@@ -3970,7 +3969,7 @@ static void CheckForNewBuildExecutable(void)
 #endif
 }
 /* ------------------------------------------------------------------------- */
-static void WriteVersion(void)
+static void WriteVersion()
 { // Create the json object to write to
   using namespace IJson;
   Document dOut;
@@ -3996,7 +3995,7 @@ static void WriteVersion(void)
     XCL("Cannot open version file for writing!", "File", strVerFile);
 }
 /* ------------------------------------------------------------------------- */
-static void ReadVersion(void)
+static void ReadVersion()
 { // Create the json object and parse it
   const Json jsManifest{ strVerFile };
   // Check version is correct
@@ -4322,7 +4321,7 @@ static int Compile(const bool bSelf)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static int DebugApp(void)
+static int DebugApp()
 { // Goto assets directory
   SetDirectory(strName);
   // Execute the debugger
@@ -4500,7 +4499,7 @@ static bool CheckCommandLine(string &strX1, string &strX2)
   return true;
 }
 /* ------------------------------------------------------------------------- */
-static void ReadProject(void)
+static void ReadProject()
 { // If project does not exist then show the error
   if(!DirLocalDirExists(strName))
     XCL("Could not find project directory!",
@@ -4528,7 +4527,7 @@ static void ReadProject(void)
   strAuthor = StdMove(rjvConstants["app_author"].GetString());
 }
 /* ------------------------------------------------------------------------- */
-static int ShowVersion(void)
+static int ShowVersion()
 { // Write extra details to log
   cLog->LogDebugExSafe(
     "Executable drive: \"$\".\n"    "Executable directory: \"$\".\n"
@@ -4569,7 +4568,7 @@ static int Build(const int iArgC, ArgType**const saArgV,
     private System, private LuaFuncs, private Archives, private Assets,
     private Crypt, private Jsons
   { Engine(const int iArgC, ArgType**const saArgV, ArgType**const saEnv) :
-      CmdLine{ iArgC, saArgV, saEnv } { }
+      CmdLine{ iArgC, saArgV, saEnv } {}
   } engEngine{ iArgC, saArgV, saEnv };
   // Force current working directory to the base directory
   SetDirectory(

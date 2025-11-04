@@ -18,38 +18,38 @@ struct AgLCString { size_t stB; const char *cpD;
     stB(0), cpD{LuaUtilGetLStr<char>(lS, iArg, stB)}{} };
 /* -- Get string (empty allowed) ------------------------------------------- */
 struct AgString { const string strString;
-  const string &operator()(void) const { return strString; }
-  operator const string&(void) const { return operator()(); }
+  const string &operator()() const { return strString; }
+  operator const string&() const { return operator()(); }
   explicit AgString(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppStr(lS, iArg)}{} };
 /* -- Get modifyable string ------------------------------------------------ */
 struct AgNcString { string strString;
-  string &operator()(void) { return strString; }
-  operator string&(void) { return operator()(); }
+  string &operator()() { return strString; }
+  operator string&() { return operator()(); }
   explicit AgNcString(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppStr(lS, iArg)}{} };
 /* -- Get non-empty string ------------------------------------------------- */
 struct AgNeString { const string strNeString;
-  const string &operator()(void) const { return strNeString; }
-  operator const string&(void) const { return operator()(); }
+  const string &operator()() const { return strNeString; }
+  operator const string&() const { return operator()(); }
   explicit AgNeString(lua_State*const lS, const int iArg) :
     strNeString{LuaUtilGetCppStrNE(lS, iArg)}{} };
 /* -- Get Valid filename --------------------------------------------------- */
 struct AgFilename { const string strFilename;
-  const string &operator()(void) const { return strFilename; }
-  operator const string&(void) const { return operator()(); }
+  const string &operator()() const { return strFilename; }
+  operator const string&() const { return operator()(); }
   explicit AgFilename(lua_State*const lS, const int iArg) :
     strFilename{LuaUtilGetCppFile(lS, iArg)}{} };
 /* -- Create class template ------------------------------------------------ */
 template<class ClassType>struct ArClass { ClassType &ctClassRef;
-  ClassType &operator()(void) const { return ctClassRef; }
-  ClassType *operator&(void) const { return &operator()(); }
-  operator ClassType&(void) const { return operator()(); }
+  ClassType &operator()() const { return ctClassRef; }
+  ClassType *operator&() const { return &operator()(); }
+  operator ClassType&() const { return operator()(); }
   explicit ArClass(ClassType &ctNClassRef) : ctClassRef(ctNClassRef){} };
 /* -- Read a generic pointer ----------------------------------------------- */
 template<typename PtrType>struct AgPointer { const PtrType*const ptAddr;
-  const PtrType* operator()(void) const { return ptAddr; }
-  operator const PtrType*(void) const { return operator()(); }
+  const PtrType* operator()() const { return ptAddr; }
+  operator const PtrType*() const { return operator()(); }
   explicit AgPointer(const PtrType*const ptNAddr) : ptAddr(ptNAddr){} };
 /* -- Read a C-String ------------------------------------------------------ */
 template<typename PtrType>struct AgCString : public AgPointer<PtrType> {
@@ -59,8 +59,8 @@ template<typename PtrType>struct AgCString : public AgPointer<PtrType> {
 typedef AgCString<char> AgCStringChar;
 /* -- Storage for a standard integral value -------------------------------- */
 template<typename AnyType>struct AgIntegral { const AnyType atValue;
-  AnyType operator()(void) const { return atValue; }
-  operator AnyType(void) const { return operator()(); }
+  AnyType operator()() const { return atValue; }
+  operator AnyType() const { return operator()(); }
   explicit AgIntegral(const AnyType atNValue) : atValue(atNValue){} };
 /* -- Read flags ----------------------------------------------------------- */
 template<typename FlagsType>struct AgFlags : public AgIntegral<FlagsType> {

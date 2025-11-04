@@ -26,20 +26,19 @@ static const sqlite3_destructor_type fcbSqLiteTransient =
   reinterpret_cast<sqlite3_destructor_type>(-1);
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Sql cvar data types -------------------------------------------------- */
-BUILD_FLAGS(SqlCVarData,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(SqlCVarData,               // Sql cvar data types
   /* -- (Note: Don't ever change these around) ----------------------------- */
-  // No flags for this cvar in db?     The data value was encrypted?
-  SD_NONE                   {Flag(0)}, SD_ENCRYPTED              {Flag(1)}
-);/* -- Sql flags ---------------------------------------------------------- */
+  SD_NONE                   {Flag(0)}, // No flags for this cvar in db?
+  SD_ENCRYPTED              {Flag(1)}  // The data value was encrypted?
+);/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(Sql,                       // Sql flags classes
   /* ----------------------------------------------------------------------- */
-  // No settings?                      Is temporary database?
-  SF_NONE                   {Flag(0)}, SF_ISTEMPDB               {Flag(1)},
-  // Delete empty databases?           Debug sql executions?
-  SF_DELETEEMPTYDB          {Flag(2)}
+  SF_NONE                   {Flag(0)}, // No settings?
+  SF_ISTEMPDB               {Flag(1)}, // Is temporary database?
+  SF_DELETEEMPTYDB          {Flag(2)}  // Delete empty databases?
 );/* ----------------------------------------------------------------------- */
-struct SqlData :                        // Query response data item class
+struct SqlData :                       // Query response data item class
   /* -- Base classes ------------------------------------------------------- */
   public Memory                        // Memory block and type
 { /* -- Sql type variable -------------------------------------------------- */
@@ -54,13 +53,13 @@ struct SqlData :                        // Query response data item class
     Memory{ StdMove(mRef) },           // Move other memory block other
     iType(iNType)                      // Copy other type over
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Move constructor --------------------------------------------------- */
   SqlData(SqlData &&sdOther) :
     /* -- Initialisers ----------------------------------------------------- */
     SqlData{ StdMove(sdOther), sdOther.iType }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(SqlRecords, const string, SqlData);
 typedef list<SqlRecordsMap> SqlResult; // vector of key/raw data blocks
@@ -74,31 +73,31 @@ struct Sql :                           // Members initially public
 { /* -- Typedefs ----------------------------------------------------------- */
   enum ADResult                        // Results for CanDeleteDatabase()
   { /* --------------------------------------------------------------------- */
-    ADR_OK_NO_TABLES,                  // No tables exist (delete ok)
-    ADR_OK_NO_RECORDS,                 // No records exist (delete ok)
+    ADR_OK_NO_TABLES,                  // [0] No tables exist (delete ok)
+    ADR_OK_NO_RECORDS,                 // [1] No records exist (delete ok)
     /* --------------------------------------------------------------------- */
-    ADR_ERR,                           // Minimum error value (delete denied)
+    ADR_ERR,                           // [2] Min error value (delete denied)
     /* --------------------------------------------------------------------- */
-    ADR_ERR_TEMP_DB = ADR_ERR,         // Is temporary database?
-    ADR_ERR_DENY_OPTION,               // Delete not allowed by guest?
-    ADR_ERR_LU_TABLE,                  // Error looking up table?
-    ADR_ERR_TABLES_EXIST,              // Tables exist?
-    ADR_ERR_LU_RECORD,                 // Error looking up records?
-    ADR_ERR_RECORDS_EXIST,             // Records exist?
+    ADR_ERR_TEMP_DB = ADR_ERR,         // [2] Is temporary database?
+    ADR_ERR_DENY_OPTION,               // [3] Delete not allowed by guest?
+    ADR_ERR_LU_TABLE,                  // [4] Error looking up table?
+    ADR_ERR_TABLES_EXIST,              // [5] Tables exist?
+    ADR_ERR_LU_RECORD,                 // [6] Error looking up records?
+    ADR_ERR_RECORDS_EXIST,             // [7] Records exist?
     /* --------------------------------------------------------------------- */
-    ADR_MAX                            // Maximum number of result types
+    ADR_MAX                            // [8] Maximum number of result types
   };/* --------------------------------------------------------------------- */
   enum PurgeResult                     // Result to a purge request
   { /* --------------------------------------------------------------------- */
-    PR_FAIL,                           // Sql call failed with error
-    PR_OK,                             // Sql call succeeded with changes
-    PR_OK_NC,                          // Sql call succeeded but no changes
+    PR_FAIL,                           // [0] Sql call failed with error
+    PR_OK,                             // [1] Sql call succeeded with changes
+    PR_OK_NC,                          // [2] Sql call succeeded but no changes
   };/* --------------------------------------------------------------------- */
   enum CreateTableResult               // Create table result
   { /* --------------------------------------------------------------------- */
-    CTR_FAIL,                          // Sql create table failed
-    CTR_OK,                            // Sql call commited the variable
-    CTR_OK_ALREADY,                    // Sql table already exists
+    CTR_FAIL,                          // [0] Sql create table failed
+    CTR_OK,                            // [1] Sql call commited the variable
+    CTR_OK_ALREADY,                    // [2] Sql table already exists
   };/* -- Private typedefs ---------------------------------------- */ private:
   typedef IdList<SQLITE_NOTICE> ErrorList; // Sqlite errors strings list
   typedef IdList<ADR_MAX> ADRList;         // AD result strings list
@@ -139,7 +138,7 @@ struct Sql :                           // Members initially public
   const string_view &ADResultToString(const ADResult adrResult) const
     { return adrlStrings.Get(adrResult); }
   /* -- Close the database ------------------------------------------------- */
-  void DoClose(void)
+  void DoClose()
   { // Number of retries needed to close the database
     unsigned int uiRetries;
     // Wait until the database can be closed
@@ -247,7 +246,7 @@ struct Sql :                           // Members initially public
     SetError(SQLITE_OK);
   }
   /* -- Can database be deleted, no point keeping if it's empty! ----------- */
-  ADResult CanDatabaseBeDeleted(void)
+  ADResult CanDatabaseBeDeleted()
   { // No if this is a temporary database as theres nothing to delete.
     if(FlagIsSet(SF_ISTEMPDB)) return ADR_ERR_TEMP_DB;
     // No if we are not allowed to delete the database
@@ -305,30 +304,30 @@ struct Sql :                           // Members initially public
   /* -- Constructor that stores a 64-bit integer --------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const sqlite_int64 qValue, const VarArgs &...vaArgs)
+      const sqlite_int64 qValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Int64/Integer> = $ <$0x$>.",
       iCol, qValue, hex, qValue);
     // Process as integer then pass next arguments
     SetError(sqlite3_bind_int64(stmtData, iCol, qValue));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as double of type SQLITE_FLOAT -------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const double dValue, const VarArgs &...vaArgs)
+      const double dValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Double/Float> = $$.", iCol, fixed, dValue);
     // Process as integer then pass next arguments
     SetError(sqlite3_bind_double(stmtData, iCol, dValue));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Constructor that stores similar types of integer ------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      int iValue, const VarArgs &...vaArgs)
+      int iValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Int/Int> = $ <$0x$>.",
       iCol, iValue, hex, iValue);
@@ -336,12 +335,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(iValue)));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Constructor that stores similar types of integer ------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const unsigned int uiValue, const VarArgs &...vaArgs)
+      const unsigned int uiValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<UInt/Int> = $ <$0x$>.",
       iCol, uiValue, hex, uiValue);
@@ -349,12 +348,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(uiValue)));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Constructor that stores similar types of integer ------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const long lValue, const VarArgs &...vaArgs)
+      const long lValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Long/Int> = $ <$0x$>.",
       iCol, lValue, hex, lValue);
@@ -362,12 +361,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(lValue)));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Constructor that stores similar types of integer ------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const short sValue, const VarArgs &...vaArgs)
+      const short sValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Short/Int> = $ <$0x$>.",
       iCol, sValue, hex, sValue);
@@ -375,12 +374,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(sValue)));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a c-string with the specified size as text ----------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const size_t stSize, const char*const cpStr, const VarArgs &...vaArgs)
+      const size_t stSize, const char*const cpStr, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Size+CStr/Text> = \"$\" ($ bytes).",
       iCol, cpStr, stSize);
@@ -388,12 +387,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_text(stmtData, iCol, cpStr,
       UtilIntOrMax<int>(stSize), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a stand alone text string ---------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const char*const cpStr, const VarArgs &...vaArgs)
+      const char*const cpStr, VarArgs &&...vaArgs)
   { // Get text length
     const size_t stLen = strlen(cpStr);
     // Log the parameter
@@ -403,25 +402,25 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_text(stmtData, iCol, cpStr,
       UtilIntOrMax<int>(stLen), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a c++ string ----------------------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-    const string &strStr, const VarArgs &...vaArgs)
+    const string &strStr, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Str/Text> = \"$\" ($ bytes).",
       iCol, strStr, strStr.length());
     // Process as text then pass next arguments
-    SetError(sqlite3_bind_text(stmtData, iCol, strStr.c_str(),
+    SetError(sqlite3_bind_text(stmtData, iCol, strStr.data(),
       UtilIntOrMax<int>(strStr.length()), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a c++ string_view ------------------------------------ */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-    const string_view &strvStr, const VarArgs &...vaArgs)
+    const string_view &strvStr, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<StrV/Text> = \"$\" ($ bytes).",
       iCol, strvStr, strvStr.length());
@@ -429,12 +428,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_text(stmtData, iCol, strvStr.data(),
       UtilIntOrMax<int>(strvStr.length()), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a c-string with the specified size as a blob --------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const char*const cpPtr, const size_t stSize, const VarArgs &...vaArgs)
+      const char*const cpPtr, const size_t stSize, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogNLCDebugExSafe("- Arg #$<Ptr+Size/Blob> = $ bytes.",
       iCol, stSize);
@@ -442,13 +441,13 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_blob(stmtData, iCol, cpPtr,
       UtilIntOrMax<int>(stSize), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as custom type ------------------------------------------ */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
       const char*const cpPtr, const size_t stSize, const int iType,
-      const VarArgs &...vaArgs)
+      VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogNLCDebugExSafe("- Arg #$<CStr/$> = \"$\" $ bytes.",
       iCol, iType, cpPtr, stSize);
@@ -467,12 +466,12 @@ struct Sql :                           // Members initially public
       sqlite3_bind_null(stmtData, iCol)
            : SQLITE_ERROR))))));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a memory block --------------------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const MemConst &mcRef, const VarArgs &...vaArgs)
+      const MemConst &mcRef, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Memory/Blob> = $ bytes.",
       iCol, mcRef.MemSize());
@@ -481,18 +480,18 @@ struct Sql :                           // Members initially public
       UtilIntOrMax<int>(mcRef.MemSize()), fcbSqLiteTransient));
     // Send the parameters if we've binded the maximum allowed
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Send command to sql in raw format ---------------------------------- */
   template<typename ...VarArgs>
-    void DoExecute(const string &strQuery, const VarArgs &...vaArgs)
+    void DoExecute(const string &strQuery, VarArgs &&...vaArgs)
   { // Reset previous results
     Reset();
     // Set query start time
     const ClockInterval<> ciStart;
     // Statement preparation
     sqlite3_stmt *stmtData = nullptr;
-    SetError(sqlite3_prepare_v2(sqlDB, strQuery.c_str(),
+    SetError(sqlite3_prepare_v2(sqlDB, strQuery.data(),
       UtilIntOrMax<int>(strQuery.length()), &stmtData, nullptr));
     // If succeeded then start parsing the input and ouput
     if(IsNoError())
@@ -505,7 +504,7 @@ struct Sql :                           // Members initially public
       { // Column id
         int iCol = 1;
         // Get maximum parameters allowed before we have to send them
-        DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+        DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
       } // We don't have parameters so just execute the statement
       else DoStep(stmtData);
     } // Get end query time to get total execution duration
@@ -544,9 +543,9 @@ struct Sql :                           // Members initially public
       strvVar, strvVal);
   }
   /* -- Is sqlite database opened? --------------------------------- */ public:
-  bool IsOpened(void) { return !!sqlDB; }
+  bool IsOpened() { return !!sqlDB; }
   /* -- Heap used ---------------------------------------------------------- */
-  size_t HeapUsed(void) const
+  size_t HeapUsed() const
     { return static_cast<size_t>(sqlite3_memory_used()); }
   /* -- Execute a command from Lua ----------------------------------------- */
   int ExecuteFromLua(lua_State*const lS, const string &strQuery)
@@ -559,7 +558,7 @@ struct Sql :                           // Members initially public
     const ClockInterval<> ciStart;
     // Statement preparation
     sqlite3_stmt *stmtData = nullptr;
-    SetError(sqlite3_prepare_v2(sqlDB, strQuery.c_str(),
+    SetError(sqlite3_prepare_v2(sqlDB, strQuery.data(),
       UtilIntOrMax<int>(strQuery.length()), &stmtData, nullptr));
     // Starting LUA parameter and current enumerated parameter
     const int iStartParam = 2;
@@ -708,7 +707,7 @@ struct Sql :                           // Members initially public
                       "Type",   sdRef.iType);
                    break;
         } // Push key name
-        LuaUtilSetField(lS, -2, srmpRef.first.c_str());
+        LuaUtilSetField(lS, -2, srmpRef.first.data());
       } // Push key pair as integer table
       LuaUtilSetRaw(lS, -3);
       // Next result number
@@ -716,17 +715,17 @@ struct Sql :                           // Members initially public
     }
   }
   /* -- Reset last sql result ---------------------------------------------- */
-  void Reset(void)
+  void Reset()
   { // Clear error
     SetError(SQLITE_OK);
     // Clear last result data
     srKeys.clear();
     // Reset query time
-    cdQuery = seconds{0};
+    cdQuery = cd0;
   }
   /* -- Dispatch stored transaction with logging --------------------------- */
   template<typename ...VarArgs>
-    int Execute(const string &strQuery, const VarArgs &...vaArgs)
+    int Execute(const string &strQuery, VarArgs &&...vaArgs)
   { // Ignore if nothing to dispatch
     if(strQuery.empty()) return SQLITE_ERROR;
     // Parameters count
@@ -734,7 +733,7 @@ struct Sql :                           // Members initially public
     // Log query, do execution and return result
     cLog->LogDebugExSafe("Sql executing '$'<$>...",
       strQuery, strQuery.length());
-    DoExecute(strQuery, vaArgs...);
+    DoExecute(strQuery, StdForward<VarArgs>(vaArgs)...);
     cLog->LogDebugExSafe("- Total: $; Code: $<$>; RTT: $ sec.",
       stCount, ResultToString(GetError()), GetError(), TimeStr());
     // Return error status
@@ -742,10 +741,11 @@ struct Sql :                           // Members initially public
   }
   /* -- Dispatch stored transaction with logging but return success bool -- */
   template<typename ...VarArgs>
-    bool ExecuteAndSuccess(const string &strQuery, const VarArgs &...vaArgs)
-      { return Execute(strQuery, vaArgs...) == SQLITE_OK; }
+    bool ExecuteAndSuccess(const string &strQuery, VarArgs &&...vaArgs)
+      { return Execute(strQuery,
+          StdForward<VarArgs>(vaArgs)...) == SQLITE_OK; }
   /* -- Check integrity ---------------------------------------------------- */
-  bool CheckIntegrity(void)
+  bool CheckIntegrity()
   { // Do check (We need a result so dont use Pragma())
     if(Execute("PRAGMA integrity_check(1)"))
     { // Log and return failure
@@ -776,7 +776,7 @@ struct Sql :                           // Members initially public
     return true;
   }
   /* -- Get size of database ----------------------------------------------- */
-  uint64_t Size(void)
+  uint64_t Size()
   { // Get the database page size
     if(Execute("pragma page_size") || srKeys.empty()) return StdMaxUInt64;
     // Get reference to keys list
@@ -801,42 +801,38 @@ struct Sql :                           // Members initially public
     return uqPageSize * uqPageCount;
   }
   /* -- Return error string ------------------------------------------------ */
-  const char *GetErrorStr(void) const { return sqlite3_errmsg(sqlDB); }
+  const char *GetErrorStr() const { return sqlite3_errmsg(sqlDB); }
   /* -- Return error code -------------------------------------------------- */
-  int GetError(void) const { return iError; }
+  int GetError() const { return iError; }
   bool IsErrorEqual(const int iWhat) const { return GetError() == iWhat; }
   bool IsErrorNotEqual(const int iWhat) const { return !IsErrorEqual(iWhat); }
-  bool IsError(void) const { return IsErrorNotEqual(SQLITE_OK); }
-  bool IsNoError(void) const { return !IsError(); }
-  bool IsBusyError(void) const { return IsErrorEqual(SQLITE_BUSY); }
-  bool IsReadOnlyError(void) const { return IsErrorEqual(SQLITE_READONLY); }
-  bool IsBusyOrReadOnlyError(void) const
+  bool IsError() const { return IsErrorNotEqual(SQLITE_OK); }
+  bool IsNoError() const { return !IsError(); }
+  bool IsBusyError() const { return IsErrorEqual(SQLITE_BUSY); }
+  bool IsReadOnlyError() const { return IsErrorEqual(SQLITE_READONLY); }
+  bool IsBusyOrReadOnlyError() const
     { return IsReadOnlyError() || IsBusyError(); }
-  bool IsNotBusyOrReadOnlyError(void) const
+  bool IsNotBusyOrReadOnlyError() const
     { return !IsBusyOrReadOnlyError(); }
-  const string_view &GetErrorAsIdString(void) const
+  const string_view &GetErrorAsIdString() const
     { return ResultToString(iError); }
   /* -- Return duration of last query -------------------------------------- */
-  double Time(void) const { return ClockDurationToDouble(cdQuery); }
+  double Time() const { return ClockDurationToDouble(cdQuery); }
   /* -- Return formatted query time ---------------------------------------- */
-  const string TimeStr(void) const { return StrShortFromDuration(Time()); }
+  const string TimeStr() const { return StrShortFromDuration(Time()); }
   /* -- Returns if sql is in a transaction --------------------------------- */
-  bool Active(void) const { return !sqlite3_get_autocommit(sqlDB); }
+  bool Active() const { return !sqlite3_get_autocommit(sqlDB); }
   /* -- Return string map of records --------------------------------------- */
-  SqlResult &GetRecords(void) { return srKeys; }
+  SqlResult &GetRecords() { return srKeys; }
   /* -- Useful aliases ----------------------------------------------------- */
-  int Begin(void)
-    { return Execute("BEGIN TRANSACTION"); }
-  int End(void)
-    { return Execute("END TRANSACTION"); }
+  int Begin() { return Execute("BEGIN TRANSACTION"); }
+  int End() { return Execute("END TRANSACTION"); }
   int DropTable(const string_view &strvTable)
     { return Execute(StrFormat("DROP table `$`", strvTable)); }
   int FlushTable(const string_view &strvTable)
     { return Execute(StrFormat("DELETE from `$`", strvTable)); }
-  int Optimise(void)
-    { return Execute("VACUUM"); }
-  int Affected(void)
-    { return sqlite3_changes(sqlDB); }
+  int Optimise() { return Execute("VACUUM"); }
+  int Affected() { return sqlite3_changes(sqlDB); }
   /* -- Process a count(*) requested --------------------------------------- */
   size_t GetRecordCount(const string_view &strvTable,
     const string_view &strvCondition=cCommon->CommonCBlank())
@@ -866,7 +862,7 @@ struct Sql :                           // Members initially public
         "SELECT `name` FROM `sqlite_master` WHERE `type`='table' AND `name`=?",
         strvTable) && !GetRecords().empty(); }
   /* -- Flush all orphan statements ---------------------------------------- */
-  size_t Finalise(void) const
+  size_t Finalise() const
   { // Number of orphan transactions
     size_t stOrphan = 0;
     // Finalise all remaining statements until there are no more left
@@ -876,7 +872,7 @@ struct Sql :                           // Members initially public
     return stOrphan;
   }
   /* ----------------------------------------------------------------------- */
-  bool CVarReadKeys(void)
+  bool CVarReadKeys()
   { // Read all variable names and if failed?
     if(Execute(StrFormat("SELECT `$` from `$`", strCVKeyColumn, strvCVTable)))
     { // Put in log and return nothing loaded
@@ -890,7 +886,7 @@ struct Sql :                           // Members initially public
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  bool CVarReadAll(void)
+  bool CVarReadAll()
   { // Read all variables and if failed?
     if(Execute(StrFormat("SELECT `$`,`$`,`$` from `$`",
       strCVKeyColumn, strCVFlagsColumn, strCVValueColumn, strvCVTable)))
@@ -904,7 +900,7 @@ struct Sql :                           // Members initially public
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult CVarDropTable(void)
+  CreateTableResult CVarDropTable()
   { // If table exists return that it already exists
     if(IsTableExist(strvCVTable)) return CTR_OK_ALREADY;
     // Drop the SQL table and if failed?
@@ -919,7 +915,7 @@ struct Sql :                           // Members initially public
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult CVarCreateTable(void)
+  CreateTableResult CVarCreateTable()
   { // If table already exists then return success already
     if(IsTableExist(strvCVTable)) return CTR_OK_ALREADY;
     // Create the SQL table for our settings if it does not exist
@@ -937,7 +933,7 @@ struct Sql :                           // Members initially public
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult LuaCacheDropTable(void)
+  CreateTableResult LuaCacheDropTable()
   { // If table exists return that it already exists
     if(GetRecordCount(strvLCTable) == StdMaxSizeT) return CTR_OK_ALREADY;
     // Drop the SQL table and if failed?
@@ -952,7 +948,7 @@ struct Sql :                           // Members initially public
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult LuaCacheCreateTable(void)
+  CreateTableResult LuaCacheCreateTable()
   { // If table already exists then return success already
     if(IsTableExist(strvLCTable)) return CTR_OK_ALREADY;
     // Create the SQL table for our settings if it does not exist
@@ -973,7 +969,7 @@ struct Sql :                           // Members initially public
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult LuaCacheRebuildTable(void)
+  CreateTableResult LuaCacheRebuildTable()
     { LuaCacheDropTable(); return LuaCacheCreateTable(); }
   /* ----------------------------------------------------------------------- */
   bool CVarCommitData(const string &strVar,
@@ -1020,9 +1016,9 @@ struct Sql :                           // Members initially public
   }
   /* ----------------------------------------------------------------------- */
   PurgeResult CVarPurge(const string &strVar)
-    { return CVarPurgeData(strVar.c_str(), strVar.length()); }
+    { return CVarPurgeData(strVar.data(), strVar.length()); }
   /* -- DeInit ------------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Ignore if no handle to deinit
     if(!sqlDB) return;
     // Log deinitialisation
@@ -1071,7 +1067,7 @@ struct Sql :                           // Members initially public
     cCrypt->SetDefaultPrivateKey();
   }
   /* -- Load schema version ------------------------------------------------ */
-  void LoadSchemaVersion(void)
+  void LoadSchemaVersion()
   { // If table exists create a new table
     if(!IsTableExist(strvSKeyTable)) goto NewKeyNoDrop;
     // Check record count
@@ -1162,7 +1158,7 @@ struct Sql :                           // Members initially public
     else cLog->LogInfoExSafe("Sql schema version updated to $.", qVersion);
   }
   /* -- Create new private key --------------------------------------------- */
-  bool CreatePrivateKeyNoDrop(void)
+  bool CreatePrivateKeyNoDrop()
   { // Try to create the table that holds the private key and if failed?
     if(Execute(StrFormat("CREATE table `$`(`$` INTEGER NOT NULL,"
                                           "`$` INTEGER NOT NULL)",
@@ -1194,7 +1190,7 @@ struct Sql :                           // Members initially public
     return true;
   }
   /* -- Create new private key (drop first) -------------------------------- */
-  bool CreatePrivateKey(void)
+  bool CreatePrivateKey()
   { // Generate a new private key
     cCrypt->ResetPrivateKey();
     // Try to drop the original private key table
@@ -1205,7 +1201,7 @@ struct Sql :                           // Members initially public
     return CreatePrivateKeyNoDrop();
   }
   /* -- Load private key --------------------------------------------------- */
-  void LoadPrivateKey(void)
+  void LoadPrivateKey()
   { // If table exists create a new table
     if(!IsTableExist(strvPKeyTable)) CreatePrivateKeyNoDrop();
     // Check record count
@@ -1289,7 +1285,7 @@ struct Sql :                           // Members initially public
     // parameter (VFS) that resolves to 'nullptr' is just to shut CppCheck up
     // with a false positive.
     sqlite3 *sqlDBtemp = nullptr;
-    if(const int iCode = sqlite3_open_v2(strDb.c_str(), &sqlDBtemp,
+    if(const int iCode = sqlite3_open_v2(strDb.data(), &sqlDBtemp,
          SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX |
          SQLITE_OPEN_SHAREDCACHE, reinterpret_cast<char*>(sqlDBtemp)))
     { // Log error result
@@ -1310,7 +1306,7 @@ struct Sql :                           // Members initially public
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Sql, DeInit(); sqlite3_shutdown())
   /* -- Constructor -------------------------------------------------------- */
-  Sql(void) :                          // No parameters
+  Sql() :
     /* -- Initialisers ----------------------------------------------------- */
     SqlFlags(SF_NONE),                 // No sql flags (loaded externally)
     elStrings{{                        // Init sqlite error strings list
@@ -1331,7 +1327,7 @@ struct Sql :                           // Members initially public
     sqlDB(nullptr),                    // No sql database handle yet
     iError(sqlite3_initialize()),      // Initialise sqlite and store error
     uiQueryRetries(3),                 // Initially 3 retries
-    cdRetry{milliseconds{1000}},       // Initially wait 1 second per retry
+    cdRetry{ cd1S },                   // Initially wait 1 second per retry
     strMemoryDBName{ ":memory:" },     // Create a memory database by default
     strCVKeyColumn{ "K" },             // Init name of cvars 'key' column
     strCVFlagsColumn{ "F" },           // Init name of cvars 'flags' column
@@ -1366,8 +1362,8 @@ struct Sql :                           // Members initially public
     { return CVarSimpleSetInt(uiQueryRetries, uiCount); }
   /* -- Set retry suspend time --------------------------------------------- */
   CVarReturn RetrySuspendModified(const uint64_t uqMilliseconds)
-    { return CVarSimpleSetIntNLG(cdRetry, milliseconds{ uqMilliseconds },
-        milliseconds{0}, milliseconds{1000}); }
+    { return CVarSimpleSetIntNLG(cdRetry,
+        milliseconds{ uqMilliseconds }, cd0, cd1S); }
   /* -- Modify delete empty database permission ---------------------------- */
   CVarReturn DeleteEmptyDBModified(const bool bState)
     { FlagSetOrClear(SF_DELETEEMPTYDB, bState); return ACCEPT; }

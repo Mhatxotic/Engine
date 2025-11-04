@@ -38,6 +38,7 @@ namespace E {                          // Start of engine namespace
 #include "cmdline.hpp"                 // Command-line class header
 #include "memory.hpp"                  // Memory management utilities header
 #include "fstream.hpp"                 // File IO utility header
+#include "mutex.hpp"                   // Mutex helper class
 #include "log.hpp"                     // Logging helper class header
 #include "luadef.hpp"                  // Lua definitions header
 #include "luaident.hpp"                // Lua ident class header
@@ -62,7 +63,7 @@ namespace E {                          // Start of engine namespace
 #include "condef.hpp"                  // Console definitions header
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
-#include "toggler.hpp"                 // Toggler class header
+#include "refctr.hpp"                  // Reference counter class header
 #include "luautil.hpp"                 // Lua utility functions header
 #include "luaref.hpp"                  // Lua reference helper class header
 #include "luaevent.hpp"                // Lua event helper class header
@@ -155,7 +156,7 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
       // Base classes required to run the main part of the engine.
       private Common, private DirBase, private CmdLine, private Log
     { // Main procedure into running the engine
-      int EngineMain(void) const try { return Core{}.CoreMain(); }
+      int EngineMain() const try { return Core{}.CoreMain(); }
       // Safe loggable exception occured?
       catch(const exception &eReason)
       { // Send to log and show error message to user. Show message box and
@@ -171,7 +172,7 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
         // Initialisers
         CmdLine{ iArgs, lArgs, lEnv }  // Initialise command-line arg
         // No code
-        { }
+        {}
     };
     // Create the engine object, run the main function and return its result
     return Engine{ __argc, __wargv, _wenviron }.EngineMain();

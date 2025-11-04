@@ -9,7 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaRef {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ILuaUtil::P;           using namespace IUtil::P;
+using namespace ILuaUtil::P;           using namespace IStd::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -42,7 +43,7 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
   /* -- Set new state ------------------------------------------------------ */
   void LuaRefSetState(lua_State*const lS=nullptr) { lsState = lS; }
   /* -- Get the state ---------------------------------------------- */ public:
-  lua_State *LuaRefGetState(void) const { return lsState; }
+  lua_State *LuaRefGetState() const { return lsState; }
   /* -- Returns the reference at the specified index ----------------------- */
   int LuaRefGetId(const size_t stIndex=0) const
     { return aReferences[stIndex]; }
@@ -62,21 +63,19 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
   bool LuaRefStateIsNotEqual(const lua_State*const lS) const
     { return !LuaRefStateIsEqual(lS); }
   /* -- Returns if the state is set ---------------------------------------- */
-  bool LuaRefStateIsSet(void) const { return LuaRefStateIsNotEqual(nullptr); }
+  bool LuaRefStateIsSet() const { return LuaRefStateIsNotEqual(nullptr); }
   /* -- Returns if the state is NOT set ------------------------------------ */
-  bool LuaRefStateIsNotSet(void) const { return !LuaRefStateIsSet(); }
+  bool LuaRefStateIsNotSet() const { return !LuaRefStateIsSet(); }
   /* -- Returns if the specified reference is set -------------------------- */
   bool LuaRefIsSet(const size_t stIndex=0) const
     { return LuaRefStateIsSet() && LuaUtilIsRefValid(LuaRefGetId(stIndex)); }
   /* -- De-initialise the reference ---------------------------------------- */
-  bool LuaRefDeInit(void)
+  bool LuaRefDeInit()
   { // Return if theres a state?
     if(LuaRefStateIsNotSet()) return false;
     // Unload and clear references from back to front
-    for(ReferencesRevIt rriIt{ aReferences.rbegin() };
-                        rriIt != aReferences.rend();
-                      ++rriIt)
-      LuaRefDoDeInitReset(*rriIt);
+    StdForEach(seq, aReferences.rbegin(), aReferences.rend(),
+      [this](int &iRef) { LuaRefDoDeInitReset(iRef); });
     // Clear the state
     LuaRefSetState();
     // Success
@@ -106,20 +105,19 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
     return true;
   }
   /* -- Constructor that does nothing but preinitialise references --------- */
-  LuaRef(void) :
+  LuaRef() :
     /* -- Initialisers ----------------------------------------------------- */
     lsState(nullptr),                  // State not initialised yet
     aReferences{ UtilMkFilledContainer<References>(LUA_REFNIL) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor, delete the reference if set----------------------------- */
-  ~LuaRef(void)
-  { // If theres a state? Delete references back to front
-    if(LuaRefStateIsSet())
-      for(ReferencesConstRevIt rcriIt{ aReferences.rbegin() };
-                               rcriIt != aReferences.rend();
-                             ++rcriIt)
-        LuaRefDoDeInit(*rcriIt);
+  ~LuaRef()
+  { // Return if there isn't a state
+    if(LuaRefStateIsNotSet()) return;
+    // Delete references back to front
+    StdForEach(seq, aReferences.rbegin(), aReferences.rend(),
+      [this](const int iRef) { LuaRefDoDeInit(iRef); });
   }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

@@ -59,16 +59,16 @@ static const string SysError(const int iError)
   }
 }
 /* -- System error code ---------------------------------------------------- */
-template<typename IntType=int>static IntType SysErrorCode(void)
+template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(GetLastError()); }
 /* -- System error formatter with current error code ----------------------- */
-static const string SysError(void) { return SysError(SysErrorCode()); }
+static const string SysError() { return SysError(SysErrorCode()); }
 /* -- Actual interface to MessageBoxExW ------------------------------------ */
 static unsigned int SysMessage(void*const vpHandle, const string &strTitle,
   const string &strMessage, const unsigned int uiFlags)
     { return static_cast<unsigned int>(
         MessageBoxExW(reinterpret_cast<HWND>(vpHandle),
-          UTFtoS16(strMessage).c_str(), UTFtoS16(strTitle).c_str(),
+          UTFtoS16(strMessage).data(), UTFtoS16(strTitle).data(),
           static_cast<DWORD>(uiFlags), 0)); }
 /* -- Set thread priority -------------------------------------------------- */
 static bool SysSetThreadPriority(const SysThread stLevel)
@@ -97,7 +97,7 @@ static void SysSetThreadName(const char*const cpName)
   // Send message to debugger to name the thread
   __try { RaiseException(0x406D1388, 0,
             sizeof(tInfo)/sizeof(ULONG_PTR), (ULONG_PTR*)&tInfo); }
-  __except(EXCEPTION_CONTINUE_EXECUTION) { }
+  __except(EXCEPTION_CONTINUE_EXECUTION) {}
 }
 /* ------------------------------------------------------------------------- */
 #elif defined(MACOS)                   // Using mac?
@@ -109,11 +109,11 @@ static unsigned int SysMessage(void*const, const string &strTitle,
   typedef unique_ptr<const void, function<decltype(CFRelease)>> CFAutoRelPtr;
   // Setup dialogue title string with autorelease and if succeeded?
   if(const CFAutoRelPtr csrTitle{
-    CFStringCreateWithCString(kCFAllocatorDefault, strTitle.c_str(),
+    CFStringCreateWithCString(kCFAllocatorDefault, strTitle.data(),
       kCFStringEncodingUTF8), CFRelease })
     // Setup dialogue message string with autorelease and if succeeded?
     if(const CFAutoRelPtr csrMessage{
-      CFStringCreateWithCString(kCFAllocatorDefault, strMessage.c_str(),
+      CFStringCreateWithCString(kCFAllocatorDefault, strMessage.data(),
         kCFStringEncodingUTF8), CFRelease })
       // Setup button text string with autorelease and if succeeded?
       if(const CFAutoRelPtr csrButton{
@@ -152,16 +152,16 @@ static unsigned int SysMessage(void*const, const string &strTitle,
         }
       }
   // Didn't work so put in stdout
-  fwprintf(stderr, L"%ls: %ls\n", UtfDecoder{ strTitle }.Wide().c_str(),
-                                  UtfDecoder{ strMessage }.Wide().c_str());
+  fwprintf(stderr, L"%ls: %ls\n", UtfDecoder{ strTitle }.Wide().data(),
+                                  UtfDecoder{ strMessage }.Wide().data());
   // If exited successfully? Return success
   return 0;
 }
 /* -- Unset multiple environment variables --------------------------------- */
-static void SysUnSetEnv(void) { }
+static void SysUnSetEnv() {}
 template<typename ...VarArgs>
-  static void SysUnSetEnv(const char*const cpEnv, const VarArgs &...vaVars)
-    { unsetenv(cpEnv); SysUnSetEnv(vaVars...); }
+  static void SysUnSetEnv(const char*const cpEnv, VarArgs &&...vaArgs)
+    { unsetenv(cpEnv); SysUnSetEnv(StdForward<VarArgs>(vaArgs)...); }
 /* -- Set thread priority -------------------------------------------------- */
 static bool SysSetThreadPriority(const SysThread stLevel)
 { // Get this thread handle
@@ -183,7 +183,7 @@ static bool SysSetThreadPriority(const SysThread stLevel)
   // Calculate the priority by fractioning the range
   struct sched_param spParam{
     static_cast<int>(floorf(fMax - ((fMax - fMin) * fFraction))),
-    { }                                // __opaque (MacOS only)
+    {}                                // __opaque (MacOS only)
   };
   // Set the new parameters and return true if succeeded
   return !pthread_setschedparam(ptHandle, iPolicy, &spParam);
@@ -198,7 +198,7 @@ static bool SysSetThreadPriority(const SysThread stLevel)
 static unsigned int SysMessage(void*const, const string &strTitle,
   const string &strMessage, const unsigned int uiFlags)
 { // Print the error in console
-  fprintf(stderr, "%s: %s\n", strTitle.c_str(), strMessage.c_str());
+  fprintf(stderr, "%s: %s\n", strTitle.data(), strMessage.data());
   // Eligable directories for dialog box elf binaries
   const array<const string_view, 10> strvaDirPrefixes{
     "/bin/",             "/usr/bin/",        "/usr/sbin/",
@@ -238,7 +238,7 @@ static unsigned int SysMessage(void*const, const string &strTitle,
           cCommon->CommonBlank() : StrFormat("$\"$\"",
             dbaApp.strvMessageParam, strMessage))) };
       // Now execute and break if successful
-      if(!system(strCmdLine.c_str())) return 0;
+      if(!system(strCmdLine.data())) return 0;
     }
   } // Return status code
   return 0;
@@ -260,12 +260,12 @@ static unsigned int SysMessage(const string &strTitle,
 /* ------------------------------------------------------------------------- */
 #else                                  // Not using Windows target? (POSIX)
 /* -- System error code ---------------------------------------------------- */
-template<typename IntType=int>static IntType SysErrorCode(void)
+template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(StdGetError()); }
 /* -- System error formatter with specified error code --------------------- */
 static const string SysError(const int iError) { return StrFromErrNo(iError); }
 /* -- System error formatter with current error code ----------------------- */
-static const string SysError(void) { return StrFromErrNo(SysErrorCode()); }
+static const string SysError() { return StrFromErrNo(SysErrorCode()); }
 /* ------------------------------------------------------------------------- */
 static void SysSetThreadName(const char*const cpName)
 { // Set thread name which helps a little with debugging

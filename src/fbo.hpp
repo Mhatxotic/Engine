@@ -41,7 +41,7 @@ struct OrderItem :                     // Order item structure
     FboRenderItem{ friOther },         fboDest(fboNDest),
     siVertices(siNVertices),           stCommands(stNCommands)
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 }; /* ---------------------------------------------------------------------- */
 Fbo               *fboActive;          // Pointer to active FBO object
 Fbo               *fboMain;            // Pointer to main FBO object
@@ -97,34 +97,34 @@ class FboBase :                        // Fbo base class
     stTrianglesFrame(0),               stCommandsFrame(0),
     stFinishCounter(0),                uiFBOtex(0)
     /* --------------------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == Fbo object class ===================================================== */
 CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public FboBase                       // Fbo base class
 { /* -- Select texture --------------------------------------------- */ public:
-  void FboBindTexture(void)
+  void FboBindTexture()
     { GL(cOgl->BindTexture(uiFBOtex),
         "Failed to select FBO texture as active!",
         "Identifier", IdentGet(), "Texture", uiFBOtex); }
   /* -- (Un)bind framebuffer ----------------------------------------------- */
-  void FboBind(void)
+  void FboBind()
     { GL(cOgl->BindFBO(uiFBO), "Failed to select active FBO!",
         "Identifier", IdentGet(), "FBO", uiFBO); }
   /* -- Bind buffer and texture -------------------------------------------- */
-  void FboBindAndTexture(void) { FboBind(); FboBindTexture(); }
+  void FboBindAndTexture() { FboBind(); FboBindTexture(); }
   /* -- Set FBO transparency (must be called before initialisation) -------- */
   void FboSetTransparency(const bool bState)
     { iPixFormat = bState ? GL_RGBA8 : GL_RGB8; }
-  bool FboIsTransparencyEnabled(void) const { return iPixFormat == GL_RGBA8; }
+  bool FboIsTransparencyEnabled() const { return iPixFormat == GL_RGBA8; }
   /* -- Set wireframe mode ------------------------------------------------- */
   void FboSetWireframe(const bool bWireframe)
     { ePolyMode = bWireframe ? GL_LINE : GL_FILL; }
   /* -- Flush the vertex buffer and queue ---------------------------------- */
-  void FboClearLists(void) { ftvActive.clear(); fcvActive.clear(); }
+  void FboClearLists() { ftvActive.clear(); fcvActive.clear(); }
   /* -- Flush queue -------------------------------------------------------- */
-  void FboFlush(void)
+  void FboFlush()
   { // Flush the vertex buffer and queue
     FboClearLists();
     // Reset counters and caches
@@ -149,19 +149,19 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   bool FboReserveTriangles(const size_t stCount)
     { return UtilReserveList(ftvActive, stCount); }
   /* -- Return number of commands parsed last frame ---------------- */ public:
-  size_t FboGetCmdsNow(void) const { return fcvActive.size(); }
-  size_t FboGetCmds(void) const { return stCommandsFrame; }
-  size_t FboGetCmdsReserved(void) const { return fcvActive.capacity(); }
+  size_t FboGetCmdsNow() const { return fcvActive.size(); }
+  size_t FboGetCmds() const { return stCommandsFrame; }
+  size_t FboGetCmdsReserved() const { return fcvActive.capacity(); }
   /* -- Return number of triangles parsed last frame ----------------------- */
-  size_t FboGetTrisCmd(void) const
+  size_t FboGetTrisCmd() const
      { return FboGetTrisNow() - stTrianglesLast; }
-  size_t FboGetTrisNow(void) const { return ftvActive.size(); }
-  size_t FboGetTris(void) const { return stTrianglesFrame; }
-  size_t FboGetTrisReserved(void) const { return ftvActive.capacity(); }
+  size_t FboGetTrisNow() const { return ftvActive.size(); }
+  size_t FboGetTris() const { return stTrianglesFrame; }
+  size_t FboGetTrisReserved() const { return ftvActive.capacity(); }
   /* -- Return number of times fbo was added to the render list ------------ */
-  size_t FboGetFinishCount(void) const { return stFinishCounter; }
+  size_t FboGetFinishCount() const { return stFinishCounter; }
   /* -- Activate this fbo -------------------------------------------------- */
-  void FboSetActive(void) { cParent->fboActive = this; }
+  void FboSetActive() { cParent->fboActive = this; }
   /* -- Perform rendering inside the FBO to the texture -------------------- */
   void FboRender(const FboOrderItem &foiRef)
   { // Select our FBO as render target
@@ -211,7 +211,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     if(!--stFinishCounter) FboFlush();
   }
   /* -- Finished with drawing in the FBO ----------------------------------- */
-  void FboFinishQueue(void)
+  void FboFinishQueue()
   { // Push the data we need to render the array
     fcvActive.push_back({
       uiTexUnitCache,                                             // uiTUId
@@ -224,7 +224,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     });
   }
   /* -- Finish and render the graphics ------------------------------------- */
-  void FboFinishAndRender(void)
+  void FboFinishAndRender()
   { // Finish writing to the arrays
     FboFinishQueue();
     // Set current triangle and frame count
@@ -304,7 +304,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   /* -- Set wrapping mode -------------------------------------------------- */
   void FboSetWrap(const GLint iM) { iWrapMode = iM; }
   /* -- Commit wrapping mode ----------------------------------------------- */
-  void FboCommitWrap(void)
+  void FboCommitWrap()
   { // Select our fbo and texture
     FboBindAndTexture();
     // Structure of the wrapping types
@@ -323,7 +323,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
         "Identifier", IdentGet(), "Mode", iWrapMode, "Type", pItem.cWrap);
   }
   /* -- Set filtering by ID ------------------------------------------------ */
-  OglFilterEnum FboGetFilter(void) const { return ofeFilterId; }
+  OglFilterEnum FboGetFilter() const { return ofeFilterId; }
   void FboSetFilter(const OglFilterEnum ofeId)
   { // Translate our filter id to min and mag filter
     cOgl->SetFilterById(ofeId, iMinFilter, iMagFilter);
@@ -331,7 +331,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     ofeFilterId = ofeId;
   }
   /* -- Commit new filter modes -------------------------------------------- */
-  void FboCommitFilter(void)
+  void FboCommitFilter()
   { // Select our fbo and texture
     FboBindAndTexture();
     // Set filtering
@@ -383,7 +383,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   }
   /* -- Set clear state ---------------------------------------------------- */
   void FboSetClear(const bool bState) { bClear = bState; }
-  bool FboIsClearEnabled(void) const { return bClear; }
+  bool FboIsClearEnabled() const { return bClear; }
   /* -- Set clear colour for the FBO --------------------------------------- */
   void FboSetClearColour(const GLfloat fRed, const GLfloat fGreen,
     const GLfloat fBlue, const GLfloat fAlpha)
@@ -392,7 +392,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   /* -- Set clear colour for the FBO as integer (console cvar) ------------- */
   void FboSetClearColourInt(const unsigned int uiC) { SetColourInt(uiC); }
   /* -- Reset clear colour ------------------------------------------------- */
-  void FboResetClearColour(void) { ResetColour(); }
+  void FboResetClearColour() { ResetColour(); }
   /* -- Set matrix for drawing --------------------------------------------- */
   void FboSetMatrix(const GLfloat fLeft, const GLfloat fTop,
     const GLfloat fRight, const GLfloat fBottom)
@@ -411,9 +411,9 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   bool FboReserve(const size_t stTri, const size_t stCmd)
     { return FboReserveCommands(stCmd) && FboReserveTriangles(stTri); }
   /* -- ReInitialise ------------------------------------------------------- */
-  void FboReInit(void) { FboInit(IdentGet(), DimGetWidth(), DimGetHeight()); }
+  void FboReInit() { FboInit(IdentGet(), DimGetWidth(), DimGetHeight()); }
   /* -- DeInitialise ------------------------------------------------------- */
-  void FboDeInit(void)
+  void FboDeInit()
   { // Remove as active fbo if set
     if(cFbos->fboActive == this) cFbos->fboMain->FboSetActive();
     // Flush active triangle and command lists
@@ -506,13 +506,13 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
       uiFBOtex, cOgl->GetPixelFormat(iPixFormat));
   }
   /* -- Constructor -------------------------------------------------------- */
-  Fbo(void) :                          // No parameters
+  Fbo() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFbo{ cFbos, this },        // Initially registered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     FboBase{ GL_RGBA8, false }         // Has alpha channel and not protected
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor WITHOUT registration (used for core Fbos)--------------- */
   Fbo(const GLint iPixFmt,             // Pixel format requested
       const bool bLocked) :            // Locked from garbage collector
@@ -521,13 +521,13 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     FboBase{ iPixFmt, bLocked }        // Init alpha channel and lua protect
     /* -- No code ---------------------------------------------------------- */
-    { }                                // Do nothing else
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Fbo(void) { FboDeInit(); }
+  ~Fbo() { FboDeInit(); }
 };/* ----------------------------------------------------------------------- */
 CTOR_END(Fbos, Fbo, FBO,,,, fboActive(nullptr), fboMain(nullptr))
 /* ========================================================================= */
-static void FboRender(void)
+static void FboRender()
 { // If there are fbo's in the queue?
   if(!cFbos->ovActive.empty())
   { // For each FBO, reset the texture cache of the fbo if neccesary
@@ -539,7 +539,7 @@ static void FboRender(void)
   cOgl->DeleteTexturesAndFboHandles();
 }
 /* ========================================================================= */
-static void FboReInit(void)
+static void FboReInit()
 { // Ignore if no fbos
   if(cFbos->empty()) return;
   // Reinit all fbos and log pre/post operation.
@@ -548,7 +548,7 @@ static void FboReInit(void)
   cLog->LogInfoExSafe("Fbos reinitialised $ objects.", cFbos->size());
 }
 /* ========================================================================= */
-static void FboDeInit(void)
+static void FboDeInit()
 { // Ignore if no fbos
   if(cFbos->empty()) return;
   // De-init all fbos (NOT destroy them!) and log pre/post operation.
@@ -560,7 +560,7 @@ static void FboDeInit(void)
 static CVarReturn FboSetOrderReserve(const size_t stCount)
   { return BoolToCVarReturn(UtilReserveList(cFbos->ovActive, stCount)); }
 /* -- Get active FBO ------------------------------------------------------- */
-static Fbo *FboActive(void) { return cFbos->fboActive; }
+static Fbo *FboActive() { return cFbos->fboActive; }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

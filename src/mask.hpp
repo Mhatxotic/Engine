@@ -382,15 +382,15 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     DimSet(static_cast<int>(stTWidth), static_cast<int>(stTHeight));
   }
   /* -- Get size of all masks ---------------------------------------------- */
-  size_t GetAlloc(void) const { return stAlloc; }
+  size_t GetAlloc() const { return stAlloc; }
   /* -- Constructor -------------------------------------------------------- */
-  Mask(void) :
+  Mask() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperMask{ cMasks, this },      // Register this object in collector
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     stAlloc(0)                         // Uninitialised allocated size
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Masks, Mask, MASK)    // Finish collector class
 /* ------------------------------------------------------------------------- */

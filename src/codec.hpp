@@ -34,10 +34,10 @@ class EncData                          // Encoded data returned by callback
   const size_t     stCompressed;       // Bytes of compressed data
   const size_t     stExtra;            // Bytes of extra data stored
   /* --------------------------------------------------------------- */ public:
-  EncMode GetMode(void) const { return eMode; }
-  size_t GetUncompressed(void) const { return stUncompressed; }
-  size_t GetCompressed(void) const { return stCompressed; }
-  size_t GetExtra(void) const { return stExtra; }
+  EncMode GetMode() const { return eMode; }
+  size_t GetUncompressed() const { return stUncompressed; }
+  size_t GetCompressed() const { return stCompressed; }
+  size_t GetExtra() const { return stExtra; }
   /* -- Init constructor --------------------------------------------------- */
   EncData(const EncMode eM, const size_t stU, const size_t stC,
     const size_t stX) :
@@ -47,7 +47,7 @@ class EncData                          // Encoded data returned by callback
     stCompressed(stC),                 // Set requested compressed size
     stExtra(stX)                       // Set extra bytes size
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Copy constructor --------------------------------------------------- */
   explicit EncData(const EncData &edOther) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -56,7 +56,7 @@ class EncData                          // Encoded data returned by callback
     stCompressed(edOther.GetCompressed()),     // Copy compressed size
     stExtra(edOther.GetExtra())                // Copy extra bytes size
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- Magic block header data -------------------------------------------- */
 enum Header : unsigned long            // Buffer header integer location flags
 { /* ----------------------------------------------------------------------- */
@@ -116,7 +116,7 @@ static const EncData CodecEncodeAES(const MemConst &mcSrc, Memory &mDest,
   else XC("Failed to create encode cipher context!");
 }
 /* -- Return size of AES256 cipher block ----------------------------------- */
-static size_t CodecGetAES256CBCSize(void)
+static size_t CodecGetAES256CBCSize()
   { return static_cast<size_t>(EVP_CIPHER_block_size(EVP_aes_256_cbc())); }
 /* ------------------------------------------------------------------------- */
 static void CodecDecodeAES(const MemConst &mcSrc, Memory &mDest,
@@ -477,7 +477,7 @@ template<class EncPlugin>class CoEncoder :
   public Memory,                       // Allocated memory block object
   public EncPlugin                     // Plugin object
 { /* -- Initialises the header of the block ----------------------- */ private:
-  void InitHeader(void)
+  void InitHeader()
   { // Resize memory to fit actual output size
     MemResize(ENCHDR_SIZE + this->GetCompressed() + this->GetExtra());
     // Set properties
@@ -553,13 +553,13 @@ template<class EncoderType>class Block final : public EncoderType
     /* -- Initialisers ----------------------------------------------------- */
     EncoderType{ mcSrc, stUser }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Initialise by string ----------------------------------------------- */
   explicit Block(const string &strIn, const size_t stUser=StdMaxSizeT) :
     /* -- Initialisers ----------------------------------------------------- */
     EncoderType{ StdMove(MemConst{ strIn }), stUser }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -53,7 +53,7 @@ struct ShaderCore                      // Actual body
       "out vec4 texcoordout;"          // Tex coords sent to fragment shader
       "out vec4 colourout;"            // Colour multiplier sent to frag shader
       "uniform vec4 matrix;"           // Current 2D matrix
-      "void main(void){"               // Entry point
+      "void main(){"                   // Entry point
         "vec4 v=vec4(vertex.xy,0,1);"  // Store vertex
         "vec4 tc=vec4(texcoord.xy,0,0);" // Store texcoord
         "vec4 c=colour;"               // Store colour
@@ -79,7 +79,7 @@ struct ShaderCore                      // Actual body
       "out vec4 pixel;"                // Pixel (RGBA) to set
       "uniform sampler2D tex;"         // Input texture
       "$"                              // Any extra header code
-      "void main(void){"               // Entry point
+      "void main(){"                   // Entry point
         "vec4 p=texture(tex,texcoordout.xy);" // Save current pixel
         "vec4 c=colourout;"            // Save custom colour
         "$"                            // Custom code goes here
@@ -102,13 +102,13 @@ struct ShaderCore                      // Actual body
     AddVertexShaderWith3DTemplate(shS, strName, StrFormat("$"
       "v.x=-1.0+(((matrix.x+$(v.x))/matrix.z)*2.0);"  // X-coord
       "v.y=-1.0+(((matrix.y+$(v.y))/matrix.w)*2.0);", // Y-coord
-        cpCode, strSPRMethod, strSPRMethod).c_str());
+        cpCode, strSPRMethod, strSPRMethod).data());
   }
   /* -- Add vertex shader with template ------------------------------------ */
   void AddVertexShaderWith2DTemplate(Shader &shS, const string &strName)
     { AddVertexShaderWith2DTemplate(shS, strName, cCommon->CommonCBlank()); }
   /* ----------------------------------------------------------------------- */
-  void Init3DShader(void)
+  void Init3DShader()
   { // Add our basic 3D shader
     sh3D.LockSet();
     AddVertexShaderWith3DTemplate(sh3D, "VERT-3D");
@@ -116,7 +116,7 @@ struct ShaderCore                      // Actual body
     sh3D.Link();
   }
   /* ----------------------------------------------------------------------- */
-  void Init2DShader(void)
+  void Init2DShader()
   { // Add our 2D to 3D transformation shader
     sh2D.LockSet();
     AddVertexShaderWith2DTemplate(sh2D, "VERT-2D");
@@ -124,7 +124,7 @@ struct ShaderCore                      // Actual body
     sh2D.Link();
   }
   /* ----------------------------------------------------------------------- */
-  void Init2DBGRShader(void)
+  void Init2DBGRShader()
   { // Add our 2D to 3D BGR transformation shader
     sh2DBGR.LockSet();
     AddVertexShaderWith2DTemplate(sh2DBGR, "VERT-2D");
@@ -133,7 +133,7 @@ struct ShaderCore                      // Actual body
     sh2DBGR.Link();
   }
   /* ----------------------------------------------------------------------- */
-  void Init2D8Shader(void)
+  void Init2D8Shader()
   { // Add our 2D to 3D transformation shader with GL_LUMINANCE decoding
     sh2D8.LockSet();
     AddVertexShaderWith2DTemplate(sh2D8, "VERT-2D");
@@ -142,7 +142,7 @@ struct ShaderCore                      // Actual body
     sh2D8.Link();
   }
   /* ----------------------------------------------------------------------- */
-  void Init2D8PalShader(void)
+  void Init2D8PalShader()
   { // Add our 2D to 3D transformation shader with GL_LUMINANCE decoding
     sh2D8Pal.LockSet();
     AddVertexShaderWith2DTemplate(sh2D8Pal, "VERT-2D");
@@ -154,7 +154,7 @@ struct ShaderCore                      // Actual body
     sh2D8Pal.VerifyUniformLocation("pal", U_PALETTE);
   }
   /* ----------------------------------------------------------------------- */
-  void Init2D16Shader(void)
+  void Init2D16Shader()
   { // Add our 2D to 3D transformation shader with GL_LUMINANCE_ALPHA decoding
     sh2D16.LockSet();
     AddVertexShaderWith2DTemplate(sh2D16, "VERT-2D");
@@ -176,7 +176,7 @@ struct ShaderCore                      // Actual body
       "uniform sampler2D texY;"        // MultiTex unit 0 for Y component data
       "uniform sampler2D texCb;"       // MultiTex unit 1 for Cb component data
       "uniform sampler2D texCr;"       // MultiTex unit 2 for Cr component data
-      "void main(void){"               // Entry point
+      "void main(){"                   // Entry point
         "vec3 ycbcr;"                  // Y, Cb and Cr components
         "$"                            // Dynamic range modification code
         "vec3 rgb=mat3($)*ycbcr;"      // Convert YCbCr to RGB matrix code
@@ -200,7 +200,7 @@ struct ShaderCore                      // Actual body
     }
   }
   /* ----------------------------------------------------------------------- */
-  void Init3DYCbCrShaders(void)
+  void Init3DYCbCrShaders()
   { // No colour keying (no transparency)
     const string_view svNoKey = "texture(texCr,vec2(texcoordout)).a",
     // Colour keying code
@@ -258,7 +258,7 @@ struct ShaderCore                      // Actual body
         slShader.svRange, slShader.svMatrix, slShader.svKey);
   }
   /* -- Initialise built-in shaders -------------------------------- */ public:
-  void InitShaders(void)
+  void InitShaders()
   { // Log initialisation
     cLog->LogDebugExSafe(
       "ShaderCore initialising $ built-in 3D shader objects...",
@@ -280,7 +280,7 @@ struct ShaderCore                      // Actual body
       sh3DBuiltIns.size() + sh2DBuiltIns.size());
   }
   /* -- De-initialise built in shaders ------------------------------------- */
-  void DeInitShaders(void)
+  void DeInitShaders()
   { // De-init built-in shaders
     cLog->LogDebugExSafe(
       "ShaderCore de-initialising $ built-in 3D shader objects...",
@@ -296,7 +296,7 @@ struct ShaderCore                      // Actual body
       sh3DBuiltIns.size() + sh2DBuiltIns.size());
   }
   /* -- Default constructor ------------------------------------- */ protected:
-  ShaderCore(void) :                   // No parameters
+  ShaderCore() :
     /* -- Initialisers ----------------------------------------------------- */
     sh3D{ sh3DBuiltIns[0] },           sh3DYCbCr601FR{ sh3DBuiltIns[1] },
     sh3DYCbCr601PR{ sh3DBuiltIns[2] }, sh3DYCbCr709FR{ sh3DBuiltIns[3] },

@@ -10,21 +10,21 @@
 namespace ITexDef {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Public typedefs ------------------------------------------------------ */
 enum TextureType : size_t              // OpenGL texture type
 { /* ----------------------------------------------------------------------- */
-  TT_NONE,                             // Uninitialised texture type
-  TT_BGR,                              // 24-bit textures (bgra)
-  TT_BGRA,                             // 32-bit textures (bgra)
-  TT_DXT1,                             // aka. GL_COMPRESSED_RGB_S3TC_DXT1_EXT
-  TT_DXT3,                             // aka. GL_COMPRESSED_RGB_S3TC_DXT3_EXT
-  TT_DXT5,                             // aka. GL_COMPRESSED_RGB_S3TC_DXT5_EXT
-  TT_GRAY,                             // 8-bit textures (gray)
-  TT_GRAYALPHA,                        // 16-bit textures (gray+alpha)
-  TT_RGB,                              // 24-bit textures (rgb)
-  TT_RGBA,                             // 32-bit textures (rgba)
+  TT_NONE,                             // [00] Uninitialised texture type
+  TT_BGR,                              // [01] 24-bit textures (bgra)
+  TT_BGRA,                             // [02] 32-bit textures (bgra)
+  TT_DXT1,                             // [03] GL_COMPRESSED_RGB_S3TC_DXT1_EXT
+  TT_DXT3,                             // [04] GL_COMPRESSED_RGB_S3TC_DXT3_EXT
+  TT_DXT5,                             // [05] GL_COMPRESSED_RGB_S3TC_DXT5_EXT
+  TT_GRAY,                             // [06] 8-bit textures (gray)
+  TT_GRAYALPHA,                        // [07] 16-bit textures (gray+alpha)
+  TT_RGB,                              // [08] 24-bit textures (rgb)
+  TT_RGBA,                             // [09] 32-bit textures (rgba)
   /* ----------------------------------------------------------------------- */
-  TT_MAX                               // Maximum number of texture types
+  TT_MAX                               // [10] Maximum number of texture types
 };/* ----------------------------------------------------------------------- */
 enum ByteDepth : unsigned int          // Human readable byte-depths
 { /* ----------------------------------------------------------------------- */

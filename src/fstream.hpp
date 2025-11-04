@@ -62,7 +62,7 @@ class FStreamBase :                    // File stream base class
       L"rb", L"wb", L"ab", L"r+b", L"w+b", L"a+b"
     };
     // Send it to the Windows file open call and accept it if successful
-    return _wfsopen(UTFtoS16(strFile).c_str(), cplModes[fsmMode], _SH_DENYWR);
+    return _wfsopen(UTFtoS16(strFile).data(), cplModes[fsmMode], _SH_DENYWR);
 #else                                  // Using linux or MacOS?
     // The mode supported (in ansi string)
     static const array<const char*const,FM_MAX>cplModes{
@@ -70,7 +70,7 @@ class FStreamBase :                    // File stream base class
       "rb", "wb", "ab", "r+b", "w+b", "a+b"
     };
     // Send it to the posix file open call and accept it if successful
-    return fopen(strFile.c_str(), cplModes[fsmMode]);
+    return fopen(strFile.data(), cplModes[fsmMode]);
 #endif                                 // Operating system check
   }
   /* -- Check that already set members are valid --------------------------- */
@@ -85,36 +85,35 @@ class FStreamBase :                    // File stream base class
     FStreamSetHandle(FStreamDoOpenDirect(IdentGet(), fsmMode));
   }
   /* -- Retrun true if internal stream or stream closed successfully ------- */
-  bool FStreamDoClose(void)
+  bool FStreamDoClose()
     { return !FStreamErrNoWrapper(fclose(FStreamGetCtx())); }
   /* -- Clear file handle -------------------------------------------------- */
-  void FStreamClearHandle(void) { FStreamSetHandle(nullptr); }
+  void FStreamClearHandle() { FStreamSetHandle(nullptr); }
   /* -- Set handle ---------------------------------------------- */ protected:
   void FStreamSetHandle(FILE*const fpS) { fStream = fpS; }
   /* -- Return file stream handle ---------------------------------- */ public:
-  FILE *FStreamGetCtx(void) const { return fStream; }
+  FILE *FStreamGetCtx() const { return fStream; }
   /* -- Returns true if handle is internal --------------------------------- */
-  bool FStreamIsHandleStd(void) const { return FStreamGetCtx() == stdin ||
-                                               FStreamGetCtx() == stdout ||
-                                               FStreamGetCtx() == stderr; }
-  bool FStreamIsHandleNotStd(void) const { return !FStreamIsHandleStd(); }
+  bool FStreamIsHandleStd() const { return FStreamGetCtx() == stdin ||
+                                           FStreamGetCtx() == stdout ||
+                                           FStreamGetCtx() == stderr; }
+  bool FStreamIsHandleNotStd() const { return !FStreamIsHandleStd(); }
   /* -- Get file stream descriptor ----------------------------------------- */
-  int FStreamGetFd(void) const { return StdFileNo(FStreamGetCtx()); }
-  int FStreamGetFdSafe(void) const
+  int FStreamGetFd() const { return StdFileNo(FStreamGetCtx()); }
+  int FStreamGetFdSafe() const
     { return FStreamOpened() ? FStreamGetFd() : EOF; }
   /* -- Swap stream handle and filename ------------------------------------ */
   void FStreamSwap(FStreamBase &fsOther)
     { swap(fStream, fsOther.fStream); IdentSwap(fsOther); }
   /* -- File is opened or closed?  ----------------------------------------- */
-  bool FStreamOpened(void) const { return !!FStreamGetCtx(); }
-  bool FStreamClosed(void) const { return !FStreamOpened(); }
+  bool FStreamOpened() const { return !!FStreamGetCtx(); }
+  bool FStreamClosed() const { return !FStreamOpened(); }
   /* -- Return last error nuumber ------------------------------------------ */
-  int FStreamGetErrNo(void) const { return iErrNo; }
-  const string FStreamGetErrStr(void) const { return StrFromErrNo(iErrNo); }
+  int FStreamGetErrNo() const { return iErrNo; }
+  const string FStreamGetErrStr() const { return StrFromErrNo(iErrNo); }
   /* -- Return handle to stream -------------------------------------------- */
-  int FStreamGetID(void) const { return StdFileNo(FStreamGetCtx()); }
-  int FStreamGetIDSafe(void) const
-    { return FStreamOpened() ? FStreamGetID() : 0; }
+  int FStreamGetID() const { return StdFileNo(FStreamGetCtx()); }
+  int FStreamGetIDSafe() const { return FStreamOpened() ? FStreamGetID() : 0; }
   /* -- Set current file position without check ---------------------------- */
   bool FStreamSeek(const int64_t qwPos, const int iMode)
     { return !FStreamErrNoWrapper(StdFSeek(FStreamGetCtx(), qwPos, iMode)); }
@@ -134,30 +133,28 @@ class FStreamBase :                    // File stream base class
   bool FStreamSeekSafeEnd(const int64_t qwPos)
     { return FStreamSeekSafe(qwPos, SEEK_END); }
   /* -- Return current file position --------------------------------------- */
-  int64_t FStreamTell(void)
+  int64_t FStreamTell()
     { return FStreamErrNoWrapper(StdFTell(FStreamGetCtx())); }
-  int64_t FStreamTellSafe(void)
-    { return FStreamOpened() ? FStreamTell() : EOF; }
+  int64_t FStreamTellSafe() { return FStreamOpened() ? FStreamTell() : EOF; }
   /* -- Flush buffered file data to disk ----------------------------------- */
-  bool FStreamFlush(void) const { return !fflush(FStreamGetCtx()); }
-  bool FStreamFlushSafe(void) const
+  bool FStreamFlush() const { return !fflush(FStreamGetCtx()); }
+  bool FStreamFlushSafe() const
     { return FStreamOpened() ? FStreamFlush() : false; }
   /* -- File stream is set to error status? -------------------------------- */
-  bool FStreamFError(void) const { return !!ferror(FStreamGetCtx()); }
-  bool FStreamFErrorSafe(void) const
+  bool FStreamFError() const { return !!ferror(FStreamGetCtx()); }
+  bool FStreamFErrorSafe() const
     { return FStreamOpened() ? FStreamFError() : true; }
   /* -- File stream is ready to be read or written ------------------------- */
-  bool FStreamIsReadyRead(void) const { return !FStreamFErrorSafe(); }
-  bool FStreamIsNotReadyRead(void) const { return !FStreamIsReadyRead(); }
-  bool FStreamIsReadyWrite(void) const
+  bool FStreamIsReadyRead() const { return !FStreamFErrorSafe(); }
+  bool FStreamIsNotReadyRead() const { return !FStreamIsReadyRead(); }
+  bool FStreamIsReadyWrite() const
     { return FStreamIsReadyRead() && FStreamIsNotEOF(); }
-  bool FStreamIsNotReadyWrite(void) const { return !FStreamIsReadyWrite(); }
+  bool FStreamIsNotReadyWrite() const { return !FStreamIsReadyWrite(); }
   /* -- Is position at end of the file? ------------------------------------ */
-  bool FStreamIsEOF(void) const { return feof(FStreamGetCtx()); }
-  bool FStreamIsEOFSafe(void) const
-    { return FStreamClosed() || FStreamIsEOF(); }
-  bool FStreamIsNotEOF(void) const { return !FStreamIsEOF(); }
-  bool FStreamIsNotEOFSafe(void) const { return !FStreamIsEOFSafe(); }
+  bool FStreamIsEOF() const { return feof(FStreamGetCtx()); }
+  bool FStreamIsEOFSafe() const { return FStreamClosed() || FStreamIsEOF(); }
+  bool FStreamIsNotEOF() const { return !FStreamIsEOF(); }
+  bool FStreamIsNotEOFSafe() const { return !FStreamIsEOFSafe(); }
   /* -- Read file information ---------------------------------------------- */
   bool FStreamStat(StdFStatStruct &sData)
     { return !FStreamErrNoWrapper(
@@ -183,7 +180,7 @@ class FStreamBase :                    // File stream base class
   const string FStreamReadStringSafe(const size_t stBytes)
     { return FStreamIsReadyRead() && stBytes ?
         FStreamReadString(stBytes) : cCommon->CommonBlank(); }
-  const string FStreamReadStringSafe(void)
+  const string FStreamReadStringSafe()
   { // Read if ready to read and there are remaining characters
     if(FStreamIsReadyRead())
       if(const size_t stBytesRemaining = FStreamRemain())
@@ -209,15 +206,17 @@ class FStreamBase :                    // File stream base class
   size_t FStreamWriteStringSafe(const string &strString)
     { return FStreamIsReadyWrite() && !strString.empty() ?
         FStreamWrite(strString.data(), strString.length()) : 0; }
-  /* -- Formatted writing a string to the file ----------------------------- */
+  /* -- Formatted writing a string to the file without checking ------------ */
   template<typename ...VarArgs>
     size_t FStreamWriteStringEx(const char*const cpFormat,
-      const VarArgs &...vaArgs)
-        { return FStreamWriteString(StrFormat(cpFormat, vaArgs...)); }
+      VarArgs &&...vaArgs)
+  { return FStreamWriteString(StrFormat(cpFormat,
+      StdForward<VarArgs>(vaArgs)...)); }
   template<typename ...VarArgs>
     size_t FStreamWriteStringExSafe(const char*const cpFormat,
-      const VarArgs &...vaArgs)
-        { return FStreamWriteStringSafe(StrFormat(cpFormat, vaArgs...)); }
+      VarArgs &&...vaArgs)
+  { return FStreamWriteStringSafe(StrFormat(cpFormat,
+      StdForward<VarArgs>(vaArgs)...)); }
   /* -- Read entire file without knowing the size of the file -------------- */
   const string FStreamReadStringChunked(const size_t stBytes=4096)
   { // Stream to write strings to
@@ -248,7 +247,7 @@ class FStreamBase :                    // File stream base class
   Memory FStreamReadBlockSafe(const size_t stBytes)
     { return FStreamIsReadyRead() && stBytes ?
         FStreamReadBlock(stBytes) : Memory{}; }
-  Memory FStreamReadBlockSafe(void)
+  Memory FStreamReadBlockSafe()
   { // Read into memory block if stream is ready and there are bytes to read
     if(FStreamIsReadyRead())
       if(const size_t stBytesRemain = FStreamRemain())
@@ -262,11 +261,11 @@ class FStreamBase :                    // File stream base class
   template<typename T>size_t FSWriteIntSafe(const T tVar)
     { return FStreamOpened() ? FStreamWrite<T>(tVar) : 0; }
   /* -- Return file position to the beginning ------------------------------ */
-  bool FStreamRewind(void) { return FStreamSeekSet(0); }
-  bool FStreamRewindSafe(void)
+  bool FStreamRewind() { return FStreamSeekSet(0); }
+  bool FStreamRewindSafe()
     { return FStreamOpened() ? FStreamRewind() : false; }
   /* -- Return size of file ------------------------------------------------ */
-  int64_t FStreamSize(void)
+  int64_t FStreamSize()
   { // Store current position, return if failed and reset to start
     const int64_t qCurrent = FStreamTell();
     if(qCurrent == EOF) return EOF;
@@ -278,10 +277,10 @@ class FStreamBase :                    // File stream base class
     return qSize;
   }
   /* -- Return remaining bytes left to read in stream ---------------------- */
-  size_t FStreamRemain(void)
+  size_t FStreamRemain()
     { return UtilIntOrMax<size_t>(FStreamSize() - FStreamTell()); }
   /* -- Return size of file ------------------------------------------------ */
-  int64_t FStreamSizeSafe(void) { return FStreamClosed() ? 0 : FStreamSize(); }
+  int64_t FStreamSizeSafe() { return FStreamClosed() ? 0 : FStreamSize(); }
   /* -- Open a file without filename validation ---------------------------- */
   int FStreamOpen(const string &strFile, const FStreamMode fsmMode)
   { // Try to open the file on disk and if succeeded? Return the result
@@ -299,7 +298,7 @@ class FStreamBase :                    // File stream base class
     return iErrNo;
   }
   /* -- Close file --------------------------------------------------------- */
-  bool FStreamClose(void)
+  bool FStreamClose()
   { // Return success if is a std handle else close stream handle
     const bool bResult = FStreamIsHandleStd() ? true : FStreamDoClose();
     // Stream is now invalid so clear handle
@@ -307,15 +306,15 @@ class FStreamBase :                    // File stream base class
     // Returm original close result
     return bResult;
   }
-  bool FStreamCloseSafe(void)
+  bool FStreamCloseSafe()
     { return FStreamOpened() ? FStreamClose() : true; }
-  /* -- Basic constructor with no init ------------------------------------- */
-  FStreamBase(void) :                  // No parameters
+  /* -- Default constructor with no init ----------------------------------- */
+  FStreamBase() :
     /* -- Initialisers ----------------------------------------------------- */
     fStream(nullptr),                  // File context not initialised yet
     iErrNo(0)                          // Error number not initialised yet
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with direct open (copy filename) ----------------------- */
   FStreamBase(const string &strF, const FStreamMode fsmMode) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -343,7 +342,7 @@ class FStreamBase :                    // File stream base class
     fStream(nullptr),                  // File context not initialised yet
     iErrNo(0)                          // Error number not initialised yet
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with lvalue name init, no open ------------------------- */
   explicit FStreamBase(const string &strF) : // Filename to set
     /* -- Initialisers ----------------------------------------------------- */
@@ -351,7 +350,7 @@ class FStreamBase :                    // File stream base class
     fStream(nullptr),                  // File context not initialised yet
     iErrNo(0)                          // Error number not initialised yet
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- MOVE assignment constructor ---------------------------------------- */
   FStreamBase(FStreamBase &&fsOther) : // Other FStream object
     /* -- Initialisers ----------------------------------------------------- */
@@ -361,25 +360,25 @@ class FStreamBase :                    // File stream base class
     /* -- Clear other handle ----------------------------------------------- */
     { fsOther.FStreamClearHandle(); }
   /* -- Destructor (Close the file if opened) ------------------------------ */
-  ~FStreamBase(void)
+  ~FStreamBase()
     { if(FStreamOpened() && FStreamIsHandleNotStd()) FStreamDoClose(); }
 };/* ----------------------------------------------------------------------- */
 class FStream :                        // Main file stream class
   /* -- Base classes ------------------------------------------------------- */
   public FStreamBase                   // Contains fstream base class
 { /* -- Direct access using class variable name which returns opened */ public:
-  operator bool(void) const { return FStreamOpened(); }
+  operator bool() const { return FStreamOpened(); }
   /* -- Constructor with optional checking --------------------------------- */
   FStream(const string &strF, const FStreamMode fsmMode) :
-    FStreamBase(strF, fsmMode) { }
+    FStreamBase(strF, fsmMode) {}
   /* -- Constructor with rvalue name init, no open ------------------------- */
-  explicit FStream(string &&strF) : FStreamBase{ StdMove(strF) } { }
+  explicit FStream(string &&strF) : FStreamBase{ StdMove(strF) } {}
   /* -- Constructor with lvalue name init, no open ------------------------- */
-  explicit FStream(const string &strF) : FStreamBase{ strF } { }
+  explicit FStream(const string &strF) : FStreamBase{ strF } {}
   /* -- MOVE assignment constructor ---------------------------------------- */
-  FStream(FStream &&fsOther) : FStreamBase{ StdMove(fsOther) } { }
+  FStream(FStream &&fsOther) : FStreamBase{ StdMove(fsOther) } {}
   /* -- Basic constructor with no init ------------------------------------- */
-  FStream(void) = default;
+  FStream() = default;
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

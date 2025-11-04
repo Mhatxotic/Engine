@@ -29,25 +29,25 @@ namespace P {                          // Start of public module namespace
 #define ALC(M,...)        ALEX(cOal->CheckExceptError, , M, ## __VA_ARGS__)
 /* -- Typedefs ------------------------------------------------------------- */
 typedef vector<ALuint>   ALUIntVector; // A vector of ALuint's
-/* -- OpenAL flags---------------------------------------------------------- */
-BUILD_FLAGS(Oal,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Oal,                       // OpenAL flags
   /* -- OAL specific flags ------------------------------------------------- */
-  // No flags                          Device has been initialised?
-  AFL_NONE                  {Flag(0)}, AFL_INITDEVICE            {Flag(3)},
-  // Context has been initialised?     Have infinite sources?
-  AFL_INITCONTEXT           {Flag(4)}, AFL_INFINITESOURCES       {Flag(5)},
-  // Context has been made current?    OpenAL fully initialised
-  AFL_CONTEXTCURRENT        {Flag(6)}, AFL_INITIALISED           {Flag(7)},
-  // Can play 32-bit float audio?      Have ALC_ENUMERATE_ALL_EXT?
-  AFL_HAVE32FPPB            {Flag(8)}, AFL_HAVEENUMEXT           {Flag(9)},
-  // Playback change def device event? Capture change default device event?
-  AFL_HAVESEPBDDC          {Flag(10)}, AFL_HAVESECADDC          {Flag(11)},
-  // Playback add device event?        Capture add device event?
-  AFL_HAVESEPBDA           {Flag(12)}, AFL_HAVESECADA           {Flag(13)},
-  // Playback remove device event?     Capture remove device event?
-  AFL_HAVESEPBDR           {Flag(14)}, AFL_HAVESECADR           {Flag(15)},
-  // Audio system is resetting?        HRTF is enabled?
-  AFL_REINIT               {Flag(16)}, AFL_HRTF                 {Flag(17)},
+  AFL_NONE                  {Flag(0)}, // No flags
+  AFL_INITDEVICE            {Flag(1)}, // Device has been initialised?
+  AFL_INITCONTEXT           {Flag(2)}, // Context has been initialised?
+  AFL_INFINITESOURCES       {Flag(3)}, // Have infinite sources?
+  AFL_CONTEXTCURRENT        {Flag(4)}, // Context has been made current?
+  AFL_INITIALISED           {Flag(5)}, // OpenAL fully initialised
+  AFL_HAVE32FPPB            {Flag(6)}, // Can play 32-bit float audio?
+  AFL_HAVEENUMEXT           {Flag(7)}, // Have ALC_ENUMERATE_ALL_EXT?
+  AFL_HAVESEPBDDC           {Flag(8)}, // Playback change def device event?
+  AFL_HAVESECADDC           {Flag(9)}, // Capture change default device event?
+  AFL_HAVESEPBDA           {Flag(10)}, // Playback add device event?
+  AFL_HAVESECADA           {Flag(11)}, // Capture add device event?
+  AFL_HAVESEPBDR           {Flag(12)}, // Playback remove device event?
+  AFL_HAVESECADR           {Flag(13)}, // Capture remove device event?
+  AFL_REINIT               {Flag(14)}, // Audio system is resetting?
+  AFL_HRTF                 {Flag(15)}, // HRTF is enabled?
   /* -- Masks -------------------------------------------------------------- */
   AFL_VOLATILE{ AFL_INITDEVICE|AFL_INITCONTEXT|AFL_INFINITESOURCES|
                 AFL_CONTEXTCURRENT|AFL_INITIALISED|AFL_HAVE32FPPB|
@@ -68,39 +68,37 @@ class Oal :                            // Actual class body
   ALuint           uiMaxStereoSources, // Maximum number of stereo sources
                    uiMaxMonoSources;   // Maximum number of mono sources
   /* ----------------------------------------------------------------------- */
-  string           strVersion,         // String version of OpenAL
-                   strPlayback;        // String playback device
-  ALuint           uiVersionMajor,     // Major version of OpenAL
-                   uiVersionMinor;     // Minor version of OpenAL
+  string           strVersion;         // String version of OpenAL
+  string_view      strvPlayback;       // String playback device
   /* ----------------------------------------------------------------------- */
   ALCdevice       *alcDevice;          // OpenAL device
   ALCcontext      *alcContext;         // OpenAL context
   /* -- Public Variables ------------------------------------------- */ public:
   ALenum           eQuery;             // Device query extension
   /* -- Return error status ------------------------------------------------ */
-  ALenum GetError(void) const { return alGetError(); }
-  bool HaveError(void) const { return GetError() != AL_NO_ERROR; }
-  bool HaveNoError(void) const { return !HaveError(); }
+  ALenum GetError() const { return alGetError(); }
+  bool HaveError() const { return GetError() != AL_NO_ERROR; }
+  bool HaveNoError() const { return !HaveError(); }
   /* -- AL error logger ---------------------------------------------------- */
   template<typename ...VarArgs>
-    void CheckLogError(const char*const cpFormat,
-      const VarArgs &...vaArgs) const
+    void CheckLogError(const char*const cpFormat, VarArgs &&...vaArgs) const
   { // While there are OpenAL errors
     for(ALenum alError = alGetError();
                alError != AL_NO_ERROR;
                alError = alGetError())
     cLog->LogWarningExSafe("AL call failed: $ ($/$$).",
-      StrFormat(cpFormat, vaArgs...), GetALErr(alError), hex, alError);
+      StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...),
+        GetALErr(alError), hex, alError);
   }
   /* -- AL error handler --------------------------------------------------- */
   template<typename ...VarArgs>
-    void CheckExceptError(const char*const cpFormat,
-      const VarArgs &...vaArgs) const
+    void CheckExceptError(const char*const cpFormat, VarArgs &&...vaArgs) const
   { // If there is no error then return
     const ALenum alError = alGetError();
     if(alError == GL_NO_ERROR) return;
     // Raise exception with error details
-    XC(cpFormat, "Code", alError, "Reason", GetALErr(alError), vaArgs...);
+    XC(cpFormat, "Code", alError, "Reason",
+      GetALErr(alError), StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Upload data to audio device ---------------------------------------- */
   void BufferData(const ALuint uiBuffer, const ALenum eFormat,
@@ -174,7 +172,7 @@ class Oal :                            // Actual class body
   void CreateSource(ALuint &uiSourceRef) const
     { CreateSources(1, &uiSourceRef); }
   /* -- Create and return a source ----------------------------------------- */
-  ALuint CreateSource(void) const
+  ALuint CreateSource() const
     { ALuint uiSource; CreateSource(uiSource); return uiSource; }
   /* -- Delete multiple sources -------------------------------------------- */
   void DeleteSources(const ALsizei siCount, const ALuint*const uipSource) const
@@ -195,7 +193,7 @@ class Oal :                            // Actual class body
   void CreateBuffer(ALuint &uiBuffer) const
     { CreateBuffers(1, &uiBuffer); }
   /* -- Create and return a buffer ----------------------------------------- */
-  ALuint CreateBuffer(void) const
+  ALuint CreateBuffer() const
     { ALuint uiBuffer; CreateBuffer(uiBuffer); return uiBuffer; }
   /* -- Delete multiple buffers -------------------------------------------- */
   void DeleteBuffers(const ALsizei siCount, const ALuint*const uipBuffer) const
@@ -245,7 +243,7 @@ class Oal :                            // Actual class body
   bool HaveNCExtension(const char*const cpEnum) const
     { return HaveCExtension(cpEnum, nullptr); }
   /* -- Detect enumeration method ------------------------------------------ */
-  void DetectEnumerationMethod(void)
+  void DetectEnumerationMethod()
   { // Get if we have ALC_ENUMERATE_ALL_EXT
     if(HaveNCExtension("ALC_ENUMERATE_ALL_EXT"))
     { // Set that we have the extension
@@ -297,10 +295,10 @@ class Oal :                            // Actual class body
     }
   }
   /* -- Report floating point playback to other classes -------------------- */
-  bool Have32FPPB(void) const { return FlagIsSet(AFL_HAVE32FPPB); }
+  bool Have32FPPB() const { return FlagIsSet(AFL_HAVE32FPPB); }
   /* -- Get openAL string -------------------------------------------------- */
   template<typename CStrType=ALchar>
-    const CStrType *LuaUtilGetStr(const ALenum eId) const
+    const CStrType *GetString(const ALenum eId) const
   { // Get the variable and throw error if occured
     const ALchar*const ucpStr = alGetString(eId);
     IALC("Get string failed!", "Index", eId);
@@ -346,12 +344,12 @@ class Oal :                            // Actual class body
   const string_view &GetALFormat(const ALenum eFormat) const
     { return imFormatCodes.Get(eFormat); }
   /* -- Get source counts -------------------------------------------------- */
-  ALuint GetMaxMonoSources(void) const { return uiMaxMonoSources; }
-  ALuint GetMaxStereoSources(void) const { return uiMaxStereoSources; }
+  ALuint GetMaxMonoSources() const { return uiMaxMonoSources; }
+  ALuint GetMaxStereoSources() const { return uiMaxStereoSources; }
   /* -- Get current playback device ---------------------------------------- */
-  const string &GetPlaybackDevice(void) const { return strPlayback; }
+  const string_view &GetPlaybackDevice() const { return strvPlayback; }
   /* -- Return version information ----------------------------------------- */
-  const string &GetVersion(void) const { return strVersion; }
+  const string &GetVersion() const { return strVersion; }
   /* -- Set new HRTF setting ----------------------------------------------- */
   bool DoSetHRTF(const ALCint alState)
   { // Reset with HRTF disabled
@@ -388,7 +386,7 @@ class Oal :                            // Actual class body
     const string_view &GetALErr(const IntType itCode) const
       { return imOALCodes.Get(static_cast<ALenum>(itCode)); }
   /* -- AL is initialised? ------------------------------------------------- */
-  bool IsInitialised(void) const { return alcDevice && alcContext; }
+  bool IsInitialised() const { return alcDevice && alcContext; }
   /* -- ReInitialise device with HRTF disabled ----------------------------- */
   bool SetHRTF(const bool bState)
   { // Ignore if audio is already reset
@@ -402,8 +400,8 @@ class Oal :                            // Actual class body
   /* -- Update device ------------------------------------------------------ */
   void UpdateDevice(ALCdevice*const alcNDevice) { alcDevice = alcNDevice; }
   /* -- Update playback device name ---------------------------------------- */
-  void UpdatePlaybackDeviceName(void)
-    { strPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
+  void UpdatePlaybackDeviceName()
+    { strvPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
         ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER); }
   /* -- Initialise device -------------------------------------------------- */
   bool InitDevice(const char *cpDevice)
@@ -417,7 +415,7 @@ class Oal :                            // Actual class body
     return true;
   }
   /* -- DeInitialise device ------------------------------------------------ */
-  bool DeInitDevice(void)
+  bool DeInitDevice()
   { // Bail if no context
     if(!alcDevice) return false;
     // Close device and nullify handle
@@ -428,7 +426,7 @@ class Oal :                            // Actual class body
     return true;
   }
   /* -- Initialise context ------------------------------------------------- */
-  bool InitContext(void)
+  bool InitContext()
   { // Bail if already initialised
     if(alcContext) return false;
     // Get the device and return failure if failed
@@ -439,7 +437,7 @@ class Oal :                            // Actual class body
     return true;
   }
   /* -- DeInitialise context ----------------------------------------------- */
-  bool DeInitContext(void)
+  bool DeInitContext()
   { // Bail if no context
     if(!alcContext) return false;
     // Clear context
@@ -449,23 +447,24 @@ class Oal :                            // Actual class body
     alcDestroyContext(alcContext);
     alcContext = nullptr;
     FlagClear(AFL_INITCONTEXT);
+    strvPlayback = cCommon->CommonNull();
     // Succeeded
     return true;
   }
   /* -- Initialise after the context has been set -------------------------- */
-  void Init(void)
+  void Init()
   { // Make sure not initialised already
     if(FlagIsSet(AFL_INITIALISED)) XC("OpenAL was already initialised!");
     // Activate the context (We can use alGetError() from now on)
     IAL(alcMakeContextCurrent(alcContext),
       "Failed to make OpenAL context current!");
     FlagSet(AFL_CONTEXTCURRENT);
-    // Add
     // Update playback device name
     UpdatePlaybackDeviceName();
     // Prepare version information
-    uiVersionMajor = GetInteger<decltype(uiVersionMajor)>(ALC_MAJOR_VERSION);
-    uiVersionMinor = GetInteger<decltype(uiVersionMinor)>(ALC_MINOR_VERSION);
+    const ALuint
+      uiVersionMajor = GetInteger<decltype(uiVersionMajor)>(ALC_MAJOR_VERSION),
+      uiVersionMinor = GetInteger<decltype(uiVersionMinor)>(ALC_MINOR_VERSION);
     strVersion = StrAppend(uiVersionMajor, '.', uiVersionMinor);
     // Need at least version 1.1 of OpenAL
     if(uiVersionMajor < 1 || (uiVersionMajor == 1 && uiVersionMinor < 1))
@@ -488,10 +487,11 @@ class Oal :                            // Actual class body
         uiMaxMonoSources = 255;
         uiMaxStereoSources = 1;
       } // Failed because no stereo sources
-      else XC("No mono source support on this device!", "Device", strPlayback);
+      else XC("No mono source support on this device!",
+              "Device", strvPlayback);
     } // Zero stereo sources? Failed because no mono sources
     else if(!uiMaxStereoSources)
-      XC("No stereo source support on this device!", "Device", strPlayback);
+      XC("No stereo source support on this device!", "Device", strvPlayback);
     // Check playback system event capabilities
     struct EventCapItem { const ALenum eEventType, eDeviceType;
                           const OalFlagsConst &ofcFlag; };
@@ -544,15 +544,17 @@ class Oal :                            // Actual class body
     FlagSet(AFL_INITIALISED);
     // Return if debug logging not enabled
     if(cLog->NotHasLevel(LH_DEBUG)) return;
-    // Build extensions list
-    const Token tlExtensions{
-      LuaUtilGetStr(AL_EXTENSIONS), cCommon->CommonSpace() };
     // Build sorted list of extensions and log them all
-    typedef pair<const string, const size_t> Pair;
+    typedef pair<const string_view, const size_t> Pair;
     typedef map<Pair::first_type, Pair::second_type> Map;
     Map mExts;
-    for(size_t stIndex = 0; stIndex < tlExtensions.size(); ++stIndex)
-      mExts.insert({ StdMove(tlExtensions[stIndex]), stIndex });
+    // Build extensions list
+    size_t stCount = 0;
+    Tokeniser<string_view>(GetString(AL_EXTENSIONS), cCommon->CommonSpace(),
+      [&mExts, &stCount](const string_view &strvExt){
+        mExts.insert({ StdMove(strvExt), stCount++ });
+      }
+    );
     // Log device info and basic capabilities
     cLog->LogNLCDebugExSafe(
       "- Head related transfer function: $.\n"
@@ -572,14 +574,14 @@ class Oal :                            // Actual class body
       StrFromBoolTF(FlagIsSet(AFL_HAVESECADDC)),
       StrFromBoolTF(FlagIsSet(AFL_HAVESECADA)),
       StrFromBoolTF(FlagIsSet(AFL_HAVESECADR)),
-      tlExtensions.size());
+      mExts.size());
     // Log extensions if debug is enabled
     for(const Pair &pExt : mExts)
       cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
         pExt.first, pExt.second);
   }
   /* -- DeInitialise ------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // De-init context and device if they're not gone already. The audio
     // class should be responsible for this, but just incase.
     DeInitContext();
@@ -594,7 +596,7 @@ class Oal :                            // Actual class body
   /* -- Destructor that unloads context and device ------------------------- */
   DTORHELPER(~Oal, DeInitContext(); DeInitDevice())
   /* -- Constructor --------------------------------------------- */ protected:
-  Oal(void) :
+  Oal() :
     /* -- Initialisers ----------------------------------------------------- */
     OalFlags{ AFL_HRTF },              // HRTF is enabled by default
     /* -- Const members ---------------------------------------------------- */
@@ -611,8 +613,8 @@ class Oal :                            // Actual class body
     /* -- Initialisers ----------------------------------------------------- */
     uiMaxStereoSources(0),             // Stereo sources initialised later
     uiMaxMonoSources(0),               // Mono sources initialised later
-    uiVersionMajor(0),                 // Major version initialised later
-    uiVersionMinor(0),                 // Minor version initialised later
+    strvPlayback{                      // Blank playback device
+      cCommon->CommonNull() },         // Initialise with "null" text
     alcDevice(nullptr),                // Device not initialised yet
     alcContext(nullptr),               // Context not initialised yet
     eQuery(AL_NONE)                    // Query method not initialised yet

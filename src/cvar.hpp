@@ -17,12 +17,11 @@ using namespace IStd::P;               using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(CVarShow,
+BUILD_FLAGS(CVarShow,                  // CVar show flags
   /* ----------------------------------------------------------------------- */
-  // Show no confidential cvars        Show private cvars
-  CSF_NONE                  {Flag(0)}, CSF_CONFIDENTIAL              {Flag(1)},
-  // Show protected cvars
-  CSF_PROTECTED             {Flag(2)},
+  CSF_NONE                  {Flag(0)}, // Show no confidential cvars
+  CSF_CONFIDENTIAL          {Flag(1)}, // Show private cvars
+  CSF_PROTECTED             {Flag(2)}, // Show protected cvars
   /* ----------------------------------------------------------------------- */
   CSF_MASK { CSF_CONFIDENTIAL|CSF_PROTECTED }
 );/* ----------------------------------------------------------------------- */
@@ -39,35 +38,34 @@ static CVarReturn NoOp(CVarItem&, const string&) { return ACCEPT; }
 /* ------------------------------------------------------------------------- */
 enum CVarSetEnums : unsigned int       // Cvar set return codes
 { /* ----------------------------------------------------------------------- */
-  CVS_OK,                              // Parameter set successful
-  CVS_OKNOTCHANGED,                    // Parameter set successful, no change
-  CVS_NOTFOUND,                        // Parameter not found
-  CVS_NOTWRITABLE,                     // Parameter set is not writable
-  CVS_NOTINTEGER,                      // Parameter set was not an integer
-  CVS_NOTFLOAT,                        // Parameter set was not a float
-  CVS_NOTBOOLEAN,                      // Parameter set was not a boolean
-  CVS_NOTUNSIGNED,                     // Parameter set was not >= 0
-  CVS_NOTPOW2,                         // Parameter set was not power of two
-  CVS_NOTALPHA,                        // Must contain only letters
-  CVS_NOTNUMERIC,                      // Must contain only digits
-  CVS_NOTALPHANUMERIC,                 // Must contain only alphanumerics
-  CVS_NOTFILENAME,                     // Must be a valid filename
-  CVS_TRIGGERDENIED,                   // Trigger callback denied change
-  CVS_TRIGGEREXCEPTION,                // exception occured in trigger
-  CVS_EMPTY,                           // Parameter set was an empty string
-  CVS_ZERO,                            // Parameter not allowed to be zero
-  CVS_NOTYPESET,                       // No type is set
+  CVS_OK,                              // [00] Value set successful
+  CVS_OKNOTCHANGED,                    // [01] Value set successful, no change
+  CVS_NOTFOUND,                        // [02] Value not found
+  CVS_NOTWRITABLE,                     // [03] Value set is not writable
+  CVS_NOTINTEGER,                      // [04] Value set was not an integer
+  CVS_NOTFLOAT,                        // [05] Value set was not a float
+  CVS_NOTBOOLEAN,                      // [06] Value set was not a boolean
+  CVS_NOTUNSIGNED,                     // [07] Value set was not >= 0
+  CVS_NOTPOW2,                         // [08] Value set was not power of two
+  CVS_NOTALPHA,                        // [09] Must contain only letters
+  CVS_NOTNUMERIC,                      // [10] Must contain only digits
+  CVS_NOTALPHANUMERIC,                 // [11] Must contain only alphanumerics
+  CVS_NOTFILENAME,                     // [12] Must be a valid filename
+  CVS_TRIGGERDENIED,                   // [13] Trigger callback denied change
+  CVS_TRIGGEREXCEPTION,                // [14] Exception occured in trigger
+  CVS_EMPTY,                           // [15] Value set was an empty string
+  CVS_ZERO,                            // [16] Value not allowed to be zero
+  CVS_NOTYPESET,                       // [17] No type is set
 };/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(CVarCondition,             // For Set() functions
   /* ----------------------------------------------------------------------- */
-  // No flags specified?               Do not mark as commit?
-  CCF_NOTHING               {Flag(0)}, CCF_NOMARKCOMMIT          {Flag(1)},
-  // Don't throw if var missing?       Throw if there is an error?
-  CCF_IGNOREIFMISSING       {Flag(2)}, CCF_THROWONERROR          {Flag(3)},
-  // Variable was just registered?     The variable was decrypted?
-  CCF_NEWCVAR               {Flag(4)}, CCF_DECRYPTED             {Flag(5)},
-  // The variable was not encrypted?
-  CCF_NOTDECRYPTED          {Flag(6)}
+  CCF_NOTHING               {Flag(0)}, // No flags specified?
+  CCF_NOMARKCOMMIT          {Flag(1)}, // Do not mark as commit?
+  CCF_IGNOREIFMISSING       {Flag(2)}, // Don't throw if var missing?
+  CCF_THROWONERROR          {Flag(3)}, // Throw if there is an error?
+  CCF_NEWCVAR               {Flag(4)}, // Variable was just registered?
+  CCF_DECRYPTED             {Flag(5)}, // The variable was decrypted?
+  CCF_NOTDECRYPTED          {Flag(6)}  // The variable was not encrypted?
 );/* -- Cvar item class ---------------------------------------------------- */
 class CVarItem :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
@@ -77,59 +75,59 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   enum CommitResult : unsigned int     // Result to a commit request
   { /* --------------------------------------------------------------------- */
-    CR_OK,                             // Sql call commited the variable
-    CR_FAIL,                           // Sql call update cvar failed
-    CR_OK_PURGE,                       // Sql call succeeded with purge
-    CR_OK_NOTHING_TO_DO,               // Sql call succeeded with nothing to do
-    CR_FAIL_PURGE,                     // Sql call failed purge
-    CR_FAIL_PURGE_NOT_CHANGED,         // Sql call succeded but no changes
-    CR_FAIL_PURGE_UNKNOWN_ERROR,       // Unknown result from sql purge call
-    CR_FAIL_NOT_SAVEABLE,              // CVar is not saveable
-    CR_FAIL_LOADED_NOT_MODIFIED,       // Cvar loaded but not modified
-    CR_FAIL_ENCRYPT,                   // Cvar could not be encrypted
-    CR_FAIL_COMPRESS,                  // Cvar could not be compress
+    CR_OK,                             // [00] Call commited the variable
+    CR_FAIL,                           // [01] Call update cvar failed
+    CR_OK_PURGE,                       // [02] Call succeeded with purge
+    CR_OK_NOTHING_TO_DO,               // [03] Call succeeded with no changes
+    CR_FAIL_PURGE,                     // [04] Call failed purge
+    CR_FAIL_PURGE_NOT_CHANGED,         // [05] Call succeded but no changes
+    CR_FAIL_PURGE_UNKNOWN_ERROR,       // [06] Unknown result from sql purge
+    CR_FAIL_NOT_SAVEABLE,              // [07] CVar is not saveable
+    CR_FAIL_LOADED_NOT_MODIFIED,       // [08] Cvar loaded but not modified
+    CR_FAIL_ENCRYPT,                   // [09] Cvar could not be encrypted
+    CR_FAIL_COMPRESS,                  // [10] Cvar could not be compress
   };/* -- Private variables ------------------------------------------------ */
   const string   strVar;               // Variable name
   string         strValue,             // Value name
                  strDefValue;          // Default value name
   CbFunc         cfTrigger;            // Callback trigger event
   /* --------------------------------------------------------------- */ public:
-  const CbFunc &GetTrigger(void) const { return cfTrigger; }
+  const CbFunc &GetTrigger() const { return cfTrigger; }
   /* ----------------------------------------------------------------------- */
   void SetTrigger(const CbFunc &cfCb) { cfTrigger = cfCb; }
   /* ----------------------------------------------------------------------- */
-  bool IsTriggerSet(void) const { return GetTrigger() == NoOp; }
+  bool IsTriggerSet() const { return GetTrigger() == NoOp; }
   /* ----------------------------------------------------------------------- */
-  const string &GetVar(void) const { return strVar; }
+  const string &GetVar() const { return strVar; }
   /* ----------------------------------------------------------------------- */
-  const string &GetDefValue(void) const { return strDefValue; }
+  const string &GetDefValue() const { return strDefValue; }
   /* ----------------------------------------------------------------------- */
-  size_t GetDefLength(void) const { return GetDefValue().length(); }
+  size_t GetDefLength() const { return GetDefValue().length(); }
   /* ----------------------------------------------------------------------- */
-  size_t GetDefCapacity(void) const { return GetDefValue().capacity(); }
+  size_t GetDefCapacity() const { return GetDefValue().capacity(); }
   /* ----------------------------------------------------------------------- */
-  string &GetModifyableValue(void) { return strValue; }
+  string &GetModifyableValue() { return strValue; }
   /* ----------------------------------------------------------------------- */
   bool IsLowerPriority(const CVarFlagsConst cvfcFlags) const
     { return (FlagGet() & SANY) < (cvfcFlags & SANY); }
   /* ----------------------------------------------------------------------- */
-  const string &GetValue(void) const { return strValue; }
+  const string &GetValue() const { return strValue; }
   /* ----------------------------------------------------------------------- */
-  size_t GetValueLength(void) const { return GetValue().length(); }
+  size_t GetValueLength() const { return GetValue().length(); }
   /* ----------------------------------------------------------------------- */
-  size_t GetValueCapacity(void) const { return GetValue().capacity(); }
+  size_t GetValueCapacity() const { return GetValue().capacity(); }
   /* ----------------------------------------------------------------------- */
-  void PruneValue(void) { GetModifyableValue().shrink_to_fit(); }
+  void PruneValue() { GetModifyableValue().shrink_to_fit(); }
   /* ----------------------------------------------------------------------- */
-  bool IsValueUnset(void) const { return GetValue().empty(); }
+  bool IsValueUnset() const { return GetValue().empty(); }
   /* ----------------------------------------------------------------------- */
-  bool IsValueSet(void) const { return !IsValueUnset(); }
+  bool IsValueSet() const { return !IsValueUnset(); }
   /* ----------------------------------------------------------------------- */
-  bool IsValueChanged(void) const { return GetValue() != GetDefValue(); }
+  bool IsValueChanged() const { return GetValue() != GetDefValue(); }
   /* ----------------------------------------------------------------------- */
-  bool IsValueUnchanged(void) const { return !IsValueChanged(); }
+  bool IsValueUnchanged() const { return !IsValueChanged(); }
   /* ----------------------------------------------------------------------- */
-  void SetDefault(void) { strValue = GetDefValue(); }
+  void SetDefault() { strValue = GetDefValue(); }
   /* ----------------------------------------------------------------------- */
   void SetDefValue(const string &strN) { strDefValue = strN; }
   /* ----------------------------------------------------------------------- */
@@ -139,7 +137,7 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   void SetValue(string &&strV) { strValue = StdMove(strV); }
   /* ----------------------------------------------------------------------- */
-  const string GetValueSafe(void) const
+  const string GetValueSafe() const
   { // If confidential, return confidential
     if(FlagIsSet(CONFIDENTIAL) && csfShowFlags.FlagIsClear(CSF_CONFIDENTIAL))
       return cCommon->CommonPrivate();
@@ -163,7 +161,7 @@ class CVarItem :                       // Members initially private
     return StrFormat("\"$\"", GetValue());
   }
   /* ----------------------------------------------------------------------- */
-  bool MarkEncodedVarAsCommit(void)
+  bool MarkEncodedVarAsCommit()
   { // Ignore if appropriate flag not set
     if(FlagIsClear(CPROTECTED|CDEFLATE)) return false;
     // Mark as commit
@@ -177,7 +175,7 @@ class CVarItem :                       // Members initially private
   bool Commit(const MemConst &mcSrc)
     { return cSql->CVarCommitBlob(GetVar(), mcSrc); }
   /* ----------------------------------------------------------------------- */
-  CommitResult Commit(void)
+  CommitResult Commit()
   { // Ignore if variable not modified, force saved or loaded
     if(FlagIsClear(COMMIT|COMMITNOCHECK)) return CR_OK_NOTHING_TO_DO;
     // If the value is the same as default value and nocheck not set?
@@ -498,7 +496,7 @@ class CVarItem :                       // Members initially private
     cfTrigger{                         // Trigger
       StdMove(ciOther.GetTrigger()) }  // Move trigger
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor -------------------------------------------------------- */
   CVarItem(
     /* -- Required parameters ---------------------------------------------- */
@@ -513,7 +511,7 @@ class CVarItem :                       // Members initially private
     strDefValue{ strVal },             // Initialise default value
     cfTrigger{ cfCb }                  // Initialise trigger function
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

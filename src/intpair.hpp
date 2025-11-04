@@ -17,17 +17,17 @@ template<typename Int>class IntPair
   constexpr static const Int iD0 = static_cast<Int>(0), // 0 of specified type
   /* Some needed values */   iD1 = static_cast<Int>(1); // 1 of specified type
   /* -- Get ---------------------------------------------------------------- */
-  template<typename RInt=Int>RInt IPGetOne(void) const
+  template<typename RInt=Int>RInt IPGetOne() const
     { return static_cast<RInt>(i1); }
-  template<typename RInt=Int>RInt IPGetTwo(void) const
+  template<typename RInt=Int>RInt IPGetTwo() const
     { return static_cast<RInt>(i2); }
-  template<typename RInt,class RBase=IntPair<RInt>>RBase IPGet(void) const
+  template<typename RInt,class RBase=IntPair<RInt>>RBase IPGet() const
     { return { IPGetOne<RInt>(), IPGetTwo<RInt>() }; }
-  template<typename RInt=Int>RInt IPDefGet(void) const
+  template<typename RInt=Int>RInt IPDefGet() const
     { return static_cast<RInt>(iD0); }
   /* -- Get reference ------------------------------------------------------ */
-  Int &IPGetOneRef(void) { return i1; }
-  Int &IPGetTwoRef(void) { return i2; }
+  Int &IPGetOneRef() { return i1; }
+  Int &IPGetTwoRef() { return i2; }
   /* -- Set ---------------------------------------------------------------- */
   void IPSetOne(const Int iV) { i1 = iV; }
   void IPSetTwo(const Int iV) { i2 = iV; }
@@ -46,12 +46,12 @@ template<typename Int>class IntPair
   void IPDecTwo(const Int iV = iD1) { IPSetTwo(IPGetTwo() - iV); }
   void IPDec(const Int iV1 = iD1) { IPDecOne(iV1); IPDecTwo(iV1); }
   /* -- Test --------------------------------------------------------------- */
-  bool IPIsOneSet(void) const { return IPGetOne() != IPDefGet(); }
-  bool IPIsNotOneSet(void) const { return !IPIsOneSet(); }
-  bool IPIsTwoSet(void) const { return IPGetTwo() != IPDefGet(); }
-  bool IPIsNotTwoSet(void) const { return !IPIsTwoSet(); }
-  bool IPIsSet(void) const { return IPIsOneSet() && IPIsTwoSet(); }
-  bool IPIsNotSet(void) const { return !IPIsSet(); }
+  bool IPIsOneSet() const { return IPGetOne() != IPDefGet(); }
+  bool IPIsNotOneSet() const { return !IPIsOneSet(); }
+  bool IPIsTwoSet() const { return IPGetTwo() != IPDefGet(); }
+  bool IPIsNotTwoSet() const { return !IPIsTwoSet(); }
+  bool IPIsSet() const { return IPIsOneSet() && IPIsTwoSet(); }
+  bool IPIsNotSet() const { return !IPIsSet(); }
   /* ----------------------------------------------------------------------- */
   bool IPIsEqual(const IntPair &ipOther) const
     { return IPGetOne() == ipOther.IPGetOne() &&
@@ -67,7 +67,7 @@ template<typename Int>class IntPair
     i1(iV),                            // Initialise first value
     i2(iV)                             // Initialise second value
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Initialisation on both values constructor -------------------------- */
   IntPair(const Int iV1,               // Specified first value
           const Int iV2) :             // Specified second value
@@ -75,19 +75,19 @@ template<typename Int>class IntPair
     i1(iV1),                           // Initialise first value
     i2(iV2)                            // Initialise second value
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Copy constructor --------------------------------------------------- */
   IntPair(const IntPair &ipO) :        // Other class
     /* -- Initialisers ----------------------------------------------------- */
     IntPair{ ipO.i1, ipO.i2 }          // Call init ctor with values
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Default constructor ------------------------------------------------ */
-  IntPair(void) :                      // No parameters
+  IntPair() :
     /* -- Initialisers ----------------------------------------------------- */
     IntPair{ iD0, iD0 }                // Call init ctor with default values
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

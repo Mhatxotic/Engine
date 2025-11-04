@@ -22,8 +22,8 @@ class CodecJPG :                       // JPEG codec object
   /* -- Base classes ------------------------------------------------------- */
   private ImageLib                     // Image format helper class
 { /* -- JPEG callbacks ----------------------------------------------------- */
-  static void JPegInitSource(j_decompress_ptr) { }
-  static void JPegTermSource(j_decompress_ptr) { }
+  static void JPegInitSource(j_decompress_ptr) {}
+  static void JPegTermSource(j_decompress_ptr) {}
   static boolean JPegFillInputBuffer(j_decompress_ptr)
     { return static_cast<boolean>(true); }
   static void JPegSkipInputData(j_decompress_ptr ciData, long lBytes)
@@ -40,9 +40,9 @@ class CodecJPG :                       // JPEG codec object
   { // Buffer for error message
     string strMsg(JMSG_LENGTH_MAX, 0);
     // Popular error message
-    (*(ciData->err->format_message))(ciData,const_cast<char*>(strMsg.c_str()));
+    (*(ciData->err->format_message))(ciData,const_cast<char*>(strMsg.data()));
     // Throw back to intermediate handler so we can cleanup libjpeg
-    throw runtime_error{ strMsg.c_str() };
+    throw runtime_error{ strMsg.data() };
   }
   /* --------------------------------------------------------------- */ public:
   bool Encode(const FStream &fmData, const ImageData &idData,
@@ -72,7 +72,7 @@ class CodecJPG :                       // JPEG codec object
         // first time for this JPEG object?
         jpeg_stdio_dest(&ciData, fsC.FStreamGetCtx());
       } // Destructor that cleans up libjpeg
-      ~JpegWriter(void) { jpeg_destroy_compress(&ciData); }
+      ~JpegWriter() { jpeg_destroy_compress(&ciData); }
     } // Send file map to class
     jwC{ fmData };
     // Get compress struct data
@@ -116,7 +116,7 @@ class CodecJPG :                       // JPEG codec object
       struct jpeg_decompress_struct ciData; // Decompress struct data
       struct jpeg_error_mgr        jemData; // Error manager data
       // Constructor
-      JpegReader(void)
+      JpegReader()
       { // Setup error manager
         ciData.err = jpeg_std_error(&jemData);
         jemData.error_exit = JPegErrorExit;
@@ -124,7 +124,7 @@ class CodecJPG :                       // JPEG codec object
         jpeg_CreateDecompress(&ciData, JPEG_LIB_VERSION,
           sizeof(struct jpeg_decompress_struct));
       } // Destructor that cleans up libjpeg
-      ~JpegReader(void) { jpeg_destroy_decompress(&ciData); }
+      ~JpegReader() { jpeg_destroy_decompress(&ciData); }
     } // Send file map to class
     jrC;
     // Get compress struct data
@@ -188,7 +188,7 @@ class CodecJPG :                       // JPEG codec object
     return true;
   }
   /* -- Default constructor ------------------------------------- */ protected:
-  CodecJPG(void) :
+  CodecJPG() :
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_JPG, "Joint Photographic Experts Group", "JPG",
       bind(&CodecJPG::Decode, this, _1, _2),

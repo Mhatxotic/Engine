@@ -47,25 +47,25 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   /* --------------------------------------------------------------- */ public:
   DimUInt          duDPI;              // FT DPI width and height
   /* -------------------------------------------------------------- */ private:
-  void DoDeInit(void)
+  void DoDeInit()
   { // Clear freetype handles if created
     if(IsStrokerLoaded()) FT_Stroker_Done(ftsStroker);
     if(IsLoaded()) cFreeType->DestroyFont(ftfFace);
   }
   /* -- Returns if face is loaded----------------------------------- */ public:
-  bool IsLoaded(void) const { return !!ftfFace; }
-  bool IsStrokerLoaded(void) const { return !!ftsStroker; }
-  FT_Stroker GetStroker(void) const { return ftsStroker; }
-  unsigned int GetDPIWidth(void) const { return duDPI.DimGetWidth(); }
-  unsigned int GetDPIHeight(void) const { return duDPI.DimGetHeight(); }
-  GLfloat GetOutline(void) const { return fOutline; }
-  bool IsOutline(void) const { return GetOutline() > 0.0f; }
-  FT_GlyphSlot GetGlyphData(void) const { return ftfFace->glyph; }
-  const FT_String *GetFamily(void) const { return ftfFace->family_name; }
-  const FT_String *GetStyle(void) const { return ftfFace->style_name; }
-  FT_Long GetGlyphCount(void) const { return ftfFace->num_glyphs; }
+  bool IsLoaded() const { return !!ftfFace; }
+  bool IsStrokerLoaded() const { return !!ftsStroker; }
+  FT_Stroker GetStroker() const { return ftsStroker; }
+  unsigned int GetDPIWidth() const { return duDPI.DimGetWidth(); }
+  unsigned int GetDPIHeight() const { return duDPI.DimGetHeight(); }
+  GLfloat GetOutline() const { return fOutline; }
+  bool IsOutline() const { return GetOutline() > 0.0f; }
+  FT_GlyphSlot GetGlyphData() const { return ftfFace->glyph; }
+  const FT_String *GetFamily() const { return ftfFace->family_name; }
+  const FT_String *GetStyle() const { return ftfFace->style_name; }
+  FT_Long GetGlyphCount() const { return ftfFace->num_glyphs; }
   /* -- Set ftf size ------------------------------------------------------- */
-  void UpdateSize(void)
+  void UpdateSize()
   { // For some twisted reason, FreeType measures char size in terms f 1/64ths
     // of pixels. Thus, to make a char 'h' pixels high, we need to request a
     // size of 'h*64'.
@@ -163,7 +163,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     SyncInitArray(strName, mData);
   }
   /* -- De-init ftf font --------------------------------------------------- */
-  void DeInit(void) { DoDeInit(); ftsStroker = nullptr; ftfFace = nullptr; }
+  void DeInit() { DoDeInit(); ftsStroker = nullptr; ftfFace = nullptr; }
   /* ----------------------------------------------------------------------- */
   void SwapFtf(Ftf &ftfOther)
   { // Copy variables over from source class
@@ -181,7 +181,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   /* -- MOVE assignment (Ftf=Ftf) just do a swap --------------------------- */
   Ftf& operator=(Ftf &&ftfOther) { SwapFtf(ftfOther); return *this; }
   /* -- Default constructor ------------------------------------------------ */
-  Ftf(void) :                          // No parameters
+  Ftf() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFtf{ cFtfs },              // Initially unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
@@ -190,16 +190,16 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     fOutline(0.0f),                    // No outline size yet
     ftfFace(nullptr),                  // No FreeType handle yet
     ftsStroker(nullptr)                // No FreeType stroker handle yet
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- MOVE constructor --------------------------------------------------- */
   Ftf(Ftf &&ftfOther) :                // The other Ftf class to swap with
     /* -- Initialisers ----------------------------------------------------- */
     Ftf()                              // Use default initialisers
-    /* --------------------------------------------------------------------- */
-    { SwapFtf(ftfOther); }             // Do the swap
+    /* -- Code that does the swap ------------------------------------------ */
+    { SwapFtf(ftfOther); }
   /* -- Destructor --------------------------------------------------------- */
-  ~Ftf(void) { AsyncCancel(); DoDeInit(); }
+  ~Ftf() { AsyncCancel(); DoDeInit(); }
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Ftfs, Ftf, FTF, FONT) // Finish collector class
 /* ------------------------------------------------------------------------- */

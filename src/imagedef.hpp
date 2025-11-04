@@ -15,75 +15,73 @@ using namespace IStd::P;               using namespace ITexDef::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Public typedefs ------------------------------------------------------ */
 enum ImageFormat : size_t              // Available image codecs
 { /* ----------------------------------------------------------------------- */
-  IFMT_PNG,                            // PNG format (IImageFormat::CodecPNG)
-  IFMT_JPG,                            // JPG format (IImageFormat::CodecJPG)
-  IFMT_GIF,                            // GIF format (IImageFormat::CodecGIF)
-  IFMT_DDS,                            // DDS format (IImageFormat::CodecDDS)
+  IFMT_PNG,                            // [0] PNG (IImageFormat::CodecPNG)
+  IFMT_JPG,                            // [1] JPG (IImageFormat::CodecJPG)
+  IFMT_GIF,                            // [2] GIF (IImageFormat::CodecGIF)
+  IFMT_DDS,                            // [3] DDS (IImageFormat::CodecDDS)
   /* ----------------------------------------------------------------------- */
-  IFMT_MAX                             // Maximum supported image codecs
-};/* -- Shared image flags ------------------------------------------------- */
-BUILD_FLAGS(Image,
+  IFMT_MAX                             // [4] Maximum supported image codecs
+};/* ----------------------------------------------------------------------- */
+BUILD_FLAGS(Image,                     // Shared image flags
   /* -- Note --------------------------------------------------------------- **
   ** The 'ImageData' class contains a 'Flags' class which is shared between  **
   ** five different classes, 'Atlas', 'Image', 'ImageData', 'Font' and       **
   ** 'Texture' so it's important we don't duplicate values here.             **
   ** -- Font loading flags (Only used in 'Font' class) --------------------- */
-  // No flags?                         True stroke but more buggy?
-  IL_NONE                   {Flag(0)}, FF_STROKETYPE2             {Flag(1)},
-  // Use image glyph size for advance? Do round() on advance width?
-  FF_USEGLYPHSIZE           {Flag(2)}, FF_ROUNDADVANCE            {Flag(3)},
-  // Do floor() on advance width?      Do ceil() on advance width?
-  FF_FLOORADVANCE           {Flag(4)}, FF_CEILADVANCE             {Flag(5)},
+  IL_NONE                   {Flag(0)}, // No flags?
+  FF_STROKETYPE2            {Flag(1)}, // True stroke but more buggy?
+  FF_USEGLYPHSIZE           {Flag(2)}, // Use image glyph size for advance?
+  FF_ROUNDADVANCE           {Flag(3)}, // Do round() on advance width?
+  FF_FLOORADVANCE           {Flag(4)}, // Do floor() on advance width?
+  FF_CEILADVANCE            {Flag(5)}, // Do ceil() on advance width?
   /* -- Font loader public mask bits --------------------------------------- */
   FF_MASK{ FF_USEGLYPHSIZE|FF_STROKETYPE2|FF_FLOORADVANCE|FF_CEILADVANCE|
            FF_ROUNDADVANCE },
   /* -- Font types --------------------------------------------------------- */
-  // Font is a freetype font?          Font is a static bitmap font?
-  FT_FREETYPE               {Flag(6)}, FT_BITMAP                  {Flag(7)},
+  FT_FREETYPE               {Flag(6)}, // Font is a freetype font?
+  FT_BITMAP                 {Flag(7)}, // Font is a static bitmap font?
   /* -- Post processing (Only used in 'Image' class) ----------------------- */
-  // Convert to atlas?                 Image will be loadable in OpenGL?
-  IL_ATLAS                  {Flag(8)}, IL_TOGPU                   {Flag(9)},
-  // Convert loaded image to 24bpp?    Convert loaded image to 32bpp?
-  IL_TO24BPP               {Flag(10)}, IL_TO32BPP                {Flag(11)},
-  // Convert loaded image to BGR(A)?   Convert loaded image to RGB(A)?
-  IL_TOBGR                 {Flag(12)}, IL_TORGB                  {Flag(13)},
-  // Convert loaded image to BINARY?   Force reverse the image?
-  IL_TOBINARY              {Flag(14)}, IL_REVERSE                {Flag(15)},
+  IL_ATLAS                  {Flag(8)}, // Convert to atlas?
+  IL_TOGPU                  {Flag(9)}, // Image will be loadable in OpenGL?
+  IL_TO24BPP               {Flag(10)}, // Convert loaded image to 24bpp?
+  IL_TO32BPP               {Flag(11)}, // Convert loaded image to 32bpp?
+  IL_TOBGR                 {Flag(12)}, // Convert loaded image to BGR(A)?
+  IL_TORGB                 {Flag(13)}, // Convert loaded image to RGB(A)?
+  IL_TOBINARY              {Flag(14)}, // Convert loaded image to BINARY?
+  IL_REVERSE               {Flag(15)}, // Force reverse the image?
   /* -- Force load formats (Only used in 'Image' class) -------------------- */
-  // Force load as PNG?                Force load as JPEG?
-  IL_FCE_PNG               {Flag(24)}, IL_FCE_JPG                {Flag(25)},
-  // Force load as GIF?                // Force load as DDS?
-  IL_FCE_GIF               {Flag(26)}, IL_FCE_DDS                {Flag(27)},
+  IL_FCE_PNG               {Flag(24)}, // Force load as PNG?
+  IL_FCE_JPG               {Flag(25)}, // Force load as JPEG?
+  IL_FCE_GIF               {Flag(26)}, // Force load as GIF?
+  IL_FCE_DDS               {Flag(27)}, // Force load as DDS?
   /* -- Image loader public mask bits -------------------------------------- */
   IL_MASK{ IL_TOGPU|IL_TO24BPP|IL_TO32BPP|IL_TOBGR|IL_TORGB|IL_TOBINARY|
     IL_REVERSE|IL_ATLAS|IL_FCE_JPG|IL_FCE_PNG|IL_FCE_GIF|IL_FCE_DDS },
   /* -- Active flags (Only used in 'Image' class) ----------------------- */
-  // Image converted to load in GL?    Converted image to 24bpp?
-  IA_TOGPU                 {Flag(32)}, IA_TO24BPP                {Flag(33)},
-  // Converted image to 32bpp?         Converted image to BGR(A)?
-  IA_TO32BPP               {Flag(34)}, IA_TOBGR                  {Flag(35)},
-  // Converted image to RGB(A)?        Converted image to BINARY?
-  IA_TORGB                 {Flag(36)}, IA_TOBINARY               {Flag(37)},
-  // Force reversed the image?         Converted to atlas?
-  IA_REVERSE               {Flag(38)}, IA_ATLAS                  {Flag(39)},
+  IA_TOGPU                 {Flag(32)}, // Image converted to load in GL?
+  IA_TO24BPP               {Flag(33)}, // Converted image to 24bpp?
+  IA_TO32BPP               {Flag(34)}, // Converted image to 32bpp?
+  IA_TOBGR                 {Flag(35)}, // Converted image to BGR(A)?
+  IA_TORGB                 {Flag(36)}, // Converted image to RGB(A)?
+  IA_TOBINARY              {Flag(37)}, // Converted image to BINARY?
+  IA_REVERSE               {Flag(38)}, // Force reversed the image?
+  IA_ATLAS                 {Flag(39)}, // Converted to atlas?
   /* -- Image loaded flags (Only used in 'ImageData' class) ---------------- */
-  // Bitmap has mipmaps?               Bitmap FILE has reversed pixels?
-  IF_MIPMAPS               {Flag(48)}, IF_REVERSED               {Flag(49)},
-  // Bitmap is compressed?             Bitmap is dynamically created?
-  IF_COMPRESSED            {Flag(50)}, IF_DYNAMIC                {Flag(51)},
-  // A palette is included?            Move loaded data back
-  IF_PALETTE               {Flag(52)},
+  IF_MIPMAPS               {Flag(48)}, // Bitmap has mipmaps?
+  IF_REVERSED              {Flag(49)}, // Bitmap FILE has reversed pixels?
+  IF_COMPRESSED            {Flag(50)}, // Bitmap is compressed?
+  IF_DYNAMIC               {Flag(51)}, // Bitmap is dynamically created?
+  IF_PALETTE               {Flag(52)}, // A palette is included?
   /* -- Texture loaded flags (Only used in 'Image' class) ------------------ */
-  // Marked for deletion
-  TF_DELETE                {Flag(55)},
+  TF_DELETE                {Flag(55)}, // Marked for deletion?
   /* -- Image purpose (help with debugging) -------------------------------- */
-  // Image is stand-alone              Image is part of a Texture class
-  IP_IMAGE                 {Flag(61)}, IP_TEXTURE                {Flag(62)},
-  // Image is part of a Font class     Image is part of an Atlas class
-  IP_FONT                  {Flag(63)}, IP_ATLAS                  {Flag(64)}
+  IP_IMAGE                 {Flag(61)}, // Image is stand-alone?
+  IP_TEXTURE               {Flag(62)}, // Image is part of a Texture class?
+  IP_FONT                  {Flag(63)}, // Image is part of a Font class?
+  IP_ATLAS                 {Flag(64)}  // Image is part of an Atlas class?
 );/* ----------------------------------------------------------------------- */
 struct ImageSlot :                     // Members initially public
   /* -- Initialisers ------------------------------------------------------- */
@@ -95,18 +93,18 @@ struct ImageSlot :                     // Members initially public
     Memory{ StdMove(mData) },          // Move memory in place
     DimUInt{ uiW, uiH }                // Set dimensions
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 typedef vector<ImageSlot> SlotList;    // list of bitmaps
 /* ------------------------------------------------------------------------- */
 enum BitDepth : unsigned int           // Human readable bit-depths
 { /* ----------------------------------------------------------------------- */
-  BD_NONE       =  0,                  // Not initialised yet
-  BD_BINARY     =  1,                  // Binary format (8 pixels per byte)
-  BD_GRAY       =  8,                  // Gray channel format
-  BD_GRAYALPHA  = 16,                  // Gray + alpha channel format
-  BD_RGB        = 24,                  // 1 pixel per 3 bytes (R+G+B)
-  BD_RGBA       = 32                   // 1 pixel per 4 bytes (R+G+B+Alpha)
+  BD_NONE                        =  0, // Not initialised yet
+  BD_BINARY                      =  1, // Binary format (8 pixels per byte)
+  BD_GRAY                        =  8, // Gray channel format
+  BD_GRAYALPHA                   = 16, // Gray + alpha channel format
+  BD_RGB                         = 24, // 1 pixel per 3 bytes (R+G+B)
+  BD_RGBA                        = 32  // 1 pixel per 4 bytes (R+G+B+Alpha)
 };/* ----------------------------------------------------------------------- */
 class ImageData :                      // Members initially private
   /* ----------------------------------------------------------------------- */
@@ -162,13 +160,13 @@ class ImageData :                      // Members initially private
     void SetBytesAndBitsPerPixelCast(const IntType uiNBPP)
       { SetBytesAndBitsPerPixel(static_cast<ByteDepth>(uiNBPP)); }
   /* ----------------------------------------------------------------------- */
-  size_t GetAlloc(void) const { return stAlloc; }
+  size_t GetAlloc() const { return stAlloc; }
   /* ----------------------------------------------------------------------- */
 #define FH(n, f) \
-  bool Is ## n(void) const { return FlagIsSet(f); } \
-  bool IsNot ## n(void) const { return !Is ## n(); } \
+  bool Is ## n() const { return FlagIsSet(f); } \
+  bool IsNot ## n() const { return !Is ## n(); } \
   void Set ## n(bool bState=true) { FlagSetOrClear(f, bState); } \
-  void Clear ## n(void) { Set ## n(false); }
+  void Clear ## n() { Set ## n(false); }
   /* ----------------------------------------------------------------------- */
   FH(FontFreeType,     FT_FREETYPE)    // Is/IsNot/Set/ClearFontFreeType
   FH(FontBitmap,       FT_BITMAP)      // Is/IsNot/Set/ClearFontBitmap
@@ -205,20 +203,20 @@ class ImageData :                      // Members initially private
   /* ----------------------------------------------------------------------- */
   void SetPixelType(const TextureType ttNType) { ttType = ttNType; }
   /* ----------------------------------------------------------------------- */
-  TextureType GetPixelType(void) const { return ttType; }
+  TextureType GetPixelType() const { return ttType; }
   /* ----------------------------------------------------------------------- */
-  size_t TotalPixels(void) const
+  size_t TotalPixels() const
     { return DimGetWidth<size_t>() * DimGetHeight<size_t>(); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType=decltype(bdDepth)>
-    IntType GetBitsPerPixel(void) const
+    IntType GetBitsPerPixel() const
       { return static_cast<IntType>(bdDepth); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType=decltype(byDepth)>
-    IntType GetBytesPerPixel(void) const
+    IntType GetBytesPerPixel() const
       { return static_cast<IntType>(byDepth); }
   /* -- Get slots ---------------------------------------------------------- */
-  SlotList &GetSlots(void) { return slSlots; }
+  SlotList &GetSlots() { return slSlots; }
   /* -- Add a new slot ----------------------------------------------------- */
   void AddSlot(Memory &mData, const unsigned int uiSWidth,
     const unsigned int uiSHeight)
@@ -233,15 +231,15 @@ class ImageData :                      // Members initially private
   /* -- Helps with one-liners (temporary variables) ------------------------ */
   void AddSlot(Memory &&mData) { AddSlot(mData); }
   /* -- Get read-only slots ------------------------------------------------ */
-  const SlotList &GetSlotsConst(void) const { return slSlots; }
+  const SlotList &GetSlotsConst() const { return slSlots; }
   /* -- Is no slots? ------------------------------------------------------- */
-  bool IsNoSlots(void) const { return GetSlotsConst().empty(); }
+  bool IsNoSlots() const { return GetSlotsConst().empty(); }
   /* -- Clear slots -------------------------------------------------------- */
-  void ClearSlots(void) { GetSlots().clear(); }
+  void ClearSlots() { GetSlots().clear(); }
   /* -- Recover slot memory ------------------------------------------------ */
-  void CompactSlots(void) { GetSlots().shrink_to_fit(); }
+  void CompactSlots() { GetSlots().shrink_to_fit(); }
   /* -- Get slots count ---------------------------------------------------- */
-  size_t GetSlotCount(void) const { return GetSlotsConst().size(); }
+  size_t GetSlotCount() const { return GetSlotsConst().size(); }
   /* -- Set allocated data size -------------------------------------------- */
   void SetAlloc(const size_t stNAlloc) { stAlloc = stNAlloc; }
   /* -- Reserve allocated slots -------------------------------------------- */
@@ -258,9 +256,9 @@ class ImageData :                      // Members initially private
     else if(stNewAlloc < stOldAlloc) DecreaseAlloc(stOldAlloc - stNewAlloc);
   }
   /* -- Clear slots and allocation size ------------------------------------ */
-  void Clear(void) { SetAlloc(0); ClearSlots(); }
+  void Clear() { SetAlloc(0); ClearSlots(); }
   /* -- Reset all data ----------------------------------------------------- */
-  void ResetAllData(void)
+  void ResetAllData()
   { // Reset dimensions and pixel data
     DimSet();
     SetBitsPerPixel(BD_NONE);
@@ -284,7 +282,7 @@ class ImageData :                      // Members initially private
     stAlloc(0),                        // Allocated memory not initialised yet
     stTiles(0)                         // No number of tiles
     /* -- Code ------------------------------------------------------------- */
-    { }                                // Nothing else to do
+    {}                                 // Nothing else to do
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

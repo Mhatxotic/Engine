@@ -224,8 +224,16 @@ template<typename CharType>
 class UtfDecoder                        // UTF8 string decoder helper
 { /* ----------------------------------------------------------------------- */
   const unsigned char *ucpStr, *ucpPtr; // String and pointer to that string
+  /* -- Test a custom condition on each character -------------------------- */
+  template<class OpFunc>bool IsType()
+  { // For each character, test if it is a control character
+    while(const unsigned int uiChar = Next())
+      if(OpFunc{}.T(uiChar)) return false;
+    // Is a displayable character
+    return true;
+  }
   /* -- Iterator --------------------------------------------------- */ public:
-  template<typename CharType=unsigned int>CharType Next(void)
+  template<typename CharType=unsigned int>CharType Next()
   { // Walk through the string until we get to a null terminator
     for(unsigned int uiState = 0, uiCode = 0; *ucpPtr > 0; ++ucpPtr)
     { // Decode the specified character
@@ -241,31 +249,28 @@ class UtfDecoder                        // UTF8 string decoder helper
     return 0;
   }
   /* -- Check if is displayable character ---------------------------------- */
-  bool IsDisplayable(void)
+  bool IsDisplayable()
   { // For each character, test if it is a control character
-    while(const unsigned int uiChar = Next())
-      if(static_cast<wchar_t>(uiChar) < 0x20) return false;
-    // Is a displayable character
-    return true;
+    struct Op{Op()=default;
+      bool T(const unsigned int uiC)const{return uiC<0x20;}};
+    return IsType<Op>();
   }
   /* -- Check if is ASCII compatible --------------------------------------- */
-  bool IsASCII(void)
+  bool IsASCII()
   { // For each character, test if it is valid ASCII
-    while(const unsigned int uiChar = Next())
-      if(static_cast<wchar_t>(uiChar) > 0x7F) return false;
-    // Is valid ASCII
-    return true;
+    struct Op{Op()=default;
+      bool T(const unsigned int uiC)const{return uiC>0x7F;}};
+    return IsType<Op>();
   }
   /* -- Check if is extended ASCII compatible ------------------------------ */
-  bool IsExtASCII(void)
+  bool IsExtASCII()
   { // For each character, test if it is valid extended ASCII
-    while(const unsigned int uiChar = Next())
-      if(static_cast<wchar_t>(uiChar) > 0xFF) return false;
-    // Is valid extended ASCII
-    return true;
+    struct Op{Op()=default;
+      bool T(const unsigned int uiC)const{return uiC>0xFF;}};
+    return IsType<Op>();
   }
   /* -- Length ------------------------------------------------------------- */
-  size_t Length(void)
+  size_t Length()
   { // Length of string
     size_t stLength = 0;
     // Walk through the string until we get to a null terminator
@@ -275,8 +280,6 @@ class UtfDecoder                        // UTF8 string decoder helper
   }
   /* -- Skip number of utf8 characters ------------------------------------- */
   void Skip(size_t stAmount) { while(stAmount-- && Next()); }
-  /* -- Skip number of C characters ---------------------------------------- */
-  void SkipChars(size_t stAmount) { while(stAmount-- && *ucpPtr++); }
   /* -- Skip characters and return last position (Char::* needs this) ------ */
   void Ignore(const unsigned int uiChar)
   { // Saved position
@@ -288,7 +291,7 @@ class UtfDecoder                        // UTF8 string decoder helper
   }
   /* -- Skip a value ------------------------------------------------------- */
   template<typename IntType=unsigned int,size_t stMaximum=8>
-    size_t SkipValue(void)
+    size_t SkipValue()
   { // Ignore if at the end of the string or it is empty
     if(Finished()) return false;
     // Save position and expected end position. The end position CAN be OOB
@@ -326,24 +329,24 @@ class UtfDecoder                        // UTF8 string decoder helper
     { return { reinterpret_cast<const char*>(ucpPos),
         static_cast<size_t>(ucpPtr - ucpPos) }; }
   /* -- Return if string is valid ------------------------------------------ */
-  bool Valid(void) const { return !!ucpStr; }
+  bool Valid() const { return !!ucpStr; }
   /* -- Return if pointer is at the end ------------------------------------ */
-  bool Finished(void) const { return !*ucpPtr; }
+  bool Finished() const { return !*ucpPtr; }
   /* -- Reset pointer ------------------------------------------------------ */
-  void Reset(void) { SetCPtr(const_cast<unsigned char*>(ucpStr)); }
+  void Reset() { SetCPtr(const_cast<unsigned char*>(ucpStr)); }
   /* -- Reset pointer with new strings ------------------------------------- */
   void Reset(const unsigned char*const ucpNew)
     { ucpPtr = ucpStr = ucpNew; }
   void Reset(const char*const cpNew)
     { ucpPtr = ucpStr = reinterpret_cast<const unsigned char*>(cpNew); }
   /* -- Return raw string -------------------------------------------------- */
-  const unsigned char *GetCString(void) const { return ucpStr; }
+  const unsigned char *GetCString() const { return ucpStr; }
   /* -- Return raw string -------------------------------------------------- */
-  const unsigned char *GetCPtr(void) const { return ucpPtr; }
+  const unsigned char *GetCPtr() const { return ucpPtr; }
   /* -- Pop position ------------------------------------------------------- */
   void SetCPtr(const unsigned char*const ucpPos) { ucpPtr = ucpPos; }
   /* -- Convert to wide string --------------------------------------------- */
-  const wstring Wide(void)
+  const wstring Wide()
   { // Output string
     wstring wstrOut;
     // Add character to string
@@ -359,13 +362,13 @@ class UtfDecoder                        // UTF8 string decoder helper
       <const unsigned char*>(ucpSrc)),
     ucpPtr(ucpStr)                     // Copy for current position
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   explicit UtfDecoder(const unsigned char*const ucpSrc) :
     /* -- Initialisers ----------------------------------------------------- */
     ucpStr(ucpSrc),                    // Set start of string
     ucpPtr(ucpStr)                     // Copy for current position
-    /* -- No codes --------------------------------------------------------- */
-    { }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   explicit UtfDecoder(const string_view &strvStr) :
     /* -- Initialisers ----------------------------------------------------- */
     ucpStr(reinterpret_cast            // Set start of string
@@ -373,15 +376,15 @@ class UtfDecoder                        // UTF8 string decoder helper
         (strvStr.data())),
     ucpPtr(ucpStr)                     // Copy for current position
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   explicit UtfDecoder(const string &strStr) :
     /* -- Initialisers ----------------------------------------------------- */
     ucpStr(reinterpret_cast            // Set start of string
       <const unsigned char*>
-        (strStr.c_str())),
+        (strStr.data())),
     ucpPtr(ucpStr)                     // Copy for current position
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- Word wrap a utf string --------------------------------------------- */
 static const StrVector UtfWordWrap(const string &strText, const size_t stWidth,
   const size_t stIndent)
@@ -400,7 +403,13 @@ static const StrVector UtfWordWrap(const string &strText, const size_t stWidth,
   const unsigned char*const ucpString = utfString.GetCString();
   const unsigned char *ucpStart = utfString.GetCPtr(),
                       *ucpSpace = ucpStart;
-  // Current column
+  // Helper function copy part of a string into the the word buffer
+  const auto Snip = [ucpString, &svLines, &strIndent, &strText]
+    (const unsigned char*const ucpStart, const unsigned char*const ucpEnd) {
+    svLines.emplace_back(strIndent + strText.substr(
+      static_cast<size_t>(ucpStart - ucpString),
+      static_cast<size_t>(ucpEnd - ucpStart)));
+  }; // Current column
   size_t stColumn = 0;
   // Until we're out of valid UTF8 characters
   while(const unsigned int uiChar = utfString.Next())
@@ -415,10 +424,9 @@ static const StrVector UtfWordWrap(const string &strText, const size_t stWidth,
     // the last space was found
     if(ucpSpace != ucpStart)
     { // Copy up to the space we found traversing the string
-      svLines.emplace_back(strIndent + strText.substr(
-        static_cast<size_t>(ucpStart - ucpString),
-        static_cast<size_t>(ucpSpace - ucpStart)));
-        utfString.SetCPtr(ucpSpace);
+      Snip(ucpStart, ucpSpace);
+      // Reset position to where we found the last whitespace
+      utfString.SetCPtr(ucpSpace);
       // Update start of next line
       ucpStart = ucpSpace = utfString.GetCPtr();
     } // No space found on this line.?
@@ -426,20 +434,15 @@ static const StrVector UtfWordWrap(const string &strText, const size_t stWidth,
     { // The wrap position is at the start
       ucpSpace = utfString.GetCPtr();
       // Copy up to the last space we found
-      svLines.emplace_back(strIndent + strText.substr(
-        static_cast<size_t>(ucpStart - ucpString),
-        static_cast<size_t>(ucpSpace - ucpStart)));
+      Snip(ucpStart, ucpSpace);
       // Update start of next line
       ucpStart = ucpSpace;
     } // Set indentation for next line
-    if(strIndent.empty()) strIndent = string(stIndent, ' ');
+    if(strIndent.empty()) strIndent.assign(stIndent, ' ');
     // Reset column to indent size
     stColumn = stIndent;
   } // If we are not at end of string? Add the remaining characters
-  if(utfString.GetCPtr() != ucpStart)
-    svLines.emplace_back(strIndent + strText.substr(
-      static_cast<size_t>(ucpStart - ucpString),
-      static_cast<size_t>(utfString.GetCPtr() - ucpStart)));
+  if(utfString.GetCPtr() != ucpStart) Snip(ucpStart, utfString.GetCPtr());
   // Return list
   return svLines;
 }

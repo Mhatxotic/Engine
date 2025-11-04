@@ -95,9 +95,9 @@ class GlFW :                           // Root engine class
     }
   }
   /* --------------------------------------------------------------- */ public:
-  const string_view &GetInternalVersion(void) const { return strvIntVersion; }
+  const string_view &GetInternalVersion() const { return strvIntVersion; }
   /* -- DeInitialiser ------------------------------------------------------ */
-  void DeInit(void)
+  void DeInit()
   { // Ignore if class not initialised
     if(IHNotDeInitialise()) return;
     // Report de-initialisation attempt
@@ -116,30 +116,30 @@ class GlFW :                           // Root engine class
     cLog->LogInfoSafe("GlFW subsystem de-initialised.");
   }
   /* -- Return if raw mouse motion is supported ---------------------------- */
-  bool IsRawMouseMotionSupported(void) const { return bRawMouseSupported; }
-  bool IsNotRawMouseMotionSupported(void) const
+  bool IsRawMouseMotionSupported() const { return bRawMouseSupported; }
+  bool IsNotRawMouseMotionSupported() const
     { return !IsRawMouseMotionSupported(); }
   /* -- Set the specified cursor ------------------------------------------- */
   void SetCursor(const GlFWCursorType gctCursorId)
     { WinSetCursorGraphic(at(gctCursorId).CursorGetContext()); }
   /* -- DeInitialise all standard cursors ---------------------------------- */
-  void DeInitCursors(void)
+  void DeInitCursors()
   { // Enumerate each created fbo and deinitialise it (NOT destroy it)
     cLog->LogDebugExSafe("GlFW de-initialising $ standard cursors...", size());
     for(GlFWCursor &gcObj : *this) gcObj.CursorDeInit();
     cLog->LogInfoExSafe("GlFW de-initialised $ standard cursors.", size());
   }
   /* -- Initialise all standard cursors ------------------------------------ */
-  void InitCursors(void)
+  void InitCursors()
   { // Enumerate each created fbo and reinitialise it
     cLog->LogDebugExSafe("GlFW initialising $ standard cursors...", size());
     for(GlFWCursor &gcObj : *this) gcObj.CursorInit();
     cLog->LogInfoExSafe("GlFW initialised $ standard cursors.", size());
   }
   /* -- Reset error level -------------------------------------------------- */
-  void ResetErrorLevel(void) { uiErrorLevel = 0; }
+  void ResetErrorLevel() { uiErrorLevel = 0; }
   /* -- Verify the GLFW library -------------------------------------------- */
-  void VerifyVersion(void)
+  void VerifyVersion()
   { // Get GLFW's identity
     if(const char*const cpIdentity = glfwGetVersionString())
     { // Parse each token (0 is always the version), rest is the features
@@ -165,7 +165,7 @@ class GlFW :                           // Root engine class
     else cLog->LogWarningSafe("GlFW failed to retrieve identity!");
   }
   /* -- Initialiser -------------------------------------------------------- */
-  void Init(void)
+  void Init()
   { // Report initialisation attempt
     cLog->LogDebugSafe("GlFW subsystem initialising...");
     // Setup custom allocator (Ubuntu 23.10 does not have 3.4 yet)
@@ -196,7 +196,7 @@ class GlFW :                           // Root engine class
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~GlFW, DeInit())
   /* -- Constructor -------------------------------------------------------- */
-  GlFW(void) :                         // Default constructor (No arguments)
+  GlFW() :                         // Default constructor (No arguments)
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Set class function name
     /* --------------------------------------------------------------------- */

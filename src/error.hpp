@@ -20,13 +20,13 @@
 /* ------------------------------------------------------------------------- */
 namespace IError {                     // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ICommon::P;            using namespace IString::P;
-using namespace IUtf::P;
+using namespace ICommon::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 struct ErrorPluginGeneric final
-  { explicit ErrorPluginGeneric(ostringstream&) { } };
+  { explicit ErrorPluginGeneric(ostringstream&) {} };
 /* ------------------------------------------------------------------------- */
 template<class Plugin=ErrorPluginGeneric>class Error final :
   /* -- Derivced classes --------------------------------------------------- */
@@ -38,7 +38,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   void Init(const char*const cpName, const char*const cpType)
     { osS << "\n+ " << cpName << '<' << cpType << "> = "; }
   /* -- Last parameter processed ------------------------------------------- */
-  void Param(void)
+  void Param()
   { // Process custom plugin on generated error message
     const Plugin pPlugin{ osS };
     // Finalise the error message into string
@@ -58,90 +58,100 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   /* ----------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
   /* -- Process long integer ----------------------------------------------- */
-  template<typename ...VarArgs>void Param(const char*const cpName,
-    const long lVal, const VarArgs &...vaVars)
-  { Int<long,unsigned long>(cpName, "Long", lVal); Param(vaVars...); }
+  template<typename ...VarArgs>
+    void Param(const char*const cpName, const long lVal, VarArgs &&...vaArgs)
+  { Int<long,unsigned long>(cpName, "Long", lVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process unsigned long integer -------------------------------------- */
-  template<typename ...VarArgs>void Param(const char*const cpName,
-    const unsigned long lVal, const VarArgs &...vaVars)
-  { Int<unsigned long>(cpName, "ULong", lVal); Param(vaVars...); }
+  template<typename ...VarArgs>
+    void Param(const char*const cpName,
+      const unsigned long lVal, VarArgs &&...vaArgs)
+  { Int<unsigned long>(cpName, "ULong", lVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* ----------------------------------------------------------------------- */
 #elif defined(LINUX)                   // Targeting Linux?
   /* -- Process long long int ---------------------------------------------- */
   template<typename ...VarArgs>        // (Lua_Integer)
     void Param(const char*const cpName, const long long int lliVal,
-      const VarArgs &...vaVars)
-  { Int<long long int>(cpName, "LongLongInt", lliVal); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Int<long long int>(cpName, "LongLongInt", lliVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process unsigned long long int ------------------------------------- */
   template<typename ...VarArgs>        // (Lua_Integer)
     void Param(const char*const cpName, const unsigned long long int ulliVal,
-      const VarArgs &...vaVars)
-  { Int<unsigned long long int>(cpName, "ULongLongInt", ulliVal); 
-    Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Int<unsigned long long int>(cpName, "ULongLongInt", ulliVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* ----------------------------------------------------------------------- */
 #elif defined(MACOS)                   // Targeting Apple device?
   /* -- Process signed long ------------------------------------------------ */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const long lVal,
-      const VarArgs &...vaVars)
-  { Int<long>(cpName, "Long", lVal); Param(vaVars...); }
+    void Param(const char*const cpName, const long lVal, VarArgs &&...vaArgs)
+  { Int<long>(cpName, "Long", lVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process unsigned long ---------------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const unsigned long ulVal,
-      const VarArgs &...vaVars)
-  { Int<unsigned long>(cpName, "ULong", ulVal); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Int<unsigned long>(cpName, "ULong", ulVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* ----------------------------------------------------------------------- */
 #endif                                 // Target check
   /* -- Process 16-bit signed integer -------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const int16_t sVal,
-      const VarArgs &...vaVars)
-  { Int<int16_t,uint16_t>(cpName, "Int16", sVal); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Int<int16_t,uint16_t>(cpName, "Int16", sVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 16-bit unsigned integer ------------------------------------ */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const uint16_t usVal,
-      const VarArgs &...vaVars)
-  { Int<uint16_t>(cpName, "UInt16", usVal); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Int<uint16_t>(cpName, "UInt16", usVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 32-bit signed integer -------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const int32_t lVal,
-      const VarArgs &...vaVars)
-  { Int<int32_t,uint32_t>(cpName, "Int32", lVal); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Int<int32_t,uint32_t>(cpName, "Int32", lVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 32-bit unsigned integer ------------------------------------ */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const uint32_t ulVal,
-      const VarArgs &...vaVars)
-  { Int<uint32_t>(cpName, "UInt32", ulVal); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Int<uint32_t>(cpName, "UInt32", ulVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 64-bit signed integer -------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const int64_t qVal,
-      const VarArgs &...vaVars)
-  { Int<int64_t,uint64_t>(cpName, "Int64", qVal); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Int<int64_t,uint64_t>(cpName, "Int64", qVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 64-bit unsigned integer ------------------------------------ */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const uint64_t uqVal,
-      const VarArgs &...vaVars)
-  { Int<uint64_t>(cpName, "UInt64", uqVal); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Int<uint64_t>(cpName, "UInt64", uqVal);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 8-bit unsigned integer ------------------------------------- */
   template<typename ...VarArgs>void Param(const char*const cpName,
-    const unsigned char ucByte, const VarArgs &...vaVars)
+    const unsigned char ucByte, VarArgs &&...vaArgs)
   { // First show as integer
     Int<unsigned int>(cpName, "UInt8", static_cast<unsigned int>(ucByte));
     // Display only if valid
     if(ucByte > 32) osS << " '" << static_cast<char>(ucByte) << "'.";
     // Process more parameters
-    Param(vaVars...);
+    Param(StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Process 8-bit signed integer --------------------------------------- */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const char cByte,
-      const VarArgs &...vaVars)
+    void Param(const char*const cpName, const char cByte, VarArgs &&...vaArgs)
   { // First show as integer
     Int<int,unsigned int>(cpName, "Int8", static_cast<int>(cByte));
     // Display only if valid
     if(cByte > 32) osS << " '" << cByte << "'.";
     // Process more parameters
-    Param(vaVars...);
+    Param(StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Show float --------------------------------------------------------- */
   template<typename FloatType>void Float(const char*const cpName,
@@ -149,26 +159,23 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   { Init(cpName, cpType); osS << fixed << tVal << '.'; }
   /* -- Process 64-bit double ---------------------------------------------- */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const double dVal,
-      const VarArgs &...vaVars)
-  { Float(cpName, "Float64", dVal); Param(vaVars...); }
+    void Param(const char*const cpName, const double dVal, VarArgs &&...vaArgs)
+  { Float(cpName, "Float64", dVal); Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 32-bit float ----------------------------------------------- */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const float fVal,
-      const VarArgs &...vaVars)
-  { Float(cpName, "Float32", fVal); Param(vaVars...); }
+    void Param(const char*const cpName, const float fVal, VarArgs &&...vaArgs)
+  { Float(cpName, "Float32", fVal); Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process boolean ---------------------------------------------------- */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const bool bFlag,
-      const VarArgs &...vaVars)
+    void Param(const char*const cpName, const bool bFlag, VarArgs &&...vaArgs)
   { // Prepare parameter
     Init(cpName, "Bool");
     osS << StrFromBoolTF(bFlag) << '.';
     // Process more parameters
-    Param(vaVars...);
+    Param(StdForward<VarArgs>(vaArgs)...);
   } /* -- Process pointer to address --------------------------------------- */
   template<typename ...VarArgs>void Param(const char*const cpName,
-    const void*const vpPtr, const VarArgs &...vaVars)
+    const void*const vpPtr, VarArgs &&...vaArgs)
   { // Get StringStream
     Init(cpName, "Ptr");
      // Get variable as a C-string
@@ -182,11 +189,11 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     // Add full stop
     osS << '.';
     // Process more parameters
-    Param(vaVars...);
+    Param(StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Process C-String ------------------------------------------------- */
   template<typename ...VarArgs>void Param(const char*const cpName,
-    const char*const cpStr, const VarArgs &...vaVars)
+    const char*const cpStr, VarArgs &&...vaArgs)
   { // Initialise start of string
     Init(cpName, "CStr");
     // Get variable as a C-string
@@ -198,12 +205,12 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     // Valid? Display and translation if neccesary
     else osS << '\"' << cpStr << "\".";
     // Process more parameters
-    Param(vaVars...);
+    Param(StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Process C-String ------------------------------------------------- */
   template<typename ...VarArgs>
     void Param[[maybe_unused]](const char*const cpName,
-      const wchar_t*const wcpStr, const VarArgs &...vaVars)
+      const wchar_t*const wcpStr, VarArgs &&...vaArgs)
   { // Initialise start of string
     Init(cpName, "WCStr");
     // Get variable as a C-string
@@ -215,17 +222,17 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     // Valid? Display and translation if neccesary
     else osS << '\"' << UtfFromWide(wcpStr) << "\".";
     // Process more parameters
-    Param(vaVars...);
+    Param(StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Process exception object ------------------------------------------- */
   template<typename ...VarArgs>void Param(const char*const cpName,
-    const exception &e, const VarArgs &...vaVars)
+    const exception &e, VarArgs &&...vaArgs)
   { // Initialise start of string
     Init(cpName, "Ex");
     // Valid? Display and translation if neccesary
     osS << e.what() << '.';
     // Process more parameters
-    Param(vaVars...);
+    Param(StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Show STL string ---------------------------------------------------- */
   template<class StringType>void Str(const char*const cpName,
@@ -248,32 +255,33 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   /* -- Process STL string lvalue ------------------------------------------ */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const string &strV,
-      const VarArgs &...vaVars)
-        { Str(cpName, "Str", strV); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Str(cpName, "Str", strV);
+    Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process STL wstring lvalue ----------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const wstring &wstrV,
-      const VarArgs &...vaVars)
-        { Str(cpName, "WStr", wstrV); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Str(cpName, "WStr", wstrV); Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process STL string_view -------------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const string_view &strvV,
-      const VarArgs &...vaVars)
-        { Str(cpName, "StrV", strvV); Param(vaVars...); }
+      VarArgs &&...vaArgs)
+  { Str(cpName, "StrV", strvV); Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Get message ------------------------------------------------ */ public:
-  virtual const char *what(void) const noexcept override { return c_str(); }
+  virtual const char *what() const noexcept override { return data(); }
   /* -- Prepare error message constructor with C-string--------------------- */
   template<typename ...VarArgs>
-    Error(const char*const cpErr, const VarArgs &...vaVars)
-      { osS << cpErr; Param(vaVars...); }
+    Error(const char*const cpErr, VarArgs &&...vaArgs)
+  { osS << cpErr; Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Prepare error message constructor with exception object ------------ */
   template<typename ...VarArgs>
-    Error(const exception &eReason, const VarArgs &...vaVars) :
-      Error(eReason.what(), vaVars...) { }
+    Error(const exception &eReason, VarArgs &&...vaArgs) :
+      Error(eReason.what(), StdForward<VarArgs>(vaArgs)...) {}
   /* -- Prepare error message constructor with STL string ------------------ */
   template<typename ...VarArgs>
-    Error(const string &strErr, const VarArgs &...vaVars)
-      { osS << strErr; Param(vaVars...); }
+    Error(const string &strErr, VarArgs &&...vaArgs)
+  { osS << strErr; Param(StdForward<VarArgs>(vaArgs)...); }
 };/* -- Helper macro to trigger exceptions --------------------------------- */
 #define XC(r,...) throw Error<>(r, ## __VA_ARGS__)
 /* ------------------------------------------------------------------------- */
