@@ -41,20 +41,20 @@ class Timer                            // Members initially private
   void TimerSetInterval(const uint64_t uqInterval)
     { cdLimit = nanoseconds{ uqInterval }; }
   /* -- Get minimum maximum interval value --------------------------------- */
-  uint64_t TimerGetMinInterval(void) const { return uqIntvMin; }
-  uint64_t TimerGetMaxInterval(void) const { return uqIntvMax; }
+  uint64_t TimerGetMinInterval() const { return uqIntvMin; }
+  uint64_t TimerGetMaxInterval() const { return uqIntvMax; }
   /* -- Update delay as double --------------------------------------------- */
   void TimerUpdateDelay(const unsigned int uiNewDelay)
     { cdDelay = milliseconds{ uiNewDelay }; }
   /* -- Forces a delay internally if delay is disabled --------------------- */
-  void TimerSetDelayIfZero(void)
+  void TimerSetDelayIfZero()
     { if(cdDelay != seconds{ 0 }) TimerUpdateDelay(1); }
   /* -- Restore saved persistent delay timer ------------------------------- */
-  void TimerRestoreDelay(void) { cdDelay = cdDelayPst; }
+  void TimerRestoreDelay() { cdDelay = cdDelayPst; }
   /* -- Get start time ----------------------------------------------------- */
-  const ClkTimePoint TimerGetStartTime(void) const { return ctpStart; }
+  const ClkTimePoint TimerGetStartTime() const { return ctpStart; }
   /* -- Do time calculations ----------------------------------------------- */
-  void TimerCalculateTime(void)
+  void TimerCalculateTime()
   { // Set end time
     ctpEnd = cmHiRes.GetTime();
     // Get duration we had to wait since end of last game loop
@@ -75,11 +75,11 @@ class Timer                            // Members initially private
     cdSecond = seconds{ 0 };
   }
   /* -- Thread suspense by requested duration ------------------------------ */
-  void TimerSuspendRequested(void) const { StdSuspend(cdDelay); }
+  void TimerSuspendRequested() const { StdSuspend(cdDelay); }
   /* -- Force wait if delay is disabled (cFboCore->Render()) --------------- */
-  void TimerForceWait(void) { if(cdDelay == seconds{ 0 }) bWait = true; }
+  void TimerForceWait() { if(cdDelay == seconds{ 0 }) bWait = true; }
   /* -- Calculate time elapsed since c++ ----------------------------------- */
-  void TimerUpdateBot(void)
+  void TimerUpdateBot()
   { // Sleep if theres a delay
     TimerSuspendRequested();
     // Calculate current time using stl
@@ -88,7 +88,7 @@ class Timer                            // Members initially private
     ++uqTicks;
   }
   /* -- Should not execute a game tick? ------------------------------------ */
-  bool TimerShouldNotTick(void)
+  bool TimerShouldNotTick()
   { // Calculate frame time
     TimerCalculateTime();
     // Increase accumulator by frame time
@@ -111,41 +111,41 @@ class Timer                            // Members initially private
     return false;
   }
   /* -- Reset counters and reinitialise start and end time ----------------- */
-  void TimerCatchup(void)
+  void TimerCatchup()
   { // Reset accumulator and duration
     cdAcc = cdFrame = seconds{ 0 };
     // Update new start and end time
     ctpStart = ctpEnd = cmHiRes.GetTime();
   }
   /* -- Return if script timer timed out ----------------------------------- */
-  bool TimerIsTimedOut(void)
+  bool TimerIsTimedOut()
     { ++uqTriggers; return cmHiRes.GetTime() >= ctpTimeOut; }
   /* -- Return how many times the script trigger was checked --------------- */
-  uint64_t TimerGetTriggers(void) const { return uqTriggers; }
+  uint64_t TimerGetTriggers() const { return uqTriggers; }
   /* -- Return the current script timeout ---------------------------------- */
-  double TimerGetTimeOut(void) const
+  double TimerGetTimeOut() const
     { return ClockDurationToDouble(cdTimeOut); }
   /* -- Return the duration of the last frame ------------------------------ */
-  double TimerGetDuration(void) const
+  double TimerGetDuration() const
     { return ClockDurationToDouble(cdFrame); }
   /* -- Return the current engine target tick time ------------------------- */
-  double TimerGetLimit(void) const { return ClockDurationToDouble(cdLimit); }
+  double TimerGetLimit() const { return ClockDurationToDouble(cdLimit); }
   /* -- Return the current accumulated frame time -------------------------- */
-  double TimerGetAccumulator(void) const
+  double TimerGetAccumulator() const
     { return ClockDurationToDouble(cdAcc); }
   /* -- Return the frames per second based on the last frame --------------- */
-  unsigned int TimerGetFPS(void) const { return uiFPS; }
+  unsigned int TimerGetFPS() const { return uiFPS; }
   /* -- Return the target frames per second -------------------------------- */
-  double TimerGetFPSLimit(void) const { return 1.0 / TimerGetLimit(); }
+  double TimerGetFPSLimit() const { return 1.0 / TimerGetLimit(); }
   /* -- Get the number of engine ticks processed --------------------------- */
-  uint64_t TimerGetTicks(void) const { return uqTicks; }
+  uint64_t TimerGetTicks() const { return uqTicks; }
   /* -- Reset tick count --------------------------------------------------- */
-  void TimerResetTicks(void) { uqTicks = uqTicksLast = 0; }
+  void TimerResetTicks() { uqTicks = uqTicksLast = 0; }
   /* -- Get the current suspend time --------------------------------------- */
-  double TimerGetDelay(void) const
+  double TimerGetDelay() const
     { return ClockDurationToDouble(cdDelay); }
   /* -- Get the current tick start time ------------------------------------ */
-  double TimerGetStart(void) const
+  double TimerGetStart() const
     { return ClockDurationToDouble(ctpStart.time_since_epoch()); }
   /* -- Reset the delay and timer ------------------------------------------ */
   void TimerReset(const bool bIdle)
@@ -157,7 +157,7 @@ class Timer                            // Members initially private
     TimerCatchup();
   }
   /* -- Default constructor ------------------------------------- */ protected:
-  Timer(void) :                        // No parameters
+  Timer() :
     /* --------------------------------------------------------------------- */
     uqTriggers(0),                     // Init number of frame timeout checks
     uqTicks(0),                        // Init no. of ticks processed this sec

@@ -53,7 +53,7 @@ class Lua :                            // Actual class body
   static int OnGenericEndTick(lua_State*const)
     { cEvtMain->ConfirmExit(); return 0; }
   /* -- Return lua state --------------------------------------------------- */
-  lua_State *GetState(void) const { return lsState.get(); }
+  lua_State *GetState() const { return lsState.get(); }
   /* -- Set or clear a lua reference (LuaFunc can't have this check) ------- */
   bool SetLuaRef(lua_State*const lS, LuaFunc &lrEvent)
   { // Must be on the main thread
@@ -108,7 +108,7 @@ class Lua :                            // Actual class body
     cConsole->AddLine("Execution resumed.");
   }
   /* -- Check if we're already exiting ------------------------------------- */
-  bool Exiting(void) { return bExiting; }
+  bool Exiting() { return bExiting; }
   /* -- Events asking LUA to quit ------------------------------------------ */
   void AskExit(const EvtMainEvent&)
   { // Ignore if already exiting
@@ -125,14 +125,14 @@ class Lua :                            // Actual class body
   void RequestPause(const bool bFromException)
     { cEvtMain->Add(EMC_LUA_PAUSE, bFromException); }
   /* -- Pause execution ---------------------------------------------------- */
-  unsigned int PauseExecution(void)
+  unsigned int PauseExecution()
   { // If not paused and not exiting? Disable events
     if(!uiLuaPaused && !bExiting) LuaFuncDisableAllRefs();
     // Return current level and increment it after
     return uiLuaPaused++;
   }
   /* -- Resume execution --------------------------------------------------- */
-  bool ResumeExecution(void)
+  bool ResumeExecution()
   { // Bail if not initialised or already paused or exiting
     if(!uiLuaPaused || bExiting) return false;
     // Restore original functions
@@ -143,7 +143,7 @@ class Lua :                            // Actual class body
     return true;
   }
   /* -- Stop gabage collection --------------------------------------------- */
-  void StopGC(void) const
+  void StopGC() const
   { // Garbage collector is running?
     if(LuaUtilGCRunning(GetState()))
     { // Stop garbage collector
@@ -154,7 +154,7 @@ class Lua :                            // Actual class body
     else cLog->LogWarningSafe("Lua garbage collector already stopped!");
   }
   /* -- Start garbage collection ------------------------------------------- */
-  void StartGC(void) const
+  void StartGC() const
   { // Garbage collector is not running?
     if(!LuaUtilGCRunning(GetState()))
     { // Start garbage collector
@@ -165,7 +165,7 @@ class Lua :                            // Actual class body
     else cLog->LogWarningSafe("Lua garbage collector already started!");
   }
   /* -- Full garbage collection while logging memory usage ----------------- */
-  size_t GarbageCollect(void) const { return LuaUtilGCCollect(GetState()); }
+  size_t GarbageCollect() const { return LuaUtilGCCollect(GetState()); }
   /* -- Checks that the state matches with main state ---------------------- */
   void StateAssert(lua_State*const lS) const
   { // This function call is needed when some LUA API functions need to make
@@ -204,14 +204,14 @@ class Lua :                            // Actual class body
         StrImplode(slResults, 0, ", "));
   }
   /* -- Execute main function ---------------------------------------------- */
-  void ExecuteMain(void) const { lrMainTick.LuaFuncPushAndCall(); }
+  void ExecuteMain() const { lrMainTick.LuaFuncPushAndCall(); }
   /* -- When lua enters the specified function ----------------------------- */
   static void OnInstructionCount(lua_State*const lS, lua_Debug*const)
     { if(cTimer->TimerIsTimedOut()) LuaUtilPushErr(lS, "Frame timeout!"); }
   /* -- Return operations count -------------------------------------------- */
-  int GetOpsInterval(void) { return iOperations; }
+  int GetOpsInterval() { return iOperations; }
   /* -- Init lua library and configuration --------------------------------- */
-  void SetupEnvironment(void)
+  void SetupEnvironment()
   { // Stop the garbage collector
     StopGC();
     // Init references
@@ -422,7 +422,7 @@ class Lua :                            // Actual class body
     LuaUtilPCallSafe(GetState(), 1, 0, iParam);
   }
   /* -- De-initialise LUA context ------------------------------------------ */
-  void DeInit(void)
+  void DeInit()
   { // Return if class already initialised
     if(!lsState) return;
     // Report execution time
@@ -478,7 +478,7 @@ class Lua :                            // Actual class body
     return false;
   }
   /* -- ReInitialise LUA context ------------------------------------------- */
-  bool ReInit(void)
+  bool ReInit()
   { // If exit event already processing? Ignore sending another event
     if(cEvtMain->ExitRequested()) return false;
     // Send the event
@@ -487,7 +487,7 @@ class Lua :                            // Actual class body
     return true;
   }
   /* -- Initialise LUA context --------------------------------------------- */
-  void Init(void)
+  void Init()
   { // Class initialised
     if(lsState) XC("Lua sandbox already initialised!");
     // Report progress
@@ -510,7 +510,7 @@ class Lua :                            // Actual class body
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Lua, DeInit())
   /* -- Constructor -------------------------------------------------------- */
-  Lua(void) :
+  Lua() :
     /* --------------------------------------------------------------------- */
     EvtMainRegAuto{ cEvtMain, {        // Regster LUA events
       { EMC_LUA_ASK_EXIT, bind(&Lua::AskExit,     this, _1) },

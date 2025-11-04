@@ -9,14 +9,14 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaVariable {               // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICommon::P;            using namespace ICollector::P;
-using namespace ICVarDef::P;           using namespace ICVar::P;
-using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IIdent::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace ILuaFunc::P;           using namespace IString::P;
-using namespace IStat::P;
+using namespace ICollector::P;         using namespace ICommon::P;
+using namespace IConsole::P;           using namespace ICVarDef::P;
+using namespace ICVar::P;              using namespace ICVarLib::P;
+using namespace IError::P;             using namespace IIdent::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace ILuaFunc::P;
+using namespace IString::P;            using namespace IStat::P;
 using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 typedef IdMap<CVarFlagsType> IdMapCVarEnums;
@@ -42,9 +42,9 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
 { /* -- Private variables -------------------------------------------------- */
   LuaCVarMapIt     lcvmiIt;            // Iterator to command Console gives us
   /* -- Returns the lua console command list ------------------------------- */
-  LuaCVarMap &GetLuaVarList(void) { return cVariables->lcvmMap; }
+  LuaCVarMap &GetLuaVarList() { return cVariables->lcvmMap; }
   /* -- Returns the end of the lua console command list -------------------- */
-  LuaCVarMapIt GetLuaVarListEnd(void) { return GetLuaVarList().end(); }
+  LuaCVarMapIt GetLuaVarListEnd() { return GetLuaVarList().end(); }
   /* == Cvar updated callback for Lua ============================== */ public:
   static CVarReturn LuaCallbackStatic(CVarItem &cviVar, const string &strVal)
   { // Find cvar and ignore if we don't have it yet! This can happen if the
@@ -70,21 +70,21 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     return bResult ? ACCEPT_HANDLED_FORCECOMMIT : ACCEPT_HANDLED;
   }
   /* -- Unregister the console command from lua -------------------- */ public:
-  const string &Name(void) const { return lcvmiIt->first; }
+  const string &Name() const { return lcvmiIt->first; }
   /* -- Get current value as string ---------------------------------------- */
-  const string Get(void) const
+  const string Get() const
     { return cCVars->GetStr(lcvmiIt->second.second); }
   /* -- Get default value as string ---------------------------------------- */
-  const string Default(void) const
+  const string Default() const
     { return cCVars->GetDefStr(lcvmiIt->second.second); }
   /* -- Reset default value ------------------------------------------------ */
-  void Reset(void) const { cCVars->Reset(lcvmiIt->second.second); }
+  void Reset() const { cCVars->Reset(lcvmiIt->second.second); }
   /* -- Returns if value is empty ------------------------------------------ */
-  bool Empty(void) const { return Get().empty(); }
+  bool Empty() const { return Get().empty(); }
   /* -- Set value from different types ------------------------------------- */
   CVarSetEnums SetString(const string &strValue) const
     { return cCVars->Set(lcvmiIt->second.second, strValue); }
-  CVarSetEnums Clear(void) const
+  CVarSetEnums Clear() const
     { return SetString(cCommon->CommonBlank()); }
   CVarSetEnums SetBoolean(const bool bState) const
     { return SetString(bState ?
@@ -147,7 +147,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     lcvmiIt->second.second = cvmiIt;
   }
   /* -- Destructor that unregisters the cvar ------------------------------- */
-  ~Variable(void)
+  ~Variable()
   { // Return if the iterator is invalid?
     if(lcvmiIt == GetLuaVarListEnd()) return;
     // Unregister the cvar if valid and registered by Lua
@@ -158,14 +158,14 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     GetLuaVarList().erase(lcvmiIt);
   }
   /* -- Basic constructor with no init ------------------------------------- */
-  Variable(void) :
+  Variable() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperVariable{                  // Initialise and register the object
       cVariables, this },
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     lcvmiIt{ GetLuaVarListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END(Variables, Variable, VARIABLE,,,, // Finish off collector class
 /* ------------------------------------------------------------------------- */
@@ -269,7 +269,7 @@ template<class MapType>
   typedef typename MapType::const_iterator MapTypeConstIt;
   const MapTypeConstIt mtciExactIt{ mtMap.find(strFilter) };
   if(mtciExactIt != mtMap.cend())
-  {  // Type could either be CVarMap?
+  { // Type could either be CVarMap?
     if constexpr(is_same_v<MapType, CVarMap>)
       return VariablesMakeInformation(mtciExactIt->second);
     // ..or the type could either be LuaCVarMap

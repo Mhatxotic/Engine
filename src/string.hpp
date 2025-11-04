@@ -28,7 +28,7 @@ namespace H                            // Private functions
   /* -- Append functions --------------------------------------------------- */
   namespace Append                     // Private functions
   { /* -- Append final parameter ------------------------------------------- */
-    static void Param(ostringstream&) { }
+    static void Param(ostringstream&) {}
     /* -- Append a parameter ----------------------------------------------- */
     template<typename AnyType, typename ...VarArgs>
       static void Param(ostringstream &osS, const AnyType &atVal,
@@ -709,7 +709,7 @@ template<typename IntType>
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const array<const ByteValue,0> bvLookup{ { } };
+    static const array<const ByteValue,0> bvLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
@@ -772,7 +772,7 @@ template<typename IntType>
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const array<const BitValue,0> bvLookup{ { } };
+    static const array<const BitValue,0> bvLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
@@ -830,7 +830,7 @@ template<typename IntType>
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const array<const Value,0> vLookup{ { } };
+    static const array<const Value,0> vLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   }

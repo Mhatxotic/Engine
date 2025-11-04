@@ -99,9 +99,9 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     return true;
   }
   /* -- Dump main fbo ------------------------------------------------------ */
-  void DumpMain(void) { DumpFBO(cFboCore->fboMain); }
+  void DumpMain() { DumpFBO(cFboCore->fboMain); }
   /* -- Default constructor ------------------------------------------------ */
-  SShot(void) :                        // No parameters
+  SShot() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperSShot{ cSShots },          // Initialise collector helper
     ifFormatId(cSShots->ifFormatId),   // Not truly initialised yet
@@ -109,7 +109,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       bind(&SShot::DumpThread,         // Dump thread entry function
         this, _1) }                    // Send this class pointer
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END(SShots, SShot, SSHOT,,,, ifFormatId(IFMT_MAX)) // Initialised by cvars
 /* -- Set screenshot format flags ------------------------------------------ */

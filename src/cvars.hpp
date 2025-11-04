@@ -247,7 +247,7 @@ struct CVars :                         // Start of vars class
     CVarSetEnums SetInternal(const CVarEnums cveId, const AnyType atV)
       { return SetInternal(cveId, StrFromNum(atV)); }
   /* ----------------------------------------------------------------------- */
-  void RefreshSettings(void)
+  void RefreshSettings()
   { // Completely clear SQL cvars table.
     cLog->LogDebugSafe("CVars erasing saved engine settings...");
     cSql->CVarDropTable();
@@ -255,7 +255,7 @@ struct CVars :                         // Start of vars class
     cLog->LogWarningSafe("CVars finished erasing saved engine settings.");
   }
   /* ----------------------------------------------------------------------- */
-  void OverwriteExistingSettings(void)
+  void OverwriteExistingSettings()
   { // Overwrite engine variables with defaults
     cLog->LogDebugSafe("CVars forcing default engine settings...");
     cSql->Begin();
@@ -265,7 +265,7 @@ struct CVars :                         // Start of vars class
     cLog->LogWarningSafe("CVars finished setting defaults.");
   }
   /* -- -------------------------------------------------------------------- */
-  ArrayVars &GetInternalList(void) { return avInternal; }
+  ArrayVars &GetInternalList() { return avInternal; }
   /* ----------------------------------------------------------------------- */
   bool VarExists(const string &strVar) const
     { return cvmActive.contains(strVar); }
@@ -373,10 +373,10 @@ struct CVars :                         // Start of vars class
     }
   }
   /* ----------------------------------------------------------------------- */
-  const CVarMap &GetVarList(void) { return cvmActive; }
-  CVarMapIt GetVarListEnd(void) { return cvmActive.end(); }
-  size_t GetVarCount(void) { return cvmActive.size(); }
-  const CVarMap &GetInitialVarList(void) { return cvmPending; }
+  const CVarMap &GetVarList() { return cvmActive; }
+  CVarMapIt GetVarListEnd() { return cvmActive.end(); }
+  size_t GetVarCount() { return cvmActive.size(); }
+  const CVarMap &GetInitialVarList() { return cvmPending; }
   /* ----------------------------------------------------------------------- */
   bool SetExistingInitialVar(const string &strVar, const string &strVal,
     const CVarFlagsConst cvfcFlags=PCONSOLE)
@@ -389,7 +389,7 @@ struct CVars :                         // Start of vars class
     return true;
   }
   /* -- Return last error from callback (also moves it) -------------------- */
-  const string GetCBError(void) { return StdMove(strCBError); }
+  const string GetCBError() { return StdMove(strCBError); }
   /* ----------------------------------------------------------------------- */
   const string GetValueSafe(const CVarMapConstIt &cvmciIt) const
     { return cvmciIt->second.GetValueSafe(); }
@@ -401,7 +401,7 @@ struct CVars :                         // Start of vars class
       cCommon->CommonInvalid() : GetValueSafe(cvmciIt);
   }
   /* ----------------------------------------------------------------------- */
-  size_t MarkAllEncodedVarsAsCommit(void)
+  size_t MarkAllEncodedVarsAsCommit()
   { // Total number of commits
     SafeSizeT stCommitted{0};
     // Enumerate the initial list and cvar list asyncronously
@@ -416,7 +416,7 @@ struct CVars :                         // Start of vars class
     return stCommitted;
   }
   /* ----------------------------------------------------------------------- */
-  size_t Save(void)
+  size_t Save()
   { // Done if sqlite database is not opened or vars table is not availabe
     if(!cSql->IsOpened() || cSql->CVarCreateTable() == Sql::CTR_FAIL)
       return StdNPos;
@@ -457,7 +457,7 @@ struct CVars :                         // Start of vars class
       cvmciIt->second.GetValue() : cCommon->CommonBlank();
   }
   /* ----------------------------------------------------------------------- */
-  size_t Clean(void)
+  size_t Clean()
   { // Get all key names in cvars, no values
     if(!cSql->CVarReadKeys()) return 0;
     // Get vars list
@@ -506,7 +506,7 @@ struct CVars :                         // Start of vars class
     return stCommit;
   }
   /* ----------------------------------------------------------------------- */
-  size_t LoadFromDatabase(void)
+  size_t LoadFromDatabase()
   { // Return if table is not already created or not available
     switch(cSql->CVarCreateTable())
     { // Table already exists?
@@ -617,7 +617,7 @@ struct CVars :                         // Start of vars class
     return stLoaded;
   }
   /* ----------------------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Ignore if not initialised
     if(IHNotDeInitialise()) return;
     // Save all variables
@@ -653,7 +653,7 @@ struct CVars :                         // Start of vars class
            stVars);
   }
   /* ----------------------------------------------------------------------- */
-  void Init(void)
+  void Init()
   { // Object initialised
     IHInitialise();
     // Register each cvar

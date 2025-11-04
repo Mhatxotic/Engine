@@ -148,16 +148,16 @@ template<typename IntType>static IntType UtilToI64BE(const IntType itV)
 /* -- Swap class functors -------------------------------------------------- */
 struct UtilSwap32LEFunctor             // Swap 32-bit little <-> big integer
   { uint32_t v;                        // Output value (32-bit)
-    explicit UtilSwap32LEFunctor(uint32_t dwV) : v(UtilToI32LE(dwV)) { } };
+    explicit UtilSwap32LEFunctor(uint32_t dwV) : v(UtilToI32LE(dwV)) {} };
 struct UtilSwap32BEFunctor             // Swap 32-bit big <-> little integer
   { uint32_t v;                        // Output value (32-bit)
-    explicit UtilSwap32BEFunctor(uint32_t dwV) : v(UtilToI32BE(dwV)) { } };
+    explicit UtilSwap32BEFunctor(uint32_t dwV) : v(UtilToI32BE(dwV)) {} };
 struct UtilSwap64LEFunctor             // Swap 64-bit little <-> big integer
   { uint64_t v;                        // Output value (64-bit)
-    explicit UtilSwap64LEFunctor(uint64_t qwV) : v(UtilToI64LE(qwV)) { } };
+    explicit UtilSwap64LEFunctor(uint64_t qwV) : v(UtilToI64LE(qwV)) {} };
 struct UtilSwap64BEFunctor             // Swap 64-bit big <-> little integer
   { uint64_t v;                        // Output value (64-bit)
-    explicit UtilSwap64BEFunctor(uint64_t qwV) : v(UtilToI64BE(qwV)) { } };
+    explicit UtilSwap64BEFunctor(uint64_t qwV) : v(UtilToI64BE(qwV)) {} };
 /* -- Convert const object to non-const ------------------------------------ */
 template<typename Type>static Type &UtilToNonConst(const Type &tSrc)
   { return const_cast<Type&>(tSrc); }

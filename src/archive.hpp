@@ -185,19 +185,19 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Get archive file/dir count as human readable string ---------------- */
   const string ArchiveGetFilesString(const auto iFiles) const
     { return StrCPluraliseNum(iFiles, "file", "files"); }
-  const string ArchiveGetNumFilesString(void) const
+  const string ArchiveGetNumFilesString() const
     { return ArchiveGetFilesString(ArchiveGetNumFiles()); }
   const string ArchiveGetDirsString(const auto iDirs) const
     { return StrCPluraliseNum(iDirs, "directory", "directories"); }
-  const string ArchiveGetNumDirsString(void) const
+  const string ArchiveGetNumDirsString() const
     { return ArchiveGetDirsString(ArchiveGetNumDirs()); }
   /* -- Get archive file/dir as table ------------------------------ */ public:
-  const StrUIntMap &ArchiveGetFileList(void) const { return suimFiles; }
-  const StrUIntMap &ArchiveGetDirList(void) const { return suimDirs; }
+  const StrUIntMap &ArchiveGetFileList() const { return suimFiles; }
+  const StrUIntMap &ArchiveGetDirList() const { return suimDirs; }
   /* -- Get archive file/dir counts ---------------------------------------- */
-  size_t ArchiveGetNumFiles(void) const { return suimFiles.size(); }
-  size_t ArchiveGetNumDirs(void) const { return suimDirs.size(); }
-  size_t ArchiveGetTotal(void) const { return csaeData.NumFiles; }
+  size_t ArchiveGetNumFiles() const { return suimFiles.size(); }
+  size_t ArchiveGetNumDirs() const { return suimDirs.size(); }
+  size_t ArchiveGetTotal() const { return csaeData.NumFiles; }
   /* -- Returns modified or creation time of specified file ---------------- */
   StdTimeT ArchiveGetModifiedTime(const size_t stId) const
     { return ArchiveSzTimeToStdTime(stId, csaeData.MTime); }
@@ -212,7 +212,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   const StrUIntMapConstIt &ArchiveGetDir(const size_t stIndex) const
     { return suimcivDirs[stIndex]; }
   /* -- Return number of extra archives opened ----------------------------- */
-  size_t ArchiveGetInUse(void) const { return stInUse; }
+  size_t ArchiveGetInUse() const { return stInUse; }
   /* -- Return if iterator is valid ---------------------------------------- */
   bool ArchiveIsFileIteratorValid(const StrUIntMapConstIt &suimciIt) const
     { return suimciIt != suimFiles.cend(); }
@@ -226,8 +226,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     const UniqueLock ulDecoder{ *this, try_to_lock };
     // Create class to notify destructor when leaving this scope
     const class Notify { public: Archive &aRef;
-      explicit Notify(Archive &aNRef) : aRef(aNRef) { }
-      ~Notify(void) { aRef.notify_one(); } } cNotify(*this);
+      explicit Notify(Archive &aNRef) : aRef(aNRef) {}
+      ~Notify() { aRef.notify_one(); } } cNotify(*this);
     // Get filename and filename id from iterator
     const string &strFile = suimciIt->first;
     const unsigned int &uiSrcId = suimciIt->second;
@@ -237,7 +237,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       // This tells the destructor to wait until it is zero.
       const class Counter { public: Archive &aRef;
         explicit Counter(Archive &aNRef) : aRef(aNRef) { ++aRef.stInUse; }
-        ~Counter(void) { --aRef.stInUse; } } cCounter(*this);
+        ~Counter() { --aRef.stInUse; } } cCounter(*this);
       // Because the API doesn't support sharing file handles, we will need
       // to re-open the archive again with new data. We don't need to collect
       // any filename data again though thankfully so this should still be
@@ -408,7 +408,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     SyncInitFileDisk(strFile);
   }
   /* -- For loading via lua ------------------------------------------------ */
-  Archive(void) :
+  Archive() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperArchive{ cArchives },      // Initialise collector with this obj
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
@@ -421,9 +421,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     cltrData{},                        // Clear lookup stream data
     csaeData{}                         // Clear archive stream data
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Unloads the archive ------------------------------------------------ */
-  ~Archive(void)
+  ~Archive()
   { // Done if a filename is not set
     if(IdentIsNotSet()) return;
     // Wait for archive loading async operations to complete
@@ -645,7 +645,7 @@ static FileMap ArchiveExtract(const string &strFile)
   return {};
 }
 /* -- ArchiveGetNames ------------------------------------------------------ */
-static const string ArchiveGetNames(void)
+static const string ArchiveGetNames()
 { // Set default archive name if no archives
   if(cArchives->empty()) return {};
   // Get first archive

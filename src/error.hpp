@@ -26,7 +26,7 @@ using namespace IUtf::P;
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 struct ErrorPluginGeneric final
-  { explicit ErrorPluginGeneric(ostringstream&) { } };
+  { explicit ErrorPluginGeneric(ostringstream&) {} };
 /* ------------------------------------------------------------------------- */
 template<class Plugin=ErrorPluginGeneric>class Error final :
   /* -- Derivced classes --------------------------------------------------- */
@@ -38,7 +38,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   void Init(const char*const cpName, const char*const cpType)
     { osS << "\n+ " << cpName << '<' << cpType << "> = "; }
   /* -- Last parameter processed ------------------------------------------- */
-  void Param(void)
+  void Param()
   { // Process custom plugin on generated error message
     const Plugin pPlugin{ osS };
     // Finalise the error message into string
@@ -76,7 +76,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   template<typename ...VarArgs>        // (Lua_Integer)
     void Param(const char*const cpName, const unsigned long long int ulliVal,
       const VarArgs &...vaVars)
-  { Int<unsigned long long int>(cpName, "ULongLongInt", ulliVal); 
+  { Int<unsigned long long int>(cpName, "ULongLongInt", ulliVal);
     Param(vaVars...); }
   /* ----------------------------------------------------------------------- */
 #elif defined(MACOS)                   // Targeting Apple device?
@@ -261,7 +261,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
       const VarArgs &...vaVars)
         { Str(cpName, "StrV", strvV); Param(vaVars...); }
   /* -- Get message ------------------------------------------------ */ public:
-  virtual const char *what(void) const noexcept override { return c_str(); }
+  virtual const char *what() const noexcept override { return c_str(); }
   /* -- Prepare error message constructor with C-string--------------------- */
   template<typename ...VarArgs>
     Error(const char*const cpErr, const VarArgs &...vaVars)
@@ -269,7 +269,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   /* -- Prepare error message constructor with exception object ------------ */
   template<typename ...VarArgs>
     Error(const exception &eReason, const VarArgs &...vaVars) :
-      Error(eReason.what(), vaVars...) { }
+      Error(eReason.what(), vaVars...) {}
   /* -- Prepare error message constructor with STL string ------------------ */
   template<typename ...VarArgs>
     Error(const string &strErr, const VarArgs &...vaVars)

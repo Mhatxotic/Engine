@@ -15,14 +15,12 @@ template<typename IntegerType=unsigned int>class TogglerMaster
 { /* -- Private variables -------------------------------------------------- */
   IntegerType      itMaster;           // Reference to protected variable
   /* --------------------------------------------------------------- */ public:
-  void TogglerSetDisabled(void) { --itMaster; }
-  void TogglerSetEnabled(void) { ++itMaster; }
-  bool TogglerIsEnabled(void) const { return itMaster > 0; }
-  bool TogglerIsDisabled(void) const { return !itMaster; }
+  void TogglerSetDisabled() { --itMaster; }
+  void TogglerSetEnabled() { ++itMaster; }
+  bool TogglerIsEnabled() const { return itMaster > 0; }
+  bool TogglerIsDisabled() const { return !itMaster; }
   /* -- Constructor --------------------------------------------- */ protected:
-  TogglerMaster(void) : itMaster(0) { }
-  /* -- Destructor --------------------------------------------------------- */
-  ~TogglerMaster(void) { }
+  TogglerMaster() : itMaster(0) {}
   /* ----------------------------------------------------------------------- */
 };                                     // End of class
 /* ------------------------------------------------------------------------- */
@@ -35,9 +33,9 @@ class TogglerSlave
   explicit TogglerSlave(TmcType &tmcRef) : tmcMaster(tmcRef)
     { tmcMaster.TogglerSetEnabled(); }
   /* -- Constructor that takes a master pointer (converts to reference) ---- */
-  explicit TogglerSlave(TmcType*const tmcPtr) : TogglerSlave(*tmcPtr) { }
+  explicit TogglerSlave(TmcType*const tmcPtr) : TogglerSlave(*tmcPtr) {}
   /* -- Destructor --------------------------------------------------------- */
-  ~TogglerSlave(void) { tmcMaster.TogglerSetDisabled(); }
+  ~TogglerSlave() { tmcMaster.TogglerSetDisabled(); }
   /* ----------------------------------------------------------------------- */
 };                                     // End of class
 /* ------------------------------------------------------------------------- */

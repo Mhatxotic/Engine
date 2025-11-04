@@ -14,11 +14,11 @@ struct StrokerFunc                     // Using as a public namespace only
   { /* --------------------------------------------------------------------- */
     const FT_Error ftErr;              // Error code
     /* ------------------------------------------------------------- */ public:
-    FT_Error Result(void) const { return ftErr; }
+    FT_Error Result() const { return ftErr; }
     /* --------------------------------------------------------------------- */
-    NoOutline(FT_Glyph&, FT_Stroker) : ftErr(0) { }
+    NoOutline(FT_Glyph&, FT_Stroker) : ftErr(0) {}
     /* --------------------------------------------------------------------- */
-    explicit NoOutline(const FT_Error ftE) : ftErr(ftE) { }
+    explicit NoOutline(const FT_Error ftE) : ftErr(ftE) {}
   };/* -- Full outline required -------------------------------------------- */
   struct Outline : public NoOutline {
     Outline(FT_Glyph &gD, FT_Stroker ftS) :
@@ -74,9 +74,9 @@ struct RoundFunc                       // Members initially public
     /* --------------------------------------------------------------------- */
     const T        tValue;             // Calculated advance value
     /* ------------------------------------------------------------- */ public:
-    T Result(void) const { return tValue; }
+    T Result() const { return tValue; }
     /* --------------------------------------------------------------------- */
-    explicit Straight(const T tV) : tValue{ tV } { }
+    explicit Straight(const T tV) : tValue{ tV } {}
   };/* -- Round co-ordinates to lowest or highest unit --------------------- */
   template<typename T=double>struct Round : public Straight<T>
     { explicit Round(const T tV) : Straight<T>{ roundf(tV) } {} };
@@ -108,8 +108,7 @@ struct RoundCheckFunc                  // Members initially public
     }
     /* -- Normal entry for auto-detection -------------------------- */ public:
     Auto(const ImageFlagsConst &ffFlags, const GLfloat fAdvance) :
-      RoundFuncType{ Detect(ffFlags, fAdvance) }
-      { }
+      RoundFuncType{ Detect(ffFlags, fAdvance) } {}
   };/* -- Manually specified rounding functor check ------------------------ */
   template<class RoundFuncType>struct Manual : public RoundFuncType {
     Manual(const ImageFlagsConst&, const GLfloat fAdvance) :

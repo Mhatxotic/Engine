@@ -43,13 +43,13 @@ class Rectangle                        // Members initially private
   void RectSet(const Int itX1, const Int itY1, const Int itX2, const Int itY2)
     { RectSetTopLeft(itX1, itY1); RectSetBottomRight(itX2, itY2); }
   /* -- Get ---------------------------------------------------------------- */
-  template<typename RInt=Int>RInt RectGetX1(void) const
+  template<typename RInt=Int>RInt RectGetX1() const
     { return co1.template CoordGetX<RInt>(); }
-  template<typename RInt=Int>RInt RectGetY1(void) const
+  template<typename RInt=Int>RInt RectGetY1() const
     { return co1.template CoordGetY<RInt>(); }
-  template<typename RInt=Int>RInt RectGetX2(void) const
+  template<typename RInt=Int>RInt RectGetX2() const
     { return co2.template CoordGetX<RInt>(); }
-  template<typename RInt=Int>RInt RectGetY2(void) const
+  template<typename RInt=Int>RInt RectGetY2() const
     { return co2.template CoordGetY<RInt>(); }
   /* -- Constructor to fill all parameters --------------------------------- */
   Rectangle(const Int itX1,            // First co-ordinate X position
@@ -60,9 +60,9 @@ class Rectangle                        // Members initially private
     co1{ itX1, itY1 },                 // Initialise first co-ordinates
     co2{ itX2, itY2 }                  // Initialise second co-ordinates
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Default constructor ------------------------------------------------ */
-  Rectangle(void) = default;
+  Rectangle() = default;
 };/* ----------------------------------------------------------------------- */
 typedef Rectangle<GLfloat> RectFloat;  // Rectangle of GLfloats
 typedef Rectangle<GLuint>  RectUint;   // Reload glyph size

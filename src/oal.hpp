@@ -78,9 +78,9 @@ class Oal :                            // Actual class body
   /* -- Public Variables ------------------------------------------- */ public:
   ALenum           eQuery;             // Device query extension
   /* -- Return error status ------------------------------------------------ */
-  ALenum GetError(void) const { return alGetError(); }
-  bool HaveError(void) const { return GetError() != AL_NO_ERROR; }
-  bool HaveNoError(void) const { return !HaveError(); }
+  ALenum GetError() const { return alGetError(); }
+  bool HaveError() const { return GetError() != AL_NO_ERROR; }
+  bool HaveNoError() const { return !HaveError(); }
   /* -- AL error logger ---------------------------------------------------- */
   template<typename ...VarArgs>
     void CheckLogError(const char*const cpFormat,
@@ -174,7 +174,7 @@ class Oal :                            // Actual class body
   void CreateSource(ALuint &uiSourceRef) const
     { CreateSources(1, &uiSourceRef); }
   /* -- Create and return a source ----------------------------------------- */
-  ALuint CreateSource(void) const
+  ALuint CreateSource() const
     { ALuint uiSource; CreateSource(uiSource); return uiSource; }
   /* -- Delete multiple sources -------------------------------------------- */
   void DeleteSources(const ALsizei siCount, const ALuint*const uipSource) const
@@ -195,7 +195,7 @@ class Oal :                            // Actual class body
   void CreateBuffer(ALuint &uiBuffer) const
     { CreateBuffers(1, &uiBuffer); }
   /* -- Create and return a buffer ----------------------------------------- */
-  ALuint CreateBuffer(void) const
+  ALuint CreateBuffer() const
     { ALuint uiBuffer; CreateBuffer(uiBuffer); return uiBuffer; }
   /* -- Delete multiple buffers -------------------------------------------- */
   void DeleteBuffers(const ALsizei siCount, const ALuint*const uipBuffer) const
@@ -245,7 +245,7 @@ class Oal :                            // Actual class body
   bool HaveNCExtension(const char*const cpEnum) const
     { return HaveCExtension(cpEnum, nullptr); }
   /* -- Detect enumeration method ------------------------------------------ */
-  void DetectEnumerationMethod(void)
+  void DetectEnumerationMethod()
   { // Get if we have ALC_ENUMERATE_ALL_EXT
     if(HaveNCExtension("ALC_ENUMERATE_ALL_EXT"))
     { // Set that we have the extension
@@ -297,7 +297,7 @@ class Oal :                            // Actual class body
     }
   }
   /* -- Report floating point playback to other classes -------------------- */
-  bool Have32FPPB(void) const { return FlagIsSet(AFL_HAVE32FPPB); }
+  bool Have32FPPB() const { return FlagIsSet(AFL_HAVE32FPPB); }
   /* -- Get openAL string -------------------------------------------------- */
   template<typename CStrType=ALchar>
     const CStrType *LuaUtilGetStr(const ALenum eId) const
@@ -346,12 +346,12 @@ class Oal :                            // Actual class body
   const string_view &GetALFormat(const ALenum eFormat) const
     { return imFormatCodes.Get(eFormat); }
   /* -- Get source counts -------------------------------------------------- */
-  ALuint GetMaxMonoSources(void) const { return uiMaxMonoSources; }
-  ALuint GetMaxStereoSources(void) const { return uiMaxStereoSources; }
+  ALuint GetMaxMonoSources() const { return uiMaxMonoSources; }
+  ALuint GetMaxStereoSources() const { return uiMaxStereoSources; }
   /* -- Get current playback device ---------------------------------------- */
-  const string &GetPlaybackDevice(void) const { return strPlayback; }
+  const string &GetPlaybackDevice() const { return strPlayback; }
   /* -- Return version information ----------------------------------------- */
-  const string &GetVersion(void) const { return strVersion; }
+  const string &GetVersion() const { return strVersion; }
   /* -- Set new HRTF setting ----------------------------------------------- */
   bool DoSetHRTF(const ALCint alState)
   { // Reset with HRTF disabled
@@ -388,7 +388,7 @@ class Oal :                            // Actual class body
     const string_view &GetALErr(const IntType itCode) const
       { return imOALCodes.Get(static_cast<ALenum>(itCode)); }
   /* -- AL is initialised? ------------------------------------------------- */
-  bool IsInitialised(void) const { return alcDevice && alcContext; }
+  bool IsInitialised() const { return alcDevice && alcContext; }
   /* -- ReInitialise device with HRTF disabled ----------------------------- */
   bool SetHRTF(const bool bState)
   { // Ignore if audio is already reset
@@ -402,7 +402,7 @@ class Oal :                            // Actual class body
   /* -- Update device ------------------------------------------------------ */
   void UpdateDevice(ALCdevice*const alcNDevice) { alcDevice = alcNDevice; }
   /* -- Update playback device name ---------------------------------------- */
-  void UpdatePlaybackDeviceName(void)
+  void UpdatePlaybackDeviceName()
     { strPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
         ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER); }
   /* -- Initialise device -------------------------------------------------- */
@@ -417,7 +417,7 @@ class Oal :                            // Actual class body
     return true;
   }
   /* -- DeInitialise device ------------------------------------------------ */
-  bool DeInitDevice(void)
+  bool DeInitDevice()
   { // Bail if no context
     if(!alcDevice) return false;
     // Close device and nullify handle
@@ -428,7 +428,7 @@ class Oal :                            // Actual class body
     return true;
   }
   /* -- Initialise context ------------------------------------------------- */
-  bool InitContext(void)
+  bool InitContext()
   { // Bail if already initialised
     if(alcContext) return false;
     // Get the device and return failure if failed
@@ -439,7 +439,7 @@ class Oal :                            // Actual class body
     return true;
   }
   /* -- DeInitialise context ----------------------------------------------- */
-  bool DeInitContext(void)
+  bool DeInitContext()
   { // Bail if no context
     if(!alcContext) return false;
     // Clear context
@@ -453,7 +453,7 @@ class Oal :                            // Actual class body
     return true;
   }
   /* -- Initialise after the context has been set -------------------------- */
-  void Init(void)
+  void Init()
   { // Make sure not initialised already
     if(FlagIsSet(AFL_INITIALISED)) XC("OpenAL was already initialised!");
     // Activate the context (We can use alGetError() from now on)
@@ -579,7 +579,7 @@ class Oal :                            // Actual class body
         pExt.first, pExt.second);
   }
   /* -- DeInitialise ------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // De-init context and device if they're not gone already. The audio
     // class should be responsible for this, but just incase.
     DeInitContext();
@@ -594,7 +594,7 @@ class Oal :                            // Actual class body
   /* -- Destructor that unloads context and device ------------------------- */
   DTORHELPER(~Oal, DeInitContext(); DeInitDevice())
   /* -- Constructor --------------------------------------------- */ protected:
-  Oal(void) :
+  Oal() :
     /* -- Initialisers ----------------------------------------------------- */
     OalFlags{ AFL_HRTF },              // HRTF is enabled by default
     /* -- Const members ---------------------------------------------------- */

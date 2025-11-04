@@ -45,8 +45,8 @@ struct AgFontFlags : public AgFlags<ImageFlagsConst> {
 /* -- Read vector of the specified number type ----------------------------- */
 template<class VectorValueType, class VectorType = vector<VectorValueType>>
   struct AgNumberVector : public VectorType
-{ const VectorType &operator()(void) const { return *this; }
-  operator const VectorType&(void) const { return operator()(); }
+{ const VectorType &operator()() const { return *this; }
+  operator const VectorType&() const { return operator()(); }
   explicit AgNumberVector(lua_State*const lS, const int iArg) :
     VectorType{ LuaUtilToNumVector<VectorType>(lS, iArg)}{} };
 /* -- Other types ---------------------------------------------------------- */

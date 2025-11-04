@@ -74,17 +74,17 @@ class PcmData :                        // Audio data structure
   Memory           &aPcmL,             // First Pcm channel (Mono or left)
                    &aPcmR;             // Second Pcm channel (Right stereo)
   /* ----------------------------------------------------------------------- */
-  size_t GetAlloc(void) const { return stAlloc; }
+  size_t GetAlloc() const { return stAlloc; }
   /* ----------------------------------------------------------------------- */
-  void ClearData(void)
+  void ClearData()
     { for(size_t stIndex = 0; stIndex < aPcm.size(); ++stIndex)
         aPcm[stIndex].MemDeInit(); }
   /* ----------------------------------------------------------------------- */
-  unsigned int GetRate(void) const { return uiRate; }
+  unsigned int GetRate() const { return uiRate; }
   /* ----------------------------------------------------------------------- */
   void SetRate(const unsigned int uiNRate) { uiRate = uiNRate; }
   /* ----------------------------------------------------------------------- */
-  PcmChannelType GetChannels(void) const { return pctChannels; }
+  PcmChannelType GetChannels() const { return pctChannels; }
   /* ----------------------------------------------------------------------- */
   void SetChannels(const PcmChannelType pctNChannels)
     { pctChannels = pctNChannels; }
@@ -93,30 +93,30 @@ class PcmData :                        // Audio data structure
     { SetChannels(pctNChannels);
       return pctNChannels >= PCT_MONO && pctNChannels <= PCT_STEREO; }
   /* ----------------------------------------------------------------------- */
-  PcmBitType GetBits(void) const { return pbitBits; }
+  PcmBitType GetBits() const { return pbitBits; }
   /* ----------------------------------------------------------------------- */
   void SetBits(const PcmBitType pbitNBits)
     { pbitBits = pbitNBits;
       pbytBytes = static_cast<PcmByteType>(pbitBits / CHAR_BIT); }
   /* ----------------------------------------------------------------------- */
-  PcmByteType GetBytes(void) const { return pbytBytes; }
+  PcmByteType GetBytes() const { return pbytBytes; }
   /* ----------------------------------------------------------------------- */
   void SetBytes(const PcmByteType pbytNBytes)
     { pbytBytes = pbytNBytes;
       pbitBits = static_cast<PcmBitType>(pbytBytes * CHAR_BIT); }
   /* ----------------------------------------------------------------------- */
-  ALenum GetFormat(void) const { return eFormat; }
+  ALenum GetFormat() const { return eFormat; }
   /* ----------------------------------------------------------------------- */
-  ALenum GetSFormat(void) const { return eSFormat; }
+  ALenum GetSFormat() const { return eSFormat; }
   /* ----------------------------------------------------------------------- */
-  bool ParseOALFormat(void)
+  bool ParseOALFormat()
     { return Oal::GetOALType(GetChannels(), GetBits(), eFormat, eSFormat); }
   /* ----------------------------------------------------------------------- */
 #define FH(n, f) \
-  bool Is ## n(void) const { return FlagIsSet(f); } \
-  bool IsNot ## n(void) const { return !Is ## n(); } \
+  bool Is ## n() const { return FlagIsSet(f); } \
+  bool IsNot ## n() const { return !Is ## n(); } \
   void Set ## n(bool bState=true) { FlagSetOrClear(f, bState); } \
-  void Clear ## n(void) { Set ## n(false); }
+  void Clear ## n() { Set ## n(false); }
   /* ----------------------------------------------------------------------- */
   FH(Dynamic, PL_DYNAMIC)              // Is/Set/ClearDynamic
   /* ----------------------------------------------------------------------- */
@@ -124,7 +124,7 @@ class PcmData :                        // Audio data structure
   /* -- Set allocated data size -------------------------------------------- */
   void SetAlloc(const size_t stNAlloc) { stAlloc = stNAlloc; }
   /* ----------------------------------------------------------------------- */
-  void ResetAllData(void)
+  void ResetAllData()
   { // Reset all data
     SetRate(0);
     SetChannels(PCT_NONE);
@@ -163,7 +163,7 @@ class PcmData :                        // Audio data structure
     aPcmL(aPcm.front()),               // Alias of first pcm channel
     aPcmR(aPcm.back())                 // Alias of second pcm channel
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

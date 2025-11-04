@@ -28,7 +28,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   public Lockable,                     // Lua garbage collector instruction
   public PcmData                       // Pcm data
 { /* -- Split a stereo waveform into two seperate channels --------- */ public:
-  void Split(void)
+  void Split()
   { // If pcm data only is single channel, we don't need to split channels.
     if(GetChannels() == 1) return;
     // If the right channel was already filled then we don't need to do it
@@ -53,7 +53,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     }
   }
   /* -- Split a stereo waveform and set allocation size -------------------- */
-  void SplitAndSetAlloc(void)
+  void SplitAndSetAlloc()
   { // Split audio into two channels if audio in stereo
     Split();
     // Set allocated size
@@ -74,7 +74,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     SplitAndSetAlloc();
   }
   /* -- Reload data -------------------------------------------------------- */
-  void ReloadData(void)
+  void ReloadData()
   { // Load the file from disk or archive
     FileMap fmData{ AssetExtract(IdentGet()) };
     // Reset memory usage to zero
@@ -154,14 +154,14 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     PcmDataSwap(pcmRef);
   }
   /* -- Constructor -------------------------------------------------------- */
-  Pcm(void) :                          // Default onstructor
+  Pcm() :                          // Default onstructor
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperPcm{ cPcms },              // Initially unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     AsyncLoaderPcm{ *this, this,       // Setup async loader with this class
       EMC_MP_PCM }                     // ...and the event id for this class
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor -------------------------------------------------------- */
   Pcm(                                 // Constructor to MOVE from other object
     /* -- Parameters ------------------------------------------------------- */
@@ -171,7 +171,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     /* -- Swap members with other class ------------------------------------ */
     { SwapPcm(pcmOther); }
   /* -- Destructor (override) ---------------------------------------------- */
-  ~Pcm(void) { AsyncCancel(); }
+  ~Pcm() { AsyncCancel(); }
 };/* -- End-of-collector --------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Pcms, Pcm, PCM, PCM) // Finish collector class
 /* ------------------------------------------------------------------------- */

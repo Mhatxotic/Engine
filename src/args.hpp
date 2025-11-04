@@ -76,9 +76,9 @@ struct Args :                          // Arguments list class
     if(stStart < stLength) emplace_back(strTrimmed.substr(stStart));
   }
   /* -- Constructor that does nothing -------------------------------------- */
-  Args(void) = default;
+  Args() = default;
   /* -- Return if list is empty -------------------------------------------- */
-  operator bool(void) const { return !empty(); }
+  operator bool() const { return !empty(); }
 };/* -- Build an array of arguments from a string -------------------------- */
 static const Args ArgsBuildSafe(const string &strArgs)
   { return strArgs.empty() ? Args{} : Args{ strArgs }; }

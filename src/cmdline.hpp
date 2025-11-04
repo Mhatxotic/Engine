@@ -41,10 +41,10 @@ struct CmdLine                         // Members initially public
   /* -- Set persistant directory ----------------------------------- */ public:
   void CmdLineSetHome(const string &strDir) { strHD = strDir; }
   /* -- Get persistant directory ------------------------------------------- */
-  bool CmdLineIsNoHome(void) const { return strHD.empty(); }
-  bool CmdLineIsHome(void) const { return !CmdLineIsNoHome(); }
+  bool CmdLineIsNoHome() const { return strHD.empty(); }
+  bool CmdLineIsHome() const { return !CmdLineIsNoHome(); }
   /* -- Return and move string into output string -------------------------- */
-  const string &CmdLineGetHome(void) const { return strHD; }
+  const string &CmdLineGetHome() const { return strHD; }
   const string CmdLineGetHome(const string &strSuf) const
     { return StrAppend(CmdLineGetHome(), strSuf); }
   /* -- Get environment variable ------------------------------------------- */
@@ -75,25 +75,25 @@ struct CmdLine                         // Members initially public
        "Result",    vRes);
   }
   /* -- Get parameter total ------------------------------------------------ */
-  size_t CmdLineGetTotalCArgs(void) const
+  size_t CmdLineGetTotalCArgs() const
     { return static_cast<size_t>(iArgC); }
-  ArgType*const*CmdLineGetCArgs(void) const { return lArgV; }
-  ArgType*const*CmdLineGetCEnv(void) const { return lEnvP; }
-  const StrStrMap &CmdLineGetEnvList(void) const { return lEnv; }
-  const StrVector &CmdLineGetArgList(void) const { return svArg; }
+  ArgType*const*CmdLineGetCArgs() const { return lArgV; }
+  ArgType*const*CmdLineGetCEnv() const { return lEnvP; }
+  const StrStrMap &CmdLineGetEnvList() const { return lEnv; }
+  const StrVector &CmdLineGetArgList() const { return svArg; }
   /* -- Set restart flag (0 = no restart, 1 = no params, 2 = params) ------- */
   void CmdLineSetRestart(const ExitOperation ecCmd) { eoExit = ecCmd; }
   /* -- Get startup current directory -------------------------------------- */
-  const string &CmdLineGetStartupCWD(void) const { return strCWD; }
+  const string &CmdLineGetStartupCWD() const { return strCWD; }
   /* -- Return to startup directory ---------------------------------------- */
-  void CmdLineSetStartupCWD(void)
+  void CmdLineSetStartupCWD()
   { // Try to set the startup working direcotry and throw if failed.
     if(!DirSetCWD(CmdLineGetStartupCWD()))
       XCL("Failed to set startup working directory!",
           "Directory", CmdLineGetStartupCWD());
   }
   /* -- Parse command line arguments --------------------------------------- */
-  StrVector CmdLineParseArgArray(void)
+  StrVector CmdLineParseArgArray()
   { // Check that args are valid
     if(iArgC < 1) XC("Arguments array count corrupted!", "Count", iArgC);
     // Check that args are valid
@@ -115,7 +115,7 @@ struct CmdLine                         // Members initially public
     return svRet;
   }
   /* -- Parse environment variables ---------------------------------------- */
-  StrStrMap CmdLineParseEnvArray(void)
+  StrStrMap CmdLineParseEnvArray()
   { // Check that environment are valid
     if(!lEnvP) XC("Evironment array corrupted!");
     if(!*lEnvP) XC("First environment variable corrupted!");
@@ -175,7 +175,7 @@ struct CmdLine                         // Members initially public
     /* -- Set global pointer to static class ------------------------------- */
     { cCmdLine = this; }
   /* -- Destructor --------------------------------------------------------- */
-  ~CmdLine(void) noexcept(false) try
+  ~CmdLine() noexcept(false) try
   { // Clear global class
     cCmdLine = nullptr;
     // Done if arguments were never initialised

@@ -83,12 +83,12 @@ class SysProcess :                     // Need this before of System init order
     return FALSE;
   }
   /* -- Return process and thread id ---------------------------- */ protected:
-  template<typename IntType=decltype(ulProcessId)>IntType GetPid(void) const
+  template<typename IntType=decltype(ulProcessId)>IntType GetPid() const
     { return static_cast<IntType>(ulProcessId); }
-  template<typename IntType=decltype(ulThreadId)>IntType GetTid(void) const
+  template<typename IntType=decltype(ulThreadId)>IntType GetTid() const
     { return static_cast<IntType>(ulThreadId); }
   /* ----------------------------------------------------------------------- */
-  void InitReportMemoryLeaks(void)
+  void InitReportMemoryLeaks()
   { // Only needed if in debug mode
 #if defined(ALPHA)
     // Create storage for the filename and clear it
@@ -123,7 +123,7 @@ class SysProcess :                     // Need this before of System init order
       { HeapSetInformation(hH, hicData, UtfToNonConstCast<PVOID>(&tVal),
           sizeof(tVal)); }
   /* ----------------------------------------------------------------------- */
-  void ReconfigureMemoryModel(void) const
+  void ReconfigureMemoryModel() const
   { // Disable paging memory to disk. RAM is cheap now, cmon ffs!
     SetProcessWorkingSetSize(hProcess, static_cast<SIZE_T>(-1),
                                        static_cast<SIZE_T>(-1));
@@ -197,7 +197,7 @@ class SysProcess :                     // Need this before of System init order
       { XC("C exception!"); }
 #endif
   /* ----------------------------------------------------------------------- */
-  void InitCRTParameters(void)
+  void InitCRTParameters()
   { // Set runtime error callback
     _set_invalid_parameter_handler(CException);
     // Set runtime error callback (Ignored when _DEBUG not set)
@@ -219,7 +219,7 @@ class SysProcess :                     // Need this before of System init order
     _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG | _CRTDBG_MODE_WNDW);
   }
   /* ----------------------------------------------------------------------- */
-  void LoadCOM(void)
+  void LoadCOM()
   { // Initialise COM and bail out if failed. We're not using COM in other
     // threads so we just initialise it normally.
     //   (COINIT_MULTITHREADED|COINIT_SPEED_OVER_MEMORY)
@@ -274,7 +274,7 @@ class SysProcess :                     // Need this before of System init order
     } // Getting here is impossible
   }
   /* -- Constructor --------------------------------------------- */ protected:
-  SysProcess(void) :
+  SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
     qwSKL(0),
     qwSUL(0),
@@ -296,7 +296,7 @@ class SysProcess :                     // Need this before of System init order
       ReconfigureMemoryModel();
     }
   /* ----------------------------------------------------------------------- */
-  ~SysProcess(void)
+  ~SysProcess()
   { // Init file handle for storing CRT issues
     InitReportMemoryLeaks();
     // Remove debug report hook (because exceptions will crash)
@@ -356,7 +356,7 @@ class SysCore :
         sizeof(dwW)) < 0 ? 2 : 0);
   }
   /* -- Get uptime from clock class ---------------------------------------- */
-  StdTimeT GetUptime(void) const { return cmHiRes.GetTimeS(); }
+  StdTimeT GetUptime() const { return cmHiRes.GetTimeS(); }
   /* -- Terminate a process ------------------------------------------------ */
   bool TerminatePid(const unsigned int uiPid) const
   { // Return result
@@ -508,7 +508,7 @@ class SysCore :
     cLog->LogDebugExSafe("System updated the window icon with type $.", uiMsg);
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateIcons(void) const
+  void UpdateIcons() const
   { // Return if the glfw or console window isn't available
     if(IsNotWindowHandleSet()) return;
     // Update the large and small icons
@@ -596,7 +596,7 @@ class SysCore :
     return mStr.MemIsEmpty() ? cpAltName : S16toUTF(mStr.MemPtr<ArgType>());
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateCPUUsageData(void)
+  void UpdateCPUUsageData()
   { // Storage for last system times
     uint64_t qwI, qwK, qwU, qwX;
     // Get system CPU times
@@ -717,7 +717,7 @@ class SysCore :
       "File", strFile, "Directory", DirGetCWD());
   }
   /* -- Enum modules ------------------------------------------------------- */
-  SysModMap EnumModules(void)
+  SysModMap EnumModules()
   { // Module list
     SysModMap smmMap;
     // Number of modules
@@ -767,7 +767,7 @@ class SysCore :
     return wstrP;
   }
   /* ----------------------------------------------------------------------- */
-  unsigned int DetectWindowsArchitechture(void)
+  unsigned int DetectWindowsArchitechture()
   { // Grab appropriate kernel function. It only exists on 64-bit versions
     // of Windows XP, Vista, 7, 8, 8.1 and 10. If this succeeds?
     typedef void (WINAPI*const LPFN_GETNATIVESYSTEMINFO)(LPSYSTEM_INFO);
@@ -794,7 +794,7 @@ class SysCore :
         '-', WS16toUTF(GetLocaleString(LOCALE_SISO3166CTRYNAME, lcidLocale)));
   }
   /* ----------------------------------------------------------------------- */
-  OSData GetOperatingSystemData(void)
+  OSData GetOperatingSystemData()
   { // Operating system data. Fuck you Microsoft. I'm still supporting XP.
     // > https://docs.microsoft.com/en-us/windows/win32/api/
     //     sysinfoapi/nf-sysinfoapi-getversionexw
@@ -861,7 +861,7 @@ class SysCore :
     string strExtra; bool bExtra;
     if(HMODULE hDLL = GetModuleHandle(L"ntdll"))
     { // Get wine version function and if succeeded?
-      typedef const char *(WINAPI*const LPWINEGETVERSION)(void);
+      typedef const char *(WINAPI*const LPWINEGETVERSION)();
       if(LPWINEGETVERSION fcbWGV =
         GetSharedFunc<LPWINEGETVERSION>(hDLL, "wine_get_version"))
           strExtra = StrAppend("Wine ", fcbWGV()), bExtra = true;
@@ -882,7 +882,7 @@ class SysCore :
     };
   }
   /* ----------------------------------------------------------------------- */
-  ExeData GetExecutableData(void)
+  ExeData GetExecutableData()
   { // Get this executables checksum and show error if failed
     DWORD dwHeaderSum, dwCheckSum;
     if(const DWORD dwResult =
@@ -894,7 +894,7 @@ class SysCore :
     return { dwHeaderSum, dwCheckSum, dwHeaderSum != dwCheckSum, false };
   }
   /* ----------------------------------------------------------------------- */
-  CPUData GetProcessorData(void)
+  CPUData GetProcessorData()
   { // Try to open the specified below registry key and if successful?
     const string strK{ "HARDWARE\\DESCRIPTION\\System\\CentralProcessor" };
     if(const SysReg srRoot{ HKEY_LOCAL_MACHINE, strK, KEY_ENUMERATE_SUB_KEYS })
@@ -939,7 +939,7 @@ class SysCore :
     return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateMemoryUsageData(void)
+  void UpdateMemoryUsageData()
   { // Get process memory info.
     PROCESS_MEMORY_COUNTERS pmcData;
     if(!GetProcessMemoryInfo(hProcess, &pmcData, sizeof(pmcData))) return;
@@ -963,7 +963,7 @@ class SysCore :
     memData.stMProcPeak = pmcData.PeakWorkingSetSize;
   }
   /* ----------------------------------------------------------------------- */
-  bool DebuggerRunning(void) const
+  bool DebuggerRunning() const
     { return !!IsDebuggerPresent(); }
   /* -- Get process affinity masks ----------------------------------------- */
   uint64_t GetAffinity(const bool bS)
@@ -975,14 +975,14 @@ class SysCore :
     XCS("Failed to acquire process affinity!", "Handle", hProcess);
   }
   /* ----------------------------------------------------------------------- */
-  DWORD GetPriority(void) const
+  DWORD GetPriority() const
   { // Get priority class and if successful? Return it
     if(const DWORD dwPriClass = GetPriorityClass(hProcess)) return dwPriClass;
     // Failed so throw exception
     XCS("Failed to acquire priority class", "Handle", hProcess);
   }
   /* ---------------------------------------------------------------------- */
-  bool DetectElevation(void)
+  bool DetectElevation()
   { // Process token
     HANDLE hToken = INVALID_HANDLE_VALUE;
     // Open access token and ignore if failed
@@ -1006,7 +1006,7 @@ class SysCore :
    return bAdmin;
   }
   /* -- Entropy generator -------------------------------------------------- */
-  Memory GetEntropy(void) const
+  Memory GetEntropy() const
   { // Entropy data structure to return to openssl. Should be enough I think!
     struct EntropyData
     { SYSTEMTIME            sSTime, sLTime;      // System times
@@ -1071,17 +1071,17 @@ class SysCore :
       "System failed to create new window brush: $!", SysError());
   }
   /* ----------------------------------------------------------------------- */
-  int LastSocketOrSysError(void)
+  int LastSocketOrSysError()
   { // Last last socket error
     const int iLastError = static_cast<int>(WSAGetLastError());
     // Use that or actual last error
     return static_cast<int>(iLastError ? iLastError : SysErrorCode<int>());
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const string BuildRoamingDir(void) const
+  const string BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("APPDATA", cCommon->CommonBlank()); }
   /* -- Constructor (only derivable) --------------------------------------- */
-  SysCore(void) :
+  SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
     SysVersion{ EnumModules(),         // Enumerate modules
       reinterpret_cast<size_t>         // Stored as 'size_t' for cross-platform
@@ -1093,9 +1093,9 @@ class SysCore :
     hIconSmall(nullptr),               // Small icon not initialised yet
     SysCon { this->OSNameEx() }        // Send Wine version to console
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor (only derivable) ---------------------------------------- */
-  ~SysCore(void)
+  ~SysCore()
   { // Destroy large and small icon if created
     if(hIconLarge) DestroyIcon(hIconLarge);
     if(hIconSmall) DestroyIcon(hIconSmall);

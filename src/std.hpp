@@ -304,7 +304,7 @@ constexpr const size_t StdNPos = string::npos;
 /* -- Set error number ----------------------------------------------------- */
 static void StdSetError(const int iValue) { errno = iValue; }
 /* -- Get error number ----------------------------------------------------- */
-static int StdGetError(void) { return errno; }
+static int StdGetError() { return errno; }
 /* -- Is error number equal to --------------------------------------------- */
 static bool StdIsError(const int iValue) { return StdGetError() == iValue; }
 /* -- Is error number not equal to ----------------------------------------- */
@@ -388,14 +388,14 @@ template<typename PtrType=void*>
     const size_t stSize)
       { return reinterpret_cast<PtrType*>(::std::memchr(ptPtr, iC, stSize)); }
 /* -- Returns number of threads supported by CPU --------------------------- */
-static unsigned int StdThreadMax(void)
+static unsigned int StdThreadMax()
   { return ::std::thread::hardware_concurrency(); }
 /* -- Returns current thread id -------------------------------------------- */
-static auto StdThreadId(void) { return ::std::this_thread::get_id(); }
+static auto StdThreadId() { return ::std::this_thread::get_id(); }
 /* -- Returns current thread id -------------------------------------------- */
 static void StdSuspend(const auto &aTime)
   { ::std::this_thread::sleep_for(aTime); }
-static void StdSuspend(void) { StdSuspend(milliseconds{ 1 }); }
+static void StdSuspend() { StdSuspend(milliseconds{ 1 }); }
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## Because some compilers may not allow me to alias ::std::move        ## **
@@ -413,7 +413,7 @@ template<class AnyType>
 ** ## Don't put try/catch on func level. (C++ ISO/IEC JTC 1/SC 22 N 4411) ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-#define DTORHELPER(c,...) c(void) noexcept(false) { try { __VA_ARGS__; } \
+#define DTORHELPER(c,...) c() noexcept(false) { try { __VA_ARGS__; } \
   catch(const exception &eReason) \
     { cLog->LogWarningExSafe("(" STR(c) ") $", eReason.what()); } }
 /* == Init helper ========================================================== **
@@ -426,8 +426,8 @@ template<class AnyType>
 ** ## d ## The function to execute when leaving the scope.                ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-#define INITHELPER(n,i,d) class n{public:n(void){i;}\
-                               ~n(void) noexcept(false){d;}} c ## n
+#define INITHELPER(n,i,d) class n{public:n(){i;}\
+                               ~n() noexcept(false){d;}} c ## n
 #define DEINITHELPER(n,d) INITHELPER(n,,d)
 /* == Z-Lib requirements =================================================== */
 #if defined(ALPHA)                     // Z-Lib debug version requires this

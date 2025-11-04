@@ -87,9 +87,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   StrNCStrMap      ssMetaData;         // Metadata strings
   mutex            mMutex;             // Mutex for thread safety
   /* -- Updates the PCM position ------------------------------------------- */
-  void UpdatePosition(void) { qDecPos = qLivePos = ov_pcm_tell(&ovfContext); }
+  void UpdatePosition() { qDecPos = qLivePos = ov_pcm_tell(&ovfContext); }
   /* -- Get time elapsed --------------------------------------------------- */
-  ALdouble GetElapsed(void) { return ov_time_tell(&ovfContext); }
+  ALdouble GetElapsed() { return ov_time_tell(&ovfContext); }
   /* -- Set time elapsed --------------------------------------------------- */
   void SetElapsed(const ALdouble dElapsed)
     { ov_time_seek(&ovfContext, dElapsed); UpdatePosition(); }
@@ -97,9 +97,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   void SetElapsedFast(const ALdouble dElapsed)
     { ov_time_seek_page(&ovfContext, dElapsed); UpdatePosition(); }
   /* -- Get total time ----------------------------------------------------- */
-  ALdouble GetDuration(void) { return ov_time_total(&ovfContext, -1); }
+  ALdouble GetDuration() { return ov_time_total(&ovfContext, -1); }
   /* -- Get PCM bytes duration --------------------------------------------- */
-  ogg_int64_t GetPosition(void) const { return qLivePos; }
+  ogg_int64_t GetPosition() const { return qLivePos; }
   /* -- Set PCM byte position ---------------------------------------------- */
   void SetPosition(const ogg_int64_t qNewPos)
     { ov_pcm_seek(&ovfContext, qNewPos); UpdatePosition(); }
@@ -107,7 +107,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   void SetPositionFast(const ogg_int64_t qPosition)
     { ov_pcm_seek_page(&ovfContext, qPosition); UpdatePosition(); }
   /* -- Get total PCM samples ---------------------------------------------- */
-  ogg_int64_t GetSamples(void) { return ov_pcm_total(&ovfContext, -1); }
+  ogg_int64_t GetSamples() { return ov_pcm_total(&ovfContext, -1); }
   /* -- Convert stop reason to string -------------------------------------- */
   const string_view &StopReasonToString(const StreamStopReason srReason) const
     { return cParent->srStrings.Get(srReason); }
@@ -138,7 +138,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     }
   }
   /* -- Play (without locks) ----------------------------------------------- */
-  void Play(void)
+  void Play()
   { // If we already have a source? Stop and unqueue all buffers
     if(sCptr) sCptr->StopAndUnQueueAllBuffers();
     // Grab and lock a new free source if need be return if we can't
@@ -240,7 +240,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     return true;
   }
   /* -- Unload buffers ----------------------------------------------------- */
-  void UnloadBuffers(void)
+  void UnloadBuffers()
   { // If buffers allocated
     if(vBuffers.empty()) return;
     // Unload the source, delete and free the buffers
@@ -250,7 +250,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
       "Stream '$' failed to delete $ buffers!", IdentGet(), vBuffers.size());
   }
   /* -- Unload source ------------------------------------------------------ */
-  void UnloadSource(void)
+  void UnloadSource()
   { // If source is not available, bail
     if(!sCptr) return;
     // Save current state. Use our internal state to decide if we should replay
@@ -265,7 +265,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     sCptr = nullptr;
   }
   /* -- Load and lock source ----------------------------------------------- */
-  void GenerateBuffers(void)
+  void GenerateBuffers()
   { // Ignore if we already have buffers
     if(vBuffers.empty())
       XC("Empty sources list!",
@@ -278,7 +278,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     vUnQBuffers.resize(vBuffers.size());
   }
   /* -- Lock source buffer ------------------------------------------------- */
-  bool LockSource(void)
+  bool LockSource()
   { // We already have a source locked or we can get a new source? Ignore
     if(sCptr) return true;
     sCptr = GetSource();
@@ -300,29 +300,29 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     if(!qLoop) SetLoopEnd(GetSamples());
   }
   /* -- Get functions with safe versions---------------------------- */ public:
-  bool IsPlaying(void) const
+  bool IsPlaying() const
     { return sCptr && sCptr->GetState() == AL_PLAYING; }
-  ALfloat GetVolume(void) const { return fVolume; }
+  ALfloat GetVolume() const { return fVolume; }
   /* -- Get info (safe functions) ------------------------------------------ */
-  long GetRate(void) const { return viData.rate; }
-  int GetChannels(void) const { return viData.channels; }
-  int GetVersion(void) const { return viData.version; }
-  long GetBitRateUpper(void) const { return viData.bitrate_upper; }
-  long GetBitRateNominal(void) const { return viData.bitrate_nominal; }
-  long GetBitRateLower(void) const { return viData.bitrate_lower; }
-  long GetBitRateWindow(void) const { return viData.bitrate_window; }
+  long GetRate() const { return viData.rate; }
+  int GetChannels() const { return viData.channels; }
+  int GetVersion() const { return viData.version; }
+  long GetBitRateUpper() const { return viData.bitrate_upper; }
+  long GetBitRateNominal() const { return viData.bitrate_nominal; }
+  long GetBitRateLower() const { return viData.bitrate_lower; }
+  long GetBitRateWindow() const { return viData.bitrate_window; }
   /* -- Get loop (unsafe functions) ---------------------------------------- */
-  ogg_int64_t GetLoop(void) const { return qLoop; }
-  ogg_int64_t GetLoopBegin(void) const { return qLoopBegin; }
-  ogg_int64_t GetLoopEnd(void) const { return qLoopEnd; }
+  ogg_int64_t GetLoop() const { return qLoop; }
+  ogg_int64_t GetLoopBegin() const { return qLoopBegin; }
+  ogg_int64_t GetLoopEnd() const { return qLoopEnd; }
   /* -- Seek and tell functions (with locks) ------------------------------- */
   void SetLoopSafe(const ogg_int64_t qLoopCount)
     { const LockGuard lgStreamSync{ mMutex }; SetLoop(qLoopCount); }
-  ogg_int64_t GetLoopSafe(void)
+  ogg_int64_t GetLoopSafe()
     { const LockGuard lgStreamSync{ mMutex }; return GetLoop(); }
-  ogg_int64_t GetLoopBeginSafe(void)
+  ogg_int64_t GetLoopBeginSafe()
     { const LockGuard lgStreamSync{ mMutex }; return GetLoopBegin(); }
-  ogg_int64_t GetLoopEndSafe(void)
+  ogg_int64_t GetLoopEndSafe()
     { const LockGuard lgStreamSync{ mMutex }; return GetLoopEnd(); }
   void SetLoopBeginSafe(const ogg_int64_t qNewPos)
     { const LockGuard lgStreamSync{ mMutex }; SetLoopBegin(qNewPos); }
@@ -330,30 +330,30 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     { const LockGuard lgStreamSync{ mMutex }; SetLoopEnd(qNewPos); }
   void SetLoopRangeSafe(const ogg_int64_t qNBPos, const ogg_int64_t qNEPos)
     { const LockGuard lgStreamSync{ mMutex }; SetLoopRange(qNBPos, qNEPos); }
-  ALdouble GetElapsedSafe(void)
+  ALdouble GetElapsedSafe()
     { const LockGuard lgStreamSync{ mMutex }; return GetElapsed(); }
   void SetElapsedSafe(const ALdouble dElapsed)
     { const LockGuard lgStreamSync{ mMutex }; SetElapsed(dElapsed); }
   void SetElapsedFastSafe(const ALdouble dElapsed)
     { const LockGuard lgStreamSync{ mMutex }; SetElapsedFast(dElapsed); }
-  ALdouble GetDurationSafe(void)
+  ALdouble GetDurationSafe()
     { const LockGuard lgStreamSync{ mMutex }; return GetDuration(); }
-  ogg_int64_t GetPositionSafe(void)
+  ogg_int64_t GetPositionSafe()
     { const LockGuard lgStreamSync{ mMutex }; return GetPosition(); }
   void SetPositionSafe(const ogg_int64_t qNewPos)
     { const LockGuard lgStreamSync{ mMutex }; SetPosition(qNewPos); }
   void SetPositionFastSafe(const ogg_int64_t qPosition)
     { const LockGuard lgStreamSync{ mMutex }; SetPositionFast(qPosition); }
-  ogg_int64_t GetSamplesSafe(void)
+  ogg_int64_t GetSamplesSafe()
     { const LockGuard lgStreamSync{ mMutex }; return GetSamples(); }
   /* ----------------------------------------------------------------------- */
-  ogg_int64_t GetOggBytes(void) const { return fmFile.MemSize<ogg_int64_t>(); }
+  ogg_int64_t GetOggBytes() const { return fmFile.MemSize<ogg_int64_t>(); }
   /* -- GetFormat ---------------------------------------------------------- */
-  ALenum GetFormat(void) const { return eFormat; }
-  const string_view GetFormatName(void) const
+  ALenum GetFormat() const { return eFormat; }
+  const string_view GetFormatName() const
     { return cOal->GetALFormat(eFormat); }
   /* -- Main (from audio thread) ------------------------------------------- */
-  void Main(void)
+  void Main()
   { // Wait for audio thread and lock access to stream buffers
     const LockGuard lgStreamSync{ mMutex };
     // Compare state
@@ -441,7 +441,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     }
   }
   /* -- Load source and buffers during a reinit ---------------------------- */
-  void GenerateSourceAndBuffers(void)
+  void GenerateSourceAndBuffers()
   { // Protect modifications from audio main thread
     const LockGuard lgStreamSync{ mMutex };
     // Generate buffer id's
@@ -473,9 +473,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     psState = PS_PLAYING;
   }
   /* -- Unload source and buffers ------------------------------------------ */
-  void UnloadSourceAndBuffers(void) { UnloadSource(); UnloadBuffers(); }
+  void UnloadSourceAndBuffers() { UnloadSource(); UnloadBuffers(); }
   /* -- Update volume ------------------------------------------------------ */
-  void UpdateVolume(void)
+  void UpdateVolume()
   {  // Ignore if no source
     if(!sCptr) return;
     // Set volume
@@ -485,7 +485,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   void SetVolume(const ALfloat fNewVolume)
     { fVolume = fNewVolume; UpdateVolume(); }
   /* -- Fully rebuffer stream data ----------------------------------------- */
-  bool FullRebuffer(void)
+  bool FullRebuffer()
   { // Start from buffer at index 0
     size_t stIndex = 0;
     // Until we run out of buffers allocated
@@ -509,7 +509,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     return true;
   }
   /* -- Play with lock ----------------------------------------------------- */
-  void PlaySafe(void) { const LockGuard lgStreamSync{ mMutex }; Play(); }
+  void PlaySafe() { const LockGuard lgStreamSync{ mMutex }; Play(); }
   /* -- Stop with lock ----------------------------------------------------- */
   void StopSafe(const StreamStopReason srReason)
     { const LockGuard lgStreamSync{ mMutex }; Stop(srReason); }
@@ -569,9 +569,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
       fixed, GetDuration(), vBuffers.size(), MemSize(), hex, GetVersion());
   }
   /* -- Return metadata as table ------------------------------------------- */
-  const StrNCStrMap &GetMetaData(void) const { return ssMetaData; }
+  const StrNCStrMap &GetMetaData() const { return ssMetaData; }
   /* -- Constructor -------------------------------------------------------- */
-  Stream(void) :                       // No parameters
+  Stream() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperStream{ cStreams },        // Initialise collector unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
@@ -589,9 +589,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     psState(PS_STANDBY),               // Current state to standby
     fVolume(1.0f)                      // No volume yet
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Stream(void)
+  ~Stream()
   { // Stop any pending async operations
     AsyncCancel();
     // Synchronise from sources management and audio thread
@@ -626,37 +626,37 @@ CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
   stBufCount(0),                       // No buffers count yet
   stBufSize(0)                         // No buffer size yet
 ) /* == Manage streams ===================================================== */
-static void StreamManage(void)
+static void StreamManage()
 { // Lock access to bitmap collector list and process each stream
   const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
   for(Stream*const sPtr : *cStreams) sPtr->Main();
 }
 /* == Unload all source and buffers ======================================== */
-static void StreamDeInit(void)
+static void StreamDeInit()
 { // Lock access to bitmap collector list and unload each stream
   const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
   for(Stream*const sPtr : *cStreams) sPtr->UnloadSourceAndBuffers();
 }
 /* == Clear event callbacks on all streams ================================= */
-static void StreamClearEvents(void)
+static void StreamClearEvents()
 { // Lock access to bitmap collector list and clear event callbacks
   const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
   for(Stream*const sPtr : *cStreams) sPtr->LuaEvtDeInit();
 }
 /* == Generate all source and buffers ====================================== */
-static void StreamReInit(void)
+static void StreamReInit()
 { // Lock access to bitmap collector list and reinit source/buffers
   const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
   for(Stream*const sPtr : *cStreams) sPtr->GenerateSourceAndBuffers();
 }
 /* == Stop all streams ===================================================== */
-static void StreamStop(void)
+static void StreamStop()
 { // Lock access to bitmap collector list and stop all streams
   const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
   for(Stream*const sPtr : *cStreams) sPtr->StopSafe(SR_STOPALL);
 }
 /* == Update all streams base volume======================================== */
-static void StreamCommitVolume(void)
+static void StreamCommitVolume()
 { // Lock access to bitmap collector list and update all stream volumes
   const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
   for(Stream*const sPtr : *cStreams) sPtr->UpdateVolume();

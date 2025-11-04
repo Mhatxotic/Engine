@@ -46,13 +46,13 @@ class FontBase :                       // Members initially private
     bool           bLoaded;            // 0=ft unloaded or 1=ft loaded
     GLfloat        fAdvance;           // Width, height and advance of glyph
     /* -- Returns character advance -------------------------------- */ public:
-    GLfloat GlyphGetAdvance(void) const { return fAdvance; }
+    GLfloat GlyphGetAdvance() const { return fAdvance; }
     /* -- Sets character advance ------------------------------------------- */
     void GlyphSetAdvance(const GLfloat fNewAdv) { fAdvance = fNewAdv; }
     /* -- Returns if this glyph has been loaded ---------------------------- */
-    bool GlyphIsLoaded(void) const { return bLoaded; }
+    bool GlyphIsLoaded() const { return bLoaded; }
     /* -- Set glyph as loaded ---------------------------------------------- */
-    void GlyphSetLoaded(void) { bLoaded = true; }
+    void GlyphSetLoaded() { bLoaded = true; }
     /* -- Constructor that initialises all members ------------------------- */
     Glyph(const GLfloat fWidth,        // Width of glyph in pixels for opengl
           const GLfloat fHeight,       // Height of glyph in pixels for opengl
@@ -68,14 +68,14 @@ class FontBase :                       // Members initially private
       bLoaded(bNLoaded),               // Init specified loaded value
       fAdvance(fNAdvance)              // Init specified advance value
       /* -- No code -------------------------------------------------------- */
-      { }
+      {}
     /* -- Default Constructor ---------------------------------------------- */
-    Glyph(void) :                      // No arguments
+    Glyph() :                          // No arguments
       /* -- Initialisers --------------------------------------------------- */
       bLoaded(false),                  // Character not loaded yet
       fAdvance(0.0f)                   // Character advance value
       /* -- No code -------------------------------------------------------- */
-      { }
+      {}
   };/* -- Variables -------------------------------------------------------- */
   typedef vector<Glyph>         GlyphVector;   // Vector of Glyphs
   typedef GlyphVector::iterator GlyphVectorIt; // Iterator to GlyphVector
@@ -107,7 +107,7 @@ class FontBase :                       // Members initially private
     tGlyphs(nullptr),                  fiOutline{ 0xFF000000 },
     ulDefaultChar('?')
     /* --------------------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == Font Class (which inherits an Atlas) ==========-====================== */
 CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
@@ -120,11 +120,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   void SetGlyphSize(const GLfloat fSize)
     { fGSize = fSize; UpdateGlyphPaddingTimesScale(); }
   /* -- Get character count ------------------------------------------------ */
-  size_t GetCharCount(void) const { return gvData.size() / stMultiplier; }
+  size_t GetCharCount() const { return gvData.size() / stMultiplier; }
   /* -- Get character scale ------------------------------------------------ */
-  GLfloat GetCharScale(void) const { return fScale; }
+  GLfloat GetCharScale() const { return fScale; }
   /* -- Get bin occupancy -------------------------------------------------- */
-  double GetTexOccupancy(void) const { return ipData.Occupancy(); }
+  double GetTexOccupancy() const { return ipData.Occupancy(); }
   /* -- Get below baseline height of specified character ------------------- */
   GLfloat GetBaselineBelow(const unsigned int uiChar)
   { // Now get character info and return data
@@ -423,22 +423,22 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
       IdentGet(), uiTW, uiTH, ofeFilter);
   }
   /* -- Constructor (Initialisation then registration) --------------------- */
-  Font(void) :                         // No parameters
+  Font() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFont{ cFonts, this }       // Initially registered
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor (without registration) --------------------------------- */
   explicit Font(const ImageFlagsConst ifcPurpose) :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFont{ cFonts },            // Initially unregistered
     FontBase{ ifcPurpose }             // Set purpose
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Fonts, Font, FONT)    // End of collector class
 /* -- DeInit Font Textures ------------------------------------------------- */
-static void FontDeInitTextures(void)
+static void FontDeInitTextures()
 { // Ignore if no fonts
   if(cFonts->empty()) return;
   // De-init all the font textures and log pre/post deinit
@@ -447,7 +447,7 @@ static void FontDeInitTextures(void)
   cLog->LogInfoExSafe("Fonts de-initialising $ objects.", cFonts->size());
 }
 /* -- Reload Font Textures ------------------------------------------------- */
-static void FontReInitTextures(void)
+static void FontReInitTextures()
 { // Ignore if no fonts
   if(cFonts->empty()) return;
   // Reinit all the font textures and log pre/post init

@@ -47,15 +47,15 @@ class FboCore :                        // The main fbo operations manager
   ClockInterval<>  ciCurrent;          // Frames rendered per last second
   unsigned int     uiFPS, uiFPSCur;    // Frames per second
   /* -- Draw flags --------------------------------------------------------- */
-  bool CanDraw(void) const { return bDraw; }
-  bool CannotDraw(void) const { return !CanDraw(); }
-  void SetDraw(void) { bDraw = true; }
-  void ClearDraw(void) { bDraw = false; }
+  bool CanDraw() const { return bDraw; }
+  bool CannotDraw() const { return !CanDraw(); }
+  void SetDraw() { bDraw = true; }
+  void ClearDraw() { bDraw = false; }
   /* -- Get members -------------------------------------------------------- */
-  GLfloat GetMatrixWidth(void) const { return fMatrixWidth; }
-  GLfloat GetMatrixHeight(void) const { return fMatrixHeight; }
+  GLfloat GetMatrixWidth() const { return fMatrixWidth; }
+  GLfloat GetMatrixHeight() const { return fMatrixHeight; }
   /* -- Reset backbuffer clear colour to colour stored in cvar ------------- */
-  void ResetClearColour(void)
+  void ResetClearColour()
   { // Set main backbuffer colour
     fboMain.FboResetClearColour();
     fboConsole.FboResetClearColour();
@@ -64,7 +64,7 @@ class FboCore :                        // The main fbo operations manager
       cCVars->GetInternal<unsigned int>(VID_CLEARCOLOUR));
   }
   /* -- Render the main fbo from the engine thread ------------------------- */
-  void Render(void)
+  void Render()
   { // Finish and render the main fbo
     FinishMain();
     // Render all the fbos
@@ -135,20 +135,20 @@ class FboCore :                        // The main fbo operations manager
     uiFPSCur = 0;
   }
   /* -- Blits the console fbo to main fbo ---------------------------------- */
-  void BlitConsoleToMain(void) { fboMain.FboBlit(fboConsole); }
+  void BlitConsoleToMain() { fboMain.FboBlit(fboConsole); }
   /* -- Finish main fbo and add it to render list -------------------------- */
-  void FinishMain(void) { fboMain.FboFinishAndRender(); }
+  void FinishMain() { fboMain.FboFinishAndRender(); }
   /* -- Set main fbo as active fbo to draw too ----------------------------- */
-  void ActivateMain(void) { fboMain.FboSetActive(); }
+  void ActivateMain() { fboMain.FboSetActive(); }
   /* -- Called from main tick incase we need to keep catching up frames ---- */
-  void RenderFbosAndFlushMain(void)
+  void RenderFbosAndFlushMain()
   { // Render all the user queud fbos and flush them
     FboRender();
     // Flush main fbo
     fboMain.FboFlush();
   }
   /* -- De-initialise all fbos --------------------------------------------- */
-  void DeInitAllObjectsAndBuiltIns(void)
+  void DeInitAllObjectsAndBuiltIns()
   { // Temporary de-init all user objects
     FboDeInit();
     // Temporary de-init the console and main static fbo classes too
@@ -156,7 +156,7 @@ class FboCore :                        // The main fbo operations manager
     fboMain.FboDeInit();
   }
   /* -- Destroy all fbo's -------------------------------------------------- */
-  void DestroyAllObjectsAndBuiltIns(void)
+  void DestroyAllObjectsAndBuiltIns()
   { // Destroy all the fbos. Note this doesn't destroy the static fbo's as they
     // were unregistered in the init function below.
     cFbos->CollectorDestroyUnsafe();
@@ -273,7 +273,7 @@ class FboCore :                        // The main fbo operations manager
     return bResult;
   }
   /* -- Init console fbo --------------------------------------------------- */
-  void InitConsoleFBO(void)
+  void InitConsoleFBO()
   { // Initialise the console fbo for the console object
     fboConsole.FboInit("console",
       fboMain.DimGetWidth(), fboMain.DimGetHeight());
@@ -281,7 +281,7 @@ class FboCore :                        // The main fbo operations manager
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~FboCore, DestroyAllObjectsAndBuiltIns())
   /* -- Initialise fbos using a different constructor ---------------------- */
-  FboCore(void) :
+  FboCore() :
     /* -- Initialisers ----------------------------------------------------- */
     fAspectMin(1.0f),                  fAspectMax(2.0f),
     fMatrixWidth(0.0f),                fMatrixHeight(0.0f),

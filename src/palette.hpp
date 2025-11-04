@@ -34,7 +34,7 @@ class Pal :                            // Members initially public
     { return (*this)[stSlot]; }
   FboColour &GetSlot(const size_t stSlot) { return (*this)[stSlot]; }
   /* -- Commit palette ----------------------------------------------------- */
-  void Commit(void) const
+  void Commit() const
     { cShaderCore->sh2D8Pal.UpdatePalette(size(),
         reinterpret_cast<const GLfloat*>(data())); }
   /* -- Set palette entry -------------------------------------------------- */
@@ -87,9 +87,9 @@ class Pal :                            // Members initially public
   void SetAlphaInt(const size_t stPos, const unsigned int uiAlpha)
     { GetSlot(stPos).SetColourAlphaInt(uiAlpha); }
   /* -- Size as signed size_t --------------------------------------------- */
-  ssize_t Size(void) const { return static_cast<ssize_t>(size()); }
-  ssize_t SizeM1(void) const { return Size()-1; }
-  ssize_t SizeN(void) const { return -Size(); }
+  ssize_t Size() const { return static_cast<ssize_t>(size()); }
+  ssize_t SizeM1() const { return Size()-1; }
+  ssize_t SizeN() const { return -Size(); }
   /* -- Shift limited palette entries backwards ---------------------------- */
   void ShiftBck(const ssize_t stBegin, const ssize_t stEnd,
     const ssize_t stRot)
@@ -132,10 +132,10 @@ class Pal :                            // Members initially public
   explicit Pal(const PalData &pdOther) :
     /* -- Initialisers ----------------------------------------------------- */
     PalData{ pdOther }                 // Copy palette data
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Default constructor that does nothing ------------------------------ */
-  Pal(void) = default;                 // No parameters
+  Pal() = default;
 };/* -- Init collector with default palette array -------------------------- */
 CTOR_BEGIN(Palettes, Palette, CLHelperUnsafe, const Pal palDefault;)
 /* ------------------------------------------------------------------------- */
@@ -187,12 +187,12 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
     Fill(isPalette.DimGetWidth(), size() - isPalette.DimGetWidth());
   }
   /* -- Default constructor ------------------------------------------------ */
-  Palette(void) :                      // No parameters
+  Palette() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperPalette{ cPalettes, this },// Register the object in collector
     IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
-    /* -- Code  ------------------------------------------------------------ */
-    { }                                // No code
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END(Palettes, Palette, PALETTE,,,,palDefault{{{ // Init default pal to VGA
 /* -- 0-15 ----------------------------------------------------------------- */

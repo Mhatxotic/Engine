@@ -60,7 +60,7 @@ class FileParts                        // Contains parts of a filename
     strFull{ StdMove(strFullNew) },
     strLoc{ strDrive+strDir }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- MOVE assign constructor on class creation -------------------------- */
   FileParts(FileParts &&pspOther) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -72,7 +72,7 @@ class FileParts                        // Contains parts of a filename
     strFull{ StdMove(pspOther.strFull) },
     strLoc{ StdMove(pspOther.strLoc) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- PathSplit class ---------------------------------------------------- */
 class PathSplit :
   /* -- Base classes ------------------------------------------------------- */
@@ -178,13 +178,13 @@ class PathSplit :
     /* -- Initialisers ----------------------------------------------------- */
     FileParts{ Init(strSrc, bUseFullPath) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- MOVE assign constructor on class creation -------------------------- */
   PathSplit(PathSplit &&psOther) :
     /* -- Initialisers ----------------------------------------------------- */
     FileParts{ StdMove(psOther) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

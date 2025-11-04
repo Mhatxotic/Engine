@@ -338,7 +338,7 @@ class Display :                        // Actual class body
     }
   }
   /* -- Enumerate monitors ------------------------------------------------- */
-  void EnumerateMonitorsAndVideoModes(void)
+  void EnumerateMonitorsAndVideoModes()
   { // Log initial progress
     cLog->LogDebugSafe("Display now enumerating available displays...");
     // Refresh monitors data
@@ -465,7 +465,7 @@ class Display :                        // Actual class body
     cEvtWin->AddUnblock(EWC_WIN_MONITORS);
   }
   /* -- Add event to reinit matrix ----------------------------------------- */
-  void RequestMatrixReInit(void) { cEvtMain->Add(EMC_VID_MATRIX_REINIT); }
+  void RequestMatrixReInit() { cEvtMain->Add(EMC_VID_MATRIX_REINIT); }
   /* -- Matrix reset requested ----------------------------------------------*/
   void OnMatrixReset(const EvtMainEvent&) { ReInitMatrix(); }
   void OnFBReset(const EvtMainEvent &emeEvent)
@@ -559,14 +559,14 @@ class Display :                        // Actual class body
     SetFullScreen(eweEvent.eaArgs.front().Bool());
   }
   /* -- Apply gamma setting ------------------------------------------------ */
-  void ApplyGamma(void)
+  void ApplyGamma()
   { // Set gamma
     GlFWSetGamma(gfwmActive->Context(), fGamma);
     // Report
     cLog->LogDebugExSafe("Display set gamma to $$.", fixed, fGamma);
   }
   /* -- Translate user specified window dimensions ------------------------- */
-  DimInt TranslateUserSize(void) const
+  DimInt TranslateUserSize() const
   { // Get window size specified by user and if optimal size requested?
     DimInt diOptimal{ *this };
     if(diOptimal.DimGetWidth() <= 0 && diOptimal.DimGetHeight() <= 0)
@@ -824,9 +824,9 @@ class Display :                        // Actual class body
       dY < dcNew.DimGetHeight<double>());
   }
   /* -- Return selected monitor ------------------------------------ */ public:
-  const GlFWMonitor *GetSelectedMonitor(void) const { return gfwmActive; }
+  const GlFWMonitor *GetSelectedMonitor() const { return gfwmActive; }
   /* -- Return selected resolution ----------------------------------------- */
-  const GlFWRes *GetSelectedRes(void) const { return gfwrActive; }
+  const GlFWRes *GetSelectedRes() const { return gfwrActive; }
   /* -- Request from alternative thread to resize window ------------------- */
   void RequestResize(const int iW, const int iH)
     { cEvtWin->AddUnblock(EWC_WIN_RESIZE, iW, iH); }
@@ -837,25 +837,25 @@ class Display :                        // Actual class body
   void RequestSetCursor(const GlFWCursorType gctType)
     { cEvtWin->AddUnblock(EWC_WIN_CURSET, gctType); }
   /* -- Request the window reset the cursor graphic ------------------------ */
-  void RequestResetCursor(void) { cEvtWin->AddUnblock(EWC_WIN_CURRESET); }
+  void RequestResetCursor() { cEvtWin->AddUnblock(EWC_WIN_CURRESET); }
   /* -- Request from alternative thread to centre the window --------------- */
-  void RequestCentre(void) { cEvtWin->AddUnblock(EWC_WIN_CENTRE); }
+  void RequestCentre() { cEvtWin->AddUnblock(EWC_WIN_CENTRE); }
   /* -- Request from alternative thread to reposition the window ----------- */
-  void RequestReposition(void) { cEvtWin->AddUnblock(EWC_WIN_RESET); }
+  void RequestReposition() { cEvtWin->AddUnblock(EWC_WIN_RESET); }
   /* -- Request to open window --------------------------------------------- */
-  void RequestOpen(void) { cEvtWin->AddUnblock(EWC_WIN_SHOW); }
+  void RequestOpen() { cEvtWin->AddUnblock(EWC_WIN_SHOW); }
   /* -- Request to close window -------------------------------------------- */
-  void RequestClose(void) { cEvtWin->AddUnblock(EWC_WIN_HIDE); }
+  void RequestClose() { cEvtWin->AddUnblock(EWC_WIN_HIDE); }
   /* -- Request to minimise window ----------------------------------------- */
-  void RequestMinimise(void) { cEvtWin->AddUnblock(EWC_WIN_MINIMISE); }
+  void RequestMinimise() { cEvtWin->AddUnblock(EWC_WIN_MINIMISE); }
   /* -- Request to maximise window ----------------------------------------- */
-  void RequestMaximise(void) { cEvtWin->AddUnblock(EWC_WIN_MAXIMISE); }
+  void RequestMaximise() { cEvtWin->AddUnblock(EWC_WIN_MAXIMISE); }
   /* -- Request to restore window ------------------------------------------ */
-  void RequestRestore(void) { cEvtWin->AddUnblock(EWC_WIN_RESTORE); }
+  void RequestRestore() { cEvtWin->AddUnblock(EWC_WIN_RESTORE); }
   /* -- Request to focus window -------------------------------------------- */
-  void RequestFocus(void) { cEvtWin->AddUnblock(EWC_WIN_FOCUS); }
+  void RequestFocus() { cEvtWin->AddUnblock(EWC_WIN_FOCUS); }
   /* -- Request for window attention --------------------------------------- */
-  void RequestAttention(void) { cEvtWin->AddUnblock(EWC_WIN_ATTENTION); }
+  void RequestAttention() { cEvtWin->AddUnblock(EWC_WIN_ATTENTION); }
   /* -- Request from alternative thread to fullscreen toggle without save -- */
   void RequestFSToggle(const bool bState)
     { cEvtWin->AddUnblock(EWC_WIN_TOGGLE_FS, bState); }
@@ -880,13 +880,13 @@ class Display :                        // Actual class body
 #endif
   }
   /* -- Return current video mode refresh rate ----------------------------- */
-  int GetRefreshRate(void) { return gfwrActive->Refresh(); }
+  int GetRefreshRate() { return gfwrActive->Refresh(); }
   /* -- Get selected monitor id -------------------------------------------- */
-  int GetMonitorId(void) const { return gfwmActive->Index(); }
+  int GetMonitorId() const { return gfwmActive->Index(); }
   /* -- Get selected video mode id ----------------------------------------- */
-  int GetVideoModeId(void) const { return gfwrActive->Index(); }
+  int GetVideoModeId() const { return gfwrActive->Index(); }
   /* -- Init info ---------------------------------------------------------- */
-  const string &GetMonitorName(void) const { return gfwmActive->Name(); }
+  const string &GetMonitorName() const { return gfwmActive->Name(); }
   /* -- Commit current matrix size ----------------------------------------- */
   void CommitMatrix(const bool bForce=true) const
   { // Set the default matrix from the configuration and if it was changed
@@ -898,7 +898,7 @@ class Display :                        // Actual class body
     else cConsole->SetRedrawIfEnabled();
   }
   /* -- Restore default matrix --------------------------------------------- */
-  void CommitDefaultMatrix(void)
+  void CommitDefaultMatrix()
   { // Restore default dimensions as set from the manifest
     dfMatrix.DimSet(dfMatrixReq);
     // Restore matrix but don't need to reinit if size didn't change
@@ -925,14 +925,14 @@ class Display :                        // Actual class body
     return true;
   }
   /* -- ReInit matrix ------------------------------------------------------ */
-  void ReInitMatrix(void)
+  void ReInitMatrix()
   { // Force-reinitialise matrix
     CommitMatrix();
     // Inform lua scripts that they should redraw the framebuffer
     cEvtMain->Add(EMC_LUA_REDRAW);
   }
   /* -- Update window icon ------------------------------------------------- */
-  void UpdateIcons(void)
+  void UpdateIcons()
   { // This functionality throws a GLFW api error on MacOS so just NullOp it
 #if !defined(MACOS)
     // If using interactive mode?
@@ -1022,18 +1022,18 @@ class Display :                        // Actual class body
   void SetIconFromLua(const string &strNames)
     { if(SetIcon(strNames)) return cEvtWin->Add(EWC_WIN_SETICON); }
   /* -- Get window full-screen type ---------------------------------------- */
-  FSType GetFSType(void) const { return fsType; }
+  FSType GetFSType() const { return fsType; }
   const string_view &GetFSTypeString(const FSType fsT) const
     { return fstStrings.Get(fsT); }
-  const string_view &GetFSTypeString(void) const
+  const string_view &GetFSTypeString() const
     { return GetFSTypeString(fsType); }
   /* -- Get window position ------------------------------------------------ */
-  int GetWindowPosX(void) const { return ciPosition.CoordGetX(); }
-  int GetWindowPosY(void) const { return ciPosition.CoordGetY(); }
-  float GetWindowScaleWidth(void) const { return dfWinScale.DimGetWidth(); }
-  float GetWindowScaleHeight(void) const { return dfWinScale.DimGetHeight(); }
+  int GetWindowPosX() const { return ciPosition.CoordGetX(); }
+  int GetWindowPosY() const { return ciPosition.CoordGetY(); }
+  float GetWindowScaleWidth() const { return dfWinScale.DimGetWidth(); }
+  float GetWindowScaleHeight() const { return dfWinScale.DimGetHeight(); }
   /* -- ReInit ------------------------------------------------------------- */
-  void ReInit(void)
+  void ReInit()
   { // Log progress
     cLog->LogDebugSafe("Display class reinitialising...");
     // Cancel window closure
@@ -1046,7 +1046,7 @@ class Display :                        // Actual class body
     cLog->LogInfoSafe("Display class reinitialised successfully.");
   }
   /* -- Init --------------------------------------------------------------- */
-  void Init(void)
+  void Init()
   { // Class initialised
     IHInitialise();
     // Log progress
@@ -1105,7 +1105,7 @@ class Display :                        // Actual class body
     cLog->LogInfoSafe("Display class started successfully.");
   }
   /* -- DeInit ------------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Ignore if class not initialised
     if(IHNotDeInitialise()) return;
     // Log progress
@@ -1143,7 +1143,7 @@ class Display :                        // Actual class body
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Display, DeInit())
   /* -- Constructor -------------------------------------------------------- */
-  Display(void) :
+  Display() :
     /* --------------------------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Send name to init helper
     DisplayFlags{ DF_NONE },           // No display flags set

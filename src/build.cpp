@@ -598,7 +598,7 @@ static const string StrGetReturnFormat(const string &strIn)
   return {};
 }
 /* ------------------------------------------------------------------------- */
-static int CheckSources(void)
+static int CheckSources()
 { // Number of warnings
   size_t stWarnings = 0, stTotal = 0;
   // Read source files directory
@@ -713,7 +713,7 @@ static int CheckSources(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static int GenDoc(void)
+static int GenDoc()
 { // Typedefs
   struct StrStrStr { string strName, strType, strDesc; };
   typedef list<StrStrStr> StrStrStrList;
@@ -1813,7 +1813,7 @@ static void PatchIcon(const string &strIco, const string &strOut)
 }
 #endif
 /* ------------------------------------------------------------------------- */
-static const string GetTempDir(void)
+static const string GetTempDir()
 { // Get temporary directory and remove trailing slash
 #if defined(WINDOWS)
   string strTmp{ cCmdLine->CmdLineGetEnv("TMP") };
@@ -1831,7 +1831,7 @@ static const string GetTempDir(void)
 #endif
 }
 /* ------------------------------------------------------------------------- */
-static void DoCleanCompilerTempFiles(void)
+static void DoCleanCompilerTempFiles()
 { // Get files
 #if defined(WINDOWS)
   const string strTmp{ StrAppend(GetTempDir(), '/') };
@@ -1958,7 +1958,7 @@ static int SpecialExecute(const string strCmd, const size_t stML,
       XCL("Could not read pipe to execute process!",
           "CmdLine", strCmd, "Directory", DirGetCWD());
   } // exception occured? Just ignore it and close handle
-  catch(const exception&) { }
+  catch(const exception&) {}
   // Close pipe and return result
   const int iR = PClose(fpPipe);
   // Print result if not successful
@@ -2225,7 +2225,7 @@ static void BuildExecutable(const string &strTmp, const string &strOS,
 }
 #endif
 /* ------------------------------------------------------------------------- */
-static int BuildDistro(void)
+static int BuildDistro()
 { // Get and make temporary directory and if it failed?
   const string strTmp{ StrAppend(GetTempDir(), '/', UuId().UuIdToString()) };
   MakeDirectory(strTmp);
@@ -2363,7 +2363,7 @@ static int BuildDistro(void)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static int CertGen(void)
+static int CertGen()
 { // Need openssl library
   using namespace Lib::OS::OpenSSL;
   // Switch to resources directory. Create it if not exists
@@ -2407,7 +2407,7 @@ static int CertGen(void)
     // First character is a hash? Ignore it
     if(strLine[0] == '#') continue;
     // Need title?
-    if(bGetTitle && StdIsAlnum(strLine[0]))
+    if(bGetTitle)
     { // Set name
       strFilename = strLine;
       // Set certificate being processed
@@ -2618,7 +2618,7 @@ static const string BuildHPPHeader(const string &strFileName,
   return strLines;
 }
 /* ------------------------------------------------------------------------- */
-static int BuildLicenses(void)
+static int BuildLicenses()
 { // Find license files
   const Dir dLicenses{ LICDIR, ".txt" };
   if(dLicenses.IsFilesEmpty())
@@ -3864,7 +3864,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static int CppCheck(void)
+static int CppCheck()
 { // Do exec, if succeeded no more code is executed
   SystemF("$ "                         "--inline-suppr "
     "--suppress=missingIncludeSystem " "--exception-handling "
@@ -3949,7 +3949,7 @@ static void GotNewBuildExecutable(const string &strOldExe,
 }
 #endif
 /* ------------------------------------------------------------------------- */
-static void CheckForNewBuildExecutable(void)
+static void CheckForNewBuildExecutable()
 { // Build executable filename and temp filename
 #if defined(WINDOWS)
   // Make filename to new executable in current directory and if we have it?
@@ -3970,7 +3970,7 @@ static void CheckForNewBuildExecutable(void)
 #endif
 }
 /* ------------------------------------------------------------------------- */
-static void WriteVersion(void)
+static void WriteVersion()
 { // Create the json object to write to
   using namespace IJson;
   Document dOut;
@@ -3996,7 +3996,7 @@ static void WriteVersion(void)
     XCL("Cannot open version file for writing!", "File", strVerFile);
 }
 /* ------------------------------------------------------------------------- */
-static void ReadVersion(void)
+static void ReadVersion()
 { // Create the json object and parse it
   const Json jsManifest{ strVerFile };
   // Check version is correct
@@ -4322,7 +4322,7 @@ static int Compile(const bool bSelf)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static int DebugApp(void)
+static int DebugApp()
 { // Goto assets directory
   SetDirectory(strName);
   // Execute the debugger
@@ -4500,7 +4500,7 @@ static bool CheckCommandLine(string &strX1, string &strX2)
   return true;
 }
 /* ------------------------------------------------------------------------- */
-static void ReadProject(void)
+static void ReadProject()
 { // If project does not exist then show the error
   if(!DirLocalDirExists(strName))
     XCL("Could not find project directory!",
@@ -4528,7 +4528,7 @@ static void ReadProject(void)
   strAuthor = StdMove(rjvConstants["app_author"].GetString());
 }
 /* ------------------------------------------------------------------------- */
-static int ShowVersion(void)
+static int ShowVersion()
 { // Write extra details to log
   cLog->LogDebugExSafe(
     "Executable drive: \"$\".\n"    "Executable directory: \"$\".\n"
@@ -4569,7 +4569,7 @@ static int Build(const int iArgC, ArgType**const saArgV,
     private System, private LuaFuncs, private Archives, private Assets,
     private Crypt, private Jsons
   { Engine(const int iArgC, ArgType**const saArgV, ArgType**const saEnv) :
-      CmdLine{ iArgC, saArgV, saEnv } { }
+      CmdLine{ iArgC, saArgV, saEnv } {}
   } engEngine{ iArgC, saArgV, saEnv };
   // Force current working directory to the base directory
   SetDirectory(

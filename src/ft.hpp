@@ -25,7 +25,7 @@ class FreeType :                       // Members initially private
   FT_Library    ftlContext;            // Freetype context
   FT_MemoryRec_ ftmrAlloc;             // Freetype custom allocator
   /* ----------------------------------------------------------------------- */
-  bool DoDeInit(void)
+  bool DoDeInit()
   { // Return failed if library not available
     if(!IsLibraryAvailable()) return false;
     // Unload freetype library
@@ -52,7 +52,7 @@ class FreeType :                       // Members initially private
   FT_Error NewStroker(FT_Stroker &ftsDst) const
     { return FT_Stroker_New(ftlContext, &ftsDst); }
   /* ----------------------------------------------------------------------- */
-  bool IsLibraryAvailable(void) { return ftlContext != nullptr; }
+  bool IsLibraryAvailable() { return ftlContext != nullptr; }
   /* ----------------------------------------------------------------------- */
   FT_Error NewFont(const MemConst &mcSrc, FT_Face &ftfDst)
   { // Lock a mutex to protect FT_Library.
@@ -77,7 +77,7 @@ class FreeType :                       // Members initially private
   { if(ftErr) XC(cpMessage, "Code", ftErr, "Reason", FT_Error_String(ftErr),
                 vaArgs...); }
   /* ----------------------------------------------------------------------- */
-  void Init(void)
+  void Init()
   { // Class initialised
     if(IsLibraryAvailable()) XC("Freetype already initialised!");
     // Log initialisation and do the init
@@ -92,11 +92,11 @@ class FreeType :                       // Members initially private
     cLog->LogDebugSafe("FreeType subsystem initialised.");
   }
   /* ----------------------------------------------------------------------- */
-  void DeInit(void) { if(DoDeInit()) ftlContext = nullptr; }
+  void DeInit() { if(DoDeInit()) ftlContext = nullptr; }
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~FreeType, DoDeInit())
   /* -- Default constructor ------------------------------------------------ */
-  FreeType(void) : ftlContext(nullptr), ftmrAlloc{ this,
+  FreeType() : ftlContext(nullptr), ftmrAlloc{ this,
     [](FT_Memory, long lBytes)->void*
       { return StdAlloc<void>(lBytes); },
     [](FT_Memory, void*const vpAddress)

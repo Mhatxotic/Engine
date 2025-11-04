@@ -207,7 +207,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void SetFlagExt(const char*const cpName, const OglFlagsConst &glFlag)
     { FlagSetOrClear(glFlag, HaveExtension(cpName)); }
   /* -- Load GL capabilities ----------------------------------------------- */
-  void DetectCapabilities(void)
+  void DetectCapabilities()
   { // Current current OpenGL strings
     strVendor = LuaUtilGetStr<char>(GL_VENDOR);
     strRenderer = LuaUtilGetStr<char>(GL_RENDERER);
@@ -244,7 +244,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     return stIndex < vaCmds.size() ? vaCmds[stIndex] : GL_NONE;
   }
   /* -- Load GL extensions ------------------------------------------------- */
-  const char *LoadFunctions(void)
+  const char *LoadFunctions()
   { // Helper macro
 #define GETPTR(v,t) sAPI.v = reinterpret_cast<t>(GlFWGetProcAddress(#v)); \
     if(!sAPI.v) return #v;
@@ -327,15 +327,15 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { return !!glfwExtensionSupported(cpName); }
   /* ----------------------------------------------------------------------- */
   template<typename RetType=decltype(uiTexSize)>
-    RetType MaxTexSize(void) const { return static_cast<RetType>(uiTexSize); }
+    RetType MaxTexSize() const { return static_cast<RetType>(uiTexSize); }
   /* ----------------------------------------------------------------------- */
-  GLuint MaxVertexAttribs(void) const { return uiMaxVertexAttribs; }
+  GLuint MaxVertexAttribs() const { return uiMaxVertexAttribs; }
   /* ----------------------------------------------------------------------- */
-  GLuint PackAlign(void) const { return uiPackAlign; }
+  GLuint PackAlign() const { return uiPackAlign; }
   /* ----------------------------------------------------------------------- */
-  GLuint UnpackAlign(void) const { return uiUnpackAlign; }
+  GLuint UnpackAlign() const { return uiUnpackAlign; }
   /* ----------------------------------------------------------------------- */
-  GLint UnpackRowLength(void) const { return iUnpackRowLength; }
+  GLint UnpackRowLength() const { return iUnpackRowLength; }
   /* ----------------------------------------------------------------------- */
   void VertexAttribPointer(const GLuint uiAttrib, const GLint iSize,
     const GLsizei siStride, const GLvoid*const vpBuffer) const
@@ -420,7 +420,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     const GLenum ePixFormat, const GLvoid*const vpBuffer) const
       { UploadTextureSub(0, 0, siWidth, siHeight, ePixFormat, vpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void GenerateMipmaps(void) const { sAPI.glGenerateMipmap(GL_TEXTURE_2D); }
+  void GenerateMipmaps() const { sAPI.glGenerateMipmap(GL_TEXTURE_2D); }
   /* ----------------------------------------------------------------------- */
   void CreateTextures(const GLsizei siCount, GLuint*const uipTexture) const
     { sAPI.glGenTextures(siCount, uipTexture); }
@@ -431,7 +431,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void CreateTexture(GLuint*const uipTexture) const
     { CreateTextures(1, uipTexture); }
   /* ----------------------------------------------------------------------- */
-  GLuint GetCurrentTexture(void) const
+  GLuint GetCurrentTexture() const
     { return GetInteger<GLuint>(GL_TEXTURE_BINDING_2D); }
   /* ----------------------------------------------------------------------- */
   void ActiveTexture(const GLuint uiTexUnit=0)
@@ -499,7 +499,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { sAPI.glFramebufferTexture2D(GL_FRAMEBUFFER,
       GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, uiTId, 0); }
   /* ----------------------------------------------------------------------- */
-  GLuint VerifyFBO(void) const
+  GLuint VerifyFBO() const
     { return sAPI.glCheckFramebufferStatus(GL_FRAMEBUFFER); }
   /* -- GLSL functions ----------------------------------------------------- */
   GLuint CreateShader(const GLenum eType) const
@@ -588,7 +588,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     return tResult;
   }
   /* ----------------------------------------------------------------------- */
-  GLuint CreateProgram(void) const { return sAPI.glCreateProgram(); }
+  GLuint CreateProgram() const { return sAPI.glCreateProgram(); }
   /* ----------------------------------------------------------------------- */
   template<typename IntegerType>
     const IntegerType GetProgramInt(const GLuint uiProgram,
@@ -614,7 +614,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void LinkProgram(const GLuint uiProgram) const
     { sAPI.glLinkProgram(uiProgram); }
   /* ----------------------------------------------------------------------- */
-  GLuint GetProgram(void) const
+  GLuint GetProgram() const
     { return GetInteger<GLuint>(GL_CURRENT_PROGRAM); }
   /* ----------------------------------------------------------------------- */
   void UseProgram(const GLuint uiProgram=0)
@@ -717,9 +717,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void BufferStaticData(const GLsizei siSize, const GLvoid*const vpBuffer)
     { BufferData(GL_ARRAY_BUFFER, siSize, vpBuffer, GL_STREAM_DRAW); }
   /* -- Clear bound fbo or back buffer ------------------------------------- */
-  void ClearBuffer(void) const { sAPI.glClear(GL_COLOR_BUFFER_BIT); }
+  void ClearBuffer() const { sAPI.glClear(GL_COLOR_BUFFER_BIT); }
   /* -- Set clear colour --------------------------------------------------- */
-  void CommitClearColour(void) const
+  void CommitClearColour() const
    { sAPI.glClearColor(GetColourRed(),  GetColourGreen(),
                        GetColourBlue(), GetColourAlpha()); }
   /* ----------------------------------------------------------------------- */
@@ -740,9 +740,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     ePolyMode = eMode;
   }
   /* ----------------------------------------------------------------------- */
-  GLenum GetError(void) const { return sAPI.glGetError(); }
+  GLenum GetError() const { return sAPI.glGetError(); }
   /* -- Restore VSync setting ---------------------------------------------- */
-  void RestoreVSync(void) const { GlFWSetVSync(vsSetting); }
+  void RestoreVSync() const { GlFWSetVSync(vsSetting); }
   /* ----------------------------------------------------------------------- */
   void DrawArrays(const GLenum eMode, const GLint iFirst,
     const GLsizei siCount) const
@@ -797,7 +797,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     return reinterpret_cast<const PtrType*>(ucpStr);
   }
   /* -- Do delete all the marked fbo handles ------------------------------- */
-  void DeleteMarkedFboHandles(void)
+  void DeleteMarkedFboHandles()
   { // Delete the fbos
     IGLL(DeleteFBO(static_cast<GLsizei>(vFbos.size()), vFbos.data()),
       "OGL failed to destroy $ fbo handles!", vFbos.size());
@@ -805,7 +805,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     vFbos.clear();
   }
   /* -- Do delete all the marked texture handles --------------------------- */
-  void DeleteMarkedTextureHandles(void)
+  void DeleteMarkedTextureHandles()
   { // Delete the marked textures
     IGLL(DeleteTexture(static_cast<GLsizei>(vTextures.size()),
       vTextures.data()), "OGL failed to destroy $ texture handles!",
@@ -840,7 +840,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       idExtensions.Get(eExtension), hex, eExtension);
   }
   /* -- Commit blending algorithms ----------------------------------------- */
-  void CommitBlend(void) const
+  void CommitBlend() const
     { sAPI.glBlendFuncSeparate(GetSrcRGB(), GetDstRGB(),
                                GetSrcAlpha(), GetDstAlpha()); }
   /* -- Set blending algorithms -------------------------------------------- */
@@ -863,8 +863,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       idHintTargets.Get(eTarget), hex, eTarget, idHintModes.Get(eMode), eMode);
   }
   /* -- GL is initialised? ------------------------------------------------- */
-  bool IsGLInitialised(void) const { return FlagIsSet(GFL_INITIALISED); }
-  bool IsGLNotInitialised(void) const { return !IsGLInitialised(); }
+  bool IsGLInitialised() const { return FlagIsSet(GFL_INITIALISED); }
+  bool IsGLNotInitialised() const { return !IsGLInitialised(); }
   void SetInitialised(const bool bState, const bool bForce=false)
   { // De-Initialising?
     if(!bState)
@@ -961,18 +961,18 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     iMin = iaPair.back();
   }
   /* -- Extensions --------------------------------------------------------- */
-  GLuint GetExtensionCount(void) const
+  GLuint GetExtensionCount() const
     { return GetInteger<GLuint>(GL_NUM_EXTENSIONS); }
   /* ----------------------------------------------------------------------- */
   const char *GetExtension(const GLuint uiI) const
     { return reinterpret_cast<const char*>
         (sAPI.glGetStringi(GL_EXTENSIONS, uiI)); }
   /* -- Read OpenGL renderer data ------------------------------------------ */
-  const string &GetVendor(void) const { return strVendor; }
-  const string &GetRenderer(void) const { return strRenderer; }
-  const string &GetVersion(void) const { return strVersion; }
+  const string &GetVendor() const { return strVendor; }
+  const string &GetRenderer() const { return strRenderer; }
+  const string &GetVersion() const { return strVersion; }
   /* -- Reset all binds ---------------------------------------------------- */
-  void ResetBinds(void)
+  void ResetBinds()
   { // Unbind active texture
     ActiveTexture();
     // Unbind shader program
@@ -996,27 +996,27 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void SetDeleteFbo(const GLuint uiI)
     { vFbos.emplace_back(uiI); }
   /* -- Do delete all the marked textures and fbos ------------------------- */
-  void DeleteTexturesAndFboHandles(void)
+  void DeleteTexturesAndFboHandles()
   { // Have textures to delete?
     if(!vTextures.empty()) DeleteMarkedTextureHandles();
     // Have fbos to delete?
     if(!vFbos.empty()) DeleteMarkedFboHandles();
   }
   /* -- Get available and total VRAM --------------------------------------- */
-  GLuint64 GetVRAMFree(void) const { return qwFreeVRAM; }
-  GLuint64 GetVRAMTotal(void) const { return qwTotalVRAM; }
-  GLuint64 GetVRAMUsed(void) const { return GetVRAMTotal() - GetVRAMFree(); }
-  double GetVRAMFreePC(void) const
+  GLuint64 GetVRAMFree() const { return qwFreeVRAM; }
+  GLuint64 GetVRAMTotal() const { return qwTotalVRAM; }
+  GLuint64 GetVRAMUsed() const { return GetVRAMTotal() - GetVRAMFree(); }
+  double GetVRAMFreePC() const
     { return 100.0 - UtilMakePercentage(GetVRAMFree(), GetVRAMTotal()); }
   /* -- Get free memory on nvidia cards ------------------------------------ */
-  void UpdateVRAMAvailableNV(void)
+  void UpdateVRAMAvailableNV()
   { // - OG macro name: GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX
     // - https://www.khronos.org/registry/OpenGL/extensions/
     //     NVX/NVX_gpu_memory_info.txt
     qwFreeVRAM = GetInteger<GLuint64>(0x9049) * 1024;
   }
   /* -- Get free memory on ATI cards --------------------------------------- */
-  void UpdateVRAMAvailableATI(void)
+  void UpdateVRAMAvailableATI()
   { // - OG macro name: TEXTURE_FREE_MEMORY_ATI
     // - https://www.khronos.org/registry/OpenGL/extensions/
     //     ATI/ATI_meminfo.txt
@@ -1025,14 +1025,14 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     if(qwFreeVRAM > qwTotalVRAM) qwTotalVRAM = qwFreeVRAM;
   }
   /* -- Get free memory on shared system memory renderer ------------------- */
-  void UpdateVRAMAvailableShared(void)
+  void UpdateVRAMAvailableShared()
   { // Update system memory usage data
     cSystem->UpdateMemoryUsageData();
     // Get system values
     qwFreeVRAM = cSystem->RAMFree();
   }
   /* -- Get memory information --------------------------------------------- */
-  void UpdateVRAMAvailable(void)
+  void UpdateVRAMAvailable()
   { // Have NVIDIA free memory?
     if(FlagIsSet(GFL_HAVENVMEM)) UpdateVRAMAvailableNV();
     // Have ATI free memory
@@ -1041,7 +1041,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     else if(FlagIsSet(GFL_SHARERAM)) UpdateVRAMAvailableShared();
   }
   /* -- Verify RAM constraints --------------------------------------------- */
-  void VerifyVRAMConstraints(void)
+  void VerifyVRAMConstraints()
   { // Have nVIDIA memory info?
     if(FlagIsSet(GFL_HAVENVMEM))
     { // Get total video memory
@@ -1093,9 +1093,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     const string_view &GetGLErr(const IntType itCode) const
       { return idOGLCodes.Get(static_cast<GLenum>(itCode)); }
   /* -- Return limit ------------------------------------------------------- */
-  double GetLimit(void) const { return ClockDurationToDouble(cdLimit); }
+  double GetLimit() const { return ClockDurationToDouble(cdLimit); }
   /* -- Update window size limits ------------------------------------------ */
-  void UpdateWindowSizeLimits(void)
+  void UpdateWindowSizeLimits()
   { // Get app specified minimums and maximums
     const unsigned int
       uiWMin = cCVars->GetInternal<unsigned int>(WIN_WIDTHMIN),
@@ -1231,7 +1231,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Ogl, DeInit(true))
   /* -- Constructor -------------------------------------------------------- */
-  Ogl(void) :
+  Ogl() :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Send name to InitHelper
     OglFlags{ GFL_NONE },              // Set no flags

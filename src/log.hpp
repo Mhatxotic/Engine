@@ -65,7 +65,7 @@ class Log :                            // The actual class body
     erase(begin(), next(begin(), static_cast<ssize_t>(stTotal - stMaximum)));
   }
   /* ----------------------------------------------------------------------- */
-  void FlushLog(void)
+  void FlushLog()
   { // Ignore if file not opened or there is nothing to write
     if(empty() || FStreamClosed()) return;
     // Get start of log
@@ -118,7 +118,7 @@ class Log :                            // The actual class body
   /* ----------------------------------------------------------------------- */
   void WriteString(const string &strL) { WriteString(LH_CRITICAL, strL); }
   /* ----------------------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Bail if initialised
     if(FStreamClosed()) return;
     // Log file closure
@@ -148,7 +148,7 @@ class Log :                            // The actual class body
     return ACCEPT;
   }
   /* ----------------------------------------------------------------------- */
-  size_t Clear(void)
+  size_t Clear()
   { // Get num log lines for returning
     const size_t stSize = size();
     // Clear the log
@@ -161,20 +161,20 @@ class Log :                            // The actual class body
   /* ----------------------------------------------------------------------- */
   bool NotHasLevel(const LHLevel lhReq) const { return !HasLevel(lhReq); }
   /* ----------------------------------------------------------------------- */
-  LHLevel GetLevel(void) const { return lhlLevel; }
+  LHLevel GetLevel() const { return lhlLevel; }
   /* ----------------------------------------------------------------------- */
-  mutex &GetMutex(void) { return *this; }
+  mutex &GetMutex() { return *this; }
   /* ----------------------------------------------------------------------- */
-  bool IsRedirectedToDevice(void)
+  bool IsRedirectedToDevice()
     { const LockGuard lgLogSync{ GetMutex() }; return FStreamIsHandleStd(); }
   /* ----------------------------------------------------------------------- */
-  bool OpenedSafe(void)
+  bool OpenedSafe()
     { const LockGuard lgLogSync{ GetMutex() }; return FStreamOpened(); }
   /* ----------------------------------------------------------------------- */
-  void DeInitSafe(void)
+  void DeInitSafe()
     { const LockGuard lgLogSync{ GetMutex() }; DeInit(); }
   /* ----------------------------------------------------------------------- */
-  const string GetNameSafe(void)
+  const string GetNameSafe()
     { const LockGuard lgLogSync{ GetMutex() }; return IdentGet(); }
   /* -- Unformatted logging without level check (specified level) ---------- */
   void LogNLCSafe(const LHLevel lhL, const string& strLine)
@@ -273,7 +273,7 @@ class Log :                            // The actual class body
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Log, DeInitSafe())
   /* -- Constructor -------------------------------------------------------- */
-  Log(void) :
+  Log() :
     /* -- Initialisers ----------------------------------------------------- */
     llLevels{{                         // Initialise log level strings
       "Critical",                      // Log line is critical

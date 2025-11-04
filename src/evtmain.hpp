@@ -160,7 +160,7 @@ class EvtMain :                        // Event list for render thread
     return true;
   }
   /* -- Unsuspend the thread after a EVT_SUSPEND event ------------- */ public:
-  void Unsuspend(void)
+  void Unsuspend()
   { // Lock the unlock variable
     UniqueLock ulWait{ *this, try_to_lock };
     // Return if already suspended
@@ -173,7 +173,7 @@ class EvtMain :                        // Event list for render thread
     cLog->LogDebugSafe("EvtMain signalling end of engine thread suspension.");
   }
   /* -- Get exit reason code ----------------------------------------------- */
-  EvtMainCmd GetExitReason(void) const { return emcExit; }
+  EvtMainCmd GetExitReason() const { return emcExit; }
   /* -- Set exit reason code ----------------------------------------------- */
   void SetExitReason(const EvtMainCmd emcReason)
   { // Ignore if this is already the code
@@ -189,9 +189,9 @@ class EvtMain :                        // Event list for render thread
   bool IsNotExitReason(const EvtMainCmd emcReason) const
     { return !IsExitReason(emcReason); }
   /* -- Incase of error we need to update the exit code -------------------- */
-  bool ExitRequested(void) const { return !!uiConfirm; }
+  bool ExitRequested() const { return !!uiConfirm; }
   /* -- Incase of error we need to update the exit code -------------------- */
-  void UpdateConfirmExit(void)
+  void UpdateConfirmExit()
   { // Ignore if not in a confirmation request
     if(!uiConfirm) return;
     // Reset confirmation
@@ -216,7 +216,7 @@ class EvtMain :                        // Event list for render thread
     emcPending = emcWhat;
   }
   /* -- Handle events from parallel loop ----------------------------------- */
-  bool HandleSafe(void)
+  bool HandleSafe()
   { // Main thread requested break? Why bother managing events?
     if(ThreadShouldExit()) return false;
     // Handle event and return true if nothing special happened
@@ -227,7 +227,7 @@ class EvtMain :                        // Event list for render thread
     return false;
   }
   /* -- Handle events from serialised loop --------------------------------- */
-  bool HandleUnsafe(void)
+  bool HandleUnsafe()
   { // Main thread requested break? Why bother managing events?
     if(ThreadShouldExit()) return false;
     // Handle event and return true if nothing special happened
@@ -238,19 +238,19 @@ class EvtMain :                        // Event list for render thread
     return false;
   }
   /* -- Confirm to the engine that Lua is aborting execution --------------- */
-  void ConfirmExit(void) { Add(EMC_LUA_CONFIRM_EXIT); }
+  void ConfirmExit() { Add(EMC_LUA_CONFIRM_EXIT); }
   /* -- Add event to quit the engine --------------------------------------- */
-  void RequestQuit(void) { Add(EMC_QUIT); }
+  void RequestQuit() { Add(EMC_QUIT); }
   /* -- Add event to quit thread and restart window manager ---------------- */
-  void RequestQuitThread(void) { Add(EMC_QUIT_THREAD); }
+  void RequestQuitThread() { Add(EMC_QUIT_THREAD); }
   /* -- Add event to quit thread and wait for it to complete --------------- */
-  void RequestQuitThreadWait(void) { Add(EMC_QUIT_THREAD); }
+  void RequestQuitThreadWait() { Add(EMC_QUIT_THREAD); }
   /* -- Add event to quit thread and restart opengl ------------------------ */
-  void RequestGLReInit(void) { Add(EMC_QUIT_VREINIT); }
+  void RequestGLReInit() { Add(EMC_QUIT_VREINIT); }
   /* -- Add event to quit thread and restart opengl and wait --------------- */
-  void RequestGLReInitWait(void) { RequestGLReInit(); ThreadJoin(); }
+  void RequestGLReInitWait() { RequestGLReInit(); ThreadJoin(); }
   /* -- Constructor --------------------------------------------- */ protected:
-  EvtMain(void) :
+  EvtMain() :
     /* -- Initialisers ----------------------------------------------------- */
     IdList{{                           // Build event list
 #define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings

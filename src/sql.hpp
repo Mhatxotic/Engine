@@ -54,13 +54,13 @@ struct SqlData :                        // Query response data item class
     Memory{ StdMove(mRef) },           // Move other memory block other
     iType(iNType)                      // Copy other type over
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Move constructor --------------------------------------------------- */
   SqlData(SqlData &&sdOther) :
     /* -- Initialisers ----------------------------------------------------- */
     SqlData{ StdMove(sdOther), sdOther.iType }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(SqlRecords, const string, SqlData);
 typedef list<SqlRecordsMap> SqlResult; // vector of key/raw data blocks
@@ -139,7 +139,7 @@ struct Sql :                           // Members initially public
   const string_view &ADResultToString(const ADResult adrResult) const
     { return adrlStrings.Get(adrResult); }
   /* -- Close the database ------------------------------------------------- */
-  void DoClose(void)
+  void DoClose()
   { // Number of retries needed to close the database
     unsigned int uiRetries;
     // Wait until the database can be closed
@@ -247,7 +247,7 @@ struct Sql :                           // Members initially public
     SetError(SQLITE_OK);
   }
   /* -- Can database be deleted, no point keeping if it's empty! ----------- */
-  ADResult CanDatabaseBeDeleted(void)
+  ADResult CanDatabaseBeDeleted()
   { // No if this is a temporary database as theres nothing to delete.
     if(FlagIsSet(SF_ISTEMPDB)) return ADR_ERR_TEMP_DB;
     // No if we are not allowed to delete the database
@@ -544,9 +544,9 @@ struct Sql :                           // Members initially public
       strvVar, strvVal);
   }
   /* -- Is sqlite database opened? --------------------------------- */ public:
-  bool IsOpened(void) { return !!sqlDB; }
+  bool IsOpened() { return !!sqlDB; }
   /* -- Heap used ---------------------------------------------------------- */
-  size_t HeapUsed(void) const
+  size_t HeapUsed() const
     { return static_cast<size_t>(sqlite3_memory_used()); }
   /* -- Execute a command from Lua ----------------------------------------- */
   int ExecuteFromLua(lua_State*const lS, const string &strQuery)
@@ -716,7 +716,7 @@ struct Sql :                           // Members initially public
     }
   }
   /* -- Reset last sql result ---------------------------------------------- */
-  void Reset(void)
+  void Reset()
   { // Clear error
     SetError(SQLITE_OK);
     // Clear last result data
@@ -745,7 +745,7 @@ struct Sql :                           // Members initially public
     bool ExecuteAndSuccess(const string &strQuery, const VarArgs &...vaArgs)
       { return Execute(strQuery, vaArgs...) == SQLITE_OK; }
   /* -- Check integrity ---------------------------------------------------- */
-  bool CheckIntegrity(void)
+  bool CheckIntegrity()
   { // Do check (We need a result so dont use Pragma())
     if(Execute("PRAGMA integrity_check(1)"))
     { // Log and return failure
@@ -776,7 +776,7 @@ struct Sql :                           // Members initially public
     return true;
   }
   /* -- Get size of database ----------------------------------------------- */
-  uint64_t Size(void)
+  uint64_t Size()
   { // Get the database page size
     if(Execute("pragma page_size") || srKeys.empty()) return StdMaxUInt64;
     // Get reference to keys list
@@ -801,42 +801,38 @@ struct Sql :                           // Members initially public
     return uqPageSize * uqPageCount;
   }
   /* -- Return error string ------------------------------------------------ */
-  const char *GetErrorStr(void) const { return sqlite3_errmsg(sqlDB); }
+  const char *GetErrorStr() const { return sqlite3_errmsg(sqlDB); }
   /* -- Return error code -------------------------------------------------- */
-  int GetError(void) const { return iError; }
+  int GetError() const { return iError; }
   bool IsErrorEqual(const int iWhat) const { return GetError() == iWhat; }
   bool IsErrorNotEqual(const int iWhat) const { return !IsErrorEqual(iWhat); }
-  bool IsError(void) const { return IsErrorNotEqual(SQLITE_OK); }
-  bool IsNoError(void) const { return !IsError(); }
-  bool IsBusyError(void) const { return IsErrorEqual(SQLITE_BUSY); }
-  bool IsReadOnlyError(void) const { return IsErrorEqual(SQLITE_READONLY); }
-  bool IsBusyOrReadOnlyError(void) const
+  bool IsError() const { return IsErrorNotEqual(SQLITE_OK); }
+  bool IsNoError() const { return !IsError(); }
+  bool IsBusyError() const { return IsErrorEqual(SQLITE_BUSY); }
+  bool IsReadOnlyError() const { return IsErrorEqual(SQLITE_READONLY); }
+  bool IsBusyOrReadOnlyError() const
     { return IsReadOnlyError() || IsBusyError(); }
-  bool IsNotBusyOrReadOnlyError(void) const
+  bool IsNotBusyOrReadOnlyError() const
     { return !IsBusyOrReadOnlyError(); }
-  const string_view &GetErrorAsIdString(void) const
+  const string_view &GetErrorAsIdString() const
     { return ResultToString(iError); }
   /* -- Return duration of last query -------------------------------------- */
-  double Time(void) const { return ClockDurationToDouble(cdQuery); }
+  double Time() const { return ClockDurationToDouble(cdQuery); }
   /* -- Return formatted query time ---------------------------------------- */
-  const string TimeStr(void) const { return StrShortFromDuration(Time()); }
+  const string TimeStr() const { return StrShortFromDuration(Time()); }
   /* -- Returns if sql is in a transaction --------------------------------- */
-  bool Active(void) const { return !sqlite3_get_autocommit(sqlDB); }
+  bool Active() const { return !sqlite3_get_autocommit(sqlDB); }
   /* -- Return string map of records --------------------------------------- */
-  SqlResult &GetRecords(void) { return srKeys; }
+  SqlResult &GetRecords() { return srKeys; }
   /* -- Useful aliases ----------------------------------------------------- */
-  int Begin(void)
-    { return Execute("BEGIN TRANSACTION"); }
-  int End(void)
-    { return Execute("END TRANSACTION"); }
+  int Begin() { return Execute("BEGIN TRANSACTION"); }
+  int End() { return Execute("END TRANSACTION"); }
   int DropTable(const string_view &strvTable)
     { return Execute(StrFormat("DROP table `$`", strvTable)); }
   int FlushTable(const string_view &strvTable)
     { return Execute(StrFormat("DELETE from `$`", strvTable)); }
-  int Optimise(void)
-    { return Execute("VACUUM"); }
-  int Affected(void)
-    { return sqlite3_changes(sqlDB); }
+  int Optimise() { return Execute("VACUUM"); }
+  int Affected() { return sqlite3_changes(sqlDB); }
   /* -- Process a count(*) requested --------------------------------------- */
   size_t GetRecordCount(const string_view &strvTable,
     const string_view &strvCondition=cCommon->CommonCBlank())
@@ -866,7 +862,7 @@ struct Sql :                           // Members initially public
         "SELECT `name` FROM `sqlite_master` WHERE `type`='table' AND `name`=?",
         strvTable) && !GetRecords().empty(); }
   /* -- Flush all orphan statements ---------------------------------------- */
-  size_t Finalise(void) const
+  size_t Finalise() const
   { // Number of orphan transactions
     size_t stOrphan = 0;
     // Finalise all remaining statements until there are no more left
@@ -876,7 +872,7 @@ struct Sql :                           // Members initially public
     return stOrphan;
   }
   /* ----------------------------------------------------------------------- */
-  bool CVarReadKeys(void)
+  bool CVarReadKeys()
   { // Read all variable names and if failed?
     if(Execute(StrFormat("SELECT `$` from `$`", strCVKeyColumn, strvCVTable)))
     { // Put in log and return nothing loaded
@@ -890,7 +886,7 @@ struct Sql :                           // Members initially public
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  bool CVarReadAll(void)
+  bool CVarReadAll()
   { // Read all variables and if failed?
     if(Execute(StrFormat("SELECT `$`,`$`,`$` from `$`",
       strCVKeyColumn, strCVFlagsColumn, strCVValueColumn, strvCVTable)))
@@ -904,7 +900,7 @@ struct Sql :                           // Members initially public
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult CVarDropTable(void)
+  CreateTableResult CVarDropTable()
   { // If table exists return that it already exists
     if(IsTableExist(strvCVTable)) return CTR_OK_ALREADY;
     // Drop the SQL table and if failed?
@@ -919,7 +915,7 @@ struct Sql :                           // Members initially public
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult CVarCreateTable(void)
+  CreateTableResult CVarCreateTable()
   { // If table already exists then return success already
     if(IsTableExist(strvCVTable)) return CTR_OK_ALREADY;
     // Create the SQL table for our settings if it does not exist
@@ -937,7 +933,7 @@ struct Sql :                           // Members initially public
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult LuaCacheDropTable(void)
+  CreateTableResult LuaCacheDropTable()
   { // If table exists return that it already exists
     if(GetRecordCount(strvLCTable) == StdMaxSizeT) return CTR_OK_ALREADY;
     // Drop the SQL table and if failed?
@@ -952,7 +948,7 @@ struct Sql :                           // Members initially public
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult LuaCacheCreateTable(void)
+  CreateTableResult LuaCacheCreateTable()
   { // If table already exists then return success already
     if(IsTableExist(strvLCTable)) return CTR_OK_ALREADY;
     // Create the SQL table for our settings if it does not exist
@@ -973,7 +969,7 @@ struct Sql :                           // Members initially public
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CreateTableResult LuaCacheRebuildTable(void)
+  CreateTableResult LuaCacheRebuildTable()
     { LuaCacheDropTable(); return LuaCacheCreateTable(); }
   /* ----------------------------------------------------------------------- */
   bool CVarCommitData(const string &strVar,
@@ -1022,7 +1018,7 @@ struct Sql :                           // Members initially public
   PurgeResult CVarPurge(const string &strVar)
     { return CVarPurgeData(strVar.c_str(), strVar.length()); }
   /* -- DeInit ------------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Ignore if no handle to deinit
     if(!sqlDB) return;
     // Log deinitialisation
@@ -1071,7 +1067,7 @@ struct Sql :                           // Members initially public
     cCrypt->SetDefaultPrivateKey();
   }
   /* -- Load schema version ------------------------------------------------ */
-  void LoadSchemaVersion(void)
+  void LoadSchemaVersion()
   { // If table exists create a new table
     if(!IsTableExist(strvSKeyTable)) goto NewKeyNoDrop;
     // Check record count
@@ -1162,7 +1158,7 @@ struct Sql :                           // Members initially public
     else cLog->LogInfoExSafe("Sql schema version updated to $.", qVersion);
   }
   /* -- Create new private key --------------------------------------------- */
-  bool CreatePrivateKeyNoDrop(void)
+  bool CreatePrivateKeyNoDrop()
   { // Try to create the table that holds the private key and if failed?
     if(Execute(StrFormat("CREATE table `$`(`$` INTEGER NOT NULL,"
                                           "`$` INTEGER NOT NULL)",
@@ -1194,7 +1190,7 @@ struct Sql :                           // Members initially public
     return true;
   }
   /* -- Create new private key (drop first) -------------------------------- */
-  bool CreatePrivateKey(void)
+  bool CreatePrivateKey()
   { // Generate a new private key
     cCrypt->ResetPrivateKey();
     // Try to drop the original private key table
@@ -1205,7 +1201,7 @@ struct Sql :                           // Members initially public
     return CreatePrivateKeyNoDrop();
   }
   /* -- Load private key --------------------------------------------------- */
-  void LoadPrivateKey(void)
+  void LoadPrivateKey()
   { // If table exists create a new table
     if(!IsTableExist(strvPKeyTable)) CreatePrivateKeyNoDrop();
     // Check record count
@@ -1310,7 +1306,7 @@ struct Sql :                           // Members initially public
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Sql, DeInit(); sqlite3_shutdown())
   /* -- Constructor -------------------------------------------------------- */
-  Sql(void) :                          // No parameters
+  Sql() :
     /* -- Initialisers ----------------------------------------------------- */
     SqlFlags(SF_NONE),                 // No sql flags (loaded externally)
     elStrings{{                        // Init sqlite error strings list

@@ -36,9 +36,9 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
   /* -- Private variables -------------------------------------------------- */
   LuaCmdMapIt      lcmiIt;             // Iterator to command Console gives us
   /* -- Returns the lua command list --------------------------------------- */
-  LuaCmdMap &GetLuaCmdsList(void) { return cParent->lcmMap; }
+  LuaCmdMap &GetLuaCmdsList() { return cParent->lcmMap; }
   /* -- Returns the end of the lua command list ---------------------------- */
-  LuaCmdMapIt GetLuaCmdsListEnd(void) { return GetLuaCmdsList().end(); }
+  LuaCmdMapIt GetLuaCmdsListEnd() { return GetLuaCmdsList().end(); }
   /* -- Push and get error callback function id ---------------------------- */
   static void LuaCallbackStatic(const Args &aArgs)
   { // Find command in console command list and log if not found (impossible)
@@ -66,7 +66,7 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     return true;
   }
   /* -- Unregister the console command from lua -------------------- */ public:
-  const string &Name(void) const { return lcmiIt->first; }
+  const string &Name() const { return lcmiIt->first; }
   /* -- Register user console command from lua ----------------------------- */
   void Init(lua_State*const lS, const string &strName,
     const unsigned int uiMinimum, const unsigned int uiMaximum)
@@ -96,7 +96,7 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
           uiMinimum, uiMaximum, LuaCallbackStatic)) });
   }
   /* -- Destructor that unregisters the cvar ------------------------------- */
-  ~Command(void)
+  ~Command()
   { // Return if iterator is not registered
     if(lcmiIt == GetLuaCmdsListEnd()) return;
     // Unregister the command if set
@@ -106,14 +106,14 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     GetLuaCmdsList().erase(lcmiIt);
   }
   /* -- Basic constructor with no init ----------------------------- */ public:
-  Command(void) :
+  Command() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperCommand{                   // Initialise and register the object
       cCommands, this },
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     lcmiIt{ GetLuaCmdsListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Commands, Command, COMMAND) // Finish global Files collector
 /* -- Build a command list (for conlib) ------------------------------------ */

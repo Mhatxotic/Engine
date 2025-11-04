@@ -31,7 +31,7 @@ struct DimCoords :                     // Members initially public
     CClass{ ciOther },                 // Initialise co-ordinates
     DClass{ diOther }                  // Initialise dimensions
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor to fill all parameters --------------------------------- */
   DimCoords(const CInt ciX,            // Specified X co-ordinate
             const CInt ciY,            // Specified Y co-ordinate
@@ -41,9 +41,9 @@ struct DimCoords :                     // Members initially public
     CClass{ ciX, ciY },                // Initialise co-ordinates
     DClass{ diW, diH }                 // Initialise dimensions
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Default constructor that zero initialises everything --------------- */
-  DimCoords(void) = default;
+  DimCoords() = default;
 };/* ----------------------------------------------------------------------- */
 typedef DimCoords<int> DimCoInt;       // Dimension Cordinates typedef
 /* ------------------------------------------------------------------------- */

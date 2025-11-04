@@ -122,7 +122,7 @@ template<typename IntType>void CryptAddEntropyInt(const IntType itValue)
 template<typename StrType>void CryptAddEntropyStr(const StrType &strValue)
   { CryptAddEntropyPtr(strValue.data(), strValue.capacity()); }
 /* ------------------------------------------------------------------------- */
-static void CryptAddEntropy(void)
+static void CryptAddEntropy()
 { // Grab some data from the system
   CryptAddEntropyInt(cmSys.GetTimeUS());
   CryptAddEntropyInt(cmHiRes.GetTimeUS());
@@ -143,7 +143,7 @@ static void CryptRandomPtr(void*const vpDst, const size_t stSize)
              static_cast<int>(stSize));
 }
 /* ------------------------------------------------------------------------- */
-template<typename AnyType>static const AnyType CryptRandom(void)
+template<typename AnyType>static const AnyType CryptRandom()
 { // Do the randomisation into the requested type and return it
   AnyType atData;
   CryptRandomPtr(&atData, sizeof(atData));
@@ -257,7 +257,7 @@ static int CryptGetError(string &strError)
   return iError;
 }
 /* -- Get error reason without code ---------------------------------------- */
-static string CryptGetError(void)
+static string CryptGetError()
   { string strOut; CryptGetError(strOut); return strOut; }
 /* -- Replacement for BIO_flush which causes warnings ---------------------- */
 static int CryptBIOFlush(BIO*const bBio)
@@ -285,7 +285,7 @@ static int CryptSSLCtxSetTlsExtStatusCb(SSL_CTX*const sslCtx,
   int(*fCB)(SSL*,void*))
 { return static_cast<int>(SSL_CTX_callback_ctrl(sslCtx,
     SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB,
-      reinterpret_cast<void(*)(void)>(fCB))); }
+      reinterpret_cast<void(*)()>(fCB))); }
 /* -- Replacement for SSL_set_tlsext_host_name which causes warnings ------- */
 static int CryptSSLSetTlsExtHostName(SSL*const sSSL, const char*const cpName)
   { return static_cast<int>(SSL_ctrl(sSSL, SSL_CTRL_SET_TLSEXT_HOSTNAME,
@@ -633,7 +633,7 @@ class Crypt :                          // Actual class body
 { /* ----------------------------------------------------------------------- */
   const StrVStrVMap svsvmEnt;          // Html entity decoding lookup table
   /* -- De-Initialise cryptographic systems -------------------------------- */
-  void CryptDeInit(void)
+  void CryptDeInit()
   { // Ignore if not initialised
     if(IHNotDeInitialise()) return;
     // De-initialise openssl
@@ -642,7 +642,7 @@ class Crypt :                          // Actual class body
     SetDefaultPrivateKey();
   }
   /* -- Initialise cryptographic systems ----------------------------------- */
-  void CryptInit(void)
+  void CryptInit()
   { // Set address of global class
     cCrypt = this;
     // Use sql to allocate memory?
@@ -698,13 +698,13 @@ class Crypt :                          // Actual class body
     // --------------------------------------------------------------------- */
   } pkDKey, pkKey;                     // Default and loaded private key data
   /* -- Set a new private key ---------------------------------------------- */
-  void ResetPrivateKey(void)
+  void ResetPrivateKey()
     { CryptRandomPtr(&pkKey.qKeys, sizeof(pkKey.qKeys)); }
   /* -- Update private key mainly for use with protected cvars ------------- */
   void WritePrivateKey(const size_t stId, const uint64_t qVal)
     { pkKey.qKeys[stId] = qVal; }
   /* -- Set default private key -------------------------------------------- */
-  void SetDefaultPrivateKey(void) { pkKey = pkDKey; }
+  void SetDefaultPrivateKey() { pkKey = pkDKey; }
   /* -- Read part of the private key --------------------------------------- */
   uint64_t ReadPrivateKey(const size_t stId) { return pkKey.qKeys[stId]; }
   /* -- Iterator is the last entitiy? -------------------------------------- */
@@ -764,7 +764,7 @@ class Crypt :                          // Actual class body
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Crypt, CryptDeInit())
   /* -- Default constructor ------------------------------------------------ */
-  Crypt(void) :                        // No arguments
+  Crypt() :                            // No arguments
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Initialise init helper
     svsvmEnt{                          // Define HTML entities

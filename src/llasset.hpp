@@ -68,8 +68,8 @@ struct AgAssetFlags : public AgFlags<AssetFlagsConst> {
     AgFlags{lS, iArg, CD_MASK}{} };
 /* -- Get Valid directory allowing the dot --------------------------------- */
 struct AgDirectory { const string strFilename;
-  const string &operator()(void) const { return strFilename; }
-  operator const string&(void) const { return operator()(); }
+  const string &operator()() const { return strFilename; }
+  operator const string&() const { return operator()(); }
   explicit AgDirectory(lua_State*const lS, const int iArg) :
     strFilename{LuaUtilGetCppDir(lS, iArg)}{} };
 /* ========================================================================= **

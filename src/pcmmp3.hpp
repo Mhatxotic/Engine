@@ -62,7 +62,7 @@ class CodecMP3 :                       // MP3 codec object
     return true;
   }
   /* -- Constructor --------------------------------------------- */ protected:
-  CodecMP3(void) :
+  CodecMP3() :
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_MP3, "MPEG Layer 1-3 Audio", "MP3",
       bind(&CodecMP3::Decode, this, _1, _2) },

@@ -138,14 +138,14 @@ class LuaStackSaver                    // Lua stack saver class
   const int        iTop;               // Current stack position
   lua_State*const  lState;             // State to use
   /* -- Return stack position -------------------------------------- */ public:
-  int Value(void) const { return iTop; }
+  int Value() const { return iTop; }
   /* -- Restore stack position --------------------------------------------- */
-  void Restore(void) const { LuaUtilPruneStack(lState, Value()); }
+  void Restore() const { LuaUtilPruneStack(lState, Value()); }
   /* -- Constructor -------------------------------------------------------- */
   explicit LuaStackSaver(lua_State*const lS) :
-    iTop(LuaUtilStackSize(lS)), lState(lS) { }
+    iTop(LuaUtilStackSize(lS)), lState(lS) {}
   /* -- Destructor --------------------------------------------------------- */
-  ~LuaStackSaver(void) { Restore(); }
+  ~LuaStackSaver() { Restore(); }
 };/* ----------------------------------------------------------------------- */
 /* -- Remove item from stack ----------------------------------------------- */
 static void LuaUtilRmStack(lua_State*const lS, const int iParam=-1)
@@ -295,7 +295,7 @@ static void LuaUtilPushStrView(lua_State*const lS, const string_view &strvStr)
 static void LuaUtilPushPtr(lua_State*const lS, void*const vpPtr)
   { lua_pushlightuserdata(lS, vpPtr); }
 /* -- Push multiple values of different types (use in ll*.hpp sources) ----- */
-static void LuaUtilPushVar(lua_State*const) { }
+static void LuaUtilPushVar(lua_State*const) {}
 template<typename ...VarArgs, typename AnyType>
   static void LuaUtilPushVar(lua_State*const lS, const AnyType &atVal,
     const VarArgs &...vaVars)
@@ -694,7 +694,7 @@ static void LuaUtilCheckParams(lua_State*const lS, const int iCount)
     "Supplied", iTop, "Required", iCount);
 }
 /* -- Check multiple functions are valid ----------------------------------- */
-static void LuaUtilCheckFunc(lua_State*const) { }
+static void LuaUtilCheckFunc(lua_State*const) {}
 template<typename ...VarArgs>
   static void LuaUtilCheckFunc(lua_State*const lS, const int iIndex,
     const VarArgs &...vaVars)

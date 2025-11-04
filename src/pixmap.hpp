@@ -17,7 +17,7 @@ class SysMap :
   StdFStatStruct   sData;              // File data
   char            *cpMem;              // Handle to memory
   /* -- De-init the file map ----------------------------------------------- */
-  void SysMapDeInitInternal(void)
+  void SysMapDeInitInternal()
   { // Unmap the memory if it was mapped
     if(SysMapIsAvailable() && SysMapIsNotEmpty() && munmap(SysMapGetMemory(),
       static_cast<size_t>(SysMapGetSize())))
@@ -32,14 +32,14 @@ class SysMap :
     XCS("Open file for file mapping failed!", "File", strF);
   }
   /* -- Setup file information --------------------------------------------- */
-  StdFStatStruct SMSetupInfo(void)
+  StdFStatStruct SMSetupInfo()
   { // Get informationa about file and return it else show error
     StdFStatStruct sNewData;
     if(FStreamStat(sNewData)) return sNewData;
     XCS("Failed to read file information!", "File", IdentGet());
   }
   /* -- Setup memory pointer ----------------------------------------------- */
-  char *SMSetupMemory(void)
+  char *SMSetupMemory()
   { // Memory to return
     char *cpNewMem;
     // Size cannot be bigger than 4GB on 32-bit system
@@ -67,18 +67,18 @@ class SysMap :
     return cpNewMem;
   }
   /* -- Clear variables ---------------------------------------------------- */
-  void SysMapClearVarsInternal(void) { cpMem = nullptr; sData = {}; }
+  void SysMapClearVarsInternal() { cpMem = nullptr; sData = {}; }
   /* -- Get members ------------------------------------------------ */ public:
-  template<typename RT=char>RT *SysMapGetMemory(void) const
+  template<typename RT=char>RT *SysMapGetMemory() const
     { return reinterpret_cast<RT*>(cpMem); }
-  bool SysMapIsEmpty(void) const { return cpMem == cCommon->CommonCBlank(); }
-  bool SysMapIsNotEmpty(void) const { return !SysMapIsEmpty(); }
-  bool SysMapIsAvailable(void) const { return !!SysMapGetMemory(); }
-  bool SysMapIsNotAvailable(void) const { return !SysMapIsAvailable(); }
-  uint64_t SysMapGetSize(void) const
+  bool SysMapIsEmpty() const { return cpMem == cCommon->CommonCBlank(); }
+  bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
+  bool SysMapIsAvailable() const { return !!SysMapGetMemory(); }
+  bool SysMapIsNotAvailable() const { return !SysMapIsAvailable(); }
+  uint64_t SysMapGetSize() const
     { return static_cast<uint64_t>(sData.st_size); }
-  StdTimeT SysMapGetCreation(void) const { return sData.st_ctime; }
-  StdTimeT SysMapGetModified(void) const { return sData.st_mtime; }
+  StdTimeT SysMapGetCreation() const { return sData.st_ctime; }
+  StdTimeT SysMapGetModified() const { return sData.st_mtime; }
   /* -- Init object from class --------------------------------------------- */
   void SysMapSwap(SysMap &smOther)
   { // Swap members
@@ -87,7 +87,7 @@ class SysMap :
     swap(sData, smOther.sData);
   }
   /* -- Assign constructor ------------------------------------------------- */
-  void SysMapDeInit(void)
+  void SysMapDeInit()
   { // De-init the map
     SysMapDeInitInternal();
     // Close the file
@@ -133,7 +133,7 @@ class SysMap :
 #endif                                 // End of Linux check
     cpMem(nullptr)                     // No handle initialised yet
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* ----------------------------------------------------------------------- */
   SysMap(SysMap &&smOther) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -148,16 +148,16 @@ class SysMap :
     FStreamBase{ SysMapSetupFile(strF) }, // Iniitalise file handle
     sData{ SMSetupInfo() },            // Initialise file data
     cpMem(SMSetupMemory())             // Initialise file pointer
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor -------------------------------------------------------- */
-  SysMap(void) :
+  SysMap() :
     /* -- Initialisers ----------------------------------------------------- */
     sData{},                           // No file data
     cpMem(nullptr)                     // No memory pointer
-    /* --------------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~SysMap(void) { SysMapDeInitInternal(); }
+  ~SysMap() { SysMapDeInitInternal(); }
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

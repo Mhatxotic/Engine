@@ -58,9 +58,9 @@ class TextureBase :                    // All members initially private
           fLeft,  fBottom,             // [1][2-3] T2 @ XY2     |/   /...|
           fRight, fTop } } }           // [1][4-5] T2 @ XY3    XY3 XY2-XY1
       /* -- No code -------------------------------------------------------- */
-      { }                              // Note that our shader handles Z co-ord
+      {}                               // Note that our shader handles Z co-ord
     /* -- Default constructor ---------------------------------------------- */
-    CoordData(void) :                  // No parameters
+    CoordData() :
       /* -- Initialisers --------------------------------------------------- */
       QuadCoordData{ {                 // Default init two GL tri tex coords
         { 0.0f, 0.0f, 0.0f,            // [0][0-2] Tri1\X1, Tri1\Y1, Tri1\X2
@@ -68,7 +68,7 @@ class TextureBase :                    // All members initially private
         { 0.0f, 0.0f, 0.0f,            // [1][0-2] Tri2\X1, Tri2\Y1, Tri2\X2
           0.0f, 0.0f, 0.0f } } }       // [1][3-5] Tri2\Y2, Tri2\X3, Tri2\Y3
       /* -- No code -------------------------------------------------------- */
-      { }                              // Note that our shader handles Z co-ord
+      {}                               // Note that our shader handles Z co-ord
   };/* --------------------------------------------------------------------- */
   typedef vector<CoordData>   CoordList;   // Tile coordinates data list
   typedef CoordList::iterator CoordListIt; // Iterator to a CoordList
@@ -90,8 +90,8 @@ class TextureBase :                    // All members initially private
     iMipmaps(0),                       // No mipmaps yet
     ofeTexFilter(OF_N_N),              // No texture filter index set yet
     shProgram(nullptr)                 // No shader programme yet
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // No code
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   /* -- Base classes ------------------------------------------------------- */
@@ -148,7 +148,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       "Identifier", IdentGet(), "Count", stCount);
   }
   /* -- Generate mipmaps if needed ----------------------------------------- */
-  void ReGenerateMipmaps(void)
+  void ReGenerateMipmaps()
   { // Only need to generate mipmaps if we're actually using mipmapping
     switch(iTexMinFilter)
     { // Any of the mipmapping settings? Generate mipmaps
@@ -344,7 +344,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       "MagFilter",  iTexMagFilter);
   }
   /* -- Load texture from image class -------------------------------------- */
-  void LoadFromImage(void)
+  void LoadFromImage()
   { // Get number of slots in this image and return if zero
     if(IsNoSlots()) XC("No data in image object!", "Identifier", IdentGet());
     // Get first slot
@@ -445,15 +445,15 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     UploadTexture<TexCompFtor::RAW>(stSlots, isSlot, ttICFormat, ttNXCFormat);
   }
   /* -- Return tile dimensions as float ------------------------- */ protected:
-  GLfloat GetTileWidthFloat(void) const { return dfTile.DimGetWidth(); }
-  GLfloat GetTileHeightFloat(void) const { return dfTile.DimGetHeight(); }
+  GLfloat GetTileWidthFloat() const { return dfTile.DimGetWidth(); }
+  GLfloat GetTileHeightFloat() const { return dfTile.DimGetHeight(); }
   /* -- Return padding dimensions ---------------------------------- */ public:
-  GLfloat GetPaddingWidth(void) const { return dfPad.DimGetWidth(); }
-  GLfloat GetPaddingHeight(void) const { return dfPad.DimGetHeight(); }
+  GLfloat GetPaddingWidth() const { return dfPad.DimGetWidth(); }
+  GLfloat GetPaddingHeight() const { return dfPad.DimGetHeight(); }
   /* -- Return tile dimensions --------------------------------------------- */
-  template<typename IntType=GLuint>IntType GetTileWidth(void) const
+  template<typename IntType=GLuint>IntType GetTileWidth() const
     { return duiTile.DimGetWidth<IntType>(); }
-  template<typename IntType=GLuint>IntType GetTileHeight(void) const
+  template<typename IntType=GLuint>IntType GetTileHeight() const
     { return duiTile.DimGetHeight<IntType>(); }
   /* -- Return number of tiles --------------------------------------------- */
   size_t GetTileCount(const size_t stSubTexId=0) const
@@ -462,17 +462,17 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   void SetTileCount(const size_t stCount, const size_t stSubTexId=0)
     { clTiles[stSubTexId].resize(stCount); }
   /* -- Return the number of mipmaps in the texture ------------------------ */
-  GLint GetMipmaps(void) const { return iMipmaps; }
+  GLint GetMipmaps() const { return iMipmaps; }
   /* -- Return the current texture filter index setting -------------------- */
-  OglFilterEnum GetTexFilter(void) const { return ofeTexFilter; }
+  OglFilterEnum GetTexFilter() const { return ofeTexFilter; }
   /* -- Return the OpenGL texture name for the specified sub-textures ------ */
   GLuint GetSubName(const size_t stSubTexId=0) const
     { return uivTexture[stSubTexId]; }
   /* -- Return number of sub-textures -------------------------------------- */
-  size_t GetSubCount(void) const { return uivTexture.size(); }
+  size_t GetSubCount() const { return uivTexture.size(); }
   /* -- Check if texture is initialised ------------------------------------ */
-  bool IsNotInitialised(void) const { return uivTexture.empty(); }
-  bool IsInitialised(void) const { return !IsNotInitialised(); }
+  bool IsNotInitialised() const { return uivTexture.empty(); }
+  bool IsInitialised() const { return !IsNotInitialised(); }
   /* -- Set a tile based on reversal --------------------------------------- */
   void SetTileDOR(const size_t stSubTexId, const size_t stTileId,
     const GLfloat fLeft, const GLfloat fTop, const GLfloat fRight,
@@ -666,7 +666,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   void Dump(const size_t stSubTexId, const string &strFile) const
     { Download(stSubTexId).SaveFile(strFile, stSubTexId, IFMT_PNG); }
   /* -- Reload texture array as normal texture ----------------------------- */
-  void ReloadTexture(void)
+  void ReloadTexture()
   { // If image was not loaded from disk? Just (re)load the image data
     // that already should be there and should NEVER be released.
     if(IsDynamic()) LoadFromImage();
@@ -904,7 +904,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       });
   }
   /* -- Deinitialise ------------------------------------------------------- */
-  void DeInit(void)
+  void DeInit()
   { // Texture not loaded? return
     if(IsNotInitialised() || FlagIsSet(TF_DELETE)) return;
     // Mark texture for deletion (explanation in fbos class)
@@ -916,25 +916,25 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       IdentGet(), GetSubCount());
   }
   /* -- Constructor (Initialisation then registration) --------------------- */
-  Texture(void) :                      // No parameters
+  Texture() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperTexture{ cTextures, this },// Automatic (de)registration
     TextureBase{ IP_TEXTURE }          // Purpose is to be a texture
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor (No registration, base class of Font class) ------------ */
   explicit Texture(const ImageFlagsConst ifcPurpose) :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperTexture{ cTextures },      // Initially unregistered
     TextureBase{ ifcPurpose }          // Purpose is specified by caller
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor (Unregistration then deinitialisation) ------------------ */
-  ~Texture(void) { DeInit(); }
+  ~Texture() { DeInit(); }
 };/* -- Finish the collector ----------------------------------------------- */
 CTOR_END_NOINITS(Textures, Texture, TEXTURE)
 /* -- DeInit Textures ------------------------------------------------------ */
-static void TextureDeInitTextures(void)
+static void TextureDeInitTextures()
 { // Ignore if no textures
   if(cTextures->empty()) return;
   // De-init all the textures and log the pre/post init of them
@@ -945,7 +945,7 @@ static void TextureDeInitTextures(void)
     cTextures->size());
 }
 /* -- Reload Textures ------------------------------------------------------ */
-static void TextureReInitTextures(void)
+static void TextureReInitTextures()
 { // Ignore if no textures
   if(cTextures->empty()) return;
   // Reload all the textures and log the pre/post init of them

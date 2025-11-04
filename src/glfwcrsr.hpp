@@ -35,22 +35,22 @@ class GlFWCursor
   const int            iCursorId;      // GLFW specific cursor id
   GLFWcursor          *gcContext;      // Pointer to cursor
   /* -- Destroy the cursor ------------------------------------------------- */
-  void CursorDoDeInit(void) { glfwDestroyCursor(gcContext); }
+  void CursorDoDeInit() { glfwDestroyCursor(gcContext); }
   /* -- Reinitialise the cursor ------------------------------------ */ public:
-  void CursorInit(void) { gcContext = glfwCreateStandardCursor(iCursorId); }
+  void CursorInit() { gcContext = glfwCreateStandardCursor(iCursorId); }
   /* -- De-initialise the cursor ------------------------------------------- */
-  void CursorDeInit(void) { CursorDoDeInit(); gcContext = nullptr; }
+  void CursorDeInit() { CursorDoDeInit(); gcContext = nullptr; }
   /* -- Return the context ------------------------------------------------- */
-  GLFWcursor *CursorGetContext(void) const { return gcContext; }
+  GLFWcursor *CursorGetContext() const { return gcContext; }
   /* -- Destruct that de-initialises the cursor ---------------------------- */
-  ~GlFWCursor(void) { if(CursorGetContext()) CursorDoDeInit(); }
+  ~GlFWCursor() { if(CursorGetContext()) CursorDoDeInit(); }
   /* -- Standby constructor ------------------------------------------------ */
   explicit GlFWCursor(const int iId) :
     /* -- Initialisers ----------------------------------------------------- */
     iCursorId(iId),                    // Assign cursor id for reinit
     gcContext(nullptr)                 // Create standard cursor...
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

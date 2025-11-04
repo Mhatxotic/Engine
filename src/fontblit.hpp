@@ -77,7 +77,7 @@ void PrintDraw(GLfloat &fX, const GLfloat fY, const size_t stPos)
   fX += (gData.GlyphGetAdvance() + fCharSpacing) * fScale;
 }
 /* -- Pop colour and reset glyphs ------------------------------------------ */
-void PopQuadColourAndGlyphs(void)
+void PopQuadColourAndGlyphs()
 { // Restore glyph colours and remove glyph texture
   tGlyphs->FboItemPopQuadColour();
   tGlyphs = nullptr;
@@ -465,11 +465,11 @@ void DoPrintM(GLfloat fX, GLfloat fY, const GLfloat fL, const GLfloat fR,
   }
 }
 /* -- Return text height plus line spacing --------------------------------- */
-void UpdateHeightPlusLineSpacing(void)
+void UpdateHeightPlusLineSpacing()
   { fLineSpacingHeight = fLineSpacing + dfScale.DimGetHeight(); }
-void UpdateCharSpacingTimesScale(void)
+void UpdateCharSpacingTimesScale()
   { fCharSpacingScale = fCharSpacing * fScale; }
-void UpdateGlyphPaddingTimesScale(void)
+void UpdateGlyphPaddingTimesScale()
   { fGPadScaled = fGPad * fScale; }
 /* -- Check to make sure texture was loaded as a font ---------------------- */
 bool PrintSanityCheck(const UtfDecoder &utfRef)

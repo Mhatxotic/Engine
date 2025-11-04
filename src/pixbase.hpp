@@ -56,9 +56,9 @@ class SysBase :                        // Safe exception handler namespace
       return TS_OK;
     }
     /* --------------------------------------------------------------------- */
-    void CloseRead(void) { if(iRead) close(iRead); }
+    void CloseRead() { if(iRead) close(iRead); }
     /* --------------------------------------------------------------------- */
-    void Reset(void)
+    void Reset()
     { // Close write pipe handle if opened
       if(iWrite != iInvalid) close(iWrite);
       // Thread is running?
@@ -75,7 +75,7 @@ class SysBase :                        // Safe exception handler namespace
       if(iSaved != iInvalid) dup2(iSaved, iRequested);
     }
     /* ------------------------------------------------------------- */ public:
-    void ResetSafe(void)
+    void ResetSafe()
     { // Do the reset
       Reset();
       // Reset the handles so shutdown doesn't trigger on destruction
@@ -110,7 +110,7 @@ class SysBase :                        // Safe exception handler namespace
         ThreadInit(bind(&Redirect::ThreadMain, this, _1), this);
     }
     /* --------------------------------------------------------------------- */
-    ~Redirect(void)
+    ~Redirect()
     { // Close the handles
       Reset();
       // Close the duplicated std handle in the constructor
@@ -471,13 +471,13 @@ class SysBase :                        // Safe exception handler namespace
               reinterpret_cast<void*>(&tWT), sizeof(tWT)) < 0 ? 2 : 0);
   }
   /* -- Check if process is in background ---------------------------------- */
-  static bool IsInBackground(void)
+  static bool IsInBackground()
   { // Get terminal foreground process and return if in backround
     const pid_t pTerminal = tcgetpgrp(STDOUT_FILENO), pParent = getpgrp();
     return pTerminal != pParent;
   }
   /* ------------------------------------------------------------ */ protected:
-  ~SysBase(void) noexcept(true)
+  ~SysBase() noexcept(true)
   { // Uninstall safe signals
     for(SignalPair &spPair : slSignals)
       if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)

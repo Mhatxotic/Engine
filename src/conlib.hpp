@@ -267,7 +267,8 @@ cConsole->AddLineA(sTable.Finish(), StrCPluraliseNum(stCount,
 /* ------------------------------------------------------------------------- */
 { "clh", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cConsole->ClearHistory();
+cConsole->AddLineA(StrCPluraliseNum(cConsole->ClearInputHistoryReturnSize(),
+  "input line cleared.",  "input lines cleared."));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'clh' function
 /* ========================================================================= */
@@ -417,7 +418,7 @@ cConsole->AddLineA(sTable.Finish(),
 { "cvars", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(VariablesMakeList(cCVars->GetVarList(),
-  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank()));
+  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlank()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvars' function
 /* ========================================================================= */
@@ -430,6 +431,15 @@ cConsole->AddLineA(StrCPluraliseNum(cCVars->Clean(),
   "cvar", "cvars"), " purged.");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvclr' function
+/* ========================================================================= */
+// ! cvi
+// ? Places the value of the specified cvar on the input line.
+/* ========================================================================= */
+{ "cvi", 2, 2, CFL_BASIC, [](const Args &aArgs){
+/* ------------------------------------------------------------------------- */
+cConsole->SetVarInput(aArgs[1]);
+/* ------------------------------------------------------------------------- */
+} },                                   // End of 'cvi' function
 /* ========================================================================= */
 // ! cvload
 // ? Replaces the current variable with values from the database.
@@ -468,7 +478,7 @@ else cConsole->AddLine("Failed to create new private key!");
 { "cvpend", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(VariablesMakeList(cCVars->GetInitialVarList(),
-  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank()));
+  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlank()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvpend' function
 /* ========================================================================= */
@@ -1307,10 +1317,10 @@ cConsole->AddLineA(sTable.Finish(),
 // ! lvars
 // ? Shows all created 'Variable' object classes created by LUA.
 /* ========================================================================= */
-{ "lvars", 1, 0, CFL_BASIC, [](const Args &aArgs){
+{ "lvars", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->AddLine(VariablesMakeList(cVariables->lcvmMap,
-  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank()));
+  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlank()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lvars' function
 /* ========================================================================= */

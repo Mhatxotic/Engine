@@ -41,31 +41,31 @@ class EvtArgVar                        // Multi-type helps access event data
     unsigned long long ull;            // Unsigned Long Long ........ (8 bytes)
     void              *vp;             // Pointer ................. (4-8 bytes)
   }; /* ------------------------------------------------------------ */ public:
-  EvtArgVarType Type(void) const { return t; }
+  EvtArgVarType Type() const { return t; }
   /* ----------------------------------------------------------------------- */
-  template<typename AnyCast=void>AnyCast *Ptr(void) const
+  template<typename AnyCast=void>AnyCast *Ptr() const
     { return reinterpret_cast<AnyCast*>(vp); }
-  template<typename AnyCast>AnyCast &Ref(void) const
+  template<typename AnyCast>AnyCast &Ref() const
     { return *Ptr<AnyCast>(vp); }
   /* ----------------------------------------------------------------------- */
-  char *CStr(void) const { return cp; }
-  bool Bool(void) const { return b; }
-  size_t SizeT(void) const { return st; }
+  char *CStr() const { return cp; }
+  bool Bool() const { return b; }
+  size_t SizeT() const { return st; }
   /* ----------------------------------------------------------------------- */
-  signed int Int(void) const { return si; }
-  unsigned int UInt(void) const { return ui; }
+  signed int Int() const { return si; }
+  unsigned int UInt() const { return ui; }
   /* ----------------------------------------------------------------------- */
-  long signed int Long(void) const { return lsi; }
-  long unsigned int ULong(void) const { return lui; }
+  long signed int Long() const { return lsi; }
+  long unsigned int ULong() const { return lui; }
   /* ----------------------------------------------------------------------- */
-  signed long long LongLong(void) const { return sll; }
-  unsigned long long ULongLong(void) const { return ull; }
+  signed long long LongLong() const { return sll; }
+  unsigned long long ULongLong() const { return ull; }
   /* ----------------------------------------------------------------------- */
-  double Double(void) const { return d; }
-  float Float(void) const { return f; }
+  double Double() const { return d; }
+  float Float() const { return f; }
   /* ----------------------------------------------------------------------- */
-  string *StrPtr(void) const { return str; }
-  string &Str(void) const { return *StrPtr(); }
+  string *StrPtr() const { return str; }
+  string &Str() const { return *StrPtr(); }
   /* ----------------------------------------------------------------------- */
   explicit EvtArgVar(const void*const vpP) :
     t(EAVT_PTR), vp(const_cast<void*>(vpP)) {}
@@ -128,7 +128,7 @@ class EvtCore :                        // Start of common event system class
       ecCore{ *ecpCore }, rvEvents{ StdMove(rvNEvents) }
         { ecCore.RegisterEx(rvNEvents); }
     /* -- Destructor that unregisters the events --------------------------- */
-    ~RegAuto(void) { ecCore.UnregisterEx(rvEvents); }
+    ~RegAuto() { ecCore.UnregisterEx(rvEvents); }
   }; /* -------------------------------------------------------------------- */
   struct Event                         // Event packet information
   { /* --------------------------------------------------------------------- */
@@ -142,7 +142,7 @@ class EvtCore :                        // Start of common event system class
       cbfFunc{ cbfNFunc },             // Set callback function
       eaArgs{ StdMove(eaNArgs) }       // Move requested parameters
       /* -- No code -------------------------------------------------------- */
-      { }
+      {}
     /* -- Initialiser with copy parameters --------------------------------- */
     Event(const Cmd cNCmd, const CbEcFunc &cbfNFunc, const EvtArgs &eaNArgs) :
       /* -- Initialisers --------------------------------------------------- */
@@ -150,7 +150,7 @@ class EvtCore :                        // Start of common event system class
       cbfFunc{ cbfNFunc },             // Set callback function
       eaArgs{ eaNArgs }                  // Copy requested parameters
       /* -- No code -------------------------------------------------------- */
-      { }
+      {}
     /* -- Move constructor ------------------------------------------------- */
     Event(Event &&cOther) :
       /* -- Initialisers --------------------------------------------------- */
@@ -158,7 +158,7 @@ class EvtCore :                        // Start of common event system class
       cbfFunc{ StdMove(cOther.cbfFunc) }, // Set other cb function
       eaArgs{ StdMove(cOther.eaArgs) }      // Move other parameters
       /* -- No code -------------------------------------------------------- */
-      { }
+      {}
   };/* -- Private variables --------------------------------------- */ private:
   const CbEcFunc   cefEmpty;           // Empty function
   Funcs            fFuncs;             // Event callback storage
@@ -215,7 +215,7 @@ class EvtCore :                        // Start of common event system class
     AddParam(cCmd, eaArgs, vaArgs...);
   }
   /* -- list is empty? --------------------------------------------- */ public:
-  bool Empty(void)
+  bool Empty()
   { // Lock access to events list
     const LockGuard lgEventsSync{ mMutex };
     // Return if queue is empty
@@ -225,16 +225,16 @@ class EvtCore :                        // Start of common event system class
   const string_view &IdToString(const Cmd cCmd) const
     { return islEventStrings.Get(cCmd); }
   /* -- Returns number of events in queue ---------------------------------- */
-  size_t SizeSafe(void)
+  size_t SizeSafe()
   { // Lock access to events list
     const LockGuard lgEventsSync{ mMutex };
     // Return number of elements in queue
     return qlEvents.size();
   }
   /* -- Returns the final iterator ----------------------------------------- */
-  const QueueConstIt Last(void) { return qlEvents.cend(); }
+  const QueueConstIt Last() { return qlEvents.cend(); }
   /* -- Manage without lock ------------------------------------------------ */
-  Cmd ManageUnsafe(void)
+  Cmd ManageUnsafe()
   { // Until event list is empty
     while(!qlEvents.empty())
     { // Get event data. Move it and never reference it!
@@ -254,7 +254,7 @@ class EvtCore :                        // Start of common event system class
     return EvtNone;
   }
   /* -- Manage with lock --------------------------------------------------- */
-  Cmd ManageSafe(void)
+  Cmd ManageSafe()
   { // Try to lock access to events list.
     UniqueLock uLock{ mMutex, try_to_lock };
     // Since we call this in our engine loop. We are in a time critical
@@ -286,7 +286,7 @@ class EvtCore :                        // Start of common event system class
     return EvtNone;
   }
   /* -- Flush events list -------------------------------------------------- */
-  void Flush(void)
+  void Flush()
   { // Lock access to the events list from other threads
     const LockGuard lgEventsSync{ mMutex };
     // Return if no events to clear
@@ -392,7 +392,7 @@ class EvtCore :                        // Start of common event system class
     cefEmpty{ bind(&EvtCore::WarningFunction, this, _1) },
     fFuncs{ UtilMkFilledContainer<Funcs>(cefEmpty) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

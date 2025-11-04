@@ -226,9 +226,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   }
   /* -- Init from asset ---------------------------------------------------- */
   void AssetInitAsset(const string &strName, const AssetFlagsConst &afcFlags,
-    Asset &aData)
-      { AssetInitPtr(strName,
-          afcFlags, aData.MemSize(), aData.MemPtr<char>()); }
+    const Asset &aData)
+  { AssetInitPtr(strName, afcFlags, aData.MemSize(), aData.MemPtr<char>()); }
   /* -- Init duplicate asset ----------------------------------------------- */
   void AssetInitDuplicate(const Asset &aCref)
   { // Copy name of asset
@@ -262,7 +261,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   /* -- Move constructor --------------------------------------------------- */
   Asset(Asset &&aOther) : Asset() { AssetSwap(aOther); }
   /* -- For loading via LUA ------------------------------------------------ */
-  Asset(void) :
+  Asset() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperAsset{ cAssets },          // Initially unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
@@ -270,9 +269,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
       EMC_MP_ASSET },                  // ...and the event id for it.
     AssetFlags{ CD_NONE }              // Np asset load flags initially
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Asset(void) { AsyncCancel(); }
+  ~Asset() { AsyncCancel(); }
 };/* ======================================================================= */
 CTOR_END_ASYNC_NOFUNCS(Assets, Asset, ASSET, ASSET, fsotOverride(FO_EXTONLY));
 /* -- Class to help enumerate files ---------------------------------------- */
@@ -280,9 +279,9 @@ struct AssetList :
   /* -- Dependents --------------------------------------------------------- */
   public StrSet                        // Sorted storage for filenames
 { /* -- Direct access using class variable name which returns if !empty ---- */
-  operator bool(void) const { return !empty(); }
+  operator bool() const { return !empty(); }
   /* -- Cast down to StrSet ------------------------------------------------ */
-  StrSet &ToStrSet(void) { return *this; }
+  StrSet &ToStrSet() { return *this; }
   /* -- Return files in directories ---------------------------------------- */
   AssetList(const string &strDir, const bool bOnlyDirs) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -309,7 +308,7 @@ static CVarReturn AssetSetPipeBufferSize(const size_t stSize)
   { return CVarSimpleSetIntNLG(cAssets->stPipeBufSize, stSize, 1UL,
       static_cast<unsigned long>(MAX_PIPE_BUFFER)); }
 /* -- Set pipe buffer size ------------------------------------------------- */
-static size_t AssetGetPipeBufferSize(void) { return cAssets->stPipeBufSize; }
+static size_t AssetGetPipeBufferSize() { return cAssets->stPipeBufSize; }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

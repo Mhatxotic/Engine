@@ -61,18 +61,21 @@ class Statistic
     return hRef;
   }
   /* -- Check that we have headers ----------------------------------------- */
-  void CheckHeaderCount(void) const
+  void CheckHeaderCount() const
     { if(hdHeaders.empty()) XC("No headers!"); }
   /* -- Check row not finished --------------------------------------------- */
-  void CheckRowNotFinished(void) const
+  void CheckRowNotFinished() const
     { if(const size_t stRow = Cells() % Headers())
         XC("Row not finished!",
            "ExpectCols", Headers(), "ActualCols", stRow,
            "RowCount", Rows()); }
+  /* -- Update maximum length of the header -------------------------------- */
+  void UpdateMaxHeaderLength(Head &hRef, const int iLength)
+    { if(iLength > hRef.iMaxLen) hRef.iMaxLen = iLength; }
   /* -- Get item counts -------------------------------------------- */ public:
-  size_t Cells(void) const { return svValues.size(); }
-  size_t Headers(void) const { return hdHeaders.size(); }
-  size_t Rows(void) const { return Cells() / Headers(); }
+  size_t Cells() const { return svValues.size(); }
+  size_t Headers() const { return hdHeaders.size(); }
+  size_t Rows() const { return Cells() / Headers(); }
   /* -- Finish with existing string stream --------------------------------- */
   void Finish(ostringstream &osS, const bool bAddLF=true, const size_t stGap=1)
   { // Check that there are headers
@@ -182,7 +185,7 @@ class Statistic
       UtfDecoder{ *svValues.insert(svValues.cend(), cpStr) }.Length());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
-    if(iLength > hRef.iMaxLen) hRef.iMaxLen = iLength;
+    UpdateMaxHeaderLength(hRef, iLength);
     // Return self so we can daisy chain
     return *this;
   }
@@ -199,7 +202,7 @@ class Statistic
         string{ strvVal }) }.Length());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
-    if(iLength > hRef.iMaxLen) hRef.iMaxLen = iLength;
+    UpdateMaxHeaderLength(hRef, iLength);
     // Return self so we can daisy chain
     return *this;
   }
@@ -221,7 +224,7 @@ class Statistic
       UtfDecoder{ *svValues.insert(svValues.cend(), strVal) }.Length());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
-    if(iLength > hRef.iMaxLen) hRef.iMaxLen = iLength;
+    UpdateMaxHeaderLength(hRef, iLength);
     // Return self so we can daisy chain
     return *this;
   }
@@ -240,7 +243,7 @@ class Statistic
       *svValues.insert(svValues.cend(), StdMove(strVal)) }.Length());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
-    if(iLength > hRef.iMaxLen) hRef.iMaxLen = iLength;
+    UpdateMaxHeaderLength(hRef, iLength);
     // Return self so we can daisy chain
     return *this;
   }
@@ -370,7 +373,7 @@ class Statistic
   /* -- Add data by pointer ------------------------------------------------ */
   Statistic &DataV(const void*const vpAddr) { return Data(StrAppend(vpAddr)); }
   /* -- Constructor that does nothing -------------------------------------- */
-  Statistic(void) = default;
+  Statistic() = default;
 };/* ----------------------------------------------------------------------- */
 /* == Stat object collector and object class =============================== */
 CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
@@ -379,12 +382,12 @@ CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
   public Ident,                        // Identifier
   public Statistic                     // Statistics data
 { /* -- Constructor ------------------------------------------------ */ public:
-  Stat(void) :                         // No parameters
+  Stat() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperStat{ cStats, this },      // Automatic (de)registration
     IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
-    { }                                // Do nothing else
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Stats, Stat, STAT)    // End of stat objects collector
 /* ------------------------------------------------------------------------- */

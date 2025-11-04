@@ -79,7 +79,7 @@ class EvtWin :                         // Event list for window thread
     GlFWForceEventHack();
   }
   /* -- Constructor --------------------------------------------- */ protected:
-  EvtWin(void) :
+  EvtWin() :
     /* -- Initialisers ----------------------------------------------------- */
     IdList{{                           // Initialise event strings
 #define EWC(x) STR(EWC_ ## x)          // Helper to define event id strings

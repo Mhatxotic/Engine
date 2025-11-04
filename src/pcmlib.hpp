@@ -36,7 +36,7 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     DataFormat{ pfNId, strvNName, strvNExt, cfdNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with saver function only ------------------------------- */
   explicit PcmLib(
     /* -- Required arguments ----------------------------------------------- */
@@ -49,7 +49,7 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     DataFormat{ pfNId, strvNName, strvNExt, cfeNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with both loader and saver functions ------------------- */
   explicit PcmLib(
     /* -- Required arguments ----------------------------------------------- */
@@ -64,7 +64,7 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     DataFormat{ pfNId, strvNName, strvNExt, cfdNFunc, cfeNFunc,
       cParent->size() }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- End of objects collector (reserve and set limit for formats) ------- */
 CTOR_END(PcmLibs, PcmLib, PCMLIB,
   reserve(PFMT_MAX); CollectorSetLimit(PFMT_MAX),)

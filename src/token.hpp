@@ -53,13 +53,13 @@ struct TokenListNC :
     }
   }
   /* -- Direct conditional access ------------------------------------------ */
-  operator bool(void) const { return !empty(); }
+  operator bool() const { return !empty(); }
   /* -- MOVE assignment constructor ---------------------------------------- */
   TokenListNC(TokenListNC &&tlOther) :
     /* -- Initialisers ----------------------------------------------------- */
     CStrVector{ StdMove(tlOther) }     // Move vector of C-Strings over
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 struct TokenList :                     // Token class with line limit
   /* -- Base classes ------------------------------------------------------- */
@@ -101,13 +101,13 @@ struct TokenList :                     // Token class with line limit
     }
   }
   /* -- Direct conditional access ------------------------------------------ */
-  operator bool(void) const { return !empty(); }
+  operator bool() const { return !empty(); }
   /* -- MOVE assignment constructor ---------------------------------------- */
   TokenList(TokenList &&tlOther) :
     /* -- Initialisers ----------------------------------------------------- */
     StrList{ StdMove(tlOther) }            // Move list of strings over
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 }; /* ---------------------------------------------------------------------- */
 struct Token :                         // Tokeniser class
   /* -- Base classes ------------------------------------------------------- */
@@ -158,13 +158,13 @@ struct Token :                         // Tokeniser class
     if(stStart <= strStr.length()) emplace_back(strStr.substr(stStart));
   }
   /* -- Direct conditional access ------------------------------------------ */
-  operator bool(void) const { return !empty(); }
+  operator bool() const { return !empty(); }
   /* -- MOVE constructor --------------------------------------------------- */
   Token(Token &&tlOther) :
     /* -- Initialisers ----------------------------------------------------- */
     StrVector{ StdMove(tlOther) }      // Move vector of strings over
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

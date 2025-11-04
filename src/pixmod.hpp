@@ -18,13 +18,13 @@ struct SysModule :
     /* -- Initialisers ----------------------------------------------------- */
     SysModuleData{ strModule }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Manual data (i.e. for executable) ---------------------------------- */
   explicit SysModule(string &&strModule) :
     /* -- Initialisers ----------------------------------------------------- */
     SysModuleData{ StdMove(strModule) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
    /* -- Return data (move filename) --------------------------------------- */
   explicit SysModule(string &&strModule, const unsigned int uiMa,
     const unsigned int uiMi, const unsigned int uiBu, const unsigned int uiRe,
@@ -34,7 +34,7 @@ struct SysModule :
       StdMove(strVen), StdMove(strDe), StdMove(strCo),
       StdMove(strVer) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Return data (copy filename) ---------------------------------------- */
   explicit SysModule(const string &strModule, const unsigned int uiMa,
     const unsigned int uiMi, const unsigned int uiBu, const unsigned int uiRe,
@@ -43,6 +43,6 @@ struct SysModule :
     SysModuleData{ strModule, uiMa, uiMi, uiBu, uiRe, StdMove(strVen),
       StdMove(strDe), StdMove(strCo), StdMove(strVer) }
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

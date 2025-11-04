@@ -79,7 +79,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     return true;
   }
   /* -- Force binary mode -------------------------------------------------- */
-  bool ForceBinary(void)
+  bool ForceBinary()
   { // Ignore if already one bit or there are no slots
     if(GetBitsPerPixel() == BD_BINARY || IsNoSlots()) return false;
     // Throw error if compressed
@@ -123,7 +123,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     return true;
   }
   /* -- Reverse pixels ----------------------------------------------------- */
-  bool ReversePixels(void)
+  bool ReversePixels()
   { // Compare bits per pixel
     switch(GetBitsPerPixel())
     { // Monochrome image?
@@ -205,7 +205,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     SetAlloc(stNewAlloc);
   }
   /* -- Force luminance alpha pixel to RGB pixel type ---------------------- */
-  void ConvertLuminanceAlphaToRGB(void)
+  void ConvertLuminanceAlphaToRGB()
   { // Class to convert a luminance alpha pixel to a RGB pixel
     struct Filter{
       inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
@@ -218,7 +218,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ConvertPixels<Filter, 2, 3, BD_RGB, TT_RGB>("LUMA>RGB");
   }
   /* -- Force luminance pixel to RGB pixel type ---------------------------- */
-  void ConvertLuminanceToRGB(void)
+  void ConvertLuminanceToRGB()
   { // Class to convert a luminance pixel to a RGB pixel
     struct Filter{
       inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
@@ -230,7 +230,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ConvertPixels<Filter, 1, 3, BD_RGB, TT_RGB>("LUM>RGB");
   }
   /* -- Force luminance alpha pixel to RGBA pixel type --------------------- */
-  void ConvertLuminanceAlphaToRGBA(void)
+  void ConvertLuminanceAlphaToRGBA()
   { // Class to convert a luminance alpha pixel to a RGBA pixel
     struct Filter{
       inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
@@ -243,7 +243,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ConvertPixels<Filter, 2, 4, BD_RGBA, TT_RGBA>("LUMA>RGBA");
   }
   /* -- Force luminance pixel to RGBA pixel type --------------------------- */
-  void ConvertLuminanceToRGBA(void)
+  void ConvertLuminanceToRGBA()
   { // Class to convert a luminance pixel to a RGBA pixel
     struct Filter{
       inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
@@ -254,7 +254,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ConvertPixels<Filter, 1, 4, BD_RGBA, TT_RGBA>("LUM>RGBA");
   }
   /* -- Force binary pixel to luminance pixel type ------------------------- */
-  void ConvertBinaryToLuminance(void)
+  void ConvertBinaryToLuminance()
   { // Class to convert a BINARY pixel to a LUMINANCE pixel
     struct Filter{
       inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
@@ -275,7 +275,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ConvertPixels<Filter, 1, 8, BD_GRAY, TT_GRAY>("BIN>LUM");
   }
   /* -- Force binary pixel to RGB pixel type ------------------------------- */
-  void ConvertBinaryToRGB(void)
+  void ConvertBinaryToRGB()
   { // Class to convert a BINARY pixel to a RGB pixel
     struct Filter{
       inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
@@ -303,7 +303,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ConvertPixels<Filter, 1, 24, BD_RGB, TT_RGB>("BIN>RGB");
   }
   /* -- Force binary pixel to RGBA pixel type ------------------------------ */
-  void ConvertBinaryToRGBA(void)
+  void ConvertBinaryToRGBA()
   { // Class to convert a BINARY pixel to a RGBA pixel
     struct Filter{
       inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
@@ -331,7 +331,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ConvertPixels<Filter, 1, 32, BD_RGBA, TT_RGBA>("BIN>RGBA");
   }
   /* -- Concatenate tiles into a single texture ---------------------------- */
-  bool MakeAtlas(void)
+  bool MakeAtlas()
   { // Save number of images compacted
     stTiles = GetSlotCount();
     // Return if 1 or less slides or 1 or less bit depth or has a palette
@@ -365,7 +365,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // Function to (re)calculate required texture size
     const function SetupCanvas{ [this, &stRemain, stMaxSize, &stTexWidth,
       &stTexHeight, &stWidth, &stHeight, &stOptSize, &stNOptSize, &stCols,
-      &stRows, &stNCols, &stNRows, &mTexture](void)->void
+      &stRows, &stNCols, &stNRows, &mTexture]()->void
     { // Now keep dividing the texture size by two until we can no longer fit
       // the needed amount of tiles inside the texture.
       while(stNOptSize && stNCols * stNRows >= stRemain)
@@ -447,7 +447,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     return true;
   }
   /* -- Convert palette to RGB(A) ------------------------------------------ */
-  template<ByteDepth byDepth, TextureType ttType>bool ExpandPalette(void)
+  template<ByteDepth byDepth, TextureType ttType>bool ExpandPalette()
   { // Ignore if not paletted
     if(IsNotPalette()) return false;
     // Must only have two slots
@@ -498,7 +498,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     return true;
   }
   /* -- Convert data to GPU compatible ------------------------------------- */
-  bool ConvertGPUCompatible(void)
+  bool ConvertGPUCompatible()
   { // We don't have functionality to load <8bpp images in GPU yet so if this
     // flag is specified, we will make sure <8bpp textures get converted
     // properly so they can be loaded by OpenGL. This is useful if the
@@ -513,7 +513,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     return true;
   }
   /* -- Convert image bit-depth to to 24-bits per pixel RGB format --------- */
-  bool ConvertRGB(void)
+  bool ConvertRGB()
   { // Compare current bit-depth
     switch(GetBitsPerPixel())
     { // 1bpp (BINARY)
@@ -531,7 +531,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     return true;
   }
   /* -- Convert image bit-depth to to 32-bits per pixel RGBA format -------- */
-  bool ConvertRGBA(void)
+  bool ConvertRGBA()
   { // Compare current bit-depth
     switch(GetBitsPerPixel())
     { // 1bpp (BINARY)
@@ -549,7 +549,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     return true;
   }
   /* -- Apply filters ------------------------------------------------------ */
-  void ApplyFilters(void)
+  void ApplyFilters()
   { // Record current parameters
     const DimUInt duOld{ *this };
     const size_t stSlots = GetSlotCount();
@@ -771,7 +771,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     CompactSlots();
   }
   /* -- Reload specified image --------------------------------------------- */
-  void ReloadData(void)
+  void ReloadData()
   { // Load the file from disk or archive
     FileMap fmData{ AssetExtract(IdentGet()) };
     // Reset memory usage to zero
@@ -925,14 +925,14 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     SyncInitArray(strName, mRval);
   }
   /* -- Default constructor ------------------------------------------------ */
-  Image(void) :                        // No parameters
+  Image() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperImage{ cImages },          // Initialise collector helper
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
     AsyncLoaderImage{ *this, this,     // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor with purpose ------------------------------------------- */
   explicit Image(
     /* -- Parameters ------------------------------------------------------- */
@@ -943,8 +943,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     AsyncLoaderImage{ *this, this,     // Initialise async loader
       EMC_MP_IMAGE },                  // Initialise async event id
     ImageData{ ifcPurpose }            // Initialise purpose of image class
-    /* -- Code ------------------------------------------------------------- */
-    { }                                // Do nothing else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor -------------------------------------------------------- */
   explicit Image(                      // Initialise a 1x1 pixel texture
     /* -- Parameters ------------------------------------------------------- */
@@ -993,7 +993,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     /* -- Code ------------------------------------------------------------- */
     { SwapImage(imOtherRval); }        // Swap image over
   /* -- Destructor --------------------------------------------------------- */
-  ~Image(void) { AsyncCancel(); }      // Wait for loading thread to cancel
+  ~Image() { AsyncCancel(); }          // Wait for loading thread to cancel
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC(Images, Image, IMAGE, IMAGE,,,, idFormatModes{{ // Pixel formats
   /* ----------------------------------------------------------------------- */

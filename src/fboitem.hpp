@@ -51,7 +51,7 @@ struct FboItem
     stUInt16Bits = sizeof(uint16_t) * 8,
     stUInt24Bits = stUInt8Bits + stUInt16Bits;
   /* -- Get defaults as lookup table --------------------------------------- */
-  const Quad &FboItemGetDefaultLookup(void) const
+  const Quad &FboItemGetDefaultLookup() const
   { // This is equal to the following calls. It's just easier to memcpy the
     // whole table across then doing pointless calculation.
     // - SetTexCoord(0, 0, 1, 1);
@@ -75,33 +75,33 @@ struct FboItem
   }
   /* -- Return static offset indexes for glVertexAttribPointer() --- */ public:
   constexpr static const size_t stTCPos = 0;
-  static const GLvoid *FboItemGetTCPos(void)
+  static const GLvoid *FboItemGetTCPos()
     { return reinterpret_cast<GLvoid*>(stTCPos); }
   constexpr static const size_t stVPos = stTCPos + sizeof(sBuffer.c.qdCoord);
-  static const GLvoid *FboItemGetVPos(void)
+  static const GLvoid *FboItemGetVPos()
     { return reinterpret_cast<GLvoid*>(stVPos); }
   constexpr static const size_t stCPos = stVPos + sizeof(sBuffer.c.qdPos);
-  static const GLvoid *FboItemGetCPos(void)
+  static const GLvoid *FboItemGetCPos()
     { return reinterpret_cast<GLvoid*>(stCPos); }
   /* -- Positions of data for in aReturn static offset indexes ------------- */
-  QuadPosData &FboItemGetVData(void) { return sBuffer.c.qdPos; }
+  QuadPosData &FboItemGetVData() { return sBuffer.c.qdPos; }
   TriPosData &FboItemGetVData(const size_t stPos)
     { return FboItemGetVData()[stPos]; }
-  TriPosData &FboItemGetVDataT1(void) { return FboItemGetVData().front(); }
-  TriPosData &FboItemGetVDataT2(void) { return FboItemGetVData().back(); }
-  QuadCoordData &FboItemGetTCData(void) { return sBuffer.c.qdCoord; }
+  TriPosData &FboItemGetVDataT1() { return FboItemGetVData().front(); }
+  TriPosData &FboItemGetVDataT2() { return FboItemGetVData().back(); }
+  QuadCoordData &FboItemGetTCData() { return sBuffer.c.qdCoord; }
   TriCoordData &FboItemGetTCData(const size_t stPos)
     { return FboItemGetTCData()[stPos]; }
-  TriCoordData &FboItemGetTCDataT1(void) { return FboItemGetTCData().front(); }
-  TriCoordData &FboItemGetTCDataT2(void) { return FboItemGetTCData().back(); }
-  QuadColData &FboItemGetCData(void) { return sBuffer.c.qdColour; }
+  TriCoordData &FboItemGetTCDataT1() { return FboItemGetTCData().front(); }
+  TriCoordData &FboItemGetTCDataT2() { return FboItemGetTCData().back(); }
+  QuadColData &FboItemGetCData() { return sBuffer.c.qdColour; }
   TriColData &FboItemGetCData(const size_t stPos)
     { return FboItemGetCData()[stPos]; }
-  TriColData &FboItemGetCDataT1(void) { return FboItemGetCData().front(); }
-  TriColData &FboItemGetCDataT2(void) { return FboItemGetCData().back(); }
+  TriColData &FboItemGetCDataT1() { return FboItemGetCData().front(); }
+  TriColData &FboItemGetCDataT2() { return FboItemGetCData().back(); }
   /* -- Get data ----------------------------------------------------------- */
-  const GLvoid *FboItemGetData(void) const { return sBuffer.faData.data(); }
-  GLsizei FboItemGetDataSize(void) const { return sizeof(sBuffer.faData); }
+  const GLvoid *FboItemGetData() const { return sBuffer.faData.data(); }
+  GLsizei FboItemGetDataSize() const { return sizeof(sBuffer.faData); }
   /* -- Set vertex bounds directly on one triangle ------------------------- */
   void FboItemSetVertexEx(const size_t stId, const TriPosData &tpdNew)
     { FboItemGetVData(stId) = tpdNew; }
@@ -110,8 +110,8 @@ struct FboItem
   void FboItemSetColourEx(const size_t stId, const TriColData &tcdNew)
     { FboItemGetCData(stId) = tcdNew; }
   /* -- Save and restore colour data --------------------------------------- */
-  void FboItemPushQuadColour(void) { faCSave = FboItemGetCData(); }
-  void FboItemPopQuadColour(void) { FboItemGetCData() = faCSave; }
+  void FboItemPushQuadColour() { faCSave = FboItemGetCData(); }
+  void FboItemPopQuadColour() { FboItemGetCData() = faCSave; }
   /* -- Set vertex bounds with pivoted angle ------------------------------- */
   void FboItemSetVertex(const GLfloat fX1, const GLfloat fY1,
     const GLfloat fX2, const GLfloat fY2, const GLfloat fA)
@@ -277,14 +277,14 @@ struct FboItem
     { TriColData &tdT1 = FboItemGetCDataT1(), &tdT2 = FboItemGetCDataT2();
       tdT1[3] = tdT1[7] = tdT1[11] = tdT2[3] = tdT2[7] = tdT2[11] = fAlpha; }
   /* -- Set defaults ------------------------------------------------------- */
-  void FboItemSetDefaults(void) { sBuffer = FboItemGetDefaultLookup(); }
+  void FboItemSetDefaults() { sBuffer = FboItemGetDefaultLookup(); }
   /* -- Constructor -------------------------------------------------------- */
-  FboItem(void) :
+  FboItem() :
     /* -- Initialisers ----------------------------------------------------- */
     sBuffer{                           // Initialise storage...
       FboItemGetDefaultLookup() }      // ...with default values
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Init with colour (from font) --------------------------------------- */
   explicit FboItem(const unsigned int uiColour) :
     /* -- Initialisers ----------------------------------------------------- */

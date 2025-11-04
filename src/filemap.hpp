@@ -35,18 +35,18 @@ class FileMap :
     return ptAddr;
   }
   /* -- Return current position ------------------------------------ */ public:
-  size_t FileMapTell(void) const { return stPosition; }
+  size_t FileMapTell() const { return stPosition; }
   /* -- Return bytes remaining --------------------------------------------- */
-  size_t FileMapRemain(void) const { return MemSize() - FileMapTell(); }
+  size_t FileMapRemain() const { return MemSize() - FileMapTell(); }
   /* -- Is end of file ----------------------------------------------------- */
-  bool FileMapIsEOF(void) const { return FileMapTell() >= MemSize(); }
-  bool FileMapIsNotEOF(void) const { return !FileMapIsEOF(); }
+  bool FileMapIsEOF() const { return FileMapTell() >= MemSize(); }
+  bool FileMapIsNotEOF() const { return !FileMapIsEOF(); }
   /* -- Return file times -------------------------------------------------- */
-  StdTimeT FileMapModifiedTime(void) { return SysMapGetModified(); }
-  StdTimeT FileMapCreationTime(void) { return SysMapGetCreation(); }
+  StdTimeT FileMapModifiedTime() { return SysMapGetModified(); }
+  StdTimeT FileMapCreationTime() { return SysMapGetCreation(); }
   /* -- Return if file is opened ------------------------------------------- */
-  bool FileMapOpened(void) const { return !!MemPtr(); }
-  bool FileMapClosed(void) const { return !FileMapOpened(); }
+  bool FileMapOpened() const { return !!MemPtr(); }
+  bool FileMapClosed() const { return !FileMapOpened(); }
   /* -- Read with byte bound check ----------------------------------------- */
   template<typename PtrType=char>
     PtrType *FileMapReadPtrFrom(const size_t stPos, const size_t stBytes=0)
@@ -68,7 +68,7 @@ class FileMap :
     const IntType FileMapReadVarFrom(const size_t stPos)
       { return *FileMapReadPtrFrom<const IntType>(stPos, sizeof(IntType)); }
   /* -- Read specified variable from current pos --------------------------- */
-  template<typename IntType=char>const IntType FileMapReadVar(void)
+  template<typename IntType=char>const IntType FileMapReadVar()
     { return FileMapReadVarFrom<IntType>(FileMapTell()); }
   /* -- Read specified variable from specified position -------------------- */
   uint16_t FileMapReadVar16LEFrom(const size_t stFrom)
@@ -84,17 +84,17 @@ class FileMap :
   uint64_t FileMapReadVar64BEFrom(const size_t stFrom)
     { return UtilToI64BE(FileMapReadVarFrom<uint64_t>(stFrom)); }
   /* -- Read specified variable from current pos --------------------------- */
-  uint16_t FileMapReadVar16LE(void)
+  uint16_t FileMapReadVar16LE()
     { return FileMapReadVar16LEFrom(FileMapTell()); }
-  uint16_t FileMapReadVar16BE(void)
+  uint16_t FileMapReadVar16BE()
     { return FileMapReadVar16BEFrom(FileMapTell()); }
-  uint32_t FileMapReadVar32LE(void)
+  uint32_t FileMapReadVar32LE()
     { return FileMapReadVar32LEFrom(FileMapTell()); }
-  uint32_t FileMapReadVar32BE(void)
+  uint32_t FileMapReadVar32BE()
     { return FileMapReadVar32BEFrom(FileMapTell()); }
-  uint64_t FileMapReadVar64LE(void)
+  uint64_t FileMapReadVar64LE()
     { return FileMapReadVar64LEFrom(FileMapTell()); }
-  uint64_t FileMapReadVar64BE(void)
+  uint64_t FileMapReadVar64BE()
     { return FileMapReadVar64BEFrom(FileMapTell()); }
   /* -- Read data into new array class ------------------------------------- */
   const Memory FileMapReadBlock(const size_t stBytes)
@@ -125,7 +125,7 @@ class FileMap :
   /* -- Read data from specified position in file to array ----------------- */
   const Memory FileMapReadBlockFrom(const size_t stPos, const size_t stBytes)
   { // Do the seek and return a blank array if failed
-    if(!FileMapSeekSet(stPos)) return { };
+    if(!FileMapSeekSet(stPos)) return {};
     // Do the read and return the array
     return FileMapReadBlock(stBytes);
   }
@@ -152,7 +152,7 @@ class FileMap :
     return FileMapReadToAddr(vpDst, stBytes);
   }
   /* -- Return full memory of file ----------------------------------------- */
-  Memory FileMapDecouple(void)
+  Memory FileMapDecouple()
   { // If memory is not mapped? Just move the current memory across so the
     // returned Memory block takes ownership and frees the memory
     if(SysMapIsNotAvailable())
@@ -184,7 +184,7 @@ class FileMap :
     return stToRead;
   }
   /* -- Rewind to start ---------------------------------------------------- */
-  void FileMapRewind(void) { stPosition = 0; }
+  void FileMapRewind() { stPosition = 0; }
   /* -- Assignment operator ------------------------------------------------ */
   void FileMapSwap(FileMap &fmOther)
   { // Swap memory block and map
@@ -194,7 +194,7 @@ class FileMap :
     swap(stPosition, fmOther.stPosition);
   }
   /* -- Direct access using class variable name which returns opened ------- */
-  operator bool(void) const { return FileMapOpened(); }
+  operator bool() const { return FileMapOpened(); }
   /* -- Open a file on disk and map it to memory --------------------------- */
   explicit FileMap(const string &strF) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -202,7 +202,7 @@ class FileMap :
     MemConst{ UtilIntOrMax<size_t>(SysMapGetSize()), SysMapGetMemory() },
     stPosition(0)
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Take ownership of another memory block ----------------------------- */
   FileMap(const string &strF, MemConst &&mcSrc, const StdTimeT ttC,
     const StdTimeT ttM) :
@@ -210,14 +210,14 @@ class FileMap :
     SysMap{ strF, ttC, ttM },          // Reuse system map variables
     MemConst{ StdMove(mcSrc) },        // Init read-only memory block
     stPosition(0)                      // Initialise position
-    /* --------------------------------------------------------------------- */
-    { }                                // Don't do anything else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Take ownership of another memory block ----------------------------- */
   FileMap(const string &strF, MemConst &&mcSrc, const StdTimeT ttC) :
     /* -- Initialisers ----------------------------------------------------- */
     FileMap{ strF, StdMove(mcSrc), ttC, ttC }
-    /* --------------------------------------------------------------------- */
-    { }                                // Don't do anything else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Move filemap constructor ------------------------------------------- */
   FileMap(FileMap &&fmOther) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -227,13 +227,13 @@ class FileMap :
     /* --------------------------------------------------------------------- */
     { fmOther.FileMapRewind(); }       // Reset other position
   /* -- No-init constructor ------------------------------------------------ */
-  FileMap(void) :
+  FileMap() :
     /* -- Initialisers ----------------------------------------------------- */
     stPosition(0)                      // No position
-    /* --------------------------------------------------------------------- */
-    { }                                // Don't do anything else
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Free memory if we allocated it and it's not a map ------------------ */
-  ~FileMap(void) { if(MemIsPtrSet() && MemPtr() != SysMapGetMemory())
+  ~FileMap() { if(MemIsPtrSet() && MemPtr() != SysMapGetMemory())
                      MemFreePtr(); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

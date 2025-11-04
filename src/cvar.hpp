@@ -94,42 +94,42 @@ class CVarItem :                       // Members initially private
                  strDefValue;          // Default value name
   CbFunc         cfTrigger;            // Callback trigger event
   /* --------------------------------------------------------------- */ public:
-  const CbFunc &GetTrigger(void) const { return cfTrigger; }
+  const CbFunc &GetTrigger() const { return cfTrigger; }
   /* ----------------------------------------------------------------------- */
   void SetTrigger(const CbFunc &cfCb) { cfTrigger = cfCb; }
   /* ----------------------------------------------------------------------- */
-  bool IsTriggerSet(void) const { return GetTrigger() == NoOp; }
+  bool IsTriggerSet() const { return GetTrigger() == NoOp; }
   /* ----------------------------------------------------------------------- */
-  const string &GetVar(void) const { return strVar; }
+  const string &GetVar() const { return strVar; }
   /* ----------------------------------------------------------------------- */
-  const string &GetDefValue(void) const { return strDefValue; }
+  const string &GetDefValue() const { return strDefValue; }
   /* ----------------------------------------------------------------------- */
-  size_t GetDefLength(void) const { return GetDefValue().length(); }
+  size_t GetDefLength() const { return GetDefValue().length(); }
   /* ----------------------------------------------------------------------- */
-  size_t GetDefCapacity(void) const { return GetDefValue().capacity(); }
+  size_t GetDefCapacity() const { return GetDefValue().capacity(); }
   /* ----------------------------------------------------------------------- */
-  string &GetModifyableValue(void) { return strValue; }
+  string &GetModifyableValue() { return strValue; }
   /* ----------------------------------------------------------------------- */
   bool IsLowerPriority(const CVarFlagsConst cvfcFlags) const
     { return (FlagGet() & SANY) < (cvfcFlags & SANY); }
   /* ----------------------------------------------------------------------- */
-  const string &GetValue(void) const { return strValue; }
+  const string &GetValue() const { return strValue; }
   /* ----------------------------------------------------------------------- */
-  size_t GetValueLength(void) const { return GetValue().length(); }
+  size_t GetValueLength() const { return GetValue().length(); }
   /* ----------------------------------------------------------------------- */
-  size_t GetValueCapacity(void) const { return GetValue().capacity(); }
+  size_t GetValueCapacity() const { return GetValue().capacity(); }
   /* ----------------------------------------------------------------------- */
-  void PruneValue(void) { GetModifyableValue().shrink_to_fit(); }
+  void PruneValue() { GetModifyableValue().shrink_to_fit(); }
   /* ----------------------------------------------------------------------- */
-  bool IsValueUnset(void) const { return GetValue().empty(); }
+  bool IsValueUnset() const { return GetValue().empty(); }
   /* ----------------------------------------------------------------------- */
-  bool IsValueSet(void) const { return !IsValueUnset(); }
+  bool IsValueSet() const { return !IsValueUnset(); }
   /* ----------------------------------------------------------------------- */
-  bool IsValueChanged(void) const { return GetValue() != GetDefValue(); }
+  bool IsValueChanged() const { return GetValue() != GetDefValue(); }
   /* ----------------------------------------------------------------------- */
-  bool IsValueUnchanged(void) const { return !IsValueChanged(); }
+  bool IsValueUnchanged() const { return !IsValueChanged(); }
   /* ----------------------------------------------------------------------- */
-  void SetDefault(void) { strValue = GetDefValue(); }
+  void SetDefault() { strValue = GetDefValue(); }
   /* ----------------------------------------------------------------------- */
   void SetDefValue(const string &strN) { strDefValue = strN; }
   /* ----------------------------------------------------------------------- */
@@ -139,7 +139,7 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   void SetValue(string &&strV) { strValue = StdMove(strV); }
   /* ----------------------------------------------------------------------- */
-  const string GetValueSafe(void) const
+  const string GetValueSafe() const
   { // If confidential, return confidential
     if(FlagIsSet(CONFIDENTIAL) && csfShowFlags.FlagIsClear(CSF_CONFIDENTIAL))
       return cCommon->CommonPrivate();
@@ -163,7 +163,7 @@ class CVarItem :                       // Members initially private
     return StrFormat("\"$\"", GetValue());
   }
   /* ----------------------------------------------------------------------- */
-  bool MarkEncodedVarAsCommit(void)
+  bool MarkEncodedVarAsCommit()
   { // Ignore if appropriate flag not set
     if(FlagIsClear(CPROTECTED|CDEFLATE)) return false;
     // Mark as commit
@@ -177,7 +177,7 @@ class CVarItem :                       // Members initially private
   bool Commit(const MemConst &mcSrc)
     { return cSql->CVarCommitBlob(GetVar(), mcSrc); }
   /* ----------------------------------------------------------------------- */
-  CommitResult Commit(void)
+  CommitResult Commit()
   { // Ignore if variable not modified, force saved or loaded
     if(FlagIsClear(COMMIT|COMMITNOCHECK)) return CR_OK_NOTHING_TO_DO;
     // If the value is the same as default value and nocheck not set?
@@ -498,7 +498,7 @@ class CVarItem :                       // Members initially private
     cfTrigger{                         // Trigger
       StdMove(ciOther.GetTrigger()) }  // Move trigger
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor -------------------------------------------------------- */
   CVarItem(
     /* -- Required parameters ---------------------------------------------- */
@@ -513,7 +513,7 @@ class CVarItem :                       // Members initially private
     strDefValue{ strVal },             // Initialise default value
     cfTrigger{ cfCb }                  // Initialise trigger function
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

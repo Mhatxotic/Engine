@@ -59,10 +59,10 @@ static const string SysError(const int iError)
   }
 }
 /* -- System error code ---------------------------------------------------- */
-template<typename IntType=int>static IntType SysErrorCode(void)
+template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(GetLastError()); }
 /* -- System error formatter with current error code ----------------------- */
-static const string SysError(void) { return SysError(SysErrorCode()); }
+static const string SysError() { return SysError(SysErrorCode()); }
 /* -- Actual interface to MessageBoxExW ------------------------------------ */
 static unsigned int SysMessage(void*const vpHandle, const string &strTitle,
   const string &strMessage, const unsigned int uiFlags)
@@ -97,7 +97,7 @@ static void SysSetThreadName(const char*const cpName)
   // Send message to debugger to name the thread
   __try { RaiseException(0x406D1388, 0,
             sizeof(tInfo)/sizeof(ULONG_PTR), (ULONG_PTR*)&tInfo); }
-  __except(EXCEPTION_CONTINUE_EXECUTION) { }
+  __except(EXCEPTION_CONTINUE_EXECUTION) {}
 }
 /* ------------------------------------------------------------------------- */
 #elif defined(MACOS)                   // Using mac?
@@ -158,7 +158,7 @@ static unsigned int SysMessage(void*const, const string &strTitle,
   return 0;
 }
 /* -- Unset multiple environment variables --------------------------------- */
-static void SysUnSetEnv(void) { }
+static void SysUnSetEnv() {}
 template<typename ...VarArgs>
   static void SysUnSetEnv(const char*const cpEnv, const VarArgs &...vaVars)
     { unsetenv(cpEnv); SysUnSetEnv(vaVars...); }
@@ -183,7 +183,7 @@ static bool SysSetThreadPriority(const SysThread stLevel)
   // Calculate the priority by fractioning the range
   struct sched_param spParam{
     static_cast<int>(floorf(fMax - ((fMax - fMin) * fFraction))),
-    { }                                // __opaque (MacOS only)
+    {}                                // __opaque (MacOS only)
   };
   // Set the new parameters and return true if succeeded
   return !pthread_setschedparam(ptHandle, iPolicy, &spParam);
@@ -260,12 +260,12 @@ static unsigned int SysMessage(const string &strTitle,
 /* ------------------------------------------------------------------------- */
 #else                                  // Not using Windows target? (POSIX)
 /* -- System error code ---------------------------------------------------- */
-template<typename IntType=int>static IntType SysErrorCode(void)
+template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(StdGetError()); }
 /* -- System error formatter with specified error code --------------------- */
 static const string SysError(const int iError) { return StrFromErrNo(iError); }
 /* -- System error formatter with current error code ----------------------- */
-static const string SysError(void) { return StrFromErrNo(SysErrorCode()); }
+static const string SysError() { return StrFromErrNo(SysErrorCode()); }
 /* ------------------------------------------------------------------------- */
 static void SysSetThreadName(const char*const cpName)
 { // Set thread name which helps a little with debugging

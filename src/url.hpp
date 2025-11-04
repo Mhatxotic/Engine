@@ -66,16 +66,16 @@ struct UrlBase : public ParamParser    // Members initially public
   /* -- Code setter and returner ------------------------------------------- */
   void SetCode(const Result rNResult) { rResult = rNResult; }
   /* -- Return data ------------------------------------------------ */ public:
-  Result GetResult(void) const { return rResult; }
-  const string &GetUrl(void) const { return strCanonicalised; }
-  const string &GetScheme(void) const { return strScheme; }
-  const string &GetUsername(void) const { return strUsername; }
-  const string &GetPassword(void) const { return strPassword; }
-  const string &GetHost(void) const { return strHost; }
-  const string &GetResource(void) const { return strResource; }
-  const string &GetBookmark(void) const { return strBookmark; }
-  Port GetPort(void) const { return pPort; }
-  bool GetSecure(void) const { return bSecure; }
+  Result GetResult() const { return rResult; }
+  const string &GetUrl() const { return strCanonicalised; }
+  const string &GetScheme() const { return strScheme; }
+  const string &GetUsername() const { return strUsername; }
+  const string &GetPassword() const { return strPassword; }
+  const string &GetHost() const { return strHost; }
+  const string &GetResource() const { return strResource; }
+  const string &GetBookmark() const { return strBookmark; }
+  Port GetPort() const { return pPort; }
+  bool GetSecure() const { return bSecure; }
   /* -- Parse -------------------------------------------------------------- */
   void Parse(const string &strUrl, const unsigned int uiMode=0)
   { // Error if string is empty
@@ -228,19 +228,19 @@ struct UrlBase : public ParamParser    // Members initially public
   explicit UrlBase(const string &strUrl, const unsigned int uiMode=0)
     { Parse(strUrl, uiMode); }
   /* -- Default constructor that does nothing ------------------------------ */
-  UrlBase(void) { }
+  UrlBase() {}
 };/* == Url collector and member class ===================================== */
 CTOR_BEGIN_DUO(Urls, Url, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable,                     // Lua garbage collector instruction
   public UrlBase                       // Url class
-{ /* -- Basic constructor with no init ----------------------------- */ public:
-  Url(void) :
+{ /* -- Default constructor with no init --------------------------- */ public:
+  Url() :
     /* -- Initialisers ----------------------------------------------------- */
-    ICHelperUrl{ cUrls, this },       // Register the object in collector
+    ICHelperUrl{ cUrls, this },        // Register the object in collector
     IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* --------------------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Urls, Url, URL)       // Finish global Files collector
 /* ------------------------------------------------------------------------- */

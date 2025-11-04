@@ -13,12 +13,12 @@ class SysReg                           // Members initially private
 { /* ----------------------------------------------------------------------- */
   HKEY             hkKey;              // Key handle
   /* -- Return handle ---------------------------------------------- */ public:
-  HKEY GetHandle(void) const { return hkKey; }
+  HKEY GetHandle() const { return hkKey; }
   /* -- Return if handle is opened or not ---------------------------------- */
-  bool Opened(void) const { return GetHandle() != nullptr; }
-  bool NotOpened(void) const { return !Opened(); }
+  bool Opened() const { return GetHandle() != nullptr; }
+  bool NotOpened() const { return !Opened(); }
   /* -- Query sub keys ----------------------------------------------------- */
-  const StrVector QuerySubKeys(void) const
+  const StrVector QuerySubKeys() const
   { // Key opened? Return nothing
     if(NotOpened()) return {};
     // Create key list
@@ -82,7 +82,7 @@ class SysReg                           // Members initially private
     return tValue;
   }
   /* -- Direct access to return if handle is opened ------------------------ */
-  operator bool(void) const { return Opened(); }
+  operator bool() const { return Opened(); }
   /* -- Constructor with init ---------------------------------------------- */
   SysReg(HKEY hkB, const string &strSK, const REGSAM rsA) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -94,8 +94,8 @@ class SysReg                           // Members initially private
         hkB :                          // Success so set the handle
         nullptr)                       // Failure so set a null handled
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~SysReg(void) { if(Opened()) RegCloseKey(GetHandle()); }
+  ~SysReg() { if(Opened()) RegCloseKey(GetHandle()); }
 };/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

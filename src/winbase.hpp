@@ -28,7 +28,7 @@ class SysBase :                        // Members initially private
                    fcbIllegalStorageAccess,   // " illegal storage access cb
                    fcbFloatingPointException; // " float point exception cb
   /* == Get environment ==================================================== */
-  void SEHDumpEnvironment(void) try
+  void SEHDumpEnvironment() try
   { // Prepare formatted data
     Statistic tD;
     tD.Header("Variable").Header("Value", false).Reserve(10);
@@ -55,7 +55,7 @@ class SysBase :                        // Members initially private
   } // Shouldn't happen but just incase
   catch(const exception &eReason) { osS << eReason.what(); }
   /* == Get memory information ============================================= */
-  void SEHDumpMemoryStatus(void) try
+  void SEHDumpMemoryStatus() try
   { // Get process memory info
     PROCESS_MEMORY_COUNTERS pD;
     pD.cb = sizeof(pD);
@@ -99,7 +99,7 @@ class SysBase :                        // Members initially private
   } // Shouldn't happen but just incase
   catch(const exception &eReason) { osS << eReason.what(); }
   /* == Get executable filename ============================================ */
-  const wstring SEHGetExecutableFileNameWithoutExtension(void)
+  const wstring SEHGetExecutableFileNameWithoutExtension()
   { // Storage for executable and crash log file name
     wstring wstrExe; wstrExe.resize(MAX_PATH);
     // Get executable file name
@@ -300,7 +300,7 @@ class SysBase :                        // Members initially private
   } // Shouldn't happen but just incase
   catch(const exception &eReason) { osS << eReason.what(); }
   /* == Perform process dump =============================================== */
-  void SEHProcessDump(void) try
+  void SEHProcessDump() try
   { // Prepare formatted data
     Statistic tData;
     tData.Header("Name").Header("Pid").Header("PPid").Header("Thr")
@@ -385,7 +385,7 @@ class SysBase :                        // Members initially private
   } // Shouldn't happen but just incase
   catch(const exception &eReason) { osS << eReason.what(); }
   /* == Perform module dump ================================================ */
-  void SEHModuleDump(void) try
+  void SEHModuleDump() try
   { // Prepare formatted data
     Statistic tD;
     tD.Header("Description").Header("Version", false)
@@ -595,7 +595,7 @@ class SysBase :                        // Members initially private
       throw;
     }
   } // Shouldn't happen but just incase
-  catch(const exception&) { }
+  catch(const exception&) {}
   /* == Build summary ====================================================== */
   const string SEHGetSummary(const EXCEPTION_POINTERS &epData) try
   { // Get exception record
@@ -693,14 +693,14 @@ class SysBase :                        // Members initially private
     RaiseException(dwId, 0, 0, nullptr);
   }
   /* --------------------------------------------------------------- */ public:
-  HWND GetWindowHandle(void) const { return hwndWindow; }
-  bool IsWindowHandleSet(void) const { return GetWindowHandle() != nullptr; }
-  bool IsNotWindowHandleSet(void) const { return !IsWindowHandleSet(); }
-  void SetWindowDestroyed(void) { SetWindowHandle(nullptr); }
+  HWND GetWindowHandle() const { return hwndWindow; }
+  bool IsWindowHandleSet() const { return GetWindowHandle() != nullptr; }
+  bool IsNotWindowHandleSet() const { return !IsWindowHandleSet(); }
+  void SetWindowDestroyed() { SetWindowHandle(nullptr); }
   /* ------------------------------------------------------------ */ protected:
   void SetWindowHandle(HWND hwndNew) { hwndWindow = hwndNew; }
   /* -- Destructor --------------------------------------------------------- */
-  ~SysBase(void)
+  ~SysBase()
   { // Restore original signal handlers
     if(fcbFloatingPointException) signal(SIGFPE, fcbFloatingPointException);
     if(fcbIllegalStorageAccess) signal(SIGSEGV, fcbIllegalStorageAccess);
@@ -711,7 +711,7 @@ class SysBase :                        // Members initially private
     SetErrorMode(uiOldErrorMode);
   }
   /* -- Constructor (install exception filter) ----------------------------- */
-  SysBase(void) :
+  SysBase() :
     /* -- Initialisers ----------------------------------------------------- */
     hwndWindow(nullptr),
     // Set no dialogues for system errors and save code

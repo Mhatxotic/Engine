@@ -155,7 +155,7 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
       // Base classes required to run the main part of the engine.
       private Common, private DirBase, private CmdLine, private Log
     { // Main procedure into running the engine
-      int EngineMain(void) const try { return Core{}.CoreMain(); }
+      int EngineMain() const try { return Core{}.CoreMain(); }
       // Safe loggable exception occured?
       catch(const exception &eReason)
       { // Send to log and show error message to user. Show message box and
@@ -171,7 +171,7 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
         // Initialisers
         CmdLine{ iArgs, lArgs, lEnv }  // Initialise command-line arg
         // No code
-        { }
+        {}
     };
     // Create the engine object, run the main function and return its result
     return Engine{ __argc, __wargv, _wenviron }.EngineMain();

@@ -24,12 +24,12 @@ CTOR_BEGIN_DUO(Files, File, CLHelperUnsafe, ICHelperUnsafe),
   public FStream,                      // File stream class
   public Lockable                      // Lua garbage collector instruction
 { /* -- Basic constructor with no init ----------------------------- */ public:
-  File(void) :
+  File() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFile{ cFiles, this },      // Register the object in collector
     IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* --------------------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Files, File, FILE)    // Finish global Files collector
 /* -- Read string to file in one go ---------------------------------------- */

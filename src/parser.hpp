@@ -65,7 +65,7 @@ template<class ParserMapType>class ParserBase :
     { if(this->find(strKey) == this->end())
         ParserPushPair(StdMove(strKey), StdMove(strValue)); }
   /* -- Direct conditional access ---------------------------------------- */
-  operator bool(void) const { return !this->empty(); }
+  operator bool() const { return !this->empty(); }
   /* -- Value access by key name ------------------------------------------- */
   const string &ParserGet(const string &strKey) const
   { // Find key and return empty string or value
@@ -141,9 +141,9 @@ template<class ParserMapType>class ParserBase :
     /* -- Initialisers ----------------------------------------------------- */
     ParserMapType{ StdMove(pbOther) }  // Initialise moving vars
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor -------------------------------------------------------- */
-  ParserBase(void) = default;
+  ParserBase() = default;
 }; /* -- A Parser class where the values can be modified ------------------- */
 template<class ParserBaseType = ParserBase<StrNCStrMap>>struct Parser :
   /* -- Base classes ------------------------------------------------------- */
@@ -190,13 +190,13 @@ template<class ParserBaseType = ParserBase<StrNCStrMap>>struct Parser :
     // Return the value
     return strOut;
   } /* -- Constructor ------------------------------------------------------ */
-  Parser(void) = default;
+  Parser() = default;
   /* -- MOVE assignment constructor ---------------------------------------- */
   Parser(Parser &&pOther) :            // Other Parser class to move from
     /* -- Initialisers ----------------------------------------------------- */
     ParserBaseType{ StdMove(pOther) }  // Initialise moving vars
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor -------------------------------------------------------- */
   Parser(const string &strSep,         // String to explode
          const string &strLineSep,     // ...Record (line) separator
@@ -206,20 +206,20 @@ template<class ParserBaseType = ParserBase<StrNCStrMap>>struct Parser :
                     strLineSep,        // Initialise record (line) separator
                     cDelimiter }       // Initialise key/value separator
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* -- A Parser class thats values cannot be modified at all -------------- */
 template<class ParserBaseType = const ParserBase<const StrStrMap>>
   struct ParserConst :
   /* -- Base classes ------------------------------------------------------- */
   public ParserBaseType                // The base map type
 { /* -- Constructor -------------------------------------------------------- */
-  ParserConst(void) = default;
+  ParserConst() = default;
   /* -- MOVE assignment constructor ---------------------------------------- */
   ParserConst(ParserConst &&pcOther) : // Other vars
     /* -- Initialisers ----------------------------------------------------- */
     ParserBaseType{ StdMove(pcOther) } // Move it over
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor -------------------------------------------------------- */
   ParserConst(const string &strSep,    // String to explode
               const string &strLineSep,// ...Record (line) separator
@@ -229,7 +229,7 @@ template<class ParserBaseType = const ParserBase<const StrStrMap>>
                     strLineSep,        // Initialise record (line) separator
                     cDelimiter }       // Initialise key/value separator
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -28,7 +28,7 @@ class LuaEvts :
   private LuaEvtsList,                 // list of added event iterators
   protected mutex                      // To serialise access to the list
 { /* -- Return mutex ------------------------------------------------------- */
-  mutex &LuaEvtsGetMutex(void) { return *this; }
+  mutex &LuaEvtsGetMutex() { return *this; }
   /* -- Remove iterator by id -------------------------------------- */ public:
   void LuaEvtsRemoveIterator(const size_t stId)
   { // Lock access to the list
@@ -70,7 +70,7 @@ class LuaEvts :
     emplace_back(StdMove(qciItem));
   }
   /* -- Deinit event store-------------------------------------------------- */
-  void LuaEvtsDeInit(void)
+  void LuaEvtsDeInit()
   { // Lock access to the list
     const LockGuard lgLuaEvtsSync{ LuaEvtsGetMutex() };
     // Done if no events lingering
@@ -88,9 +88,9 @@ class LuaEvts :
     }
   }
   /* -- Constructor -------------------------------------------------------- */
-  LuaEvts(void) = default;
+  LuaEvts() = default;
   /* -- Destructor --------------------------------------------------------- */
-  ~LuaEvts(void) { LuaEvtsDeInit(); }
+  ~LuaEvts() { LuaEvtsDeInit(); }
 };/* ----------------------------------------------------------------------- */
 /* == Class type for master class (send parameters on event trigger) ======= */
 template<class MemberType>struct LuaEvtTypeParam
@@ -113,7 +113,7 @@ template<class MemberType>struct LuaEvtTypeParam
         emeEvent.cCmd, emaArgs.size());
   }
   /* -- Constructor (not interested) --------------------------------------- */
-  LuaEvtTypeParam(void) = default;
+  LuaEvtTypeParam() = default;
 };/* ----------------------------------------------------------------------- */
 /* == Class type for master class (send no parameters on event trigger) ==== */
 template<class MemberType>struct LuaEvtTypeAsync // Used in async class
@@ -136,7 +136,7 @@ template<class MemberType>struct LuaEvtTypeAsync // Used in async class
         emeEvent.cCmd, emaArgs.size());
   }
   /* -- Constructor (not interested) --------------------------------------- */
-  LuaEvtTypeAsync(void) = default;
+  LuaEvtTypeAsync() = default;
 };/* ----------------------------------------------------------------------- */
 /* == Class for master class =============================================== */
 template<class MemberType,             // Member object type
@@ -153,7 +153,7 @@ class LuaEvtMaster :
     /* -- Register the event ----------------------------------------------- */
     { cEvtMain->Register(emcCmd, this->OnEvent); }
   /* -- Unregister the event ----------------------------------------------- */
-  ~LuaEvtMaster(void) { cEvtMain->Unregister(emcCmd); }
+  ~LuaEvtMaster() { cEvtMain->Unregister(emcCmd); }
 };/* == Routines for a collectors child class ============================== */
 template<class MemberType,             // Member object type
          size_t stRefs=1>              // Number of references to store
@@ -261,7 +261,7 @@ class LuaEvtSlave :
   } // Exception occured? Disable lua callback and rethrow
   catch(const exception&) { this->LuaRefDeInit(); throw; }
   /* ----------------------------------------------------------------------- */
-  void LuaEvtDeInit(void)
+  void LuaEvtDeInit()
   { // De-initialise reference state
     this->LuaRefDeInit();
     // De-init event store
@@ -303,9 +303,9 @@ class LuaEvtSlave :
     emcCmd(emcNCmd),                   // Command event id
     mtPtr(mtNPtr)                      // Set pointer to member object
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Destructor to clean up any leftover events and references ---------- */
-  ~LuaEvtSlave(void) { LuaEvtDeInit(); }
+  ~LuaEvtSlave() { LuaEvtDeInit(); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

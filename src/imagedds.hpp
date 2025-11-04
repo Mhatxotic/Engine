@@ -330,7 +330,7 @@ class CodecDDS :                       // GIF codec object
     return true;
   }
   /* -- Default constructor ------------------------------------- */ protected:
-  CodecDDS(void) :
+  CodecDDS() :
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_DDS, "DirectDraw Surface", "DDS",
       bind(&CodecDDS::Decode, this, _1, _2) }

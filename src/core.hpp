@@ -163,7 +163,7 @@ class Core final :                     // Members initially private
       bLeaving ? "reset" : "prepared");
   }
   /* -- Graphical core window thread tick without frame limiter ------------ */
-  void CoreTickNoFrameLimiter(void)
+  void CoreTickNoFrameLimiter()
   { // Update timer
     cTimer->TimerUpdateBot();
     // Render the console fbo (if update requested)
@@ -182,7 +182,7 @@ class Core final :                     // Members initially private
     cFboCore->Render();
   }
   /* -- Graphical core window thread tick with frame limiter --------------- */
-  void CoreTickFrameLimiter(void)
+  void CoreTickFrameLimiter()
   { // Return if it is not time to execute a game tick
     if(cTimer->TimerShouldNotTick()) return;
     // Render the console fbo (if update requested)
@@ -316,14 +316,14 @@ class Core final :                     // Members initially private
     return cPtr->CoreThreadSandbox(lS);
   }
   /* -- Lua deinitialiser helper which updates all the classes that use it - */
-  void CoreLuaDeInitHelper(void)
+  void CoreLuaDeInitHelper()
   { // De-init lua and update systems that use Lua
     cLua->DeInit();
     // Reset environment (leaving)
     CoreResetEnvironment(true);
   }
   /* -- DeInitialise engine components ------------------------------------- */
-  void CoreDeInitComponents(void) try
+  void CoreDeInitComponents() try
   { // Log reason for deinit
     cLog->LogDebugExSafe("Engine de-initialising interfaces with code $.",
       cEvtMain->GetExitReason());
@@ -385,7 +385,7 @@ class Core final :                     // Members initially private
     cFboCore->Render();
   }
   /* -- De-initialise everything ------------------------------------------- */
-  void CoreDeInitEverything(void)
+  void CoreDeInitEverything()
   { // De-initialise components
     CoreDeInitComponents();
     // If not in graphical mode, we're done
@@ -396,7 +396,7 @@ class Core final :                     // Members initially private
     GlFWForceEventHack();
   }
   /* -- Initoialise graphics subsystems ------------------------------------ */
-  void CoreInitGraphicalSubsystems(void)
+  void CoreInitGraphicalSubsystems()
   { // Set context current and pass selected refresh rate
     cOgl->Init(cDisplay->GetRefreshRate());
     // Initialise core shaders
@@ -630,7 +630,7 @@ class Core final :                     // Members initially private
     return TS_ERROR;
   }
   /* -- Engine should continue? -------------------------------------------- */
-  bool CoreShouldEngineContinue(void)
+  bool CoreShouldEngineContinue()
   { // Compare exit value
     switch(cEvtMain->GetExitReason())
     { // Engine was requested to quit or restart? NO!
@@ -642,7 +642,7 @@ class Core final :                     // Members initially private
     }
   }
   /* -- Initialise graphical mode ------------------------------------------ */
-  void CoreEnterGraphicalMode(void)
+  void CoreEnterGraphicalMode()
   { // Initialise Glfw mode and de-init it when exiting
     INITHELPER(GlFWIH, cGlFW->Init(), cGlFW->DeInit());
     // Until engine should terminate.
@@ -679,7 +679,7 @@ class Core final :                     // Members initially private
    } // Engine should terminate from here-on
   }
   /* -- Wait async on all systems ---------------------------------- */ public:
-  void CoreWaitAllAsync(void)
+  void CoreWaitAllAsync()
   { // Wait for all asynchronous operations to complete.
     const scoped_lock slCollectorMutexes{
       cArchives->CollectorGetMutex(), cAssets->CollectorGetMutex(),
@@ -690,7 +690,7 @@ class Core final :                     // Members initially private
     };
   }
   /* -- Main function ------------------------------------------------------ */
-  int CoreMain(void)
+  int CoreMain()
   { // Register default cvars and pass over the current gui mode by ref. All
     // the core parts of the engine are initialised from cvar callbacks.
     cCVars->Init();
@@ -795,7 +795,7 @@ class Core final :                     // Members initially private
     return 0;
   }
   /* -- Default constructor ------------------------------------------------ */
-  Core(void) :
+  Core() :
     /* -- Initialisers ----------------------------------------------------- */
 #include "cvarlib.hpp"                 // Defines cvar list
     CVars{                             // Initialise cvars list

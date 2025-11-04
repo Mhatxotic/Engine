@@ -43,9 +43,9 @@ class SysProcess :                     // Need this before of System init order
   const pid_t      piProcessId;        // Process id
   const pthread_t  vpThreadId;         // Thread id
   /* -- Return process and thread id ---------------------------- */ protected:
-  template<typename IntType=decltype(piProcessId)>IntType GetPid(void) const
+  template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
-  template<typename IntType=decltype(vpThreadId)>IntType GetTid(void) const
+  template<typename IntType=decltype(vpThreadId)>IntType GetTid() const
     { return static_cast<IntType>(vpThreadId); }
   /* -- Initialise global mutex ------------------------------------ */ public:
   bool InitGlobalMutex(const string_view &strvTitle)
@@ -66,14 +66,14 @@ class SysProcess :                     // Need this before of System init order
     return true;
   }
   /* -- Destructor --------------------------------------------------------- */
-  ~SysProcess(void)
+  ~SysProcess()
   { // Unlink the mutex and show warning in log if failed
     if(IdentIsSet() && shm_unlink(IdentGetData()))
       cLog->LogWarningExSafe("SysMutex could not delete old mutex '$': $",
         IdentGet(), SysError());
   }
   /* -- Constructor -------------------------------------------------------- */
-  SysProcess(void) :
+  SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
     fsDevRandom{ "/dev/random",        // Open dev random garbage stream
                  FM_R_B },             // - Read/Binary mode
@@ -92,7 +92,7 @@ class SysProcess :                     // Need this before of System init order
     piProcessId(getpid()),             // Get native process id
     vpThreadId(pthread_self())         // Get native thread id
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
@@ -102,7 +102,7 @@ class SysCore :
 { /* -- Variables ---------------------------------------------------------- */
   bool             bWindowInitialised; // Is window initialised?
   /* --------------------------------------------------------------- */ public:
-  void UpdateMemoryUsageData(void)
+  void UpdateMemoryUsageData()
   { // If the stat file is opened
     if(fsProcStatM.FStreamIsReadyRead())
     { // Read string from stat
@@ -144,7 +144,7 @@ class SysCore :
          memData.dMLoad = 0;
   }
   /* -- Return operating system uptime (cmHiRes.GetTimeS() doesn't work!) -- */
-  StdTimeT GetUptime(void)
+  StdTimeT GetUptime()
   { // Get uptime
     struct timespec tsData;
     clock_gettime(CLOCK_MONOTONIC, &tsData);
@@ -158,7 +158,7 @@ class SysCore :
   bool IsPidRunning(const unsigned int uiPid) const
     { return !kill(uiPid, 0); }
   /* -- GLFW handles the icons on this ------------------------------------- */
-  void UpdateIcons(void) { }
+  void UpdateIcons() {}
   /* ----------------------------------------------------------------------- */
   static bool LibFree(void*const vpModule)
     { return vpModule && !dlclose(vpModule); }
@@ -181,7 +181,7 @@ class SysCore :
     return StdMove(PathSplit{ lmData->l_name, true }.strFull);
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateCPUUsageData(void)
+  void UpdateCPUUsageData()
   { // If the stat file is opened
     if(fsProcStatM.FStreamIsReadyRead())
     { // Read string from stat and if succeeded?
@@ -347,7 +347,7 @@ class SysCore :
     else XCL("Failed to open executable!", "File", strFile);
   }
   /* -- Get executable file name ------------------------------------------- */
-  const string GetExeName(void)
+  const string GetExeName()
   { // Storage for executable name
     string strName; strName.resize(PATH_MAX);
     strName.resize(readlink("/proc/self/exe",
@@ -355,7 +355,7 @@ class SysCore :
     return strName;
   }
   /* -- Enum modules ------------------------------------------------------- */
-  SysModMap EnumModules(void)
+  SysModMap EnumModules()
   { // Make verison string
     string strVersion{ StrAppend(numeric_limits<void*>::digits,
       "-bit version") };
@@ -368,7 +368,7 @@ class SysCore :
     return smmMap;
   }
   /* ----------------------------------------------------------------------- */
-  OSData GetOperatingSystememData(void)
+  OSData GetOperatingSystememData()
   { // Get operating system name
     struct utsname utsnData;
     if(uname(&utsnData)) XCS("Failed to read operating system information!");
@@ -396,9 +396,9 @@ class SysCore :
       sizeof(void*)<<3, StdMove(strCode), DetectElevation(), false };
   }
   /* ----------------------------------------------------------------------- */
-  ExeData GetExecutableData(void) { return { 0, 0, false, false }; }
+  ExeData GetExecutableData() { return { 0, 0, false, false }; }
   /* ----------------------------------------------------------------------- */
-  CPUData GetProcessorData(void)
+  CPUData GetProcessorData()
   {  // Open cpu information file
     if(FStream fsCpuInfo{ "/proc/cpuinfo", FM_R_B })
     { // Read file and if we got data?
@@ -448,7 +448,7 @@ class SysCore :
     return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
   }
   /* ----------------------------------------------------------------------- */
-  bool DebuggerRunning(void) const { return false; }
+  bool DebuggerRunning() const { return false; }
   /* -- Get process affinity masks ----------------------------------------- */
   uint64_t GetAffinity(const bool bS)
   { // Get the process affinity mask
@@ -467,7 +467,7 @@ class SysCore :
     return qwAffinity;
   }
   /* ----------------------------------------------------------------------- */
-  int GetPriority(void)
+  int GetPriority()
   { // Get priority value and throw if failed
     const int iNice = getpriority(PRIO_PROCESS, GetPid());
     if(iNice == -1) XCS("Failed to acquire process priority!");
@@ -475,26 +475,26 @@ class SysCore :
     return iNice;
    }
   /* -- Return if running as root ------------------------------------------ */
-  bool DetectElevation(void) { return getuid() == 0; }
+  bool DetectElevation() { return getuid() == 0; }
   /* -- Return data from /dev/urandom -------------------------------------- */
-  Memory GetEntropy(void)
+  Memory GetEntropy()
     { return fsDevRandom.FStreamReadBlockSafe(stPageSize); }
   /* ----------------------------------------------------------------------- */
-  void *GetWindowHandle(void) const { return nullptr; }
+  void *GetWindowHandle() const { return nullptr; }
   /* -- A window was created ----------------------------------------------- */
   void WindowInitialised(GlFW::GLFWwindow*const gwWindow)
     { bWindowInitialised = !!gwWindow; }
   /* -- Window was destroyed, nullify handles ------------------------------ */
-  void SetWindowDestroyed(void) { bWindowInitialised = false; }
+  void SetWindowDestroyed() { bWindowInitialised = false; }
   /* -- Help with debugging ------------------------------------------------ */
-  const char *HeapCheck(void) const { return "Not implemented!"; }
+  const char *HeapCheck() const { return "Not implemented!"; }
   /* ----------------------------------------------------------------------- */
-  int LastSocketOrSysError(void) const { return StdGetError(); }
+  int LastSocketOrSysError() const { return StdGetError(); }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const string BuildRoamingDir(void) const
+  const string BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("HOME", "/.local"); }
   /* -- Constructor -------------------------------------------------------- */
-  SysCore(void) :
+  SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
     SysCon{ EnumModules(), 0 },
     SysCommon{ GetExecutableData(),
@@ -502,6 +502,6 @@ class SysCore :
                GetProcessorData() },
     bWindowInitialised(false)
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

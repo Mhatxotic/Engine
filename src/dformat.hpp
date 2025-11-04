@@ -51,12 +51,12 @@ class DataFormat                       // Image libraries format object class
   static bool NoEncoder(const FStream&, const DataType&, const SlotType&)
     { return false; }
   /* -- Get members ------------------------------------------------ */ public:
-  const CbFuncDecoder &GetDecoder(void) const { return cfdFunc; }
-  const CbFuncEncoder &GetEncoder(void) const { return cfeFunc; }
-  const string_view &GetName(void) const { return strvName; }
-  const string_view &GetExt(void) const { return strvExt; }
-  bool HaveDecoder(void) const { return dffcCaps.FlagIsSet(DF_DECODE); }
-  bool HaveEncoder(void) const { return dffcCaps.FlagIsSet(DF_ENCODE); }
+  const CbFuncDecoder &GetDecoder() const { return cfdFunc; }
+  const CbFuncEncoder &GetEncoder() const { return cfeFunc; }
+  const string_view &GetName() const { return strvName; }
+  const string_view &GetExt() const { return strvExt; }
+  bool HaveDecoder() const { return dffcCaps.FlagIsSet(DF_DECODE); }
+  bool HaveEncoder() const { return dffcCaps.FlagIsSet(DF_ENCODE); }
   /* -- Constructor with loader function only ------------------- */ protected:
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
@@ -73,7 +73,7 @@ class DataFormat                       // Image libraries format object class
     cfeFunc{ NoEncoder },              // Set no saver function
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with saver function only ------------------------------- */
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
@@ -90,7 +90,7 @@ class DataFormat                       // Image libraries format object class
     cfeFunc{ cfeNFunc },               // Set saver function
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
   /* -- Constructor with both loader and saver functions ------------------- */
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
@@ -108,7 +108,7 @@ class DataFormat                       // Image libraries format object class
     cfeFunc{ cfeNFunc },               // Set saver function
     ftId(CheckId(ftNId, stSize))       // Set unique id for this filter
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

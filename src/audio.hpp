@@ -59,7 +59,7 @@ class Audio :                          // Audio manager class
     lfOnUpdate.LuaFuncDispatch(false);
   }
   /* -- Init thread -------------------------------------------------------- */
-  void AudioInitThread(void)
+  void AudioInitThread()
   { // Log that the thread is starting
     cLog->LogDebugSafe("Audio monitoring thread initialising...");
     // Start the minimal thread
@@ -71,14 +71,14 @@ class Audio :                          // Audio manager class
       StrShortFromDuration(ClockDurationToDouble(cdCheckRate)));
   }
   /* -- DeInit thread ------------------------------------------------------ */
-  void AudioDeInitThread(void)
+  void AudioDeInitThread()
   { // Stop and de-init the thread and log progress
     cLog->LogDebugSafe("Audio monitoring thread de-initialising...");
     ThreadDeInit();
     cLog->LogDebugSafe("Audio monitoring thread de-initialised.");
   }
   /* -- Reset timer interval ----------------------------------------------- */
-  void AudioResetCheckTime(void)
+  void AudioResetCheckTime()
     { tpNextCheck = cmHiRes.GetTime() + cdCheckRate.load(); }
   /* -- ReInit requested --------------------------------------------------- */
   void AudioOnReInit(const EvtMainEvent&)
@@ -139,7 +139,7 @@ class Audio :                          // Audio manager class
     return TS_RETRY;
   }
   /* -- Verification of context -------------------------------------------- */
-  bool AudioVerify(void)
+  bool AudioVerify()
   { // Ignore if next check time not met
     if(cmHiRes.GetTime() < tpNextCheck) return true;
     // Number of discrepancies found. If there is no such device in the current
@@ -254,7 +254,7 @@ class Audio :                          // Audio manager class
     }
   }
   /* -- Init context ------------------------------------------------------- */
-  void AudioInitContext(void)
+  void AudioInitContext()
   { // Log that we are initialising
     cLog->LogDebugSafe("Audio subsystem initialising...");
     // Enumerate devices
@@ -305,9 +305,9 @@ class Audio :                          // Audio manager class
     AudioSetOrientation(0, 0, 1, 0, -1, 0);
   }
   /* -- De-initialise the context ------------------------------------------ */
-  void AudioDeInitContext(void) { cOal->DeInit(); }
+  void AudioDeInitContext() { cOal->DeInit(); }
   /* -- Enumerate capture devices ------------------------------------------ */
-  void AudioEnumCaptureDevices(void)
+  void AudioEnumCaptureDevices()
   { // Log enumerations
     cLog->LogDebugSafe("Audio enumerating capture devices...");
     // Storage for list of devices
@@ -342,7 +342,7 @@ class Audio :                          // Audio manager class
       AudioGetNumCapDevices());
   }
   /* -- Enumerate playback devices ----------------------------------------- */
-  void AudioEnumPlaybackDevices(void)
+  void AudioEnumPlaybackDevices()
   { // Log enumerations
     cLog->LogDebugSafe("Audio enumerating playback devices...");
     // Clear playback devices list
@@ -413,10 +413,10 @@ class Audio :                          // Audio manager class
     return dlPBDevices[stId];
   }
   /* -- Return devices ----------------------------------------------------- */
-  const StrVector &AudioGetPbkDevices(void) { return dlPBDevices; }
-  const StrVector &AudioGetCapDevices(void) { return dlCTDevices; }
+  const StrVector &AudioGetPbkDevices() { return dlPBDevices; }
+  const StrVector &AudioGetCapDevices() { return dlCTDevices; }
   /* -- Get device information --------------------------------------------- */
-  size_t AudioGetNumPbkDevices(void) const { return dlPBDevices.size(); }
+  size_t AudioGetNumPbkDevices() const { return dlPBDevices.size(); }
   /* -- Get device information --------------------------------------------- */
   const string AudioGetCapDevice(const size_t stId) const
   { // bail if value out of range
@@ -427,9 +427,9 @@ class Audio :                          // Audio manager class
     return dlCTDevices[stId];
   }
   /* -- Get device information --------------------------------------------- */
-  size_t AudioGetNumCapDevices(void) const { return dlCTDevices.size(); }
+  size_t AudioGetNumCapDevices() const { return dlCTDevices.size(); }
   /* -- Send init signal --------------------------------------------------- */
-  bool AudioReInit(void)
+  bool AudioReInit()
   { // Return if signal already set to reinitialise
     if(cOal->FlagIsSet(AFL_REINIT)) return false;
     // Set the signal to reinit (it will get unset when reinitialised)
@@ -440,9 +440,9 @@ class Audio :                          // Audio manager class
     return true;
   }
   /* -- Stop all sounds ---------------------------------------------------- */
-  void AudioStopAll(void) { VideoStop(); StreamStop(); SampleStop(); }
+  void AudioStopAll() { VideoStop(); StreamStop(); SampleStop(); }
   /* -- Init --------------------------------------------------------------- */
-  void AudioDeInit(void)
+  void AudioDeInit()
   { // Ignore if class already de-initialised
     if(IHNotDeInitialise()) return;
     // Log subsystem
@@ -466,7 +466,7 @@ class Audio :                          // Audio manager class
     cLog->LogDebugSafe("Audio class shutdown finished.");
   }
   /* -- Init --------------------------------------------------------------- */
-  void AudioInit(void)
+  void AudioInit()
   { // Class initialised
     IHInitialise();
     // Log subsystem
@@ -485,7 +485,7 @@ class Audio :                          // Audio manager class
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Audio, AudioDeInit())
   /* -- Default constructor ------------------------------------------------ */
-  Audio(void) :                        // No parameters
+  Audio() :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Initialise class name
     Thread{ "audio", STP_AUDIO },      // Initialise high perf audio thread

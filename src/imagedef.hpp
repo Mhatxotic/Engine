@@ -95,7 +95,7 @@ struct ImageSlot :                     // Members initially public
     Memory{ StdMove(mData) },          // Move memory in place
     DimUInt{ uiW, uiH }                // Set dimensions
     /* -- No code ---------------------------------------------------------- */
-    { }
+    {}
 };/* ----------------------------------------------------------------------- */
 typedef vector<ImageSlot> SlotList;    // list of bitmaps
 /* ------------------------------------------------------------------------- */
@@ -162,13 +162,13 @@ class ImageData :                      // Members initially private
     void SetBytesAndBitsPerPixelCast(const IntType uiNBPP)
       { SetBytesAndBitsPerPixel(static_cast<ByteDepth>(uiNBPP)); }
   /* ----------------------------------------------------------------------- */
-  size_t GetAlloc(void) const { return stAlloc; }
+  size_t GetAlloc() const { return stAlloc; }
   /* ----------------------------------------------------------------------- */
 #define FH(n, f) \
-  bool Is ## n(void) const { return FlagIsSet(f); } \
-  bool IsNot ## n(void) const { return !Is ## n(); } \
+  bool Is ## n() const { return FlagIsSet(f); } \
+  bool IsNot ## n() const { return !Is ## n(); } \
   void Set ## n(bool bState=true) { FlagSetOrClear(f, bState); } \
-  void Clear ## n(void) { Set ## n(false); }
+  void Clear ## n() { Set ## n(false); }
   /* ----------------------------------------------------------------------- */
   FH(FontFreeType,     FT_FREETYPE)    // Is/IsNot/Set/ClearFontFreeType
   FH(FontBitmap,       FT_BITMAP)      // Is/IsNot/Set/ClearFontBitmap
@@ -205,20 +205,20 @@ class ImageData :                      // Members initially private
   /* ----------------------------------------------------------------------- */
   void SetPixelType(const TextureType ttNType) { ttType = ttNType; }
   /* ----------------------------------------------------------------------- */
-  TextureType GetPixelType(void) const { return ttType; }
+  TextureType GetPixelType() const { return ttType; }
   /* ----------------------------------------------------------------------- */
-  size_t TotalPixels(void) const
+  size_t TotalPixels() const
     { return DimGetWidth<size_t>() * DimGetHeight<size_t>(); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType=decltype(bdDepth)>
-    IntType GetBitsPerPixel(void) const
+    IntType GetBitsPerPixel() const
       { return static_cast<IntType>(bdDepth); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType=decltype(byDepth)>
-    IntType GetBytesPerPixel(void) const
+    IntType GetBytesPerPixel() const
       { return static_cast<IntType>(byDepth); }
   /* -- Get slots ---------------------------------------------------------- */
-  SlotList &GetSlots(void) { return slSlots; }
+  SlotList &GetSlots() { return slSlots; }
   /* -- Add a new slot ----------------------------------------------------- */
   void AddSlot(Memory &mData, const unsigned int uiSWidth,
     const unsigned int uiSHeight)
@@ -233,15 +233,15 @@ class ImageData :                      // Members initially private
   /* -- Helps with one-liners (temporary variables) ------------------------ */
   void AddSlot(Memory &&mData) { AddSlot(mData); }
   /* -- Get read-only slots ------------------------------------------------ */
-  const SlotList &GetSlotsConst(void) const { return slSlots; }
+  const SlotList &GetSlotsConst() const { return slSlots; }
   /* -- Is no slots? ------------------------------------------------------- */
-  bool IsNoSlots(void) const { return GetSlotsConst().empty(); }
+  bool IsNoSlots() const { return GetSlotsConst().empty(); }
   /* -- Clear slots -------------------------------------------------------- */
-  void ClearSlots(void) { GetSlots().clear(); }
+  void ClearSlots() { GetSlots().clear(); }
   /* -- Recover slot memory ------------------------------------------------ */
-  void CompactSlots(void) { GetSlots().shrink_to_fit(); }
+  void CompactSlots() { GetSlots().shrink_to_fit(); }
   /* -- Get slots count ---------------------------------------------------- */
-  size_t GetSlotCount(void) const { return GetSlotsConst().size(); }
+  size_t GetSlotCount() const { return GetSlotsConst().size(); }
   /* -- Set allocated data size -------------------------------------------- */
   void SetAlloc(const size_t stNAlloc) { stAlloc = stNAlloc; }
   /* -- Reserve allocated slots -------------------------------------------- */
@@ -258,9 +258,9 @@ class ImageData :                      // Members initially private
     else if(stNewAlloc < stOldAlloc) DecreaseAlloc(stOldAlloc - stNewAlloc);
   }
   /* -- Clear slots and allocation size ------------------------------------ */
-  void Clear(void) { SetAlloc(0); ClearSlots(); }
+  void Clear() { SetAlloc(0); ClearSlots(); }
   /* -- Reset all data ----------------------------------------------------- */
-  void ResetAllData(void)
+  void ResetAllData()
   { // Reset dimensions and pixel data
     DimSet();
     SetBitsPerPixel(BD_NONE);
@@ -284,7 +284,7 @@ class ImageData :                      // Members initially private
     stAlloc(0),                        // Allocated memory not initialised yet
     stTiles(0)                         // No number of tiles
     /* -- Code ------------------------------------------------------------- */
-    { }                                // Nothing else to do
+    {}                                 // Nothing else to do
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
