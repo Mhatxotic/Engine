@@ -682,11 +682,9 @@ class Core final :                     // Members initially private
   void CoreWaitAllAsync()
   { // Wait for all asynchronous operations to complete.
     const scoped_lock slCollectorMutexes{
-      cArchives->CollectorGetMutex(), cAssets->CollectorGetMutex(),
-      cFtfs->CollectorGetMutex(),     cImages->CollectorGetMutex(),
-      cJsons->CollectorGetMutex(),    cPcms->CollectorGetMutex(),
-      cSources->CollectorGetMutex(),  cStreams->CollectorGetMutex(),
-      cVideos->CollectorGetMutex()
+      cArchives->MutexGet(), cAssets->MutexGet(),  cFtfs->MutexGet(),
+      cImages->MutexGet(),   cJsons->MutexGet(),   cPcms->MutexGet(),
+      cSources->MutexGet(),  cStreams->MutexGet(), cVideos->MutexGet()
     };
   }
   /* -- Main function ------------------------------------------------------ */

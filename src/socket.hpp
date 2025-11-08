@@ -18,12 +18,13 @@ using namespace IFlags;                using namespace IIdent::P;
 using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IParser::P;
+using namespace IMemory::P;            using namespace IMutex::P;
+using namespace IParser::P;            using namespace IRefCtr::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IThread::P;            using namespace IToggler::P;
-using namespace IToken::P;             using namespace IUtil::P;
-using namespace IUtf::P;               using namespace Lib::OS::OpenSSL;
+using namespace IThread::P;            using namespace IToken::P;
+using namespace IUtil::P;              using namespace IUtf::P;
+using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
@@ -84,9 +85,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public LuaEvtSlave<Socket,2>,        // Need to store two references
   public Lockable,                     // Lua garbage collector instruction
-  public TogglerMaster<>,              // Boolean to protect LUA callbacks
+  public RefCtrMaster<>,               // Ref counter to protect LUA callbacks
   public SocketFlags,                  // Socket flags
-  public Ident                         // Identifier
+  public Ident,                        // Identifier
+  private Mutex                        // Reader mutex
 { /* ----------------------------------------------------------------------- */
   struct Packet                        // Connection packet
   { /* --------------------------------------------------------------------- */
@@ -114,8 +116,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Threads and concurrency -------------------------------------------- */
   Thread           tReader,            // Thread for sockread/http operations
                    tWriter;            // Thread for sockwrite operations
-  mutex            mMutex,             // mutex to prevent threading deadlocks
-                   mWriter;            // For condition variable
+  mutex            mWriter;            // For condition variable
   bool             bUnlock;            // Condition variable unblocker
   condition_variable cvWriter;         // Waiting for write/terminate event
   /* -- Other variables ---------------------------------------------------- */
@@ -157,10 +158,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     const char*const cpFormat, const VarArgs &...vaArgs)
   { // Return if we don't have this level
     if(cLog->NotHasLevel(lhlSeverity)) return;
-    // Synchronise access to socket data while we log details
-    const LockGuard lgSockSync{ mMutex };
-    // Write formatted string
-    SocketLog(lhlSeverity, cpFormat, vaArgs...);
+    // Synchronise access to data while we log details
+    MutexCall([this,lhlSeverity,cpFormat,&vaArgs...](){
+      SocketLog(lhlSeverity, cpFormat, vaArgs...);});
   }
   /* -- Internal log ------------------------------------------------------- */
   template<typename ...VarArgs>void SocketLogUnsafe(const LHLevel lhlSeverity,
@@ -399,8 +399,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Disconnect the socket ---------------------------------------------- */
   void FinishDisconnect()
   { // Lock mutex to prevent data race
-    const LockGuard lgSockSync{ mMutex };
-    { // Have BIO socket pointer?
+    MutexCall([this](){
+      // Have BIO socket pointer?
       if(bioPtr)
       { // This automatically frees the SSL context
         BIO_free_all(bioPtr);
@@ -415,7 +415,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         sslPtr = nullptr;
       } // Clear context if created
       if(sslctxPtr) { SSL_CTX_free(sslctxPtr); sslctxPtr = nullptr; }
-    } // Don't log if we're already disconnected
+    });
+    // Don't log if we're already disconnected
     if(IsDisconnected()) return;
     // Set standby status
     AddStatus(SS_STANDBY, cdDisconnected);
@@ -489,11 +490,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Get item of interest and if successful, move the result into the
         // specified destination
         if(const AddrPtr apAddr{ baData, adCmd.iId })
-        { // Lock mutex
-          const LockGuard lgSockSync{ mMutex };
-          // Load C-String into STL string
-          adCmd.strDest = apAddr.cpPtr;
-        }
+          MutexCall([&adCmd,&apAddr](){adCmd.strDest = apAddr.cpPtr;});
       }
     } // No IP address detected for some reason
     else return SetErrorSafe("No address found");
@@ -704,13 +701,14 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Is the cipher available?
       if(SSL_CIPHER_description(SSL_get_current_cipher(sslPtr), cpStr, iLen))
       { // Synchronise access to cipher string
-        const LockGuard lgSetCipher{ mMutex };
-        // Set cipher and remove spaces, carriage returns and linefeeds
-        strCipher = cpStr;
-        StrCompactRef(strCipher);
-        StrChop(strCipher);
-        // Print encryption info. Don't need to lock twice
-        SocketLogUnsafe(LH_DEBUG, "Cipher is $", strCipher);
+        MutexCall([this,cpStr](){
+          // Set cipher and remove spaces, carriage returns and linefeeds
+          strCipher = cpStr;
+          StrCompactRef(strCipher);
+          StrChop(strCipher);
+          // Print encryption info. Don't need to lock twice
+          SocketLogUnsafe(LH_DEBUG, "Cipher is $", strCipher);
+        });
       } // Get cipher failed? Log failure
       else return SetErrorSafe("Server using no cipher!");
       // Get server certificate
@@ -839,13 +837,14 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               if(stRequired) continue;
               // Ignore if not final packet
               if(!bFinal) break;
-              { // Lock access to the packet list
-                const LockGuard lgSockSync{ mMutex };
+              // Lock access to the packet list
+              MutexCall([this,&plTemp,stPLTotal](){
                 // Move packets to main packet list
                 plRX.splice(plRX.end(), plTemp);
                 // Set total size
                 stRX += stPLTotal;
-              } // Tell client that we have data ready
+              });
+              // Tell client that we have data ready
               DispatchEvent(SS_READPACKET);
               // Break to reset counters
               break;
@@ -1153,8 +1152,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // without having to perform any special string operations
       pRegistry.ParserPushOrUpdatePair(cParent->strRegVarPROTO, strProtoRecv);
       pRegistry.ParserPushOrUpdatePair(cParent->strRegVarCODE, strStatus);
-      { // We have to lock the TX list since a LUA function can read this
-        const LockGuard lgSockSync{ mMutex };
+      // We have to lock the TX list since a LUA function can read this
+      MutexCall([this](){
+        // Enumerate registry entries
         for(const StrNCStrMapPair &sncsmpPair : pRegistry)
         { // Get items and push into TX since we're not using it anymore. Make
           // sure to include the null-terminator so we can use string_view for
@@ -1165,7 +1165,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           PushData(plTX, stTX, sncsmpPair.second.c_str(),
             sncsmpPair.second.size()+1);
         }
-      } // If we got a content type?
+      });
+      // If we got a content type?
       const StrNCStrMapConstIt sncsmciType{
         GetRegistryIterator("content-type") };
       if(sncsmciType != pRegistry.cend())
@@ -1231,13 +1232,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   }
   /* -- Return if there are TX packets available --------------------------- */
   bool IsTXPacketAvailable()
-    { const LockGuard lgSockSync{ mMutex }; return !plTX.empty(); }
+    { return MutexCall([this](){return !plTX.empty();}); }
   /* -- Get memory to oldest TX packet ------------------------------------- */
   const MemConst &GetOldestTXPacketSafe()
-    { const LockGuard lgSockSync{ mMutex }; return plTX.front().mData; }
+    { return MutexCall([this]()->MemConst&{return plTX.front().mData;}); }
   /* -- Pop oldest TX packet ----------------------------------------------- */
-  void PopOldestTXPacketSafe()
-    { const LockGuard lgSockSync{ mMutex }; return plTX.pop_front(); }
+  void PopOldestTXPacketSafe() { MutexCall([this](){plTX.pop_front();}); }
   /* -- Socket write manager ----------------------------------------------- */
   ThreadStatus SockWebWriteManager()
   { // Block until requested to exit
@@ -1474,26 +1474,22 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     { return StrAppend(GetIPAddress(), ':', GetPort()); }
   const string &GetErrorStr() const { return strError; }
   /* ----------------------------------------------------------------------- */
-  template<typename AnyType>const AnyType GetVarSafe(const AnyType &atVar)
-    { const LockGuard lgSockSync{ mMutex }; return atVar; }
-  /* ----------------------------------------------------------------------- */
   double GetPacketXSafe(Memory &mbD, PacketList &plList, size_t &stX)
   { // Synchronise access to packet list
-    const LockGuard lgSockSync{ mMutex };
-    // Not empty? Return top memory block else through error
-    if(plList.empty())
-      XC("No packets remaining in blocklist!",
-         "Address", strAddr, "Port", uiPort);
-    // Get last packet and return time
-    return GetPacket(mbD, plList, stX);
+    return MutexCall([this,&mbD,&plList,&stX](){
+      // Not empty? Return top memory block else through error
+      if(plList.empty())
+        XC("No packets remaining in blocklist!",
+           "Address", strAddr, "Port", uiPort);
+      // Get last packet and return time
+      return GetPacket(mbD, plList, stX);
+    });
   }
   /* ----------------------------------------------------------------------- */
   size_t GetXQCountSafe(const PacketList &plList)
-    { const LockGuard lgSockSync{ mMutex };
-      return plList.size(); }
+    { return MutexCall([&plList](){return plList.size();}); }
   void CompactXSafe(Memory &mbD, PacketList &plList, size_t &stX)
-    { const LockGuard lgSockSync{ mMutex };
-      Compact(mbD, plList, stX); }
+    { MutexCall([this,&mbD,&plList,&stX](){Compact(mbD, plList, stX);}); }
   /* -- Events status ------------------------------------------------------ */
   bool IsConnected() const { return FlagIsSet(SS_CONNECTED); }
   bool IsDisconnected() const { return FlagIsSet(SS_STANDBY); }
@@ -1507,20 +1503,26 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   int GetError() const { return iError; }
   /* -- Connection data ---------------------------------------------------- */
   const string &GetAddress() const { return strAddr; }
-  const string GetAddressSafe() { return GetVarSafe(GetAddress()); }
+  const string GetAddressSafe()
+    { return MutexCall([this](){return GetAddress();}); }
   const unsigned int &GetPort() const { return uiPort; }
-  unsigned int GetPortSafe() { return GetVarSafe(GetPort()); }
+  unsigned int GetPortSafe()
+    { return MutexCall([this](){return GetPort();}); }
   const string &GetIPAddress() const { return strIP; }
-  const string GetIPAddressSafe() { return GetVarSafe(GetIPAddress()); }
+  const string GetIPAddressSafe()
+    { return MutexCall([this](){return GetIPAddress();}); }
   const string GetAddressAndPortSafe()
-    { return GetVarSafe(GetAddressAndPort()); }
+    { return MutexCall([this](){return GetAddressAndPort();}); }
   const string GetIPAddressAndPortSafe()
-    { return GetVarSafe(GetIPAddressAndPort()); }
+    { return MutexCall([this](){return GetIPAddressAndPort();}); }
   const string &GetRealHost() const { return strRealHost; }
-  const string GetRealHostSafe() { return GetVarSafe(GetRealHost()); }
+  const string GetRealHostSafe()
+    { return MutexCall([this](){return GetRealHost();}); }
   const string &GetCipher() const { return strCipher; }
-  const string GetCipherSafe() { return GetVarSafe(GetCipher()); }
-  const string GetErrorStrSafe() { return GetVarSafe(GetErrorStr()); }
+  const string GetCipherSafe()
+    { return MutexCall([this](){return GetCipher();}); }
+  const string GetErrorStrSafe()
+    { return MutexCall([this](){return GetErrorStr();}); }
   /* -- RX packets --------------------------------------------------------- */
   uint64_t GetRX() const { return qRX; }
   uint64_t GetRXpkt() const { return qRXp; }
@@ -1539,16 +1541,17 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void CompactTXSafe(Memory &mbD) { CompactXSafe(mbD, plTX, stTX); }
   /* ----------------------------------------------------------------------- */
   ThreadStatus SetErrorSafe(const string &strS)
-    { const LockGuard lgSockSync{ mMutex }; return SetError(strS); }
+    { return MutexCall([this,&strS](){return SetError(strS);}); }
   ThreadStatus SetErrorStaticSafe(const string &strS, const bool bS=true)
-    { const LockGuard lgSockSync{ mMutex }; return SetErrorStatic(strS, bS); }
+    { return MutexCall([this,&strS,bS](){return SetErrorStatic(strS, bS);}); }
   void PushDataSafe(PacketList &blD, size_t &stX, const char *cpData,
     const size_t stS)
-    { const LockGuard lgSockSync{ mMutex }; PushData(blD, stX, cpData, stS); }
+      { MutexCall([this,&blD,&stX,cpData,stS](){
+          PushData(blD, stX, cpData, stS);}); }
   void SendSafe(const MemConst &mcPacket)
-    { const LockGuard lgSockSync{ mMutex }; Send(mcPacket); }
+    { MutexCall([this,&mcPacket](){Send(mcPacket);}); }
   void SendStringSafe(const string &strData)
-    { const LockGuard lgSockSync{ mMutex }; SendString(strData); }
+    { MutexCall([this,&strData](){SendString(strData);}); }
   /* -- Get timers --------------------------------------------------------- */
   const ClkTimePoint GetTConnect() const { return ClkTimePoint{ cdConnect }; }
   const ClkTimePoint GetTConnected() const
@@ -1580,7 +1583,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
             LuaUtilPushInt(lsState, uiStatus);
             if(LuaUtilIsInteger(lsState, -1))
             { // Call callback
-              LuaUtilCallFuncTogglerEx(lsState, this, 2);
+              LuaUtilCallFuncRefCtrEx(lsState, this, 2);
               // Clear references and state if this is the last event
               if(uiStatus == SS_STANDBY.FlagGet()) LuaEvtDeInit();
               // Success
@@ -1642,28 +1645,29 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   { // This function can only be called if we don't have a write thread
     if(tWriter.ThreadIsJoinable()) return;
     // Lock access to packet list
-    const LockGuard lgSockSync{ mMutex };
-    // Return if there are packets and divisble by 2
-    const size_t stCount = GetTXQCount();
-    if(!stCount || stCount % 2) return LuaUtilPushTable(lS);
-    // Create the table, we're creating non-indexed key/value pairs
-    LuaUtilPushTable(lS, 0, stCount / 2);
-    // Currently selected variable
-    const char *cpVar = nullptr;
-    // For each packet
-    for(const Packet &pData : plTX)
-    { // Get variable or value (both are already safely null-terminated)
-      const Memory &mbPacket = pData.mData;
-      // Set the variable and continue if we haven't set it yet
-      if(!cpVar) { cpVar = mbPacket.MemPtr<char>(); continue; }
-      // Push value and set it as the variable
-      LuaUtilPushStrView(lS, mbPacket.MemToStringView());
-      LuaUtilSetField(lS, -2, cpVar);
-      // Done with variable
-      cpVar = nullptr;
-    } // Clear data and memory usage in queue
-    plTX.clear();
-    stTX = 0;
+    MutexCall([this,lS]{
+      // Return if there are packets and divisble by 2
+      const size_t stCount = GetTXQCount();
+      if(!stCount || stCount % 2) return LuaUtilPushTable(lS);
+      // Create the table, we're creating non-indexed key/value pairs
+      LuaUtilPushTable(lS, 0, stCount / 2);
+      // Currently selected variable
+      const char *cpVar = nullptr;
+      // For each packet
+      for(const Packet &pData : plTX)
+      { // Get variable or value (both are already safely null-terminated)
+        const Memory &mbPacket = pData.mData;
+        // Set the variable and continue if we haven't set it yet
+        if(!cpVar) { cpVar = mbPacket.MemPtr<char>(); continue; }
+        // Push value and set it as the variable
+        LuaUtilPushStrView(lS, mbPacket.MemToStringView());
+        LuaUtilSetField(lS, -2, cpVar);
+        // Done with variable
+        cpVar = nullptr;
+      } // Clear data and memory usage in queue
+      plTX.clear();
+      stTX = 0;
+    });
   }
   /* -- Send request to disconnect ----------------------------------------- */
   bool SendDisconnect()
@@ -1674,25 +1678,26 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Disconnecting
     AddStatus(SS_DISCONNECTING, cdDisconnect);
     // Lock access to packet list
-    const LockGuard lgSockSync{ mMutex };
-    // If we have a BIO and there is no fd? (i.e. stuck in BIO_do_connect)
-    if(bioPtr && iFd == -1) UpdateDescriptor();
-    // If socket is open?
-    if(iFd != -1)
-    { // Closed by us if not closed by server
-      if(FlagIsClear(SS_CLOSEDBYSERVER)) FlagSet(SS_CLOSEDBYCLIENT);
-      // Force close the socket to unblock recv()
-      // This will probably cause a 'system lib' error as well
-      BIO_closesocket(iFd);
-      // Fd no longer valid
-      iFd = -1;
-      // We don't care if an error occured
-      ERR_clear_error();
-    } // Set thread to exit if we are not calling from it
-    if(tReader.ThreadIsNotCurrent() && tReader.ThreadIsJoinable())
-      tReader.ThreadSetExit();
-    // Closing
-    return true;
+    return MutexCall([this](){
+      // If we have a BIO and there is no fd? (i.e. stuck in BIO_do_connect)
+      if(bioPtr && iFd == -1) UpdateDescriptor();
+      // If socket is open?
+      if(iFd != -1)
+      { // Closed by us if not closed by server
+        if(FlagIsClear(SS_CLOSEDBYSERVER)) FlagSet(SS_CLOSEDBYCLIENT);
+        // Force close the socket to unblock recv()
+        // This will probably cause a 'system lib' error as well
+        BIO_closesocket(iFd);
+        // Fd no longer valid
+        iFd = -1;
+        // We don't care if an error occured
+        ERR_clear_error();
+      } // Set thread to exit if we are not calling from it
+      if(tReader.ThreadIsNotCurrent() && tReader.ThreadIsJoinable())
+        tReader.ThreadSetExit();
+      // Closing
+      return true;
+    });
   }
   /* -- Init connection ---------------------------------------------------- */
   void Connect(lua_State*const lS, string &strNAddress,

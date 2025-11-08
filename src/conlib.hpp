@@ -24,7 +24,7 @@ ConCmdStaticList{{
 { "archives", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to assets collector class and lock it so it's not changed
-const LockGuard lgAssetsSync{ cArchives->CollectorGetMutex() };
+const LockGuard lgAssetsSync{ cArchives->MutexGet() };
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID").Header("F").Header("D").Header("T").Header("U")
@@ -64,7 +64,7 @@ cConsole->AddLineA("Audio subsystem reset ",
 { "assets", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to arrays collector class and lock it so it's not changed
-const LockGuard lgAssetsSync{ cAssets->CollectorGetMutex() };
+const LockGuard lgAssetsSync{ cAssets->MutexGet() };
 // Size of all blocks
 size_t stTotal = 0;
 // Number of bytes to show
@@ -520,7 +520,7 @@ typedef pair<const string, const Item> StrItemPair;
 typedef map<StrItemPair::first_type, StrItemPair::second_type> StrItemList;
 StrItemList silDirs, silFiles;
 // Get reference to assets collector class and lock it so it's not changed
-const LockGuard lgArchivesSync{ cArchives->CollectorGetMutex() };
+const LockGuard lgArchivesSync{ cArchives->MutexGet() };
 // Iterate through the list
 for(const Archive*const aPtr : *cArchives)
 { // Get reference to class
@@ -774,7 +774,7 @@ cConsole->AddLineA(sTable.Finish(),
 { "ftfs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to fonts collector class and lock it so it's not changed
-const LockGuard lgFtfsSync{ cFtfs->CollectorGetMutex() };
+const LockGuard lgFtfsSync{ cFtfs->MutexGet() };
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID").Header("GLYPH").Header("FW").Header("FH").Header("DW")
@@ -862,7 +862,7 @@ cEvtMain->RequestGLReInit();
 { "images", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get reference to images collector class and lock it so it's not changed
-const LockGuard lgImagesSync{ cImages->CollectorGetMutex() };
+const LockGuard lgImagesSync{ cImages->MutexGet() };
 // If we have more than one parameter?
 if(aArgs.size() == 2)
 { // Get slot data and return if it is a bad slot
@@ -1026,7 +1026,7 @@ cConsole->AddLineF("$$ connected ($ supported).\n"
 { "jsons", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to jsons collector class and lock it so it's not changed
-const LockGuard lgJsonsSync{ cJsons->CollectorGetMutex() };
+const LockGuard lgJsonsSync{ cJsons->MutexGet() };
 // Print totals
 cConsole->AddLineA(StrCPluraliseNum(cJsons->size(), "json.", "jsons."));
 /* ------------------------------------------------------------------------- */
@@ -1093,7 +1093,7 @@ cConsole->AddLine(cLua->CompileStringAndReturnResult(StrImplode(aArgs, 1)));
 { "lfuncs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to luarefs collector class and lock it so it's not changed
-const LockGuard lgLuaRefsSync(cLuaFuncs->CollectorGetMutex());
+const LockGuard lgLuaRefsSync(cLuaFuncs->MutexGet());
 // Make a table to automatically format our data neatly
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("DATA", false).Header("MID")
@@ -1225,13 +1225,14 @@ const LogLevelColours llcLookup{
   COLOUR_LGRAY  /* LH_DEBUG    */
 };
 // Get reference to log class and lock it so it's not changed
-const LockGuard lgLogSync{ cLog->GetMutex() };
-// For each log line. Add the line to console buffer
-for(const LogLine &llRef : *cLog)
-  cConsole->AddLineF(llcLookup[llRef.lhlLevel], "[$$$] $",
-    fixed, setprecision(6), llRef.dTime, llRef.strLine);
-// Number of items in buffer
-cConsole->AddLineA(StrCPluraliseNum(cLog->size(), "line.", "lines."));
+cLog->MutexCall([&llcLookup](){
+  // For each log line. Add the line to console buffer
+  for(const LogLine &llRef : *cLog)
+    cConsole->AddLineF(llcLookup[llRef.lhlLevel], "[$$$] $",
+      fixed, setprecision(6), llRef.dTime, llRef.strLine);
+  // Number of items in buffer
+  cConsole->AddLineA(StrCPluraliseNum(cLog->size(), "line.", "lines."));
+});
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'log' function
 /* ========================================================================= */
@@ -1241,16 +1242,17 @@ cConsole->AddLineA(StrCPluraliseNum(cLog->size(), "line.", "lines."));
 { "logclr", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Lock access to the log
-const LockGuard lgLogSync{ cLog->GetMutex() };
-// Ignore if not empty
-if(cLog->empty()) return cConsole->AddLine("No log lines to clear!");
-// Get log lines count
-const size_t stCount = cLog->size();
-// Clear the log
-cLog->Clear();
-// Say we cleared it
-cConsole->AddLineA(StrCPluraliseNum(stCount,
-  "log line cleared.", "log lines cleared."));
+cLog->MutexCall([](){
+  // Ignore if not empty
+  if(cLog->empty()) return cConsole->AddLine("No log lines to clear!");
+  // Get log lines count
+  const size_t stCount = cLog->size();
+  // Clear the log
+  cLog->Clear();
+  // Say we cleared it
+  cConsole->AddLineA(StrCPluraliseNum(stCount,
+    "log line cleared.", "log lines cleared."));
+});
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'logclr' function
 /* ========================================================================= */
@@ -1575,7 +1577,7 @@ cConsole->AddLineA(sTable.Finish(),
 // Required pcm definition namespace
 using namespace IPcmDef::P;
 // Get reference to pcms collector class and lock it so it's not changed
-const LockGuard lgPcmsSync{ cPcms->CollectorGetMutex() };
+const LockGuard lgPcmsSync{ cPcms->MutexGet() };
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("RATE")
@@ -1840,7 +1842,7 @@ else cConsole->AddLineF("Connection $ $ closed.",
 { "sources", 1, 1, CFL_AUDIO, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to sources collector class and lock it so it's not changed
-const LockGuard lgSourcesSync{ cSources->CollectorGetMutex() };
+const LockGuard lgSourcesSync{ cSources->MutexGet() };
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID").Header("SID").Header("FLAG").Header("S")
@@ -2065,7 +2067,7 @@ cConsole->AddLine("Stopping all sounds from playing.");
 { "streams", 1, 1, CFL_AUDIO, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Synchronise the streams collector list
-const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
+const LockGuard lgStreamsSync{ cStreams->MutexGet() };
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID").Header("L").Header("LENGTH").Header("TIME").Header()
@@ -2224,7 +2226,7 @@ cConsole->AddLine(StrCPluraliseNum(cUrls->size(),
 { "videos", 1, 1, CFL_AUDIOVIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get reference to videos collector class and lock it so it's not changed
-const LockGuard lgVideosSync{ cVideos->CollectorGetMutex() };
+const LockGuard lgVideosSync{ cVideos->MutexGet() };
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("PCMF").Header("P").Header("C")

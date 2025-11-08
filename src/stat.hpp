@@ -283,7 +283,7 @@ class Statistic
                     sviRowIt != svValues.end();
                     sviRowIt = next(sviRowIt, sstHeaders))
       srvList.push_back({ sviRowIt, next(sviRowIt, sstColPri),
-                                  next(sviRowIt, sstColSec) });
+                                    next(sviRowIt, sstColSec) });
     // Now enumerate all the primary and secondary columns and sort them
     StdSort(par_unseq, srvList.begin(), srvList.end(), bDescending ?
       [](const StrRef &srRow1, const StrRef &srRow2)

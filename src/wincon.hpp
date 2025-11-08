@@ -42,7 +42,8 @@ static const ColourList wNDXtoW32BC{
 class SysCon :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public SysBase,                      // Defined in 'winbase.hpp'
-  public SysConBase                    // Defined in 'syscore.hpp'
+  public SysConBase,                   // Defined in 'syscore.hpp'
+  private mutex                        // Exit mutex
 { /* -- Private typedefs --------------------------------------------------- */
   typedef vector<CHAR_INFO> CharInfoVec;
   /* -- Private variables -------------------------------------------------- */
@@ -88,7 +89,7 @@ class SysCon :                         // Members initially private
     // We'll need to wait for the exit
     if(*cpEvent == '!')
     { // Lock mutex
-      UniqueLock ulExit{ mExit };
+      UniqueLock ulExit{ *this };
       // Ignore if we've already exited which can happen if shutdown and break
       // events occur at the same time.
       if(FlagIsClear(SCO_EXIT))

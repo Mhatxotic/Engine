@@ -13,7 +13,8 @@ namespace ICollector {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICVarDef::P;           using namespace IError::P;
 using namespace IHelper::P;            using namespace IIdent::P;
-using namespace ILog::P;               using namespace IStd::P;
+using namespace ILog::P;               using namespace IMutex::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Static class try/catch helpers ======================================= **
@@ -201,52 +202,40 @@ template<class MemberType, class ListType, class IteratorType,
 class CLHelperSafe :
   /* -- Base classes ------------------------------------------------------- */
   public BaseType,                     // The collector base type
-  private mutex                        // Member list locking protection
-{ /* -- Protected functions ------------------------------------- */ protected:
-  void CLLock() { CollectorGetMutex().lock(); }
-  void CLUnlock() { CollectorGetMutex().unlock(); }
-  /* -- Lock the mutex and return if empty --------------------------------- */
+  public Mutex                         // Mutex helper
+{ /* -- Lock the mutex and return if empty ---------------------- */ protected:
   bool CLEmpty()
-    { const LockGuard lgGuardEmpty{ CollectorGetMutex() };
-      return this->CLBaseIsEmptyUnsafe(); }
+    { return MutexCall([this](){return this->CLBaseIsEmptyUnsafe();}); }
   /* -- Lock the mutex and check size -------------------------------------- */
   void CLCheck()
-    { const LockGuard lgGuardCheck{ CollectorGetMutex() };
-      this->CLBaseCheckUnsafe(); }
+    { return MutexCall([this](){return this->CLBaseCheckUnsafe();}); }
   /* -- Lock the mutex and return size ------------------------------------- */
   size_t CLCount()
-    { const LockGuard lgGuardCount{ CollectorGetMutex() };
-      return this->CLBaseCountUnsafe(); }
+    { return MutexCall([this](){return this->CLBaseCountUnsafe();}); }
   /* -- Lock the mutex and return newly added object ----------------------- */
   IteratorType CLAdd(MemberType*const mtObj)
-    { const LockGuard lgGuardAdd{ CollectorGetMutex() };
-      return this->CLBaseAddUnsafe(mtObj); }
+    { return MutexCall([this,mtObj](){return this->CLBaseAddUnsafe(mtObj);}); }
   /* -- Lock the mutex and return the removed iterator --------------------- */
   IteratorType CLErase(IteratorType &itObj)
-    { const LockGuard lgGuardErase{ CollectorGetMutex() };
-      return this->CLBaseEraseUnsafe(itObj); }
+    { return MutexCall([this,&itObj](){
+        return this->CLBaseEraseUnsafe(itObj);}); }
   /* -- Constructor -------------------------------------------------------- */
   explicit CLHelperSafe(const char*const cpT) :
     /* -- Initialisers ----------------------------------------------------- */
     BaseType{ cpT }                    // Initialise base type with name
     /* -- No code ---------------------------------------------------------- */
     {}
-  /* -- Return the mutex ------------------------------------------- */ public:
-  mutex &CollectorGetMutex() { return *this; }
   /* -- Lock the mutex and return the removed iterator --------------------- */
   CVarReturn CLSetLimit(const size_t stLimit)
-    { const LockGuard lgGuardSetLimit{ CollectorGetMutex() };
-      return this->CLBaseSetLimitUnsafe(stLimit); }
+    { return MutexCall([this,stLimit](){
+        return this->CLBaseSetLimitUnsafe(stLimit);}); }
 };/* ----------------------------------------------------------------------- */
 template<class MemberType, class ListType, class IteratorType,
          class BaseType = CLHelperBase<MemberType, ListType, IteratorType>>
 class CLHelperUnsafe :                 // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public BaseType                      // The collector base type
-{ /* -- (Un)Lock the mutex (nope) ------------------------------- */ protected:
-  void CLLock() {}
-  void CLUnlock() {}
-  /* -- Return if collector is empty --------------------------------------- */
+{ /* -- Return if collector is empty ---------------------------- */ protected:
   bool CLEmpty() { return this->CLBaseIsEmptyUnsafe(); }
   /* -- Check for overflow ------------------------------------------------- */
   void CLCheck() { this->CLBaseCheckUnsafe(); }
@@ -271,10 +260,7 @@ template<class MemberType, class LockType, class ListType, class IteratorType>
 struct CLHelper :                      // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public LockType                      // CLHelperSafe or CLHelperUnsafe
-{ /* -- (Un)Lock the mutex (nope) ------------------------------------------ */
-  void CollectorLock() { this->CLLock(); }
-  void CollectorUnlock() { this->CLUnlock(); }
-  /* -- Return last item in list ------------------------------------------- */
+{ /* -- Return last item in list ------------------------------------------- */
   IteratorType CollectorGetLastItemUnsafe()
     { return this->CLBaseGetLastItemUnsafe(); }
   /* -- Destory all members ------------------------------------------------ */
@@ -408,22 +394,20 @@ class ICHelperSafe :                   // Members initially private
 { /* -- Initialise (un)registered entry with synchronisation --------------- */
   IteratorType ICHelperInit(CollectorType*const ctPtr,
     MemberType*const mtPtr) const
-      { const LockGuard lgInitRegistered{ ctPtr->CollectorGetMutex() };
-        return this->ICHelperBaseInit(ctPtr, mtPtr); }
+      { return ctPtr->MutexCall([this,ctPtr,mtPtr](){
+          return this->ICHelperBaseInit(ctPtr, mtPtr);}); }
   IteratorType ICHelperInit(CollectorType*const ctPtr) const
-    { const LockGuard lgInitUnregistered{ ctPtr->CollectorGetMutex() };
-      return this->ICHelperBaseInit(ctPtr); }
+    { return ctPtr->MutexCall([this,ctPtr](){
+        return this->ICHelperBaseInit(ctPtr);}); }
   /* -- Insert/Remove from collector list with synchronisation -- */ protected:
   void ICHelperPush()
-    { const LockGuard lgPush{ this->cParent->CollectorGetMutex() };
-      this->ICHelperBaseRegister(); }
+    { this->cParent->MutexCall([this](){this->ICHelperBaseRegister();}); }
   void ICHelperErase()
-    { const LockGuard lgErase{ this->cParent->CollectorGetMutex() };
-      this->ICHelperBaseUnregister(); }
+    { this->cParent->MutexCall([this](){this->ICHelperBaseUnregister();}); }
   /* -- Swap to objects ---------------------------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
-    { const LockGuard lgSwap{ this->cParent->CollectorGetMutex() };
-      this->ICHelperBaseSwapRegistration(mtObj); }
+    { this->cParent->MutexCall([this,&mtObj](){
+        this->ICHelperBaseSwapRegistration(mtObj);}); }
   /* -- Constructors ------------------------------------------------------- */
   explicit ICHelperSafe(CollectorType*const ctPtr) :
     BaseType(ctPtr, StdMove(ICHelperInit(ctPtr))) {}

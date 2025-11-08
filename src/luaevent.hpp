@@ -11,10 +11,10 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaEvt {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ILuaRef::P;            using namespace ILuaUtil::P;
 using namespace IError::P;             using namespace IEvtCore::P;
 using namespace IEvtMain::P;           using namespace ILog::P;
-using namespace IStd::P;               using namespace IToggler::P;
+using namespace ILuaRef::P;            using namespace ILuaUtil::P;
+using namespace IRefCtr::P;            using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Private typedefs ----------------------------------------------------- */
@@ -71,21 +71,18 @@ class LuaEvts :
   }
   /* -- Deinit event store-------------------------------------------------- */
   void LuaEvtsDeInit()
-  { // Lock access to the list
+  { // Lock access to the queued events list
     const LockGuard lgLuaEvtsSync{ LuaEvtsGetMutex() };
-    // Done if no events lingering
-    if(empty()) return;
-    // Remove any queued events dispatched by this class as if they fire, the
-    // app will crash because the class may have been destroyed.
-    while(!empty())
-    { // Get interator to the stored iterators
-      const LuaEvtsList::const_iterator lelciIt{ cbegin() };
-      // Get iterator to the event iterator and remove it if valid
-      const EvtMain::QueueConstIt qciIt{ *lelciIt };
-      if(qciIt != cEvtMain->Last()) cEvtMain->Remove(qciIt);
-      // Erase the queue iterator from the queue
-      erase(lelciIt);
-    }
+    // If there are queued events?
+    if(!empty())
+    { // Lock engine thread events list
+      const LockGuard lgEvtMainSync{ cEvtMain->GetMutex() };
+      // Remove any queued events dispatched by this class as if they fire, the
+      // app will crash because the class may have been destroyed.
+      StdForEach(seq, cbegin(), cend(), [](const EvtMain::QueueConstIt &qciIt)
+        { if(qciIt != cEvtMain->Last()) cEvtMain->RemoveUnsafe(qciIt); });
+    } // Clear the list
+    clear();
   }
   /* -- Constructor -------------------------------------------------------- */
   LuaEvts() = default;
@@ -256,7 +253,7 @@ class LuaEvtSlave :
           break;
       }
     } // Call the callback function.
-    LuaUtilCallFuncTogglerEx(this->LuaRefGetState(), mtPtr,
+    LuaUtilCallFuncRefCtrEx(this->LuaRefGetState(), mtPtr,
       static_cast<int>(emaArgs.size() - stMandatory));
   } // Exception occured? Disable lua callback and rethrow
   catch(const exception&) { this->LuaRefDeInit(); throw; }

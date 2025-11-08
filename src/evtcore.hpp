@@ -201,7 +201,7 @@ class EvtCore :                        // Start of common event system class
   { // Event data to add to events list
     Event eEvent{ cCmd, GetFunction(cCmd), StdMove(eaArgs) };
     // Wait and lock main event list
-    const LockGuard lgEventsSync{ mMutex };
+    const LockGuard lgEventsSync{ GetMutex() };
     // Move cell into event list
     qlEvents.emplace_back(StdMove(eEvent));
   }
@@ -214,10 +214,12 @@ class EvtCore :                        // Start of common event system class
     // Add more parameters or finish
     AddParam(cCmd, eaArgs, vaArgs...);
   }
-  /* -- list is empty? --------------------------------------------- */ public:
+  /* -- Return mutex ----------------------------------------------- */ public:
+  mutex &GetMutex(void) { return mMutex; }
+  /* -- list is empty? ----------------------------------------------------- */
   bool Empty()
   { // Lock access to events list
-    const LockGuard lgEventsSync{ mMutex };
+    const LockGuard lgEventsSync{ GetMutex() };
     // Return if queue is empty
     return qlEvents.empty();
   }
@@ -227,7 +229,7 @@ class EvtCore :                        // Start of common event system class
   /* -- Returns number of events in queue ---------------------------------- */
   size_t SizeSafe()
   { // Lock access to events list
-    const LockGuard lgEventsSync{ mMutex };
+    const LockGuard lgEventsSync{ GetMutex() };
     // Return number of elements in queue
     return qlEvents.size();
   }
@@ -256,7 +258,7 @@ class EvtCore :                        // Start of common event system class
   /* -- Manage with lock --------------------------------------------------- */
   Cmd ManageSafe()
   { // Try to lock access to events list.
-    UniqueLock uLock{ mMutex, try_to_lock };
+    UniqueLock uLock{ GetMutex(), try_to_lock };
     // Since we call this in our engine loop. We are in a time critical
     // situation so we need to continue executing instead of waiting for
     // other threads to post events. So just return no event if threads are
@@ -288,7 +290,7 @@ class EvtCore :                        // Start of common event system class
   /* -- Flush events list -------------------------------------------------- */
   void Flush()
   { // Lock access to the events list from other threads
-    const LockGuard lgEventsSync{ mMutex };
+    const LockGuard lgEventsSync{ GetMutex() };
     // Return if no events to clear
     if(qlEvents.empty()) return;
     // Store number of events cleared
@@ -324,7 +326,7 @@ class EvtCore :                        // Start of common event system class
   { // Setup cell to insert
     Event eEvent{ cCmd, GetFunction(cCmd), StdMove(eaArgs) };
     // Try to lock main event list
-    const LockGuard lgEventsSync{ mMutex };
+    const LockGuard lgEventsSync{ GetMutex() };
     // Push new event whilst move parameters into it
     qciItem = StdMove(qlEvents.emplace(qlEvents.cend(), StdMove(eEvent)));
   }
@@ -351,13 +353,8 @@ class EvtCore :                        // Start of common event system class
     // Return iterator
     return qciItem;
   }
-  /* -- Remove event ------------------------------------------------------- */
-  void Remove(const QueueConstIt &qciIt)
-  { // Try to lock main event list
-    const LockGuard lgEventsSync{ mMutex };
-    // Remove the event
-    qlEvents.erase(qciIt);
-  }
+  /* -- Remove event (lock is caller responsibility) ----------------------- */
+  void RemoveUnsafe(const QueueConstIt &qciIt) { qlEvents.erase(qciIt); }
   /* -- Register single event ---------------------------------------------- */
   void Register(const Cmd cCmd, const CbEcFunc &cbfFunc)
   { // Bail if invalid command

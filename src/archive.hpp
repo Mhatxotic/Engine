@@ -459,11 +459,12 @@ CTOR_END_ASYNC_NOFUNCS(Archives, Archive, ARCHIVE, ARCHIVE, // Finish collector
 );/* == Look if a file exists in archives ================================== */
 static bool ArchiveFileExists(const string &strFile)
 { // Lock archive list so it cannot be modified and iterate through the list
-  const LockGuard lgArchivesSync{ cArchives->CollectorGetMutex() };
-  // For each archive. Return if the specified file exists in it.
-  return any_of(cArchives->cbegin(), cArchives->cend(),
-    [&strFile](const Archive*const aPtr)
-      { return aPtr->ArchiveFileExists(strFile); });
+  return cArchives->MutexCall([&strFile](){
+    // For each archive. Return if the specified file exists in it.
+    return any_of(cArchives->cbegin(), cArchives->cend(),
+      [&strFile](const Archive*const aPtr)
+        { return aPtr->ArchiveFileExists(strFile); });
+  });
 }
 /* -- Create and check a dynamic archive ----------------------------------- */
 static Archive *ArchiveInitNew(const string &strFile, const size_t stSize=0)
@@ -580,10 +581,12 @@ static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
 /* -- Return files in directories and archives with empty check ------------ */
 static const StrSet &ArchiveEnumerate(const string &strDir,
   const string &strExt, const bool bOnlyDirs, StrSet &ssFiles)
-{ // Lock archive list so it cannot be modified and if we have archives?
-  const LockGuard lgArchivesSync{ cArchives->CollectorGetMutex() };
-  if(!cArchives->empty())
-  { // Lock for file list
+{ // Lock archive list so it cannot be modified
+  return cArchives->MutexCall(
+    [&strDir, &strExt, bOnlyDirs, &ssFiles]()->StrSet&{
+    // Return if no archives
+    if(cArchives->empty()) return ssFiles;
+    // Lock for file list
     mutex mLock;
     // If only dirs requested? For each archive.
     if(bOnlyDirs)
@@ -616,13 +619,14 @@ static const StrSet &ArchiveEnumerate(const string &strDir,
         ssFiles.emplace(StdMove(psParts.strFileExt));
       });
     });
-  } // Return file list
-  return ssFiles;
+    // Return file list
+    return ssFiles;
+  });
 }
 /* -- Extract -------------------------------------------------------------- */
 static FileMap ArchiveExtract(const string &strFile)
 { // Lock archive list so it cannot be modified and iterate through the list
-  UniqueLock ulLock{ cArchives->CollectorGetMutex() };
+  UniqueLock ulLock{ cArchives->MutexGet() };
   // Enumerate each archive from last to first because the latest-most loaded
   // archive should always have priority if multiple archives have the same
   // filename, just like game engines do.

@@ -377,7 +377,6 @@ class SysConBase :
   enum KeyType { KT_NONE, KT_KEY, KT_CHAR, KT_RESET }; // GetKey return types
   /* -- For handling CTRL_CLOSE_EVENT --------------------------- */ protected:
   condition_variable cvExit;           // Exit condition variable
-  mutex            mExit;              // Exit mutex
   /* -- Handle CTRL_CLOSE_EVENT ------------------------------------ */ public:
   bool SysConIsClosing() const { return FlagIsSet(SCO_EXIT); }
   bool SysConIsNotClosing() const { return !SysConIsClosing(); }

@@ -365,7 +365,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // Function to (re)calculate required texture size
     const function SetupCanvas{ [this, &stRemain, stMaxSize, &stTexWidth,
       &stTexHeight, &stWidth, &stHeight, &stOptSize, &stNOptSize, &stCols,
-      &stRows, &stNCols, &stNRows, &mTexture]()->void
+      &stRows, &stNCols, &stNRows, &mTexture]()
     { // Now keep dividing the texture size by two until we can no longer fit
       // the needed amount of tiles inside the texture.
       while(stNOptSize && stNCols * stNRows >= stRemain)

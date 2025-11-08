@@ -38,6 +38,7 @@ namespace E {                          // Start of engine namespace
 #include "cmdline.hpp"                 // Command-line class header
 #include "memory.hpp"                  // Memory management utilities header
 #include "fstream.hpp"                 // File IO utility header
+#include "mutex.hpp"                   // Mutex helper class
 #include "log.hpp"                     // Logging helper class header
 #include "luadef.hpp"                  // Lua definitions header
 #include "luaident.hpp"                // Lua ident class header
@@ -62,7 +63,7 @@ namespace E {                          // Start of engine namespace
 #include "condef.hpp"                  // Console definitions header
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
-#include "toggler.hpp"                 // Toggler class header
+#include "refctr.hpp"                  // Reference counter class header
 #include "luautil.hpp"                 // Lua utility functions header
 #include "luaref.hpp"                  // Lua reference helper class header
 #include "luaevent.hpp"                // Lua event helper class header

@@ -133,9 +133,9 @@ class ConGraphics :                    // Members initially private
   Font *GetFont() { return &GetFontRef(); }
   /* -- Do set visibility -------------------------------------------------- */
   bool SetVisible(const bool bState)
-  { // Set the visibility state and draw the fbo if enabled and visible
+  { // Set the visibility state and redraw the main fbo if not visible
     const bool bResult = cConsole->SetVisible(bState);
-    if(bResult) cFboCore->SetDraw();
+    if(!bResult) cFboCore->SetDraw();
     return bResult;
   }
   /* -- Set console visibility lock status --------------------------------- */

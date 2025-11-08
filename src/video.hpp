@@ -55,7 +55,9 @@ BUILD_FLAGS(Video,
   // Hard stopped?                     Video is playing?
   FL_STOP                   {Flag(8)}, FL_PLAY                   {Flag(9)},
   // Play after reinit?
-  FL_RESUME                {Flag(10)}
+  FL_RESUME                {Flag(10)},
+  /* -- Combined flags ----------------------------------------------------- */
+  FL_THEORAVORBIS { FL_THEORA|FL_VORBIS }
 );/* ======================================================================= */
 CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Base classes ------------------------------------------------------- */
@@ -532,7 +534,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // Send playing event if we're not temporarily de-initialising
     if(ubReason != UB_REINIT) LuaEvtDispatch(VE_PLAY);
     // Loop until thread should exit
-    if(FlagIsSet(FL_THEORA|FL_VORBIS)) // Ogg has both audio and video streams?
+    if(FlagIsSet(FL_THEORAVORBIS)) // Ogg has both audio and video streams?
       while(tClass.ThreadShouldNotExit() && VideoHandleAudioVideo());
     else if(FlagIsSet(FL_VORBIS))      // Ogg has audio only stream?
       while(tClass.ThreadShouldNotExit() && VideoHandleAudioOnly());
@@ -716,7 +718,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(iGotTheoraPage) FlagSet(FL_THEORA);
     if(iGotVorbisPage) FlagSet(FL_VORBIS);
     // And now we should have it all if not, well die
-    if(FlagIsClear(FL_THEORA|FL_VORBIS))
+    if(FlagIsClear(FL_THEORAVORBIS))
       XC("Could not find a Theora and/or Vorbis stream!",
          "Identifier", IdentGet());
     // If there is a video stream?
@@ -735,7 +737,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       dFPS = static_cast<double>(tiData.fps_numerator) /
              static_cast<double>(tiData.fps_denominator);
       // Sanity check FPS
-      if(GetFPS()<1 || GetFPS()>200)
+      if(GetFPS() < 1.0 || GetFPS() > 200.0)
         XC("Ambiguous frame rate in video!",
           "Identifier", IdentGet(), "FPS", GetFPS());
       // Get maximum texture size to match stored types
@@ -1003,7 +1005,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // If not playing
     if(tThread.ThreadIsNotExited()) return;
     // Loop until thread should exit
-    if(FlagIsSet(FL_THEORA|FL_VORBIS)) // Ogg has both audio and video streams?
+    if(FlagIsSet(FL_THEORAVORBIS)) // Ogg has both audio and video streams?
       while(!VideoHandleAudioVideo() && !stFWaiting);
     else if(FlagIsSet(FL_THEORA))      // Ogg has video only stream?
       while(!VideoHandleVideoOnly() && !stFWaiting);
@@ -1321,20 +1323,25 @@ static void VideoDeInitTextures()
 }
 /* == Clear event callbacks on all videos (must be synchronised) =========== */
 static void VideoClearEvents()
-{ // Lock access to video collector list and clear all video events
-  const LockGuard lgVideosSync{ cVideos->CollectorGetMutex() };
-  if(cVideos->empty()) return;
-  cLog->LogDebugExSafe("Videos clearing events from $ video objects...",
-    cVideos->CollectorCountUnsafe());
-  for(Video*const vVideo : *cVideos) vVideo->LuaEvtDeInit();
-  cLog->LogDebugExSafe("Videos cleared events from $ video objects!",
-    cVideos->CollectorCountUnsafe());
+{ // Lock access to video collector list
+  cVideos->MutexCall([](){
+    // Ignore if no videos
+    if(cVideos->empty()) return;
+    // Clear all video events and log results
+    cLog->LogDebugExSafe("Videos clearing events from $ video objects...",
+      cVideos->CollectorCountUnsafe());
+    for(Video*const vVideo : *cVideos) vVideo->LuaEvtDeInit();
+    cLog->LogDebugExSafe("Videos cleared events from $ video objects!",
+      cVideos->CollectorCountUnsafe());
+  });
 }
 /* == Stop all videos (must be sychronised) ================================ */
 static void VideoStop()
-{ // Lock access to video collector list and stop all videos
-  const LockGuard lgVideosSync{ cVideos->CollectorGetMutex() };
-  for(Video*const vVideo : *cVideos) vVideo->Stop();
+{ // Lock access to video collector list
+  cVideos->MutexCall([](){
+    // Stop all videos
+    for(Video*const vVideo : *cVideos) vVideo->Stop();
+  });
 }
 /* == DeInit all videos (after engine thread shutdown) ===================== */
 static void VideoDeInit()

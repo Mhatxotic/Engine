@@ -11,8 +11,8 @@ namespace ILuaUtil {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IDir::P;
 using namespace IError::P;             using namespace ILuaIdent::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace IToggler::P;
+using namespace IMemory::P;            using namespace IRefCtr::P;
+using namespace IStd::P;               using namespace IString::P;
 using namespace IToken::P;             using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -901,7 +901,7 @@ template<class ClassType>
   { // Get address to the C++ class and if that is valid?
     if(ClassType*const ctPtr = reinterpret_cast<ClassType*>(lucPtr->vpPtr))
     { // Throw error if destruction attempted in protected callback
-      if(ctPtr->TogglerIsEnabled())
+      if(ctPtr->RefCtrIsEnabled())
         XC("Call not allowed in protected callback!",
            "Type", liRef.LuaIdentStr());
       // Clear the pointer to the C++ class and destroy it if not locked
@@ -1017,10 +1017,10 @@ static void LuaUtilCallFuncEx(lua_State*const lS, const int iParams=0,
   const int iReturns=0)
     { lua_call(lS, iParams, iReturns); }
 /* -- Standard in-sandbox call function with toggler ref ctr (unmanaged) --- */
-static void LuaUtilCallFuncTogglerEx(lua_State*const lS,
-  TogglerMaster<>*const tmMaster, const int iParams=0, const int iReturns=0)
+static void LuaUtilCallFuncRefCtrEx(lua_State*const lS,
+  RefCtrMaster<>*const rcmMaster, const int iParams=0, const int iReturns=0)
 { // Set a 'protect' flag and then unset it when leaving this scope
-  const TogglerSlave<> tsProtect{ tmMaster };
+  const RefCtrSlave<> rcsProtect{ rcmMaster };
   // Do the call
   LuaUtilCallFuncEx(lS, iParams, iReturns);
 }

@@ -22,10 +22,11 @@ using namespace IIdent::P;             using namespace ILog::P;
 using namespace ILockable::P;          using namespace ILuaEvt::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IOal::P;               using namespace ISource::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::Ogg;              using namespace Lib::OpenAL::Types;
+using namespace IMutex::P;             using namespace IOal::P;
+using namespace ISource::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::Ogg;
+using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -68,7 +69,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   public Ident,                        // Stream file name
   public AsyncLoaderStream,            // Asynchronous loading of Streams
   public LuaEvtSlave<Stream>,          // Lua event system for Stream
-  public Lockable                      // Lua garbage collector instruction
+  public Lockable,                     // Lua garbage collector instruction
+  protected Mutex                      // Mutex helper object
 { /* -- Variables ---------------------------------------------------------- */
   FileMap          fmFile;             // FileMap class
   OggVorbis_File   ovfContext;         // Ogg vorbis file context
@@ -85,7 +87,6 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   StreamPlayState  psState;            // Play state
   ALfloat          fVolume;            // Saved volume
   StrNCStrMap      ssMetaData;         // Metadata strings
-  mutex            mMutex;             // Mutex for thread safety
   /* -- Updates the PCM position ------------------------------------------- */
   void UpdatePosition() { qDecPos = qLivePos = ov_pcm_tell(&ovfContext); }
   /* -- Get time elapsed --------------------------------------------------- */
@@ -317,35 +318,35 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   ogg_int64_t GetLoopEnd() const { return qLoopEnd; }
   /* -- Seek and tell functions (with locks) ------------------------------- */
   void SetLoopSafe(const ogg_int64_t qLoopCount)
-    { const LockGuard lgStreamSync{ mMutex }; SetLoop(qLoopCount); }
+    { MutexCall([this,qLoopCount](){SetLoop(qLoopCount);}); }
   ogg_int64_t GetLoopSafe()
-    { const LockGuard lgStreamSync{ mMutex }; return GetLoop(); }
+    { return MutexCall([this](){return GetLoop();}); }
   ogg_int64_t GetLoopBeginSafe()
-    { const LockGuard lgStreamSync{ mMutex }; return GetLoopBegin(); }
+    { return MutexCall([this](){return GetLoopBegin();}); }
   ogg_int64_t GetLoopEndSafe()
-    { const LockGuard lgStreamSync{ mMutex }; return GetLoopEnd(); }
+    { return MutexCall([this](){return GetLoopEnd();}); }
   void SetLoopBeginSafe(const ogg_int64_t qNewPos)
-    { const LockGuard lgStreamSync{ mMutex }; SetLoopBegin(qNewPos); }
+    { MutexCall([this,qNewPos](){SetLoopBegin(qNewPos);}); }
   void SetLoopEndSafe(const ogg_int64_t qNewPos)
-    { const LockGuard lgStreamSync{ mMutex }; SetLoopEnd(qNewPos); }
+    { MutexCall([this,qNewPos](){SetLoopEnd(qNewPos);}); }
   void SetLoopRangeSafe(const ogg_int64_t qNBPos, const ogg_int64_t qNEPos)
-    { const LockGuard lgStreamSync{ mMutex }; SetLoopRange(qNBPos, qNEPos); }
+    { MutexCall([this,qNBPos,qNEPos](){SetLoopRange(qNBPos, qNEPos);}); }
   ALdouble GetElapsedSafe()
-    { const LockGuard lgStreamSync{ mMutex }; return GetElapsed(); }
+    { return MutexCall([this](){return GetElapsed();}); }
   void SetElapsedSafe(const ALdouble dElapsed)
-    { const LockGuard lgStreamSync{ mMutex }; SetElapsed(dElapsed); }
+    { MutexCall([this,dElapsed](){SetElapsed(dElapsed);}); }
   void SetElapsedFastSafe(const ALdouble dElapsed)
-    { const LockGuard lgStreamSync{ mMutex }; SetElapsedFast(dElapsed); }
+    { MutexCall([this,dElapsed](){SetElapsedFast(dElapsed);}); }
   ALdouble GetDurationSafe()
-    { const LockGuard lgStreamSync{ mMutex }; return GetDuration(); }
+    { return MutexCall([this](){return GetDuration();}); }
   ogg_int64_t GetPositionSafe()
-    { const LockGuard lgStreamSync{ mMutex }; return GetPosition(); }
+    { return MutexCall([this](){return GetPosition();}); }
   void SetPositionSafe(const ogg_int64_t qNewPos)
-    { const LockGuard lgStreamSync{ mMutex }; SetPosition(qNewPos); }
+    { MutexCall([this,qNewPos](){SetPosition(qNewPos);}); }
   void SetPositionFastSafe(const ogg_int64_t qPosition)
-    { const LockGuard lgStreamSync{ mMutex }; SetPositionFast(qPosition); }
+    { MutexCall([this,qPosition](){SetPositionFast(qPosition);}); }
   ogg_int64_t GetSamplesSafe()
-    { const LockGuard lgStreamSync{ mMutex }; return GetSamples(); }
+    { return MutexCall([this](){return GetSamples();}); }
   /* ----------------------------------------------------------------------- */
   ogg_int64_t GetOggBytes() const { return fmFile.MemSize<ogg_int64_t>(); }
   /* -- GetFormat ---------------------------------------------------------- */
@@ -355,9 +356,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   /* -- Main (from audio thread) ------------------------------------------- */
   void Main()
   { // Wait for audio thread and lock access to stream buffers
-    const LockGuard lgStreamSync{ mMutex };
-    // Compare state
-    switch(psState)
+    MutexCall([this](){ switch(psState) // Compare state
     { // Don't care if on stand by
       case PS_STANDBY: break;
       // Is finishing playing?
@@ -438,39 +437,40 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
         }
       } // Other state (ignore)
       default: break;
-    }
+    }});
   }
   /* -- Load source and buffers during a reinit ---------------------------- */
   void GenerateSourceAndBuffers()
   { // Protect modifications from audio main thread
-    const LockGuard lgStreamSync{ mMutex };
-    // Generate buffer id's
-    GenerateBuffers();
-    // Ignore and set to standby if wasn't playing before
-    if(psState != PS_WASPLAYING) { psState = PS_STANDBY; return; }
-    // Lock the source and return with message if we can't
-    if(!LockSource())
-    { // Log problem
-      cLog->LogWarningExSafe(
-        "Stream '$' could not be allocated a source after reset!",
-        fmFile.IdentGet());
-      // Set internal state to standby
-      psState = PS_STANDBY;
-      // Done
-      return;
-    } // If we didn't rebuffer anything then no point playing
-    if(!FullRebuffer())
-    { // Log problem
-      cLog->LogWarningExSafe("Stream '$' could not be rebuffered after reset!",
-        fmFile.IdentGet());
-      // Set fully stopped and return
-      return Stop(SR_GENBUFFAIL);
-    } // Update volume
-    UpdateVolume();
-    // Play the buffers
-    sCptr->Play();
-    // Set internal state to playing
-    psState = PS_PLAYING;
+    MutexCall([this](){
+      // Generate buffer id's
+      GenerateBuffers();
+      // Ignore and set to standby if wasn't playing before
+      if(psState != PS_WASPLAYING) { psState = PS_STANDBY; return; }
+      // Lock the source and return with message if we can't
+      if(!LockSource())
+      { // Log problem
+        cLog->LogWarningExSafe(
+          "Stream '$' could not be allocated a source after reset!",
+          fmFile.IdentGet());
+        // Set internal state to standby
+        psState = PS_STANDBY;
+        // Done
+        return;
+      } // If we didn't rebuffer anything then no point playing
+      if(!FullRebuffer())
+      { // Log problem
+        cLog->LogWarningExSafe("Stream '$' could not be rebuffered after reset!",
+          fmFile.IdentGet());
+        // Set fully stopped and return
+        return Stop(SR_GENBUFFAIL);
+      } // Update volume
+      UpdateVolume();
+      // Play the buffers
+      sCptr->Play();
+      // Set internal state to playing
+      psState = PS_PLAYING;
+    });
   }
   /* -- Unload source and buffers ------------------------------------------ */
   void UnloadSourceAndBuffers() { UnloadSource(); UnloadBuffers(); }
@@ -509,10 +509,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     return true;
   }
   /* -- Play with lock ----------------------------------------------------- */
-  void PlaySafe() { const LockGuard lgStreamSync{ mMutex }; Play(); }
+  void PlaySafe() { MutexCall([this](){Play();}); }
   /* -- Stop with lock ----------------------------------------------------- */
   void StopSafe(const StreamStopReason srReason)
-    { const LockGuard lgStreamSync{ mMutex }; Stop(srReason); }
+    { MutexCall([this,srReason](){Stop(srReason);}); }
   /* -- Load from memory --------------------------------------------------- */
   void AsyncReady(FileMap &fmData)
   { // Set file class
@@ -595,8 +595,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   { // Stop any pending async operations
     AsyncCancel();
     // Synchronise from sources management and audio thread
-    const scoped_lock slCollectorAndStream{
-      cParent->CollectorGetMutex(), mMutex };
+    const scoped_lock slCollectorAndStream{ cParent->MutexGet(), MutexGet() };
     // Unload source and buffers
     UnloadSourceAndBuffers();
     // If stream opened? Clear ogg state
@@ -625,41 +624,48 @@ CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
   }},                                  // Play state strings initialised
   stBufCount(0),                       // No buffers count yet
   stBufSize(0)                         // No buffer size yet
-) /* == Manage streams ===================================================== */
+) /* == Manage streams for audio thread ==================================== */
 static void StreamManage()
-{ // Lock access to bitmap collector list and process each stream
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->Main();
+{ // Lock access to streams collector list
+  cStreams->MutexCall([](){
+    // Process logic for each stream
+    for(Stream*const sPtr : *cStreams) sPtr->Main();
+  });
 }
 /* == Unload all source and buffers ======================================== */
 static void StreamDeInit()
-{ // Lock access to bitmap collector list and unload each stream
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->UnloadSourceAndBuffers();
+{ // Lock access to streams collector list and uninitialise all buffers
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->UnloadSourceAndBuffers();
+  });
 }
 /* == Clear event callbacks on all streams ================================= */
 static void StreamClearEvents()
-{ // Lock access to bitmap collector list and clear event callbacks
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->LuaEvtDeInit();
+{ // Lock access to streams collector list and uninitialise all stream events
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->LuaEvtDeInit();
+  });
 }
 /* == Generate all source and buffers ====================================== */
 static void StreamReInit()
-{ // Lock access to bitmap collector list and reinit source/buffers
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->GenerateSourceAndBuffers();
+{ // Lock access to bitmap collector list and uninitialise source/buffers
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->GenerateSourceAndBuffers();
+  });
 }
 /* == Stop all streams ===================================================== */
 static void StreamStop()
 { // Lock access to bitmap collector list and stop all streams
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->StopSafe(SR_STOPALL);
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->StopSafe(SR_STOPALL);
+  });
 }
 /* == Update all streams base volume======================================== */
 static void StreamCommitVolume()
 { // Lock access to bitmap collector list and update all stream volumes
-  const LockGuard lgStreamsSync{ cStreams->CollectorGetMutex() };
-  for(Stream*const sPtr : *cStreams) sPtr->UpdateVolume();
+  cStreams->MutexCall([](){
+    for(Stream*const sPtr : *cStreams) sPtr->UpdateVolume();
+  });
 }
 /* == Set number of buffers to allocate per stream ========================= */
 static CVarReturn StreamSetBufferCount(const size_t stNewCount)

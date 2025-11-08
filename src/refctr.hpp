@@ -1,41 +1,42 @@
-/* == TOGGLER.HPP ========================================================== **
+/* == REFCTR.HPP =========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## Helps to turn a variable off and on                                 ## **
+** ## Provides a reference counter for protecting objects from being      ## **
+** ## destroyed abruptly.                                                 ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IToggler {                   // Start of private module namespace
+namespace IRefCtr {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename IntegerType=unsigned int>class TogglerMaster
+template<typename IntegerType=unsigned int>class RefCtrMaster
 { /* -- Private variables -------------------------------------------------- */
   IntegerType      itMaster;           // Reference to protected variable
   /* --------------------------------------------------------------- */ public:
-  void TogglerSetDisabled() { --itMaster; }
-  void TogglerSetEnabled() { ++itMaster; }
-  bool TogglerIsEnabled() const { return itMaster > 0; }
-  bool TogglerIsDisabled() const { return !itMaster; }
+  void RefCtrSetDisabled() { --itMaster; }
+  void RefCtrSetEnabled() { ++itMaster; }
+  bool RefCtrIsEnabled() const { return itMaster > 0; }
+  bool RefCtrIsDisabled() const { return !itMaster; }
   /* -- Constructor --------------------------------------------- */ protected:
-  TogglerMaster() : itMaster(0) {}
+  RefCtrMaster() : itMaster(0) {}
   /* ----------------------------------------------------------------------- */
 };                                     // End of class
 /* ------------------------------------------------------------------------- */
 template<typename IntegerType=unsigned int,
-         class TmcType=TogglerMaster<IntegerType>>
-class TogglerSlave
+         class RmcType=RefCtrMaster<IntegerType>>
+class RefCtrSlave
 { /* -- Private variables -------------------------------------------------- */
-  TmcType         &tmcMaster;          // Reference to protected variable
+  RmcType         &rtMaster;           // Reference to protected variable
   /* -- Constructor that takes a master reference ------------------ */ public:
-  explicit TogglerSlave(TmcType &tmcRef) : tmcMaster(tmcRef)
-    { tmcMaster.TogglerSetEnabled(); }
+  explicit RefCtrSlave(RmcType &rtRef) : rtMaster(rtRef)
+    { rtMaster.RefCtrSetEnabled(); }
   /* -- Constructor that takes a master pointer (converts to reference) ---- */
-  explicit TogglerSlave(TmcType*const tmcPtr) : TogglerSlave(*tmcPtr) {}
+  explicit RefCtrSlave(RmcType*const rtPtr) : RefCtrSlave(*rtPtr) {}
   /* -- Destructor --------------------------------------------------------- */
-  ~TogglerSlave() { tmcMaster.TogglerSetDisabled(); }
+  ~RefCtrSlave() { rtMaster.RefCtrSetDisabled(); }
   /* ----------------------------------------------------------------------- */
 };                                     // End of class
 /* ------------------------------------------------------------------------- */

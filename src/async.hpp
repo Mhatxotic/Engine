@@ -39,10 +39,10 @@ using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
 using namespace IIdent::P;             using namespace ILog::P;
 using namespace ILuaEvt::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace IToggler::P;
+using namespace IMemory::P;            using namespace IRefCtr::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -55,7 +55,7 @@ enum ASyncProgressCommand : unsigned int // For lua callback events
 template<class MemberType, class ColType>class AsyncLoader :
   /* -- Base classes ------------------------------------------------------- */
   public Memory,                       // Loading from memory data (reusable)
-  public TogglerMaster<>               // Boolean to protect from destruction
+  public RefCtrMaster<>                // Ref counter to protect from destructs
 { /* -- Private typedefs ------------------------------------------ */ private:
   enum AsyncResult : unsigned int      // Async loading results
   { /* --------------------------------------------------------------------- */
@@ -358,7 +358,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   void AsyncDoLuaProtectedDispatch(const EvtMainEvent &emeEvent,
     const int iParams, const int iHandler)
   { // Set a 'protect' flag and then unset it when leaving this scope
-    const TogglerSlave<> tsProtect{ this };
+    const RefCtrSlave<> rcsProtect{ this };
     // Compare error code
     switch(LuaUtilPCallExSafe(lecAsync.LuaRefGetState(), iParams, 0, iHandler))
     { // No error so remove error handler value and return
@@ -652,10 +652,10 @@ class CLHelperAsync :
   const LuaEvtMasterType lemAsync;     // Event name id
   /* -- Functions ---------------------------------------------------------- */
   void WaitAsync()
-  { // Lock the collector's mutex
-    const LockGuard lgSync{ this->CollectorGetMutex() };
-    // Sync all members
-    for(MemberType*const cChild : *this) cChild->AsyncWait();
+  { // Lock the collector's mutex and sync all members
+    this->MutexCall([this](){
+      for(MemberType*const cChild : *this) cChild->AsyncWait();
+    });
   }
   /* -- Constructor -------------------------------------------------------- */
   CLHelperAsync(const char*const cpName, const EvtMainCmd emcCmd) :

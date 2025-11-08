@@ -794,42 +794,33 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   { // Generate the texture as normal but we'll be generating the tileset
     InitTextureImage(imgSrc, 0, 0, 0, 0, ofeFilter, false);
     // Check that the tile count is divisble by 4 (X,Y,W,H)
-    const size_t stExcess = gluvTiles.size() % 4;
-    if(stExcess)
+    static constexpr size_t stValues = 4, stValuesM1 = stValues - 1;
+    if(const size_t stExcess = gluvTiles.size() % stValues)
       XC("Invalid count of tiles specified!",
          "Identifier", IdentGet(), "Count", stExcess);
     // Reserve memory for actual count
     clTiles.resize(1);
     CoordList &clFirst = clTiles.front();
-    clFirst.reserve(gluvTiles.size() / 4);
+    clFirst.reserve(gluvTiles.size() / stValues);
     // Shortcut to GLUIntVector const iterator
     typedef GLUIntVector::const_iterator GLUIntVectorItConst;
     // Are image pixels reversed?
     if(IsReversed())
-      // Until there are no more values to parse
       for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
-                              gluvicIt != gluvTiles.cend();
-                            ++gluvicIt)
-      { // Add the user specified tile
-        const GLfloat fX      = static_cast<GLfloat>(*gluvicIt),
-                      fY      = static_cast<GLfloat>(*(++gluvicIt)),
-                      fWidth  = static_cast<GLfloat>(*(++gluvicIt)),
-                      fHeight = static_cast<GLfloat>(*(++gluvicIt));
-        AddTileRWH(0, fX, fY, fWidth, fHeight);
-      }
+                              gluvicIt + stValuesM1 < gluvTiles.cend();
+                              gluvicIt += stValues)
+        AddTileRWH(0, static_cast<GLfloat>(*gluvicIt),
+                      static_cast<GLfloat>(*(gluvicIt + 1)),
+                      static_cast<GLfloat>(*(gluvicIt + 2)),
+                      static_cast<GLfloat>(*(gluvicIt + 3)));
     // Image pixels are not reversed?
-    else
-      // Until there are no more values to parse
-      for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
-                              gluvicIt != gluvTiles.cend();
-                            ++gluvicIt)
-      { // Add the user specified tile
-        const GLfloat fX      = static_cast<GLfloat>(*gluvicIt),
-                      fY      = static_cast<GLfloat>(*(++gluvicIt)),
-                      fWidth  = static_cast<GLfloat>(*(++gluvicIt)),
-                      fHeight = static_cast<GLfloat>(*(++gluvicIt));
-        AddTileWH(0, fX, fY, fWidth, fHeight);
-      }
+    else for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
+                                 gluvicIt + stValuesM1 < gluvTiles.cend();
+                                 gluvicIt += stValues)
+     AddTileWH(0, static_cast<GLfloat>(*gluvicIt),
+                  static_cast<GLfloat>(*(gluvicIt + 1)),
+                  static_cast<GLfloat>(*(gluvicIt + 2)),
+                  static_cast<GLfloat>(*(gluvicIt + 3)));
   }
   /* -- Init from a manifest ----------------------------------------------- */
   void InitTextureImageManifest(Image &imSrc, const Json &jsDoc)

@@ -9,7 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaRef {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ILuaUtil::P;           using namespace IUtil::P;
+using namespace ILuaUtil::P;           using namespace IStd::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -73,10 +74,8 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
   { // Return if theres a state?
     if(LuaRefStateIsNotSet()) return false;
     // Unload and clear references from back to front
-    for(ReferencesRevIt rriIt{ aReferences.rbegin() };
-                        rriIt != aReferences.rend();
-                      ++rriIt)
-      LuaRefDoDeInitReset(*rriIt);
+    StdForEach(seq, aReferences.rbegin(), aReferences.rend(),
+      [this](int &iRef) { LuaRefDoDeInitReset(iRef); });
     // Clear the state
     LuaRefSetState();
     // Success
@@ -114,12 +113,11 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
     {}
   /* -- Destructor, delete the reference if set----------------------------- */
   ~LuaRef()
-  { // If theres a state? Delete references back to front
-    if(LuaRefStateIsSet())
-      for(ReferencesConstRevIt rcriIt{ aReferences.rbegin() };
-                               rcriIt != aReferences.rend();
-                             ++rcriIt)
-        LuaRefDoDeInit(*rcriIt);
+  { // Return if there isn't a state
+    if(LuaRefStateIsNotSet()) return;
+    // Delete references back to front
+    StdForEach(seq, aReferences.rbegin(), aReferences.rend(),
+      [this](const int iRef) { LuaRefDoDeInit(iRef); });
   }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

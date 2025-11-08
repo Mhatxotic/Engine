@@ -318,16 +318,17 @@ static void SampleReInit()
 /* == Update all streams base volume======================================== */
 static void SampleUpdateVolume()
 { // Lock source list so it cannot be modified
-  const LockGuard lgCollectorLock{ cSources->CollectorGetMutex() };
-  // Walk through sources
-  for(const Source*const scPtr : *cSources)
-  { // Get class
-    const Source &scRef = *scPtr;
-    // If it is locked then its a sample so ignore it
-    if(scRef.GetExternal()) continue;
-    // Set new sample volume
-    scRef.SetGain(cSources->fGVolume * cSources->fSVolume);
-  }
+  cSources->MutexCall([](){
+    // Walk through sources
+    for(const Source*const scPtr : *cSources)
+    { // Get class
+      const Source &scRef = *scPtr;
+      // If it is locked then its a sample so ignore it
+      if(scRef.GetExternal()) continue;
+      // Set new sample volume
+      scRef.SetGain(cSources->fGVolume * cSources->fSVolume);
+    }
+  });
 }
 /* == Set all streams base volume ========================================== */
 static CVarReturn SampleSetVolume(const ALfloat fVolume)
