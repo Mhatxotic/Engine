@@ -851,20 +851,21 @@ class Console :                        // Members initially private
   void AddLine(const string &strText) { AddLine(cTextColour, strText); }
   /* -- Formatted console output ------------------------------------------- */
   template<typename ...VarArgs>
-    void AddLineF(const char*const cpFormat, const VarArgs &...vaArgs)
-      { AddLine(StrFormat(cpFormat, vaArgs...)); }
+    void AddLineF(const char*const cpFormat, VarArgs &&...vaArgs)
+      { AddLine(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output with colour ------------------------------- */
   template<typename ...VarArgs>
     void AddLineF(const Colour cColour, const char*const cpFormat,
-      const VarArgs &...vaArgs)
-        { AddLine(cColour, StrFormat(cpFormat, vaArgs...)); }
+      VarArgs &&...vaArgs)
+        { AddLine(cColour,
+            StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output using StrAppend() ------------------------- */
   template<typename ...VarArgs>
-    void AddLineAC(const Colour cColour, const VarArgs &...vaArgs)
-      { AddLine(cColour, StrAppend(vaArgs...)); }
+    void AddLineAC(const Colour cColour, VarArgs &&...vaArgs)
+      { AddLine(cColour, StrAppend(StdForward<VarArgs>(vaArgs)...)); }
   template<typename ...VarArgs>
-    void AddLineA(const VarArgs &...vaArgs)
-      { AddLineAC(cTextColour, vaArgs...); }
+    void AddLineA(VarArgs &&...vaArgs)
+      { AddLineAC(cTextColour, StdForward<VarArgs>(vaArgs)...); }
   /* -- Print version information ------------------------------------------ */
   void PrintVersion()
   { // Show engine version

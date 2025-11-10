@@ -14,7 +14,8 @@ namespace ILuaEvt {                    // Start of private module namespace
 using namespace IError::P;             using namespace IEvtCore::P;
 using namespace IEvtMain::P;           using namespace ILog::P;
 using namespace ILuaRef::P;            using namespace ILuaUtil::P;
-using namespace IRefCtr::P;            using namespace IStd::P;
+using namespace IMutex::P;             using namespace IRefCtr::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Private typedefs ----------------------------------------------------- */
@@ -25,21 +26,21 @@ typedef deque<EvtMain::QueueConstIt> LuaEvtsList;
 /* == Class type for storing an event iterator and removing it ============= */
 class LuaEvts :
   /* -- Initialisers ------------------------------------------------------- */
-  private LuaEvtsList,                 // list of added event iterators
-  protected mutex                      // To serialise access to the list
-{ /* -- Return mutex ------------------------------------------------------- */
-  mutex &LuaEvtsGetMutex() { return *this; }
+  private LuaEvtsList                  // list of added event iterators
+{ /* -- Private variables -------------------------------------------------- */
+  Mutex            mMutex;             // To serialise access to the list
   /* -- Remove iterator by id -------------------------------------- */ public:
   void LuaEvtsRemoveIterator(const size_t stId)
   { // Lock access to the list
-    const LockGuard lgLuaEvtsSync{ LuaEvtsGetMutex() };
-    // Throw error if the id is invalid
-    if(stId >= size())
-      XC("Invalid event index to remove!",
-         "Requested", stId, "Maximum", size());
-    // Clear stored event and remove all empty events from the end
-    at(stId) = cEvtMain->Last();
-    while(!empty() && back() == cEvtMain->Last()) pop_back();
+    mMutex.MutexCall([this, stId](){
+      // Throw error if the id is invalid
+      if(stId >= size())
+        XC("Invalid event index to remove!",
+           "Requested", stId, "Maximum", size());
+      // Clear stored event and remove all empty events from the end
+      at(stId) = cEvtMain->Last();
+      while(!empty() && back() == cEvtMain->Last()) pop_back();
+    });
   }
   /* -- Check if enough parameters ----------------------------------------- */
   template<size_t stMinimum>
@@ -55,34 +56,38 @@ class LuaEvts :
   }
   /* -- Add a new event and stab iterator ---------------------------------- */
   template<typename ...VarArgs>void LuaEvtsDispatch(const EvtMainCmd emcCmd,
-    const void*const vpClass, const VarArgs &...vaArgs)
-  { // Iterator to return
-    EvtMain::QueueConstIt qciItem;
-    // Lock access to the list
-    const LockGuard lgLuaEvtsSync{ LuaEvtsGetMutex() };
-    // Current parameters list for event
+    const void*const vpClass, const VarArgs ...vaArgs)
+  { // Reserve memory for current parameters list for event
     EvtMainArgs emaArgs;
-    // Reserve memory for parameters
     emaArgs.reserve(sizeof...(VarArgs));
-    // Create a new params list with the class and the events list size
-    cEvtMain->AddExParam(emcCmd, qciItem, emaArgs, vpClass, size(), vaArgs...);
-    // Insert the iterator the new event.
-    emplace_back(StdMove(qciItem));
+    // Lock access to the list
+    mMutex.MutexCall([this, &emaArgs, &emcCmd, vpClass, &vaArgs...]{
+      // Iterator to return
+      EvtMain::QueueConstIt qciItem;
+      // Create a new params list with the class and the events list size
+      cEvtMain->AddExParam(emcCmd, qciItem, emaArgs, vpClass, size(),
+        vaArgs...);
+      // Insert the iterator the new event.
+      emplace_back(StdMove(qciItem));
+    });
   }
   /* -- Deinit event store-------------------------------------------------- */
   void LuaEvtsDeInit()
   { // Lock access to the queued events list
-    const LockGuard lgLuaEvtsSync{ LuaEvtsGetMutex() };
-    // If there are queued events?
-    if(!empty())
-    { // Lock engine thread events list
-      const LockGuard lgEvtMainSync{ cEvtMain->GetMutex() };
-      // Remove any queued events dispatched by this class as if they fire, the
-      // app will crash because the class may have been destroyed.
-      StdForEach(seq, cbegin(), cend(), [](const EvtMain::QueueConstIt &qciIt)
-        { if(qciIt != cEvtMain->Last()) cEvtMain->RemoveUnsafe(qciIt); });
-    } // Clear the list
-    clear();
+    mMutex.MutexCall([this](){
+      // Return if there are no queued events
+      if(empty()) return;
+      // Lock engine thread events list
+      cEvtMain->MutexCall([this](){
+        // Remove any queued events dispatched by this class as if they fire,
+        // the app will crash because the class may have been destroyed.
+        StdForEach(seq, cbegin(), cend(),
+          [](const EvtMain::QueueConstIt &qciIt)
+            { if(qciIt != cEvtMain->Last()) cEvtMain->RemoveUnsafe(qciIt); });
+        // Clear the list
+        clear();
+      });
+    });
   }
   /* -- Constructor -------------------------------------------------------- */
   LuaEvts() = default;
@@ -162,7 +167,7 @@ class LuaEvtSlave :
   EvtMainCmd       emcCmd;             // Event associated with this
   MemberType*const mtPtr;              // Parent of this class
   /* -- Event dispatch --------------------------------------------- */ public:
-  template<typename ...VarArgs>void LuaEvtDispatch(const VarArgs &...vaArgs)
+  template<typename ...VarArgs>void LuaEvtDispatch(const VarArgs ...vaArgs)
   { // Return if no callback is set. No point firing an event!
     if(!this->LuaRefIsSet()) return;
     // Insert a new event. We need to store the id of the iterator too so we

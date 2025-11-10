@@ -63,12 +63,11 @@ struct Ident :                         // Members initially public
   void IdentSet(const IdentBase &ibO) { strIdentifier = ibO.IdentGet(); }
   /* -- Formatted set using StrFormat() ------------------------------------ */
   template<typename ...VarArgs>
-    void IdentSetEx(const char*const cpFormat, const VarArgs &...vaArgs)
-      { IdentSet(StrFormat(cpFormat, vaArgs...)); }
+    void IdentSetEx(const char*const cpFormat, VarArgs &&...vaArgs)
+  { IdentSet(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted set using StrAppend() ------------------------------------ */
-  template<typename ...VarArgs>
-    void IdentSetA(const VarArgs &...vaArgs)
-      { IdentSet(StrAppend(vaArgs...)); }
+  template<typename ...VarArgs>void IdentSetA(VarArgs &&...vaArgs)
+    { IdentSet(StrAppend(StdForward<VarArgs>(vaArgs)...)); }
   /* -- Clear identifier --------------------------------------------------- */
   void IdentClear() { strIdentifier.clear(); }
   /* -- Swap identifier ---------------------------------------------------- */

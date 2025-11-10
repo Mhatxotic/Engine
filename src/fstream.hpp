@@ -206,15 +206,17 @@ class FStreamBase :                    // File stream base class
   size_t FStreamWriteStringSafe(const string &strString)
     { return FStreamIsReadyWrite() && !strString.empty() ?
         FStreamWrite(strString.data(), strString.length()) : 0; }
-  /* -- Formatted writing a string to the file ----------------------------- */
+  /* -- Formatted writing a string to the file without checking ------------ */
   template<typename ...VarArgs>
     size_t FStreamWriteStringEx(const char*const cpFormat,
-      const VarArgs &...vaArgs)
-        { return FStreamWriteString(StrFormat(cpFormat, vaArgs...)); }
+      VarArgs &&...vaArgs)
+  { return FStreamWriteString(StrFormat(cpFormat,
+      StdForward<VarArgs>(vaArgs)...)); }
   template<typename ...VarArgs>
     size_t FStreamWriteStringExSafe(const char*const cpFormat,
-      const VarArgs &...vaArgs)
-        { return FStreamWriteStringSafe(StrFormat(cpFormat, vaArgs...)); }
+      VarArgs &&...vaArgs)
+  { return FStreamWriteStringSafe(StrFormat(cpFormat,
+      StdForward<VarArgs>(vaArgs)...)); }
   /* -- Read entire file without knowing the size of the file -------------- */
   const string FStreamReadStringChunked(const size_t stBytes=4096)
   { // Stream to write strings to

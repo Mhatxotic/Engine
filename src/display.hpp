@@ -23,10 +23,11 @@ using namespace IGlFWUtil::P;          using namespace IHelper::P;
 using namespace IIdent::P;             using namespace IImage::P;
 using namespace IImageDef::P;          using namespace IInput::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
+using namespace IMutex::P;             using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -76,7 +77,7 @@ class Display :                        // Actual class body
   public  DisplayFlags,                // Display settings
   private DimCoInt,                    // Requested window position and size
   public  GlFWMonitors,                // Monitor list data
-  private mutex,                       // Mutex for sychronising engine thread
+  private Mutex,                       // Mutex for sychronising engine thread
   private condition_variable,          // CV for sychronising engine thread
   private EvtMainRegAuto,              // Main events list to register
   private EvtWinRegAuto                // Window events list to register
@@ -402,35 +403,36 @@ class Display :                        // Actual class body
   /* -- Monitors refresh requested ----------------------------------------- */
   void OnReqMonitors(const EvtWinEvent &)
   { // Lock mutex and make other requests wait
-    UniqueLock ulWait{ *this };
-    // Log that we're processing a monitor change event
-    cLog->LogDebugSafe("Display got monitor event, suspending engine...");
-    // Capture exceptions so we can resume a suspended engine thread
-    try
-    { // Tell engine thread to suspend
-      cEvtMain->Add(EMC_SUSPEND, &bUnsuspend,
-        static_cast<condition_variable*>(this));
-      // Wait for engine thread to tell us it's suspended
-      wait(ulWait, [this]{ return bUnsuspend == true; });
-      // Reset our unsuspension variable
-      bUnsuspend = false;
+    MutexUniqueCall([this](UniqueLock &ulLock){
       // Log that we're processing a monitor change event
-      cLog->LogDebugSafe("Display acknowledged engine suspension.");
-      // Enumerate monitors and video modes
-      EnumerateMonitorsAndVideoModes();
-      // Engine thread can continue
-      cEvtMain->Unsuspend();
-      // Log that we're processing a monitor change event
-      cLog->LogDebugSafe("Display finished processing monitor event.");
-    } // Exception occured?
-    catch(...)
-    { // Reset our unsuspension variable
-      bUnsuspend = false;
-      // Engine thread can continue
-      cEvtMain->Unsuspend();
-      // Throw exception to LUA
-      throw;
-    }
+      cLog->LogDebugSafe("Display got monitor event, suspending engine...");
+      // Capture exceptions so we can resume a suspended engine thread
+      try
+      { // Tell engine thread to suspend
+        cEvtMain->Add(EMC_SUSPEND, &bUnsuspend,
+          static_cast<condition_variable*>(this));
+        // Wait for engine thread to tell us it's suspended
+        wait(ulLock, [this]{ return bUnsuspend == true; });
+        // Reset our unsuspension variable
+        bUnsuspend = false;
+        // Log that we're processing a monitor change event
+        cLog->LogDebugSafe("Display acknowledged engine suspension.");
+        // Enumerate monitors and video modes
+        EnumerateMonitorsAndVideoModes();
+        // Engine thread can continue
+        cEvtMain->Unsuspend();
+        // Log that we're processing a monitor change event
+        cLog->LogDebugSafe("Display finished processing monitor event.");
+      } // Exception occured?
+      catch(...)
+      { // Reset our unsuspension variable
+        bUnsuspend = false;
+        // Engine thread can continue
+        cEvtMain->Unsuspend();
+        // Throw exception to LUA
+        throw;
+      }
+    });
   }
   /* -- Monitor changed ---------------------------------------------------- */
   void OnReqMonitor(const EvtWinEvent &eweEvent)
@@ -1091,7 +1093,7 @@ class Display :                        // Actual class body
     cSystem->WindowInitialised(cGlFW->WinInit(cpTitle, nullptr));
     // Clear any lingering window events which is very important because
     // events from the last window may contain invalidated pointers and as long
-    // as they don't reach the 'cEvtWin->ManageSafe()' function we're fine.
+    // as they don't reach the 'cEvtWin->Manage()' function we're fine.
     cEvtWin->Flush();
     // Re-adjust the window
     ReInitWindow(FlagIsSet(DF_FULLSCREEN));

@@ -14,6 +14,10 @@ namespace IStd {                       // Start of private module namespace
 using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* -- Wrapper for std::forward<> as we can't do 'using std::forward' ------- */
+template<typename AnyType>
+  constexpr static auto &&StdForward(auto &&...aArgs)
+    { return ::std::forward<AnyType>(aArgs...); }
 /* ------------------------------------------------------------------------- */
 #if defined(MACOS)                     // Using MacOS?
 /* ------------------------------------------------------------------------- **
@@ -23,57 +27,63 @@ namespace P {                          // Start of public module namespace
 ** ## same parameter to pass through on other targets.                    ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-constexpr static bool par_unseq = false, par = false, seq = false;
+constexpr static bool par_unseq = false, // Parallel and vectorised disabled
+                      par       = false, // Parallel only disabled
+                      seq       = false; // Serialised disabled
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdSort(auto&, auto &&...aArgs)
-  { return ::std::sort(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::sort(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdFill(auto&, auto &&...aArgs)
-  { return ::std::fill(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::fill(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdRotate(auto&, auto &&...aArgs)
-  { return ::std::rotate(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::rotate(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdTransform(auto&, auto &&...aArgs)
-  { return ::std::transform(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::transform(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdForEach(auto&, auto &&...aArgs)
-  { return ::std::for_each(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::for_each(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdFindIf(auto&, auto &&...aArgs)
-  { return ::std::find_if(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::find_if(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdCopy(auto&, auto &&...aArgs)
-  { return ::std::copy(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::copy(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdAllOf(auto&, auto &&...aArgs)
-  { return ::std::all_of(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::all_of(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 #else                                  // Windows or Posix target?
 /* ------------------------------------------------------------------------- */
+using ::std::execution::par_unseq;     // Parallel and vectorised
+using ::std::execution::par;           // Parallel only
+using ::std::execution::seq;           // Serialised
+/* ------------------------------------------------------------------------- */
 constexpr static auto StdSort(auto &&...aArgs)
-  { return ::std::sort(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::sort(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdFill(auto &&...aArgs)
-  { return ::std::fill(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::fill(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdRotate(auto &&...aArgs)
-  { return ::std::rotate(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::rotate(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdTransform(auto &&...aArgs)
-  { return ::std::transform(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::transform(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdForEach(auto &&...aArgs)
-  { return ::std::for_each(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::for_each(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdFindIf(auto &&...aArgs)
-  { return ::std::find_if(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::find_if(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdCopy(auto &&...aArgs)
-  { return ::std::copy(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::copy(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 constexpr static auto StdAllOf(auto &&...aArgs)
-  { return ::std::all_of(::std::forward<decltype(aArgs)>(aArgs)... ); }
+  { return ::std::all_of(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // MacOS check
 /* ------------------------------------------------------------------------- */
@@ -90,19 +100,19 @@ typedef __time64_t      StdTimeT;       // Different on Windows
 /* -- Typedefs for types not in Windows ------------------------------------ */
 typedef make_signed_t<size_t> ssize_t;  // Not in MSVC
 /* -- Convert any widestring pointer type to utf8 class string ------------- */
-inline const string S16toUTF(const wchar_t*const wcpStr)
+const string S16toUTF(const wchar_t*const wcpStr)
   { return UtfFromWide(wcpStr); }
 /* -- Convert STL widestring to utf8 --------------------------------------- */
-inline const string WS16toUTF(const wstring &wstrStr)
+const string WS16toUTF(const wstring &wstrStr)
   { return S16toUTF(wstrStr.c_str()); }
 /* -- Convert UTF c-string to STL widestring ------------------------------- */
-inline const wstring UTFtoS16(const char*const cpPtr)
+const wstring UTFtoS16(const char*const cpPtr)
   { return UtfDecoder{ cpPtr }.Wide(); };
 /* -- Convert UTF string to STL widestring --------------------------------- */
-inline const wstring UTFtoS16(const string &strStr)
+const wstring UTFtoS16(const string &strStr)
   { return UtfDecoder{ strStr }.Wide(); };
 /* -- Convert UTF string view to STL widestring ---------------------------- */
-inline const wstring UTFtoS16(const string_view &strvStr)
+const wstring UTFtoS16(const string_view &strvStr)
   { return UtfDecoder{ strvStr }.Wide(); };
 /* -- Wrapper for _waccess() ----------------------------------------------- */
 static int StdAccess(const wchar_t*const wcpPath, const int iMode)
@@ -112,7 +122,8 @@ static int StdAccess(const wstring &wstrPath, const int iMode)
 static int StdAccess(const string &strPath, const int iMode)
   { return StdAccess(UTFtoS16(strPath), iMode); }
 /* -- Wrapper for mkdir() function ----------------------------------------- */
-static int StdMkDir(const wchar_t*const wcpPath) { return _wmkdir(wcpPath); }
+static int StdMkDir(const wchar_t*const wcpPath)
+  { return _wmkdir(wcpPath); }
 static int StdMkDir(const wstring &wstrPath)
   { return StdMkDir(wstrPath.c_str()); }
 static int StdMkDir(const string &strPath)
@@ -122,25 +133,29 @@ static int StdRename(const wchar_t*const wcpSrcPath,
   const wchar_t*const wcpDstPath)
     { return _wrename(wcpSrcPath, wcpDstPath); }
 /* -- Wrapper for _wrename() function (wstring version) -------------------- */
-static int StdRename(const wstring &wstrSrcPath, const wstring &wstrDstPath)
-  { return StdRename(wstrSrcPath.c_str(), wstrDstPath.c_str()); }
+static int StdRename(const wstring &wstrSrcPath,
+  const wstring &wstrDstPath)
+    { return StdRename(wstrSrcPath.c_str(), wstrDstPath.c_str()); }
 /* -- Wrapper for _wrename() function (utf string version) ----------------- */
 static int StdRename(const string &strSrcPath, const string &strDstPath)
   { return StdRename(UTFtoS16(strSrcPath), UTFtoS16(strDstPath)); }
 /* -- Wrapper for _wrmdir() function --------------------------------------- */
-static int StdRmDir(const wchar_t*const wcpPath) { return _wrmdir(wcpPath); }
+static int StdRmDir(const wchar_t*const wcpPath)
+  { return _wrmdir(wcpPath); }
 static int StdRmDir(const wstring &wstrPath)
   { return StdRmDir(wstrPath.c_str()); }
 static int StdRmDir(const string &strPath)
   { return StdRmDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wchdir() function --------------------------------------- */
-static int StdChDir(const wchar_t*const wcpPath) { return _wchdir(wcpPath); }
+static int StdChDir(const wchar_t*const wcpPath)
+  { return _wchdir(wcpPath); }
 static int StdChDir(const wstring &wstrPath)
   { return StdChDir(wstrPath.c_str()); }
 static int StdChDir(const string &strPath)
   { return StdChDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wunlink() function -------------------------------------- */
-static int StdUnlink(const wchar_t*const wcpPath) { return _wunlink(wcpPath); }
+static int StdUnlink(const wchar_t*const wcpPath)
+  { return _wunlink(wcpPath); }
 static int StdUnlink(const wstring &wstrPath)
   { return StdUnlink(wstrPath.c_str()); }
 static int StdUnlink(const string &strPath)
@@ -160,18 +175,23 @@ static int StdFileNo(FILE*const fStream) { return _fileno(fStream); }
 static int StdFStat(const wchar_t*const wcpPath,
   StdFStatStruct*const sDestBuffer)
     { return _wstat64(wcpPath, sDestBuffer);  }
-static int StdFStat(const wstring &wstrPath, StdFStatStruct*const sDestBuffer)
-  { return StdFStat(wstrPath.c_str(), sDestBuffer);  }
-static int StdFStat(const string &strPath, StdFStatStruct*const sDestBuffer)
-  { return StdFStat(UTFtoS16(strPath), sDestBuffer);  }
+static int StdFStat(const wstring &wstrPath,
+  StdFStatStruct*const sDestBuffer)
+    { return StdFStat(wstrPath.c_str(), sDestBuffer);  }
+static int StdFStat(const string &strPath,
+  StdFStatStruct*const sDestBuffer)
+    { return StdFStat(UTFtoS16(strPath), sDestBuffer);  }
 /* -- Wrapper for _fseeki64() function ------------------------------------- */
-static int StdFSeek(FILE*const fStream, const int64_t qwOffset, int iWhence)
-  { return _fseeki64(fStream, qwOffset, iWhence); }
+static int StdFSeek(FILE*const fStream, const int64_t qwOffset,
+  int iWhence)
+    { return _fseeki64(fStream, qwOffset, iWhence); }
 /* -- Wrapper for _ftelli64() function ------------------------------------- */
-static int64_t StdFTell(FILE*const fStream) { return _ftelli64(fStream); }
+static int64_t StdFTell(FILE*const fStream)
+  { return _ftelli64(fStream); }
 /* -- Wrapper for _gmtime64_s() function ----------------------------------- */
-static void StdGMTime(StdTMStruct*const tmpResult, const StdTimeT*const tpTime)
-  { _gmtime64_s(tmpResult, tpTime); }
+static void StdGMTime(StdTMStruct*const tmpResult,
+  const StdTimeT*const tpTime)
+    { _gmtime64_s(tmpResult, tpTime); }
 /* -- Wrapper for _fstat64() function -------------------------------------- */
 static int StdHStat(const int iFd, StdFStatStruct*const sDestBuffer)
   { return _fstat64(iFd, sDestBuffer); }
@@ -187,7 +207,7 @@ static FILE *StdPOpen(const wchar_t*const wcpCommand,
   const wchar_t*const wcpType=L"rt") { return _wpopen(wcpCommand, wcpType); }
 static FILE *StdPOpen[[maybe_unused]](const wstring &wstrCommand,
   const wchar_t*const wcpType=L"rt")
-{ return StdPOpen(wstrCommand.c_str(), wcpType); }
+    { return StdPOpen(wstrCommand.c_str(), wcpType); }
 static FILE *StdPOpen[[maybe_unused]](const string &strCommand,
   const wchar_t*const wcpType=L"rt")
     { return StdPOpen(UTFtoS16(strCommand), wcpType); }
@@ -229,8 +249,9 @@ static int StdMkDir(const char*const cpPath)
 static int StdMkDir(const string &strPath)
   { return StdMkDir(strPath.c_str()); }
 /* -- Wrapper for rename() function ---------------------------------------- */
-static int StdRename(const char*const cpSrcPath, const char*const cpDstPath)
-  { return rename(cpSrcPath, cpDstPath); }
+static int StdRename(const char*const cpSrcPath,
+  const char*const cpDstPath)
+    { return rename(cpSrcPath, cpDstPath); }
 static int StdRename(const string &strSrcPath, const string &strDstPath)
   { return StdRename(strSrcPath.c_str(), strDstPath.c_str()); }
 /* -- Wrapper for rmdir() function ----------------------------------------- */
@@ -246,28 +267,34 @@ static int StdUnlink(const char*const cpPath) { return unlink(cpPath); }
 static int StdUnlink(const string &strPath)
   { return StdUnlink(strPath.c_str()); }
 /* -- Wrapper for execve() stdlib function --------------------------------- */
-static int StdExecVE(const char*const cpaArg[], const char*const cpaEnv[])
-  { return execve(*cpaArg, const_cast<char**>(cpaArg),
-      const_cast<char**>(cpaEnv)); }
+static int StdExecVE(const char*const cpaArg[],
+  const char*const cpaEnv[])
+    { return execve(*cpaArg, const_cast<char**>(cpaArg),
+        const_cast<char**>(cpaEnv)); }
 /* -- Wrapper for posix_spawn() stdlib function ---------------------------- */
-static int StdSpawnVE(const char*const cpaArg[], const char*const cpaEnv[])
-  { pid_t pId; return posix_spawn(&pId, *cpaArg, nullptr, nullptr,
-      const_cast<char**>(cpaArg), const_cast<char**>(cpaEnv)); }
+static int StdSpawnVE(const char*const cpaArg[],
+  const char*const cpaEnv[])
+    { pid_t pId; return posix_spawn(&pId, *cpaArg, nullptr, nullptr,
+        const_cast<char**>(cpaArg), const_cast<char**>(cpaEnv)); }
 /* -- Wrapper for fileno() function ---------------------------------------- */
 static int StdFileNo(FILE*const fStream) { return fileno(fStream); }
 /* -- Wrapper for stat() function ------------------------------------------ */
-static int StdFStat(const char*const cpPath, StdFStatStruct*const sDestBuffer)
-  { return stat(cpPath, sDestBuffer);  }
-static int StdFStat(const string &strPath, StdFStatStruct*const sDestBuffer)
-  { return StdFStat(strPath.c_str(), sDestBuffer);  }
+static int StdFStat(const char*const cpPath,
+  StdFStatStruct*const sDestBuffer)
+    { return stat(cpPath, sDestBuffer);  }
+static int StdFStat(const string &strPath,
+  StdFStatStruct*const sDestBuffer)
+    { return StdFStat(strPath.c_str(), sDestBuffer);  }
 /* -- Wrapper for fseek() function ----------------------------------------- */
-static int StdFSeek(FILE*const fStream, const off_t otOffset, int iWhence)
-  { return fseeko(fStream, otOffset, iWhence); }
+static int StdFSeek(FILE*const fStream, const off_t otOffset,
+  int iWhence)
+    { return fseeko(fStream, otOffset, iWhence); }
 /* -- Wrapper for ftell() function ----------------------------------------- */
 static off_t StdFTell(FILE*const fStream) { return ftello(fStream); }
 /* -- Wrapper for gmtime_r() function -------------------------------------- */
-static void StdGMTime(StdTMStruct*const tmpResult, const StdTimeT*const tpTime)
-  { gmtime_r(tpTime, tmpResult); }
+static void StdGMTime(StdTMStruct*const tmpResult,
+  const StdTimeT*const tpTime)
+    { gmtime_r(tpTime, tmpResult); }
 /* -- Wrapper for fstat() function ----------------------------------------- */
 static int StdHStat(const int iFd, StdFStatStruct*const sDestBuffer)
   { return fstat(iFd, sDestBuffer); }
@@ -280,9 +307,11 @@ static StdTimeT StdMkTime(StdTMStruct*const tmpResult)
   { return mktime(tmpResult); }
 /* -- Wrapper for popen() function ----------------------------------------- */
 static FILE *StdPOpen(const char*const cpCommand,
-  const char*const cpType="r") { return popen(cpCommand, cpType); }
+  const char*const cpType="r")
+    { return popen(cpCommand, cpType); }
 static FILE *StdPOpen[[maybe_unused]](const string &strCommand,
-  const char*const cpType="r") { return StdPOpen(strCommand.c_str(), cpType); }
+  const char*const cpType="r")
+    { return StdPOpen(strCommand.c_str(), cpType); }
 /* -- Wrapper for pclose() function ---------------------------------------- */
 static int StdPClose[[maybe_unused]](FILE*const fStream)
   { return pclose(fStream); }
@@ -306,9 +335,11 @@ static void StdSetError(const int iValue) { errno = iValue; }
 /* -- Get error number ----------------------------------------------------- */
 static int StdGetError() { return errno; }
 /* -- Is error number equal to --------------------------------------------- */
-static bool StdIsError(const int iValue) { return StdGetError() == iValue; }
+static bool StdIsError(const int iValue)
+  { return StdGetError() == iValue; }
 /* -- Is error number not equal to ----------------------------------------- */
-static bool StdIsNotError(const int iValue) { return !StdIsError(iValue); }
+static bool StdIsNotError(const int iValue)
+  { return !StdIsError(iValue); }
 /* -- Uppercases the specified character ----------------------------------- */
 template<typename IntType>static char StdToUpper(const IntType itC)
   { return static_cast<char>(toupper(static_cast<int>(itC))); }
@@ -357,11 +388,12 @@ template<typename IntType=int64_t>
   else return itVal;
 }
 /* -- Returns if the specified number is a power of two -------------------- */
-template<typename IntType=int64_t>static bool StdIntIsPOW2(const IntType itVal)
-  { return !((itVal & (itVal - 1)) && itVal); }
+template<typename IntType=int64_t>
+  static bool StdIntIsPOW2(const IntType itVal)
+    { return !((itVal & (itVal - 1)) && itVal); }
 /* -- Get the distance between two opposing corners ------------------------ */
-template<typename IntType>static double StdHypot(const IntType itWidth,
-  const IntType itHeight)
+template<typename IntType>
+  static double StdHypot(const IntType itWidth, const IntType itHeight)
     { return ::std::hypot(itWidth, itHeight); }
 /* -- Allocate memory ------------------------------------------------------ */
 template<typename AnyType,typename IntType>
@@ -393,9 +425,10 @@ static unsigned int StdThreadMax()
 /* -- Returns current thread id -------------------------------------------- */
 static auto StdThreadId() { return ::std::this_thread::get_id(); }
 /* -- Returns current thread id -------------------------------------------- */
-static void StdSuspend(const auto &aTime)
+constexpr static void StdSuspend(const auto &aTime)
   { ::std::this_thread::sleep_for(aTime); }
-static void StdSuspend() { StdSuspend(milliseconds{ 1 }); }
+constexpr static void StdSuspend()
+  { StdSuspend(::std::chrono::milliseconds{ 1 }); }
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## Because some compilers may not allow me to alias ::std::move        ## **

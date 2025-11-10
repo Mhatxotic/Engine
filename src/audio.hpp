@@ -494,7 +494,7 @@ class Audio :                          // Audio manager class
       { EMC_AUD_PD_UPDATED, bind(&Audio::AudioOnPbkDeviceUpdated, this, _1) },
       { EMC_AUD_CD_UPDATED, bind(&Audio::AudioOnCapDeviceUpdated, this, _1) }
     } },
-    cdDiscWait{ milliseconds{ 100 } }, // Initialise discrepency sleep time
+    cdDiscWait{ cd100MS },             // Initialise discrepency sleep time
     ctfThSysEvts{ bind(&Audio::AudioThreadMainSysEvents, this, _1) },
     ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) },
     lfOnUpdate{ "OnUpdate" }           // On update event
@@ -503,11 +503,10 @@ class Audio :                          // Audio manager class
   /* ----------------------------------------------------------------------- */
   CVarReturn SetAudCheckRate(const unsigned int uiTime)
     { return CVarSimpleSetIntNLG(cdCheckRate,
-        milliseconds{ uiTime }, milliseconds{ 100 }, milliseconds{ 60000 }); }
+        milliseconds{ uiTime }, cd100MS, cd60S); }
   /* ----------------------------------------------------------------------- */
   CVarReturn SetAudThreadDelay(const ALuint uiTime)
-    { return CVarSimpleSetIntNG(cdThreadDelay,
-        milliseconds{ uiTime }, milliseconds{ 1000 }); }
+    { return CVarSimpleSetIntNG(cdThreadDelay, milliseconds{ uiTime }, cd1S); }
   /* -- Set global volume -------------------------------------------------- */
   CVarReturn AudioSetVolume(const ALfloat fVolume)
   { // Ignore if invalid value

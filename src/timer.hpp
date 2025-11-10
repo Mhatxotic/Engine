@@ -47,8 +47,7 @@ class Timer                            // Members initially private
   void TimerUpdateDelay(const unsigned int uiNewDelay)
     { cdDelay = milliseconds{ uiNewDelay }; }
   /* -- Forces a delay internally if delay is disabled --------------------- */
-  void TimerSetDelayIfZero()
-    { if(cdDelay != seconds{ 0 }) TimerUpdateDelay(1); }
+  void TimerSetDelayIfZero() { if(cdDelay != cd0) TimerUpdateDelay(1); }
   /* -- Restore saved persistent delay timer ------------------------------- */
   void TimerRestoreDelay() { cdDelay = cdDelayPst; }
   /* -- Get start time ----------------------------------------------------- */
@@ -66,18 +65,18 @@ class Timer                            // Members initially private
     // Add to one second timer
     cdSecond += cdFrame;
     // Return if one second has past
-    if(cdSecond < seconds{ 1 }) return;
+    if(cdSecond < cd1S) return;
     // Set new fps
     uiFPS = static_cast<unsigned int>(uqTicks - uqTicksLast);
     // Update last ticks
     uqTicksLast = uqTicks;
     // Reset second timer
-    cdSecond = seconds{ 0 };
+    cdSecond = cd0;
   }
   /* -- Thread suspense by requested duration ------------------------------ */
   void TimerSuspendRequested() const { StdSuspend(cdDelay); }
   /* -- Force wait if delay is disabled (cFboCore->Render()) --------------- */
-  void TimerForceWait() { if(cdDelay == seconds{ 0 }) bWait = true; }
+  void TimerForceWait() { if(cdDelay == cd0) bWait = true; }
   /* -- Calculate time elapsed since c++ ----------------------------------- */
   void TimerUpdateBot()
   { // Sleep if theres a delay
@@ -113,7 +112,7 @@ class Timer                            // Members initially private
   /* -- Reset counters and reinitialise start and end time ----------------- */
   void TimerCatchup()
   { // Reset accumulator and duration
-    cdAcc = cdFrame = seconds{ 0 };
+    cdAcc = cdFrame = cd0;
     // Update new start and end time
     ctpStart = ctpEnd = cmHiRes.GetTime();
   }
@@ -169,11 +168,11 @@ class Timer                            // Members initially private
   /* -- Set time out ----------------------------------------------- */ public:
   CVarReturn TimerSetTimeOut(const unsigned int uiTimeOut)
     { return CVarSimpleSetIntNL(cdTimeOut,
-        seconds{ uiTimeOut }, seconds{ 1 }); }
+        seconds{ uiTimeOut }, cd1S); }
   /* -- Set global target fps ---------------------------------------------- */
   CVarReturn TimerTickRateModified(const uint64_t uqInterval)
   { // Return if not valid
-    if(CVarSimpleSetIntNLGE(cdLimit, nanoseconds{ uqInterval},
+    if(CVarSimpleSetIntNLGE(cdLimit, nanoseconds{ uqInterval },
         nanoseconds{ TimerGetMinInterval() },
         nanoseconds{ TimerGetMaxInterval() }) == DENY) return DENY;
     // Set expected FPS

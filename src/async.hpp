@@ -123,10 +123,10 @@ template<class MemberType, class ColType>class AsyncLoader :
   /* -- Send progress event ------------------------------------------------ */
   template<typename ...VarArgs>
     void AsyncProgress(const ASyncProgressCommand apcCmd,
-      const VarArgs &...vaVars)
+      const VarArgs ...vaArgs)
   { lecAsync.LuaEvtsDispatch(emcAsyncCmd,
       reinterpret_cast<void*>(&mtAsyncOwner), AR_LOADING,
-      static_cast<uint64_t>(apcCmd), vaVars...); }
+      static_cast<uint64_t>(apcCmd), vaArgs...); }
   /* -- Write to pipe assistant -------------------------------------------- */
   void AsyncWriteToPipe(SysPipe &spProcess, size_t &stPosition,
     const size_t stBuffer)

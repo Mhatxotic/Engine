@@ -32,27 +32,27 @@ namespace H                            // Private functions
     /* -- Append a parameter ----------------------------------------------- */
     template<typename AnyType, typename ...VarArgs>
       static void Param(ostringstream &osS, const AnyType &atVal,
-        const VarArgs &...vatArgs)
+        VarArgs &&...vaArgs)
     { // Push the specified value
       Value(osS, atVal);
       // Process next argument
-      Param(osS, vatArgs...);
+      Param(osS, StdForward<VarArgs>(vaArgs)...);
     }
     /* -- Append main function --------------------------------------------- */
     template<typename ...VarArgs>
-      static const string StrAppend(const VarArgs &...vaVars)
+      static const string StrAppend(VarArgs &&...vaArgs)
     { // Theres no need to call this if theres no parameters
       static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
       // Stream to write to
       ostringstream osS;
       // Build string
-      Param(osS, vaVars...);
+      Param(osS, StdForward<VarArgs>(vaArgs)...);
       // Return string
       return osS.str();
     }
     /* -- Append with formatted numbers ------------------------------------ */
     template<typename ...VarArgs>
-      static const string StrAppendImbue(const VarArgs &...vaVars)
+      static const string StrAppendImbue(VarArgs &&...vaArgs)
     { // Theres no need to call this if theres no parameters
       static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
       // Stream to write to
@@ -60,7 +60,7 @@ namespace H                            // Private functions
       // Imbue current locale
       osS.imbue(cCommon->CommonLocale());
       // Build string
-      Param(osS, vaVars...);
+      Param(osS, StdForward<VarArgs>(vaArgs)...);
       // Return appended string
       return osS.str();
     }
@@ -72,7 +72,7 @@ namespace H                            // Private functions
     /* -- Process any value ------------------------------------------------ */
     template<typename AnyType, typename ...VarArgs>
       static void Param(ostringstream &osS, const char *cpPos,
-        const AnyType &atVal, const VarArgs &...vaVars)
+        const AnyType &atVal, VarArgs &&...vaArgs)
     { // Find the mark that will be replaced by this parameter and if we
       // find the character?
       if(const char*const cpNewPos = strchr(cpPos, '$'))
@@ -92,14 +92,14 @@ namespace H                            // Private functions
         } // Push the value we are supposed to replace the matched '$' with.
         Value(osS, atVal);
         // Process more parameters if we can.
-        Param(osS, cpPos, vaVars...);
+        Param(osS, cpPos, StdForward<VarArgs>(vaArgs)...);
       } // Return the rest of the string.
       else Param(osS, cpPos);
     }
     /* -- Prepare message from c-string format ----------------------------- */
     template<typename ...VarArgs>
       static const string StrFormat(const char*const cpFmt,
-        const VarArgs &...vaVars)
+        VarArgs &&...vaArgs)
     { // Theres no need to call this if theres no parameters
       static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
       // Return if string empty of invalid
@@ -107,20 +107,20 @@ namespace H                            // Private functions
       // Stream to write to
       ostringstream osS;
       // Format the text
-      Param(osS, cpFmt, vaVars...);
+      Param(osS, cpFmt, StdForward<VarArgs>(vaArgs)...);
       // Return formated text
       return osS.str();
     }
     /* -- Prepare message from string format ------------------------------- */
     template<typename ...VarArgs>
       static const string StrFormat[[maybe_unused]](const string &strS,
-        const VarArgs &...vaVars)
+        VarArgs &&...vaArgs)
     { // Return if string empty of invalid
       if(strS.empty()) return {};
       // Stream to write to
       ostringstream osS;
       // StrFormat the text
-      Param(osS, strS.c_str(), vaVars...);
+      Param(osS, strS.c_str(), StdForward<VarArgs>(vaArgs)...);
       // Return formated text
       return osS.str();
     }

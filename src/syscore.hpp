@@ -21,12 +21,13 @@ using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFlags;                using namespace IFStream::P;
 using namespace IHelper::P;            using namespace IIdent::P;
 using namespace ILog::P;               using namespace IMemory::P;
-using namespace IParser::P;            using namespace IPSplit::P;
-using namespace IStat::P;              using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IThread::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS;
+using namespace IMutex::P;             using namespace IParser::P;
+using namespace IPSplit::P;            using namespace IStat::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IThread::P;            using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS;
+using ::std::terminate_handler;        using ::std::set_terminate;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == System module data =================================================== **
@@ -514,7 +515,7 @@ class System :                         // The main system class
       "text+audio+video+timer",        // [15<1|2|4|8>] (text+audio+video+timr)
     }},                                // Mode strings list initialised
     cfMode{ CFL_MASK },                // Guimode initially set by cvars
-    ciCpu{ seconds{ 1 } },             // Cpu refresh time is one seconds
+    ciCpu{ cd1S },                     // Cpu refresh time is one seconds
     stProcessId(GetPid<size_t>()),     // Init readable proceess id
     stThreadId(GetTid<size_t>()),      // Init readable thread id
     thHandler(set_terminate(           // Store current termination handler

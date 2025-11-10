@@ -205,19 +205,20 @@ class CLHelperSafe :
   public Mutex                         // Mutex helper
 { /* -- Lock the mutex and return if empty ---------------------- */ protected:
   bool CLEmpty()
-    { return MutexCall([this](){return this->CLBaseIsEmptyUnsafe();}); }
+    { return MutexCall([this](){ return this->CLBaseIsEmptyUnsafe(); }); }
   /* -- Lock the mutex and check size -------------------------------------- */
   void CLCheck()
-    { return MutexCall([this](){return this->CLBaseCheckUnsafe();}); }
+    { return MutexCall([this](){ return this->CLBaseCheckUnsafe(); }); }
   /* -- Lock the mutex and return size ------------------------------------- */
   size_t CLCount()
-    { return MutexCall([this](){return this->CLBaseCountUnsafe();}); }
+    { return MutexCall([this](){ return this->CLBaseCountUnsafe(); }); }
   /* -- Lock the mutex and return newly added object ----------------------- */
   IteratorType CLAdd(MemberType*const mtObj)
-    { return MutexCall([this,mtObj](){return this->CLBaseAddUnsafe(mtObj);}); }
+    { return MutexCall([this, mtObj](){
+        return this->CLBaseAddUnsafe(mtObj); }); }
   /* -- Lock the mutex and return the removed iterator --------------------- */
   IteratorType CLErase(IteratorType &itObj)
-    { return MutexCall([this,&itObj](){
+    { return MutexCall([this, &itObj](){
         return this->CLBaseEraseUnsafe(itObj);}); }
   /* -- Constructor -------------------------------------------------------- */
   explicit CLHelperSafe(const char*const cpT) :
@@ -227,7 +228,7 @@ class CLHelperSafe :
     {}
   /* -- Lock the mutex and return the removed iterator --------------------- */
   CVarReturn CLSetLimit(const size_t stLimit)
-    { return MutexCall([this,stLimit](){
+    { return MutexCall([this, stLimit](){
         return this->CLBaseSetLimitUnsafe(stLimit);}); }
 };/* ----------------------------------------------------------------------- */
 template<class MemberType, class ListType, class IteratorType,
@@ -394,19 +395,19 @@ class ICHelperSafe :                   // Members initially private
 { /* -- Initialise (un)registered entry with synchronisation --------------- */
   IteratorType ICHelperInit(CollectorType*const ctPtr,
     MemberType*const mtPtr) const
-      { return ctPtr->MutexCall([this,ctPtr,mtPtr](){
+      { return ctPtr->MutexCall([this, ctPtr, mtPtr](){
           return this->ICHelperBaseInit(ctPtr, mtPtr);}); }
   IteratorType ICHelperInit(CollectorType*const ctPtr) const
-    { return ctPtr->MutexCall([this,ctPtr](){
+    { return ctPtr->MutexCall([this, ctPtr](){
         return this->ICHelperBaseInit(ctPtr);}); }
   /* -- Insert/Remove from collector list with synchronisation -- */ protected:
   void ICHelperPush()
-    { this->cParent->MutexCall([this](){this->ICHelperBaseRegister();}); }
+    { this->cParent->MutexCall([this](){ this->ICHelperBaseRegister(); }); }
   void ICHelperErase()
-    { this->cParent->MutexCall([this](){this->ICHelperBaseUnregister();}); }
+    { this->cParent->MutexCall([this](){ this->ICHelperBaseUnregister(); }); }
   /* -- Swap to objects ---------------------------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
-    { this->cParent->MutexCall([this,&mtObj](){
+    { this->cParent->MutexCall([this, &mtObj](){
         this->ICHelperBaseSwapRegistration(mtObj);}); }
   /* -- Constructors ------------------------------------------------------- */
   explicit ICHelperSafe(CollectorType*const ctPtr) :

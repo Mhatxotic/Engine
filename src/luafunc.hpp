@@ -129,7 +129,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   /* -- Send string vector ------------------------------------------------- */
   template<typename ...VarArgs>
     void LuaFuncParams(int &iParams, const StrVector &svList,
-      const VarArgs &...vaVars) const
+      VarArgs &&...vaArgs) const
   { // If we have items
     if(!svList.empty())
     { // Make sure the number of parameters would not overflow
@@ -140,27 +140,26 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       // Increase number of parameters
       iParams += static_cast<int>(svList.size());
     } // Next item
-    LuaFuncParams(iParams, vaVars...);
+    LuaFuncParams(iParams, StdForward<VarArgs>(vaArgs)...);
   }
   /* ----------------------------------------------------------------------- */
   template<typename ...VarArgs>
     void LuaFuncParams(int &iParams, const string &strVal,
-      const VarArgs &...vaVars) const
+      VarArgs &&...vaArgs) const
   { // Make sure the number of parameters would not overflow
     if(!LuaFuncCheckAddParams(1, "string")) return;
     // Copy string to stack and process next argument
     LuaUtilPushStr(LuaFuncGetState(), strVal);
-    LuaFuncParams(++iParams, vaVars...);
+    LuaFuncParams(++iParams, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Helper function to make LUAREFDISPATCH parameters ------------------ */
 #define MP(t,s,f) \
   template<typename ...VarArgs> \
-    void LuaFunc ## Params(int &iParams, const t tValue, \
-      const VarArgs &...vaVars) \
+    void LuaFuncParams(int &iParams, const t tValue, VarArgs &&...vaArgs) \
   { \
     if(!LuaFuncCheckAddParams(1, s)) return; \
     f(LuaFuncGetState(), tValue); \
-    LuaFunc ## Params(++iParams, vaVars...); \
+    LuaFuncParams(++iParams, StdForward<VarArgs>(vaArgs)...); \
   }
   /* -- A function for each type ------------------------------------------- */
   MP(signed long long,   "int64",  LuaUtilPushInt)
@@ -188,7 +187,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     LuaUtilGetRefFunc(LuaFuncGetState(), cParent->LuaRefGetFunc());
   }
   /* -- Dispatch the requested variables ----------------------------------- */
-  template<typename ...VarArgs>void LuaFuncDispatch(const VarArgs &...vArgs)
+  template<typename ...VarArgs>void LuaFuncDispatch(VarArgs &&...vArgs)
   { // Push the call back function
     LuaFuncPushFunc();
     // Number of parameters written. This cannot be optimised with sizeof...()
@@ -200,7 +199,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   }
   /* -- Dispatch the requested variables safely ---------------------------- */
   template<typename ...VarArgs>
-    void LuaFuncProtectedDispatch(const int iReturns, const VarArgs &...vArgs)
+    void LuaFuncProtectedDispatch(const int iReturns, VarArgs &&...vArgs)
       const
   { // Save stack position so we can restore it on error
     const int iStack = LuaUtilStackSize(LuaFuncGetState()),

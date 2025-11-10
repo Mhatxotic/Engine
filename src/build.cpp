@@ -45,6 +45,7 @@ namespace E {                          // Put everything in engine namespace
 #include "cmdline.hpp"                 // Command-line class header
 #include "memory.hpp"                  // Memory management utilities header
 #include "fstream.hpp"                 // File IO utility header
+#include "mutex.hpp"                   // Mutex helper class header
 #include "log.hpp"                     // Logging helper class header
 #include "luadef.hpp"                  // Lua definitions header
 #include "collect.hpp"                 // Class collector utility header
@@ -3893,7 +3894,7 @@ static int CppCheck()
 static void GotNewBuildExecutable(const string &strOldExe,
   const string &strNewExe)
 { // Wait for the compiled file to be readable and writable just incase
-  while(!DirCheckFileAccess(strNewExe, 6)) StdSuspend(milliseconds{ 100 });
+  while(!DirCheckFileAccess(strNewExe, 6)) StdSuspend(cd100MS);
   // Open the new executable and if succeeded?
   if(FStream fsNewExe{ strNewExe, FM_R_B })
   { // Read the new executable and its checksum
@@ -3931,11 +3932,9 @@ static void GotNewBuildExecutable(const string &strOldExe,
       } // Else if we're calling from the .x extension?
       if(cSystem->ENGExt() == ".x")
       { // Unlink the new executable
-        while(!DirFileUnlink(strOldExe))
-          StdSuspend(milliseconds{ 100 });
+        while(!DirFileUnlink(strOldExe)) StdSuspend(cd100MS);
         // Move the executable over
-        while(!DirFileRename(strNewExe, strOldExe))
-          StdSuspend(milliseconds{ 100 });
+        while(!DirFileRename(strNewExe, strOldExe)) StdSuspend(cd100MS);
         // Exit as normal if we were asked to or just return
         if(cCmdLine->CmdLineGetTotalCArgs() >= 2 &&
           !wcscmp(cCmdLine->CmdLineGetCArgs()[1], L"!")) exit(0);

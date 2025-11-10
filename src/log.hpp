@@ -164,17 +164,17 @@ class Log :                            // The actual class body
   LHLevel GetLevel() const { return lhlLevel; }
   /* ----------------------------------------------------------------------- */
   bool IsRedirectedToDevice()
-    { return MutexCall([this](){return FStreamIsHandleStd();}); }
+    { return MutexCall([this](){ return FStreamIsHandleStd(); }); }
   /* ----------------------------------------------------------------------- */
-  bool OpenedSafe() { return MutexCall([this](){return FStreamOpened();}); }
+  bool OpenedSafe() { return MutexCall([this](){ return FStreamOpened(); }); }
   /* ----------------------------------------------------------------------- */
-  void DeInitSafe() { MutexCall([this](){DeInit();}); }
+  void DeInitSafe() { MutexCall([this](){ DeInit(); }); }
   /* ----------------------------------------------------------------------- */
   const string GetNameSafe()
-    { return MutexCall([this](){return IdentGet();}); }
+    { return MutexCall([this](){ return IdentGet(); }); }
   /* -- Unformatted logging without level check (specified level) ---------- */
   void LogNLCSafe(const LHLevel lhL, const string& strLine)
-    { MutexCall([this,lhL,&strLine](){WriteString(lhL, strLine);}); }
+    { MutexCall([this, lhL, &strLine](){ WriteString(lhL, strLine); }); }
   /* -- Unformatted logging without level check (error level) -------------- */
   void LogNLCErrorSafe(const string& strLine)
     { LogNLCSafe(LH_ERROR, strLine); }
@@ -189,49 +189,49 @@ class Log :                            // The actual class body
     { LogNLCSafe(LH_DEBUG, strLine); }
   /* -- Formatted logging without level check (specified level) ------------ */
   template<typename ...VarArgs>void LogNLCExSafe(const LHLevel lhLev,
-    const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogNLCSafe(lhLev, StrFormat(cpFormat, vaArgs...)); }
+    const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogNLCSafe(lhLev,
+          StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted logging without level check (error level) ---------------- */
   template<typename ...VarArgs>
-    void LogNLCErrorExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogNLCExSafe(LH_ERROR, cpFormat, vaArgs...); }
+    void LogNLCErrorExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogNLCExSafe(LH_ERROR, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging without level check (warning level) -------------- */
   template<typename ...VarArgs>
-    void LogNLCWarningExSafe(const char*const cpFormat,
-      const VarArgs &...vaArgs)
-        { LogNLCExSafe(LH_WARNING, cpFormat, vaArgs...); }
+    void LogNLCWarningExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+        { LogNLCExSafe(LH_WARNING, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging without level check (info level) ----------------- */
   template<typename ...VarArgs>
-    void LogNLCInfoExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogNLCExSafe(LH_INFO, cpFormat, vaArgs...); }
+    void LogNLCInfoExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogNLCExSafe(LH_INFO, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging without level check (debug level) ---------------- */
   template<typename ...VarArgs>
-    void LogNLCDebugExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogNLCExSafe(LH_DEBUG, cpFormat, vaArgs...); }
+    void LogNLCDebugExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogNLCExSafe(LH_DEBUG, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging with level check (specified level) --------------- */
   template<typename ...VarArgs>void LogExSafe(const LHLevel lhL,
-    const char*const cpFormat, const VarArgs &...vaArgs)
+    const char*const cpFormat, VarArgs &&...vaArgs)
   { // Return if we don't have this level
     if(NotHasLevel(lhL)) return;
     // Write formatted string
-    LogNLCExSafe(lhL, cpFormat, vaArgs...);
+    LogNLCExSafe(lhL, cpFormat, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Formatted logging with level check (error level) ------------------- */
   template<typename ...VarArgs>
-    void LogErrorExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogExSafe(LH_ERROR, cpFormat, vaArgs...); }
+    void LogErrorExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogExSafe(LH_ERROR, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging with level check (warning level) ----------------- */
   template<typename ...VarArgs>
-    void LogWarningExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogExSafe(LH_WARNING, cpFormat, vaArgs...); }
+    void LogWarningExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogExSafe(LH_WARNING, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging with level check (info level) -------------------- */
   template<typename ...VarArgs>
-    void LogInfoExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogExSafe(LH_INFO, cpFormat, vaArgs...); }
+    void LogInfoExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogExSafe(LH_INFO, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging with level check --------------------------------- */
   template<typename ...VarArgs>
-    void LogDebugExSafe(const char*const cpFormat, const VarArgs &...vaArgs)
-      { LogExSafe(LH_DEBUG, cpFormat, vaArgs...); }
+    void LogDebugExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogExSafe(LH_DEBUG, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Unformatted logging with level check (specified level) ------------- */
   void LogSafe(const LHLevel lhL, const string& strLine)
     { if(NotHasLevel(lhL)) return; LogNLCSafe(lhL, strLine); }
@@ -246,7 +246,7 @@ class Log :                            // The actual class body
   /* -- Return buffer lines for debugger ----------------------------------- */
   void GetBufferLines(ostringstream &osS)
   { // Gain exclusive access to log lines
-    MutexCall([this,&osS](){
+    MutexCall([this, &osS](){
       // For each log entry, write the line to the buffer
       for(const LogLine &llLine : *this) osS
         << '[' << fixed << setprecision(6) << llLine.dTime << "] "
@@ -288,7 +288,7 @@ class Log :                            // The actual class body
   /* -- Conlib callback function for APP_LOG variable -------------- */ public:
   CVarReturn LogFileModified(const string &strFN, string &strCV)
   { // Lock mutex
-    return MutexCall([this,&strFN,&strCV](){
+    return MutexCall([this, &strFN, &strCV](){
       // Close log if opened
       if(FStreamOpened()) DeInit();
       // Check for special character
@@ -296,7 +296,7 @@ class Log :                            // The actual class body
       { // Empty? Ignore
         case 0: return ACCEPT;
         // If not on Windows?
-  #if !defined(WINDOWS)
+#if !defined(WINDOWS)
         // One character was specified?
         case 1:
           // Compare the character
@@ -308,7 +308,7 @@ class Log :                            // The actual class body
             default: break;
           } // Done
           break;
-  #endif
+#endif
         // Anything else just break.
         default: break;
       } // Create new filename and set filename on success and return success
@@ -322,7 +322,7 @@ class Log :                            // The actual class body
   { // Must have at least one line and lets also set a safe maximum
     if(stL < 1 || stL > 1000000 || stL > max_size()) return DENY;
     // Prevent use of variables off the main thread
-    return MutexCall([this,stL](){
+    return MutexCall([this, stL](){
       // Current size is over the new maximum? Trim the oldest entries out
       if(size() > stMaximum)
         erase(begin(), next(begin(), static_cast<ssize_t>(size() - stMaximum)));

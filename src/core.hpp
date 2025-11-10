@@ -38,22 +38,22 @@ using namespace ILog::P;               using namespace ILua::P;
 using namespace ILuaCode::P;           using namespace ILuaCommand::P;
 using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
 using namespace ILuaVariable::P;       using namespace IMask::P;
-using namespace IMemory::P;            using namespace IOal::P;
-using namespace IOgl::P;               using namespace IPSplit::P;
-using namespace IPalette::P;           using namespace IPcm::P;
-using namespace IPcmLib::P;            using namespace ISShot::P;
-using namespace ISample::P;            using namespace IShader::P;
-using namespace IShaders::P;           using namespace ISocket::P;
-using namespace ISource::P;            using namespace ISql::P;
-using namespace IStat::P;              using namespace IStd::P;
-using namespace IStream::P;            using namespace IString::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace ISystem::P;            using namespace ITexture::P;
-using namespace IThread::P;            using namespace ITimer::P;
-using namespace IToken::P;             using namespace IUrl::P;
-using namespace IUtil::P;              using namespace IVideo::P;
-using namespace Lib::OS::GlFW::Types;  using namespace Lib::OpenAL::Types;
-using namespace Lib::Sqlite::Types;
+using namespace IMemory::P;            using namespace IMutex::P;
+using namespace IOal::P;               using namespace IOgl::P;
+using namespace IPSplit::P;            using namespace IPalette::P;
+using namespace IPcm::P;               using namespace IPcmLib::P;
+using namespace ISShot::P;             using namespace ISample::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace ISocket::P;            using namespace ISource::P;
+using namespace ISql::P;               using namespace IStat::P;
+using namespace IStd::P;               using namespace IStream::P;
+using namespace IString::P;            using namespace IString::P;
+using namespace ISysUtil::P;           using namespace ISystem::P;
+using namespace ITexture::P;           using namespace IThread::P;
+using namespace ITimer::P;             using namespace IToken::P;
+using namespace IUrl::P;               using namespace IUtil::P;
+using namespace IVideo::P;             using namespace Lib::OS::GlFW::Types;
+using namespace Lib::OpenAL::Types;    using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -656,7 +656,7 @@ class Core final :                     // Members initially private
       // Loop until window should close
       while(cGlFW->WinShouldNotClose())
       { // Process window event manager commands from other threads
-        cEvtWin->ManageSafe();
+        cEvtWin->Manage();
         // Wait for more window events
         GlFWWaitEvents();
       } // Restart to hard reinit the window if not doing a soft reinit
@@ -681,11 +681,14 @@ class Core final :                     // Members initially private
   /* -- Wait async on all systems ---------------------------------- */ public:
   void CoreWaitAllAsync()
   { // Wait for all asynchronous operations to complete.
-    const scoped_lock slCollectorMutexes{
-      cArchives->MutexGet(), cAssets->MutexGet(),  cFtfs->MutexGet(),
-      cImages->MutexGet(),   cJsons->MutexGet(),   cPcms->MutexGet(),
-      cSources->MutexGet(),  cStreams->MutexGet(), cVideos->MutexGet()
-    };
+    cArchives->MutexScopedCall([](){
+      // Log sychronisation result
+      cLog->LogDebugExSafe("Core synchronised $ objects.", cArchives->size() +
+        cAssets->size() + cFtfs->size() + cImages->size() + cJsons->size() +
+        cPcms->size() + cSources->size() + cStreams->size() + cVideos->size());
+    }, cAssets->MutexGet(), cFtfs->MutexGet(), cImages->MutexGet(),
+    cJsons->MutexGet(), cPcms->MutexGet(), cSources->MutexGet(),
+    cStreams->MutexGet(), cVideos->MutexGet());
   }
   /* -- Main function ------------------------------------------------------ */
   int CoreMain()

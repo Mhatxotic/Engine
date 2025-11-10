@@ -105,9 +105,9 @@ class FlagsConst :
   constexpr bool FlagIsAnyOfSetAndClear() const { return false; }
   template<typename ...VarArgs>
     constexpr bool FlagIsAnyOfSetAndClear(const FlagsConst &fcSet,
-      const FlagsConst &fcClear, const VarArgs &...vaVars) const
+      const FlagsConst &fcClear, const VarArgs ...vaArgs) const
   { return FlagIsSetAndClear(fcSet, fcClear) ?
-      true : FlagIsAnyOfSetAndClear(vaVars...); }
+      true : FlagIsAnyOfSetAndClear(vaArgs...); }
   /* -- Is bits set? ------------------------------------------------------- */
   constexpr bool FlagIsEqualToBool(const FlagsConst &fcValue,
     const bool bState) const

@@ -160,8 +160,8 @@ static unsigned int SysMessage(void*const, const string &strTitle,
 /* -- Unset multiple environment variables --------------------------------- */
 static void SysUnSetEnv() {}
 template<typename ...VarArgs>
-  static void SysUnSetEnv(const char*const cpEnv, const VarArgs &...vaVars)
-    { unsetenv(cpEnv); SysUnSetEnv(vaVars...); }
+  static void SysUnSetEnv(const char*const cpEnv, VarArgs &&...vaArgs)
+    { unsetenv(cpEnv); SysUnSetEnv(StdForward<VarArgs>(vaArgs)...); }
 /* -- Set thread priority -------------------------------------------------- */
 static bool SysSetThreadPriority(const SysThread stLevel)
 { // Get this thread handle

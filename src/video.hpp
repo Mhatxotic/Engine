@@ -18,15 +18,15 @@ using namespace IFlags;                using namespace IIdent::P;
 using namespace ILog::P;               using namespace ILuaEvt::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IOal::P;               using namespace IOgl::P;
-using namespace IPcmLib::P;            using namespace IShader::P;
-using namespace IShaders::P;           using namespace ISource::P;
-using namespace IStd::P;               using namespace IStream::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IThread::P;            using namespace ITimer::P;
-using namespace IUtil::P;              using namespace Lib::Ogg;
-using namespace Lib::Ogg::Theora;      using namespace Lib::OpenAL::Types;
-using namespace Lib::OS::GlFW::Types;
+using namespace IMutex::P;             using namespace IOal::P;
+using namespace IOgl::P;               using namespace IPcmLib::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace ISource::P;            using namespace IStd::P;
+using namespace IStream::P;            using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace ITimer::P;             using namespace IUtil::P;
+using namespace Lib::Ogg;              using namespace Lib::Ogg::Theora;
+using namespace Lib::OpenAL::Types;    using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */
@@ -65,7 +65,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   public AsyncLoaderVideo,             // Asynchronous laoding of videos
   public LuaEvtSlave<Video>,           // Lua asynchronous events
   public VideoFlags,                   // Video settings flags
-  private ClockInterval<>              // Frame playback timing helper
+  private ClockInterval<>,             // Frame playback timing helper
+  private Mutex                        // mutex for uploading data
 { /* -- Typedefs ----------------------------------------------------------- */
   struct YCbCr                         // Y/Cb/Cr plane data
   { /* --------------------------------------------------------------------- */
@@ -107,7 +108,6 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   enum Event { VE_PLAY, VE_LOOP, VE_STOP, VE_PAUSE, VE_FINISH };
   /* -- Concurrency -------------------------------------------------------- */
   Thread           tThread;            // Video Decoding Thread
-  mutex            mUpload;            // mutex for uploading data
   atomic<Unblock>  ubReason;           // Unlock condition variable
   SafeSizeT        stLoop;             // Loops count
   double           dDrift;             // Drift between audio and video
@@ -341,9 +341,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
             th_decode_packetin(tdcPtr, &opkData, &iVideoGranulePos))
           { // Success?
             case 0:
-              // Need a scope for destructing upcoming sychronisation
-              { // Wait until uploading is done
-                const LockGuard lgWaitForUpload{ mUpload };
+              // Prevent uploading while we modify the upload data
+              MutexCall([this](){
                 // Get next frame to draw
                 Frame &frFrame = faData[stFNext];
                 // If decoding the frame failed?
@@ -364,7 +363,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
                 stFNext = (stFNext + 1) % faData.size();
                 ++stFWaiting;
                 --stFFree;
-              } // We processed a video frame
+              });
+              // We processed a video frame
               bParsed = true;
               // Set next frome time and fall through to break
               CIAccumulate();
@@ -447,8 +447,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // Process exhausted audio buffers if there is a source
     if(IsSourceAvailable()) ProcessExhaustedAudioBuffers();
     // If enough audio buffered and time is moving? Thread can breathe a little
-    if(dAudioBuffer >= dAudBufMax && GetAudioTime() >= 0.0)
-      StdSuspend(milliseconds{ 10 });
+    if(dAudioBuffer >= dAudBufMax && GetAudioTime() >= 0.0) StdSuspend(cd10MS);
     // Parse and render more vorbis data and if we didn't?
     else if(!ParseAndRenderVorbisData())
     { // Try to load more raw data and return if we're at the end of file
@@ -464,7 +463,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // If it is not time to process a frame yet?
     if(CIIsNotTriggered())
     { // Wait a little bit if we can
-      if(CIIsNotTriggered(milliseconds{1})) StdSuspend();
+      if(CIIsNotTriggered(cd1MS)) StdSuspend();
     } // Decode and render new Theora data and if we did? Set new video time
     else if(ParseAndRenderTheoraData())
       dVideoTime = th_granule_time(tdcPtr, iVideoGranulePos);
@@ -505,7 +504,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           dDrift = GetAudioTime() > 0.0 ?
             GetVideoTime() - GetAudioTime() : 0.0;
         // Wait a little bit if we can
-        else if(CIIsNotTriggered(milliseconds{1})) StdSuspend();
+        else if(CIIsNotTriggered(cd1MS)) StdSuspend();
         // Done, keep thread alive
         return true;
       } // Time to check for new packets? Repeat...
@@ -579,6 +578,45 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Convert pixel format to name --------------------------------------- */
   const string_view &PixelFormatToString(const th_pixel_fmt pfId) const
     { return cVideos->pfStrings.Get(pfId); }
+  /* -- Update textures without lock --------------------------------------- */
+  void RenderUnsafe()
+  { // Get frame
+    Frame &frFrame = faData[stFActive];
+    // Skip ahead frames if we need to catch up with audio
+    // If we should draw?
+    if(frFrame.bDraw)
+    { // Upload texture data. This is quite safe because this data isnt
+      // written to until the decoding routine thread has finished setting
+      // these values.
+      for(YCbCr &yccFrame : frFrame.yccaFrames)
+      { // Bind the texture for this colour component
+        cOgl->BindTexture(uiaYCbCr[yccFrame.stI]);
+        // Get data
+        th_img_plane &tipD = yccFrame.tipP;
+        // Set unpack row length because of how the image data is formatted
+        // by the vorbis api
+        cOgl->SetUnpackRowLength(tipD.stride);
+        // Now upload the image data to opengl, the memory is already
+        // pre-allocated
+        cOgl->UploadTextureSub(tipD.width, tipD.height, GL_RED, tipD.data);
+      } // Reset unpack row length to default
+      cOgl->SetUnpackRowLength(0);
+      // Initialise Y texture id, active texture and shader program
+      FboResetCache(uiaYCbCr[0], 0, shProgram->GetProgram());
+      // Commit the Y setup and configure the U and V setup
+      FboFinishAndReset(uiaYCbCr[1], 1, shProgram->GetProgram());
+      FboFinishAndReset(uiaYCbCr[2], 2, shProgram->GetProgram());
+      // Blit the YCbCr multi-texture into the fbo
+      FboBlit(fboYCbCr, uiaYCbCr[2], 2, shProgram);
+      // Commit the V texture and send everything to fbo list for rendering
+      FboFinishAndRender();
+      // No need to update again until decoder thread rendered another frame
+      frFrame.bDraw = false;
+    } // One less buffer to wait
+    --stFWaiting;
+    ++stFFree;
+    stFActive = (stFActive + 1) % faData.size();
+  }
   /* -- Video properties ------------------------------------------- */ public:
   double GetVideoTime() const { return dVideoTime; }
   double GetAudioTime() const { return dAudioTime; }
@@ -890,47 +928,14 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   void BlitTri(const size_t stTId) { FboActive()->FboBlitTri(*this, stTId); }
   /* -- Blit quad ---------------------------------------------------------- */
   void Blit() { FboActive()->FboBlit(*this); }
-  /* -- Upload the texture -------read ------------------------------------- */
+  /* -- Upload the textures ------------------------------------------------ */
   void Render()
-  { // Try to lock and return if failed or no frames waiting
-    const UniqueLock ulWaitForProcessing{ mUpload, try_to_lock };
-    if(!ulWaitForProcessing.owns_lock() || !stFWaiting) return;
-    // Get frame
-    Frame &frFrame = faData[stFActive];
-    // Skip ahead frames if we need to catch up with audio
-    // If we should draw?
-    if(frFrame.bDraw)
-    { // Upload texture data. This is quite safe because this data isnt
-      // written to until the decoding routine thread has finished setting
-      // these values.
-      for(YCbCr &yccFrame : frFrame.yccaFrames)
-      { // Bind the texture for this colour component
-        cOgl->BindTexture(uiaYCbCr[yccFrame.stI]);
-        // Get data
-        th_img_plane &tipD = yccFrame.tipP;
-        // Set unpack row length because of how the image data is formatted by
-        // the vorbis api
-        cOgl->SetUnpackRowLength(tipD.stride);
-        // Now upload the image data to opengl, the memory is already
-        // pre-allocated
-        cOgl->UploadTextureSub(tipD.width, tipD.height, GL_RED, tipD.data);
-      } // Reset unpack row length to default
-      cOgl->SetUnpackRowLength(0);
-      // Initialise Y texture id, active texture and shader program
-      FboResetCache(uiaYCbCr[0], 0, shProgram->GetProgram());
-      // Commit the Y setup and configure the U and V setup
-      FboFinishAndReset(uiaYCbCr[1], 1, shProgram->GetProgram());
-      FboFinishAndReset(uiaYCbCr[2], 2, shProgram->GetProgram());
-      // Blit the YCbCr multi-texture into the fbo
-      FboBlit(fboYCbCr, uiaYCbCr[2], 2, shProgram);
-      // Commit the V texture and send everything to fbo list for rendering
-      FboFinishAndRender();
-      // No need to update again until decoder thread rendered another frame
-      frFrame.bDraw = false;
-    } // One less buffer to wait
-    --stFWaiting;
-    ++stFFree;
-    stFActive = (stFActive + 1) % faData.size();
+  { // Try to lock access to uploading mutex and upload textures if lock was
+    // successful and frames waiting to upload
+    MutexUniqueCall(
+      [this](UniqueLock &ulUpload)
+        { if(ulUpload.owns_lock() && stFWaiting) RenderUnsafe(); },
+      try_to_lock);
   }
   /* -- Video is playing? -------------------------------------------------- */
   bool IsPlaying() const { return tThread.ThreadIsJoinable(); }
@@ -1206,6 +1211,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     AsyncCancel();
     // Remove the registration now so it is no longer polled
     ICHelperVideo::CollectorUnregister();
+    // Ignore if file data not initialised
+    if(fmFile.FileMapClosed()) return;
     // Prevent more events being generated
     LuaEvtDeInit();
     // Set exit reason
@@ -1229,6 +1236,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     ogg_sync_clear(&osysData);
     vorbis_info_clear(&viData);
     th_info_clear(&tiData);
+    // Log that the video was unloaded
+    cLog->LogDebugExSafe("Video unloaded '$'!", IdentGet());
   }
   /* -- Default Constructor ------------------------------------------------ */
   Video() :
@@ -1337,9 +1346,8 @@ static void VideoClearEvents()
 }
 /* == Stop all videos (must be sychronised) ================================ */
 static void VideoStop()
-{ // Lock access to video collector list
+{ // Lock access to video collector list and stop all videos
   cVideos->MutexCall([](){
-    // Stop all videos
     for(Video*const vVideo : *cVideos) vVideo->Stop();
   });
 }

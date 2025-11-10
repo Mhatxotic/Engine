@@ -12,8 +12,9 @@ namespace ICert {                      // Start of private module namespace
 using namespace IAsset::P;             using namespace IClock::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace Lib::OS::OpenSSL;
+using namespace ILog::P;               using namespace IMutex::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -38,13 +39,14 @@ class Certs                            // Certificates store
     /* -- Destructor/Constructor ------------------------------------------- */
     LoadSerialised() {}                // Constructor not used
   };/* -- Class to load certificates in parallel --------------------------- */
-  class LoadParallel                   // Parallel certificate installation
+  class LoadParallel :                 // Parallel certificate installation
+    /* -- Base classes ----------------------------------------------------- */
+    private Mutex                      // Mutex
   { /* --------------------------------------------------------------------- */
     bool           bLocked;            // Locked flag
-    mutex          mMutex;             // Mutex
     /* -- Lock/Unlock ---------------------------------------------- */ public:
-    void LockFunction() { mMutex.lock(); bLocked = true; }
-    void UnlockFunction() { mMutex.unlock(); bLocked = false; }
+    void LockFunction() { MutexGet().lock(); bLocked = true; }
+    void UnlockFunction() { MutexGet().unlock(); bLocked = false; }
     /* -- Destructor/Constructor ------------------------------------------- */
     ~LoadParallel() { if(bLocked) UnlockFunction(); }
     LoadParallel() : bLocked(false) {}

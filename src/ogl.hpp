@@ -148,6 +148,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     PFNGLENABLEPROC                    glEnable;
     PFNGLENABLEVERTEXATTRIBARRAYPROC   glEnableVertexAttribArray;
     PFNGLFRAMEBUFFERTEXTURE2DPROC      glFramebufferTexture2D;
+    PFNGLFLUSHPROC                     glFlush;
     PFNGLGENBUFFERSPROC                glGenBuffers;
     PFNGLGENERATEMIPMAPPROC            glGenerateMipmap;
     PFNGLGENFRAMEBUFFERSPROC           glGenFramebuffers;
@@ -184,24 +185,25 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   } sAPI;                              // API functions list
   /* -- GL error logger ---------------------------------------------------- */
   template<typename ...VarArgs>
-    void CheckLogError(const char*const cpFormat,
-      const VarArgs &...vaArgs) const
+    void CheckLogError(const char*const cpFormat, VarArgs &&...vaArgs) const
   { // While there are OpenGL errors
     for(GLenum eCode = sAPI.glGetError();
                eCode != GL_NO_ERROR;
                eCode = sAPI.glGetError())
     cLog->LogWarningExSafe("GL call failed: $ ($/$$).",
-      StrFormat(cpFormat, vaArgs...), GetGLErr(eCode), hex, eCode);
+      StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...),
+      GetGLErr(eCode), hex, eCode);
   }
   /* -- GL error handler --------------------------------------------------- */
   template<typename ...VarArgs>
     void CheckExceptError(const char*const cpFormat,
-      const VarArgs &...vaArgs) const
+      VarArgs &&...vaArgs) const
   { // If there is no error then return
     const GLenum eCode = sAPI.glGetError();
     if(eCode == GL_NO_ERROR) return;
     // Raise exception with error details
-    XC(cpFormat, "Code", eCode, "Reason", GetGLErr(eCode), vaArgs...);
+    XC(cpFormat, "Code", eCode, "Reason",
+      GetGLErr(eCode), StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Flag setter ----------------------------------------------- */ private:
   void SetFlagExt(const char*const cpName, const OglFlagsConst &glFlag)
@@ -259,6 +261,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     GETPTR(glDisable, PFNGLDISABLEPROC);
     GETPTR(glDrawArrays, PFNGLDRAWARRAYSPROC);
     GETPTR(glEnable, PFNGLENABLEPROC);
+    GETPTR(glFlush, PFNGLFLUSHPROC);
     GETPTR(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
     GETPTR(glGenTextures, PFNGLGENTEXTURESPROC);
     GETPTR(glGetError, PFNGLGETERRORPROC);
@@ -1094,6 +1097,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       { return idOGLCodes.Get(static_cast<GLenum>(itCode)); }
   /* -- Return limit ------------------------------------------------------- */
   double GetLimit() const { return ClockDurationToDouble(cdLimit); }
+  /* -- Flush pipeline when not drawing to prevent memory leak ------------- */
+  void Flush(void) const { sAPI.glFlush(); }
   /* -- Update window size limits ------------------------------------------ */
   void UpdateWindowSizeLimits()
   { // Get app specified minimums and maximums
@@ -1286,7 +1291,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     qwMinVRAM(0),                      // No minimum vram
     qwTotalVRAM(0),                    // No total vram
     qwFreeVRAM(0),                     // No free vram
-    cdLimit{ milliseconds{0} }         // Init frame duration
+    cdLimit{ cd0 }                     // Init frame duration
     /* -- Set global pointer to static class ------------------------------- */
     { cOgl = this; }
   /* -- Setup VSync ------------------------------------------------ */ public:

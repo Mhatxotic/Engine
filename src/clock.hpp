@@ -16,6 +16,21 @@ using namespace IStd::P;               using namespace IString::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using ::std::chrono::duration_cast;    using ::std::chrono::duration;
+using ::std::chrono::microseconds;     using ::std::chrono::milliseconds;
+using ::std::chrono::nanoseconds;      using ::std::chrono::seconds;
+using ::std::chrono::system_clock;
+using CoreClock = ::std::chrono::high_resolution_clock; // Using HRC
+/* -- Typedefs ------------------------------------------------------------- */
+typedef CoreClock::time_point ClkTimePoint;    // Holds a time
+typedef CoreClock::duration   ClkDuration;     // Holds a duration
+typedef atomic<ClkDuration>   SafeClkDuration; // Thread safe duration
+/* -- Common duration values ----------------------------------------------- */
+static constexpr ClkDuration
+  cd0{ nanoseconds{ 0 } },             cd1MS{ milliseconds{ 1 } },
+  cd10MS{ milliseconds{ 10 } },        cd100MS{ milliseconds{ 100 } },
+  cd1S{ seconds{ 1 } },                cd60S{ seconds{ 60 } };
 /* -- Get count from a duration -------------------------------------------- */
 template<typename DurType>
   static auto ClockGetCount(const ClkDuration &cdDuration)

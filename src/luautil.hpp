@@ -298,7 +298,7 @@ static void LuaUtilPushPtr(lua_State*const lS, void*const vpPtr)
 static void LuaUtilPushVar(lua_State*const) {}
 template<typename ...VarArgs, typename AnyType>
   static void LuaUtilPushVar(lua_State*const lS, const AnyType &atVal,
-    const VarArgs &...vaVars)
+    VarArgs &&...vaArgs)
 { // Type is STL string?
   if constexpr(is_same_v<AnyType, string>) LuaUtilPushStr(lS, atVal);
   // Type is STL string_view?
@@ -324,7 +324,7 @@ template<typename ...VarArgs, typename AnyType>
   // Compiler check
 #endif
   // Shift to next variable
-  LuaUtilPushVar(lS, vaVars...);
+  LuaUtilPushVar(lS, StdForward<VarArgs>(vaArgs)...);
 }
 /* -- Throw error ---------------------------------------------------------- */
 static void LuaUtilErrThrow(lua_State*const lS) { lua_error(lS); }
@@ -697,9 +697,9 @@ static void LuaUtilCheckParams(lua_State*const lS, const int iCount)
 static void LuaUtilCheckFunc(lua_State*const) {}
 template<typename ...VarArgs>
   static void LuaUtilCheckFunc(lua_State*const lS, const int iIndex,
-    const VarArgs &...vaVars)
-      { LuaUtilAssert(lS, LuaUtilIsFunction(lS, iIndex), iIndex, "function");
-        LuaUtilCheckFunc(lS, vaVars...); }
+    VarArgs &&...vaArgs)
+{ LuaUtilAssert(lS, LuaUtilIsFunction(lS, iIndex), iIndex, "function");
+  LuaUtilCheckFunc(lS, StdForward<VarArgs>(vaArgs)...); }
 /* -- Get and return a boolean and throw exception if not a boolean -------- */
 static bool LuaUtilGetBool(lua_State*const lS, const int iIndex)
 { // Throw if requested parameter isn't a boolean else return it

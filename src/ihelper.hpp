@@ -53,9 +53,9 @@ class InitHelper :                     // The Init Helper class
   /* -- Constructors -------------------------------------------- */ protected:
   explicit InitHelper(const string_view &strvName) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdentConst{strvName},              // Initialise name
-    ctInitialised{seconds{0}},         // Clear initialised time
-    ctDeinitialised{cmHiRes.GetTime()} // Set deinitialised time
+    IdentConst{ strvName },            // Initialise name
+    ctInitialised{ cd0 },              // Clear initialised time
+    ctDeinitialised{ cmHiRes.GetTime() } // Set deinitialised time
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

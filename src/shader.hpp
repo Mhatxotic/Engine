@@ -211,8 +211,9 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Shader initialiser helper ------------------------------------------ */
   template<typename ...VarArgs>
     void AddShaderEx(const string &strName, const GLenum eT,
-      const char*const cpFormat, const VarArgs &...vaArgs)
-  { AddShader(strName, eT, StrFormat(cpFormat, vaArgs...)); }
+      const char*const cpFormat, VarArgs &&...vaArgs)
+  { AddShader(strName, eT,
+      StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Detach and unlink shaders ------------------------------------------ */
   void DeInitShaders()
   { // Ignore if nothing in list

@@ -83,24 +83,24 @@ class Oal :                            // Actual class body
   bool HaveNoError() const { return !HaveError(); }
   /* -- AL error logger ---------------------------------------------------- */
   template<typename ...VarArgs>
-    void CheckLogError(const char*const cpFormat,
-      const VarArgs &...vaArgs) const
+    void CheckLogError(const char*const cpFormat, VarArgs &&...vaArgs) const
   { // While there are OpenAL errors
     for(ALenum alError = alGetError();
                alError != AL_NO_ERROR;
                alError = alGetError())
     cLog->LogWarningExSafe("AL call failed: $ ($/$$).",
-      StrFormat(cpFormat, vaArgs...), GetALErr(alError), hex, alError);
+      StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...),
+        GetALErr(alError), hex, alError);
   }
   /* -- AL error handler --------------------------------------------------- */
   template<typename ...VarArgs>
-    void CheckExceptError(const char*const cpFormat,
-      const VarArgs &...vaArgs) const
+    void CheckExceptError(const char*const cpFormat, VarArgs &&...vaArgs) const
   { // If there is no error then return
     const ALenum alError = alGetError();
     if(alError == GL_NO_ERROR) return;
     // Raise exception with error details
-    XC(cpFormat, "Code", alError, "Reason", GetALErr(alError), vaArgs...);
+    XC(cpFormat, "Code", alError, "Reason",
+      GetALErr(alError), StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Upload data to audio device ---------------------------------------- */
   void BufferData(const ALuint uiBuffer, const ALenum eFormat,

@@ -72,7 +72,7 @@ class EvtWin :                         // Event list for window thread
     EWC_NOLOG>                         // Event id for NOLOG
 { /* -- Add with copy parameter semantics (starter) ---------------- */ public:
   template<typename ...VarArgs>
-    void AddUnblock(const EvtWinCmd ewcCmd, const VarArgs &...vaArgs)
+    void AddUnblock(const EvtWinCmd ewcCmd, const VarArgs ...vaArgs)
   { // Prepare parameters list and add a new event
     Add(ewcCmd, vaArgs...);
     // Unblock the window thread

@@ -116,7 +116,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Threads and concurrency -------------------------------------------- */
   Thread           tReader,            // Thread for sockread/http operations
                    tWriter;            // Thread for sockwrite operations
-  mutex            mWriter;            // For condition variable
+  Mutex            mWriter;            // For condition variable
   bool             bUnlock;            // Condition variable unblocker
   condition_variable cvWriter;         // Waiting for write/terminate event
   /* -- Other variables ---------------------------------------------------- */
@@ -144,31 +144,32 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
                    cdDisconnected;     // Time socket was disconnected
   /* -- Do internal log ---------------------------------------------------- */
   template<typename ...VarArgs>void SocketLog(const LHLevel lhlSeverity,
-    const char*const cpFormat, const VarArgs &...vaArgs)
+    const char*const cpFormat, VarArgs &&...vaArgs)
   { // If parameters are specified then cater to them
     if constexpr(sizeof...(VarArgs) > 0)
       cLog->LogExSafe(lhlSeverity, "Socket $:$$$:$ $", CtrGet(), hex,
-        FlagGet(), dec, GetAddressAndPort(), StrFormat(cpFormat, vaArgs...));
+        FlagGet(), dec, GetAddressAndPort(),
+        StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...));
     // No parameters specified so don't need to format them
     else cLog->LogExSafe(lhlSeverity, "Socket $:$$$:$ $", CtrGet(), hex,
       FlagGet(), dec, GetAddressAndPort(), cpFormat);
   }
   /* -- Internal log ------------------------------------------------------- */
   template<typename ...VarArgs>void SocketLogSafe(const LHLevel lhlSeverity,
-    const char*const cpFormat, const VarArgs &...vaArgs)
+    const char*const cpFormat, VarArgs &&...vaArgs)
   { // Return if we don't have this level
     if(cLog->NotHasLevel(lhlSeverity)) return;
     // Synchronise access to data while we log details
-    MutexCall([this,lhlSeverity,cpFormat,&vaArgs...](){
-      SocketLog(lhlSeverity, cpFormat, vaArgs...);});
+    MutexCall([this, lhlSeverity, cpFormat, &vaArgs...](){
+      SocketLog(lhlSeverity, cpFormat, StdForward<VarArgs>(vaArgs)...);});
   }
   /* -- Internal log ------------------------------------------------------- */
   template<typename ...VarArgs>void SocketLogUnsafe(const LHLevel lhlSeverity,
-    const char*const cpFormat, const VarArgs &...vaArgs)
+    const char*const cpFormat, VarArgs &&...vaArgs)
   { // Return if we don't have this level
     if(cLog->NotHasLevel(lhlSeverity)) return;
     // Write formatted string
-    SocketLog(lhlSeverity, cpFormat, vaArgs...);
+    SocketLog(lhlSeverity, cpFormat, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise static error (no openssl error) ------------------------- */
   ThreadStatus SetErrorStatic(const string &strReason, const bool bSet)
@@ -490,7 +491,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Get item of interest and if successful, move the result into the
         // specified destination
         if(const AddrPtr apAddr{ baData, adCmd.iId })
-          MutexCall([&adCmd,&apAddr](){adCmd.strDest = apAddr.cpPtr;});
+          MutexCall([&adCmd, &apAddr](){ adCmd.strDest = apAddr.cpPtr; });
       }
     } // No IP address detected for some reason
     else return SetErrorSafe("No address found");
@@ -550,8 +551,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     FlagReset(SS_INITIALISING);
     // Reset counters and timers
     qRX = qTX = qRXp = qTXp = 0;
-    cdConnect = cdConnected = cdRead = cdWrite = cdDisconnect =
-      cdDisconnected = seconds{0};
+    cdConnect = cdConnected = cdRead = cdWrite =
+      cdDisconnect = cdDisconnected = cd0;
     // Flush packets in all buffers
     FlushPackets();
     // If want TLS encryption?
@@ -701,7 +702,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Is the cipher available?
       if(SSL_CIPHER_description(SSL_get_current_cipher(sslPtr), cpStr, iLen))
       { // Synchronise access to cipher string
-        MutexCall([this,cpStr](){
+        MutexCall([this, cpStr](){
           // Set cipher and remove spaces, carriage returns and linefeeds
           strCipher = cpStr;
           StrCompactRef(strCipher);
@@ -740,11 +741,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Writer thread notification ----------------------------------------- */
   void WriteUnblock()
   { // Acquire unique lock
-    const UniqueLock ulSocketGuard{ mWriter };
-    // Unblock variable
-    bUnlock = true;
-    // Notify the condition variable
-    cvWriter.notify_one();
+    mWriter.MutexCall([this](){
+      // Unblock variable
+      bUnlock = true;
+      // Notify the condition variable
+      cvWriter.notify_one();
+    });
   }
   /* -- Get registry iterator ---------------------------------------------- */
   StrNCStrMapIt GetRegistryIterator(const string &strItem)
@@ -838,7 +840,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               // Ignore if not final packet
               if(!bFinal) break;
               // Lock access to the packet list
-              MutexCall([this,&plTemp,stPLTotal](){
+              MutexCall([this, &plTemp, stPLTotal](){
                 // Move packets to main packet list
                 plRX.splice(plRX.end(), plTemp);
                 // Set total size
@@ -1232,12 +1234,23 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   }
   /* -- Return if there are TX packets available --------------------------- */
   bool IsTXPacketAvailable()
-    { return MutexCall([this](){return !plTX.empty();}); }
+    { return MutexCall([this](){ return !plTX.empty(); }); }
   /* -- Get memory to oldest TX packet ------------------------------------- */
   const MemConst &GetOldestTXPacketSafe()
-    { return MutexCall([this]()->MemConst&{return plTX.front().mData;}); }
+    { return MutexCall([this]()->MemConst&{ return plTX.front().mData; }); }
   /* -- Pop oldest TX packet ----------------------------------------------- */
-  void PopOldestTXPacketSafe() { MutexCall([this](){plTX.pop_front();}); }
+  void PopOldestTXPacketSafe() { MutexCall([this](){ plTX.pop_front(); }); }
+  /* -- Wait for more data ------------------------------------------------- */
+  void SockWriteWaitForMoreData()
+  { // Setup lock for condition variable
+    mWriter.MutexUniqueCall([this](UniqueLock &ulLock){
+      // Wait for new data to write
+      cvWriter.wait(ulLock,
+        [this]{ return bUnlock || tReader.ThreadShouldExit(); });
+      // Next wait will block
+      bUnlock = false;
+    });
+  }
   /* -- Socket write manager ----------------------------------------------- */
   ThreadStatus SockWebWriteManager()
   { // Block until requested to exit
@@ -1332,12 +1345,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Subtract total bytes counter and pop the packet we just sent
         stTX -= mcPacket.MemSize();
         PopOldestTXPacketSafe();
-      } // Setup lock for condition variable and wait for new data to write
-      UniqueLock uLock{ mWriter };
-      cvWriter.wait(uLock,
-        [this]{ return bUnlock || tReader.ThreadShouldExit(); });
-      // Next wait will block
-      bUnlock = false;
+      } // Wait for more data or exit request
+      SockWriteWaitForMoreData();
     } // Sucesss
     return TS_OK;
   }
@@ -1373,12 +1382,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Subtract total bytes counter and pop the packet we just sent
         stTX -= mcPacket.MemSize();
         PopOldestTXPacketSafe();
-      } // Setup lock for condition variable and wait for new data to write
-      UniqueLock uLock{ mWriter };
-      cvWriter.wait(uLock,
-        [this]{ return bUnlock || tReader.ThreadShouldExit(); });
-      // Next wait will block
-      bUnlock = false;
+      } // Wait for more data or exit request
+      SockWriteWaitForMoreData();
     } // Sucesss
     return TS_OK;
   }
@@ -1403,7 +1408,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   }
   /* -- Dispatch an event -------------------------------------------------- */
   template<typename ...VarArgs>
-    void DispatchEvent(const SocketFlagsConst &evtId, const VarArgs &...vaArgs)
+    void DispatchEvent(const SocketFlagsConst &evtId, const VarArgs ...vaArgs)
   { // Signal events handler to execute event callback on the next frame.
     // Add the event to the event store so we can remove the event when the
     // destructor is called before the event is called.
@@ -1476,7 +1481,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   double GetPacketXSafe(Memory &mbD, PacketList &plList, size_t &stX)
   { // Synchronise access to packet list
-    return MutexCall([this,&mbD,&plList,&stX](){
+    return MutexCall([this, &mbD, &plList, &stX](){
       // Not empty? Return top memory block else through error
       if(plList.empty())
         XC("No packets remaining in blocklist!",
@@ -1487,9 +1492,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   }
   /* ----------------------------------------------------------------------- */
   size_t GetXQCountSafe(const PacketList &plList)
-    { return MutexCall([&plList](){return plList.size();}); }
+    { return MutexCall([&plList](){ return plList.size(); }); }
   void CompactXSafe(Memory &mbD, PacketList &plList, size_t &stX)
-    { MutexCall([this,&mbD,&plList,&stX](){Compact(mbD, plList, stX);}); }
+    { MutexCall([this, &mbD, &plList, &stX](){ Compact(mbD, plList, stX); }); }
   /* -- Events status ------------------------------------------------------ */
   bool IsConnected() const { return FlagIsSet(SS_CONNECTED); }
   bool IsDisconnected() const { return FlagIsSet(SS_STANDBY); }
@@ -1504,25 +1509,25 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Connection data ---------------------------------------------------- */
   const string &GetAddress() const { return strAddr; }
   const string GetAddressSafe()
-    { return MutexCall([this](){return GetAddress();}); }
+    { return MutexCall([this](){ return GetAddress(); }); }
   const unsigned int &GetPort() const { return uiPort; }
   unsigned int GetPortSafe()
-    { return MutexCall([this](){return GetPort();}); }
+    { return MutexCall([this](){ return GetPort(); }); }
   const string &GetIPAddress() const { return strIP; }
   const string GetIPAddressSafe()
-    { return MutexCall([this](){return GetIPAddress();}); }
+    { return MutexCall([this](){ return GetIPAddress(); }); }
   const string GetAddressAndPortSafe()
-    { return MutexCall([this](){return GetAddressAndPort();}); }
+    { return MutexCall([this](){ return GetAddressAndPort(); }); }
   const string GetIPAddressAndPortSafe()
-    { return MutexCall([this](){return GetIPAddressAndPort();}); }
+    { return MutexCall([this](){ return GetIPAddressAndPort(); }); }
   const string &GetRealHost() const { return strRealHost; }
   const string GetRealHostSafe()
-    { return MutexCall([this](){return GetRealHost();}); }
+    { return MutexCall([this](){ return GetRealHost(); }); }
   const string &GetCipher() const { return strCipher; }
   const string GetCipherSafe()
-    { return MutexCall([this](){return GetCipher();}); }
+    { return MutexCall([this](){ return GetCipher(); }); }
   const string GetErrorStrSafe()
-    { return MutexCall([this](){return GetErrorStr();}); }
+    { return MutexCall([this](){ return GetErrorStr(); }); }
   /* -- RX packets --------------------------------------------------------- */
   uint64_t GetRX() const { return qRX; }
   uint64_t GetRXpkt() const { return qRXp; }
@@ -1541,17 +1546,18 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void CompactTXSafe(Memory &mbD) { CompactXSafe(mbD, plTX, stTX); }
   /* ----------------------------------------------------------------------- */
   ThreadStatus SetErrorSafe(const string &strS)
-    { return MutexCall([this,&strS](){return SetError(strS);}); }
+    { return MutexCall([this, &strS](){ return SetError(strS); }); }
   ThreadStatus SetErrorStaticSafe(const string &strS, const bool bS=true)
-    { return MutexCall([this,&strS,bS](){return SetErrorStatic(strS, bS);}); }
+    { return MutexCall([this, &strS, bS]()
+        { return SetErrorStatic(strS, bS); }); }
   void PushDataSafe(PacketList &blD, size_t &stX, const char *cpData,
     const size_t stS)
-      { MutexCall([this,&blD,&stX,cpData,stS](){
+      { MutexCall([this, &blD, &stX, cpData, stS](){
           PushData(blD, stX, cpData, stS);}); }
   void SendSafe(const MemConst &mcPacket)
-    { MutexCall([this,&mcPacket](){Send(mcPacket);}); }
+    { MutexCall([this, &mcPacket](){ Send(mcPacket); }); }
   void SendStringSafe(const string &strData)
-    { MutexCall([this,&strData](){SendString(strData);}); }
+    { MutexCall([this, &strData](){ SendString(strData); }); }
   /* -- Get timers --------------------------------------------------------- */
   const ClkTimePoint GetTConnect() const { return ClkTimePoint{ cdConnect }; }
   const ClkTimePoint GetTConnected() const
@@ -1645,7 +1651,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   { // This function can only be called if we don't have a write thread
     if(tWriter.ThreadIsJoinable()) return;
     // Lock access to packet list
-    MutexCall([this,lS]{
+    MutexCall([this, lS]{
       // Return if there are packets and divisble by 2
       const size_t stCount = GetTXQCount();
       if(!stCount || stCount % 2) return LuaUtilPushTable(lS);

@@ -69,11 +69,8 @@ class FboCore :                        // The main fbo operations manager
     FinishMain();
     // Render all the fbos
     FboRender();
-    // We don't want to swap if the guest has chosen not to draw but we should
-    // at least wait if the timer isn't already waiting or the GPU is going to
-    // be locked at 100% in situations where the engine is in standby mode with
-    // an empty tick function.
-    if(CannotDraw()) return cTimer->TimerForceWait();
+    // Flush the pipeline to prevent memory leak and wait if not drawing
+    if(CannotDraw()) { cOgl->Flush(); return cTimer->TimerForceWait(); }
     // Clear redraw flag
     ClearDraw();
     // Unbind current FBO so we select the back buffer to draw to
@@ -288,7 +285,7 @@ class FboCore :                        // The main fbo operations manager
     bDraw(false),                      bSimpleMatrix(false),
     bLockViewport(false),              bClearBuffer(false),
     fboConsole{ GL_RGBA8, true },      fboMain{ GL_RGB8, true },
-    ciCurrent{ seconds{ 1 } },         uiFPS(0),
+    ciCurrent{ cd1S },                 uiFPS(0),
     uiFPSCur(0)
     /* -- Set pointer to global class and main fbo ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }

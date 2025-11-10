@@ -39,7 +39,7 @@ BUILD_FLAGS(Sql,                       // Sql flags classes
   // Delete empty databases?           Debug sql executions?
   SF_DELETEEMPTYDB          {Flag(2)}
 );/* ----------------------------------------------------------------------- */
-struct SqlData :                        // Query response data item class
+struct SqlData :                       // Query response data item class
   /* -- Base classes ------------------------------------------------------- */
   public Memory                        // Memory block and type
 { /* -- Sql type variable -------------------------------------------------- */
@@ -305,30 +305,30 @@ struct Sql :                           // Members initially public
   /* -- Constructor that stores a 64-bit integer --------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const sqlite_int64 qValue, const VarArgs &...vaArgs)
+      const sqlite_int64 qValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Int64/Integer> = $ <$0x$>.",
       iCol, qValue, hex, qValue);
     // Process as integer then pass next arguments
     SetError(sqlite3_bind_int64(stmtData, iCol, qValue));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as double of type SQLITE_FLOAT -------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const double dValue, const VarArgs &...vaArgs)
+      const double dValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Double/Float> = $$.", iCol, fixed, dValue);
     // Process as integer then pass next arguments
     SetError(sqlite3_bind_double(stmtData, iCol, dValue));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Constructor that stores similar types of integer ------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      int iValue, const VarArgs &...vaArgs)
+      int iValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Int/Int> = $ <$0x$>.",
       iCol, iValue, hex, iValue);
@@ -336,12 +336,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(iValue)));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Constructor that stores similar types of integer ------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const unsigned int uiValue, const VarArgs &...vaArgs)
+      const unsigned int uiValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<UInt/Int> = $ <$0x$>.",
       iCol, uiValue, hex, uiValue);
@@ -349,12 +349,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(uiValue)));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Constructor that stores similar types of integer ------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const long lValue, const VarArgs &...vaArgs)
+      const long lValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Long/Int> = $ <$0x$>.",
       iCol, lValue, hex, lValue);
@@ -362,12 +362,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(lValue)));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Constructor that stores similar types of integer ------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const short sValue, const VarArgs &...vaArgs)
+      const short sValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Short/Int> = $ <$0x$>.",
       iCol, sValue, hex, sValue);
@@ -375,12 +375,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(sValue)));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a c-string with the specified size as text ----------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const size_t stSize, const char*const cpStr, const VarArgs &...vaArgs)
+      const size_t stSize, const char*const cpStr, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Size+CStr/Text> = \"$\" ($ bytes).",
       iCol, cpStr, stSize);
@@ -388,12 +388,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_text(stmtData, iCol, cpStr,
       UtilIntOrMax<int>(stSize), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a stand alone text string ---------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const char*const cpStr, const VarArgs &...vaArgs)
+      const char*const cpStr, VarArgs &&...vaArgs)
   { // Get text length
     const size_t stLen = strlen(cpStr);
     // Log the parameter
@@ -403,12 +403,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_text(stmtData, iCol, cpStr,
       UtilIntOrMax<int>(stLen), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a c++ string ----------------------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-    const string &strStr, const VarArgs &...vaArgs)
+    const string &strStr, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Str/Text> = \"$\" ($ bytes).",
       iCol, strStr, strStr.length());
@@ -416,12 +416,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_text(stmtData, iCol, strStr.c_str(),
       UtilIntOrMax<int>(strStr.length()), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a c++ string_view ------------------------------------ */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-    const string_view &strvStr, const VarArgs &...vaArgs)
+    const string_view &strvStr, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<StrV/Text> = \"$\" ($ bytes).",
       iCol, strvStr, strvStr.length());
@@ -429,12 +429,12 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_text(stmtData, iCol, strvStr.data(),
       UtilIntOrMax<int>(strvStr.length()), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a c-string with the specified size as a blob --------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const char*const cpPtr, const size_t stSize, const VarArgs &...vaArgs)
+      const char*const cpPtr, const size_t stSize, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogNLCDebugExSafe("- Arg #$<Ptr+Size/Blob> = $ bytes.",
       iCol, stSize);
@@ -442,13 +442,13 @@ struct Sql :                           // Members initially public
     SetError(sqlite3_bind_blob(stmtData, iCol, cpPtr,
       UtilIntOrMax<int>(stSize), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as custom type ------------------------------------------ */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
       const char*const cpPtr, const size_t stSize, const int iType,
-      const VarArgs &...vaArgs)
+      VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogNLCDebugExSafe("- Arg #$<CStr/$> = \"$\" $ bytes.",
       iCol, iType, cpPtr, stSize);
@@ -467,12 +467,12 @@ struct Sql :                           // Members initially public
       sqlite3_bind_null(stmtData, iCol)
            : SQLITE_ERROR))))));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise as a memory block --------------------------------------- */
   template<typename ...VarArgs>
     void DoExecuteParam(int &iCol, const int iMax, sqlite3_stmt*const stmtData,
-      const MemConst &mcRef, const VarArgs &...vaArgs)
+      const MemConst &mcRef, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Memory/Blob> = $ bytes.",
       iCol, mcRef.MemSize());
@@ -481,11 +481,11 @@ struct Sql :                           // Members initially public
       UtilIntOrMax<int>(mcRef.MemSize()), fcbSqLiteTransient));
     // Send the parameters if we've binded the maximum allowed
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
-      DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+      DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Send command to sql in raw format ---------------------------------- */
   template<typename ...VarArgs>
-    void DoExecute(const string &strQuery, const VarArgs &...vaArgs)
+    void DoExecute(const string &strQuery, VarArgs &&...vaArgs)
   { // Reset previous results
     Reset();
     // Set query start time
@@ -505,7 +505,7 @@ struct Sql :                           // Members initially public
       { // Column id
         int iCol = 1;
         // Get maximum parameters allowed before we have to send them
-        DoExecuteParam(iCol, iMax, stmtData, vaArgs...);
+        DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
       } // We don't have parameters so just execute the statement
       else DoStep(stmtData);
     } // Get end query time to get total execution duration
@@ -722,11 +722,11 @@ struct Sql :                           // Members initially public
     // Clear last result data
     srKeys.clear();
     // Reset query time
-    cdQuery = seconds{0};
+    cdQuery = cd0;
   }
   /* -- Dispatch stored transaction with logging --------------------------- */
   template<typename ...VarArgs>
-    int Execute(const string &strQuery, const VarArgs &...vaArgs)
+    int Execute(const string &strQuery, VarArgs &&...vaArgs)
   { // Ignore if nothing to dispatch
     if(strQuery.empty()) return SQLITE_ERROR;
     // Parameters count
@@ -734,7 +734,7 @@ struct Sql :                           // Members initially public
     // Log query, do execution and return result
     cLog->LogDebugExSafe("Sql executing '$'<$>...",
       strQuery, strQuery.length());
-    DoExecute(strQuery, vaArgs...);
+    DoExecute(strQuery, StdForward<VarArgs>(vaArgs)...);
     cLog->LogDebugExSafe("- Total: $; Code: $<$>; RTT: $ sec.",
       stCount, ResultToString(GetError()), GetError(), TimeStr());
     // Return error status
@@ -742,8 +742,9 @@ struct Sql :                           // Members initially public
   }
   /* -- Dispatch stored transaction with logging but return success bool -- */
   template<typename ...VarArgs>
-    bool ExecuteAndSuccess(const string &strQuery, const VarArgs &...vaArgs)
-      { return Execute(strQuery, vaArgs...) == SQLITE_OK; }
+    bool ExecuteAndSuccess(const string &strQuery, VarArgs &&...vaArgs)
+      { return Execute(strQuery,
+          StdForward<VarArgs>(vaArgs)...) == SQLITE_OK; }
   /* -- Check integrity ---------------------------------------------------- */
   bool CheckIntegrity()
   { // Do check (We need a result so dont use Pragma())
@@ -1327,7 +1328,7 @@ struct Sql :                           // Members initially public
     sqlDB(nullptr),                    // No sql database handle yet
     iError(sqlite3_initialize()),      // Initialise sqlite and store error
     uiQueryRetries(3),                 // Initially 3 retries
-    cdRetry{milliseconds{1000}},       // Initially wait 1 second per retry
+    cdRetry{ cd1S },                   // Initially wait 1 second per retry
     strMemoryDBName{ ":memory:" },     // Create a memory database by default
     strCVKeyColumn{ "K" },             // Init name of cvars 'key' column
     strCVFlagsColumn{ "F" },           // Init name of cvars 'flags' column
@@ -1362,8 +1363,8 @@ struct Sql :                           // Members initially public
     { return CVarSimpleSetInt(uiQueryRetries, uiCount); }
   /* -- Set retry suspend time --------------------------------------------- */
   CVarReturn RetrySuspendModified(const uint64_t uqMilliseconds)
-    { return CVarSimpleSetIntNLG(cdRetry, milliseconds{ uqMilliseconds },
-        milliseconds{0}, milliseconds{1000}); }
+    { return CVarSimpleSetIntNLG(cdRetry,
+        milliseconds{ uqMilliseconds }, cd0, cd1S); }
   /* -- Modify delete empty database permission ---------------------------- */
   CVarReturn DeleteEmptyDBModified(const bool bState)
     { FlagSetOrClear(SF_DELETEEMPTYDB, bState); return ACCEPT; }

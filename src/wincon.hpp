@@ -43,7 +43,7 @@ class SysCon :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public SysBase,                      // Defined in 'winbase.hpp'
   public SysConBase,                   // Defined in 'syscore.hpp'
-  private mutex                        // Exit mutex
+  private Mutex                        // Exit mutex
 { /* -- Private typedefs --------------------------------------------------- */
   typedef vector<CHAR_INFO> CharInfoVec;
   /* -- Private variables -------------------------------------------------- */
@@ -89,11 +89,11 @@ class SysCon :                         // Members initially private
     // We'll need to wait for the exit
     if(*cpEvent == '!')
     { // Lock mutex
-      UniqueLock ulExit{ *this };
-      // Ignore if we've already exited which can happen if shutdown and break
-      // events occur at the same time.
-      if(FlagIsClear(SCO_EXIT))
-      { // Set exit flag so when main loop informs us that it cleaned up
+      MutexUniqueCall([this](UniqueLock &ulLock){
+        // Ignore if we've already exited which can happen if shutdown and
+        // break events occur at the same time.
+        if(FlagIsSet(SCO_EXIT)) return;
+        // Set exit flag so when main loop informs us that it cleaned up
         // properly, it can exit immediately cleaning everything up.
         FlagSet(SCO_EXIT);
         // Show warning
@@ -106,8 +106,8 @@ class SysCon :                         // Members initially private
         // Send logout event
         cEvtMain->RequestQuit();
         // Wait for main thread to clean up so we can exit
-        cvExit.wait(ulExit);
-      }
+        cvExit.wait(ulLock);
+      });
     } // Send normal exit event
     else cEvtMain->RequestQuit();
     // Block default event

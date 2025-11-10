@@ -208,7 +208,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   void ConvertLuminanceAlphaToRGB()
   { // Class to convert a luminance alpha pixel to a RGB pixel
     struct Filter{
-      inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
+      Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Unpack one luminance alpha pixel into one RGB pixel
         *reinterpret_cast<uint16_t*>(ubpDst) =
           (static_cast<uint16_t>(*ubpSrc) * 0x0101);
@@ -221,7 +221,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   void ConvertLuminanceToRGB()
   { // Class to convert a luminance pixel to a RGB pixel
     struct Filter{
-      inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
+      Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Unpack one luminance pixel into one RGB pixel
         *reinterpret_cast<uint16_t*>(ubpDst) = *ubpSrc * 0x101;
         *reinterpret_cast<uint8_t*>(ubpDst+2) = *ubpSrc;
@@ -233,7 +233,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   void ConvertLuminanceAlphaToRGBA()
   { // Class to convert a luminance alpha pixel to a RGBA pixel
     struct Filter{
-      inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
+      Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Unpack one luminance alpha pixel into one RGBA pixel
         *reinterpret_cast<uint32_t*>(ubpDst) =
           (static_cast<uint32_t>(*ubpSrc) * 0x00010101) |
@@ -246,7 +246,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   void ConvertLuminanceToRGBA()
   { // Class to convert a luminance pixel to a RGBA pixel
     struct Filter{
-      inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
+      Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Unpack one luminance pixel into one RGBA pixel ignoring alpha
         *reinterpret_cast<uint32_t*>(ubpDst) = (*ubpSrc * 0x01010100) | 0xFF;
       }
@@ -257,7 +257,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   void ConvertBinaryToLuminance()
   { // Class to convert a BINARY pixel to a LUMINANCE pixel
     struct Filter{
-      inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
+      Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Get the packed eight pixels
         const unsigned int uiPixels = *ubpSrc;
         // Unpack eight binary pixels into eight luminance (white) pixels
@@ -278,7 +278,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   void ConvertBinaryToRGB()
   { // Class to convert a BINARY pixel to a RGB pixel
     struct Filter{
-      inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
+      Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Get the packed eight pixels
         const unsigned int uiPixels = *ubpSrc;
         // Unpack eight BINARY (1-bit) pixels into eight RGB (24-bit) pixels.
@@ -306,7 +306,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   void ConvertBinaryToRGBA()
   { // Class to convert a BINARY pixel to a RGBA pixel
     struct Filter{
-      inline Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
+      Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Get the packed eight pixels
         const unsigned int uiPixels = *ubpSrc;
         // Unpack eight BINARY pixels into eight RGBA (32-bit) pixels

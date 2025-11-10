@@ -207,11 +207,12 @@ class Statistic
     return *this;
   }
   /* -- Appended data ------------------------------------------------------ */
-  template<typename ...VarArgs>Statistic &DataA(const VarArgs &...vaArgs)
-    { return Data(StrAppend(vaArgs...)); }
+  template<typename ...VarArgs>Statistic &DataA(VarArgs &&...vaArgs)
+    { return Data(StrAppend(StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted data ----------------------------------------------------- */
   template<typename ...VarArgs>Statistic &DataF(const char*const cpFormat,
-    const VarArgs &...vaArgs) { return Data(StrFormat(cpFormat, vaArgs...)); }
+    VarArgs &&...vaArgs)
+  { return Data(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Data by read-only lvalue string copy ------------------------------- */
   Statistic &Data(const string &strVal=cCommon->CommonBlank())
   { // Return if there are no headers
