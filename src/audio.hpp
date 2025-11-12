@@ -274,11 +274,11 @@ class Audio :                          // Audio manager class
         // Set to default device
         stDevice = 0;
       } // Set device
-      strDevice = AudioGetPbkDeviceById(stDevice).c_str();
+      strDevice = AudioGetPbkDeviceById(stDevice).data();
     } // Device id setup complete
     { // Get pointer to device name
       const char*const cpDevice =
-        strDevice.empty() ? nullptr : strDevice.c_str();
+        strDevice.empty() ? nullptr : strDevice.data();
       // Say device being used
       cLog->LogDebugExSafe("Audio trying to initialise device '$'...",
         cpDevice ? cpDevice : "<Default>");

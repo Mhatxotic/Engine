@@ -3,7 +3,7 @@
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
 ** ## Provides a reference counter for protecting objects from being      ## **
-** ## destroyed abruptly.                                                 ## **
+** ## destroyed abruptly.                                                 ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed

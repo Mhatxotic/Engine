@@ -465,8 +465,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
       } // If we didn't rebuffer anything then no point playing
       if(!FullRebuffer())
       { // Log problem
-        cLog->LogWarningExSafe("Stream '$' could not be rebuffered after reset!",
-          fmFile.IdentGet());
+        cLog->LogWarningExSafe(
+          "Stream '$' could not be rebuffered after reset!",
+            fmFile.IdentGet());
         // Set fully stopped and return
         return Stop(SR_GENBUFFAIL);
       } // Update volume

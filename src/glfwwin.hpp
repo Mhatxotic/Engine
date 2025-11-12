@@ -263,7 +263,7 @@ class GlFWWindow :                     // GLFW window class
     { glfwSetClipboardString(WinGetHandle(), cpT); }
   /* -- Set clipboard c++ string ------------------------------------------- */
   void WinSetClipboardString(const string &strT) const
-    { WinSetClipboard(strT.c_str()); }
+    { WinSetClipboard(strT.data()); }
   /* -- Get clipboard c-string --------------------------------------------- */
   const char *WinGetClipboard() const
   { // Return clipboard string if available

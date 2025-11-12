@@ -104,7 +104,7 @@ class SysBase :                        // Members initially private
     wstring wstrExe; wstrExe.resize(MAX_PATH);
     // Get executable file name
     wstrExe.resize(GetModuleFileName(nullptr,
-      const_cast<wchar_t*>(wstrExe.c_str()), MAX_PATH));
+      const_cast<wchar_t*>(wstrExe.data()), MAX_PATH));
     // Remove extension if we can
     if(wstrExe.length() >= 4 && wstrExe[wstrExe.length() - 4] == '.')
       wstrExe.resize(wstrExe.length() - 4);
@@ -347,10 +347,10 @@ class SysBase :                        // Members initially private
             &dwMask, &dwSys) ? dwMask : 0);
           // Get module file name and if succeeded?
           if(GetModuleFileNameEx(hProcess, nullptr,
-            const_cast<LPWSTR>(wstrFN.c_str()), MAX_PATH))
+            const_cast<LPWSTR>(wstrFN.data()), MAX_PATH))
           { // Get version information
             const SysModuleData vD{ StdMove(SysModule(WS16toUTF(wstrFN))) };
-            // Push version, description vendor and filename (use .c_str())
+            // Push version, description vendor and filename (use .data())
             tData.DataF("$.$.$.$", vD.GetMajor(), vD.GetMinor(),
                     vD.GetRevision(), vD.GetBuild())
                  .Data(StdMove(vD.GetDesc()))
@@ -567,7 +567,7 @@ class SysBase :                        // Members initially private
     const wstring wstrFile{ SEHGetExecutableFileNameWithoutExtension() +
       L".dbg" };
     // Open dump file and return if failed
-    const HANDLE hFile = CreateFile(wstrFile.c_str(), GENERIC_WRITE, 0, 0,
+    const HANDLE hFile = CreateFile(wstrFile.data(), GENERIC_WRITE, 0, 0,
       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
     if(hFile == INVALID_HANDLE_VALUE) return;
     // Capture exceptions so we can close the file
@@ -649,14 +649,14 @@ class SysBase :                        // Members initially private
     // No need to show anything if we're in a debugger
     if(IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH;
     // Show message box
-    MessageBox(hwndWindow, UTFtoS16(strDialog).c_str(),
+    MessageBox(hwndWindow, UTFtoS16(strDialog).data(),
       L"Unhandled exception", MB_ICONSTOP);
     // We handled the exception
     return EXCEPTION_EXECUTE_HANDLER;
   } // This shouldn't happen but just incase
   catch(const exception &eReason)
   { // Show message box
-    MessageBox(hwndWindow, UTFtoS16(eReason.what()).c_str(),
+    MessageBox(hwndWindow, UTFtoS16(eReason.what()).data(),
       L"exception in unhandled exception", MB_ICONSTOP);
     // We handled the exception
     return EXCEPTION_EXECUTE_HANDLER;

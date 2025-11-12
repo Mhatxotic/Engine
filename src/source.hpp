@@ -413,16 +413,17 @@ static Source *GetSource()
 }
 /* == SourceAlloc ========================================================== */
 static void SourceAlloc(const size_t stCount)
-{ // Set the value we can actually use
-  const size_t stUsable = UtilClamp(stCount, 0, cOal->GetMaxMonoSources());
-  // Get size and return if no new static sources needed to be created
-  const size_t stSize = cSources->size();
+{ // Get the value we can actually use and the number of sources currently
+  // allocated and return if no new static sources are needed to be created.
+  const size_t stUsable = UtilClamp(stCount, 0, cOal->GetMaxMonoSources()),
+               stSize = cSources->size();
   if(stSize >= stUsable) return;
   // Create new sources until we've reached the maximum and mark as usable
-  for(size_t stI = stSize; stI < stUsable; ++stI) new Source{ SF_NONE };
+  for(size_t stIndex = stSize; stIndex < stUsable; ++stIndex)
+    new Source{ SF_NONE };
   // Log count
-  cLog->LogDebugExSafe("Audio added new sources [$:$$].",
-    cSources->size(), hex, cOal->GetError());
+  cLog->LogDebugExSafe("Audio added $ new stand-by sources [$:$$].",
+    stUsable - stSize, cSources->size(), hex, cOal->GetError());
 }
 /* == Set number of sources ================================================ */
 static CVarReturn SourceSetCount(const size_t stCount)

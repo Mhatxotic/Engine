@@ -62,6 +62,7 @@ typedef atomic<size_t>     SafeSizeT;  // Thread safe size_t
 typedef atomic<uint64_t>   SafeUInt64; // Thread safe 64-bit integer
 typedef atomic<unsigned int> SafeUInt; // Thread safe unsigned integer
 /* -- Indexed vector list types -------------------------------------------- */
+typedef string::const_iterator            StringConstIt;
 typedef vector<const char*>               CStrVector;
 typedef CStrVector::const_iterator        CStrVectorConstIt;
 typedef vector<float>                     FloatVector;

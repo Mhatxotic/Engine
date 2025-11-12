@@ -50,12 +50,12 @@ class SysReg                           // Members initially private
     DWORD dwSize = 0, dwType = 0;
     // Query value into string
     const wstring wstrV{ UTFtoS16(strV) };
-    if(RegQueryValueEx(GetHandle(), wstrV.c_str(), nullptr, &dwType,
+    if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
       reinterpret_cast<LPBYTE>(&dwType), &dwSize) != ERROR_MORE_DATA ||
         dwType != REG_SZ || !dwSize) return {};
     // Create a pre-allocated stringAllocate buffer and query value again
     wstring wstrBuffer; wstrBuffer.resize(dwSize / sizeof(wchar_t));
-    if(RegQueryValueEx(GetHandle(), wstrV.c_str(), nullptr, &dwType,
+    if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
       reinterpret_cast<LPBYTE>(wstrBuffer.data()), &dwSize) != ERROR_SUCCESS)
         return {};
     // Return as UTF string.
@@ -68,7 +68,7 @@ class SysReg                           // Members initially private
     // Set size
     DWORD dwSize = dwS, dwType = 0;
     // Query value and return status
-    return RegQueryValueEx(GetHandle(), UTFtoS16(strV).c_str(), nullptr,
+    return RegQueryValueEx(GetHandle(), UTFtoS16(strV).data(), nullptr,
       &dwType, reinterpret_cast<LPBYTE>(vpD), &dwSize);
   }
   /* -- Query integer ------------------------------------------------------ */
@@ -87,7 +87,7 @@ class SysReg                           // Members initially private
   SysReg(HKEY hkB, const string &strSK, const REGSAM rsA) :
     /* -- Initialisers ----------------------------------------------------- */
     hkKey(RegOpenKeyEx(hkB,            // Open registry key with specified root
-      UTFtoS16(strSK).c_str(),         // Specified subkey to open
+      UTFtoS16(strSK).data(),         // Specified subkey to open
       0,                               // No options
       rsA,                             // Specified security
       &hkB) == ERROR_SUCCESS ?         // Destination handle and if succeeded?

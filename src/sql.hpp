@@ -413,7 +413,7 @@ struct Sql :                           // Members initially public
     cLog->LogDebugExSafe("- Arg #$<Str/Text> = \"$\" ($ bytes).",
       iCol, strStr, strStr.length());
     // Process as text then pass next arguments
-    SetError(sqlite3_bind_text(stmtData, iCol, strStr.c_str(),
+    SetError(sqlite3_bind_text(stmtData, iCol, strStr.data(),
       UtilIntOrMax<int>(strStr.length()), fcbSqLiteTransient));
     if(DoExecuteParamCheckCommit(stmtData, iCol, iMax))
       DoExecuteParam(iCol, iMax, stmtData, StdForward<VarArgs>(vaArgs)...);
@@ -492,7 +492,7 @@ struct Sql :                           // Members initially public
     const ClockInterval<> ciStart;
     // Statement preparation
     sqlite3_stmt *stmtData = nullptr;
-    SetError(sqlite3_prepare_v2(sqlDB, strQuery.c_str(),
+    SetError(sqlite3_prepare_v2(sqlDB, strQuery.data(),
       UtilIntOrMax<int>(strQuery.length()), &stmtData, nullptr));
     // If succeeded then start parsing the input and ouput
     if(IsNoError())
@@ -559,7 +559,7 @@ struct Sql :                           // Members initially public
     const ClockInterval<> ciStart;
     // Statement preparation
     sqlite3_stmt *stmtData = nullptr;
-    SetError(sqlite3_prepare_v2(sqlDB, strQuery.c_str(),
+    SetError(sqlite3_prepare_v2(sqlDB, strQuery.data(),
       UtilIntOrMax<int>(strQuery.length()), &stmtData, nullptr));
     // Starting LUA parameter and current enumerated parameter
     const int iStartParam = 2;
@@ -708,7 +708,7 @@ struct Sql :                           // Members initially public
                       "Type",   sdRef.iType);
                    break;
         } // Push key name
-        LuaUtilSetField(lS, -2, srmpRef.first.c_str());
+        LuaUtilSetField(lS, -2, srmpRef.first.data());
       } // Push key pair as integer table
       LuaUtilSetRaw(lS, -3);
       // Next result number
@@ -1017,7 +1017,7 @@ struct Sql :                           // Members initially public
   }
   /* ----------------------------------------------------------------------- */
   PurgeResult CVarPurge(const string &strVar)
-    { return CVarPurgeData(strVar.c_str(), strVar.length()); }
+    { return CVarPurgeData(strVar.data(), strVar.length()); }
   /* -- DeInit ------------------------------------------------------------- */
   void DeInit()
   { // Ignore if no handle to deinit
@@ -1286,7 +1286,7 @@ struct Sql :                           // Members initially public
     // parameter (VFS) that resolves to 'nullptr' is just to shut CppCheck up
     // with a false positive.
     sqlite3 *sqlDBtemp = nullptr;
-    if(const int iCode = sqlite3_open_v2(strDb.c_str(), &sqlDBtemp,
+    if(const int iCode = sqlite3_open_v2(strDb.data(), &sqlDBtemp,
          SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX |
          SQLITE_OPEN_SHAREDCACHE, reinterpret_cast<char*>(sqlDBtemp)))
     { // Log error result

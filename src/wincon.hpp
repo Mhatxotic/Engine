@@ -796,7 +796,7 @@ class SysCon :                         // Members initially private
       // Throw the error
       XCS("Failed to retrieve console window handle!");
     } // Set console window title (doesn't matter if failed)
-    if(!SetConsoleTitleW(UTFtoS16(cpTitle).c_str()))
+    if(!SetConsoleTitleW(UTFtoS16(cpTitle).data()))
       XCS("Failed to set window title!", "Title", cpTitle);
     // Get output handle
     hOut = GetStdHandle(STD_OUTPUT_HANDLE);

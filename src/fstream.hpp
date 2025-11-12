@@ -62,7 +62,7 @@ class FStreamBase :                    // File stream base class
       L"rb", L"wb", L"ab", L"r+b", L"w+b", L"a+b"
     };
     // Send it to the Windows file open call and accept it if successful
-    return _wfsopen(UTFtoS16(strFile).c_str(), cplModes[fsmMode], _SH_DENYWR);
+    return _wfsopen(UTFtoS16(strFile).data(), cplModes[fsmMode], _SH_DENYWR);
 #else                                  // Using linux or MacOS?
     // The mode supported (in ansi string)
     static const array<const char*const,FM_MAX>cplModes{
@@ -70,7 +70,7 @@ class FStreamBase :                    // File stream base class
       "rb", "wb", "ab", "r+b", "w+b", "a+b"
     };
     // Send it to the posix file open call and accept it if successful
-    return fopen(strFile.c_str(), cplModes[fsmMode]);
+    return fopen(strFile.data(), cplModes[fsmMode]);
 #endif                                 // Operating system check
   }
   /* -- Check that already set members are valid --------------------------- */

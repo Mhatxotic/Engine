@@ -17,10 +17,9 @@ using namespace ILuaLib::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Class for collector class name in LUA -------------------------------- */
-class LuaIdent {
-  /* -- Private variables -------------------------------------------------- */
+class LuaIdent
+{ /* -- Private variables -------------------------------------------------- */
   const string_view svName;            // Name of class
-  /* -- Private variables ----------------------------------------- */ private:
   const int        &iRef;              // Reference to namespace in Lua
   /* -- Get reference ---------------------------------------------- */ public:
   int LuaIdentGetRef() const { return iRef; }
@@ -29,7 +28,7 @@ class LuaIdent {
   /* -- Get string view name of class -------------------------------------- */
   const string_view &LuaIdentStr() const { return svName; }
   /* -- Constructor --------------------------------------------- */ protected:
-  explicit LuaIdent(const string_view svNName, const LuaClassId lciId) :
+  LuaIdent(const string_view svNName, const LuaClassId lciId) :
     /* --------------------------------------------------------------------- */
     svName{ svNName },                 // Set name of class
     iRef(llcirAPI[lciId])              // Alias Lua class reference storage

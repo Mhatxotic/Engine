@@ -68,7 +68,7 @@ static unsigned int SysMessage(void*const vpHandle, const string &strTitle,
   const string &strMessage, const unsigned int uiFlags)
     { return static_cast<unsigned int>(
         MessageBoxExW(reinterpret_cast<HWND>(vpHandle),
-          UTFtoS16(strMessage).c_str(), UTFtoS16(strTitle).c_str(),
+          UTFtoS16(strMessage).data(), UTFtoS16(strTitle).data(),
           static_cast<DWORD>(uiFlags), 0)); }
 /* -- Set thread priority -------------------------------------------------- */
 static bool SysSetThreadPriority(const SysThread stLevel)
@@ -109,11 +109,11 @@ static unsigned int SysMessage(void*const, const string &strTitle,
   typedef unique_ptr<const void, function<decltype(CFRelease)>> CFAutoRelPtr;
   // Setup dialogue title string with autorelease and if succeeded?
   if(const CFAutoRelPtr csrTitle{
-    CFStringCreateWithCString(kCFAllocatorDefault, strTitle.c_str(),
+    CFStringCreateWithCString(kCFAllocatorDefault, strTitle.data(),
       kCFStringEncodingUTF8), CFRelease })
     // Setup dialogue message string with autorelease and if succeeded?
     if(const CFAutoRelPtr csrMessage{
-      CFStringCreateWithCString(kCFAllocatorDefault, strMessage.c_str(),
+      CFStringCreateWithCString(kCFAllocatorDefault, strMessage.data(),
         kCFStringEncodingUTF8), CFRelease })
       // Setup button text string with autorelease and if succeeded?
       if(const CFAutoRelPtr csrButton{
@@ -152,8 +152,8 @@ static unsigned int SysMessage(void*const, const string &strTitle,
         }
       }
   // Didn't work so put in stdout
-  fwprintf(stderr, L"%ls: %ls\n", UtfDecoder{ strTitle }.Wide().c_str(),
-                                  UtfDecoder{ strMessage }.Wide().c_str());
+  fwprintf(stderr, L"%ls: %ls\n", UtfDecoder{ strTitle }.Wide().data(),
+                                  UtfDecoder{ strMessage }.Wide().data());
   // If exited successfully? Return success
   return 0;
 }
@@ -198,7 +198,7 @@ static bool SysSetThreadPriority(const SysThread stLevel)
 static unsigned int SysMessage(void*const, const string &strTitle,
   const string &strMessage, const unsigned int uiFlags)
 { // Print the error in console
-  fprintf(stderr, "%s: %s\n", strTitle.c_str(), strMessage.c_str());
+  fprintf(stderr, "%s: %s\n", strTitle.data(), strMessage.data());
   // Eligable directories for dialog box elf binaries
   const array<const string_view, 10> strvaDirPrefixes{
     "/bin/",             "/usr/bin/",        "/usr/sbin/",
@@ -238,7 +238,7 @@ static unsigned int SysMessage(void*const, const string &strTitle,
           cCommon->CommonBlank() : StrFormat("$\"$\"",
             dbaApp.strvMessageParam, strMessage))) };
       // Now execute and break if successful
-      if(!system(strCmdLine.c_str())) return 0;
+      if(!system(strCmdLine.data())) return 0;
     }
   } // Return status code
   return 0;

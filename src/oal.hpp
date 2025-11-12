@@ -68,10 +68,8 @@ class Oal :                            // Actual class body
   ALuint           uiMaxStereoSources, // Maximum number of stereo sources
                    uiMaxMonoSources;   // Maximum number of mono sources
   /* ----------------------------------------------------------------------- */
-  string           strVersion,         // String version of OpenAL
-                   strPlayback;        // String playback device
-  ALuint           uiVersionMajor,     // Major version of OpenAL
-                   uiVersionMinor;     // Minor version of OpenAL
+  string           strVersion;         // String version of OpenAL
+  string_view      strvPlayback;       // String playback device
   /* ----------------------------------------------------------------------- */
   ALCdevice       *alcDevice;          // OpenAL device
   ALCcontext      *alcContext;         // OpenAL context
@@ -300,7 +298,7 @@ class Oal :                            // Actual class body
   bool Have32FPPB() const { return FlagIsSet(AFL_HAVE32FPPB); }
   /* -- Get openAL string -------------------------------------------------- */
   template<typename CStrType=ALchar>
-    const CStrType *LuaUtilGetStr(const ALenum eId) const
+    const CStrType *GetString(const ALenum eId) const
   { // Get the variable and throw error if occured
     const ALchar*const ucpStr = alGetString(eId);
     IALC("Get string failed!", "Index", eId);
@@ -349,7 +347,7 @@ class Oal :                            // Actual class body
   ALuint GetMaxMonoSources() const { return uiMaxMonoSources; }
   ALuint GetMaxStereoSources() const { return uiMaxStereoSources; }
   /* -- Get current playback device ---------------------------------------- */
-  const string &GetPlaybackDevice() const { return strPlayback; }
+  const string_view &GetPlaybackDevice() const { return strvPlayback; }
   /* -- Return version information ----------------------------------------- */
   const string &GetVersion() const { return strVersion; }
   /* -- Set new HRTF setting ----------------------------------------------- */
@@ -403,7 +401,7 @@ class Oal :                            // Actual class body
   void UpdateDevice(ALCdevice*const alcNDevice) { alcDevice = alcNDevice; }
   /* -- Update playback device name ---------------------------------------- */
   void UpdatePlaybackDeviceName()
-    { strPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
+    { strvPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
         ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER); }
   /* -- Initialise device -------------------------------------------------- */
   bool InitDevice(const char *cpDevice)
@@ -449,6 +447,7 @@ class Oal :                            // Actual class body
     alcDestroyContext(alcContext);
     alcContext = nullptr;
     FlagClear(AFL_INITCONTEXT);
+    strvPlayback = cCommon->CommonNull();
     // Succeeded
     return true;
   }
@@ -460,12 +459,12 @@ class Oal :                            // Actual class body
     IAL(alcMakeContextCurrent(alcContext),
       "Failed to make OpenAL context current!");
     FlagSet(AFL_CONTEXTCURRENT);
-    // Add
     // Update playback device name
     UpdatePlaybackDeviceName();
     // Prepare version information
-    uiVersionMajor = GetInteger<decltype(uiVersionMajor)>(ALC_MAJOR_VERSION);
-    uiVersionMinor = GetInteger<decltype(uiVersionMinor)>(ALC_MINOR_VERSION);
+    const ALuint
+      uiVersionMajor = GetInteger<decltype(uiVersionMajor)>(ALC_MAJOR_VERSION),
+      uiVersionMinor = GetInteger<decltype(uiVersionMinor)>(ALC_MINOR_VERSION);
     strVersion = StrAppend(uiVersionMajor, '.', uiVersionMinor);
     // Need at least version 1.1 of OpenAL
     if(uiVersionMajor < 1 || (uiVersionMajor == 1 && uiVersionMinor < 1))
@@ -488,10 +487,11 @@ class Oal :                            // Actual class body
         uiMaxMonoSources = 255;
         uiMaxStereoSources = 1;
       } // Failed because no stereo sources
-      else XC("No mono source support on this device!", "Device", strPlayback);
+      else XC("No mono source support on this device!",
+              "Device", strvPlayback);
     } // Zero stereo sources? Failed because no mono sources
     else if(!uiMaxStereoSources)
-      XC("No stereo source support on this device!", "Device", strPlayback);
+      XC("No stereo source support on this device!", "Device", strvPlayback);
     // Check playback system event capabilities
     struct EventCapItem { const ALenum eEventType, eDeviceType;
                           const OalFlagsConst &ofcFlag; };
@@ -544,15 +544,17 @@ class Oal :                            // Actual class body
     FlagSet(AFL_INITIALISED);
     // Return if debug logging not enabled
     if(cLog->NotHasLevel(LH_DEBUG)) return;
-    // Build extensions list
-    const Token tlExtensions{
-      LuaUtilGetStr(AL_EXTENSIONS), cCommon->CommonSpace() };
     // Build sorted list of extensions and log them all
-    typedef pair<const string, const size_t> Pair;
+    typedef pair<const string_view, const size_t> Pair;
     typedef map<Pair::first_type, Pair::second_type> Map;
     Map mExts;
-    for(size_t stIndex = 0; stIndex < tlExtensions.size(); ++stIndex)
-      mExts.insert({ StdMove(tlExtensions[stIndex]), stIndex });
+    // Build extensions list
+    size_t stCount = 0;
+    Tokeniser<string_view>(GetString(AL_EXTENSIONS), cCommon->CommonSpace(),
+      [&mExts, &stCount](const string_view &strvExt){
+        mExts.insert({ StdMove(strvExt), stCount++ });
+      }
+    );
     // Log device info and basic capabilities
     cLog->LogNLCDebugExSafe(
       "- Head related transfer function: $.\n"
@@ -572,7 +574,7 @@ class Oal :                            // Actual class body
       StrFromBoolTF(FlagIsSet(AFL_HAVESECADDC)),
       StrFromBoolTF(FlagIsSet(AFL_HAVESECADA)),
       StrFromBoolTF(FlagIsSet(AFL_HAVESECADR)),
-      tlExtensions.size());
+      mExts.size());
     // Log extensions if debug is enabled
     for(const Pair &pExt : mExts)
       cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
@@ -611,8 +613,8 @@ class Oal :                            // Actual class body
     /* -- Initialisers ----------------------------------------------------- */
     uiMaxStereoSources(0),             // Stereo sources initialised later
     uiMaxMonoSources(0),               // Mono sources initialised later
-    uiVersionMajor(0),                 // Major version initialised later
-    uiVersionMinor(0),                 // Minor version initialised later
+    strvPlayback{                      // Blank playback device
+      cCommon->CommonNull() },         // Initialise with "null" text
     alcDevice(nullptr),                // Device not initialised yet
     alcContext(nullptr),               // Context not initialised yet
     eQuery(AL_NONE)                    // Query method not initialised yet

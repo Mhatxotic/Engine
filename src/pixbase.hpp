@@ -279,7 +279,7 @@ class SysBase :                        // Safe exception handler namespace
     rStdErr.ResetSafe();
 #endif
     // Print it to stderr
-    fputs(osS.str().c_str(), stderr);
+    fputs(osS.str().data(), stderr);
     // Dump mods to log
     DumpMods(osS);
     // Add trace header
@@ -438,7 +438,7 @@ class SysBase :                        // Safe exception handler namespace
       // Sent when we grow a file larger than the maximum allowed size.
       case SIGXFSZ: return DebugMessage("XFSZ (File size threshold)");
       // Unrecognised signal?
-      default: return DebugMessage(StrFormat("UNKNOWN<$>", iSignal).c_str());
+      default: return DebugMessage(StrFormat("UNKNOWN<$>", iSignal).data());
     }
   }
   /* ----------------------------------------------------------------------- */

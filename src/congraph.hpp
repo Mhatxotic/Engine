@@ -273,7 +273,7 @@ class ConGraphics :                    // Members initially private
       fboC.ffcStage.GetCoRight(), GetFontRef().dfScale.DimGetWidth(),
         reinterpret_cast<const GLubyte*>(StrFormat(">$\rc000000ff$\rr$",
         cConsole->GetConsoleBegin(), cCursor,
-        cConsole->GetConsoleEnd()).c_str()));
+        cConsole->GetConsoleEnd()).data()));
     // For each line or until we clip the top of the screen, print the text
     for(ConLinesConstRevIt clI{ cConsole->GetConBufPos() };
                            clI != cConsole->GetConBufPosEnd() && fY > 0.0f;
@@ -286,7 +286,7 @@ class ConGraphics :                    // Members initially private
       fY -= GetFontRef().PrintWU(fboC.ffcStage.GetCoLeft(), fY,
         fboC.ffcStage.GetCoRight(),
           GetFontRef().dfScale.DimGetWidth(), reinterpret_cast<const GLubyte*>
-            (clD.strLine.c_str()));
+            (clD.strLine.data()));
     } // Finish and render
     fboC.FboFinishAndRender();
     // Make sure the main fbo is updated

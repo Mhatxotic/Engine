@@ -70,7 +70,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
 #if defined(WINDOWS)                   // Using Windows?
   /* -- Open a stream ------------------------------------------------------ */
   WRes ArchiveOpenFile(CSzFile*const csfStream) const
-    { return InFile_OpenW(csfStream, UTFtoS16(IdentGet()).c_str()); }
+    { return InFile_OpenW(csfStream, UTFtoS16(IdentGet()).data()); }
   /* -- Get operating system specific handle ------------------------------- */
   Lib::OS::HANDLE ArchiveCFISToOSHandle(const CFileInStream &cfisStream) const
     { return cfisStream.file.handle; }
@@ -78,7 +78,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
 #else                                  // Linux or MacOS?
   /* -- Open a stream ------------------------------------------------------ */
   WRes ArchiveOpenFile(CSzFile*const csfStream) const
-    { return InFile_Open(csfStream, IdentGet().c_str()); }
+    { return InFile_Open(csfStream, IdentGet().data()); }
   /* -- Get operating system specific handle ------------------------------- */
   int ArchiveCFISToOSHandle(const CFileInStream &cfisStream) const
     { return cfisStream.file.fd; }
@@ -348,10 +348,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // how many files and directories there are individually so we'll reserve
     // memory for the maximum amount of entries in the 7-zip file. We'll shrink
     // this after to reclaim the memory
-    const size_t stFilesMaximum = suimcivFiles.max_size();
-    if(csaeData.NumFiles > stFilesMaximum)
+    if(csaeData.NumFiles > suimcivFiles.max_size())
       XC("Insufficient storage for file list!",
-         "Current", csaeData.NumFiles, "Maximum", stFilesMaximum);
+         "Current", csaeData.NumFiles, "Maximum", suimcivFiles.max_size());
     suimcivFiles.reserve(csaeData.NumFiles);
     // ...and same for the directories too.
     const size_t stDirsMaximum = suimcivDirs.max_size();
@@ -408,7 +407,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // Set filename without filename checking
     SyncInitFileDisk(strFile);
   }
-  /* -- For loading via lua ------------------------------------------------ */
+  /* -- Default constructor ------------------------------------------------ */
   Archive() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperArchive{ cArchives },      // Initialise collector with this obj

@@ -320,7 +320,7 @@ class Lua :                            // Actual class body
       llcirAPI[llRef.lciId] = iReference;
       // Push the name of the object for 'tostring()' LUA function.
       LuaUtilPushStrView(GetState(), llRef.strvName);
-      LuaUtilSetField(GetState(), -2, cCommon->CommonLuaName().c_str());
+      LuaUtilSetField(GetState(), -2, cCommon->CommonLuaName().data());
       // Set function methods so var:func() works.
       LuaUtilPushTable(GetState(), 0, llRef.iLLMFCount);
       luaL_setfuncs(GetState(), llRef.libmfList, 0);
@@ -386,7 +386,7 @@ class Lua :                            // Actual class body
         LuaUtilClassCreate<Variable>(GetState(), *cVariables)->
           InitInternal(cvmiIt);
         // Assign the id to the cvar name
-        LuaUtilSetField(GetState(), -2, cvmiIt->first.c_str());
+        LuaUtilSetField(GetState(), -2, cvmiIt->first.data());
       }
     // Push cvar id table into the core namespace
     LuaUtilSetField(GetState(), -2, "Internal");

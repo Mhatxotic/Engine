@@ -102,7 +102,7 @@ struct ShaderCore                      // Actual body
     AddVertexShaderWith3DTemplate(shS, strName, StrFormat("$"
       "v.x=-1.0+(((matrix.x+$(v.x))/matrix.z)*2.0);"  // X-coord
       "v.y=-1.0+(((matrix.y+$(v.y))/matrix.w)*2.0);", // Y-coord
-        cpCode, strSPRMethod, strSPRMethod).c_str());
+        cpCode, strSPRMethod, strSPRMethod).data());
   }
   /* -- Add vertex shader with template ------------------------------------ */
   void AddVertexShaderWith2DTemplate(Shader &shS, const string &strName)

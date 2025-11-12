@@ -408,7 +408,7 @@ class DirCore :                        // System specific implementation
     iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ?
       cCommon->CommonAsterisk() :
         StrAppend(StrTrimSuffix(strDir, '/'), '/',
-          cCommon->CommonAsterisk())).c_str(),
+          cCommon->CommonAsterisk())).data(),
       &wfData)),
     bMore(iHandle != -1)
     /* -- Process file if there are more ----------------------------------- */
@@ -445,7 +445,7 @@ class DirCore :                        // System specific implementation
     // Data for stat
     struct stat sfssData;
     // Get information about the filename
-    if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData))
+    if(stat(StrAppend(strPrefix, strFile).data(), &sfssData))
     { // Not a directory (unknown)
       bIsDir = false;
       // Set the file data as blank
@@ -471,7 +471,7 @@ class DirCore :                        // System specific implementation
       // Set filename
       strFile = dePtr->d_name;
       // Get information about the filename
-      if(stat(StrAppend(strPrefix, strFile).c_str(), &sfssData))
+      if(stat(StrAppend(strPrefix, strFile).data(), &sfssData))
       { // Not a directory (unknown)
         bIsDir = false;
         // Set the file data as blank
@@ -499,7 +499,7 @@ class DirCore :                        // System specific implementation
         StrTrimSuffix(strDir, '/'),    // Trim forward-slash trailing slashes
       cCommon->CommonFSlash()) },      // Add our own slash at the end
     dupHandle{                         // Initialise directory handle
-      opendir(strPrefix.c_str()) }     // Open the directory and store handle
+      opendir(strPrefix.data()) }     // Open the directory and store handle
     /* -- MacOS initialisers ----------------------------------------------- */
 # if defined(MACOS)                    // Initialise other vars on MacOS
     /* --------------------------------------------------------------------- */
@@ -592,7 +592,7 @@ static const string DirGetCWD()
     static_cast<int>(wstrDir.capacity())))
       throw runtime_error{ "getcwd() failed!" };
   // Resize and recover memory
-  wstrDir.resize(wcslen(wstrDir.c_str()));
+  wstrDir.resize(wcslen(wstrDir.data()));
   // Return directory replacing backslashes for forward slashes
   return PSplitBackToForwardSlashes(WS16toUTF(wstrDir));
 #else
@@ -602,7 +602,7 @@ static const string DirGetCWD()
   if(!getcwd(const_cast<char*>(strDir.data()), strDir.capacity()))
     throw runtime_error{ "getcwd() failed!" };
   // Resize and recover memory
-  strDir.resize(strlen(strDir.c_str()));
+  strDir.resize(strlen(strDir.data()));
   strDir.shrink_to_fit();
   // Return directory
   return strDir;

@@ -188,6 +188,14 @@ LLFUNC(Exists, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS,1})))
 // ? written.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->Save()))
+/* ========================================================================= */
+// $ Variable.Valid
+// > Var:string=Cvar name to test.
+// < Valid:boolean=Cvar name is valid.
+// ? Returns true if the cvar name is valid, false if not.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Valid, 1, LuaUtilPushVar(lS,
+  cCVars->IsValidVariableName(AgString{lS,1})))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Variable.* namespace functions structure                            ## **
@@ -195,6 +203,7 @@ LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->Save()))
 ** ========================================================================= */
 LLRSBEGIN                              // Variable.* namespace functions begin
   LLRSFUNC(Count), LLRSFUNC(Exists), LLRSFUNC(Register), LLRSFUNC(Save),
+  LLRSFUNC(Valid),
 LLRSEND                                // Variable.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

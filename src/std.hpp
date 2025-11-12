@@ -104,7 +104,7 @@ const string S16toUTF(const wchar_t*const wcpStr)
   { return UtfFromWide(wcpStr); }
 /* -- Convert STL widestring to utf8 --------------------------------------- */
 const string WS16toUTF(const wstring &wstrStr)
-  { return S16toUTF(wstrStr.c_str()); }
+  { return S16toUTF(wstrStr.data()); }
 /* -- Convert UTF c-string to STL widestring ------------------------------- */
 const wstring UTFtoS16(const char*const cpPtr)
   { return UtfDecoder{ cpPtr }.Wide(); };
@@ -118,14 +118,14 @@ const wstring UTFtoS16(const string_view &strvStr)
 static int StdAccess(const wchar_t*const wcpPath, const int iMode)
   { return _waccess(wcpPath, iMode); }
 static int StdAccess(const wstring &wstrPath, const int iMode)
-  { return StdAccess(wstrPath.c_str(), iMode); }
+  { return StdAccess(wstrPath.data(), iMode); }
 static int StdAccess(const string &strPath, const int iMode)
   { return StdAccess(UTFtoS16(strPath), iMode); }
 /* -- Wrapper for mkdir() function ----------------------------------------- */
 static int StdMkDir(const wchar_t*const wcpPath)
   { return _wmkdir(wcpPath); }
 static int StdMkDir(const wstring &wstrPath)
-  { return StdMkDir(wstrPath.c_str()); }
+  { return StdMkDir(wstrPath.data()); }
 static int StdMkDir(const string &strPath)
   { return StdMkDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wrename() function -------------------------------------- */
@@ -135,7 +135,7 @@ static int StdRename(const wchar_t*const wcpSrcPath,
 /* -- Wrapper for _wrename() function (wstring version) -------------------- */
 static int StdRename(const wstring &wstrSrcPath,
   const wstring &wstrDstPath)
-    { return StdRename(wstrSrcPath.c_str(), wstrDstPath.c_str()); }
+    { return StdRename(wstrSrcPath.data(), wstrDstPath.data()); }
 /* -- Wrapper for _wrename() function (utf string version) ----------------- */
 static int StdRename(const string &strSrcPath, const string &strDstPath)
   { return StdRename(UTFtoS16(strSrcPath), UTFtoS16(strDstPath)); }
@@ -143,21 +143,21 @@ static int StdRename(const string &strSrcPath, const string &strDstPath)
 static int StdRmDir(const wchar_t*const wcpPath)
   { return _wrmdir(wcpPath); }
 static int StdRmDir(const wstring &wstrPath)
-  { return StdRmDir(wstrPath.c_str()); }
+  { return StdRmDir(wstrPath.data()); }
 static int StdRmDir(const string &strPath)
   { return StdRmDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wchdir() function --------------------------------------- */
 static int StdChDir(const wchar_t*const wcpPath)
   { return _wchdir(wcpPath); }
 static int StdChDir(const wstring &wstrPath)
-  { return StdChDir(wstrPath.c_str()); }
+  { return StdChDir(wstrPath.data()); }
 static int StdChDir(const string &strPath)
   { return StdChDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wunlink() function -------------------------------------- */
 static int StdUnlink(const wchar_t*const wcpPath)
   { return _wunlink(wcpPath); }
 static int StdUnlink(const wstring &wstrPath)
-  { return StdUnlink(wstrPath.c_str()); }
+  { return StdUnlink(wstrPath.data()); }
 static int StdUnlink(const string &strPath)
   { return StdUnlink(UTFtoS16(strPath)); }
 /* -- Wrapper for _wexecve() stdlib function ------------------------------- */
@@ -177,7 +177,7 @@ static int StdFStat(const wchar_t*const wcpPath,
     { return _wstat64(wcpPath, sDestBuffer);  }
 static int StdFStat(const wstring &wstrPath,
   StdFStatStruct*const sDestBuffer)
-    { return StdFStat(wstrPath.c_str(), sDestBuffer);  }
+    { return StdFStat(wstrPath.data(), sDestBuffer);  }
 static int StdFStat(const string &strPath,
   StdFStatStruct*const sDestBuffer)
     { return StdFStat(UTFtoS16(strPath), sDestBuffer);  }
@@ -207,7 +207,7 @@ static FILE *StdPOpen(const wchar_t*const wcpCommand,
   const wchar_t*const wcpType=L"rt") { return _wpopen(wcpCommand, wcpType); }
 static FILE *StdPOpen[[maybe_unused]](const wstring &wstrCommand,
   const wchar_t*const wcpType=L"rt")
-    { return StdPOpen(wstrCommand.c_str(), wcpType); }
+    { return StdPOpen(wstrCommand.data(), wcpType); }
 static FILE *StdPOpen[[maybe_unused]](const string &strCommand,
   const wchar_t*const wcpType=L"rt")
     { return StdPOpen(UTFtoS16(strCommand), wcpType); }
@@ -241,31 +241,31 @@ constexpr const char *S16toUTF(const char*const cpPtr) { return cpPtr; }
 static int StdAccess(const char*const cpPath, const int iMode)
   { return access(cpPath, iMode); }
 static int StdAccess(const string &strPath, const int iMode)
-  { return StdAccess(strPath.c_str(), iMode); }
+  { return StdAccess(strPath.data(), iMode); }
 /* -- Wrapper for mkdir() function ----------------------------------------- */
 static int StdMkDir(const char*const cpPath)
   { return mkdir(cpPath,
       S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH); }
 static int StdMkDir(const string &strPath)
-  { return StdMkDir(strPath.c_str()); }
+  { return StdMkDir(strPath.data()); }
 /* -- Wrapper for rename() function ---------------------------------------- */
 static int StdRename(const char*const cpSrcPath,
   const char*const cpDstPath)
     { return rename(cpSrcPath, cpDstPath); }
 static int StdRename(const string &strSrcPath, const string &strDstPath)
-  { return StdRename(strSrcPath.c_str(), strDstPath.c_str()); }
+  { return StdRename(strSrcPath.data(), strDstPath.data()); }
 /* -- Wrapper for rmdir() function ----------------------------------------- */
 static int StdRmDir(const char*const cpPath) { return rmdir(cpPath); }
 static int StdRmDir(const string &strPath)
-  { return StdRmDir(strPath.c_str()); }
+  { return StdRmDir(strPath.data()); }
 /* -- Wrapper for chdir() function ----------------------------------------- */
 static int StdChDir(const char*const cpPath) { return chdir(cpPath); }
 static int StdChDir(const string &strPath)
-  { return StdChDir(strPath.c_str()); }
+  { return StdChDir(strPath.data()); }
 /* -- Wrapper for unlink() function ---------------------------------------- */
 static int StdUnlink(const char*const cpPath) { return unlink(cpPath); }
 static int StdUnlink(const string &strPath)
-  { return StdUnlink(strPath.c_str()); }
+  { return StdUnlink(strPath.data()); }
 /* -- Wrapper for execve() stdlib function --------------------------------- */
 static int StdExecVE(const char*const cpaArg[],
   const char*const cpaEnv[])
@@ -284,7 +284,7 @@ static int StdFStat(const char*const cpPath,
     { return stat(cpPath, sDestBuffer);  }
 static int StdFStat(const string &strPath,
   StdFStatStruct*const sDestBuffer)
-    { return StdFStat(strPath.c_str(), sDestBuffer);  }
+    { return StdFStat(strPath.data(), sDestBuffer);  }
 /* -- Wrapper for fseek() function ----------------------------------------- */
 static int StdFSeek(FILE*const fStream, const off_t otOffset,
   int iWhence)
@@ -311,7 +311,7 @@ static FILE *StdPOpen(const char*const cpCommand,
     { return popen(cpCommand, cpType); }
 static FILE *StdPOpen[[maybe_unused]](const string &strCommand,
   const char*const cpType="r")
-    { return StdPOpen(strCommand.c_str(), cpType); }
+    { return StdPOpen(strCommand.data(), cpType); }
 /* -- Wrapper for pclose() function ---------------------------------------- */
 static int StdPClose[[maybe_unused]](FILE*const fStream)
   { return pclose(fStream); }

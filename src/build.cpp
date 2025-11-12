@@ -578,9 +578,9 @@ static const string StrGetReturnFormat(const string &strIn)
 { // String is not empty?
   if(!strIn.empty())
   { // Enumerate each character...
-    for(string::const_iterator ciC{ strIn.cbegin() };
-                               ciC != strIn.cend();
-                             ++ciC)
+    for(StringConstIt ciC{ strIn.cbegin() };
+                      ciC != strIn.cend();
+                    ++ciC)
     { // Test character
       switch(*ciC)
       { // Carriage-return found
@@ -1786,7 +1786,7 @@ static void PatchIcon(const string &strIco, const string &strOut)
     stPos += sizeof(ICONDIRENT);
   }
   // Open executable for resource writing
-  HANDLE hExeFile = BeginUpdateResourceW(UTFtoS16(strOut).c_str(), FALSE);
+  HANDLE hExeFile = BeginUpdateResourceW(UTFtoS16(strOut).data(), FALSE);
   if(hExeFile == INVALID_HANDLE_VALUE)
     XCS("Failed to open executable for updating resource!",
         "File", strOut);
@@ -2177,7 +2177,7 @@ static void PatchChecksum(const string &strOut)
        "Actual", static_cast<unsigned int>(PEHDR.Signature));
   // Get actual CRC of executable. If call failed? Bail
   DWORD HS, CS;
-  if(MapFileAndCheckSumW(UTFtoS16(strOut).c_str(), &HS, &CS) != S_OK)
+  if(MapFileAndCheckSumW(UTFtoS16(strOut).data(), &HS, &CS) != S_OK)
     XCS("Failed to map executable file and checksum!",
         "File", strOut, "Headersum", static_cast<unsigned int>(HS),
                         "Checksum",  static_cast<unsigned int>(CS));
@@ -2323,7 +2323,7 @@ static int BuildDistro()
       "</plist>\n",
       strName, ENGINENAME, strName, strTitle, strVer, uiVer[3],
       strAuthor, cmSys.FormatTime("%Y")))
-        throw runtime_error{ strPList.c_str() };
+        throw runtime_error{ strPList.data() };
     // Convert icons
     const struct _iconlist { const int i; const char *s; } iconlist[] = {
       {  16,"icon_16x16.png"   }, {   32,"icon_16x16@2x.png"   },
@@ -2399,7 +2399,7 @@ static int CertGen()
           static_cast<int>(strLine.capacity()), fp);
     strLine.resize(strLine.capacity()))
   { // Update size of string because we bypassed C++ functions
-    strLine.resize(strlen(strLine.c_str()));
+    strLine.resize(strlen(strLine.data()));
     // Remove any extra suffixed control characters
     while(!strLine.empty() && strLine[strLine.length()-1] < 32)
       strLine.pop_back();
@@ -2581,7 +2581,7 @@ static void ReplaceTextMulti(const string &strFile,
        "File", strFile, "Entries", ssplPairs.size());
   // Write file with new changes and close it
   fsFile.FStreamOpen(strFile, FM_W_B);
-  if(!fsFile.FStreamOpened()) throw runtime_error{ strFile.c_str() };
+  if(!fsFile.FStreamOpened()) throw runtime_error{ strFile.data() };
   fsFile.FStreamWriteString(strNew);
   fsFile.FStreamClose();
   // Write what we found
@@ -2889,7 +2889,7 @@ static void SetupTarRepoNSD(const string &strLibPath, const string &strTmp,
 { // Must have .tar. in filename
   if(strLibPath.find(".tar.") == StdNPos)
     throw runtime_error{
-      StrFormat("Archive '$' must contain '.tar.'!", strLibPath).c_str() };
+      StrFormat("Archive '$' must contain '.tar.'!", strLibPath).data() };
   // Make .tar file name
   const string strTar{ StrAppend(strTmp, '/', strPSFile) };
   // Extract the .gz to the temporary directory
@@ -3398,9 +3398,9 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Remove some sources we don't need
     System("rm -rf core/mixer/mixer_neon.cpp core/rtkit.* core/dbus_wrap.*");
     // Don't put messages in debugger
-    ReplaceText("core/logging.cpp", "OutputDebugStringW(wstr.c_str());",
+    ReplaceText("core/logging.cpp", "OutputDebugStringW(wstr.data());",
       "\n#ifdef _DEBUG\n"
-      "  OutputDebugStringW(wstr.c_str());\n"
+      "  OutputDebugStringW(wstr.data());\n"
       "#endif");
     // Rename mixer_inc.cpp to h
     ReplaceText("core/mixer/mixer_c.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
@@ -3923,7 +3923,7 @@ static void GotNewBuildExecutable(const string &strOldExe,
       { // Convert new exe to widestring
         const wstring wstrNewExe{ UTFtoS16(strNewExe) };
         // Get environment and modify first parameter
-        const ArgType *const lArgs[] = { wstrNewExe.c_str(), L"!", nullptr };
+        const ArgType *const lArgs[] = { wstrNewExe.data(), L"!", nullptr };
         const ArgType *const *lEnv = cCmdLine->CmdLineGetCEnv();
         // Execute the new program
         const int iCode = StdExecVE(lArgs, lEnv);

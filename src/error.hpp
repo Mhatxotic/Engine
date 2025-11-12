@@ -269,7 +269,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
       VarArgs &&...vaArgs)
   { Str(cpName, "StrV", strvV); Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Get message ------------------------------------------------ */ public:
-  virtual const char *what() const noexcept override { return c_str(); }
+  virtual const char *what() const noexcept override { return data(); }
   /* -- Prepare error message constructor with C-string--------------------- */
   template<typename ...VarArgs>
     Error(const char*const cpErr, VarArgs &&...vaArgs)

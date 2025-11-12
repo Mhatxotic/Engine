@@ -120,7 +120,7 @@ namespace H                            // Private functions
       // Stream to write to
       ostringstream osS;
       // StrFormat the text
-      Param(osS, strS.c_str(), StdForward<VarArgs>(vaArgs)...);
+      Param(osS, strS.data(), StdForward<VarArgs>(vaArgs)...);
       // Return formated text
       return osS.str();
     }
@@ -230,24 +230,24 @@ static const string StrFromErrNo(const int iErrNo=errno)
 #if defined(WINDOWS)
   // 'https://msdn.microsoft.com/en-us/library/51sah927.aspx' says:
   // "Your string message can be, at most, 94 characters long."
-  if(strerror_s(const_cast<char*>(strErr.c_str()), strErr.capacity(), iErrNo))
+  if(strerror_s(const_cast<char*>(strErr.data()), strErr.capacity(), iErrNo))
     strErr.assign(StrAppend("Error ", iErrNo));
   // Targeting MacOS?
 #elif defined(MACOS)
   // Grab the error result and if failed? Just put in the error number continue
-  if(strerror_r(iErrNo, const_cast<char*>(strErr.c_str()), strErr.capacity()))
+  if(strerror_r(iErrNo, const_cast<char*>(strErr.data()), strErr.capacity()))
     strErr.assign(StrAppend("Error ", iErrNo));
   // Linux?
 #elif defined(LINUX)
   // Grab the error result and if failed? Set a error and continue
   const char*const cpResult =
-    strerror_r(iErrNo, const_cast<char*>(strErr.c_str()), strErr.capacity());
+    strerror_r(iErrNo, const_cast<char*>(strErr.data()), strErr.capacity());
   if(!cpResult) strErr = StrAppend("Error ", iErrNo);
   // We got a message but if was not put in our buffer just return as is
-  else if(cpResult != strErr.c_str()) return cpResult;
+  else if(cpResult != strErr.data()) return cpResult;
 #endif
   // Resize and compact the buffer
-  strErr.resize(strlen(strErr.c_str()));
+  strErr.resize(strlen(strErr.data()));
   strErr.shrink_to_fit();
   // Have to do this because the string is still actually 94 bytes long
   return strErr;
@@ -355,7 +355,7 @@ template<class ListType=StrPairList>
     { // Get string to find
       const string &strWhat = ltiItem.first;
       // Last cut position and current character index
-      if(strncmp(strDest.c_str()+stPos, strWhat.data(), strWhat.length()))
+      if(strncmp(strDest.data()+stPos, strWhat.data(), strWhat.length()))
         continue;
       // Get string to replace with
       const string &strWith = ltiItem.second;
@@ -599,7 +599,7 @@ template<class AnyArray, class CtrType = typename AnyArray::value_type>
   if(sstSize - sstBegin != 1)
   { // Build command string from vector
     copy(next(aArray.cbegin(), sstBegin), prev(aArray.cend(), 1),
-      ostream_iterator<CtrType>(osS, strSep.c_str()));
+      ostream_iterator<CtrType>(osS, strSep.data()));
     // Add final item
     osS << *aArray.crbegin();
   } // Just access the one directly

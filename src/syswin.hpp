@@ -44,7 +44,7 @@ class SysProcess :                     // Need this before of System init order
   static BOOL WINAPI EnumWindowsProc(HWND hH, LPARAM lP)
   { // Get title of window and cancel if empty
     wstring wstrT(GetWindowTextLength(hH), 0);
-    if(!GetWindowText(hH, const_cast<LPWSTR>(wstrT.c_str()),
+    if(!GetWindowText(hH, const_cast<LPWSTR>(wstrT.data()),
       static_cast<DWORD>(wstrT.capacity())))
         return TRUE;
     // If there is not enough characters in this windows title or the title
@@ -97,11 +97,11 @@ class SysProcess :                     // Need this before of System init order
     // available so we'll keep it simple and use the full path name to
     // the executable.
     wstrName.resize(UtilMaximum(GetModuleFileName(nullptr,
-      const_cast<LPWSTR>(wstrName.c_str()),
+      const_cast<LPWSTR>(wstrName.data()),
       static_cast<DWORD>(wstrName.capacity())) - 4, 0));
     wstrName.append(L".crt");
     // Create a file with the above name and just return if failed
-    HANDLE hH = CreateFile(wstrName.c_str(), GENERIC_WRITE,
+    HANDLE hH = CreateFile(wstrName.data(), GENERIC_WRITE,
       FILE_SHARE_READ|FILE_SHARE_WRITE, 0, CREATE_ALWAYS,
       FILE_ATTRIBUTE_NORMAL, 0);
     if(hH == INVALID_HANDLE_VALUE) return;
@@ -244,7 +244,7 @@ class SysProcess :                     // Need this before of System init order
   { // Convert UTF title to wide string
     const wstring wstrTitle{ UTFtoS16(strvTitle) };
     // Create the global mutex handle with the specified name and check error
-    hMutex = CreateMutex(nullptr, FALSE, wstrTitle.c_str());
+    hMutex = CreateMutex(nullptr, FALSE, wstrTitle.data());
     switch(const DWORD dwResult = SysErrorCode<DWORD>())
     { // No error, continue
       case 0: return true;
@@ -579,7 +579,7 @@ class SysCore :
           cpExport); }
   /* -- Load the specified .dll -------------------------------------------- */
   static void *LibLoad(const char*const cpFileName) { return
-    reinterpret_cast<void*>(LoadLibraryEx(UTFtoS16(cpFileName).c_str(),
+    reinterpret_cast<void*>(LoadLibraryEx(UTFtoS16(cpFileName).data(),
       nullptr, 0)); }
   /* -- Get full pathname to the library ----------------------------------- */
   const string LibGetName(void*const vpModule,
@@ -744,7 +744,7 @@ class SysCore :
       wstring wstrP; wstrP.resize(MAX_PATH);
       // Put filename of file in string and resize string to amount returned
       wstrP.resize(GetModuleFileNameEx(hProcess, hH,
-        const_cast<LPWSTR>(wstrP.c_str()),
+        const_cast<LPWSTR>(wstrP.data()),
         static_cast<DWORD>(wstrP.capacity())));
       // ...and if empty, ignore (doubtful)
       if(wstrP.empty()) continue;
@@ -759,10 +759,10 @@ class SysCore :
   { // To hold path name
     wstring wstrP; wstrP.resize(MAX_PATH);
     // Get folder path name
-    SHGetSpecialFolderPath(nullptr, const_cast<wchar_t*>(wstrP.c_str()),
+    SHGetSpecialFolderPath(nullptr, const_cast<wchar_t*>(wstrP.data()),
       iCSIDL, true);
     // Resize string to length. Shame the API doesn't return the length :-(
-    wstrP.resize(wcslen(wstrP.c_str()));
+    wstrP.resize(wcslen(wstrP.data()));
     // Return pathname
     return wstrP;
   }
@@ -886,7 +886,7 @@ class SysCore :
   { // Get this executables checksum and show error if failed
     DWORD dwHeaderSum, dwCheckSum;
     if(const DWORD dwResult =
-         MapFileAndCheckSum(UTFtoS16(ENGFull()).c_str(),
+         MapFileAndCheckSum(UTFtoS16(ENGFull()).data(),
            &dwHeaderSum, &dwCheckSum))
       XCS("Error reading the executable checksum!",
           "Executable", ENGFull(), "Result", dwResult);

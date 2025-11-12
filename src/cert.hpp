@@ -371,7 +371,7 @@ static const string CertGetSubject(const Certs::X509Pair &caPair)
     const_cast<char*>(strD.data()), static_cast<int>(strD.length())))
       return {};
   // Resize and return string
-  strD.resize(strlen(strD.c_str()));
+  strD.resize(strlen(strD.data()));
   return strD;
 }
 /* ------------------------------------------------------------------------- */

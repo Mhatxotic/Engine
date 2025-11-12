@@ -1144,7 +1144,7 @@ class Display :                        // Actual class body
   }
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Display, DeInit())
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Default constructor ------------------------------------------------ */
   Display() :
     /* --------------------------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Send name to init helper

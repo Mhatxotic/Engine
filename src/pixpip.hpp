@@ -125,7 +125,7 @@ class SysPipe :
     char**const cpaArgV = cvArgs.data(), **cpaArgVPtr = cpaArgV;
     for(const string &strArg : aList)
     { // Set address of argument string
-      *cpaArgVPtr = const_cast<char*>(strArg.c_str());
+      *cpaArgVPtr = const_cast<char*>(strArg.data());
       // Goto next argument to write to
       ++cpaArgVPtr;
     } // De-init existing process

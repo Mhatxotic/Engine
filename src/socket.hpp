@@ -456,7 +456,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Create connection with select used to monitor for timeout ---------- */
   ThreadStatus DoConnect()
   { // Set hostname (always returns 1).
-    if(CryptBIOSetConnHostname(bioPtr, GetAddressAndPort().c_str()) != 1)
+    if(CryptBIOSetConnHostname(bioPtr, GetAddressAndPort().data()) != 1)
       return SetErrorSafe("Resolve failed");
     // Log and do secure connection
     SocketLogSafe(LH_DEBUG, "$onnecting...", IsSecure() ? "Securely c" : "C");
@@ -564,11 +564,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       if(!sslctxPtr) return SetErrorSafe("Init TLS failed");
       // Set cipher options
       if(!strCipherSuite.empty())
-        if(!SSL_CTX_set_ciphersuites(sslctxPtr, strCipherSuite.c_str()))
+        if(!SSL_CTX_set_ciphersuites(sslctxPtr, strCipherSuite.data()))
           return SetErrorStaticSafe("Invalid cipher suite");
       // Set ciphers supported, and if failed? Just show warning
       if(!strCipherList.empty())
-        if(!SSL_CTX_set_cipher_list(sslctxPtr, strCipherList.c_str()))
+        if(!SSL_CTX_set_cipher_list(sslctxPtr, strCipherList.data()))
           return SetErrorStaticSafe("Invalid cipher list");
       // Set context to release buffers as we don't reuse the contexts
       SSL_CTX_set_mode(sslctxPtr, SSL_MODE_RELEASE_BUFFERS);
@@ -654,7 +654,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
             SocketLogSafe(LH_WARNING,
               "Failed to setup OCSP verification argument!");
       } // Set SNI hostname. Some sites break if this is not set
-      if(!CryptSSLSetTlsExtHostName(sslPtr, strAddr.c_str()))
+      if(!CryptSSLSetTlsExtHostName(sslPtr, strAddr.data()))
         return SetErrorStaticSafe("Init TLS SNI hostname failed");
       // Log and do secure connection
       if(DoConnect() == TS_ERROR) return TS_ERROR;
@@ -1162,9 +1162,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           // sure to include the null-terminator so we can use string_view for
           // when LUA grabs the list.
           PushData(plTX, stTX,
-            StrToLowCaseRef(UtilToNonConst(sncsmpPair.first)).c_str(),
+            StrToLowCaseRef(UtilToNonConst(sncsmpPair.first)).data(),
             sncsmpPair.first.size()+1);
-          PushData(plTX, stTX, sncsmpPair.second.c_str(),
+          PushData(plTX, stTX, sncsmpPair.second.data(),
             sncsmpPair.second.size()+1);
         }
       });

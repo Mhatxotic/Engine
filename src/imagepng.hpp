@@ -40,7 +40,7 @@ class CodecPNG :                       // PNG codec object
     if(stRead == stC) return;
     // Error occured so longjmp()
     png_error(psD, StrFormat("Read only $ of the $ requested bytes",
-      stRead, stC).c_str());
+      stRead, stC).data());
   }
   /* -- Save png file ---------------------------------------------- */ public:
   bool Encode(const FStream &fmData, const ImageData &idData,
@@ -90,7 +90,7 @@ class CodecPNG :                       // PNG codec object
       void Meta(const char*const cpK, const char*cpV)
         { Meta(cpK, cpV, strlen(cpV)); }
       void Meta(const char*const cpK, const string &strV)
-        { Meta(cpK, strV.c_str(), strV.length()); }
+        { Meta(cpK, strV.data(), strV.length()); }
       void Meta(const char*const cpK, const string_view &strvV)
         { Meta(cpK, strvV.data(), strvV.length()); }
       // Constructor

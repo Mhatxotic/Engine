@@ -325,7 +325,8 @@ class Log :                            // The actual class body
     return MutexCall([this, stL](){
       // Current size is over the new maximum? Trim the oldest entries out
       if(size() > stMaximum)
-        erase(begin(), next(begin(), static_cast<ssize_t>(size() - stMaximum)));
+        erase(begin(),
+          next(begin(), static_cast<ssize_t>(size() - stMaximum)));
       // Set new maximum and return success
       stMaximum = stL;
       return ACCEPT;

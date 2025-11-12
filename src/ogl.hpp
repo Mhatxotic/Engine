@@ -9,17 +9,17 @@
 /* ------------------------------------------------------------------------- */
 namespace IOgl {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IError::P;             using namespace IEvtWin::P;
-using namespace IFboDef::P;            using namespace IFlags;
-using namespace IGlFW::P;              using namespace IGlFWUtil::P;
-using namespace IHelper::P;            using namespace IIdent::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace IClock::P;             using namespace ICommon::P;
+using namespace ICVar::P;              using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace IError::P;
+using namespace IEvtWin::P;            using namespace IFboDef::P;
+using namespace IFlags;                using namespace IGlFW::P;
+using namespace IGlFWUtil::P;          using namespace IHelper::P;
+using namespace IIdent::P;             using namespace ILog::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITexDef::P;            using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
@@ -106,9 +106,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
                    qwTotalVRAM,        // Maximum VRAM supported
                    qwFreeVRAM;         // Current VRAM available
   ClkDuration      cdLimit;            // Frame limit based on refresh rate
-  string           strRenderer,        // GL renderer string
-                   strVersion,         // GL version string
-                   strVendor;          // GL vendor string
+  string_view      strvRenderer,       // GL renderer string
+                   strvVersion,        // GL version string
+                   strvVendor;         // GL vendor string
   /* -- Delayed destruction ------------------------------------------------ */
   /* Because LUA garbage collection could zap a texture or fbo class at any  */
   /* time, we need to delay deletion of textures and FBO handles in OpenGL   */
@@ -211,9 +211,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Load GL capabilities ----------------------------------------------- */
   void DetectCapabilities()
   { // Current current OpenGL strings
-    strVendor = LuaUtilGetStr<char>(GL_VENDOR);
-    strRenderer = LuaUtilGetStr<char>(GL_RENDERER);
-    strVersion = LuaUtilGetStr<char>(GL_VERSION);
+    strvRenderer = GetString<char>(GL_RENDERER);
+    strvVersion = GetString<char>(GL_VERSION);
+    strvVendor = GetString<char>(GL_VENDOR);
     // Get vendor specific memory info extensions
     SetFlagExt("GL_NVX_gpu_memory_info", GFL_HAVENVMEM);
     SetFlagExt("GL_ATI_meminfo", GFL_HAVEATIMEM);
@@ -789,7 +789,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
           GetIntegerArray<sizeof(IntegerType) / sizeof(GLint)>(eId)[0]); }
   /* -- Get openGL string -------------------------------------------------- */
   template<typename PtrType = GLubyte>
-    const PtrType* LuaUtilGetStr(const GLenum eId) const
+    const PtrType* GetString(const GLenum eId) const
   { // Get the variable and throw error if occured
     const GLubyte*const ucpStr = sAPI.glGetString(eId);
     IGLC("Get string failed!", "Index", eId);
@@ -971,9 +971,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { return reinterpret_cast<const char*>
         (sAPI.glGetStringi(GL_EXTENSIONS, uiI)); }
   /* -- Read OpenGL renderer data ------------------------------------------ */
-  const string &GetVendor() const { return strVendor; }
-  const string &GetRenderer() const { return strRenderer; }
-  const string &GetVersion() const { return strVersion; }
+  const string_view &GetVendor() const { return strvVendor; }
+  const string_view &GetRenderer() const { return strvRenderer; }
+  const string_view &GetVersion() const { return strvVersion; }
   /* -- Reset all binds ---------------------------------------------------- */
   void ResetBinds()
   { // Unbind active texture
@@ -1227,9 +1227,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiPackAlign = uiTexUnits = uiMaxVertexAttribs = 0;
     ePolyMode = GL_NONE;
     // Set blank generic text for strings
-    strVendor.clear();
-    strVersion.clear();
-    strRenderer.clear();
+    strvVendor = cCommon->CommonNull();
+    strvVersion = cCommon->CommonNull();
+    strvRenderer = cCommon->CommonNull();
     // Log class initialising
     cLog->LogInfoSafe("OGL subsystem de-initialised.");
   }
@@ -1291,7 +1291,13 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     qwMinVRAM(0),                      // No minimum vram
     qwTotalVRAM(0),                    // No total vram
     qwFreeVRAM(0),                     // No free vram
-    cdLimit{ cd0 }                     // Init frame duration
+    cdLimit{ cd0 },                    // Init frame duration
+    strvRenderer{                      // Blank renderer
+      cCommon->CommonNull() },         // Initialise with "<null>" text
+    strvVersion{                       // Blank version
+      cCommon->CommonNull() },         // Initialise with "<null>" text
+    strvVendor{                        // Blank vendor
+      cCommon->CommonNull() }          // Initialise with "<null>" text
     /* -- Set global pointer to static class ------------------------------- */
     { cOgl = this; }
   /* -- Setup VSync ------------------------------------------------ */ public:

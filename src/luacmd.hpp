@@ -51,19 +51,15 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
   }
   /* -- Check that the console variable name is valid ---------------------- */
   bool IsValidConsoleCommandName(const string &strName)
-  { // Check minimum name length
-    if(strName.length() < stConCmdMinLength ||
-       strName.length() > stConCmdMaxLength) return false;
-    // Get address of string. The first character must be a letter
-    const unsigned char *ucpPtr =
-      reinterpret_cast<const unsigned char*>(strName.c_str());
-    if(StdIsNotAlpha(*ucpPtr)) return false;
-    // For each character in cvar name until end of string...
-    for(const unsigned char*const ucpPtrEnd = ucpPtr + strName.length();
-                                   ++ucpPtr < ucpPtrEnd;)
-      if(StdIsNotAlnum(*ucpPtr) && *ucpPtr != '_') return false;
-    // Success!
-    return true;
+  { // Return true if length is over or equal minimum allowed and length is
+    // under or equal maximum allowed and first character is valid and the rest
+    // of the characters are valid.
+    return strName.length() >= stConCmdMinLength &&
+      strName.length() <= stConCmdMaxLength &&
+      StdIsAlpha(strName.front()) &&
+      StdFindIf(par_unseq, next(strName.cbegin()), strName.cend(),
+        [](const char cC) { return StdIsNotAlnum(cC) && cC != '_'; })
+          == strName.cend();
   }
   /* -- Unregister the console command from lua -------------------- */ public:
   const string &Name() const { return lcmiIt->first; }
@@ -90,10 +86,11 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     // forget the lua reference needs to be in place for when the callback
     // is called. Create a function and reference the function on the lua
     // stack and insert the reference into the list
-    lcmiIt = GetLuaCmdsList().insert(GetLuaCmdsListEnd(), { StdMove(strName),
-      make_pair(LuaFunc{ StrAppend("CC:", strName), true },
-        cConsole->RegisterCommand(strName,
-          uiMinimum, uiMaximum, LuaCallbackStatic)) });
+    lcmiIt = GetLuaCmdsList().insert(GetLuaCmdsListEnd(),
+      { StdMove(strName),
+        make_pair(LuaFunc{ StrAppend("CC:", strName), true },
+          cConsole->RegisterCommand(strName,
+            uiMinimum, uiMaximum, LuaCallbackStatic)) });
   }
   /* -- Destructor that unregisters the cvar ------------------------------- */
   ~Command()

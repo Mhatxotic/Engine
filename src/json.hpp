@@ -112,7 +112,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     // and then place that into a CSW object so we can track the source
     // information when a parse error occurs.
     const string strJson{ fmData.MemToString() };
-    StringStream ssStream{ strJson.c_str() };
+    StringStream ssStream{ strJson.data() };
     CursorStreamWrapper<StringStream> cswStream{ ssStream };
     // Parse the text and if there is a parse error? Break execution
     if(ParseStream(cswStream).HasParseError())

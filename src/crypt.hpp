@@ -50,7 +50,7 @@ static Memory CryptHexDecodeA(const string &strSrc)
   // The memory to output. We know what size will be
   Memory mbDst{ strSrc.size() / 2 };
   // Build 8-bit value from two ASCII characters
-  CryptHexDecodePtr(strSrc.c_str(), strSrc.length(), mbDst.MemPtr<char>());
+  CryptHexDecodePtr(strSrc.data(), strSrc.length(), mbDst.MemPtr<char>());
   // Return memory
   return mbDst;
 }
@@ -61,7 +61,7 @@ static string CryptHexDecodeStr(const string &strSrc)
   // The memory to output. We know what size will be
   string strDst; strDst.resize(strSrc.size() / 2);
   // Build 8-bit value from two ASCII characters
-  CryptHexDecodePtr(strSrc.c_str(), strSrc.length(),
+  CryptHexDecodePtr(strSrc.data(), strSrc.length(),
     UtfToNonConstCast<char*>(strDst.data()));
   // Return memory
   return strDst;
@@ -154,7 +154,7 @@ static const string CryptURLEncode(const string &strS)
 { // Bail if passed string is empty
   if(strS.empty()) return {};
   // Movable pointer to input string
-  const char *cpPtr = strS.c_str();
+  const char *cpPtr = strS.data();
   // Preallocate string to avoid multiple reallocations. Worst case: every char
   // needs encoding.
   string strURL; strURL.reserve(strS.size() * 3);
@@ -537,7 +537,7 @@ static string CryptURLDecode(const string &strS)
   // Preallocate string to avoid multiple reallocations
   string strURL; strURL.reserve(strS.size());
   // Movable pointer to input string and perform actions for each character...
-  for(const char *cpPtr = strS.c_str(); *cpPtr;)
+  for(const char *cpPtr = strS.data(); *cpPtr;)
   { // Get the character and if it denotes a encoded value?
     unsigned char ucC = static_cast<unsigned char>(*cpPtr);
     if(ucC == '%')

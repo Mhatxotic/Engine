@@ -250,7 +250,7 @@ class Statistic
   }
   /* -- Data by read-only lvalue widestring copy --------------------------- */
   Statistic &DataW(const wstring &wstrVal={})
-    { return Data(UtfFromWide(wstrVal.c_str())); }
+    { return Data(UtfFromWide(wstrVal.data())); }
   /* -- Duplicate current headers ------------------------------------------ */
   Statistic &DupeHeader(const size_t stCount=1)
   { // Have headers? Duplicate the headers the specified number of times

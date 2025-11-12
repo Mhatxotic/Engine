@@ -381,7 +381,7 @@ class SysCore :
       strCode = cCmdLine->CmdLineGetEnv("LANG");
       if(strCode.size() < 5) strCode = "en_GB.UTF8";
     } // Set global locale and show error if failed
-    if(!setlocale(LC_ALL, strCode.c_str()))
+    if(!setlocale(LC_ALL, strCode.data()))
       XCL("Failed to initialise default locale!", "Locale", strCode);
     // Replace underscore with dash to be consistent with Windows
     if(strCode[2] == '_') strCode[2] = '-';

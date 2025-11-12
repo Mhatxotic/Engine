@@ -197,7 +197,7 @@ class SysCore :
     if(sysctlbyname(cpS, nullptr, &stSize, nullptr, 0) < 0) return "#ERR1#";
     // Resize and fill string
     string strOut; strOut.resize(stSize - 1);
-    if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.c_str()),
+    if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.data()),
       &stSize, nullptr, 0) < 0)
         return cCommon->CommonBlank();
     // Return the string
@@ -580,11 +580,11 @@ class SysCore :
     string strExe; strExe.resize(PROC_PIDPATHINFO_MAXSIZE);
     // Get path to executable
     if(proc_pidpath(GetPid(),
-      const_cast<char*>(strExe.c_str()), PROC_PIDPATHINFO_MAXSIZE) <= 0)
+      const_cast<char*>(strExe.data()), PROC_PIDPATHINFO_MAXSIZE) <= 0)
         XCS("Failed to get path to executable!",
             "Pid", GetPid(), "Buffer", strExe.capacity());
     // Set real size and trim the memory usage
-    strExe.resize(strlen(strExe.c_str()));
+    strExe.resize(strlen(strExe.data()));
     strExe.shrink_to_fit();
     // Return executable name
     return strExe;
@@ -629,11 +629,11 @@ class SysCore :
       else continue;
       // Now we can get the version and if we got it?
       unsigned int uiVer = static_cast<unsigned int>
-        (NSVersionOfLinkTimeLibrary(strPathName.c_str()));
+        (NSVersionOfLinkTimeLibrary(strPathName.data()));
       // Try another function if failed
       if(uiVer == StdMaxUInt)
         uiVer = static_cast<unsigned int>
-          (NSVersionOfRunTimeLibrary(strPathName.c_str()));
+          (NSVersionOfRunTimeLibrary(strPathName.data()));
       // Worked this time?
       if(uiVer != StdMaxUInt)
       { // Fill in the bkanks
@@ -645,7 +645,7 @@ class SysCore :
       // Add it to mods list
       smmMap.emplace(make_pair(static_cast<size_t>(ulIndex),
         SysModule{ StdMove(strFullPath), uiMajor, uiMinor, uiBuild,
-          0, strPathName.c_str(), strPathName.c_str(),
+          0, strPathName.data(), strPathName.data(),
           string(strVersion), string(StrFormat("$.$.$.0",
             uiMajor, uiMinor, uiBuild)) }));
     } // Module list which includes the executable module
@@ -739,7 +739,7 @@ class SysCore :
       // Update and set global locale
       cCommon->CommonSetLocale(strCode);
     } // Set global locale and show error if failed
-    if(!setlocale(LC_ALL, strCode.c_str()))
+    if(!setlocale(LC_ALL, strCode.data()))
       XCL("Failed to initialise default locale!", "Locale", strCode);
     // Replace underscore with dash to be consistent with Windows
     if(strCode[2] == '_') strCode[2] = '-';

@@ -91,32 +91,22 @@ struct CVars :                         // Start of vars class
   }
   /* -- Check that the variable name is valid ------------------------------ */
   bool IsValidVariableName(const string &strVar)
-  { // Check minimum name length
-    if(strVar.length() < stCVarMinLength || strVar.length() > stCVarMaxLength)
-      return false;
-    // Get address of string. The first character must be a letter
-    const unsigned char *ucpPtr =
-      reinterpret_cast<const unsigned char*>(strVar.c_str());
-    if(StdIsNotAlpha(*ucpPtr)) return false;
-    // For each character in cvar name until end of string...
-    for(const unsigned char*const ucpPtrEnd = ucpPtr + strVar.length();
-                                   ++ucpPtr < ucpPtrEnd;)
-    { // If it is an underscore?
-      if(*ucpPtr == '_')
-      { // Next character must be a letter. This could also catch a nullptr
-        // character if at the end of string but thats okay too!
-        if(StdIsNotAlpha(*(++ucpPtr))) return false;
-        // Skip underscore and keep comparing with new conditions. The
-        // underscore is now allowed normally.
-        while(++ucpPtr < ucpPtrEnd)
-          if(StdIsNotAlnum(*ucpPtr) && *ucpPtr != '_')
-            return false;
-        // Success!
-        return true;
-      } // Fail if not a letter
-      else if(StdIsNotAlpha(*ucpPtr)) break;
-    } // An underscore was not specified or invalid character
-    return false;
+  { // Return failure if length is under minimum allowed or length is over
+    // maximum allowed or first character is not valid.
+    if(strVar.length() < stCVarMinLength ||
+      strVar.length() > stCVarMaxLength ||
+      StdIsNotAlpha(strVar.front())) return false;
+    // Find an invalid character in the string
+    const StringConstIt sciPos{
+      StdFindIf(par, next(strVar.cbegin()), strVar.cend(),
+        [](const char cC) { return StdIsNotAlnum(cC) && cC != '_'; }) };
+    // Success if at end of string
+    if(sciPos == strVar.cend()) return true;
+    // Failure if not an underscore
+    if(*sciPos != '_') return false;
+    // Search rest of string but underscore is no longer allowed
+    return StdFindIf(par_unseq, next(sciPos), strVar.cend(),
+      [](const char cC) { return StdIsNotAlnum(cC); }) == strVar.cend();
   }
   /* ----------------------------------------------------------------------- */
   bool SetInitialVar(const string &strVar, const string &strVal,
@@ -185,7 +175,7 @@ struct CVars :                         // Start of vars class
   }
   /* -- Return the cvar id's value as a string ----------------------------- */
   const char *GetCStrInternal(const CVarEnums cveId)
-    { return GetStrInternal(cveId).c_str(); }
+    { return GetStrInternal(cveId).data(); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>const IntType GetInternal(const CVarEnums cveId)
     { return StdMove(StrToNum<IntType>(GetStrInternal(cveId))); }

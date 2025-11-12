@@ -740,7 +740,7 @@ class Console :                        // Members initially private
       // Print line to output
       fwprintf(stdout, L"\033[%um[%.6f]<!> %ls\033[0m\n",
         clLine.cColour, clLine.dTime,
-          UtfDecoder{ clLine.strLine }.Wide().c_str());
+          UtfDecoder{ clLine.strLine }.Wide().data());
       // remove the old item
       clqOutput.pop();
     }
@@ -997,7 +997,7 @@ class Console :                        // Members initially private
   CVarReturn SetTimeFormat(const string &strFmt, const string &strV)
   { // Verify the new time format and log it
     cLog->LogInfoExSafe("Console time from format '$' is '$'.",
-      strFmt, cmSys.FormatTime(strFmt.c_str()));
+      strFmt, cmSys.FormatTime(strFmt.data()));
     // Accept the new time format
     strvTimeFormat = strV;
     // Done

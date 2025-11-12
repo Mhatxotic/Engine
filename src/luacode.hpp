@@ -136,7 +136,7 @@ static void LuaCodeCompileFunction(lua_State*const lS)
 static void LuaCodeDoCompileBuffer(lua_State*const lS, const char *cpBuf,
   size_t stSize, const string &strRef)
 { // Compile the specified script and capture result
-  switch(const int iR = luaL_loadbuffer(lS, cpBuf, stSize, strRef.c_str()))
+  switch(const int iR = luaL_loadbuffer(lS, cpBuf, stSize, strRef.data()))
   { // No error? Execute functions and log success. We should always be in
     // the sandbox, so no pcall is needed.
     case LUA_OK: return;

@@ -1144,7 +1144,7 @@ if(svciIt != aArgs.cend())
   if(strRoot.empty()) return cConsole->AddLine("Empty table name!");
   // Push variable specified on command line and if it's not a table?
   // Tell user the table is invalid and return
-  LuaUtilGetGlobal(lS, strRoot.c_str());
+  LuaUtilGetGlobal(lS, strRoot.data());
   if(!LuaUtilIsTable(lS, -1))
     return cConsole->AddLineF("Table '$' $!", strRoot,
       LuaUtilIsNil(lS, -1) ? "does not exist" : "is not valid");
@@ -1162,7 +1162,7 @@ if(svciIt != aArgs.cend())
       // Restore where we were in the stack
       LuaUtilPruneStack(lS, iIndex);
     } // Find subtable. It must be a table
-    LuaUtilGetField(lS, -1, strParam.c_str());
+    LuaUtilGetField(lS, -1, strParam.data());
     if(LuaUtilIsTable(lS, -1)) continue;
     // Tell user the table is invalid and return
     return cConsole->AddLineF("Sub-table '$' $!", strParam,
@@ -1516,7 +1516,7 @@ cConsole->AddLineF("$$ totalling $ ($).", stData.Finish(),
 const string &strExtName = aArgs[1];
 cConsole->AddLineF(
   "Extension '$' is$ supported by the selected graphics device.",
-    strExtName, cOgl->HaveExtension(strExtName.c_str()) ?
+    strExtName, cOgl->HaveExtension(strExtName.data()) ?
       cCommon->CommonBlank() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'oglext' function
@@ -1531,7 +1531,7 @@ cConsole->AddLineF(
 const string &strFunction = aArgs[1];
 cConsole->AddLineF(
   "Function '$' is$ supported by the selected graphics device.",
-    strFunction, GlFWProcExists(strFunction.c_str()) ?
+    strFunction, GlFWProcExists(strFunction.data()) ?
       cCommon->CommonBlank() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'oglfunc' function

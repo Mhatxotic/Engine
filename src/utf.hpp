@@ -381,7 +381,7 @@ class UtfDecoder                        // UTF8 string decoder helper
     /* -- Initialisers ----------------------------------------------------- */
     ucpStr(reinterpret_cast            // Set start of string
       <const unsigned char*>
-        (strStr.c_str())),
+        (strStr.data())),
     ucpPtr(ucpStr)                     // Copy for current position
     /* -- No code ---------------------------------------------------------- */
     {}

@@ -40,9 +40,9 @@ class CodecJPG :                       // JPEG codec object
   { // Buffer for error message
     string strMsg(JMSG_LENGTH_MAX, 0);
     // Popular error message
-    (*(ciData->err->format_message))(ciData,const_cast<char*>(strMsg.c_str()));
+    (*(ciData->err->format_message))(ciData,const_cast<char*>(strMsg.data()));
     // Throw back to intermediate handler so we can cleanup libjpeg
-    throw runtime_error{ strMsg.c_str() };
+    throw runtime_error{ strMsg.data() };
   }
   /* --------------------------------------------------------------- */ public:
   bool Encode(const FStream &fmData, const ImageData &idData,

@@ -47,7 +47,7 @@ class ShaderCell :                     // Members initially private
   /* -- Return length of shader code --------------------------------------- */
   size_t GetCodeLength() const { return GetCode().length(); }
   /* -- Return name of shader as C-String ---------------------------------- */
-  const char *GetCodeCStr() const { return GetCode().c_str(); }
+  const char *GetCodeCStr() const { return GetCode().data(); }
   /* -- Return type of shader ---------------------------------------------- */
   GLenum GetType() const { return eType; }
   /* -- Return shader id --------------------------------------------------- */

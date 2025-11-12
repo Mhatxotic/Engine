@@ -48,7 +48,7 @@ class SysMap :                         // Members initially private
   /* -- Get file handle ---------------------------------------------------- */
   HANDLE SysMapSetupFile()
   { // Open file and return if opened
-    HANDLE hF = CreateFile(UTFtoS16(IdentGetCStr()).c_str(), GENERIC_READ,
+    HANDLE hF = CreateFile(UTFtoS16(IdentGetCStr()).data(), GENERIC_READ,
       FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
     if(hF != INVALID_HANDLE_VALUE) return hF;
     // Failed
