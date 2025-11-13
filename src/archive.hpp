@@ -25,7 +25,7 @@ using namespace ISysUtil::P;           using namespace IUtf::P;
 using namespace IUtil::P;              using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == Archive collector with extract buffer size =========================== */
+/* -- Public typedefs ------------------------------------------------------ */
 CTOR_BEGIN_ASYNC(Archives, Archive, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
   string           strArchiveExt;      // Archive extension
@@ -38,13 +38,13 @@ CTOR_BEGIN_ASYNC(Archives, Archive, CLHelperSafe,
   static void Free(ISzAllocPtr, void*const vpAddress)
     { StdFree(vpAddress); }
 );/* ----------------------------------------------------------------------- */
-BUILD_FLAGS(Archive,
+BUILD_FLAGS(Archive,                   // Archive flags
   /* ----------------------------------------------------------------------- */
-  // Archive on standby?             Archive file handle opened?
-  AE_STANDBY              {Flag(0)}, AE_FILEOPENED           {Flag(1)},
-  // Allocated look2read structs?    Allocated archive structs?
-  AE_SETUPL2R             {Flag(2)}, AE_ARCHIVEINIT          {Flag(3)}
-);/* == Archive object class =============================================== */
+  AE_STANDBY                {Flag(0)}, // Archive on standby?
+  AE_FILEOPENED             {Flag(1)}, // Archive file handle opened?
+  AE_SETUPL2R               {Flag(2)}, // Allocated look2read structs?
+  AE_ARCHIVEINIT            {Flag(3)}  // Allocated archive structs?
+);/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Ident,                        // Archive file name

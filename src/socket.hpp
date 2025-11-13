@@ -30,25 +30,23 @@ namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
 BUILD_SECURE_FLAGS(Socket,
   /* ----------------------------------------------------------------------- */
-  // No flags                          Socket is initialising?
-  SS_NONE                   {Flag(0)}, SS_INITIALISING           {Flag(1)},
-  // Socket is set to use encryption?  Socket is connecting
-  SS_ENCRYPTION             {Flag(2)}, SS_CONNECTING             {Flag(3)},
-  // Socket is connected               Socket is sending request (HTTP)
-  SS_CONNECTED              {Flag(4)}, SS_SENDREQUEST            {Flag(5)},
-  // Socket waiting for reply? (HTTP)? Socket is downloading (HTTP)
-  SS_REPLYWAIT              {Flag(6)}, SS_DOWNLOADING            {Flag(7)},
-  // Socket is upgraded (WEBSOCKET)    Socket was closed by server?
-  SS_UPGRADED               {Flag(8)}, SS_CLOSEDBYSERVER         {Flag(9)},
-  // Socket was closed by server?      Socket is disconnecting?
-  SS_CLOSEDBYCLIENT        {Flag(10)}, SS_DISCONNECTING         {Flag(11)},
-  // Socket on standby (disconnected)
-  SS_STANDBY               {Flag(12)},
+  SS_NONE                   {Flag(0)}, // No flags?
+  SS_INITIALISING           {Flag(1)}, // Socket is initialising?
+  SS_ENCRYPTION             {Flag(2)}, // Socket is set to use encryption?
+  SS_CONNECTING             {Flag(3)}, // Socket is connecting?
+  SS_CONNECTED              {Flag(4)}, // Socket is connected?
+  SS_SENDREQUEST            {Flag(5)}, // Socket is sending request (HTTP)?
+  SS_REPLYWAIT              {Flag(6)}, // Socket waiting for reply (HTTP)?
+  SS_DOWNLOADING            {Flag(7)}, // Socket is downloading (HTTP)?
+  SS_UPGRADED               {Flag(8)}, // Socket is upgraded (WEBSOCKET)?
+  SS_CLOSEDBYSERVER         {Flag(9)}, // Socket was closed by server?
+  SS_CLOSEDBYCLIENT        {Flag(10)}, // Socket was closed by server?
+  SS_DISCONNECTING         {Flag(11)}, // Socket is disconnecting?
+  SS_STANDBY               {Flag(12)}, // Socket on standby (disconnected)?
   /* ----------------------------------------------------------------------- */
-  // Set if error with event callback? Socket read a packet (not ever set)
-  SS_EVENTERROR            {Flag(13)}, SS_READPACKET            {Flag(14)},
-  // Pong from WebSocket?
-  SS_PONG                  {Flag(15)}
+  SS_EVENTERROR            {Flag(13)}, // Set if error with event callback?
+  SS_READPACKET            {Flag(14)}, // Socket read a packet (not ever set)?
+  SS_PONG                  {Flag(15)}  // Pong from WebSocket?
 );/* == Socket collector class for collector data and custom variables ===== */
 CTOR_BEGIN(Sockets, Socket, CLHelperUnsafe,
 /* -- Internal registry values for http data ------------------------------- **

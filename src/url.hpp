@@ -24,33 +24,33 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 enum Result : unsigned int             // Result codes
 {/* ------------------------------------------------------------------------ */
-  R_GOOD,                              // Url is good
-  R_TOOLONG,                           // Url is too long
-  R_EMURL,                             // Empty URL specified
-  R_EMSCHEME,                          // Empty scheme after processing
-  R_EMHOSTUSERPASSPORT,                // Empty hostname/username/password/port
-  R_EMUSERPASS,                        // Empty username and password
-  R_EMUSER,                            // Empty username
-  R_EMPASS,                            // Empty password
-  R_EMHOSTPORT,                        // Empty hostname/port
-  R_EMHOST,                            // Empty hostname
-  R_EMPORT,                            // Empty port number
-  R_NOSCHEME,                          // No scheme delimiter ':'
-  R_INVSCHEME,                         // Invalid scheme (not ://)
-  R_INVPORT,                           // Invalid port number (1-65535)
-  R_UNKSCHEME,                         // Unknown scheme without port
-  R_EMPARAMS,                          // Bad parameters
-  R_MAX                                // Maximum number of codes
+  R_GOOD,                              // [00] Url is good
+  R_TOOLONG,                           // [01] Url is too long
+  R_EMURL,                             // [02] Empty URL specified
+  R_EMSCHEME,                          // [03] Empty scheme after processing
+  R_EMHOSTUSERPASSPORT,                // [04] Empty host/user/pass/port
+  R_EMUSERPASS,                        // [05] Empty username and password
+  R_EMUSER,                            // [06] Empty username
+  R_EMPASS,                            // [07] Empty password
+  R_EMHOSTPORT,                        // [08] Empty hostname/port
+  R_EMHOST,                            // [09] Empty hostname
+  R_EMPORT,                            // [10] Empty port number
+  R_NOSCHEME,                          // [11] No scheme delimiter ':'
+  R_INVSCHEME,                         // [12] Invalid scheme (not ://)
+  R_INVPORT,                           // [13] Invalid port number (1-65535)
+  R_UNKSCHEME,                         // [14] Unknown scheme without port
+  R_EMPARAMS,                          // [15] Bad parameters
+  R_MAX                                // [16] Maximum number of codes
 };/* ----------------------------------------------------------------------- */
 /* == Class to break apart urls ============================================ */
 struct UrlBase : public ParamParser    // Members initially public
 { /* ----------------------------------------------------------------------- */
   enum Port : unsigned int             // Frequently used ports
   { /* --------------------------------------------------------------------- */
-    P_MIN   = 1,                       // Minimum port number
-    P_HTTP  = 80,                      // Insecure http port number
-    P_HTTPS = 443,                     // Secure http port number
-    P_MAX   = 65536                    // Maximum port number
+    P_MIN                     =     1, // Minimum port number
+    P_HTTP                    =    80, // Insecure http port number
+    P_HTTPS                   =   443, // Secure http port number
+    P_MAX                     = 65536  // Maximum port number
   };/* --------------------------------------------------------------------- */
   /* -- Private variables ----------------------------------------- */ private:
   Result           rResult;            // Result

@@ -90,7 +90,7 @@ struct CVars :                         // Start of vars class
     XC("CVar not found!", "Variable", strVar, "Value", strValue);
   }
   /* -- Check that the variable name is valid ------------------------------ */
-  bool IsValidVariableName(const string &strVar)
+  bool IsValidVariableName(const string &strVar) const
   { // Return failure if length is under minimum allowed or length is over
     // maximum allowed or first character is not valid.
     if(strVar.length() < stCVarMinLength ||
@@ -167,9 +167,9 @@ struct CVars :                         // Start of vars class
     return true;
   }
   /* -- Return the cvar id's value as a string ----------------------------- */
-  const string &GetStrInternal(const CVarEnums cveId)
+  const string &GetStrInternal(const CVarEnums cveId) const
   { // Get internal iterator and return value or empty string if invalid
-    const CVarMapConstIt cvmciIt{ GetInternalList()[cveId] };
+    const CVarMapConstIt cvmciIt{ GetInternalListConst()[cveId] };
     return cvmciIt != cvmActive.cend() ? cvmciIt->second.GetValue() :
       cCommon->CommonBlank();
   }
@@ -218,7 +218,7 @@ struct CVars :                         // Start of vars class
     const CVarFlagsConst cvfcFlags=PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
   { // Get internal iterator and return value or empty string if invalid
-    const CVarMapIt cvmiIt{ GetInternalList()[cveId] };
+    const CVarMapIt cvmiIt{ GetInternalListConst()[cveId] };
     return cvmiIt != cvmActive.cend() ? Reset(cvmiIt, cvfcFlags, cvcfcFlags) :
       CVS_NOTFOUND;
   }
@@ -227,7 +227,7 @@ struct CVars :                         // Start of vars class
     const CVarFlagsConst cvfcFlags=PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
   { // Get iterator and set the value if valid except return invalid
-    const CVarMapIt cvmiIt{ GetInternalList()[cveId] };
+    const CVarMapIt cvmiIt{ GetInternalListConst()[cveId] };
     return cvmiIt != cvmActive.cend() ?
       cvmiIt->second.SetValue(strValue,
         cvfcFlags, cvcfcFlags, strCBError) : CVS_NOTFOUND;
@@ -249,13 +249,13 @@ struct CVars :                         // Start of vars class
   { // Overwrite engine variables with defaults
     cLog->LogDebugSafe("CVars forcing default engine settings...");
     cSql->Begin();
-    for(const CVarMapIt &cvmiIt : GetInternalList())
+    for(const CVarMapIt &cvmiIt : GetInternalListConst())
       if(cvmiIt != cvmActive.end()) cSql->CVarPurge(cvmiIt->first);
     cSql->End();
     cLog->LogWarningSafe("CVars finished setting defaults.");
   }
   /* -- -------------------------------------------------------------------- */
-  ArrayVars &GetInternalList() { return avInternal; }
+  const ArrayVars &GetInternalListConst() const { return avInternal; }
   /* ----------------------------------------------------------------------- */
   bool VarExists(const string &strVar) const
     { return cvmActive.contains(strVar); }
@@ -614,16 +614,16 @@ struct CVars :                         // Start of vars class
     Save();
     // Log result then dereg core variables, they don't need testing
     cLog->LogDebugExSafe("CVars unregistering core variables...",
-      GetInternalList().size());
+      GetInternalListConst().size());
     // Enumerate all the internal variables in reverse order
     size_t stVars = 0;
-    for(size_t stIndex = GetInternalList().size()-1;
+    for(size_t stIndex = GetInternalListConst().size() - 1;
                stIndex != StdMaxSizeT;
              --stIndex)
     { // Get iterator and unregister it if it is registered
-      const CVarMapIt cvmiIt{ GetInternalList()[stIndex] };
+      const CVarMapIt cvmiIt{ GetInternalListConst()[stIndex] };
       if(cvmiIt == cvmActive.end()) continue;
-      GetInternalList()[stIndex] = cvmActive.end();
+      avInternal[stIndex] = cvmActive.end();
       UnregisterVar(cvmiIt);
       ++stVars;
     } // This should be 100% impossible but we'll deal with it just incase
@@ -631,7 +631,7 @@ struct CVars :                         // Start of vars class
     { // Something lingers which should be impossible but just incase
       cLog->LogWarningExSafe("CVars unregistered $ engine variables "
         "with $ lingering core engine variables!",
-          GetInternalList().size(), cvmActive.size());
+          GetInternalListConst().size(), cvmActive.size());
       // Repeat unregistering each remaining variable...
       do { UnregisterVar(cvmActive.rbegin().base()); }
       // ...until the vars list is empty
@@ -650,7 +650,7 @@ struct CVars :                         // Start of vars class
     for(size_t stIndex = 0; stIndex < cvislList.size(); ++stIndex)
     { // Get ref to cvar info and register the variable if the guimode is valid
       const CVarItemStatic &cvisRef = cvislList[stIndex];
-      GetInternalList()[stIndex] =
+      avInternal[stIndex] =
         cSystem->IsCoreFlagsHave(cvisRef.cfcRequired) ?
           RegisterVar(string(cvisRef.strvVar), string(cvisRef.strvValue),
             cvisRef.cbTrigger, cvisRef.cFlags, CCF_NOTHING) : cvmActive.end();

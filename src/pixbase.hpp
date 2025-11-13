@@ -14,7 +14,7 @@ class SysBase :                        // Safe exception handler namespace
   /* -- Base classes ------------------------------------------------------- */
   public SysVersion                    // Version information class
 { /* -- Class to rebuffer system generated output to log ------------------- */
-#if !defined(BUILD) && defined(MACOS)  // Not applicable on build or not MacOS
+#if !defined(BUILD)                    // Not applicable on build or not MacOS
   class Redirect final :               // Linux: close() doesn't unblock read()
     /* -- Base classes ----------------------------------------------------- */
     private Thread,                    // Thread to monitor file descriptor
@@ -274,7 +274,7 @@ class SysBase :                        // Safe exception handler namespace
     // Add extra information if set
     if(*cpExtra) osS << cCommon->CommonLf() << cpExtra << cCommon->CommonLf();
  // Not building the command line too?
-#if !defined(BUILD) && defined(MACOS)
+#if !defined(BUILD)
     // Shut down the stderr monitoring thread
     rStdErr.ResetSafe();
 #endif
@@ -478,7 +478,7 @@ class SysBase :                        // Safe exception handler namespace
   }
   /* ------------------------------------------------------------ */ protected:
   ~SysBase() noexcept(true)
-  { // Uninstall safe signals
+  { // Uninstall safe signals (signal() is not thread safe)
     for(SignalPair &spPair : slSignals)
       if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)
         cLog->LogWarningExSafe("Failed to restore signal $ handler! $.",
@@ -514,18 +514,19 @@ class SysBase :                        // Safe exception handler namespace
       { SIGXCPU, HandleSignalStatic }, { SIGXFSZ, HandleSignalStatic },
     }}
     /* --------------------------------------------------------------------- */
-  { // Install all those signal handlers
+  { // Install all those signal handlers (signal() is not thread safe.)
     for(SignalPair &spPair : slSignals)
     { // Set the signal and check for error
       spPair.second = signal(spPair.first, spPair.second);
       if(spPair.second == SIG_ERR)
         XCL("Failed to install signal handler!", "Id", spPair.first);
     } // Increase resource limits we can change so the engine can do more
-    for(ResourceLimitMapPair &rlmpPair : rlmLimits)
+    StdForEach(par_unseq, rlmLimits.begin(), rlmLimits.end(),
+      [](ResourceLimitMapPair &rlmpPair)
     { // Get the limit for this resource
       if(!getrlimit(rlmpPair.first, &rlmpPair.second))
       { // Ignore if value doesn't need to change
-        if(rlmpPair.second.rlim_cur >= rlmpPair.second.rlim_max) continue;
+        if(rlmpPair.second.rlim_cur >= rlmpPair.second.rlim_max) return;
         // Set maximum allowed and if failed?
         const rlim_t rtOld = rlmpPair.second.rlim_cur;
         rlmpPair.second.rlim_cur = rlmpPair.second.rlim_max;
@@ -544,7 +545,7 @@ class SysBase :                        // Safe exception handler namespace
       else cLog->LogWarningExSafe(
         "System failed to get limit for resource $<0x$$$>: $!",
         rlmpPair.first, hex, rlmpPair.first, dec, SysError());
-    }
+    });
   }
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \

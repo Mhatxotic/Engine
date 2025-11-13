@@ -30,10 +30,6 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable                      // Lua garbage collector instruction
 { /* -- Private variables -------------------------------------------------- */
-  constexpr static const size_t
-    stConCmdMinLength = 1,             // Minimum length of a console command
-    stConCmdMaxLength = 255;           // Maximum length of a console command
-  /* -- Private variables -------------------------------------------------- */
   LuaCmdMapIt      lcmiIt;             // Iterator to command Console gives us
   /* -- Returns the lua command list --------------------------------------- */
   LuaCmdMap &GetLuaCmdsList() { return cParent->lcmMap; }
@@ -49,28 +45,16 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     // Call the function callback in Lua
     else lcmiIt->second.first.LuaFuncProtectedDispatch(0, aArgs);
   }
-  /* -- Check that the console variable name is valid ---------------------- */
-  bool IsValidConsoleCommandName(const string &strName)
-  { // Return true if length is over or equal minimum allowed and length is
-    // under or equal maximum allowed and first character is valid and the rest
-    // of the characters are valid.
-    return strName.length() >= stConCmdMinLength &&
-      strName.length() <= stConCmdMaxLength &&
-      StdIsAlpha(strName.front()) &&
-      StdFindIf(par_unseq, next(strName.cbegin()), strName.cend(),
-        [](const char cC) { return StdIsNotAlnum(cC) && cC != '_'; })
-          == strName.cend();
-  }
   /* -- Unregister the console command from lua -------------------- */ public:
   const string &Name() const { return lcmiIt->first; }
   /* -- Register user console command from lua ----------------------------- */
   void Init(lua_State*const lS, const string &strName,
     const unsigned int uiMinimum, const unsigned int uiMaximum)
   { // Check that the console command is valid
-    if(!IsValidConsoleCommandName(strName))
+    if(!cConsole->IsValidConsoleCommandName(strName))
       XC("Console command name is invalid!",
-         "Command", strName, "Minimum", stConCmdMinLength,
-         "Maximum", stConCmdMaxLength);
+         "Command", strName, "Minimum", cConsole->stConCmdMinLength,
+         "Maximum", cConsole->stConCmdMaxLength);
     // Check min/Max params and that they're valid
     if(uiMinimum && uiMaximum && uiMaximum < uiMinimum)
       XC("Minimum greater than maximum!",

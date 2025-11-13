@@ -18,7 +18,7 @@ using namespace IMutex::P;             using namespace IRefCtr::P;
 using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Private typedefs ----------------------------------------------------- */
+/* -- Public typedefs ------------------------------------------------------ */
 // We need to collect the event ids of the events we dispatch so we can
 // remove these events when the class is destroyed, or events that reference
 // derived classes which have been destroyed will crash the engine.

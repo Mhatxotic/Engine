@@ -14,15 +14,15 @@ using namespace IOal::P;               using namespace IStd::P;
 using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Public typedefs ------------------------------------------------------ */
 enum PcmFormat : size_t                // Available PCM codecs
 { /* ----------------------------------------------------------------------- */
-  PFMT_WAV,                            // WAV format (IPcmFormat::CodecWAV)
-  PFMT_CAF,                            // CAF format (IPcmFormat::CodecCAF)
-  PFMT_OGG,                            // OGG format (IPcmFormat::CodecOGG)
-  PFMT_MP3,                            // MP3 format (IPcmFormat::CodecMP3)
+  PFMT_WAV,                            // [0] WAV (IPcmFormat::CodecWAV)
+  PFMT_CAF,                            // [1] CAF (IPcmFormat::CodecCAF)
+  PFMT_OGG,                            // [2] OGG (IPcmFormat::CodecOGG)
+  PFMT_MP3,                            // [3] MP3 (IPcmFormat::CodecMP3)
   /* ----------------------------------------------------------------------- */
-  PFMT_MAX                             // Maximum supported PCM codecs
+  PFMT_MAX                             // [4] Maximum supported PCM codecs
 };/* ----------------------------------------------------------------------- */
 enum PcmBitType : unsigned int         // PCM bit-depth type
 { /* ----------------------------------------------------------------------- */
@@ -43,18 +43,16 @@ enum PcmChannelType : unsigned int     // PCM channels type
   PCT_NONE                       =  0, // PCM audio is uninitialised
   PCT_MONO                       =  1, // PCM audio is mono (1ch)
   PCT_STEREO                     =  2, // PCM audio is stereo (2ch)
-};/* -- Loading flags ------------------------------------------------------ */
-BUILD_FLAGS(Pcm,
+};/* ----------------------------------------------------------------------- */
+BUILD_FLAGS(Pcm,                       // PCM loading flags
   /* -- Commands (Only used in 'Pcm' class) -------------------------------- */
-  // No loading flags                  Force load as WAV
-  PL_NONE                   {Flag(0)}, PL_FCE_WAV                {Flag(1)},
-  // Force load as CAF                 Force load as OGG
-  PL_FCE_CAF                {Flag(2)}, PL_FCE_OGG                {Flag(3)},
-  // Force load as MP3
-  PL_FCE_MP3                {Flag(4)},
+  PL_NONE                   {Flag(0)}, // No loading flags?
+  PL_FCE_WAV                {Flag(1)}, // Force load as WAV format?
+  PL_FCE_CAF                {Flag(2)}, // Force load as CAF format?
+  PL_FCE_OGG                {Flag(3)}, // Force load as OGG format?
+  PL_FCE_MP3                {Flag(4)}, // Force load as MP3 format?
   /* -- Private flags (Only used in 'PcmData' class) ----------------------- */
-  // Bitmap is dynamically created
-  PL_DYNAMIC                {Flag(5)},
+  PL_DYNAMIC                {Flag(5)}, // Bitmap is dynamically created?
   /* -- Mask bits ---------------------------------------------------------- */
   PL_MASK{ PL_FCE_WAV|PL_FCE_CAF|PL_FCE_OGG|PL_FCE_MP3 }
 );/* -- Variables ---------------------------------------------------------- */

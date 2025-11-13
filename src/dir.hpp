@@ -18,30 +18,30 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 enum ValidResult : unsigned int        // Return values for ValidName()
 { /* ----------------------------------------------------------------------- */
-  VR_OK,                               // 00: The filename is valid!
-  VR_EMPTY,                            // 01: The filename is empty!
-  VR_TOOLONG,                          // 02: The filename is too long!
-  VR_NOROOT,                           // 03: Root directory not allowed
-  VR_NODRIVE,                          // 04: Drive letter not allowed
-  VR_INVDRIVE,                         // 05: Invalid drive letter
-  VR_INVALID,                          // 06: Invalid trust parameter
-  VR_RESERVED,                         // 07: No reserved names
-  VR_INVCHAR,                          // 08: Invalid character in part
-  VR_CSUBDIR,                          // 09: As above but as a a sub-dir
-  VR_CURRENT,                          // 10: Current directory not allowed
-  VR_EXPLODE,                          // 11: String failed to explode
-  VR_NOTRAILWS,                        // 12: No trailing whitespace
-  VR_NOLEADWS,                         // 13: No leading whitespace
+  VR_OK,                               // [00] The filename is valid!
+  VR_EMPTY,                            // [01] The filename is empty!
+  VR_TOOLONG,                          // [02] The filename is too long!
+  VR_NOROOT,                           // [03] Root directory not allowed
+  VR_NODRIVE,                          // [04] Drive letter not allowed
+  VR_INVDRIVE,                         // [05] Invalid drive letter
+  VR_INVALID,                          // [06] Invalid trust parameter
+  VR_RESERVED,                         // [07] No reserved names
+  VR_INVCHAR,                          // [08] Invalid character in part
+  VR_CSUBDIR,                          // [09] As above but as a a sub-dir
+  VR_CURRENT,                          // [10] Current directory not allowed
+  VR_EXPLODE,                          // [11] String failed to explode
+  VR_NOTRAILWS,                        // [12] No trailing whitespace
+  VR_NOLEADWS,                         // [13] No leading whitespace
   /* ----------------------------------------------------------------------- */
-  VR_MAX                               // 14: Maximum number of errors
+  VR_MAX                               // [14] Maximum number of errors
 };/* ----------------------------------------------------------------------- */
 enum ValidType : unsigned int          // Types for ValidName()
 { /* ----------------------------------------------------------------------- */
-  VT_NOTHING,                          // 0: Absolutely no safety whatsoever
-  VT_TRUSTED,                          // 1: Trusted caller
-  VT_UNTRUSTED,                        // 2: Untrusted caller (chroot-like)
+  VT_NOTHING,                          // [0] Absolutely no safety whatsoever
+  VT_TRUSTED,                          // [1] Trusted caller
+  VT_UNTRUSTED,                        // [2] Untrusted caller (chroot-like)
   /* ----------------------------------------------------------------------- */
-  VT_MAX                               // 3: Maximum trust modes
+  VT_MAX                               // [3] Maximum trust modes
 };/* ----------------------------------------------------------------------- */
 class DirBase;                         // Prototype to class
 static DirBase *cDirBase = nullptr;    // Pointer to global class
@@ -334,14 +334,10 @@ class DirFile                          // Files container class
   const DirEntMap &GetDirs() const { return demDirs; }
   const DirEntMap &GetFiles() const { return demFiles; }
   /* -- Get lists iterators ------------------------------------------------ */
-  const DirEntMapConstIt GetDirsBegin() const
-    { return GetDirs().cbegin(); }
-  const DirEntMapConstIt GetFilesBegin() const
-    { return GetFiles().cbegin(); }
-  const DirEntMapConstIt GetDirsEnd() const
-    { return GetDirs().cend(); }
-  const DirEntMapConstIt GetFilesEnd() const
-    { return GetFiles().cend(); }
+  const DirEntMapConstIt GetDirsBegin() const { return GetDirs().cbegin(); }
+  const DirEntMapConstIt GetFilesBegin() const { return GetFiles().cbegin(); }
+  const DirEntMapConstIt GetDirsEnd() const { return GetDirs().cend(); }
+  const DirEntMapConstIt GetFilesEnd() const { return GetFiles().cend(); }
   /* -- Get elements in lists ---------------------------------------------- */
   size_t GetDirsSize() const { return GetDirs().size(); }
   size_t GetFilesSize() const { return GetFiles().size(); }
@@ -647,15 +643,15 @@ static bool DirMkDirEx(const string &strDir)
       // directory doesn't already exist
       if(!DirMkDir(strFirst) && StdIsNotError(EEXIST)) return false;
       // Move first item. It will be empty if directory started with a slash
-      osS << StdMove(strFirst);
+      osS << strFirst;
     } // If there are more directories?
     if(tParts.size() >= 2)
     { // Create all the other directories
-      for(StrVectorConstIt svI{ next(tParts.cbegin(), 1) };
+      for(StrVectorConstIt svI{ next(tParts.cbegin()) };
                            svI != tParts.cend();
                          ++svI)
       { // Append next directory
-        osS << '/' << StdMove(*svI);
+        osS << '/' << *svI;
         // Make the directory and if failed and it doesn't exist return error
         if(!DirMkDir(osS.str()) && StdIsNotError(EEXIST)) return false;
       }
@@ -682,10 +678,8 @@ static bool DirRmDirEx(const string &strDir)
     if(!strFirst.empty()) osS << strFirst;
     // If there are more directories? Build directory structure
     if(tParts.size() >= 2)
-      for(StrVectorConstIt svI{ next(tParts.begin(), 1) };
-                           svI != tParts.end();
-                         ++svI)
-        osS << '/' << *svI;
+      StdForEach(seq, next(tParts.cbegin()), tParts.cend(),
+        [&osS](const string &strPart) { osS << '/' << strPart; });
     // Make the directory and if failed and it doesn't exist return error
     if(!DirRmDir(osS.str()) && StdIsNotError(EEXIST)) return false;
     // Remove the last item

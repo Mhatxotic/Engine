@@ -17,16 +17,16 @@ using namespace IStd::P;               using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == Input flags ========================================================== */
-BUILD_FLAGS(Input,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Input,                     // Input flags
   /* ----------------------------------------------------------------------- */
-  // No flags                          Mouse cursor is enabled?
-  IF_NONE                   {Flag(0)}, IF_CURSOR                 {Flag(1)},
-  // Full-screen toggler enabled?      Mouse cursor has focus?
-  IF_FSTOGGLER              {Flag(2)}, IF_MOUSEFOCUS             {Flag(3)},
-  // Send events at startup            Do joystick polling?
-  IF_INITEVENTS             {Flag(4)}, IF_POLLJOYSTICKS          {Flag(5)}
-);
+  IF_NONE                   {Flag(0)}, // No flags
+  IF_CURSOR                 {Flag(1)}, // Mouse cursor is enabled?
+  IF_FSTOGGLER              {Flag(2)}, // Full-screen toggler enabled?
+  IF_MOUSEFOCUS             {Flag(3)}, // Mouse cursor has focus?
+  IF_INITEVENTS             {Flag(4)}, // Send events at startup?
+  IF_POLLJOYSTICKS          {Flag(5)}  // Do joystick polling?
+);/* ----------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 class Joystick :
   /* -- Base classes ------------------------------------------------------- */

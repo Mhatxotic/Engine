@@ -40,15 +40,15 @@ class Lua :                            // Actual class body
   /* -- Private variables -------------------------------------------------- */
   LuaPtr           lsState;            // Lua state pointer
   bool             bExiting;           // Ending execution?
-  int              iOperations;        // Default ops before timeout check
-  int              iStack;             // Default stack size
-  int              iGCPause;           // Default GC pause time
-  int              iGCStep;            // Default GC step counter
+  int              iOperations,        // Default ops before timeout check
+                   iStack,             // Default stack size
+                   iGCPause,           // Default GC pause time
+                   iGCStep;            // Default GC step counter
   lua_Integer      liSeed;             // Default seed
   /* -- References ------------------------------------------------- */ public:
-  LuaFunc          lrMainTick;         // Main tick function callback
-  LuaFunc          lrMainEnd;          // End function callback
-  LuaFunc          lrMainRedraw;       // Redraw function callback
+  LuaFunc          lrMainTick,         // Main tick function callback
+                   lrMainEnd,          // End function callback
+                   lrMainRedraw;       // Redraw function callback
   /* -- Generic end tick to quit the engine  ------------------------------- */
   static int OnGenericEndTick(lua_State*const)
     { cEvtMain->ConfirmExit(); return 0; }
@@ -380,7 +380,7 @@ class Lua :                            // Actual class body
     // Create a table of the specified number of variables
     LuaUtilPushTable(GetState(), 0, CVAR_MAX);
     // Enumerate cvars and if stored iterator is registered?
-    for(const CVarMapIt &cvmiIt : cCVars->GetInternalList())
+    for(const CVarMapIt &cvmiIt : cCVars->GetInternalListConst())
       if(cvmiIt != cCVars->GetVarListEnd())
       { // Push internal id value name
         LuaUtilClassCreate<Variable>(GetState(), *cVariables)->

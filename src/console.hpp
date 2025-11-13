@@ -25,43 +25,41 @@ using namespace IToken::P;             using namespace IUtf::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
-/* == Typedefs ============================================================= */
-BUILD_FLAGS(Console,                   // Console flags classes
-  /* --------------------------------------------------------------------- */
-  // No settings?                      Can't disable console? (temporary)
-  CF_NONE                   {Flag(0)}, CF_LOCKED                 {Flag(1)},
-  // Ignore first key on show console? Autoscroll on message?
-  CF_IGNOREKEY              {Flag(2)}, CF_AUTOSCROLL             {Flag(3)},
-  // Automatically copy cvar on check? Character insert mode?
-  CF_AUTOCOPYCVAR           {Flag(4)}, CF_INSERT                 {Flag(5)},
-  // Console displayed?                Ignore escape key?
-  CF_ENABLED                {Flag(6)}, CF_IGNOREESC              {Flag(7)},
-  // Can't disable console?            Block output position update?
-  CF_LOCKEDGLOBAL           {Flag(8)}, CF_BLOCKOUTPUTUPDATE      {Flag(9)}
-);/* ======================================================================= */
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Console,                   // Console flags
+  /* ----------------------------------------------------------------------- */
+  CF_NONE                   {Flag(0)}, // No settings?
+  CF_LOCKED                 {Flag(1)}, // Can't disable console (temporary)?
+  CF_IGNOREKEY              {Flag(2)}, // Ignore first key on show console?
+  CF_AUTOSCROLL             {Flag(3)}, // Autoscroll on message?
+  CF_AUTOCOPYCVAR           {Flag(4)}, // Automatically copy cvar on check?
+  CF_INSERT                 {Flag(5)}, // Character insert mode?
+  CF_ENABLED                {Flag(6)}, // Console displayed?
+  CF_IGNOREESC              {Flag(7)}, // Ignore escape key?
+  CF_LOCKEDGLOBAL           {Flag(8)}, // Can't disable console?
+  CF_BLOCKOUTPUTUPDATE      {Flag(9)}  // Block output position update?
+);/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(AutoComplete,              // Autocomplete flags classes
   /* ----------------------------------------------------------------------- */
-  // No autocompletion?                Autocomplete command names?
-  AC_NONE                   {Flag(0)}, AC_COMMANDS               {Flag(1)},
-  // Autocomplete cvar names?
-  AC_CVARS                  {Flag(2)},
+  AC_NONE                   {Flag(0)}, // No autocompletion?
+  AC_COMMANDS               {Flag(1)}, // Autocomplete command names?
+  AC_CVARS                  {Flag(2)}, // Autocomplete cvar names?
   /* ----------------------------------------------------------------------- */
   AC_MASK{ AC_COMMANDS|AC_CVARS }      // All flags
-);/* ======================================================================= */
+);/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(Redraw,                    // Redraw terminal or graphical console
   /* ----------------------------------------------------------------------- */
-  // Redraw nothing                    Redraw text console
-  RD_NONE                   {Flag(0)}, RD_TEXT                   {Flag(1)},
-  // Redraw graphical console
-  RD_GRAPHICS               {Flag(2)},
+  RD_NONE                   {Flag(0)}, // Redraw nothing?
+  RD_TEXT                   {Flag(1)}, // Redraw text console?
+  RD_GRAPHICS               {Flag(2)}, // Redraw graphical console?
   /* ----------------------------------------------------------------------- */
   RD_BOTH{ RD_TEXT|RD_GRAPHICS }       // All flags
 );/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(Cmd, const string, const ConLib) // Map of commands type
 /* ========================================================================= */
-class Console;                         // Class prototype
+struct Console;                        // Class prototype
 static Console *cConsole = nullptr;    // Pointer to global class
-class Console :                        // Members initially private
+struct Console :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public ConLines,                     // Console text lines list
   private ConLinesConstIt,             // Text lines forward iterator
@@ -69,7 +67,11 @@ class Console :                        // Members initially private
   private InitHelper,                  // Initialisation helper
   public ConsoleFlags,                 // Console flags
   private EvtMainRegAuto               // Events list to register
-{ /* -- Private typedefs --------------------------------------------------- */
+{ /* -- Settings ----------------------------------------------------------- */
+  constexpr static const size_t
+    stConCmdMinLength = 1,             // Minimum length of a console command
+    stConCmdMaxLength = 255;           // Maximum length of a console command
+  /* -- Private typedefs ------------------------------------------ */ private:
   typedef queue<ConLine> ConLineQueue; // Pending console lines
   /* -- Input -------------------------------------------------------------- */
   ConLineQueue     clqOutput;          // Console lines pending
@@ -221,9 +223,8 @@ class Console :                        // Members initially private
     } // Get reference name of item and return failed if comparison failed
     const string &strKey = *acisciCurrent;
     // We found the word so now we need to replace it with the actual command.
-    if(stBPos == StdNPos) strConsoleBegin = strKey;
-    else strConsoleBegin =
-      StrAppend(strConsoleBegin.substr(0, stBPos+1), strKey);
+    strConsoleBegin = stBPos == StdNPos ?
+      strKey : StrAppend(strConsoleBegin.substr(0, stBPos + 1), strKey);
     if(stEPos == StdNPos) strConsoleEnd.clear();
     else strConsoleEnd = strConsoleEnd.substr(stEPos);
     // Redraw console and return success
@@ -340,7 +341,7 @@ class Console :                        // Members initially private
     if(empty() || clriPosition == crend()) return false;
     // Find string in list and return if not found
     const ConLinesConstRevIt clcriIt{
-      StdFindIf(seq, next(clriPosition, 1), crend(),
+      StdFindIf(seq, next(clriPosition), crend(),
         [&strWhat](const ConLine &clLine)->bool
           { return clLine.strLine.find(strWhat) != StdNPos; }) };
     if(clcriIt == crend()) return false;
@@ -407,7 +408,7 @@ class Console :                        // Members initially private
     if(slriInputPosition == slHistory.crend())
       slriInputPosition = slHistory.crbegin();
     // Move back towards beginning of list if we can
-    else if(next(slriInputPosition, 1) != slHistory.crend())
+    else if(next(slriInputPosition) != slHistory.crend())
       ++slriInputPosition;
     // Set new input
     SetInput(*slriInputPosition);
@@ -812,7 +813,7 @@ class Console :                        // Members initially private
     cSystem->CommitBuffer();
   }
   /* -- Copy all console lines to log -------------------------------------- */
-  size_t ToLog()
+  size_t ToLog() const
   { // Write all console lines to log and return lines in buffer
     for(const ConLine &clItem : *this) cLog->LogNLCDebugSafe(clItem.strLine);
     return size();
@@ -820,6 +821,18 @@ class Console :                        // Members initially private
   /* -- Command exists? ---------------------------------------------------- */
   bool CommandIsRegistered(const string &strName) const
     { return cmMap.contains(strName); }
+  /* -- Check that the console variable name is valid ---------------------- */
+  bool IsValidConsoleCommandName(const string &strName) const
+  { // Return true if length is over or equal minimum allowed and length is
+    // under or equal maximum allowed and first character is valid and the rest
+    // of the characters are valid.
+    return strName.length() >= stConCmdMinLength &&
+      strName.length() <= stConCmdMaxLength &&
+      StdIsAlpha(strName.front()) &&
+      StdFindIf(par_unseq, next(strName.cbegin()), strName.cend(),
+        [](const char cC) { return StdIsNotAlnum(cC) && cC != '_'; })
+          == strName.cend();
+  }
   /* -- Register console command ------------------------------------------- */
   const CmdMapIt RegisterCommand(const string &strName,
     const unsigned int uiMin, const unsigned int uiMax,

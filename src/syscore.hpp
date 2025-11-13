@@ -366,10 +366,10 @@ class SysPipeBase :
 ** -- Typedefs ------------------------------------------------------------- */
 BUILD_FLAGS(SysCon,                    // Console flags classes
   /* ----------------------------------------------------------------------- */
-  // No settings?                      Cursor is visible?
-  SCO_NONE                  {Flag(0)}, SCO_CURVISIBLE            {Flag(1)},
-  // Cursor is in insert mode?         Exit requested?
-  SCO_CURINSERT             {Flag(2)}, SCO_EXIT                  {Flag(3)}
+  SCO_NONE                  {Flag(0)}, // No settings?
+  SCO_CURVISIBLE            {Flag(1)}, // Cursor is visible?
+  SCO_CURINSERT             {Flag(2)}, // Cursor is in insert mode?
+  SCO_EXIT                  {Flag(3)}  // Exit requested?
 );/* ----------------------------------------------------------------------- */
 class SysConBase :
   /* -- Base classes ------------------------------------------------------- */

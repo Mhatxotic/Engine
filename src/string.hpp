@@ -598,7 +598,7 @@ template<class AnyArray, class CtrType = typename AnyArray::value_type>
   // How many items do we have? Have more than 1?
   if(sstSize - sstBegin != 1)
   { // Build command string from vector
-    copy(next(aArray.cbegin(), sstBegin), prev(aArray.cend(), 1),
+    copy(next(aArray.cbegin(), sstBegin), prev(aArray.cend()),
       ostream_iterator<CtrType>(osS, strSep.data()));
     // Add final item
     osS << *aArray.crbegin();
@@ -997,7 +997,7 @@ template<class ListType>
              typedef typename ListType::value_type ListTypeValue;
              // Write the rest but one prefixed with the separator
              StdForEach(seq,
-               next(lType.cbegin(), 1), next(lType.crbegin(), 1).base(),
+               next(lType.cbegin()), next(lType.crbegin()).base(),
                  [&ossOut, &strSep](const ListTypeValue &strStr)
                    { ossOut << strSep << strStr; });
              // and now append the last separator and string from list

@@ -26,18 +26,17 @@ static const sqlite3_destructor_type fcbSqLiteTransient =
   reinterpret_cast<sqlite3_destructor_type>(-1);
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Sql cvar data types -------------------------------------------------- */
-BUILD_FLAGS(SqlCVarData,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(SqlCVarData,               // Sql cvar data types
   /* -- (Note: Don't ever change these around) ----------------------------- */
-  // No flags for this cvar in db?     The data value was encrypted?
-  SD_NONE                   {Flag(0)}, SD_ENCRYPTED              {Flag(1)}
-);/* -- Sql flags ---------------------------------------------------------- */
+  SD_NONE                   {Flag(0)}, // No flags for this cvar in db?
+  SD_ENCRYPTED              {Flag(1)}  // The data value was encrypted?
+);/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(Sql,                       // Sql flags classes
   /* ----------------------------------------------------------------------- */
-  // No settings?                      Is temporary database?
-  SF_NONE                   {Flag(0)}, SF_ISTEMPDB               {Flag(1)},
-  // Delete empty databases?           Debug sql executions?
-  SF_DELETEEMPTYDB          {Flag(2)}
+  SF_NONE                   {Flag(0)}, // No settings?
+  SF_ISTEMPDB               {Flag(1)}, // Is temporary database?
+  SF_DELETEEMPTYDB          {Flag(2)}  // Delete empty databases?
 );/* ----------------------------------------------------------------------- */
 struct SqlData :                       // Query response data item class
   /* -- Base classes ------------------------------------------------------- */
@@ -74,31 +73,31 @@ struct Sql :                           // Members initially public
 { /* -- Typedefs ----------------------------------------------------------- */
   enum ADResult                        // Results for CanDeleteDatabase()
   { /* --------------------------------------------------------------------- */
-    ADR_OK_NO_TABLES,                  // No tables exist (delete ok)
-    ADR_OK_NO_RECORDS,                 // No records exist (delete ok)
+    ADR_OK_NO_TABLES,                  // [0] No tables exist (delete ok)
+    ADR_OK_NO_RECORDS,                 // [1] No records exist (delete ok)
     /* --------------------------------------------------------------------- */
-    ADR_ERR,                           // Minimum error value (delete denied)
+    ADR_ERR,                           // [2] Min error value (delete denied)
     /* --------------------------------------------------------------------- */
-    ADR_ERR_TEMP_DB = ADR_ERR,         // Is temporary database?
-    ADR_ERR_DENY_OPTION,               // Delete not allowed by guest?
-    ADR_ERR_LU_TABLE,                  // Error looking up table?
-    ADR_ERR_TABLES_EXIST,              // Tables exist?
-    ADR_ERR_LU_RECORD,                 // Error looking up records?
-    ADR_ERR_RECORDS_EXIST,             // Records exist?
+    ADR_ERR_TEMP_DB = ADR_ERR,         // [2] Is temporary database?
+    ADR_ERR_DENY_OPTION,               // [3] Delete not allowed by guest?
+    ADR_ERR_LU_TABLE,                  // [4] Error looking up table?
+    ADR_ERR_TABLES_EXIST,              // [5] Tables exist?
+    ADR_ERR_LU_RECORD,                 // [6] Error looking up records?
+    ADR_ERR_RECORDS_EXIST,             // [7] Records exist?
     /* --------------------------------------------------------------------- */
-    ADR_MAX                            // Maximum number of result types
+    ADR_MAX                            // [8] Maximum number of result types
   };/* --------------------------------------------------------------------- */
   enum PurgeResult                     // Result to a purge request
   { /* --------------------------------------------------------------------- */
-    PR_FAIL,                           // Sql call failed with error
-    PR_OK,                             // Sql call succeeded with changes
-    PR_OK_NC,                          // Sql call succeeded but no changes
+    PR_FAIL,                           // [0] Sql call failed with error
+    PR_OK,                             // [1] Sql call succeeded with changes
+    PR_OK_NC,                          // [2] Sql call succeeded but no changes
   };/* --------------------------------------------------------------------- */
   enum CreateTableResult               // Create table result
   { /* --------------------------------------------------------------------- */
-    CTR_FAIL,                          // Sql create table failed
-    CTR_OK,                            // Sql call commited the variable
-    CTR_OK_ALREADY,                    // Sql table already exists
+    CTR_FAIL,                          // [0] Sql create table failed
+    CTR_OK,                            // [1] Sql call commited the variable
+    CTR_OK_ALREADY,                    // [2] Sql table already exists
   };/* -- Private typedefs ---------------------------------------- */ private:
   typedef IdList<SQLITE_NOTICE> ErrorList; // Sqlite errors strings list
   typedef IdList<ADR_MAX> ADRList;         // AD result strings list

@@ -21,13 +21,13 @@ namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
 enum ThreadStatus : int                // Thread status codes
 { /* ----------------------------------------------------------------------- */
-  TS_EXCEPTION = -3,                   // (-3) Thread exited with an exception
-  TS_INIT,                             // (-2) Thread starting up
-  TS_ERROR,                            // (-1) Thread will terminate cleanly
-  TS_STANDBY,                          // ( 0) Thread is in stand-by mode
-  TS_RUNNING,                          // ( 1) Thread is running still
-  TS_RETRY,                            // ( 2) Thread will start again
-  TS_OK,                               // ( 3) Thread will terminate cleanly
+  TS_EXCEPTION = -3,                   // [-3] Thread exited with an exception
+  TS_INIT,                             // [-2] Thread starting up
+  TS_ERROR,                            // [-1] Thread will terminate cleanly
+  TS_STANDBY,                          // [+0] Thread is in stand-by mode
+  TS_RUNNING,                          // [+1] Thread is running still
+  TS_RETRY,                            // [+2] Thread will start again
+  TS_OK,                               // [+3] Thread will terminate cleanly
 };/* == Thread collector class with global thread id counter =============== */
 CTOR_BEGIN(Threads, Thread, CLHelperSafe,
   /* ----------------------------------------------------------------------- */

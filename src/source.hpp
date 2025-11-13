@@ -23,12 +23,12 @@ using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Source flags --------------------------------------------------------- */
-BUILD_FLAGS(Source,
-  // No flags                          // Source is managed externally
-  SF_NONE{Flag(0)},                    SF_EXTERNAL{Flag(1)},
-  // Source is managed by LUA
-  SF_CLASS{Flag(2)}
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Source,                    // Source flags
+  /* ----------------------------------------------------------------------- */
+  SF_NONE                   {Flag(0)}, // No flags
+  SF_EXTERNAL               {Flag(1)}, // Source is managed externally
+  SF_CLASS                  {Flag(2)}  // Source is managed by LUA
 );/* -- Source collector class for collector data and custom variables ----- */
 CTOR_BEGIN(Sources, Source, CLHelperSafe,
 /* ------------------------------------------------------------------------- */

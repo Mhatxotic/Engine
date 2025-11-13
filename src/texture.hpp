@@ -3,8 +3,8 @@
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
 ** ## This module handles the loading and uploading of textures into      ## **
-** ## OpenGL. It will also handle some core drawing procedures inside the ## **
-** ## collector class too.                                                ## **
+** ## the renderer and the handling of tiles, texture co-ordinates,       ## **
+** ## colour and drawing positions.                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
@@ -804,23 +804,24 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     clFirst.reserve(gluvTiles.size() / stValues);
     // Shortcut to GLUIntVector const iterator
     typedef GLUIntVector::const_iterator GLUIntVectorItConst;
-    // Are image pixels reversed?
-    if(IsReversed())
+    // Inline function to enumerate the vector of coords and send to callback
+    auto fFunc = [&gluvTiles](auto &&fFunc){
       for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
                               gluvicIt + stValuesM1 < gluvTiles.cend();
                               gluvicIt += stValues)
-        AddTileRWH(0, static_cast<GLfloat>(*gluvicIt),
-                      static_cast<GLfloat>(*(gluvicIt + 1)),
-                      static_cast<GLfloat>(*(gluvicIt + 2)),
-                      static_cast<GLfloat>(*(gluvicIt + 3)));
-    // Image pixels are not reversed?
-    else for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
-                                 gluvicIt + stValuesM1 < gluvTiles.cend();
-                                 gluvicIt += stValues)
-     AddTileWH(0, static_cast<GLfloat>(*gluvicIt),
-                  static_cast<GLfloat>(*(gluvicIt + 1)),
-                  static_cast<GLfloat>(*(gluvicIt + 2)),
-                  static_cast<GLfloat>(*(gluvicIt + 3)));
+        fFunc(static_cast<GLfloat>(*gluvicIt),
+              static_cast<GLfloat>(*(gluvicIt + 1)),
+              static_cast<GLfloat>(*(gluvicIt + 2)),
+              static_cast<GLfloat>(*(gluvicIt + 3)));
+    }; // Are image pixels reversed?
+    if(IsReversed())
+      fFunc([this](const GLfloat fLeft, const GLfloat fTop,
+                   const GLfloat fWidth, const GLfloat fHeight)
+        { AddTileRWH(0, fLeft, fTop, fWidth, fHeight); });
+    // Image pixels not reversed
+    else fFunc([this](const GLfloat fLeft, const GLfloat fTop,
+                      const GLfloat fWidth, const GLfloat fHeight)
+      { AddTileWH(0, fLeft, fTop, fWidth, fHeight); });
   }
   /* -- Init from a manifest ----------------------------------------------- */
   void InitTextureImageManifest(Image &imSrc, const Json &jsDoc)

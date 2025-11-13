@@ -42,20 +42,19 @@ double             dMaxDrift;,,        // Maximum drift before drop frames
 /* -- Derived classes ------------------------------------------------------ */
 private LuaEvtMaster<Video, LuaEvtTypeParam<Video>>); // Lua event
 /* ------------------------------------------------------------------------- */
-BUILD_FLAGS(Video,
+BUILD_FLAGS(Video,                     // Video flags
   /* ----------------------------------------------------------------------- */
-  // No flags set?                     Have a theora stream?
-  FL_NONE                   {Flag(0)}, FL_THEORA                 {Flag(1)},
-  // Have a vorbis stream?             Video output initialised?
-  FL_VORBIS                 {Flag(2)}, FL_GLINIT                 {Flag(3)},
-  // Video is keyed?                   Video is full dynamic range?
-  FL_KEYED                  {Flag(4)}, FL_FDR                    {Flag(5)},
-  // Video is Rec.709 colour space?    Filtering is enabled?
-  FL_REC709                 {Flag(6)}, FL_FILTER                 {Flag(7)},
-  // Hard stopped?                     Video is playing?
-  FL_STOP                   {Flag(8)}, FL_PLAY                   {Flag(9)},
-  // Play after reinit?
-  FL_RESUME                {Flag(10)},
+  FL_NONE                   {Flag(0)}, // No flags set?
+  FL_THEORA                 {Flag(1)}, // Have a theora stream?
+  FL_VORBIS                 {Flag(2)}, // Have a vorbis stream?
+  FL_GLINIT                 {Flag(3)}, // Video output initialised?
+  FL_KEYED                  {Flag(4)}, // Video is keyed?
+  FL_FDR                    {Flag(5)}, // Video is full dynamic range?
+  FL_REC709                 {Flag(6)}, // Video is Rec.709 colour space?
+  FL_FILTER                 {Flag(7)}, // Filtering is enabled?
+  FL_STOP                   {Flag(8)}, // Hard stopped?
+  FL_PLAY                   {Flag(9)}, // Video is playing?
+  FL_RESUME                {Flag(10)}, // Play after reinit?
   /* -- Combined flags ----------------------------------------------------- */
   FL_THEORAVORBIS { FL_THEORA|FL_VORBIS }
 );/* ======================================================================= */

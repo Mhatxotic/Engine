@@ -27,29 +27,56 @@ namespace P {                          // Start of public module namespace
 #define GLL(F,M,...)      GLEX(cOgl->CheckLogError, F, M, ## __VA_ARGS__)
 #define GL(F,M,...)       GLEX(cOgl->CheckExceptError, F, M, ## __VA_ARGS__)
 #define GLC(M,...)        GLEX(cOgl->CheckExceptError, , M, ## __VA_ARGS__)
-/* -- OpenGL flags --------------------------------------------------------- */
-BUILD_FLAGS(Ogl,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Ogl,                       // OpenGL flags
   /* ----------------------------------------------------------------------- */
-  // No flags                          OpenGL context initialised?
-  GFL_NONE                  {Flag(0)}, GFL_INITIALISED           {Flag(1)},
-  // Either of the below commands?     Have nVidia memory information?
-  GFL_HAVEMEM               {Flag(2)}, GFL_HAVENVMEM             {Flag(3)},
-  // Have ATI memory avail info?       Devices shares memory with system
-  GFL_HAVEATIMEM            {Flag(4)}, GFL_SHARERAM              {Flag(5)}
+  GFL_NONE                  {Flag(0)}, // No flags
+  GFL_INITIALISED           {Flag(1)}, // OpenGL context initialised?
+  GFL_HAVEMEM               {Flag(2)}, // Either of the below commands?
+  GFL_HAVENVMEM             {Flag(3)}, // Have nVidia memory information?
+  GFL_HAVEATIMEM            {Flag(4)}, // Have ATI memory avail info?
+  GFL_SHARERAM              {Flag(5)}  // Devices shares memory with system
 );/* ----------------------------------------------------------------------- */
 enum OglFilterEnum : size_t            // Available filter combinations
-{ /* ----------------------------------------------------------------------- */
-  OF_N_N,     OF_N_L,    OF_L_N,      OF_L_L,      OF_NM_MAX,
-  OF_N_N_MM_N=OF_NM_MAX, OF_L_N_MM_N, OF_N_N_MM_L, OF_L_N_MM_L,
-  OF_N_L_MM_N,           OF_L_L_MM_N, OF_N_L_MM_L, OF_L_L_MM_L,
-  OF_MAX,
+{ /* -- Non-mipmapped ------------------------------------------------------ */
+  OF_N_N,                              // [00] GL_NEAREST GL_LINEAR
+  OF_N_L,                              // [01] GL_NEAREST GL_LINEAR
+  OF_L_N,                              // [02] GL_LINEAR  GL_NEAREST
+  OF_L_L,                              // [03] GL_LINEAR  GL_LINEAR
+  /* ----------------------------------------------------------------------- */
+  OF_NM_MAX,                           // [04] Non-mipmap filters count
+  /* -- Mipmapped ---------------------------------------------------------- */
+  OF_N_N_MM_N             = OF_NM_MAX, // [04] GL_NEAREST GL_NEAREST GL_NEAREST
+  OF_L_N_MM_N,                         // [05] GL_LINEAR  GL_NEAREST GL_NEAREST
+  OF_N_N_MM_L,                         // [06] GL_NEAREST GL_NEAREST GL_LINEAR
+  OF_L_N_MM_L,                         // [07] GL_LINEAR  GL_NEAREST GL_LINEAR
+  OF_N_L_MM_N,                         // [08] GL_NEAREST GL_LINEAR  GL_NEAREST
+  OF_L_L_MM_N,                         // [09] GL_LINEAR  GL_LINEAR  GL_NEAREST
+  OF_N_L_MM_L,                         // [10] GL_NEAREST GL_LINEAR  GL_LINEAR
+  OF_L_L_MM_L,                         // [11] GL_LINEAR  GL_LINEAR  GL_LINEAR
+  /* ----------------------------------------------------------------------- */
+  OF_MAX,                              // [12] GL_NEAREST/GL_NEAREST/GL_LINEAR
 };/* ----------------------------------------------------------------------- */
 enum OglBlendEnum : size_t             // Available blend combinations
 { /* ----------------------------------------------------------------------- */
-  OB_Z,   OB_O,       OB_S_C,   OB_O_M_S_C, OB_D_C, OB_O_M_D_C,
-  OB_S_A, OB_O_M_S_A, OB_D_A,   OB_O_M_D_A, OB_C_C, OB_O_M_C_C,
-  OB_C_A, OB_O_M_C_A, OB_S_A_S, OB_MAX
-};/* ---------------------------------------------------------------------- */
+  OB_Z,                                // [00] GL_ZERO
+  OB_O,                                // [01] GL_ONE
+  OB_S_C,                              // [02] GL_SRC_COLOR
+  OB_O_M_S_C,                          // [03] GL_ONE_MINUS_SRC_COLOR
+  OB_D_C,                              // [04] GL_DST_COLOR
+  OB_O_M_D_C,                          // [05] GL_ONE_MINUS_DST_COLOR
+  OB_S_A,                              // [06] GL_SRC_ALPHA
+  OB_O_M_S_A,                          // [07] GL_ONE_MINUS_SRC_ALPHA
+  OB_D_A,                              // [08] GL_DST_ALPHA
+  OB_O_M_D_A,                          // [09] GL_ONE_MINUS_DST_ALPHA
+  OB_C_C,                              // [10] GL_CONSTANT_COLOR
+  OB_O_M_C_C,                          // [11] GL_ONE_MINUS_CONSTANT_COLOR
+  OB_C_A,                              // [12] GL_CONSTANT_ALPHA
+  OB_O_M_C_A,                          // [13] GL_ONE_MINUS_CONSTANT_ALPHA
+  OB_S_A_S,                            // [14] GL_SRC_ALPHA_SATURATE
+  /* ----------------------------------------------------------------------- */
+  OB_MAX                               // [15] Blend functions supported
+};/* ----------------------------------------------------------------------- */
 enum OglUndefinedEnums : GLenum        // Some undefined OpenGL consts
 { /* ----------------------------------------------------------------------- */
   GL_RGBA_DXT1               = 0x83F1, // GL_COMPRESSED_RGBA_S3TC_DXT1_EXT

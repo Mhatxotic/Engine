@@ -122,8 +122,7 @@ static int StdAccess(const wstring &wstrPath, const int iMode)
 static int StdAccess(const string &strPath, const int iMode)
   { return StdAccess(UTFtoS16(strPath), iMode); }
 /* -- Wrapper for mkdir() function ----------------------------------------- */
-static int StdMkDir(const wchar_t*const wcpPath)
-  { return _wmkdir(wcpPath); }
+static int StdMkDir(const wchar_t*const wcpPath) { return _wmkdir(wcpPath); }
 static int StdMkDir(const wstring &wstrPath)
   { return StdMkDir(wstrPath.data()); }
 static int StdMkDir(const string &strPath)
@@ -133,29 +132,25 @@ static int StdRename(const wchar_t*const wcpSrcPath,
   const wchar_t*const wcpDstPath)
     { return _wrename(wcpSrcPath, wcpDstPath); }
 /* -- Wrapper for _wrename() function (wstring version) -------------------- */
-static int StdRename(const wstring &wstrSrcPath,
-  const wstring &wstrDstPath)
-    { return StdRename(wstrSrcPath.data(), wstrDstPath.data()); }
+static int StdRename(const wstring &wstrSrcPath, const wstring &wstrDstPath)
+  { return StdRename(wstrSrcPath.data(), wstrDstPath.data()); }
 /* -- Wrapper for _wrename() function (utf string version) ----------------- */
 static int StdRename(const string &strSrcPath, const string &strDstPath)
   { return StdRename(UTFtoS16(strSrcPath), UTFtoS16(strDstPath)); }
 /* -- Wrapper for _wrmdir() function --------------------------------------- */
-static int StdRmDir(const wchar_t*const wcpPath)
-  { return _wrmdir(wcpPath); }
+static int StdRmDir(const wchar_t*const wcpPath) { return _wrmdir(wcpPath); }
 static int StdRmDir(const wstring &wstrPath)
   { return StdRmDir(wstrPath.data()); }
 static int StdRmDir(const string &strPath)
   { return StdRmDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wchdir() function --------------------------------------- */
-static int StdChDir(const wchar_t*const wcpPath)
-  { return _wchdir(wcpPath); }
+static int StdChDir(const wchar_t*const wcpPath) { return _wchdir(wcpPath); }
 static int StdChDir(const wstring &wstrPath)
   { return StdChDir(wstrPath.data()); }
 static int StdChDir(const string &strPath)
   { return StdChDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wunlink() function -------------------------------------- */
-static int StdUnlink(const wchar_t*const wcpPath)
-  { return _wunlink(wcpPath); }
+static int StdUnlink(const wchar_t*const wcpPath) { return _wunlink(wcpPath); }
 static int StdUnlink(const wstring &wstrPath)
   { return StdUnlink(wstrPath.data()); }
 static int StdUnlink(const string &strPath)
@@ -182,16 +177,14 @@ static int StdFStat(const string &strPath,
   StdFStatStruct*const sDestBuffer)
     { return StdFStat(UTFtoS16(strPath), sDestBuffer);  }
 /* -- Wrapper for _fseeki64() function ------------------------------------- */
-static int StdFSeek(FILE*const fStream, const int64_t qwOffset,
-  int iWhence)
-    { return _fseeki64(fStream, qwOffset, iWhence); }
+static int StdFSeek(FILE*const fStream, const int64_t qwOffset, int iWhence)
+  { return _fseeki64(fStream, qwOffset, iWhence); }
 /* -- Wrapper for _ftelli64() function ------------------------------------- */
 static int64_t StdFTell(FILE*const fStream)
   { return _ftelli64(fStream); }
 /* -- Wrapper for _gmtime64_s() function ----------------------------------- */
-static void StdGMTime(StdTMStruct*const tmpResult,
-  const StdTimeT*const tpTime)
-    { _gmtime64_s(tmpResult, tpTime); }
+static void StdGMTime(StdTMStruct*const tmpResult, const StdTimeT*const tpTime)
+  { _gmtime64_s(tmpResult, tpTime); }
 /* -- Wrapper for _fstat64() function -------------------------------------- */
 static int StdHStat(const int iFd, StdFStatStruct*const sDestBuffer)
   { return _fstat64(iFd, sDestBuffer); }
@@ -246,22 +239,18 @@ static int StdAccess(const string &strPath, const int iMode)
 static int StdMkDir(const char*const cpPath)
   { return mkdir(cpPath,
       S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH); }
-static int StdMkDir(const string &strPath)
-  { return StdMkDir(strPath.data()); }
+static int StdMkDir(const string &strPath) { return StdMkDir(strPath.data()); }
 /* -- Wrapper for rename() function ---------------------------------------- */
-static int StdRename(const char*const cpSrcPath,
-  const char*const cpDstPath)
-    { return rename(cpSrcPath, cpDstPath); }
+static int StdRename(const char*const cpSrcPath, const char*const cpDstPath)
+  { return rename(cpSrcPath, cpDstPath); }
 static int StdRename(const string &strSrcPath, const string &strDstPath)
   { return StdRename(strSrcPath.data(), strDstPath.data()); }
 /* -- Wrapper for rmdir() function ----------------------------------------- */
 static int StdRmDir(const char*const cpPath) { return rmdir(cpPath); }
-static int StdRmDir(const string &strPath)
-  { return StdRmDir(strPath.data()); }
+static int StdRmDir(const string &strPath) { return StdRmDir(strPath.data()); }
 /* -- Wrapper for chdir() function ----------------------------------------- */
 static int StdChDir(const char*const cpPath) { return chdir(cpPath); }
-static int StdChDir(const string &strPath)
-  { return StdChDir(strPath.data()); }
+static int StdChDir(const string &strPath) { return StdChDir(strPath.data()); }
 /* -- Wrapper for unlink() function ---------------------------------------- */
 static int StdUnlink(const char*const cpPath) { return unlink(cpPath); }
 static int StdUnlink(const string &strPath)
@@ -272,29 +261,24 @@ static int StdExecVE(const char*const cpaArg[],
     { return execve(*cpaArg, const_cast<char**>(cpaArg),
         const_cast<char**>(cpaEnv)); }
 /* -- Wrapper for posix_spawn() stdlib function ---------------------------- */
-static int StdSpawnVE(const char*const cpaArg[],
-  const char*const cpaEnv[])
-    { pid_t pId; return posix_spawn(&pId, *cpaArg, nullptr, nullptr,
-        const_cast<char**>(cpaArg), const_cast<char**>(cpaEnv)); }
+static int StdSpawnVE(const char*const cpaArg[], const char*const cpaEnv[])
+  { pid_t pId; return posix_spawn(&pId, *cpaArg, nullptr, nullptr,
+      const_cast<char**>(cpaArg), const_cast<char**>(cpaEnv)); }
 /* -- Wrapper for fileno() function ---------------------------------------- */
 static int StdFileNo(FILE*const fStream) { return fileno(fStream); }
 /* -- Wrapper for stat() function ------------------------------------------ */
-static int StdFStat(const char*const cpPath,
-  StdFStatStruct*const sDestBuffer)
-    { return stat(cpPath, sDestBuffer);  }
-static int StdFStat(const string &strPath,
-  StdFStatStruct*const sDestBuffer)
-    { return StdFStat(strPath.data(), sDestBuffer);  }
+static int StdFStat(const char*const cpPath, StdFStatStruct*const sDestBuffer)
+  { return stat(cpPath, sDestBuffer);  }
+static int StdFStat(const string &strPath, StdFStatStruct*const sDestBuffer)
+  { return StdFStat(strPath.data(), sDestBuffer);  }
 /* -- Wrapper for fseek() function ----------------------------------------- */
-static int StdFSeek(FILE*const fStream, const off_t otOffset,
-  int iWhence)
-    { return fseeko(fStream, otOffset, iWhence); }
+static int StdFSeek(FILE*const fStream, const off_t otOffset, int iWhence)
+  { return fseeko(fStream, otOffset, iWhence); }
 /* -- Wrapper for ftell() function ----------------------------------------- */
 static off_t StdFTell(FILE*const fStream) { return ftello(fStream); }
 /* -- Wrapper for gmtime_r() function -------------------------------------- */
-static void StdGMTime(StdTMStruct*const tmpResult,
-  const StdTimeT*const tpTime)
-    { gmtime_r(tpTime, tmpResult); }
+static void StdGMTime(StdTMStruct*const tmpResult, const StdTimeT*const tpTime)
+  { gmtime_r(tpTime, tmpResult); }
 /* -- Wrapper for fstat() function ----------------------------------------- */
 static int StdHStat(const int iFd, StdFStatStruct*const sDestBuffer)
   { return fstat(iFd, sDestBuffer); }
@@ -306,9 +290,8 @@ static void StdLocalTime(StdTMStruct*const tmpResult,
 static StdTimeT StdMkTime(StdTMStruct*const tmpResult)
   { return mktime(tmpResult); }
 /* -- Wrapper for popen() function ----------------------------------------- */
-static FILE *StdPOpen(const char*const cpCommand,
-  const char*const cpType="r")
-    { return popen(cpCommand, cpType); }
+static FILE *StdPOpen(const char*const cpCommand, const char*const cpType="r")
+  { return popen(cpCommand, cpType); }
 static FILE *StdPOpen[[maybe_unused]](const string &strCommand,
   const char*const cpType="r")
     { return StdPOpen(strCommand.data(), cpType); }
@@ -318,9 +301,9 @@ static int StdPClose[[maybe_unused]](FILE*const fStream)
 /* -- Wrapper for srandom() function --------------------------------------- */
 static void StdSRand(const unsigned int uiSeed) { srandom(uiSeed); }
 /* -- Wrapper for mmap function -------------------------------------------- */
-template<typename PtrType>PtrType *StdMMap(void*vpAddr,
-  const size_t stLen, const int iProtection, const int iFlags,
-  const int iDescriptor, const off_t otOffset)
+template<typename PtrType>PtrType *StdMMap(void*vpAddr, const size_t stLen,
+  const int iProtection, const int iFlags, const int iDescriptor,
+  const off_t otOffset)
     { return reinterpret_cast<PtrType*>(Lib::OS::mmap(vpAddr, stLen,
         iProtection, iFlags, iDescriptor, otOffset)); }
 /* ------------------------------------------------------------------------- */
@@ -335,11 +318,9 @@ static void StdSetError(const int iValue) { errno = iValue; }
 /* -- Get error number ----------------------------------------------------- */
 static int StdGetError() { return errno; }
 /* -- Is error number equal to --------------------------------------------- */
-static bool StdIsError(const int iValue)
-  { return StdGetError() == iValue; }
+static bool StdIsError(const int iValue) { return StdGetError() == iValue; }
 /* -- Is error number not equal to ----------------------------------------- */
-static bool StdIsNotError(const int iValue)
-  { return !StdIsError(iValue); }
+static bool StdIsNotError(const int iValue) { return !StdIsError(iValue); }
 /* -- Uppercases the specified character ----------------------------------- */
 template<typename IntType>static char StdToUpper(const IntType itC)
   { return static_cast<char>(toupper(static_cast<int>(itC))); }
@@ -407,9 +388,8 @@ template<typename AnyType,typename IntType>
         (::std::realloc(reinterpret_cast<void*>(atPtr),
            static_cast<size_t>(itBytes))); }
 /* -- Release allocated memory --------------------------------------------- */
-template<typename AnyType>
-  static void StdFree(AnyType*const atPtr)
-    { ::std::free(reinterpret_cast<void*>(atPtr)); }
+template<typename AnyType>static void StdFree(AnyType*const atPtr)
+  { ::std::free(reinterpret_cast<void*>(atPtr)); }
 /* -- Compare memory ------------------------------------------------------- */
 static int StdCompare(const void*const vpA, const void*const vpB,
   const size_t stSize)

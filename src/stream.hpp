@@ -34,24 +34,26 @@ enum StreamEvents : unsigned int { SE_PLAY, SE_STOP }; // Playback events
 /* ------------------------------------------------------------------------- */
 enum StreamPlayState : unsigned int    // Current playback state
 { /* ----------------------------------------------------------------------- */
-  PS_STANDBY,                          // Is not playing?
-  PS_PLAYING,                          // Is playing?
-  PS_FINISHING,                        // Was stopping? (no more data)
-  PS_WASPLAYING,                       // Was playing? (audio reinit)
-  PS_MAX                               // Maximum number of states
+  PS_STANDBY,                          // [0] Is not playing?
+  PS_PLAYING,                          // [1] Is playing?
+  PS_FINISHING,                        // [2] Was stopping? (no more data)
+  PS_WASPLAYING,                       // [3] Was playing? (audio reinit)
+  /* ----------------------------------------------------------------------- */
+  PS_MAX                               // [4] Maximum number of states
 };/* ----------------------------------------------------------------------- */
 typedef IdList<PS_MAX> PSList;         // Play state strings
 /* ------------------------------------------------------------------------- */
 enum StreamStopReason : unsigned int   // Reason playback stopped
 { /* ----------------------------------------------------------------------- */
-  SR_STOPNOUNQ,                        // Successful stop with no unqueue
-  SR_STOPUNQ,                          // Successful stop with unqueue
-  SR_REBUFFAIL,                        // Rebuffer failed
-  SR_RWREBUFFAIL,                      // Rewind/Rebuffer failed
-  SR_GENBUFFAIL,                       // Generate source and buffer failed
-  SR_STOPALL,                          // Stopping all buffers (reset/quit)
-  SR_LUA,                              // Requested by Lua (guest).
-  SR_MAX                               // Maximum number of stop reasons
+  SR_STOPNOUNQ,                        // [0] Successful stop with no unqueue
+  SR_STOPUNQ,                          // [1] Successful stop with unqueue
+  SR_REBUFFAIL,                        // [2] Rebuffer failed
+  SR_RWREBUFFAIL,                      // [3] Rewind/Rebuffer failed
+  SR_GENBUFFAIL,                       // [4] Generate source and buffer failed
+  SR_STOPALL,                          // [5] Stopping all buffers (reset/quit)
+  SR_LUA,                              // [6] Requested by Lua (guest).
+  /* ----------------------------------------------------------------------- */
+  SR_MAX                               // [7] Maximum number of stop reasons
 };/* ----------------------------------------------------------------------- */
 typedef IdList<SR_MAX> SRList;         // Stop reason strings
 /* -- Stream collector class for collector data and custom variables ------- */

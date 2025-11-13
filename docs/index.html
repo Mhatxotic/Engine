@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.11.12.89 -->
-<!-- Automatically built at Wed Nov 12 22:18:34 2025 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.11.12.89 -->
+<!-- Reference for the Mhatxotic Engine API version 25.11.13.14 -->
+<!-- Automatically built at Thu Nov 13 01:17:47 2025 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 25.11.13.14 -->
 <!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.11.12.89">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 25.11.13.14">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.11.12.89">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.11.13.14">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.11.12.89">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.11.13.14">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.11.12.89 API reference">
+	<META name="og:title" content="Mhatxotic Engine 25.11.13.14 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 25.11.12.89 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 25.11.13.14 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.11.12.89 API reference</H1>
+	<H1>Mhatxotic Engine 25.11.13.14 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 900 functions (408 members, 492 methods) and 30 consts in 31 namespaces with 87 commands and 215 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 901 functions (409 members, 492 methods) and 30 consts in 31 namespaces with 87 commands and 215 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -382,11 +382,12 @@
 						<OL>
 							<LI><P>The Command class allows creation and manipulation of console commands</P></LI>
 							<LI>
-								<B>Members</B> <I>(3 members)</I>
+								<B>Members</B> <I>(4 members)</I>
 								<OL>
 									<LI><A href="#Command.Count">Count</A></LI>
 									<LI><A href="#Command.Exists">Exists</A></LI>
 									<LI><A href="#Command.Register">Register</A></LI>
+									<LI><A href="#Command.Valid">Valid</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -3174,6 +3175,18 @@
 		<PRE><U>Object</U> <I>(Command)</I> = The class object created.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Registers the specified console command and returns a reference to the newly created object which unregisters the console command when garbage collected&#x2e;<BR></PRE>
+		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Command.Valid" style="display:none">
+		<H3>Command.Valid</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Valid</U> = Command.Valid(<I><U>Cmd</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Cmd</U> <I>(string)</I> = Command name to test.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Valid</U> <I>(boolean)</I> = Command name is valid.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns true if the given string has valid characters&#x2c; false if not&#x2e;<BR>Console commands must begin with a letter but subsequent characters can be underscores and numbers&#x2e; The command must also be between 1 and 255 characters in length&#x2e;<BR></PRE>
 		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Command:Destroy" style="display:none">
@@ -11111,7 +11124,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Valid</U> <I>(boolean)</I> = Cvar name is valid.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns true if the cvar name is valid&#x2c; false if not&#x2e;<BR></PRE>
+		<PRE>Returns true if the given string has valid characters&#x2c; false if not&#x2e; CVars must begin with a letter but subsequent characters can be underscores and numbers&#x2e; The name must also be between 5 and 255 characters in length&#x2e;<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Variable:Boolean" style="display:none">
@@ -13247,6 +13260,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Wed Nov 12 22:18:34 2025 +0000</ADDRESS>
+	This document was generated at Thu Nov 13 01:17:47 2025 +0000</ADDRESS>
 </BODY>
 </HTML>

@@ -29,25 +29,25 @@ namespace P {                          // Start of public module namespace
 #define ALC(M,...)        ALEX(cOal->CheckExceptError, , M, ## __VA_ARGS__)
 /* -- Typedefs ------------------------------------------------------------- */
 typedef vector<ALuint>   ALUIntVector; // A vector of ALuint's
-/* -- OpenAL flags---------------------------------------------------------- */
-BUILD_FLAGS(Oal,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Oal,                       // OpenAL flags
   /* -- OAL specific flags ------------------------------------------------- */
-  // No flags                          Device has been initialised?
-  AFL_NONE                  {Flag(0)}, AFL_INITDEVICE            {Flag(3)},
-  // Context has been initialised?     Have infinite sources?
-  AFL_INITCONTEXT           {Flag(4)}, AFL_INFINITESOURCES       {Flag(5)},
-  // Context has been made current?    OpenAL fully initialised
-  AFL_CONTEXTCURRENT        {Flag(6)}, AFL_INITIALISED           {Flag(7)},
-  // Can play 32-bit float audio?      Have ALC_ENUMERATE_ALL_EXT?
-  AFL_HAVE32FPPB            {Flag(8)}, AFL_HAVEENUMEXT           {Flag(9)},
-  // Playback change def device event? Capture change default device event?
-  AFL_HAVESEPBDDC          {Flag(10)}, AFL_HAVESECADDC          {Flag(11)},
-  // Playback add device event?        Capture add device event?
-  AFL_HAVESEPBDA           {Flag(12)}, AFL_HAVESECADA           {Flag(13)},
-  // Playback remove device event?     Capture remove device event?
-  AFL_HAVESEPBDR           {Flag(14)}, AFL_HAVESECADR           {Flag(15)},
-  // Audio system is resetting?        HRTF is enabled?
-  AFL_REINIT               {Flag(16)}, AFL_HRTF                 {Flag(17)},
+  AFL_NONE                  {Flag(0)}, // No flags
+  AFL_INITDEVICE            {Flag(1)}, // Device has been initialised?
+  AFL_INITCONTEXT           {Flag(2)}, // Context has been initialised?
+  AFL_INFINITESOURCES       {Flag(3)}, // Have infinite sources?
+  AFL_CONTEXTCURRENT        {Flag(4)}, // Context has been made current?
+  AFL_INITIALISED           {Flag(5)}, // OpenAL fully initialised
+  AFL_HAVE32FPPB            {Flag(6)}, // Can play 32-bit float audio?
+  AFL_HAVEENUMEXT           {Flag(7)}, // Have ALC_ENUMERATE_ALL_EXT?
+  AFL_HAVESEPBDDC           {Flag(8)}, // Playback change def device event?
+  AFL_HAVESECADDC           {Flag(9)}, // Capture change default device event?
+  AFL_HAVESEPBDA           {Flag(10)}, // Playback add device event?
+  AFL_HAVESECADA           {Flag(11)}, // Capture add device event?
+  AFL_HAVESEPBDR           {Flag(12)}, // Playback remove device event?
+  AFL_HAVESECADR           {Flag(13)}, // Capture remove device event?
+  AFL_REINIT               {Flag(14)}, // Audio system is resetting?
+  AFL_HRTF                 {Flag(15)}, // HRTF is enabled?
   /* -- Masks -------------------------------------------------------------- */
   AFL_VOLATILE{ AFL_INITDEVICE|AFL_INITCONTEXT|AFL_INFINITESOURCES|
                 AFL_CONTEXTCURRENT|AFL_INITIALISED|AFL_HAVE32FPPB|

@@ -30,43 +30,41 @@ using namespace IUtf::P;               using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-BUILD_FLAGS(Display,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Display,                   // Display flags
   /* -- Active flags ------------------------------------------------------- */
-  // No display flags                  Window is focused?
-  DF_NONE                   {Flag(0)}, DF_FOCUSED                {Flag(1)},
-  // Exclusive mode full-screen?       Full-screen locked?
-  DF_EXCLUSIVE              {Flag(2)}, DF_NATIVEFS               {Flag(3)},
-  // Window is actually in fullscreen? Bad position was specified?
-  DF_INFULLSCREEN           {Flag(4)}, DF_BADPOS                 {Flag(5)},
-  // Bad size was specified?
-  DF_BADSIZE                {Flag(6)},
+  DF_NONE                   {Flag(0)}, // No display flags
+  DF_FOCUSED                {Flag(1)}, // Window is focused?
+  DF_EXCLUSIVE              {Flag(2)}, // Exclusive mode full-screen?
+  DF_NATIVEFS               {Flag(3)}, // Full-screen locked?
+  DF_INFULLSCREEN           {Flag(4)}, // Window is actually in fullscreen?
+  DF_BADPOS                 {Flag(5)}, // Bad position was specified?
+  DF_BADSIZE                {Flag(6)}, // Bad size was specified?
   /* -- End-user configuration flags --------------------------------------- */
-  // Use forward compatible context?   Use double-buffering?
-  DF_FORWARD               {Flag(47)}, DF_DOUBLEBUFFER          {Flag(48)},
-  // Automatic minimise?               Focus on show?
-  DF_AUTOICONIFY           {Flag(49)}, DF_AUTOFOCUS             {Flag(50)},
-  // Window is resizable?              Always on top?
-  DF_SIZABLE               {Flag(51)}, DF_FLOATING              {Flag(52)},
-  // Window has a border?              Minimize on lose focus?
-  DF_BORDER                {Flag(53)}, DF_MINFOCUS              {Flag(54)},
-  // HiDPI is enabled?                 SRGB namespace is enabled?
-  DF_SRGB                  {Flag(56)},
-  // Graphics switching enabled?       Full-screen mode set?
-  DF_GASWITCH              {Flag(57)}, DF_FULLSCREEN            {Flag(58)},
-  // Window is closable?               Stereo mode enabled?
-  DF_CLOSEABLE             {Flag(59)}, DF_STEREO                {Flag(60)},
-  // OpenGL debug context?             Window transparency enabled?
-  DF_DEBUG                 {Flag(61)}, DF_TRANSPARENT           {Flag(62)},
-  // No opengl errors?                 Window maximised at start?
-  DF_NOERRORS              {Flag(63)}, DF_MAXIMISED             {Flag(64)}
-);
+  DF_FORWARD               {Flag(47)}, // Use forward compatible context?
+  DF_DOUBLEBUFFER          {Flag(48)}, // Use double-buffering?
+  DF_AUTOICONIFY           {Flag(49)}, // Automatic minimise?
+  DF_AUTOFOCUS             {Flag(50)}, // Focus on show?
+  DF_SIZABLE               {Flag(51)}, // Window is resizable?
+  DF_FLOATING              {Flag(52)}, // Always on top?
+  DF_BORDER                {Flag(53)}, // Window has a border?
+  DF_MINFOCUS              {Flag(54)}, // Minimize on lose focus?
+  DF_SRGB                  {Flag(56)}, // SRGB namespace is enabled?
+  DF_GASWITCH              {Flag(57)}, // Graphics switching enabled?
+  DF_FULLSCREEN            {Flag(58)}, // Full-screen mode set?
+  DF_CLOSEABLE             {Flag(59)}, // Window is closable?
+  DF_STEREO                {Flag(60)}, // Stereo mode enabled?
+  DF_DEBUG                 {Flag(61)}, // OpenGL debug context?
+  DF_TRANSPARENT           {Flag(62)}, // Window transparency enabled?
+  DF_NOERRORS              {Flag(63)}, // No opengl errors?
+  DF_MAXIMISED             {Flag(64)}  // Window maximised at start?
+);/* ----------------------------------------------------------------------- */
 /* -- HIDPI setting enums -------------------------------------------------- */
 enum HiDPISetting                      // Possible values for 'vid_hidpi'
 { /* ----------------------------------------------------------------------- */
-  HD_DISABLED,                         // Do not enable HiDPI
-  HD_ENABLED,                          // Enable HiDPI
-  HD_ENHANCED                          // Enable HiDPI with certain behaviours
+  HD_DISABLED,                         // [0] Do not enable HiDPI
+  HD_ENABLED,                          // [1] Enable HiDPI
+  HD_ENHANCED                          // [2] Enable HiDPI keep main FBO DPI
 };/* ----------------------------------------------------------------------- */
 /* -- Display class -------------------------------------------------------- */
 class Display;                         // Class prototype
@@ -82,8 +80,8 @@ class Display :                        // Actual class body
   private EvtMainRegAuto,              // Main events list to register
   private EvtWinRegAuto                // Window events list to register
 { /* -- Monitors and resolutions ------------------------------------------- */
-  const GlFWMonitor  *gfwmActive;      // Monitor selected
-  const GlFWRes      *gfwrActive;      // Monitor resolution selected
+  const GlFWMonitor *gfwmActive;       // Monitor selected
+  const GlFWRes     *gfwrActive;       // Monitor resolution selected
   size_t           stMRequested,       // Monitor id request
                    stVRequested;       // Video mode requested
   SafeBool         bUnsuspend;         // Request to un-suspend window thread
@@ -295,8 +293,7 @@ class Display :                        // Actual class body
   /* == Check if window resized ============================================ */
   void CheckWindowResized(const int iWidth, const int iHeight) const
   { // If position not changed? Report event and return
-    if(cInput->DimGetWidth() == iWidth &&
-       cInput->DimGetHeight() == iHeight)
+    if(cInput->DimGetWidth() == iWidth && cInput->DimGetHeight() == iHeight)
       return cLog->LogDebugExSafe("Display received window size of $x$.",
         iWidth, iHeight);
     // Report change

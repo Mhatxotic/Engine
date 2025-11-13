@@ -234,23 +234,21 @@ class SysCore :
     // Get cpu times
     struct tms tmsData;
     const clock_t cProcNow = times(&tmsData);
-    // If times are not valid? Show percent as error
+    // If times are not valid? Show percent as error and return
     if(cProcNow <= ctProc || tmsData.tms_stime < ctProcSys ||
                              tmsData.tms_utime < ctProcUser)
-      cpuUData.dProcess = -1;
-    // Times are valid
-    else
-    { // Caclulate total time
-      cpuUData.dProcess = (tmsData.tms_stime - ctProcSys) +
-                           (tmsData.tms_utime - ctProcUser);
-      // Divide by total cpu time
-      cpuUData.dProcess /= (cProcNow - ctProc);
-      cpuUData.dProcess /= StdThreadMax();
-      cpuUData.dProcess *= 100;
-      // Update times
-      ctProc = cProcNow, ctProcSys = tmsData.tms_stime,
-        ctProcUser = tmsData.tms_utime;
-    }
+      { cpuUData.dProcess = -1; return; }
+    // Times are valid. Caclulate total time
+    cpuUData.dProcess =
+      (tmsData.tms_stime - ctProcSys) + (tmsData.tms_utime - ctProcUser);
+    // Divide by total cpu time
+    cpuUData.dProcess /= (cProcNow - ctProc);
+    cpuUData.dProcess /= StdThreadMax();
+    cpuUData.dProcess *= 100;
+    // Update times
+    ctProc = cProcNow;
+    ctProcSys = tmsData.tms_stime;
+    ctProcUser = tmsData.tms_utime;
   }
   /* -- Seek to position in specified handle ------------------------------- */
   template<typename IntType>
@@ -271,75 +269,76 @@ class SysCore :
     { // Read in the header
       Elf64_Ehdr ehData;
       if(const size_t stRead = fExe.FStreamReadSafe(&ehData, sizeof(ehData)))
-      { // We read enough bytes?
-        if(stRead == sizeof(ehData))
-        { // Rewind back to start
-          if(!fExe.FStreamRewind())
-            XCL("Failed to rewind executable file!", "File", strFile);
-          // Get ELF data order type and if correct byte order?
-          const unsigned int uiType = ehData.e_ident[EI_DATA];
-          if(uiType == ELFDATA2LSB || uiType == ELFDATA2MSB)
-          { // Is a 32-bit executable?
-            const unsigned int uiClass = ehData.e_ident[EI_CLASS];
-            if(uiClass == ELFCLASS32)
-            { // Read in 32-bit header
-              Elf32_Ehdr ehData32;
-              if(const size_t stRead2 =
-                fExe.FStreamReadSafe(&ehData32, sizeof(ehData32)))
-              { // We read enough bytes?
-                if(stRead2 == sizeof(ehData32))
-                { // Reverse bytes if not native
-                  if(uiType != uiELFDataNative)
-                    ehData.e_shoff = SWAP_U32(ehData32.e_shoff),
-                    ehData.e_shentsize = SWAP_U16(ehData32.e_shentsize),
-                    ehData.e_shnum = SWAP_U16(ehData32.e_shnum);
-                  else ehData.e_shoff = ehData32.e_shoff,
-                       ehData.e_shentsize = ehData32.e_shentsize,
-                       ehData.e_shnum = ehData32.e_shnum;
-                } // Failed to read enough bytes for ELF32 header
-                else XC("Failed to read enough bytes for ELF32 header!",
-                        "Requested", sizeof(ehData32), "Actual", stRead,
-                        "File", strFile);
-              } // Failed to read enough bytes for ELF32 header
-              else XCL("Failed to read ELF32 header!",
-                       "Requested", sizeof(ehData32), "File", strFile);
-            } // Or is a 64-bit executable?
-            else if(uiClass == ELFCLASS64)
-            { // Read in 64-bit header
-              Elf64_Ehdr ehData64;
-              if(const size_t stRead2 =
-                fExe.FStreamReadSafe(&ehData64, sizeof(ehData64)))
-              { // We read enough bytes?
-                if(stRead2 == sizeof(ehData64))
-                { // Reverse bytes if not native
-                  if(uiType != uiELFDataNative)
-                    ehData.e_shoff = SWAP_U64(ehData64.e_shoff),
-                    ehData.e_shentsize = SWAP_U16(ehData64.e_shentsize),
-                    ehData.e_shnum = SWAP_U16(ehData64.e_shnum);
-                  else ehData.e_shoff = ehData64.e_shoff,
-                       ehData.e_shentsize = ehData64.e_shentsize,
-                       ehData.e_shnum = ehData64.e_shnum;
-                } // Failed to read enough bytes for ELF64 header
-                else XC("Failed to read enough bytes for ELF64 header!",
-                        "Requested", sizeof(ehData64), "Actual", stRead,
-                        "File", strFile);
-              } // Failed to read enough bytes for 64-bit header
-              else XCL("Failed to read ELF64 header!",
-                       "Requested", sizeof(ehData64), "File", strFile);
-            } // Unknown executable type
-            else XC("Invalid ELF header architecture!",
-                  "Requested", ELFCLASS32, "OrRequested", ELFCLASS64,
-                  "Actual", uiClass, "File", strFile);
-            // Now we can return result
-            return ehData.e_shoff + (ehData.e_shentsize * ehData.e_shnum);
-          } // Failed to detect executable type
-          else XC("Invalid ELF executable type!",
-                  "Requested", ELFDATA2LSB, "OrRequested", ELFDATA2MSB,
-                  "Actual", uiType, "File", strFile);
-        } // Failed to read enough bytes
-        else XC("Failed to read enough bytes for ELF header!",
-                "Requested", sizeof(ehData), "Actual", stRead,
-                "File", strFile);
+      { // Throw error if we did not read enough bytes
+        if(stRead != sizeof(ehData))
+          XC("Failed to read enough bytes for ELF header!",
+             "Requested", sizeof(ehData), "Actual", stRead,
+             "File", strFile);
+        // Rewind back to start
+        if(!fExe.FStreamRewind())
+          XCL("Failed to rewind executable file!", "File", strFile);
+        // Get ELF data order type and throw if not correct byte order
+        const unsigned int uiType = ehData.e_ident[EI_DATA];
+        if(uiType != ELFDATA2LSB && uiType != ELFDATA2MSB)
+          XC("Invalid ELF executable type!",
+             "Requested", ELFDATA2LSB, "OrRequested", ELFDATA2MSB,
+             "Actual",    uiType,      "File",        strFile);
+        // Check bits-type
+        switch(const unsigned int uiClass = ehData.e_ident[EI_CLASS])
+        { // Is a 32-bit executable?
+          case ELFCLASS32:
+          { // Read in 32-bit header
+            Elf32_Ehdr ehData32;
+            if(const size_t stRead2 =
+              fExe.FStreamReadSafe(&ehData32, sizeof(ehData32)))
+            { // Throw if we didn't read enough bytes
+              if(stRead2 != sizeof(ehData32))
+                XC("Failed to read enough bytes for ELF32 header!",
+                   "Requested", sizeof(ehData32), "Actual", stRead,
+                   "File",      strFile);
+              // Reverse bytes if not native
+              if(uiType != uiELFDataNative)
+                ehData.e_shoff = SWAP_U32(ehData32.e_shoff),
+                ehData.e_shentsize = SWAP_U16(ehData32.e_shentsize),
+                ehData.e_shnum = SWAP_U16(ehData32.e_shnum);
+              else ehData.e_shoff = ehData32.e_shoff,
+                   ehData.e_shentsize = ehData32.e_shentsize,
+                   ehData.e_shnum = ehData32.e_shnum;
+              // Success
+              break;
+            } // Failed to read enough bytes for ELF32 header
+            XCL("Failed to read ELF32 header!",
+                "Requested", sizeof(ehData32), "File", strFile);
+          } // Is a 64-bit executable?
+          case ELFCLASS64:
+          { // Read in 64-bit header
+            Elf64_Ehdr ehData64;
+            if(const size_t stRead2 =
+              fExe.FStreamReadSafe(&ehData64, sizeof(ehData64)))
+            { // Throw if we didn't read enough bytes?
+              if(stRead2 != sizeof(ehData64))
+                XC("Failed to read enough bytes for ELF64 header!",
+                   "Requested", sizeof(ehData64), "Actual", stRead,
+                   "File",      strFile);
+              // Reverse bytes if not native
+              if(uiType != uiELFDataNative)
+                ehData.e_shoff = SWAP_U64(ehData64.e_shoff),
+                ehData.e_shentsize = SWAP_U16(ehData64.e_shentsize),
+                ehData.e_shnum = SWAP_U16(ehData64.e_shnum);
+              else ehData.e_shoff = ehData64.e_shoff,
+                   ehData.e_shentsize = ehData64.e_shentsize,
+                   ehData.e_shnum = ehData64.e_shnum;
+              // Success
+              break;
+            } // Failed to read enough bytes for 64-bit header
+            XCL("Failed to read ELF64 header!",
+                "Requested", sizeof(ehData64), "File", strFile);
+          } // Unknown executable type
+          default: XC("Invalid ELF header architecture!",
+                      "Requested", ELFCLASS32, "OrRequested", ELFCLASS64,
+                      "Actual",    uiClass,    "File",        strFile);
+        } // Now we can return the size
+        return ehData.e_shoff + (ehData.e_shentsize * ehData.e_shnum);
       } // Failed to read elf ident
       else XCL("Failed to read ELF header!",
                "Requested", sizeof(ehData), "File", strFile);
@@ -357,8 +356,7 @@ class SysCore :
   /* -- Enum modules ------------------------------------------------------- */
   SysModMap EnumModules()
   { // Make verison string
-    string strVersion{ StrAppend(numeric_limits<void*>::digits,
-      "-bit version") };
+    string strVersion{ StrAppend(sizeof(void*)*8, "-bit version") };
     // Mod list
     SysModMap smmMap;
     smmMap.emplace(make_pair(0UL, SysModule{ GetExeName(), VER_MAJOR,

@@ -15,14 +15,13 @@ using namespace IJoyAxis::P;           using namespace IJoyButton::P;
 using namespace ILog::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Joystick type typedef ------------------------------------------------ */
-BUILD_FLAGS(Joy,
+/* -- Public typedefs ------------------------------------------------------ */
+BUILD_FLAGS(Joy,                       // Joystick state flags
   /* ----------------------------------------------------------------------- */
-  // No flags                          Joystick is connnected?
-  JF_NONE                   {Flag(0)}, JF_CONNECTED              {Flag(1)},
-  // Joystick is actually a gamepad
-  JF_GAMEPAD                {Flag(2)}
-);
+  JF_NONE                   {Flag(0)}, // No flags?
+  JF_CONNECTED              {Flag(1)}, // Joystick is connnected?
+  JF_GAMEPAD                {Flag(2)}  // Joystick is actually a gamepad?
+);/* ----------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 class JoyInfo :                        // Joystick class
   /* -- Base classes ------------------------------------------------------- */
