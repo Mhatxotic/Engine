@@ -236,6 +236,13 @@ class Core final :                     // Members initially private
           cEvtMain->SetExitReason(EMC_LUA_ERROR);
           // Done
           break;
+        // Lua executing was reinitialised?
+        case EMC_LUA_REINIT:
+          // Commit modified cvars. We know if we get this far, all the
+          // configurations are valid so let's make sure they're saved!
+          cCVars->Save();
+          // Fall through to default
+          [[fallthrough]];
         // For anything else
         default:
           // Reset environment (entering)

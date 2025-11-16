@@ -407,11 +407,17 @@ struct CVars :                         // Start of vars class
   }
   /* ----------------------------------------------------------------------- */
   size_t Save()
-  { // Done if sqlite database is not opened or vars table is not availabe
-    if(!cSql->IsOpened() || cSql->CVarCreateTable() == Sql::CTR_FAIL)
+  { // If there is no database?
+    if(!cSql->IsOpened())
+    { // Log error silently and return
+      cLog->LogWarningSafe("CVars commit skipped because no database!");
       return StdNPos;
-    // Begin transaction
-    cSql->Begin();
+    } // Return if there is no table
+    if(cSql->CVarCreateTable() == Sql::CTR_FAIL) return StdNPos;
+    // Begin transaction and if failed? Log error silently
+    if(cSql->Begin() == SQLITE_ERROR)
+      cLog->LogWarningExSafe("CVars commit begin transaction failed ($)! $.",
+        cSql->GetError(), cSql->GetErrorAsIdString());
     // Total number of commits attempted which may need to be read and
     // written by multiple threads.
     SafeSizeT stCommitTotal{0}, stPurgeTotal{0};
@@ -428,14 +434,19 @@ struct CVars :                         // Start of vars class
           { cvmpRef.second.Save(stCommit, stPurge); });
       // Log variables written
       if(stCommit || stPurge)
-        cLog->LogInfoExSafe("CVars commited $ and purged $ from $ pool.",
+        cLog->LogInfoExSafe("CVars committed $ and purged $ from $ pool.",
           stCommit.load(), stPurge.load(), cvmpIt.strName);
       // Add to totals
       stCommitTotal += stCommit;
       stPurgeTotal += stPurge;
     });
-    // End transaction
-    cSql->End();
+    // End transaction and if failed? Log error silently
+    if(cSql->End() == SQLITE_ERROR)
+      cLog->LogWarningExSafe("CVars commit end transaction failed ($)! $.",
+        cSql->GetError(), cSql->GetErrorAsIdString());
+    // Get total changes and show a message on total changes
+    if(!stCommitTotal && !stPurgeTotal)
+      cLog->LogDebugSafe("CVars commit made no database changes.");
     // Return number of records saved or updated
     return stCommitTotal + stPurgeTotal;
   }
