@@ -184,15 +184,15 @@ class FboCore :                        // The main fbo operations manager
       // within the specified multiple value to prevent cracks appearing in
       // between tiles.
       fAspect = UtilClamp(DimGetWidth<GLfloat>() / DimGetHeight<GLfloat>(),
-        fAspectMin, fAspectMax) / 1.333333f;
+        fAspectMin, fAspectMax) / 1.33333333333333333333333f;
       // For some unknown reason we could be sent invalid values so we need to
       // make sure we ignore this value to prevent error handlers triggering.
       if(fAspect != fAspect) fAspect = 1.0f;
       // Calculate additional width over the 4:3 aspect ratio
       fAddWidth = UtilMaximum(((fWidth * fAspect) - fWidth) / 2.0f, 0.0f);
       // Calculate bounds for stage
-      fLeft = ceilf(-fAddWidth);
-      fRight = floorf(fWidth + fAddWidth);
+      fLeft = floorf(-fAddWidth);
+      fRight = ceilf(fWidth + fAddWidth);
       // Set top and bottom stage bounds
       fTop = 0.0f;
       fBottom = fHeight;
@@ -210,6 +210,24 @@ class FboCore :                        // The main fbo operations manager
       fMatrixHeight = fHeight;
       // Set stage bounds for drawing
       fboMain.FboSetMatrix(fLeft, fTop, fRight, fBottom);
+      // Calculate matrix dimensions
+      double dIW = static_cast<double>(fRight) - static_cast<double>(fLeft),
+             dIH = static_cast<double>(fBottom) - static_cast<double>(fTop),
+             // Viewport dimensions as double
+             dOW = DimGetWidth<double>(),
+             dOH = DimGetHeight<double>();
+      // Stretch matrix into viewport to reveal discardable pixels
+      UtilStretchToOuter(dOW, dOH, dIW, dIH);
+      // Calculate effective scaled viewport width
+      const double dW = dIW - dOW;
+      // Update the drawing position so the main fbo triangles are in the
+      // centre of the screen to try and maintain 1:1 pixel ratio even though
+      // on non-4:3 resolutions, you might not be able to scale the matrix
+      // width into a scaled 16:9 aspect ratio (e.g. 426x240 isn't exactly
+      // 16:9 and would cause one or two extra pixels on 2560x1440).
+      fboMain.FboItemSetVertex(
+        static_cast<GLfloat>(-1.0 - (-dOW        / dW)),  1.0f,
+        static_cast<GLfloat>( 1.0 + (-(dIW - dW) / dW)), -1.0f);
     } // Calculate new fbo width and height
     const GLsizei siFBOWidth = static_cast<GLsizei>(fRight - fLeft),
                   siFBOHeight = static_cast<GLsizei>(fBottom - fTop);
