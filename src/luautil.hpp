@@ -1262,6 +1262,63 @@ static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS)
   // Return count of key/value pairs in table
   return uiCount - uiIndexedCount;
 }
+/* -- Clear a table of key pairs ------------------------------------------- */
+static void LuaUtilClearObject(lua_State*const lS, const int iIndex)
+{ // Create a new table which will hold keys to delete
+  lua_newtable(lS);
+  const int iKIndex = LuaUtilStackSize(lS);
+  int iKCount = 0;
+  // First key pair for lua_next()
+  LuaUtilPushNil(lS);
+  // For each key pair
+  while(lua_next(lS, iIndex))
+  { // Copy the key name into the array
+    LuaUtilCopyValue(lS, -2);
+    lua_rawseti(lS, iKIndex, ++iKCount);
+    lua_pop(lS, 1);
+  } // For each key in the table
+  for(;iKCount > 0; --iKCount)
+  { // Nil out each collected key using rawset (avoids metamethods)
+    LuaUtilGetRefEx(lS, iKIndex, iKCount);
+    LuaUtilPushNil(lS);
+    LuaUtilSetRaw(lS, iIndex);
+  } // Remove keys table we created
+  lua_pop(lS, 1);
+}
+/* -- Clear a table of key pairs with check -------------------------------- */
+static void LuaUtilClearObjectSafe(lua_State*const lS, const int iIndex)
+  { LuaUtilCheckTable(lS, iIndex); LuaUtilClearObject(lS, iIndex); }
+/* -- Clear multiple tables of key pairs with check ------------------------ */
+static void LuaUtilClearObjects(lua_State*const lS, int iStart)
+  { for(const int iEnd = LuaUtilStackSize(lS); iStart <= iEnd; ++iStart)
+      LuaUtilClearObjectSafe(lS, iStart); }
+/* -- Clear a table of indicies -------------------------------------------- */
+static void LuaUtilClearArray(lua_State*const lS, const int iIndex)
+{ // If table array has size?
+  if(lua_Unsigned luSize = LuaUtilGetSize(lS, iIndex)) do
+  { // Push a nil and set it to the indice
+    LuaUtilPushNil(lS);
+    lua_rawseti(lS, iIndex, luSize);
+  } // Until all indicies removed
+  while(--luSize > 0);
+}
+/* -- Clear a table of indices with check ---------------------------------- */
+static void LuaUtilClearArraySafe(lua_State*const lS, const int iIndex)
+  { LuaUtilCheckTable(lS, iIndex); LuaUtilClearArray(lS, iIndex); }
+/* -- Clear multiple tables of indicies with check ------------------------- */
+static void LuaUtilClearArrays(lua_State*const lS, int iStart)
+  { for(const int iEnd = LuaUtilStackSize(lS); iStart <= iEnd; ++iStart)
+      LuaUtilClearArraySafe(lS, iStart); }
+/* -- Clear a table of both key pairs and indicies ------------------------- */
+static void LuaUtilClearTable(lua_State*const lS, const int iIndex)
+  { LuaUtilClearArray(lS, iIndex); LuaUtilClearObject(lS, iIndex); }
+/* -- Clear a table of both key pairs and indicies with check -------------- */
+static void LuaUtilClearTableSafe(lua_State*const lS, const int iIndex)
+  { LuaUtilCheckTable(lS, iIndex); LuaUtilClearTable(lS, iIndex); }
+/* -- Clear multiple tables of both key pairs and indicies with check ------ */
+static void LuaUtilClearTables(lua_State*const lS, int iStart)
+  { for(const int iEnd = LuaUtilStackSize(lS); iStart <= iEnd; ++iStart)
+      LuaUtilClearTableSafe(lS, iStart); }
 /* -- Replace text with values from specified LUA table -------------------- */
 static const string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
 { // Return if source string is empty?
