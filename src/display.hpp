@@ -219,13 +219,13 @@ class Display :                        // Actual class body
     const float fNewWidth = emaArgs[1].Float(),
                 fNewHeight = emaArgs[2].Float();
     // If scale not changed? Report event and return
-    if(UtilIsFloatEqual(fNewWidth, dfWinScale.DimGetWidth()) &&
-       UtilIsFloatEqual(fNewHeight, dfWinScale.DimGetHeight()))
+    if(StdIsFloatEqual(fNewWidth, dfWinScale.DimGetWidth()) &&
+       StdIsFloatEqual(fNewHeight, dfWinScale.DimGetHeight()))
       return cLog->LogDebugExSafe("Display received window scale of $x$.",
         fNewWidth, fNewHeight);
     // Set scale for ReInit if we went from HiDPI to LoDPI
-    if(UtilIsFloatEqual(fNewWidth, 1.0f) &&
-       UtilIsFloatEqual(fNewHeight, 1.0f) &&
+    if(StdIsFloatEqual(fNewWidth, 1.0f) &&
+       StdIsFloatEqual(fNewHeight, 1.0f) &&
        fNewWidth < dfWinScale.DimGetWidth() &&
        fNewHeight < dfWinScale.DimGetHeight())
       dfLastScale.DimSet(dfWinScale);
@@ -465,8 +465,14 @@ class Display :                        // Actual class body
   }
   /* -- Add event to reinit matrix ----------------------------------------- */
   void RequestMatrixReInit() { cEvtMain->Add(EMC_VID_MATRIX_REINIT); }
-  /* -- Matrix reset requested ----------------------------------------------*/
-  void OnMatrixReset(const EvtMainEvent&) { ReInitMatrix(); }
+  /* -- Matrix reset requested --------------------------------------------- */
+  void OnMatrixReset(const EvtMainEvent&)
+  { // Force-reinitialise matrix
+    CommitMatrix();
+    // Inform lua scripts that they should redraw the framebuffer
+    cEvtMain->Add(EMC_LUA_REDRAW);
+  }
+  /* -- Frame buffer was reset --------------------------------------------- */
   void OnFBReset(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
@@ -763,8 +769,8 @@ class Display :                        // Actual class body
       // Enabled with downscale fix?
       case HD_ENHANCED:
         // If we went from >1x scale to 1x scale?
-        if(UtilIsFloatEqual(dfWinScale.DimGetWidth(), 1.0f) &&
-           UtilIsFloatEqual(dfWinScale.DimGetHeight(), 1.0f) &&
+        if(StdIsFloatEqual(dfWinScale.DimGetWidth(), 1.0f) &&
+           StdIsFloatEqual(dfWinScale.DimGetHeight(), 1.0f) &&
            dfWinScale.DimGetWidth() < dfLastScale.DimGetWidth() &&
            dfWinScale.DimGetHeight() < dfLastScale.DimGetWidth())
         { // Increase size by old scale size
@@ -906,13 +912,13 @@ class Display :                        // Actual class body
   /* -- Alter default matrix ----------------------------------------------- */
   bool AlterDefaultMatrix(const GLfloat fNewWidth, const GLfloat fNewHeight)
   { // If width changed?
-    if(UtilIsFloatNotEqual(fNewWidth, dfMatrix.DimGetWidth()))
+    if(StdIsFloatNotEqual(fNewWidth, dfMatrix.DimGetWidth()))
     { // Update width and if height changed? Update the height
       dfMatrix.DimSetWidth(fNewWidth);
-      if(UtilIsFloatNotEqual(fNewHeight, dfMatrix.DimGetHeight()))
+      if(StdIsFloatNotEqual(fNewHeight, dfMatrix.DimGetHeight()))
         dfMatrix.DimSetHeight(fNewHeight);
     } // If height changed? Update the height and fall through to reinit
-    else if(UtilIsFloatNotEqual(fNewHeight, dfMatrix.DimGetHeight()))
+    else if(StdIsFloatNotEqual(fNewHeight, dfMatrix.DimGetHeight()))
       dfMatrix.DimSetHeight(fNewHeight);
     // Not modified so don't change the fbo
     else return false;
@@ -922,13 +928,6 @@ class Display :                        // Actual class body
     RequestMatrixReInit();
     // Success
     return true;
-  }
-  /* -- ReInit matrix ------------------------------------------------------ */
-  void ReInitMatrix()
-  { // Force-reinitialise matrix
-    CommitMatrix();
-    // Inform lua scripts that they should redraw the framebuffer
-    cEvtMain->Add(EMC_LUA_REDRAW);
   }
   /* -- Update window icon ------------------------------------------------- */
   void UpdateIcons()

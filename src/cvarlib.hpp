@@ -1437,14 +1437,6 @@ CVarItemStaticList{{
 { CFL_VIDEO, "vid_hidpi", cCommon->CommonOne(),
   CB(cDisplay->HiDPIChanged, HiDPISetting), TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
-// ! VID_LOCK
-// ? Locks the main frame buffer size to the app author values specified by
-// ? 'vid_orwidth' and 'vid_orheight' instead of resizing it to the windows
-// ? size.
-/* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_lock", cCommon->CommonZero(),
-  CB(cFboCore->SetLockViewport, bool), TBOOLEAN|PAPPCFG },
-/* ------------------------------------------------------------------------- */
 // ! VID_MONITOR
 // ? Specifies the monitor id to use. Use the 'mlist' console command to see
 // ? possible values or just use -1 to let the operating system decide.

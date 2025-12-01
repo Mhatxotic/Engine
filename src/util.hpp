@@ -45,7 +45,7 @@ static void UtilStretchToOuter(double &dOW, double &dOH, double &dIW,
   if(dInnerAspect > dOuterAspect)
   { // Calculate new width and centring factor
     const double dNewWidth = dOH / dIH * dIW,
-                 dCentringFactor = (dOW - dNewWidth) / 2;
+                 dCentringFactor = (dOW - dNewWidth) / 2.0;
     // Set new bounds. We'll use the original vars to set the values
     dIW = dNewWidth + dCentringFactor;
     dIH = dOH;
@@ -55,18 +55,18 @@ static void UtilStretchToOuter(double &dOW, double &dOH, double &dIW,
   else if(dInnerAspect < dOuterAspect)
   { // Calculate new width and centring factor
     const double dNewHeight = dOW / dIW * dIH,
-                 dCentringFactor = (dOH - dNewHeight) / 2;
+                 dCentringFactor = (dOH - dNewHeight) / 2.0;
     // Set new bounds. We'll use the original vars to set the values
     dIH = dNewHeight + dCentringFactor;
     dIW = dOW;
-    dOW = 0;
+    dOW = 0.0;
     dOH = dCentringFactor;
   } // No change?
   else
   { // Keep original values
     dIW = dOW;
     dIH = dOH;
-    dOW = dOH = 0;
+    dOW = dOH = 0.0;
   }
 }
 /* -- Expand dimensions to specified inner bounds keeping aspect ----------- */
@@ -79,27 +79,27 @@ static void UtilStretchToInner(double &dOW, double &dOH, double &dIW,
   if(dInnerAspect > dOuterAspect)
   { // Calculate new width and centring factor
     const double dNewHeight = dOW / dIW * dIH,
-                 dCentringFactor = (dOH - dNewHeight) / 2;
+                 dCentringFactor = (dOH - dNewHeight) / 2.0;
     // Set new bounds. We'll use the original vars to set the values
     dIH = dNewHeight + dCentringFactor;
     dIW = dOW;
-    dOW = 0;
+    dOW = 0.0;
     dOH = dCentringFactor;
   } // Otherwise
   else if(dInnerAspect < dOuterAspect)
   { // Calculate new width and centring factor
     const double dNewWidth = dOH / dIH * dIW,
-                 dCentringFactor = (dOW - dNewWidth) / 2;
+                 dCentringFactor = (dOW - dNewWidth) / 2.0;
     // Set new bounds. We'll use the original vars to set the values
     dIW = dNewWidth + dCentringFactor;
-    dIH = 0;
+    dIH = 0.0;
     dOW = dCentringFactor;
   } // No change?
   else
   { // Keep original values
     dIW = dOW;
     dIH = dOH;
-    dOW = dOH = 0;
+    dOW = dOH = 0.0;
   }
 }
 /* -- Try to reserve items in a list --------------------------------------- */
@@ -379,14 +379,6 @@ template<typename RetType, typename IntType>
 template<typename IntType>
   static double UtilMillimetresToInches(const IntType itValue)
     { return static_cast<double>(itValue) * 0.0393700787; }
-/* -- Returns true if two numbers are equal (Omit != and == warnings) ------ */
-template<typename FloatType>
-  static bool UtilIsFloatEqual(const FloatType f1, const FloatType f2)
-    { return f1 >= f2 && f1 <= f2; }
-/* -- Returns true if two numbers are NOT equal (Omit != and == warnings) -- */
-template<typename FloatType>
-  static bool UtilIsFloatNotEqual(const FloatType f1, const FloatType f2)
-    { return f1 < f2 || f1 > f2; }
 /* -- Initialise an array of the specified value --------------------------- */
 namespace MakeFilledContainer
 { /* -- Fill with specified value ------------------------------------------ */

@@ -10,7 +10,8 @@
 namespace IFboDef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICoord::P;             using namespace IDim::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
+using namespace IStd::P;               using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Defines -------------------------------------------------------------- */
@@ -143,13 +144,13 @@ class FboColour                        // Members initially private
   void ResetColour() { GetColour().fill(-1.0f); }
   /* ----------------------------------------------------------------------- */
   bool RedColourNotEqual(const FboColour &fcValue) const
-    { return UtilIsFloatNotEqual(GetColourRed(), fcValue.GetColourRed()); }
+    { return StdIsFloatNotEqual(GetColourRed(), fcValue.GetColourRed()); }
   bool GreenColourNotEqual(const FboColour &fcValue) const
-    { return UtilIsFloatNotEqual(GetColourGreen(), fcValue.GetColourGreen()); }
+    { return StdIsFloatNotEqual(GetColourGreen(), fcValue.GetColourGreen()); }
   bool BlueColourNotEqual(const FboColour &fcValue) const
-    { return UtilIsFloatNotEqual(GetColourBlue(), fcValue.GetColourBlue()); }
+    { return StdIsFloatNotEqual(GetColourBlue(), fcValue.GetColourBlue()); }
   bool AlphaColourNotEqual(const FboColour &fcValue) const
-    { return UtilIsFloatNotEqual(GetColourAlpha(), fcValue.GetColourAlpha()); }
+    { return StdIsFloatNotEqual(GetColourAlpha(), fcValue.GetColourAlpha()); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType,
     class ArrayType=array<IntType, sizeof(FboRGBA)/sizeof(GLfloat)>>

@@ -368,7 +368,7 @@ class Core final :                     // Members initially private
         // Done
         break;
     } // Unload all fbos (NOT destroy);
-    cFboCore->DeInitAllObjectsAndBuiltIns();
+    cFboCore->DeInit();
     // De-init core shaders
     cShaderCore->DeInitShaders();
     // OpenGL de-initialised (do not throw error if de-initialised)

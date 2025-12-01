@@ -22,6 +22,8 @@ using namespace IString::P;            using namespace ISysUtil::P;
 using namespace ITimer::P;             using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
+typedef array<Fbo, 2> FboDouble;       // Main and console fbo typedef
+/* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Main fbo class ======================================================= */
 class FboCore;                         // Class prototype
@@ -30,44 +32,41 @@ class FboCore :                        // The main fbo operations manager
   /* -- Base classes ------------------------------------------------------- */
   public FboColour,                    // Backbuffer clear colour
   public FboBlend,                     // Default blending mode
-  public DimGLSizei                    // Fbo dimensions
-{ /* -- Private variables ----------------------------------------- */ private:
+  public DimGLSizei,                   // Main frame buffer object dimensions
+  private FboDouble                    // Core frame buffer objects
+{ /* -- Private variables -------------------------------------------------- */
   GLfloat          fAspectMin,         // Minimum orthangal matrix ratio
-                   fAspectMax,         // Maximum orthangal matrix ratio
-                   fMatrixWidth,       // Requested matrix width
-                   fMatrixHeight;      // Requested matrix height
+                   fAspectMax;         // Maximum orthangal matrix ratio
+  DimGLFloat       dfMatrix;           // Requested matrix dimensions
   bool             bDraw,              // Should we draw the main fbo flag
                    bSimpleMatrix,      // Use simple not automatic matrix
-                   bLockViewport,      // Lock the viewport?
                    bClearBuffer;       // Clear back buffer?
   /* -- Core fbos -------------------------------------------------- */ public:
-  Fbo              fboConsole,         // Console fbo class
-                   fboMain;            // Primary fbo class
+  Fbo             &fboMain,            // Main fbo class (FboDouble[0])
+                  &fboConsole;         // Console fbo class (FboDouble[1])
   /* -- Render timings ----------------------------------------------------- */
-  ClockInterval<>  ciCurrent;          // Frames rendered per last second
-  unsigned int     uiFPS, uiFPSCur;    // Frames per second
+  ClockInterval<>  ciCurrent;          // One second interval to calculate fps
+  unsigned int     uiFPS, uiFPSCur;    // Frames per second (last / current)
   /* -- Draw flags --------------------------------------------------------- */
   bool CanDraw() const { return bDraw; }
   bool CannotDraw() const { return !CanDraw(); }
   void SetDraw() { bDraw = true; }
   void ClearDraw() { bDraw = false; }
   /* -- Get members -------------------------------------------------------- */
-  GLfloat GetMatrixWidth() const { return fMatrixWidth; }
-  GLfloat GetMatrixHeight() const { return fMatrixHeight; }
+  GLfloat GetMatrixWidth() const { return dfMatrix.DimGetWidth(); }
+  GLfloat GetMatrixHeight() const { return dfMatrix.DimGetHeight(); }
   /* -- Reset backbuffer clear colour to colour stored in cvar ------------- */
   void ResetClearColour()
-  { // Set main backbuffer colour
-    fboMain.FboResetClearColour();
-    fboConsole.FboResetClearColour();
-    // Commit the default backbuffer clear colour
+  { // Reset core framebuffer object colour intensities
+    for(Fbo &fboRef : *this) fboRef.FboResetClearColour();
+    // Commit the default back buffer clear colour
     cOgl->SetClearColourInt(
       cCVars->GetInternal<unsigned int>(VID_CLEARCOLOUR));
   }
   /* -- Render the main fbo from the engine thread ------------------------- */
   void Render()
-  { // Finish and render the main fbo
+  { // Finish and add the main fbo to the render list and render all fbos
     FinishMain();
-    // Render all the fbos
     FboRender();
     // Flush the pipeline to prevent memory leak and wait if not drawing
     if(CannotDraw()) { cOgl->Flush(); return cTimer->TimerForceWait(); }
@@ -138,29 +137,7 @@ class FboCore :                        // The main fbo operations manager
   /* -- Set main fbo as active fbo to draw too ----------------------------- */
   void ActivateMain() { fboMain.FboSetActive(); }
   /* -- Called from main tick incase we need to keep catching up frames ---- */
-  void RenderFbosAndFlushMain()
-  { // Render all the user queud fbos and flush them
-    FboRender();
-    // Flush main fbo
-    fboMain.FboFlush();
-  }
-  /* -- De-initialise all fbos --------------------------------------------- */
-  void DeInitAllObjectsAndBuiltIns()
-  { // Temporary de-init all user objects
-    FboDeInit();
-    // Temporary de-init the console and main static fbo classes too
-    fboConsole.FboDeInit();
-    fboMain.FboDeInit();
-  }
-  /* -- Destroy all fbo's -------------------------------------------------- */
-  void DestroyAllObjectsAndBuiltIns()
-  { // Destroy all the fbos. Note this doesn't destroy the static fbo's as they
-    // were unregistered in the init function below.
-    cFbos->CollectorDestroyUnsafe();
-    // Deinit the console and main static fbo classes
-    fboConsole.FboDeInit();
-    fboMain.FboDeInit();
-  }
+  void RenderFbosAndFlushMain() { FboRender(); fboMain.FboFlush(); }
   /* -- Sent when the window is resized/main fbo needs autosized --- */ public:
   bool AutoMatrix(const GLfloat fWidth, const GLfloat fHeight,
     const bool bForce)
@@ -169,12 +146,9 @@ class FboCore :                        // The main fbo operations manager
     // Use a simple matrix. The simple matrix means that the aspect ratio
     // will not be automatically calculated based on window size.
     if(bSimpleMatrix)
-    { // Set aspect based on window size and clamp it to allowable matrix
-      fAspect = UtilClamp(fWidth / fHeight, fAspectMin, fAspectMax);
-      // We're not adding any width, keep it classic style
-      fAddWidth = 0.0f;
-      // Set bounds
-      fLeft = fTop = 0.0f;
+    { // Allow any aspect ratio
+      fAspect = fWidth / fHeight;
+      fAddWidth = fLeft = fTop = 0.0f;
       fRight = fWidth;
       fBottom = fHeight;
     } // Don't use simple matrix?
@@ -190,45 +164,43 @@ class FboCore :                        // The main fbo operations manager
       if(fAspect != fAspect) fAspect = 1.0f;
       // Calculate additional width over the 4:3 aspect ratio
       fAddWidth = UtilMaximum(((fWidth * fAspect) - fWidth) / 2.0f, 0.0f);
-      // Calculate bounds for stage
+      // Calculate bounds for stage clamping to integral values
       fLeft = floorf(-fAddWidth);
-      fRight = ceilf(fWidth + fAddWidth);
+      fRight = floorf(fWidth + fAddWidth);
       // Set top and bottom stage bounds
       fTop = 0.0f;
       fBottom = fHeight;
-    } // If the viewport didn't change?
-    if(UtilIsFloatEqual(fLeft, fboMain.ffcStage.GetCoLeft()) &&
-       UtilIsFloatEqual(fTop, fboMain.ffcStage.GetCoTop()) &&
-       UtilIsFloatEqual(fRight, fboMain.ffcStage.GetCoRight()) &&
-       UtilIsFloatEqual(fBottom, fboMain.ffcStage.GetCoBottom()))
-    { // Return if we're not forcing the change
-      if(!bForce) return false;
-    } // Viewport changed?
-    else
-    { // Save requested matrix size incase viewport changes
-      fMatrixWidth = fWidth;
-      fMatrixHeight = fHeight;
-      // Set stage bounds for drawing
-      fboMain.FboSetMatrix(fLeft, fTop, fRight, fBottom);
-      // Calculate matrix dimensions
-      double dIW = static_cast<double>(fRight) - static_cast<double>(fLeft),
-             dIH = static_cast<double>(fBottom) - static_cast<double>(fTop),
-             // Viewport dimensions as double
-             dOW = DimGetWidth<double>(),
-             dOH = DimGetHeight<double>();
-      // Stretch matrix into viewport to reveal discardable pixels
-      UtilStretchToOuter(dOW, dOH, dIW, dIH);
-      // Calculate effective scaled viewport width
-      const double dW = dIW - dOW;
-      // Update the drawing position so the main fbo triangles are in the
-      // centre of the screen to try and maintain 1:1 pixel ratio even though
-      // on non-4:3 resolutions, you might not be able to scale the matrix
-      // width into a scaled 16:9 aspect ratio (e.g. 426x240 isn't exactly
-      // 16:9 and would cause one or two extra pixels on 2560x1440).
-      fboMain.FboItemSetVertex(
-        static_cast<GLfloat>(-1.0 - (-dOW        / dW)),  1.0f,
-        static_cast<GLfloat>( 1.0 + (-(dIW - dW) / dW)), -1.0f);
-    } // Calculate new fbo width and height
+    } // Test if the viewport didn't change?
+    const bool bUnchanged =
+      StdIsFloatEqual(fLeft, fboMain.ffcStage.GetCoLeft()) &&
+      StdIsFloatEqual(fTop, fboMain.ffcStage.GetCoTop()) &&
+      StdIsFloatEqual(fRight, fboMain.ffcStage.GetCoRight()) &&
+      StdIsFloatEqual(fBottom, fboMain.ffcStage.GetCoBottom());
+    // Set stage bounds for drawing
+    fboMain.FboSetMatrix(fLeft, fTop, fRight, fBottom);
+    // Calculate matrix dimensions
+    double dIW = static_cast<double>(fRight) - static_cast<double>(fLeft),
+           dIH = static_cast<double>(fBottom) - static_cast<double>(fTop),
+           // Viewport dimensions as double
+           dOW = DimGetWidth<double>(),
+           dOH = DimGetHeight<double>();
+    // Stretch matrix into viewport to reveal discardable pixels
+    UtilStretchToOuter(dOW, dOH, dIW, dIH);
+    // Calculate effective scaled viewport width
+    const double dW = dIW - dOW;
+    // Update the drawing position so the main fbo triangles are in the
+    // centre of the screen to try and maintain 1:1 pixel ratio even though
+    // on non-4:3 resolutions, you might not be able to scale the matrix
+    // width into a scaled 16:9 aspect ratio (e.g. 426x240 isn't exactly
+    // 16:9 and would cause one or two extra pixels on 2560x1440).
+    fboMain.FboItemSetVertex(
+      static_cast<GLfloat>(-1.0 - (-dOW        / dW)),  1.0f,
+      static_cast<GLfloat>( 1.0 + (-(dIW - dW) / dW)), -1.0f);
+    // If the stage unchanged? Return failure if we're not forcing the change
+    if(bUnchanged) { if(!bForce) return false; }
+    // Stage changed so save matrix size incase viewport changes
+    else dfMatrix.DimSet(fWidth, fHeight);
+    // Calculate new fbo width and height
     const GLsizei siFBOWidth = static_cast<GLsizei>(fRight - fLeft),
                   siFBOHeight = static_cast<GLsizei>(fBottom - fTop);
     // No point changing anything if the bounds are the same and if the fbo
@@ -240,8 +212,8 @@ class FboCore :                        // The main fbo operations manager
     { // Re-initialise the main framebuffer
       fboMain.FboInit("main", siFBOWidth, siFBOHeight);
       // Log computations
-      cLog->LogDebugExSafe("Fbo main matrix reinitialised as $x$ [$] "
-        "(D=$x$,A=$<$-$>,AW=$,S=$:$:$:$).",
+      cLog->LogDebugExSafe(
+        "FboCore matrix reinit to $x$[$] (D=$x$,A=$<$-$>,AW=$,S=$:$:$:$).",
         fboMain.GetCoRight(), fboMain.GetCoBottom(),
         StrFromRatio(siFBOWidth, siFBOHeight),
           fWidth, fHeight, fAspect, fAspectMin, fAspectMax, fAddWidth,
@@ -249,8 +221,8 @@ class FboCore :                        // The main fbo operations manager
       // Everything changed
       return true;
     } // Re-initialisation required?
-    cLog->LogDebugExSafe("Fbo main matrix recalculated! "
-      "(D=$x$,A=$<$-$>,AW=$,S=$:$:$:$).",
+    cLog->LogDebugExSafe(
+      "FboCore matrix recalculated! (D=$x$,A=$<$-$>,AW=$,S=$:$:$:$).",
       fWidth, fHeight, fAspect, fAspectMin, fAspectMax, fAddWidth,
       fLeft, fTop, fRight, fBottom);
     // Only bounds were changed
@@ -261,50 +233,43 @@ class FboCore :                        // The main fbo operations manager
     const bool bForce=false)
   { // Return if the viewport size did not change
     if(DimGetWidth() == siWidth && DimGetHeight() == siHeight) return false;
-    // Chosen viewport to store
-    GLsizei siUseWidth, siUseHeight;
-    // Lock viewport to matrix?
-    if(bLockViewport)
-    { // Lock viewport to matrix
-      siUseWidth = static_cast<GLsizei>(GetMatrixWidth());
-      siUseHeight = static_cast<GLsizei>(GetMatrixHeight());
-    } // Lock viewport to requested size?
-    else
-    { // Lock viewport to requested size clamped to a minimum of 1x1.
-      siUseWidth = UtilMaximum(1, siWidth);
-      siUseHeight = UtilMaximum(1, siHeight);
-    } // Set the new viewport
-    DimSet(siUseWidth, siUseHeight);
-    // Log event
-    cLog->LogDebugExSafe(
-      "Fbo processing automatrix size of $x$ to backbuffer...",
-      siUseWidth, siUseHeight);
-    // Update matrix because the window's aspect ratio may have changed
-    const bool bResult =
-      AutoMatrix(GetMatrixWidth(), GetMatrixHeight(), bForce);
-    // Inform lua scripts that they should redraw the framebuffer
-    if(bResult) cEvtMain->Add(EMC_LUA_REDRAW);
-    // Return result
-    return bResult;
+    // Set the new viewport and log the result
+    DimSet(UtilMaximum(1, siWidth), UtilMaximum(1, siHeight));
+    cLog->LogDebugExSafe("FboCore set new viewport of $x$.",
+      DimGetWidth(), DimGetHeight());
+    // Update matrix because the window's aspect ratio may have changed and
+    // if the FBO changed then inform lua scripts that they should redraw any
+    // FBO's they are managing and return the result.
+    if(!AutoMatrix(GetMatrixWidth(), GetMatrixHeight(), bForce)) return false;
+    cEvtMain->Add(EMC_LUA_REDRAW);
+    return true;
   }
-  /* -- Init console fbo --------------------------------------------------- */
+  /* -- Initialise the console fbo for the console object ------------------ */
   void InitConsoleFBO()
-  { // Initialise the console fbo for the console object
-    fboConsole.FboInit("console",
-      fboMain.DimGetWidth(), fboMain.DimGetHeight());
+    { fboConsole.FboInit("console",
+        fboMain.DimGetWidth(), fboMain.DimGetHeight()); }
+  /* -- Temporary de-init all guest, console and main fbo objects ---------- */
+  void DeInit()
+  { // De-init guest fbo objects
+    FboDeInit();
+    // De-init core fbo objects
+    StdForEach(seq, rbegin(), rend(), [](Fbo &fboRef){ fboRef.FboDeInit(); });
   }
-  /* -- Destructor ---------------------------------------------- */ protected:
-  DTORHELPER(~FboCore, DestroyAllObjectsAndBuiltIns())
-  /* -- Initialise fbos using a different constructor ---------------------- */
+  /* -- Initialise fbos using a different constructor ----------- */ protected:
   FboCore() :
     /* -- Initialisers ----------------------------------------------------- */
-    fAspectMin(1.0f),                  fAspectMax(2.0f),
-    fMatrixWidth(0.0f),                fMatrixHeight(0.0f),
-    bDraw(false),                      bSimpleMatrix(false),
-    bLockViewport(false),              bClearBuffer(false),
-    fboConsole{ GL_RGBA8, true },      fboMain{ GL_RGB8, true },
-    ciCurrent{ cd1S },                 uiFPS(0),
-    uiFPSCur(0)
+    FboDouble{{ { GL_RGB8,  true },    // Initialise main fbo (no register)
+                { GL_RGBA8, true } }}, // Initialise console fbo (no register)
+    fAspectMin(1.0f),                  // Minimum aspect ratio init by CVar
+    fAspectMax(2.0f),                  // Minimum aspect ratio init by CVar
+    bDraw(false),                      // Do not redraw the back buffer
+    bSimpleMatrix(false),              // Simple matrix init by CVar
+    bClearBuffer(false),               // Clear buffer init by CVar
+    fboMain(front()),                  // Init reference to main fbo
+    fboConsole(back()),                // Init reference to console fbo
+    ciCurrent{ cd1S },                 // Init one second timer
+    uiFPS(0),                          // Init zero last frames per second
+    uiFPSCur(0)                        // Init zero current frames per second
     /* -- Set pointer to global class and main fbo ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }
   /* -- Set main fbo float reserve --------------------------------- */ public:
@@ -317,14 +282,12 @@ class FboCore :                        // The main fbo operations manager
   CVarReturn SetFilter(const OglFilterEnum ofeV)
   { // Check value
     if(ofeV >= OF_MAX) return DENY;
-    // Set filtering of main and console fbo
-    fboMain.FboSetFilter(ofeV);
-    fboConsole.FboSetFilter(ofeV);
+    // Set filtering of main and console framebuffer objects
+    for(Fbo &fboRef : *this) fboRef.FboSetFilter(ofeV);
     // Accept the change anyway if opengl not initialised
     if(cOgl->IsGLNotInitialised()) return ACCEPT;
     // Commit the filters
-    fboMain.FboCommitFilter();
-    fboConsole.FboCommitFilter();
+    for(Fbo &fboRef : *this) fboRef.FboCommitFilter();
     // Redraw the main frame-buffer
     SetDraw();
     // Return success
@@ -342,9 +305,6 @@ class FboCore :                        // The main fbo operations manager
   /* -- Set maximum orthagonal matrix ratio -------------------------------- */
   CVarReturn SetMaxAspect(const GLfloat fMaximum)
     { return CVarSimpleSetIntNLG(fAspectMax, fMaximum, fAspectMin, 2.0f); }
-  /* -- Set viewport lock -------------------------------------------------- */
-  CVarReturn SetLockViewport(const bool bState)
-    { return CVarSimpleSetInt(bLockViewport, bState); }
   /* -- Set simple matrix -------------------------------------------------- */
   CVarReturn SetSimpleMatrix(const bool bState)
     { return CVarSimpleSetInt(bSimpleMatrix, bState); }
