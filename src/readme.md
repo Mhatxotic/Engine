@@ -61,4 +61,4 @@ Feel free to create an [issue](https://github.com/Mhatxotic/Engine/issues) or [p
 
 ### [Back to contents](#contents)…
 
-## Copyright © 2006-2025 Mhatxotic Design. All Rights Reserved.
+## Copyright © 2006-2026 Mhatxotic Design. All Rights Reserved.

@@ -251,22 +251,22 @@ class UtfDecoder                        // UTF8 string decoder helper
   /* -- Check if is displayable character ---------------------------------- */
   bool IsDisplayable()
   { // For each character, test if it is a control character
-    struct Op{Op()=default;
-      bool T(const unsigned int uiC)const{return uiC<0x20;}};
+    struct Op{ Op() = default;
+      static bool T(const unsigned int uiC) { return uiC < 0x20; }};
     return IsType<Op>();
   }
   /* -- Check if is ASCII compatible --------------------------------------- */
   bool IsASCII()
   { // For each character, test if it is valid ASCII
-    struct Op{Op()=default;
-      bool T(const unsigned int uiC)const{return uiC>0x7F;}};
+    struct Op{ Op() = default;
+      static bool T(const unsigned int uiC) { return uiC > 0x7F; }};
     return IsType<Op>();
   }
   /* -- Check if is extended ASCII compatible ------------------------------ */
   bool IsExtASCII()
   { // For each character, test if it is valid extended ASCII
-    struct Op{Op()=default;
-      bool T(const unsigned int uiC)const{return uiC>0xFF;}};
+    struct Op{ Op() = default;
+      static bool T(const unsigned int uiC) { return uiC > 0xFF; }};
     return IsType<Op>();
   }
   /* -- Length ------------------------------------------------------------- */

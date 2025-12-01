@@ -49,16 +49,16 @@ static double ClockTimePointRangeToClampedDouble
 /* -- Clock manager -------------------------------------------------------- */
 template<class ClockType = CoreClock>struct ClockManager
 { /* -- Get current time --------------------------------------------------- */
-  auto GetTime() const { return ClockType::now(); }
+  static auto GetTime() { return ClockType::now(); }
   /* -- Get time since epoch ----------------------------------------------- */
-  const ClkDuration GetEpochTime() const
+  static const ClkDuration GetEpochTime()
     { return GetTime().time_since_epoch(); }
   /* -- Get current time since epoch casted and counted -------------------- */
   template<typename Type,typename ReturnType>
     const ReturnType GetTimeEx() const
       { return static_cast<ReturnType>(ClockGetCount<Type>(GetEpochTime())); }
   /* -- Return time as double ---------------------------------------------- */
-  double GetTimeDouble() const
+  static double GetTimeDouble()
     { return ClockDurationToDouble(GetEpochTime()); }
   /* -- Return time since epoch count as integer --------------------------- */
   template<typename Type=StdTimeT>const Type GetTimeS() const
@@ -73,26 +73,26 @@ template<class ClockType = CoreClock>struct ClockManager
   template<typename Type=uint64_t>const Type GetTimeNS() const
     { return GetTimeEx<nanoseconds,Type>(); }
   /* -- Get offset time ---------------------------------------------------- */
-  const ClkDuration GetDuration(const ClkTimePoint &ctpCurrent) const
+  static const ClkDuration GetDuration(const ClkTimePoint &ctpCurrent)
     { return GetTime() - ctpCurrent; }
   /* -- Get timepoint count ------------------------------------------------ */
   template<typename Type>
     auto GetDurationCount(const ClkTimePoint &ctpCurrent) const
       { return ClockGetCount<Type>(GetDuration(ctpCurrent)); }
   /* -- Convert timepoint to double ---------------------------------------- */
-  double TimePointToDouble(const ClkTimePoint &ctpTime) const
+  static double TimePointToDouble(const ClkTimePoint &ctpTime)
     { return ClockDurationToDouble(GetDuration(ctpTime)); }
   /* -- Convert clamped timepoint to double -------------------------------- */
-  double TimePointToClampedDouble(const ClkTimePoint &ctpTime) const
+  static double TimePointToClampedDouble(const ClkTimePoint &ctpTime)
     { return UtilMaximum(TimePointToDouble(ctpTime), 0); }
   /* -- Convert local time to string --------------------------------------- */
-  const string FormatTime(const char*const cpFormat = cpTimeFormat)
-    const { return StrFromTimeTT(GetTimeS(), cpFormat); }
+  const string FormatTime(const char*const cpFormat = cpTimeFormat) const
+    { return StrFromTimeTT(GetTimeS(), cpFormat); }
   /* -- Convert universal time to string ----------------------------------- */
-  const string FormatTimeUTC(const char*const cpFormat =
-    cpTimeFormat) const { return StrFromTimeTTUTC(GetTimeS(), cpFormat); }
+  const string FormatTimeUTC(const char*const cpFormat = cpTimeFormat) const
+    { return StrFromTimeTTUTC(GetTimeS(), cpFormat); }
   /* -- Convert time to short duration ------------------------------------- */
-  const string ToDurationString(unsigned int uiPrecision = 6) const
+  static const string ToDurationString(unsigned int uiPrecision = 6)
     { return StrShortFromDuration(GetTimeDouble(), uiPrecision); }
   /* -- Convert seconds to long duration relative to current time ---------- */
   const string ToDurationRel(const StdTimeT tDuration = 0,

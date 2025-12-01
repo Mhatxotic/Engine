@@ -409,6 +409,16 @@ constexpr static void StdSuspend(const auto &aTime)
   { ::std::this_thread::sleep_for(aTime); }
 constexpr static void StdSuspend()
   { StdSuspend(::std::chrono::milliseconds{ 1 }); }
+/* -- Returns true if two numbers are equal (Omit != and == warnings) ------ */
+template<typename FloatType>
+  static bool StdIsFloatEqual(const FloatType ft1,
+    const FloatType ft2, const FloatType ftEpsilon=1e-6)
+      { return ::std::fabs(ft1 - ft2) < ftEpsilon; }
+/* -- Returns true if two numbers are NOT equal (Omit != and == warnings) -- */
+template<typename FloatType>
+  static bool StdIsFloatNotEqual(const FloatType ft1,
+    const FloatType ft2, const FloatType ftEpsilon=1e-6)
+      { return !StdIsFloatEqual<FloatType>(ft1, ft2, ftEpsilon); }
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## Because some compilers may not allow me to alias ::std::move        ## **

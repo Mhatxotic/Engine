@@ -703,7 +703,7 @@ CVarItemStaticList{{
 // ? current LUA version is different to this then the code cache will be
 // ? completely deleted so all code is recompiled.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_lastver", LUA_VDIR "." LUA_VERSION_RELEASE,
+{ CFL_BASIC, "lua_lastver", cCommon->CommonBlank(),
   CBSTR(LuaCodeCheckVersion), TSTRINGSAVE|PCMDLINE|PUDB },
 /* ------------------------------------------------------------------------- */
 // ! LUA_RANDOMSEED
@@ -1436,14 +1436,6 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_hidpi", cCommon->CommonOne(),
   CB(cDisplay->HiDPIChanged, HiDPISetting), TUINTEGER|PAPPCFG|PCMDLINE },
-/* ------------------------------------------------------------------------- */
-// ! VID_LOCK
-// ? Locks the main frame buffer size to the app author values specified by
-// ? 'vid_orwidth' and 'vid_orheight' instead of resizing it to the windows
-// ? size.
-/* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_lock", cCommon->CommonZero(),
-  CB(cFboCore->SetLockViewport, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_MONITOR
 // ? Specifies the monitor id to use. Use the 'mlist' console command to see

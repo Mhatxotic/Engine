@@ -43,7 +43,7 @@ class Log :                            // The actual class body
   public LogLines,                     // Holds info about every log line
   private FStream,                     // Output log file if needed
   public ClockChrono<CoreClock>,       // Holds the current log time
-  public Mutex                         // Because logger needs thread safe
+  public MutexLock                     // Because logger needs thread safe
 { /* -- Private typedefs --------------------------------------------------- */
   typedef IdList<LH_MAX> LogLevels;    // Log levels as human readable strings
   /* -- Private variables -------------------------------------------------- */

@@ -42,9 +42,9 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
 { /* -- Private variables -------------------------------------------------- */
   LuaCVarMapIt     lcvmiIt;            // Iterator to command Console gives us
   /* -- Returns the lua console command list ------------------------------- */
-  LuaCVarMap &GetLuaVarList() { return cVariables->lcvmMap; }
+  static LuaCVarMap &GetLuaVarList() { return cVariables->lcvmMap; }
   /* -- Returns the end of the lua console command list -------------------- */
-  LuaCVarMapIt GetLuaVarListEnd() { return GetLuaVarList().end(); }
+  static LuaCVarMapIt GetLuaVarListEnd() { return GetLuaVarList().end(); }
   /* == Cvar updated callback for Lua ============================== */ public:
   static CVarReturn LuaCallbackStatic(CVarItem &cviVar, const string &strVal)
   { // Find cvar and ignore if we don't have it yet! This can happen if the

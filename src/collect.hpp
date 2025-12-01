@@ -202,7 +202,7 @@ template<class MemberType, class ListType, class IteratorType,
 class CLHelperSafe :
   /* -- Base classes ------------------------------------------------------- */
   public BaseType,                     // The collector base type
-  public Mutex                         // Mutex helper
+  public MutexLock                     // Mutex helper
 { /* -- Lock the mutex and return if empty ---------------------- */ protected:
   bool CLEmpty()
     { return MutexCall([this](){ return this->CLBaseIsEmptyUnsafe(); }); }
@@ -409,11 +409,11 @@ class ICHelperSafe :                   // Members initially private
   void ICHelperSwap(const MemberType &mtObj)
     { this->cParent->MutexCall([this, &mtObj](){
         this->ICHelperBaseSwapRegistration(mtObj);}); }
-  /* -- Constructors ------------------------------------------------------- */
-  explicit ICHelperSafe(CollectorType*const ctPtr) :
-    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr))) {}
+  /* -- Constructor with/without registration ------------------------------ */
   explicit ICHelperSafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
     BaseType(ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr))) {}
+  explicit ICHelperSafe(CollectorType*const ctPtr) :
+    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr))) {}
 };/* ----------------------------------------------------------------------- */
 /* == Collector class helper without locks ================================= **
 ** ######################################################################### **

@@ -5,4 +5,4 @@ These scripts will help one build the Mhatxotic Engine Project Management Utilit
 * `.sh` files are for Linux and MacOS.
 * `.bat` files are for Windows.
 
-## Copyright © 2006-2025 Mhatxotic Design. All Rights Reserved.
+## Copyright © 2006-2026 Mhatxotic Design. All Rights Reserved.

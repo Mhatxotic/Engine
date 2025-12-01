@@ -538,9 +538,9 @@ class System :                         // The main system class
 #endif
        "+ Working directory is $.\n"
        "+ Persistent directory is $.\n"
-       "+ Process id is $<0x$$$> with main thread id of $<0x$$$>.\n"
+       "+ Process and thread id are $<0x$$$> and $<0x$$$>.\n"
 #if !defined(MACOS)
-       "+ Priority is $<0x$$$> with affinity $<0x$$$> and mask $<0x$$$>.\n"
+       "+ Priority and affinity are $<0x$$$> and $<0x$$$>[$<0x$$$>].\n"
 #endif
        "+ Processor is $<$x$MHz;FMS:$,$,$>.\n"
        "+ Memory has $ with $ free and $ initial.\n"

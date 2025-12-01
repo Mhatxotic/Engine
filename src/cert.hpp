@@ -31,83 +31,13 @@ class Certs                            // Certificates store
   };/* --------------------------------------------------------------------- */
   typedef map<const size_t, const X509ErrInfo> X509Err;
   typedef array<SafeUInt64, 2> SafeDoubleUInt64; // Two atomic double uint64's
-  /* -- Class to serialise load of certificates ---------------------------- */
-  struct LoadSerialised                // Serialised certificate installation
-  { /* -- Lock/Unlock ------------------------------------------------------ */
-    void LockFunction() {}             // Lock function not used
-    void UnlockFunction() {}           // Unlock function not used
-    /* -- Destructor/Constructor ------------------------------------------- */
-    LoadSerialised() {}                // Constructor not used
-  };/* -- Class to load certificates in parallel --------------------------- */
-  class LoadParallel :                 // Parallel certificate installation
-    /* -- Base classes ----------------------------------------------------- */
-    private Mutex                      // Mutex
-  { /* --------------------------------------------------------------------- */
-    bool           bLocked;            // Locked flag
-    /* -- Lock/Unlock ---------------------------------------------- */ public:
-    void LockFunction() { MutexGet().lock(); bLocked = true; }
-    void UnlockFunction() { MutexGet().unlock(); bLocked = false; }
-    /* -- Destructor/Constructor ------------------------------------------- */
-    ~LoadParallel() { if(bLocked) UnlockFunction(); }
-    LoadParallel() : bLocked(false) {}
-  };/* -- Variables -------------------------------------------------------- */
+  /* -- Variables ---------------------------------------------------------- */
   SSL_CTX           *scStore;          // Context used for cerificate store
   X509_STORE        *xsCerts;          // Certificate store inside OpenSSL
   X509List           lCAStore;         // Certificate store
   SafeDoubleUInt64   qCertBypass;      // Certificate bypass flags
   const string       strExtension;     // Default extension
   const X509Err      xErrDB;           // X509 error database
-  /* -- Load certificate --------------------------------------------------- */
-  template<class SyncMethod>void CertsLoad(SyncMethod &smClass,
-    const string &strD, const string &strF) try
-  { // Load the certificate
-    const FileMap fmCert{ AssetExtract(StrAppend(strD, '/', strF)) };
-    // Get pointer
-    const unsigned char*ucpPtr = fmCert.MemPtr<unsigned char>();
-    // Load the raw certificate and ig it succeeded?
-    typedef unique_ptr<X509, function<decltype(X509_free)>> X509Ptr;
-    if(X509Ptr caCert{
-      d2i_X509(nullptr, &ucpPtr, fmCert.MemSize<long>()), X509_free })
-    { // Get purpose struct of certificate
-      if(X509_PURPOSE*const x509p = X509_PURPOSE_get0(X509_PURPOSE_SSL_SERVER))
-      { // Get purpose id and reject if it is not a server CA certificate
-        switch(X509_check_purpose(caCert.get(), X509_PURPOSE_get_id(x509p), 1))
-        { // The certificate was created to perform the purpose represented
-          case 1:
-            // Valid server CA certificate so add to CA store and if succeeded?
-            if(X509_STORE_add_cert(xsCerts, caCert.get()))
-            { // Lock access to the list
-              smClass.LockFunction();
-              lCAStore.push_back({ fmCert.IdentGet(), caCert.get() });
-              smClass.UnlockFunction();
-            } // Failed to add certificate to CA store
-            else cLog->LogWarningExSafe(
-              "Certs failed to add '$' to SSL context!", fmCert.IdentGet());
-            break;
-          // The certificate was not created to perform the purpose represented
-          case 0:
-            cLog->LogWarningExSafe(
-              "Certs rejected '$' as not a server CA certificate!",
-              fmCert.IdentGet());
-            break;
-          // An error occured
-          default:
-            cLog->LogWarningExSafe(
-              "Certs rejected '$' because an error occurred!",
-              fmCert.IdentGet());
-            break;
-        }
-      } // Failed to get purpose? Log the rejection
-      else cLog->LogWarningExSafe(
-        "Certs rejected '$' as unable to get purpose!", fmCert.IdentGet());
-    } // Release the certificate (caCert)
-  } // In the rare occurence that an exception occurs we should skip the cert
-  catch(const exception &eReason)
-  { // Show the exception and try the next certificate
-    cLog->LogErrorExSafe(
-      "Certs rejected certificate '$/$' due to exception: $",
-      strD, strF, eReason);
-  }
   /* -- Unload open ssl certificate store ---------------------------------- */
   void CertsUnload()
   { // If there are certificates in the list then clear them
@@ -148,35 +78,76 @@ class Certs                            // Certificates store
     // Log that we're loading certificates in parallel
     cLog->LogDebugExSafe("Certs store initialised. Loading $ certificates...",
       aList.size());
-    // Apple compiler does not support STL execution policy yet :(.
-#if defined(MACOS)
-    // Create sync method class
-    LoadSerialised ccaSync;
-    // Now initialising certificate store
-    for(const string &strF : aList) CertsLoad(ccaSync, strD, strF);
-#else
-    // Create async method class
-    LoadParallel ccaASync;
-    // Now initialising certificate store
+    // Mutex for parallel loading of certificates (no-op on MacOS)
+    MutexAuto maLock;
+    // Now initialising certificate store ('seq' on MacOS)
     StdForEach(par_unseq, aList.cbegin(), aList.cend(),
-      [this, &ccaASync, &strD](const string &strF)
-        { CertsLoad(ccaASync, strD, strF); });
-#endif
+      [this, &strD, &maLock](const string &strF)
+    { // Capture exceptions
+      try
+      { // Load the certificate
+        const FileMap fmCert{ AssetExtract(StrAppend(strD, '/', strF)) };
+        // Get pointer
+        const unsigned char*ucpPtr = fmCert.MemPtr<unsigned char>();
+        // Load the raw certificate and ig it succeeded?
+        typedef unique_ptr<X509, function<decltype(X509_free)>> X509Ptr;
+        if(X509Ptr caCert{
+          d2i_X509(nullptr, &ucpPtr, fmCert.MemSize<long>()), X509_free })
+        { // Get purpose struct of certificate
+          if(X509_PURPOSE*const x509p =
+            X509_PURPOSE_get0(X509_PURPOSE_SSL_SERVER))
+          { // Get purpose id and reject if it is not a server CA certificate
+            switch(X509_check_purpose(caCert.get(),
+              X509_PURPOSE_get_id(x509p), 1))
+            { // The certificate was created to perform the purpose represented
+              case 1:
+                // Valid server CA cert so add to CA store and if succeeded?
+                if(X509_STORE_add_cert(xsCerts, caCert.get()))
+                { // Lock access to the list
+                  maLock.MutexCall([this, &fmCert, &caCert](){
+                    lCAStore.push_back({ fmCert.IdentGet(), caCert.get() });
+                  });
+                } // Failed to add certificate to CA store
+                else cLog->LogWarningExSafe(
+                  "Certs failed to add '$' to SSL context!", fmCert.IdentGet());
+                break;
+              // The cert was not created to perform the purpose represented
+              case 0:
+                cLog->LogWarningExSafe(
+                  "Certs rejected '$' as not a server CA certificate!",
+                  fmCert.IdentGet());
+                break;
+              // An error occurred so show warning
+              default:
+                cLog->LogWarningExSafe(
+                  "Certs rejected '$' because an error occurred!",
+                  fmCert.IdentGet());
+                break;
+            }
+          } // Failed to get purpose? Log the rejection
+          else cLog->LogWarningExSafe(
+            "Certs rejected '$' as unable to get purpose!", fmCert.IdentGet());
+        } // Release the certificate (caCert)
+      } // In the rare occurence that an exception occurs we should skip the cert
+      catch(const exception &eReason)
+      { // Show the exception and try the next certificate
+        cLog->LogErrorExSafe(
+          "Certs rejected certificate '$/$' due to exception: $",
+          strD, strF, eReason);
+      }
+    });
     // If no certs were loaded then there is no need to keep the context
     if(lCAStore.empty()) CertsUnload();
     // We hav certs so shrink memory to fit actual contents
     else lCAStore.shrink_to_fit();
-    // If we loaded all the certificates?
+    // Load if we loaded all the certificates?
     if(lCAStore.size() == aList.size())
-    { // Log that we loaded all the certificates
       cLog->LogInfoExSafe("Certs validated all $ certificates.",
         lCAStore.size(), aList.size());
-    } // If we didn't load all the certificates?
-    else
-    { // Log a warning that we did not load all the certificates
-      cLog->LogWarningExSafe("Certs could only validate $ of $ certificates!",
+    // Else log if we didn't load all the certificates?
+    else cLog->LogWarningExSafe(
+      "Certs could only validate $ of $ certificates!",
         lCAStore.size(), aList.size());
-    }
   }
   /* --------------------------------------------------------------- */ public:
   X509_STORE *CertsGetStore() const { return xsCerts; }
@@ -301,9 +272,8 @@ class Certs                            // Certificates store
     cLog->LogDebugExSafe("Certs searching '$' for certificates...", strD);
     // Get certificates in ca subdirectory and return if nothing found
     if(const AssetList aList{ strD, strExtension, false })
-    { // Reload new certificates list
+    { // Reload new certificates list and clear error stack
       CertsLoadList(strD, aList);
-      // Clear error stack
       ERR_clear_error();
     } // No certificates to load so log it
     else cLog->LogWarningSafe("Certs found no matching files!");
@@ -355,9 +325,8 @@ static StdTimeT CertGetTime(const ASN1_TIME &atD)
 }
 /* ========================================================================= */
 static bool CertIsExpired(const X509*const x509)
-{ // Get current time
+{ // Get current time and check expired begin and end date
   const StdTimeT tTime = cmSys.GetTimeS();
-  // Check expired begin and end date
   return tTime < CertGetTime(*X509_get0_notBefore(x509)) ||
          tTime > CertGetTime(*X509_get0_notAfter(x509));
 }

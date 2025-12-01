@@ -86,7 +86,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   public RefCtrMaster<>,               // Ref counter to protect LUA callbacks
   public SocketFlags,                  // Socket flags
   public Ident,                        // Identifier
-  private Mutex                        // Reader mutex
+  private MutexLock                    // Reader mutex
 { /* ----------------------------------------------------------------------- */
   struct Packet                        // Connection packet
   { /* --------------------------------------------------------------------- */

@@ -93,7 +93,8 @@ struct RoundCheckFunc                  // Members initially public
 { /* -- Function to to automatically check for rounding method ------------- */
   template<class RoundFuncType>class Auto : public RoundFuncType
   { /* -- Detect advance rounding method from flags ------------------------ */
-    GLfloat Detect(const ImageFlagsConst &ffFlags, const GLfloat fAdvance)
+    static GLfloat Detect(const ImageFlagsConst &ffFlags,
+      const GLfloat fAdvance)
     { // Load the character with floor rounding?
       if(ffFlags.FlagIsSet(FF_FLOORADVANCE))
         return RoundFunc::template Floor<GLfloat>{ fAdvance }.Result();
@@ -137,7 +138,7 @@ struct HandleGlyphFunc                 // Members initially public
   struct Glyph                        // Members initially public
   { /* --------------------------------------------------------------------- */
     template<class StrokerCheckFuncType, class RoundCheckFuncType>
-      size_t DoHandleGlyph(Font*const fP, const size_t stChar,
+      static size_t DoHandleGlyph(Font*const fP, const size_t stChar,
         const size_t stPos)
           { return fP->DoHandleStaticGlyph(stChar, stPos); }
   };/* --------------------------------------------------------------------- */

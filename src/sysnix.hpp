@@ -372,20 +372,9 @@ class SysCore :
     if(uname(&utsnData)) XCS("Failed to read operating system information!");
     // Tokenize version numbers
     const Token tVersion{ utsnData.release, cCommon->CommonPeriod() };
-    // Get LANGUAGE code and set default if not found
-    string strCode{ cCmdLine->CmdLineGetEnv("LANGUAGE") };
-    if(strCode.size() != 5)
-    { // Get LANG code and set default if not found
-      strCode = cCmdLine->CmdLineGetEnv("LANG");
-      if(strCode.size() < 5) strCode = "en_GB.UTF8";
-    } // Set global locale and show error if failed
-    if(!setlocale(LC_ALL, strCode.data()))
-      XCL("Failed to initialise default locale!", "Locale", strCode);
-    // Replace underscore with dash to be consistent with Windows
-    if(strCode[2] == '_') strCode[2] = '-';
-    // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
-    const size_t stPeriod = strCode.find('.');
-    if(stPeriod != StdNPos) strCode = strCode.substr(0, stPeriod);
+    // Process and activate locale code
+    string strCode{ cCmdLine->CmdLineGetEnv("LANG") };
+    ProcessAndActivateLocale(strCode);
     // Return operating system info
     return { utsnData.sysname, cCommon->CommonBlank(),
       tVersion.empty()    ? 0 : StrToNum<unsigned int>(tVersion[0]),
@@ -484,8 +473,6 @@ class SysCore :
     { bWindowInitialised = !!gwWindow; }
   /* -- Window was destroyed, nullify handles ------------------------------ */
   void SetWindowDestroyed() { bWindowInitialised = false; }
-  /* -- Help with debugging ------------------------------------------------ */
-  const char *HeapCheck() const { return "Not implemented!"; }
   /* ----------------------------------------------------------------------- */
   int LastSocketOrSysError() const { return StdGetError(); }
   /* -- Build user roaming directory ---------------------------- */ protected:

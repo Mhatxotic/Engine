@@ -98,7 +98,7 @@ class Credits                          // Members initially private
   const CreditLib &CreditGetItem(const CreditEnums ceIndex) const
     { return CreditGetLibList()[ceIndex]; }
   /* -- Decompress a credit item ------------------------------------------- */
-  const string CreditGetItemText(const CreditLib &libItem) const try
+  static const string CreditGetItemText(const CreditLib &libItem) try
   { // Using codec namespace
     using namespace ICodec;
     return Block<CoDecoder>{ libItem }.MemToStringSafe();

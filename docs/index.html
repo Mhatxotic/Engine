@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 25.11.26.11 -->
-<!-- Automatically built at Mon Dec 01 00:21:16 2025 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 25.11.26.11 -->
-<!-- Copyright (c) 2006-2025 Mhatxotic Design, All Rights Reserved Worldwide -->
+<!-- Reference for the Mhatxotic Engine API version 26.1.1.1 -->
+<!-- Automatically built at Thu Jan 01 14:35:24 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.1.1.1 -->
+<!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
 	<META charset="UTF-8">
@@ -10,20 +10,20 @@
 	<META name="apple-mobile-web-app-status-bar-style" content="black">
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
-	<META name="copyright" content="Copyright © 2006-2025 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 25.11.26.11">
+	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.1.1.1">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 25.11.26.11">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.1.1.1">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 25.11.26.11">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.1.1.1">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 25.11.26.11 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.1.1.1 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 25.11.26.11 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.1.1.1 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 25.11.26.11 API reference</H1>
+	<H1>Mhatxotic Engine 26.1.1.1 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 907 functions (415 members, 492 methods) and 30 consts in 31 namespaces with 87 commands and 215 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 907 functions (415 members, 492 methods) and 30 consts in 31 namespaces with 87 commands and 214 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1888,7 +1888,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(215 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(214 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -2065,7 +2065,6 @@
 									<LI><A href="#cv.vid_gamma">vid_gamma</A></LI>
 									<LI><A href="#cv.vid_gaswitch">vid_gaswitch</A></LI>
 									<LI><A href="#cv.vid_hidpi">vid_hidpi</A></LI>
-									<LI><A href="#cv.vid_lock">vid_lock</A></LI>
 									<LI><A href="#cv.vid_monitor">vid_monitor</A></LI>
 									<LI><A href="#cv.vid_noerrors">vid_noerrors</A></LI>
 									<LI><A href="#cv.vid_oraspmax">vid_oraspmax</A></LI>
@@ -13110,11 +13109,6 @@
 		<PRE>Enables or disables HiDPI support&#x2e; Set to &#x27;0&#x27; to disable HiDPI&#x2c; &#x27;1&#x27; to &#x28;default&#x29; to enable it&#x2c; or &#x27;2&#x27; to enable it with a fix for going from a HiDPI window to non&#x2d;HiDPI window to increase window size to match the previous OpenGL frame&#x2d;buffer size which is useful for video capturing and maintaining capture quality&#x2e; The cvar only applies to MacOS and can only be set via command&#x2d;line or the application manifest&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="cv.vid_lock" style="display:none">
-		<H3>vid_lock</H3>
-		<PRE>Locks the main frame buffer size to the app author values specified by &#x27;vid_orwidth&#x27; and &#x27;vid_orheight&#x27; instead of resizing it to the windows size&#x2e;<BR></PRE>
-		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="cv.vid_monitor" style="display:none">
 		<H3>vid_monitor</H3>
 		<PRE>Specifies the monitor id to use&#x2e; Use the &#x27;mlist&#x27; console command to see possible values or just use &#x2d;1 to let the operating system decide&#x2e;<BR></PRE>
@@ -13325,7 +13319,7 @@
 		<PRE>Sets the minimum width of the window&#x2e; This is only changable at the application configuration file and is not saved to persistence database&#x2e;<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<ADDRESS>Copyright &copy; 2025 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Mon Dec 01 00:21:16 2025 +0000</ADDRESS>
+	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
+	This document was generated at Thu Jan 01 14:35:24 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

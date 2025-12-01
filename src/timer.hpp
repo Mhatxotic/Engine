@@ -41,8 +41,8 @@ class Timer                            // Members initially private
   void TimerSetInterval(const uint64_t uqInterval)
     { cdLimit = nanoseconds{ uqInterval }; }
   /* -- Get minimum maximum interval value --------------------------------- */
-  uint64_t TimerGetMinInterval() const { return uqIntvMin; }
-  uint64_t TimerGetMaxInterval() const { return uqIntvMax; }
+  static uint64_t TimerGetMinInterval() { return uqIntvMin; }
+  static uint64_t TimerGetMaxInterval() { return uqIntvMax; }
   /* -- Update delay as double --------------------------------------------- */
   void TimerUpdateDelay(const unsigned int uiNewDelay)
     { cdDelay = milliseconds{ uiNewDelay }; }

@@ -143,7 +143,7 @@ using namespace ICVarDef::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-enum CVarEnums : size_t
+enum CVarEnums : size_t                // CVars list (cvarlib.hpp for bodies)
 { /* -- Critical cvars (order is critical!) -------------------------------- */
   APP_CMDLINE,      LOG_LEVEL,         AST_LZMABUFFER,      AST_PIPEBUFFER,
   AST_FSOVERRIDE,   AST_EXEBUNDLE,     AST_BASEDIR,         AST_BUNDLES,
@@ -199,14 +199,13 @@ enum CVarEnums : size_t
   VID_CLEAR,        VID_CLEARCOLOUR,   VID_DBLBUFF,         VID_DEBUG,
   VID_FBALPHA,      VID_FBBLUE,        VID_FBGREEN,         VID_FBRED,
   VID_FS,           VID_FSAA,          VID_FORWARD,         VID_FSMODE,
-  VID_GAMMA,        VID_GASWITCH,      VID_HIDPI,           VID_LOCK,
-  VID_MONITOR,      VID_NOERRORS,      VID_ORASPMAX,        VID_ORASPMIN,
-  VID_ORHEIGHT,     VID_ORWIDTH,       VID_PROFILE,         VID_QCOMPRESS,
-  VID_QLINE,        VID_QPOLYGON,      VID_QSHADER,         VID_RCMDS,
-  VID_RDFBO,        VID_RDTEX,         VID_RELEASE,         VID_RFBO,
-  VID_RFLOATS,      VID_ROBUSTNESS,    VID_SIMPLEMATRIX,    VID_SRGB,
-  VID_SSTYPE,       VID_STEREO,        VID_SUBPIXROUND,     VID_TEXFILTER,
-  VID_VSYNC,
+  VID_GAMMA,        VID_GASWITCH,      VID_HIDPI,           VID_MONITOR,
+  VID_NOERRORS,     VID_ORASPMAX,      VID_ORASPMIN,        VID_ORHEIGHT,
+  VID_ORWIDTH,      VID_PROFILE,       VID_QCOMPRESS,       VID_QLINE,
+  VID_QPOLYGON,     VID_QSHADER,       VID_RCMDS,           VID_RDFBO,
+  VID_RDTEX,        VID_RELEASE,       VID_RFBO,            VID_RFLOATS,
+  VID_ROBUSTNESS,   VID_SIMPLEMATRIX,  VID_SRGB,            VID_SSTYPE,
+  VID_STEREO,       VID_SUBPIXROUND,   VID_TEXFILTER,       VID_VSYNC,
   /* -- Window cvars ------------------------------------------------------- */
   WIN_ALPHA,        WIN_ASPECT,        WIN_BORDER,          WIN_CLOSEABLE,
   WIN_FLOATING,     WIN_FOCUSED,       WIN_HEIGHT,          WIN_HEIGHTMAX,
@@ -224,8 +223,8 @@ enum CVarEnums : size_t
 struct CVarItemStatic                  // Start of CVar static struct
 { /* ----------------------------------------------------------------------- */
   const CoreFlagsConst cfcRequired;    // Required core flags
-  const string_view    strvVar;        // Variable name from C-String
-  const string_view    strvValue;      // Variable default value from C-String
+  const string_view    strvVar,        // Variable name from C-String
+                       strvValue;      // Variable default value from C-String
   const CbFunc         cbTrigger;      // Callback trigger event
   const CVarFlagsConst cFlags;         // Variable flags
 };/* ----------------------------------------------------------------------- */

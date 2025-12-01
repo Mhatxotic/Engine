@@ -157,11 +157,6 @@ static unsigned int SysMessage(void*const, const string &strTitle,
   // If exited successfully? Return success
   return 0;
 }
-/* -- Unset multiple environment variables --------------------------------- */
-static void SysUnSetEnv() {}
-template<typename ...VarArgs>
-  static void SysUnSetEnv(const char*const cpEnv, VarArgs &&...vaArgs)
-    { unsetenv(cpEnv); SysUnSetEnv(StdForward<VarArgs>(vaArgs)...); }
 /* -- Set thread priority -------------------------------------------------- */
 static bool SysSetThreadPriority(const SysThread stLevel)
 { // Get this thread handle
@@ -259,6 +254,11 @@ static unsigned int SysMessage(const string &strTitle,
         MB_SYSTEMMODAL|uiFlags); }
 /* ------------------------------------------------------------------------- */
 #else                                  // Not using Windows target? (POSIX)
+/* -- Unset multiple environment variables --------------------------------- */
+static void SysUnSetEnv() {}
+template<typename ...VarArgs>
+  static void SysUnSetEnv(const char*const cpEnv, VarArgs &&...vaArgs)
+    { unsetenv(cpEnv); SysUnSetEnv(StdForward<VarArgs>(vaArgs)...); }
 /* -- System error code ---------------------------------------------------- */
 template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(StdGetError()); }

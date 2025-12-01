@@ -26,7 +26,7 @@ class Common                           // Common variables class
   /* --------------------------------------------------------------- */ public:
   const locale &CommonLocale() const { return lLocaleCurrent; }
   void CommonSetLocale(const string &strLocale)
-    { lLocaleCurrent = locale(strLocale); }
+    { lLocaleCurrent = locale{ strLocale }; }
   /* ----------------------------------------------------------------------- */
   const string &CommonBlank() const { return strBlank; }
   const char *CommonCBlank() const { return cpBlank; }
