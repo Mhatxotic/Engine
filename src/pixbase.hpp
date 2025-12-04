@@ -22,11 +22,17 @@ class SysBase :                        // Safe exception handler namespace
   { /* -- Private variables ------------------------------------------------ */
     static constexpr int iInvalid=-1;  // Handle is invalid value
     /* --------------------------------------------------------------------- */
-    const int      iRequested,         // Requested handle
-                   iSaved;             // Saved handle
-    array<int,2>   iaPipes;            // Pipes
-    int           &iRead,              // Read end of the pipe (iaPipes[0])
-                  &iWrite;             // Write end of the pipe (iaPipes[1])
+    const int      iRequested;         // Requested handle
+    /* -- Handles for pipe() function -------------------------------------- */
+    typedef array<int,2> PipeHandles;  // Handles struct (for pipe())
+    PipeHandles    phHandles;          // Pipe handles (for pipe())
+    /* -- Order is important ----------------------------------------------- */
+    int            iSaved,             // Saved (ahHandles[0])
+                  &iWrite,             // Write (ahHandles[1]/phHandles[1])
+                  &iRead;              // Read (ahHandles[2]/phHandles[0])
+    /* -- All handles so we can close them all together -------------------- */
+    typedef array<::std::reference_wrapper<int>,3> AllHandles; // array<int&,3>
+    AllHandles    ahHandles;           // All handles (iSaved, iWrite, iRead)
     /* -- Async off-main thread function ----------------------------------- */
     ThreadStatus ThreadMain(Thread&)
     { // Until thread should exit or end of file
@@ -56,68 +62,88 @@ class SysBase :                        // Safe exception handler namespace
       return TS_OK;
     }
     /* --------------------------------------------------------------------- */
-    void CloseRead() { if(iRead) close(iRead); }
+    void CloseAndReset(int &iHandle) { close(iHandle); iHandle = iInvalid; }
     /* --------------------------------------------------------------------- */
     void Reset()
-    { // Close write pipe handle if opened
-      if(iWrite != iInvalid) close(iWrite);
-      // Thread is running?
-      if(ThreadIsJoinable())
-      { // Signal the exit
-        ThreadSetExit();
-        // Close the read pipe so the thread can exit
-        CloseRead();
-        // Wait for the thread to exit
-        ThreadJoin();
-      } // Thread not running for some reason so just close the handle
-      else CloseRead();
-      // Restore original handle allocated by system
-      if(iSaved != iInvalid) dup2(iSaved, iRequested);
+    { // Thread is running? Signal the exit
+      if(ThreadIsJoinable()) ThreadSetExit();
+      // Restoring the original FD with dup2(iSaved, iRequested) will replace
+      // the current iRequested fd (which points at the pipe's write end) with
+      // the original saved fd. As a side-effect dup2 closes the old iRequested
+      // (the pipe writer) which allows the reader to observe EOF.
+      if(iSaved != iInvalid && dup2(iSaved, iRequested) == iInvalid)
+        cLog->LogWarningExSafe(
+          "System failed to restore dup2 oldf $ to $ for $! $",
+          iSaved, iRequested, IdentGet(), SysError());
+      // Now close the read end to ensure the reader's read() either sees EOF
+      // or gets EBADF.
+      if(iRead != iInvalid) CloseAndReset(iRead);
+      // Join the reader thread
+      ThreadJoin();
     }
-    /* ------------------------------------------------------------- */ public:
-    void ResetSafe()
-    { // Do the reset
-      Reset();
-      // Reset the handles so shutdown doesn't trigger on destruction
-      iaPipes.fill(iInvalid);
+    /* --------------------------------------------------------------------- */
+    void CloseAll()
+    { // Close all handles
+      StdForEach(seq, ahHandles.begin(), ahHandles.end(), [this](int &iHandle)
+        { if(iHandle != iInvalid) CloseAndReset(iHandle); });
     }
+    /* -- Shut down stderr reader ---------------------------------- */ public:
+    void ResetSafe() { Reset(); CloseAll(); }
     /* --------------------------------------------------------------------- */
     Redirect(const int iHandle, const string &strNName) :
       /* ------------------------------------------------------------------- */
       Thread{ strNName, STP_LOW },     // Initialise low priority thread
       Memory{ 4096 },                  // Initialise buffer
       iRequested(iHandle),             // Store requested handle
-      iSaved(dup(iHandle)),            // Duplicate requested handle
-      iaPipes{ iInvalid, iInvalid },   // Initialise pipe handles
-      iRead(iaPipes[0]),               // Init reference to read pipe
-      iWrite(iaPipes[1])               // Init reference to write pipe
+      phHandles{ iInvalid, iInvalid }, // Initialise pipe handles references
+      iSaved(dup(iRequested)),         // Duplicate requested handle
+      iWrite(phHandles[1]),            // Init reference to write pipe
+      iRead(phHandles[0]),             // Init reference to read pipe
+      ahHandles{ iSaved,iWrite,iRead } // Initialise all handles references
       /* ------------------------------------------------------------------- */
     { // Return if handle not copied
       if(iSaved == iInvalid)
-        XCL("Failed to copy specified output handle!", "Name", IdentGet());
-      // Create pipe handles and show error on failure
-      if(pipe(iaPipes.data()))
-        XCL("Failed to redirect specified output to buffer!",
-            "Name", IdentGet());
-      // Redirect requested output handle to the pipe
+      { // Write warning to log
+        cLog->LogWarningExSafe("System failed to dup fd $ for $! $",
+          iRequested, IdentGet(), SysError());
+        // Do not run the reader thread
+        return;
+      } // Create pipe handles and if failed?
+      if(pipe(phHandles.data()))
+      { // Need to close saved handle
+        CloseAndReset(iSaved);
+        // Write warning to log
+        cLog->LogWarningExSafe("System pipe call failed for $! $",
+          IdentGet(), SysError());
+        // Do not run the reader thread
+        return;
+      } // Redirect requested output handle to the pipe and if failed?
       if(dup2(iWrite, iHandle) == iInvalid)
-        XCL("Failed to redirect output handle to the pipe!",
-            "Name", IdentGet(), "OldFd", iWrite, "NewFd", iHandle);
-      // Dup2() closes iWrite automatically so it is now invalid
-      iWrite = iInvalid;
+      { // Close and reset all handles
+        CloseAll();
+        // Write warning to log
+        cLog->LogWarningExSafe(
+          "System failed to dup2 oldfd $ to fd $ for $! $",
+          iWrite, iHandle, IdentGet(), SysError());
+        // Do not run the reader thread
+        return;
+      } // Close the original write-end returned by pipe(); the duplicate now
+      // lives at iRequested and we must not hold the original iWrite,
+      // otherwise the reader never sees EOF.
+      CloseAndReset(iWrite);
       // Start the monitoring thread if it is open
-      if(iRead != iInvalid)
-        ThreadInit(bind(&Redirect::ThreadMain, this, _1), this);
+      ThreadInit(bind(&Redirect::ThreadMain, this, _1), this);
     }
     /* --------------------------------------------------------------------- */
     ~Redirect()
-    { // Close the handles
+    { // Terminate the reader thread
       Reset();
-      // Close the duplicated std handle in the constructor
-      if(iSaved != iInvalid) close(iSaved);
+      // Close all handles with no need to reset handle values
+      StdForEach(seq, ahHandles.cbegin(), ahHandles.cend(),
+        [](const int iHandle) { if(iHandle != iInvalid) close(iHandle); });
     }
     /* --------------------------------------------------------------------- */
-  } rStdErr;                  // Capture stdout and stderr
+  } rStdErr;                           // Capture stdout and stderr
 #endif
   /* ----------------------------------------------------------------------- */
   MAPPACK_BUILD(ResourceLimit, const int, struct rlimit)
