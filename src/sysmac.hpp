@@ -696,53 +696,63 @@ class SysCore :
     osS << "Unknown";
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
-    // Get LANGUAGE code and set default if not 5 bytes long?
-    string strCode{ cCmdLine->CmdLineGetEnv("LANGUAGE") } ;
-    if(strCode.size() != 5)
-    { // Get LANG code and set default if not found
-      strCode = cCmdLine->CmdLineGetEnv("LANG");
-      if(strCode.size() >= 5)
-      { // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
-        const size_t stPeriod = strCode.find('.');
-        if(stPeriod != StdNPos) strCode.resize(stPeriod);
-      } // Clear code
-      else strCode.clear();
-    } // Clear code
-    else strCode.clear();
-    // Couldn't find code? (true if running from bundle)
-    if(strCode.empty())
-    { // Resize buffer for storage
-      strCode.resize(256);
-      // Create autorelease storage for locale, ask OS for it and if success?
-      typedef unique_ptr<const void,
-        function<decltype(CFRelease)>> CFAutoRelPtr;
-      if(const CFAutoRelPtr cfLocale{ reinterpret_cast<const void*>
-        (CFLocaleCopyCurrent()), CFRelease })
-      { // Get reference to string
-        const CFStringRef csrRef =
-          CFLocaleGetIdentifier(reinterpret_cast<const CFLocaleRef>
-            (cfLocale.get()));
-        // Copy the string into our STL string and if successful?
-        if(CFStringGetCString(csrRef, const_cast<char*>(strCode.data()),
-            static_cast<CFIndex>(strCode.capacity()), kCFStringEncodingUTF8))
-        { // Get length and truncate the string to proper number of bytes
-          const size_t stLength =
-            static_cast<size_t>(CFStringGetLength(csrRef));
-          strCode.resize(stLength);
-          // It must be 5 bytes
-          if(stLength < 5)
-            XC("Region code too short!", "Code", strCode, "Length", stLength);
-        } // Failed
-        else XC("Could not get region code!");
-      } // This should never happen but just incase?
-      else XC("Could not detect region code!");
-      // Update and set global locale
-      cCommon->CommonSetLocale(strCode);
-    } // Set global locale and show error if failed
-    if(!setlocale(LC_ALL, strCode.data()))
-      XCL("Failed to initialise default locale!", "Locale", strCode);
+    // Resize buffer for storage
+    string strCode; strCode.resize(32, '\0');
+    // Create autorelease storage for locale, ask OS for it and if success?
+    typedef unique_ptr<const void,
+      function<decltype(CFRelease)>> CFAutoRelPtr;
+    if(const CFAutoRelPtr cfLocale{ reinterpret_cast<const void*>
+      (CFLocaleCopyCurrent()), CFRelease })
+    { // Get reference to string
+      const CFStringRef csrRef =
+        CFLocaleGetIdentifier(reinterpret_cast<const CFLocaleRef>
+          (cfLocale.get()));
+      // Copy the string into our STL string and if successful?
+      if(CFStringGetCString(csrRef, const_cast<char*>(strCode.data()),
+          static_cast<CFIndex>(strCode.capacity()), kCFStringEncodingUTF8))
+      { // Get length and truncate the string to proper number of bytes
+        const size_t stLength =
+          static_cast<size_t>(CFStringGetLength(csrRef));
+        strCode.resize(stLength);
+        // It must be 5 bytes
+        if(stLength < 5)
+          XC("Region code invalid!", "Locale", strCode, "Length", stLength);
+      } // Failed
+      else XC("Could not build region code!");
+    } // This should never happen but just incase?
+    else XC("Could not detect region code!");
+    // Is there a hyphen?
+    const size_t stHyphen = strCode.find('-');
+    if(stHyphen != StdNPos)
+    { // Is there an underscore?
+      const size_t stUnderscore = strCode.find('_', stHyphen);
+      if(stUnderscore != StdNPos)
+        XC("Can't decipher locale with script which has hyphen "
+           "but no underscore!", "Locale", strCode);
+      // Rewrite the code without the script part as std::locale/setlocale does
+      // not support that part of the locale code.
+      strCode = StrAppend(strCode.substr(0, stHyphen),
+                          strCode.substr(stUnderscore));
+    } // If there is an at sign (variant) then remove it?
+    const size_t stAt = strCode.find('@');
+    if(stAt != StdNPos) strCode = strCode.substr(0, stAt);
+    // Append UTF-8 format
+    const string strRealCode{ StrAppend(strCode, ".UTF-8") };
+    // Capture exceptions
+    try
+    { // Update and set local locale.
+      cCommon->CommonSetLocale(strRealCode);
+    } // If error occurred?
+    catch(const exception &eReason)
+    { // Show a friendlier error
+      XC("Could not initialise the default locale object!",
+         "Locale", strRealCode, "Alt", strCode, "Reason", eReason);
+    } // Update global locale
+    if(!setlocale(LC_ALL, strRealCode.data()))
+      XCL("Could not initialise the default locale!",
+          "Locale", strRealCode, "Alt", strCode);
     // Replace underscore with dash to be consistent with Windows
-    if(strCode[2] == '_') strCode[2] = '-';
+    StrReplace(strCode, '_', '-');
     // Get operating system kernel name
     string strExtra;
     struct utsname utsnData;
