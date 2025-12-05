@@ -745,12 +745,12 @@ class SysCore :
     } // If error occurred?
     catch(const exception &eReason)
     { // Show a friendlier error
-      XC("Could not initialise the default locale object!",
-         "Locale", strRealCode, "Alt", strCode, "Reason", eReason);
+      cLog->LogWarningExSafe("System can't initialise '$' locale object: $!",
+        strRealCode, eReason);
     } // Update global locale
     if(!setlocale(LC_ALL, strRealCode.data()))
-      XCL("Could not initialise the default locale!",
-          "Locale", strRealCode, "Alt", strCode);
+      cLog->LogWarningExSafe("System can't initialise '$' locale: $!",
+       strRealCode, strCode, SysError());
     // Replace underscore with dash to be consistent with Windows
     StrReplace(strCode, '_', '-');
     // Get operating system kernel name
