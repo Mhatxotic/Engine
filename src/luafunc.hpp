@@ -125,7 +125,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     return false;
   }
   /* -- Send nothing ------------------------------------------------------- */
-  void LuaFuncParams(int&) const {}
+  static void LuaFuncParams(int&) {}
   /* -- Send string vector ------------------------------------------------- */
   template<typename ...VarArgs>
     void LuaFuncParams(int &iParams, const StrVector &svList,

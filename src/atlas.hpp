@@ -59,11 +59,9 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
   /* -- Base classes ------------------------------------------------------- */
   public AtlasBase                     // Atlas variables class
 {  /* -- Convert co-ordinates to absolute position -------------- */ protected:
-  static size_t CoordsToAbsolute(const size_t stPosX,
-                                 const size_t stPosY,
-                                 const size_t stWidth,
-                                 const size_t stBytesPerColumn=1)
-    { return ((stPosY * stWidth) + stPosX) * stBytesPerColumn; }
+  static size_t CoordsToAbsolute(const size_t stPosX, const size_t stPosY,
+    const size_t stWidth, const size_t stBytesPerColumn=1)
+  { return ((stPosY * stWidth) + stPosX) * stBytesPerColumn; }
   /* -- Check if texture reload required ----------------------------------- */
   void AtlasCheckReloadTexture()
   { // Check reload command
@@ -118,12 +116,9 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     constexpr static ByteDepth byDepth   = BY_GRAYALPHA;
     constexpr static uint64_t  uqInitVal = 0x00FF00FF00FF00FF;
     /* -- Image resize routine --------------------------------------------- */
-    void Resize(const size_t stNewWidth,
-                const size_t stNewHeight,
-                const MemConst &mcRef,
-                const size_t stOldWidth,
-                const size_t stOldHeight,
-                Memory &mDst)
+    static void Resize(const size_t stNewWidth, const size_t stNewHeight,
+      const MemConst &mcRef, const size_t stOldWidth, const size_t stOldHeight,
+      Memory &mDst)
     { // Size of a scan line from the old surface in bytes
       const size_t stSrcScanSize = stOldWidth * byDepth,
       // Size of Extra width to clear on right
@@ -149,13 +144,9 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       }
     }
     /* -- Glyph copy routine ----------------------------------------------- */
-    void Copy(const size_t stSrcWidth,
-              const size_t stSrcHeight,
-              const MemConst &mcSrc,
-              const size_t stDstX,
-              const size_t stDstY,
-              const size_t stDstWidth,
-              Memory &mDst)
+    static void Copy(const size_t stSrcWidth, const size_t stSrcHeight,
+      const MemConst &mcSrc, const size_t stDstX, const size_t stDstY,
+      const size_t stDstWidth, Memory &mDst)
     { // For each pixel row of glyph image
       for(size_t stPixPosY = 0; stPixPosY < stSrcHeight; ++stPixPosY)
       { // Calculate Y position co-ordinate in buffer.
@@ -184,18 +175,14 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       }
     }
     /* -- Initialse memory area of image ----------------------------------- */
-    void Init(Memory &mPixels) { mPixels.MemFill(uqInitVal); }
+    static void Init(Memory &mPixels) { mPixels.MemFill(uqInitVal); }
     /* -- Constructor that does nothing ------------------------------------ */
     ImageTypeGrayAlpha() = default;
   };/* --------------------------------------------------------------------- */
   /* -- Render texture data to memory -------------------------------------- */
-  template<class ImageType>
-    void AtlasCopyBitmap(const IntPackRect &iprRef,
-                         const size_t stSrcWidth,
-                         const size_t stSrcHeight,
-                         CoordData &cdRef,
-                         const void*const vpSrc,
-                         Memory &mDst)
+  template<class ImageType>void AtlasCopyBitmap(const IntPackRect &iprRef,
+    const size_t stSrcWidth, const size_t stSrcHeight, CoordData &cdRef,
+    const void*const vpSrc, Memory &mDst)
   { // Get source and destination sizes and return if they're different
     const size_t stDstWidth = iprRef.DimGetWidth<size_t>(),
                  stDstHeight = iprRef.DimGetHeight<size_t>();
@@ -225,11 +212,8 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     tcT1[5] = tcT2[1] = tcT2[3] = fMaxY / fBH; // Bottom
   }
   /* -- Upload tile to texture --------------------------------------------- */
-  template<class ImageType>
-    void AtlasAddBitmap(const size_t stSlot,
-                        const GLuint uiTWidth,
-                        const GLuint uiTHeight,
-                        const void*const vpSrc)
+  template<class ImageType>void AtlasAddBitmap(const size_t stSlot,
+    const GLuint uiTWidth, const GLuint uiTHeight, const void*const vpSrc)
   { // Calculate size plus padding and return if size not set
     const GLuint uiTPWidth = uiTWidth + uiPadding,
                  uiTPHeight = uiTHeight + uiPadding;
@@ -344,13 +328,9 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       IdentGet(), uiDivisor, DimGetWidth(), DimGetHeight());
   }
   /* -- Initialise the atlas --------------------------------------- */ public:
-  template<class ImageType>
-    void AtlasInit(const string &strId,
-                   const GLuint uiTWidth,
-                   const GLuint uiTHeight,
-                   const GLuint uiISize,
-                   const GLuint uiTPadding,
-                   const OglFilterEnum ofeTFilter)
+  template<class ImageType>void AtlasInit(const string &strId,
+    const GLuint uiTWidth, const GLuint uiTHeight, const GLuint uiISize,
+    const GLuint uiTPadding, const OglFilterEnum ofeTFilter)
   { // Make sure padding isn't negative. We use int because it is optimal for
     // use with the BinPack routines.
     if(UtilIntWillOverflow<int>(uiPadding))

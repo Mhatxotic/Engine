@@ -320,7 +320,7 @@ class DirFile                          // Files container class
 { /* -- Public variables --------------------------------------------------- */
   DirEntMap        demDirs, demFiles;  // Directories and files list
   /* -- Export ------------------------------------------------------------- */
-  const StrSet Export(const DirEntMap &dSrc) const
+  static const StrSet Export(const DirEntMap &dSrc)
   { // Write entries into a single set list and return it
     StrSet ssFiles;
     for(const DirEntMapPair &dempFile : dSrc)

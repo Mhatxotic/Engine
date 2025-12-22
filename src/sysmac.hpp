@@ -170,6 +170,9 @@ class SysProcess :                     // Need this before of System init order
       cLog->LogWarningExSafe("System failed to unlink shared memory object "
         "'$'! $", IdentGet(), SysError());
   }
+  /* -- Apparently due to 'dynamic memory/resource management' (CppCheck) -- */
+  SysProcess(SysProcess &) = delete;           // Even though we don't use
+  SysProcess operator=(SysProcess &) = delete; // these at all
   /* -- Constructor -------------------------------------------------------- */
   SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -324,7 +327,7 @@ class SysCore :
   bool IsPidRunning(const unsigned int uiPid) const
     { return !SendSignal(uiPid, 0); }
   /* -- GLFW handles the icons on this ------------------------------------- */
-  void UpdateIcons() {}
+  static void UpdateIcons() {}
   /* ----------------------------------------------------------------------- */
   static bool LibFree(void*const vpModule)
     { return vpModule && !dlclose(vpModule); }
@@ -869,14 +872,12 @@ class SysCore :
   Memory GetEntropy() const
     { return FStream{ "/dev/random", FM_R_B }.FStreamReadBlockSafe(1024); }
   /* -- Return window handle (n/a) ----------------------------------------- */
-  void *GetWindowHandle() const { return nullptr; }
+  static void *GetWindowHandle() { return nullptr; }
   /* -- A window was created ----------------------------------------------- */
   void WindowInitialised(GlFW::GLFWwindow*const gwWindow)
     { bWindowInitialised = !!gwWindow; }
   /* -- Window was destroyed, nullify handles ------------------------------ */
   void SetWindowDestroyed() { bWindowInitialised = false; }
-  /* -- Help with debugging ------------------------------------------------ */
-  const char *HeapCheck() const { return "Not implemented!"; }
   /* ----------------------------------------------------------------------- */
   int LastSocketOrSysError() const { return StdGetError(); }
   /* -- Build user roaming directory ---------------------------- */ protected:

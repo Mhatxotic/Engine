@@ -409,11 +409,11 @@ class ICHelperSafe :                   // Members initially private
   void ICHelperSwap(const MemberType &mtObj)
     { this->cParent->MutexCall([this, &mtObj](){
         this->ICHelperBaseSwapRegistration(mtObj);}); }
-  /* -- Constructors ------------------------------------------------------- */
-  explicit ICHelperSafe(CollectorType*const ctPtr) :
-    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr))) {}
+  /* -- Constructor with/without registration ------------------------------ */
   explicit ICHelperSafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
     BaseType(ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr))) {}
+  explicit ICHelperSafe(CollectorType*const ctPtr) :
+    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr))) {}
 };/* ----------------------------------------------------------------------- */
 /* == Collector class helper without locks ================================= **
 ** ######################################################################### **

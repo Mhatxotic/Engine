@@ -1071,11 +1071,12 @@ class SysCore :
       "System failed to create new window brush: $!", SysError());
   }
   /* ----------------------------------------------------------------------- */
-  int LastSocketOrSysError()
-  { // Last last socket error
-    const int iLastError = static_cast<int>(WSAGetLastError());
-    // Use that or actual last error
-    return static_cast<int>(iLastError ? iLastError : SysErrorCode<int>());
+  int LastSocketOrSysError() const
+  { // Get last socket error and return it if set
+    if(const int iLastError = static_cast<int>(WSAGetLastError()))
+      return iLastError;
+    // Return system error code instead
+    return SysErrorCode<int>();
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir() const

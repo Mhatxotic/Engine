@@ -42,7 +42,7 @@ struct ShaderCore                      // Actual body
   const RoundList rList;               // Rounding method list
   string          strSPRMethod;        // Rounding method string
   /* -- Add vertex shader with template and extra code --------------------- */
-  void AddVertexShaderWith3DTemplate(Shader &shS, const string &strName,
+  static void AddVertexShaderWith3DTemplate(Shader &shS, const string &strName,
     const char*const cpCode)
   { // Add vertex shader program
     shS.AddShaderEx(strName, GL_VERTEX_SHADER,
@@ -65,10 +65,11 @@ struct ShaderCore                      // Actual body
       stCompsPerCoord, stCompsPerPos, stCompsPerColour, cpCode);
   }
   /* -- Add vertex shader with template ------------------------------------ */
-  void AddVertexShaderWith3DTemplate(Shader &shS, const string &strName)
-    { AddVertexShaderWith3DTemplate(shS, strName, cCommon->CommonCBlank()); }
+  static void AddVertexShaderWith3DTemplate(Shader &shS,
+    const string &strName)
+  { AddVertexShaderWith3DTemplate(shS, strName, cCommon->CommonCBlank()); }
   /* -- Add fragment shader with template ---------------------------------- */
-  void AddFragmentShaderWithTemplate(Shader &shS, const string &strName,
+  static void AddFragmentShaderWithTemplate(Shader &shS, const string &strName,
     const char*const cpCode, const char*const cpHeader)
   { // Add fragmnet shader program
     shS.AddShaderEx(strName, GL_FRAGMENT_SHADER,
@@ -87,11 +88,11 @@ struct ShaderCore                      // Actual body
       "}", cpHeader, cpCode);          // Done
   }
   /* -- Add fragment shader with template ---------------------------------- */
-  void AddFragmentShaderWithTemplate(Shader &shS, const string &strName)
+  static void AddFragmentShaderWithTemplate(Shader &shS, const string &strName)
     { AddFragmentShaderWithTemplate(shS, strName, cCommon->CommonCBlank(),
         cCommon->CommonCBlank()); }
   /* -- Add fragment shader with template ---------------------------------- */
-  void AddFragmentShaderWithTemplate(Shader &shS, const string &strName,
+  static void AddFragmentShaderWithTemplate(Shader &shS, const string &strName,
       const char*const cpCode)
     { AddFragmentShaderWithTemplate(shS,
         strName, cpCode, cCommon->CommonCBlank()); }
@@ -163,7 +164,7 @@ struct ShaderCore                      // Actual body
     sh2D16.Link();
   }
   /* ----------------------------------------------------------------------- */
-  void Init3DYCbCrTemplate(Shader &shDest, const string &strName,
+  static void Init3DYCbCrTemplate(Shader &shDest, const string &strName,
     const string_view &svRangeCode, const string_view &svMatrixCode,
     const string_view &svKeyCode)
   { // Add YCbCr to RGB shaders

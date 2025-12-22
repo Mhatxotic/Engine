@@ -35,19 +35,19 @@ class Statistic
   HeadDeque        hdHeaders;          // Headers dataz
   StrVector        svValues;           // Values list
   /* -- Format output iterator data without a suffix ----------------------- */
-  void ProcValNoSuf(ostringstream &osS, const StrVectorConstIt &svciIt,
+  static void ProcValNoSuf(ostringstream &osS, const StrVectorConstIt &svciIt,
     const Head &hRef)
   { osS << hRef.jccFunc << setw(hRef.iMaxLen) << StdMove(*svciIt); }
   /* -- Format output iterator data with a suffix -------------------------- */
-  void ProcValSuf(ostringstream &osS, const StrVectorConstIt &svciIt,
+  static void ProcValSuf(ostringstream &osS, const StrVectorConstIt &svciIt,
     const Head &hRef, const string &strSuffix)
   { osS << hRef.jccFunc << setw(hRef.iMaxLen)
         << StdMove(*svciIt) << strSuffix; }
   /* -- Format empty output data without a suffix -------------------------- */
-  void ProcHdrNoSuf(ostringstream &osS, const Head &hRef)
+  static void ProcHdrNoSuf(ostringstream &osS, const Head &hRef)
     { osS << hRef.jccFunc << setw(hRef.iMaxLen) << StdMove(hRef.strName); }
   /* -- Format empty output data with a suffix ----------------------------- */
-  void ProcHdrSuf(ostringstream &osS, const Head &hRef,
+  static void ProcHdrSuf(ostringstream &osS, const Head &hRef,
     const string &strSuffix)
   { osS << hRef.jccFunc << setw(hRef.iMaxLen)
         << StdMove(hRef.strName) << strSuffix; }
@@ -70,7 +70,7 @@ class Statistic
            "ExpectCols", Headers(), "ActualCols", stRow,
            "RowCount", Rows()); }
   /* -- Update maximum length of the header -------------------------------- */
-  void UpdateMaxHeaderLength(Head &hRef, const int iLength)
+  static void UpdateMaxHeaderLength(Head &hRef, const int iLength)
     { if(iLength > hRef.iMaxLen) hRef.iMaxLen = iLength; }
   /* -- Get item counts -------------------------------------------- */ public:
   size_t Cells() const { return svValues.size(); }

@@ -51,7 +51,7 @@ struct FboItem
     stUInt16Bits = sizeof(uint16_t) * 8,
     stUInt24Bits = stUInt8Bits + stUInt16Bits;
   /* -- Get defaults as lookup table --------------------------------------- */
-  const Quad &FboItemGetDefaultLookup() const
+  static const Quad &FboItemGetDefaultLookup()
   { // This is equal to the following calls. It's just easier to memcpy the
     // whole table across then doing pointless calculation.
     // - SetTexCoord(0, 0, 1, 1);

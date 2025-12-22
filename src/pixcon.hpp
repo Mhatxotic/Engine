@@ -84,7 +84,7 @@ class SysCon :                         // All members initially private
     }
   }
   /* -- Return console window handle --------------------------------------- */
-  void *GetHandle() { return nullptr; }
+  static void *GetHandle() { return nullptr; }
   /* -- Check for and update size ------------------------------------------ */
   void CheckAndUpdateSize()
   { // Include curses namespace

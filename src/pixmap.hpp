@@ -26,20 +26,20 @@ class SysMap :
     // ~FStream() will close the file
   }
   /* -- Setup handle ------------------------------------------------------- */
-  FStreamBase SysMapSetupFile(const string &strF)
+  static FStreamBase SysMapSetupFile(const string &strF)
   { // Open file and return it if opened else show error
     if(FStream fsFile{ strF, FM_R_B }) return fsFile;
     XCS("Open file for file mapping failed!", "File", strF);
   }
   /* -- Setup file information --------------------------------------------- */
-  StdFStatStruct SMSetupInfo()
+  StdFStatStruct SysMapSetupInfo()
   { // Get informationa about file and return it else show error
     StdFStatStruct sNewData;
     if(FStreamStat(sNewData)) return sNewData;
     XCS("Failed to read file information!", "File", IdentGet());
   }
   /* -- Setup memory pointer ----------------------------------------------- */
-  char *SMSetupMemory()
+  char *SysMapSetupMemory()
   { // Memory to return
     char *cpNewMem;
     // Size cannot be bigger than 4GB on 32-bit system
@@ -146,8 +146,8 @@ class SysMap :
   explicit SysMap(const string &strF) :
     /* -- Initialisers ----------------------------------------------------- */
     FStreamBase{ SysMapSetupFile(strF) }, // Iniitalise file handle
-    sData{ SMSetupInfo() },            // Initialise file data
-    cpMem(SMSetupMemory())             // Initialise file pointer
+    sData{ SysMapSetupInfo() },        // Initialise file data
+    cpMem(SysMapSetupMemory())         // Initialise file pointer
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor -------------------------------------------------------- */

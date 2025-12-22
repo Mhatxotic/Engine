@@ -34,10 +34,10 @@ class Certs                            // Certificates store
   /* -- Class to serialise load of certificates ---------------------------- */
   struct LoadSerialised                // Serialised certificate installation
   { /* -- Lock/Unlock ------------------------------------------------------ */
-    void LockFunction() {}             // Lock function not used
-    void UnlockFunction() {}           // Unlock function not used
+    static void LockFunction() {}      // Lock function not used
+    static void UnlockFunction() {}    // Unlock function not used
     /* -- Destructor/Constructor ------------------------------------------- */
-    LoadSerialised() {}                // Constructor not used
+    LoadSerialised() = default;        // Constructor not used
   };/* -- Class to load certificates in parallel --------------------------- */
   class LoadParallel :                 // Parallel certificate installation
     /* -- Base classes ----------------------------------------------------- */

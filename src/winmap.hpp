@@ -80,7 +80,7 @@ class SysMap :                         // Members initially private
     return INVALID_HANDLE_VALUE;
   }
   /* -- Get pointer to memory ---------------------------------------------- */
-  char *SMSetupMemory()
+  char *SysMapSetupMemory()
   { // Return a blank string if file is empty
     if(!qSize) return const_cast<char*>(cCommon->CommonCBlank());
     // Get pointer to mapped memory and return it if successful
@@ -167,7 +167,7 @@ class SysMap :                         // Members initially private
     hFile(SysMapSetupFile()),          // Get file handle from file on disk
     qSize(SysMapSetupSize()),          // Get file size on disk
     hMap(SysMapSetupMap()),            // Get map handle
-    cpMem(SMSetupMemory()),            // Get pointer to file in memory
+    cpMem(SysMapSetupMemory()),        // Get pointer to file in memory
     atTime{ SysMapSetupTimes() }       // Get times of file
     /* -- No code ---------------------------------------------------------- */
     {}

@@ -484,8 +484,6 @@ class SysCore :
     { bWindowInitialised = !!gwWindow; }
   /* -- Window was destroyed, nullify handles ------------------------------ */
   void SetWindowDestroyed() { bWindowInitialised = false; }
-  /* -- Help with debugging ------------------------------------------------ */
-  const char *HeapCheck() const { return "Not implemented!"; }
   /* ----------------------------------------------------------------------- */
   int LastSocketOrSysError() const { return StdGetError(); }
   /* -- Build user roaming directory ---------------------------- */ protected:
