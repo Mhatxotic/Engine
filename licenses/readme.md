@@ -10,4 +10,4 @@ The syntax format is `Lic-<Date>-<LibName>-<Type>.txt`, where…
 
 We respect and honour the hard work of the authors of all the third-party code thus all of creditation for this work is compressed and compiled into the Mhatxotic Engine executable at compilation as static C++ code. They are decompressed and read with the `credits` console commands or via Lua within the `Credits` namespace.
 
-## Copyright © 2006-2025 Mhatxotic Design. All Rights Reserved.
+## Copyright © 2006-2026 Mhatxotic Design. All Rights Reserved.

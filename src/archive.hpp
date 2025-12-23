@@ -51,7 +51,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   public AsyncLoaderArchive,           // Async manager for off-thread loading
   public Lockable,                     // Lua garbage collect instruction
   public ArchiveFlags,                 // Archive initialisation flags
-  private Mutex,                       // Mutex for condition variable
+  private MutexLock,                   // Mutex for condition variable
   private condition_variable           // Waiting for async ops to complete
 { /* -- Private Variables -------------------------------------------------- */
   SafeSizeT        stInUse;            // API in use reference count
@@ -563,17 +563,17 @@ static CVarReturn ArchiveInitPersist(const bool bState)
 }
 /* -- Parallel enumeration ------------------------------------------------- */
 static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
-  StrSet &ssFiles, Mutex &mLock)
+  StrSet &ssFiles, MutexAuto &maLock)
 { // For each directory in archive. Try to use multi-threading.
   StdForEach(par_unseq, suimList.cbegin(), suimList.cend(),
-    [&strDir, &ssFiles, &mLock](const StrUIntMapPair &suimpRef)
+    [&strDir, &ssFiles, &maLock](const StrUIntMapPair &suimpRef)
   { // Ignore if folder name does not match or a forward-slash found after
     if(strDir != suimpRef.first.substr(0, strDir.length()) ||
       suimpRef.first.find('/', strDir.length() + 1) != StdNPos) return;
     // Split file path
     const PathSplit psParts{ suimpRef.first };
     // Lock access to archives list and split path parts and move into list
-    mLock.MutexCall([&ssFiles, &psParts](){
+    maLock.MutexCall([&ssFiles, &psParts](){
       ssFiles.emplace(StdMove(psParts.strFileExt)); });
   });
 }
@@ -585,28 +585,28 @@ static const StrSet &ArchiveEnumerate(const string &strDir,
     [&strDir, &strExt, bOnlyDirs, &ssFiles]()->StrSet&{
     // Return if no archives
     if(cArchives->empty()) return ssFiles;
-    // Lock for file list
-    Mutex mLock;
+    // Lock for file list (No-op on MacOS).
+    MutexAuto maLock;
     // If only dirs requested? For each archive.
     if(bOnlyDirs)
       StdForEach(par, cArchives->cbegin(), cArchives->cend(),
-        [&strDir, &ssFiles, &mLock](const Archive*const aPtr)
+        [&strDir, &ssFiles, &maLock](const Archive*const aPtr)
           { ArchiveEnumFiles(strDir,
-              aPtr->ArchiveGetDirList(), ssFiles, mLock); });
+              aPtr->ArchiveGetDirList(), ssFiles, maLock); });
     // No extension specified? Show all files
     else if(strExt.empty())
       StdForEach(par, cArchives->cbegin(), cArchives->cend(),
-        [&strDir, &ssFiles, &mLock](const Archive*const aPtr)
+        [&strDir, &ssFiles, &maLock](const Archive*const aPtr)
           { ArchiveEnumFiles(strDir,
-              aPtr->ArchiveGetFileList(), ssFiles, mLock); });
+              aPtr->ArchiveGetFileList(), ssFiles, maLock); });
     // Files with extension requested. For each archive.
     else StdForEach(par, cArchives->cbegin(), cArchives->cend(),
-      [&strDir, &ssFiles, &mLock, &strExt](const Archive*const aPtr)
+      [&strDir, &ssFiles, &maLock, &strExt](const Archive*const aPtr)
     { // Get reference to file list
       const StrUIntMap &suimList = aPtr->ArchiveGetFileList();
       // For each directory in archive...
       StdForEach(par_unseq, suimList.cbegin(), suimList.cend(),
-        [&strDir, &ssFiles, &mLock, &strExt](const StrUIntMapPair &suimpRef)
+        [&strDir, &ssFiles, &maLock, &strExt](const StrUIntMapPair &suimpRef)
       { // Ignore if folder name does not match or a forward-slash found after
         if(strDir != suimpRef.first.substr(0, strDir.length()) ||
           suimpRef.first.find('/', strDir.length() + 1) != StdNPos) return;
@@ -614,7 +614,7 @@ static const StrSet &ArchiveEnumerate(const string &strDir,
         const PathSplit psParts{ suimpRef.first };
         if(psParts.strExt != strExt) return;
         // Lock the mutex and insert into list
-        mLock.MutexCall([&ssFiles, &psParts](){
+        maLock.MutexCall([&ssFiles, &psParts](){
           ssFiles.emplace(StdMove(psParts.strFileExt)); });
       });
     });

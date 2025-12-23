@@ -45,6 +45,8 @@ static CVarReturn LuaCodeSetCache(const LuaCache lcVal)
 static CVarReturn LuaCodeCheckVersion(const string &strVal, string &strNVal)
 { // Get current LUA version
   const string_view &svVersion = cCredits->CreditGetItem(CL_LUA).GetVersion();
+  // Not set? Just set the version and make sure it's written to database
+  if(strVal.empty()) goto UpdateVersion;
   // Is version not the same?
   if(strVal != svVersion)
   { // Log that the LUA version is different
@@ -55,7 +57,7 @@ static CVarReturn LuaCodeCheckVersion(const string &strVal, string &strNVal)
     { // Write success in the console
       cLog->LogWarningSafe("LuaCode flushed the LUA code cache successfully!");
       // Update cvar to the current version
-      strNVal = svVersion;
+      UpdateVersion: strNVal = svVersion;
       // Accepted and value modified
       return ACCEPT_HANDLED_FORCECOMMIT;
     } // Failed? Write reason to console

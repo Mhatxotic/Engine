@@ -1,3 +1,3 @@
 # Website resources
 
-## Copyright © 2006-2025 Mhatxotic Design. All Rights Reserved.
+## Copyright © 2006-2026 Mhatxotic Design. All Rights Reserved.

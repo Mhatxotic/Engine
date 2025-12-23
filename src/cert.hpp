@@ -41,7 +41,7 @@ class Certs                            // Certificates store
   };/* -- Class to load certificates in parallel --------------------------- */
   class LoadParallel :                 // Parallel certificate installation
     /* -- Base classes ----------------------------------------------------- */
-    private Mutex                      // Mutex
+    private MutexLock                  // Mutex
   { /* --------------------------------------------------------------------- */
     bool           bLocked;            // Locked flag
     /* -- Lock/Unlock ---------------------------------------------- */ public:

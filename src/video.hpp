@@ -65,7 +65,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   public LuaEvtSlave<Video>,           // Lua asynchronous events
   public VideoFlags,                   // Video settings flags
   private ClockInterval<>,             // Frame playback timing helper
-  private Mutex                        // mutex for uploading data
+  private MutexLock                    // mutex for uploading data
 { /* -- Typedefs ----------------------------------------------------------- */
   struct YCbCr                         // Y/Cb/Cr plane data
   { /* --------------------------------------------------------------------- */

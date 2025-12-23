@@ -16,10 +16,11 @@ using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDir::P;
 using namespace IError::P;             using namespace IHelper::P;
 using namespace IJson::P;              using namespace ILog::P;
-using namespace IPSplit::P;            using namespace ISql::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::Sqlite;
+using namespace IMutex::P;             using namespace IPSplit::P;
+using namespace ISql::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -538,11 +539,13 @@ struct CVars :                         // Start of vars class
     { // Log number of vars being parsed
       cLog->LogDebugExSafe("CVars read $ persistent variables, parsing...",
         srRef.size());
+      // Mutex for synchronisation to engine. (no-op mutex on MacOS)
+      MutexAuto maMutex;
       // For each record returned. Set each keypair returned, these are user
       // variables. We're using multithreading for this to accellerate
       // decryption and decompression routines.
       StdForEach(par_unseq, srRef.cbegin(), srRef.cend(),
-        [this, &stLoaded](const SqlRecordsMap &srmRef)
+        [this, &stLoaded, &maMutex](const SqlRecordsMap &srmRef)
       { // Get key and goto next record if not found, else set the key string
         const SqlRecordsMapConstIt
           srmciKeyIt{ srmRef.find(cSql->strCVKeyColumn) };
@@ -573,10 +576,14 @@ struct CVars :                         // Start of vars class
               "and not type $ for '$'!",
               SQLITE_TEXT, sdValueRef.iType, strVar);
             return;
-          } // Store value directly with synchronisation and goto next
-          if(SetVarOrInitial(strVar, sdValueRef.MemToStringSafe(),
-            PUDB|SUDB, CCF_NOTDECRYPTED))
-              ++stLoaded;
+          }
+          // Store value directly with synchronisation
+          maMutex.MutexCall([this, &strVar, &sdValueRef, &stLoaded](){;
+            if(SetVarOrInitial(strVar, sdValueRef.MemToStringSafe(),
+              PUDB|SUDB, CCF_NOTDECRYPTED))
+                ++stLoaded;
+          });
+          // Go to next item
           return;
         } // New decrypted value to write into
         string strNewValue;
@@ -598,8 +605,10 @@ struct CVars :                         // Start of vars class
         // are not to be marked as changed. Do not throw on error because it
         // is not easy to change a sql database manually if we change the
         // rules on a cvar.
-        if(SetVarOrInitial(strVar, strNewValue, PUDB|SUDB, CCF_DECRYPTED))
-          ++stLoaded;
+        maMutex.MutexCall([this, &strVar, &strNewValue, &stLoaded](){
+          if(SetVarOrInitial(strVar, strNewValue, PUDB|SUDB, CCF_DECRYPTED))
+            ++stLoaded;
+        });
       });
       // If we loaded all the variables? Report that we loaded all the vars
       if(stLoaded == srRef.size())

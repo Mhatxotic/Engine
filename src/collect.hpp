@@ -202,7 +202,7 @@ template<class MemberType, class ListType, class IteratorType,
 class CLHelperSafe :
   /* -- Base classes ------------------------------------------------------- */
   public BaseType,                     // The collector base type
-  public Mutex                         // Mutex helper
+  public MutexLock                     // Mutex helper
 { /* -- Lock the mutex and return if empty ---------------------- */ protected:
   bool CLEmpty()
     { return MutexCall([this](){ return this->CLBaseIsEmptyUnsafe(); }); }

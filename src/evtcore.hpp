@@ -102,7 +102,7 @@ template<typename Cmd,                 // Variable type of command to use
 class EvtCore :                        // Start of common event system class
   /* -- Base classes ------------------------------------------------------- */
   private Ident,                       // Identifier of event list
-  public Mutex                         // Primary events list mutex
+  public MutexLock                     // Primary events list mutex
 { /* -- Typedefs --------------------------------------------------- */ public:
   struct Event;                           // (Prototype) Event packet info
   typedef void (CbEcFuncT)(const Event&); // Event callback type

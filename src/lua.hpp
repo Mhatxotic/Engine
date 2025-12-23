@@ -495,17 +495,16 @@ class Lua :                            // Actual class body
     // Create lua context and bail if failed. ONLY use malloc() because we
     // could sometimes interleave allocations with C++ STL and use of any other
     // allocator will cause issues.
-    lsState = LuaPtr{ lua_newstate(LuaDefaultAllocator, this), lua_close };
+    lsState = LuaPtr{ lua_newstate(LuaDefaultAllocator, this,
+      CryptRandom<unsigned int>()), lua_close };
     if(!lsState) XC("Failed to create Lua context!");
     // Set panic callback
     lua_atpanic(GetState(), LuaUtilException);
     // Set warning catcher
     lua_setwarnf(GetState(), WarningCallback, this);
     // Report initialisation with version and some important variables
-    cLog->LogDebugExSafe("Lua sandbox initialised...\n"
-      "- Stack size minimum: $; Stack size maximum: $.\n"
-      "- Maximum CFunction calls: $; Maximum UpValues: $.",
-      LUA_MINSTACK, LUAI_MAXSTACK, LUAI_MAXCCALLS, MAXUPVAL);
+    cLog->LogDebugExSafe("Lua sandbox initialised ($;$;$).",
+      LUA_MINSTACK, LUAI_MAXCCALLS, MAXUPVAL);
   }
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~Lua, DeInit())

@@ -43,7 +43,7 @@ class SysCon :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public SysBase,                      // Defined in 'winbase.hpp'
   public SysConBase,                   // Defined in 'syscore.hpp'
-  private Mutex                        // Exit mutex
+  private MutexLock                    // Exit mutex
 { /* -- Private typedefs --------------------------------------------------- */
   typedef vector<CHAR_INFO> CharInfoVec;
   /* -- Private variables -------------------------------------------------- */

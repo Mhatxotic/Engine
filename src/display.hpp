@@ -75,7 +75,7 @@ class Display :                        // Actual class body
   public  DisplayFlags,                // Display settings
   private DimCoInt,                    // Requested window position and size
   public  GlFWMonitors,                // Monitor list data
-  private Mutex,                       // Mutex for sychronising engine thread
+  private MutexLock,                   // Mutex for sychronising engine thread
   private condition_variable,          // CV for sychronising engine thread
   private EvtMainRegAuto,              // Main events list to register
   private EvtWinRegAuto                // Window events list to register

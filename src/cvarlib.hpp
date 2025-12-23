@@ -703,7 +703,7 @@ CVarItemStaticList{{
 // ? current LUA version is different to this then the code cache will be
 // ? completely deleted so all code is recompiled.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_lastver", LUA_VDIR "." LUA_VERSION_RELEASE,
+{ CFL_BASIC, "lua_lastver", cCommon->CommonBlank(),
   CBSTR(LuaCodeCheckVersion), TSTRINGSAVE|PCMDLINE|PUDB },
 /* ------------------------------------------------------------------------- */
 // ! LUA_RANDOMSEED

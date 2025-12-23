@@ -28,7 +28,7 @@ class LuaEvts :
   /* -- Initialisers ------------------------------------------------------- */
   private LuaEvtsList                  // list of added event iterators
 { /* -- Private variables -------------------------------------------------- */
-  Mutex            mMutex;             // To serialise access to the list
+  MutexLock        mMutex;             // To serialise access to the list
   /* -- Remove iterator by id -------------------------------------- */ public:
   void LuaEvtsRemoveIterator(const size_t stId)
   { // Lock access to the list

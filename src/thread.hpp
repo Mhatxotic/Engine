@@ -324,12 +324,12 @@ template<class Callbacks>class ThreadSyncHelper : private Callbacks
   SafeBool           bUnlock;          // Synchronisation should occur?
   bool               bAToB,            // Release lock for thread A?
                      bBToA;            // Release lock for thread B?
-  Mutex              mAToB,            // Thread A to Thread B mutex
+  MutexLock          mAToB,            // Thread A to Thread B mutex
                      mBToA;            // Thread B to Thread A mutex
   condition_variable cvAToB,           // Thread A to Thread B notification
                      cvBToA;           // Thread B to Thread A notification
   /* ----------------------------------------------------------------------- */
-  void SendNotification(Mutex &mM, condition_variable &cvCV, bool &bUL)
+  void SendNotification(MutexLock &mM, condition_variable &cvCV, bool &bUL)
   { // Acquire unique lock
     mM.MutexCall([&bUL, &cvCV](){
       // Modify the unlock boolean
@@ -339,7 +339,7 @@ template<class Callbacks>class ThreadSyncHelper : private Callbacks
     });
   }
   /* ----------------------------------------------------------------------- */
-  void WaitForThreadNotification(Mutex &mM, condition_variable &cvCV,
+  void WaitForThreadNotification(MutexLock &mM, condition_variable &cvCV,
     bool &bUL)
   { // Setup lock for condition variable
     mM.MutexUniqueCall([this, &cvCV, &bUL](UniqueLock &ulLock){

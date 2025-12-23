@@ -20,7 +20,7 @@ class FreeType;                        // Class prototype
 static FreeType *cFreeType = nullptr;  // Pointer to global class
 class FreeType :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private Mutex                        // Instance protection
+  private MutexLock                    // Instance protection
 { /* -- Private variables -------------------------------------------------- */
   FT_Library    ftlContext;            // Freetype context
   FT_MemoryRec_ ftmrAlloc;             // Freetype custom allocator

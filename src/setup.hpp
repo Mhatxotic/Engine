@@ -348,6 +348,7 @@
 #include <lua/lstate.h>                // Definition of Lua_State
 #include <lua/lauxlib.h>               // Lua auxiliary library
 #include <lua/lualib.h>                // Lua library
+#include <lua/ldo.h>                   // Lua macros
 #include <lua/lfunc.h>                 // Lua functions
 #undef getstr                          // Ambiguity with ncurses
 /* == Libaries namespace to keep all the API's neat and tidy =============== */

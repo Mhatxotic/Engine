@@ -103,4 +103,4 @@ This engine makes use of the following [open-source](https://en.wikipedia.org/wi
 Thank you for your interest in contributing to the [Mhatxotic Engine](https://github.com/Mhatxotic/Engine) project. If you decide to contribute code in any way — whether that may be via [issues](https://github.com/Mhatxotic/Engine/issues), [discussions](https://github.com/Mhatxotic/Engine/discussions), [pull requests](https://github.com/Mhatxotic/Engine/pulls) or any other medium then by doing so you accept that you give full and permanent permission for us to use and modify your code as we see fit. As gratitude, your (nick)name or organisation will be credited in the [credits](#credits) section and the [credits 0](https://mhatxotic.github.io/Engine/#cc.credits) console command output inside [all future executables](https://github.com/Mhatxotic/Engine/releases).
 
 <sup><sub>[↑ Top](#contents)</sub></sup>
-## Copyright © 2006-2025 Mhatxotic Design. All Rights Reserved.
+## Copyright © 2006-2026 Mhatxotic Design. All Rights Reserved.

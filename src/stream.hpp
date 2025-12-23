@@ -72,7 +72,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   public AsyncLoaderStream,            // Asynchronous loading of Streams
   public LuaEvtSlave<Stream>,          // Lua event system for Stream
   public Lockable,                     // Lua garbage collector instruction
-  protected Mutex                      // Mutex helper object
+  protected MutexLock                  // Mutex helper object
 { /* -- Variables ---------------------------------------------------------- */
   FileMap          fmFile;             // FileMap class
   OggVorbis_File   ovfContext;         // Ogg vorbis file context
