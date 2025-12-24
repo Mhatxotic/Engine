@@ -717,31 +717,12 @@ class SysCore :
         const size_t stLength =
           static_cast<size_t>(CFStringGetLength(csrRef));
         strCode.resize(stLength);
-        // It must be 5 bytes
-        if(stLength < 5)
-          XC("Region code invalid!", "Locale", strCode, "Length", stLength);
       } // Failed
       else XC("Could not build region code!");
     } // This should never happen but just incase?
     else XC("Could not detect region code!");
-    // Is there a hyphen?
-    const size_t stHyphen = strCode.find('-');
-    if(stHyphen != StdNPos)
-    { // Is there an underscore?
-      const size_t stUnderscore = strCode.find('_', stHyphen);
-      if(stUnderscore != StdNPos)
-        XC("Can't decipher locale with script which has hyphen "
-           "but no underscore!", "Locale", strCode);
-      // Rewrite the code without the script part as std::locale/setlocale does
-      // not support that part of the locale code.
-      strCode = StrAppend(strCode.substr(0, stHyphen),
-                          strCode.substr(stUnderscore));
-    } // If there is an at sign (variant) then remove it?
-    const size_t stAt = strCode.find('@');
-    if(stAt != StdNPos) strCode = strCode.substr(0, stAt);
-    // Replace underscore with dash to be consistent with Windows. After this
-    // hopefully we have generated a locale in the syntax of 'xx-XX'.
-    StrReplace(strCode, '_', '-');
+    // Try to activate the locale
+    ProcessAndActivateLocale(strCode);
     // Get operating system kernel name
     string strExtra;
     struct utsname utsnData;

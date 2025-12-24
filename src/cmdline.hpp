@@ -139,13 +139,13 @@ struct CmdLine                         // Members initially public
         ssmRet.insert({ StdMove(tokParam.front()), tokParam.size() >= 2 ?
           StdMove(tokParam.back()) : cCommon->CommonBlank() });
     }
-    // Compile on MacOS?
-#if defined(MACOS)
-    // Unset variables for process children because these variables can cause
-    // spawned terminal apps to spit garbage output and ruin the display for
-    // scripts. If the guest needs these then they can just try the apps
-    // standalone in the terminal without the need for the engine.
+    // Not using Windows?
+#if !defined(WINDOWS)
+    // Unset unallowed variables
     SysUnSetEnv(
+      // MacOS?
+# if defined(MACOS)
+      // Unset debugging variables
       "DYLD_INSERT_LIBRARIES",         // Disable dylib override
       "MallocCheckHeapAbort",          // Don't throw abort() on heap check
       "MallocCheckHeapEach",           // Don't check heap every 'n' mallocs
@@ -154,7 +154,11 @@ struct CmdLine                         // Members initially public
       "MallocHelp",                    // Help messages
       "MallocScribble",                // Don't scribble memory
       "NSDeallocateZombies",           // Deallocate zombies
-      "NSZombieEnabled"                // Enable dealloc in foundation
+      "NSZombieEnabled",               // Enable dealloc in foundation
+# endif
+      // Unset OpenSSL environment
+      "SSL_CERT_FILE",                 // Ignore OpenSSL CA store files
+      "SSL_CERT_DIR"                   // Ignore OpenSSL CA store directories
     );
 #endif
     // Return environment variables list

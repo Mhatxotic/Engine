@@ -503,6 +503,58 @@ class SysBase :                        // Safe exception handler namespace
     return pTerminal != pParent;
   }
   /* ------------------------------------------------------------ */ protected:
+  static void ProcessAndActivateLocale(string &strCode)
+  { // Return generic id if empty
+    if(strCode.empty()) { Default: strCode = "en-GB"; return; }
+    // Show a warning if length doesn't make sense
+    if(strCode.size() < 5 || strCode.size() > 32)
+    { // Log a warning
+      cLog->LogWarningExSafe(
+        "System not processing malformed locale '$'!", strCode);
+      // Set a default locale and return
+      goto Default;
+    } // Is there a hyphen?
+    const size_t stHyphen = strCode.find('-');
+    if(stHyphen != StdNPos)
+    { // Is there no underscore?
+      const size_t stUnderscore = strCode.find('_', stHyphen);
+      if(stUnderscore != StdNPos)
+      { // Log a warning
+        cLog->LogWarningExSafe(
+          "System could not decipher locale with hyphen '$'!", strCode);
+        // Set a default locale and return
+        goto Default;
+      } // Rewrite the code without the script part
+      strCode = StrAppend(strCode.substr(0, stHyphen),
+                          strCode.substr(stUnderscore));
+    } // If there is an at sign (variant) then remove it?
+    const size_t stAt = strCode.find('@');
+    if(stAt != StdNPos) strCode = strCode.substr(0, stAt);
+    // Find a period (e.g. "en_GB.UTF8") and remove suffix it if found
+    const size_t stPeriod = strCode.find('.');
+    if(stPeriod != StdNPos) strCode = strCode.substr(0, stPeriod);
+    // Make a string with .UTF8 suffix
+    const string strCodeUTF8{ strCode + ".UTF-8" };
+    // Try to set C locale and warn on fail
+    if(!setlocale(LC_ALL, strCodeUTF8.data()))
+    { // Show warning to say the function call failed
+      cLog->LogWarningExSafe("System could not set locale '$'! $",
+        strCodeUTF8, SysError());
+      // Set a default locale and return
+      goto Default;
+    } // Try to set the locale for the C++ object
+    try { cCommon->CommonSetLocale(strCodeUTF8.data()); }
+    // This very likely to fail on systems with odd locales
+    catch(const exception &eReason)
+    { // Show warning to say there was an excaption
+      cLog->LogWarningExSafe(
+        "System could not build locale object '$'! $", strCodeUTF8, eReason);
+      // Set a default locale and return
+      goto Default;
+    } // Replace underscore with dash to match Windows locale syntax (xx-XX).
+    StrReplace(strCode, '_', '-');
+  }
+  /* ----------------------------------------------------------------------- */
   ~SysBase() noexcept(true)
   { // Uninstall safe signals (signal() is not thread safe)
     for(SignalPair &spPair : slSignals)
