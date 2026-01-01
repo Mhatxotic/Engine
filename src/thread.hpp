@@ -312,9 +312,10 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
 };/* ======================================================================= */
 CTOR_END(Threads, Thread, THREAD,,,, stRunning{0}, imCodes{{
   /* ----------------------------------------------------------------------- */
-  IDMAPSTR(TS_EXCEPTION),              IDMAPSTR(TS_ERROR),
-  IDMAPSTR(TS_STANDBY),                IDMAPSTR(TS_RUNNING),
-  IDMAPSTR(TS_RETRY),                  IDMAPSTR(TS_OK),
+  IDMAPSTR(TS_EXCEPTION),              IDMAPSTR(TS_INIT),
+  IDMAPSTR(TS_ERROR),                  IDMAPSTR(TS_STANDBY),
+  IDMAPSTR(TS_RUNNING),                IDMAPSTR(TS_RETRY),
+  IDMAPSTR(TS_OK),
   /* ----------------------------------------------------------------------- */
 }});                                   // End of 'Threads' initialisation
 /* -- Thread sync helper --------------------------------------------------- */

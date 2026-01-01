@@ -18,8 +18,10 @@ class Common                           // Common variables class
   const string strTrue, strFalse, strY, strN, strEquals, strNOne, strZero,
     strOne, strTwo, strSpace, strDblSpace, strBlank, strCr, strLf, strCrLf,
     strCrLf2, strLfCr, strFSlash, strUnspec, strNull, strPeriod, str2Period,
-    strEllipsis, strLuaName, strPrivate, strProtected, strEmpty, strInvalid,
-    strAsterisk, strEnt, strNil, strFs, strDir, strHttp, strHttps;
+    strEllipsis, strPrivate, strProtected, strEmpty, strInvalid, strAsterisk,
+    strEnt, strNil;
+  /* -- Common string views ------------------------------------------------ */
+  const string_view svDir, svFs, svHttp, svHttps, svLuaName, svTimeout;
   /* -- Miscellaneous common variables ------------------------------------- */
   const char*const cpBlank;            // Blank C-String
   locale           lLocaleCurrent;     // Current locale
@@ -27,7 +29,7 @@ class Common                           // Common variables class
   const locale &CommonLocale() const { return lLocaleCurrent; }
   void CommonSetLocale(const string &strLocale)
     { lLocaleCurrent = locale{ strLocale }; }
-  /* ----------------------------------------------------------------------- */
+  /* -- Return string functions -------------------------------------------- */
   const string &CommonBlank() const { return strBlank; }
   const char *CommonCBlank() const { return cpBlank; }
   const string &CommonTrue() const { return strTrue; }
@@ -52,7 +54,6 @@ class Common                           // Common variables class
   const string &CommonNull() const { return strNull; }
   const string &CommonPeriod() const { return strPeriod; }
   const string &CommonTwoPeriod() const { return str2Period; }
-  const string &CommonLuaName() const { return strLuaName; }
   const string &CommonPrivate() const { return strPrivate; }
   const string &CommonProtected() const { return strProtected; }
   const string &CommonEmpty() const { return strEmpty; }
@@ -60,10 +61,13 @@ class Common                           // Common variables class
   const string &CommonAsterisk() const { return strAsterisk; }
   const string &CommonEnt() const { return strEnt; }
   const string &CommonNil() const { return strNil; }
-  const string &CommonFs() const { return strFs; }
-  const string &CommonDir() const { return strDir; }
-  const string &CommonHttp() const { return strHttp; }
-  const string &CommonHttps() const { return strHttps; }
+  /* -- Return string view functions --------------------------------------- */
+  const string_view &CommonFs() const { return svFs; }
+  const string_view &CommonDir() const { return svDir; }
+  const string_view &CommonHttp() const { return svHttp; }
+  const string_view &CommonHttps() const { return svHttps; }
+  const string_view &CommonLuaName() const { return svLuaName; }
+  const string_view &CommonTimeout() const { return svTimeout; }
   /* -- Default constructor ------------------------------------- */ protected:
   Common() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -78,13 +82,14 @@ class Common                           // Common variables class
     strFSlash{ "/" },                  strUnspec{ "<Unspecified>" },
     strNull{ "<Null>" },               strPeriod{ "." },
     str2Period{ ".." },                strEllipsis{ "..." },
-    strLuaName{ "__name" },            strPrivate{ "<Private>" },
-    strProtected{ "<Protected>" },     strEmpty{ "<Empty>" },
-    strInvalid{ "<Invalid>" },         strAsterisk{ "*" },
-    strEnt{ "&#x" },                   strNil{ "nil" },
-    strFs{ "<FS>" },                   strDir{ "<DIR>" },
-    strHttp{ "http" },                 strHttps{ "https" },
-    cpBlank(strBlank.data()),          lLocaleCurrent{ strBlank }
+    strPrivate{ "<Private>" },         strProtected{ "<Protected>" },
+    strEmpty{ "<Empty>" },             strInvalid{ "<Invalid>" },
+    strAsterisk{ "*" },                strEnt{ "&#x" },
+    strNil{ "nil" },                   svDir{ "<DIR>" },
+    svFs{ "<FS>" },                    svHttp{ "http" },
+    svHttps{ "https" },                svLuaName{ "__name" },
+    svTimeout{ "Script timed out!" },  cpBlank(strBlank.data()),
+    lLocaleCurrent{ strBlank }
     /* -- Set global pointer to static class ------------------------------- */
     { cCommon = this; }
 };/* ----------------------------------------------------------------------- */

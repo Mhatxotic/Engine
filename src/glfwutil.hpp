@@ -92,6 +92,8 @@ class GlFWUtil                         // Members initially private
   SET(AuxBuffers, AUX_BUFFERS)         // Set auxiliary buffer count
   SET(RefreshRate, REFRESH_RATE)       // Set desktop refresh rate
   SET(ClientAPI, CLIENT_API)           // Set client api to use
+  SET(PositionX, POSITION_X)           // Set X position of window
+  SET(PositionY, POSITION_Y)           // Set Y position of window
   SET(CtxMajor, CONTEXT_VERSION_MAJOR) // Set gl context major version
   SET(CtxMinor, CONTEXT_VERSION_MINOR) // Set gl context minor version
   SET(CoreProfile, OPENGL_PROFILE)     // Set gl profile to use
@@ -120,9 +122,11 @@ class GlFWUtil                         // Members initially private
   SET(Iconify, ICONIFIED)              // Set window minimised state
   SET(Maximised, MAXIMIZED)            // Set window maximised state
   SET(MouseHovered, HOVERED)           // Set mouse hovered over state
+  SET(MousePassthrough, MOUSE_PASSTHROUGH) // Set mouse passthrough
   SET(NoErrors, CONTEXT_NO_ERROR)      // Set context no errors
   SET(Resizable, RESIZABLE)            // Set window resizable state
-  SET(RetinaMode, COCOA_RETINA_FRAMEBUFFER) // Set retina framebuffer?
+  SET(RetinaMode, SCALE_FRAMEBUFFER)   // Set frame buffer scale
+  SET(ScaleMonitor, SCALE_TO_MONITOR); // Set scale window to monitor
   SET(SRGBCapable, SRGB_CAPABLE)       // Set SRGB colour space capable
   SET(Stereo, CENTER_CURSOR)           // Set window cursor centre state
   SET(Transparency, TRANSPARENT_FRAMEBUFFER) // Set transparent framebuffer
@@ -139,7 +143,6 @@ class GlFWUtil                         // Members initially private
       IDMAPSTR(GLFW_AUX_BUFFERS), IDMAPSTR(GLFW_BLUE_BITS),
       IDMAPSTR(GLFW_CENTER_CURSOR), IDMAPSTR(GLFW_CLIENT_API),
       IDMAPSTR(GLFW_COCOA_FRAME_NAME), IDMAPSTR(GLFW_COCOA_GRAPHICS_SWITCHING),
-      IDMAPSTR(GLFW_COCOA_RETINA_FRAMEBUFFER),
       IDMAPSTR(GLFW_CONTEXT_CREATION_API), IDMAPSTR(GLFW_CONTEXT_NO_ERROR),
       IDMAPSTR(GLFW_CONTEXT_RELEASE_BEHAVIOR), IDMAPSTR(GLFW_CONTEXT_REVISION),
       IDMAPSTR(GLFW_CONTEXT_ROBUSTNESS), IDMAPSTR(GLFW_CONTEXT_VERSION_MAJOR),
@@ -148,15 +151,18 @@ class GlFWUtil                         // Members initially private
       IDMAPSTR(GLFW_FLOATING), IDMAPSTR(GLFW_FOCUS_ON_SHOW),
       IDMAPSTR(GLFW_FOCUSED), IDMAPSTR(GLFW_GREEN_BITS),
       IDMAPSTR(GLFW_HOVERED), IDMAPSTR(GLFW_ICONIFIED),
-      IDMAPSTR(GLFW_MAXIMIZED), IDMAPSTR(GLFW_OPENGL_DEBUG_CONTEXT),
+      IDMAPSTR(GLFW_MAXIMIZED), IDMAPSTR(GLFW_MOUSE_PASSTHROUGH),
+      IDMAPSTR(GLFW_OPENGL_DEBUG_CONTEXT),
       IDMAPSTR(GLFW_OPENGL_FORWARD_COMPAT), IDMAPSTR(GLFW_OPENGL_PROFILE),
+      IDMAPSTR(GLFW_POSITION_X), IDMAPSTR(GLFW_POSITION_Y),
       IDMAPSTR(GLFW_RED_BITS), IDMAPSTR(GLFW_REFRESH_RATE),
       IDMAPSTR(GLFW_RESIZABLE), IDMAPSTR(GLFW_SAMPLES),
-      IDMAPSTR(GLFW_SCALE_TO_MONITOR), IDMAPSTR(GLFW_SRGB_CAPABLE),
-      IDMAPSTR(GLFW_STENCIL_BITS), IDMAPSTR(GLFW_STEREO),
-      IDMAPSTR(GLFW_TRANSPARENT_FRAMEBUFFER), IDMAPSTR(GLFW_VISIBLE),
-      IDMAPSTR(GLFW_X11_CLASS_NAME), IDMAPSTR(GLFW_X11_INSTANCE_NAME),
-      IDMAPSTR(GLFW_CONNECTED), IDMAPSTR(GLFW_DISCONNECTED),
+      IDMAPSTR(GLFW_SCALE_FRAMEBUFFER), IDMAPSTR(GLFW_SCALE_TO_MONITOR),
+      IDMAPSTR(GLFW_SRGB_CAPABLE), IDMAPSTR(GLFW_STENCIL_BITS),
+      IDMAPSTR(GLFW_STEREO), IDMAPSTR(GLFW_TRANSPARENT_FRAMEBUFFER),
+      IDMAPSTR(GLFW_VISIBLE), IDMAPSTR(GLFW_X11_CLASS_NAME),
+      IDMAPSTR(GLFW_X11_INSTANCE_NAME), IDMAPSTR(GLFW_CONNECTED),
+      IDMAPSTR(GLFW_DISCONNECTED),
     }, "GLFW_UNKNOWN" }                // End of initialisation of hint strings
   /* -- No code ------------------------------------------------------------ */
   {}

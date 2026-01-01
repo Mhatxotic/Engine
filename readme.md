@@ -73,7 +73,7 @@ See this [automatically generated document](https://Mhatxotic.github.io/Engine) 
 ## Examples…
 A remake of the classic [Amiga](https://en.wikipedia.org/wiki/Amiga) and [DOS](https://en.wikipedia.org/wiki/DOS) game [Diggers](https://github.com/Mhatxotic/Diggers) was made with this engine and available to play. The contents of the self-contained and portable executable are available in the [diggers](diggers) sub-directory.
 
-[This YouTube video](https://www.youtube.com/watch?v=ccePNvBzsWg) is a preview of a private (quick and messy) script I made that dynamically builds a carousel which takes advantage of framebuffer-objects, True-type fonts, triangle rotations, dynamic texture coordinate manipulations, Vorbis audio and Theora video streams, and Lua's incredibly versatile ability to build event and animation systems.
+[This YouTube video](https://youtu.be/Uf3DXH9bhk4) is a preview of a private (quick and messy) script I made that dynamically builds a carousel which takes advantage of framebuffer-objects, True-type fonts, triangle rotations, dynamic texture coordinate manipulations, Vorbis audio and Theora video streams, and Lua's incredibly versatile ability to build event and animation systems.
 
 <sup><sub>[↑ Top](#contents)</sub></sup>
 ## Credits…

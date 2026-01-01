@@ -59,9 +59,10 @@ LLFUNC(Catchup, 0, cTimer->TimerCatchup())
 // < Stepping:integer=Processor stepping.
 // ? Returns information about the installed Central Processing Unit.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CPU, 6, LuaUtilPushVar(lS, cSystem->CPUName(), cSystem->CPUCount(),
-  cSystem->CPUSpeed(), cSystem->CPUFamily(), cSystem->CPUModel(),
-  cSystem->CPUStepping()))
+LLFUNC(CPU, 6,
+  LuaUtilPushExtStr(lS, cSystem->CPUName());
+  LuaUtilPushVar(lS, cSystem->CPUCount(), cSystem->CPUSpeed(),
+    cSystem->CPUFamily(), cSystem->CPUModel(), cSystem->CPUStepping()))
 /* ========================================================================= */
 // $ Core.CPUFPS
 // < FPS:number=Frames per second.
@@ -133,11 +134,16 @@ LLFUNC(End, 0, cEvtMain->Add(EMC_LUA_END))
 // < CompVersion:string=The version of the compiler that built the executable.
 // ? Returns version information about the engine.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Engine, 12, LuaUtilPushVar(lS, cSystem->ENGName(),
-  cSystem->ENGAuthor(), cSystem->ENGMajor(), cSystem->ENGMinor(),
-  cSystem->ENGBuild(), cSystem->ENGRevision(), cSystem->ENGBits(),
-  cSystem->ENGBuildType(), cSystem->ENGTarget(), cSystem->ENGCompiled(),
-  cSystem->ENGCompiler(), cSystem->ENGCompVer()))
+LLFUNC(Engine, 12,
+  LuaUtilPushExtStr(lS, cSystem->ENGName());
+  LuaUtilPushExtStr(lS, cSystem->ENGAuthor());
+  LuaUtilPushVar(lS, cSystem->ENGMajor(), cSystem->ENGMinor(),
+    cSystem->ENGBuild(), cSystem->ENGRevision(), cSystem->ENGBits(),
+    cSystem->ENGBuildType());
+  LuaUtilPushExtStr(lS, cSystem->ENGTarget());
+  LuaUtilPushExtStr(lS, cSystem->ENGCompiled());
+  LuaUtilPushExtStr(lS, cSystem->ENGCompiler());
+  LuaUtilPushExtStr(lS, cSystem->ENGCompVer()))
 /* ========================================================================= */
 // $ Core.Env
 // > Value:string=The name of the variable to query.
@@ -146,7 +152,7 @@ LLFUNC(Engine, 12, LuaUtilPushVar(lS, cSystem->ENGName(),
 // ? empty. All environment variables are converted to upper-case at startup.
 // ? Type 'env' in the console to see the current environment.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Env, 1, LuaUtilPushVar(lS, cCmdLine->CmdLineGetEnv(AgString{lS,1})))
+LLFUNC(Env, 1, LuaUtilPushExtStr(lS, cCmdLine->CmdLineGetEnv(AgString{lS,1})))
 /* ========================================================================= */
 // $ Core.Events
 // < Events:integer=Number of events in the engine events system.
@@ -263,8 +269,10 @@ LLFUNC(LUAUsage, 1, LuaUtilPushVar(lS, LuaUtilGetUsage(lS)))
 LLFUNC(Library, 4,
   const AgCreditEnum aCredit{lS, 1};
   const CreditLib &clItem = cCredits->CreditGetItem(aCredit);
-  LuaUtilPushVar(lS, clItem.GetName(),     clItem.GetVersion(),
-            clItem.IsCopyright(), clItem.GetAuthor()))
+  LuaUtilPushExtStr(lS, clItem.GetName());
+  LuaUtilPushExtStr(lS, clItem.GetVersion());
+  LuaUtilPushBool(lS, clItem.IsCopyright());
+  LuaUtilPushExtStr(lS, clItem.GetAuthor()))
 /* ========================================================================= */
 // $ Core.License
 // > Id:integer=The index of the license.
@@ -288,9 +296,11 @@ LLFUNC(License, 1,
 // < Extra:string=Extra operating system information (e.g. Wine/Kernel).
 // ? Returns version information about the operating system.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OS, 6, LuaUtilPushVar(lS, cSystem->OSName(), cSystem->OSMajor(),
-  cSystem->OSMinor(), cSystem->OSBuild(), cSystem->OSBits(),
-  cSystem->OSNameEx()))
+LLFUNC(OS, 6,
+  LuaUtilPushExtStr(lS, cSystem->OSName());
+  LuaUtilPushVar(lS, cSystem->OSMajor(), cSystem->OSMinor(),
+    cSystem->OSBuild(), cSystem->OSBits());
+  LuaUtilPushExtStr(lS, cSystem->OSNameEx()))
 /* ========================================================================= */
 // $ Core.OSMicroTime
 // < Time:integer=The time in microseconds.
@@ -539,20 +549,20 @@ LLRSBEGIN                              // Core.* namespace functions begin
   LLRSFUNC(Engine),       LLRSFUNC(Env),          LLRSFUNC(Events),
   LLRSFUNC(IsOSLinux),    LLRSFUNC(IsOSMac),      LLRSFUNC(IsOSWindows),
   LLRSFUNC(KillPid),      LLRSFUNC(Library),      LLRSFUNC(License),
-  LLRSFUNC(Locale),       LLRSFUNC(Log),
-  LLRSFUNC(LogEx),        LLRSFUNC(LUAMicroTime), LLRSFUNC(LUAMilliTime),
-  LLRSFUNC(LUANanoTime),  LLRSFUNC(LUATime),      LLRSFUNC(LUAUsage),
-  LLRSFUNC(OnEnd),        LLRSFUNC(OnTick),       LLRSFUNC(OS),
-  LLRSFUNC(OSMicroTime),  LLRSFUNC(OSMilliTime),  LLRSFUNC(OSNanoTime),
-  LLRSFUNC(OSNumTime),    LLRSFUNC(OSTime),       LLRSFUNC(Pause),
-  LLRSFUNC(PidRunning),   LLRSFUNC(Quit),         LLRSFUNC(RAM),
-  LLRSFUNC(Reset),        LLRSFUNC(Restart),      LLRSFUNC(RestartNP),
-  LLRSFUNC(RestoreDelay), LLRSFUNC(ScrollDown),   LLRSFUNC(ScrollUp),
-  LLRSFUNC(SetDelay),     LLRSFUNC(SetIcon),      LLRSFUNC(Stack),
-  LLRSFUNC(StatusLeft),   LLRSFUNC(StatusRight),  LLRSFUNC(Suspend),
-  LLRSFUNC(Ticks),        LLRSFUNC(Time),         LLRSFUNC(UpMicroTime),
-  LLRSFUNC(UpMilliTime),  LLRSFUNC(UpNanoTime),   LLRSFUNC(Uptime),
-  LLRSFUNC(WaitAsync),    LLRSFUNC(Write),        LLRSFUNC(WriteEx),
+  LLRSFUNC(Locale),       LLRSFUNC(Log),          LLRSFUNC(LogEx),
+  LLRSFUNC(LUAMicroTime), LLRSFUNC(LUAMilliTime), LLRSFUNC(LUANanoTime),
+  LLRSFUNC(LUATime),      LLRSFUNC(LUAUsage),     LLRSFUNC(OnEnd),
+  LLRSFUNC(OnTick),       LLRSFUNC(OS),           LLRSFUNC(OSMicroTime),
+  LLRSFUNC(OSMilliTime),  LLRSFUNC(OSNanoTime),   LLRSFUNC(OSNumTime),
+  LLRSFUNC(OSTime),       LLRSFUNC(Pause),        LLRSFUNC(PidRunning),
+  LLRSFUNC(Quit),         LLRSFUNC(RAM),          LLRSFUNC(Reset),
+  LLRSFUNC(Restart),      LLRSFUNC(RestartNP),    LLRSFUNC(RestoreDelay),
+  LLRSFUNC(ScrollDown),   LLRSFUNC(ScrollUp),     LLRSFUNC(SetDelay),
+  LLRSFUNC(SetIcon),      LLRSFUNC(Stack),        LLRSFUNC(StatusLeft),
+  LLRSFUNC(StatusRight),  LLRSFUNC(Suspend),      LLRSFUNC(Ticks),
+  LLRSFUNC(Time),         LLRSFUNC(UpMicroTime),  LLRSFUNC(UpMilliTime),
+  LLRSFUNC(UpNanoTime),   LLRSFUNC(Uptime),       LLRSFUNC(WaitAsync),
+  LLRSFUNC(Write),        LLRSFUNC(WriteEx),
 LLRSEND                                // Core.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

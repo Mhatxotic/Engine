@@ -712,6 +712,11 @@ class Display :                        // Actual class body
         cGlFW->WinSetResizableAttribDisabled();
       } // Position is top-left in full-screen
       ciPosition.CoordSet();
+      // Set initial position of window to top-left
+#if !defined(LINUX)
+      cGlFW->GlFWSetPositionX(0);
+      cGlFW->GlFWSetPositionY(0);
+#endif
       // Set initial window width and height
       diSize.DimSet(gfwrActive->Width(), gfwrActive->Height());
       // Log that we are switching to full-screen mode. Casting requested
@@ -719,8 +724,7 @@ class Display :                        // Actual class body
       cLog->LogInfoExSafe("Display setting a $x$ $ full-screen window...",
         diSize.DimGetWidth(), diSize.DimGetHeight(), cpType);
       // Instruct glfw to set full-screen window
-      cGlFW->WinSetMonitor(mUsing, ciPosition, diSize,
-        gfwrActive->Refresh());
+      cGlFW->WinSetMonitor(mUsing, ciPosition, diSize, gfwrActive->Refresh());
     } // Window mode selected
     else
     { // Not in full-screen mode or native mode
@@ -728,6 +732,11 @@ class Display :                        // Actual class body
       // Trnslate user specified window size
       diSize.DimSet(TranslateUserSize());
       ciPosition.CoordSet(TranslateUserCoords(diSize));
+      // Set initial position of window
+#if !defined(LINUX)
+      cGlFW->GlFWSetPositionX(ciPosition.CoordGetX());
+      cGlFW->GlFWSetPositionY(ciPosition.CoordGetY());
+#endif	
       // Is a desktop mode window (Could change via OnFBReset())
       fsType = FST_WINDOW;
       // We need to adjust to the position of the currently selected monitor so
@@ -1073,10 +1082,13 @@ class Display :                        // Actual class body
     cGlFW->GlFWSetRedBits(iFBDepthR);
     cGlFW->GlFWSetRefreshRate(GetRefreshRate());
     cGlFW->GlFWSetRelease(iRelease);
+#if !defined(LINUX)
     cGlFW->GlFWSetRetinaMode(hdpiSetting != HD_DISABLED);
+#endif
     cGlFW->GlFWSetRobustness(iRobustness);
+    cGlFW->GlFWSetScaleMonitor(true);
     cGlFW->GlFWSetSRGBCapable(FlagIsSet(DF_SRGB));
-    cGlFW->GlFWSetStencilBits(0); // No use (yet)
+    cGlFW->GlFWSetStencilBits(0); // Not used
     cGlFW->GlFWSetStereo(FlagIsSet(DF_STEREO));
     cGlFW->GlFWSetTransparency(cFboCore->fboMain.FboIsTransparencyEnabled());
     // Set Apple operating system only settings

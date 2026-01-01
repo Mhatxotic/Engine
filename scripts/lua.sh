@@ -65,22 +65,25 @@ if [ ! -f src/ldo.c.patched ]; then
 #include "lauxlib.h"\n/g' | \
     sed 's/L->errorJmp = &lj;/L->errorJmp = \&lj;\
 #if defined(__cplusplus)\
-\ttry{\
-\t(*f)(L, ud);\
-\t}\
-\tcatch(struct lua_longjmp *lj){\
-\t\tif(!lj->status) lj->status=-1;\
-\t}\
+\ttry { (*f)(L, ud); }\
+\tcatch(struct lua_longjmp *e) { lj.status = (e->status != 0) ? e->status : LUA_ERRRUN; }\
 \tcatch(const std::exception \&e){\
 \t\ttry{\
-\t\t\tluaL_where(L,1);\
-\t\t\tlua_pushstring(L,e.what());\
-\t\t\tlua_concat(L,2);\
+\t\t\tluaL_where(L, 1);\
+\t\t\tlua_pushstring(L, e.what());\
+\t\t\tlua_concat(L, 2);\
 \t\t\tlua_error(L);\
 \t\t}\
-\t\tcatch(struct lua_longjmp *lj){\
-\t\t\tif(!lj->status) lj->status=-1;\
+\t\tcatch(struct lua_longjmp *e2) { lj.status = (e2->status != 0) ? e2->status : LUA_ERRRUN; }\
+\t}\
+\tcatch(...){\
+\t\ttry{\
+\t\t\tluaL_where(L, 1);\
+\t\t\tlua_pushstring(L, "Unknown C++ exception!");\
+\t\t\tlua_concat(L, 2);\
+\t\t\tlua_error(L);\
 \t\t}\
+\t\tcatch(struct lua_longjmp *e2) { lj.status = (e2->status != 0) ? e2->status : LUA_ERRRUN; }\
 \t}\
 #else\n/g' | \
     sed 's/L->errorJmp = lj.previous;/\

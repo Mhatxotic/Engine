@@ -1664,7 +1664,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Set the variable and continue if we haven't set it yet
         if(!cpVar) { cpVar = mbPacket.MemPtr<char>(); continue; }
         // Push value and set it as the variable
-        LuaUtilPushStrView(lS, mbPacket.MemToStringView());
+        LuaUtilPushStr(lS, mbPacket.MemToStringView());
         LuaUtilSetField(lS, -2, cpVar);
         // Done with variable
         cpVar = nullptr;
