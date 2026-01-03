@@ -207,7 +207,12 @@ class Lua :                            // Actual class body
   void ExecuteMain() const { lrMainTick.LuaFuncPushAndCall(); }
   /* -- When lua enters the specified function ----------------------------- */
   static void OnInstructionCount(lua_State*const lS, lua_Debug*const)
-    { if(cTimer->TimerIsTimedOut()) LuaUtilPushErr(lS, "Frame timeout!"); }
+  { // Return if timer is not timed out
+    if(!cTimer->TimerIsTimedOut()) return;
+    // Push error message and throw error
+    LuaUtilPushExtStr(lS, cCommon->CommonTimeout());
+    LuaUtilErrThrow(lS);
+  }
   /* -- Return operations count -------------------------------------------- */
   int GetOpsInterval() { return iOperations; }
   /* -- Init lua library and configuration --------------------------------- */
@@ -284,9 +289,8 @@ class Lua :                            // Actual class body
           LuaUtilPushTable(GetState(), 0, ltRef.iCount);
           // Walk through the key/value pairs
           for(const LuaKeyInt *kiPtr = ltRef.kiList; kiPtr->cpName; ++kiPtr)
-          { // Get reference to key/value pair
+          { // Get reference to key/value pair and it to LUA
             const LuaKeyInt &kiRef = *kiPtr;
-            // Push the name of the item
             LuaUtilPushInt(GetState(), kiRef.liValue);
             LuaUtilSetField(GetState(), -2, kiRef.cpName);
           } // Set field name and finalise const table
@@ -301,7 +305,8 @@ class Lua :                            // Actual class body
       { // Set this current list to global
         LuaUtilSetGlobal(GetState(), llRef.strvName.data());
         // Log progress
-        cLog->LogDebugExSafe("- $ ($ members, $ tables, $ statics).",
+        cLog->LogDebugExSafe(
+          "- $ with $ functions and $ tables with $ values.",
           llRef.strvName, llRef.iLLCount, llRef.iLLKICount, iStaticsNS);
         // Continue
         continue;
@@ -319,14 +324,14 @@ class Lua :                            // Actual class body
            "Name", llRef.strvName);
       llcirAPI[llRef.lciId] = iReference;
       // Push the name of the object for 'tostring()' LUA function.
-      LuaUtilPushStrView(GetState(), llRef.strvName);
+      LuaUtilPushExtStr(GetState(), llRef.strvName);
       LuaUtilSetField(GetState(), -2, cCommon->CommonLuaName().data());
       // Set function methods so var:func() works.
       LuaUtilPushTable(GetState(), 0, llRef.iLLMFCount);
       luaL_setfuncs(GetState(), llRef.libmfList, 0);
       LuaUtilSetField(GetState(), -2, "__index");
       // Getmetatable(x) just returns the type name for now.
-      LuaUtilPushStrView(GetState(), llRef.strvName);
+      LuaUtilPushExtStr(GetState(), llRef.strvName);
       LuaUtilSetField(GetState(), -2, "__metatable");
       // Push garbage collector function.
       LuaUtilPushCFunc(GetState(), llRef.lcfpDestroy);
@@ -335,23 +340,23 @@ class Lua :                            // Actual class body
       LuaUtilSetField(GetState(), LUA_REGISTRYINDEX, llRef.strvName.data());
       // Log progress
       cLog->LogDebugExSafe(
-        "- $ ($ members, $ methods, $ tables and $ statics); Id:$; Ref:$.",
-        llRef.strvName, llRef.iLLMFCount, llRef.iLLCount,
-        llRef.iLLKICount, iStaticsNS, llRef.lciId, iReference);
+        "- $ ($:$) with $ methods, $ functions and $ tables with $ values.",
+        llRef.strvName, llRef.lciId, iReference, llRef.iLLMFCount,
+        llRef.iLLCount, llRef.iLLKICount, iStaticsNS);
     } // Report summary of API usage
     cLog->LogDebugExSafe(
       "Lua registered $ of $ global namespaces...\n"
-      "- $ of $ static tables are registered.\n"
-      "- $ of $ static variables are registered.\n"
       "- $ of $ member functions are registered.\n"
       "- $ of $ method functions are registered.\n"
+      "- $ of $ static tables are registered.\n"
+      "- $ of $ static variables are registered.\n"
       "- $ of $ functions are registered in total.\n"
       "- $ of $ variables are registered in total.",
       iCount,             iTotal,
-      iTables,            iTotalTables,
-      iStatics,           iTotalStatics,
       iMembers,           iTotalMembers,
       iMethods,           iTotalMethods,
+      iTables,            iTotalTables,
+      iStatics,           iTotalStatics,
       iMembers+iMethods,  iTotalMembers+iTotalMethods,
       iMembers+iMethods+iTables+iStatics,
       iTotalMembers+iTotalMethods+iTotalTables+iTotalStatics);
@@ -414,11 +419,10 @@ class Lua :                            // Actual class body
   void EnterSandbox(lua_CFunction cbFunc, void*const vpPtr)
   { // Push and get error callback function id
     const int iParam = LuaUtilPushAndGetGenericErrId(GetState());
-    // Push function and parameters
+    // Push function and parameters and user parameter from core class
     LuaUtilPushCFunc(GetState(), cbFunc);
-    // Push user parameter (core class)
     LuaUtilPushPtr(GetState(), vpPtr);
-    // Call it! No parameters and no returns
+    // Call it! One parameter and no returns
     LuaUtilPCallSafe(GetState(), 1, 0, iParam);
   }
   /* -- De-initialise LUA context ------------------------------------------ */

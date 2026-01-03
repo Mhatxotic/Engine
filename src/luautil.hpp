@@ -150,6 +150,17 @@ class LuaStackSaver                    // Lua stack saver class
 /* -- Remove item from stack ----------------------------------------------- */
 static void LuaUtilRmStack(lua_State*const lS, const int iParam=-1)
   { lua_remove(lS, iParam); }
+/* -- Push a part of memory as a string ------------------------------------ */
+template<class PtrType>
+  static void LuaUtilPushExtStr(lua_State*const lS, const PtrType*const ptStr,
+    const size_t stLen, lua_Alloc laFunc=nullptr,
+    void*const vpUserData=nullptr)
+{ lua_pushexternalstring(lS, ptStr, stLen, laFunc, vpUserData); }
+/* -- Push a string we manage onto the stack ------------------------------- */
+template<class StrType>
+  static void LuaUtilPushExtStr(lua_State*const lS, const StrType &strStr,
+    lua_Alloc laFunc=nullptr, void*const vpUserData=nullptr)
+{ LuaUtilPushExtStr(lS, strStr.data(), strStr.size(), laFunc, vpUserData); }
 /* -- Push a literal string onto the stack --------------------------------- */
 template<typename PtrType, typename IntType>
   static void LuaUtilPushLStr(lua_State*const lS, const PtrType ptValue,
@@ -161,8 +172,9 @@ template<typename PtrType, typename IntType>
                       static_cast<size_t>(itSize));
 }
 /* -- Push a C++ string onto the stack ------------------------------------- */
-static void LuaUtilPushStr(lua_State*const lS, const string &strStr)
-  { LuaUtilPushLStr(lS, strStr.data(), strStr.length()); }
+template<class StrType>
+  static void LuaUtilPushStr(lua_State*const lS, const StrType &strStr)
+{ LuaUtilPushLStr(lS, strStr.data(), strStr.length()); }
 /* -- Get metatable entry from userdata ------------------------------------ */
 static int LuaUtilGetMetaTable(lua_State*const lS, const int iIndex)
   { return lua_getmetatable(lS, iIndex); }
@@ -200,7 +212,7 @@ static const string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
       LuaUtilGetMetaTable(lS, -1);
       if(!LuaUtilIsTable(lS, -1)) return StrFormat("<userdata:$>", vpPtr);
       // Read internal engine name and return generic data if not a string
-      LuaUtilPushStr(lS, cCommon->CommonLuaName());
+      LuaUtilPushExtStr(lS, cCommon->CommonLuaName());
       LuaUtilGetRaw(lS, -2);
       return StrFormat("<$:$>", LuaUtilIsString(lS, -1) ?
         LuaUtilToCppString(lS, -1) : "Unknown", vpPtr);
@@ -288,9 +300,6 @@ template<typename IntType>
 /* -- Push a memory block onto the stack as a string ----------------------- */
 static void LuaUtilPushMem(lua_State*const lS, const MemConst &mcSrc)
   { LuaUtilPushLStr(lS, mcSrc.MemPtr<char>(), mcSrc.MemSize()); }
-/* -- Push a C++ string view onto the stack -------------------------------- */
-static void LuaUtilPushStrView(lua_State*const lS, const string_view &strvStr)
-  { LuaUtilPushLStr(lS, strvStr.data(), strvStr.length()); }
 /* -- Push a pointer ------------------------------------------------------- */
 static void LuaUtilPushPtr(lua_State*const lS, void*const vpPtr)
   { lua_pushlightuserdata(lS, vpPtr); }
@@ -300,10 +309,8 @@ template<typename ...VarArgs, typename AnyType>
   static void LuaUtilPushVar(lua_State*const lS, const AnyType &atVal,
     VarArgs &&...vaArgs)
 { // Type is STL string?
-  if constexpr(is_same_v<AnyType, string>) LuaUtilPushStr(lS, atVal);
-  // Type is STL string_view?
-  else if constexpr(is_same_v<AnyType, string_view>)
-    LuaUtilPushStrView(lS, atVal);
+  if constexpr(is_same_v<AnyType, string> ||
+               is_same_v<AnyType, string_view>) LuaUtilPushStr(lS, atVal);
   // Type is boolean?
   else if constexpr(is_same_v<AnyType, bool>) LuaUtilPushBool(lS, atVal);
   // Type is any pointer type (assuming char*, don't send anything else)
@@ -328,10 +335,6 @@ template<typename ...VarArgs, typename AnyType>
 }
 /* -- Throw error ---------------------------------------------------------- */
 static void LuaUtilErrThrow(lua_State*const lS) { lua_error(lS); }
-/* -- Push C-String on stack and throw ------------------------------------- */
-static void LuaUtilPushErr(lua_State*const lS,
-  const char*const cpReason)
-{ LuaUtilPushCStr(lS, cpReason); LuaUtilErrThrow(lS); }
 /* -- Get and pop string on top -------------------------------------------- */
 static const string LuaUtilGetAndPopStr(lua_State*const lS)
 { // If there is nothing on the stack then return a generic error

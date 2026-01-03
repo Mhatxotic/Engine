@@ -309,7 +309,8 @@ class Core final :                     // Members initially private
     { // Allow Lue to process error. WARNING!! This prevents destructors on all
       // statically initialised classes to NEVER call so make sure we do not
       // statically create something above!
-      LuaUtilPushErr(lS, eReason.what());
+      LuaUtilPushCStr(lS, eReason.what());
+      LuaUtilErrThrow(lS);
     } // Returning nothing
     return 0;
   }
