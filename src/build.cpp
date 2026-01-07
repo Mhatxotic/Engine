@@ -3817,39 +3817,6 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       { "{LUA_OSLIBNAME, luaopen_os},",        cCommon->CommonCBlank() },
       { "{LUA_LOADLIBNAME, luaopen_package},", cCommon->CommonCBlank() },
     });
-    // Patch to replace the default throwing code with code that works better
-    // to store the exception message so we don't have to have try blocks in
-    // each C function
-    ReplaceTextMulti("src/ldo.c", {
-      { "throw(c)",
-        "throw(c)\n#include <stdexcept>\n#include \"lauxlib.h\"" },
-      { "L->errorJmp = &lj;",
-        "L->errorJmp = &lj;\n"
-        "#if defined(__cplusplus)\n"
-        "\ttry { (*f)(L, ud); }\n"
-        "\tcatch(struct lua_longjmp *e) { lj.status = (e->status != 0) ? e->status : LUA_ERRRUN; }\n"
-        "\tcatch(const std::exception &e){\n"
-        "\t\ttry{\n"
-        "\t\t\tluaL_where(L, 1);\n"
-        "\t\t\tlua_pushstring(L, e.what());\n"
-        "\t\t\tlua_concat(L, 2);\n"
-        "\t\t\tlua_error(L);\n"
-        "\t\t}\n"
-        "\t\tcatch(struct lua_longjmp *e2) { lj.status = (e2->status != 0) ? e2->status : LUA_ERRRUN; }\n"
-        "\t}\n"
-        "\tcatch(...){\n"
-        "\t\ttry{\n"
-        "\t\tluaL_where(L, 1);\n"
-        "\t\t\tlua_pushstring(L, \"Unknown C++ exception!\");\n"
-        "\t\tlua_concat(L, 2);\n"
-        "\t\tlua_error(L);\n"
-        "\t\t}\n"
-        "\t\tcatch(struct lua_longjmp *e2) { lj.status = (e2->status != 0) ? e2->status : LUA_ERRRUN; }\n"
-        "\t}\n#else\n" },
-      { "L->errorJmp = lj.previous;",
-        "#endif\n"
-        "\tL->errorJmp = lj.previous;" }
-    });
     // Performing removal of unneeded core function ---------------------------
     ReplaceTextMulti("src/lbaselib.c", {
       { "{\"dofile\", luaB_dofile},",     cCommon->CommonCBlank() },
@@ -3862,7 +3829,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Perform increase of limits ---------------------------------------------
     ReplaceText("src/lparser.c", "MAXVARS\t\t200", "MAXVARS\t\t253");
     // Add lua specific flags to compiler command line ------------------------
-    const string strLuaSpecific{ "-TP -EHsc" }, // DO NOT COMPILE AS C!!!
+    const string strLuaSpecific{ "-TP -EHsc -std:" STANDARD }, // NO C!
                  strLuaDebug{ "-DLUA_USE_APICHECK" },
                  strLuaSources{ "src/*.c" };
     strRelFlags64 += StrAppend(strLuaSpecific, ' ', strLuaSources),

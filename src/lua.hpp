@@ -38,7 +38,7 @@ class Lua :                            // Actual class body
 { /* -- Private typedefs --------------------------------------------------- */
   typedef unique_ptr<lua_State, function<decltype(lua_close)>> LuaPtr;
   /* -- Private variables -------------------------------------------------- */
-  LuaPtr           lsState;            // Lua state pointer
+  LuaPtr           lpState;            // Lua state pointer
   bool             bExiting;           // Ending execution?
   int              iOperations,        // Default ops before timeout check
                    iStack,             // Default stack size
@@ -52,8 +52,22 @@ class Lua :                            // Actual class body
   /* -- Generic end tick to quit the engine  ------------------------------- */
   static int OnGenericEndTick(lua_State*const)
     { cEvtMain->ConfirmExit(); return 0; }
-  /* -- Return lua state --------------------------------------------------- */
-  lua_State *GetState() const { return lsState.get(); }
+  /* -- Check if LUA state is set or not ----------------------------------- */
+  bool StateIsSet() const { return !!GetState(); }
+  bool StateIsNotSet() const { return !StateIsSet(); }
+  /* -- Set new LUA state and return if it was set ------------------------- */
+  bool StateSetAndFailed(LuaPtr &&lpNState)
+  { // Return failure if not set
+    if(!lpNState) return true;
+    // Move new state into place
+    lpState = StdMove(lpNState);
+    // Return success
+    return false;
+  }
+  /* -- Clear and close LUA state ------------------------------------------ */
+  void StateClear() { lpState.reset(); }
+  /* -- Return current LUA state ------------------------------------------- */
+  lua_State *GetState() const { return lpState.get(); }
   /* -- Set or clear a lua reference (LuaFunc can't have this check) ------- */
   bool SetLuaRef(lua_State*const lS, LuaFunc &lrEvent)
   { // Must be on the main thread
@@ -72,7 +86,7 @@ class Lua :                            // Actual class body
   { // Lua not initialised? This may be executed before Init() via an
     // exception. For example... The CONSOLE.Init() may have raised an
     // exception. Also do not fire if paused
-    if(!lsState || uiLuaPaused) return;
+    if(StateIsNotSet() || uiLuaPaused) return;
     // Get ending function and ignore if not a function
     lrMainRedraw.LuaFuncDispatch();
     // Say that we've finished calling the function
@@ -206,7 +220,7 @@ class Lua :                            // Actual class body
   /* -- Execute main function ---------------------------------------------- */
   void ExecuteMain() const { lrMainTick.LuaFuncPushAndCall(); }
   /* -- When lua enters the specified function ----------------------------- */
-  static void OnInstructionCount(lua_State*const lS, lua_Debug*const)
+  static void OnInstructionCount(lua_State*const lS, lua_Debug*const) noexcept
   { // Return if timer is not timed out
     if(!cTimer->TimerIsTimedOut()) return;
     // Push error message and throw error
@@ -222,7 +236,7 @@ class Lua :                            // Actual class body
     // Init references
     LuaFuncInitRef(GetState());
     // Set default end function to automatically exit the engine
-    LuaUtilPushCFunc(GetState(), OnGenericEndTick);
+    LuaUtilPushCFunc<OnGenericEndTick>(GetState());
     lrMainEnd.LuaFuncSet();
     // Set initial size of stack
     cLog->LogDebugExSafe("Lua $ stack size to $.",
@@ -416,11 +430,11 @@ class Lua :                            // Actual class body
     CCReset();
   }
   /* -- Enter sandbox mode ------------------------------------------------- */
-  void EnterSandbox(lua_CFunction cbFunc, void*const vpPtr)
+  template<lua_CFunction cFunc>void EnterSandbox(void*const vpPtr)
   { // Push and get error callback function id
     const int iParam = LuaUtilPushAndGetGenericErrId(GetState());
     // Push function and parameters and user parameter from core class
-    LuaUtilPushCFunc(GetState(), cbFunc);
+    LuaUtilPushCFunc(GetState(), cFunc);
     LuaUtilPushPtr(GetState(), vpPtr);
     // Call it! One parameter and no returns
     LuaUtilPCallSafe(GetState(), 1, 0, iParam);
@@ -428,7 +442,7 @@ class Lua :                            // Actual class body
   /* -- De-initialise LUA context ------------------------------------------ */
   void DeInit()
   { // Return if class already initialised
-    if(!lsState) return;
+    if(StateIsNotSet()) return;
     // Report execution time
     cLog->LogInfoExSafe("Lua execution took $ seconds.",
       StrShortFromDuration(CCDeltaToDouble()));
@@ -441,7 +455,7 @@ class Lua :                            // Actual class body
     // DeInit references
     LuaFuncDeInitRef();
     // Close state and reset var
-    lsState.reset();
+    StateClear();
     // Clear API class references
     llcirAPI.fill(LUA_REFNIL);
     // No longer paused or exited
@@ -493,15 +507,15 @@ class Lua :                            // Actual class body
   /* -- Initialise LUA context --------------------------------------------- */
   void Init()
   { // Class initialised
-    if(lsState) XC("Lua sandbox already initialised!");
+    if(StateIsSet()) XC("Lua sandbox already initialised!");
     // Report progress
     cLog->LogDebugSafe("Lua sandbox initialising...");
     // Create lua context and bail if failed. ONLY use malloc() because we
     // could sometimes interleave allocations with C++ STL and use of any other
     // allocator will cause issues.
-    lsState = LuaPtr{ lua_newstate(LuaDefaultAllocator, this,
-      CryptRandom<unsigned int>()), lua_close };
-    if(!lsState) XC("Failed to create Lua context!");
+    if(StateSetAndFailed({ lua_newstate(LuaDefaultAllocator, this,
+         CryptRandom<unsigned int>()), lua_close }))
+      XC("Failed to create Lua context!");
     // Set panic callback
     lua_atpanic(GetState(), LuaUtilException);
     // Set warning catcher

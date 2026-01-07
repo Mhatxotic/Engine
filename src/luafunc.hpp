@@ -330,7 +330,7 @@ static void LuaFuncDeInitRef()
   cLog->LogDebugSafe("LuaFuncs de-initialised.");
 }
 /* -- Empty function ------------------------------------------------------- */
-static int LuaFuncEmptyCFunction(lua_State*const) { return 0; }
+static int LuaFuncEmptyCFunction(lua_State*const) noexcept { return 0; }
 /* -- Init with lua state -------------------------------------------------- */
 static void LuaFuncInitRef(lua_State*const lS)
 { // DeInit current lua refs

@@ -27,8 +27,8 @@ namespace P {                          // Start of public module namespace
 #define LLRSCONSTBEGIN       static const LuaTable ltConsts[]{
 #define LLRSCONSTEND         ltLast };
 #define LLRSEND              llrLast };
-#define LLRSFUNC(n)          { #n, Cb ## n }
-#define LLRSFUNCEX(n,f)      { #n, Cb ## f }
+#define LLRSFUNC(n)          { #n, LuaUtilCallback<&Cb ## n> }
+#define LLRSFUNCEX(n,f)      { #n, LuaUtilCallback<&Cb ## f> }
 #define LLRSKTBEGIN(n)       static const LuaKeyInt lkiConsts ## n[]{
 #define LLRSKTEND            lkiLast };
 #define LLRSKTITEM(p,n)      LLRSKTITEMEX2(#n, p ## n)
@@ -106,7 +106,7 @@ constexpr static const luaL_Reg llrLast{ nullptr, nullptr };
 /* -- Items in a table helper macro ---------------------------------------- */
 #define LLAL(n,t)  LLArrLen(LLNS(n, t))
 /* -- Destructor function builder helper macro ----------------------------- */
-#define LLDF(n)    static_cast<lua_CFunction>(LL ## n::CbDestroy)
+#define LLDF(n)    LuaUtilCallback<&LL ## n::CbDestroy>
 /* -- Macro to actually build an item in the main API array ---------------- */
 #define LLITEM(lmt,                    /* LMT_* identifier (luadef.hpp)     */\
                ns,                     /* Name of namespace or class        */\

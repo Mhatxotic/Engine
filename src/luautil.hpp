@@ -335,6 +335,32 @@ template<typename ...VarArgs, typename AnyType>
 }
 /* -- Throw error ---------------------------------------------------------- */
 static void LuaUtilErrThrow(lua_State*const lS) { lua_error(lS); }
+/* ------------------------------------------------------------------------- */
+static int LuaUtilProcException(lua_State*const lS, const char*const cpWhat)
+{ // Push a string onto the stack that describes the current execution context
+  luaL_where(lS, 1);
+  // Push the exception reason
+  LuaUtilPushCStr(lS, cpWhat);
+  // Concatenate both strings
+  lua_concat(lS, 2);
+  // Throw the error
+  LuaUtilErrThrow(lS);
+  // Shouldn't get here
+  return 0;
+}
+/* -- Trampoline to wrap C closures ---------------------------------------- */
+template<lua_CFunction cFunc>static int LuaUtilCallback(lua_State*const lS) try
+{ // Execute the callback
+  return cFunc(lS);
+} // Unknown exception occured?
+catch(const exception &eReason)
+{ // Throw error and return nothing
+  return LuaUtilProcException(lS, eReason.what());
+} // Unknown exception occured?
+catch(...)
+{ // Throw error and return nothing
+  return LuaUtilProcException(lS, "Internal error!");
+}
 /* -- Get and pop string on top -------------------------------------------- */
 static const string LuaUtilGetAndPopStr(lua_State*const lS)
 { // If there is nothing on the stack then return a generic error
@@ -497,20 +523,30 @@ static int LuaUtilException(lua_State*const lS)
   XC(StrAppend(strError, LuaUtilStack(lS)));
 }
 /* -- Generic error handler ------------------------------------------------ */
-static int LuaUtilErrGeneric(lua_State*const lS)
+static int LuaUtilErrGeneric(lua_State*const lS) try
 { // Get error message and stack. Don't one line this because the order of
   // execution is important!
   const string strError{ LuaUtilGetAndPopStr(lS) };
   LuaUtilPushStr(lS, StrAppend(strError, LuaUtilStack(lS)));
   return 1;
+} // Exception occured?
+catch(const exception &eReason)
+{ // Push exception instead
+  LuaUtilPushCStr(lS, eReason.what());
+  return 1;
 }
+// Unknown exception occurred?
+catch(...) { LuaUtilPushCStr(lS, "Internal error!"); return 1; }
 /* -- Push a function onto the stack --------------------------------------- */
 static void LuaUtilPushCFunc(lua_State*const lS, lua_CFunction cFunc,
-  const int iNVals=0)
-    { lua_pushcclosure(lS, cFunc, iNVals); }
+  const int iNVals=0) { lua_pushcclosure(lS, cFunc, iNVals); }
+/* -- Push a templated function onto the stack ----------------------------- */
+template<lua_CFunction cFunc>
+  static void LuaUtilPushCFunc(lua_State*const lS, const int iNVals=0)
+    { LuaUtilPushCFunc(lS, LuaUtilCallback<cFunc>, iNVals); }
 /* -- Push the above generic error function and return its id -------------- */
 static int LuaUtilPushAndGetGenericErrId(lua_State*const lS)
-  { LuaUtilPushCFunc(lS, LuaUtilErrGeneric); return LuaUtilStackSize(lS); }
+  { LuaUtilPushCFunc<LuaUtilErrGeneric>(lS); return LuaUtilStackSize(lS); }
 /* == Generate an exception if the specified condition is false ============ */
 static void LuaUtilAssert(lua_State*const lS, const bool bCond,
   const int iIndex, const char*const cpType)

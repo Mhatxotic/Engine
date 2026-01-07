@@ -469,7 +469,7 @@ class Core final :                     // Members initially private
     } // Lua loop without initialisation. Begin by capturing exceptions
     SandBox: try
     { // ...and enter sand box mode. Below function is when we're in sandbox
-      cLua->EnterSandbox(CoreThreadSandboxStatic, this);
+      cLua->EnterSandbox<CoreThreadSandboxStatic>(this);
     } // ...and if exception occured?
     catch(const exception &eReason)
     { // Show error in console

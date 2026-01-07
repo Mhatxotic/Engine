@@ -98,7 +98,7 @@ class Log :                            // The actual class body
     clear();
   }
   /* -- Write lines to log ------------------------------------------------- */
-  void WriteLines(const LHLevel lhL, const TokenList &tLines) noexcept(true)
+  void WriteLines(const LHLevel lhL, const TokenList &tLines)
   { // Ignore if no lines
     if(tLines.empty()) return;
     // Prune log to fit this many lines
@@ -113,7 +113,7 @@ class Log :                            // The actual class body
     FlushLog();
   }
   /* -- Write string to log. Line feed creates multiple lines -------------- */
-  void WriteString(const LHLevel lhL, const string &strL) noexcept(true)
+  void WriteString(const LHLevel lhL, const string &strL)
     { WriteLines(lhL, { strL, cCommon->CommonLf(), stMaximum }); }
   /* ----------------------------------------------------------------------- */
   void WriteString(const string &strL) { WriteString(LH_CRITICAL, strL); }
