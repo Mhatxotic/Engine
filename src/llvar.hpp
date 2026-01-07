@@ -106,6 +106,12 @@ LLFUNC(Get, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Get()))
 LLFUNC(Integer, 1, LuaUtilPushVar(lS,
   AgVariable{lS, 1}().SetInteger(AgLuaInteger{lS, 2})))
 /* ========================================================================= */
+// $ Variable:NotEmpty
+// < NotEmpty:boolean=Is the value not empty?
+// ? Returns if the value is not empty.
+/* ------------------------------------------------------------------------- */
+LLFUNC(NotEmpty, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().NotEmpty()))
+/* ========================================================================= */
 // $ Variable:Number
 // > Value:numberr=The new cvar value.
 // < Success:integer=The return code.
@@ -136,8 +142,8 @@ LLFUNC(String, 1,
 LLRSMFBEGIN                            // Variable:* member functions begin
   LLRSFUNC(Boolean),   LLRSFUNC(Clear), LLRSFUNC(Default), LLRSFUNC(Destroy),
   LLRSFUNC(Destroyed), LLRSFUNC(Empty), LLRSFUNC(Get),     LLRSFUNC(Id),
-  LLRSFUNC(Integer),   LLRSFUNC(Name),  LLRSFUNC(Number),  LLRSFUNC(Reset),
-  LLRSFUNC(String),
+  LLRSFUNC(Integer),   LLRSFUNC(Name),  LLRSFUNC(NotEmpty),LLRSFUNC(Number),
+  LLRSFUNC(Reset),     LLRSFUNC(String),
 LLRSEND                                // Variable:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -172,7 +178,7 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
 // ? force committed to disk (true) or not (false). Note that variable values
 // ? that are equal to the default value are not committed to the database.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Register, 1, cLua->StateAssert(lS);AcVariable{lS}().Init(lS))
+LLFUNC(Register, 1, cLua->LuaStateAssert(lS);AcVariable{lS}().Init(lS))
 /* ========================================================================= */
 // $ Variable.Exists
 // > String:string=The console command name to lookup
@@ -187,7 +193,7 @@ LLFUNC(Exists, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS, 1})))
 // ? Commits all modified variables to database. Returns number of items
 // ? written.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->Save()))
+LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->CVarsSaveToDatabase()))
 /* ========================================================================= */
 // $ Variable.Valid
 // > Var:string=Cvar name to test.

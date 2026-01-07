@@ -27,19 +27,19 @@ using namespace ISql::P;               using namespace Common;
 // < Code:integer=Last error code.
 // ? Returns the error code of the last SQLlite operation.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Error, 1, LuaUtilPushVar(lS, cSql->GetError()))
+LLFUNC(Error, 1, LuaUtilPushVar(lS, cSql->SqlGetError()))
 /* ========================================================================= */
 // $ Sql.ErrorStr
 // < Error:string=Last error reason string.
 // ? Returns the string version of the error code.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ErrorStr, 1, LuaUtilPushVar(lS, cSql->GetErrorAsIdString()))
+LLFUNC(ErrorStr, 1, LuaUtilPushVar(lS, cSql->SqlGetErrorAsIdString()))
 /* ========================================================================= */
 // $ Sql.Reason
 // < Error:string=Last error reason string.
 // ? Returns the error string of the last SQLlite operation.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Reason, 1, LuaUtilPushVar(lS, cSql->GetErrorStr()))
+LLFUNC(Reason, 1, LuaUtilPushVar(lS, cSql->SqlGetErrorStr()))
 /* ========================================================================= */
 // $ Sql.Records
 // < Records:table=Resulting records.
@@ -60,45 +60,46 @@ LLFUNC(Records, 1, cSql->RecordsToLuaTable(lS))
 // ? Execute the specified SQLlite statement. See
 // ? https://www.sqlite.org/docs.html for more information on the SQLlite API.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Exec, 1, LuaUtilPushVar(lS, cSql->ExecuteFromLua(lS, AgString{lS,1})))
+LLFUNC(Exec, 1,
+  LuaUtilPushVar(lS, cSql->SqlExecuteFromLua(lS, AgString{lS,1})))
 /* ========================================================================= */
 // $ Sql.Reset
 // ? Cleans up the last result, error and response.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Reset, 0, cSql->Reset())
+LLFUNC(Reset, 0, cSql->SqlReset())
 /* ========================================================================= */
 // $ Sql.Affected
 // ? Returns number of affected rows in the last result
 /* ------------------------------------------------------------------------- */
-LLFUNC(Affected, 1, LuaUtilPushVar(lS, cSql->Affected()))
+LLFUNC(Affected, 1, LuaUtilPushVar(lS, cSql->SqlAffected()))
 /* ========================================================================= */
 // $ Sql.Time
 // ? Returns time taken with the last executed SQL statement
 /* ------------------------------------------------------------------------- */
-LLFUNC(Time, 1, LuaUtilPushVar(lS, cSql->Time()))
+LLFUNC(Time, 1, LuaUtilPushVar(lS, cSql->SqlTime()))
 /* ========================================================================= */
 // $ Sql.Active
 // ? Returns wether a transaction is in progress or not.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Active, 1, LuaUtilPushVar(lS, cSql->Active()))
+LLFUNC(Active, 1, LuaUtilPushVar(lS, cSql->SqlActive()))
 /* ========================================================================= */
 // $ Sql.Size
 // ? Returns size of database.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Size, 1, LuaUtilPushVar(lS, cSql->Size()))
+LLFUNC(Size, 1, LuaUtilPushVar(lS, cSql->SqlSize()))
 /* ========================================================================= */
 // $ Sql.Begin
 // < Result:integer=The result of the operation
 // ? Begins a new transaction. Returns non-zero if the call fails.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Begin, 1, LuaUtilPushVar(lS, cSql->Begin()))
+LLFUNC(Begin, 1, LuaUtilPushVar(lS, cSql->SqlBegin()))
 /* ========================================================================= */
 // $ Sql.Commit
 // < Result:integer=The result of the operation
 // ? Ends an existing transaction and commits it. Returns non-zero if the call
 // ? fails.
 /* ------------------------------------------------------------------------- */
-LLFUNC(End, 1, LuaUtilPushVar(lS, cSql->End()))
+LLFUNC(End, 1, LuaUtilPushVar(lS, cSql->SqlEnd()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Sql.* namespace functions structure                                 ## **

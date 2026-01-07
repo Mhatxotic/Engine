@@ -106,9 +106,8 @@ static void ImageSave(const ImageFormat ifId, const string &strFile,
   { // Remove file if created
     if(bCreated) DirFileUnlink(strFileNX);
     // Throw an error with the specified reason
-    XC(eReason, "Identifier", strFileNX,
-                "FormatId",   ifId,
-                "Plugin",     ilRef.GetName());
+    XC(eReason,
+      "Identifier", strFileNX, "FormatId", ifId, "Plugin", ilRef.GetName());
   }
 }
 /* -- Load a image using a specific type ----------------------------------- */
@@ -128,11 +127,10 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
   } // Error occured. Error used as title
   catch(const exception &eReason)
   { // Throw an error with the specified reason
-    XC(eReason, "Identifier", fmData.IdentGet(),
-                "Size",       fmData.MemSize(),
-                "Position",   fmData.FileMapTell(),
-                "FormatId",   ifId,
-                "Plugin",     ilRef.GetName());
+    XC(eReason,
+      "Identifier", fmData.IdentGet(),    "Size",     fmData.MemSize(),
+      "Position",   fmData.FileMapTell(), "FormatId", ifId,
+      "Plugin",     ilRef.GetName());
   }
 }
 /* -- Load a image and automatically detect type --------------------------- */
@@ -151,10 +149,9 @@ static void ImageLoad(FileMap &fmData, ImageData &idData)
     } // Error occured. Error used as title
     catch(const exception &eReason)
     { // Throw an error with the specified reason
-      XC(eReason, "Identifier", fmData.IdentGet(),
-                  "Size",       fmData.MemSize(),
-                  "Position",   fmData.FileMapTell(),
-                  "Plugin",     ilRef.GetName());
+      XC(eReason,
+        "Identifier", fmData.IdentGet(),    "Size",   fmData.MemSize(),
+        "Position",   fmData.FileMapTell(), "Plugin", ilRef.GetName());
     } // Rewind stream position
     fmData.FileMapRewind();
     // Reset other members to try next filter

@@ -25,9 +25,9 @@ class FreeType :                       // Members initially private
   FT_Library    ftlContext;            // Freetype context
   FT_MemoryRec_ ftmrAlloc;             // Freetype custom allocator
   /* ----------------------------------------------------------------------- */
-  bool DoDeInit()
+  bool FreeTypeDoDeInit()
   { // Return failed if library not available
-    if(!IsLibraryAvailable()) return false;
+    if(!FreeTypeIsLibraryAvailable()) return false;
     // Unload freetype library
     cLog->LogDebugSafe("FreeType subsystem deinitialising...");
     FT_Done_Library(ftlContext);
@@ -36,25 +36,28 @@ class FreeType :                       // Members initially private
     return true;
   }
   /* --------------------------------------------------------------- */ public:
-  static FT_Error ApplyStrokerFull(FT_Glyph &ftgData, FT_Stroker ftsStroker)
-    { return FT_Glyph_Stroke(&ftgData, ftsStroker, true); }
+  static FT_Error FreeTypeApplyStrokerFull(FT_Glyph &ftgData,
+    FT_Stroker ftsStroker)
+      { return FT_Glyph_Stroke(&ftgData, ftsStroker, true); }
   /* ----------------------------------------------------------------------- */
-  static FT_Error ApplyStrokerPartial(FT_Glyph &ftgData, FT_Stroker ftsStroker,
-    const bool bInside)
+  static FT_Error FreeTypeApplyStrokerPartial(FT_Glyph &ftgData,
+    FT_Stroker ftsStroker, const bool bInside)
       { return FT_Glyph_StrokeBorder(&ftgData, ftsStroker, bInside, true); }
   /* ----------------------------------------------------------------------- */
-  static FT_Error ApplyStrokerOutside(FT_Glyph &ftgData, FT_Stroker ftsStroker)
-    { return ApplyStrokerPartial(ftgData, ftsStroker, false); }
+  static FT_Error FreeTypeApplyStrokerOutside(FT_Glyph &ftgData,
+    FT_Stroker ftsStroker)
+      { return FreeTypeApplyStrokerPartial(ftgData, ftsStroker, false); }
   /* ----------------------------------------------------------------------- */
-  static FT_Error ApplyStrokerInside(FT_Glyph &ftgData, FT_Stroker ftsStroker)
-    { return ApplyStrokerPartial(ftgData, ftsStroker, true); }
+  static FT_Error FreeTypeApplyStrokerInside(FT_Glyph &ftgData,
+    FT_Stroker ftsStroker)
+      { return FreeTypeApplyStrokerPartial(ftgData, ftsStroker, true); }
   /* ----------------------------------------------------------------------- */
-  FT_Error NewStroker(FT_Stroker &ftsDst) const
+  FT_Error FreeTypeNewStroker(FT_Stroker &ftsDst) const
     { return FT_Stroker_New(ftlContext, &ftsDst); }
   /* ----------------------------------------------------------------------- */
-  bool IsLibraryAvailable() { return ftlContext != nullptr; }
+  bool FreeTypeIsLibraryAvailable() { return ftlContext != nullptr; }
   /* ----------------------------------------------------------------------- */
-  FT_Error NewFont(const MemConst &mcSrc, FT_Face &ftfDst)
+  FT_Error FreeTypeNewFont(const MemConst &mcSrc, FT_Face &ftfDst)
   { // Lock a mutex to protect FT_Library.
     // > freetype.org/freetype2/docs/reference/ft2-base_interface.html
     return MutexCall([this,&mcSrc,&ftfDst](){
@@ -64,25 +67,25 @@ class FreeType :                       // Members initially private
     });
   }
   /* ----------------------------------------------------------------------- */
-  void DestroyFont(FT_Face ftfFace)
+  void FreeTypeDestroyFont(FT_Face ftfFace)
   { // Lock a mutex to protect FT_Library and destroy the font context.
     // > freetype.org/freetype2/docs/reference/ft2-base_interface.html
     MutexCall([ftfFace](){FT_Done_Face(ftfFace);});
   }
   /* -- Error checker with custom error details ---------------------------- */
   template<typename ...VarArgs>
-    static void CheckError(const FT_Error ftErr,
-      const char*cpMessage, VarArgs &&...vaArgs)
+    static void FreeTypeCheckError(const FT_Error ftErr,
+      const char*const cpMessage, VarArgs &&...vaArgs)
   { if(ftErr) XC(cpMessage, "Code", ftErr, "Reason", FT_Error_String(ftErr),
-                StdForward<VarArgs>(vaArgs)...); }
+      StdForward<VarArgs>(vaArgs)...); }
   /* ----------------------------------------------------------------------- */
-  void Init()
+  void FreeTypeInit()
   { // Class initialised
-    if(IsLibraryAvailable()) XC("Freetype already initialised!");
+    if(FreeTypeIsLibraryAvailable()) XC("Freetype already initialised!");
     // Log initialisation and do the init
     cLog->LogDebugSafe("FreeType subsystem initialising...");
     // Create the memory
-    CheckError(FT_New_Library(&ftmrAlloc, &ftlContext),
+    FreeTypeCheckError(FT_New_Library(&ftmrAlloc, &ftlContext),
       "Failed to initialise FreeType!");
     // Documentation says we must run this function (fails if not)
     // https://www.freetype.org/freetype2/docs/design/design-4.html
@@ -91,10 +94,8 @@ class FreeType :                       // Members initially private
     cLog->LogDebugSafe("FreeType subsystem initialised.");
   }
   /* ----------------------------------------------------------------------- */
-  void DeInit() { if(DoDeInit()) ftlContext = nullptr; }
-  /* -- Destructor ---------------------------------------------- */ protected:
-  DTORHELPER(~FreeType, DoDeInit())
-  /* -- Default constructor ------------------------------------------------ */
+  void FreeTypeDeInit() { if(FreeTypeDoDeInit()) ftlContext = nullptr; }
+  /* -- Default constructor ------------------------------------- */ protected:
   FreeType() : ftlContext(nullptr), ftmrAlloc{ this,
     [](FT_Memory, long lBytes)->void*
       { return StdAlloc<void>(lBytes); },
@@ -105,6 +106,8 @@ class FreeType :                       // Members initially private
   }
   /* -- Set global pointer to static class --------------------------------- */
   { cFreeType = this; }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~FreeType, FreeTypeDoDeInit())
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

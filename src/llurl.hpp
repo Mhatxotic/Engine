@@ -39,13 +39,13 @@ struct AcUrl : public ArClass<Url> {
 // < String:string=The bookmark part of the url.
 // ? Returns the bookmark part of the parsed url.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Bookmark, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetBookmark()))
+LLFUNC(Bookmark, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetBookmark()))
 /* ========================================================================= */
 // $ Url:Final
 // < Scheme:string=The final url.
 // ? Returns the final part of the Url object after the parse.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Final, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetUrl()))
+LLFUNC(Final, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetUrl()))
 /* ========================================================================= */
 // $ Url:Destroy
 // ? Destroys the bin and frees all the memory associated with it. The object
@@ -64,7 +64,7 @@ LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cUrls)))
 // < String:string=The hostname part of the url.
 // ? Returns the hostname part of the parsed url.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Host, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetHost()))
+LLFUNC(Host, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetHost()))
 /* ========================================================================= */
 // $ Url:Id
 // < Id:integer=The id number of the Url object.
@@ -82,7 +82,7 @@ LLFUNC(Params, 1, LuaUtilToTableEx(lS, AgUrl{lS, 1}()))
 // > URL:string=The url to parse.
 // ? Reparses the specified address.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Parse, 0, AgUrl{lS ,1}().Parse(AgNeString{lS, 2}, 0))
+LLFUNC(Parse, 0, AgUrl{lS ,1}().UrlParse(AgNeString{lS, 2}, 0))
 /* ========================================================================= */
 // $ Url:ParseEx
 // > URL:string=The url to parse.
@@ -94,49 +94,49 @@ LLFUNC(ParseEx, 0,
   const AgUrl aUrl{lS, 1};
   const AgNeString aUrlAddr{lS, 2};
   const AgUIntLG aMode{lS, 3, 0, 2};
-  aUrl().Parse(aUrlAddr, aMode))
+  aUrl().UrlParse(aUrlAddr, aMode))
 /* ========================================================================= */
 // $ Url:Password
 // < Password:string=The password part of the url.
 // ? Returns the password part of the Url object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Password, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetPassword()))
+LLFUNC(Password, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetPassword()))
 /* ========================================================================= */
 // $ Url:Port
 // < Port:integer=The port number of the url.
 // ? Returns the port part of the parsed url.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Port, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetPort()))
+LLFUNC(Port, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetPort()))
 /* ========================================================================= */
 // $ Url:Resource
 // < Resource:string=The resource of the url.
 // ? Returns the resource part of the Url object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Resource, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetResource()))
+LLFUNC(Resource, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetResource()))
 /* ========================================================================= */
 // $ Url:Result
 // < Code:integer=The result of the last parse.
 // ? Returns the hostname part of the parsed url.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Result, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetResult()))
+LLFUNC(Result, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetResult()))
 /* ========================================================================= */
 // $ Url:Scheme
 // < Scheme:string=The scheme of the url.
 // ? Returns the scheme part of the Url object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Scheme, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetScheme()))
+LLFUNC(Scheme, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetScheme()))
 /* ========================================================================= */
 // $ Url:Secure
 // < Secure:boolean=Does the url define a secure url?
 // ? Returns if the scheme would use SSL.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Secure, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetSecure()))
+LLFUNC(Secure, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetSecure()))
 /* ========================================================================= */
 // $ Url:Username
 // < Username:string=The username part of the url.
 // ? Returns the username part of the Url object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Username, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().GetUsername()))
+LLFUNC(Username, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetUsername()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Url:* member functions structure                                    ## **
@@ -180,7 +180,7 @@ LLFUNC(IsHost, 1, LuaUtilPushVar(lS, LuaUtilValidHostname(lS, 1)))
 // < Count:Url=The parsed url class.
 // ? Return an Url class and parses the address.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Url, 1, AcUrl{lS}().Parse(AgNeString{lS, 1}, 0))
+LLFUNC(Url, 1, AcUrl{lS}().UrlParse(AgNeString{lS, 1}, 0))
 /* ========================================================================= */
 // $ Url.UrlEx
 // > URL:string=The url to parse.
@@ -195,7 +195,7 @@ LLFUNC(Url, 1, AcUrl{lS}().Parse(AgNeString{lS, 1}, 0))
 LLFUNC(UrlEx, 1,
   const AgNeString aUrl{lS, 1};
   const AgUIntLG aEncode{lS, 2, 0, 2};
-  AcUrl{lS}().Parse(aUrl, aEncode))
+  AcUrl{lS}().UrlParse(aUrl, aEncode))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Url:* namespace functions structure                                 ## **
@@ -222,7 +222,7 @@ LLRSKTBEGIN(Codes)                     // Beginning of parse result flags
   LLRSKTITEM(R_,EMPORT),             LLRSKTITEM(R_,NOSCHEME),
   LLRSKTITEM(R_,INVSCHEME),          LLRSKTITEM(R_,INVPORT),
   LLRSKTITEM(R_,UNKSCHEME),          LLRSKTITEM(R_,EMPARAMS),
-  LLRSKTITEM(R_,MAX),
+  LLRSKTITEM(R_,STANDBY),            LLRSKTITEM(R_,MAX),
 LLRSKTEND                              // End of parse result flags
 /* ========================================================================= **
 ** ######################################################################### **

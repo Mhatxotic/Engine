@@ -11,7 +11,8 @@ namespace IEvtCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IIdent::P;
 using namespace ILog::P;               using namespace IMutex::P;
-using namespace IStd::P;               using namespace IUtil::P;
+using namespace IStd::P;               using namespace IUtf::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public public namespace
 /* ------------------------------------------------------------------------- */
@@ -101,7 +102,7 @@ template<typename Cmd,                 // Variable type of command to use
          Cmd      EvtNoLog>            // Id of succeeding ids to not log for
 class EvtCore :                        // Start of common event system class
   /* -- Base classes ------------------------------------------------------- */
-  private Ident,                       // Identifier of event list
+  public Ident,                        // Identifier of event list
   public MutexLock                     // Primary events list mutex
 { /* -- Typedefs --------------------------------------------------- */ public:
   struct Event;                           // (Prototype) Event packet info
@@ -187,13 +188,11 @@ class EvtCore :                        // Start of common event system class
   }
   /* -- Execute specified event NOW (parameters) --------------------------- */
   template<typename ...VarArgs,typename AnyType>
-    void ExecuteParam(const Cmd cCmd, EvtArgs &eaArgs, AnyType atArg,
-      const VarArgs ...vaArgs)
-  { // Check specified parameter is valid
-    static_assert(is_enum_v<AnyType> || is_integral_v<AnyType> ||
-      is_pointer_v<AnyType> || is_null_pointer_v<AnyType>,
-        "Must be enum, integer, pointer or nullptr!");
-    // Insert parameter into list and add more parameters. It only accepts
+  requires is_enum_v<AnyType> || is_integral_v<AnyType> ||
+    is_pointer_v<AnyType> || is_null_pointer_v<AnyType>
+  void ExecuteParam(const Cmd cCmd, EvtArgs &eaArgs, AnyType atArg,
+    const VarArgs ...vaArgs)
+  { // Insert parameter into list and add more parameters. It only accepts
     // simple integers and pointers, hence why the direct copy on ...vaArgs.
     eaArgs.push_back(EvtArgVar{ atArg });
     ExecuteParam(cCmd, eaArgs, vaArgs...);
@@ -260,11 +259,11 @@ class EvtCore :                        // Start of common event system class
       // Return if no events to clear
       if(qlEvents.empty()) return 0;
       // Store number of events cleared
-      const size_t stCleared = qlEvents.size();
+      const size_t stCount = qlEvents.size();
       // Clear the events list
       qlEvents.clear();
       // Return events cleared
-      return stCleared;
+      return stCount;
     })) // Write number of events cleared
       cLog->LogDebugExSafe("$ cleared $ lingering events.",
         IdentGet(), stCleared);
@@ -272,20 +271,16 @@ class EvtCore :                        // Start of common event system class
   /* -- Execute specified event NOW (starter) ------------------------------ */
   template<typename ...VarArgs>
     void Execute(const Cmd cCmd, const VarArgs ...vaArgs)
-  { // Parameters list
-    EvtArgs eaArgs;
-    // Reserve memory for parameters
-    eaArgs.reserve(sizeof...(VarArgs));
+  { // Reserve memory for parameters
+    Reserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
     // Prepare parameters list and execute
     ExecuteParam(cCmd, eaArgs, vaArgs...);
   }
   /* -- Add with copy parameter semantics (starter) ------------------------ */
   template<typename ...VarArgs>
     void Add(const Cmd cCmd, const VarArgs ...vaArgs)
-  { // Parameters list
-    EvtArgs eaArgs;
-    // Reserve memory for parameters
-    eaArgs.reserve(sizeof...(VarArgs));
+  { // Reserve memory for parameters
+    Reserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
     // Prepare parameters list and add a new event
     AddParam(cCmd, eaArgs, vaArgs...);
   }
@@ -311,10 +306,8 @@ class EvtCore :                        // Start of common event system class
     const QueueConstIt AddEx(const Cmd cCmd, const VarArgs ...vaArgs)
   { // Iterator to return
     QueueConstIt qciItem;
-    // Parameters list
-    EvtArgs eaArgs;
-    // Reserve parameters
-    eaArgs.reserve(sizeof...(VarArgs));
+    // Reserve parameters list
+    Reserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
     // Prepare parameters list and execute
     AddExParam(cCmd, qciItem, eaArgs, vaArgs...);
     // Return iterator
@@ -327,8 +320,8 @@ class EvtCore :                        // Start of common event system class
   { // Bail if invalid command
     if(cCmd >= fFuncs.size())
       XC("Invalid registration command!",
-         "System",   IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd,
-         "Function", reinterpret_cast<const void*>(&cbfFunc));
+        "System",   IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd,
+        "Function", reinterpret_cast<const void*>(&cbfFunc));
     // Assign callback function to event
     fFuncs[cCmd] = cbfFunc;
   }
@@ -342,9 +335,9 @@ class EvtCore :                        // Start of common event system class
     fFuncs[cCmd] = cefEmpty;
   }
   /* -- Event data, all empty functions ------------------------- */ protected:
-  EvtCore(string &&strCName, const ISList &islStrings) :
+  EvtCore(const string &strCName, const ISList &islStrings) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(strCName) },        // Initialise event system name
+    Ident{ strCName },                 // Initialise event system name
     islEventStrings{ islStrings },     // Initialise event id names
     cefEmpty{ bind(&EvtCore::WarningFunction, this, _1) },
     fFuncs{ UtilMkFilledContainer<Funcs>(cefEmpty) }

@@ -26,16 +26,16 @@ class Certs                            // Certificates store
   struct X509ErrInfo                   // Information about the X509 error
   { /* --------------------------------------------------------------------- */
     const char*const cpErr;            // Error as a string (X509_V_ERR_*)
-    const size_t     stBank;           // Override bank index (qCertBypass)
-    const uint64_t   qFlag;            // Flag required to ignore this error
+    const size_t     stBank;           // Override bank index (sdullCertBypass)
+    const uint64_t   ullFlag;          // Flag required to ignore this error
   };/* --------------------------------------------------------------------- */
   typedef map<const size_t, const X509ErrInfo> X509Err;
-  typedef array<SafeUInt64, 2> SafeDoubleUInt64; // Two atomic double uint64's
+  typedef array<AtomicUInt64, 2> AtomicDoubleUInt64;
   /* -- Variables ---------------------------------------------------------- */
   SSL_CTX           *scStore;          // Context used for cerificate store
   X509_STORE        *xsCerts;          // Certificate store inside OpenSSL
   X509List           lCAStore;         // Certificate store
-  SafeDoubleUInt64   qCertBypass;      // Certificate bypass flags
+  AtomicDoubleUInt64 sdullCertBypass;  // Certificate bypass flags
   const string       strExtension;     // Default extension
   const X509Err      xErrDB;           // X509 error database
   /* -- Unload open ssl certificate store ---------------------------------- */
@@ -109,7 +109,8 @@ class Certs                            // Certificates store
                   });
                 } // Failed to add certificate to CA store
                 else cLog->LogWarningExSafe(
-                  "Certs failed to add '$' to SSL context!", fmCert.IdentGet());
+                  "Certs failed to add '$' to SSL context!",
+                  fmCert.IdentGet());
                 break;
               // The cert was not created to perform the purpose represented
               case 0:
@@ -128,7 +129,7 @@ class Certs                            // Certificates store
           else cLog->LogWarningExSafe(
             "Certs rejected '$' as unable to get purpose!", fmCert.IdentGet());
         } // Release the certificate (caCert)
-      } // In the rare occurence that an exception occurs we should skip the cert
+      } // In the rare occurence that an exception occurs we skip the cert
       catch(const exception &eReason)
       { // Show the exception and try the next certificate
         cLog->LogErrorExSafe(
@@ -164,16 +165,16 @@ class Certs                            // Certificates store
   bool CertsIsNotErrorValid(const auto &aItem) const
     { return !CertsIsErrorValid(aItem); }
   /* -- Verify if a X509 bypass flag is set -------------------------------- */
-  bool CertsIsX509BypassFlagSet(const size_t stBank, uint64_t qFlag)
-    { return qCertBypass[stBank] & qFlag; }
-  bool CertsIsNotX509BypassFlagSet(const size_t stBank, uint64_t qFlag)
-    { return !CertsIsX509BypassFlagSet(stBank, qFlag); }
+  bool CertsIsX509BypassFlagSet(const size_t stBank, uint64_t ullFlag)
+    { return sdullCertBypass[stBank] & ullFlag; }
+  bool CertsIsNotX509BypassFlagSet(const size_t stBank, uint64_t ullFlag)
+    { return !CertsIsX509BypassFlagSet(stBank, ullFlag); }
   /* -- Constructor --------------------------------------------- */ protected:
   Certs() :
     /* -- Initialisers ----------------------------------------------------- */
     scStore(nullptr),                  // No store initialised
     xsCerts(nullptr),                  // No certificate chain initialised
-    qCertBypass{{0, 0}},               // No bypass flags setup yet
+    sdullCertBypass{{0, 0}},           // No bypass flags setup yet
     strExtension{ "." CER_EXTENSION }, // Default extension
 #define X509ERR(b,f,e) { X509_V_ERR_ ## e, { STR(e), b, 1ULL << f } }
     xErrDB{                            // Init X509 Error code definitions
@@ -254,13 +255,13 @@ class Certs                            // Certificates store
   /* -- No code ------------------------------------------------------------ */
   {}
   /* -- Destructor that unloads all x509 certificates ---------------------- */
-  ~Certs() { CertsUnload(); }
+  DTORHELPER(~Certs, CertsUnload())
   /* --------------------------------------------------------------- */ public:
   CVarReturn CertsSetBypassFlags1(const uint64_t uiFlags)
-    { return CVarSimpleSetInt(qCertBypass.front(), uiFlags); }
+    { return CVarSimpleSetInt(sdullCertBypass.front(), uiFlags); }
   /* ----------------------------------------------------------------------- */
   CVarReturn CertsSetBypassFlags2(const uint64_t uiFlags)
-    { return CVarSimpleSetInt(qCertBypass.back(), uiFlags); }
+    { return CVarSimpleSetInt(sdullCertBypass.back(), uiFlags); }
   /* ----------------------------------------------------------------------- */
   CVarReturn CertsFileModified(const string &strD, string&)
   { // Empty string is ok, treat as no CA store

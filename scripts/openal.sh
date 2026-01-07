@@ -14,7 +14,7 @@ ARCHIVE=$BASE/archive
 LIB=$BASE/lib
 FILEPREFIX=openal-soft-
 FILE=$FILEPREFIX$1
-ZIP=$ARCHIVE/$FILE.zip
+ZIP=$ARCHIVE/$FILE.tar.bz2
 
 if [ ! -e $ZIP ]; then
   echo Error: $ZIP not found!
@@ -26,7 +26,7 @@ if [ ! -e $ZIP ]; then
   exit 2
 fi
 
-unzip -n $ZIP
+tar -xvzf $ZIP
 if [ ! $? -eq 0 ]; then
   exit 3
 fi
@@ -60,9 +60,7 @@ build()
         -D"ALSOFT_NO_CONFIG_UTIL=TRUE" \
         -D"ALSOFT_REQUIRE_SDL2=FALSE" \
         -D"ALSOFT_UPDATE_BUILD_VERSION=FALSE" \
-        -D"ALSOFT_UTILS=FALSE" \
-        -D"SDL2_CORE_LIBRARY=FALSE" \
-        -D"SDL2_INCLUDE_DIR=FALSE" \
+        -D"ALSOFT_UTILS=FALSE"
         .
   if [ ! $? -eq 0 ]; then
     exit 6

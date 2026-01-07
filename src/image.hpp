@@ -33,17 +33,15 @@ template<typename IntType>             // Prototype
 /* ------------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Ident,                        // Image file name
   public AsyncLoaderImage,             // For loading images off main thread
   public Lockable,                     // Lua garbage collector instruction
   public ImageData                     // Raw image data
 { /* -- Swap image data  ------------------------------------------- */ public:
   void SwapImage(Image &imRef)
   { // Swap members with other class
-    IdentSwap(imRef);                 // Image filename
-    LockSwap(imRef);                  // Lua lock status
-    CollectorSwapRegistration(imRef); // Collector registration
-    ImageDataSwap(imRef);             // Image data and flags swap
+    LockSwap(imRef);                   // Lua lock status
+    CollectorSwapRegistration(imRef);  // Collector registration
+    ImageDataSwap(imRef);              // Image data and flags swap
   }
   /* -- Swap image data (so you can use temporary variables) --------------- */
   void SwapImage(Image &&imRef) { SwapImage(imRef); }
@@ -62,12 +60,12 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
         isRef.MemSize(), GetBytesPerPixel(), 0, 2);
       if(iResult < 0)
         XC("Pixel reorder failed!",
-           "Code",          iResult,
-           "FromFormat",    ImageGetPixelFormat(GetPixelType()),
-           "ToFormat",      ImageGetPixelFormat(ttNType),
-           "BytesPerPixel", GetBytesPerPixel(),
-           "Address",       isRef.MemPtr<void>(),
-           "Length",        isRef.MemSize());
+          "Code",          iResult,
+          "FromFormat",    ImageGetPixelFormat(GetPixelType()),
+          "ToFormat",      ImageGetPixelFormat(ttNType),
+          "BytesPerPixel", GetBytesPerPixel(),
+          "Address",       isRef.MemPtr<void>(),
+          "Length",        isRef.MemSize());
     } // Set new pixel type
     switch(GetPixelType())
     { case TT_RGBA : SetPixelType(TT_BGRA); break;
@@ -87,7 +85,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // Must be 32bpp
     if(GetBitsPerPixel() != BD_RGBA)
       XC("Cannot binary downsample a non RGBA encoded image!",
-         "BitsPerPixel", GetBitsPerPixel());
+        "BitsPerPixel", GetBitsPerPixel());
     // Calculate destination size
     const size_t stDst = TotalPixels() / CHAR_BIT;
     // Must be divisible by eight
@@ -160,11 +158,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Pixel conversion process ------------------------------------------- */
   template<class PixelConversionFunction, size_t stSrcStep, size_t stDstStep,
     BitDepth bdNewBPP, TextureType ttType>
-      void ConvertPixels(const char*const cpFilter)
-  { // Some basic checks of parameters
-    static_assert(stSrcStep > 0 && stSrcStep <= 2, "Invalid source step!");
-    static_assert(stDstStep > 0 && stDstStep <= 32, "Invalid dest step!");
-    // Set new bits and bytes
+  requires (stSrcStep > 0) && (stSrcStep <= 2) &&
+           (stDstStep > 0) && (stDstStep <= 32)
+  void ConvertPixels(const char*const cpFilter)
+  { // Set new bits and bytes
     SetBitsAndBytesPerPixel(bdNewBPP);
     SetPixelType(ttType);
     // New allocation size
@@ -178,16 +175,16 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
       // Quick sanity check to make sure the filters don't read/write OOB
       if(const size_t stUnpadded = isRef.MemSize() % stSrcStep)
         XC("Source image dimensions not acceptable for filter!",
-           "File",   IdentGet(),            "Width",    isRef.DimGetWidth(),
-           "Height", isRef.DimGetHeight(), "Total",    stTotal,
-           "Depth",  GetBytesPerPixel(),    "Filter",   cpFilter,
-           "Step",   stSrcStep,             "Unpadded", stUnpadded);
+          "File",   IdentGet(),            "Width",    isRef.DimGetWidth(),
+          "Height", isRef.DimGetHeight(), "Total",    stTotal,
+          "Depth",  GetBytesPerPixel(),    "Filter",   cpFilter,
+          "Step",   stSrcStep,             "Unpadded", stUnpadded);
       if(const size_t stUnpadded = mDst.MemSize() % stDstStep)
         XC("Destination image dimensions not acceptable for filter!",
-           "File",   IdentGet(),            "Width",    isRef.DimGetWidth(),
-           "Height", isRef.DimGetHeight(), "Total",    stTotal,
-           "Depth",  GetBytesPerPixel(),    "Filter",   cpFilter,
-           "Step",   stDstStep,             "Unpadded", stUnpadded);
+          "File",   IdentGet(),            "Width",    isRef.DimGetWidth(),
+          "Height", isRef.DimGetHeight(), "Total",    stTotal,
+          "Depth",  GetBytesPerPixel(),    "Filter",   cpFilter,
+          "Step",   stDstStep,             "Unpadded", stUnpadded);
       // Enumerate and filter through each pixel
       for(uint8_t *ubpSrc = isRef.MemPtr<uint8_t>(),
          *const ubpSrcEnd = isRef.MemPtrEnd<uint8_t>(),
@@ -453,7 +450,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // Must only have two slots
     if(GetSlotCount() != 2)
       XC("Cannot convert palette to RGB because we need two slots!",
-         "Slots", GetSlotCount());
+        "Slots", GetSlotCount());
     // Take ownership current slots list and make a blank new one.
     SlotList slSrc{ StdMove(slSlots) };
     // Reset allocation
@@ -832,9 +829,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // Simple check to make sure the sizes are same
     if(isFirst.MemSize() != mSrc.MemSize())
       XC("Pixel data buffer size mismatch!",
-         "Identifier", IdentGet(),
-         "Expected",   isFirst.MemSize(),
-         "Actual",     mSrc.MemSize());
+        "Identifier", IdentGet(),
+        "Expected",   isFirst.MemSize(),
+        "Actual",     mSrc.MemSize());
     // Now just move it over
     isFirst.MemSwap(mSrc);
   }
@@ -860,17 +857,17 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     { // Only fail if not binary
       if(GetBitsPerPixel() != BD_BINARY)
         XC("Image bits per pixel not valid!",
-           "File", strName, "Depth", GetBitsPerPixel());
+          "File", strName, "Depth", GetBitsPerPixel());
       // Total pixels must be divisible by 8
       if(const size_t stRemainder = TotalPixels() % CHAR_BIT)
         XC("Binary image pixel count must be divisible by eight!",
-           "File", strName, "Pixels", TotalPixels(), "Remainder", stRemainder);
+          "File", strName, "Pixels", TotalPixels(), "Remainder", stRemainder);
       // Set expected number of bits for binary image
       stExpect = TotalPixels() / CHAR_BIT;
     } // Compressed textures not supported yet
     else if(GetPixelType() >= TT_DXT1 && GetPixelType() <= TT_DXT3)
       XC("Compressed images not supported yet!",
-         "File", strName, "Type", ImageGetPixelFormat(GetPixelType()));
+        "File", strName, "Type", ImageGetPixelFormat(GetPixelType()));
     // Set expected number of bytes
     else stExpect = TotalPixels() * GetBytesPerPixel();
     // Check that the size matches
@@ -929,7 +926,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperImage{ cImages },          // Initialise collector helper
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    AsyncLoaderImage{ *this, this,     // Initialise async loader
+    AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -940,7 +937,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperImage{ cImages },          // Initialise collector helper
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    AsyncLoaderImage{ *this, this,     // Initialise async loader
+    AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE },                  // Initialise async event id
     ImageData{ ifcPurpose }            // Initialise purpose of image class
     /* -- No code ---------------------------------------------------------- */
@@ -950,7 +947,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     /* -- Parameters ------------------------------------------------------- */
     const uint32_t uiColour            // 32-bit RGBA colour pixel value
     ): /* -- Initialisers -------------------------------------------------- */
-    Image{}                            // Default initialisation
+    ICHelperImage{ cImages },          // Initialise collector helper
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    AsyncLoaderImage{ this,            // Initialise async loader
+      EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Code  ------------------------------------------------------------ */
     { InitColour(uiColour); }          // Init 1x1 tex with specified colour
   /* -- Constructor -------------------------------------------------------- */
@@ -962,7 +962,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     const unsigned int uiHeight,       // Number of scan lines
     const BitDepth bdBits              // Bit depth of the pixel data
     ): /* -- Initialisation of members ------------------------------------- */
-    Image{}                            // Default initialisation
+    Ident{ strName },                  // Initialise identifier
+    ICHelperImage{ cImages },          // Initialise collector helper
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    AsyncLoaderImage{ this,            // Initialise async loader
+      EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Initialise raw image --------------------------------------------- */
     { InitRaw(strName, mRval, uiWidth, uiHeight, bdBits); }
   /* -- Constructor -------------------------------------------------------- */
@@ -972,7 +976,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     Memory &&mRval,                    // Source memory block to read from
     const ImageFlagsConst &ifFlags     // Loading flags
     ): /* -- Initialisation of members ------------------------------------- */
-    Image{}                            // Default initialisation
+    Ident{ strName },                  // Initialise identifier
+    ICHelperImage{ cImages },          // Initialise collector helper
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    AsyncLoaderImage{ this,            // Initialise async loader
+      EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Initialise from array -------------------------------------------- */
     { InitArray(strName, mRval, ifFlags); }
   /* -- Constructor -------------------------------------------------------- */
@@ -981,7 +989,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     const string &strName,             // Name of image from assets to load
     const ImageFlagsConst &ifFlags     // Loading flags
     ): /* -- Initialisation of members ------------------------------------- */
-    Image{}                            // Default initialisation
+    Ident{ strName },                  // Initialise identifier
+    ICHelperImage{ cImages },          // Initialise collector helper
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    AsyncLoaderImage{ this,            // Initialise async loader
+      EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Code ------------------------------------------------------------- */
     { InitFile(strName, ifFlags); }    // Initialisation from file
   /* -- Constructor -------------------------------------------------------- */
@@ -989,11 +1001,15 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     /* -- Parameters ------------------------------------------------------- */
     Image &&imOtherRval                // Other image to swap with
     ): /* -- Initialisation of members ------------------------------------- */
-    Image{}                            // Default initialisation
+    Ident{ StdMove(imOtherRval) },     // Initialise identifier
+    ICHelperImage{ cImages },          // Initialise collector helper
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    AsyncLoaderImage{ this,            // Initialise async loader
+      EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Code ------------------------------------------------------------- */
     { SwapImage(imOtherRval); }        // Swap image over
   /* -- Destructor --------------------------------------------------------- */
-  ~Image() { AsyncCancel(); }          // Wait for loading thread to cancel
+  DTORHELPER(~Image, AsyncCancel())    // Wait for loading thread to cancel
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC(Images, Image, IMAGE, IMAGE,,,, idFormatModes{{ // Pixel formats
   /* ----------------------------------------------------------------------- */

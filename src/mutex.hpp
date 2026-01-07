@@ -22,9 +22,9 @@ typedef unique_lock<mutex> UniqueLock; // Shortcut to a mutex unique lock
 /* -- Dummy mutex lock ----------------------------------------------------- */
 struct mutexnoop
 { /* -- No-op lock/unlock/try_lock ----------------------------------------- */
-  void lock() noexcept {}
-  void unlock() noexcept {}
-  bool try_lock() noexcept { return true; }
+  static void lock() {}
+  static void unlock() {}
+  static bool try_lock() { return true; }
   /* -- No-op ctor --------------------------------------------------------- */
   mutexnoop(void) = default;
 };/* ----------------------------------------------------------------------- */

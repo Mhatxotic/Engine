@@ -10,10 +10,10 @@
 /* ------------------------------------------------------------------------- */
 namespace ISysUtil {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICommon	::P;
-using namespace IDir::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace ICommon::P;            using namespace IDir::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -26,7 +26,8 @@ enum SysThread : size_t                // Thread priority types
   STP_LOW,                             // Aux thread low priority
   /* ----------------------------------------------------------------------- */
   STP_MAX                              // Maximum number of types
-};/* -- Includes ----------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
+/* -- Includes ------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
 /* -- System error formatter with specified error code --------------------- */
 static const string SysError(const int iError)
@@ -152,8 +153,8 @@ static unsigned int SysMessage(void*const, const string &strTitle,
         }
       }
   // Didn't work so put in stdout
-  fwprintf(stderr, L"%ls: %ls\n", UtfDecoder{ strTitle }.Wide().data(),
-                                  UtfDecoder{ strMessage }.Wide().data());
+  wcerr << UtfDecoder{ strTitle }.UtfWide() << ": "
+        << UtfDecoder{ strMessage }.UtfWide() << endl;
   // If exited successfully? Return success
   return 0;
 }
@@ -190,8 +191,8 @@ static bool SysSetThreadPriority(const SysThread stLevel)
 #  undef Bool                          // To prevent problems with other apis
 # endif                                // Done checking for 'Bool'
 /* -- Actual interface to show a message box ------------------------------- */
-static unsigned int SysMessage(void*const, const string &strTitle,
-  const string &strMessage, const unsigned int uiFlags)
+static unsigned int SysMessage(void*const, string strTitle,
+  string strMessage, const unsigned int uiFlags)
 { // Print the error in console
   fprintf(stderr, "%s: %s\n", strTitle.data(), strMessage.data());
   // Eligable directories for dialog box elf binaries
@@ -216,7 +217,12 @@ static unsigned int SysMessage(void*const, const string &strTitle,
       cCommon->CommonBlank(),  cCommon->CommonSpace() },
     { "xmessage",              "-center",
       cCommon->CommonBlank(),  cCommon->CommonSpace() }
-  } }; // Search for one of these apps now
+  } }; // Command-line safety replacements
+  const StrPairList splReplace
+    { { "\"", "\\\"" }, { "'", "\\\'" }, { "`", "\\`" } };
+  StrReplaceEx(strTitle, splReplace);
+  StrReplaceEx(strMessage, splReplace);
+  // Search for one of these apps now
   for(const DlgBoxApplication &dbaApp : dbaaApps)
   { // In one of these directories
     for(const string_view &strvDir : strvaDirPrefixes)
@@ -238,11 +244,8 @@ static unsigned int SysMessage(void*const, const string &strTitle,
   } // Return status code
   return 0;
 }
-/* -- Set thread priority -------------------------------------------------- */
-static bool SysSetThreadPriority(const SysThread stLevel)
-{ // pthread_setschedparam() is pointless on Linux as root is required.
-  return true;
-}
+/* -- Set thread priority (pthread_setschedparam() requires root) ---------- */
+static bool SysSetThreadPriority(const SysThread stPriority) { return true; }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Done checking OS
 /* ------------------------------------------------------------------------- */
@@ -254,11 +257,6 @@ static unsigned int SysMessage(const string &strTitle,
         MB_SYSTEMMODAL|uiFlags); }
 /* ------------------------------------------------------------------------- */
 #else                                  // Not using Windows target? (POSIX)
-/* -- Unset multiple environment variables --------------------------------- */
-static void SysUnSetEnv() {}
-template<typename ...VarArgs>
-  static void SysUnSetEnv(const char*const cpEnv, VarArgs &&...vaArgs)
-    { unsetenv(cpEnv); SysUnSetEnv(StdForward<VarArgs>(vaArgs)...); }
 /* -- System error code ---------------------------------------------------- */
 template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(StdGetError()); }
@@ -272,13 +270,13 @@ static void SysSetThreadName(const char*const cpName)
   pthread_setname_np(
 #if defined(LINUX)                     // Linux?
     pthread_self(),                    // Requires handle
-#endif
+#endif                                 // Not on MacOS
     cpName);
 }
 /* -- System message without a handle -------------------------------------- */
 static unsigned int SysMessage(const string &strTitle,
   const string &strMessage, const unsigned int uiFlags)
-    { return SysMessage(nullptr, strTitle, strMessage, uiFlags); }
+{ return SysMessage(nullptr, strTitle, strMessage, uiFlags); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Not using Windows target
 /* ------------------------------------------------------------------------- */
@@ -291,9 +289,16 @@ struct SysErrorPlugin final
     const int iCode = SysErrorCode();
     osS << "\n+ Reason<" << iCode << "> = \"" << SysError(iCode) << "\".";
   }
-};/* ----------------------------------------------------------------------- */
+};
+/* -- Unset multiple environment variables --------------------------------- */
+static void SysUnSetEnv() {}
+template<typename ...VarArgs>
+  static void SysUnSetEnv(const char*const cpEnv, VarArgs &&...vaArgs)
+{ StdUnSetEnv(cpEnv); SysUnSetEnv(StdForward<VarArgs>(vaArgs)...); }
+/* ------------------------------------------------------------------------- */
 static bool SysIsErrorCode(const int iCode=0)
   { return SysErrorCode() == iCode; }
+/* ------------------------------------------------------------------------- */
 static bool SysIsNotErrorCode[[maybe_unused]](const int iCode=0)
   { return !SysIsErrorCode(iCode); }
 /* ------------------------------------------------------------------------- */

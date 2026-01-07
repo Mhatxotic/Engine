@@ -15,7 +15,7 @@ using namespace IError::P;             using namespace IEvtCore::P;
 using namespace IEvtMain::P;           using namespace ILog::P;
 using namespace ILuaRef::P;            using namespace ILuaUtil::P;
 using namespace IMutex::P;             using namespace IRefCtr::P;
-using namespace IStd::P;
+using namespace IStd::P;               using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -36,18 +36,16 @@ class LuaEvts :
       // Throw error if the id is invalid
       if(stId >= size())
         XC("Invalid event index to remove!",
-           "Requested", stId, "Maximum", size());
+          "Requested", stId, "Maximum", size());
       // Clear stored event and remove all empty events from the end
       at(stId) = cEvtMain->Last();
       while(!empty() && back() == cEvtMain->Last()) pop_back();
     });
   }
   /* -- Check if enough parameters ----------------------------------------- */
-  template<size_t stMinimum>
+  template<size_t stMinimum> requires (stMinimum >= 2)
     bool LuaEvtsCheckParams(const EvtMainArgs &emaArgs)
-  { // Minimum arguments must be two or more
-    static_assert(stMinimum >= 2, "Must specify two parameters or more!");
-    // If we have at least two parameters remove the iterator
+  { // If we have at least two parameters remove the iterator
     if(emaArgs.size() >= 2) LuaEvtsRemoveIterator(emaArgs[1].SizeT());
     // Return true if required args is 2 because we've already checked that
     if constexpr(stMinimum == 2) return true;
@@ -58,8 +56,7 @@ class LuaEvts :
   template<typename ...VarArgs>void LuaEvtsDispatch(const EvtMainCmd emcCmd,
     const void*const vpClass, const VarArgs ...vaArgs)
   { // Reserve memory for current parameters list for event
-    EvtMainArgs emaArgs;
-    emaArgs.reserve(sizeof...(VarArgs));
+    Reserved<EvtMainArgs> emaArgs{ sizeof...(VarArgs) };
     // Lock access to the list
     mMutex.MutexCall([this, &emaArgs, &emcCmd, vpClass, &vaArgs...]{
       // Iterator to return
@@ -92,7 +89,7 @@ class LuaEvts :
   /* -- Constructor -------------------------------------------------------- */
   LuaEvts() = default;
   /* -- Destructor --------------------------------------------------------- */
-  ~LuaEvts() { LuaEvtsDeInit(); }
+  DTORHELPER(~LuaEvts, LuaEvtsDeInit())
 };/* ----------------------------------------------------------------------- */
 /* == Class type for master class (send parameters on event trigger) ======= */
 template<class MemberType>struct LuaEvtTypeParam
@@ -155,7 +152,7 @@ class LuaEvtMaster :
     /* -- Register the event ----------------------------------------------- */
     { cEvtMain->Register(emcCmd, this->OnEvent); }
   /* -- Unregister the event ----------------------------------------------- */
-  ~LuaEvtMaster() { cEvtMain->Unregister(emcCmd); }
+  DTORHELPER(~LuaEvtMaster, cEvtMain->Unregister(emcCmd))
 };/* == Routines for a collectors child class ============================== */
 template<class MemberType,             // Member object type
          size_t stRefs=1>              // Number of references to store
@@ -183,8 +180,8 @@ class LuaEvtSlave :
     // Get number of parameters and make sure we have enough parameters
     if(emaArgs.size() < stMandatory)
       XC("Not enough parameters to generic Lua event callback!",
-         "Identifier", mtPtr->IdentGet(), "Event",   emeEvent.cCmd,
-         "Count",      emaArgs.size(),    "Maximum", stMandatory);
+        "Identifier", mtPtr->IdentGet(), "Event",   emeEvent.cCmd,
+        "Count",      emaArgs.size(),    "Maximum", stMandatory);
     // Remove iterator from our events dispatched list
     LuaEvtsRemoveIterator(static_cast<size_t>(emaArgs[1].UInt()));
     // Lua is paused?
@@ -199,15 +196,15 @@ class LuaEvtSlave :
     } // Check to see if we can write the function and it's parameters, if not?
     if(!LuaUtilIsStackAvail(this->LuaRefGetState(), emaArgs.size() - 1))
       XC("Not enough stack space or memory, or param count overflowed!",
-         "Identifier", mtPtr->IdentGet(),        "Event", emeEvent.cCmd,
-         "HaveState",  this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
-         "Params",     emaArgs.size());
+        "Identifier", mtPtr->IdentGet(),        "Event", emeEvent.cCmd,
+        "HaveState",  this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
+        "Params",     emaArgs.size());
     // Not have function?
     if(!this->LuaRefGetFunc())
       XC("Could not get callback function!",
-         "Identifier", mtPtr->IdentGet(),        "Event", emeEvent.cCmd,
-         "HaveState",  this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
-         "Params",     emaArgs.size());
+        "Identifier", mtPtr->IdentGet(),        "Event", emeEvent.cCmd,
+        "HaveState",  this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
+        "Params",     emaArgs.size());
     // Enumerate add the rest of the parameters
     for(size_t stIndex = 2; stIndex < emaArgs.size(); ++stIndex)
     { // Using event core namespace
@@ -281,8 +278,8 @@ class LuaEvtSlave :
   { // Check that the sent state is the same one we have stored
     if(this->LuaRefGetState() != lS)
       XC("Cannot use callback from a different state to the one currently "
-         "stored as the internal storage only supports storing one state "
-         "for multiple references!",
+        "stored as the internal storage only supports storing one state "
+        "for multiple references!",
         "StoredState", this->LuaRefStateIsSet(), "SentState", lS != nullptr,
         "Identifier",  mtPtr->IdentGet(),        "Reference", stId,
         "Count",       stRefs);
@@ -307,7 +304,7 @@ class LuaEvtSlave :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor to clean up any leftover events and references ---------- */
-  ~LuaEvtSlave() { LuaEvtDeInit(); }
+  DTORHELPER(~LuaEvtSlave, LuaEvtDeInit())
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

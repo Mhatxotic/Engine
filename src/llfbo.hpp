@@ -12,14 +12,14 @@
 ** ========================================================================= */
 // % Fbo
 /* ------------------------------------------------------------------------- */
-// ! The fbo class allows the programmer to create an OpenGL frame-buffer
+// ! The 'Fbo' class allows the programmer to create an OpenGL frame-buffer
 // ! object which they can use to create seperate drawing canvases which they
 // ! can apply special effects to without modifying other canvases.
 /* ========================================================================= */
 namespace LLFbo {                      // Fbo namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IConGraph::P;          using namespace IConsole::P;
-using namespace IFboDef::P;            using namespace IFbo::P;
+using namespace IFbo::P;               using namespace ICoords::P;
 using namespace IFboCore::P;           using namespace ILua::P;
 using namespace IOgl::P;               using namespace ISShot::P;
 using namespace IString::P;            using namespace Common;
@@ -40,6 +40,32 @@ struct AgBlend : public AgIntegerLGE<OglBlendEnum>
 ** ## Fbo:* member functions                                              ## **
 ** ######################################################################### **
 ** ========================================================================= */
+// $ Fbo:Activate
+// ? Makes the specified FBO the active FBO and all subsequent Texture:* calls
+// ? will apply to this FBO. This can be called on the main FBO.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Activate, 0, AgFbo{lS, 1}().FboSetActive())
+/* ========================================================================= */
+// $ Fbo:Blit
+// ? Blits the SPECIFIED FBO to the currently ACTIVE FBO. This just adds
+// ? to the active FBO drawing arrays and doesn't actually render until the
+// ? active FBO is finished and rendered. The currently stored vertex,
+// ? texcoord, colour and matrix values are used.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Blit, 0, FboActive()->FboBlit(AgFbo{lS, 1}()))
+/* ========================================================================= */
+// $ Fbo:BlitT
+// > TriIndex:integer=Triangle index. Triangle #1 (zero) or triangle #2 (one).
+// ? Blits the SPECIFIED triangle of the SPECIFIED FBO to the currently
+// ? ACTIVE FBO. This just adds to the active FBO drawing arrays and doesn't
+// ? actually render until the active FBO is finished and rendered. The
+// ? currently stored vertex, texcoord, colour and matrix values are used.
+/* ------------------------------------------------------------------------- */
+LLFUNC(BlitT, 0,
+  const AgFbo aFbo{lS, 1};
+  const AgTriangleId aTriangleId{lS, 2};
+  FboActive()->FboBlitTri(aFbo(), aTriangleId))
+/* ========================================================================= */
 // $ Fbo:Destroy
 // ? Destroys the FBO and frees all the memory associated with it. The OpenGL
 // ? handles and VRAM allocated by it are freed after the main FBO has has
@@ -53,6 +79,87 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroy<Fbo>(lS, cFbos))
 // ? Returns if the Fbo class is destroyed.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFbos)))
+/* ========================================================================= */
+// $ Fbo:Finish
+// ? Queues the FBO for redrawing after LUA has finished it's tick function.
+// ? You only need to run this once, subsequent calls in the same frame will
+// ? be ignored as the FBO has already been queued for redrawing.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Finish, 0, AgFbo{lS, 1}().FboFinishAndRender())
+/* ========================================================================= */
+// $ Fbo:Flush
+// ? Completely resets the FBO commands and triangles lists. The triangles list
+// ? data has to exist before the frame ends as OpenGL could copy it to VRAM at
+// ? any time during the frame up to when glFinish() is called at the end of
+// ? the frame. For performance reasons, this data is not cleared until the FBO
+// ? is set to active again with the Activate() function on any subsequent
+// ? frame that you call this function. Using this function before Finish() is
+// ? called is safe too but not after and before the same frame ends. This also
+// ? will not free memory as these buffers are designed to only increase in
+// ? size.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Flush, 0, AgFbo{lS, 1}().FboFlushSafe())
+/* ========================================================================= */
+// $ Fbo:GetFloatCount
+// < Count:integer=Number of floats in display lists.
+// ? Returns the number of floating point numbers currently entered into the
+// ? display list.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetFloatCount, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().FboGetTrisNow()))
+/* ========================================================================= */
+// $ Fbo:GetId
+// < Id:integer=The id number of the Fbo object.
+// ? Returns the unique id of the Fbo object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().CtrGet()))
+/* ========================================================================= */
+// $ Fbo:GetLFloatCount
+// < Count:integer=Number of floats in display lists.
+// ? Returns the number of floating point numbers entered into the display list
+// ? on the last rendered frame.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetLFloatCount, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().FboGetTris()))
+/* ========================================================================= */
+// $ Fbo:GetMatrix
+// < Width:number=Total count of horizontal viewable pixels.
+// < Height:number=Total count of vertical viewable pixels.
+// < Left:number=Minimum viewable matrix X position.
+// < Top:number=Minimum viewable matrix Y position.
+// < Right:number=Maximum viewable matrix X position.
+// < Bottom:number=Maximum viewable matrix Y position.
+// ? Returns the current matrix information for the specified FBO.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetMatrix, 6,
+  const Fbo &fboCref = AgFbo{lS, 1}();
+  const CoordsFloat &cfRef = fboCref.cfStage;
+  LuaUtilPushVar(lS, fboCref.DimGetWidth(), fboCref.DimGetHeight(),
+    cfRef.CoordsGetLeft(), cfRef.CoordsGetTop(), cfRef.CoordsGetRight(),
+    cfRef.CoordsGetBottom()))
+/* ========================================================================= */
+// $ Fbo:GetName
+// < Id:string=The video identifier
+// ? Returns the identifier of the Fbo object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().IdentGet()))
+/* ========================================================================= */
+// $ Fbo:Reserve
+// > Triangles:integer=How many triangles to reserve in GPU float list
+// > Commands:integer=How many structs to reserve in GPU commands list
+// ? Reserves memory the respective number of triangles and commands.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Reserve, 0,
+  const AgFbo aFbo{lS, 1};
+  const AgSizeTLG aVertexes{lS, 2, 1, 1000000},
+                  aCommands{lS, 3, 1, 1000000};
+  aFbo().FboReserve(aVertexes, aCommands))
+/* ========================================================================= */
+// $ Fbo:SetFilter
+// > Id:integer=The texture filter id.
+// ? Sets the texture filtering id for the FBO texture. Mipmaps are
+// ? automatically generated if a mipmapping id is selected.
+// ? (Magnification / Minification). See 'Texture.Filters()' for more info.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetFilter, 0, AgFbo{lS, 1}().FboSetFilterCommit(AgFilterId{lS, 2}))
 /* ========================================================================= */
 // $ Fbo.SetBlend
 // > srcRGB:integer=How the source RGB blending factors are computed.
@@ -71,45 +178,44 @@ LLFUNC(SetBlend, 0,
                 aDstAlpha{lS, 5};
   aFbo().FboSetBlend(aSrcRGB, aDstRGB, aSrcAlpha, aDstAlpha))
 /* ========================================================================= */
-// $ Fbo:SetVX
-// > TriIndex:integer=Triangle index. Triangle #1 (zero) or triangle #2 (one).
-// > V1Left:number=Coord #1 of vertex #1 of the specified triangle.
-// > V1Top:number=Coord #2 of vertex #2 of the specified triangle.
-// > V2Left:number=Coord #1 of vertex #3 of the specified triangle.
-// > V2Top:number=Coord #2 of vertex #1 of the specified triangle.
-// > V3Left:number=Coord #1 of vertex #2 of the specified triangle.
-// > V3Top:number=Coord #2 of vertex #3 of the specified triangle.
-// ? Stores the specified vertex co-ordinates when using the 'Fbo:Blit'
-// ? function.
+// $ Fbo:SetClear
+// > State:bool=New clear state
+// ? Sets if the FBO should be cleared before rendering to it
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetVX, 0,
-  const AgFbo aFbo{lS, 1};
-  const AgTriangleId aTriangleId{lS, 2};
-  const FboBase::TriPosData tpdVertices{
-    AgGLfloat{lS, 3}, AgGLfloat{lS, 4}, AgGLfloat{lS, 5},
-    AgGLfloat{lS, 6}, AgGLfloat{lS, 7}, AgGLfloat{lS, 8},
-  };
-  aFbo().FboItemSetVertexEx(aTriangleId, tpdVertices))
+LLFUNC(SetClear, 0, AgFbo{lS, 1}().FboSetClear(AgBoolean{lS, 2}))
 /* ========================================================================= */
-// $ Fbo:SetTCX
-// > TriIndex:integer=Triangle index. Triangle #1 (zero) or triangle #2 (one).
-// > TC1Left:number=Coord #1 of vertex #1 of the specified triangle.
-// > TC1Top:number=Coord #2 of vertex #2 of the specified triangle.
-// > TC2Left:number=Coord #1 of vertex #3 of the specified triangle.
-// > TC2Top:number=Coord #2 of vertex #1 of the specified triangle.
-// > TC3Left:number=Coord #1 of vertex #2 of the specified triangle.
-// > TC3Top:number=Coord #2 of vertex #3 of the specified triangle.
-// ? Stores the specified texture co-ordinates for when the frame buffer object
-// ? is drawn.
+// $ Fbo:SetClearColour
+// > Red:number=The red component intensity (0 to 1).
+// > Green:number=The green component intensity (0 to 1).
+// > Blue:number=The blue component intensity (0 to 1).
+// > Alpha:number=The alpha component intensity (0 to 1).
+// ? Same as glClearColour(). Allows you to set the colour for glClear(),
+// ? meaning the FBO is cleared with this colour on each new frame loop.
+// ? See: https://www.opengl.org/sdk/docs/man2/xhtml/glClear.xml.
+// ? See: https://www.opengl.org/sdk/docs/man2/xhtml/glClearColor.xml.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetTCX, 0,
+LLFUNC(SetClearColour, 0,
   const AgFbo aFbo{lS, 1};
-  const AgTriangleId aTriangleId{lS, 2};
-  const FboBase::TriCoordData tcdCoords{
-    AgGLfloat{lS, 3}, AgGLfloat{lS, 4}, AgGLfloat{lS, 5},
-    AgGLfloat{lS, 6}, AgGLfloat{lS, 7}, AgGLfloat{lS, 8},
-  };
-  aFbo().FboItemSetTexCoordEx(aTriangleId, tcdCoords))
+  const AgGLfloat aRed{lS, 2},
+                  aGreen{lS, 3},
+                  aBlue{lS, 4},
+                  aAlpha{lS, 5};
+  aFbo().ColourSet(aRed, aGreen, aBlue, aAlpha))
+/* ========================================================================= */
+// $ Fbo:SetCRGBA
+// > Red:number=The entire FBO texture red colour intensity (0 to 1).
+// > Green:number=The entire FBO texture green colour intensity (0 to 1).
+// > Blue:number=The entire FBO texture blue colour intensity (0 to 1).
+// > Alpha:number=The entire FBO texture alpha colour intensity (0 to 1).
+// ? Sets the colour intensity of all the vertexes for the entire FBO texture.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetCRGBA, 0,
+  const AgFbo aFbo{lS, 1};
+  const AgGLfloat aRed{lS, 2},
+                  aGreen{lS, 3},
+                  aBlue{lS, 4},
+                  aAlpha{lS, 5};
+  aFbo().FboItemSetQuadRGBA(aRed, aGreen, aBlue, aAlpha))
 /* ========================================================================= */
 // $ Fbo:SetCX
 // > TriIndex:integer=Triangle index. Triangle #1 (zero) or triangle #2 (one).
@@ -137,6 +243,74 @@ LLFUNC(SetCX, 0,
     AgGLfloat{lS, 11}, AgGLfloat{lS, 12}, AgGLfloat{lS, 13}, AgGLfloat{lS, 14}
   };
   aFbo().FboItemSetColourEx(aTriangleId, tcdColour))
+/* ========================================================================= */
+// $ Fbo:SetMatrix
+// > Left:number=The left co-ordinate.
+// > Top:number=The top co-ordinate.
+// > Right:number=The right co-ordinate.
+// > Bottom:number=The bottom co-ordinate.
+// ? Sets the 2D matrix of the specified FBO.
+// ? See: https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetMatrix, 0,
+  const AgFbo aFbo{lS, 1};
+  const AgGLfloat aLeft{lS, 2},
+                  aTop{lS, 3},
+                  aRight{lS, 4},
+                  aBottom{lS, 5};
+  aFbo().FboSetMatrix(aLeft, aTop, aRight, aBottom));
+/* ========================================================================= */
+// $ Fbo:SetTCLTRB
+// > Left:number=The destination left co-ordinate.
+// > Top:number=The destination top co-ordinate.
+// > Right:number=The destination right co-ordinate.
+// > Bottom:number=The destination bottom co-ordinate.
+// ? Stores the specified texture bounds used when blitting the frame buffer
+// ? object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetTCLTRB, 0,
+  const AgFbo aFbo{lS, 1};
+  const AgGLfloat aLeft{lS, 2},
+                  aTop{lS, 3},
+                  aRight{lS, 4},
+                  aBottom{lS, 5};
+  aFbo().FboItemSetTexCoord(aLeft, aTop, aRight, aBottom))
+/* ========================================================================= */
+// $ Fbo:SetTCLTWH
+// > Left:number=The left destination co-ordinate.
+// > Top:number=The top destination co-ordinate.
+// > Width:number=The destination width.
+// > Height:number=The destination height.
+// ? Stores the specified texture co-ords and dimensions when blitting the
+// ? frame buffer object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetTCLTWH, 0,
+  const AgFbo aFbo{lS, 1};
+  const AgGLfloat aLeft{lS, 2},
+                  aTop{lS, 3},
+                  aWidth{lS, 4},
+                  aHeight{lS, 5};
+  aFbo().FboItemSetTexCoordWH(aLeft, aTop, aWidth, aHeight))
+/* ========================================================================= */
+// $ Fbo:SetTCX
+// > TriIndex:integer=Triangle index. Triangle #1 (zero) or triangle #2 (one).
+// > TC1Left:number=Coord #1 of vertex #1 of the specified triangle.
+// > TC1Top:number=Coord #2 of vertex #2 of the specified triangle.
+// > TC2Left:number=Coord #1 of vertex #3 of the specified triangle.
+// > TC2Top:number=Coord #2 of vertex #1 of the specified triangle.
+// > TC3Left:number=Coord #1 of vertex #2 of the specified triangle.
+// > TC3Top:number=Coord #2 of vertex #3 of the specified triangle.
+// ? Stores the specified texture co-ordinates for when the frame buffer object
+// ? is drawn.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetTCX, 0,
+  const AgFbo aFbo{lS, 1};
+  const AgTriangleId aTriangleId{lS, 2};
+  const FboBase::TriCoordData tcdCoords{
+    AgGLfloat{lS, 3}, AgGLfloat{lS, 4}, AgGLfloat{lS, 5},
+    AgGLfloat{lS, 6}, AgGLfloat{lS, 7}, AgGLfloat{lS, 8},
+  };
+  aFbo().FboItemSetTexCoordEx(aTriangleId, tcdCoords))
 /* ========================================================================= */
 // $ Fbo:SetVLTRB
 // > Left:number=The destination left co-ordinate.
@@ -176,7 +350,7 @@ LLFUNC(SetVLTWH, 0,
 // > Width:number=The destination width.
 // > Height:number=The destination height.
 // > Angle:number=The angle of the vertex.
-// ? Allows you to set basic vertex co-ordinates when blitting the fbo with
+// ? Allows you to set basic vertex co-ordinates when blitting the FBO with
 // ? angle calculations.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetVLTWHA, 0,
@@ -188,217 +362,47 @@ LLFUNC(SetVLTWHA, 0,
   const AgAngle aAngle{lS, 6};
   aFbo().FboItemSetVertexWH(aLeft, aTop, aWidth, aHeight, aAngle))
 /* ========================================================================= */
-// $ Fbo:SetMatrix
-// > Left:number=The left co-ordinate.
-// > Top:number=The top co-ordinate.
-// > Right:number=The right co-ordinate.
-// > Bottom:number=The bottom co-ordinate.
-// ? Sets the 2D matrix of the specified fbo.
-// ? See: https://www.opengl.org/sdk/docs/man2/xhtml/glOrtho.xml
+// $ Fbo:SetVX
+// > TriIndex:integer=Triangle index. Triangle #1 (zero) or triangle #2 (one).
+// > V1Left:number=Coord #1 of vertex #1 of the specified triangle.
+// > V1Top:number=Coord #2 of vertex #2 of the specified triangle.
+// > V2Left:number=Coord #1 of vertex #3 of the specified triangle.
+// > V2Top:number=Coord #2 of vertex #1 of the specified triangle.
+// > V3Left:number=Coord #1 of vertex #2 of the specified triangle.
+// > V3Top:number=Coord #2 of vertex #3 of the specified triangle.
+// ? Stores the specified vertex co-ordinates when using the 'Fbo:Blit'
+// ? function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetMatrix, 0,
+LLFUNC(SetVX, 0,
   const AgFbo aFbo{lS, 1};
-  const AgGLfloat aLeft{lS, 2},
-                  aTop{lS, 3},
-                  aRight{lS, 4},
-                  aBottom{lS, 5};
-  aFbo().FboSetMatrix(aLeft, aTop, aRight, aBottom));
+  const AgTriangleId aTriangleId{lS, 2};
+  const FboBase::TriPosData tpdVertices{
+    AgGLfloat{lS, 3}, AgGLfloat{lS, 4}, AgGLfloat{lS, 5},
+    AgGLfloat{lS, 6}, AgGLfloat{lS, 7}, AgGLfloat{lS, 8},
+  };
+  aFbo().FboItemSetVertexEx(aTriangleId, tpdVertices))
 /* ========================================================================= */
 // $ Fbo:SetWireframe
 // > Wireframe:Boolean=Use polygon mode GL_LINE (true) or GL_FILL (false).
-// ? Sets drawing the contents in the fbo in wireframe more or texture filled
+// ? Sets drawing the contents in the FBO in wireframe more or texture filled
 // ? mode (default).
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetWireframe, 0, AgFbo{lS, 1}().FboSetWireframe(AgBoolean{lS, 2}))
-/* ========================================================================= */
-// $ Fbo:SetTCLTRB
-// > Left:number=The destination left co-ordinate.
-// > Top:number=The destination top co-ordinate.
-// > Right:number=The destination right co-ordinate.
-// > Bottom:number=The destination bottom co-ordinate.
-// ? Stores the specified texture bounds used when blitting the frame buffer
-// ? object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetTCLTRB, 0,
-  const AgFbo aFbo{lS, 1};
-  const AgGLfloat aLeft{lS, 2},
-                  aTop{lS, 3},
-                  aRight{lS, 4},
-                  aBottom{lS, 5};
-  aFbo().FboItemSetTexCoord(aLeft, aTop, aRight, aBottom))
-/* ========================================================================= */
-// $ Fbo:SetTCLTWH
-// > Left:number=The left destination co-ordinate.
-// > Top:number=The top destination co-ordinate.
-// > Width:number=The destination width.
-// > Height:number=The destination height.
-// ? Stores the specified texture co-ords and dimensions when blitting the
-// ? frame buffer object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetTCLTWH, 0,
-  const AgFbo aFbo{lS, 1};
-  const AgGLfloat aLeft{lS, 2},
-                  aTop{lS, 3},
-                  aWidth{lS, 4},
-                  aHeight{lS, 5};
-  aFbo().FboItemSetTexCoordWH(aLeft, aTop, aWidth, aHeight))
-/* ========================================================================= */
-// $ Fbo:SetClear
-// > State:bool=New clear state
-// ? Sets if the fbo should be cleared before rendering to it
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetClear, 0, AgFbo{lS, 1}().FboSetClear(AgBoolean{lS, 2}))
-/* ========================================================================= */
-// $ Fbo:SetClearColour
-// > Red:number=The red component intensity (0 to 1).
-// > Green:number=The green component intensity (0 to 1).
-// > Blue:number=The blue component intensity (0 to 1).
-// > Alpha:number=The alpha component intensity (0 to 1).
-// ? Same as glClearColour(). Allows you to set the colour for glClear(),
-// ? meaning the fbo is cleared with this colour on each new frame loop.
-// ? See: https://www.opengl.org/sdk/docs/man2/xhtml/glClear.xml.
-// ? See: https://www.opengl.org/sdk/docs/man2/xhtml/glClearColor.xml.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetClearColour, 0,
-  const AgFbo aFbo{lS, 1};
-  const AgGLfloat aRed{lS, 2},
-                  aGreen{lS, 3},
-                  aBlue{lS, 4},
-                  aAlpha{lS, 5};
-  aFbo().FboSetClearColour(aRed, aGreen, aBlue, aAlpha))
-/* ========================================================================= */
-// $ Fbo:SetCRGBA
-// > Red:number=The entire fbo texture red colour intensity (0 to 1).
-// > Green:number=The entire fbo texture green colour intensity (0 to 1).
-// > Blue:number=The entire fbo texture blue colour intensity (0 to 1).
-// > Alpha:number=The entire fbo texture alpha colour intensity (0 to 1).
-// ? Sets the colour intensity of all the vertexes for the entire fbo texture.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetCRGBA, 0,
-  const AgFbo aFbo{lS, 1};
-  const AgGLfloat aRed{lS, 2},
-                  aGreen{lS, 3},
-                  aBlue{lS, 4},
-                  aAlpha{lS, 5};
-  aFbo().FboItemSetQuadRGBA(aRed, aGreen, aBlue, aAlpha))
-/* ========================================================================= */
-// $ Fbo:SetFilter
-// > Id:integer=The texture filter id.
-// ? Sets the texture filtering id for the fbo texture. Mipmaps are
-// ? automatically generated if a mipmapping id is selected.
-// ? (Magnification / Minification). See 'Texture.Filters()' for more info.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetFilter, 0, AgFbo{lS, 1}().FboSetFilterCommit(AgFilterId{lS, 2}))
-/* ========================================================================= */
-// $ Fbo:Activate
-// ? Makes the specified fbo the active fbo and all subsequent Texture:* calls
-// ? will apply to this fbo. This can be called on the main fbo.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Activate, 0, AgFbo{lS, 1}().FboSetActive())
-/* ========================================================================= */
-// $ Fbo:Finish
-// ? Queues the fbo for redrawing after LUA has finished it's tick function.
-// ? You only need to run this once, subsequent calls in the same frame will
-// ? be ignored as the fbo has already been queued for redrawing.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Finish, 0, AgFbo{lS, 1}().FboFinishAndRender())
-/* ========================================================================= */
-// $ Fbo:Blit
-// ? Blits the SPECIFIED fbo to the currently ACTIVE fbo. This just adds
-// ? to the active FBO drawing arrays and doesn't actually render until the
-// ? active fbo is finished and rendered. The currently stored vertex,
-// ? texcoord, colour and matrix values are used.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Blit, 0, FboActive()->FboBlit(AgFbo{lS, 1}()))
-/* ========================================================================= */
-// $ Fbo:BlitT
-// > TriIndex:integer=Triangle index. Triangle #1 (zero) or triangle #2 (one).
-// ? Blits the SPECIFIED triangle of the SPECIFIED fbo to the currently
-// ? ACTIVE fbo. This just adds to the active FBO drawing arrays and doesn't
-// ? actually render until the active fbo is finished and rendered. The
-// ? currently stored vertex, texcoord, colour and matrix values are used.
-/* ------------------------------------------------------------------------- */
-LLFUNC(BlitT, 0,
-  const AgFbo aFbo{lS, 1};
-  const AgTriangleId aTriangleId{lS, 2};
-  FboActive()->FboBlitTri(aFbo(), aTriangleId))
-/* ========================================================================= */
-// $ Fbo:GetLFloatCount
-// < Count:integer=Number of floats in display lists.
-// ? Returns the number of floating point numbers entered into the display list
-// ? on the last rendered frame.
-/* ------------------------------------------------------------------------- */
-LLFUNC(GetLFloatCount, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().FboGetTris()))
-/* ========================================================================= */
-// $ Fbo:GetFloatCount
-// < Count:integer=Number of floats in display lists.
-// ? Returns the number of floating point numbers currently entered into the
-// ? display list.
-/* ------------------------------------------------------------------------- */
-LLFUNC(GetFloatCount, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().FboGetTrisNow()))
-/* ========================================================================= */
-// $ Fbo:IsFinished
-// < State:boolean=Is the fbo finished
-// ? Returns if the fbo has been finished.
-/* ------------------------------------------------------------------------- */
-LLFUNC(IsFinished, 1,
-  LuaUtilPushVar(lS, !!AgFbo{lS, 1}().FboGetFinishCount()))
-/* ========================================================================= */
-// $ Fbo:GetMatrix
-// < Width:number=Total count of horizontal viewable pixels.
-// < Height:number=Total count of vertical viewable pixels.
-// < Left:number=Minimum viewable matrix X position.
-// < Top:number=Minimum viewable matrix Y position.
-// < Right:number=Maximum viewable matrix X position.
-// < Bottom:number=Maximum viewable matrix Y position.
-// ? Returns the current matrix information for the specified fbo.
-/* ------------------------------------------------------------------------- */
-LLFUNC(GetMatrix, 6,
-  const Fbo &fboCref = AgFbo{lS, 1}();
-  const FboFloatCoords &ffcRef = fboCref.ffcStage;
-  LuaUtilPushVar(lS, fboCref.DimGetWidth(), fboCref.DimGetHeight(),
-    ffcRef.GetCoLeft(), ffcRef.GetCoTop(), ffcRef.GetCoRight(),
-    ffcRef.GetCoBottom()))
-/* ========================================================================= */
-// $ Fbo:Reserve
-// > Vertexes:integer=How many 64-bit floats to reserve in GPU float list
-// > Commands:integer=How many structs to reserve in GPU commands list
-// ? Reserves memory the respective number of items. Use this if the first
-// ? complex frame you draw is slow. It's probably because of this as the
-// ? default reservation level for the lists is 1024 x 64-bit float/command.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Reserve, 0,
-  const AgFbo aFbo{lS, 1};
-  const AgSizeTLG aVertexes{lS, 2, 0, 1000000},
-                  aCommands{lS, 3, 0, 1000000};
-  aFbo().FboReserve(aVertexes, aCommands))
-/* ========================================================================= */
-// $ Fbo:GetId
-// < Id:integer=The id number of the Fbo object.
-// ? Returns the unique id of the Fbo object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().CtrGet()))
-/* ========================================================================= */
-// $ Fbo:GetName
-// < Id:string=The video identifier
-// ? Returns the identifier of the Fbo object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().IdentGet()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Fbo:* member functions structure                                    ## **
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Fbo:* member functions begin
-  LLRSFUNC(Activate),       LLRSFUNC(Blit),      LLRSFUNC(BlitT),
-  LLRSFUNC(Destroy),        LLRSFUNC(Destroyed), LLRSFUNC(Finish),
-  LLRSFUNC(GetFloatCount),  LLRSFUNC(GetId),     LLRSFUNC(GetLFloatCount),
-  LLRSFUNC(GetMatrix),      LLRSFUNC(GetName),   LLRSFUNC(IsFinished),
-  LLRSFUNC(Reserve),        LLRSFUNC(SetBlend),  LLRSFUNC(SetClear),
-  LLRSFUNC(SetClearColour), LLRSFUNC(SetCRGBA),  LLRSFUNC(SetCX),
-  LLRSFUNC(SetFilter),      LLRSFUNC(SetMatrix), LLRSFUNC(SetTCLTRB),
-  LLRSFUNC(SetTCLTWH),      LLRSFUNC(SetTCX),    LLRSFUNC(SetVLTRB),
-  LLRSFUNC(SetVLTWH),       LLRSFUNC(SetVLTWHA), LLRSFUNC(SetVX),
+  LLRSFUNC(Activate),       LLRSFUNC(Blit),          LLRSFUNC(BlitT),
+  LLRSFUNC(Destroy),        LLRSFUNC(Destroyed),     LLRSFUNC(Finish),
+  LLRSFUNC(Flush),          LLRSFUNC(GetFloatCount), LLRSFUNC(GetId),
+  LLRSFUNC(GetLFloatCount), LLRSFUNC(GetMatrix),     LLRSFUNC(GetName),
+  LLRSFUNC(Reserve),        LLRSFUNC(SetBlend),      LLRSFUNC(SetClear),
+  LLRSFUNC(SetClearColour), LLRSFUNC(SetCRGBA),      LLRSFUNC(SetCX),
+  LLRSFUNC(SetFilter),      LLRSFUNC(SetMatrix),     LLRSFUNC(SetTCLTRB),
+  LLRSFUNC(SetTCLTWH),      LLRSFUNC(SetTCX),        LLRSFUNC(SetVLTRB),
+  LLRSFUNC(SetVLTWH),       LLRSFUNC(SetVLTWHA),     LLRSFUNC(SetVX),
   LLRSFUNC(SetWireframe),
 LLRSEND                                // Fbo:* member functions end
 /* ========================================================================= **
@@ -407,26 +411,32 @@ LLRSEND                                // Fbo:* member functions end
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Fbo.Main
-// < Handle:Fbo=A handle to the main fbo object.
+// < Handle:Fbo=A handle to the main FBO object.
 // ? Returns a handle to the main FBO so you can draw to it. Changing the
 // ? properties of the main FBO may result in undefined behaviour. Note that
 // ? the engine console shares the same FBO so you may want to create a
 // ? separatte FBO to draw to.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Main, 1, LuaUtilClassCreatePtr<Fbo>(lS, *cFbos, &cFboCore->fboMain))
+LLFUNC(Main, 1,
+  LuaUtilClassCreatePtr<Fbo>(lS, *cFbos, &cFboCore->FboCoreGetMain()))
 /* ========================================================================= */
 // $ Fbo.Create
 // > Identifier:string=Reference only user-defined identifier.
 // > Width:integer=Width of the FBO.
 // > Height:integer=Height of the FBO.
-// < Handle:Fbo=A handle to the newly created main fbo object.
-// ? Creates a new FBO of the specified size.
+// > Triangles:integer=How many triangles to reserve in GPU float list
+// > Commands:integer=How many structs to reserve in GPU commands list
+// < Handle:Fbo=A handle to the newly created main FBO object.
+// ? Creates a new FBO of the specified size and reserves memory the respective
+// ? number of triangles and commands.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1,
   const AgNeString aIdentifier{lS, 1};
   const AgTextureDimension aWidth{lS, 2},
                            aHeight{lS, 3};
-  AcFbo{lS}().FboInit(aIdentifier, aWidth, aHeight))
+  const AgSizeTLG aVertexes{lS, 2, 2, 1000000},
+                  aCommands{lS, 3, 1, 1000000};
+  AcFbo{lS}().FboInit(aIdentifier, aWidth, aHeight, aVertexes, aCommands))
 /* ========================================================================= */
 // $ Fbo.Draw
 // ? When the UI mode is set to 3 which is fully manual mode, you need to call
@@ -434,22 +444,22 @@ LLFUNC(Create, 1,
 // ? flushed and not finished and OpenGL will NOT swap buffers if you do not
 // ? call this function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Draw, 0, cFboCore->SetDraw())
+LLFUNC(Draw, 0, cFboCore->FboCoreSetDraw())
 /* ========================================================================= */
 // $ Fbo.IsDrawing
-// < State:boolean=Is the main fbo set to redraw?
-// ? Returns if the main fbo is set to redraw.
+// < State:boolean=Is the main FBO set to redraw?
+// ? Returns if the main FBO is set to redraw.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsDrawing, 1, LuaUtilPushVar(lS, cFboCore->CanDraw()))
+LLFUNC(IsDrawing, 1, LuaUtilPushVar(lS, cFboCore->FboCoreCanDraw()))
 /* ========================================================================= */
 // $ Fbo.OnRedraw
 // > Func:function=The main redraw function to change to
 // ? When OpenGL needs to be reinitialised, the specified callback will be
 // ? called so the guest can redraw FBO's and maybe do other stuff. All
-// ? texture and fbo data is already preserved so there is no need to
+// ? texture and FBO data is already preserved so there is no need to
 // ? reinitialise any of that, you just need to redraw them.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnRedraw, 0, cLua->SetLuaRef(lS, cLua->lrMainRedraw))
+LLFUNC(OnRedraw, 0, cLua->LuaSetRedrawFunc(lS))
 /* ========================================================================= */
 // $ Fbo.ConSet
 // > State:boolean=The console state.
@@ -459,14 +469,14 @@ LLFUNC(OnRedraw, 0, cLua->SetLuaRef(lS, cLua->lrMainRedraw))
 // ? overrides the 'con_disabled' setting.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ConSet, 1,
-  LuaUtilPushVar(lS, cConGraphics->SetVisible(AgBoolean{lS, 1})))
+  LuaUtilPushVar(lS, cConGfx->ConGfxSetVisible(AgBoolean{lS, 1})))
 /* ========================================================================= */
 // $ Fbo.ConHeight
 // > State:number=The console height.
 // ? Sets the console height normal without modifying the cvar. This function
 // ? is in Fbo because it only applies to opengl mode.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ConHeight, 0, cConGraphics->SetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
+LLFUNC(ConHeight, 0, cConGfx->ConGfxSetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
 /* ========================================================================= */
 // $ Fbo.ConEnabled
 // < State:boolean=The console state.
@@ -480,11 +490,11 @@ LLFUNC(ConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
 // ? Lock the visibility of the console on or off. This function is in Fbo
 // ? because it only applies to opengl mode.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ConLock, 0, cConGraphics->SetLocked(AgBoolean{lS, 1}))
+LLFUNC(ConLock, 0, cConGfx->ConGfxSetLocked(AgBoolean{lS, 1}))
 /* ========================================================================= */
 // $ Fbo.Count
-// < Count:integer=Total number of fbos created.
-// ? Returns the total number of fbo classes currently active.
+// < Count:integer=Total number of FBO's created.
+// ? Returns the total number of FBO classes currently active.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Count, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
 /* ========================================================================= */
@@ -495,8 +505,8 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
 // ? set by cvars 'vid_orwidth', 'vid_orheight' and also modified with the
 // ? Fbo.Resize() function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Matrix, 2, LuaUtilPushVar(lS, cFboCore->GetMatrixWidth(),
-                                     cFboCore->GetMatrixHeight()))
+LLFUNC(Matrix, 2, LuaUtilPushVar(lS, cFboCore->FboCoreGetMatrixWidth(),
+                                     cFboCore->FboCoreGetMatrixHeight()))
 /* ========================================================================= */
 // $ Fbo.Resize
 // < Width:number=The new width of the main frame buffer
@@ -511,8 +521,8 @@ LLFUNC(Resize, 1,
   const AgUIntLG aWidth{lS, 1, 1, cOgl->MaxTexSize() },
                  aHeight{lS, 2, 1, cOgl->MaxTexSize() };
   LuaUtilPushVar(lS,
-    cDisplay->AlterDefaultMatrix(static_cast<GLfloat>(aWidth()),
-                                 static_cast<GLfloat>(aHeight()))))
+    cDisplay->DisplayAlterDefaultMatrix(static_cast<GLfloat>(aWidth()),
+      static_cast<GLfloat>(aHeight()))))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Fbo.* namespace functions structure                                 ## **

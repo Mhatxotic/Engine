@@ -15,6 +15,8 @@ using namespace ICVarDef::P;           using namespace IFStream::P;
 using namespace IIdent::P;             using namespace IMutex::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
+/* -- Typedefs ------------------------------------------------------------- */
+typedef ClockChrono<CoreClock> CoreClockChrono; // Log timer class
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Log levels ----------------------------------------------------------- */
@@ -41,19 +43,20 @@ static Log *cLog = nullptr;            // Address of global log class
 class Log :                            // The actual class body
   /* -- Base classes ------------------------------------------------------- */
   public LogLines,                     // Holds info about every log line
-  private FStream,                     // Output log file if needed
-  public ClockChrono<CoreClock>,       // Holds the current log time
+  public FStream,                      // Output log file if needed
+  public CoreClockChrono,              // Holds the current log time
   public MutexLock                     // Because logger needs thread safe
 { /* -- Private typedefs --------------------------------------------------- */
   typedef IdList<LH_MAX> LogLevels;    // Log levels as human readable strings
+  typedef atomic<LHLevel> SafeLHLevel; // Async safe version of 'LHLevel'.
   /* -- Private variables -------------------------------------------------- */
   const LogLevels  llLevels;           // Log level strings
   const string     strStdOut,          // Label for 'stdout'
                    strStdErr;          // Label for 'stderr'
-  atomic<LHLevel>  lhlLevel;           // Log helper level for this instance
+  SafeLHLevel      slhlLevel;          // Log helper level for this instance
   size_t           stMaximum;          // Maximum log lines
-  /* ----------------------------------------------------------------------- */
-  void ReserveLines(const size_t stLines)
+  /* -- Reserve a certain amount of log lines ------------------------------ */
+  void LogReserveLines(const size_t stLines)
   { // Calculate total liens
     const size_t stTotal = size() + stLines;
     // If writing this many lines would fit in the log, then the log does not
@@ -64,8 +67,10 @@ class Log :                            // The actual class body
     // Erase enough lines for the new ones to fit
     erase(begin(), next(begin(), static_cast<ssize_t>(stTotal - stMaximum)));
   }
+  /* -- Return log level --------------------------------------------------- */
+  LHLevel LogGetLevel() const { return slhlLevel; }
   /* ----------------------------------------------------------------------- */
-  void FlushLog()
+  void LogFlushLog()
   { // Ignore if file not opened or there is nothing to write
     if(empty() || FStreamClosed()) return;
     // Get start of log
@@ -98,56 +103,41 @@ class Log :                            // The actual class body
     clear();
   }
   /* -- Write lines to log ------------------------------------------------- */
-  void WriteLines(const LHLevel lhL, const TokenList &tLines) noexcept(true)
+  void LogWriteLines(const LHLevel lhRequire, const TokenList &tLines)
   { // Ignore if no lines
     if(tLines.empty()) return;
     // Prune log to fit this many lines
-    ReserveLines(tLines.size());
+    LogReserveLines(tLines.size());
     // For each line, print to log. Note that I tried using string
     // appending for this and it turned out to be almost twice as slow as
     // using formatstring due to the fact that less memory management
     // is required!
     for(const string &strLine : tLines)
-      push_back({ CCDeltaToDouble(), lhL, StdMove(strLine) });
+      push_back({ CCDeltaToDouble(), lhRequire, StdMove(strLine) });
     // Write lines to log
-    FlushLog();
+    LogFlushLog();
   }
   /* -- Write string to log. Line feed creates multiple lines -------------- */
-  void WriteString(const LHLevel lhL, const string &strL) noexcept(true)
-    { WriteLines(lhL, { strL, cCommon->CommonLf(), stMaximum }); }
+  void LogWriteString(const LHLevel lhL, const string &strLine)
+    { LogWriteLines(lhL, { strLine, cCommon->CommonLf(), stMaximum }); }
   /* ----------------------------------------------------------------------- */
-  void WriteString(const string &strL) { WriteString(LH_CRITICAL, strL); }
+  void LogWriteString(const string &strLine)
+    { LogWriteString(LH_CRITICAL, strLine); }
   /* ----------------------------------------------------------------------- */
-  void DeInit()
+  void LogDeInit()
   { // Bail if initialised
     if(FStreamClosed()) return;
     // Log file closure
-    WriteString("Log file closed.");
+    LogWriteString("Log file closed.");
     // Flush all remaining strings
-    FlushLog();
-    // Done
+    LogFlushLog();
+    // Done so close the file
     FStreamClose();
   }
   /* -- Convert log level to a string -------------------------------------- */
   const string_view &LogLevelToString(const LHLevel lhId)
     { return llLevels.Get(lhId); }
-  /* -- Safe access to members ------------------------------------- */ public:
-  CVarReturn SetLevel(const LHLevel lhlNewLevel)
-  { // Deny if invalid level
-    if(lhlNewLevel >= LH_MAX) return DENY;
-    // Not same level as current? (when cvar registered/init prevents echo)
-    if(lhlNewLevel != lhlLevel)
-    { // Set new logging state
-      const LHLevel lhOldLevel = lhlLevel;
-      lhlLevel = lhlNewLevel;
-      // Report state, we could disable logging so we should force report it
-      LogNLCDebugExSafe("Log change verbosity from $ ($) to $ ($).",
-        LogLevelToString(lhOldLevel), lhOldLevel,
-        LogLevelToString(lhlNewLevel), lhlNewLevel);
-    } // Success
-    return ACCEPT;
-  }
-  /* ----------------------------------------------------------------------- */
+  /* --------------------------------------------------------------- */ public:
   size_t Clear()
   { // Get num log lines for returning
     const size_t stSize = size();
@@ -157,24 +147,22 @@ class Log :                            // The actual class body
     return stSize;
   }
   /* ----------------------------------------------------------------------- */
-  bool HasLevel(const LHLevel lhReq) const { return lhReq <= lhlLevel; }
+  bool LogHasLevel(const LHLevel lhReq) const
+    { return lhReq <= LogGetLevel(); }
   /* ----------------------------------------------------------------------- */
-  bool NotHasLevel(const LHLevel lhReq) const { return !HasLevel(lhReq); }
-  /* ----------------------------------------------------------------------- */
-  LHLevel GetLevel() const { return lhlLevel; }
-  /* ----------------------------------------------------------------------- */
-  bool IsRedirectedToDevice()
+  bool LogNotHasLevel(const LHLevel lhReq) const
+    { return lhReq > LogGetLevel(); }
+  /* -- Safe async call to check if output file is a device ---------------- */
+  bool LogIsRedirectedToDevice()
     { return MutexCall([this](){ return FStreamIsHandleStd(); }); }
-  /* ----------------------------------------------------------------------- */
-  bool OpenedSafe() { return MutexCall([this](){ return FStreamOpened(); }); }
-  /* ----------------------------------------------------------------------- */
-  void DeInitSafe() { MutexCall([this](){ DeInit(); }); }
-  /* ----------------------------------------------------------------------- */
-  const string GetNameSafe()
+  /* -- Safe async call to close file -------------------------------------- */
+  void LogDeInitSafe() { MutexCall([this](){ LogDeInit(); }); }
+  /* -- Safe async call to get log filename from Ident base class ---------- */
+  const string LogGetNameSafe()
     { return MutexCall([this](){ return IdentGet(); }); }
   /* -- Unformatted logging without level check (specified level) ---------- */
   void LogNLCSafe(const LHLevel lhL, const string& strLine)
-    { MutexCall([this, lhL, &strLine](){ WriteString(lhL, strLine); }); }
+    { MutexCall([this, lhL, &strLine](){ LogWriteString(lhL, strLine); }); }
   /* -- Unformatted logging without level check (error level) -------------- */
   void LogNLCErrorSafe(const string& strLine)
     { LogNLCSafe(LH_ERROR, strLine); }
@@ -199,7 +187,7 @@ class Log :                            // The actual class body
   /* -- Formatted logging without level check (warning level) -------------- */
   template<typename ...VarArgs>
     void LogNLCWarningExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
-        { LogNLCExSafe(LH_WARNING, cpFormat, StdForward<VarArgs>(vaArgs)...); }
+      { LogNLCExSafe(LH_WARNING, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Formatted logging without level check (info level) ----------------- */
   template<typename ...VarArgs>
     void LogNLCInfoExSafe(const char*const cpFormat, VarArgs &&...vaArgs)
@@ -212,7 +200,7 @@ class Log :                            // The actual class body
   template<typename ...VarArgs>void LogExSafe(const LHLevel lhL,
     const char*const cpFormat, VarArgs &&...vaArgs)
   { // Return if we don't have this level
-    if(NotHasLevel(lhL)) return;
+    if(LogNotHasLevel(lhL)) return;
     // Write formatted string
     LogNLCExSafe(lhL, cpFormat, StdForward<VarArgs>(vaArgs)...);
   }
@@ -234,7 +222,7 @@ class Log :                            // The actual class body
       { LogExSafe(LH_DEBUG, cpFormat, StdForward<VarArgs>(vaArgs)...); }
   /* -- Unformatted logging with level check (specified level) ------------- */
   void LogSafe(const LHLevel lhL, const string& strLine)
-    { if(NotHasLevel(lhL)) return; LogNLCSafe(lhL, strLine); }
+    { if(LogNotHasLevel(lhL)) return; LogNLCSafe(lhL, strLine); }
   /* -- Unformatted logging with level check (error level) ----------------- */
   void LogErrorSafe(const string& strLine) { LogSafe(LH_ERROR, strLine); }
   /* -- Unformatted logging with level check (warning level) --------------- */
@@ -244,7 +232,7 @@ class Log :                            // The actual class body
   /* -- Unformatted logging with level check (debug level) ----------------- */
   void LogDebugSafe(const string& strLine) { LogSafe(LH_DEBUG, strLine); }
   /* -- Return buffer lines for debugger ----------------------------------- */
-  void GetBufferLines(ostringstream &osS)
+  void LogGetBufferLines(ostringstream &osS)
   { // Gain exclusive access to log lines
     MutexCall([this, &osS](){
       // For each log entry, write the line to the buffer
@@ -254,22 +242,20 @@ class Log :                            // The actual class body
     });
   }
   /* -- Initialise log to built-in standard output ------------------------- */
-  void Init(FILE*const fpDevice, const string &strLabel)
+  void LogInit(FILE*const fpDevice, const string &strLabel)
   { // Set device, name and write confirmation of opening a device handle
     FStreamSetHandle(fpDevice);
     IdentSet(strLabel);
-    WriteString(StrFormat("Logging to standard output '$'.", IdentGet()));
+    LogWriteString(StrFormat("Logging to standard output '$'.", IdentGet()));
   }
-  /* ----------------------------------------------------------------------- */
-  bool Init(const string &strFN)
+  /* -- Initialise with specified file name -------------------------------- */
+  bool LogInit(const string &strFN)
   { // Return failure if already opened else write log file and return success
     if(FStreamOpen(strFN, FM_W_T)) return false;
-    WriteString(StrFormat("Log file is '$'.", IdentGet()));
+    LogWriteString(StrFormat("Log file is '$'.", IdentGet()));
     return true;
   }
-  /* -- Destructor ---------------------------------------------- */ protected:
-  DTORHELPER(~Log, DeInitSafe())
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Constructor --------------------------------------------- */ protected:
   Log() :
     /* -- Initialisers ----------------------------------------------------- */
     llLevels{{                         // Initialise log level strings
@@ -281,16 +267,34 @@ class Log :                            // The actual class body
     }},                                // End of log level strings
     strStdOut{ "/dev/stdout" },        // Initialise display label for stdout
     strStdErr{ "/dev/stderr" },        // Initialise display label for stderr
-    lhlLevel{ LH_DEBUG },              // Initialise default level
+    slhlLevel{ LH_DEBUG },             // Initialise default level
     stMaximum(1000)                    // Initialise maximum output lines
     /* -- Set global pointer to static class ------------------------------- */
     { cLog = this; }
-  /* -- Conlib callback function for APP_LOG variable -------------- */ public:
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~Log, LogDeInitSafe())
+  /* -- Safe access to members ------------------------------------- */ public:
+  CVarReturn LogSetLevel(const LHLevel lhlNewLevel)
+  { // Deny if invalid level
+    if(lhlNewLevel >= LH_MAX) return DENY;
+    // Not same level as current? (when cvar registered/init prevents echo)
+    if(lhlNewLevel != LogGetLevel())
+    { // Set new logging state and save old one
+      const LHLevel lhOldLevel = LogGetLevel();
+      slhlLevel = lhlNewLevel;
+      // Report state, we could disable logging so we should force report it
+      LogNLCDebugExSafe("Log change verbosity from $ ($) to $ ($).",
+        LogLevelToString(lhOldLevel), lhOldLevel,
+        LogLevelToString(lhlNewLevel), lhlNewLevel);
+    } // Success
+    return ACCEPT;
+  }
+  /* -- Conlib callback function for APP_LOG variable ---------------------- */
   CVarReturn LogFileModified(const string &strFN, string &strCV)
   { // Lock mutex
     return MutexCall([this, &strFN, &strCV](){
       // Close log if opened
-      if(FStreamOpened()) DeInit();
+      if(FStreamOpened()) LogDeInit();
       // Check for special character
       switch(strFN.length())
       { // Empty? Ignore
@@ -302,8 +306,8 @@ class Log :                            // The actual class body
           // Compare the character
           switch(strFN.front())
           { // Check for requested use of stderr or stdout
-            case '!': Init(stderr, strStdErr); return ACCEPT;
-            case '-': Init(stdout, strStdOut); return ACCEPT;
+            case '!': LogInit(stderr, strStdErr); return ACCEPT;
+            case '-': LogInit(stdout, strStdOut); return ACCEPT;
             // Anything else ignore and open the file normally
             default: break;
           } // Done
@@ -312,7 +316,7 @@ class Log :                            // The actual class body
         // Anything else just break.
         default: break;
       } // Create new filename and set filename on success and return success
-      if(!Init(StrAppend(strFN, "." LOG_EXTENSION))) return DENY;
+      if(!LogInit(StrAppend(strFN, "." LOG_EXTENSION))) return DENY;
       strCV = IdentGet();
       return ACCEPT_HANDLED;
     });
@@ -332,7 +336,8 @@ class Log :                            // The actual class body
       return ACCEPT;
     });
   }
-};/* ----------------------------------------------------------------------- */
+};
+/* ------------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */
 };                                     // End of private module namespace

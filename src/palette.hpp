@@ -9,8 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IPalette {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IError::P;
-using namespace IFboDef::P;            using namespace IIdent::P;
+using namespace ICollector::P;         using namespace IColour::P;
+using namespace IError::P;             using namespace IIdent::P;
 using namespace IImage::P;             using namespace IImageDef::P;
 using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
@@ -18,7 +18,7 @@ using namespace IShaders::P;           using namespace IStd::P;
 using namespace ITexDef::P;            using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
-typedef array<FboColour, 256> PalData; // Palette data
+typedef array<Colour, 256> PalData;    // Palette data
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -30,9 +30,9 @@ class Pal :                            // Members initially public
   typedef PalData::iterator         PalDataIt;      // Forward iterator
   typedef PalData::const_iterator   PalDataConstIt; // Const forward iterator
   /* -- Get PalData ------------------------------------------------ */ public:
-  const FboColour &GetSlotConst(const size_t stSlot) const
+  const Colour &GetSlotConst(const size_t stSlot) const
     { return (*this)[stSlot]; }
-  FboColour &GetSlot(const size_t stSlot) { return (*this)[stSlot]; }
+  Colour &GetSlot(const size_t stSlot) { return (*this)[stSlot]; }
   /* -- Commit palette ----------------------------------------------------- */
   void Commit() const
     { cShaderCore->sh2D8Pal.UpdatePalette(size(),
@@ -48,44 +48,44 @@ class Pal :                            // Members initially public
   { GetSlot(stPos) = { uiRed, uiGreen, uiBlue, uiAlpha }; }
   /* -- Get red palette entry ---------------------------------------------- */
   GLfloat GetRed(const size_t stPos) const
-    { return GetSlotConst(stPos).GetColourRed(); }
+    { return GetSlotConst(stPos).ColourGetRed(); }
   unsigned int GetRedInt(const size_t stPos) const
     { return UtilDenormalise<unsigned int>(GetRed(stPos)); }
   /* -- Get green palette entry -------------------------------------------- */
   GLfloat GetGreen(const size_t stPos) const
-    { return GetSlotConst(stPos).GetColourGreen(); }
+    { return GetSlotConst(stPos).ColourGetGreen(); }
   unsigned int GetGreenInt(const size_t stPos) const
     { return UtilDenormalise<unsigned int>(GetGreen(stPos)); }
   /* -- Get green palette entry -------------------------------------------- */
   GLfloat GetBlue(const size_t stPos) const
-    { return GetSlotConst(stPos).GetColourBlue(); }
+    { return GetSlotConst(stPos).ColourGetBlue(); }
   unsigned int GetBlueInt(const size_t stPos) const
     { return UtilDenormalise<unsigned int>(GetBlue(stPos)); }
   /* -- Get alpha palette entry -------------------------------------------- */
   GLfloat GetAlpha(const size_t stPos) const
-    { return GetSlotConst(stPos).GetColourAlpha(); }
+    { return GetSlotConst(stPos).ColourGetAlpha(); }
   unsigned int GetAlphaInt(const size_t stPos) const
     { return UtilDenormalise<unsigned int>(GetAlpha(stPos)); }
   /* -- Set red palette entry ---------------------------------------------- */
   void SetRed(const size_t stPos, const GLfloat fRed)
-    { GetSlot(stPos).SetColourRed(fRed); }
+    { GetSlot(stPos).ColourSetRed(fRed); }
   void SetRedInt(const size_t stPos, const unsigned int uiRed)
-    { GetSlot(stPos).SetColourRedInt(uiRed); }
+    { GetSlot(stPos).ColourSetRedInt(uiRed); }
   /* -- Set green palette entry -------------------------------------------- */
   void SetGreen(const size_t stPos, const GLfloat fGreen)
-    { GetSlot(stPos).SetColourGreen(fGreen); }
+    { GetSlot(stPos).ColourSetGreen(fGreen); }
   void SetGreenInt(const size_t stPos, const unsigned int uiGreen)
-    { GetSlot(stPos).SetColourGreenInt(uiGreen); }
+    { GetSlot(stPos).ColourSetGreenInt(uiGreen); }
   /* -- Set blue palette entry --------------------------------------------- */
   void SetBlue(const size_t stPos, const GLfloat fBlue)
-    { GetSlot(stPos).SetColourBlue(fBlue); }
+    { GetSlot(stPos).ColourSetBlue(fBlue); }
   void SetBlueInt(const size_t stPos, const unsigned int uiBlue)
-    { GetSlot(stPos).SetColourBlueInt(uiBlue); }
+    { GetSlot(stPos).ColourSetBlueInt(uiBlue); }
   /* -- Set alpha palette entry -------------------------------------------- */
   void SetAlpha(const size_t stPos, const GLfloat fAlpha)
-    { GetSlot(stPos).SetColourAlpha(fAlpha); }
+    { GetSlot(stPos).ColourSetAlpha(fAlpha); }
   void SetAlphaInt(const size_t stPos, const unsigned int uiAlpha)
-    { GetSlot(stPos).SetColourAlphaInt(uiAlpha); }
+    { GetSlot(stPos).ColourSetAlphaInt(uiAlpha); }
   /* -- Size as signed size_t --------------------------------------------- */
   ssize_t Size() const { return static_cast<ssize_t>(size()); }
   ssize_t SizeM1() const { return Size()-1; }
@@ -127,7 +127,7 @@ class Pal :                            // Members initially public
   { // Get start and fill in the array
     const PalDataIt pdiStart{ begin() + stIndex };
     StdFill(par_unseq, pdiStart, pdiStart + stCount,
-      FboColour{ fRed, fGreen, fBlue, fAlpha }); }
+      Colour{ fRed, fGreen, fBlue, fAlpha }); }
   /* -- Copy constructor from other palette data --------------------------- */
   explicit Pal(const PalData &pdOther) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -142,7 +142,6 @@ CTOR_BEGIN(Palettes, Palette, CLHelperUnsafe, const Pal palDefault;)
 CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable,                     // Lua garbage collector instruction
-  public Ident,                        // Identifier
   public Pal                           // Base Palette class
 { /* -- Init name only --------------------------------------------- */ public:
   void Init(const string &strName) { IdentSet(strName); }
@@ -156,24 +155,24 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
     // Throw error if image doesn't have a palette
     if(imOther.IsNotPalette())
       XC("Image does not have a palette!",
-         "Palette", strName, "Image", imOther.IdentGet());
+        "Palette", strName, "Image", imOther.IdentGet());
     // Must have two images
     if(imOther.GetSlotCount() != 2)
       XC("Image must must have two slots!",
-         "Palette", strName, "Image", imOther.IdentGet(),
-         "Slots",   imOther.GetSlotCount());
+        "Palette", strName, "Image", imOther.IdentGet(),
+        "Slots",   imOther.GetSlotCount());
     // Get last item
     const ImageSlot &isPalette = imOther.GetSlotsConst().back();
     // Dimensions must be valid
     if(isPalette.DimIsNotWidthSet() || isPalette.DimGetWidth() > size())
       XC("Image palette has invalid count!",
-         "Palette", strName,                 "Image",   imOther.IdentGet(),
-         "Actual",  isPalette.DimGetWidth(), "Maximum", size());
+        "Palette", strName,                 "Image",   imOther.IdentGet(),
+        "Actual",  isPalette.DimGetWidth(), "Maximum", size());
     // Make sure palette entries are the same depth
     if(isPalette.DimGetHeight() != BY_RGB)
       XC("Image palette has invalid byte count!",
-         "Palette", strName,                  "Image",    imOther.IdentGet(),
-         "Actual",  isPalette.DimGetHeight(), "Required", BY_RGB);
+        "Palette", strName,                  "Image",    imOther.IdentGet(),
+        "Actual",  isPalette.DimGetHeight(), "Required", BY_RGB);
     // Step through our palette and set values to zero
     for(size_t stIndex = 0; stIndex < isPalette.DimGetWidth(); ++stIndex)
     { // Calculate position and set the new value

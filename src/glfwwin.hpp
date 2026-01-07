@@ -55,18 +55,19 @@ class GlFWWindow :                     // GLFW window class
     for(unsigned int uiI = 0; uiI < uiC; ++uiI)
       WinGetFiles().emplace_back(cpaF[uiI]);
     // Now dispatch the event
-    cEvtMain->Add(EMC_INP_DRAG_DROP);
+    cEvtMain->Add(EMC_INP_DRAGDROP);
   }
   /* -- Event handler for 'glfwSetCharCallback' ---------------------------- */
   static void WinOnInputChar(GLFWwindow*const wC, unsigned int uiChar)
-    { cEvtMain->Add(EMC_INP_CHAR, reinterpret_cast<void*>(wC), uiChar); }
+    { cEvtMain->Add(EMC_INP_CHAR, reinterpret_cast<void*>(wC),
+        static_cast<Codepoint>(uiChar)); }
   /* -- Event handler for 'glfwSetCursorEnterCallback' --------------------- */
   static void WinOnMouseFocus(GLFWwindow*const wC, int iOnStage)
-    { cEvtMain->Add(EMC_INP_MOUSE_FOCUS,
+    { cEvtMain->Add(EMC_INP_MOUSEFOCUS,
         reinterpret_cast<void*>(wC), iOnStage); }
   /* -- Event handler for 'glfwSetCursorPosCallback' ----------------------- */
   static void WinOnMouseMove(GLFWwindow*const wC, double dX, double dY)
-    { cEvtMain->Add(EMC_INP_MOUSE_MOVE, reinterpret_cast<void*>(wC), dX, dY); }
+    { cEvtMain->Add(EMC_INP_MOUSEMOVE, reinterpret_cast<void*>(wC), dX, dY); }
   /* -- Event handler for 'glfwSetDropCallback' ---------------------------- */
   static void WinOnDragDrop(GLFWwindow*const wC, int iC,
     const char**const cpaFiles)
@@ -86,7 +87,7 @@ class GlFWWindow :                     // GLFW window class
       // callback can check if screen is actually full.
       const CoordInt ciPos{ wPtr->WinGetPos() };
       const DimInt diSize{ wPtr->WinGetSize() };
-      cEvtMain->Add(EMC_VID_FB_REINIT, reinterpret_cast<void*>(wC), iW, iH,
+      cEvtMain->Add(EMC_VID_FBREINIT, reinterpret_cast<void*>(wC), iW, iH,
         ciPos.CoordGetX(), ciPos.CoordGetY(), diSize.DimGetWidth(),
         diSize.DimGetHeight());
     } // Log null window class pointer
@@ -95,7 +96,7 @@ class GlFWWindow :                     // GLFW window class
     // On Windows or Linux?
 #else
     // Just send new frame buffer dimensions
-    cEvtMain->Add(EMC_VID_FB_REINIT, reinterpret_cast<void*>(wC), iW, iH);
+    cEvtMain->Add(EMC_VID_FBREINIT, reinterpret_cast<void*>(wC), iW, iH);
 #endif
   }
   /* -- Event handler for 'glfwSetKeyCallback' ----------------------------- */
@@ -106,11 +107,11 @@ class GlFWWindow :                     // GLFW window class
   /* -- Event handler for 'glfwSetMouseButtonCallback' --------------------- */
   static void WinOnMousePress(GLFWwindow*const wC, int iButton, int iAction,
     int iMods)
-  { cEvtMain->Add(EMC_INP_MOUSE_CLICK,
+  { cEvtMain->Add(EMC_INP_MOUSECLICK,
       reinterpret_cast<void*>(wC), iButton, iAction, iMods); }
   /* -- Event handler for 'glfwSetScrollCallback' -------------------------- */
   static void WinOnMouseScroll(GLFWwindow*const wC, double dX, double dY)
-    { cEvtMain->Add(EMC_INP_MOUSE_SCROLL,
+    { cEvtMain->Add(EMC_INP_MOUSESCROLL,
         reinterpret_cast<void*>(wC), dX, dY); }
   /* -- Event handler for 'glfwSetWindowCloseCallback' --------------------- */
   static void WinOnWindowClose(GLFWwindow*const wC)
@@ -320,10 +321,10 @@ class GlFWWindow :                     // GLFW window class
   /* -- Get window size ---------------------------------------------------- */
   CoordInt WinGetPos() const
   { // Put window position inside the coordinates class and return it
-    CoordInt ciCoordinates;
-    glfwGetWindowPos(WinGetHandle(), &ciCoordinates.CoordGetXRef(),
-                                     &ciCoordinates.CoordGetYRef());
-    return ciCoordinates;
+    CoordInt ciCoord;
+    glfwGetWindowPos(WinGetHandle(), &ciCoord.CoordGetXRef(),
+                                     &ciCoord.CoordGetYRef());
+    return ciCoord;
   }
   /* -- Swap GL buffers ---------------------------------------------------- */
   void WinSwapGLBuffers() const { glfwSwapBuffers(WinGetHandle()); }
@@ -436,7 +437,7 @@ class GlFWWindow :                     // GLFW window class
   { // Bail if handle already set
     if(WinIsAvailable())
       XC("Window already created!",
-         "Class", WinGetHandle(), "Title", cpT, "Monitor", mM);
+        "Class", WinGetHandle(), "Title", cpT, "Monitor", mM);
     // Set handle and create window, throw exception if failed
     if(!WinSetHandleResult(glfwCreateWindow(1, 1, cpT, mM, nullptr)))
       XC("Failed to create window!", "Title", cpT, "Monitor", mM);

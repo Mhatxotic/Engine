@@ -235,14 +235,14 @@ static const EncData CodecEncodeZLIB(const MemConst &mcSrc, Memory &mDest,
   const uLong ulSrc = mcSrc.MemSize<uLong>();
   if(static_cast<size_t>(ulSrc) != mcSrc.MemSize())
     XC("Input size not valid to deflate from memory!",
-       "InputSizeExternal", mcSrc.MemSize(), "InputSizeInternal", ulSrc);
+      "InputSizeExternal", mcSrc.MemSize(), "InputSizeInternal", ulSrc);
   // Output address and size, check the size
   const size_t stOut = mDest.MemSize() - stPos;
   Bytef*const ucpDest = mDest.MemRead<Bytef>(stPos);
   uLongf ulDest = static_cast<uLongf>(stOut);
   if(static_cast<size_t>(ulDest) != stOut)
     XC("Output size not valid to deflate from memory!",
-       "OutputSizeExternal", stOut, "OutputSizeInternal", ulDest);
+      "OutputSizeExternal", stOut, "OutputSizeInternal", ulDest);
   // Do compress with default parameters and check for failure
   switch(const int iR = compress2(ucpDest, &ulDest, ucpSrc, ulSrc,
     static_cast<int>(stLevel)))
@@ -283,7 +283,7 @@ static const EncData CodecEncodeLZMA(const MemConst &mcSrc, Memory &mDest,
     static_cast<int>(stLevel), 0, -1, -1, -1, -1, -1);
   if(iResult != SZ_OK)
     XC("Compress failed!",
-       "Reason", CodecGetLzmaErrString(iResult), "Code", iResult);
+      "Reason", CodecGetLzmaErrString(iResult), "Code", iResult);
   // Return what we did
   return { ENCMODE_LZMA, mcSrc.MemSize(), stOutLen, stPropLen };
 }
@@ -314,7 +314,7 @@ static void CodecDecodeZLIB(const MemConst &mcSrc, Memory &mDest,
   const uLongf ulSrc = static_cast<uLongf>(stIn);
   if(static_cast<size_t>(ulSrc) != stIn)
     XC("Input size not valid to inflate from memory!",
-       "InputSizeExternal", stIn, "InputSizeInternal", ulSrc);
+      "InputSizeExternal", stIn, "InputSizeInternal", ulSrc);
   // Allocate buffer for output
   mDest.MemResize(stOut);
   // Prepare and check dest parameters and make sure dest valid for ulong
@@ -322,7 +322,7 @@ static void CodecDecodeZLIB(const MemConst &mcSrc, Memory &mDest,
   uLongf ulDest = static_cast<uLongf>(stOut);
   if(static_cast<size_t>(ulDest) != stOut)
     XC("Output size not valid to inflate from memory!",
-       "OutputSizeExternal", stOut, "OutputSizeInternal", ulDest);
+      "OutputSizeExternal", stOut, "OutputSizeInternal", ulDest);
   // Uncompress the block and compare result
   switch(const int iR = uncompress(ucpDest, &ulDest, ucpSrc, ulSrc))
   { // Succeeded!
@@ -410,7 +410,7 @@ class CoDecoder :                      // Magic decoder derivative class
     const size_t stExpect = ENCHDR_SIZE + stXLen + stCBLen;
     if(mcSrc.MemSize() != stExpect)
       XC("Invalid data length!",
-         "Expect", stExpect, "Actual", mcSrc.MemSize());
+        "Expect", stExpect, "Actual", mcSrc.MemSize());
     // Get uncompressed block length
     const size_t stUBLen = mcSrc.ReadIntLE<uint32_t>(ENCHDR_POS_UBLEN);
     // No compressed block length?
@@ -419,7 +419,7 @@ class CoDecoder :                      // Magic decoder derivative class
       if(!stUBLen) return;
       // Error because this will never happen
       XC("Compressed/Uncompressed data size mismtch!",
-          "Compressed", stCBLen, "Uncompressed", stUBLen);
+        "Compressed", stCBLen, "Uncompressed", stUBLen);
     } // Compare mode and decode as necessary
     switch(const uint32_t ulMode =
       mcSrc.ReadIntLE<uint32_t>(ENCHDR_POS_FLAGS))
@@ -438,15 +438,15 @@ class CoDecoder :                      // Magic decoder derivative class
       // Decrypt (openssl)?
       case ENCMODE_AES:
         CodecDecodeAES(mcSrc, *this, ENCHDR_SIZE, stCBLen, stUBLen,
-          cCrypt->pkKey.p.qKey, cCrypt->pkKey.p.qIV); break;
+          cCrypt->pkKey.p.qpkData, cCrypt->pkKey.p.qivData); break;
       // Decrypt/decompress? (compressed length stored in stXLen)
       case ENCMODE_ZLIBAES:
         CodecDecodeAESZLIB(mcSrc, *this, ENCHDR_SIZE, stCBLen, stUBLen,
-          cCrypt->pkKey.p.qKey, cCrypt->pkKey.p.qIV); break;
+          cCrypt->pkKey.p.qpkData, cCrypt->pkKey.p.qivData); break;
       // Decrypt/decompress? (compressed length stored in stXLen)
       case ENCMODE_LZMAAES:
         CodecDecodeAESLZMA(mcSrc, *this, ENCHDR_SIZE, stCBLen, stUBLen, stXLen,
-          cCrypt->pkKey.p.qKey, cCrypt->pkKey.p.qIV); break;
+          cCrypt->pkKey.p.qpkData, cCrypt->pkKey.p.qivData); break;
       // Unknown
       default: XC("Unknown decoding method!", "Mode", ulMode);
     }
@@ -531,12 +531,12 @@ template<class EncPlugin>class CoEncoder :
     public: explicit n ## Encoder(const MemConst &dS, const size_t stU) : \
       CoEncoder<CodecHelper::n ## Encoder>{ dS, stU } {} };
 /* -- The AES + ZLIB combined encoder (already provides init sizes) -------- */
-CODEC_PLUGIN(AESZLIB, cCrypt->pkKey.p.qKey, cCrypt->pkKey.p.qIV)
+CODEC_PLUGIN(AESZLIB, cCrypt->pkKey.p.qpkData, cCrypt->pkKey.p.qivData)
 /* -- The AES + LZMA combined encoder (already provides init sizes) -------- */
-CODEC_PLUGINEX(AESLZMA, 5, cCrypt->pkKey.p.qKey, cCrypt->pkKey.p.qIV)
+CODEC_PLUGINEX(AESLZMA, 5, cCrypt->pkKey.p.qpkData, cCrypt->pkKey.p.qivData)
 /* -- The AES only encoder (needs init size and keys) ---------------------- */
-CODEC_PLUGINEX(AES, CodecGetAES256CBCSize(), cCrypt->pkKey.p.qKey,
-  cCrypt->pkKey.p.qIV)
+CODEC_PLUGINEX(AES, CodecGetAES256CBCSize(), cCrypt->pkKey.p.qpkData,
+  cCrypt->pkKey.p.qivData)
 /* -- The ZLIB encoder class (provides init size) -------------------------- */
 CODEC_PLUGINEX(ZLIB, static_cast<size_t>(ceil(dS.MemSize() * 0.001)) + 12)
 /* -- The LZMA encoder class (provides the extra data needed size) --------- */

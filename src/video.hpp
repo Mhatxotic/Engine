@@ -101,18 +101,23 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       /* -- No code -------------------------------------------------------- */
       {}
   };/* --------------------------------------------------------------------- */
+  typedef array<Frame, 2> FrameArray;
+  /* ----------------------------------------------------------------------- */
+  typedef array<GLuint,3> GLuintArray;
+  /* --------------------------------------------------------------- */ public:
   enum Unblock { UB_STANDBY, UB_BLOCK, UB_DATA, UB_REINIT, UB_PLAY, UB_STOP,
                  UB_PAUSE, UB_FINISH };
-  /* --------------------------------------------------------------- */ public:
+  typedef atomic<Unblock> AtomicUnblock;
+  /* ----------------------------------------------------------------------- */
   enum Event { VE_PLAY, VE_LOOP, VE_STOP, VE_PAUSE, VE_FINISH };
   /* -- Concurrency -------------------------------------------------------- */
   Thread           tThread;            // Video Decoding Thread
-  atomic<Unblock>  ubReason;           // Unlock condition variable
-  SafeSizeT        stLoop;             // Loops count
+  AtomicUnblock    auReason;           // Unlock condition variable
+  AtomicSizeT      astLoop;            // Loops count
   double           dDrift;             // Drift between audio and video
   const double     dMaxDrift,          // Maximum allowed drift
                    dMaxDriftNeg;       // Maximum allowed drift (negative
-  SafeBool         bPause;             // Only pause the stream?
+  AtomicBool       abPause;            // Only pause the stream?
   /* -- Ogg ---------------------------------------------------------------- */
   ogg_sync_state   osysData;           // Ogg sync state
   ogg_page         opgData;            // Ogg page
@@ -127,17 +132,17 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   th_setup_info   *tsiPtr;             // Theora setup info
   th_dec_ctx      *tdcPtr;             // Theora decoder context
   th_ycbcr_buffer  tybData;            // Theora colour buffer
-  ogg_int64_t      iVideoGranulePos;   // Video granule position
-  SafeDouble       dVideoTime;         // Video time index
+  ogg_int64_t      llVideoGranulePos;  // Video granule position
+  AtomicDouble     adVideoTime;        // Video time index
   double           dFPS;               // Video fps
-  SafeUInt         uiVideoFrames,      // Frames rendered
-                   uiVideoFramesLost;  // Frames skipped
-  array<Frame,2>   faData;             // Frame data
+  AtomicUInt       auiVideoFrames,     // Frames rendered
+                   auiVideoFramesLost; // Frames skipped
+  FrameArray       faData;             // Frame data
   size_t           stFActive,          // Currently active frame
                    stFNext,            // Next frame to process
                    stFWaiting;         // Frames waiting to be processed
-  SafeSizeT        stFFree;            // Frames free to be processed
-  StrNCStrMap      ssThMetaData;       // Theora comments block
+  AtomicSizeT      astFFree;           // Frames free to be processed
+  StrNCStrMap      sncsmThMetaData;    // Theora comments block
   /* -- Vorbis ------------------------------------------------------------- */
   const double     dAudBufMax;         // Audio buffer size
   ogg_stream_state ostsVorbis;         // Ogg (Vorbis) stream states
@@ -145,13 +150,13 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   vorbis_comment   vcData;             // Vorbis comment block
   vorbis_dsp_state vdsData;            // Vorbis DSP state
   vorbis_block     vbData;             // Vorbis decoder block
-  SafeDouble       dAudioTime;         // Audio time index
+  AtomicDouble       sdAudioTime;        // Audio time index
   ALdouble         dAudioBuffer;       // Audio buffered
   ALfloat          fAudioVolume;       // Audio volume
-  StrNCStrMap      ssVoMetaData;       // Vorbis comments block
+  StrNCStrMap      sncsmVoMetaData;    // Vorbis comments block
   /* -- OpenGL ------------------------------------------------------------- */
   FboItem          fboYCbCr;           // Blit data for actual YCbCr components
-  array<GLuint,3>  uiaYCbCr;           // Texture id's for YCbCr components
+  GLuintArray      uiaYCbCr;           // Texture id's for YCbCr components
   Shader          *shProgram;          // Shader program to use
   /* -- OpenAL ------------------------------------------------------------- */
   Source          *sSource;            // Source class
@@ -182,10 +187,10 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // Rewind video to start
     DoRewind();
     // Reset granule position and frames rendered
-    iVideoGranulePos = 0;
-    uiVideoFrames = uiVideoFramesLost = 0;
+    llVideoGranulePos = 0;
+    auiVideoFrames = auiVideoFramesLost = 0;
     // Reset counters
-    dVideoTime = dAudioTime = dDrift = dAudioBuffer = 0.0;
+    adVideoTime = sdAudioTime = dDrift = dAudioBuffer = 0.0;
   }
   /* -- Get/Set theora decoder control ------------------------------------- */
   template<typename AnyType>
@@ -224,7 +229,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       { // Tell vorbis how much we read
         vorbis_synthesis_read(&vdsData, iFrames);
         // Set audio time
-        dAudioTime = vorbis_granule_time(&vdsData, vdsData.granulepos);
+        sdAudioTime = vorbis_granule_time(&vdsData, vdsData.granulepos);
         // Set that we got audio
         bParsed = true;
         // No need to do anymore if there is no source
@@ -310,7 +315,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
             case OV_EBADPACKET: break;
             // Unknown error
             default: XC("Unknown audio synthesis result!",
-                        "Identifier", IdentGet(), "Result", iR2);
+                       "Identifier", IdentGet(), "Result", iR2);
           } // See if there is more vorbis packets
           continue;
         // If we are out of sync and there is a gap in the data?
@@ -319,7 +324,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         case 0: break;
         // Unknown error
         default: XC("Unknown audio stream packet out result!",
-                    "Identifier", IdentGet(), "Result", iR1);
+                   "Identifier", IdentGet(), "Result", iR1);
       } // Break loop
       break;
     } // Return parse result
@@ -337,7 +342,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         case 1:
           // Decode the packet and if we get a positive result?
           switch(const int iR2 =
-            th_decode_packetin(tdcPtr, &opkData, &iVideoGranulePos))
+            th_decode_packetin(tdcPtr, &opkData, &llVideoGranulePos))
           { // Success?
             case 0:
               // Prevent uploading while we modify the upload data
@@ -349,7 +354,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
                 { // Skip the frame
                   frFrame.bDraw = false;
                   // We lost this frame
-                  ++uiVideoFramesLost;
+                  ++auiVideoFramesLost;
                 } // Decoding succeeded?
                 else
                 { // Set pointers to planes and we will be drawing this frame
@@ -357,11 +362,11 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
                     yccFrame.tipP = tybData[yccFrame.stI];
                   frFrame.bDraw = true;
                   // We processed this frame
-                  ++uiVideoFrames;
+                  ++auiVideoFrames;
                 } // Buffer filled
                 stFNext = (stFNext + 1) % faData.size();
                 ++stFWaiting;
-                --stFFree;
+                --astFFree;
               });
               // We processed a video frame
               bParsed = true;
@@ -374,7 +379,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
               // We processed a video frame
               bParsed = true;
               // Update video time and increment frames counter
-              ++uiVideoFrames;
+              ++auiVideoFrames;
               // Set next frame time and fall through to break
               CIAccumulate();
               // See if we can accumulate more packets
@@ -383,7 +388,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
             case TH_EBADPACKET: break;
             // Unknown error
             default: XC("Unknown video decode packet in result!",
-                        "Identifier", IdentGet(), "Result", iR2);
+                       "Identifier", IdentGet(), "Result", iR2);
           } // Check for more packets
           break;
         // We are out of sync and there is a gap in the data, try again
@@ -392,7 +397,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         case 0: break;
         // Unknown error
         default: XC("Unknown stream packet out result!",
-                    "Identifier", IdentGet(), "Result", iR1);
+                   "Identifier", IdentGet(), "Result", iR1);
       } // Break out of loop
       break;
     } // ...until the timer continues to trigger
@@ -412,7 +417,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       case 0: break;
       // Unknown error
       default: XC("Unknown sync page out result!",
-                  "Identifier", IdentGet(), "Result", iR);
+                 "Identifier", IdentGet(), "Result", iR);
     } // Break loop
     return false;
   }
@@ -423,15 +428,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     { // Rewind video
       DoRewind();
       // We should loop?
-      if(stLoop > 0)
+      if(astLoop > 0)
       { // Reduce loops if not infinity
-        if(stLoop != StdMaxSizeT) --stLoop;
+        if(astLoop != StdMaxSizeT) --astLoop;
         // Send looping event
         LuaEvtDispatch(VE_LOOP);
       } // No more loops? so set finished reason and exit the thread
       else
       { // Set finished
-        ubReason = UB_FINISH;
+        auReason = UB_FINISH;
         // We're not processing more data
         return true;
       }
@@ -465,7 +470,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       if(CIIsNotTriggered(cd1MS)) StdSuspend();
     } // Decode and render new Theora data and if we did? Set new video time
     else if(ParseAndRenderTheoraData())
-      dVideoTime = th_granule_time(tdcPtr, iVideoGranulePos);
+      adVideoTime = th_granule_time(tdcPtr, llVideoGranulePos);
     // No video rendered?
     else
     { // Try to load more raw data and return if at end of file
@@ -511,7 +516,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       { // Got a video packet
         bVideoParsed = true;
         // Update video position and drift
-        dVideoTime = th_granule_time(tdcPtr, iVideoGranulePos);
+        adVideoTime = th_granule_time(tdcPtr, llVideoGranulePos);
         dDrift = GetAudioTime() > 0.0 ? GetVideoTime() - GetAudioTime() : 0.0;
       }
     } // Didn't process anything this time?
@@ -530,9 +535,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Thread main function ----------------------------------------------- */
   ThreadStatus VideoThreadMain(const Thread &tClass) try
   { // Send playing event if we're not temporarily de-initialising
-    if(ubReason != UB_REINIT) LuaEvtDispatch(VE_PLAY);
+    if(auReason != UB_REINIT) LuaEvtDispatch(VE_PLAY);
     // Loop until thread should exit
-    if(FlagIsSet(FL_THEORAVORBIS)) // Ogg has both audio and video streams?
+    if(FlagIsSet(FL_THEORAVORBIS))     // Ogg has both audio and video streams?
       while(tClass.ThreadShouldNotExit() && VideoHandleAudioVideo());
     else if(FlagIsSet(FL_VORBIS))      // Ogg has audio only stream?
       while(tClass.ThreadShouldNotExit() && VideoHandleAudioOnly());
@@ -540,9 +545,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       while(tClass.ThreadShouldNotExit() && VideoHandleVideoOnly());
     // Log the reason why the thread should be terminated
     cLog->LogDebugExSafe("Video '$' main loop exit with reason $!",
-      IdentGet(), ubReason.load());
+      IdentGet(), auReason.load());
     // Why did the video manager terminate?
-    switch(const Unblock ubCode = ubReason.load())
+    switch(const Unblock ubCode = auReason.load())
     { // The thread was in standby? Shouldn't happen! Restart the thread
       case UB_STANDBY: [[fallthrough]];
       // The thread was blocking? Shouldn't happen! Restart the thread
@@ -561,7 +566,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       case UB_PAUSE: LuaEvtDispatch(VE_PAUSE); break;
       // Unknown code
       default: XC("Internal error: Unknown unblock reason code!",
-                  "Code", ubCode);
+                 "Code", ubCode);
     } // Exit thread cleanly with specified reason
     return TS_OK;
   } // exception occured?
@@ -581,9 +586,12 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   void RenderUnsafe()
   { // Get frame
     Frame &frFrame = faData[stFActive];
+    // On a slower system, this call could repeat in the same frame so if FBO
+    // is already finished this frame? Ignore rendering to it.
+    if(FboIsFinished()) frFrame.bDraw = false;
     // Skip ahead frames if we need to catch up with audio
     // If we should draw?
-    if(frFrame.bDraw)
+    else if(frFrame.bDraw)
     { // Upload texture data. This is quite safe because this data isnt
       // written to until the decoding routine thread has finished setting
       // these values.
@@ -605,26 +613,26 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       // Commit the Y setup and configure the U and V setup
       FboFinishAndReset(uiaYCbCr[1], 1, shProgram->GetProgram());
       FboFinishAndReset(uiaYCbCr[2], 2, shProgram->GetProgram());
-      // Blit the YCbCr multi-texture into the fbo
+      // Blit the YCbCr multi-texture into the FBO
       FboBlit(fboYCbCr, uiaYCbCr[2], 2, shProgram);
-      // Commit the V texture and send everything to fbo list for rendering
+      // Commit the V texture and send everything to FBO list for rendering
       FboFinishAndRender();
       // No need to update again until decoder thread rendered another frame
       frFrame.bDraw = false;
     } // One less buffer to wait
     --stFWaiting;
-    ++stFFree;
+    ++astFFree;
     stFActive = (stFActive + 1) % faData.size();
   }
   /* -- Video properties ------------------------------------------- */ public:
-  double GetVideoTime() const { return dVideoTime; }
-  double GetAudioTime() const { return dAudioTime; }
+  double GetVideoTime() const { return adVideoTime; }
+  double GetAudioTime() const { return sdAudioTime; }
   double GetDrift() const { return dDrift; }
   double GetFPS() const { return dFPS; }
   unsigned int GetFrame() const
     { return static_cast<unsigned int>(GetVideoTime() * GetFPS()); }
-  unsigned int GetFrames() const { return uiVideoFrames; }
-  unsigned int GetFramesSkipped() const { return uiVideoFramesLost; }
+  unsigned int GetFrames() const { return auiVideoFrames; }
+  unsigned int GetFramesSkipped() const { return auiVideoFramesLost; }
   th_pixel_fmt GetPixelFormat() const { return tiData.pixel_fmt; }
   th_colorspace GetColourSpace() const { return tiData.colorspace; }
   ogg_uint32_t GetFrameHeight() const { return tiData.frame_height; }
@@ -679,7 +687,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           // Try to rebuffer more data and throw error if error reading
           if(DoIOBuffer())
             XC("Read ogg/theora stream error!",
-               "Identifier", IdentGet(), "Reason", StrFromErrNo());
+              "Identifier", IdentGet(), "Reason", StrFromErrNo());
           // Done
           break;
         } // Indicated a page was synced and returned.
@@ -712,7 +720,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         case -1: break;
         // Done
         default: XC("Unknown OGG pageout result!",
-                    "Identifier", IdentGet(), "Result", iPageOutResult);
+                   "Identifier", IdentGet(), "Result", iPageOutResult);
                  break;
       } // fall through ostsTheora non-bos page parsing
     } // ...until done
@@ -727,7 +735,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         // decode the headers
         if(!th_decode_headerin(&tiData, &tcData, &tsiPtr, &opkData))
           XC("Error parsing Theora stream headers!",
-             "Identifier", IdentGet());
+            "Identifier", IdentGet());
         // Got the page
         ++iGotTheoraPage;
       } // Look for further vorbis headers
@@ -737,7 +745,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         // decode the headers
         if(vorbis_synthesis_headerin(&viData, &vcData, &opkData))
           XC("Error parsing Vorbis stream headers!",
-             "Identifier", IdentGet());
+            "Identifier", IdentGet());
         // Got the page
         ++iGotVorbisPage;
       }
@@ -750,18 +758,18 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       } // Theora needs more data
       else if(DoIOBuffer())
         XC("EOF while searching for codec headers!",
-           "Identifier", IdentGet(), "Position", fmFile.FileMapTell());
+          "Identifier", IdentGet(), "Position", fmFile.FileMapTell());
     } // Set flags of what headers we got
     if(iGotTheoraPage) FlagSet(FL_THEORA);
     if(iGotVorbisPage) FlagSet(FL_VORBIS);
     // And now we should have it all if not, well die
     if(FlagIsClear(FL_THEORAVORBIS))
       XC("Could not find a Theora and/or Vorbis stream!",
-         "Identifier", IdentGet());
+        "Identifier", IdentGet());
     // If there is a video stream?
     if(FlagIsSet(FL_THEORA))
     { // Parse the comments and then free the strings
-      ssThMetaData =
+      sncsmThMetaData =
         StdMove(cCodecOGG->VorbisParseComments(tcData.user_comments,
           tcData.comments));
       th_comment_clear(&tcData);
@@ -769,7 +777,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       tdcPtr = th_decode_alloc(&tiData, tsiPtr);
       if(!tdcPtr)
         XC("Error creating theora decoder context!",
-           "Identifier", IdentGet());
+          "Identifier", IdentGet());
       // Calculate FPS of video
       dFPS = static_cast<double>(tiData.fps_numerator) /
              static_cast<double>(tiData.fps_denominator);
@@ -782,9 +790,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       // Make sure GPU can support texture size
       if(GetFrameWidth() > uiMaxTexSize || GetFrameHeight() > uiMaxTexSize)
         XC("The currently active graphics device does not support a "
-           "texture size that would fit the video dimensions!",
-           "Identifier", IdentGet(),       "Width", GetFrameWidth(),
-           "Height",     GetFrameHeight(), "Limit", uiMaxTexSize);
+          "texture size that would fit the video dimensions!",
+          "Identifier", IdentGet(),       "Width", GetFrameWidth(),
+          "Height",     GetFrameHeight(), "Limit", uiMaxTexSize);
       // Verify colour space
       switch(GetColourSpace())
       { // Valid colour spaces
@@ -793,7 +801,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         case TH_CS_ITU_REC_470BG: break;          // PAL/SECAM content?
         // Invalid colour space
         default: XC("The specified colour space is unsupported!",
-                    "Identifier", IdentGet(), "ColourSpace", GetColourSpace());
+                   "Identifier", IdentGet(), "ColourSpace", GetColourSpace());
       } // Verify chroma subsampling type
       switch(GetPixelFormat())
       { // Valid chroma types
@@ -802,9 +810,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         case TH_PF_444: break;           // YCbCr 4:4:4
         // Invalid chroma type
         default: XC("Only 420, 422 or 444 pixel format is supported!",
-                    "Identifier", IdentGet(), "PixelFormat", GetPixelFormat());
+                   "Identifier", IdentGet(), "PixelFormat", GetPixelFormat());
       } // Update frame immediately
-      CISetLimit(1.0 / GetFPS());
+      CISetLimit(UtilPerSec(GetFPS()));
     } // No Theora stream?
     else
     { // Force dummy 1x1 surfaces
@@ -815,18 +823,18 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     } // If there is an audio stream?
     if(FlagIsSet(FL_VORBIS))
     { // Parse the comments and then free the strings
-      ssVoMetaData =
+      sncsmVoMetaData =
         StdMove(cCodecOGG->VorbisParseComments(vcData.user_comments,
           vcData.comments));
       vorbis_comment_clear(&vcData);
       // Make sure rate is sane
       if(GetSampleRate() < 1 || GetSampleRate() > 192000)
         XC("Video playback rate not valid at this time!",
-           "Identifier", IdentGet(), "Rate", GetSampleRate());
+          "Identifier", IdentGet(), "Rate", GetSampleRate());
       // Make sure channels are correct
       if(GetChannels() < 1 || GetChannels() > 2)
         XC("Video playback channel count of not supported!",
-           "Identifier", IdentGet(), "Channels", GetChannels());
+          "Identifier", IdentGet(), "Channels", GetChannels());
       // Initialise vorbis synthesis
       if(vorbis_synthesis_init(&vdsData, &viData))
         XC("Failed to initialise vorbis synthesis!", "Identifier", IdentGet());
@@ -851,7 +859,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       cLog->LogDebugExSafe("Video pre-allocated $ bytes for audio decoder.",
         MemSize());
       // Reset audio position and drift
-      dAudioTime = dDrift = 0.0;
+      sdAudioTime = dDrift = 0.0;
     } // Log success
     cLog->LogInfoExSafe("Video loaded '$' successfully.", IdentGet());
     // Log debug inforation
@@ -876,8 +884,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       GetOriginX(), GetOriginY(),
       PixelFormatToString(GetPixelFormat()), GetPixelFormat(),
       ColourSpaceToString(GetColourSpace()), GetColourSpace(), GetFPS(),
-      viData.version,
-      GetChannels(),
+      viData.version, GetChannels(),
       GetSampleRate(), StrToGrouped(GetSampleRate()),
       tiData.target_bitrate, StrToBits(tiData.target_bitrate),
       viData.bitrate_upper, StrToBits(viData.bitrate_upper),
@@ -885,13 +892,13 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       viData.bitrate_lower, StrToBits(viData.bitrate_lower),
       viData.bitrate_window, StrToBits(viData.bitrate_window));
     // Parse vorbis comments and if not empty? Enumerate and log each one
-    if(cLog->HasLevel(LH_DEBUG))
+    if(cLog->LogHasLevel(LH_DEBUG))
     { // Prepare data for lists
       typedef pair<const string_view&, StrNCStrMap&> ListPair;
       typedef array<const ListPair, 2> Lists;
       static const string_view svTheora{ "Theora" }, svVorbis{ "Vorbis" };
-      const Lists lLists{ { { svTheora, ssThMetaData },
-                            { svVorbis, ssVoMetaData } } };
+      const Lists lLists{ { { svTheora, sncsmThMetaData },
+                            { svVorbis, sncsmVoMetaData } } };
       // Write Theora comments iv available
       for(const ListPair lpPair : lLists)
       { // Ignore if empty else log metadata for specified list
@@ -916,13 +923,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Set volume
     sSource->SetGain(fAudioVolume * cSources->fVVolume * cSources->fGVolume);
   }
-  /* -- Set volume --------------------------------------------------------- */
+  /* -- Set and update volume ---------------------------------------------- */
   void SetVolume(const ALfloat fVolume)
-  { // Set volume
-    fAudioVolume = fVolume;
-    // Update volume
-    CommitVolume();
-  }
+    { fAudioVolume = fVolume; CommitVolume(); }
   /* -- Blit specific triangle --------------------------------------------- */
   void BlitTri(const size_t stTId) { FboActive()->FboBlitTri(*this, stTId); }
   /* -- Blit quad ---------------------------------------------------------- */
@@ -973,7 +976,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(FlagIsClear(FL_PLAY)) return false;
     FlagClear(FL_PLAY);
     // Set exit reason
-    ubReason = ubNewReason;
+    auReason = ubNewReason;
     // DeInit the thread, unblock the worker thread and stop and unload buffers
     tThread.ThreadStop();
     // Success
@@ -987,7 +990,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Pause playback and synchronise
     Pause(ubNewReason);
     // Set the reason for stopping
-    ubReason = ubNewReason;
+    auReason = ubNewReason;
     // De-initialise the OpenGL segment
     if(FlagIsSet(FL_GLINIT)) { DeInitTexture(); FboDeInit(); }
     // De-initialise the OpenAL segment
@@ -995,7 +998,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Audio buffers are empty
     dAudioBuffer = 0.0;
     // Reset buffer status
-    stFActive = stFNext = stFWaiting = stFFree = stLoop = 0;
+    stFActive = stFNext = stFWaiting = astFFree = astLoop = 0;
     // Rewind data stream
     DoRewindAndReset();
     // Log that the video was stopped
@@ -1021,18 +1024,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(FlagIsClear(FL_GLINIT))
     { // OpenGL output initialised
       FlagSet(FL_GLINIT);
-      // Init fbo
+      // Init FBO with room for 2 triangles and 3 commands
       FboInit(IdentGet(), static_cast<GLsizei>(GetWidth()),
-                          static_cast<GLsizei>(GetHeight()));
+                          static_cast<GLsizei>(GetHeight()), 2, 3);
       FboSetMatrix(0.0f, 0.0f, 0.0f, 0.0f);
       FboSetTransparency(true);
       FboItemSetTexCoord(0.0f, 0.0f, 1.0f, 1.0f);
-      // Clear the fbo, initially transparent and blue
-      FboSetClearColour(0.0f, 0.0f, 1.0f, 0.0f);
+      // Clear the FBO, initially transparent and blue
+      ColourSet(0.0f, 0.0f, 1.0f, 0.0f);
       FboSetClear(false);
-      // Only 2 triangles and 3 commands are needed so reserve the memory
-      if(!FboReserve(2, 3))
-        cLog->LogWarningSafe("Video failed to reserve memory for fbo lists.");
       // We must discard the extra garbage from the ogg video. We can do that
       // with the GPU very easily by altering texture coords!
       fboYCbCr.FboItemSetTexCoord(
@@ -1074,7 +1074,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Check that OpenGL and OpenAL is initialised
     Awaken();
     // Set reason for playing
-    ubReason = ubNewReason;
+    auReason = ubNewReason;
     // Next frame can show immediately
     CISync();
     // Set playing flag
@@ -1090,7 +1090,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Rewind video ------------------------------------------------------- */
   void Rewind()
   { // Ignore if already rewound
-    if(iVideoGranulePos <= 0) return;
+    if(llVideoGranulePos <= 0) return;
     // Rewind video to start
     DoRewindAndReset();
     // Log that the video was rewound
@@ -1138,15 +1138,12 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Commit filter ------------------------------------------------------ */
   void CommitFilter()
     { FboSetFilterCommit(FlagIsSet(FL_FILTER) ? OF_L_L : OF_N_N); }
-  /* -- Set filtering on video textures ------------------------------------ */
+  /* -- Set and commit filtering on video textures ------------------------- */
   void SetFilter(const bool bState)
-  { // Update and commit filter
-    FlagSetOrClear(FL_FILTER, bState);
-    CommitFilter();
-  }
+    { FlagSetOrClear(FL_FILTER, bState); CommitFilter(); }
   /* -- Looping functions -------------------------------------------------- */
-  size_t GetLoop() const { return stLoop; }
-  void SetLoop(const size_t stCount) { stLoop = stCount; }
+  size_t GetLoop() const { return astLoop; }
+  void SetLoop(const size_t stCount) { astLoop = stCount; }
   /* -- Colour key functions ----------------------------------------------- */
   void UpdateShader()
   { // Set program depending on the specified parameters
@@ -1198,26 +1195,79 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     ConfigTexture(0, siWidth, siHeight);
     // Configure the Cb/Cr components
     for(GLuint uiIndex = 1; uiIndex <= 2; ++uiIndex)
-      ConfigTexture(uiIndex, siWidth/siWDIV, siHeight/siHDIV);
+      ConfigTexture(uiIndex, siWidth / siWDIV, siHeight / siHDIV);
     // Commit the current filter setting
     SetFilter(FlagIsSet(FL_FILTER));
     // Update choice of shader to use
     UpdateShader();
   }
+  /* -- Default Constructor ------------------------------------------------ */
+  Video() :
+    /* -- Initialisers ----------------------------------------------------- */
+    ICHelperVideo{ cVideos, this },    // Initialise collector class
+    Fbo{ GL_RGBA8, false },            // Create unregistered opaque surface
+    AsyncLoaderVideo{ this,            // Initialise async loader
+      EMC_MP_VIDEO },                  // ...video event code
+    LuaEvtSlave{ this,                 // Initialise event handler
+      EMC_VID_EVENT },                 // ...event handler code
+    VideoFlags{ FL_FDR|FL_REC709 },    // Use full-dynamic range and Rec.709
+    tThread{ "video", STP_HIGH,        // Initialise thread with high priority
+      bind(&Video::VideoThreadMain,    // ...preset callback
+        this, _1) },                   // ...class as parameter
+    auReason(UB_STANDBY),              // Initially set to blocked
+    astLoop(0),                        // Initialise no loops remaining
+    dDrift(0.0),                       // Initialise drift time
+    dMaxDrift(cVideos->dMaxDrift),     // Initialise maximum drift time
+    dMaxDriftNeg(-dMaxDrift),          // Initialise negated max drift time
+    osysData{ /* Zeroed */ },          // Clear ogg sync state
+    opgData{ /* Zeroed */ },           // Clear ogg page data
+    opkData{ /* Zeroed */ },           // Clear ogg packet data
+    stIOBuf(cVideos->stIOBufferSize),  // Initialise buffer length
+    lIOBuf(static_cast<long>(stIOBuf)),// Initialise buffer length as long
+    ostsTheora{ /* Zeroed */ },        // Clear ogg stream state
+    tiData{ /* Zeroed */ },            // Clear Theora info struct
+    tcData{ /* Zeroed */ },            // Clear Theora comment struct
+    tsiPtr(nullptr),                   // Initialise Theora setup information
+    tdcPtr(nullptr),                   // Initialise Theora decoder context
+    tybData{ /* Zeroed */ },           // Clear Theora pixel colour buffers
+    llVideoGranulePos(0),              // Initialise granule position
+    adVideoTime(0.0),                   // Initialise position
+    dFPS(0.0),                         // Initialise fps
+    auiVideoFrames(0),                  // Initialise frames processed
+    auiVideoFramesLost(0),              // Initialise frames lost
+    stFActive(0),                      // initialise active frame id
+    stFNext(0),                        // Initialise next frame id
+    stFWaiting(0),                     // Initialise frames waiting
+    astFFree{ faData.size() },         // Initialise free frames
+    dAudBufMax(                        // Initialise maximum audio buffer size
+      cVideos->dAudioBufferSize),      // ...with value set by user
+    ostsVorbis{ /* Zeroed */ },        // Clear Vorbis stream status data
+    viData{ /* Zeroed */ },            // Clear Vorbis decoder data
+    vcData{ /* Zeroed */ },            // Clear Vorbis comment data
+    vdsData{ /* Zeroed */ },           // Clear Vorbis DSP state data
+    vbData{ /* Zeroed */ },            // Clear Vorbis decoder block data
+    sdAudioTime(0.0),                  // Initialise audio position
+    dAudioBuffer(0.0),                 // Initialise audio buffer length
+    fAudioVolume(1.0f),                // Initialise audio volume
+    shProgram(nullptr),                // Initialise pointer to Shader used
+    sSource(nullptr),                  // Initialise pointer to Source used
+    eFormat(AL_NONE)                   // Initialise audio format type
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Video()
-  { // Stop any pending async operations
+  DTORHELPER(~Video,
+    // Stop any pending async operations
     AsyncCancel();
     // Remove the registration now so it is no longer polled
     ICHelperVideo::CollectorUnregister();
+    // Set exit reason
+    auReason = UB_FINISH;
+    // DeInit the thread, unblock the worker thread and stop and unload buffers
+    tThread.ThreadStopNoThrow();
     // Ignore if file data not initialised
     if(fmFile.FileMapClosed()) return;
     // Prevent more events being generated
     LuaEvtDeInit();
-    // Set exit reason
-    ubReason = UB_FINISH;
-    // DeInit the thread, unblock the worker thread and stop and unload buffers
-    tThread.ThreadStopNoThrow();
     // Stop and unload audio buffers
     StopAudioAndUnloadBuffers();
     // Deinit texture and reset parameters
@@ -1237,60 +1287,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     th_info_clear(&tiData);
     // Log that the video was unloaded
     cLog->LogDebugExSafe("Video unloaded '$'!", IdentGet());
-  }
-  /* -- Default Constructor ------------------------------------------------ */
-  Video() :
-    /* -- Initialisers ----------------------------------------------------- */
-    ICHelperVideo{ cVideos, this },    // Initialise collector class
-    Fbo{ GL_RGBA8, false },            // Create unregistered opaque surface
-    AsyncLoaderVideo{ *this, this,     // Initialise async loader
-      EMC_MP_VIDEO },                  // ...video event code
-    LuaEvtSlave{ this,                 // Initialise event handler
-      EMC_VID_EVENT },                 // ...event handler code
-    VideoFlags{ FL_FDR|FL_REC709 },    // Use full-dynamic range and Rec.709
-    tThread{ "video", STP_HIGH,        // Initialise thread with high priority
-      bind(&Video::VideoThreadMain,    // ...preset callback
-        this, _1) },                   // ...class as parameter
-    ubReason(UB_STANDBY),              // Initially set to blocked
-    stLoop(0),                         // Initialise no loops remaining
-    dDrift(0.0),                       // Initialise drift time
-    dMaxDrift(cVideos->dMaxDrift),     // Initialise maximum drift time
-    dMaxDriftNeg(-dMaxDrift),          // Initialise negated max drift time
-    osysData{ /* Zeroed */ },          // Clear ogg sync state
-    opgData{ /* Zeroed */ },           // Clear ogg page data
-    opkData{ /* Zeroed */ },           // Clear ogg packet data
-    stIOBuf(cVideos->stIOBufferSize),  // Initialise buffer length
-    lIOBuf(static_cast<long>(stIOBuf)),// Initialise buffer length as long
-    ostsTheora{ /* Zeroed */ },        // Clear ogg stream state
-    tiData{ /* Zeroed */ },            // Clear Theora info struct
-    tcData{ /* Zeroed */ },            // Clear Theora comment struct
-    tsiPtr(nullptr),                   // Initialise Theora setup information
-    tdcPtr(nullptr),                   // Initialise Theora decoder context
-    tybData{ /* Zeroed */ },           // Clear Theora pixel colour buffers
-    iVideoGranulePos(0),               // Initialise granule position
-    dVideoTime(0.0),                   // Initialise position
-    dFPS(0.0),                         // Initialise fps
-    uiVideoFrames(0),                  // Initialise frames processed
-    uiVideoFramesLost(0),              // Initialise frames lost
-    stFActive(0),                      // initialise active frame id
-    stFNext(0),                        // Initialise next frame id
-    stFWaiting(0),                     // Initialise frames waiting
-    stFFree{ faData.size() },          // Initialise free frames
-    dAudBufMax(                        // Initialise maximum audio buffer size
-      cVideos->dAudioBufferSize),      // ...with value set by user
-    ostsVorbis{ /* Zeroed */ },        // Clear Vorbis stream status data
-    viData{ /* Zeroed */ },            // Clear Vorbis decoder data
-    vcData{ /* Zeroed */ },            // Clear Vorbis comment data
-    vdsData{ /* Zeroed */ },           // Clear Vorbis DSP state data
-    vbData{ /* Zeroed */ },            // Clear Vorbis decoder block data
-    dAudioTime(0.0),                   // Initialise audio position
-    dAudioBuffer(0.0),                 // Initialise audio buffer length
-    fAudioVolume(1.0f),                // Initialise audio volume
-    shProgram(nullptr),                // Initialise pointer to Shader used
-    sSource(nullptr),                  // Initialise pointer to Source used
-    eFormat(AL_NONE)                   // Initialise audio format type
-    /* -- No code ---------------------------------------------------------- */
-    {}
+  )
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Videos, Video, VIDEO, VIDEO, // Finish collector class
   /* -- Initialisers ------------------------------------------------------- */
@@ -1385,8 +1382,7 @@ static CVarReturn VideoSetMaximumDrift(const double dMax)
   { return CVarSimpleSetIntNLG(cVideos->dMaxDrift, dMax, 0.01, 1.0); }
 /* == Set audio buffer length maximum ====================================== */
 static CVarReturn VideoSetAudioBufferSize(const double dMax)
-  { return CVarSimpleSetIntNLG(cVideos->dAudioBufferSize,
-      dMax, 0.01, 1.0); }
+  { return CVarSimpleSetIntNLG(cVideos->dAudioBufferSize, dMax, 0.01, 1.0); }
 /* == Set all streams base volume ========================================== */
 static CVarReturn VideoSetVolume(const ALfloat fVolume)
 { // Ignore if invalid value

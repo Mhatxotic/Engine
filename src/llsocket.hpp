@@ -332,7 +332,7 @@ LLRSEND                                // Socket:* member functions end
 // < Count:integer=Total number of sockets connected
 // ? Returns the total number of socket classes currently connected.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Connected, 1, LuaUtilPushVar(lS, cSockets->stConnected.load()))
+LLFUNC(Connected, 1, LuaUtilPushVar(lS, cSockets->astConnected.load()))
 /* ========================================================================= */
 // $ Socket.Count
 // < Count:integer=Total number of sockets created.
@@ -399,25 +399,25 @@ LLFUNC(Flush, 1, LuaUtilPushVar(lS, SocketReset()))
 // < Total:integer=The number of bytes read from this socket.
 // ? Returns the total number of bytes read from this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TotalRXBytes, 1, LuaUtilPushVar(lS, cSockets->qRX.load()))
+LLFUNC(TotalRXBytes, 1, LuaUtilPushVar(lS, cSockets->aullRX.load()))
 /* ========================================================================= */
 // $ Socket.TotalTXBytes
 // < Total:integer=The number of bytes written to this socket.
 // ? Returns the total number of bytes written to this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TotalTXBytes, 1, LuaUtilPushVar(lS, cSockets->qTX.load()))
+LLFUNC(TotalTXBytes, 1, LuaUtilPushVar(lS, cSockets->aullTX.load()))
 /* ========================================================================= */
 // $ Socket.TotalRXPackets
 // < Total:integer=The total number of packets read from this socket.
 // ? Returns the total number of packets read from this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TotalRXPackets, 1, LuaUtilPushVar(lS, cSockets->qRXp.load()))
+LLFUNC(TotalRXPackets, 1, LuaUtilPushVar(lS, cSockets->aullRXp.load()))
 /* ========================================================================= */
 // $ Socket.TotalTXPackets
 // < Total:integer=The total number of packets written to all sockets.
 // ? Returns the total number of packets written to all sockets.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TotalTXPackets, 1, LuaUtilPushVar(lS, cSockets->qTXp.load()))
+LLFUNC(TotalTXPackets, 1, LuaUtilPushVar(lS, cSockets->aullTXp.load()))
 /* ========================================================================= */
 // $ Socket.SocketWaitAsync
 // < Count:integer=Total number of sockets disconnected.

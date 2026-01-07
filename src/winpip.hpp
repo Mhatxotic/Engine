@@ -68,9 +68,9 @@ class SysPipe :                        // Members initially private
       case VR_OK: break;
       // Anything else and we need to throw an exception
       default: XC("Executable name is invalid!",
-                  "Program", strApp, "Code", vrResult,
-                  "Reason",  cDirBase->DirBaseVNRtoStr(vrResult),
-                  "CmdLine", strCmdLine);
+                 "Program", strApp, "Code", vrResult,
+                 "Reason",  cDirBase->DirBaseVNRtoStr(vrResult),
+                 "CmdLine", strCmdLine);
     } // De-init existing process
     Finish();
     // Show command and arguments
@@ -260,6 +260,6 @@ class SysPipe :                        // Members initially private
     /* --------------------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~SysPipe() { DeInit(); }
+  DTORHELPER(~SysPipe, DeInit())
 };/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

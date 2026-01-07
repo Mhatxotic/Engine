@@ -32,8 +32,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public LuaEvtSlave<Clip, 2>,         // Need to store callback and class
   public RefCtrMaster<>,               // Ref counter to protect from destructs
-  public Lockable,                     // Lua garbage collector instruction
-  public Ident                         // Name of this clipboard event
+  public Lockable                      // Lua garbage collector instruction
 { /* -- Private variables -------------------------------------------------- */
   string           strClipboard;       // Clipboard string
   /* -- Window set clipboard request --------------------------------------- */
@@ -73,17 +72,17 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     // Must have 2 parameters
     if(!LuaEvtsCheckParams<2>(emaArgs))
       XC("Clipboard did not receive two parameters!",
-         "Identifier", IdentGet(), "Count", emaArgs.size());
+        "Identifier", IdentGet(), "Count", emaArgs.size());
     // If lua is not paused?
     if(!uiLuaPaused)
     { // Get and push function
       if(!LuaRefGetFunc(1))
         XC("Clipboard first argument not a function!",
-           "Identifier", IdentGet());
+          "Identifier", IdentGet());
       // Get and push class
       if(!LuaRefGetUData())
         XC("Clipboard second argument not a class!",
-           "Identifier", IdentGet());
+          "Identifier", IdentGet());
       // Call callback with class
       LuaUtilCallFuncRefCtrEx(lsState, this, 1);
     } // Done with references. We won't be using them anymore.
@@ -115,7 +114,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperClip{ cClips },            // Initially unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    LuaEvtSlave{ this, EMC_CB_EVENT }  // Register Clip async event
+    LuaEvtSlave{ this, EMC_CLP_EVENT } // Register Clip async event
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -126,7 +125,7 @@ CTOR_END(Clips, Clip, CLIP,,,,         // Finish 'Clips' class body
     { EWC_CB_GET,   &Clip::ClipOnGetCb   },
     { EWC_CB_SETNR, &Clip::ClipOnSetNRCb },
   } },
-  LuaEvtMaster{ EMC_CB_EVENT }         // Setup Lua event master
+  LuaEvtMaster{ EMC_CLP_EVENT }        // Setup Lua event master
 );/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

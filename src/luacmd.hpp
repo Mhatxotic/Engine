@@ -53,12 +53,12 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
   { // Check that the console command is valid
     if(!cConsole->IsValidConsoleCommandName(strName))
       XC("Console command name is invalid!",
-         "Command", strName, "Minimum", cConsole->stConCmdMinLength,
-         "Maximum", cConsole->stConCmdMaxLength);
+        "Command", strName, "Minimum", cConsole->stConCmdMinLength,
+        "Maximum", cConsole->stConCmdMaxLength);
     // Check min/Max params and that they're valid
     if(uiMinimum && uiMaximum && uiMaximum < uiMinimum)
       XC("Minimum greater than maximum!",
-         "Identifier", strName, "Minimum",  uiMinimum, "Maximum", uiMaximum);
+        "Identifier", strName, "Minimum",  uiMinimum, "Maximum", uiMaximum);
     // Find command and throw exception if already exists
     if(GetLuaCmdsList().contains(strName))
       XC("Virtual command already exists!", "Command", strName);
@@ -76,16 +76,6 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
           cConsole->RegisterCommand(strName,
             uiMinimum, uiMaximum, LuaCallbackStatic)) });
   }
-  /* -- Destructor that unregisters the cvar ------------------------------- */
-  ~Command()
-  { // Return if iterator is not registered
-    if(lcmiIt == GetLuaCmdsListEnd()) return;
-    // Unregister the command if set
-    if(lcmiIt->second.second != cConsole->GetCmdsListEnd())
-      cConsole->UnregisterCommand(lcmiIt->second.second);
-    // Erase the item from the list
-    GetLuaCmdsList().erase(lcmiIt);
-  }
   /* -- Basic constructor with no init ----------------------------- */ public:
   Command() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -95,6 +85,16 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     lcmiIt{ GetLuaCmdsListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
     {}
+  /* -- Destructor that unregisters the cvar ------------------------------- */
+  DTORHELPER(~Command,
+    // Return if iterator is not registered
+    if(lcmiIt == GetLuaCmdsListEnd()) return;
+    // Unregister the command if set
+    if(lcmiIt->second.second != cConsole->GetCmdsListEnd())
+      cConsole->UnregisterCommand(lcmiIt->second.second);
+    // Erase the item from the list
+    GetLuaCmdsList().erase(lcmiIt);
+  )
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Commands, Command, COMMAND) // Finish global Files collector
 /* -- Build a command list (for conlib) ------------------------------------ */

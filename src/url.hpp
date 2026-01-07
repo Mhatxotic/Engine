@@ -40,13 +40,15 @@ enum Result : unsigned int             // Result codes
   R_INVPORT,                           // [13] Invalid port number (1-65535)
   R_UNKSCHEME,                         // [14] Unknown scheme without port
   R_EMPARAMS,                          // [15] Bad parameters
-  R_MAX                                // [16] Maximum number of codes
+  R_STANDBY,                           // [16] Class not initialised
+  R_MAX                                // [17] Maximum number of codes
 };/* ----------------------------------------------------------------------- */
 /* == Class to break apart urls ============================================ */
 struct UrlBase : public ParamParser    // Members initially public
 { /* ----------------------------------------------------------------------- */
   enum Port : unsigned int             // Frequently used ports
   { /* --------------------------------------------------------------------- */
+    P_NONE                    =     0, // Not initialised
     P_MIN                     =     1, // Minimum port number
     P_HTTP                    =    80, // Insecure http port number
     P_HTTPS                   =   443, // Secure http port number
@@ -64,33 +66,33 @@ struct UrlBase : public ParamParser    // Members initially public
   Port             pPort;              // Port number (1-65535)
   bool             bSecure;            // Connection would require SSL?
   /* -- Code setter and returner ------------------------------------------- */
-  void SetCode(const Result rNResult) { rResult = rNResult; }
+  void UrlSetCode(const Result rNResult) { rResult = rNResult; }
   /* -- Return data ------------------------------------------------ */ public:
-  Result GetResult() const { return rResult; }
-  const string &GetUrl() const { return strCanonicalised; }
-  const string &GetScheme() const { return strScheme; }
-  const string &GetUsername() const { return strUsername; }
-  const string &GetPassword() const { return strPassword; }
-  const string &GetHost() const { return strHost; }
-  const string &GetResource() const { return strResource; }
-  const string &GetBookmark() const { return strBookmark; }
-  Port GetPort() const { return pPort; }
-  bool GetSecure() const { return bSecure; }
+  Result UrlGetResult() const { return rResult; }
+  const string &UrlGetUrl() const { return strCanonicalised; }
+  const string &UrlGetScheme() const { return strScheme; }
+  const string &UrlGetUsername() const { return strUsername; }
+  const string &UrlGetPassword() const { return strPassword; }
+  const string &UrlGetHost() const { return strHost; }
+  const string &UrlGetResource() const { return strResource; }
+  const string &UrlGetBookmark() const { return strBookmark; }
+  Port UrlGetPort() const { return pPort; }
+  bool UrlGetSecure() const { return bSecure; }
   /* -- Parse -------------------------------------------------------------- */
-  void Parse(const string &strUrl, const unsigned int uiMode=0)
+  void UrlParse(const string &strUrl, const unsigned int uiMode=0)
   { // Error if string is empty
-    if(strUrl.empty()) { SetCode(R_EMURL); return; }
+    if(strUrl.empty()) { UrlSetCode(R_EMURL); return; }
     // Error if URL is too long
-    if(strUrl.size() > 2048) { SetCode(R_TOOLONG); return; }
+    if(strUrl.size() > 2048) { UrlSetCode(R_TOOLONG); return; }
     // Error if no scheme
     size_t stStart = 0, stEnd = strUrl.find(':');
-    if(stEnd == StdNPos) { SetCode(R_NOSCHEME); return; }
+    if(stEnd == StdNPos) { UrlSetCode(R_NOSCHEME); return; }
     // Set scheme and error if empty
     strScheme = strUrl.substr(stStart, stEnd);
-    if(strScheme.empty()) { SetCode(R_EMSCHEME); return; }
+    if(strScheme.empty()) { UrlSetCode(R_EMSCHEME); return; }
     // Error if scheme is invalid
     stStart = stEnd + 1;
-    if(strUrl.substr(stStart, 2) != "//") { SetCode(R_INVSCHEME); return; }
+    if(strUrl.substr(stStart, 2) != "//") { UrlSetCode(R_INVSCHEME); return; }
     // Move past scheme and find the resource part
     stStart += 2;
     stEnd = strUrl.find('/', stStart);
@@ -114,11 +116,11 @@ struct UrlBase : public ParamParser    // Members initially public
         strUsername = strUserInfo.substr(0, stColonPos);
         strPassword = strUserInfo.substr(stColonPos + 1);
         // Error if password not specified
-        if(strPassword.empty()) { SetCode(R_EMPASS); return; }
+        if(strPassword.empty()) { UrlSetCode(R_EMPASS); return; }
       } // Username and password delimiter not specified so just username
       else strUsername = strUserInfo;
       // Error if username not specified
-      if(strUsername.empty()) { SetCode(R_EMUSER); return; }
+      if(strUsername.empty()) { UrlSetCode(R_EMUSER); return; }
       // We have the authority
       strAHP = strAHP.substr(stAtPos + 1);
     } // String for port number
@@ -132,10 +134,10 @@ struct UrlBase : public ParamParser    // Members initially public
       strHost = strAHP.substr(0, stColonPos);
       // Extract the port number and error if empty
       strPort = strAHP.substr(stColonPos + 1);
-      if(strPort.empty()) { SetCode(R_EMPORT); return; }
+      if(strPort.empty()) { UrlSetCode(R_EMPORT); return; }
       // Convert to number and error if out of range
       pPort = StrToNum<Port>(strPort);
-      if(pPort < P_MIN || pPort >= P_MAX) { SetCode(R_INVPORT); return; }
+      if(pPort < P_MIN || pPort >= P_MAX) { UrlSetCode(R_INVPORT); return; }
       // Check if non-standard port
       bNSPort = (pPort != P_HTTP && strScheme == cCommon->CommonHttp()) ||
                 (pPort != P_HTTPS && strScheme == cCommon->CommonHttps());
@@ -148,13 +150,13 @@ struct UrlBase : public ParamParser    // Members initially public
         { pPort = P_HTTP; bSecure = false; }
       else if(strScheme == cCommon->CommonHttps())
         { pPort = P_HTTPS; bSecure = true; }
-      else { SetCode(R_UNKSCHEME); return; }
+      else { UrlSetCode(R_UNKSCHEME); return; }
       // Is a standard port
       bNSPort = false;
       // Turn port into a string
       strPort = StrFromNum(pPort);
     } // Error if the host is not empty
-    if(strHost.empty()) { SetCode(R_EMHOST); return; }
+    if(strHost.empty()) { UrlSetCode(R_EMHOST); return; }
     // Find the bookmark delimiter and if we have it?
     size_t stHashPos = strResource.find('#');
     if(stHashPos != StdNPos)
@@ -211,24 +213,24 @@ struct UrlBase : public ParamParser    // Members initially public
           default: break;
         }
       } // Nothing found so clear the question mark
-      else { SetCode(R_EMPARAMS); return; }
+      else { UrlSetCode(R_EMPARAMS); return; }
     } // Rebuild final url
-    strCanonicalised = StrAppend(GetScheme(), "://",
-      GetUsername().empty() ? cCommon->CommonBlank() :
-        (GetPassword().empty() ?
-           StrAppend(GetUsername(), '@') :
-           StrAppend(GetUsername(), ':', GetPassword(), '@')),
-      GetHost(),
+    strCanonicalised = StrAppend(UrlGetScheme(), "://",
+      UrlGetUsername().empty() ? cCommon->CommonBlank() :
+        (UrlGetPassword().empty() ?
+           StrAppend(UrlGetUsername(), '@') :
+           StrAppend(UrlGetUsername(), ':', UrlGetPassword(), '@')),
+      UrlGetHost(),
       bNSPort ? StrAppend(':', strPort) : cCommon->CommonBlank(),
-      GetResource());
+      UrlGetResource());
     // Perfect
-    SetCode(R_GOOD);
+    UrlSetCode(R_GOOD);
   }
   /* -- Constructor -------------------------------------------------------- */
   explicit UrlBase(const string &strUrl, const unsigned int uiMode=0)
-    { Parse(strUrl, uiMode); }
+    { UrlParse(strUrl, uiMode); }
   /* -- Default constructor that does nothing ------------------------------ */
-  UrlBase() {}
+  UrlBase() : rResult(R_STANDBY), pPort(P_NONE), bSecure(false) { }
 };/* == Url collector and member class ===================================== */
 CTOR_BEGIN_DUO(Urls, Url, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */

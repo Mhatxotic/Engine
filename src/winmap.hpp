@@ -10,12 +10,12 @@
 /* == Windows file mapping class =========================================== */
 class SysMap :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  public Ident                         // File name to the map
+  public virtual Ident                 // File name to the map
 { /* -- Private typedefs --------------------------------------------------- */
   typedef array<StdTimeT,2> TwoTime;   // For holding two unix timestamps
   /* -- Private variables (don't change order!) ---------------------------- */
   HANDLE           hFile;              // Handle to the file
-  uint64_t         qSize;              // Size of file
+  uint64_t         ullSize;            // Size of file
   HANDLE           hMap;               // Handle to the file map
   char            *cpMem;              // Handle to memory
   TwoTime          atTime;             // File times (0=creation,1=time)
@@ -48,7 +48,7 @@ class SysMap :                         // Members initially private
   /* -- Get file handle ---------------------------------------------------- */
   HANDLE SysMapSetupFile()
   { // Open file and return if opened
-    HANDLE hF = CreateFile(UTFtoS16(IdentGetCStr()).data(), GENERIC_READ,
+    HANDLE hF = CreateFile(UTFtoS16(IdentGetData()).data(), GENERIC_READ,
       FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
     if(hF != INVALID_HANDLE_VALUE) return hF;
     // Failed
@@ -82,7 +82,7 @@ class SysMap :                         // Members initially private
   /* -- Get pointer to memory ---------------------------------------------- */
   char *SysMapSetupMemory()
   { // Return a blank string if file is empty
-    if(!qSize) return const_cast<char*>(cCommon->CommonCBlank());
+    if(!ullSize) return const_cast<char*>(cCommon->CommonCBlank());
     // Get pointer to mapped memory and return it if successful
     if(char*const cpM =
       reinterpret_cast<char*>(MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)))
@@ -106,17 +106,16 @@ class SysMap :                         // Members initially private
   bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
   bool SysMapIsAvailable() const { return !!SysMapGetMemory(); }
   bool SysMapIsNotAvailable() const { return !SysMapIsAvailable(); }
-  uint64_t SysMapGetSize() const { return qSize; }
+  uint64_t SysMapGetSize() const { return ullSize; }
   StdTimeT SysMapGetCreation() const { return atTime.front(); }
   StdTimeT SysMapGetModified() const { return atTime.back(); }
   /* -- Init object from class --------------------------------------------- */
   void SysMapSwap(SysMap &smOther)
   { // Swap members
-    IdentSwap(smOther);
     swap(hFile, smOther.hFile);
     swap(hMap, smOther.hMap);
     swap(cpMem, smOther.cpMem);
-    swap(qSize, smOther.qSize);
+    swap(ullSize, smOther.ullSize);
     atTime.swap(smOther.atTime);
   }
   /* -- Assign constructor ------------------------------------------------- */
@@ -133,7 +132,7 @@ class SysMap :                         // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strIn },                    // Initialise file name
     hFile(INVALID_HANDLE_VALUE),       // No file handle
-    qSize(0),                          // No file size
+    ullSize(0),                        // No file size
     hMap(nullptr),                     // No map handle
     cpMem(nullptr),                    // No memory pointer
     atTime{ tC, tM }                   // Set file times
@@ -143,7 +142,7 @@ class SysMap :                         // Members initially private
   SysMap() :
     /* -- Initialisers ----------------------------------------------------- */
     hFile(INVALID_HANDLE_VALUE),       // No file handle
-    qSize(0),                          // No size
+    ullSize(0),                        // No size
     hMap(nullptr),                     // No map handle
     cpMem(nullptr),                    // No pointer to memory
     atTime{ 0, 0 }                     // No file times
@@ -154,7 +153,7 @@ class SysMap :                         // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ StdMove(smOther) },         // Move other identifier
     hFile(smOther.hFile),              // Move other file handle
-    qSize(smOther.qSize),              // Move other size
+    ullSize(smOther.ullSize),          // Move other size
     hMap(smOther.hMap),                // Move other file map
     cpMem(smOther.cpMem),              // Move other memory pointer
     atTime{ StdMove(smOther.atTime) }  // Move other file times
@@ -165,13 +164,13 @@ class SysMap :                         // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strIn },                    // Set file name
     hFile(SysMapSetupFile()),          // Get file handle from file on disk
-    qSize(SysMapSetupSize()),          // Get file size on disk
+    ullSize(SysMapSetupSize()),        // Get file size on disk
     hMap(SysMapSetupMap()),            // Get map handle
     cpMem(SysMapSetupMemory()),        // Get pointer to file in memory
     atTime{ SysMapSetupTimes() }       // Get times of file
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~SysMap() { SysMapDeInitInternal(); }
+  DTORHELPER(~SysMap, SysMapDeInitInternal())
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

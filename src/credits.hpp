@@ -106,8 +106,8 @@ class Credits                          // Members initially private
   catch(const exception &eReason)
   { // Log failure and try to reset the initial var so this does not
     XC("Failed to decode license text!",
-       "Name",   libItem.GetName(), "Reason", eReason,
-       "Length", libItem.MemSize());
+      "Name",   libItem.GetName(), "Reason", eReason,
+      "Length", libItem.MemSize());
   }
   /* -- Decompress a credit ------------------------------------------------ */
   const string CreditGetItemText(const CreditEnums ceIndex) const
@@ -142,7 +142,7 @@ class Credits                          // Members initially private
         true, ENGINE),
       LD(FT, "FreeType", STR(FREETYPE_MAJOR) "." STR(FREETYPE_MINOR) "."
         STR(FREETYPE_PATCH), "The FreeType Project", true, FREETYPE),
-      LD(GLFW, "GLFW", cGlFW->GetInternalVersion(),
+      LD(GLFW, "GLFW", cGlFW->GlFWGetInternalVersion(),
         "Marcus Geelnard & Camilla Löwy", true, GLFW),
       LD(JPEG, "JPEGTurbo", STR(LIBJPEG_TURBO_VERSION),
         "IJG/Contributing authors", true, LIBJPEGTURBO),

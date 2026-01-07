@@ -20,9 +20,7 @@ namespace P {                          // Start of public module namespace
 /* -- LuaFunc ollector class for collector data and custom variables ------- */
 CTOR_BEGIN(LuaFuncs, LuaFunc, CLHelperSafe,,,public LuaRef<1>)
 /* -- LuaFunc base class --------------------------------------------------- */
-class LuaFuncBase :                    // Just for de-duplicating initialisers
-  /* -- Base classes ------------------------------------------------------- */
-  public Ident                         // Name of LUA function
+class LuaFuncBase                      // Just for de-duplicating initialisers
 { /* -- Private variables -------------------------------------------------- */
   typedef array<int, 2> References;    // Type for our pair of LUA references
   /* -- Protected variables ------------------------------------- */ protected:
@@ -32,7 +30,6 @@ class LuaFuncBase :                    // Just for de-duplicating initialisers
   /* -- Move constructor --------------------------------------------------- */
   LuaFuncBase(LuaFuncBase &&lfbOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(lfbOther) },        // Move name of function over
     aReferences{ StdMove(lfbOther.aReferences) }, // Move references over
     iLiveReference(aReferences[0]),    // Set reference to live reference
     iPauseReference(aReferences[1])    // Set reference to paused reference
@@ -41,24 +38,6 @@ class LuaFuncBase :                    // Just for de-duplicating initialisers
   /* -- Disabled constructor without registration -------------------------- */
   explicit LuaFuncBase() :
     /* -- Initialisers ----------------------------------------------------- */
-    aReferences{LUA_REFNIL,LUA_REFNIL},// Reference to pause ref (when paused)
-    iLiveReference(aReferences[0]),    // Set reference to live reference
-    iPauseReference(aReferences[1])    // Set reference to paused reference
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Name constructor --------------------------------------------------- */
-  explicit LuaFuncBase(const string &strN) :
-    /* -- Initialisers ----------------------------------------------------- */
-    Ident{ strN },                     // Copy name of function
-    aReferences{LUA_REFNIL,LUA_REFNIL},// Reference to pause ref (when paused)
-    iLiveReference(aReferences[0]),    // Set reference to live reference
-    iPauseReference(aReferences[1])    // Set reference to paused reference
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Name(move) constructor --------------------------------------------- */
-  explicit LuaFuncBase(string &&strN) :
-    /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(strN) },            // Move name of function
     aReferences{LUA_REFNIL,LUA_REFNIL},// Reference to pause ref (when paused)
     iLiveReference(aReferences[0]),    // Set reference to live reference
     iPauseReference(aReferences[1])    // Set reference to paused reference
@@ -89,7 +68,6 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   { // Swap members, ident and collector iterators
     swap(iLiveReference, oCref.iLiveReference);
     swap(iPauseReference, oCref.iPauseReference);
-    IdentSwap(oCref);
     CollectorSwapRegistration(oCref);
   }
   /* -- Restore reference and reset saved reference if it is not set ------- */
@@ -166,6 +144,9 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   MP(unsigned long long, "uint64", LuaUtilPushInt)
   MP(signed int,         "int",    LuaUtilPushInt)
   MP(unsigned int,       "uint",   LuaUtilPushInt)
+#if !defined(WINDOWS)
+  MP(size_t,             "size_t", LuaUtilPushInt)
+#endif
   MP(float,              "float",  LuaUtilPushNum)
   MP(double,             "double", LuaUtilPushNum)
   MP(bool,               "bool",   LuaUtilPushBool)
@@ -176,8 +157,8 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   { // Get referenced function and return if succeeded else break execution
     if(LuaUtilGetRefFunc(LuaFuncGetState(), iLiveReference)) return;
     XC("Pushed function is not a valid function!",
-       "Name",  IdentGet(), "Value", iLiveReference,
-       "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
+      "Name",  IdentGet(), "Value", iLiveReference,
+      "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
   }
   /* -- Send a function or blank ------------------------------------------- */
   void LuaFuncPushFuncOrBlank() const
@@ -241,8 +222,8 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       iLiveReference = LuaUtilRefInit(LuaFuncGetState());
       if(LuaUtilIsNotRefValid(iLiveReference))
         XC("Failed to create refid to C function!",
-           "Name",  IdentGet(),
-           "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
+          "Name",  IdentGet(),
+          "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
       // Succeeded so put in log
       cLog->LogDebugExSafe("LuaFunc allocated refid #$ for C function '$'.",
         iLiveReference, IdentGet());
@@ -254,16 +235,16 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       iLiveReference = LuaUtilRefInit(LuaFuncGetState());
       if(LuaUtilIsNotRefValid(iLiveReference))
         XC("Failed to create refid to function!",
-           "Name",  IdentGet(),
-           "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
+          "Name",  IdentGet(),
+          "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
       // Succeeded so put in log
       cLog->LogDebugExSafe("LuaFunc allocated refid #$ for function '$'.",
         iLiveReference, IdentGet());
     } // Don't know what this was?
     else XC("Expected C or regular function type on stack!",
-            "Name",  IdentGet(),
-            "Type",  LuaUtilGetType(LuaFuncGetState(), -1),
-            "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
+      "Name",  IdentGet(),
+      "Type",  LuaUtilGetType(LuaFuncGetState(), -1),
+      "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
   }
   /* -- Set empty function ------------------------------------------------- */
   void LuaFuncSetEmptyFunc() { iLiveReference = LuaFuncGetEmptyFunc(); }
@@ -285,28 +266,28 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   /* -- Name constructor --------------------------------------------------- */
   explicit LuaFunc(const string &strN, const bool bSet=false) :
     /* -- Initialisers ----------------------------------------------------- */
+    Ident{ strN },                     // Move name of function over
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector class
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    LuaFuncBase{ strN }                // Initialise base class
+    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* -- Set if requested ------------------------------------------------- */
     { if(bSet) LuaFuncSet(); }
   /* -- Name(move) constructor --------------------------------------------- */
   explicit LuaFunc(string &&strN, const bool bSet=false) :
     /* -- Initialisers ----------------------------------------------------- */
+    Ident{ StdMove(strN) },            // Move name of function over
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    LuaFuncBase{ StdMove(strN) }       // Initialise base class
+    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
     /* -- Set if requested ------------------------------------------------- */
     { if(bSet) LuaFuncSet(); }
   /* -- Destructor --------------------------------------------------------- */
-  ~LuaFunc()
-  { // If we have the parent state? Delete both refs if not empty func/set
+  DTORHELPER(~LuaFunc,
+    // If we have the parent state? Delete both refs if not empty func/set
     if(LuaFuncGetState())
       for(int iReference : aReferences)
         if(LuaUtilIsRefValid(iReference) &&
            LuaFuncIsNotRefEmptyFunc(iReference))
           LuaUtilRmRef(LuaFuncGetState(), iReference);
-  }
+  )
 };/* ----------------------------------------------------------------------- */
 /* -- De-init state and all references ------------------------------------- */
 static void LuaFuncDeInitRef()

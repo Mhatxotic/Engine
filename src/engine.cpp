@@ -8,8 +8,10 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This the file that handles the inclusing of engine subsystems in a  ## **
-** ## tidy namespace and handles the main entry point.                    ## **
+** ## This is the main entry module that handles the inclusion of each    ## **
+** ## engine subsystem in its own namespace and handles the main entry    ## **
+** ## point for the operating system and sets up basic critical systems   ## **
+** ## before entering the main part of the engine.                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #include "setup.hpp"                   // Setup the compilation environment
@@ -54,7 +56,6 @@ namespace E {                          // Start of engine namespace
 #include "glfwcrsr.hpp"                // GLFW cursor class header
 #include "intpair.hpp"                 // Integer pair class header
 #include "coord.hpp"                   // Co-oridinates class header
-#include "rectangl.hpp"                // Rectangle class header
 #include "dim.hpp"                     // Dimensions class header
 #include "dimcoord.hpp"                // Joined dim/coord class header
 #include "glfwwin.hpp"                 // GLFW window class header
@@ -85,30 +86,34 @@ namespace E {                          // Start of engine namespace
 #include "socket.hpp"                  // Socket handling class header
 #include "console.hpp"                 // Console handling header
 #include "oal.hpp"                     // OpenAL audio header
+#include "dformat.hpp"                 // Plugin data format helper header
 #include "pcmdef.hpp"                  // Pcm definitions header
-#include "dformat.hpp"                 // Data format helper header
 #include "pcmlib.hpp"                  // Pcm codecs handling header
-#include "pcmwav.hpp"                  // PcmLib WAV file codec
-#include "pcmcaf.hpp"                  // PcmLib CAF file codec
-#include "pcmogg.hpp"                  // PcmLib OGG file codec
-#include "pcmmp3.hpp"                  // PcmLib MP3 file codec
+#include "pfmtwav.hpp"                 // PcmLib WAV file codec
+#include "pfmtcaf.hpp"                 // PcmLib CAF file codec
+#include "pfmtogg.hpp"                 // PcmLib OGG file codec
+#include "pfmtmp3.hpp"                 // PcmLib MP3 file codec
 #include "pcm.hpp"                     // Pcm loader class header
-#include "fbodef.hpp"                  // Frambuffer object definitions header
+#include "fbocmd.hpp"                  // FBO object definitions header
+#include "fboblend.hpp"                // FBO blending definition header
+#include "coords.hpp"                  // Co-ordinates class definition header
 #include "texdef.hpp"                  // Texture data definitions header
+#include "shaderdef.hpp"               // Shader attribute definitions header
+#include "colour.hpp"                  // Colour class definition header
 #include "ogl.hpp"                     // OpenGL graphics management header
 #include "imagedef.hpp"                // Image data definitions header
 #include "imagelib.hpp"                // Image codecs handling header
-#include "imagedds.hpp"                // ImageLib DDS file codec
-#include "imagegif.hpp"                // ImageLib GIF file codec
-#include "imagepng.hpp"                // ImageLib PNG file codec
-#include "imagejpg.hpp"                // ImageLib JPG file codec
+#include "ifmtdds.hpp"                 // ImageLib DDS file codec
+#include "ifmtgif.hpp"                 // ImageLib GIF file codec
+#include "ifmtpng.hpp"                 // ImageLib PNG file codec
+#include "ifmtjpg.hpp"                 // ImageLib JPG file codec
 #include "bin.hpp"                     // Bin packing class header
 #include "image.hpp"                   // Image load and save handling header
 #include "shader.hpp"                  // OpenGL Shader handling header
 #include "shaders.hpp"                 // Actual shaders core
-#include "fboitem.hpp"                 // Frame buffer object item class header
-#include "fbo.hpp"                     // Frame buffer object class header
-#include "fbocore.hpp"                 // Core frame buffer object class header
+#include "fboitem.hpp"                 // FBO item definition class header
+#include "fbo.hpp"                     // Frame Buffer Object class header
+#include "fbocore.hpp"                 // Core FBO's handling class header
 #include "sshot.hpp"                   // Screenshot handling class header
 #include "texture.hpp"                 // Texture handling class header
 #include "atlas.hpp"                   // Atlas handling class header
@@ -118,7 +123,7 @@ namespace E {                          // Start of engine namespace
 #include "font.hpp"                    // Font loading and printing header
 #include "file.hpp"                    // FStream+FileMap class header
 #include "clip.hpp"                    // Clipboard class header
-#include "congraph.hpp"                // Console rendering class header
+#include "congfx.hpp"                  // Console graphics class header
 #include "joyaxis.hpp"                 // Joystick axis class header
 #include "joybutton.hpp"               // Joystick button class header
 #include "joyinfo.hpp"                 // Joystick info class header
@@ -140,12 +145,12 @@ namespace E {                          // Start of engine namespace
 };                                     // End of engine namespace
 /* == The main entry point ================================================= */
 int ENTRYFUNC                          // Macro defined in 'setup.hpp'
-{ // Includes required to build the engine.
+{ // Includes required to build the engine
   using namespace E;                   using namespace ISysUtil::P;
   using namespace IStd::P;
   // Initialise and label the main thread
   SysInitThread("main", STP_MAIN);
-  // Capture exceptions.
+  // Capture exceptions
   try
   { // Create the base systems, run main procedure and return result
     using namespace ICmdLine::P;       using namespace ICommon::P;
@@ -153,32 +158,30 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
     using namespace ILog::P;
     // Create engine class
     struct Engine final :
-      // Base classes required to run the main part of the engine.
+      // Base classes required to run the main part of the engine
       private Common, private DirBase, private CmdLine, private Log
-    { // Main procedure into running the engine
+    { // Main procedure into creating and running the engine in 'core.cpp'
       int EngineMain() const try { return Core{}.CoreMain(); }
       // Safe loggable exception occured?
       catch(const exception &eReason)
       { // Send to log and show error message to user. Show message box and
-        // return error status.
+        // return error status
         cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", eReason);
         SysMessage("Main Thread Exception", eReason.what(), MB_ICONSTOP);
         return 2;
-      }
-      // Constructor
+      } // Constructor which processes command-line arguments and environment
       Engine(const int iArgs,          // Arguments count
-             ArgType**const lArgs,     // Arguments array
-             ArgType**const lEnv) :    // Environment variables array
+             ArgType**const atArgs,    // Arguments array
+             ArgType**const atEnv) :   // Environment variables array
         // Initialisers
-        CmdLine{ iArgs, lArgs, lEnv }  // Initialise command-line arg
+        CmdLine{iArgs, atArgs, atEnv}  // Initialise command-line arguments
         // No code
         {}
-    };
-    // Create the engine object, run the main function and return its result
+    }; // Create the engine object, run the main function and return its result
     return Engine{ __argc, __wargv, _wenviron }.EngineMain();
   } // Unsafe exception occured?
   catch(const exception &eReason)
-  { // Show message box and return error status.
+  { // Show message box and return error status
     SysMessage("Main Init Exception", eReason.what(), MB_ICONSTOP);
     return 1;
   }

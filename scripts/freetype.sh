@@ -12,7 +12,7 @@ fi
 BASE=~/Assets/Engine
 ARCHIVE=$BASE/archive
 LIB=$BASE/lib
-INCLUDE=$BASE/include
+INCLUDE=$BASE/include/ft
 FILEPREFIX=freetype-
 FILEPREFIX2=zlib-
 FILEPREFIX3=libpng-
@@ -40,7 +40,7 @@ if [ ! -e $ZIP2 ]; then
     echo Available files...
     echo $LS
   fi
-  exit 2
+  exit 3
 fi
 
 if [ ! -e $ZIP3 ]; then
@@ -50,28 +50,20 @@ if [ ! -e $ZIP3 ]; then
     echo Available files...
     echo $LS
   fi
-  exit 2
-fi
-
-tar -xvzkf $ZIP
-if [ ! $? -eq 0 ]; then
-  exit 3
-fi
-
-tar -xvzkf $ZIP2
-if [ ! $? -eq 0 ]; then
   exit 4
 fi
 
+tar -xvzkf $ZIP
+if [ ! $? -eq 0 ]; then exit 5; fi
+
+tar -xvzkf $ZIP2
+if [ ! $? -eq 0 ]; then exit 6; fi
+
 tar -xvzkf $ZIP3
-if [ ! $? -eq 0 ]; then
-  exit 5
-fi
+if [ ! $? -eq 0 ]; then exit 7; fi
 
 cd $FILE
-if [ ! $? -eq 0 ]; then
-  exit 6
-fi
+if [ ! $? -eq 0 ]; then exit 8; fi
 
 ZLIBDIR=`realpath ../${FILE2}`
 PNGDIR=`realpath ../${FILE3}`
@@ -81,13 +73,12 @@ build()
   rm -rfv "build-${1}" 2>/dev/null
   mkdir "build-${1}" 2>/dev/null
   cd "build-${1}"
-  if [ ! $? -eq 0 ]; then
-    exit 7
-  fi
+  if [ ! $? -eq 0 ]; then exit 9; fi
 
   cmake -D"CMAKE_BUILD_TYPE=Release" \
+        -D"CMAKE_POLICY_VERSION_MINIMUM=3.5" \
         -D"CMAKE_OSX_ARCHITECTURES=${1}" \
-        -D"CMAKE_OSX_DEPLOYMENT_TARGET=10.15" \
+        -D"CMAKE_OSX_DEPLOYMENT_TARGET=${3}" \
         -D"CMAKE_C_FLAGS=-mtune=${2}" \
         -D"FT_DISABLE_HARFBUZZ=TRUE" \
         -D"FT_DISABLE_BZIP2=TRUE" \
@@ -100,30 +91,32 @@ build()
         -D"PNG_LIBRARY_RELEASE=${PNGDIR}/png64-${1}-${2}.a" \
         $4 \
         ..
-  if [ ! $? -eq 0 ]; then
-    exit 8
-  fi
+  if [ ! -e Makefile ]; then exit 10; fi
 
   make
-  if [ ! $? -eq 0 ]; then
-    exit 7
-  fi
+  if [ ! $? -eq 0 ]; then exit 11; fi
 
   mv -fv libfreetype.a "../ft64-${1}-${2}.a"
-  if [ ! $? -eq 0 ]; then
-    exit 8
-  fi
+  if [ ! $? -eq 0 ]; then exit 12; fi
 
   cd ..
-  if [ ! $? -eq 0 ]; then
-    exit 9
-  fi
+  if [ ! $? -eq 0 ]; then exit 13; fi
 }
 
-build x86_64 generic
-build arm64 apple-m1
+# Build for each platform
+build x86_64 generic 10.15
+build arm64 apple-m1 11.0
 
+# Join libraries together and put in place
 lipo ft64-*.a -create -output "${LIB}/ft64.ma"
-if [ $? -ne 0 ]; then
-  exit 10
-fi
+if [ $? -ne 0 ]; then exit 14; fi
+
+# Patch include files to not make me have to use an extra '-I' argument
+for f in include/freetype/*.h include/freetype/config/*.h; do
+  fp=$f.patch
+  cat $f | sed 's/include\/freetype\///g' | \
+           sed 's/freetype\///g' > $fp
+  if [ $? -ne 0 ]; then exit 15; fi
+  mv -fv $fp $INCLUDE/"${f#include/freetype/}"
+  if [ $? -ne 0 ]; then exit 16; fi
+done

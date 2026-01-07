@@ -46,8 +46,8 @@ class GlFW :                           // Root engine class
   /* -- Custom free -------------------------------------------------------- */
   static void GlFWFree(void*const vpPtr, void*const) { StdFree(vpPtr); }
   /* -- Monitor changed ---------------------------------------------------- */
-  static void OnMonitorChangedStatic(GLFWmonitor*const, const int);
-  void OnMonitorChanged(GLFWmonitor*const mAffected, const int iAction) try
+  static void GlFWOnMonitorChangedStatic(GLFWmonitor*const, const int);
+  void GlFWOnMonitorChanged(GLFWmonitor*const mAffected, const int iAction) try
   { // Send event to process monitor which has to unsuspend the engine thread
     if(iAction == GLFW_CONNECTED)
       cEvtWin->Execute(EWC_WIN_MONITOR,
@@ -72,9 +72,9 @@ class GlFW :                           // Root engine class
     cEvtMain->RequestQuitThread();
   }
   /* -- Error handler prototype (full body at bottom) ---------------------- */
-  static void OnHandleErrorStatic(int, const char*const);
+  static void GlFWOnHandleErrorStatic(int, const char*const);
   /* -- Error handler converted to thiscall -------------------------------- */
-  void OnHandleError(const int iCode, const char*const cpDesc)
+  void GlFWOnHandleError(const int iCode, const char*const cpDesc)
   { // What's the error code?
     switch(iCode)
     { // Errors that are safe to ignore
@@ -95,9 +95,10 @@ class GlFW :                           // Root engine class
     }
   }
   /* --------------------------------------------------------------- */ public:
-  const string_view &GetInternalVersion() const { return strvIntVersion; }
+  const string_view &GlFWGetInternalVersion() const
+    { return strvIntVersion; }
   /* -- DeInitialiser ------------------------------------------------------ */
-  void DeInit()
+  void GlFWDeInit()
   { // Ignore if class not initialised
     if(IHNotDeInitialise()) return;
     // Report de-initialisation attempt
@@ -107,7 +108,7 @@ class GlFW :                           // Root engine class
     // Clear monitor change callback
     GlFWSetMonitorCallback(nullptr);
     // De-Initialise standard cursors
-    DeInitCursors();
+    GlFWDeInitCursors();
     // Terminate glfw
     glfwTerminate();
     // Delete error handler
@@ -116,30 +117,30 @@ class GlFW :                           // Root engine class
     cLog->LogInfoSafe("GlFW subsystem de-initialised.");
   }
   /* -- Return if raw mouse motion is supported ---------------------------- */
-  bool IsRawMouseMotionSupported() const { return bRawMouseSupported; }
-  bool IsNotRawMouseMotionSupported() const
-    { return !IsRawMouseMotionSupported(); }
+  bool GlFWIsRawMouseMotionSupported() const { return bRawMouseSupported; }
+  bool GlFWIsNotRawMouseMotionSupported() const
+    { return !GlFWIsRawMouseMotionSupported(); }
   /* -- Set the specified cursor ------------------------------------------- */
-  void SetCursor(const GlFWCursorType gctCursorId)
+  void GlFWSetCursor(const GlFWCursorType gctCursorId)
     { WinSetCursorGraphic(at(gctCursorId).CursorGetContext()); }
   /* -- DeInitialise all standard cursors ---------------------------------- */
-  void DeInitCursors()
-  { // Enumerate each created fbo and deinitialise it (NOT destroy it)
+  void GlFWDeInitCursors()
+  { // Enumerate each created cursor and deinitialise it (NOT destroy it)
     cLog->LogDebugExSafe("GlFW de-initialising $ standard cursors...", size());
     for(GlFWCursor &gcObj : *this) gcObj.CursorDeInit();
     cLog->LogInfoExSafe("GlFW de-initialised $ standard cursors.", size());
   }
   /* -- Initialise all standard cursors ------------------------------------ */
-  void InitCursors()
-  { // Enumerate each created fbo and reinitialise it
+  void GlFWInitCursors()
+  { // Enumerate each created cursor and initialise it
     cLog->LogDebugExSafe("GlFW initialising $ standard cursors...", size());
     for(GlFWCursor &gcObj : *this) gcObj.CursorInit();
     cLog->LogInfoExSafe("GlFW initialised $ standard cursors.", size());
   }
   /* -- Reset error level -------------------------------------------------- */
-  void ResetErrorLevel() { uiErrorLevel = 0; }
+  void GlFWResetErrorLevel() { uiErrorLevel = 0; }
   /* -- Verify the GLFW library -------------------------------------------- */
-  void VerifyVersion()
+  void GlFWVerifyVersion()
   { // Get GLFW's identity
     if(const char*const cpIdentity = glfwGetVersionString())
     { // Parse each token (0 is always the version), rest is the features
@@ -148,9 +149,9 @@ class GlFW :                           // Root engine class
         // mismatches with our version? Write a log message. It's not really a
         // problem since GlFW's headers maintain compatibility across versions.
         strExtVersion = StdMove(tIdentity.front());
-        if(strExtVersion != GetInternalVersion())
+        if(strExtVersion != GlFWGetInternalVersion())
           cLog->LogInfoExSafe("GlFW compiled with version '$' headers.",
-            GetInternalVersion());
+            GlFWGetInternalVersion());
         // Parse features into a list
         StdForEach(seq, tIdentity.cbegin()+1, tIdentity.cend(),
           [this](const string &strStr)
@@ -165,7 +166,7 @@ class GlFW :                           // Root engine class
     else cLog->LogWarningSafe("GlFW failed to retrieve identity!");
   }
   /* -- Initialiser -------------------------------------------------------- */
-  void Init()
+  void GlFWInit()
   { // Report initialisation attempt
     cLog->LogDebugSafe("GlFW subsystem initialising...");
     // Setup custom allocator (Ubuntu 23.10 does not have 3.4 yet)
@@ -174,27 +175,27 @@ class GlFW :                           // Root engine class
     glfwInitAllocator(&gaInfo);
 #endif
     // Set error callback which just throws an exception and reset error level
-    glfwSetErrorCallback(OnHandleErrorStatic);
-    ResetErrorLevel();
+    glfwSetErrorCallback(GlFWOnHandleErrorStatic);
+    GlFWResetErrorLevel();
     // Initialise GlFW and throw exception if failed
     if(!glfwInit()) XC("GlFW initialisation failed!");
     // Report internal library version
-    VerifyVersion();
+    GlFWVerifyVersion();
     // Class initialised
     IHInitialise();
     // Initialise standard built-in operating system cursors
-    InitCursors();
+    GlFWInitCursors();
     // Set if raw mouse motion supported
     bRawMouseSupported = GlFWIsRawMouseMotionSupported();
     cLog->LogDebugExSafe("GlFW raw mouse motion support is $.",
-      IsRawMouseMotionSupported() ? "available" : "unavailable");
+      GlFWIsRawMouseMotionSupported() ? "available" : "unavailable");
     // Set monitor change callback
-    GlFWSetMonitorCallback(OnMonitorChangedStatic);
+    GlFWSetMonitorCallback(GlFWOnMonitorChangedStatic);
     // Report initialisation successful
     cLog->LogInfoSafe("GlFW subsystem initialised.");
   }
   /* -- Destructor ---------------------------------------------- */ protected:
-  DTORHELPER(~GlFW, DeInit())
+  DTORHELPER(~GlFW, GlFWDeInit())
   /* -- Constructor -------------------------------------------------------- */
   GlFW() :                         // Default constructor (No arguments)
     /* -- Initialisers ----------------------------------------------------- */
@@ -240,12 +241,12 @@ class GlFW :                           // Root engine class
     { cGlFW = this; }
 };/* ----------------------------------------------------------------------- */
 /* -- Process a glfw error ------------------------------------------------- */
-void GlFW::OnHandleErrorStatic(int iCode, const char*const cpDesc)
-  { cGlFW->OnHandleError(iCode, cpDesc); }
+void GlFW::GlFWOnHandleErrorStatic(int iCode, const char*const cpDesc)
+  { cGlFW->GlFWOnHandleError(iCode, cpDesc); }
 /* -- Process a glfw error ------------------------------------------------- */
-void GlFW::OnMonitorChangedStatic(GLFWmonitor*const mAffected,
+void GlFW::GlFWOnMonitorChangedStatic(GLFWmonitor*const mAffected,
   const int iAction)
-    { cGlFW->OnMonitorChanged(mAffected, iAction); }
+    { cGlFW->GlFWOnMonitorChanged(mAffected, iAction); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -87,11 +87,10 @@ static void PcmLoadFile(const PcmFormat pfId, FileMap &fmData, PcmData &pdData)
   } // Error occured. Error used as title
   catch(const exception &eReason)
   { // Throw an error with the specified reason
-    XC(eReason, "Identifier", fmData.IdentGet(),
-                "Size",       fmData.MemSize(),
-                "Position",   fmData.FileMapTell(),
-                "FormatId",   pfId,
-                "Plugin",     plRef.GetName());
+    XC(eReason,
+      "Identifier", fmData.IdentGet(),    "Size",     fmData.MemSize(),
+      "Position",   fmData.FileMapTell(), "FormatId", pfId,
+      "Plugin",     plRef.GetName());
   }
 }
 /* -- Load a bitmap and automatically detect type -------------------------- */
@@ -112,10 +111,9 @@ static void PcmLoadFile(FileMap &fmData, PcmData &pdData)
     } // Error occured. Error used as title
     catch(const exception &eReason)
     { // Throw an error with the specified reason
-      XC(eReason, "Identifier", fmData.IdentGet(),
-                  "Size",       fmData.MemSize(),
-                  "Position",   fmData.FileMapTell(),
-                  "Plugin",     plRef.GetName());
+      XC(eReason,
+        "Identifier", fmData.IdentGet(),    "Size",   fmData.MemSize(),
+        "Position",   fmData.FileMapTell(), "Plugin", plRef.GetName());
     } // Rewind stream position and reset all pcm data read to load again
     fmData.FileMapRewind();
     pdData.ResetAllData();

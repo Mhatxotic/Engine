@@ -136,6 +136,7 @@ template<typename IntType>struct AgIntegerL : public AgIntegral<IntType> {
   explicit AgIntegerL(lua_State*const lS, const int iArg, const IntType itMin):
     AgIntegral<IntType>{LuaUtilGetIntL<IntType>(lS, iArg, itMin)}{} };
 /* -- Different types we can use ------------------------------------------- */
+typedef AgInteger<GLuint> AgGLuint;
 typedef AgInteger<int> AgInt;
 typedef AgInteger<lua_Integer> AgLuaInteger;
 typedef AgInteger<size_t> AgSizeT;
@@ -146,6 +147,7 @@ typedef AgInteger<unsigned int> AgUInt;
 typedef AgIntegerL<int> AgIntL;
 typedef AgIntegerL<lua_Integer> AgLuaIntegerL;
 typedef AgIntegerL<size_t> AgSizeTL;
+typedef AgIntegerLG<int> AgIntLG;
 typedef AgIntegerLG<size_t> AgSizeTLG;
 typedef AgIntegerLG<ssize_t> AgSSizeTLG;
 typedef AgIntegerLG<unsigned int> AgUIntLG;
@@ -153,7 +155,6 @@ typedef AgIntegerLGE<int> AgIntLGE;
 typedef AgIntegerLGE<size_t> AgSizeTLGE;
 typedef AgIntegerLGE<ssize_t> AgSSizeTLGE;
 typedef AgIntegerLGE<unsigned int> AgUIntLGE;
-typedef AgInteger<GLuint> AgGLuint;
 /* -- Get/Create Asset object ---------------------------------------------- */
 using IAsset::P::Asset;
 using IAsset::P::cAssets;
@@ -202,7 +203,7 @@ struct AgJson : public ArClass<Json> {
 /* -- Read a valid triangle index ------------------------------------------ */
 struct AgTriangleId : public AgSizeTLGE {
   explicit AgTriangleId(lua_State*const lS, const int iArg) :
-    AgSizeTLGE{lS, iArg, 0, IFboDef::P::stTrisPerQuad}{} };
+    AgSizeTLGE{lS, iArg, 0, IFboCmd::P::stTrisPerQuad}{} };
 /* -- Read a texture id ---------------------------------------------------- */
 struct AgTextureId : public AgSizeTLGE {
   explicit AgTextureId(lua_State*const lS, const int iArg,

@@ -191,7 +191,7 @@ class SysVersion :
     const SysModMapConstIt smmciIt{ smmMap.find(stId) };
     if(smmciIt == smmMap.cend())
       XC("Failed to locate executable information!",
-         "Length", smmMap.size(), "Instance", stId);
+        "Length", smmMap.size(), "Instance", stId);
     // Return version data
     return smmciIt->second;
   }
@@ -266,9 +266,9 @@ class SysCommon                        // Common system structs and funcs
   /* ----------------------------------------------------------------------- */
   struct MemData                       // Processor data
   { /* --------------------------------------------------------------------- */
-    uint64_t       qMTotal,            // 64-bit memory total
-                   qMFree,             // 64-bit memory free
-                   qMUsed;             // 64-bit memory used
+    uint64_t       ullMTotal,          // 64-bit memory total
+                   ullMFree,           // 64-bit memory free
+                   ullMUsed;           // 64-bit memory used
     double         dMLoad;             // Ram use in %
     size_t         stMFree,            // 32-bit memory free
                    stMProcUse,         // Process memory usage
@@ -276,9 +276,9 @@ class SysCommon                        // Common system structs and funcs
     /* -- Default constructor ---------------------------------------------- */
     MemData() :
       /* -- Initialisers --------------------------------------------------- */
-      qMTotal(0),                      // Zero total memory
-      qMFree(0),                       // Zero free memory
-      qMUsed(0),                       // Zero used memory
+      ullMTotal(0),                    // Zero total memory
+      ullMFree(0),                     // Zero free memory
+      ullMUsed(0),                     // Zero used memory
       dMLoad(0.0),                     // Zero memory usage percentage
       stMFree(0),                      // Zero 32-bit free memory
       stMProcUse(0),                   // Zero process usage
@@ -313,13 +313,13 @@ class SysCommon                        // Common system structs and funcs
   double CPUUsage() const { return cpuUData.dProcess; }
   double CPUUsageSystem() const { return cpuUData.dSystem; }
   /* ----------------------------------------------------------------------- */
-  uint64_t RAMTotal() const { return memData.qMTotal; }
+  uint64_t RAMTotal() const { return memData.ullMTotal; }
   double RAMTotalMegs() const
     { return static_cast<double>(RAMTotal()) / 1048576; }
-  uint64_t RAMFree() const { return memData.qMFree; }
+  uint64_t RAMFree() const { return memData.ullMFree; }
   double RAMFreeMegs() const
     { return static_cast<double>(RAMFree()) / 1048576; }
-  uint64_t RAMUsed() const { return memData.qMUsed; }
+  uint64_t RAMUsed() const { return memData.ullMUsed; }
   size_t RAMFree32() const { return memData.stMFree; }
   double RAMFree32Megs() const
     { return static_cast<double>(RAMFree32()) / 1048576; }
@@ -331,9 +331,9 @@ class SysCommon                        // Common system structs and funcs
   /* -- Constructor --------------------------------------------- */ protected:
   SysCommon(ExeData &&edExe, OSData &&osdOS, CPUData &&cpudCPU) :
     /* -- Initialisers ----------------------------------------------------- */
-    exeData{ StdMove(edExe) },          // Move executable data
-    osData{ StdMove(osdOS) },           // Move operating system data
-    cpuData{ StdMove(cpudCPU) }         // Move processor data
+    exeData{ StdMove(edExe) },         // Move executable data
+    osData{ StdMove(osdOS) },          // Move operating system data
+    cpuData{ StdMove(cpudCPU) }        // Move processor data
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -346,16 +346,16 @@ class SysPipeBase :
   /* -- Base classes ------------------------------------------------------- */
   public Ident                         // Name of the pipe
 { /* ----------------------------------------------------------------------- */
-  int64_t          qwExitCode;         // Process exit code
+  int64_t          llExitCode;         // Process exit code
   /* -- Set status code ----------------------------------------- */ protected:
-  void SysPipeBaseSetStatus(const int64_t qwNewCode)
-    { qwExitCode = qwNewCode; }
+  void SysPipeBaseSetStatus(const int64_t llNewCode)
+    { llExitCode = llNewCode; }
   /* -- Return status code ----------------------------------------- */ public:
-  int64_t SysPipeBaseGetStatus() const { return qwExitCode; }
+  int64_t SysPipeBaseGetStatus() const { return llExitCode; }
   /* -- Constructor with init ---------------------------------------------- */
   SysPipeBase() :
     /* -- Initialisers ----------------------------------------------------- */
-    qwExitCode(127)                    // Standard exit code
+    llExitCode(127)                    // Standard exit code
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- End ---------------------------------------------------------------- */
@@ -432,60 +432,60 @@ class System :                         // The main system class
   /* ----------------------------------------------------------------------- */
   const string     strRoamingDir;      // Roaming directory
   /* -- Callback for set_terminate() defined later ------------------------- */
-  static void TerminateHandler[[noreturn]]();
+  static void SysOnTerminateHandler[[noreturn]]();
   /* -- Return readable process and thread id ---------------------- */ public:
-  size_t GetReadablePid() const { return stProcessId; }
-  size_t GetReadableTid() const { return stThreadId; }
+  size_t SysGetReadablePid() const { return stProcessId; }
+  size_t SysGetReadableTid() const { return stThreadId; }
   /* -- Update CPU usage information --------------------------------------- */
-  void UpdateCPUUsage()
+  void SysUpdateCPUUsage()
     { if(ciCpu.CITriggerStrict()) UpdateCPUUsageData(); }
   /* -- Update and return process CPU usage -------------------------------- */
-  double UpdateAndGetCPUUsage()
-    { UpdateCPUUsage(); return CPUUsage(); }
+  double SysUpdateAndGetCPUUsage()
+    { SysUpdateCPUUsage(); return CPUUsage(); }
   /* -- Update and return system CPU usage --------------------------------- */
-  double UpdateAndGetCPUUsageSystem()
-    { UpdateCPUUsage(); return CPUUsageSystem(); }
+  double SysUpdateAndGetCPUUsageSystem()
+    { SysUpdateCPUUsage(); return CPUUsageSystem(); }
   /* -- Show message box with window handle (thiscall) --------------------- */
   unsigned int SysMsgEx(const string &strReason, const string &strMessage,
     unsigned int uiFlags = MB_ICONSTOP) const
       { return SysMessage(GetWindowHandle(),
           StrAppend(ENGName(), ' ', strReason), strMessage, uiFlags); }
   /* -- Get descriptor strings --------------------------------------------- */
-  const string_view &GetGuestTitle() const { return strvTitle; }
-  const string_view &GetGuestShortTitle() const { return strvShortTitle; }
-  const string_view &GetGuestVersion() const { return strvVersion; }
-  const string_view &GetGuestAuthor() const { return strvAuthor; }
-  const string_view &GetGuestCopyright() const { return strvCopyright; }
-  const string_view &GetGuestDescription() const {return strvDescription; }
-  const string_view &GetGuestWebsite() const { return strvWebsite; }
+  const string_view &SysGetGuestTitle() const { return strvTitle; }
+  const string_view &SysGetGuestShortTitle() const { return strvShortTitle; }
+  const string_view &SysGetGuestVersion() const { return strvVersion; }
+  const string_view &SysGetGuestAuthor() const { return strvAuthor; }
+  const string_view &SysGetGuestCopyright() const { return strvCopyright; }
+  const string_view &SysGetGuestDescription() const {return strvDescription; }
+  const string_view &SysGetGuestWebsite() const { return strvWebsite; }
   /* ----------------------------------------------------------------------- */
-  const CoreFlagsConst GetCoreFlags() const { return cfMode; }
-  bool IsCoreFlagsHave(const CoreFlagsConst cfFlags) const
-    { return !cfFlags || GetCoreFlags().FlagIsSet(cfFlags); }
-  bool IsCoreFlagsNotHave(const CoreFlagsConst cfFlags) const
-    { return !IsCoreFlagsHave(cfFlags); }
-  bool IsGraphicalMode() const
-    { return GetCoreFlags().FlagIsSet(CFL_VIDEO); }
-  bool IsNotGraphicalMode() const { return !IsGraphicalMode(); }
-  bool IsTextMode() const
-    { return GetCoreFlags().FlagIsSet(CFL_TEXT); }
-  bool IsNotTextMode() const { return !IsTextMode(); }
-  bool IsAudioMode() const
-    { return GetCoreFlags().FlagIsSet(CFL_AUDIO); }
-  bool IsNotAudioMode() const { return !IsAudioMode(); }
-  bool IsTimerMode() const
-    { return GetCoreFlags().FlagIsSet(CFL_TIMER); }
-  bool IsNotTimerMode() const { return !IsTimerMode(); }
+  const CoreFlagsConst SysGetCoreFlags() const { return cfMode; }
+  bool SysIsCoreFlagsHave(const CoreFlagsConst cfFlags) const
+    { return !cfFlags || SysGetCoreFlags().FlagIsSet(cfFlags); }
+  bool SysIsCoreFlagsNotHave(const CoreFlagsConst cfFlags) const
+    { return !SysIsCoreFlagsHave(cfFlags); }
+  bool SysIsGraphicalMode() const
+    { return SysGetCoreFlags().FlagIsSet(CFL_VIDEO); }
+  bool SysIsNotGraphicalMode() const { return !SysIsGraphicalMode(); }
+  bool SysIsTextMode() const
+    { return SysGetCoreFlags().FlagIsSet(CFL_TEXT); }
+  bool SysIsNotTextMode() const { return !SysIsTextMode(); }
+  bool SysIsAudioMode() const
+    { return SysGetCoreFlags().FlagIsSet(CFL_AUDIO); }
+  bool SysIsNotAudioMode() const { return !SysIsAudioMode(); }
+  bool SysIsTimerMode() const
+    { return SysGetCoreFlags().FlagIsSet(CFL_TIMER); }
+  bool SysIsNotTimerMode() const { return !SysIsTimerMode(); }
   /* -- Return users roaming directory ------------------------------------- */
-  const string &GetRoamingDir() const { return strRoamingDir; }
+  const string &SysGetRoamingDir() const { return strRoamingDir; }
   /* ----------------------------------------------------------------------- */
-  const string_view &GetCoreFlagsString(const CoreFlagsConst cfFlags) const
+  const string_view &SysGetCoreFlagsString(const CoreFlagsConst cfFlags) const
     { return mList.Get(cfFlags); }
   /* ----------------------------------------------------------------------- */
-  const string_view &GetCoreFlagsString() const
-    { return GetCoreFlagsString(GetCoreFlags()); }
+  const string_view &SysGetCoreFlagsString() const
+    { return SysGetCoreFlagsString(SysGetCoreFlags()); }
   /* -- Default error handler ---------------------------------------------- */
-  static void CriticalHandler[[noreturn]](const char*const cpMessage)
+  static void SysCriticalHandler[[noreturn]](const char*const cpMessage)
   { // Show message box with error
     cLog->LogNLCErrorExSafe("Critical error: $!", cpMessage);
     // Abort and crash
@@ -519,7 +519,7 @@ class System :                         // The main system class
     stProcessId(GetPid<size_t>()),     // Init readable proceess id
     stThreadId(GetTid<size_t>()),      // Init readable thread id
     thHandler(set_terminate(           // Store current termination handler
-      TerminateHandler)),              // " Use our termination handler
+      SysOnTerminateHandler)),         // " Use our termination handler
     strRoamingDir{                     // Set user roaming directory
       PSplitBackToForwardSlashes(      // Convert backward slashes to forward
         BuildRoamingDir()) }           // Get roaming directory from system
@@ -527,7 +527,7 @@ class System :                         // The main system class
   { // Set address of global class
     cSystem = this;
     // Update cpu and memory usage data
-    UpdateCPUUsage();
+    SysUpdateCPUUsage();
     UpdateMemoryUsageData();
     // Log information about the environment
     cLog->LogNLCInfoExSafe("$ v$.$.$.$ ($) for $.\n"
@@ -558,9 +558,9 @@ class System :                         // The main system class
         exeData.ulCheckSum, hex, exeData.ulCheckSum, dec,
 #endif
       cCmdLine->CmdLineGetStartupCWD(),
-      GetRoamingDir(),
-      GetReadablePid(), hex, GetReadablePid(), dec,
-        GetReadableTid(), hex, GetReadableTid(), dec,
+      SysGetRoamingDir(),
+      SysGetReadablePid(), hex, SysGetReadablePid(), dec,
+        SysGetReadableTid(), hex, SysGetReadableTid(), dec,
 #if !defined(MACOS)
       GetPriority(), hex, GetPriority(), dec,
         GetAffinity(false), hex, GetAffinity(false), dec,
@@ -577,24 +577,24 @@ class System :                         // The main system class
       StrFromBoolTF(OSIsAdmin()), StrFromBoolTF(EXEBundled()));
   }
   /* -- CVar callbacks to update guest descriptor strings ---------- */ public:
-  CVarReturn SetGuestTitle(const string&, const string &strV)
+  CVarReturn SysSetGuestTitle(const string&, const string &strV)
     { strvTitle = strV; return ACCEPT; }
-  CVarReturn SetGuestShortTitle(const string&, const string &strV)
+  CVarReturn SysSetGuestShortTitle(const string&, const string &strV)
     { strvShortTitle = strV; return ACCEPT; }
-  CVarReturn SetGuestVersion(const string&, const string &strV)
+  CVarReturn SysSetGuestVersion(const string&, const string &strV)
     { strvVersion = strV; return ACCEPT; }
-  CVarReturn SetGuestAuthor(const string&, const string &strV)
+  CVarReturn SysSetGuestAuthor(const string&, const string &strV)
     { strvAuthor = strV; return ACCEPT; }
-  CVarReturn SetGuestCopyright(const string&, const string &strV)
+  CVarReturn SysSetGuestCopyright(const string&, const string &strV)
     { strvCopyright = strV; return ACCEPT; }
-  CVarReturn SetGuestDescription(const string&, const string &strV)
+  CVarReturn SysSetGuestDescription(const string&, const string &strV)
     { strvDescription = strV; return ACCEPT; }
-  CVarReturn SetGuestWebsite(const string&, const string &strV)
+  CVarReturn SysSetGuestWebsite(const string&, const string &strV)
     { strvWebsite = strV; return ACCEPT; }
   /* -- Update minimum RAM ------------------------------------------------- */
-  CVarReturn SetMinRAM(const uint64_t qwMinValue)
+  CVarReturn SysSetMinRAM(const uint64_t ullMinValue)
   { // If we're to check for minimum memory free
-    if(const size_t stMemory = UtilIntOrMax<size_t>(qwMinValue))
+    if(const size_t stMemory = UtilIntOrMax<size_t>(ullMinValue))
     { // Update memory usage data
       UpdateMemoryUsageData();
       // Capture allocation error
@@ -618,7 +618,7 @@ class System :                         // The main system class
     return ACCEPT;
   }
   /* -- Set/Get GUI mode status -------------------------------------------- */
-  CVarReturn SetCoreFlags(const CoreFlagsType cftFlags)
+  CVarReturn SysSetCoreFlags(const CoreFlagsType cftFlags)
   { // Failed if bad value
     if(cftFlags != CFL_BASIC && (cftFlags & ~CFL_MASK)) return DENY;
     // Set new value
@@ -627,27 +627,27 @@ class System :                         // The main system class
     return ACCEPT;
   }
   /* -- Set throw error on executable checksum mismatch -------------------- */
-  CVarReturn CheckChecksumModified(const bool bEnabled)
+  CVarReturn SysCheckChecksumModified(const bool bEnabled)
   { // Ignore if we don't care that executabe checksum was modified
     if(!bEnabled || !EXEModified()) return ACCEPT;
     // Throw error
     XC("This software has been modified! Please re-acquire and/or "
-       "re-install a fresh version of this software and try again!",
-       "Path",     ENGFull(),
-       "Expected", EXECheckSum(),
-       "Actual",   EXEHeaderSum());
+      "re-install a fresh version of this software and try again!",
+      "Path",     ENGFull(),
+      "Expected", EXECheckSum(),
+      "Actual",   EXEHeaderSum());
   }
   /* -- Set throw error if debugger is attached ---------------------------- */
-  CVarReturn CheckDebuggerDetected(const bool bEnabled)
+  CVarReturn SysCheckDebuggerDetected(const bool bEnabled)
   { // Ignore if we don't care that a debugger is attached to the process
     if(!bEnabled || !DebuggerRunning()) return ACCEPT;
     // Throw error
     XC("There is a debugger attached to this software. Please "
-       "close the offending debugger that is hooking onto this application "
-       "and try running the application again");
+      "close the offending debugger that is hooking onto this application "
+      "and try running the application again");
   }
   /* -- Set working directory ---------------------------------------------- */
-  CVarReturn SetWorkDir(const string &strP, string &strV)
+  CVarReturn SysSetWorkDir(const string &strP, string &strV)
   { // Set current directory to the startup directory as we want to honour the
     // users choice of relative directory.
     cCmdLine->CmdLineSetStartupCWD();
@@ -680,7 +680,7 @@ class System :                         // The main system class
     return ACCEPT_HANDLED;
   }
   /* -- Set throw error on elevated priviliedges --------------------------- */
-  CVarReturn CheckAdminModified(const unsigned int uiMode)
+  CVarReturn SysCheckAdminModified(const unsigned int uiMode)
   { // Valid modes allowed
     enum Mode { AM_OK,                 // [0] Running as admin is okay?
                 AM_NOTOK,              // [1] Running as admin is not okay?
@@ -699,12 +699,12 @@ class System :                         // The main system class
       default: return DENY;
     }// Throw error
     XC("You are running this software with elevated privileges which can be "
-       "dangerous and thus has been blocked on request by the guest. Please "
-       "restart this software with reduced privileges.");
+      "dangerous and thus has been blocked on request by the guest. Please "
+      "restart this software with reduced privileges.");
   }
 };/* ----------------------------------------------------------------------- */
 /* -- Callback for set_terminate() ----------------------------------------- */
-void System::TerminateHandler()
+void System::SysOnTerminateHandler()
 { // Show message box to user
   cSystem->SysMsgEx("Abnormal program termination!",
     "An unexpected error has occurred and the engine "

@@ -47,7 +47,7 @@ CVarItemStaticList{{
   cCommon->CommonTwo(),                // Default of WARNING for log level
 #endif                                 // Release type check
   /* ----------------------------------------------------------------------- */
-  CB(cLog->SetLevel, LHLevel), TUINTEGER|PANY },
+  CB(cLog->LogSetLevel, LHLevel), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AST_LZMABUFFER
 // ? Specifies the decompression buffer size (in bytes) for the lzma api. The
@@ -84,7 +84,8 @@ CVarItemStaticList{{
 // ? is only readable by the end-user and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "ast_basedir", cCommon->CommonBlank(),
-  CBSTR(cSystem->SetWorkDir), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
+  CBSTR(cSystem->SysSetWorkDir),
+  CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! AST_BUNDLES
 // ? Specifies the [.ext]ension to use as 7-zip archives. These filenames will
@@ -107,7 +108,7 @@ CVarItemStaticList{{
 // ? purposes only and can be requested by the guest and only set in the
 // ? app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_author", "Anonymous", CBSTR(cSystem->SetGuestAuthor),
+{ CFL_BASIC, "app_author", "Anonymous", CBSTR(cSystem->SysSetGuestAuthor),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_SHORTNAME
@@ -115,7 +116,8 @@ CVarItemStaticList{{
 // ? display purposes only to the end-user. It can be requested by the guest
 // ? and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_shortname", "Untitled", CBSTR(cSystem->SetGuestShortTitle),
+{ CFL_BASIC, "app_shortname", "Untitled",
+  CBSTR(cSystem->SysSetGuestShortTitle),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! AST_HOMEDIR
@@ -161,7 +163,7 @@ CVarItemStaticList{{
 // ? string uses the executables filename without the extension.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_db", cCommon->CommonBlank(),
-  CBSTR(cSql->UdbFileModified),
+  CBSTR(cSql->SqlUdbFileModified),
   CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! SQL_RETRYCOUNT
@@ -169,7 +171,7 @@ CVarItemStaticList{{
 // ? up. Set to -1 for infinite. The default value is 1000.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_retrycount", "1000",
-  CB(cSql->RetryCountModified, unsigned int), TINTEGER|PAPPCFG },
+  CB(cSql->SqlRetryCountModified, unsigned int), TINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_RETRYSUSPEND
 // ? Specifies the number of milliseconds to suspend before retrying the
@@ -177,53 +179,53 @@ CVarItemStaticList{{
 // ? safety reasons. Setting to zero disables but yields the calling thread.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_retrysuspend", cCommon->CommonOne(),
-  CB(cSql->RetrySuspendModified, uint64_t), TUINTEGER|PAPPCFG },
+  CB(cSql->SqlRetrySuspendModified, uint64_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_ERASEEMPTY
 // ? Specifies to automatically erase the database at exit if no cvars or
 // ? custom tables are written to it by the guest.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_eraseempty", cCommon->CommonOne(),
-  CB(cSql->DeleteEmptyDBModified, bool), TBOOLEAN|PAPPCFG },
+  CB(cSql->SqlDeleteEmptyDBModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_TEMPSTORE
 // ? Performs 'pragma temp_store' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_tempstore", "MEMORY",
-  CBSTR(cSql->TempStoreModified), TSTRING|MTRIM|PAPPCFG },
+  CBSTR(cSql->SqlTempStoreModified), TSTRING|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_SYNCHRONOUS
 // ? Performs 'pragma synchronous x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_synchronous", cCommon->CommonZero(),
-  CB(cSql->SynchronousModified, bool), TBOOLEAN|PAPPCFG },
+  CB(cSql->SqlSynchronousModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_JOURNALMODE
 // ? Performs 'pragma journal_mode x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_journalmode", cCommon->CommonZero(),
-  CB(cSql->JournalModeModified, bool), TBOOLEAN|PAPPCFG },
+  CB(cSql->SqlJournalModeModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_AUTOVACUUM
 // ? Performs 'pragma auto_vacuum x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_autovacuum", cCommon->CommonOne(),
-  CB(cSql->AutoVacuumModified, bool), TBOOLEAN|PAPPCFG },
+  CB(cSql->SqlAutoVacuumModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_FOREIGNKEYS
 // ? Performs 'pragma foreign_keys x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_foreignkeys", cCommon->CommonOne(),
-  CB(cSql->ForeignKeysModified, bool), TBOOLEAN|PAPPCFG },
+  CB(cSql->SqlForeignKeysModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_INCVACUUM
 // ? Performs 'pragma incremental_vacuum(x)' when the database is opened and
 // ? sets 'x' to this value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_incvacuum", cCommon->CommonZero(),
-  CB(cSql->IncVacuumModified, uint64_t), TUINTEGER|PAPPCFG },
+  CB(cSql->SqlIncVacuumModified, uint64_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DEFAULTS
 // ? Performs a reset of the database depending on the following value...
@@ -248,7 +250,7 @@ CVarItemStaticList{{
 // ? [0x4] CFL_VIDEO = Inits an OpenGL context+window and API.
 // ? [0x8] CFL_TIMER = Limit engine framerate to cvar value 'app_tickrate'.
 { CFL_BASIC, "app_cflags", cCommon->CommonZero(),
-  CB(cSystem->SetCoreFlags, CoreFlagsType), TUINTEGER|PAPPCFG },
+  CB(cSystem->SysSetCoreFlags, CoreFlagsType), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! LOG_LINES
 // ? Specifies the maximum number of lines to keep in the backlog. The log
@@ -270,7 +272,7 @@ CVarItemStaticList{{
 // ? window title and for display purposes only to the end-user. It can be
 // ? requested by the guest and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_longname", "Untitled", CBSTR(cSystem->SetGuestTitle),
+{ CFL_BASIC, "app_longname", "Untitled", CBSTR(cSystem->SysSetGuestTitle),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! ERR_INSTANCE
@@ -514,14 +516,14 @@ CVarItemStaticList{{
 // ? and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_description", "Undescribed",
-  CBSTR(cSystem->SetGuestDescription), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+  CBSTR(cSystem->SysSetGuestDescription), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_VERSION
 // ? Specifies a version for the guest application. It is purely for display
 // ? purposes only to the end-user. It can be requested by the guest and only
 // ? set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_version", "0.0", CBSTR(cSystem->SetGuestVersion),
+{ CFL_BASIC, "app_version", "0.0", CBSTR(cSystem->SysSetGuestVersion),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_ICON
@@ -530,7 +532,7 @@ CVarItemStaticList{{
 // ? also be changed dynamically by Lua. Keep to empty for default icon.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_icon", cCommon->CommonBlank(),
-  CBSTR(cDisplay->SetIcon), TSTRING|MTRIM|PAPPCFG },
+  CBSTR(cDisplay->DisplaySetIcon), TSTRING|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_COPYRIGHT
 // ? Specifies any copyright information for the guest application. It is
@@ -538,31 +540,33 @@ CVarItemStaticList{{
 // ? the guest and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_copyright", "Public Domain",
-  CBSTR(cSystem->SetGuestCopyright), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+  CBSTR(cSystem->SysSetGuestCopyright), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_WEBSITE
 // ? Specifies a website for the guest application. It is purely for display
 // ? purposes only to the end-user. It can be requested by the guest and only
 // ? set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_website", "about:blank", CBSTR(cSystem->SetGuestWebsite),
+{ CFL_BASIC, "app_website", "about:blank", CBSTR(cSystem->SysSetGuestWebsite),
   TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_TICKRATE
 // ? Specifies the base tick rate of the guest application in nanoseconds.
 // ? The engine locks to this tick rate regardless of lag. It can also be
-// ? changed dynamically with Lua. The default is 0.016666667 seconds (60fps).
+// ? changed dynamically with Lua. The default is 0.016666666 seconds (60fps).
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "app_tickrate", "16666667",
+{ CFL_VIDEO, "app_tickrate", "16666666",
   CB(cTimer->TimerTickRateModified, uint64_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_DELAY
-// ? Specifies an artificial delay to force for terminal mode in milliseconds.
-// ? This is ignored on interactive mode because a one millisecond delay is
-// ? forced for every frame under the target rate.
+// ? Specifies an artificial delay to force for terminal mode or graphical mode
+// ? without the frame-limiter mode in milliseconds. In frame-limiter graphical
+// ? mode, the delay is completely ignored if frames are running behind the
+// ? accumulator. This function greatly lowers CPU usage and performance. The
+// ? default is '0' which causes a thread yield every frame but no suspend.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_delay", cCommon->CommonOne(),
-  CB(cTimer->TimerSetDelay, unsigned int), TUINTEGERSAVE|PANY },
+{ CFL_BASIC, "app_delay", cCommon->CommonZero(),
+  CB(cTimer->TimerSetDelay, unsigned int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! APP_TITLE
 // ? Sets a custom title for the window. This can only be changed at the
@@ -585,7 +589,7 @@ CVarItemStaticList{{
 // ? The default value is 2.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "err_admin", cCommon->CommonTwo(),
-  CB(cSystem->CheckAdminModified, unsigned int), TUINTEGER|PAPPCFG },
+  CB(cSystem->SysCheckAdminModified, unsigned int), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! ERR_CHECKSUM
 // ? Throws an error if there is an executable checksum mismatch. This only
@@ -601,7 +605,7 @@ CVarItemStaticList{{
   cCommon->CommonZero(),
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cSystem->CheckChecksumModified, bool), TBOOLEAN|PAPPCFG },
+  CB(cSystem->SysCheckChecksumModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! ERR_DEBUGGER
 // ? Throws an error if a debugger is running at start-up. The default value
@@ -615,7 +619,7 @@ CVarItemStaticList{{
   cCommon->CommonZero(),
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cSystem->CheckDebuggerDetected, bool), TBOOLEAN|PAPPCFG },
+  CB(cSystem->SysCheckDebuggerDetected, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! ERR_LUAMODE
 // ? Sets how to handle a LUA script error to one of these values...
@@ -666,7 +670,7 @@ CVarItemStaticList{{
 // ? default value is zero.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "err_minram", cCommon->CommonZero(),
-  CB(cSystem->SetMinRAM, uint64_t), TUINTEGER|PAPPCFG },
+  CB(cSystem->SysSetMinRAM, uint64_t), TUINTEGER|PAPPCFG },
 /* == Lua cvars ============================================================ */
 // ! LUA_CACHE
 // ? Specifies to compile any Lua code and store it in the user database for
@@ -769,7 +773,7 @@ CVarItemStaticList{{
 // ? use.
 /* ------------------------------------------------------------------------- */
 { CFL_AUDIO, "aud_interface", cCommon->CommonNegOne(),
-    NoOp, TINTEGERSAVE|PANY },
+    CB(cAudio->SetInterface, size_t), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AUD_CHECK
 // ? Specifies an interval (in number of milliseconds) of checking for audio
@@ -835,21 +839,22 @@ CVarItemStaticList{{
 // ? Specifies whether to use HRTF dynamics on audio output. This could cause
 // ? strange audio stereo quality issues so it is recommended to disable.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_hrtf", cCommon->CommonZero(), NoOp, TUINTEGERSAVE|PANY },
+{ CFL_AUDIO, "aud_hrtf", cCommon->CommonZero(), CB(cOal->OalSetHRTF, bool),
+  TUINTEGERSAVE|PANY },
 /* == Console cvars ======================================================== */
 // ! CON_KEYPRIMARY
 // ? The primary GLFW console key virtual key code to use to toggle console
 // ? visibility. It is set to '`' as default on a UK keyboard.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_keyprimary", "96",
-  CB(cInput->SetConsoleKey1, int), TUINTEGERSAVE|PANY },
+  CB(cInput->InputSetConsoleKey1, int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_KEYSECONDARY
 // ? The secondary GLFW console key virtual key code to use to toggle console
 // ? visibility. It is set to '+-' as default on a US keyboard.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_keysecondary", "161",
-  CB(cInput->SetConsoleKey2, int), TUINTEGERSAVE|PANY },
+  CB(cInput->InputSetConsoleKey2, int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_AUTOCOMPLETE
 // ? Flags that specify what to auto complete when TAB key is pressed in the
@@ -880,7 +885,7 @@ CVarItemStaticList{{
 // ? is covering the whole screen, and 0 means the console is not showing.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_height", "0.5",
-  CB(cConGraphics->SetHeight, GLfloat), TUFLOATSAVE|PANY },
+  CB(cConGfx->ConGfxSetHeight, GLfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_BLOUTPUT
 // ? Specifies the maximum number of lines to keep in the console. Excess
@@ -902,7 +907,7 @@ CVarItemStaticList{{
 // ? terminal which cannot be disabled.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_disabled", cCommon->CommonZero(),
-  CB(cConGraphics->CantDisableModified, bool), TBOOLEAN|PANY },
+  CB(cConGfx->ConGfxCantDisableModified, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_CVSHOWFLAGS
 // ? Flags specifying how to show CVar values in the console to protect
@@ -919,7 +924,7 @@ CVarItemStaticList{{
 // ? 0xAARRGGBB or an integral number.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_bgcolour", "2130706432",
-  CB(cConGraphics->TextBackgroundColourModified, uint32_t),
+  CB(cConGfx->ConGfxTextBackgroundColourModified, uint32_t),
   TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_BGTEXTURE
@@ -941,7 +946,8 @@ CVarItemStaticList{{
 // ? possible values
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontflags", cCommon->CommonZero(),
-  CB(cConGraphics->ConsoleFontFlagsModified, ImageFlagsType), TUINTEGER|PANY },
+  CB(cConGfx->ConGfxFontFlagsModified, ImageFlagsType),
+  TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTCOLOUR
 // ? Specifies the default colour of the console text. See the Console.Colours
@@ -956,7 +962,7 @@ CVarItemStaticList{{
 // ? Specifies the height of the loaded console FreeType font.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontheight", "20",
-  CB(cConGraphics->TextHeightModified, GLfloat), TUINTEGER|PAPPCFG },
+  CB(cConGfx->ConGfxTextHeightModified, GLfloat), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTPADDING
 // ? Specifies any extra padding to add to each FreeType font glyph to prevent
@@ -980,25 +986,25 @@ CVarItemStaticList{{
 // ? cause interpolation to occur so filtering is advised.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontscale", cCommon->CommonOne(),
-  CB(cConGraphics->TextScaleModified, GLfloat), TUFLOATSAVE|PANY },
+  CB(cConGfx->ConGfxTextScaleModified, GLfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTSPACING
 // ? Specifies the amount of padding to add after each cahracter rendered.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontspacing", cCommon->CommonZero(),
-  CB(cConGraphics->TextLetterSpacingModified, GLfloat), TFLOAT|PAPPCFG },
+  CB(cConGfx->ConGfxTextLetterSpacingModified, GLfloat), TFLOAT|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTLSPACING
 // ? Specifies the amount of padding to add below each line of text rendered.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontlspacing", cCommon->CommonZero(),
-  CB(cConGraphics->TextLineSpacingModified, GLfloat), TFLOAT|PAPPCFG },
+  CB(cConGfx->ConGfxTextLineSpacingModified, GLfloat), TFLOAT|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTWIDTH
 // ? Specifies the width of the loaded console FreeType font.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontwidth", "20",
-  CB(cConGraphics->TextWidthModified, GLfloat), TUINTEGER|PAPPCFG },
+  CB(cConGfx->ConGfxTextWidthModified, GLfloat), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTTEXSIZE
 // ? Specifies the initial size of the texture canvas in pixels. Do not set
@@ -1126,51 +1132,51 @@ CVarItemStaticList{{
 // ? 'inp_fsignore' too to disable the input when mouse leaves the window.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_clampmouse", cCommon->CommonOne(),
-  CB(cInput->SetClampMouse, bool), TBOOLEANSAVE|PANY },
+  CB(cInput->InputSetClampMouse, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_JOYDEFFDZ
 // ? Specifies the gamepad forward deadzone.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_joydeffdz", "0.25",
-  CB(cInput->SetDefaultJoyFwdDZ, float), TUFLOATSAVE|PANY },
+  CB(cInput->JoySetDefaultJoyFwdDZ, float), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_JOYDEFRDZ
 // ? Specifies the gamepad reverse deadzone.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_joydefrdz", "0.25",
-  CB(cInput->SetDefaultJoyRevDZ, float), TUFLOATSAVE|PANY },
+  CB(cInput->JoySetDefaultJoyRevDZ, float), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_FSTOGGLER
 // ? Enables or disables the ALT+ENTER or OPTION+ENTER combinations to switch
 // ? between full-screen or windowed mode (Uses value from 'vid_fs').
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_fstoggler", cCommon->CommonOne(),
-  CB(cInput->SetFSTogglerEnabled, bool), TBOOLEANSAVE|PANY },
+  CB(cInput->InputSetFSTogglerEnabled, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_LOCKKEYMODS
 // ? Enables or disables the placing CAPS/NUM/SCROLL LOCK status in the key
 // ? events.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_lockkeymods", cCommon->CommonOne(),
-  CB(cInput->SetLockKeyModEnabled, bool), TBOOLEAN|PANY },
+  CB(cInput->InputSetLockKeyModEnabled, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_RAWMOUSE
 // ? Enables raw mouse input if available.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_rawmouse", cCommon->CommonOne(),
-  CB(cInput->SetRawMouseEnabled, bool), TBOOLEANSAVE|PANY },
+  CB(cInput->InputSetRawMouseEnabled, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_STICKYKEY
 // ? Enables sticky key presses.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_stickykey", cCommon->CommonOne(),
-  CB(cInput->SetStickyKeyEnabled, bool), TBOOLEAN|PANY },
+  CB(cInput->InputSetStickyKeyEnabled, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! INP_STICKYMOUSE
 // ? Enables sticky mouse buttons.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_stickymouse", cCommon->CommonOne(),
-  CB(cInput->SetStickyMouseEnabled, bool), TBOOLEAN|PANY },
+  CB(cInput->InputSetStickyMouseEnabled, bool), TBOOLEAN|PANY },
 /* == Network cvars ======================================================== */
 // ! NET_CBPFLAG1
 // ? Specifies the certificate error ignore flags.
@@ -1249,15 +1255,7 @@ CVarItemStaticList{{
 // ? 1 for GLFW_OPENGL_ES_API or 2 for GLFW_NO_API.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_api",  cCommon->CommonZero(),
-  CB(cDisplay->ApiChanged, size_t), TUINTEGER|PCMDLINE|PAPPCFG },
-/* ------------------------------------------------------------------------- */
-// ! VID_AUXBUFFERS
-// ? Specified the number of auxiliary swap chain buffers to use. Specify 0
-// ? for double-buffering, 1 for triple-buffering or -1 to let the OpenGL
-// ? driver decide.
-/* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_auxbuffers", cCommon->CommonNegOne(),
-  CB(cDisplay->AuxBuffersChanged, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplayApiChanged, size_t), TUINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBALPHA
 // ? Override alpha component bit-depth. Default is -1 for GLFW_DONT_CARE.
@@ -1272,7 +1270,7 @@ CVarItemStaticList{{
   cCommon->CommonNegOne(),             // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->SetForcedBitDepthA, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetForcedBitDepthA, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBBLUE
 // ? Override red component bit-depth. Default is -1 for GLFW_DONT_CARE or 10
@@ -1288,7 +1286,7 @@ CVarItemStaticList{{
   cCommon->CommonNegOne(),             // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->SetForcedBitDepthB, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetForcedBitDepthB, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBGREEN
 // ? Override red component bit-depth. Default is -1 for GLFW_DONT_CARE or 10
@@ -1304,7 +1302,7 @@ CVarItemStaticList{{
   cCommon->CommonNegOne(),             // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->SetForcedBitDepthG, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetForcedBitDepthG, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBRED
 // ? Override red component bit-depth. Default is -1 for GLFW_DONT_CARE or 10
@@ -1320,7 +1318,7 @@ CVarItemStaticList{{
   cCommon->CommonNegOne(),             // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->SetForcedBitDepthR, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetForcedBitDepthR, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_CTXMAJOR
 // ? Specifies the major context version to use. This is only used for
@@ -1328,7 +1326,7 @@ CVarItemStaticList{{
 // ? 3 with a core profile.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_ctxmajor", "3",
-  CB(cDisplay->CtxMajorChanged, int), TINTEGER|PCMDLINE|PAPPCFG },
+  CB(cDisplay->DisplayCtxMajorChanged, int), TINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_CTXMINOR
 // ? Specifies the minor context version to use. This is only used for
@@ -1336,32 +1334,33 @@ CVarItemStaticList{{
 // ? 2 with a core profile.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_ctxminor", cCommon->CommonTwo(),
-  CB(cDisplay->CtxMinorChanged, int), TINTEGER|PCMDLINE|PAPPCFG },
+  CB(cDisplay->DisplayCtxMinorChanged, int), TINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_CLEAR
 // ? Specifies to clear the main frame buffer every frame.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_clear", cCommon->CommonOne(),
-  CB(cFboCore->SetBackBufferClear, bool), TBOOLEAN|PAPPCFG },
+  CB(cFboCore->FboCoreSetBackBufferClear, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_CLEARCOLOUR
 // ? Specifies the 32-bit integer (0xAARRGGBB) as the default clear value.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_clearcolour", cCommon->CommonZero(),
-  CB(cFboCore->SetBackBufferClearColour, unsigned int), TUINTEGER|PAPPCFG },
+  CB(cFboCore->FboCoreSetBackBufferClearColour, unsigned int),
+  TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_DBLBUFF
 // ? Specifies to use double-buffering. This is only used for troubleshooting
 // ? purposes only and serves no other purpose. The default is 1 for yes.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_dblbuff", cCommon->CommonOne(),
-  CB(cDisplay->DoubleBufferChanged, bool), TBOOLEAN|PCMDLINE|PAPPCFG },
+  CB(cDisplay->DisplayDoubleBufferChanged, bool), TBOOLEAN|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_DEBUG
 // ? Sets 'GLFW_OPENGL_DEBUG_CONTEXT'. Default is 0 (disabled).
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_debug", cCommon->CommonZero(),
-  CB(cDisplay->SetGLDebugMode, bool), TBOOLEANSAVE|PANY },
+  CB(cDisplay->DisplaySetGLDebugMode, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FS
 // ? Specifies what full-screen type to use. Specify 0 to keep the engine in
@@ -1369,7 +1368,7 @@ CVarItemStaticList{{
 // ? 'vid_fsmode') or 2 for borderless full-screen mode.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_fs", cCommon->CommonZero(),
-  CB(cDisplay->FullScreenStateChanged, bool), TBOOLEANSAVE|PANY },
+  CB(cDisplay->DisplayFullScreenStateChanged, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FSAA
 // ? Enables full-scene anti-aliasing. Only needed to smooth the edges of
@@ -1378,7 +1377,7 @@ CVarItemStaticList{{
 // ? occurs with any setting other than the default on a Mac.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_fsaa", cCommon->CommonNegOne(),
-  CB(cDisplay->FsaaChanged, int), TINTEGER|CPOW2|PCMDLINE },
+  CB(cDisplay->DisplayFsaaChanged, int), TINTEGER|CPOW2|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! VID_FORWARD
 // ? Specifies to use a forward compatible context. This is only used for
@@ -1386,7 +1385,7 @@ CVarItemStaticList{{
 // ? 1 for yes.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_forward", cCommon->CommonOne(),
-  CB(cDisplay->ForwardChanged, bool), TBOOLEAN|PCMDLINE|PAPPCFG },
+  CB(cDisplay->DisplayForwardChanged, bool), TBOOLEAN|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_FSMODE
 // ? Specifies which full-screen mode to use. You can check the log or use
@@ -1403,14 +1402,14 @@ CVarItemStaticList{{
   "-2",                                // Force borderless full-screen
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->FullScreenModeChanged, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplayFullScreenModeChanged, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_GAMMA
 // ? Overrides the gamma level. The default is 1 which is to keep the desktop
 // ? gamma level.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_gamma", cCommon->CommonOne(),
-  CB(cDisplay->GammaChanged, GLfloat), TUFLOATSAVE|PANY },
+  CB(cDisplay->DisplayGammaChanged, GLfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_GASWITCH
 // ? Set to 0 (default) to disable MacOS graphics switching, or 1 to allow
@@ -1424,7 +1423,7 @@ CVarItemStaticList{{
     cCommon->CommonZero(),             // No support for graphics switching
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->GraphicsSwitchingChanged, bool), TBOOLEANSAVE|PANY },
+  CB(cDisplay->DisplayGraphicsSwitchingChanged, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_HIDPI
 // ? Enables or disables HiDPI support. Set to '0' to disable HiDPI, '1' to
@@ -1435,20 +1434,21 @@ CVarItemStaticList{{
 // ? be set via command-line or the application manifest.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_hidpi", cCommon->CommonOne(),
-  CB(cDisplay->HiDPIChanged, HiDPISetting), TUINTEGER|PAPPCFG|PCMDLINE },
+  CB(cDisplay->DisplayHiDPIChanged, HiDPISetting),
+  TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! VID_MONITOR
 // ? Specifies the monitor id to use. Use the 'mlist' console command to see
 // ? possible values or just use -1 to let the operating system decide.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_monitor", cCommon->CommonNegOne(),
-  CB(cDisplay->MonitorChanged, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplayMonitorChanged, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_NOERRORS
 // ? Sets GLFW_CONTEXT_NO_ERROR. Default is 0 (disabled).
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_noerrors", cCommon->CommonZero(),
-  CB(cDisplay->SetNoErrorsMode, bool), TBOOLEANSAVE|PANY },
+  CB(cDisplay->DisplaySetNoErrorsMode, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_ORASPMAX
 // ? Specifies the maximum aspect ratio allowed in the main frame buffer. For
@@ -1456,7 +1456,7 @@ CVarItemStaticList{{
 // ? 'vid_simplematrix' cvar is set to 0.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_oraspmax", "1.777778",
-  CB(cFboCore->SetMaxAspect, GLfloat), TUFLOAT|PAPPCFG },
+  CB(cFboCore->FboCoreSetMaxAspect, GLfloat), TUFLOAT|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_ORASPMIN
 // ? Specifies the minmum aspect ratio allowed in the main frame buffer. For
@@ -1464,19 +1464,19 @@ CVarItemStaticList{{
 // ? 'vid_simplematrix' cvar is set to 0.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_oraspmin", "1.25",
-  CB(cFboCore->SetMinAspect, GLfloat), TUFLOAT|PAPPCFG },
+  CB(cFboCore->FboCoreSetMinAspect, GLfloat), TUFLOAT|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_ORHEIGHT
 // ? Specifies the height of the main frame buffer.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_orheight", "480",
-  CB(cDisplay->SetMatrixHeight, GLfloat), TUFLOAT|PAPPCFG },
+  CB(cDisplay->DisplaySetMatrixHeight, GLfloat), TUFLOAT|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_ORWIDTH
 // ? Specifies the width of the main frame buffer.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_orwidth", "640",
-  CB(cDisplay->SetMatrixWidth, GLfloat), TUFLOAT|PAPPCFG },
+  CB(cDisplay->DisplaySetMatrixWidth, GLfloat), TUFLOAT|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_PROFILE
 // ? Specifies the type of profile to create the context for. This is only used
@@ -1485,7 +1485,7 @@ CVarItemStaticList{{
 // ? or 2 for GLFW_OPENGL_ANY_PROFILE.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_profile", cCommon->CommonZero(),
-  CB(cDisplay->ProfileChanged, size_t), TUINTEGER|PCMDLINE|PAPPCFG },
+  CB(cDisplay->DisplayProfileChanged, size_t), TUINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_QCOMPRESS
 // ? Specifies texture compression quality. Default is maximum.
@@ -1517,7 +1517,8 @@ CVarItemStaticList{{
 // ? app author needs to be concerned with this value and can only be set in
 // ? the application manifest.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_rcmds", "1000", CB(cFboCore->SetCommandReserve, size_t),
+{ CFL_VIDEO, "vid_rcmds", "1000",
+  CB(cFboCore->FboCoreSetCommandReserve, size_t),
   TINTEGER|PAPPCFG|CUNSIGNED|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! VID_RDFBO
@@ -1543,7 +1544,7 @@ CVarItemStaticList{{
 // ? or 2 for GLFW_RELEASE_BEHAVIOR_NONE.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_release", cCommon->CommonTwo(),
-  CB(cDisplay->ReleaseChanged, size_t), TUINTEGER|PCMDLINE|PAPPCFG },
+  CB(cDisplay->DisplayReleaseChanged, size_t), TUINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_RFBO
 // ? Pre-allocates space for the specified number of frame buffer names. By
@@ -1562,7 +1563,8 @@ CVarItemStaticList{{
 // ? the application manifest.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_rfloats", "10000",
-  CB(cFboCore->SetFloatReserve, size_t), TINTEGER|PAPPCFG|CUNSIGNED|PCMDLINE },
+  CB(cFboCore->FboCoreSetFloatReserve, size_t),
+  TINTEGER|PAPPCFG|CUNSIGNED|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! VID_ROBUSTNESS
 // ? Specifies the robustness strategy of the context. This is only used
@@ -1571,7 +1573,7 @@ CVarItemStaticList{{
 // ? GLFW_LOSE_CONTEXT_ON_RESET or 2 for GLFW_NO_ROBUSTNESS.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_robustness", cCommon->CommonTwo(),
-  CB(cDisplay->RobustnessChanged, size_t), TUINTEGER|PCMDLINE|PAPPCFG },
+  CB(cDisplay->DisplayRobustnessChanged, size_t), TUINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_SIMPLEMATRIX
 // ? Set to 0 to not maintain frame buffer aspect ratio, or 1 to allow the
@@ -1579,7 +1581,7 @@ CVarItemStaticList{{
 // ? 'vid_oraspmin' and 'vid_oraspmax).
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_simplematrix", cCommon->CommonZero(),
-  CB(cFboCore->SetSimpleMatrix, bool), TBOOLEAN|PAPPCFG },
+  CB(cFboCore->FboCoreSetSimpleMatrix, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! VID_SRGB
 // ? This specifies whether the framebuffer should be sRGB capable. Possible
@@ -1587,7 +1589,7 @@ CVarItemStaticList{{
 // ? to the configuration database.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_srgb", cCommon->CommonZero(),
-  CB(cDisplay->SRGBColourSpaceChanged, bool), TBOOLEANSAVE|PANY },
+  CB(cDisplay->DisplaySRGBColourSpaceChanged, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_SSTYPE
 // ? Specifies the screenshot type, see the command output of 'imgfmts' to see
@@ -1601,7 +1603,7 @@ CVarItemStaticList{{
 // ? Enables 3D glasses support.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_stereo", cCommon->CommonZero() ,
-  CB(cDisplay->SetStereoMode, bool), TBOOLEANSAVE|PANY },
+  CB(cDisplay->DisplaySetStereoMode, bool), TBOOLEANSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_SUBPIXROUND
 // ? Specifies the type of sub-pixel rounding function on the main frame-buffer
@@ -1617,7 +1619,7 @@ CVarItemStaticList{{
 // ? table.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_texfilter", "3",
-  CB(cFboCore->SetFilter, OglFilterEnum), TUINTEGERSAVE|PANY },
+  CB(cFboCore->FboCoreSetFilter, OglFilterEnum), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_VSYNC
 // ? Enables vertical synchronisation which helps smooth the frame rate. Set to
@@ -1634,7 +1636,7 @@ CVarItemStaticList{{
 // ? windows. Default is 0 for no.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_alpha", cCommon->CommonZero(),
-  CB(cDisplay->SetWindowTransparency, bool), TBOOLEAN|PAPPCFG },
+  CB(cDisplay->DisplaySetWindowTransparency, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! WIN_ASPECT
 // ? Force the window to have an aspect ratio. Specify as a floating point
@@ -1647,33 +1649,33 @@ CVarItemStaticList{{
 // ? Specifies if the window should have a titlebar and a border.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_border", cCommon->CommonOne(),
-  CB(cDisplay->BorderChanged, bool), TBOOLEAN|PANY },
+  CB(cDisplay->DisplayBorderChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_CLOSEABLE
 // ? Specifies if the window is closable by the user.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_closeable", cCommon->CommonOne(),
-  CB(cDisplay->CloseableChanged, bool), TBOOLEAN|PANY },
+  CB(cDisplay->DisplayCloseableChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_FLOATING
 // ? Specifies to lock the visibility of the window, otherwise known as 'always
 // ? on top' or 'Topmost'.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_floating", cCommon->CommonZero(),
-  CB(cDisplay->FloatingChanged, bool), TBOOLEAN|PANY },
+  CB(cDisplay->DisplayFloatingChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_FOCUSED
 // ? Specifies to automatically focus the window on creation.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_focused", cCommon->CommonOne(),
-  CB(cDisplay->AutoFocusChanged, bool), TBOOLEAN|PANY },
+  CB(cDisplay->DisplayAutoFocusChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_HEIGHT
 // ? Sets the initial height of the window. This value is saved to the
 // ? persistence database when changed.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_height", cCommon->CommonZero(),
-  CB(cDisplay->HeightChanged, int), TUINTEGERSAVE|PANY },
+  CB(cDisplay->DisplayHeightChanged, int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_HEIGHTMAX
 // ? Sets the maximum height of the window. This is only changable at the
@@ -1694,14 +1696,14 @@ CVarItemStaticList{{
 // ? to not. The default value is 0.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_maximised", cCommon->CommonZero(),
-  CB(cDisplay->SetMaximisedMode, bool), TBOOLEAN|PANY },
+  CB(cDisplay->DisplaySetMaximisedMode, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_MINIMISEAUTO
 // ? Specify 1 to have the window automatically minimise when it is not active
 // ? or 0 to not. The default value is 1.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_minimiseauto", cCommon->CommonOne(),
-  CB(cDisplay->AutoIconifyChanged, bool), TBOOLEAN|PANY },
+  CB(cDisplay->DisplayAutoIconifyChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_POSX
 // ? Specify the default X position of the window. -2 means the centre of the
@@ -1709,7 +1711,7 @@ CVarItemStaticList{{
 // ? physical position on the screen. The default value is -2.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_posx", "-2",
-  CB(cDisplay->SetXPosition, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetXPosition, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_POSY
 // ? Specify the default Y position of the window. -2 means the centre of the
@@ -1717,21 +1719,21 @@ CVarItemStaticList{{
 // ? physical position on the screen. The default value is -2.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_posy", "-2",
-  CB(cDisplay->SetYPosition, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetYPosition, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_SIZABLE
 // ? Specify 1 if the window is allowed to be resized or 0 if not. The default
 // ? value is 1.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_sizable", cCommon->CommonOne(),
-  CB(cDisplay->SizableChanged, bool), TBOOLEAN|PANY },
+  CB(cDisplay->DisplaySizableChanged, bool), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_WIDTH
 // ? Sets the initial width of the window. This value is saved to the
 // ? persistence database when changed.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_width", cCommon->CommonZero(),
-  CB(cDisplay->WidthChanged, int), TUINTEGERSAVE|PANY },
+  CB(cDisplay->DisplayWidthChanged, int), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_WIDTHMAX
 // ? Sets the maximum width of the window. This is only changable at the

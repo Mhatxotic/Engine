@@ -27,8 +27,8 @@ namespace P {                          // Start of public module namespace
 #define LLRSCONSTBEGIN       static const LuaTable ltConsts[]{
 #define LLRSCONSTEND         ltLast };
 #define LLRSEND              llrLast };
-#define LLRSFUNC(n)          { #n, Cb ## n }
-#define LLRSFUNCEX(n,f)      { #n, Cb ## f }
+#define LLRSFUNC(n)          { #n, LuaUtilCallback<&Cb ## n> }
+#define LLRSFUNCEX(n,f)      { #n, LuaUtilCallback<&Cb ## f> }
 #define LLRSKTBEGIN(n)       static const LuaKeyInt lkiConsts ## n[]{
 #define LLRSKTEND            lkiLast };
 #define LLRSKTITEM(p,n)      LLRSKTITEMEX2(#n, p ## n)
@@ -43,40 +43,54 @@ template<typename AnyType, int itSize>
 constexpr static const LuaTable ltLast{ nullptr, nullptr, 0 };
 constexpr static const LuaKeyInt lkiLast{ nullptr, 0 };
 constexpr static const luaL_Reg llrLast{ nullptr, nullptr };
-/* -- Dependencies --------------------------------------------------------- */
+/* ------------------------------------------------------------------------- **
+** ######################################################################### **
+** ## LUA library API includes                                            ## **
+** ######################################################################### **
+** ## The following files are also parsed by the engine Project           ## **
+** ## Management Utility to help create a HTML documentation. New         ## **
+** ## namespaces start with '// % ' with each line describing the         ## **
+** ## namespace starting with '// ! '. Each new function starts with      ## **
+** ## '// $ ' with 'Class:Method' or 'Namespace.Function'. Each parameter ## **
+** ## to that function starts with '// > ' with 'Name:type=Description'   ## **
+** ## and returning result as '// < ' with the same format as             ## **
+** ## 'Name:type=Description'. Each line describing the function will     ## **
+** ## begin with '// ? '. If one of these lines ends with a period then   ## **
+** ## the following line will not be a new paragraph.                     ## **
+** ######################################################################### **
+** ------------------------------------------------------------------------- */
 #include "llcommon.hpp"                // Common helper classes (always first)
-/* -- API includes --------------------------------------------------------- */
-#include "llarchive.hpp"               // Archive namespace functions
-#include "llasset.hpp"                 // Asset namespace functions
-#include "llatlas.hpp"                 // Atlas namespace functions
-#include "llaudio.hpp"                 // Audio namespace functions
-#include "llbin.hpp"                   // Bin namespace functions
-#include "llclip.hpp"                  // Clipboard namespace functions
-#include "llcmd.hpp"                   // Command namespace functions
-#include "llcore.hpp"                  // Core namespace functions
-#include "lldisplay.hpp"               // Display namespace functions
-#include "llfbo.hpp"                   // Fbo namespace functions
-#include "llfile.hpp"                  // File namespace functions
-#include "llfont.hpp"                  // Font namespace functions
-#include "llftf.hpp"                   // Ftf namespace functions
-#include "llimage.hpp"                 // Image namespace functions
-#include "llinput.hpp"                 // Input namespace functions
-#include "lljson.hpp"                  // Json namespace functions
-#include "llmask.hpp"                  // Mask namespace functions
-#include "llpcm.hpp"                   // Pcm namespace functions
-#include "llsource.hpp"                // Source namespace functions
-#include "llsample.hpp"                // Sample namespace functions
-#include "llsocket.hpp"                // Socket namespace functions
-#include "llsql.hpp"                   // Sql namespace functions
-#include "llsshot.hpp"                 // SShot namespace functions
-#include "llstat.hpp"                  // Stat namespace functions
-#include "llstream.hpp"                // Stream namespace functions
-#include "lltexture.hpp"               // Texture namespace functions
-#include "llpalette.hpp"               // Palette namespace functions
-#include "llurl.hpp"                   // Url namespace functions
-#include "llutil.hpp"                  // Util namespace functions
-#include "llvar.hpp"                   // Variable namespace functions
-#include "llvideo.hpp"                 // Video namespace functions
+#include "llarchive.hpp"               // Archive members and methods
+#include "llasset.hpp"                 // Asset members and methods
+#include "llatlas.hpp"                 // Atlas members and methods
+#include "llaudio.hpp"                 // Audio members and methods
+#include "llbin.hpp"                   // Bin members and methods
+#include "llclip.hpp"                  // Clipboard members and methods
+#include "llcmd.hpp"                   // Command members and methods
+#include "llcore.hpp"                  // Core members and methods
+#include "lldisplay.hpp"               // Display members and methods
+#include "llfbo.hpp"                   // Fbo members and methods
+#include "llfile.hpp"                  // File members and methods
+#include "llfont.hpp"                  // Font members and methods
+#include "llftf.hpp"                   // Ftf members and methods
+#include "llimage.hpp"                 // Image members and methods
+#include "llinput.hpp"                 // Input members and methods
+#include "lljson.hpp"                  // Json members and methods
+#include "llmask.hpp"                  // Mask members and methods
+#include "llpcm.hpp"                   // Pcm members and methods
+#include "llsource.hpp"                // Source members and methods
+#include "llsample.hpp"                // Sample members and methods
+#include "llsocket.hpp"                // Socket members and methods
+#include "llsql.hpp"                   // Sql members and methods
+#include "llsshot.hpp"                 // SShot members and methods
+#include "llstat.hpp"                  // Stat members and methods
+#include "llstream.hpp"                // Stream members and methods
+#include "lltexture.hpp"               // Texture members and methods
+#include "llpalette.hpp"               // Palette members and methods
+#include "llurl.hpp"                   // Url members and methods
+#include "llutil.hpp"                  // Util members and methods
+#include "llvar.hpp"                   // Variable members and methods
+#include "llvideo.hpp"                 // Video members and methods
 /* -- Done with these macros ----------------------------------------------- */
 #undef LLRSMFBEGIN
 #undef LLRSKTITEMEX2
@@ -106,7 +120,7 @@ constexpr static const luaL_Reg llrLast{ nullptr, nullptr };
 /* -- Items in a table helper macro ---------------------------------------- */
 #define LLAL(n,t)  LLArrLen(LLNS(n, t))
 /* -- Destructor function builder helper macro ----------------------------- */
-#define LLDF(n)    static_cast<lua_CFunction>(LL ## n::CbDestroy)
+#define LLDF(n)    LuaUtilCallback<&LL ## n::CbDestroy>
 /* -- Macro to actually build an item in the main API array ---------------- */
 #define LLITEM(lmt,                    /* LMT_* identifier (luadef.hpp)     */\
                ns,                     /* Name of namespace or class        */\

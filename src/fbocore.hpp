@@ -2,19 +2,21 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## Contains the main drawing fbo's and commands. It would be nice to   ## **
-** ## have this in the FBOs collector but we can't due to C++ limitations ## **
-** ## of initialising static FBO classes when it hasn't been defined yet. ## **
+** ## Contains the main drawing FBO's and commands. It would be nice to   ## **
+** ## have this in the FBO's collector but we can't due to C++            ## **
+** ## limitations of initialising static FBO classes when it hasn't been  ## **
+** ## defined yet.                                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IFboCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IDim::P;               using namespace IEvtMain::P;
-using namespace IFboDef::P;            using namespace IFbo::P;
+using namespace IClock::P;             using namespace ICoords::P;
+using namespace ICVar::P;              using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace IDim::P;
+using namespace IEvtMain::P;           using namespace IFboBlend::P;
+using namespace IColour::P;            using namespace IFbo::P;
 using namespace IGlFW::P;              using namespace ILog::P;
 using namespace IOgl::P;               using namespace IShader::P;
 using namespace IShaders::P;           using namespace IStd::P;
@@ -22,61 +24,76 @@ using namespace IString::P;            using namespace ISysUtil::P;
 using namespace ITimer::P;             using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
-typedef array<Fbo, 2> FboDouble;       // Main and console fbo typedef
+typedef array<Fbo, 2> FboDouble;       // Main and console FBO typedef
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == Main fbo class ======================================================= */
+/* == Typedefs ============================================================= */
+enum DrawState : unsigned int          // Drawing states
+{ /* ----------------------------------------------------------------------- */
+  DS_NONE,                             // [0] No redrawing requested
+  DS_PARTIAL,                          // [1] Draw main FBO to back buffer only
+  DS_FULL,                             // [2] Finish console/main, draw to back
+};/* ----------------------------------------------------------------------- */
+/* == Main FBO class ======================================================= */
 class FboCore;                         // Class prototype
 static FboCore *cFboCore = nullptr;    // Pointer to global class
-class FboCore :                        // The main fbo operations manager
+class FboCore :                        // The main FBO operations manager
   /* -- Base classes ------------------------------------------------------- */
-  public FboColour,                    // Backbuffer clear colour
+  public Colour,                       // Backbuffer clear colour
   public FboBlend,                     // Default blending mode
-  public DimGLSizei,                   // Main frame buffer object dimensions
-  private FboDouble                    // Core frame buffer objects
+  public DimGLSizei,                   // Main FBO dimensions
+  private FboDouble                    // Main and console classes
 { /* -- Private variables -------------------------------------------------- */
   GLfloat          fAspectMin,         // Minimum orthangal matrix ratio
                    fAspectMax;         // Maximum orthangal matrix ratio
   DimGLFloat       dfMatrix;           // Requested matrix dimensions
-  bool             bDraw,              // Should we draw the main fbo flag
-                   bSimpleMatrix,      // Use simple not automatic matrix
+  DrawState        dsDraw;             // Draw mode
+  bool             bSimpleMatrix,      // Use simple not automatic matrix
                    bClearBuffer;       // Clear back buffer?
-  /* -- Core fbos -------------------------------------------------- */ public:
-  Fbo             &fboMain,            // Main fbo class (FboDouble[0])
-                  &fboConsole;         // Console fbo class (FboDouble[1])
-  /* -- Render timings ----------------------------------------------------- */
-  ClockInterval<>  ciCurrent;          // One second interval to calculate fps
-  unsigned int     uiFPS, uiFPSCur;    // Frames per second (last / current)
+  /* -- Core FBO's --------------------------------------------------------- */
+  Fbo             &fboMain,            // Main FBO class (FboDouble[0])
+                  &fboConsole;         // Console FBO class (FboDouble[1])
+  /* -- FPS ---------------------------------------------------------------- */
+  ClkTimePoint     ctpStart;           // Fps checkpoint
+  double           dFps, dFpsSmoothed; // Caluclated FPS value + smoothed
+  /* -- Get FBO's -------------------------------------------------- */ public:
+  Fbo &FboCoreGetMain() { return fboMain; }
+  Fbo &FboCoreGetConsole() { return fboConsole; }
+  /* -- Shortcut to the main FBO stage bounds ------------------------------ */
+  const CoordsFloat &FboCoreGetMainStage() const { return fboMain.cfStage; }
+  const CoordsFloat &FboCoreGetConsoleStage() const
+    { return fboConsole.cfStage; }
+  /* -- Blits the console FBO to main FBO ---------------------------------- */
+  void FboCoreBlitConsoleToMain() { fboMain.FboBlit(fboConsole); }
+  /* -- Set main FBO as active FBO to draw too ----------------------------- */
+  void FboCoreActivateMain() { fboMain.FboSetActive(); }
   /* -- Draw flags --------------------------------------------------------- */
-  bool CanDraw() const { return bDraw; }
-  bool CannotDraw() const { return !CanDraw(); }
-  void SetDraw() { bDraw = true; }
-  void ClearDraw() { bDraw = false; }
-  /* -- Get members -------------------------------------------------------- */
-  GLfloat GetMatrixWidth() const { return dfMatrix.DimGetWidth(); }
-  GLfloat GetMatrixHeight() const { return dfMatrix.DimGetHeight(); }
+  DrawState FboCoreGetDraw() const { return dsDraw; }
+  bool FboCoreCanDraw() const { return FboCoreGetDraw() == DS_FULL; }
+  bool FboCoreCannotDraw() const { return FboCoreGetDraw() == DS_NONE; }
+  void FboCoreSetDraw() { dsDraw = DS_FULL; }
+  void FboCoreClearDrawPartial() { dsDraw = DS_PARTIAL; }
+  void FboCoreClearDraw() { dsDraw = DS_NONE; }
+  /* -- Get matrix dimensions ---------------------------------------------- */
+  GLfloat FboCoreGetMatrixWidth() const { return dfMatrix.DimGetWidth(); }
+  GLfloat FboCoreGetMatrixHeight() const { return dfMatrix.DimGetHeight(); }
+  /* -- Get smoothed rendering frames per second --------------------------- */
+  double FboCoreGetFPS() const { return dFpsSmoothed; }
   /* -- Reset backbuffer clear colour to colour stored in cvar ------------- */
-  void ResetClearColour()
+  void FboCoreResetClearColour()
   { // Reset core framebuffer object colour intensities
-    for(Fbo &fboRef : *this) fboRef.FboResetClearColour();
+    for(Fbo &fboRef : *this) fboRef.ColourReset();
     // Commit the default back buffer clear colour
     cOgl->SetClearColourInt(
-      cCVars->GetInternal<unsigned int>(VID_CLEARCOLOUR));
+      cCVars->CVarsGetInternal<unsigned int>(VID_CLEARCOLOUR));
   }
-  /* -- Render the main fbo from the engine thread ------------------------- */
-  void Render()
-  { // Finish and add the main fbo to the render list and render all fbos
-    FinishMain();
-    FboRender();
-    // Flush the pipeline to prevent memory leak and wait if not drawing
-    if(CannotDraw()) { cOgl->Flush(); return cTimer->TimerForceWait(); }
-    // Clear redraw flag
-    ClearDraw();
-    // Unbind current FBO so we select the back buffer to draw to
+  /* -- Render the main FBO from the engine thread ------------------------- */
+  void FboCoreRender()
+  { // Unbind current FBO so we select the back buffer to draw to
     cOgl->BindFBO();
     // Set the first active texture unit
     cOgl->ActiveTexture();
-    // Bind the texture attached to the fbo
+    // Bind the texture attached to the FBO
     cOgl->BindTexture(fboMain.uiFBOtex);
     // Select our basic 3D transform shader
     cOgl->UseProgram(cShaderCore->sh3D.GetProgram());
@@ -84,62 +101,24 @@ class FboCore :                        // The main fbo operations manager
     cOgl->SetViewport(DimGetWidth(), DimGetHeight());
     // Set the default alpha blending mode
     cOgl->SetBlendIfChanged(*this);
-    // Clear back buffer if main fbo has alpha
+    // Clear back buffer if main FBO has alpha
     if(fboMain.FboIsTransparencyEnabled()) cOgl->SetAndClear(*this);
-    // Set normal fill poly mode
-    cOgl->SetPolygonMode(GL_FILL);
-    // Buffer the interlaced triangle data
-    cOgl->BufferStaticData(fboMain.FboItemGetDataSize(),
-      fboMain.FboItemGetData());
-    // Specify format of the interlaced triangle data
-    cOgl->VertexAttribPointer(A_COORD, stCompsPerCoord, 0,
-      fboMain.FboItemGetTCPos());
-    cOgl->VertexAttribPointer(A_VERTEX, stCompsPerPos, 0,
-      fboMain.FboItemGetVPos());
-    cOgl->VertexAttribPointer(A_COLOUR, stCompsPerColour, 0,
-      fboMain.FboItemGetCPos());
- // Using MacOS?
-#if defined(MACOS)
-    // This locking code is required to fix a major crash bug in Ventura 13.3+.
-    // See https://github.com/glfw/glfw/issues/1997 for more information.
-    using namespace Lib::OS::GlFW::NSGL;
-    // Get the current NSGL context and lock it. Note there is nothing to throw
-    // in this routine so it is safe to use this as-is.
-    CGLContextObj cglcoLock = CGLGetCurrentContext();
-    CGLLockContext(cglcoLock);
-    // Blit the two triangles
-    cOgl->DrawArraysTriangles(stTwoTriangles);
-    // Context is unlocked when exiting this scope
-    CGLUnlockContext(cglcoLock);
-#else
-    // Blit the two triangles
-    cOgl->DrawArraysTriangles(stTwoTriangles);
-#endif
+    // Draw the main FBO to the back buffer
+    cOgl->OglDrawArrays();
+    // Delete lingering texture and FBO handles
+    cOgl->OglPostRender();
     // Swap buffers
     cGlFW->WinSwapGLBuffers();
-    // Update memory
-    cOgl->UpdateVRAMAvailable();
-    // Clear any existing errors
-    cOgl->GetError();
-    // Frames rendered
-    ++uiFPSCur;
-    // Return if we've not reached one second yet
-    if(!ciCurrent.CITriggerStrict()) return;
-    // Set frames per second
-    uiFPS = uiFPSCur;
-    // Reset frames per second this frame
-    uiFPSCur = 0;
+    // Calculate an average fps
+    const ClkTimePoint ctpNow{ cTimer->TimerGetStartTime() };
+    // Smooth the value with a 0.01 alpha
+    dFps = UtilSmooth(UtilPerSec(ClockDurationToDouble(ctpNow - ctpStart)),
+      dFpsSmoothed);
+    // Update to the current timepoint
+    ctpStart = ctpNow;
   }
-  /* -- Blits the console fbo to main fbo ---------------------------------- */
-  void BlitConsoleToMain() { fboMain.FboBlit(fboConsole); }
-  /* -- Finish main fbo and add it to render list -------------------------- */
-  void FinishMain() { fboMain.FboFinishAndRender(); }
-  /* -- Set main fbo as active fbo to draw too ----------------------------- */
-  void ActivateMain() { fboMain.FboSetActive(); }
-  /* -- Called from main tick incase we need to keep catching up frames ---- */
-  void RenderFbosAndFlushMain() { FboRender(); fboMain.FboFlush(); }
-  /* -- Sent when the window is resized/main fbo needs autosized --- */ public:
-  bool AutoMatrix(const GLfloat fWidth, const GLfloat fHeight,
+  /* -- Sent when the window is resized/main FBO needs autosized --- */ public:
+  bool FboCoreAutoMatrix(const GLfloat fWidth, const GLfloat fHeight,
     const bool bForce)
   { // Some variables we'll need to do some calculations
     GLfloat fAspect, fAddWidth, fLeft, fTop, fRight, fBottom;
@@ -172,10 +151,10 @@ class FboCore :                        // The main fbo operations manager
       fBottom = fHeight;
     } // Test if the viewport didn't change?
     const bool bUnchanged =
-      StdIsFloatEqual(fLeft, fboMain.ffcStage.GetCoLeft()) &&
-      StdIsFloatEqual(fTop, fboMain.ffcStage.GetCoTop()) &&
-      StdIsFloatEqual(fRight, fboMain.ffcStage.GetCoRight()) &&
-      StdIsFloatEqual(fBottom, fboMain.ffcStage.GetCoBottom());
+      StdIsFloatEqual(fLeft, FboCoreGetMainStage().CoordsGetLeft()) &&
+      StdIsFloatEqual(fTop, FboCoreGetMainStage().CoordsGetTop()) &&
+      StdIsFloatEqual(fRight, FboCoreGetMainStage().CoordsGetRight()) &&
+      StdIsFloatEqual(fBottom, FboCoreGetMainStage().CoordsGetBottom());
     // Set stage bounds for drawing
     fboMain.FboSetMatrix(fLeft, fTop, fRight, fBottom);
     // Calculate matrix dimensions
@@ -188,7 +167,7 @@ class FboCore :                        // The main fbo operations manager
     UtilStretchToOuter(dOW, dOH, dIW, dIH);
     // Calculate effective scaled viewport width
     const double dW = dIW - dOW;
-    // Update the drawing position so the main fbo triangles are in the
+    // Update the drawing position so the main FBO triangles are in the
     // centre of the screen to try and maintain 1:1 pixel ratio even though
     // on non-4:3 resolutions, you might not be able to scale the matrix
     // width into a scaled 16:9 aspect ratio (e.g. 426x240 isn't exactly
@@ -200,21 +179,29 @@ class FboCore :                        // The main fbo operations manager
     if(bUnchanged) { if(!bForce) return false; }
     // Stage changed so save matrix size incase viewport changes
     else dfMatrix.DimSet(fWidth, fHeight);
-    // Calculate new fbo width and height
+    // Calculate new FBO width and height
     const GLsizei siFBOWidth = static_cast<GLsizei>(fRight - fLeft),
                   siFBOHeight = static_cast<GLsizei>(fBottom - fTop);
-    // No point changing anything if the bounds are the same and if the fbo
+    // No point changing anything if the bounds are the same and if the FBO
     // needs updating? Also ignore if opengl isn't initialised as the GLfW FB
     // reset window event might be sent before we've initialised it!
-    if((siFBOWidth != static_cast<GLsizei>(fboMain.GetCoRight()) ||
-        siFBOHeight != static_cast<GLsizei>(fboMain.GetCoBottom()) ||
+    if((siFBOWidth != static_cast<GLsizei>(fboMain.CoordsGetRight()) ||
+        siFBOHeight != static_cast<GLsizei>(fboMain.CoordsGetBottom()) ||
         bForce) && cOgl->IsGLInitialised())
-    { // Re-initialise the main framebuffer
-      fboMain.FboInit("main", siFBOWidth, siFBOHeight);
+    { // Re-initialise the main framebuffer (the reservation is ignored)
+      fboMain.FboInit("main", siFBOWidth, siFBOHeight, 0, 0);
+      // Store new data for drawing main FBO to the back buffer into VRAM
+      cOgl->MainFBOInitDrawData(fboMain.FboItemGetDataSize(),
+        fboMain.FboItemGetData(), fboMain.FboItemGetTCPos(),
+        fboMain.FboItemGetVPos(), fboMain.FboItemGetCPos());
+      // Reset fps based on highest possible frames per second
+      ctpStart = cTimer->TimerGetStartTime();
+      dFps = dFpsSmoothed = UtilPerSec(
+        UtilMaximum(cTimer->TimerGetLimit(), cOgl->GetLimit()));
       // Log computations
       cLog->LogDebugExSafe(
         "FboCore matrix reinit to $x$[$] (D=$x$,A=$<$-$>,AW=$,S=$:$:$:$).",
-        fboMain.GetCoRight(), fboMain.GetCoBottom(),
+        fboMain.CoordsGetRight(), fboMain.CoordsGetBottom(),
         StrFromRatio(siFBOWidth, siFBOHeight),
           fWidth, fHeight, fAspect, fAspectMin, fAspectMax, fAddWidth,
           fLeft, fTop, fRight, fBottom);
@@ -229,57 +216,61 @@ class FboCore :                        // The main fbo operations manager
     return false;
   }
   /* -- Sent when the window is resized ------------------------------------ */
-  bool AutoViewport(const GLsizei siWidth, const GLsizei siHeight,
+  bool FboCoreAutoViewport(const GLsizei siWidth, const GLsizei siHeight,
     const bool bForce=false)
   { // Return if the viewport size did not change
     if(DimGetWidth() == siWidth && DimGetHeight() == siHeight) return false;
     // Set the new viewport and log the result
-    DimSet(UtilMaximum(1, siWidth), UtilMaximum(1, siHeight));
+    DimSet(UtilMaximum(siWidth, 1), UtilMaximum(siHeight, 1));
     cLog->LogDebugExSafe("FboCore set new viewport of $x$.",
       DimGetWidth(), DimGetHeight());
     // Update matrix because the window's aspect ratio may have changed and
     // if the FBO changed then inform lua scripts that they should redraw any
     // FBO's they are managing and return the result.
-    if(!AutoMatrix(GetMatrixWidth(), GetMatrixHeight(), bForce)) return false;
+    if(!FboCoreAutoMatrix(FboCoreGetMatrixWidth(),
+      FboCoreGetMatrixHeight(), bForce))
+        return false;
     cEvtMain->Add(EMC_LUA_REDRAW);
     return true;
   }
-  /* -- Initialise the console fbo for the console object ------------------ */
-  void InitConsoleFBO()
-    { fboConsole.FboInit("console",
-        fboMain.DimGetWidth(), fboMain.DimGetHeight()); }
-  /* -- Temporary de-init all guest, console and main fbo objects ---------- */
-  void DeInit()
-  { // De-init guest fbo objects
+  /* -- Initialise the console FBO for the console object ------------------ */
+  void FboCoreInitConsole(const size_t stTriangles)
+  { // Estimate amount of triangles that would fit in the console and if
+    // we have a non-zero value?
+    fboConsole.FboInit("console",
+      fboMain.DimGetWidth(), fboMain.DimGetHeight(), stTriangles, 2);
+   }
+  /* -- Temporary de-init all guest, console and main FBO objects ---------- */
+  void FboCoreDeInit()
+  { // De-init guest FBO objects
     FboDeInit();
-    // De-init core fbo objects
+    // De-init core FBO objects
     StdForEach(seq, rbegin(), rend(), [](Fbo &fboRef){ fboRef.FboDeInit(); });
   }
-  /* -- Initialise fbos using a different constructor ----------- */ protected:
+  /* -- Initialise FBO's using a different constructor ---------- */ protected:
   FboCore() :
     /* -- Initialisers ----------------------------------------------------- */
-    FboDouble{{ { GL_RGB8,  true },    // Initialise main fbo (no register)
-                { GL_RGBA8, true } }}, // Initialise console fbo (no register)
+    FboDouble{{ { GL_RGB8,  true },    // Initialise main FBO (no register)
+                { GL_RGBA8, true } }}, // Initialise console FBO (no register)
     fAspectMin(1.0f),                  // Minimum aspect ratio init by CVar
     fAspectMax(2.0f),                  // Minimum aspect ratio init by CVar
-    bDraw(false),                      // Do not redraw the back buffer
+    dsDraw(DS_FULL),                   // Redraw the back buffer
     bSimpleMatrix(false),              // Simple matrix init by CVar
     bClearBuffer(false),               // Clear buffer init by CVar
-    fboMain(front()),                  // Init reference to main fbo
-    fboConsole(back()),                // Init reference to console fbo
-    ciCurrent{ cd1S },                 // Init one second timer
-    uiFPS(0),                          // Init zero last frames per second
-    uiFPSCur(0)                        // Init zero current frames per second
-    /* -- Set pointer to global class and main fbo ------------------------- */
+    fboMain(front()),                  // Init reference to main FBO
+    fboConsole(back()),                // Init reference to console FBO
+    ctpStart{ cd0 },                   // Initialise FPS timepoint
+    dFps{ 0.0 }, dFpsSmoothed{ 0.0 }   // Initialise calculated FPS
+    /* -- Set pointer to global class and main FBO ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }
-  /* -- Set main fbo float reserve --------------------------------- */ public:
-  CVarReturn SetFloatReserve(const size_t stCount)
-    { return BoolToCVarReturn(fboMain.FboReserveTriangles(stCount)); }
-  /* -- Set main fbo command reserve --------------------------------------- */
-  CVarReturn SetCommandReserve(const size_t stCount)
-    { return BoolToCVarReturn(fboMain.FboReserveCommands(stCount)); }
-  /* -- Set main fbo filters (cvar event) ---------------------------------- */
-  CVarReturn SetFilter(const OglFilterEnum ofeV)
+  /* -- Set main FBO float reserve --------------------------------- */ public:
+  CVarReturn FboCoreSetFloatReserve(const size_t stCount)
+    { return BoolToCVarReturn(UtilReserveList(fboMain.ftvActive, stCount)); }
+  /* -- Set main FBO command reserve --------------------------------------- */
+  CVarReturn FboCoreSetCommandReserve(const size_t stCount)
+    { return BoolToCVarReturn(UtilReserveList(fboMain.fcvActive, stCount)); }
+  /* -- Set main FBO filters (cvar event) ---------------------------------- */
+  CVarReturn FboCoreSetFilter(const OglFilterEnum ofeV)
   { // Check value
     if(ofeV >= OF_MAX) return DENY;
     // Set filtering of main and console framebuffer objects
@@ -289,24 +280,24 @@ class FboCore :                        // The main fbo operations manager
     // Commit the filters
     for(Fbo &fboRef : *this) fboRef.FboCommitFilter();
     // Redraw the main frame-buffer
-    SetDraw();
+    FboCoreSetDraw();
     // Return success
     return ACCEPT;
   }
   /* -- Set back buffer clear ---------------------------------------------- */
-  CVarReturn SetBackBufferClear(const bool bState)
+  CVarReturn FboCoreSetBackBufferClear(const bool bState)
     { return CVarSimpleSetInt(bClearBuffer, bState); }
   /* -- Set back buffer clear colour --------------------------------------- */
-  CVarReturn SetBackBufferClearColour(const unsigned int uiColour)
-    { SetColourInt(uiColour); return ACCEPT; }
+  CVarReturn FboCoreSetBackBufferClearColour(const unsigned int uiColour)
+    { ColourSetInt(uiColour); return ACCEPT; }
   /* -- Set minimum orthagonal matrix ratio -------------------------------- */
-  CVarReturn SetMinAspect(const GLfloat fMinimum)
+  CVarReturn FboCoreSetMinAspect(const GLfloat fMinimum)
     { return CVarSimpleSetIntNLG(fAspectMin, fMinimum, 1.0f, fAspectMax); }
   /* -- Set maximum orthagonal matrix ratio -------------------------------- */
-  CVarReturn SetMaxAspect(const GLfloat fMaximum)
+  CVarReturn FboCoreSetMaxAspect(const GLfloat fMaximum)
     { return CVarSimpleSetIntNLG(fAspectMax, fMaximum, fAspectMin, 2.0f); }
   /* -- Set simple matrix -------------------------------------------------- */
-  CVarReturn SetSimpleMatrix(const bool bState)
+  CVarReturn FboCoreSetSimpleMatrix(const bool bState)
     { return CVarSimpleSetInt(bSimpleMatrix, bState); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

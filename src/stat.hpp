@@ -61,14 +61,12 @@ class Statistic
     return hRef;
   }
   /* -- Check that we have headers ----------------------------------------- */
-  void CheckHeaderCount() const
-    { if(hdHeaders.empty()) XC("No headers!"); }
+  void CheckHeaderCount() const { if(hdHeaders.empty()) XC("No headers!"); }
   /* -- Check row not finished --------------------------------------------- */
   void CheckRowNotFinished() const
     { if(const size_t stRow = Cells() % Headers())
         XC("Row not finished!",
-           "ExpectCols", Headers(), "ActualCols", stRow,
-           "RowCount", Rows()); }
+          "ExpectCols", Headers(), "ActualCols", stRow, "RowCount", Rows()); }
   /* -- Update maximum length of the header -------------------------------- */
   static void UpdateMaxHeaderLength(Head &hRef, const int iLength)
     { if(iLength > hRef.iMaxLen) hRef.iMaxLen = iLength; }
@@ -121,7 +119,7 @@ class Statistic
         // Proc headers on the last row except the last header item
         for(size_t stHIndex = 0; stHIndex < stHM1; ++stHIndex, ++svciIt)
           ProcValSuf(osS, svciIt, hdHeaders[stHIndex], strGap);
-      } // Proc the last item with carriage return if reuqested
+      } // Proc the last item with carriage return if requested
       if(bAddLF) ProcValSuf(osS, vLast, hdHeaders[stHM1], strLF);
       // Not requested so process the last item without a carriage return
       else ProcValNoSuf(osS, vLast, hdHeaders[stHM1]);
@@ -182,7 +180,7 @@ class Statistic
     // Copy the value into the last and put the string we inserted into a
     // decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(
-      UtfDecoder{ *svValues.insert(svValues.cend(), cpStr) }.Length());
+      UtfDecoder{ *svValues.insert(svValues.cend(), cpStr) }.UtfLength());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
     UpdateMaxHeaderLength(hRef, iLength);
@@ -199,7 +197,7 @@ class Statistic
     // decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(
       UtfDecoder{ *svValues.insert(svValues.cend(),
-        string{ strvVal }) }.Length());
+        string{ strvVal }) }.UtfLength());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
     UpdateMaxHeaderLength(hRef, iLength);
@@ -222,7 +220,7 @@ class Statistic
     // Copy the value into the last and put the string we inserted into a
     // decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(
-      UtfDecoder{ *svValues.insert(svValues.cend(), strVal) }.Length());
+      UtfDecoder{ *svValues.insert(svValues.cend(), strVal) }.UtfLength());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
     UpdateMaxHeaderLength(hRef, iLength);
@@ -241,7 +239,7 @@ class Statistic
     // Move the value into the list and put the tring we inserted into
     // a decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(UtfDecoder{
-      *svValues.insert(svValues.cend(), StdMove(strVal)) }.Length());
+      *svValues.insert(svValues.cend(), StdMove(strVal)) }.UtfLength());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
     UpdateMaxHeaderLength(hRef, iLength);
@@ -275,8 +273,7 @@ class Statistic
     // Sorting list
     struct StrRef { StrVectorIt sviRowIt, sviColPri, sviColSec; };
     typedef vector<StrRef> StrRefVec;
-    StrRefVec srvList;
-    srvList.reserve(Rows());
+    Reserved<StrRefVec> srvList{ Rows() };
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
     // For each value. Add row start iterator and column iterator to list
@@ -310,8 +307,7 @@ class Statistic
                strRow1Sec < strRow2Sec);
       });
     // Now we have the sorted list we can rebuilding the new list
-    StrVector svValuesNew;
-    svValuesNew.reserve(Cells());
+    Reserved<StrVector> svValuesNew{ Cells() };
     for(const StrRef &srRow : srvList)
       for(StrVectorIt sviColIt{ srRow.sviRowIt },
                       sviColEnd{ next(sviColIt, sstHeaders) };
@@ -330,8 +326,7 @@ class Statistic
     // Sorting list
     struct StrRef { StrVectorIt sviRowIt, sviColIt; };
     typedef vector<StrRef> StrRefVec;
-    StrRefVec srvList;
-    srvList.reserve(Rows());
+    Reserved<StrRefVec> srvList{ Rows() };
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
     // For each value. Add row start iterator and column iterator to list
@@ -346,8 +341,7 @@ class Statistic
       [](const StrRef &srRow1, const StrRef &srRow2)
         { return *srRow1.sviColIt < *srRow2.sviColIt; });
     // Now we have the sorted list we can rebuilding the new list
-    StrVector svValuesNew;
-    svValuesNew.reserve(Cells());
+    Reserved<StrVector> svValuesNew{ Cells() };
     for(const StrRef &srRow : srvList)
       for(StrVectorIt sviColIt{ srRow.sviRowIt },
                       sviColEnd{ next(sviColIt, sstHeaders) };
@@ -380,7 +374,6 @@ class Statistic
 CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable,                     // Lua garbage collect instruction
-  public Ident,                        // Identifier
   public Statistic                     // Statistics data
 { /* -- Constructor ------------------------------------------------ */ public:
   Stat() :

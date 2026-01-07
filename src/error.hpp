@@ -7,7 +7,7 @@
 ** ## Use the XC() macro as a helper to build an error message with your  ## **
 ** ## chosen parameters to debug...                                       ## **
 ** ######################################################################### **
-** ## Usage: XC(Reason, [VarName, VarValue[, ...]])                       ## **
+** ## Usage: XC(Reason, ["VarName", VarValue[, ...]])                     ## **
 ** ######################################################################### **
 ** ## []       ## Denotes an optional argument.                           ## **
 ** ## Reason   ## The reason for the error.                               ## **
@@ -123,15 +123,15 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 64-bit signed integer -------------------------------------- */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const int64_t qVal,
+    void Param(const char*const cpName, const int64_t llVal,
       VarArgs &&...vaArgs)
-  { Int<int64_t,uint64_t>(cpName, "Int64", qVal);
+  { Int<int64_t,uint64_t>(cpName, "Int64", llVal);
     Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 64-bit unsigned integer ------------------------------------ */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const uint64_t uqVal,
+    void Param(const char*const cpName, const uint64_t ullVal,
       VarArgs &&...vaArgs)
-  { Int<uint64_t>(cpName, "UInt64", uqVal);
+  { Int<uint64_t>(cpName, "UInt64", ullVal);
     Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process 8-bit unsigned integer ------------------------------------- */
   template<typename ...VarArgs>void Param(const char*const cpName,
@@ -245,19 +245,17 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     else if(tString.front() < 32) osS << cCommon->CommonInvalid() << '.';
     // Valid? Is a string view? (has no capacity())
     else if constexpr(is_same_v<StringType, string_view>)
-      osS << '\"' << tString << '\"' << dec
-                  << " [" << tString.length() << "].";
+      osS << '\"' << tString << '\"' << dec << " [" << tString.length()
+          << "].";
     // Valid? Display string
-    else osS << '\"' << tString << '\"' << dec
-             << " [" << tString.length() << '/'
-             << tString.capacity() << "].";
+    else osS << '\"' << tString << '\"' << dec << " [" << tString.length()
+             << '/' << tString.capacity() << "].";
   }
   /* -- Process STL string lvalue ------------------------------------------ */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const string &strV,
       VarArgs &&...vaArgs)
-  { Str(cpName, "Str", strV);
-    Param(StdForward<VarArgs>(vaArgs)...); }
+  { Str(cpName, "Str", strV); Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process STL wstring lvalue ----------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const wstring &wstrV,

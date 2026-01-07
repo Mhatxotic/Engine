@@ -33,9 +33,9 @@ class InitHelper :                     // The Init Helper class
   { // Raise exception if object already initialised
     if(IHIsInitialised())
       XC("Object already initialised!",
-         "Identifier", IdentGet(),
-         "Age", StrShortFromDuration(cmHiRes.
-                  TimePointToClampedDouble(ctInitialised)));
+        "Identifier", IdentGet(),
+        "Age", StrShortFromDuration(cmHiRes.
+                 TimePointToClampedDouble(ctInitialised)));
     // Class now initialised
     IHSetInitialised();
   }

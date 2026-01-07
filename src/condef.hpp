@@ -4,14 +4,15 @@
 ** ######################################################################### **
 ** ## This module defines console definitions before the console is       ## **
 ** ## created.                                                            ## **
-** ######################################################################### */
+** ######################################################################### **
+** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IConDef {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Colour palette ------------------------------------------------------- */
-enum Colour : unsigned int             // Try to match with SysCon colours
+enum ConColour : size_t                // Try to match with SysCon colours
 { /* ----------------------------------------------------------------------- */
   COLOUR_BLACK   /* 00 */, COLOUR_BLUE     /* 01 */, COLOUR_GREEN  /* 02 */,
   COLOUR_CYAN    /* 03 */, COLOUR_RED      /* 04 */, COLOUR_GRAY   /* 05 */,
@@ -21,22 +22,28 @@ enum Colour : unsigned int             // Try to match with SysCon colours
   COLOUR_WHITE   /* 15 */, COLOUR_MAX      /* 16 */
 };/* ----------------------------------------------------------------------- */
 /* -- Colour palette to RGB lookup ----------------------------------------- */
-const unsigned int uiNDXtoRGB[COLOUR_MAX] =
-{ /* ----------------------------------------------------------------------- */
-  0x00010101 /* 00=COLOUR_BLACK   */, 0x0000008b /* 01=COLOUR_BLUE     */,
-  0x00008b00 /* 02=COLOUR_GREEN   */, 0x00a0b0b0 /* 03=COLOUR_CYAN     */,
-  0x008b0000 /* 04=COLOUR_RED     */, 0x00808080 /* 05=COLOUR_GRAY     */,
-  0x008b008b /* 06=COLOUR_MAGENTA */, 0x00a52a2a /* 07=COLOUR_BROWN    */,
-  0x01c0c0c0 /* 08=COLOUR_LGRAY   */, 0x018da8c6 /* 09=COLOUR_LBLUE    */,
-  0x0190ee90 /* 10=COLOUR_LGREEN  */, 0x01c0dddd /* 11=COLOUR_LCYAN    */,
-  0x01ff4b4b /* 12=COLOUR_LRED    */, 0x01e78be7 /* 13=COLOUR_LMAGENTA */,
-  0x01ffff00 /* 14=COLOUR_YELLOW  */, 0x01ffffff /* 15=COLOUR_WHITE    */
-};/* ----------------------------------------------------------------------- */
+static unsigned int ConColourToRGB(const ConColour ccIndex)
+{ // The conversion of index to colour 0x[II][RR][GG][BB]. The 'II' means that
+  // if it is zero (0) then the value is perceived as normal intensity, else if
+  // the value is one (1) then bright intensity.
+  typedef array<unsigned int, COLOUR_MAX> ConPalette;
+  static const ConPalette cpaNDXtoRGB{
+    0x00010101 /* 00=COLOUR_BLACK   */, 0x0000008b /* 01=COLOUR_BLUE     */,
+    0x00008b00 /* 02=COLOUR_GREEN   */, 0x00a0b0b0 /* 03=COLOUR_CYAN     */,
+    0x008b0000 /* 04=COLOUR_RED     */, 0x00808080 /* 05=COLOUR_GRAY     */,
+    0x008b008b /* 06=COLOUR_MAGENTA */, 0x00a52a2a /* 07=COLOUR_BROWN    */,
+    0x01c0c0c0 /* 08=COLOUR_LGRAY   */, 0x018da8c6 /* 09=COLOUR_LBLUE    */,
+    0x0190ee90 /* 10=COLOUR_LGREEN  */, 0x01c0dddd /* 11=COLOUR_LCYAN    */,
+    0x01ff4b4b /* 12=COLOUR_LRED    */, 0x01e78be7 /* 13=COLOUR_LMAGENTA */,
+    0x01ffff00 /* 14=COLOUR_YELLOW  */, 0x01ffffff /* 15=COLOUR_WHITE    */
+  }; // Return the index
+  return cpaNDXtoRGB[ccIndex];
+}
 /* -- Console stuff, no where else to put it really ------------------------ */
 struct ConLine                         // Console line data structure
 { /* ----------------------------------------------------------------------- */
   const double     dTime;              // Line time
-  const Colour     cColour;            // Line colour index
+  const ConColour  ccColour;           // Line colour index
   const string     strLine;            // Line data
 };/* ----------------------------------------------------------------------- */
 typedef list<ConLine>                    ConLines;           // Con lines data
@@ -94,7 +101,7 @@ struct ConLib                          // Console library command structure
   const unsigned int   uiMinimum,      // Minimum parameters
                        uiMaximum;      // Maximum parameters
   const CoreFlagsConst cfcRequired;    // Required core flags
-  const ConCbFunc      ccbFunc;        // Callback function
+  const ConCbFunc      ccfFunc;        // Callback function
 };/* ----------------------------------------------------------------------- */
 struct ConLibStatic                    // For static engine commands list
 { /* ----------------------------------------------------------------------- */
@@ -102,7 +109,7 @@ struct ConLibStatic                    // For static engine commands list
   const unsigned int   uiMinimum,      // Minimum parameters
                        uiMaximum;      // Maximum parameters
   const CoreFlagsConst cfcRequired;    // Required core flags
-  const ConCbFunc      ccbFunc;        // Callback function
+  const ConCbFunc      ccfFunc;        // Callback function
 };/* ----------------------------------------------------------------------- */
 typedef array<const ConLibStatic, MAX_CONCMD> ConCmdStaticList;
 /* ------------------------------------------------------------------------- */

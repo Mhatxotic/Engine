@@ -48,8 +48,7 @@ class CodecPNG :                       // PNG codec object
   { // Check that dimensions are set
     if(isData.DimIsNotSet())
       XC("Dimensions are invalid!",
-         "Width",  isData.DimGetWidth(),
-         "Height", isData.DimGetHeight());
+        "Width", isData.DimGetWidth(), "Height", isData.DimGetHeight());
     // Check that there is data
     if(isData.MemIsEmpty()) XC("No image data!", "Size", isData.MemSize());
     // Png writer helper class
@@ -99,7 +98,7 @@ class CodecPNG :                       // PNG codec object
         psData(png_create_write_struct(  // Create a write struct
           PNG_LIBPNG_VER_STRING,         // Set version string
           UtfToNonConstCast<png_voidp>(  // Send user parameter
-            fsC.IdentGetCStr()),         // Set filename as user parameter
+            fsC.IdentGetData()),         // Set filename as user parameter
           PngError,                      // Set error callback function
           PngWarning)),                  // Set warning callback function
         piData(                          // We'll handle the info struct here
@@ -116,17 +115,17 @@ class CodecPNG :                       // PNG codec object
     pwC{ fmData };
     // Set system data in metadata
     { using namespace ISystem::P;
-      pwC.Meta("Title", cSystem->GetGuestTitle());
-      pwC.Meta("Version", cSystem->GetGuestVersion());
-      pwC.Meta("Author", cSystem->GetGuestAuthor());
-      pwC.Meta("Copyright", cSystem->GetGuestCopyright());
+      pwC.Meta("Title", cSystem->SysGetGuestTitle());
+      pwC.Meta("Version", cSystem->SysGetGuestVersion());
+      pwC.Meta("Author", cSystem->SysGetGuestAuthor());
+      pwC.Meta("Copyright", cSystem->SysGetGuestCopyright());
       pwC.Meta("Creation Time", cmSys.FormatTime());
       pwC.Meta("Description", cSystem->ENGName() + " Exported Image");
       pwC.Meta("Software", StrFormat("$ ($) v$.$.$.$ ($-bit $) by $",
         cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
         cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
         cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor()));
-      pwC.Meta("Comment", cSystem->GetGuestWebsite());
+      pwC.Meta("Comment", cSystem->SysGetGuestWebsite());
     } // Set renderer in metadata
     { using namespace IOgl::P;
       pwC.Meta("Source", StrFormat("$ ($ by $)",
@@ -175,7 +174,7 @@ class CodecPNG :                       // PNG codec object
         break;
       // Un-supported format
       default: XC("Image is not binary or 24-bit!",
-                  "BitsPerPixel", idData.GetBitsPerPixel());
+        "BitsPerPixel", idData.GetBitsPerPixel());
     } // Finish write image
     pwC.Finish(ppvList.data());
     // Success
@@ -197,8 +196,8 @@ class CodecPNG :                       // PNG codec object
         // Initialisers
         psData(png_create_read_struct(   // Create a read struct
           PNG_LIBPNG_VER_STRING,         // Set version string
-          UtfToNonConstCast<png_voidp>(     // Send user parameter
-            fmC.IdentGetCStr()),         // Set filename as user parameter
+          UtfToNonConstCast<png_voidp>(  // Send user parameter
+            fmC.IdentGetData()),         // Set filename as user parameter
           PngError,                      // Set error callback function
           PngWarning)),                  // Set warning callback function
         piData(                          // We'll handle the info struct here
@@ -244,14 +243,16 @@ class CodecPNG :                       // PNG codec object
           idData.DimSet(png_get_image_width(psData, piData),
                      png_get_image_height(psData, piData));
           // Initialise memory
-          Memory mPixels{ UtilMaximum(1UL, idData.TotalPixels() / 8) };
+          Memory mPixels{ UtilMaximum(idData.TotalPixels() / 8,
+            static_cast<size_t>(1)) };
           // Create vector array to hold scanline pointers and size it
           PngPtrVec ppvList{ idData.DimGetHeight<size_t>() };
           // For each scanline
           for(size_t stHeight = idData.DimGetHeight<size_t>(),
                      stHeightM1 = stHeight - 1,
-                     stStride = UtilMaximum(1UL,
-                       idData.DimGetWidth<size_t>() / 8),
+                     stStride = UtilMaximum(
+                       idData.DimGetWidth<size_t>() / 8,
+                         static_cast<size_t>(1)),
                      stRow = 0;
                      stRow < stHeight;
                    ++stRow)

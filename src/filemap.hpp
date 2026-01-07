@@ -53,9 +53,9 @@ class FileMap :
   { // Check parameters.
     if(!MemCheckParam(stPos, stBytes))
       XC("Read error!",
-         "Identifier", IdentGet(), "Destination", MemPtr<void>(),
-         "Bytes",      stBytes,    "Position",    stPos,
-         "Maximum",    SysMapGetSize());
+        "Identifier", IdentGet(), "Destination", MemPtr<void>(),
+        "Bytes",      stBytes,    "Position",    stPos,
+        "Maximum",    SysMapGetSize());
     // Return address. This also sets the new position
     return FileMapDoReadPtrFrom<PtrType>(stPos, stBytes);
   }
@@ -198,15 +198,17 @@ class FileMap :
   /* -- Open a file on disk and map it to memory --------------------------- */
   explicit FileMap(const string &strF) :
     /* -- Initialisers ----------------------------------------------------- */
-    SysMap{ strF },
+    Ident{ strF },                     // Set identifier (virtual)
+    SysMap{ strF },                    // Initialise file handle
     MemConst{ UtilIntOrMax<size_t>(SysMapGetSize()), SysMapGetMemory() },
-    stPosition(0)
+    stPosition(0)                      // Initialise position
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Take ownership of another memory block ----------------------------- */
   FileMap(const string &strF, MemConst &&mcSrc, const StdTimeT ttC,
     const StdTimeT ttM) :
     /* -- Initialisers ----------------------------------------------------- */
+    Ident{ strF },                     // Set identifier (virtual)
     SysMap{ strF, ttC, ttM },          // Reuse system map variables
     MemConst{ StdMove(mcSrc) },        // Init read-only memory block
     stPosition(0)                      // Initialise position
@@ -215,12 +217,16 @@ class FileMap :
   /* -- Take ownership of another memory block ----------------------------- */
   FileMap(const string &strF, MemConst &&mcSrc, const StdTimeT ttC) :
     /* -- Initialisers ----------------------------------------------------- */
-    FileMap{ strF, StdMove(mcSrc), ttC, ttC }
+    Ident{ strF },                     // Set identifier (virtual)
+    SysMap{ strF, ttC, ttC },          // Reuse system map variables
+    MemConst{ StdMove(mcSrc) },        // Init read-only memory block
+    stPosition(0)                      // Initialise position
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Move filemap constructor ------------------------------------------- */
   FileMap(FileMap &&fmOther) :
     /* -- Initialisers ----------------------------------------------------- */
+    Ident{ StdMove(fmOther) },         // Move identifier over (virtual)
     SysMap{ StdMove(fmOther) },        // Just moves SysMap members
     MemConst{ StdMove(fmOther) },      // Just moves MemConst members
     stPosition(fmOther.FileMapTell())  // Copy other current position
@@ -233,8 +239,8 @@ class FileMap :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Free memory if we allocated it and it's not a map ------------------ */
-  ~FileMap() { if(MemIsPtrSet() && MemPtr() != SysMapGetMemory())
-                     MemFreePtr(); }
+  ~FileMap()
+    { if(MemIsPtrSet() && MemPtr() != SysMapGetMemory()) MemFreePtr(); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

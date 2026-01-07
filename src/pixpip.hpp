@@ -111,9 +111,8 @@ class SysPipe :
       case VR_OK: break;
       // Anything else and we need to throw an exception
       default: XC("Executable name is invalid!",
-                  "Program", strApp, "Code", vrResult,
-                  "Reason",  cDirBase->DirBaseVNRtoStr(vrResult),
-                  "CmdLine", strCmdLine);
+        "Program", strApp,                              "Code",    vrResult,
+        "Reason",  cDirBase->DirBaseVNRtoStr(vrResult), "CmdLine", strCmdLine);
     } // Make sure the executable exists
     if(!DirIsFileExecutable(strApp))
       XCS("Executable not valid!", "Program", strApp);
@@ -136,11 +135,11 @@ class SysPipe :
     // Generate child-to-parent handles and throw error on failure
     if(!haChildToParent.GenerateHandles())
       XCS("Failed to create child-to-parent pipe handles for process!",
-          "CmdLine", strCmdLine, "Program", strApp);
+        "CmdLine", strCmdLine, "Program", strApp);
     // Generate parent-to-child handles and throw error on failure
     if(!haParentToChild.GenerateHandles())
       XCS("Failed to create parent-to-child pipe handles for process!",
-          "CmdLine", strCmdLine, "Program", strApp);
+        "CmdLine", strCmdLine, "Program", strApp);
     // Fork the process and get result and compare it
     switch(const pid_t pForkedPid = fork())
     { // Success? This is the child process routine. Remember that the child
@@ -178,7 +177,7 @@ class SysPipe :
         break;
       } // Error? Bail out
       case -1: XCS("Failed to fork for piped process!",
-                   "CmdLine", strCmdLine, "Program", strApp);
+        "CmdLine", strCmdLine, "Program", strApp);
     }
   }
   /* -- DeInit pipe ------------------------------------------------ */ public:
@@ -271,6 +270,6 @@ class SysPipe :
     /* -- Initialise pipe -------------------------------------------------- */
     { Init(strF); }
   /* -- Destructor to kill and wait for process to exit -------------------- */
-  ~SysPipe() { DeInit(); }
+  DTORHELPER(~SysPipe, DeInit())
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

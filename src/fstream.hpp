@@ -35,7 +35,7 @@ enum FStreamMode : size_t              // Open types allowed
 };/* -- FStream base class ------------------------------------------------- */
 class FStreamBase :                    // File stream base class
   /* -- Base classes ------------------------------------------------------- */
-  public Ident                         // Contains filename string
+  public virtual Ident                 // Contains filename string
 { /* -- Private variables -------------------------------------------------- */
   FILE            *fStream;            // Stream handle
   int              iErrNo;             // Stored error number
@@ -102,9 +102,8 @@ class FStreamBase :                    // File stream base class
   int FStreamGetFd() const { return StdFileNo(FStreamGetCtx()); }
   int FStreamGetFdSafe() const
     { return FStreamOpened() ? FStreamGetFd() : EOF; }
-  /* -- Swap stream handle and filename ------------------------------------ */
-  void FStreamSwap(FStreamBase &fsOther)
-    { swap(fStream, fsOther.fStream); IdentSwap(fsOther); }
+  /* -- Swap stream handle ------------------------------------------------- */
+  void FStreamSwap(FStreamBase &fsOther) { swap(fStream, fsOther.fStream); }
   /* -- File is opened or closed?  ----------------------------------------- */
   bool FStreamOpened() const { return !!FStreamGetCtx(); }
   bool FStreamClosed() const { return !FStreamOpened(); }
@@ -115,23 +114,23 @@ class FStreamBase :                    // File stream base class
   int FStreamGetID() const { return StdFileNo(FStreamGetCtx()); }
   int FStreamGetIDSafe() const { return FStreamOpened() ? FStreamGetID() : 0; }
   /* -- Set current file position without check ---------------------------- */
-  bool FStreamSeek(const int64_t qwPos, const int iMode)
-    { return !FStreamErrNoWrapper(StdFSeek(FStreamGetCtx(), qwPos, iMode)); }
-  bool FStreamSeekCur(const int64_t qwPos)
-    { return FStreamSeek(qwPos, SEEK_CUR); }
-  bool FStreamSeekSet(const int64_t qwPos)
-    { return FStreamSeek(qwPos, SEEK_SET); }
-  bool FStreamSeekEnd(const int64_t qwPos)
-    { return FStreamSeek(qwPos, SEEK_END); }
+  bool FStreamSeek(const int64_t llPos, const int iMode)
+    { return !FStreamErrNoWrapper(StdFSeek(FStreamGetCtx(), llPos, iMode)); }
+  bool FStreamSeekCur(const int64_t llPos)
+    { return FStreamSeek(llPos, SEEK_CUR); }
+  bool FStreamSeekSet(const int64_t llPos)
+    { return FStreamSeek(llPos, SEEK_SET); }
+  bool FStreamSeekEnd(const int64_t llPos)
+    { return FStreamSeek(llPos, SEEK_END); }
   /* -- Set current file position with check ------------------------------- */
-  bool FStreamSeekSafe(const int64_t qwPos, const int iMode)
-    { return FStreamOpened() ? FStreamSeek(qwPos, iMode) : false; }
-  bool FStreamSeekSafeCur(const int64_t qwPos)
-    { return FStreamSeekSafe(qwPos, SEEK_CUR); }
-  bool FStreamSeekSafeSet(const int64_t qwPos)
-    { return FStreamSeekSafe(qwPos, SEEK_SET); }
-  bool FStreamSeekSafeEnd(const int64_t qwPos)
-    { return FStreamSeekSafe(qwPos, SEEK_END); }
+  bool FStreamSeekSafe(const int64_t llPos, const int iMode)
+    { return FStreamOpened() ? FStreamSeek(llPos, iMode) : false; }
+  bool FStreamSeekSafeCur(const int64_t llPos)
+    { return FStreamSeekSafe(llPos, SEEK_CUR); }
+  bool FStreamSeekSafeSet(const int64_t llPos)
+    { return FStreamSeekSafe(llPos, SEEK_SET); }
+  bool FStreamSeekSafeEnd(const int64_t llPos)
+    { return FStreamSeekSafe(llPos, SEEK_END); }
   /* -- Return current file position --------------------------------------- */
   int64_t FStreamTell()
     { return FStreamErrNoWrapper(StdFTell(FStreamGetCtx())); }
@@ -267,14 +266,14 @@ class FStreamBase :                    // File stream base class
   /* -- Return size of file ------------------------------------------------ */
   int64_t FStreamSize()
   { // Store current position, return if failed and reset to start
-    const int64_t qCurrent = FStreamTell();
-    if(qCurrent == EOF) return EOF;
+    const int64_t llCurrent = FStreamTell();
+    if(llCurrent == EOF) return EOF;
     if(!FStreamSeekEnd(0)) return 0;
     // Store current position (size) and restore old position
-    const int64_t qSize = FStreamTell();
-    FStreamSeek(qCurrent, SEEK_SET);
+    const int64_t llSize = FStreamTell();
+    FStreamSeek(llCurrent, SEEK_SET);
     // Return size
-    return qSize;
+    return llSize;
   }
   /* -- Return remaining bytes left to read in stream ---------------------- */
   size_t FStreamRemain()
@@ -363,21 +362,40 @@ class FStreamBase :                    // File stream base class
   ~FStreamBase()
     { if(FStreamOpened() && FStreamIsHandleNotStd()) FStreamDoClose(); }
 };/* ----------------------------------------------------------------------- */
-class FStream :                        // Main file stream class
+struct FStream :                       // Main file stream class
   /* -- Base classes ------------------------------------------------------- */
   public FStreamBase                   // Contains fstream base class
-{ /* -- Direct access using class variable name which returns opened */ public:
+{ /* -- Direct access using class variable name which returns opened ------- */
   operator bool() const { return FStreamOpened(); }
   /* -- Constructor with optional checking --------------------------------- */
   FStream(const string &strF, const FStreamMode fsmMode) :
-    FStreamBase(strF, fsmMode) {}
+    /* -- Initialisers ----------------------------------------------------- */
+    Ident{ strF },                     // Initialise identifier (virtual)
+    FStreamBase{ strF, fsmMode }       // Initialise other members
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor with rvalue name init, no open ------------------------- */
-  explicit FStream(string &&strF) : FStreamBase{ StdMove(strF) } {}
+  explicit FStream(string &&strF) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Ident{ StdMove(strF) },            // Initialise identifier (virtual)
+    FStreamBase{ StdMove(strF) }       // Initialise other members
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor with lvalue name init, no open ------------------------- */
-  explicit FStream(const string &strF) : FStreamBase{ strF } {}
+  explicit FStream(const string &strF) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Ident{ strF },                     // Initialise identifier (virtual)
+    FStreamBase{ strF }                // Initialise other members
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- MOVE assignment constructor ---------------------------------------- */
-  FStream(FStream &&fsOther) : FStreamBase{ StdMove(fsOther) } {}
-  /* -- Basic constructor with no init ------------------------------------- */
+  FStream(FStream &&fsOther) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Ident{ StdMove(fsOther) },         // Initialise identifier (virtual)
+    FStreamBase{ StdMove(fsOther) }    // Initialise other members
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Default constructor ------------------------------------------------ */
   FStream() = default;
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

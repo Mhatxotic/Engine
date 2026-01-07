@@ -10,64 +10,63 @@
 /* ------------------------------------------------------------------------- */
 namespace IDim {                       // Start of module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ICoord::P;             using namespace IIntPair::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace IIntPair::P;           using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename Int,                 // Integer type to use
-         class Base = IntPair<Int>>    // Base class type to use
+template<typename IntType,             // Integer type to use
+  class Base = IntPair<IntType>>       // Base class type to use
+requires is_arithmetic_v<IntType>      // Must be be integer or float
 struct Dimensions :                    // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   private Base                         // Base double value class
-{ /* -- Get ---------------------------------------------------------------- */
-  template<typename RInt=Int>RInt DimGetWidth() const
-    { return this->template IPGetOne<RInt>(); }
-  template<typename RInt=Int>RInt DimGetHeight() const
-    { return this->template IPGetTwo<RInt>(); }
-  template<typename RInt,class RBase=Dimensions<RInt>>RBase DimGet() const
-    { return this->template IPGet<RInt,RBase>(); }
-  template<typename RInt=Int>RInt DimDefGet() const
-    { return this->template IPDefGet<RInt>(); }
-  /* -- Get reference ------------------------------------------------------ */
-  Int &DimGetWidthRef() { return this->IPGetOneRef(); }
-  Int &DimGetHeightRef() { return this->IPGetTwoRef(); }
-  /* -- Set ---------------------------------------------------------------- */
-  void DimSetWidth(const Int iV) { this->IPSetOne(iV); }
-  void DimSetHeight(const Int iV) { this->IPSetTwo(iV); }
-  void DimSet(const Int iW, const Int iH) { this->IPSet(iW, iH); }
-  void DimSet(const Int iV = Base::iD0) { this->IPSet(iV); }
-  void DimSet(const Dimensions &dO) { this->IPSet(dO); }
-  void DimSwap(Dimensions &dO) { this->IPSwap(dO); }
-  /* -- Increment ---------------------------------------------------------- */
-  void DimIncWidth(const Int iV = Base::iD1) { this->IPIncOne(iV); }
-  void DimIncHeight(const Int iV = Base::iD1) { this->IPIncTwo(iV); }
-  /* -- Decrement ---------------------------------------------------------- */
-  void DimDecWidth(const Int iV = Base::iD1) { this->IPDecOne(iV); }
-  void DimDecHeight(const Int iV = Base::iD1) { this->IPDecTwo(iV); }
-  void DimDec(const Int iV = Base::iD1) { this->IPDec(iV); }
-  /* -- Test --------------------------------------------------------------- */
+{ /* -- Test --------------------------------------------------------------- */
   bool DimIsWidthSet() const { return this->IPIsOneSet(); }
   bool DimIsNotWidthSet() const { return this->IPIsNotOneSet(); }
   bool DimIsHeightSet() const { return this->IPIsTwoSet(); }
   bool DimIsNotHeightSet()const { return this->IPIsNotTwoSet(); }
   bool DimIsSet() const { return this->IPIsSet(); }
   bool DimIsNotSet() const { return this->IPIsNotSet(); }
-  bool DimIsEqual(const Dimensions &dOther) const
-    { return this->IPIsEqual(dOther); }
-  bool DimIsNotEqual(const Dimensions &dOther) const
-    { return this->IPIsNotEqual(dOther); }
+  bool DimIsEqual(const Dimensions &dRef) const
+    { return this->IPIsEqual(dRef); }
+  bool DimIsNotEqual(const Dimensions &dRef) const
+    { return this->IPIsNotEqual(dRef); }
+  /* -- Get ---------------------------------------------------------------- */
+  template<typename RIntType=IntType>RIntType DimGetWidth() const
+    { return this->template IPGetOne<RIntType>(); }
+  template<typename RIntType=IntType>RIntType DimGetHeight() const
+    { return this->template IPGetTwo<RIntType>(); }
+  template<typename RIntType,class RBase=Dimensions<RIntType>>
+    RBase DimGet() const { return this->template IPGet<RIntType,RBase>(); }
+  template<typename RIntType=IntType>RIntType DimDefGet() const
+    { return this->template IPDefGet<RIntType>(); }
+  /* -- Get reference ------------------------------------------------------ */
+  IntType &DimGetWidthRef() { return this->IPGetOneRef(); }
+  IntType &DimGetHeightRef() { return this->IPGetTwoRef(); }
+  /* -- Set ---------------------------------------------------------------- */
+  void DimSetWidth(const IntType itW) { this->IPSetOne(itW); }
+  void DimSetHeight(const IntType itH) { this->IPSetTwo(itH); }
+  void DimSet(const IntType itW, const IntType itH) { this->IPSet(itW, itH); }
+  void DimSet(const IntType itV = Base::itD0) { this->IPSet(itV); }
+  void DimSet(const Dimensions &dRef) { this->IPSet(dRef); }
+  void DimSwap(Dimensions &dRef) { this->IPSwap(dRef); }
+  /* -- Increment ---------------------------------------------------------- */
+  void DimIncWidth(const IntType itW = Base::itD1) { this->IPIncOne(itW); }
+  void DimIncHeight(const IntType itH = Base::itD1) { this->IPIncTwo(itH); }
+  /* -- Decrement ---------------------------------------------------------- */
+  void DimDecWidth(const IntType itW = Base::itD1) { this->IPDecOne(itW); }
+  void DimDecHeight(const IntType itH = Base::itD1) { this->IPDecTwo(itH); }
+  void DimDec(const IntType itV = Base::itD1) { this->IPDec(itV); }
   /* -- Initialisation of one value constructor ---------------------------- */
-  explicit Dimensions(const Int itV) : // Specified value to initialise to
+  explicit Dimensions(const IntType itBoth) :
     /* -- Initialisers ----------------------------------------------------- */
-    Base{ itV }                        // Initialise specified values
+    Base{ itBoth }                     // Initialise specified values
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Initialisation of both values constructor -------------------------- */
-  Dimensions(const Int itW,            // Specified width to initialise to
-             const Int itH) :          // Specified height to initialise to
+  Dimensions(const IntType itWidth, const IntType itHeight) :
     /* -- Initialisers ----------------------------------------------------- */
-    Base{ itW, itH }                   // Initialise specified values
+    Base{ itWidth, itHeight }          // Initialise specified values
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor that does not need to do anything -------------- */

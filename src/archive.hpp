@@ -47,14 +47,13 @@ BUILD_FLAGS(Archive,                   // Archive flags
 );/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Ident,                        // Archive file name
   public AsyncLoaderArchive,           // Async manager for off-thread loading
   public Lockable,                     // Lua garbage collect instruction
   public ArchiveFlags,                 // Archive initialisation flags
   private MutexLock,                   // Mutex for condition variable
   private condition_variable           // Waiting for async ops to complete
 { /* -- Private Variables -------------------------------------------------- */
-  SafeSizeT        stInUse;            // API in use reference count
+  AtomicSizeT      astInUse;           // API in use reference count
   /* ----------------------------------------------------------------------- */
   StrUIntMap       suimFiles,          // Files and directories as a map means
                    suimDirs;           // quick access to assets via filenames
@@ -62,7 +61,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   StrUIntMapConstItVector suimcivFiles,// 0-indexed files in the archive
                           suimcivDirs; // 0-indexed directories in the archive
   /* ----------------------------------------------------------------------- */
-  uint64_t         uqArchPos;          // Position of archive in file
+  uint64_t         ullArchPos;         // Position of archive in file
   CFileInStream    cfisData;           // LZMA file stream data
   CLookToRead2     cltrData;           // LZMA lookup data
   CSzArEx          csaeData;           // LZMA archive Data
@@ -105,9 +104,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         uiSrcId, &uiBlockIndex, &ucpData, &stUncompressed, &stOffset,
         &stCompressed, &cParent->isaData, &cParent->isaData))
           XC("Failed to extract file",
-             "Archive", IdentGet(), "File", strFile,
-             "Index",   uiSrcId,    "Code", iCode,
-             "Reason",  CodecGetLzmaErrString(iCode));
+            "Archive", IdentGet(), "File", strFile,
+            "Index",   uiSrcId,    "Code", iCode,
+            "Reason",  CodecGetLzmaErrString(iCode));
       // No data returned meaning a zero-byte file?
       if(!ucpData)
       { // Allocate a zero-byte array to a new class. Remember we need to send
@@ -170,7 +169,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       (ISzAlloc_Alloc(&cParent->isaData, cParent->stExtractBufSize));
     if(!cltrData.buf)
       XC("Error allocating buffer for archive!",
-         "Archive", IdentGet(), "Bytes", cParent->stExtractBufSize);
+        "Archive", IdentGet(), "Bytes", cParent->stExtractBufSize);
     cltrRef.bufSize = cParent->stExtractBufSize;
     // Initialise look2read structs. On p7zip, the buffer allocation is already
     // done for us.
@@ -212,7 +211,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   const StrUIntMapConstIt &ArchiveGetDir(const size_t stIndex) const
     { return suimcivDirs[stIndex]; }
   /* -- Return number of extra archives opened ----------------------------- */
-  size_t ArchiveGetInUse() const { return stInUse; }
+  size_t ArchiveGetInUse() const { return astInUse; }
   /* -- Return if iterator is valid ---------------------------------------- */
   bool ArchiveIsFileIteratorValid(const StrUIntMapConstIt &suimciIt) const
     { return suimciIt != suimFiles.cend(); }
@@ -236,8 +235,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       { // We need to adjust in-use counter when joining and leaving this scope
         // This tells the destructor to wait until it is zero.
         const class Counter { public: Archive &aRef;
-          explicit Counter(Archive &aNRef) : aRef(aNRef) { ++aRef.stInUse; }
-          ~Counter() { --aRef.stInUse; } } cCounter(*this);
+          explicit Counter(Archive &aNRef) : aRef(aNRef) { ++aRef.astInUse; }
+          ~Counter() { --aRef.astInUse; } } cCounter(*this);
         // Because the API doesn't support sharing file handles, we will need
         // to re-open the archive again with new data. We don't need to collect
         // any filename data again though thankfully so this should still be
@@ -254,12 +253,12 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
               "File",    suimciIt->first, "Code",  iCode,
               "Reason",  CodecGetLzmaErrString(iCode));
           // Custom start position specified
-          if(uqArchPos > 0 &&
+          if(ullArchPos > 0 &&
              cSystem->SeekFile(ArchiveCFISToOSHandle(cfisData),
-               uqArchPos) != uqArchPos)
+               ullArchPos) != ullArchPos)
             XC("Failed to seek in archive!",
               "Archive", IdentGet(),      "Index",    suimciIt->second,
-              "File",    suimciIt->first, "Position", uqArchPos);
+              "File",    suimciIt->first, "Position", ullArchPos);
           // Load archive
           ArchiveSetupLookToRead(cfisData2, cltrData2);
           // Init lzma data
@@ -268,9 +267,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
           if(const int iCode = SzArEx_Open(&csaeData2,
             &cltrData2.vt, &cParent->isaData, &cParent->isaData))
               XC("Failed to load archive!",
-                 "Archive", IdentGet(),      "Index", suimciIt->second,
-                 "File",    suimciIt->first, "Code",  iCode,
-                 "Reason",  CodecGetLzmaErrString(iCode));
+                "Archive", IdentGet(),      "Index", suimciIt->second,
+                "File",    suimciIt->first, "Code",  iCode,
+                "Reason",  CodecGetLzmaErrString(iCode));
           // Decompress the buffer using our duplicated handles
           FileMap fmFile{
             ArchiveExtract(strFile, uiSrcId, cltrData2, csaeData2) };
@@ -319,13 +318,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       XCS("Error opening archive!", "Archive", IdentGet(), "Code", iCode);
     FlagSet(AE_FILEOPENED);
     // Custom start position specified?
-    if(uqArchPos > 0)
+    if(ullArchPos > 0)
     { // Log position setting
       cLog->LogDebugExSafe("Archive loading '$' from position $...",
-        IdentGet(), uqArchPos);
+        IdentGet(), ullArchPos);
       // Seek to overlay in executable + 1 and if failed? Log the warning
       if(cSystem->SeekFile(ArchiveCFISToOSHandle(cfisData),
-           uqArchPos) != uqArchPos)
+           ullArchPos) != ullArchPos)
         cLog->LogWarningExSafe("Archive '$' seek error! [$].",
           IdentGet(), SysError());
     } // Load from beginning? Log that we're loading from beginning
@@ -350,13 +349,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // this after to reclaim the memory
     if(csaeData.NumFiles > suimcivFiles.max_size())
       XC("Insufficient storage for file list!",
-         "Current", csaeData.NumFiles, "Maximum", suimcivFiles.max_size());
+        "Current", csaeData.NumFiles, "Maximum", suimcivFiles.max_size());
     suimcivFiles.reserve(csaeData.NumFiles);
     // ...and same for the directories too.
     const size_t stDirsMaximum = suimcivDirs.max_size();
     if(suimcivFiles.size() > stDirsMaximum)
       XC("Insufficient storage for directory list!",
-         "Current", suimcivFiles.size(), "Maximum", stDirsMaximum);
+        "Current", suimcivFiles.size(), "Maximum", stDirsMaximum);
     suimcivDirs.reserve(suimcivFiles.size());
     // Enumerate through each file
     for(unsigned int uiIndex = 0; uiIndex < csaeData.NumFiles; ++uiIndex)
@@ -401,9 +400,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     else cLog->LogWarningExSafe("Archive loaded empty '$'!", IdentGet());
   }
   /* -- Loads archive synchronously at specified position ------------------ */
-  void InitFromFile(const string &strFile, const uint64_t uqPosition)
+  void InitFromFile(const string &strFile, const uint64_t ullPosition)
   { // Store position
-    uqArchPos = uqPosition;
+    ullArchPos = ullPosition;
     // Set filename without filename checking
     SyncInitFileDisk(strFile);
   }
@@ -412,19 +411,19 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperArchive{ cArchives },      // Initialise collector with this obj
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    AsyncLoaderArchive{ *this, this,   // Initialise async collector
+    AsyncLoaderArchive{ this,          // Initialise async collector
       EMC_MP_ARCHIVE },                // " our archive async event
     ArchiveFlags{ AE_STANDBY },        // Set default archive flags
-    stInUse(0),                        // Set threads in use
-    uqArchPos(0),                      // Set archive initial position
+    astInUse(0),                       // Set threads in use
+    ullArchPos(0),                     // Set archive initial position
     cfisData{},                        // Clear file stream data
     cltrData{},                        // Clear lookup stream data
     csaeData{}                         // Clear archive stream data
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Unloads the archive ------------------------------------------------ */
-  ~Archive()
-  { // Done if a filename is not set
+  DTORHELPER(~Archive,
+    // Done if a filename is not set
     if(IdentIsNotSet()) return;
     // Wait for archive loading async operations to complete
     AsyncCancel();
@@ -433,13 +432,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // Unloading archive in log
     cLog->LogDebugExSafe("Archive unloading '$'...", IdentGet());
     // If decompression is being executed across threads?
-    if(stInUse > 0)
+    if(astInUse > 0)
     { // Then we need to wait until they finish.
       cLog->LogInfoExSafe("Archive '$' waiting for $ async ops to complete...",
-        IdentGet(), static_cast<size_t>(stInUse));
+        IdentGet(), static_cast<size_t>(astInUse));
       // Wait for base and spawned file operations to finish
       MutexUniqueCall([this](UniqueLock &ulLock){
-        wait(ulLock, [this]{ return !stInUse; }); });
+        wait(ulLock, [this]{ return !astInUse; }); });
     } // Free archive structs if allocated
     if(FlagIsSet(AE_ARCHIVEINIT)) SzArEx_Free(&csaeData, &cParent->isaData);
     // Memory allocated? Free memory allocated for buffer
@@ -450,7 +449,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         IdentGet(), SysError());
     // Log shutdown
     cLog->LogInfoExSafe("Archive unloaded '$' successfully.", IdentGet());
-  }
+  )
 };/* ----------------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Archives, Archive, ARCHIVE, ARCHIVE, // Finish collector
   /* -- Collector initialisers --------------------------------------------- */

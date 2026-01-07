@@ -44,7 +44,7 @@ enum EvtWinCmd : size_t                // Render thread event commands
   EWC_WIN_SETSTKKEYS,                  // 21: Set sticky keys state
   EWC_WIN_SETSTKMOUSE,                 // 22: Set sticky mouse buttons state
   EWC_WIN_SHOW,                        // 23: Show the window
-  EWC_WIN_TOGGLE_FS,                   // 24: Toggle full-screen
+  EWC_WIN_TOGGLEFS,                    // 24: Toggle full-screen
   /* -- Clipboard events --------------------------------------------------- */
   EWC_CB_GET,                          // 25: Get clipboard (via Clip class)
   EWC_CB_SET,                          // 26: Set clipboard (via Clip class)

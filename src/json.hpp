@@ -26,7 +26,6 @@ namespace P {                          // Start of public module namespace
 /* == Json object collector and member class =============================== */
 CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Ident,                        // Json code file name
   public AsyncLoaderJson,              // Asynchronous loading of Json object
   public Lockable,                     // Lua garbage collector instruction
   public Document                      // RapidJson document class
@@ -117,9 +116,8 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     // Parse the text and if there is a parse error? Break execution
     if(ParseStream(cswStream).HasParseError())
       XC(GetParseError_En(GetParseError()),
-        "Identifier", fmData.IdentGet(),
-        "Line",       cswStream.GetLine(),
-        "Column",     cswStream.GetColumn());
+        "Identifier", fmData.IdentGet(), "Line", cswStream.GetLine(),
+        "Column", cswStream.GetColumn());
     // Write that we parsed this stream
     cLog->LogDebugExSafe("Json parsed $ bytes from '$' successfully.",
       fmData.MemSize(), fmData.IdentGet());
@@ -245,7 +243,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
       case kObjectType: ToTableObject(lS, rjvVal); break;
       // Unacceptable
       default: XC("Not array or object!",
-                  "Identifier", IdentGet(), "Type", rjvVal.GetType());
+        "Identifier", IdentGet(), "Type", rjvVal.GetType());
     }
   }
   /* -- Start sorting the entire array ------------------------------------- */
@@ -276,7 +274,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
                                       SortObject<SortAscending>(rjvVal); break;
       // Unacceptable
       default: XC("Not an array or object!",
-                  "Identifier", IdentGet(), "Type", rjvVal.GetType());
+        "Identifier", IdentGet(), "Type", rjvVal.GetType());
     }
   }
   /* ----------------------------------------------------------------------- */
@@ -339,14 +337,12 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   template<typename T>int ToFile(const string &strFile) const
     { return FStream{ strFile, FM_W_T }.
         FStreamWriteStringSafe(ToString<T>()) ? 0 : StdGetError(); }
-  /* ----------------------------------------------------------------------- */
-  ~Json() { AsyncCancel(); }
   /* -- Default constructor ------------------------------------------------ */
   Json() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperJson{ cJsons },            // Initialise collector
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    AsyncLoaderJson{ *this, this,      // Initialise async loader with this
+    AsyncLoaderJson{ this,             // Initialise async loader with this
       EMC_MP_JSON }                    // ...and the event id
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -356,6 +352,8 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     Json{}                             // Use default initialisers
     /* -- Initialise from file --------------------------------------------- */
     { SyncInitFileSafe(strFile); }
+  /* -- Destructor that tries to recover on exception ---------------------- */
+  DTORHELPER(~Json, AsyncCancel())
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Jsons, Json, JSON, JSON) // Finish collector class
 /* ------------------------------------------------------------------------- */

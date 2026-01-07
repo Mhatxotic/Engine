@@ -76,7 +76,7 @@ LLFUNC(CPUFPS, 1, LuaUtilPushVar(lS, cTimer->TimerGetFPS()))
 // ? Returns the engine CPU load. It is hard-coded to only update once a
 // ? a second so constant calls won't stress the kernel.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CPUProcUsage, 1, LuaUtilPushVar(lS, cSystem->UpdateAndGetCPUUsage()))
+LLFUNC(CPUProcUsage, 1, LuaUtilPushVar(lS, cSystem->SysUpdateAndGetCPUUsage()))
 /* ========================================================================= */
 // $ Core.CPUSysUsage
 // < Percent:number=Percentage system.
@@ -84,7 +84,7 @@ LLFUNC(CPUProcUsage, 1, LuaUtilPushVar(lS, cSystem->UpdateAndGetCPUUsage()))
 // ? a second so constant calls won't stress the kernel.
 /* ------------------------------------------------------------------------- */
 LLFUNC(CPUSysUsage, 1,
-  LuaUtilPushVar(lS, cSystem->UpdateAndGetCPUUsageSystem()))
+  LuaUtilPushVar(lS, cSystem->SysUpdateAndGetCPUUsageSystem()))
 /* ========================================================================= */
 // $ Core.CPUUsage
 // < Percent:number=Percentage process.
@@ -96,7 +96,7 @@ LLFUNC(CPUSysUsage, 1,
 // ? a second so constant calls won't stress the kernel.
 /* ------------------------------------------------------------------------- */
 LLFUNC(CPUUsage, 2, LuaUtilPushVar(lS,
-  cSystem->UpdateAndGetCPUUsage(), cSystem->CPUUsageSystem()))
+  cSystem->SysUpdateAndGetCPUUsage(), cSystem->CPUUsageSystem()))
 /* ========================================================================= */
 // $ Core.Delay
 // < Time:number=Delay time in seconds.
@@ -336,7 +336,7 @@ LLFUNC(OSNumTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeS<lua_Number>()))
 // ? this function, you need to run this command with the function you want to
 // ? change to.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnTick, 0, cLua->SetLuaRef(lS, cLua->lrMainTick))
+LLFUNC(OnTick, 0, cLua->LuaSetTickFunc(lS))
 /* ========================================================================= */
 // $ Core.OnEnd
 // > Func:function=The main end function to change to.
@@ -346,7 +346,7 @@ LLFUNC(OnTick, 0, cLua->SetLuaRef(lS, cLua->lrMainTick))
 // ? engine is already terminating will do nothing so use Core.SetMain()
 // ? instead if you want to change to a new main tick function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnEnd, 0, cLua->SetLuaRef(lS, cLua->lrMainEnd))
+LLFUNC(OnEnd, 0, cLua->LuaSetEndFunc(lS))
 /* ========================================================================= */
 // $ Core.OSTime
 // < Timestamp:integer=The UNIX timestamp.
@@ -393,7 +393,7 @@ LLFUNC(RAM, 6, cSystem->UpdateMemoryUsageData();
 // ? Ends LUA execution, clears the context, and restarts LUA execution. It
 // ? will return 'false' if Lua is already reinitialising.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Reset, 1, LuaUtilPushVar(lS, cLua->ReInit()))
+LLFUNC(Reset, 1, LuaUtilPushVar(lS, cLua->LuaReInit()))
 /* ========================================================================= */
 // $ Core.Restart
 // ? Restarts the engine process cleanly.
@@ -403,7 +403,7 @@ LLFUNC(Restart, 0, cEvtMain->Add(EMC_QUIT_RESTART))
 // $ Core.RestartFresh
 // ? Restarts the engine process cleanly without command-line arguments.
 /* ------------------------------------------------------------------------- */
-LLFUNC(RestartNP, 0, cEvtMain->Add(EMC_QUIT_RESTART_NP))
+LLFUNC(RestartNP, 0, cEvtMain->Add(EMC_QUIT_RESTARTNP))
 /* ========================================================================= */
 // $ Core.RestoreDelay
 // ? Restores the frame thread suspend value set via cvars
@@ -425,7 +425,7 @@ LLFUNC(ScrollUp, 0, cConsole->MoveLogUp())
 // ? This is the same as updating the cvar 'app_delay' apart from that the cvar
 // ? is not updated and not saved.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetDelay, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
+LLFUNC(SetDelay, 0, const AgIntLG aMilliseconds{lS, 1, -1, 1000};
   cTimer->TimerUpdateDelay(aMilliseconds))
 /* ========================================================================= */
 // $ Core.SetIcon
@@ -435,7 +435,7 @@ LLFUNC(SetDelay, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
 // ? but the first and the last icon are dropped so make sure you list the
 // ? first filename as the large icon and the last filename as the small icon.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetIcon, 0, cDisplay->SetIconFromLua(AgString{lS, 1}))
+LLFUNC(SetIcon, 0, cDisplay->DisplaySetIconFromLua(AgString{lS, 1}))
 /* ========================================================================= */
 // $ Core.Stack
 // < Stack:string=The current stack trace.
@@ -525,7 +525,7 @@ LLFUNC(WaitAsync, 0, cCore->CoreWaitAllAsync())
 // ? Writes the specified line of text directly to the console with no regard
 // ? to colour of text.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Write, 0, cConsole->AddLine(COLOUR_CYAN, AgString{lS, 1}))
+LLFUNC(Write, 0, cConsole->ConsoleAddLine(COLOUR_CYAN, AgString{lS, 1}))
 /* ========================================================================= */
 // $ Core.WriteEx
 // > Message:string=Text to write to console.
@@ -535,8 +535,8 @@ LLFUNC(Write, 0, cConsole->AddLine(COLOUR_CYAN, AgString{lS, 1}))
 /* ------------------------------------------------------------------------- */
 LLFUNC(WriteEx, 0,
   const AgString aMessage{lS, 1};
-  const AgIntegerLGE<Colour> aColour{lS, 2, COLOUR_BLACK, COLOUR_MAX};
-  cConsole->AddLine(aColour, aMessage))
+  const AgIntegerLGE<ConColour> aColour{lS, 2, COLOUR_BLACK, COLOUR_MAX};
+  cConsole->ConsoleAddLine(aColour, aMessage))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Core.* namespace functions structure                                ## **

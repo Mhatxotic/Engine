@@ -53,7 +53,7 @@ class CodecJPG :                       // JPEG codec object
     // Check for valid dimensions
     if(isData.DimIsNotSet())
       XC("Dimensions are invalid!",
-         "Width",  isData.DimGetWidth(), "Height", isData.DimGetHeight());
+        "Width",  isData.DimGetWidth(), "Height", isData.DimGetHeight());
     // Have image data?
     if(isData.MemIsEmpty()) XC("No image data!", "Size", isData.MemSize());
     // Setup class to free pointer on exit
@@ -154,7 +154,7 @@ class CodecJPG :                       // JPEG codec object
       case JPEG_SUSPENDED: XC("Jpeg suspension requested!");
       // Unknown result
       default: XC("Internal error: Jpeg read header unknown result!",
-                  "Code", iResult);
+        "Code", iResult);
     } // Start decompressing before we can read main image information
     if(!jpeg_start_decompress(&ciData))
       XC("Jpeg start decompression failed!");

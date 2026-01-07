@@ -47,20 +47,23 @@ static CVarReturn LuaCodeCheckVersion(const string &strVal, string &strNVal)
   const string_view &svVersion = cCredits->CreditGetItem(CL_LUA).GetVersion();
   // If version stored is not the same as expected?
   if(strVal != svVersion)
-  { // Log that the LUA version is different
-    cLog->LogWarningExSafe("LuaCode detected LUA version mismatch ($ != $) so "
-      "the code cache will be flushed.", strVal, svVersion);
+  { // If the LUA code table doesn't exist? Just initialise the version
+    if(!cSql->SqlIsTableExist(cSql->strvLCTable)) goto Accepted;
+    // Log that the LUA version is different
+    cLog->LogWarningExSafe("LuaCode detected LUA version mismatch "
+      "(\"$\" != \"$\") so the code cache will be flushed.",
+      strVal, svVersion);
     // Clear the cache and if succeeded?
-    if(cSql->FlushTable(cSql->strvLCTable) == SQLITE_OK)
+    if(cSql->SqlFlushTable(cSql->strvLCTable) == SQLITE_OK)
     { // Write success in the console
       cLog->LogWarningSafe("LuaCode flushed the LUA code cache successfully!");
       // Update cvar to the current version
-      strNVal = svVersion;
+      Accepted: strNVal = svVersion;
       // Accepted and value modified
       return ACCEPT_HANDLED_FORCECOMMIT;
     } // Failed? Write reason to console
     else cLog->LogWarningExSafe("LuaCode failed to flush the LUA code cache "
-      "because $ ($)!", cSql->GetErrorStr(), cSql->GetError());
+      "because $ ($)!", cSql->SqlGetErrorStr(), cSql->SqlGetError());
   } // Version not changed or problem occured
   return ACCEPT;
 }
@@ -163,10 +166,11 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
   } // Get checksum of module
   const unsigned int uiCRC = CrcCalc(cpBuf, stSize);
   // Check if we have cached this in the sql database and if we have?
-  if(cSql->ExecuteAndSuccess(StrFormat("SELECT `$` from `$` WHERE R=? AND C=?",
-    cSql->strvLCCodeColumn, cSql->strvLCTable), strRef, uiCRC))
+  if(cSql->SqlExecuteAndSuccess(
+    StrFormat("SELECT `$` from `$` WHERE R=? AND C=?",
+      cSql->strvLCCodeColumn, cSql->strvLCTable), strRef, uiCRC))
   { // Get records and if we have results?
-    const SqlResult &srData = cSql->GetRecords();
+    const SqlResult &srData = cSql->SqlGetRecords();
     if(!srData.empty())
     { // If we should show the rows affected. This is sloppy but sqllite
       // doesn't support resetting sqlite3_changes result yet :(
@@ -198,13 +202,13 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
       "LuaCode will recompile '$'[$]($$) as the module was modified!",
         strRef, stSize, hex, uiCRC);
   } // Error reading database so try to rebuild table
-  else cSql->LuaCacheRebuildTable();
+  else cSql->SqlLuaCacheRebuildTable();
   // Do compile the buffer
   LuaCodeDoCompileBuffer(lS, cpBuf, stSize, strRef);
   // Compile the function
   Memory mbData{ LuaCodeCompileFunction(lS, lcSetting == LCC_FULL) };
   // Send to sql database and return if succeeded
-  if(cSql->ExecuteAndSuccess(StrFormat(
+  if(cSql->SqlExecuteAndSuccess(StrFormat(
          "INSERT or REPLACE into `$`(`$`,`$`,`$`,`$`) VALUES(?,?,?,?)",
          cSql->strvLCTable, cSql->strvLCCRCColumn, cSql->strvLCTimeColumn,
          cSql->strvLCRefColumn, cSql->strvLCCodeColumn),
@@ -213,9 +217,9 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
   // Show error
   cLog->LogWarningExSafe(
     "LuaCode failed to store cache for '$' because $ ($)!",
-    strRef, cSql->GetErrorStr(), cSql->GetError());
+    strRef, cSql->SqlGetErrorStr(), cSql->SqlGetError());
   // Try to rebuild table
-  cSql->LuaCacheRebuildTable();
+  cSql->SqlLuaCacheRebuildTable();
   // Return compiled but not stored
   return LCR_DBERR;
 }
@@ -247,7 +251,7 @@ static LuaCompResult LuaCodeExecuteString(lua_State*const lS,
 static LuaCompResult LuaCodeCompileFile(lua_State*const lS,
   const FileMap &fScript)
     { return LuaCodeCompileBuffer(lS, fScript.MemPtr<char>(),
-        fScript.MemSize(), fScript.IdentGetCStr()); }
+        fScript.MemSize(), fScript.IdentGetData()); }
 /* -- Copmile file and execute script that may be binary ------------------- */
 static LuaCompResult LuaCodeCompileFile(lua_State*const lS,
   const string &strFilename)

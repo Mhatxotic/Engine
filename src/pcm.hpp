@@ -23,7 +23,6 @@ namespace P {                          // Start of public module namespace
 /* == Pcm collector and member class ======================================= */
 CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Ident,                        // Pcm file name
   public AsyncLoaderPcm,               // For loading Pcm's off main-thread
   public Lockable,                     // Lua garbage collector instruction
   public PcmData                       // Pcm data
@@ -125,9 +124,9 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     const size_t stExpected = uiNRate * pctNChannels * pbtNBits;
     if(mSrc.MemSize() != stExpected)
       XC("Expected size versus actual size mismatch!",
-         "Identifier", strName,      "Rate",   uiNRate,
-         "Channels",   pctNChannels, "Bits",   pbtNBits,
-         "Expected",   stExpected,   "Actual", mSrc.MemSize());
+        "Identifier", strName,      "Rate",   uiNRate,
+        "Channels",   pctNChannels, "Bits",   pbtNBits,
+        "Expected",   stExpected,   "Actual", mSrc.MemSize());
     // Set members
     IdentSet(strName);
     SetDynamic();
@@ -138,8 +137,8 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     // Check that format is supported in OpenAL
     if(!ParseOALFormat())
       XC("Format not supported by audio driver!",
-         "Identifier", IdentGet(),
-         "Channels",   GetChannels(), "Bits", GetBits());
+        "Identifier", IdentGet(),
+        "Channels",   GetChannels(), "Bits", GetBits());
     // Split audio into two channels if audio in stereo
     SplitAndSetAlloc();
     // Load succeeded so register the block
@@ -148,7 +147,6 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   void SwapPcm(Pcm &pcmRef)
   { // Swap datas
-    IdentSwap(pcmRef);
     LockSwap(pcmRef);
     CollectorSwapRegistration(pcmRef);
     PcmDataSwap(pcmRef);
@@ -158,8 +156,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperPcm{ cPcms },              // Initially unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    AsyncLoaderPcm{ *this, this,       // Setup async loader with this class
-      EMC_MP_PCM }                     // ...and the event id for this class
+    AsyncLoaderPcm{ this, EMC_MP_PCM } // Setup async loader with this class
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor -------------------------------------------------------- */
@@ -171,7 +168,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     /* -- Swap members with other class ------------------------------------ */
     { SwapPcm(pcmOther); }
   /* -- Destructor (override) ---------------------------------------------- */
-  ~Pcm() { AsyncCancel(); }
+  DTORHELPER(~Pcm, AsyncCancel())
 };/* -- End-of-collector --------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Pcms, Pcm, PCM, PCM) // Finish collector class
 /* ------------------------------------------------------------------------- */

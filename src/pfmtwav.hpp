@@ -68,13 +68,13 @@ class CodecWAV :                       // WAV codec object
                  stActualLength = fmData.FileMapReadVar32LE();
     if(stActualLength != stExpectedLength)
       XC("WAVE file length mismatch with actual file length!",
-         "Expected", stExpectedLength, "Actual", stActualLength);
+        "Expected", stExpectedLength, "Actual", stActualLength);
     // Make sure its a MSWin WAV formatted file
     const unsigned int uiExpectedMagic = HL_U32LE_V_WAVE,
                        uiActualMagic = fmData.FileMapReadVar32LE();
     if(uiActualMagic != uiExpectedMagic)
       XC("RIFF must have WAV formatted data!",
-         "Expected", uiExpectedMagic, "Actual", uiActualMagic);
+        "Expected", uiExpectedMagic, "Actual", uiActualMagic);
     // Flag for if we got the data chunks we need
     BUILD_FLAGS(WaveLoad, WL_NONE{1}, WL_GOTFORMAT{2}, WL_GOTDATA{4});
     WaveLoadFlags chunkFlags{ WL_NONE };
@@ -101,7 +101,7 @@ class CodecWAV :                       // WAV codec object
             // Unsupported type?
             default:
               XC("Wave format must be either integer PCM or IEEE FLOAT!",
-                 "Actual", uiFormatTag);
+                "Actual", uiFormatTag);
           } // Wave format data. Can't use #pragma pack nowadays :-(
           if(!pdData.SetChannelsSafe(
                static_cast<PcmChannelType>(fmData.FileMapReadVar16LE())))
@@ -112,8 +112,8 @@ class CodecWAV :                       // WAV codec object
           if(pdData.GetRate() < HL_U32LE_MINRATE ||
              pdData.GetRate() > HL_U32LE_MAXRATE)
             XC("Wave format has invalid sample rate!",
-               "Rate", pdData.GetRate(), "Minimum", HL_U32LE_MINRATE,
-               "Maximum", HL_U32LE_MAXRATE);
+              "Rate", pdData.GetRate(), "Minimum", HL_U32LE_MINRATE,
+              "Maximum", HL_U32LE_MAXRATE);
           // Get bytes per second and block align
           const unsigned int uiAvgBytesPerSec = fmData.FileMapReadVar32LE();
           const unsigned int uiBlockAlign = fmData.FileMapReadVar16LE();
@@ -124,8 +124,8 @@ class CodecWAV :                       // WAV codec object
             pdData.GetRate() * pdData.GetChannels() * pdData.GetBytes();
           if(uiCalcAvgBytes != uiAvgBytesPerSec)
             XC("Average bytes per second mismatch!",
-               "Rate",     pdData.GetRate(),
-               "Channels", pdData.GetChannels(),
+              "Rate",     pdData.GetRate(),
+              "Channels", pdData.GetChannels(),
                "BitsPC",   pdData.GetBits(), "BytesPC",    pdData.GetBytes(),
                "Expected", uiAvgBytesPerSec, "Calculated", uiCalcAvgBytes);
           // Check block align
@@ -134,14 +134,13 @@ class CodecWAV :                       // WAV codec object
               pdData.GetBytes();
           if(uiCalcBlockAlign != uiBlockAlign)
             XC("Block align size mismatch!",
-               "Channels",   pdData.GetChannels(),
-               "BitsPC",     pdData.GetBits(),
-               "BytesPC",    pdData.GetBytes(), "Expected", uiBlockAlign,
-               "Calculated", uiCalcBlockAlign);
+              "Channels",   pdData.GetChannels(), "BitsPC",   pdData.GetBits(),
+              "BytesPC",    pdData.GetBytes(),    "Expected", uiBlockAlign,
+              "Calculated", uiCalcBlockAlign);
           // Determine openal format type from the WAV file structure
           if(!pdData.ParseOALFormat())
             XC("Wave format not supported by AL!",
-               "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
+              "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
           // We got the format chunk
           chunkFlags.FlagSet(WL_GOTFORMAT);
           // Done

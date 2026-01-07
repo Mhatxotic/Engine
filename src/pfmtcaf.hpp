@@ -73,12 +73,12 @@ class CodecCAF :                       // CAF codec object
     { // Get magic which we will test
       const unsigned int uiMagic = fmData.FileMapReadVar32LE();
       // Read size and if size is too big for machine to handle? Log warning.
-      const uint64_t qSize = fmData.FileMapReadVar64BE();
-      if(UtilIntWillOverflow<size_t>(qSize))
+      const uint64_t ullSize = fmData.FileMapReadVar64BE();
+      if(UtilIntWillOverflow<size_t>(ullSize))
         cLog->LogWarningExSafe("Pcm CAF chunk too big $ > $!",
-          qSize, StdMaxSizeT);
+          ullSize, StdMaxSizeT);
       // Accept maximum size the machine allows
-      const size_t stSize = UtilIntOrMax<size_t>(qSize);
+      const size_t stSize = UtilIntOrMax<size_t>(ullSize);
       // test the header chunk
       switch(uiMagic)
       { // Is it the 'desc' chunk?
@@ -111,12 +111,12 @@ class CodecCAF :                       // CAF codec object
           if(!pdData.SetChannelsSafe(
                static_cast<PcmChannelType>(fmData.FileMapReadVar32BE())))
             XC("CAF format has invalid channel count!",
-               "Channels", pdData.GetChannels());
+              "Channels", pdData.GetChannels());
           // Read bits per sample and check that format is supported in OpenAL
           pdData.SetBits(static_cast<PcmBitType>(fmData.FileMapReadVar32BE()));
           if(!pdData.ParseOALFormat())
             XC("CAF pcm data un-supported by AL!",
-               "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
+              "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
           // Done
           break;
         } // Is it the 'data' chunk?
@@ -173,7 +173,7 @@ class CodecCAF :                       // CAF codec object
         break;
       // Not supported
       default: XC("Pcm bit count not supported for endian conversion!",
-                  "Bits", pdData.GetBits(), "Type", cpConversion);
+        "Bits", pdData.GetBits(), "Type", cpConversion);
     } // Done
     return true;
   }

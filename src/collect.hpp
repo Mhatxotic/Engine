@@ -154,21 +154,21 @@ class CLHelperBase :
   /* -- Return last item in the list ------------------------------- */ public:
   IteratorType CLBaseGetLastItemUnsafe() { return this->end(); }
   /* -- Return if collector is empty --------------------------------------- */
-  bool CLBaseIsEmptyUnsafe() {  return this->empty(); }
+  bool CLBaseIsEmptyUnsafe() const { return this->empty(); }
   /* -- Destroy all objects (clear() doesn't do this!) --------------------- */
   void CLBaseDestroyUnsafe()
     { while(!CLBaseIsEmptyUnsafe()) delete this->back(); }
   /* -- Return number of registered items ---------------------------------- */
-  size_t CLBaseCountUnsafe() { return this->size(); }
+  size_t CLBaseCountUnsafe() const { return this->size(); }
   /* -- Reference counter increment ---------------------------------------- */
-  void CLBaseCheckUnsafe()
+  void CLBaseCheckUnsafe() const
   { // Throw error if at limit. This check is only performed during
     // construction of an object. Construction should never occur off-thread or
     // we will need to serialise this access.
     if(CLBaseCountUnsafe() >= stMaximum)
       XC("Collector child object threshold exceeded!",
-         "Type", IdentGet(), "Current", CLBaseCountUnsafe(),
-         "Maximum", stMaximum);
+        "Type", IdentGet(), "Current", CLBaseCountUnsafe(),
+        "Maximum", stMaximum);
   }
   /* -- Add/remove object to the list -------------------------------------- */
   IteratorType CLBaseAddUnsafe(MemberType*const mtObj)
@@ -292,7 +292,7 @@ struct CLHelper :                      // Members initially public
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~CLHelper() { this->CLBaseCheckAndDestroyUnsafe(); }
+  DTORHELPER(~CLHelper, this->CLBaseCheckAndDestroyUnsafe())
   /* -- Set maximum objects ------------------------------------------------ */
   CVarReturn CollectorSetLimit(const size_t stLimit)
     { return this->CLSetLimit(stLimit); }
@@ -411,9 +411,9 @@ class ICHelperSafe :                   // Members initially private
         this->ICHelperBaseSwapRegistration(mtObj);}); }
   /* -- Constructor with/without registration ------------------------------ */
   explicit ICHelperSafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
-    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr))) {}
+    BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr)) } {}
   explicit ICHelperSafe(CollectorType*const ctPtr) :
-    BaseType(ctPtr, StdMove(ICHelperInit(ctPtr))) {}
+    BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr)) } {}
 };/* ----------------------------------------------------------------------- */
 /* == Collector class helper without locks ================================= **
 ** ######################################################################### **
@@ -466,7 +466,8 @@ template<class CollectorType, class MemberType, class LockType,
   class IteratorType>
 struct ICHelper :                      // Members initially public
   /* -- Base classes ------------------------------------------------------- */
-  public LockType                      // ICHelperSafe or ICHelperUnSafe
+  public LockType,                     // ICHelperSafe or ICHelperUnSafe
+  public virtual Ident                 // Name of object (possibly shared)
 { /* -- Swap registration with another class ------------------------------- */
   void CollectorSwapRegistration(const MemberType &mtObj)
     { this->ICHelperSwap(mtObj); }
@@ -474,20 +475,39 @@ struct ICHelper :                      // Members initially public
   void CollectorRegister() { this->ICHelperPush(); }
   void CollectorUnregister() { this->ICHelperErase(); }
   /* -- Destructor (unregister if registered) ------------------- */ protected:
-  ~ICHelper() { CollectorUnregister(); }
+  DTORHELPER(~ICHelper, CollectorUnregister())
   /* -- Constructor (move) ------------------------------------------------- */
   explicit ICHelper(ICHelper &&icOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    LockType{ StdMove(icOther) }
+    Ident{ StdMove(icOther) },         // Move other identifier
+    LockType{ StdMove(icOther) }       // Move base class members
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor (manual registration) ---------------------------------- */
+  explicit ICHelper(const string &strN, CollectorType*const ctPtr) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Ident{ strN },                     // Initialise identifier
+    LockType{ ctPtr }                  // Initialise with other collector
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Constructor (manual registration, virtual) ------------------------- */
   explicit ICHelper(CollectorType*const ctPtr) :
     /* -- Initialisers ----------------------------------------------------- */
-    LockType{ ctPtr }
+    LockType{ ctPtr }                  // Initialise with other collector
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with automatic registration ---------------------------- */
+  explicit ICHelper(
+    /* -- Parameters ------------------------------------------------------- */
+    const string &strN,                // Set object identifier
+    CollectorType*const ctPtr,         // Pointer to collector class
+    MemberType*const mtPtr             // Pointer to member class
+    ): /* -- Initialisers -------------------------------------------------- */
+    Ident{ strN },                     // Initialise identifier
+    LockType{ ctPtr, mtPtr }           // Initialise lock type
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Constructor with automatic registration (virtual) ------------------ */
   explicit ICHelper(
     /* -- Parameters ------------------------------------------------------- */
     CollectorType*const ctPtr,         // Pointer to collector class

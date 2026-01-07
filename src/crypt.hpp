@@ -127,7 +127,7 @@ static void CryptAddEntropy()
   CryptAddEntropyInt(cmSys.GetTimeUS());
   CryptAddEntropyInt(cmHiRes.GetTimeUS());
   CryptAddEntropyInt(cLog->CCDeltaUS());
-  cSystem->UpdateCPUUsage();
+  cSystem->SysUpdateCPUUsage();
   CryptAddEntropyInt(cSystem->CPUUsage());
   CryptAddEntropyInt(cSystem->CPUUsageSystem());
   cSystem->UpdateMemoryUsageData();
@@ -157,7 +157,7 @@ static const string CryptURLEncode(const string &strS)
   const char *cpPtr = strS.data();
   // Preallocate string to avoid multiple reallocations. Worst case: every char
   // needs encoding.
-  string strURL; strURL.reserve(strS.size() * 3);
+  Reserved<string> strURL{ strS.size() * 3 };
   // Perform these actions for each character...
   do
   { // Get character
@@ -321,20 +321,20 @@ static const string CryptPTRtoB64(const void*const vpIn, const size_t stIn)
             return { bmPTR->data, bmPTR->length };
           } // Failed to flush stream
           XC("Failed to flush base64 encoder stream!",
-             "InSize", stIn, "OutSize", stBytesWritten,
-             "Reason", CryptGetError());
+            "InSize", stIn, "OutSize", stBytesWritten,
+            "Reason", CryptGetError());
         } // Failed to decode base64
         XC("Failed to decode base64 stream!",
-           "InSize", stIn, "Reason", CryptGetError());
+          "InSize", stIn, "Reason", CryptGetError());
       } // Failed to decode base64
       XC("Failed to assign RAM buffer to decode base64 stream!",
-         "InSize", stIn, "Reason", CryptGetError());
+        "InSize", stIn, "Reason", CryptGetError());
     } // Failed to create RAM based buffer
     XC("Failed to create RAM based buffer to decode base64 stream!",
-       "InSize", stIn, "Reason", CryptGetError());
+      "InSize", stIn, "Reason", CryptGetError());
   } // Failed to create base64 decoder context
   XC("Failed to create base64 decoder context!",
-     "InSize", stIn, "Reason", CryptGetError());
+    "InSize", stIn, "Reason", CryptGetError());
 }
 /* ------------------------------------------------------------------------- */
 static size_t CryptB64toPTR(void*const vpIn, const size_t stIn,
@@ -357,16 +357,16 @@ static size_t CryptB64toPTR(void*const vpIn, const size_t stIn,
           return stBytesRead;
         // Failure so raise exception
         XC("Failed to decode base64 data!",
-           "InSize", stIn, "OutSize", stOut, "Reason", CryptGetError());
+          "InSize", stIn, "OutSize", stOut, "Reason", CryptGetError());
       } // Failure to assign RAM buffer
       XC("Failed to assign RAM buffer for base64 decoding!",
-         "InSize", stIn, "OutSize", stOut, "Reason", CryptGetError());
+        "InSize", stIn, "OutSize", stOut, "Reason", CryptGetError());
     } // Failure to create RAM buffer filter
     XC("Failed to allocate memory for base64 decoding!",
-       "InSize", stIn, "OutSize", stOut, "Reason", CryptGetError());
+      "InSize", stIn, "OutSize", stOut, "Reason", CryptGetError());
   }  // Failure to create base 64 filter
   XC("Failed to create base64 filter!",
-     "InSize", stIn, "OutSize", stOut, "Reason", CryptGetError());
+    "InSize", stIn, "OutSize", stOut, "Reason", CryptGetError());
 }
 /* ------------------------------------------------------------------------- */
 static const string CryptMBtoB64(const MemConst &mcSrc)
@@ -406,15 +406,32 @@ static const string CryptEntEncode(const string &strS)
   ostringstream osS; osS << hex;
   // For each entity. Find it in the string
   // Until null character. Which control token?
-  for(UtfDecoder utfSrc{ strS }; unsigned int uiChar = utfSrc.Next();)
-  { // Characters not these character ranges will be encoded
-    if(uiChar <  ' '                   || // Control characters
-      (uiChar >= '!' && uiChar <= '/') || // Symbols before numbers
-      (uiChar >= ':' && uiChar <= '@') || // Symbols before capitals
-       uiChar >= '{')                     // Extended characters
-      osS << cCommon->CommonEnt() << uiChar << ';';
+  for(UtfDecoder udSrc{ strS }; Codepoint cChar = udSrc.UtfNext();)
+  { // If characters with special meaning in HTML that must be escaped in text
+    // contexts? (ampersand, less-than, greater-than, quotation marks
+    // (depending on context))?
+    if(cChar == static_cast<Codepoint>('&') || // (U+0026)
+       cChar == static_cast<Codepoint>('<') || // (U+003C)
+       cChar == static_cast<Codepoint>('>') || // (U+003E)
+       // Is control characters? (C0): U+0000..U+001F except allowed whitespace
+       // (TAB U+0009, LF U+000A, CR U+000D)
+       (cChar <= 0x001f && cChar != 0x0009 &&
+        cChar != 0x000a && cChar != 0x000d) ||
+       // Is DELETE control? (U+007F)
+       cChar == 0x007f ||
+       // Is C1 control characters? (U+0080..U+009F)
+       (cChar > 0x0080 && cChar <= 0x009f) ||
+       // Is surrogate code points character? (never valid Unicode scalar
+       // values -> U+D800..U+DFFF)
+       (cChar > 0xd800 && cChar <= 0xdfff) ||
+       // Noncharacters? (U+FDD0..U+FDEF)
+       (cChar > 0xfdd0 && cChar <= 0xfdef) ||
+       // Any code point where low 16 bits are 0xFFFE or 0xFFFF?
+       (cChar & 0xffff) >= 0xfffe)
+      // Write the hexedecimal notation for the character instead
+      osS << cCommon->CommonEnt() << cChar << ';';
     // Character is usable as is
-    else osS << static_cast<char>(uiChar);
+    else osS << static_cast<char>(cChar);
   } // Return string
   return osS.str();
 }
@@ -427,16 +444,16 @@ static const string CryptStoHEXL(const string &strIn)
   { return CryptBin2HexL(reinterpret_cast<const uint8_t*>(strIn.data()),
       strIn.length()); }
 /* -- Helper for mutliple hashing types from OpenSSL ----------------------- */
-static Memory CryptHMACCall(const EVP_MD*const fFunc,
-  const void         *const vpSalt, const size_t stSaltSize,
-  const unsigned char*const cpSrc,  const size_t stSrcSize)
+static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
+  const size_t stSaltSize, const unsigned char*const cpSrc,
+  const size_t stSrcSize)
 { // Check sizes to make sure they can be converted to integer
   if(UtilIntWillOverflow<int>(stSaltSize))
     XC("Size of salt data too big!",
-       "Requested", stSaltSize, "Maximum", numeric_limits<int>::max());
+      "Requested", stSaltSize, "Maximum", numeric_limits<int>::max());
   if(UtilIntWillOverflow<int>(stSrcSize))
     XC("Size of source data to hash too big!",
-       "Requested", stSrcSize,  "Maximum", numeric_limits<int>::max());
+      "Requested", stSrcSize, "Maximum", numeric_limits<int>::max());
   // Create output for HMAC-SHA hash
   Memory mData{ EVP_MAX_MD_SIZE };
   // For storage of size. We really need to know the output size.
@@ -446,10 +463,10 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc,
   if(!HMAC(fFunc, vpSalt, static_cast<int>(stSaltSize), cpSrc, stSrcSize,
     mData.MemPtr<unsigned char>(), &uiLen))
       XC("Failed to perform salted-hash on source data!",
-         "Function",    fFunc != nullptr,
-         "SaltAddress", vpSalt != nullptr, "SaltSize", stSaltSize,
-         "SrcAddress",  cpSrc != nullptr,  "SrcSize", stSrcSize,
-         "OutLength",   uiLen);
+        "Function",    fFunc != nullptr,
+        "SaltAddress", vpSalt != nullptr, "SaltSize", stSaltSize,
+        "SrcAddress",  cpSrc != nullptr,  "SrcSize", stSrcSize,
+        "OutLength",   uiLen);
   // Resize string
   mData.MemResize(uiLen);
   // Return memory block
@@ -535,7 +552,7 @@ static string CryptURLDecode(const string &strS)
 { // Bail if passed string is invalid
   if(strS.empty()) return {};
   // Preallocate string to avoid multiple reallocations
-  string strURL; strURL.reserve(strS.size());
+  Reserved<string> strURL{ strS.size() };
   // Movable pointer to input string and perform actions for each character...
   for(const char *cpPtr = strS.data(); *cpPtr;)
   { // Get the character and if it denotes a encoded value?
@@ -577,8 +594,7 @@ static Memory CryptRandomBlock(const size_t stSize)
 /* -- Sanitise a string removing excessive letters and words --------------- */
 static string CryptSanitise(const string &strMessage)
 { // Create output string and pre-allocate memory
-  string strPruned;
-  strPruned.reserve(strMessage.capacity());
+  Reserved<string> strPruned{ strMessage.capacity() };
   // Last character processed and count
   char cLastChar = '\0';
   size_t stCount = 0;
@@ -602,7 +618,7 @@ static string CryptSanitise(const string &strMessage)
   // Repeated words
   string strWord, strLastWord;
   // Output string
-  string strOutput; strOutput.reserve(strPruned.size());
+  Reserved<string> strOutput{ strPruned.size() };
   // Put pruned string into a string stream
   istringstream issS{ strPruned };
   // For each word
@@ -639,14 +655,14 @@ class Crypt :                          // Actual class body
     // De-initialise openssl
     OPENSSL_cleanup();
     // Overwrite loaded private key so it doesn't linger in memory
-    SetDefaultPrivateKey();
+    CryptSetDefaultPrivateKey();
   }
   /* -- Initialise cryptographic systems ----------------------------------- */
   void CryptInit()
   { // Set address of global class
     cCrypt = this;
     // Use sql to allocate memory?
-    if(!CRYPTO_set_mem_functions(OSSLAlloc, OSSLReAlloc, OSSLFree))
+    if(!CRYPTO_set_mem_functions(CryptAlloc, CryptReAlloc, CryptFree))
       XC("Failed to setup allocator for crypto interface!");
     // Generate CRC table (for lzma lib)
     CrcGenerateTable();
@@ -666,14 +682,14 @@ class Crypt :                          // Actual class body
     while(!RAND_status());
   }
   /* ----------------------------------------------------------------------- */
-  static void *OSSLAlloc(size_t stSize, const char*const, const int)
+  static void *CryptAlloc(size_t stSize, const char*const, const int)
     { return StdAlloc<void>(stSize); }
   /* ----------------------------------------------------------------------- */
-  static void *OSSLReAlloc(void*const vpPtr, size_t stSize,
+  static void *CryptReAlloc(void*const vpPtr, size_t stSize,
     const char*const, const int)
       { return StdReAlloc(vpPtr, stSize); }
   /* ----------------------------------------------------------------------- */
-  static void OSSLFree(void*const vpPtr, const char*const, const int)
+  static void CryptFree(void*const vpPtr, const char*const, const int)
     { StdFree(vpPtr); }
   /* -- Private keys ----------------------------------------------- */ public:
   static constexpr const size_t
@@ -689,71 +705,65 @@ class Crypt :                          // Actual class body
   { // --------------------------------------------------------------------- */
     struct Parts                       // Parts of the private key
     { // ------------------------------------------------------------------- */
-      QPKey        qKey;               // Private key (256bits)
-      QIVKey       qIV;                // IV key (128bits)
+      QPKey        qpkData;            // Private key (256bits)
+      QIVKey       qivData;            // IV key (128bits)
       // ------------------------------------------------------------------ */
     } p;                               // Access to important parts
     // --------------------------------------------------------------------- */
-    QKeys          qKeys;              // Access to all parts of key
+    QKeys          qkData;             // Access to all parts of key
     // --------------------------------------------------------------------- */
   } pkDKey, pkKey;                     // Default and loaded private key data
   /* -- Set a new private key ---------------------------------------------- */
-  void ResetPrivateKey()
-    { CryptRandomPtr(&pkKey.qKeys, sizeof(pkKey.qKeys)); }
+  void CryptResetPrivateKey()
+    { CryptRandomPtr(&pkKey.qkData, sizeof(pkKey.qkData)); }
   /* -- Update private key mainly for use with protected cvars ------------- */
-  void WritePrivateKey(const size_t stId, const uint64_t qVal)
-    { pkKey.qKeys[stId] = qVal; }
+  void CryptWritePrivateKey(const size_t stId, const uint64_t ullVal)
+    { pkKey.qkData[stId] = ullVal; }
   /* -- Set default private key -------------------------------------------- */
-  void SetDefaultPrivateKey() { pkKey = pkDKey; }
+  void CryptSetDefaultPrivateKey() { pkKey = pkDKey; }
   /* -- Read part of the private key --------------------------------------- */
-  uint64_t ReadPrivateKey(const size_t stId) { return pkKey.qKeys[stId]; }
-  /* -- Iterator is the last entitiy? -------------------------------------- */
-  bool IsLastEntity(const StrVStrVMapConstIt &svsvmciIt)
-    { return svsvmciIt == svsvmEnt.cend(); }
-  /* -- Find entity in the entity list ------------------------------------- */
-  const StrVStrVMapConstIt FindEntity(const string &strWhat)
-    { return svsvmEnt.find(strWhat); }
-  /* -- Encode XML/HTML entities into string ------------------------------- */
-  const string EntDecode(string strS)
+  uint64_t CryptReadPrivateKey(const size_t stId)
+    { return pkKey.qkData[stId]; }
+  /* -- Decode XML/HTML entities from a string ----------------------------- */
+  const string CryptEntDecode(string strS)
   { // Done if empty
-    if(strS.empty()) return {};
+    if(strS.empty()) return strS;
     // Loop until we don't find anymore entities to decode
     for(size_t stAPos = strS.find('&');
                stAPos != StdNPos;
                stAPos = strS.find('&', stAPos))
     { // Get semi-colon position, break if not found
-      const size_t stSPos = strS.find(';', stAPos+1);
+      const size_t stSPos = strS.find(';', stAPos + 1);
       if(stSPos == StdNPos) break;
       // Copy out the entity
-      const string strT{ strS.substr(stAPos+1, stSPos-stAPos-1) };
+      const string strT{ strS.substr(stAPos + 1, stSPos - stAPos - 1) };
       // Cut out the entity
-      strS.erase(stAPos, stSPos-stAPos+1);
+      strS.erase(stAPos, stSPos - stAPos + 1);
       // Is a unicode number?
       if(strT.front() == '#')
       { // Don't have at least two characters? Ignore, goto next entity
         if(strT.length() <= 1) continue;
         // Value to convert
-        unsigned int uiVal;
+        Codepoint cVal;
         // Have more than 2 characters and hex character specified?
         if(strT.length() > 2 && (strT[1] == 'x' || strT[1] == 'X'))
-          uiVal = StrHexToInt<unsigned int>
-            (strT.substr(2, StdNPos));
+          cVal = StrHexToInt<unsigned int>(strT.substr(2, StdNPos));
         // Not hex but is a number? Normal number
         else if(StdIsDigit(strT[1]))
-          uiVal = StrToNum<unsigned int>(strT.substr(1, StdNPos));
+          cVal = StrToNum<unsigned int>(strT.substr(1, StdNPos));
         // Shouldn't be anything else. Ignore insertations, goto next entity
         else continue;
         // Encoder character
-        const UtfEncoderEx utfCode{ UtfEncodeEx(uiVal) };
+        const UtfEncoderEx ueeCode{ UtfEncodeEx(cVal) };
         // Insert utf-8 string
-        strS.insert(stAPos, utfCode.u.c);
+        strS.insert(stAPos, ueeCode.u.c);
         // Go forward the number of unicode bytes written
-        stAPos += utfCode.l;
+        stAPos += ueeCode.l;
         // Find another entity
         continue;
       } // Find string to decode, ignore further insertation if no match
-      const StrVStrVMapConstIt svsvmciIt{ FindEntity(strT) };
-      if(IsLastEntity(svsvmciIt)) continue;
+      const StrVStrVMapConstIt svsvmciIt{ svsvmEnt.find(strT) };
+      if(svsvmciIt == svsvmEnt.cend()) continue;
       // Insert result
       strS.insert(stAPos, svsvmciIt->second);
       // Go forward
@@ -761,109 +771,120 @@ class Crypt :                          // Actual class body
     } // Return string
     return strS;
   }
-  /* -- Destructor ---------------------------------------------- */ protected:
-  DTORHELPER(~Crypt, CryptDeInit())
-  /* -- Default constructor ------------------------------------------------ */
+  /* -- Default constructor ------------------------------------- */ protected:
   Crypt() :                            // No arguments
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Initialise init helper
     svsvmEnt{                          // Define HTML entities
-      { "Agrave", "\xC0" }, { "Aacute", "\xC1" }, { "Acirc", "\xC2" },
-      { "Atilde", "\xC3" }, { "Auml", "\xC4" }, { "Aring", "\xC5" },
-      { "AElig", "\xC6" }, { "Ccedil", "\xC7" }, { "Egrave", "\xC8" },
-      { "Eacute", "\xC9" }, { "Ecirc", "\xCA" }, { "Euml", "\xCB" },
-      { "Igrave", "\xCC" }, { "Iacute", "\xCD" }, { "Icirc", "\xCE" },
-      { "Iuml", "\xCF" }, { "ETH", "\xD0" }, { "Ntilde", "\xD1" },
-      { "Ograve", "\xD2" }, { "Oacute", "\xD3" }, { "Ocirc", "\xD4" },
-      { "Otilde", "\xD5" }, { "Ouml", "\xD6" }, { "Oslash", "\xD8" },
-      { "Ugrave", "\xD9" }, { "Uacute", "\xDA" }, { "Ucirc", "\xDB" },
-      { "Uuml", "\xDC" }, { "Yacute", "\xDD" }, { "THORN", "\xDE" },
-      { "aacute", "\xE1" }, { "acirc", "\xE2" }, { "acute", "\xB4" },
-      { "aelig", "\xE6" }, { "agrave", "\xE0" },
-      { "alefsym", cCommon->CommonBlank() }, { "alpha", "a" }, { "amp", "&" },
-      { "and", cCommon->CommonBlank() }, { "ang", cCommon->CommonBlank() },
-      { "apos", "'" }, { "aring", "\xE5" }, { "asymp", "\x98" },
-      { "atilde", "\xE3" }, { "auml", "\xE4" }, { "bdquo", "\x84" },
-      { "beta", "\xDF" }, { "brvbar", "\xA6" }, { "bull", "\x95" },
-      { "cap", "n" }, { "ccedil", "\xE7" }, { "cedil", "\xB8" },
-      { "cent", "\xA2" }, { "chi", "X" }, { "circ", "\x88" },
-      { "clubs", cCommon->CommonBlank() }, { "cong", cCommon->CommonBlank() },
-      { "copy", "\xA9" }, { "crarr", cCommon->CommonBlank() },
-      { "cup", cCommon->CommonBlank() }, { "curren", "\xA4" },
-      { "dArr", cCommon->CommonBlank() }, { "dagger", "\x86" },
-      { "darr", cCommon->CommonBlank() }, { "deg", "\xB0" },
-      { "delta", "d" }, { "diams", cCommon->CommonBlank() },
-      { "divide", "\xF7" }, { "eacute", "\xE9" }, { "ecirc", "\xEA" },
-      { "egrave", "\xE8" }, { "empty", "\xD8" },
-      { "emsp", cCommon->CommonSpace() }, { "ensp", cCommon->CommonSpace() },
-      { "epsilon", "e" }, { "equiv", cCommon->CommonEquals() },
-      { "eta", cCommon->CommonBlank() }, { "eth", "\xF0" }, { "euml", "\xEB" },
-      { "euro", "\x80" }, { "exist", cCommon->CommonBlank() },
-      { "fnof", "\x83" }, { "forall", cCommon->CommonBlank() },
-      { "frac12", "\xBD" }, { "frac14", "\xBC" }, { "frac34", "\xBE" },
-      { "frasl", cCommon->CommonFSlash() },
-      { "gamma", cCommon->CommonBlank() }, { "ge", cCommon->CommonEquals() },
-      { "gt", ">" }, { "hArr", cCommon->CommonBlank() },
-      { "harr", cCommon->CommonBlank() }, { "hearts", cCommon->CommonBlank() },
-      { "hellip", "\x85" }, { "iacute", "\xED" }, { "icirc", "\xEE" },
-      { "iexcl", "\xA1" }, { "igrave", "\xEC" }, { "image", "I" },
-      { "infin", "8" }, { "int", cCommon->CommonBlank() },
-      { "iota", cCommon->CommonBlank() }, { "iquest", "\xBF" },
-      { "isin", cCommon->CommonBlank() }, { "iuml", "\xEF" },
-      { "kappa", cCommon->CommonBlank() }, { "lArr", cCommon->CommonBlank() },
-      { "lambda", cCommon->CommonBlank() }, { "lang", "<" },
-      { "laquo", "\xAB" }, { "larr", cCommon->CommonBlank() },
-      { "lceil", cCommon->CommonBlank() }, { "ldquo", "\x93" },
-      { "le", cCommon->CommonEquals() }, { "lfloor", cCommon->CommonBlank() },
-      { "lowast", "*" }, { "loz", cCommon->CommonBlank() },
-      { "lrm", "\xE2\x80\x8E" }, { "lsaquo", "\x8B" }, { "lsquo", "\x91" },
-      { "lt", "<" }, { "macr", "\xAF" }, { "mdash", "\x97" },
-      { "micro", "\xB5" }, { "middot", "\xB7" }, { "minus", "-" },
-      { "mu", "\xB5" }, { "nabla", cCommon->CommonBlank() },
-      { "nbsp", cCommon->CommonSpace() }, { "ndash", "\x96" },
-      { "ne", cCommon->CommonBlank() }, { "ni", cCommon->CommonBlank() },
-      { "not", "\xAC" }, { "notin", cCommon->CommonBlank() },
-      { "nsub", cCommon->CommonBlank() }, { "ntilde", "\xF1" },
-      { "nu", cCommon->CommonBlank() }, { "oacute", "\xF3" },
-      { "ocirc", "\xF4" }, { "oelig", "\x9C" }, { "ograve", "\xF2" },
-      { "oline", cCommon->CommonBlank() }, { "omega", cCommon->CommonBlank() },
-      { "omicron", cCommon->CommonBlank() },
-      { "oplus", cCommon->CommonBlank() }, { "or", cCommon->CommonBlank() },
-      { "ordf", "\xAA" }, { "ordm", "\xBA" }, { "oslash", "\xF8" },
-      { "otilde", "\xF5" }, { "otimes", cCommon->CommonBlank() },
-      { "ouml", "\xF6" }, { "para", "\xB6" },
-      { "part", cCommon->CommonBlank() }, { "permil", "\x89" },
-      { "perp", cCommon->CommonBlank() }, { "phi", "f" }, { "pi", "p" },
-      { "piv", cCommon->CommonBlank() }, { "plusmn", "\xB1" },
-      { "pound", "\xA3" }, { "prime", "'" },
-      { "prod", cCommon->CommonBlank() }, { "prop", cCommon->CommonBlank() },
-      { "psi", cCommon->CommonBlank() }, { "quot", "\"" },
-      { "rArr", cCommon->CommonBlank() }, { "radic", "v" }, { "rang", ">" },
-      { "raquo", "\xBB" }, { "rarr", cCommon->CommonBlank() },
-      { "rceil", cCommon->CommonBlank() }, { "rdquo", "\x94" },
-      { "real", "R" }, { "reg", "\xAE" }, { "rfloor", cCommon->CommonBlank() },
-      { "rho", cCommon->CommonBlank() }, { "rlm", "\xE2\x80\x8F" },
-      { "rsaquo", "\x9B" }, { "rsquo", "\x92" }, { "sbquo", "\x82" },
-      { "scaron", "\x9A" }, { "sdot", "\xB7" }, { "sect", "\xA7" },
-      { "shy", "\xC2\xAD" }, { "sigma", "s" },
-      { "sigmaf", cCommon->CommonBlank() }, { "sim", "~" },
-      { "spades", cCommon->CommonBlank() }, { "sub", cCommon->CommonBlank() },
-      { "sube", cCommon->CommonBlank() }, { "sum", cCommon->CommonBlank() },
-      { "sup", cCommon->CommonBlank() }, { "sup1", "\xB9" },
-      { "sup2", "\xB2" }, { "sup3", "\xB3" },
-      { "supe", cCommon->CommonBlank() }, { "szlig", "\xDF" }, { "tau", "t" },
-      { "there4", cCommon->CommonBlank() },
-      { "theta", cCommon->CommonBlank() },
-      { "thetasym",cCommon->CommonBlank() },
-      { "thinsp", cCommon->CommonBlank() }, { "thorn", "\xFE" },
-      { "tilde", "\x98" }, { "times", "\xD7" }, { "trade", "\x99" },
-      { "uArr", cCommon->CommonBlank() }, { "uacute", "\xFA" },
-      { "uarr", cCommon->CommonBlank() }, { "ucirc", "\xFB" },
-      { "ugrave", "\xF9" }, { "uml", "\xA8" },
-      { "upsih", cCommon->CommonBlank() }, { "upsilon", "Y" },
-      { "uuml", "\xFC" }, { "weierp", "P" }, { "xi", cCommon->CommonBlank() },
-      { "yacute", "\xFD" }, { "yen", "\xA5" }, { "yuml", "\xFF" },
-      { "zeta", "Z" }, { "zwj", "\xE2\x80\x8D" }, { "zwnj", "\xE2\x80\x8C" },
+      { "AElig", "\xC3\x86" }, { "Aacute", "\xC3\x81" },
+      { "Acirc", "\xC3\x82" }, { "Agrave", "\xC3\x80" },
+      { "Aring", "\xC3\x85" }, { "Atilde", "\xC3\x83" },
+      { "Auml", "\xC3\x84" }, { "Ccedil", "\xC3\x87" },
+      { "Dagger", "\xE2\x80\xA1" }, { "ETH", "\xC3\x90" },
+      { "Eacute", "\xC3\x89" }, { "Ecirc", "\xC3\x8A" },
+      { "Egrave", "\xC3\x88" }, { "Euml", "\xC3\x8B" },
+      { "Iacute", "\xC3\x8D" }, { "Icirc", "\xC3\x8E" },
+      { "Igrave", "\xC3\x8C" }, { "Iuml", "\xC3\x8F" },
+      { "Ntilde", "\xC3\x91" }, { "OElig", "\xC5\x92" },
+      { "Oacute", "\xC3\x93" }, { "Ocirc", "\xC3\x94" },
+      { "Ograve", "\xC3\x92" }, { "Oslash", "\xC3\x98" },
+      { "Otilde", "\xC3\x95" }, { "Ouml", "\xC3\x96" },
+      { "Prime", "\xE2\x80\xB3" }, { "Scaron", "\xC5\xA0" },
+      { "THORN", "\xC3\x9E" }, { "Uacute", "\xC3\x9A" },
+      { "Ucirc", "\xC3\x9B" }, { "Ugrave", "\xC3\x99" },
+      { "Uuml", "\xC3\x9C" }, { "Yacute", "\xC3\x9D" }, { "Yuml", "\xC5\xB8" },
+      { "aacute", "\xC3\xA1" }, { "acirc", "\xC3\xA2" },
+      { "acute", "\xC2\xB4" }, { "aelig", "\xC3\xA6" },
+      { "agrave", "\xC3\xA0" }, { "alefsym", "\xE2\x84\xB5" },
+      { "alpha", "\xCE\xB1" }, { "amp", "&" }, { "and", "\xE2\x88\xA7" },
+      { "ang", "\xE2\x88\xA0" }, { "apos", "'" }, { "aring", "\xC3\xA5" },
+      { "asymp", "\xE2\x89\x88" }, { "atilde", "\xC3\xA3" },
+      { "auml", "\xC3\xA4" }, { "bdquo", "\xE2\x80\x9E" },
+      { "beta", "\xCE\xB2" }, { "brvbar", "\xC2\xA6" },
+      { "bull", "\xE2\x80\xA2" }, { "cap", "\xE2\x88\xA9" },
+      { "ccedil", "\xC3\xA7" }, { "cedil", "\xC2\xB8" },
+      { "cent", "\xC2\xA2" }, { "chi", "\xCF\x87" }, { "circ", "\xCB\x86" },
+      { "clubs", "\xE2\x99\xA3" }, { "cong", "\xE2\x89\xA5" },
+      { "copy", "\xC2\xA9" }, { "crarr", "\xE2\x86\xB5" },
+      { "cup", "\xE2\x88\xAA" }, { "curren", "\xC2\xA4" },
+      { "dArr", "\xE2\x87\x93" }, { "dagger", "\xE2\x80\xA0" },
+      { "darr", "\xE2\x86\x93" }, { "deg", "\xC2\xB0" },
+      { "delta", "\xCE\xB4" }, { "diams", "\xE2\x99\xA6" },
+      { "divide", "\xC3\xB7" }, { "eacute", "\xC3\xA9" },
+      { "ecirc", "\xC3\xAA" }, { "egrave", "\xC3\xA8" },
+      { "empty", "\xE2\x88\x85" }, { "emsp", "\xE2\x80\x83" },
+      { "ensp", "\xE2\x80\x82" }, { "epsilon", "\xCE\xB5" },
+      { "equiv", "\xE2\x89\xA1" }, { "eta", "\xCE\xB7" },
+      { "eth", "\xC3\xB0" }, { "euml", "\xC3\xAB" },
+      { "euro", "\xE2\x82\xAC" }, { "exist", "\xE2\x88\x83" },
+      { "fnof", "\xC6\x92" }, { "forall", "\xE2\x88\x80" },
+      { "frac12", "\xC2\xBD" }, { "frac14", "\xC2\xBC" },
+      { "frac34", "\xC2\xBE" }, { "frasl", "\xE2\x81\x84" },
+      { "gamma", "\xCE\xB3" }, { "ge", "\xE2\x89\xA5" }, { "gt", ">" },
+      { "hArr", "\xE2\x87\x94" }, { "hairsp", "\xE2\x80\x8A" },
+      { "harr", "\xE2\x86\x94" }, { "hearts", "\xE2\x99\xA5" },
+      { "hellip", "\xE2\x80\xA6" }, { "iacute", "\xC3\xAD" },
+      { "icirc", "\xC3\xAE" }, { "iexcl", "\xC2\xA1" },
+      { "igrave", "\xC3\xAC" }, { "image", "\xE2\x84\x91" },
+      { "infin", "\xE2\x88\x9E" }, { "int", "\xE2\x88\xAB" },
+      { "iota", "\xCE\xB9" }, { "iquest", "\xC2\xBF" },
+      { "isin", "\xE2\x88\x88" }, { "iuml", "\xC3\xAF" },
+      { "kappa", "\xCE\xBA" }, { "lArr", "\xE2\x87\x90" },
+      { "lambda", "\xCE\xBB" }, { "lang", "\xE2\x8C\xA9" },
+      { "laquo", "\xC2\xAB" }, { "larr", "\xE2\x86\x90" },
+      { "lceil", "\xE2\x8C\x88" }, { "ldquo", "\xE2\x80\x9C" },
+      { "le", "\xE2\x89\xA4" }, { "lfloor", "\xE2\x8C\x8A" },
+      { "lowast", "\xE2\x88\x97" }, { "loz", "\xE2\x97\x8A" },
+      { "lrm", "\xE2\x80\x8E" }, { "lsaquo", "\xE2\x80\xB9" },
+      { "lsquo", "\xE2\x80\x98" }, { "lt", "<" }, { "macr", "\xC2\xAF" },
+      { "mdash", "\xE2\x80\x94" }, { "micro", "\xC2\xB5" },
+      { "middot", "\xC2\xB7" }, { "minus", "\xE2\x88\x92" },
+      { "mu", "\xCE\xBC" }, { "nabla", "\xE2\x88\x87" },
+      { "nbsp", "\xC2\xA0" }, { "nbspace", "\xC2\xA0" },
+      { "ndash", "\xE2\x80\x93" }, { "ne", "\xE2\x89\xA0" },
+      { "ni", "\xE2\x88\x8B" }, { "not", "\xC2\xAC" },
+      { "notin", "\xE2\x88\x89" }, { "nsub", "\xE2\x8A\x84" },
+      { "ntilde", "\xC3\xB1" }, { "nu", "\xCE\xBD" }, { "oacute", "\xC3\xB3" },
+      { "ocirc", "\xC3\xB4" }, { "oelig", "\xC5\x93" },
+      { "ograve", "\xC3\xB2" }, { "oline", "\xE2\x80\xBE" },
+      { "omega", "\xCF\x89" }, { "omicron", "\xCE\xBF" },
+      { "oplus", "\xE2\x8A\x95" }, { "or", "\xE2\x88\xA8" },
+      { "ordf", "\xC2\xAA" }, { "ordm", "\xC2\xBA" }, { "oslash", "\xC3\xB8" },
+      { "otilde", "\xC3\xB5" }, { "otimes", "\xE2\x8A\x97" },
+      { "ouml", "\xC3\xB6" }, { "para", "\xC2\xB6" },
+      { "part", "\xE2\x88\x82" }, { "permil", "\xE2\x80\xB0" },
+      { "perp", "\xE2\x8A\xA5" }, { "phi", "\xCF\x86" }, { "pi", "\xCF\x80" },
+      { "piv", "\xCF\xB6" }, { "plusmn", "\xC2\xB1" }, { "pound", "\xC2\xA3" },
+      { "prime", "\xE2\x80\xB2" }, { "prod", "\xE2\x88\x8F" },
+      { "prop", "\xE2\x88\x9D" }, { "psi", "\xCF\x88" }, { "quot", "\"" },
+      { "rArr", "\xE2\x87\x92" }, { "radic", "\xE2\x88\x9A" },
+      { "rang", "\xE2\x8C\xAA" }, { "raquo", "\xC2\xBB" },
+      { "rarr", "\xE2\x86\x92" }, { "rceil", "\xE2\x8C\x89" },
+      { "rdquo", "\xE2\x80\x9D" }, { "real", "\xE2\x84\x9C" },
+      { "reg", "\xC2\xAE" }, { "rfloor", "\xE2\x8C\x8B" },
+      { "rho", "\xCF\x81" }, { "rlm", "\xE2\x80\x8F" },
+      { "rsaquo", "\xE2\x80\xBA" }, { "rsquo", "\xE2\x80\x99" },
+      { "sbquo", "\xE2\x80\x9A" }, { "scaron", "\xC5\xA1" },
+      { "sdot", "\xE2\x8B\x85" }, { "sect", "\xC2\xA7" },
+      { "shy", "\xC2\xAD" }, { "sigma", "\xCF\x83" }, { "sigmaf", "\xCF\x82" },
+      { "sim", "\xE2\x88\xBC" }, { "spades", "\xE2\x99\xA0" },
+      { "sub", "\xE2\x8A\x82" }, { "sube", "\xE2\x8A\x86" },
+      { "sum", "\xE2\x88\x91" }, { "sup", "\xE2\x8A\x83" },
+      { "sup1", "\xC2\xB9" }, { "sup2", "\xC2\xB2" }, { "sup3", "\xC2\xB3" },
+      { "supe", "\xE2\x8A\x87" }, { "szlig", "\xC3\x9F" },
+      { "tau", "\xCF\x84" }, { "there4", "\xE2\x88\xB4" },
+      { "theta", "\xCE\xB8" }, { "thetasym","\xCF\xB1" },
+      { "thinsp", "\xE2\x80\x89" }, { "thorn", "\xC3\xBE" },
+      { "tilde", "\xCB\x9C" }, { "times", "\xC3\x97" },
+      { "trade", "\xE2\x84\xA2" }, { "uArr", "\xE2\x87\x91" },
+      { "uacute", "\xC3\xBA" }, { "uarr", "\xE2\x86\x91" },
+      { "ucirc", "\xC3\xBB" }, { "ugrave", "\xC3\xB9" },
+      { "uml", "\xC2\xA8" }, { "upsih", "\xCF\xB2" },
+      { "upsilon", "\xCF\x85" }, { "uuml", "\xC3\xBC" },
+      { "weierp", "\xE2\x84\x98" }, { "xi", "\xCE\xBE" },
+      { "yacute", "\xC3\xBD" }, { "yen", "\xC2\xA5" }, { "yuml", "\xC3\xBF" },
+      { "zeta", "\xCE\xB6" }, { "zwj", "\xE2\x80\x8D" },
+      { "zwnj", "\xE2\x80\x8C" }, { "zwsp", "\xE2\x80\x8B" },
     },
     pkDKey{{{ 0x9F7C1E39CA3935CA,      // Default private key (1/4) 256-bits
               0x71F2A9630EF11A98,      // Default private key (2/4)
@@ -874,6 +895,8 @@ class Crypt :                          // Actual class body
     pkKey(pkDKey)                      // Modified private key
     /* -- Initialise cryptography ------------------------------------------ */
     { CryptInit(); }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~Crypt, CryptDeInit())
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

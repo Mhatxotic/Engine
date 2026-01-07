@@ -5,7 +5,9 @@
 ** ## This class helps with processing of TimePoint variables into basic  ## **
 ** ## types. Also provides a simple class boolean wether the specified    ## **
 ** ## time has elapsed or not. Since the C++ time functions are so        ## **
-** ## complecated, theres also a lot of code here to deal with that.      ## **
+** ## complecated, theres also a lot of code here to deal with that. We   ## **
+** ## use 'noexcept' extensively here as nothing in 'std::chrono::*' will ## **
+** ## ever throw exceptions.                                              ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
@@ -23,9 +25,9 @@ using ::std::chrono::nanoseconds;      using ::std::chrono::seconds;
 using ::std::chrono::system_clock;
 using CoreClock = ::std::chrono::high_resolution_clock; // Using HRC
 /* -- Typedefs ------------------------------------------------------------- */
-typedef CoreClock::time_point ClkTimePoint;    // Holds a time
-typedef CoreClock::duration   ClkDuration;     // Holds a duration
-typedef atomic<ClkDuration>   SafeClkDuration; // Thread safe duration
+typedef CoreClock::time_point ClkTimePoint;      // Holds a time
+typedef CoreClock::duration   ClkDuration;       // Holds a duration
+typedef atomic<ClkDuration>   AtomicClkDuration; // Thread safe duration
 /* -- Common duration values ----------------------------------------------- */
 static constexpr ClkDuration
   cd0{ nanoseconds{ 0 } },             cd1MS{ milliseconds{ 1 } },
@@ -45,7 +47,7 @@ static double ClockTimePointRangeToDouble
 /* -- Subtract one timepoint from the other and return as clamped double --- */
 static double ClockTimePointRangeToClampedDouble
   (const ClkTimePoint &ctpEnd, const ClkTimePoint &ctpStart)
-    { return UtilMaximum(ClockTimePointRangeToDouble(ctpEnd, ctpStart), 0); }
+    { return UtilMaximum(ClockTimePointRangeToDouble(ctpEnd, ctpStart), 0.0); }
 /* -- Clock manager -------------------------------------------------------- */
 template<class ClockType = CoreClock>struct ClockManager
 { /* -- Get current time --------------------------------------------------- */
@@ -84,13 +86,15 @@ template<class ClockType = CoreClock>struct ClockManager
     { return ClockDurationToDouble(GetDuration(ctpTime)); }
   /* -- Convert clamped timepoint to double -------------------------------- */
   static double TimePointToClampedDouble(const ClkTimePoint &ctpTime)
-    { return UtilMaximum(TimePointToDouble(ctpTime), 0); }
+    { return UtilMaximum(TimePointToDouble(ctpTime), 0.0); }
   /* -- Convert local time to string --------------------------------------- */
-  const string FormatTime(const char*const cpFormat = cpTimeFormat) const
-    { return StrFromTimeTT(GetTimeS(), cpFormat); }
+  const string FormatTime(const char*const cpFormat =
+    cpTimeFormat) const
+      { return StrFromTimeTT(GetTimeS(), cpFormat); }
   /* -- Convert universal time to string ----------------------------------- */
-  const string FormatTimeUTC(const char*const cpFormat = cpTimeFormat) const
-    { return StrFromTimeTTUTC(GetTimeS(), cpFormat); }
+  const string FormatTimeUTC(const char*const cpFormat =
+    cpTimeFormat) const
+      { return StrFromTimeTTUTC(GetTimeS(), cpFormat); }
   /* -- Convert time to short duration ------------------------------------- */
   static const string ToDurationString(unsigned int uiPrecision = 6)
     { return StrShortFromDuration(GetTimeDouble(), uiPrecision); }
@@ -99,8 +103,9 @@ template<class ClockType = CoreClock>struct ClockManager
     unsigned int uiCompMax = StdMaxUInt) const
       { return StrLongFromDuration(GetTimeS() - tDuration, uiCompMax); }
   /* -- Convert time to long duration -------------------------------------- */
-  const string ToDurationLongString(unsigned int uiCompMax = StdMaxUInt) const
-    { return ToDurationRel(0, uiCompMax); }
+  const string ToDurationLongString(unsigned int uiCompMax =
+    StdMaxUInt) const
+      { return ToDurationRel(0, uiCompMax); }
   /* -- Unused constructor ------------------------------------------------- */
   ClockManager() = default;
 };/* -- Global functors / System time clock functor ------------------------ */
@@ -152,7 +157,8 @@ class ClockInterval :                  // Members initially private
   /* -- Reset trigger ------------------------------------------------------ */
   void CIReset() { ctpNext = this->GetTime() + cdLimit; }
   /* -- Return time left --------------------------------------------------- */
-  const ClkDuration CIDelta() const { return this->GetTime() - ctpNext; }
+  const ClkDuration CIDelta() const
+    { return this->GetTime() - ctpNext; }
   /* -- Sync now ----------------------------------------------------------- */
   void CISync() { ctpNext = this->GetTime(); }
   /* -- Update limit and time now do a duration object --------------------- */
@@ -187,7 +193,7 @@ class ClockChrono :                    // Members intially private
     { return ClockDurationToDouble(ctpEnd - ctpStart); }
   /* -- Same as above but clamps to zero so there is no negative time ------ */
   double CCDeltaToClampedDouble(const ClkTimePoint &ctpEnd) const
-    { return UtilMaximum(CCDeltaRangeToDouble(ctpEnd), 0); }
+    { return UtilMaximum(CCDeltaRangeToDouble(ctpEnd), 0.0); }
   /* -- Return uptime as milliseconds in a 64-bit uint --------------------- */
   uint64_t CCDeltaMS() const
     { return static_cast<uint64_t>(

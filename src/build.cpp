@@ -16,10 +16,7 @@
 # pragma GCC diagnostic ignored "-Wunused-function"
 #endif                                 // Operating system check
 /* ------------------------------------------------------------------------- */
-#include <iostream>                    // Using cout to print to con
-/* ------------------------------------------------------------------------- */
 using std::cout;                       // Using this to print text
-using std::endl;                       // " End of line for std::cout
 /* ------------------------------------------------------------------------- */
 namespace E {                          // Put everything in engine namespace
 /* ------------------------------------------------------------------------- */
@@ -1863,8 +1860,8 @@ static void DoClean(StrVector &svDeleted, StrVector &svNotDeleted,
 { // Write initial scan
   if(dFiles.IsFilesEmpty()) return;
   // Allocate memory for filenames
-  svDeleted.reserve(svDeleted.size()+dFiles.GetFilesSize());
-  svNotDeleted.reserve(svNotDeleted.size()+dFiles.GetFilesSize());
+  svDeleted.reserve(svDeleted.size() + dFiles.GetFilesSize());
+  svNotDeleted.reserve(svNotDeleted.size() + dFiles.GetFilesSize());
   // Enumerate files
   for(const DirEntMapPair &dempPair : dFiles.GetFiles())
   { // Delete the file and if failed?
@@ -3357,7 +3354,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
   } // = OPENALSOFT SCRIPT ====================================================
   else if(strLib.length() >= 12 && strLib.substr(0, 12) == "openal-soft-")
   { // Setup the repository
-    SetupZipRepo(strLibPath, strTmp, PSLib.strFile);
+    SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Get fmt directory version
     string strFmtDir;
     { const Dir dFiles;
@@ -3384,9 +3381,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
               "-DALSOFT_REQUIRE_SDL2=FALSE "
               "-DALSOFT_REQUIRE_WASAPI=FALSE "
               "-DALSOFT_UPDATE_BUILD_VERSION=FALSE "
-              "-DALSOFT_UTILS=FALSE "
-              "-DSDL2_CORE_LIBRARY=FALSE "
-              "-DSDL2_INCLUDE_DIR=FALSE .", strCMakeBase);
+              "-DALSOFT_UTILS=FALSE .", strCMakeBase);
     // Apply header patches to conquer forcing of DLL exports
     ReplaceText(strFmtDir + "/include/fmt/base.h",
       "#    define FMT_API __declspec(dllimport)",
@@ -3440,7 +3435,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "-DAL_ALEXT_PROTOTYPES -DAL_BUILD_LIBRARY -DAL_LIBTYPE_STATIC "
       "-DHAVE_STRUCT_TIMESPEC -DNOMINMAX -DRESTRICT=__restrict "
       "-Dstrcasecmp=_stricmp -Dstrncasecmp=_strnicmp -DWIN32 -EHsc -I. -Ialc "
-      "-Icommon -Ihrtf -Iinclude -Iopenal32/include -I" +
+      "-Icommon -Ihrtf -Iinclude -Iopenal32/include -Igsl/include -I" +
       strFmtDir + "/include "
       // Files to compile
       "al/*.cpp "
@@ -3817,39 +3812,6 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       { "{LUA_OSLIBNAME, luaopen_os},",        cCommon->CommonCBlank() },
       { "{LUA_LOADLIBNAME, luaopen_package},", cCommon->CommonCBlank() },
     });
-    // Patch to replace the default throwing code with code that works better
-    // to store the exception message so we don't have to have try blocks in
-    // each C function
-    ReplaceTextMulti("src/ldo.c", {
-      { "throw(c)",
-        "throw(c)\n#include <stdexcept>\n#include \"lauxlib.h\"" },
-      { "L->errorJmp = &lj;",
-        "L->errorJmp = &lj;\n"
-        "#if defined(__cplusplus)\n"
-        "\ttry { (*f)(L, ud); }\n"
-        "\tcatch(struct lua_longjmp *e) { lj.status = (e->status != 0) ? e->status : LUA_ERRRUN; }\n"
-        "\tcatch(const std::exception &e){\n"
-        "\t\ttry{\n"
-        "\t\t\tluaL_where(L, 1);\n"
-        "\t\t\tlua_pushstring(L, e.what());\n"
-        "\t\t\tlua_concat(L, 2);\n"
-        "\t\t\tlua_error(L);\n"
-        "\t\t}\n"
-        "\t\tcatch(struct lua_longjmp *e2) { lj.status = (e2->status != 0) ? e2->status : LUA_ERRRUN; }\n"
-        "\t}\n"
-        "\tcatch(...){\n"
-        "\t\ttry{\n"
-        "\t\tluaL_where(L, 1);\n"
-        "\t\t\tlua_pushstring(L, \"Unknown C++ exception!\");\n"
-        "\t\tlua_concat(L, 2);\n"
-        "\t\tlua_error(L);\n"
-        "\t\t}\n"
-        "\t\tcatch(struct lua_longjmp *e2) { lj.status = (e2->status != 0) ? e2->status : LUA_ERRRUN; }\n"
-        "\t}\n#else\n" },
-      { "L->errorJmp = lj.previous;",
-        "#endif\n"
-        "\tL->errorJmp = lj.previous;" }
-    });
     // Performing removal of unneeded core function ---------------------------
     ReplaceTextMulti("src/lbaselib.c", {
       { "{\"dofile\", luaB_dofile},",     cCommon->CommonCBlank() },
@@ -3862,7 +3824,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Perform increase of limits ---------------------------------------------
     ReplaceText("src/lparser.c", "MAXVARS\t\t200", "MAXVARS\t\t253");
     // Add lua specific flags to compiler command line ------------------------
-    const string strLuaSpecific{ "-TP -EHsc" }, // DO NOT COMPILE AS C!!!
+    const string strLuaSpecific{ "-TP -EHsc -std:" STANDARD }, // NO C!
                  strLuaDebug{ "-DLUA_USE_APICHECK" },
                  strLuaSources{ "src/*.c" };
     strRelFlags64 += StrAppend(strLuaSpecific, ' ', strLuaSources),
@@ -4301,7 +4263,7 @@ static int Compile(const bool bSelf)
     strCmdRC += StrAppend(envActive.cpCCRES, strRes, ' ', strRc);
     if(SpecialExecute(strCmdRC, 10)) return 1;
   } // Save executable size
-  const uint64_t qOldSize = DirLocalFileExists(strExe) ?
+  const uint64_t ullOldSize = DirLocalFileExists(strExe) ?
     FStream{ strExe, FM_R_B }.FStreamSize() : 0;
   // Link sources and resources and if failed?
   if(SpecialExecute(strCmdLD, 10))
@@ -4312,22 +4274,22 @@ static int Compile(const bool bSelf)
   } // Clean up temporary files that MS likes leaving behind
   DoCleanCompilerTempFiles();
   // Show executable size
-  const uint64_t qNewSize = FStream{ strExe, FM_R_B }.FStreamSize();
-  cout << "*** Executable size is " << qNewSize << " bytes (" <<
-    StrToBytes(qNewSize, 2) << ")." << endl;
+  const uint64_t ullNewSize = FStream{ strExe, FM_R_B }.FStreamSize();
+  cout << "*** Executable size is " << ullNewSize << " bytes (" <<
+    StrToBytes(ullNewSize, 2) << ")." << endl;
   // If the old executable had size?
-  if(qOldSize && qOldSize != qNewSize)
+  if(ullOldSize && ullOldSize != ullNewSize)
   { // Calculate and show changed size
-    const int64_t qChange = qNewSize - qOldSize;
+    const int64_t llChange = ullNewSize - ullOldSize;
     // Decreased?
-    if(qChange < 0)
+    if(llChange < 0)
     { // Negate to positive
-      const uint64_t qAdjChange = -qChange;
-      cout << "*** Executable size decreased " << qAdjChange << " bytes (" <<
-        StrToBytes(qAdjChange, 2) << ")." << endl;
+      const uint64_t ullAdjChange = -llChange;
+      cout << "*** Executable size decreased " << ullAdjChange << " bytes (" <<
+        StrToBytes(ullAdjChange, 2) << ")." << endl;
     } // Increqased?
-    else cout << "*** Executable size increased " << qChange << " bytes (" <<
-      StrToBytes(qChange, 2) << ")." << endl;
+    else cout << "*** Executable size increased " << llChange << " bytes (" <<
+      StrToBytes(llChange, 2) << ")." << endl;
   } // Move new executable into position
   if(bSelf) CheckForNewBuildExecutable();
   // Done
@@ -4522,8 +4484,8 @@ static void ReadProject()
   // Create the json object and parse it
   const Json jsManifest{ StrAppend(strFile, "." JSON_EXTENSION) };
   // Check version is correct
-  const unsigned int uiVersionRequired = 1;
-  const unsigned int uiVersion = jsManifest.GetInteger("Version");
+  const unsigned int uiVersionRequired = 1,
+                     uiVersion = jsManifest.GetInteger("Version");
   if(uiVersion != uiVersionRequired)
     XC("Invalid application manifest version!",
        "Manfiest", jsManifest.IdentGet(), "Required", uiVersionRequired,
@@ -4534,10 +4496,10 @@ static void ReadProject()
   if(!rjvConstants.IsObject())
     XC("Constants array not valid!", "Manfiest", jsManifest.IdentGet());
   // Get version and long name of app and update the version
-  strArch = StdMove(rjvConstants["app_shortname"].GetString());
-  strVer = StdMove(rjvConstants["app_version"].GetString());
-  strTitle = StdMove(rjvConstants["app_longname"].GetString());
-  strAuthor = StdMove(rjvConstants["app_author"].GetString());
+  strArch = rjvConstants["app_shortname"].GetString();
+  strVer = rjvConstants["app_version"].GetString();
+  strTitle = rjvConstants["app_longname"].GetString();
+  strAuthor = rjvConstants["app_author"].GetString();
 }
 /* ------------------------------------------------------------------------- */
 static int ShowVersion()

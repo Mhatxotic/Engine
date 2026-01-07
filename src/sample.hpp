@@ -134,8 +134,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
               break;
       // Unsupported amount of channels
       default: XC("Unsupported amount of channels!",
-                  "Identifier", IdentGet(),
-                  "Channels",   uivNames.size());
+        "Identifier", IdentGet(), "Channels",   uivNames.size());
     }
   }
   /* ----------------------------------------------------------------------- */
@@ -166,8 +165,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
         break;
       // Unsupported amount of channels
       default: XC("Unsupported amount of channels!",
-                  "Identifier", IdentGet(),
-                  "Channels",   uivNames.size());
+        "Identifier", IdentGet(), "Channels",   uivNames.size());
     }
   }
   /* -- Play with a pre-allocated sources by Lua --------------------------- */
@@ -201,8 +199,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
         break;
       // Unsupported amount of channels
       default: XC("Unsupported amount of channels!",
-                  "Identifier", IdentGet(),
-                  "Channels",   uivNames.size());
+        "Identifier", IdentGet(), "Channels",   uivNames.size());
     } // Remember two 'Source' classes are left on the Lua stack on success.
   }
   /* == Stop the buffer ==================================================== */
@@ -265,13 +262,9 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
       pcmSrc.GetChannels(), pcmSrc.GetBits());
     // If source and destination pcm class are not the same?
     if(this != &pcmSrc)
-    { // Move pcm data over. The old pcm will be unusable so guest should
-      // discard it.
+    { // Take ownership of PCM object and identifier
       SwapPcm(pcmSrc);
-      // The pcm passed in the arguments is usually still allocated by LUA and
-      // will still be registered, so lets put a note in the pcm sample to show
-      // that this sample class has nicked the pcm sample.
-      pcmSrc.IdentSetEx("!SAM!$!", IdentGet());
+      IdentSwap(pcmSrc);
     } // Initialise
     LoadSample(*this);
     // Remove all sample data because we can just load it from file again
@@ -285,7 +278,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Sample() { UnloadBuffer(); }
+  DTORHELPER(~Sample, UnloadBuffer())
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_NOINITS(Samples, Sample, SAMPLE) // Finish collector class
 /* ========================================================================= */

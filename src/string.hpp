@@ -39,11 +39,9 @@ namespace H                            // Private functions
       Param(osS, StdForward<VarArgs>(vaArgs)...);
     }
     /* -- Append main function --------------------------------------------- */
-    template<typename ...VarArgs>
+    template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
       static const string StrAppend(VarArgs &&...vaArgs)
-    { // Theres no need to call this if theres no parameters
-      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-      // Stream to write to
+    { // Stream to write to
       ostringstream osS;
       // Build string
       Param(osS, StdForward<VarArgs>(vaArgs)...);
@@ -51,11 +49,9 @@ namespace H                            // Private functions
       return osS.str();
     }
     /* -- Append with formatted numbers ------------------------------------ */
-    template<typename ...VarArgs>
+    template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
       static const string StrAppendImbue(VarArgs &&...vaArgs)
-    { // Theres no need to call this if theres no parameters
-      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-      // Stream to write to
+    { // Stream to write to
       ostringstream osS;
       // Imbue current locale
       osS.imbue(cCommon->CommonLocale());
@@ -97,12 +93,10 @@ namespace H                            // Private functions
       else Param(osS, cpPos);
     }
     /* -- Prepare message from c-string format ----------------------------- */
-    template<typename ...VarArgs>
+    template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
       static const string StrFormat(const char*const cpFmt,
         VarArgs &&...vaArgs)
-    { // Theres no need to call this if theres no parameters
-      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-      // Return if string empty of invalid
+    { // Return if string empty of invalid
       if(UtfIsCStringNotValid(cpFmt)) return {};
       // Stream to write to
       ostringstream osS;
@@ -322,7 +316,7 @@ static const string StrToUpCase[[maybe_unused]](const string &strSrc)
 { // String empty? Return a blank one
   if(strSrc.empty()) return {};
   // Create memory for destination string and copy the string over
-  string strDst; strDst.reserve(strSrc.size());
+  Reserved<string> strDst{ strSrc.size() };
   transform(strSrc.begin(), strSrc.end(), back_inserter(strDst),
     [](unsigned char ucChar) { return StdToUpper(ucChar); });
   // Return result
@@ -333,7 +327,7 @@ static const string StrToLowCase[[maybe_unused]](const string &strSrc)
 { // String empty? Return a blank one
   if(strSrc.empty()) return {};
   // Prepare destination string and run a transform to lowercase each char
-  string strDst; strDst.reserve(strSrc.size());
+  Reserved<string> strDst{ strSrc.size() };
   transform(strSrc.begin(), strSrc.end(), back_inserter(strDst),
     [](unsigned char ucChar) { return StdToLower(ucChar); });
   // Return result
@@ -493,18 +487,18 @@ static const string StrLongFromDuration(const StdTimeT tDuration,
   return osS.str();
 }
 /* ------------------------------------------------------------------------- */
-static const char *StrGetPositionSuffix(const uint64_t qPosition)
+static const char *StrGetPositionSuffix(const uint64_t ullPosition)
 { // Get value as base 100
-  const uint64_t qVb100 = qPosition % 100;
+  const uint64_t ullVb100 = ullPosition % 100;
   // Number not in teens? Compare value as base 10 instead
-  if(qVb100 <= 10 || qVb100 >= 20) switch(qPosition % 10)
+  if(ullVb100 <= 10 || ullVb100 >= 20) switch(ullPosition % 10)
   { case 1: return "st"; case 2: return "nd"; case 3: return "rd";
     default: break;
   } // Everything else is 'th'
   return "th";
 } /* -- Get position of number as a string --------------------------------- */
-static const string StrFromPosition(const uint64_t qPosition)
-  { return StrAppend(qPosition, StrGetPositionSuffix(qPosition)); }
+static const string StrFromPosition(const uint64_t ullPosition)
+  { return StrAppend(ullPosition, StrGetPositionSuffix(ullPosition)); }
 /* -- Capitalise a string -------------------------------------------------- */
 static const string StrCapitalise(const string &strStr)
 { // Capitalise first character if string not nullptr or empty
@@ -616,7 +610,7 @@ static const string ImplodeMap[[maybe_unused]](const StrNCStrMap &ssmSrc,
   if(ssmSrc.empty()) return {};
   // Make string vector to implode and reserve memory for items.
   // Insert each value in the map with the appropriate seperators.
-  StrVector svRet; svRet.reserve(ssmSrc.size());
+  Reserved<StrVector> svRet{ ssmSrc.size() };
   transform(ssmSrc.cbegin(), ssmSrc.cend(), back_inserter(svRet),
     [&strKeyValSep, &strValEncaps](const StrNCStrMapPair &sncsmpPair)
       { return StrAppend(sncsmpPair.first, strKeyValSep,
@@ -637,14 +631,13 @@ template<typename AnyType>
           atVal); }
 /* ------------------------------------------------------------------------- */
 template<typename OutType, typename InType, class SuffixClass>
-  static OutType StrToReadableSuffix(const InType itValue,
-    const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup,
-    const char*const cpDefault)
-{ // Check types
-  static_assert(is_floating_point_v<OutType>, "OutType not floating point!");
-  static_assert(is_integral_v<InType>, "InType not integral!");
-  static_assert(is_class_v<SuffixClass>, "Class invalid!");
-  // Value to return
+requires is_floating_point_v<OutType> &&
+         is_integral_v<InType> &&
+         is_class_v<SuffixClass>
+static OutType StrToReadableSuffix(const InType itValue,
+  const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup,
+  const char*const cpDefault)
+{ // Value to return
   OutType otReturn;
   // Discover the best measurement to show by testing each unit from the
   // lookup table to see if it is divisible and if it is not then try the next

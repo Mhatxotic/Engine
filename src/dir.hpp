@@ -266,29 +266,29 @@ class DirItem                          // File information structure
   StdTimeT         tCreate,            // File creation time
                    tAccess,            // File access time
                    tWrite;             // File modification time
-  uint64_t         uqSize,             // File size
-                   uqFlags;            // Attributes (OS specific)
+  uint64_t         ullSize,            // File size
+                   ullFlags;           // Attributes (OS specific)
   /* -- Set members --------------------------------------------- */ protected:
   void Set(const StdTimeT tNCreate, const StdTimeT tNAccess,
-    const StdTimeT tNWrite, const uint64_t uqNSize, const uint64_t uqNFlags)
+    const StdTimeT tNWrite, const uint64_t ullNSize, const uint64_t ullNFlags)
       { tCreate = tNCreate; tAccess = tNAccess; tWrite = tNWrite;
-          uqSize = uqNSize; uqFlags = uqNFlags; }
+          ullSize = ullNSize; ullFlags = ullNFlags; }
   /* -- Clear members ------------------------------------------------------ */
-  void Clear() { tCreate = tAccess = tWrite = 0; uqSize = uqFlags = 0; }
+  void Clear() { tCreate = tAccess = tWrite = 0; ullSize = ullFlags = 0; }
   /* -- Get members ------------------------------------------------ */ public:
   StdTimeT Created() const { return tCreate; }
   StdTimeT Accessed() const { return tAccess; }
   StdTimeT Written() const { return tWrite; }
-  uint64_t Size() const { return uqSize; }
-  uint64_t Attributes() const { return uqFlags; }
+  uint64_t Size() const { return ullSize; }
+  uint64_t Attributes() const { return ullFlags; }
   /* -- Default constructor ------------------------------------------------ */
   DirItem() :
     /* -- Initialisers ----------------------------------------------------- */
     tCreate(0),                        // Clear file creation time
     tAccess(0),                        // Clear file access time
     tWrite(0),                         // Clear file modification time
-    uqSize(0),                         // Clear file size
-    uqFlags(0)                         // Clear file attributes
+    ullSize(0),                        // Clear file size
+    ullFlags(0)                        // Clear file attributes
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Copy constructor --------------------------------------------------- */
@@ -301,16 +301,17 @@ class DirItem                          // File information structure
   /* -- Assignment operator ------------------------------------------------ */
   DirItem operator=                    // cppcheck-suppress operatorEqVarError
     (const DirItem &diRHS) const       // False positive as copy ctor used
-      { return diRHS; }                // Thinks 'uqSize' is not initialised
+      { return diRHS; }                // Thinks 'ullSize' is not initialised
   /* ----------------------------------------------------------------------- */
   DirItem(const StdTimeT tNCreate, const StdTimeT tNAccess,
-    const StdTimeT tNWrite, const uint64_t uqNSize, const uint64_t uqNFlags) :
+    const StdTimeT tNWrite, const uint64_t ullNSize,
+    const uint64_t ullNFlags) :
     /* -- Initialisers ----------------------------------------------------- */
     tCreate(tNCreate),                 // Initialise file creation time
     tAccess(tNAccess),                 // Initialise file access time
     tWrite(tNWrite),                   // Initialise file modification time
-    uqSize(uqNSize),                   // Initialise file size
-    uqFlags(uqNFlags)                  // Initialise file attributes
+    ullSize(ullNSize),                 // Initialise file size
+    ullFlags(ullNFlags)                // Initialise file attributes
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -738,9 +739,9 @@ static void DirVerifyFileNameIsValid(const string &strFile)
 { // Throw error if invalid name
   if(const ValidResult vrId = DirValidName(strFile))
     XC("Filename is invalid!",
-       "File",     strFile,
-       "Reason",   cDirBase->DirBaseVNRtoStr(vrId),
-       "ReasonId", vrId);
+      "File",     strFile,
+      "Reason",   cDirBase->DirBaseVNRtoStr(vrId),
+      "ReasonId", vrId);
 }
 /* -- Directory saver/restorer class --------------------------------------- */
 class DirSaver
@@ -759,7 +760,7 @@ class DirSaver
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~DirSaver() noexcept(false)
+  ~DirSaver()                          // Restore original working directory
     /* -- Restore current working directory -------------------------------- */
     { DirSetCWD(strCWD); }
 };/* ----------------------------------------------------------------------- */

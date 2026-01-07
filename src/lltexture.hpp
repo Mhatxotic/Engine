@@ -992,7 +992,7 @@ LLRSEND                                // Texture:* member functions end
 // ? properties!
 /* ------------------------------------------------------------------------- */
 LLFUNC(Console, 1,
-  LuaUtilClassCreatePtr<Texture>(lS, *cTextures, cConGraphics->GetTexture()))
+  LuaUtilClassCreatePtr<Texture>(lS, *cTextures, cConGfx->ConGfxGetTexture()))
 /* ========================================================================= */
 // $ Texture.Create
 // > Source:image=The image class to load from.

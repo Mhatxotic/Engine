@@ -100,20 +100,18 @@ struct TokenList :                     // Token class with line limit
         // Location of separator
         size_t stStart = strStr.size() - 1;
         // Until there are no more occurences of separator
-        for(size_t stLoc;
-             stStart != StdNPos &&
-               (stLoc = strStr.find_last_of(strSep, stStart)) != StdNPos;
-            stStart = stLoc - 1)
+        for(size_t stLoc; stStart != StdNPos &&
+              (stLoc = strStr.find_last_of(strSep, stStart)) != StdNPos;
+              stStart = stLoc - 1)
         { // Get location plus length
           const size_t stLocPlusLength = stLoc + stSepLen;
           // Move the tokenised part into a new list item
-          emplace_front(strStr.substr(stLocPlusLength,
-            stStart - stLocPlusLength + 1));
+          emplace_front(
+            strStr.substr(stLocPlusLength, stStart - stLocPlusLength + 1));
           // If we're over the limit
           if(size() >= stMax) return;
         } // Push remainder of string if there is a remainder
-        if(stStart != StdNPos)
-          emplace_front(strStr.substr(0, stStart + 1));
+        if(stStart != StdNPos) emplace_front(strStr.substr(0, stStart + 1));
         // Done
         return;
       }

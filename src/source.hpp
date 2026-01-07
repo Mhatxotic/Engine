@@ -34,6 +34,7 @@ CTOR_BEGIN(Sources, Source, CLHelperSafe,
 /* ------------------------------------------------------------------------- */
 typedef atomic<ALfloat> SafeALFloat;   // Multi-threaded AL float
 /* ------------------------------------------------------------------------- */
+size_t             stSources;          // Number of preallocated sources
 SafeALFloat        fGVolume;           // Global volume multiplier
 SafeALFloat        fMVolume;           // Stream volume multiplier
 SafeALFloat        fVVolume;           // Video volume multiplier
@@ -301,18 +302,18 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
     uiId(cOal->CreateSource())         // Initialise a new source from OpenAL
     /* -- Check for CreateSource error or initialise ----------------------- */
     { // Generate source
-      ALC("Error generating al source id!");
+      ALNF("Error generating al source id!");
       // Reset source parameters and set as
       Init();
     }
   /* -- Destructor --------------------------------------------------------- */
-  ~Source()
-  { // Delete the sourcess if id allocated
+  DTORHELPER(~Source,
+    // Delete the sourcess if id allocated
     if(uiId) ALL(cOal->DeleteSource(uiId), "Source failed to delete $!", uiId);
-  }
+  )
 };/* -- End ---------------------------------------------------------------- */
-CTOR_END(Sources, Source, SOURCE,,,,
-  fGVolume(0.0f), fMVolume(0.0f), fVVolume(0.0f), fSVolume(0.0f))
+CTOR_END(Sources, Source, SOURCE,,,, stSources(0), fGVolume(0.0f),
+  fMVolume(0.0f), fVVolume(0.0f), fSVolume(0.0f))
 /* -- Stop (multiple buffers) ---------------------------------------------- */
 static unsigned int SourceStop(const ALUIntVector &uiBuffers)
 { // Done if no buffers
@@ -412,24 +413,29 @@ static Source *GetSource()
   return SourceCanMakeNew() ? new Source : nullptr;
 }
 /* == SourceAlloc ========================================================== */
-static void SourceAlloc(const size_t stCount)
+static bool SourceAlloc(const size_t stCount)
 { // Get the value we can actually use and the number of sources currently
-  // allocated and return if no new static sources are needed to be created.
-  const size_t stUsable = UtilClamp(stCount, 0, cOal->GetMaxMonoSources()),
-               stSize = cSources->size();
-  if(stSize >= stUsable) return;
-  // Create new sources until we've reached the maximum and mark as usable
-  for(size_t stIndex = stSize; stIndex < stUsable; ++stIndex)
+  // allocated. Return if no new static sources are needed to be created.
+  if(stCount >= cOal->GetMaxMonoSources()) return false;
+  // Create new sources until we've reached the maximum and mark as usable.
+  // The audio thread could already be polling these right now so all three of
+  // these lines will lock access to the list.
+  const size_t stBefore = cSources->CollectorCount();
+  for(size_t stIndex = stBefore; stIndex < stCount; ++stIndex)
     new Source{ SF_NONE };
+  const size_t stAfter = cSources->CollectorCount();
   // Log count
-  cLog->LogDebugExSafe("Audio added $ new stand-by sources [$:$$].",
-    stUsable - stSize, cSources->size(), hex, cOal->GetError());
+  cLog->LogDebugExSafe("Audio added $ new stand-by sources to total $.",
+    stAfter - stBefore, stAfter);
+  // Return success
+  return true;
 }
 /* == Set number of sources ================================================ */
 static CVarReturn SourceSetCount(const size_t stCount)
-{ // If AL is initialised reallocate the sources and return success
-  if(cOal->IsInitialised()) SourceAlloc(stCount);
-  return ACCEPT;
+{ // Set preallocated source count for Audio class when initialising
+  cSources->stSources = stCount;
+  // Accepted if we can't check it yet, denied if not, or bad value
+  return BoolToCVarReturn(cOal->IsNotInitialised() || SourceAlloc(stCount));
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

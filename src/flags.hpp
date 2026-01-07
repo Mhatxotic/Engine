@@ -14,24 +14,28 @@ namespace IFlags {                     // Start of module namespace
 ** ######################################################################### **
 ** ## Simple unprotected integer based flags.                             ## **
 ** ######################################################################### */
-template<typename IntType>class FlagsStorageUnsafe
+template<typename IntType>
+requires is_integral_v<IntType> || is_std_atomic_v<IntType>
+class FlagsStorageUnsafe
 { /* -- Values storage ------------------------------------------ */ protected:
   IntType          itV;                // The simple value
   /* -- Reset with specified value ----------------------------------------- */
-  template<typename AnyType>constexpr void FlagSetInt(const AnyType atValue)
-    { itV = static_cast<IntType>(atValue); }
+  template<typename AnyType> requires is_integral_v<IntType>
+    constexpr void FlagSetInt(const AnyType atValue)
+  { itV = static_cast<IntType>(atValue); }
   /* -- Swap values -------------------------------------------------------- */
   constexpr void FlagSwapStorage(FlagsStorageUnsafe &fcValue)
     { swap(itV, fcValue.itV); }
   /* -- Implicit init constructor (todo, make explicit but many errors!) --- */
-  explicit constexpr FlagsStorageUnsafe(const IntType itValue) :
+  constexpr explicit FlagsStorageUnsafe(const IntType itValue) :
     /* -- Initialisers ----------------------------------------------------- */
     itV{ itValue }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>constexpr AnyType FlagGet() const
-    { return static_cast<AnyType>(itV); }
+  template<typename AnyType=IntType>requires is_integral_v<IntType>
+    constexpr AnyType FlagGet() const
+  { return static_cast<AnyType>(itV); }
 };/* ----------------------------------------------------------------------- */
 /* == Atomic storage for flags ============================================= **
 ** ######################################################################### **
@@ -39,18 +43,22 @@ template<typename IntType>class FlagsStorageUnsafe
 ** ######################################################################### */
 template<typename IntType,
          typename SafeType = atomic<IntType>>
+requires is_integral_v<IntType> &&
+         is_std_atomic_v<SafeType> &&
+         is_integral_v<typename SafeType::value_type>
 class FlagsStorageSafe :
-  /* -- Base classes ------------------------------------------------------- */
+  /* -- Base classes (note that std::atomic will never throw) -------------- */
   private SafeType
 { /* -- Set values ---------------------------------------------- */ protected:
-  template<typename AnyType>void FlagSetInt(const AnyType atValue)
+  template<typename AnyType>constexpr void FlagSetInt(const AnyType atValue)
     { this->store(static_cast<IntType>(atValue)); }
   /* -- Swap values -------------------------------------------------------- */
-  void FlagSwapStorage(FlagsStorageSafe &fcValue) { swap(fcValue); }
+  constexpr void FlagSwapStorage(FlagsStorageSafe &fcValue) { swap(fcValue); }
   /* -- Implicit init constructor (todo, make explicit but many errors!) --- */
-  explicit FlagsStorageSafe(const IntType itValue) : SafeType{ itValue } {}
+  constexpr explicit FlagsStorageSafe(const IntType itValue) :
+    SafeType{ itValue } {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>AnyType FlagGet() const
+  template<typename AnyType=IntType>constexpr AnyType FlagGet() const
     { return static_cast<AnyType>(this->load()); }
 };/* ----------------------------------------------------------------------- */
 /* == Read-only flags helper class ========================================= **
@@ -59,6 +67,7 @@ class FlagsStorageSafe :
 ** ######################################################################### */
 template<typename IntType,
          class StorageType = FlagsStorageUnsafe<IntType>>
+requires is_integral_v<IntType>
 class FlagsConst :
   /* -- Base classes ------------------------------------------------------- */
   public StorageType
@@ -102,7 +111,7 @@ class FlagsConst :
   constexpr bool FlagIsInMask(const FlagsConst &fcValue) const
     { return !FlagIsNotInMask(fcValue); }
   /* -- Is any of these flags set and cleared? ----------------------------- */
-  constexpr bool FlagIsAnyOfSetAndClear() const { return false; }
+  constexpr static bool FlagIsAnyOfSetAndClear() { return false; }
   template<typename ...VarArgs>
     constexpr bool FlagIsAnyOfSetAndClear(const FlagsConst &fcSet,
       const FlagsConst &fcClear, const VarArgs ...vaArgs) const
@@ -148,11 +157,13 @@ class FlagsConst :
 template<typename IntType,
          class StorageType = FlagsStorageUnsafe<IntType>,
          class ConstType = FlagsConst<IntType, StorageType>>
+requires is_integral_v<IntType>
 struct Flags :
   /* -- Base classes ------------------------------------------------------- */
   public ConstType
 { /* -- Swap function ------------------------------------------------------ */
-  constexpr void FlagSwap(Flags &fValue) { this->FlagSwapStorage(fValue); }
+  constexpr void FlagSwap(Flags &fValue)
+    { this->FlagSwapStorage(fValue); }
   /* -- Set bits ----------------------------------------------------------- */
   constexpr void FlagSet(const IntType &itOther)
     { this->FlagSetInt(this->FlagGet() | itOther); }
@@ -189,8 +200,10 @@ struct Flags :
     const ConstType &ctSet)
       { FlagClear(ctClear); FlagSet(ctSet); }
   /* -- Init constructors -------------------------------------------------- */
-  constexpr explicit Flags(const IntType &itOther) : ConstType{ itOther } {}
-  constexpr explicit Flags(const ConstType &ctOther) : ConstType{ ctOther } {}
+  constexpr explicit Flags(const IntType &itOther) :
+    ConstType{ itOther } {}
+  constexpr explicit Flags(const ConstType &ctOther) :
+   ConstType{ ctOther } {}
   /* -- Default constructor ------------------------------------------------ */
   constexpr Flags() : ConstType{ 0 } {}
 };/* ----------------------------------------------------------------------- */
@@ -204,23 +217,26 @@ template<typename IntType,
          class UConstType = FlagsConst<IntType, UStorageType>,
          class FlagsType = Flags<IntType, StorageType, UConstType>,
          class ConstType = FlagsConst<IntType, StorageType>>
+requires is_integral_v<IntType>
 class SafeFlags :
   /* -- Base classes ------------------------------------------------------- */
   public FlagsType
 { /* -- Implicit init constructor (todo, make explicit!) ----------- */ public:
-  explicit SafeFlags(const ConstType &fcValue) : FlagsType{ fcValue } {}
-  explicit SafeFlags(const UConstType &fcValue) : FlagsType{ fcValue } {}
+  constexpr explicit SafeFlags(const ConstType &fcValue) :
+    FlagsType{ fcValue } {}
+  constexpr explicit SafeFlags(const UConstType &fcValue) :
+    FlagsType{ fcValue } {}
 };/* ----------------------------------------------------------------------- */
 /* == Flags helper macro =================================================== */
 #define BUILD_FLAGS_EX(n, s, ...) \
   typedef uint64_t n ## FlagsType; \
   typedef s<n ## FlagsType> n ## Flags; \
   typedef FlagsConst<n ## FlagsType> n ## FlagsConst; \
-  static const n ## FlagsConst __VA_ARGS__;
+  constexpr static const n ## FlagsConst __VA_ARGS__;
 #define BUILD_FLAGS(n, ...) BUILD_FLAGS_EX(n, Flags, __VA_ARGS__)
 #define BUILD_SECURE_FLAGS(n, ...) BUILD_FLAGS_EX(n, SafeFlags, __VA_ARGS__)
 /* -- Helper for defining flags -------------------------------------------- */
-constexpr uint64_t Flag(const size_t stIndex)
+constexpr static uint64_t Flag(const size_t stIndex)
   { return stIndex ? 1ULL << (stIndex - 1) : 0; };
 /* ------------------------------------------------------------------------- */
 }                                      // End of module namespace

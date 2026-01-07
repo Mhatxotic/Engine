@@ -10,11 +10,11 @@
 namespace IAtlas {                     // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IBin::P;               using namespace ICollector::P;
-using namespace IError::P;             using namespace IFboDef::P;
-using namespace IImageDef::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IRectangle::P;         using namespace IStd::P;
+using namespace ICoords::P;            using namespace IError::P;
+using namespace IFboCmd::P;            using namespace IImageDef::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IStd::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace ITexture::P;           using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
@@ -39,7 +39,7 @@ class AtlasBase :                      // Members initially private
   IntPack          ipData;             // FT packed characters in image
   /* -- Reload texture parameters ------------------------------------------ */
   enum RTCmd { RT_NONE, RT_FULL, RT_PARTIAL } rtCmd; // Reload texture command
-  RectUint         rRedraw;            // Reload cordinates and dimensions
+  CoordsUint       cuRedraw;           // Reload cordinates and dimensions
   /* -- Default constructor ------------------------------------------------ */
   explicit AtlasBase(const ImageFlagsConst ifcPurpose = IP_ATLAS) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -47,7 +47,7 @@ class AtlasBase :                      // Members initially private
     ofeFilter(OF_N_N),                 // Initialise point texture filter
     uiPadding(0),                      // Initialise padding between tiles
     rtCmd(RT_NONE),                    // Initialise re-upload command
-    rRedraw{                           // Initialise redraw bounds
+    cuRedraw{                          // Initialise redraw bounds
       numeric_limits<GLuint>::max(),   // Highest possible
       numeric_limits<GLuint>::max(),   // Highest possible
       0, 0 }                           // Lowest possible
@@ -84,37 +84,39 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       { // Reset reload command incase of error
         rtCmd = RT_NONE;
         // Calculate position to read from in buffer
-        const size_t stRTPos = CoordsToAbsolute(rRedraw.RectGetX1(),
-          rRedraw.RectGetY1(), DimGetWidth(), 2);
+        const size_t stRTPos = CoordsToAbsolute(cuRedraw.CoordsGetLeft(),
+          cuRedraw.CoordsGetTop(), DimGetWidth(), 2);
         // Calculate position in buffer to read from
         const GLubyte*const ucpSrc =
           GetSlots().front().MemRead<GLubyte>(stRTPos, DimGetWidth());
         // Update partial texture
         UpdateEx(GetSubName(),
-          rRedraw.RectGetX1<GLint>(), rRedraw.RectGetY1<GLint>(),
-          static_cast<GLsizei>(rRedraw.RectGetX2() - rRedraw.RectGetX1()),
-          static_cast<GLsizei>(rRedraw.RectGetY2() - rRedraw.RectGetY1()),
+          cuRedraw.CoordsGetLeft<GLint>(), cuRedraw.CoordsGetTop<GLint>(),
+          static_cast<GLsizei>(cuRedraw.CoordsGetRight() -
+            cuRedraw.CoordsGetLeft()),
+          static_cast<GLsizei>(cuRedraw.CoordsGetBottom() -
+            cuRedraw.CoordsGetTop()),
           GetPixelType(), ucpSrc, DimGetWidth<GLsizei>());
         // Log that we partially reuploaded the texture
         cLog->LogDebugExSafe("Atlas '$' partial re-upload (B:$,$,$,$;P:$).",
-          IdentGet(), rRedraw.RectGetX1(), rRedraw.RectGetY1(),
-          rRedraw.RectGetX2(), rRedraw.RectGetY2(), stRTPos);
+          IdentGet(), cuRedraw.CoordsGetLeft(), cuRedraw.CoordsGetTop(),
+          cuRedraw.CoordsGetRight(), cuRedraw.CoordsGetBottom(), stRTPos);
         // Reset range parameters
-        rRedraw.RectSetTopLeft(numeric_limits<GLuint>::max());
-        rRedraw.RectSetBottomRight(0);
+        cuRedraw.CoordsSetTopLeft(numeric_limits<GLuint>::max());
+        cuRedraw.CoordsSetBottomRight(0);
         // Done
         return;
       } // Unknown reload command
       default: XC("Internal error: Unknown reload command!",
-                  "Command", rtCmd);
+        "Command", rtCmd);
     }
   }
   /* -- Gray-Alpha (16-bpp) bitmap enlarging support ----------------------- */
   struct ImageTypeGrayAlpha
   { /* -- Statics ---------------------------------------------------------- */
-    constexpr static BitDepth  biDepth   = BD_GRAYALPHA;
-    constexpr static ByteDepth byDepth   = BY_GRAYALPHA;
-    constexpr static uint64_t  uqInitVal = 0x00FF00FF00FF00FF;
+    constexpr static BitDepth  biDepth    = BD_GRAYALPHA;
+    constexpr static ByteDepth byDepth    = BY_GRAYALPHA;
+    constexpr static uint64_t  ullInitVal = 0x00FF00FF00FF00FF;
     /* -- Image resize routine --------------------------------------------- */
     static void Resize(const size_t stNewWidth, const size_t stNewHeight,
       const MemConst &mcRef, const size_t stOldWidth, const size_t stOldHeight,
@@ -133,14 +135,14 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
         mDst.MemWrite(stDestPos, cpSrc, stSrcScanSize);
         // Calculate clear position and set white transparent pixels
         const size_t stClearPos = stDestPos + stSrcScanSize;
-        mDst.MemFillEx(stClearPos, uqInitVal, stDestExtra);
+        mDst.MemFillEx(stClearPos, ullInitVal, stDestExtra);
       } // Calculate size of a scan line in the new surface
       const size_t stDestScanSize = stNewWidth * byDepth;
       // Clear extra pixels on the bottom
       for(size_t stY = stOldHeight; stY < stNewHeight; ++stY)
       { // Calculate source and destination position and copy the scan line
         const size_t stClearPos = (stNewWidth * stY) * byDepth;
-        mDst.MemFillEx(stClearPos, uqInitVal, stDestScanSize);
+        mDst.MemFillEx(stClearPos, ullInitVal, stDestScanSize);
       }
     }
     /* -- Glyph copy routine ----------------------------------------------- */
@@ -175,7 +177,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       }
     }
     /* -- Initialse memory area of image ----------------------------------- */
-    static void Init(Memory &mPixels) { mPixels.MemFill(uqInitVal); }
+    static void Init(Memory &mPixels) { mPixels.MemFill(ullInitVal); }
     /* -- Constructor that does nothing ------------------------------------ */
     ImageTypeGrayAlpha() = default;
   };/* --------------------------------------------------------------------- */
@@ -234,19 +236,19 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       { // Set partial redraw
         rtCmd = RT_PARTIAL;
         // Set lowest most left bound
-        if(iprNew.CoordGetX<GLuint>() < rRedraw.RectGetX1())
-          rRedraw.RectSetX1(iprNew.CoordGetX<GLuint>());
+        if(iprNew.CoordGetX<GLuint>() < cuRedraw.CoordsGetLeft())
+          cuRedraw.CoordsSetLeft(iprNew.CoordGetX<GLuint>());
         // Set lowest most top bound
-        if(iprNew.CoordGetY<GLuint>() < rRedraw.RectGetY1())
-          rRedraw.RectSetY1(iprNew.CoordGetY<GLuint>());
+        if(iprNew.CoordGetY<GLuint>() < cuRedraw.CoordsGetTop())
+          cuRedraw.CoordsSetTop(iprNew.CoordGetY<GLuint>());
         // Set highest most right bound
         const GLuint uiX2 = static_cast<GLuint>(iprNew.CoordGetX() +
           iprNew.DimGetWidth());
-        if(uiX2 > rRedraw.RectGetX2()) rRedraw.RectSetX2(uiX2);
+        if(uiX2 > cuRedraw.CoordsGetRight()) cuRedraw.CoordsSetRight(uiX2);
         // Set highest most bottom bound
         const GLuint uiY2 = static_cast<GLuint>(iprNew.CoordGetY() +
           iprNew.DimGetHeight());
-        if(uiY2 > rRedraw.RectGetY2()) rRedraw.RectSetY2(uiY2);
+        if(uiY2 > cuRedraw.CoordsGetBottom()) cuRedraw.CoordsSetBottom(uiY2);
       } // Done
       return;
     } // Failed to resize so get next biggest size from bounds
@@ -259,12 +261,12 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // of work.
     if(uiSize > uiMaximum)
       XC("Cannot grow texture any further due to GPU limitation!",
-         "Identifier",    IdentGet(),   "Slot",           stSlot,
-         "BinWidth",      ipData.DimGetWidth(),
-         "BinHeight",     ipData.DimGetHeight(),
-         "TileWidth",     uiTWidth,     "TileHeight",     uiTHeight,
-         "TileWidth+Pad", uiTPWidth,    "TileHeight+Pad", uiTPHeight,
-         "Requested",     uiSize,       "Maximum",       uiMaximum);
+        "Identifier",    IdentGet(),   "Slot",           stSlot,
+        "BinWidth",      ipData.DimGetWidth(),
+        "BinHeight",     ipData.DimGetHeight(),
+        "TileWidth",     uiTWidth,     "TileHeight",     uiTHeight,
+        "TileWidth+Pad", uiTPWidth,    "TileHeight+Pad", uiTPHeight,
+        "Requested",     uiSize,       "Maximum",       uiMaximum);
     // Double the size taking into account that the requested glyph size
     // must fit inside it as well and the video card maximum texture
     // space must support the glyph as well. Then try placing it in the
@@ -274,13 +276,13 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     iprNew = ipData.Insert(uiTPWidth, uiTPHeight);
     if(iprNew.DimGetHeight() <= 0)
       XC("No texture space left for tile!",
-         "Identifier",    IdentGet(),   "Slot",       stSlot,
-         "BinWidth",      ipData.DimGetWidth(),
-         "BinHeight",     ipData.DimGetHeight(),
-         "TileWidth",     uiTWidth,     "TileHeight",     uiTHeight,
-         "TileWidth+Pad", uiTPWidth,    "TileHeight+Pad", uiTPHeight,
-         "Occupancy",     ipData.Occupancy(),
-         "Maximum",       cOgl->MaxTexSize());
+        "Identifier",    IdentGet(),   "Slot",       stSlot,
+        "BinWidth",      ipData.DimGetWidth(),
+        "BinHeight",     ipData.DimGetHeight(),
+        "TileWidth",     uiTWidth,     "TileHeight",     uiTHeight,
+        "TileWidth+Pad", uiTPWidth,    "TileHeight+Pad", uiTPHeight,
+        "Occupancy",     ipData.Occupancy(),
+        "Maximum",       cOgl->MaxTexSize());
     // THe result rect will include padding so remove it
     iprNew.DimDec(static_cast<int>(uiPadding));
     // Convert new surface size to size_t
@@ -335,7 +337,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // use with the BinPack routines.
     if(UtilIntWillOverflow<int>(uiPadding))
       XC("Atlas padding size overflows signed integer range!",
-         "Identifier", strId, "Requested", uiTPadding);
+        "Identifier", strId, "Requested", uiTPadding);
     // Initialise base size, padding and opengl filter
     uiPadding = uiTPadding;
     ofeFilter = ofeTFilter;
@@ -348,10 +350,10 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // Check if texture size is valid
     if(DimGetWidth() > cOgl->MaxTexSize() || uiTWidth > cOgl->MaxTexSize())
       XC("Atlas dimensions not supported by graphics processor!",
-         "Identifier", strId,               "Requested",  uiISize,
-         "Width",      DimGetWidth(),       "Height",     DimGetHeight(),
-         "TileWidth",  uiTWidth,            "TileHeight", uiTHeight,
-         "Maximum",    cOgl->MaxTexSize());
+        "Identifier", strId,               "Requested",  uiISize,
+        "Width",      DimGetWidth(),       "Height",     DimGetHeight(),
+        "TileWidth",  uiTWidth,            "TileHeight", uiTHeight,
+        "Maximum",    cOgl->MaxTexSize());
     // Estimate how many glyphs we're fitting in here to prevent unnecessary
     // alocations
     const size_t stGColumns = DimGetWidth() / uiTWidth,

@@ -46,8 +46,8 @@ class DataFormat                       // Image libraries format object class
     const size_t stExpect = stSize - 1;
     if(ftNId == stExpect) return ftNId;
     XC("Internal error: Data format id mismatch!",
-       "Id",     ftNId,    "Expect",    stExpect,
-       "Filter", strvName, "Extension", strvExt);
+      "Id",     ftNId,    "Expect",    stExpect,
+      "Filter", strvName, "Extension", strvExt);
   }
   /* -- Unsupported callbacks----------------------------------------------- */
   static bool NoDecoder(FileMap&, DataType&) { return false; }

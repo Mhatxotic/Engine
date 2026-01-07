@@ -14,7 +14,7 @@ class SysBase :                        // Safe exception handler namespace
   /* -- Base classes ------------------------------------------------------- */
   public SysVersion                    // Version information class
 { /* -- Class to rebuffer system generated output to log ------------------- */
-#if !defined(BUILD) && defined(MACOS)  // Not applicable on command-line tool
+#if !defined(BUILD) && !defined(ALPHA) // Not applicable on command-line tool
   class Redirect final :               // Linux: close() doesn't unblock read()
     /* -- Base classes ----------------------------------------------------- */
     private Thread,                    // Thread to monitor file descriptor
@@ -92,7 +92,8 @@ class SysBase :                        // Safe exception handler namespace
     /* --------------------------------------------------------------------- */
     Redirect(const int iHandle, const string &strNName) :
       /* ------------------------------------------------------------------- */
-      Thread{ strNName, STP_LOW },     // Initialise low priority thread
+      Ident{ strNName },               // Initialise identifier
+      Thread{ STP_LOW },               // Initialise low priority thread
       Memory{ 4096 },                  // Initialise buffer
       iRequested(iHandle),             // Store requested handle
       phHandles{ iInvalid, iInvalid }, // Initialise pipe handles references
@@ -151,9 +152,11 @@ class SysBase :                        // Safe exception handler namespace
   /* ----------------------------------------------------------------------- */
   enum ExitState { ES_SAFE, ES_UNSAFE, ES_CRITICAL }; // Signal exit types
   /* -- Signals to support ------------------------------------------------- */
+#if !defined(ALPHA)
   typedef pair<const int, void(*)(int)> SignalPair;
   typedef array<SignalPair, 14> SignalList;
   SignalList       slSignals;          // Signal list
+#endif
   /* ----------------------------------------------------------------------- */
   void DebugFunction(Statistic &staData, const char*const cpStack,
     const void*const vpStack) const
@@ -300,7 +303,7 @@ class SysBase :                        // Safe exception handler namespace
     // Add extra information if set
     if(*cpExtra) osS << cCommon->CommonLf() << cpExtra << cCommon->CommonLf();
  // Not building the command line too?
-#if !defined(BUILD) && defined(MACOS)  // Not applicable on command-line tool
+#if !defined(BUILD) && !defined(ALPHA)
     // Shut down the stderr monitoring thread
     rStdErr.ResetSafe();
 #endif
@@ -312,7 +315,7 @@ class SysBase :                        // Safe exception handler namespace
     osS << "\nLog trace:-\n"
            "===========\n";
     // Now add the buffer lines
-    cLog->GetBufferLines(osS);
+    cLog->LogGetBufferLines(osS);
     // Write the output and close the log
     const string strMsg{ StrAppend(osS.str(), '\n') };
     // Message box string
@@ -555,21 +558,14 @@ class SysBase :                        // Safe exception handler namespace
     StrReplace(strCode, '_', '-');
   }
   /* ----------------------------------------------------------------------- */
-  ~SysBase() noexcept(true)
-  { // Uninstall safe signals (signal() is not thread safe)
-    for(SignalPair &spPair : slSignals)
-      if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)
-        cLog->LogWarningExSafe("Failed to restore signal $ handler! $.",
-          spPair.first, StrFromErrNo());
-  }
-  /* ----------------------------------------------------------------------- */
   SysBase(SysModMap &&smmMap, const size_t stI) :
     /* -- Initialisers ----------------------------------------------------- */
     SysVersion{                        // Initialise version info class
       StdMove(smmMap), stI },          // Move sent mod list into ours
-#if !defined(BUILD) && defined(MACOS)  // Not applicable on command-line tool
+#if !defined(BUILD) && !defined(ALPHA) // Not applicable on command-line tool
     rStdErr{ STDERR_FILENO, "stderr" },// Initialise stderr redirect
 #endif                                 // BUILD check complete
+    /* --------------------------------------------------------------------- */
     rlmLimits{{                        // Limits data
 #if !defined(MACOS)                    // Not all resources supported
       { RLIMIT_LOCKS,  { 0, 0 } },     { RLIMIT_MSGQUEUE,   { 0, 0 } },
@@ -581,8 +577,10 @@ class SysBase :                        // Safe exception handler namespace
       { RLIMIT_FSIZE,  { 0, 0 } },     { RLIMIT_MEMLOCK,    { 0, 0 } },
       { RLIMIT_NOFILE, { 0, 0 } },     { RLIMIT_NPROC,      { 0, 0 } },
       { RLIMIT_RSS,    { 0, 0 } },     { RLIMIT_STACK,      { 0, 0 } }
-    }},
-    slSignals{{                        // Init signals list
+    }}
+    /* --------------------------------------------------------------------- */
+#if !defined(ALPHA)
+    , slSignals{{                      // Init signals list
       { SIGABRT, HandleSignalStatic }, { SIGBUS,  HandleSignalStatic },
       { SIGFPE,  HandleSignalStatic }, { SIGHUP,  HandleSignalStatic },
       { SIGILL,  HandleSignalStatic }, { SIGINT,  HandleSignalStatic },
@@ -591,14 +589,17 @@ class SysBase :                        // Safe exception handler namespace
       { SIGTERM, HandleSignalStatic }, { SIGTRAP, HandleSignalStatic },
       { SIGXCPU, HandleSignalStatic }, { SIGXFSZ, HandleSignalStatic },
     }}
+#endif
     /* --------------------------------------------------------------------- */
   { // Install all those signal handlers (signal() is not thread safe.)
+#if !defined(ALPHA)
     for(SignalPair &spPair : slSignals)
     { // Set the signal and check for error
       spPair.second = signal(spPair.first, spPair.second);
       if(spPair.second == SIG_ERR)
         XCL("Failed to install signal handler!", "Id", spPair.first);
     } // Increase resource limits we can change so the engine can do more
+#endif
     StdForEach(par_unseq, rlmLimits.begin(), rlmLimits.end(),
       [](ResourceLimitMapPair &rlmpPair)
     { // Get the limit for this resource
@@ -625,6 +626,14 @@ class SysBase :                        // Safe exception handler namespace
         rlmpPair.first, hex, rlmpPair.first, dec, SysError());
     });
   }
+  /* -- Destructor to uninstall safe signals (signal() not thread safe) ---- */
+#if !defined(ALPHA)
+  DTORHELPER(~SysBase,
+    for(SignalPair &spPair : slSignals)
+      if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)
+        cLog->LogWarningExSafe("Failed to restore signal $ handler! $.",
+          spPair.first, StrFromErrNo()))
+#endif
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
   void SysBase::HandleSignalStatic(int iSignal) \

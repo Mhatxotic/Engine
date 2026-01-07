@@ -11,40 +11,41 @@ namespace IIntPair {                   // Start of module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename Int>class IntPair
+template<typename IntType> requires is_arithmetic_v<IntType> class IntPair
 { /* -- Private variables --------------------------------------- */ protected:
-  Int              i1, i2;             // Two values of the specified type
-  constexpr static const Int iD0 = static_cast<Int>(0), // 0 of specified type
-  /* Some needed values */   iD1 = static_cast<Int>(1); // 1 of specified type
+  IntType              it1, it2;       // Two values of the specified type
+  constexpr static const IntType itD0 = static_cast<IntType>(0),
+                                 itD1 = static_cast<IntType>(1);
   /* -- Get ---------------------------------------------------------------- */
-  template<typename RInt=Int>RInt IPGetOne() const
-    { return static_cast<RInt>(i1); }
-  template<typename RInt=Int>RInt IPGetTwo() const
-    { return static_cast<RInt>(i2); }
-  template<typename RInt,class RBase=IntPair<RInt>>RBase IPGet() const
-    { return { IPGetOne<RInt>(), IPGetTwo<RInt>() }; }
-  template<typename RInt=Int>static RInt IPDefGet()
-    { return static_cast<RInt>(iD0); }
+  template<typename RIntType=IntType>RIntType IPGetOne() const
+    { return static_cast<RIntType>(it1); }
+  template<typename RIntType=IntType>RIntType IPGetTwo() const
+    { return static_cast<RIntType>(it2); }
+  template<typename RIntType,class RBase=IntPair<RIntType>>RBase IPGet() const
+    { return { IPGetOne<RIntType>(), IPGetTwo<RIntType>() }; }
+  template<typename RIntType=IntType>static RIntType IPDefGet()
+    { return static_cast<RIntType>(itD0); }
   /* -- Get reference ------------------------------------------------------ */
-  Int &IPGetOneRef() { return i1; }
-  Int &IPGetTwoRef() { return i2; }
+  IntType &IPGetOneRef() { return it1; }
+  IntType &IPGetTwoRef() { return it2; }
   /* -- Set ---------------------------------------------------------------- */
-  void IPSetOne(const Int iV) { i1 = iV; }
-  void IPSetTwo(const Int iV) { i2 = iV; }
-  void IPSet(const Int iV1, const Int iV2) { IPSetOne(iV1); IPSetTwo(iV2); }
-  void IPSet(const Int iV = iD0) { IPSet(iV, iV); }
+  void IPSetOne(const IntType itV1) { it1 = itV1; }
+  void IPSetTwo(const IntType itV2) { it2 = itV2; }
+  void IPSet(const IntType itV1, const IntType itV2)
+    { IPSetOne(itV1); IPSetTwo(itV2); }
+  void IPSet(const IntType itV = itD0) { IPSet(itV, itV); }
   void IPSet(const IntPair &ipO) { IPSet(ipO.IPGetOne(), ipO.IPGetTwo()); }
-  void IPSwap(IntPair &ipO) { swap(i1, ipO.i1); swap(i2, ipO.i2); }
+  void IPSwap(IntPair &ipO) { swap(it1, ipO.it1); swap(it2, ipO.it2); }
   /* -- Increment ---------------------------------------------------------- */
-  void IPIncOne(const Int iV = iD1) { IPSetOne(IPGetOne() + iV); }
-  void IPIncTwo(const Int iV = iD1) { IPSetTwo(IPGetTwo() + iV); }
-  void IPInc(const Int iV1 = iD1) { IPIncOne(iV1); IPIncTwo(iV1); }
-  void IPInc(const IntPair &ipOther) { IPIncOne(ipOther.IPGetOne());
-                                       IPIncTwo(ipOther.IPGetTwo()); }
+  void IPIncOne(const IntType itV1 = itD1) { IPSetOne(IPGetOne() + itV1); }
+  void IPIncTwo(const IntType itV2 = itD1) { IPSetTwo(IPGetTwo() + itV2); }
+  void IPInc(const IntType itV = itD1) { IPIncOne(itV); IPIncTwo(itV); }
+  void IPInc(const IntPair &ipRef)
+    { IPIncOne(ipRef.IPGetOne()); IPIncTwo(ipRef.IPGetTwo()); }
   /* -- Decrement ---------------------------------------------------------- */
-  void IPDecOne(const Int iV = iD1) { IPSetOne(IPGetOne() - iV); }
-  void IPDecTwo(const Int iV = iD1) { IPSetTwo(IPGetTwo() - iV); }
-  void IPDec(const Int iV1 = iD1) { IPDecOne(iV1); IPDecTwo(iV1); }
+  void IPDecOne(const IntType itV1 = itD1) { IPSetOne(IPGetOne() - itV1); }
+  void IPDecTwo(const IntType itV2 = itD1) { IPSetTwo(IPGetTwo() - itV2); }
+  void IPDec(const IntType itV1 = itD1) { IPDecOne(itV1); IPDecTwo(itV1); }
   /* -- Test --------------------------------------------------------------- */
   bool IPIsOneSet() const { return IPGetOne() != IPDefGet(); }
   bool IPIsNotOneSet() const { return !IPIsOneSet(); }
@@ -53,39 +54,38 @@ template<typename Int>class IntPair
   bool IPIsSet() const { return IPIsOneSet() && IPIsTwoSet(); }
   bool IPIsNotSet() const { return !IPIsSet(); }
   /* ----------------------------------------------------------------------- */
-  bool IPIsEqual(const IntPair &ipOther) const
-    { return IPGetOne() == ipOther.IPGetOne() &&
-             IPGetTwo() == ipOther.IPGetTwo(); }
-  bool IPIsNotEqual(const IntPair &ipOther) const
-    { return IPGetOne() != ipOther.IPGetOne() ||
-             IPGetTwo() != ipOther.IPGetTwo(); }
+  bool IPIsEqual(const IntPair &ipRef) const
+    { return IPGetOne() == ipRef.IPGetOne() &&
+             IPGetTwo() == ipRef.IPGetTwo(); }
+  bool IPIsNotEqual(const IntPair &ipRef) const
+    { return IPGetOne() != ipRef.IPGetOne() ||
+             IPGetTwo() != ipRef.IPGetTwo(); }
   /* -- Copy assignment ---------------------------------------------------- */
-  IntPair& operator=(const IntPair &ipO) { IPSet(ipO); return *this; }
+  IntPair& operator=(const IntPair &ipRef) { IPSet(ipRef); return *this; }
   /* -- Initialisation on both values with one value constructor ----------- */
-  explicit IntPair(const Int iV) :     // Specified value
+  explicit IntPair(const IntType itV) :
     /* -- Initialisers ----------------------------------------------------- */
-    i1(iV),                            // Initialise first value
-    i2(iV)                             // Initialise second value
+    it1(itV),                          // Initialise first value
+    it2(itV)                           // Initialise second value
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Initialisation on both values constructor -------------------------- */
-  IntPair(const Int iV1,               // Specified first value
-          const Int iV2) :             // Specified second value
+  IntPair(const IntType itV1, const IntType itV2) :
     /* -- Initialisers ----------------------------------------------------- */
-    i1(iV1),                           // Initialise first value
-    i2(iV2)                            // Initialise second value
+    it1(itV1),                         // Initialise first value
+    it2(itV2)                          // Initialise second value
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Copy constructor --------------------------------------------------- */
-  IntPair(const IntPair &ipO) :        // Other class
+  IntPair(const IntPair &ipO) :
     /* -- Initialisers ----------------------------------------------------- */
-    IntPair{ ipO.i1, ipO.i2 }          // Call init ctor with values
+    IntPair{ ipO.it1, ipO.it2 }        // Call init ctor with values
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor ------------------------------------------------ */
   IntPair() :
     /* -- Initialisers ----------------------------------------------------- */
-    IntPair{ iD0, iD0 }                // Call init ctor with default values
+    IntPair{ itD0, itD0 }              // Call init ctor with default values
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

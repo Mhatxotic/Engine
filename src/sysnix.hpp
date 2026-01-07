@@ -22,9 +22,7 @@
 ** ## again - they are only for initialisation.                           ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-class SysProcess :                     // Need this before of System init order
-  /* -- Dependency classes ------------------------------------------------- */
-  private Ident                        // Mutex identifier
+class SysProcess                       // Need this before of System init order
 { /* -- Streams ------------------------------------------------- */ protected:
   FStream          fsDevRandom,        // Handle to dev/random (rng)
                    fsProcStat,         // Handle to proc/stat (cpu)
@@ -42,6 +40,11 @@ class SysProcess :                     // Need this before of System init order
   /* -------------------------------------------------------------- */ private:
   const pid_t      piProcessId;        // Process id
   const pthread_t  vpThreadId;         // Thread id
+  /* -- Shared memory ------------------------------------------------------ */
+  pid_t           *pipProcessId;       // Process id (OS level memory)
+  static constexpr size_t stPidSize = sizeof(piProcessId); // Size of a pid
+  /* -- Mutex name --------------------------------------------------------- */
+  Ident            idMutex;            // Mutex identifier
   /* -- Return process and thread id ---------------------------- */ protected:
   template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
@@ -50,27 +53,101 @@ class SysProcess :                     // Need this before of System init order
   /* -- Initialise global mutex ------------------------------------ */ public:
   bool InitGlobalMutex(const string_view &strvTitle)
   { // Initialise mutex ident
-    IdentSet(strvTitle);
-    // Create the semaphore and if the creation failed?
-    if(shm_open(strvTitle.data(), O_CREAT | O_EXCL, 0) == -1)
-    { // If it was because it already exists?
-      if(StdIsError(EEXIST) || StdIsError(EACCES))
-      { // Execution may not continue
-        cLog->LogWarningSafe(
-         "System detected another instance of this application running.");
-        return false;
-      } // Report error
-      cLog->LogWarningExSafe("System failed to setup global mutex: $!",
-        SysError());
-    } // Execution may continue
+    idMutex.IdentSet(strvTitle);
+    // Shared memory file descriptor helper
+    class Shm
+    { /* -- Private variables ---------------------------------------------- */
+      const string_view &strvTitle; // Filename of shm object
+      int               iFd,        // The file descriptor of the shm object
+                        iMode;      // Requested mode for the shm object
+      /* -- Return mode -------------------------------------------- */ public:
+      int Mode() const { return iMode; }
+      /* -- Get file descriptor -------------------------------------------- */
+      int Get() const { return iFd; }
+      /* -- Resize file descriptor content --------------------------------- */
+      bool Truncate(const size_t stSize) const
+        { return !ftruncate(Get(), static_cast<off_t>(stSize)); }
+      /* -- Close the file descriptor -------------------------------------- */
+      bool Close()
+      { // Return success if already closed
+        if(Get() < 0) return true;
+        // Do the close and return failure if failed
+        if(close(Get())) return false;
+        // Reset the file descriptor
+        iFd = -1;
+        // Success
+        return true;
+      }
+      /* -- Open the file descriptor --------------------------------------- */
+      bool Open(const int iNMode)
+      { // Close previous file descriptor
+        Close();
+        // Set new mode
+        iMode = iNMode;
+        // Open and assign the new descriptor
+        iFd = shm_open(strvTitle.data(), iMode, 0600);
+        // Return if the open succeeded
+        return Get() >= 0;
+      }
+      /* -- Destructor that closes the file descriptor --------------------- */
+      ~Shm() { if(Get() >= 0) close(Get()); }
+      /* -- Constructor that initialises variables ------------------------- */
+      explicit Shm(const string_view &strvNTitle) :
+        /* -- Initialisers ------------------------------------------------- */
+        strvTitle(strvNTitle),         // Set reference to title
+        iFd(-1),                       // File descriptor uninitialised
+        iMode(0)                       // Mode uninitialised
+        /* -- No code ------------------------------------------------------ */
+        {}
+      /* -- Initialise a single object that automatically cleans up -------- */
+    } shmShm{ strvTitle };
+    // Create the semaphore and if an error occurs?
+    if(!shmShm.Open(O_CREAT | O_EXCL | O_RDWR))
+    { // Report error if it isn't because the semaphore already exists
+      if(StdIsNotError(EEXIST))
+        XCL("Failed to setup shared memory object for exclusive writing!",
+          "Name", strvTitle, "Mode", shmShm.Mode());
+      // Try opening it again for reading with exclusivity
+      if(!shmShm.Open(O_RDONLY | O_EXCL))
+        XCL("Failed to setup shared memory object for exclusive reading!",
+          "Name", strvTitle, "Mode", shmShm.Mode());
+      // Initialise memory
+      pipProcessId = StdMMap<pid_t>
+        (nullptr, stPidSize, PROT_READ, MAP_SHARED, shmShm.Get(), 0);
+      if(pipProcessId == MAP_FAILED)
+        XCL("Failed to setup shared memory for reading!",
+          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+      // Test if the process exists
+      const pid_t pPId = *pipProcessId;
+      if(getpgid(pPId) >= 0)
+      { // Put in log that another instance of this application is running and
+        // return to caller that execution must cease.
+        XC("Another instance of this software is running!",
+          "MyPID", piProcessId, "OtherPID", pPId);
+      } // Put in log that another instance of this application is running.
+      cLog->LogWarningExSafe(
+        "Previous pid of $ not valid so assuming no previous instance.", pPId);
+      // Unmap previous shared memory
+      if(munmap(pipProcessId, stPidSize))
+        XCL("Failed to unmap shared memory from reading!", "Name", strvTitle);
+      // Try reopening for exclusive writing again
+      if(!shmShm.Open(O_RDWR | O_EXCL))
+        XCL("Failed to setup shared memory object for exclusive writing!",
+          "Name", strvTitle, "Mode", shmShm.Mode());
+    } // Make sure it is the correct size
+    if(!shmShm.Truncate(stPidSize) && StdIsNotError(EINVAL))
+      XCL("Failed to truncate shared memory object!",
+        "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+    // Initialise memory
+    pipProcessId = StdMMap<pid_t>(nullptr, stPidSize,
+      PROT_READ | PROT_WRITE, MAP_SHARED, shmShm.Get(), 0);
+    if(pipProcessId == MAP_FAILED)
+      XCL("Failed to setup shared memory for writing!",
+        "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+    // Write the current PID to shared memory
+    *pipProcessId = piProcessId;
+    // Execution can continue
     return true;
-  }
-  /* -- Destructor --------------------------------------------------------- */
-  ~SysProcess()
-  { // Unlink the mutex and show warning in log if failed
-    if(IdentIsSet() && shm_unlink(IdentGetData()))
-      cLog->LogWarningExSafe("SysMutex could not delete old mutex '$': $",
-        IdentGet(), SysError());
   }
   /* -- Constructor -------------------------------------------------------- */
   SysProcess() :
@@ -90,9 +167,21 @@ class SysProcess :                     // Need this before of System init order
     ctProcSys(0),                      // Init system process cpu time
     stPageSize(sysconf(_SC_PAGESIZE)), // Get memory page size
     piProcessId(getpid()),             // Get native process id
-    vpThreadId(pthread_self())         // Get native thread id
+    vpThreadId(pthread_self()),        // Get native thread id
+    pipProcessId(nullptr)              // Process id memory not available
     /* -- No code ---------------------------------------------------------- */
     {}
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~SysProcess,
+    // Unmap the memory containing the pid and reset the pid memory address
+    if(pipProcessId && munmap(pipProcessId, stPidSize))
+      cLog->LogWarningExSafe("System failed to unmap shared memory of size "
+        "$ bytes! $", stPidSize, SysError());
+    // Unlink the mutex and show warning in log if failed
+    if(idMutex.IdentIsSet() && shm_unlink(idMutex.IdentGetData()))
+      cLog->LogWarningExSafe("System could not delete old mutex '$': $",
+        idMutex.IdentGet(), SysError());
+  )
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
@@ -133,13 +222,14 @@ class SysCore :
     // Grab system memory information and if successful?
     struct sysinfo siData;
     if(!sysinfo(&siData))
-      memData.qMTotal = siData.totalram,
-      memData.qMFree = siData.freeram + siData.bufferram,
-      memData.qMUsed = memData.qMTotal - memData.qMFree,
-      memData.stMFree = UtilMinimum(memData.qMFree, 0xFFFFFFFF),
-      memData.dMLoad = UtilMakePercentage(memData.qMUsed, memData.qMTotal);
+      memData.ullMTotal = siData.totalram,
+      memData.ullMFree = siData.freeram + siData.bufferram,
+      memData.ullMUsed = memData.ullMTotal - memData.ullMFree,
+      memData.stMFree = UtilMinimum(static_cast<size_t>(memData.ullMFree),
+                                    static_cast<size_t>(0xFFFFFFFF)),
+      memData.dMLoad = UtilMakePercentage(memData.ullMUsed, memData.ullMTotal);
     // Failed
-    else memData.qMTotal = memData.qMFree = memData.qMUsed = 0,
+    else memData.ullMTotal = memData.ullMFree = memData.ullMUsed = 0,
          memData.stMFree = 0,
          memData.dMLoad = 0;
   }
@@ -272,8 +362,8 @@ class SysCore :
       { // Throw error if we did not read enough bytes
         if(stRead != sizeof(ehData))
           XC("Failed to read enough bytes for ELF header!",
-             "Requested", sizeof(ehData), "Actual", stRead,
-             "File", strFile);
+            "Requested", sizeof(ehData), "Actual", stRead,
+            "File", strFile);
         // Rewind back to start
         if(!fExe.FStreamRewind())
           XCL("Failed to rewind executable file!", "File", strFile);
@@ -281,8 +371,8 @@ class SysCore :
         const unsigned int uiType = ehData.e_ident[EI_DATA];
         if(uiType != ELFDATA2LSB && uiType != ELFDATA2MSB)
           XC("Invalid ELF executable type!",
-             "Requested", ELFDATA2LSB, "OrRequested", ELFDATA2MSB,
-             "Actual",    uiType,      "File",        strFile);
+            "Requested", ELFDATA2LSB, "OrRequested", ELFDATA2MSB,
+            "Actual",    uiType,      "File",        strFile);
         // Check bits-type
         switch(const unsigned int uiClass = ehData.e_ident[EI_CLASS])
         { // Is a 32-bit executable?
@@ -294,8 +384,8 @@ class SysCore :
             { // Throw if we didn't read enough bytes
               if(stRead2 != sizeof(ehData32))
                 XC("Failed to read enough bytes for ELF32 header!",
-                   "Requested", sizeof(ehData32), "Actual", stRead,
-                   "File",      strFile);
+                  "Requested", sizeof(ehData32), "Actual", stRead,
+                  "File",      strFile);
               // Reverse bytes if not native
               if(uiType != uiELFDataNative)
                 ehData.e_shoff = SWAP_U32(ehData32.e_shoff),
@@ -318,8 +408,8 @@ class SysCore :
             { // Throw if we didn't read enough bytes?
               if(stRead2 != sizeof(ehData64))
                 XC("Failed to read enough bytes for ELF64 header!",
-                   "Requested", sizeof(ehData64), "Actual", stRead,
-                   "File",      strFile);
+                  "Requested", sizeof(ehData64), "Actual", stRead,
+                  "File",      strFile);
               // Reverse bytes if not native
               if(uiType != uiELFDataNative)
                 ehData.e_shoff = SWAP_U64(ehData64.e_shoff),
@@ -335,8 +425,8 @@ class SysCore :
                 "Requested", sizeof(ehData64), "File", strFile);
           } // Unknown executable type
           default: XC("Invalid ELF header architecture!",
-                      "Requested", ELFCLASS32, "OrRequested", ELFCLASS64,
-                      "Actual",    uiClass,    "File",        strFile);
+                     "Requested", ELFCLASS32, "OrRequested", ELFCLASS64,
+                     "Actual",    uiClass,    "File",        strFile);
         } // Now we can return the size
         return ehData.e_shoff + (ehData.e_shentsize * ehData.e_shnum);
       } // Failed to read elf ident
@@ -443,21 +533,22 @@ class SysCore :
     if(sched_getaffinity(GetPid(), sizeof(cstMask), &cstMask))
       XCS("Failed to acquire process affinity!");
     // Return value
-    uint64_t qwAffinity = 0;
+    uint64_t ullAffinity = 0;
     // Fill in the mask
     for(size_t stIndex = 0,
-               stMaximum = UtilMinimum(64, CPU_COUNT(&cstMask));
+               stMaximum = UtilMinimum(CPU_COUNT(&cstMask), 64);
                stIndex < stMaximum;
              ++stIndex)
-      qwAffinity |= CPU_ISSET(stIndex, &cstMask) << stIndex;
+      ullAffinity |= CPU_ISSET(stIndex, &cstMask) << stIndex;
     // Return affinity mask
-    return qwAffinity;
+    return ullAffinity;
   }
   /* ----------------------------------------------------------------------- */
   int GetPriority()
   { // Get priority value and throw if failed
+    errno = 0;
     const int iNice = getpriority(PRIO_PROCESS, GetPid());
-    if(iNice == -1) XCS("Failed to acquire process priority!");
+    if(iNice == -1 && errno) XCS("Failed to acquire process priority!");
     // Return priority
     return iNice;
    }

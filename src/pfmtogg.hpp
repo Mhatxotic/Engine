@@ -33,9 +33,9 @@ class CodecOGG :                       // OGG codec object
       { return reinterpret_cast<FileMap*>(vFmClassPtr)->
           FileMapReadToAddr(vpPtr, stSize * stCount); }
   /* -- Vorbis seek callback ----------------------------------------------- */
-  static int VorbisSeek(void*const vFmClassPtr, ogg_int64_t qOffset, int iLoc)
+  static int VorbisSeek(void*const vFmClassPtr, ogg_int64_t llOffset, int iLoc)
     { return static_cast<int>(reinterpret_cast<FileMap*>(vFmClassPtr)->
-        FileMapSeek(static_cast<size_t>(qOffset), iLoc)); }
+        FileMapSeek(static_cast<size_t>(llOffset), iLoc)); }
   /* -- Vorbis close callback ---------------------------------------------- */
   static int VorbisClose(void*const) { return 1; }
   /* -- Vorbis tell callback ----------------------------------------------- */
@@ -92,10 +92,9 @@ class CodecOGG :                       // OGG codec object
     // Ogg handle
     OggVorbis_File vorbisFile;
     // Open ogg file and pass callbacks and if failed? Throw error
-    if(const int iR = ov_open_callbacks(&fmData, &vorbisFile, nullptr, 0,
-      GetCallbacks()))
-        XC("OGG init context failed!",
-           "Code", iR, "Reason", GetOggErr(iR));
+    if(const int iR =
+      ov_open_callbacks(&fmData, &vorbisFile, nullptr, 0, GetCallbacks()))
+        XC("OGG init context failed!", "Code", iR, "Reason", GetOggErr(iR));
     // Put in a unique ptr
     typedef unique_ptr<OggVorbis_File, function<decltype(ov_clear)>>
       OggFilePtr;
@@ -111,26 +110,26 @@ class CodecOGG :                       // OGG codec object
     // Check that format is supported in OpenAL
     if(!pdData.ParseOALFormat())
       XC("OGG pcm data not supported by AL!",
-         "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
+        "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
     // Create PCM buffer (Not sure if multiplication is correct :[)
-    const ogg_int64_t qwSize =
+    const ogg_int64_t llSize =
       ov_pcm_total(&vorbisFile, -1) * (vorbisInfo->channels * 2);
-    if(qwSize < 0) XC("OGG has invalid pcm size!", "Size", qwSize);
+    if(llSize < 0) XC("OGG has invalid pcm size!", "Size", llSize);
     // Allocate memory
-    pdData.aPcmL.MemResize(static_cast<size_t>(qwSize));
+    pdData.aPcmL.MemResize(static_cast<size_t>(llSize));
     // Decompress until done
-    for(ogg_int64_t qwPos = 0; qwPos < qwSize; )
+    for(ogg_int64_t llPos = 0; llPos < llSize; )
     { // Read ogg stream and if not end of file?
-      const size_t stToRead = static_cast<size_t>(qwSize - qwPos);
+      const size_t stToRead = static_cast<size_t>(llSize - llPos);
       if(const long lBytesRead = ov_read(&vorbisFile,
-           pdData.aPcmL.MemRead(static_cast<size_t>(qwPos), stToRead),
+           pdData.aPcmL.MemRead(static_cast<size_t>(llPos), stToRead),
         static_cast<int>(stToRead), 0, 2, 1, nullptr))
       { // Error occured? Bail out
         if(lBytesRead < 0)
           XC("OGG decode failed!",
-             "Error", lBytesRead, "Reason", GetOggErr(lBytesRead));
+            "Error", lBytesRead, "Reason", GetOggErr(lBytesRead));
         // Move position onwards
-        qwPos += lBytesRead;
+        llPos += lBytesRead;
       } // End of file so break;
       else break;
     } // Get ogg comments and enumerate through each comment

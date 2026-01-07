@@ -19,7 +19,7 @@
 /* ========================================================================= */
 namespace LLPalette {                  // Palette namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IFboDef::P;            using namespace IImage::P;
+using namespace IColour::P;            using namespace IImage::P;
 using namespace IPalette::P;           using namespace IStd::P;
 using namespace ITexture::P;           using namespace Common;
 /* ========================================================================= **
@@ -192,7 +192,7 @@ LLFUNC(GetRGBAI, 4,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const auto &fbocData =
-    aPalette().GetSlotConst(aColourId).Cast<lua_Integer>();
+    aPalette().GetSlotConst(aColourId).ColourCast<lua_Integer>();
   LuaUtilPushVar(lS, fbocData[0], fbocData[1], fbocData[2], fbocData[3]))
 /* ========================================================================= */
 // $ Palette:GetR
@@ -216,9 +216,9 @@ LLFUNC(GetR, 1,
 LLFUNC(GetRGBA, 4,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  const FboColour &fbocData = aPalette().GetSlotConst(aColourId);
-  LuaUtilPushVar(lS, fbocData.GetColourRed(), fbocData.GetColourGreen(),
-            fbocData.GetColourBlue(), fbocData.GetColourAlpha()))
+  const Colour &fbocData = aPalette().GetSlotConst(aColourId);
+  LuaUtilPushVar(lS, fbocData.ColourGetRed(), fbocData.ColourGetGreen(),
+            fbocData.ColourGetBlue(), fbocData.ColourGetAlpha()))
 /* ========================================================================= */
 // $ Palette:GetId
 // < Id:integer=The id number of the Palette object.

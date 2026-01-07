@@ -27,7 +27,7 @@ struct UuId                            // Members initially public
                    ucNode[6];          // 48-bit node id
     } p; /* ---------------------------------------------------------------- */
     uint8_t        ucRandom[16];       // As sixteen 8-bit integers (128-bit)
-    uint64_t       qwRandom[2];        // As two 64-bit integers    (128-bit)
+    uint64_t       ullRandom[2];       // As two 64-bit integers    (128-bit)
     /* --------------------------------------------------------------------- */
   } d;                                 // Member to hold uuid data
   /* -- Initialise randomised UUID -------------------------------- */ private:
@@ -44,11 +44,12 @@ struct UuId                            // Members initially public
     return uuidData;
   }
   /* -- Initialise UUID from two quads ------------------------------------- */
-  static const Struct UuIdReadTwoQuads(const uint64_t q1, const uint64_t q2)
+  static const Struct UuIdReadTwoQuads(const uint64_t ull1,
+    const uint64_t ull2)
   { // Structure to return
     Struct uuidData;
-    uuidData.qwRandom[0] = q1;
-    uuidData.qwRandom[1] = q2;
+    uuidData.ullRandom[0] = ull1;
+    uuidData.ullRandom[1] = ull2;
     return uuidData;
   }
   /* -- Initialise UUID from C-string -------------------------------------- */
@@ -113,9 +114,9 @@ struct UuId                            // Members initially public
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor to intiialise from two quads --------------------------- */
-  UuId(const uint64_t q1, const uint64_t q2) :
+  UuId(const uint64_t ull1, const uint64_t ull2) :
     /* -- Initialisers ----------------------------------------------------- */
-    d{ UuIdReadTwoQuads(q1, q2) }      // Read two integers and store result
+    d{ UuIdReadTwoQuads(ull1, ull2) }  // Read two integers and store result
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

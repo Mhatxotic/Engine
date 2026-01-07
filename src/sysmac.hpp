@@ -24,18 +24,18 @@
 ** ## again - they are only for initialisation.                           ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-class SysProcess :                     // Need this before of System init order
-  /* -- Dependency classes ------------------------------------------------- */
-  private Ident                        // Mutex identifier
+class SysProcess                       // Need this before of System init order
 { /* -- Private variables -------------------------------------------------- */
   const pid_t      piProcessId;        // Process id
   const pthread_t  vpThreadId;         // Thread id
   /* -- Protected variables ------------------------------------- */ protected:
-  const uint64_t   qwPageSize;         // Memory page size
+  const uint64_t   ullPageSize;        // Memory page size
   const mach_port_t mptHost, mptTask;  // Current mach host and task id
   /* -- Shared memory ------------------------------------------------------ */
   pid_t           *pipProcessId;       // Process id (OS level memory)
   static constexpr size_t stPidSize = sizeof(piProcessId); // Size of a pid
+  /* -- Mutex name --------------------------------------------------------- */
+  Ident            idMutex;            // Mutex identifier
   /* -- Return process and thread id --------------------------------------- */
   template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
@@ -44,7 +44,7 @@ class SysProcess :                     // Need this before of System init order
   /* -- Initialise global mutex ------------------------------------ */ public:
   bool InitGlobalMutex(const string_view &strvTitle)
   { // Initialise mutex ident
-    IdentSet(strvTitle);
+    idMutex.IdentSet(strvTitle);
     // Shared memory file descriptor helper
     class Shm
     { /* -- Private variables ---------------------------------------------- */
@@ -97,17 +97,17 @@ class SysProcess :                     // Need this before of System init order
     { // Report error if it isn't because the semaphore already exists
       if(StdIsNotError(EEXIST))
         XCL("Failed to setup shared memory object for exclusive writing!",
-            "Name", strvTitle, "Mode", shmShm.Mode());
+          "Name", strvTitle, "Mode", shmShm.Mode());
       // Try opening it again for reading with exclusivity
       if(!shmShm.Open(O_RDONLY|O_EXCL))
         XCL("Failed to setup shared memory object for exclusive reading!",
-            "Name", strvTitle, "Mode", shmShm.Mode());
+          "Name", strvTitle, "Mode", shmShm.Mode());
       // Initialise memory
       pipProcessId = StdMMap<pid_t>
         (nullptr, stPidSize, PROT_READ, MAP_SHARED, shmShm.Get(), 0);
       if(pipProcessId == MAP_FAILED)
         XCL("Failed to setup shared memory for reading!",
-            "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
       // Test if the process exists
       const pid_t pPId = *pipProcessId;
       if(getpgid(pPId) >= 0)
@@ -120,13 +120,13 @@ class SysProcess :                     // Need this before of System init order
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         // Get process serial number from pid and show error if failed
         ProcessSerialNumber psnApp;
-        if(const OSStatus ossErr = GetProcessForPID(pPId, &psnApp))
+        if(const OSStatus ossErr1 = GetProcessForPID(pPId, &psnApp))
           cLog->LogErrorExSafe("System can't get serial for pid $ (code $)!",
-            pPId, ossErr);
+            pPId, ossErr1);
         // Try to activate the app with specified serial number
-        else if(const OSStatus ossErr = SetFrontProcess(&psnApp))
+        else if(const OSStatus ossErr2 = SetFrontProcess(&psnApp))
           cLog->LogErrorExSafe(
-            "System can't activate app with pid $ (code $)!", pPId, ossErr);
+            "System can't activate app with pid $ (code $)!", pPId, ossErr2);
         // Success
         else cLog->LogInfoExSafe("System activated application at pid $.",
           pPId);
@@ -143,32 +143,21 @@ class SysProcess :                     // Need this before of System init order
       // Try reopening for exclusive writing again
       if(!shmShm.Open(O_WRONLY|O_EXCL))
         XCL("Failed to setup shared memory object for exclusive writing!",
-            "Name", strvTitle, "Mode", shmShm.Mode());
+          "Name", strvTitle, "Mode", shmShm.Mode());
     } // Make sure it is the correct size
     if(!shmShm.Truncate(stPidSize) && StdIsNotError(EINVAL))
       XCL("Failed to truncate shared memory object!",
-          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+        "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
     // Initialise memory
     pipProcessId = StdMMap<pid_t>
       (nullptr, stPidSize, PROT_WRITE, MAP_SHARED, shmShm.Get(), 0);
     if(pipProcessId == MAP_FAILED)
       XCL("Failed to setup shared memory for writing!",
-          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+        "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
     // Write the current PID to shared memory
     *pipProcessId = piProcessId;
     // Execution can continue
     return true;
-  }
-  /* -- Destructor --------------------------------------------------------- */
-  ~SysProcess()
-  { // Unmap the memory containing the pid and reset the pid memory address
-    if(pipProcessId && munmap(pipProcessId, stPidSize))
-      cLog->LogWarningExSafe("System failed to unmap shared memory of size "
-        "$ bytes! $", stPidSize, SysError());
-    // Unlink the shared memory object if data is set
-    if(IdentIsSet() && shm_unlink(IdentGetData()))
-      cLog->LogWarningExSafe("System failed to unlink shared memory object "
-        "'$'! $", IdentGet(), SysError());
   }
   /* -- Apparently due to 'dynamic memory/resource management' (CppCheck) -- */
   SysProcess(SysProcess &) = delete;           // Even though we don't use
@@ -178,13 +167,24 @@ class SysProcess :                     // Need this before of System init order
     /* -- Initialisers ----------------------------------------------------- */
     piProcessId(getpid()),             // Initialise process id number
     vpThreadId(pthread_self()),        // Initialise main thread id number
-    qwPageSize(static_cast<uint64_t>   // Initialise memory page size
+    ullPageSize(static_cast<uint64_t>  // Initialise memory page size
       (sysconf(_SC_PAGESIZE))),        // Usually 16k on M1 or 4k on Intel
     mptHost(mach_host_self()),         // Initialise host task
     mptTask(mach_task_self()),         // Initialise self task
     pipProcessId(nullptr)              // Process id memory not available
     /* -- No code ---------------------------------------------------------- */
     {}
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~SysProcess,
+    // Unmap the memory containing the pid and reset the pid memory address
+    if(pipProcessId && munmap(pipProcessId, stPidSize))
+      cLog->LogWarningExSafe("System failed to unmap shared memory of size "
+        "$ bytes! $", stPidSize, SysError());
+    // Unlink the shared memory object if data is set
+    if(idMutex.IdentIsSet() && shm_unlink(idMutex.IdentGetData()))
+      cLog->LogWarningExSafe("System failed to unlink shared memory object "
+        "'$'! $", idMutex.IdentGet(), SysError());
+  )
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Dependency classes ------------------------------------------------- */
@@ -218,11 +218,11 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   void InitMemorySize()
   { // Store real total memory and return if succesful
-    memData.qMTotal = GetSysCTLInfoNum<uint64_t>("hw.memsize");
-    if(memData.qMTotal) return;
+    memData.ullMTotal = GetSysCTLInfoNum<uint64_t>("hw.memsize");
+    if(memData.ullMTotal) return;
     // Update memory information and set total from current data instead
     UpdateMemoryUsageData();
-    memData.qMTotal = memData.qMFree + memData.qMUsed;
+    memData.ullMTotal = memData.ullMFree + memData.ullMUsed;
   }
   /* ----------------------------------------------------------------------- */
   void UpdateProcessCpuUsage()
@@ -235,21 +235,21 @@ class SysCore :
       return;
     // Do cpu time calculations
     const uint64_t
-      uqUserTime = static_cast<uint64_t>(ttiInfo.user_time.seconds) *
+      ullUserTime = static_cast<uint64_t>(ttiInfo.user_time.seconds) *
         1000000ULL + static_cast<uint64_t>(ttiInfo.user_time.microseconds),
-      uqSystemTime = static_cast<uint64_t>(ttiInfo.system_time.seconds) *
+      ullSystemTime = static_cast<uint64_t>(ttiInfo.system_time.seconds) *
         1000000ULL + static_cast<uint64_t>(ttiInfo.system_time.microseconds),
-      uqTotalTime = uqUserTime + uqSystemTime,
-      uqTimeNow = cmHiRes.GetTimeUS();
+      ullTotalTime = ullUserTime + ullSystemTime,
+      ullTimeNow = cmHiRes.GetTimeUS();
     // Persistent last times
-    static uint64_t uqTimeNowL = 0, uqTotalTimeL = 0;
+    static uint64_t ullTimeNowL = 0, ullTotalTimeL = 0;
     // Calculate cpu usage. Sometimes total time can be less.
-    if(uqTotalTime >= uqTotalTimeL)
-      cpuUData.dProcess = UtilMakePercentage(uqTotalTime - uqTotalTimeL,
-        uqTimeNow - uqTimeNowL) / StdThreadMax();
+    if(ullTotalTime >= ullTotalTimeL)
+      cpuUData.dProcess = UtilMakePercentage(ullTotalTime - ullTotalTimeL,
+        ullTimeNow - ullTimeNowL) / StdThreadMax();
     // Update times for next query
-    uqTotalTimeL = uqTotalTime;
-    uqTimeNowL = uqTimeNow;
+    ullTotalTimeL = ullTotalTime;
+    ullTimeNowL = ullTimeNow;
   }
   /* ----------------------------------------------------------------------- */
   void UpdateSystemCpuUsage()
@@ -261,23 +261,23 @@ class SysCore :
          reinterpret_cast<host_info_t>(&hclidData), &mmtnType) != KERN_SUCCESS)
       return;
     // Calculate the total ticks
-    uint64_t uqTotalTicks = 0;
+    uint64_t ullTotalTicks = 0;
     for(size_t stIndex = 0; stIndex < CPU_STATE_MAX; ++stIndex)
-      uqTotalTicks += hclidData.cpu_ticks[stIndex];
+      ullTotalTicks += hclidData.cpu_ticks[stIndex];
     // Persistent last times
-    static uint64_t uqTotalTicksL = 0, uqIdleTicksL = 0;
+    static uint64_t ullTotalTicksL = 0, ullIdleTicksL = 0;
     // Do calculations
     const uint64_t
-      uqIdleTicks = hclidData.cpu_ticks[CPU_STATE_IDLE],
-      uqTotalTicksSinceLastTime = uqTotalTicks - uqTotalTicksL,
-      uqIdleTicksSinceLastTime = uqIdleTicks - uqIdleTicksL;
+      ullIdleTicks = hclidData.cpu_ticks[CPU_STATE_IDLE],
+      ullTotalTicksSinceLastTime = ullTotalTicks - ullTotalTicksL,
+      ullIdleTicksSinceLastTime = ullIdleTicks - ullIdleTicksL;
     // Set previous values
-    uqTotalTicksL = uqTotalTicks;
-    uqIdleTicksL = uqIdleTicks;
+    ullTotalTicksL = ullTotalTicks;
+    ullIdleTicksL = ullIdleTicks;
     // Final calculation
-    cpuUData.dSystem = (1.0 - ((uqTotalTicksSinceLastTime > 0) ?
-      (static_cast<double>(uqIdleTicksSinceLastTime)) /
-      uqTotalTicksSinceLastTime : 0)) * 100;
+    cpuUData.dSystem = (1.0 - ((ullTotalTicksSinceLastTime > 0) ?
+      (static_cast<double>(ullIdleTicksSinceLastTime)) /
+      ullTotalTicksSinceLastTime : 0)) * 100;
   }
   /* ----------------------------------------------------------------------- */
   void UpdateProcessMemoryUsage()
@@ -302,12 +302,12 @@ class SysCore :
          reinterpret_cast<host_info_t>(&vmsData), &mmtnType) != KERN_SUCCESS)
       return;
     // Succeeded getting info, now set the counters
-    memData.qMUsed =
+    memData.ullMUsed =
       (static_cast<uint64_t>(vmsData.active_count) +
-       static_cast<uint64_t>(vmsData.wire_count)) * qwPageSize;
-    memData.qMFree = memData.qMTotal - memData.qMUsed;
+       static_cast<uint64_t>(vmsData.wire_count)) * ullPageSize;
+    memData.ullMFree = memData.ullMTotal - memData.ullMUsed;
     // Calculate usage percentage
-    memData.dMLoad = UtilMakePercentage(memData.qMUsed, memData.qMTotal);
+    memData.dMLoad = UtilMakePercentage(memData.ullMUsed, memData.ullMTotal);
   }
   /* --------------------------------------------------------------- */ public:
   void UpdateMemoryUsageData()
@@ -375,7 +375,7 @@ class SysCore :
                          uiIndex < mhData.ncmds && fExe.FStreamIsNotEOF();
                        ++uiIndex)
         { // Save file position
-          const int64_t qwCmdPos = fExe.FStreamTell();
+          const int64_t llCmdPos = fExe.FStreamTell();
           // Create memory to store segment data
           load_command lcData;
           if(const size_t stReadCmd =
@@ -390,7 +390,7 @@ class SysCore :
               { // 64-bit segment?
                 case LC_SEGMENT_64:
                 { // Move back to original offset
-                  fExe.FStreamSeekSet(qwCmdPos);
+                  fExe.FStreamSeekSet(llCmdPos);
                   // Read segment data
                   segment_command_64 scItem;
                   if(const size_t stReadSeg = fExe.FStreamReadSafe(&scItem,
@@ -404,22 +404,22 @@ class SysCore :
                       const size_t stEnd = scItem.fileoff + scItem.filesize;
                       if(stEnd > stExeSize) stExeSize = stEnd;
                     } // Failed to read enough bytes for segment
-                    else XC("Failed to read enough bytes for MACH-O 64 "
-                            "segment!",
-                            "Requested", sizeof(scItem),
-                            "Actual",    stReadCmd,
-                            "Type",      cpType,
-                            "File",      fExe.IdentGet());
+                    else XC(
+                      "Failed to read enough bytes for MACH-O 64 segment!",
+                      "Requested", sizeof(scItem),
+                      "Actual",    stReadCmd,
+                      "Type",      cpType,
+                      "File",      fExe.IdentGet());
                   } // Failed to read segment bytes
                   else XCL("Failed to read MACH-O 64 segment!",
-                           "Requested", sizeof(scItem), "Type", cpType,
-                           "File",      fExe.IdentGet());
+                    "Requested", sizeof(scItem), "Type", cpType,
+                    "File",      fExe.IdentGet());
                   // Done
                   break;
                 } // 32-bit segment?
                 case LC_SEGMENT:
                 { // Move back to original offset
-                  fExe.FStreamSeekSet(qwCmdPos);
+                  fExe.FStreamSeekSet(llCmdPos);
                   // Read segment data
                   segment_command scItem;
                   if(const size_t stReadSeg = fExe.FStreamReadSafe(&scItem,
@@ -433,36 +433,36 @@ class SysCore :
                       const size_t stEnd = scItem.fileoff + scItem.filesize;
                       if(stEnd > stExeSize) stExeSize = stEnd;
                     } // Failed to read enough bytes for segment
-                    else XC("Failed to read enough bytes for MACH-O 32 "
-                            "segment!",
-                            "Requested", sizeof(scItem),
-                            "Actual",    stReadCmd,
-                            "Type",      cpType,
-                            "File",      fExe.IdentGet());
+                    else XC(
+                      "Failed to read enough bytes for MACH-O 32 segment!",
+                      "Requested", sizeof(scItem),
+                      "Actual",    stReadCmd,
+                      "Type",      cpType,
+                      "File",      fExe.IdentGet());
                   } // Failed to read segment bytes
                   else XCL("Failed to read MACH-O 32 segment!",
-                           "Requested", sizeof(scItem), "Type", cpType,
-                           "File",      fExe.IdentGet());
+                    "Requested", sizeof(scItem), "Type", cpType,
+                    "File",      fExe.IdentGet());
                   // Done
                   break;
                 } // We're not supporting this command
                 default: break;
               } // Move forward to next command position
-              fExe.FStreamSeekSet(qwCmdPos + lcData.cmdsize);
+              fExe.FStreamSeekSet(llCmdPos + lcData.cmdsize);
             } // Failed to read enough bytes
             else XC("Failed to read enough bytes for MACH-O command!",
-                    "Requested", sizeof(lcData), "Actual", stReadCmd,
-                    "Type",      cpType,         "File",   fExe.IdentGet());
+              "Requested", sizeof(lcData), "Actual", stReadCmd,
+              "Type",      cpType,         "File",   fExe.IdentGet());
           } // Failed to read command bytes
           else XCL("Failed to read MACH-O command!",
-                 "Requested", sizeof(lcData), "Type", cpType,
-                 "File",      fExe.IdentGet());
+            "Requested", sizeof(lcData), "Type", cpType,
+            "File",      fExe.IdentGet());
         } // Return executable size
         return stExeSize;
       } // Failed to read enough bytes
       else XC("Failed to read enough bytes for MACH-O header!",
-              "Requested", sizeof(mhData), "Actual", stRead,
-              "Type",      cpType,         "File",   fExe.IdentGet());
+        "Requested", sizeof(mhData), "Actual", stRead,
+        "Type",      cpType,         "File",   fExe.IdentGet());
     } // Failed to read elf ident
     else XCL("Failed to read MACH-O header!",
              "Requested", sizeof(mhData), "Type", cpType,
@@ -499,22 +499,22 @@ class SysCore :
               if(stEnd > stExeSize) stExeSize = stEnd;
             } // Failed to read enough bytes
             else XC("Failed to read enough bytes for FAT archive header!",
-                    "Requested", sizeof(faData), "Actual", stReadArch,
-                    "Type",      cpType,         "File",   fExe.IdentGet());
+              "Requested", sizeof(faData), "Actual", stReadArch,
+              "Type",      cpType,         "File",   fExe.IdentGet());
           } // Failed to read elf ident
           else XCL("Failed to read FAT archive header!",
-                   "Requested", sizeof(faData), "Type", cpType,
-                   "File",      fExe.IdentGet());
+            "Requested", sizeof(faData), "Type", cpType,
+            "File",      fExe.IdentGet());
         } // Return executable size
         return stExeSize;
       } // Failed to read enough bytes
       else XC("Failed to read enough bytes for FAT header!",
-              "Requested", sizeof(fhData), "Actual", stReadFat,
-              "Type",      cpType,         "File",   fExe.IdentGet());
+        "Requested", sizeof(fhData), "Actual", stReadFat,
+        "Type",      cpType,         "File",   fExe.IdentGet());
     } // Failed to read elf ident
     else XCL("Failed to read FAT header!",
-             "Requested", sizeof(fhData), "Type", cpType,
-             "File",      fExe.IdentGet());
+      "Requested", sizeof(fhData), "Type", cpType,
+      "File",      fExe.IdentGet());
   }
   /* -- Get executable size from header (N/A on MacOS) --------------------- */
   static size_t GetExeSize(const string &strFile)
@@ -565,14 +565,14 @@ class SysCore :
             UtilSwap64BEFunctor>("FAT64BE", fExe);
           // Invalid magic
           default: XC("MACH-O magic is invalid!",
-                      "Magic", uiMagic, "File", strFile);
+            "Magic", uiMagic, "File", strFile);
         } // Read nothing? Throw error with reason
         case 0: XCL("Failed to read MACH-O magic!",
-                    "Requested", sizeof(uiMagic), "File", fExe.IdentGet());
+          "Requested", sizeof(uiMagic), "File", fExe.IdentGet());
         // Failed to read enough bytes
         default: XC("Failed to read enough bytes for MACH-O executable magic!",
-                    "Requested", sizeof(uiMagic), "Actual", stMagicBytes,
-                    "File", strFile);
+          "Requested", sizeof(uiMagic), "Actual", stMagicBytes,
+          "File", strFile);
       }
     } // Failed to open mach executable
     XCL("Failed to open MACH-O executable!", "File", strFile);
@@ -585,7 +585,7 @@ class SysCore :
     if(proc_pidpath(GetPid(),
       const_cast<char*>(strExe.data()), PROC_PIDPATHINFO_MAXSIZE) <= 0)
         XCS("Failed to get path to executable!",
-            "Pid", GetPid(), "Buffer", strExe.capacity());
+          "Pid", GetPid(), "Buffer", strExe.capacity());
     // Set real size and trim the memory usage
     strExe.resize(strlen(strExe.data()));
     strExe.shrink_to_fit();

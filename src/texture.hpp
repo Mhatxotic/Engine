@@ -13,7 +13,7 @@ namespace ITexture {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IDim::P;
 using namespace IError::P;             using namespace IFbo::P;
-using namespace IFboDef::P;            using namespace IFboItem::P;
+using namespace IFboCmd::P;            using namespace IFboItem::P;
 using namespace IImage::P;             using namespace IImageDef::P;
 using namespace IJson::P;              using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
@@ -179,9 +179,9 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
         if(DimGetWidth() != isRef.DimGetWidth() ||
            DimGetHeight() != isRef.DimGetHeight())
           XC("Alternating image sizes are not supported!",
-             "Identifier", IdentGet(),     "LastWidth", DimGetWidth(),
-             "LastHeight", DimGetHeight(), "ThisWidth", isRef.DimGetWidth(),
-             "ThisHeight", isRef.DimGetHeight());
+            "Identifier", IdentGet(),     "LastWidth", DimGetWidth(),
+            "LastHeight", DimGetHeight(), "ThisWidth", isRef.DimGetWidth(),
+            "ThisHeight", isRef.DimGetHeight());
         // Get texture id and bind it
         const unsigned int uiTexId = GetSubName(stSubTexId);
         GL(cOgl->BindTexture(uiTexId), "Texture id failed to bind!",
@@ -229,9 +229,9 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
         if(isRef.DimGetWidth() >= uiLWidth ||
            isRef.DimGetHeight() >= uiLHeight)
           XC("Specified mipmap is not smaller than the last!",
-             "Identifier", IdentGet(), "LastWidth", uiLWidth,
-             "LastHeight", uiLHeight,  "ThisWidth", isRef.DimGetWidth(),
-             "ThisHeight", isRef.DimGetHeight());
+            "Identifier", IdentGet(), "LastWidth", uiLWidth,
+            "LastHeight", uiLHeight,  "ThisWidth", isRef.DimGetWidth(),
+            "ThisHeight", isRef.DimGetHeight());
         // Load the mipmap
         TexCompFtor(*this, 0, static_cast<GLint>(stSubTexId), ttNICFormat,
           ttNXCFormat, isRef);
@@ -358,14 +358,14 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     if(isSlot.DimIsNotSet() || isSlot.DimGetWidth() > uiMaxSize ||
        isSlot.DimGetHeight() > uiMaxSize)
       XC("Image dimensions not supported by graphics hardware!",
-         "Identifier", IdentGet(),            "Width",   isSlot.DimGetWidth(),
-         "Height",     isSlot.DimGetHeight(), "Maximum", uiMaxSize);
+        "Identifier", IdentGet(),            "Width",   isSlot.DimGetWidth(),
+        "Height",     isSlot.DimGetHeight(), "Maximum", uiMaxSize);
     // Lookup internal pixel type chosen and check it
     const TextureType ttICFormat = ImageBYtoTexType(GetBytesPerPixel());
     if(ttICFormat == TT_NONE)
       XC("Unsupported texture colour type!",
-         "Identifier",   IdentGet(), "BytesPerPixel", GetBytesPerPixel(),
-         "BitsPerPixel", GetBitsPerPixel());
+        "Identifier",   IdentGet(), "BytesPerPixel", GetBytesPerPixel(),
+        "BitsPerPixel", GetBitsPerPixel());
     // Get usable slots
     const size_t stSlots = GetSlotCount() - static_cast<size_t>(IsPalette());
     // Calculated internal and external format
@@ -693,13 +693,9 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     cLog->LogDebugExSafe("Texture loading from image '$'.", imgSrc.IdentGet());
     // If source and destination image class are not the same?
     if(this != &imgSrc)
-    { // Move image data over. The old image will be unusable so guest should
-      // discard it.
+    { // Take ownership of specified image and identifier
       SwapImage(imgSrc);
-      // The image passed in the arguments is usually still allocated by LUA
-      // and will still be registered, so lets put a note in the image to show
-      // that this function has nicked by this image class.
-      imgSrc.IdentSetEx("!TEX!$!", IdentGet());
+      IdentSwap(imgSrc);
     } // We'll set float versions for faster calculations later on
     dfPad.DimSet(static_cast<GLfloat>(uiPadX), static_cast<GLfloat>(uiPadY));
     // Set filter
@@ -797,7 +793,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     static constexpr size_t stValues = 4, stValuesM1 = stValues - 1;
     if(const size_t stExcess = gluvTiles.size() % stValues)
       XC("Invalid count of tiles specified!",
-         "Identifier", IdentGet(), "Count", stExcess);
+        "Identifier", IdentGet(), "Count", stExcess);
     // Reserve memory for actual count
     clTiles.resize(1);
     CoordList &clFirst = clTiles.front();
@@ -805,14 +801,14 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     // Shortcut to GLUIntVector const iterator
     typedef GLUIntVector::const_iterator GLUIntVectorItConst;
     // Inline function to enumerate the vector of coords and send to callback
-    auto fFunc = [&gluvTiles](auto &&fFunc){
+    auto fFunc = [&gluvTiles](auto &&fCb){
       for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
                               gluvicIt + stValuesM1 < gluvTiles.cend();
                               gluvicIt += stValues)
-        fFunc(static_cast<GLfloat>(*gluvicIt),
-              static_cast<GLfloat>(*(gluvicIt + 1)),
-              static_cast<GLfloat>(*(gluvicIt + 2)),
-              static_cast<GLfloat>(*(gluvicIt + 3)));
+        fCb(static_cast<GLfloat>(*gluvicIt),
+            static_cast<GLfloat>(*(gluvicIt + 1)),
+            static_cast<GLfloat>(*(gluvicIt + 2)),
+            static_cast<GLfloat>(*(gluvicIt + 3)));
     }; // Are image pixels reversed?
     if(IsReversed())
       fFunc([this](const GLfloat fLeft, const GLfloat fTop,
@@ -833,8 +829,8 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     const unsigned int uiVersion = jsDoc.GetInteger("Version");
     if(uiVersion != uiVersionRequired)
       XC("Invalid version in manifest!",
-         "Identifier", imSrc.IdentGet(),  "Manfiest", jsDoc.IdentGet(),
-         "Required",   uiVersionRequired, "Actual",   uiVersion);
+        "Identifier", imSrc.IdentGet(),  "Manfiest", jsDoc.IdentGet(),
+        "Required",   uiVersionRequired, "Actual",   uiVersion);
     // Read filter
     const OglFilterEnum ofeFilter =
       static_cast<OglFilterEnum>(jsDoc.GetInteger("Filter"));
@@ -855,11 +851,11 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     const Value &rjvTiles = jsDoc.GetValue("Tiles");
     if(!rjvTiles.IsArray())
       XC("Tiles array not valid in manifest!",
-         "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet());
+        "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet());
     // If we have items in the array
     if(rjvTiles.Empty())
       XC("Tiles array is empty in manifest!",
-         "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet());
+        "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet());
     // Allocate memory for tiles on first image
     clTiles.resize(1);
     CoordList &clFirst = clTiles.front();
@@ -872,13 +868,13 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       { // Must be a valid array
         if(!rjvValue.IsArray())
           XC("Tile array values not valid in manifest!",
-             "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
-             "Index",      clFirst.size());
+            "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
+            "Index",      clFirst.size());
         // Must have at least 4 values
         if(rjvValue.Size() < 4)
           XC("Tile array must have at least four values in manifest!",
-             "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
-             "Index",      clFirst.size(),   "Count",    rjvValue.Size());
+            "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
+            "Index",      clFirst.size(),   "Count",    rjvValue.Size());
         // Enumerate the values and set them in our array
         array<GLfloat, 4> aValues;
         for(unsigned int uiIndex = 0; uiIndex < aValues.size(); ++uiIndex)
@@ -886,9 +882,9 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
           const Value &rjvCoord = rjvValue[uiIndex];
           if(!rjvCoord.IsUint())
             XC("Tile array value is not valid in manifest!",
-               "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
-               "Index",      clFirst.size(),   "Count",    rjvValue.Size(),
-               "SubIndex",   uiIndex);
+              "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
+              "Index",      clFirst.size(),   "Count",    rjvValue.Size(),
+              "SubIndex",   uiIndex);
           // Convert and assign the value
           aValues[uiIndex] = static_cast<GLfloat>(rjvCoord.GetUint());
         } // Add the tile and then process the next tile
@@ -899,7 +895,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   void DeInit()
   { // Texture not loaded? return
     if(IsNotInitialised() || FlagIsSet(TF_DELETE)) return;
-    // Mark texture for deletion (explanation in fbos class)
+    // Mark texture for deletion
     cOgl->SetDeleteTextures(uivTexture);
     // Texture has been marked for deleting
     FlagSet(TF_DELETE);
@@ -921,8 +917,8 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     TextureBase{ ifcPurpose }          // Purpose is specified by caller
     /* -- No code ---------------------------------------------------------- */
     {}
-  /* -- Destructor (Unregistration then deinitialisation) ------------------ */
-  ~Texture() { DeInit(); }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~Texture, DeInit())
 };/* -- Finish the collector ----------------------------------------------- */
 CTOR_END_NOINITS(Textures, Texture, TEXTURE)
 /* -- DeInit Textures ------------------------------------------------------ */

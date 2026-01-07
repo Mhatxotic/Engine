@@ -54,16 +54,16 @@ class Input :                          // Handles keyboard, mouse & controllers
                    lfOnChar,           // Filtered key pressed
                    lfOnDragDrop;       // Drag and dropped files
   /* -- Filtered key pressed ----------------------------------------------- */
-  void OnFilteredKey(const EvtMainEvent &emeEvent)
-  { // Get key pressed
-    const unsigned int uiKey = emeEvent.eaArgs[1].UInt();
+  void InputOnFilteredKey(const EvtMainEvent &emeEvent)
+  { // Get key pressed (Codepoint defined in 'utf.hpp' is same as size_t)
+    const Codepoint cKey = emeEvent.eaArgs[1].SizeT();
     // If console is enabled, send it to console instead
-    if(cConsole->IsVisible()) return cConsole->OnCharPress(uiKey);
+    if(cConsole->IsVisible()) return cConsole->OnCharPress(cKey);
     // Else send the key to lua callbacks
-    lfOnChar.LuaFuncDispatch(uiKey);
+    lfOnChar.LuaFuncDispatch(cKey);
   }
   /* -- Mouse moved -------------------------------------------------------- */
-  void OnMouseMove(const EvtMainEvent &emeEvent)
+  void InputOnMouseMove(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Do not process this event if input disabled on lack of mouse focus
@@ -88,14 +88,14 @@ class Input :                          // Handles keyboard, mouse & controllers
     // co-ordinates to the lua callback handler
     lfOnMouseMove.LuaFuncDispatch(
       UtilScaleValue(dX, DimGetWidth(),
-        cFboCore->fboMain.ffcStage.GetCoLeft(),
-        cFboCore->fboMain.GetCoRight()),
+        cFboCore->FboCoreGetMainStage().CoordsGetLeft(),
+        cFboCore->FboCoreGetMain().CoordsGetRight()),
       UtilScaleValue(dY, DimGetHeight(),
-        cFboCore->fboMain.ffcStage.GetCoTop(),
-        cFboCore->fboMain.GetCoBottom()));
+        cFboCore->FboCoreGetMainStage().CoordsGetTop(),
+        cFboCore->FboCoreGetMain().CoordsGetBottom()));
   }
   /* -- Mouse went inside the window --------------------------------------- */
-  void OnMouseFocus(const EvtMainEvent &emeEvent)
+  void InputOnMouseFocus(const EvtMainEvent &emeEvent)
   { // Get and check state
     const int iState = emeEvent.eaArgs[1].Int();
     switch(iState)
@@ -126,18 +126,18 @@ class Input :                          // Handles keyboard, mouse & controllers
     lfOnMouseFocus.LuaFuncDispatch(iState);
   }
   /* -- Mouse wheel scroll ------------------------------------------------- */
-  void OnMouseWheel(const EvtMainEvent &emeEvent)
+  void InputOnMouseWheel(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get movements
     const double dX = emaArgs[1].Double(), dY = emaArgs[2].Double();
     // If console is enabled and ctrl not pressed? Send it to console instead
-    if(cConsole->IsVisible()) return cConGraphics->OnMouseWheel(dX, dY);
+    if(cConsole->IsVisible()) return cConGfx->ConGfxOnMouseWheel(dX, dY);
     // Set event to lua callbacks
     lfOnMouseScroll.LuaFuncDispatch(dX, dY);
   }
   /* -- Mouse button clicked ----------------------------------------------- */
-  void OnMouseClick(const EvtMainEvent &emeEvent)
+  void InputOnMouseClick(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Set event to lua callbacks
@@ -145,7 +145,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       emaArgs[3].Int());
   }
   /* -- Unfiltered key pressed --------------------------------------------- */
-  void OnKeyPress(const EvtMainEvent &emeEvent)
+  void InputOnKeyPress(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get key code, state and modifier state
@@ -158,15 +158,15 @@ class Input :                          // Handles keyboard, mouse & controllers
     { // Return if key has not been released
       if(iState != GLFW_RELEASE) return;
       // Get inverted full-screen setting
-      const bool bFullScreen = !cCVars->GetInternal<bool>(VID_FS);
+      const bool bFullScreen = !cCVars->CVarsGetInternal<bool>(VID_FS);
       // Set full screen setting depending on current state
       cCVars->SetInternal<bool>(VID_FS, bFullScreen);
       // Send command to toggle full-screen
-      cEvtWin->AddUnblock(EWC_WIN_TOGGLE_FS, bFullScreen);
+      cEvtWin->AddUnblock(EWC_WIN_TOGGLEFS, bFullScreen);
       // Don't send key to guest
       return;
     } // Return if console handled this key
-    else if(cConGraphics->IsKeyHandled(iKey, iState, iMod)) return;
+    else if(cConGfx->ConGfxIsKeyHandled(iKey, iState, iMod)) return;
     // Compare state
     switch(iState)
     { // Key initially pressed down?
@@ -175,7 +175,7 @@ class Input :                          // Handles keyboard, mouse & controllers
         // enabled worked? Ignore first key as registering OnCharPress will
         // trigger this keystroke and print it out in the console.
         if(!iMod && (iKey == iConKey1 || iKey == iConKey2) &&
-           cConGraphics->SetVisible(true))
+           cConGfx->ConGfxSetVisible(true))
           return cConsole->FlagSet(CF_IGNOREKEY);
         // Key not handled so send event to guest
         break;
@@ -200,7 +200,7 @@ class Input :                          // Handles keyboard, mouse & controllers
     lfOnKey.LuaFuncDispatch(iKey, iState, iMod, emaArgs[2].Int());
   }
   /* -- Files dragged and dropped on window--------------------------------- */
-  void OnDragDrop(const EvtMainEvent&)
+  void InputOnDragDrop(const EvtMainEvent&)
   { // Get files and return if empty
     StrVector &vFiles = cGlFW->WinGetFiles();
     if(vFiles.empty()) return;
@@ -211,44 +211,44 @@ class Input :                          // Handles keyboard, mouse & controllers
     vFiles.shrink_to_fit();
   }
   /* -- Window past event--------------------------------------------------- */
-  void OnWindowPaste(const EvtMainEvent&)
+  void InputOnWindowPaste(const EvtMainEvent&)
   { // Get text in clipboard
-    UtfDecoder utfString{ cGlFW->WinGetClipboard() };
+    UtfDecoder udStr{ cGlFW->WinGetClipboard() };
     // For each character, ddd the character to queue if valid
-    while(const unsigned int uiChar = utfString.Next())
-      if(uiChar >= 32) cConsole->OnCharPress(uiChar);
+    while(const Codepoint cChar = udStr.UtfNext())
+      if(cChar >= 32) cConsole->OnCharPress(cChar);
   }
   /* -- Commit cursor visibility ------------------------------------------- */
-  void CommitCursor()
+  void InputCommitCursor()
     { cEvtWin->AddUnblock(EWC_WIN_CURSETVIS, FlagIsSet(IF_CURSOR)); }
   /* -- Set visibility of mouse cursor ------------------------------------- */
-  void SetCursor(const bool bState)
+  void InputSetCursor(const bool bState)
   { // Set member var incase window needs to reinit so we can restore the
     // cursor state
     FlagSetOrClear(IF_CURSOR, bState);
     // Request to set cursor visibility
-    CommitCursor();
+    InputCommitCursor();
   }
   /* -- Reset environment -------------------------------------------------- */
-  void ResetEnvironment()
+  void InputResetEnvironment()
   { // Reset cursor visibility
-    SetCursor(true);
+    InputSetCursor(true);
     // Reset joystick environment
     JoyReset();
   }
   /* -- Update window size from actual glfw window ------------------------- */
-  void UpdateWindowSize() { DimSet(cGlFW->WinGetSize()); }
+  void InputUpdateWindowSize() { DimSet(cGlFW->WinGetSize()); }
   /* -- Request input state ------------------------------------------------ */
-  void RequestMousePosition() const
+  void InputRequestMousePosition() const
     { cEvtWin->AddUnblock(EWC_WIN_CURPOSGET); }
   /* -- Forcefully move the cursor ----------------------------------------- */
-  void SetCursorPos(const GLfloat fX, const GLfloat fY)
+  void InputSetCursorPos(const GLfloat fX, const GLfloat fY)
   { // Expand the stage co-ordinates to actual desktop window co-ordinates
     const GLfloat
-      fAdjX = (fX + -cFboCore->fboMain.ffcStage.GetCoLeft()) /
-        cFboCore->fboMain.GetCoRight() * DimGetWidth(),
-      fAdjY = (fY + -cFboCore->fboMain.ffcStage.GetCoTop()) /
-        cFboCore->fboMain.GetCoBottom() * DimGetHeight(),
+      fAdjX = (fX + -cFboCore->FboCoreGetMainStage().CoordsGetLeft()) /
+        cFboCore->FboCoreGetMain().CoordsGetRight() * DimGetWidth(),
+      fAdjY = (fY + -cFboCore->FboCoreGetMainStage().CoordsGetTop()) /
+        cFboCore->FboCoreGetMain().CoordsGetBottom() * DimGetHeight(),
       // Clamp the new position to the window bounds.
       fNewX = UtilClamp(fAdjX, 0.0f, DimGetWidth() - 1.0f),
       fNewY = UtilClamp(fAdjY, 0.0f, DimGetHeight() - 1.0f);
@@ -260,11 +260,11 @@ class Input :                          // Handles keyboard, mouse & controllers
       static_cast<double>(fY));
   }
   /* -- Forcefully move the cursor to the centre --------------------------- */
-  void SetCursorCentre()
-    { SetCursorPos(cFboCore->GetMatrixWidth() / 2.0f,
-                   cFboCore->GetMatrixHeight() / 2.0f); }
+  void InputSetCursorCentre()
+    { InputSetCursorPos(cFboCore->FboCoreGetMatrixWidth() / 2.0f,
+                        cFboCore->FboCoreGetMatrixHeight() / 2.0f); }
   /* -- Init --------------------------------------------------------------- */
-  void Init()
+  void InputInit()
   { // if window not available? This should never happen but we will put
     // this here just incase. The subsequent operations are pointless without
     // a valid GLFW window. Log that initialisation is being skipped and return
@@ -277,12 +277,13 @@ class Input :                          // Handles keyboard, mouse & controllers
     // Log progress
     cLog->LogDebugSafe("Input interface is initialising...");
     // Init input settings
-    SetLockKeyModEnabled(cCVars->GetInternal<bool>(INP_LOCKKEYMODS));
-    SetRawMouseEnabled(cCVars->GetInternal<bool>(INP_RAWMOUSE));
-    SetStickyKeyEnabled(cCVars->GetInternal<bool>(INP_STICKYKEY));
-    SetStickyMouseEnabled(cCVars->GetInternal<bool>(INP_STICKYMOUSE));
+    InputSetLockKeyModEnabled(cCVars->CVarsGetInternal<bool>(INP_LOCKKEYMODS));
+    InputSetRawMouseEnabled(cCVars->CVarsGetInternal<bool>(INP_RAWMOUSE));
+    InputSetStickyKeyEnabled(cCVars->CVarsGetInternal<bool>(INP_STICKYKEY));
+    InputSetStickyMouseEnabled(
+      cCVars->CVarsGetInternal<bool>(INP_STICKYMOUSE));
     // Set/Restore cursor state
-    SetCursor(FlagIsSet(IF_CURSOR));
+    InputSetCursor(FlagIsSet(IF_CURSOR));
     // Init joystick system
     JoyInit();
     // Log progress
@@ -290,7 +291,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       StrFromBoolTF(GlFWIsRawMouseMotionSupported()), JoyGetCount());
   }
   /* -- DeInit ------------------------------------------------------------- */
-  void DeInit()
+  void InputDeInit()
   { // Ignore if class not initialised
     if(IHNotDeInitialise()) return;
     // Log progress
@@ -300,24 +301,22 @@ class Input :                          // Handles keyboard, mouse & controllers
     // Log progress
     cLog->LogDebugSafe("Input interface deinitialised.");
   }
-  /* -- Destructor ---------------------------------------------- */ protected:
-  DTORHELPER(~Input, DeInit())
-  /* -- Constructor -------------------------------------------------------- */
+  /* -- Constructor --------------------------------------------- */ protected:
   Input() :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Init initialisation helper class
     InputFlags{ IF_NONE },             // No flags set initially
     /* -- Init events for event manager ------------------------------------ */
     EvtMainRegAuto{ cEvtMain, {        // Events list to register
-      { EMC_INP_CHAR,         bind(&Input::OnFilteredKey, this, _1) },
-      { EMC_INP_PASTE,        bind(&Input::OnWindowPaste, this, _1) },
-      { EMC_INP_MOUSE_MOVE,   bind(&Input::OnMouseMove,   this, _1) },
-      { EMC_INP_MOUSE_CLICK,  bind(&Input::OnMouseClick,  this, _1) },
-      { EMC_INP_MOUSE_FOCUS,  bind(&Input::OnMouseFocus,  this, _1) },
-      { EMC_INP_MOUSE_SCROLL, bind(&Input::OnMouseWheel,  this, _1) },
-      { EMC_INP_KEYPRESS,     bind(&Input::OnKeyPress,    this, _1) },
-      { EMC_INP_DRAG_DROP,    bind(&Input::OnDragDrop,    this, _1) },
-      { EMC_INP_JOY_STATE,    bind(&Joystick::OnJoyState, this, _1) },
+      { EMC_INP_CHAR,        bind(&Input::InputOnFilteredKey, this, _1) },
+      { EMC_INP_PASTE,       bind(&Input::InputOnWindowPaste, this, _1) },
+      { EMC_INP_MOUSEMOVE,   bind(&Input::InputOnMouseMove,   this, _1) },
+      { EMC_INP_MOUSECLICK,  bind(&Input::InputOnMouseClick,  this, _1) },
+      { EMC_INP_MOUSEFOCUS,  bind(&Input::InputOnMouseFocus,  this, _1) },
+      { EMC_INP_MOUSESCROLL, bind(&Input::InputOnMouseWheel,  this, _1) },
+      { EMC_INP_KEYPRESS,    bind(&Input::InputOnKeyPress,    this, _1) },
+      { EMC_INP_DRAGDROP,    bind(&Input::InputOnDragDrop,    this, _1) },
+      { EMC_INP_DRAGDROP,    bind(&Joystick::JoyOnState,      this, _1) },
     } },
     /* -- More initialisers ------------------------------------------------ */
     iConKey1(GLFW_KEY_UNKNOWN),        // Init primary console key
@@ -331,48 +330,50 @@ class Input :                          // Handles keyboard, mouse & controllers
     lfOnDragDrop{ "OnDragDrop" }       // Init drag & drop lua event
     /* -- Set global pointer to static class ------------------------------- */
     { cInput = this; }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~Input, InputDeInit())
   /* -- CVar callback to toggle raw mouse -------------------------- */ public:
-  CVarReturn SetRawMouseEnabled(const bool bState)
+  CVarReturn InputSetRawMouseEnabled(const bool bState)
   { // Send request to set raw mouse motion state if enabled
     if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETRAWMOUSE, bState);
     // CVar allowed to be set
     return ACCEPT;
   }
   // -- CVar callback to toggle sticky keys -------------------------------- */
-  CVarReturn SetStickyKeyEnabled(const bool bState)
+  CVarReturn InputSetStickyKeyEnabled(const bool bState)
   { // Send request to set sticky keys state if enabled
     if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETSTKKEYS, bState);
     // CVar allowed to be set
     return ACCEPT;
   }
   // -- CVar callback to toggle lock key mod bits -------------------------- */
-  CVarReturn SetLockKeyModEnabled(const bool bState)
+  CVarReturn InputSetLockKeyModEnabled(const bool bState)
   { // Send request to set lock key mods state if enabled
     if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETLKMODS, bState);
     // CVar allowed to be set
     return ACCEPT;
   }
   // -- CVar callback to toggle sticky mouse ------------------------------- */
-  CVarReturn SetStickyMouseEnabled(const bool bState)
+  CVarReturn InputSetStickyMouseEnabled(const bool bState)
   { // Send request to set sticky mouse if enabled
     if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETSTKMOUSE, bState);
     // CVar allowed to be set
     return ACCEPT;
   }
   /* -- Set first console key ---------------------------------------------- */
-  CVarReturn SetConsoleKey1(const int iK)
+  CVarReturn InputSetConsoleKey1(const int iK)
     { return CVarSimpleSetIntNG(iConKey1, iK, GLFW_KEY_LAST); }
   /* -- Set send joystick events at startup -------------------------------- */
-  CVarReturn SetSendEventsEnabled(const bool bState)
+  CVarReturn InputSetSendEventsEnabled(const bool bState)
     { FlagSetOrClear(IF_INITEVENTS, bState); return ACCEPT; }
   /* -- Set second console key --------------------------------------------- */
-  CVarReturn SetConsoleKey2(const int iK)
+  CVarReturn InputSetConsoleKey2(const int iK)
     { return CVarSimpleSetIntNG(iConKey2, iK, GLFW_KEY_LAST); }
   /* -- Set full screen toggler -------------------------------------------- */
-  CVarReturn SetFSTogglerEnabled(const bool bState)
+  CVarReturn InputSetFSTogglerEnabled(const bool bState)
     { FlagSetOrClear(IF_FSTOGGLER, bState); return ACCEPT; }
   /* -- Set clamp mouse cursor --------------------------------------------- */
-  CVarReturn SetClampMouse(const bool bState)
+  CVarReturn InputSetClampMouse(const bool bState)
     { FlagSetOrClear(IF_CLAMPMOUSE, bState); return ACCEPT; }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

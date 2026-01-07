@@ -72,10 +72,10 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     const size_t stBytesPerPixel = bdBPP / 8;
     Memory mBuffer{ fboRef.DimGetWidth<size_t>() *
       fboRef.DimGetHeight<size_t>() * stBytesPerPixel };
-    // Bind the fbo
+    // Bind the FBO
     GL(cOgl->BindFBO(fboRef.uiFBO), "Failed to bind FBO to dump!",
       "Identifier", fboRef.IdentGet(), "Id", fboRef.uiFBO);
-    // Bind the texture in the fbo
+    // Bind the texture in the FBO
     GL(cOgl->BindTexture(fboRef.uiFBOtex),
       "Failed to bind FBO texture to dump!",
       "Identifier", fboRef.IdentGet(), "Id", fboRef.uiFBOtex);
@@ -84,7 +84,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       "Failed to read FBO pixel data!",
       "Identifier", fboRef.IdentGet(), "Mode", ImageGetPixelFormat(ttMode));
     // Get new filename or original filename
-    IdentSet(strFile.empty() ? StrAppend(cSystem->GetGuestShortTitle(),
+    IdentSet(strFile.empty() ? StrAppend(cSystem->SysGetGuestShortTitle(),
       cmSys.FormatTime("-%Y%m%d-%H%M%S")) : strFile);
     // Log status
     cLog->LogDebugExSafe("SShot '$' screen capture to '$' ($x$x$;$)...",
@@ -98,8 +98,8 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     // Success
     return true;
   }
-  /* -- Dump main fbo ------------------------------------------------------ */
-  void DumpMain() { DumpFBO(cFboCore->fboMain); }
+  /* -- Dump main FBO ------------------------------------------------------ */
+  void DumpMain() { DumpFBO(cFboCore->FboCoreGetMain()); }
   /* -- Default constructor ------------------------------------------------ */
   SShot() :
     /* -- Initialisers ----------------------------------------------------- */

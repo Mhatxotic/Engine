@@ -2,17 +2,17 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## Variables to help with fbos, rendering threading and context.       ## **
+** ## Sets up the built-in pre-defined shaders.                           ## **
 ** ######################################################################### */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IShaders {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICVarDef::P;
-using namespace IFboDef::P;            using namespace ILog::P;
+using namespace IFboCmd::P;            using namespace ILog::P;
 using namespace IOgl::P;               using namespace IShader::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace IShaderDef::P;         using namespace IStd::P;
+using namespace IString::P;            using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Shader core class ==================================================== */
@@ -259,7 +259,7 @@ struct ShaderCore                      // Actual body
         slShader.svRange, slShader.svMatrix, slShader.svKey);
   }
   /* -- Initialise built-in shaders -------------------------------- */ public:
-  void InitShaders()
+  void ShadersInit()
   { // Log initialisation
     cLog->LogDebugExSafe(
       "ShaderCore initialising $ built-in 3D shader objects...",
@@ -281,7 +281,7 @@ struct ShaderCore                      // Actual body
       sh3DBuiltIns.size() + sh2DBuiltIns.size());
   }
   /* -- De-initialise built in shaders ------------------------------------- */
-  void DeInitShaders()
+  void ShadersDeInit()
   { // De-init built-in shaders
     cLog->LogDebugExSafe(
       "ShaderCore de-initialising $ built-in 3D shader objects...",

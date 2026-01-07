@@ -66,9 +66,8 @@ size_t             stBufSize;,,        // Size of each buffer
 /* -- Derived classes ------------------------------------------------------ */
 private LuaEvtMaster<Stream,LuaEvtTypeParam<Stream>>); // Lua event handler
 /* ========================================================================= */
-CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
+CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Ident,                        // Stream file name
   public AsyncLoaderStream,            // Asynchronous loading of Streams
   public LuaEvtSlave<Stream>,          // Lua event system for Stream
   public Lockable,                     // Lua garbage collector instruction
@@ -81,16 +80,16 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
                    vUnQBuffers;        // Unqueued buffers space
   Source          *sCptr;              // A free source to stream to
   ALenum           eFormat;            // Internal format
-  ogg_int64_t      qLivePos,           // Live playback position (external)
-                   qDecPos,            // Decoder playback position (internal)
-                   qLoopBegin,         // Loop start position
-                   qLoopEnd,           // Loop end position
-                   qLoop;              // Loop counter
+  ogg_int64_t      llLivePos,          // Live playback position (external)
+                   llDecPos,           // Decoder playback position (internal)
+                   llLoopBegin,        // Loop start position
+                   llLoopEnd,          // Loop end position
+                   llLoop;             // Loop counter
   StreamPlayState  psState;            // Play state
   ALfloat          fVolume;            // Saved volume
   StrNCStrMap      ssMetaData;         // Metadata strings
   /* -- Updates the PCM position ------------------------------------------- */
-  void UpdatePosition() { qDecPos = qLivePos = ov_pcm_tell(&ovfContext); }
+  void UpdatePosition() { llDecPos = llLivePos = ov_pcm_tell(&ovfContext); }
   /* -- Get time elapsed --------------------------------------------------- */
   ALdouble GetElapsed() { return ov_time_tell(&ovfContext); }
   /* -- Set time elapsed --------------------------------------------------- */
@@ -102,13 +101,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   /* -- Get total time ----------------------------------------------------- */
   ALdouble GetDuration() { return ov_time_total(&ovfContext, -1); }
   /* -- Get PCM bytes duration --------------------------------------------- */
-  ogg_int64_t GetPosition() const { return qLivePos; }
+  ogg_int64_t GetPosition() const { return llLivePos; }
   /* -- Set PCM byte position ---------------------------------------------- */
-  void SetPosition(const ogg_int64_t qNewPos)
-    { ov_pcm_seek(&ovfContext, qNewPos); UpdatePosition(); }
+  void SetPosition(const ogg_int64_t llNewPos)
+    { ov_pcm_seek(&ovfContext, llNewPos); UpdatePosition(); }
   /* -- Set PCM byte position fast ----------------------------------------- */
-  void SetPositionFast(const ogg_int64_t qPosition)
-    { ov_pcm_seek_page(&ovfContext, qPosition); UpdatePosition(); }
+  void SetPositionFast(const ogg_int64_t llPosition)
+    { ov_pcm_seek_page(&ovfContext, llPosition); UpdatePosition(); }
   /* -- Get total PCM samples ---------------------------------------------- */
   ogg_int64_t GetSamples() { return ov_pcm_total(&ovfContext, -1); }
   /* -- Convert stop reason to string -------------------------------------- */
@@ -121,12 +120,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   void Stop(const StreamStopReason srReason)
   { // Don't have source class? There is nothing else to do!
     if(!sCptr) return;
-    // Stop source from playing
+    // Stop source from playing and unload it
     sCptr->Stop();
-    // Go back to unplayed position
-    SetPosition(qLivePos);
-    // Unlock the source so it can be used by other samples and streams
     UnloadSource();
+    // Go back to unplayed position
+    SetPosition(llLivePos);
     // Write debug reason for stoppage
     cLog->LogDebugExSafe("Stream stopped '$'! (R:$<$>;L:$<$>).", IdentGet(),
       StopReasonToString(srReason), srReason, StateReasonToString(psState),
@@ -160,7 +158,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   /* -- Decompression routine (VORBIS->PCM) -------------------------------- */
   bool Rebuffer(const ALuint uiBufferId)
   { // Reseek and rebuffer if looping
-    if(qDecPos >= qLoopEnd) return false;
+    if(llDecPos >= llLoopEnd) return false;
     // Bytes written to buffer and bytes per channel
     size_t stBSize = 0, stBpc;
     // Number of channels as size_t
@@ -180,8 +178,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
         { // Error?
           if(lResult < 0)
             XC("Failed to decode ogg stream to float pcm!",
-               "Identifier", IdentGet(), "Result", lResult,
-               "Reason",     cCodecOGG->GetOggErr(lResult));
+              "Identifier", IdentGet(), "Result", lResult,
+              "Reason",     cCodecOGG->GetOggErr(lResult));
           // Get size as size_t
           const size_t stBytes = static_cast<size_t>(lResult);
           // Converted to float buffer
@@ -207,8 +205,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
         { // Check result
           if(lResult < 0)
             XC("Failed to decode ogg stream to integer pcm!",
-               "Identifier", IdentGet(), "Result", lResult,
-               "Reason",     cCodecOGG->GetOggErr(lResult));
+              "Identifier", IdentGet(), "Result", lResult,
+              "Reason",     cCodecOGG->GetOggErr(lResult));
           // Add bytes read
           stBSize += static_cast<size_t>(lResult);
         } // Break loop when no bytes read
@@ -216,20 +214,20 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
       } // ...until buffer is filled
       while(stBSize < MemSize());
     } // Calculate pcm samples read in 32-bit floats
-    const ogg_int64_t qS = static_cast<ogg_int64_t>(stBSize) /
-                           static_cast<ogg_int64_t>(stBpc) /
-                           static_cast<ogg_int64_t>(stChannels),
+    const ogg_int64_t llS = static_cast<ogg_int64_t>(stBSize) /
+                            static_cast<ogg_int64_t>(stBpc) /
+                            static_cast<ogg_int64_t>(stChannels),
       // Get new position we want to ideally move to next
-      qN = qDecPos + qS;
+      llN = llDecPos + llS;
     // We can play the next part of the audio so set the new position
-    if(qN <= qLoopEnd) qDecPos = qN;
+    if(llN <= llLoopEnd) llDecPos = llN;
     // We cannot play the next part of the audio due to loop end position
     else
     { // Restrict number of samples to play, but don't go over the buffer size
       stBSize = UtilMinimum(MemSize(),
-        static_cast<size_t>(qLoopEnd - qDecPos) * stBpc * stChannels);
+        static_cast<size_t>(llLoopEnd - llDecPos) * stBpc * stChannels);
       // Push forward
-      qDecPos += stBSize;
+      llDecPos += stBSize;
     } // Return failure if no bytes were buffered
     if(!stBSize) return false;
     // Buffer the PCM data if we have some
@@ -244,13 +242,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   }
   /* -- Unload buffers ----------------------------------------------------- */
   void UnloadBuffers()
-  { // If buffers allocated
-    if(vBuffers.empty()) return;
-    // Unload the source, delete and free the buffers
-    UnloadSource();
-    // Check for error and log it
-    ALL(cOal->DeleteBuffers(vBuffers),
-      "Stream '$' failed to delete $ buffers!", IdentGet(), vBuffers.size());
+  { // Unload the buffers if we have them
+    if(!vBuffers.empty())
+      ALL(cOal->DeleteBuffers(vBuffers),
+        "Stream '$' failed to delete $ buffers!", IdentGet(), vBuffers.size());
   }
   /* -- Unload source ------------------------------------------------------ */
   void UnloadSource()
@@ -272,7 +267,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   { // Ignore if we already have buffers
     if(vBuffers.empty())
       XC("Empty sources list!",
-         "Identifier", IdentGet(), "BufferCount", vBuffers.size());
+        "Identifier", IdentGet(), "BufferCount", vBuffers.size());
     // Generate OpenAL buffers
     AL(cOal->CreateBuffers(vBuffers),
       "Failed to generate buffers for stream!",
@@ -292,15 +287,15 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     return false;
   }
   /* -- Get/Set loop ------------------------------------------------------- */
-  void SetLoopBegin(const ogg_int64_t qNewPos) { qLoopBegin = qNewPos; }
-  void SetLoopEnd(const ogg_int64_t qNewPos) { qLoopEnd = qNewPos; }
-  void SetLoopRange(const ogg_int64_t qNBPos, const ogg_int64_t qNEPos)
-    { SetLoopBegin(qNBPos); SetLoopEnd(qNEPos); }
-  void SetLoop(const ogg_int64_t qLoopCount)
+  void SetLoopBegin(const ogg_int64_t llNewPos) { llLoopBegin = llNewPos; }
+  void SetLoopEnd(const ogg_int64_t llNewPos) { llLoopEnd = llNewPos; }
+  void SetLoopRange(const ogg_int64_t llNBPos, const ogg_int64_t llNEPos)
+    { SetLoopBegin(llNBPos); SetLoopEnd(llNEPos); }
+  void SetLoop(const ogg_int64_t llLoopCount)
   { // Set the loop
-    qLoop = qLoopCount;
+    llLoop = llLoopCount;
     // Set loop to the end if we're to finish
-    if(!qLoop) SetLoopEnd(GetSamples());
+    if(!llLoop) SetLoopEnd(GetSamples());
   }
   /* -- Get functions with safe versions---------------------------- */ public:
   bool IsPlaying() const
@@ -315,24 +310,25 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   long GetBitRateLower() const { return viData.bitrate_lower; }
   long GetBitRateWindow() const { return viData.bitrate_window; }
   /* -- Get loop (unsafe functions) ---------------------------------------- */
-  ogg_int64_t GetLoop() const { return qLoop; }
-  ogg_int64_t GetLoopBegin() const { return qLoopBegin; }
-  ogg_int64_t GetLoopEnd() const { return qLoopEnd; }
+  ogg_int64_t GetLoop() const { return llLoop; }
+  ogg_int64_t GetLoopBegin() const { return llLoopBegin; }
+  ogg_int64_t GetLoopEnd() const { return llLoopEnd; }
   /* -- Seek and tell functions (with locks) ------------------------------- */
-  void SetLoopSafe(const ogg_int64_t qLoopCount)
-    { MutexCall([this, qLoopCount](){ SetLoop(qLoopCount); }); }
+  void SetLoopSafe(const ogg_int64_t llLoopCount)
+    { MutexCall([this, llLoopCount](){ SetLoop(llLoopCount); }); }
   ogg_int64_t GetLoopSafe()
     { return MutexCall([this](){ return GetLoop(); }); }
   ogg_int64_t GetLoopBeginSafe()
     { return MutexCall([this](){ return GetLoopBegin(); }); }
   ogg_int64_t GetLoopEndSafe()
     { return MutexCall([this](){ return GetLoopEnd(); }); }
-  void SetLoopBeginSafe(const ogg_int64_t qNewPos)
-    { MutexCall([this, qNewPos](){ SetLoopBegin(qNewPos); }); }
-  void SetLoopEndSafe(const ogg_int64_t qNewPos)
-    { MutexCall([this, qNewPos](){ SetLoopEnd(qNewPos); }); }
-  void SetLoopRangeSafe(const ogg_int64_t qNBPos, const ogg_int64_t qNEPos)
-    { MutexCall([this, qNBPos, qNEPos](){ SetLoopRange(qNBPos, qNEPos); }); }
+  void SetLoopBeginSafe(const ogg_int64_t llNewPos)
+    { MutexCall([this, llNewPos](){ SetLoopBegin(llNewPos); }); }
+  void SetLoopEndSafe(const ogg_int64_t llNewPos)
+    { MutexCall([this, llNewPos](){ SetLoopEnd(llNewPos); }); }
+  void SetLoopRangeSafe(const ogg_int64_t llNBPos, const ogg_int64_t llNEPos)
+    { MutexCall([this, llNBPos, llNEPos]()
+        { SetLoopRange(llNBPos, llNEPos); }); }
   ALdouble GetElapsedSafe()
     { return MutexCall([this](){ return GetElapsed(); }); }
   void SetElapsedSafe(const ALdouble dElapsed)
@@ -343,10 +339,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     { return MutexCall([this](){ return GetDuration(); }); }
   ogg_int64_t GetPositionSafe()
     { return MutexCall([this](){ return GetPosition(); }); }
-  void SetPositionSafe(const ogg_int64_t qNewPos)
-    { MutexCall([this, qNewPos](){ SetPosition(qNewPos); }); }
-  void SetPositionFastSafe(const ogg_int64_t qPosition)
-    { MutexCall([this, qPosition](){ SetPositionFast(qPosition); }); }
+  void SetPositionSafe(const ogg_int64_t llNewPos)
+    { MutexCall([this, llNewPos](){ SetPosition(llNewPos); }); }
+  void SetPositionFastSafe(const ogg_int64_t llPosition)
+    { MutexCall([this, llPosition](){ SetPositionFast(llPosition); }); }
   ogg_int64_t GetSamplesSafe()
     { return MutexCall([this](){ return GetSamples(); }); }
   /* ----------------------------------------------------------------------- */
@@ -414,7 +410,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
               // or slightly before the decoder position instead of at the
               // decoder position which will be way after the live playback
               // position.
-              qLivePos += cOal->GetBufferInt<ogg_int64_t>(uiBuffer, AL_SIZE) /
+              llLivePos += cOal->GetBufferInt<ogg_int64_t>(uiBuffer, AL_SIZE) /
                 // This could be 16 (if no AL_EXT_FLOAT32) or 32.
                 (cOal->GetBufferInt<ogg_int64_t>(uiBuffer, AL_BITS)/8) /
                 // This should always be 1 or 2.
@@ -422,20 +418,20 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
               // Try to rebuffer data to it and if failed?
               if(Rebuffer(uiBuffer)) continue;
               // Run out of loops? Finish playing and stop
-              if(!qLoop)
+              if(!llLoop)
               { // Finish playing, reset position and break
                 psState = PS_FINISHING;
                 SetPosition(0);
                 break;
               } // Seek to start and try rebuffering again and if failed still?
-              SetPosition(qLoopBegin);
+              SetPosition(llLoopBegin);
               if(!Rebuffer(uiBuffer))
               { // Stop playing, reset position and break
                 Stop(SR_RWREBUFFAIL);
                 SetPosition(0);
                 break;
               } // If not looping forever? Reduce count and if zero play to end
-              if(qLoop != -1 && !--qLoop) SetLoopEnd(GetSamples());
+              if(llLoop != -1 && !--llLoop) SetLoopEnd(GetSamples());
             } // Requeue the buffers
             sCptr->QueueBuffers(vUnQBuffers.data(), stBuffersProcessed);
             // Done
@@ -501,12 +497,12 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     { // If we could not rebuffer then we maybe at the end of file
       if(!Rebuffer(vBuffers[stIndex]))
       { // Try to buffer from the loop start
-        SetPosition(qLoopBegin);
+        SetPosition(llLoopBegin);
         // Try to rebuffer again and if failed then throw an error
         if(!Rebuffer(vBuffers[stIndex]))
           XC("Full rebuffer from loop start failed!",
             "Identifier", fmFile.IdentGet(),
-            "LoopBegin", static_cast<uint64_t>(qLoopBegin));
+            "LoopBegin", static_cast<uint64_t>(llLoopBegin));
       } // Increment buffer index
       ++stIndex;
     } // We can't play anything if we couldn't decode to one buffer
@@ -563,7 +559,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
         VorbisParseComments(vcStrings->user_comments, vcStrings->comments));
       vorbis_comment_clear(vcStrings);
       // Write vorbis comments to log if debug mode set
-      if(cLog->HasLevel(LH_DEBUG))
+      if(cLog->LogHasLevel(LH_DEBUG))
         for(const StrNCStrMapPair &sncsmpPair : ssMetaData)
           cLog->LogNLCDebugExSafe("- Vorbis comment: $ -> $.",
             sncsmpPair.first, sncsmpPair.second);
@@ -583,7 +579,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperStream{ cStreams },        // Initialise collector unregistered
     IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
-    AsyncLoaderStream{ *this, this,    // Initialise async loader
+    AsyncLoaderStream{ this,           // Initialise async loader
       EMC_MP_STREAM },                 //   with our streaming event
     LuaEvtSlave{ this,                 // Initialise stream event manager
       EMC_STR_EVENT },                 //   with our stremaing event
@@ -591,31 +587,33 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     viData{},                          // No vorbis information yet
     sCptr(nullptr),                    // No associated OAL source yet
     eFormat(AL_NONE),                  // No OAL format id yet
-    qLivePos(0), qDecPos(0),           // No ext|internal position
-    qLoopBegin(0), qLoopEnd(0),        // No loop start/end position
-    qLoop(0),                          // Do not loop
+    llLivePos(0), llDecPos(0),         // No ext|internal position
+    llLoopBegin(0), llLoopEnd(0),      // No loop start/end position
+    llLoop(0),                         // Do not loop
     psState(PS_STANDBY),               // Current state to standby
     fVolume(1.0f)                      // No volume yet
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Stream()
-  { // Stop any pending async operations
+  DTORHELPER(~Stream,
+    // Stop any pending async operations
     AsyncCancel();
-    // Remove the registration now so it is no longer polled
+    // Remove the collector registration to stop audio thread polling
     ICHelperStream::CollectorUnregister();
-    // Ignore if file data not initialised
+    // Nothing else to do if file data not initialised
     if(fmFile.FileMapClosed()) return;
-    // Synchronise from audio thread and sources management
-    MutexScopedCall([this](){
-      // Unload source and buffers
-      UnloadSourceAndBuffers();
-      // If stream opened? Clear ogg state
-      if(ovfContext.datasource) ov_clear(&ovfContext);
-    }, cParent->MutexGet());
+    // If there is a source?
+    if(sCptr)
+    { // Stop the source, unqueue all buffers, unlock and
+      sCptr->StopAndUnQueueAllBuffers();
+      sCptr->Unlock();
+    } // Unload the buffers
+    UnloadBuffers();
+    // If stream opened? Clear ogg state
+    if(ovfContext.datasource) ov_clear(&ovfContext);
     // Log that the stream was unloaded
     cLog->LogDebugExSafe("Stream unloaded '$'!", IdentGet());
-  }
+  )
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
   /* -- Initialisers ------------------------------------------------------- */
@@ -627,14 +625,14 @@ CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
     "SR_RWBUFFAIL",                    // [3] Rewind/Rebuffer failed
     "SR_GENBUFFAIL",                   // [4] Generate source and buffer failed
     "SR_STOPALL",                      // [5] Stopping all buffers (reset/quit)
-    "SR_LUA",                          // [6] Requested by Lua (guest).
-  }},                                  // Stop reason strings initialised
+    "SR_LUA"                           // [6] Requested by Lua (guest).
+  }, "SR_UNKNOWN" },                   // Stop reason strings initialised
   psStrings{{                          // Initialise play state strings
     "PS_STANDBY",                      // [0] Is not playing
     "PS_PLAYING",                      // [1] Is playing
     "PS_FINISHING",                    // [2] Was stopping (no more data)
     "PS_WASPLAYING",                   // [3] Was playing (audio reset)
-  }},                                  // Play state strings initialised
+  }, "PS_UNKNOWN" },                   // Play state strings initialised
   stBufCount(0),                       // No buffers count yet
   stBufSize(0)                         // No buffer size yet
 ) /* == Manage streams for audio thread ==================================== */

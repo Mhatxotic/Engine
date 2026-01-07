@@ -173,7 +173,7 @@ class CVarItem :                       // Members initially private
   }
   /* ----------------------------------------------------------------------- */
   bool Commit(const MemConst &mcSrc)
-    { return cSql->CVarCommitBlob(GetVar(), mcSrc); }
+    { return cSql->SqlCVarCommitBlob(GetVar(), mcSrc); }
   /* ----------------------------------------------------------------------- */
   CommitResult Commit()
   { // Ignore if variable not modified, force saved or loaded
@@ -183,7 +183,7 @@ class CVarItem :                       // Members initially private
     { // Nothing to do if the flag wasn't loaded from the database
       if(FlagIsClear(LOADED)) return CR_OK_NOTHING_TO_DO;
       // Purge the cvar from the database
-      switch(cSql->CVarPurge(GetVar()))
+      switch(cSql->SqlCVarPurge(GetVar()))
       { case Sql::PR_OK    : return CR_OK_PURGE;
         case Sql::PR_FAIL  : return CR_FAIL_PURGE;
         case Sql::PR_OK_NC : return CR_FAIL_PURGE_NOT_CHANGED;
@@ -223,7 +223,7 @@ class CVarItem :                       // Members initially private
         return CR_FAIL_COMPRESS;
       } // Success
     } // Commit the unencrypted cvar and return if failed
-    else if(!cSql->CVarCommitString(GetVar(), GetValue())) return CR_FAIL;
+    else if(!cSql->SqlCVarCommitString(GetVar(), GetValue())) return CR_FAIL;
     // Successfully saved so remove commit flag
     FlagClear(COMMIT);
     // Success
@@ -290,7 +290,7 @@ class CVarItem :                       // Members initially private
         // Throw exception if requested otherwise return trigger denied code
         if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
           XC("CVar callback denied change!",
-             "Variable", GetVar(), "Value", strNValue);
+            "Variable", GetVar(), "Value", strNValue);
         return CVS_TRIGGERDENIED;
         // The new value is acceptable? Set the new value
       case ACCEPT: SetValue(strNValue); break;
@@ -303,7 +303,7 @@ class CVarItem :                       // Members initially private
         // Throw exception if requested otherwise return trigger denied code
         if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
           XC("CVar callback returned unknown value!",
-             "Variable", GetVar(), "Value", strNValue, "Result", cbrResult);
+            "Variable", GetVar(), "Value", strNValue, "Result", cbrResult);
         return CVS_TRIGGEREXCEPTION;
     } // Free unused memory from cvar
     PruneValue();
@@ -333,8 +333,8 @@ class CVarItem :                       // Members initially private
     { // If we should not abort? Just return error else throw exception
       if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTWRITABLE;
       XC("CVar is not writable from this scope!",
-         "Variable", GetVar(),            "Value", strNValue,
-         "Scope",    cvfcFlags.FlagGet(), "Flags", FlagGet());
+        "Variable", GetVar(),            "Value", strNValue,
+        "Scope",    cvfcFlags.FlagGet(), "Flags", FlagGet());
     } // If integer?
     if(FlagIsSet(TINTEGER))
     { // If number begins with '0x' to denote hexadecimal? Convert specified
@@ -348,25 +348,25 @@ class CVarItem :                       // Members initially private
       { // If we should not abort? Just return error else throw exception
         if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTINTEGER;
         XC("CVar specified is not a valid integer!",
-           "Variable", GetVar(), "Value", strNValue);
+          "Variable", GetVar(), "Value", strNValue);
       } // Deny negative values if unsigned only needed
       if(FlagIsSet(CUNSIGNED) && strNValue.front() == '-')
       { // If we should not abort? Just return error else throw exception
         if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTUNSIGNED;
         XC("CVar specified must be an unsigned integer!",
-           "Variable", GetVar(), "Value", strNValue);
+          "Variable", GetVar(), "Value", strNValue);
       } // Deny non-power of two numbers but allow zero?
       if(FlagIsSet(CNOTEMPTY) && !StrToNum<uint64_t>(strNValue))
       { // If we should not abort? Just return error else throw exception
         if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_ZERO;
         XC("CVar specified must be non-zero!",
-           "Variable", GetVar(), "Value", strNValue);
+          "Variable", GetVar(), "Value", strNValue);
       } // Deny non-power of two numbers?
       if(FlagIsSet(CPOW2) && !StrIsNumPOW2(strNValue))
       { // If we should not abort? Just return error else throw exception
         if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTPOW2;
         XC("CVar specified must be power of two!",
-           "Variable", GetVar(), "Value", strNValue);
+          "Variable", GetVar(), "Value", strNValue);
       } // Next step
       return SetValue(strNValue, ccfcFlags, strCBError);
     } // If float? Bail if not a floating point number
@@ -377,14 +377,14 @@ class CVarItem :                       // Members initially private
         if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
           return CVS_NOTFLOAT;
         XC("CVar specified is not a valid number!",
-           "Variable", GetVar(), "Value", strNValue);
+          "Variable", GetVar(), "Value", strNValue);
       } // Deny negative values if unsigned only needed
       if(FlagIsSet(CUNSIGNED) && strNValue.front() == '-')
       { // If we should not abort? Just return error else throw exception
         if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
           return CVS_NOTUNSIGNED;
         XC("CVar specified must be a non-negative float!",
-           "Variable", GetVar(), "Value", strNValue);
+          "Variable", GetVar(), "Value", strNValue);
       } // Next step
       return SetValue(strNValue, ccfcFlags, strCBError);
     } // Is a boolean?
@@ -408,7 +408,7 @@ class CVarItem :                       // Members initially private
       if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
         return CVS_NOTBOOLEAN;
       XC("CVar specified is not a valid boolean!",
-         "Variable", GetVar(), "Value", strNValue);
+        "Variable", GetVar(), "Value", strNValue);
     } // Is a string?
     if(FlagIsSet(TSTRING))
     { // Trim string if setting requests it and get new result
@@ -430,9 +430,9 @@ class CVarItem :                       // Members initially private
           default: if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
                      return CVS_NOTFILENAME;
                    XC("CVar untrusted path name is invalid!",
-                      "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
-                      "Result",   vrRes,
-                      "Variable", GetVar());
+                     "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
+                     "Result",   vrRes,
+                     "Variable", GetVar());
         }
       } // Check if valid trusted pathname required
       if(FlagIsSet(CTRUSTEDFN))
@@ -444,10 +444,10 @@ class CVarItem :                       // Members initially private
           default : if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
                       return CVS_NOTFILENAME;
                     XC("CVar trusted path name is invalid!",
-                       "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
-                       "Result",   vrRes,
-                       "Variable", GetVar(),
-                       "Path",     strNewValue);
+                      "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
+                      "Result",   vrRes,
+                      "Variable", GetVar(),
+                      "Path",     strNewValue);
         }
       } // Alpha characters only?
       if(FlagIsSet(CALPHA))
@@ -457,27 +457,27 @@ class CVarItem :                       // Members initially private
           if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
             return CVS_NOTALPHANUMERIC;
           XC("CVar specified must only contain alphanumeric characters!",
-             "Variable", GetVar());
+            "Variable", GetVar());
         } // Only letters?
         if(!StrIsAlpha(strNewValue))
         { // If we should not abort? Just return error else throw exception
           if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTALPHA;
           XC("CVar specified must only contain letters!",
-             "Variable", GetVar());
+            "Variable", GetVar());
         }
       } // Must only contain numbers
       else if(FlagIsSet(CNUMERIC) && !StrIsInt(strNewValue))
       { // If we should not abort? Just return error else throw exception
         if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTNUMERIC;
         XC("CVar specified must only contain numeric characters!",
-           "Variable", GetVar());
+          "Variable", GetVar());
       } // Next step
       return SetValue(strNewValue, ccfcFlags, strCBError);
     } // If we should not throw error? Just return code else throw exception
     if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTYPESET;
     XC("CVar type is not set!",
-       "Variable", GetVar(),   "NewValue", strNValue,
-       "OldValue", GetValue(), "Flags",    FlagGet());
+      "Variable", GetVar(),   "NewValue", strNValue,
+      "OldValue", GetValue(), "Flags",    FlagGet());
   }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums ResetValue(const CVarFlagsConst &cvfcFlags,
@@ -493,8 +493,7 @@ class CVarItem :                       // Members initially private
       StdMove(ciOther.GetValue()) },   // Move value
     strDefValue{                       // Default value
       StdMove(ciOther.GetDefValue()) },// Move default value
-    cfTrigger{                         // Trigger
-      StdMove(ciOther.GetTrigger()) }  // Move trigger
+    cfTrigger{ ciOther.GetTrigger() }  // Move trigger
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor -------------------------------------------------------- */

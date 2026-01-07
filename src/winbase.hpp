@@ -8,9 +8,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* == We'll put all these calls in a namespace ============================= */
-class SysBase :                        // Members initially private
-  /* -- Base classes ------------------------------------------------------- */
-  public Ident                         // Mutex name
+class SysBase                          // Members initially private
 { /* -- Custom exceptions -------------------------------------------------- */
   static constexpr const DWORD         // Custom exceptions
     EXCEPTION_ABORT      = 0xF0000001, // Abornmal program termination
@@ -140,7 +138,7 @@ class SysBase :                        // Members initially private
     } // For each parameter. Clamping just incase
     for(DWORD dwParam = 0,
       dwMax = UtilMinimum(erData.NumberParameters,
-                EXCEPTION_MAXIMUM_PARAMETERS);
+                static_cast<DWORD>(EXCEPTION_MAXIMUM_PARAMETERS));
               dwParam < dwMax;
               dwParam += 2)
     { // Write where the access occured
@@ -581,7 +579,7 @@ class SysBase :                        // Members initially private
       SEHSubTitle("Modules");     SEHModuleDump();            osS << "\r\n";
       SEHSubTitle("Processes");   SEHProcessDump();           osS << "\r\n";
       SEHSubTitle("Log");
-      cLog->GetBufferLines(osS);                              osS << "\r\n";
+      cLog->LogGetBufferLines(osS);                           osS << "\r\n";
       SEHSubTitle("End-of-File");
       // Write the log and throw if failed
       SEHWrite(hFile, osS.str());
@@ -699,17 +697,6 @@ class SysBase :                        // Members initially private
   void SetWindowDestroyed() { SetWindowHandle(nullptr); }
   /* ------------------------------------------------------------ */ protected:
   void SetWindowHandle(HWND hwndNew) { hwndWindow = hwndNew; }
-  /* -- Destructor --------------------------------------------------------- */
-  ~SysBase()
-  { // Restore original signal handlers
-    if(fcbFloatingPointException) signal(SIGFPE, fcbFloatingPointException);
-    if(fcbIllegalStorageAccess) signal(SIGSEGV, fcbIllegalStorageAccess);
-    if(fcbAbortCallback) signal(SIGABRT, fcbAbortCallback);
-    // exception filter no longer valid
-    SetUnhandledExceptionFilter(nullptr);
-    // Restore old error mode
-    SetErrorMode(uiOldErrorMode);
-  }
   /* -- Constructor (install exception filter) ----------------------------- */
   SysBase() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -750,6 +737,17 @@ class SysBase :                        // Members initially private
     }}
   /* -- Install unhandled exception filter --------------------------------- */
   { SetUnhandledExceptionFilter(HandleExceptionStatic); }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~SysBase,
+    // Restore original signal handlers
+    if(fcbFloatingPointException) signal(SIGFPE, fcbFloatingPointException);
+    if(fcbIllegalStorageAccess) signal(SIGSEGV, fcbIllegalStorageAccess);
+    if(fcbAbortCallback) signal(SIGABRT, fcbAbortCallback);
+    // exception filter no longer valid
+    SetUnhandledExceptionFilter(nullptr);
+    // Restore old error mode
+    SetErrorMode(uiOldErrorMode);
+  )
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
   LONG WINAPI SysBase::HandleExceptionStatic(LPEXCEPTION_POINTERS \

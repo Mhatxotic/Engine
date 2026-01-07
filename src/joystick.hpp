@@ -36,8 +36,8 @@ class Joystick :
   LuaFunc          lfOnJoyState;       // Joystick lua event
   size_t           stConnected;        // Joysticks connected
   /* -- Event handler for 'glfwSetJoystickCallback' ------------------------ */
-  static void OnGamePad(int iJId, int iEvent)
-    { cEvtMain->Add(EMC_INP_JOY_STATE, iJId, iEvent); }
+  static void JoyOnGamePad(int iJId, int iEvent)
+    { cEvtMain->Add(EMC_INP_JOYSTATE, iJId, iEvent); }
   /* -- Enable or disable joystick polling --------------------------------- */
   void JoyEnablePoll() { bPoll = true; }
   void JoyDisablePoll() { bPoll = false; }
@@ -46,7 +46,7 @@ class Joystick :
     { lfOnJoyState.LuaFuncDispatch(static_cast<lua_Integer>(stJoystickId),
         bConnected); }
   /* -- Joystick state changed ------------------------------------- */ public:
-  void OnJoyState(const EvtMainEvent &emeEvent)
+  void JoyOnState(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get joystick id as int
@@ -164,7 +164,7 @@ class Joystick :
     JoyDisablePoll();
   }
   /* -- Init/DeInit joystick callback -------------------------------------- */
-  void JoyInit() const { GlFWSetJoystickCallback(OnGamePad); }
+  void JoyInit() const { GlFWSetJoystickCallback(JoyOnGamePad); }
   void JoyDeInit() const { GlFWSetJoystickCallback(nullptr); }
   /* -- Constructor --------------------------------------------- */ protected:
   Joystick() :
@@ -178,7 +178,7 @@ class Joystick :
   /* -- Destructor --------------------------------------------------------- */
   ~Joystick() { JoyDeInit(); }
   /* -- Handle a deadzone change ----------------------------------- */ public:
-  CVarReturn SetDefaultJoyDZ(const float fDZ,
+  CVarReturn JoySetDefaultJoyDZ(const float fDZ,
     const function<void(JoyInfo&)> &fcbCallBack)
   { // Return if invalid deadzone else set it and return success
     if(fDZ > 1) return DENY;
@@ -186,12 +186,12 @@ class Joystick :
     return ACCEPT;
   }
   /* -- Set default negative deadzone -------------------------------------- */
-  CVarReturn SetDefaultJoyRevDZ(const float fNewDeadZone)
-    { return SetDefaultJoyDZ(fNewDeadZone, [fNewDeadZone](JoyInfo &jiRef)
+  CVarReturn JoySetDefaultJoyRevDZ(const float fNewDeadZone)
+    { return JoySetDefaultJoyDZ(fNewDeadZone, [fNewDeadZone](JoyInfo &jiRef)
         { jiRef.JoyAxisListSetReverseDeadZone(fNewDeadZone); }); }
   /* -- Set default positive deadzone -------------------------------------- */
-  CVarReturn SetDefaultJoyFwdDZ(const float fNewDeadZone)
-    { return SetDefaultJoyDZ(fNewDeadZone, [fNewDeadZone](JoyInfo &jiRef)
+  CVarReturn JoySetDefaultJoyFwdDZ(const float fNewDeadZone)
+    { return JoySetDefaultJoyDZ(fNewDeadZone, [fNewDeadZone](JoyInfo &jiRef)
         { jiRef.JoyAxisListSetForwardDeadZone(fNewDeadZone); }); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

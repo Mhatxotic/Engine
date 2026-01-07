@@ -23,15 +23,11 @@
 ** ## again - they are only for initialisation.                           ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-class SysProcess :                     // Need this before of System init order
-  /* -- Dependency classes ------------------------------------------------- */
-  private Ident                        // Mutex identifier
+class SysProcess                       // Need this before of System init order
 { /* ------------------------------------------------------------ */ protected:
-  uint64_t         qwSKL,              // Kernel kernel time
-                   qwSUL,              // Kernel user time
-                   qwPKL,              // Process kernel time
-                   qwPUL,              // Process user time
-                   qwPTL;              // Current system time
+  uint64_t         ullSKL, ullSUL,     // Kernel kernel and user time
+                   ullPKL, ullPUL,     // Process kernel and user time
+                   ullPTL;             // Current system time
   /* ----------------------------------------------------------------------- */
   const HMODULE    hKernel;            // Handle to kernel library
   const HANDLE     hProcess;           // Process handle
@@ -40,6 +36,8 @@ class SysProcess :                     // Need this before of System init order
   /* -- Return process and thread id ------------------------------ */ private:
   const DWORD      ulProcessId;        // Process id
   const DWORD      ulThreadId;         // Thread id (WinMain())
+  /* -- Mutex name --------------------------------------------------------- */
+  Ident            idMutex;            // Mutex identifier
   /* ----------------------------------------------------------------------- */
   static BOOL WINAPI EnumWindowsProc(HWND hH, LPARAM lP)
   { // Get title of window and cancel if empty
@@ -170,7 +168,7 @@ class SysProcess :                     // Need this before of System init order
     const int iLine, const wchar_t*const wcpM, const wchar_t*const wcpFmt, ...)
   { // Buffer for formatted data. The maximum size is 1024 bytes. That is
     // 512 wide characters. std::string adds the nullptr for us automatically.
-    wstring wstrFmt; wstrFmt.reserve(511);
+    Reserved<wstring> wstrFmt{ 511 };
     // Use windows api function for this as we're not using the c-lib
     // formatting functions and theres no need to invoke extra exe space.
     va_list vlData;
@@ -189,8 +187,9 @@ class SysProcess :                     // Need this before of System init order
 #if defined(ALPHA)
     const wchar_t*const wcpE, const wchar_t *const wcpFN,
     const wchar_t*const wcpF, const unsigned int uiL, uintptr_t)
-      { XC("C exception!", "Expression", wcpE,  "File", wcpF,
-                           "Function",   wcpFN, "Line", uiL); }
+      { XC("C exception!",
+          "Expression", wcpE,  "File", wcpF,
+          "Function",   wcpFN, "Line", uiL); }
 #else
     const wchar_t*const, const wchar_t*const,
     const wchar_t*const, const unsigned int, uintptr_t)
@@ -225,7 +224,7 @@ class SysProcess :                     // Need this before of System init order
     //   (COINIT_MULTITHREADED|COINIT_SPEED_OVER_MEMORY)
     if(const HRESULT hrResult = CoInitialize(nullptr))
       XC("Failed to initialise COM library!",
-         "Result", static_cast<unsigned int>(hrResult));
+        "Result", static_cast<unsigned int>(hrResult));
     // Prepare common controls initialisation struct
     const INITCOMMONCONTROLSEX iccData{
       sizeof(iccData),                 // DWORD dwSize (Size of struct)
@@ -241,8 +240,10 @@ class SysProcess :                     // Need this before of System init order
     { if(!tParam) XCS(cpStr); return tParam; }
   /* --------------------------------------------------------------- */ public:
   bool InitGlobalMutex(const string_view &strvTitle)
-  { // Convert UTF title to wide string
-    const wstring wstrTitle{ UTFtoS16(strvTitle) };
+  { // Set mutex name
+    idMutex.IdentSet(strvTitle);
+    // Convert UTF title to wide string
+    const wstring wstrTitle{ UTFtoS16(idMutex.IdentGet()) };
     // Create the global mutex handle with the specified name and check error
     hMutex = CreateMutex(nullptr, FALSE, wstrTitle.data());
     switch(const DWORD dwResult = SysErrorCode<DWORD>())
@@ -268,7 +269,7 @@ class SysProcess :                     // Need this before of System init order
         return false;
       // Other error
       default: XCS("Failed to create global mutex object!",
-        "Title",  strvTitle,
+        "Title",  idMutex.IdentGet(),
         "Result", static_cast<unsigned int>(dwResult),
         "mutex",  reinterpret_cast<void*>(hMutex));
     } // Getting here is impossible
@@ -276,11 +277,7 @@ class SysProcess :                     // Need this before of System init order
   /* -- Constructor --------------------------------------------- */ protected:
   SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
-    qwSKL(0),
-    qwSUL(0),
-    qwPKL(0),
-    qwPUL(0),
-    qwPTL(0),
+    ullSKL(0), ullSUL(0), ullPKL(0), ullPUL(0), ullPTL(0),
     hKernel(Test(GetModuleHandle(L"KERNEL32"), "No kernel library handle!")),
     hProcess(Test(GetCurrentProcess(), "No engine process handle!")),
     hInstance(Test(GetModuleHandle(nullptr), "No engine instance handle!")),
@@ -296,8 +293,8 @@ class SysProcess :                     // Need this before of System init order
       ReconfigureMemoryModel();
     }
   /* ----------------------------------------------------------------------- */
-  ~SysProcess()
-  { // Init file handle for storing CRT issues
+  DTORHELPER(~SysProcess,
+    // Init file handle for storing CRT issues
     InitReportMemoryLeaks();
     // Remove debug report hook (because exceptions will crash)
     _CrtSetReportHook2(_CRT_RPTHOOK_REMOVE, CRTException);
@@ -308,8 +305,8 @@ class SysProcess :                     // Need this before of System init order
     // If mutex initialised? Close the handle and log if failed
     if(hMutex && !CloseHandle(hMutex))
       cLog->LogWarningExSafe("System failed to close mutex handle '$'! $.",
-        IdentGet(), SysError());
-  }
+        idMutex.IdentGet(), SysError());
+  )
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
@@ -522,11 +519,11 @@ class SysCore :
   { // Check parameters
     if(!stWidth || !stHeight)
       XC("Supplied icon dimensions invalid!",
-         "Type",  cpType,  "Identifier", strId,
-         "Width", stWidth, "Height",     stHeight);
+        "Type",  cpType,  "Identifier", strId,
+        "Width", stWidth, "Height",     stHeight);
     if(stBits != 24 && stBits != 32)
       XC("Must be 24/32 bpp icon!",
-         "Type", cpType, "Identifier", strId, "Bits", stBits);
+        "Type", cpType, "Identifier", strId, "Bits", stBits);
     if(mcSrc.MemIsEmpty())
       XC("Invalid icon data!", "Type", cpType, "Identifier", strId);
     // Create the icon. CreateIcon() seems to ignore the AND bits
@@ -598,36 +595,36 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   void UpdateCPUUsageData()
   { // Storage for last system times
-    uint64_t qwI, qwK, qwU, qwX;
+    uint64_t ullI, ullK, ullU, ullX;
     // Get system CPU times
-    if(!GetSystemTimes(reinterpret_cast<LPFILETIME>(&qwI),
-                       reinterpret_cast<LPFILETIME>(&qwK),
-                       reinterpret_cast<LPFILETIME>(&qwU))) return;
+    if(!GetSystemTimes(reinterpret_cast<LPFILETIME>(&ullI),
+                       reinterpret_cast<LPFILETIME>(&ullK),
+                       reinterpret_cast<LPFILETIME>(&ullU))) return;
     // Calculate system CPU times
-    const uint64_t qcpuSUser   = qwU - qwSUL,
-                   qcpuSKernel = qwK - qwSKL,
-                   qcpuSysTot  = qcpuSKernel + qcpuSUser;
+    const uint64_t ullSUser   = ullU - ullSUL,
+                   ullSKernel = ullK - ullSKL,
+                   ullSysTot  = ullSKernel + ullSUser;
     // Set system cpu usage
-    cpuUData.dSystem = UtilMakePercentage(qcpuSKernel, qcpuSysTot);
+    cpuUData.dSystem = UtilMakePercentage(ullSKernel, ullSysTot);
     // Update last system times
-    qwSUL = qwU, qwSKL = qwK;
+    ullSUL = ullU, ullSKL = ullK;
     // Get process CPU times
-    if(!GetProcessTimes(hProcess, reinterpret_cast<LPFILETIME>(&qwI),
-                                  reinterpret_cast<LPFILETIME>(&qwX),
-                                  reinterpret_cast<LPFILETIME>(&qwK),
-                                  reinterpret_cast<LPFILETIME>(&qwU))) return;
+    if(!GetProcessTimes(hProcess, reinterpret_cast<LPFILETIME>(&ullI),
+                                  reinterpret_cast<LPFILETIME>(&ullX),
+                                  reinterpret_cast<LPFILETIME>(&ullK),
+                                  reinterpret_cast<LPFILETIME>(&ullU))) return;
     // Get system time
-    GetSystemTimeAsFileTime(reinterpret_cast<LPFILETIME>(&qwX));
+    GetSystemTimeAsFileTime(reinterpret_cast<LPFILETIME>(&ullX));
     // Calculate process CPU time
-    const uint64_t qcpuPUser   = qwU - qwPUL,
-                   qcpuPKernel = qwK - qwPKL,
-                   qcpuPTime   = qwX - qwPTL,
-                   qcpuProcTot = qcpuPKernel + qcpuPUser;
+    const uint64_t ullPUser   = ullU - ullPUL,
+                   ullPKernel = ullK - ullPKL,
+                   ullPTime   = ullX - ullPTL,
+                   ullProcTot = ullPKernel + ullPUser;
     // Update last values
-    qwPUL = qwU, qwPKL = qwK, qwPTL = qwX;
+    ullPUL = ullU, ullPKL = ullK, ullPTL = ullX;
     // Set process cpu usage
     cpuUData.dProcess =
-      UtilMakePercentage(static_cast<double>(qcpuProcTot) / qcpuPTime,
+      UtilMakePercentage(static_cast<double>(ullProcTot) / ullPTime,
         StdThreadMax());
   }
   /* -- Seek to position in specified handle ------------------------------- */
@@ -638,17 +635,17 @@ class SysCore :
     // Convert uint64_t to UINT64. They're normally the same but we'll have
     // this here just to be correct. The compiler will optimise this out
     // anyway.
-    const UINT64 qwP = static_cast<UINT64>(itP);
+    const UINT64 ullP = static_cast<UINT64>(itP);
     // High-order 64-bit value will be sent and returned in this
-    DWORD dwNH = UtilHighDWord(qwP);
+    DWORD dwNH = UtilHighDWord(ullP);
     // Set file pointer
-    const DWORD dwNL = SetFilePointer(hH, UtilLowDWord(qwP),
+    const DWORD dwNL = SetFilePointer(hH, UtilLowDWord(ullP),
       reinterpret_cast<PLONG>(&dwNH), FILE_BEGIN);
     // Build new 64-bit position integer
-    const UINT64 qwNP = UtilMakeQWord(dwNH, dwNL);
+    const UINT64 ullNP = UtilMakeQWord(dwNH, dwNL);
     // Return zero if failed or new position
-    return qwNP == qwP ?
-      static_cast<IntType>(qwNP) : numeric_limits<IntType>::max();
+    return ullNP == ullP ?
+      static_cast<IntType>(ullNP) : numeric_limits<IntType>::max();
   }
   /* -- Get executable size from header ------------------------------------ */
   size_t GetExeSize(const string &strFile) const
@@ -676,13 +673,13 @@ class SysCore :
           sizeof(IMAGE_NT_HEADERS32));
       if(pdhData.e_magic != IMAGE_DOS_SIGNATURE)
         XC("Executable does not have a valid MZ signature!",
-           "File",   strFile, "Requested", IMAGE_DOS_SIGNATURE,
-           "Actual", pdhData.e_magic);
+          "File",   strFile, "Requested", IMAGE_DOS_SIGNATURE,
+          "Actual", pdhData.e_magic);
       // Throw error if it is not valid MZ signature
       if(pnthData.Signature != IMAGE_NT_SIGNATURE)
         XC("Executable does not have a valid PE signature!",
-           "File",   strFile, "Requested", IMAGE_NT_SIGNATURE,
-           "Actual", pnthData.Signature);
+          "File",   strFile, "Requested", IMAGE_NT_SIGNATURE,
+          "Actual", pnthData.Signature);
       // Detect machine type and set pointer to first section
       size_t stHdrSize;
       switch(pnthData.FileHeader.Machine)
@@ -692,7 +689,7 @@ class SysCore :
           stHdrSize = sizeof(IMAGE_NT_HEADERS64); break;
         // Unknown. Bail out!
         default: XC("Could not detect executable header size!",
-                    "File", strFile, "Actual", pnthData.FileHeader.Machine);
+          "File", strFile, "Actual", pnthData.FileHeader.Machine);
       } // Calculate beginning of headers offset
       const size_t stHdrsOffset = pdhData.e_lfanew + stHdrSize;
       // Maximum pointer and size of executable
@@ -948,17 +945,18 @@ class SysCore :
     msD.dwLength = sizeof(msD);
     if(!GlobalMemoryStatusEx(&msD)) return;
     // Set memory data
-    memData.qMTotal = msD.ullTotalPhys;
-    memData.qMFree = msD.ullAvailPhys;
-    memData.qMUsed = msD.ullTotalPhys - msD.ullAvailPhys;
+    memData.ullMTotal = msD.ullTotalPhys;
+    memData.ullMFree = msD.ullAvailPhys;
+    memData.ullMUsed = msD.ullTotalPhys - msD.ullAvailPhys;
+    constexpr const uint64_t ullMax32 = 0x00000000FFFFFFFFULL;
 #if defined(X64)                       // 64-bit?
     memData.stMFree =
-      static_cast<size_t>(UtilMinimum(msD.ullAvailPhys, 0xFFFFFFFF));
+      static_cast<size_t>(UtilMinimum(msD.ullAvailPhys, ullMax32));
 #elif defined(X86)                     // 32-bit?
-    memData.stMFree = msD.ullAvailPhys <= 0xFFFFFFFF ?
+    memData.stMFree = msD.ullAvailPhys <= ullMax32 ?
       static_cast<size_t>(msD.ullAvailPhys) : 0 - pmcData.WorkingSetSize;
 #endif                                 // Bits check
-    memData.dMLoad = UtilMakePercentage(memData.qMUsed, msD.ullTotalPhys);
+    memData.dMLoad = UtilMakePercentage(memData.ullMUsed, msD.ullTotalPhys);
     memData.stMProcUse = pmcData.WorkingSetSize;
     memData.stMProcPeak = pmcData.PeakWorkingSetSize;
   }
@@ -1096,10 +1094,10 @@ class SysCore :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor (only derivable) ---------------------------------------- */
-  ~SysCore()
-  { // Destroy large and small icon if created
+  DTORHELPER(~SysCore,
+    // Destroy large and small icon if created
     if(hIconLarge) DestroyIcon(hIconLarge);
     if(hIconSmall) DestroyIcon(hIconSmall);
-  }
+  )
 }; /* ---------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

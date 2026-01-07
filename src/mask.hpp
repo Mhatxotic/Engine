@@ -24,7 +24,6 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public MemoryVector,                 // Slots for each mask
   public Lockable,                     // Lua garbage collector instruction
-  public Ident,                        // Name of mask object
   public DimInt                        // Size of mask image
 { /* -- Variables ---------------------------------------------------------- */
   size_t           stAlloc;            // Size of all mask bitmaps in array
@@ -209,7 +208,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     if(!uiWidth || !uiHeight ||
        UtilIntWillOverflow<int>(uiWidth) || UtilIntWillOverflow<int>(uiHeight))
       XC("Mask dimensions are invalid!",
-         "Identifier", strName, "Width", uiWidth, "Height", uiHeight);
+        "Identifier", strName, "Width", uiWidth, "Height", uiHeight);
     // Calculate space required, push it into mask list and increment size
     const size_t stLen = (uiWidth * uiHeight) / 8;
     emplace_back(Memory{ stLen });
@@ -272,30 +271,30 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
       UtilIntWillOverflow<int>(uiTileWidth) ||
       UtilIntWillOverflow<int>(uiTileHeight))
         XC("Invalid tile dimensions!",
-           "Identifier", IdentGet(), "Width", uiTileWidth,
-           "Height",     uiTileHeight);
+          "Identifier", IdentGet(), "Width", uiTileWidth,
+          "Height",     uiTileHeight);
     // Get first image slot and show error as we are not reversing this.
     ImageSlot &bData = imC.GetSlots().front();
     // Check bit depth
     if(imC.GetBitsPerPixel() != 1)
       XC("Image is not monochrome!",
-         "Identifier",   IdentGet(),
-         "Width",        bData.DimGetWidth(),
-         "Height",       bData.DimGetHeight(),
-         "BitsPerPixel", imC.GetBitsPerPixel());
+        "Identifier",   IdentGet(),
+        "Width",        bData.DimGetWidth(),
+        "Height",       bData.DimGetHeight(),
+        "BitsPerPixel", imC.GetBitsPerPixel());
     // Check image dimensions too. Again we're dealing with ints!
     if(!bData.DimIsSet() ||
       UtilIntWillOverflow<int>(bData.DimGetWidth()) ||
       UtilIntWillOverflow<int>(bData.DimGetHeight()))
         XC("Invalid image dimensions!",
-           "Identifier", IdentGet(), "Width", bData.DimGetWidth(),
-           "Height",     bData.DimGetHeight());
+          "Identifier", IdentGet(), "Width", bData.DimGetWidth(),
+          "Height",     bData.DimGetHeight());
     // Image is divisible by 8?
     if(!UtilIsDivisible(bData.DimGetWidth<double>() / 8) ||
        !UtilIsDivisible(bData.DimGetHeight<double>() / 8))
       XC("Image dimensions are not divisible by eight!",
-         "Identifier", IdentGet(), "Width", bData.DimGetWidth(),
-         "Height",     bData.DimGetHeight());
+        "Identifier", IdentGet(), "Width", bData.DimGetWidth(),
+        "Height",     bData.DimGetHeight());
     // Get reference to the image memory and if no tiling needed?
     if(bData.DimGetWidth() == uiTileWidth &&
        bData.DimGetHeight() == uiTileHeight)

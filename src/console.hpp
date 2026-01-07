@@ -89,7 +89,7 @@ struct Console :                       // Members initially private
                    sstPageLinesNeg;    // As above but negative version
   RedrawFlags      rfDefault,          // Default redraw type
                    rfFlags;            // Redraw flags
-  Colour           cTextColour;        // Console text colour
+  ConColour        ccTextColour;       // Console text colour
   /* -- Text mode ---------------------------------------------------------- */
   ClockInterval<>  ciOutputRefresh,    // Next screen buffer update time
                    ciInputRefresh;     // Time to wait before next peek
@@ -249,13 +249,13 @@ struct Console :                       // Members initially private
     if(const Args aList{ strCmd }) ExecuteArguments(strCmd, aList);
   }
   /* -- OnCharPress --------------------------- Console character pressed -- */
-  void OnCharPress(const unsigned int uiKey)
+  void OnCharPress(const Codepoint cKey)
   { // Ignore first key? Ignore it
     if(FlagIsSet(CF_IGNOREKEY)) return FlagClear(CF_IGNOREKEY);
     // Insert character if insert mode is on
-    if(FlagIsSet(CF_INSERT)) AddInputChar(uiKey);
+    if(FlagIsSet(CF_INSERT)) AddInputChar(cKey);
     // Repalce character in input buffer
-    else ReplaceInputChar(uiKey);
+    else ReplaceInputChar(cKey);
     // Reset autocomplete
     AutoCompleteReset();
   }
@@ -395,7 +395,8 @@ struct Console :                       // Members initially private
   void SetVarInput(const string &strVar)
   { // Return if the cvar doesn't exist
     const CVarMapIt cvmMapIt{ cCVars->FindVariable(strVar) };
-    if(cvmMapIt == cCVars->GetVarListEnd()) return AddLine("No such cvar!");
+    if(cvmMapIt == cCVars->GetVarListEnd())
+      return ConsoleAddLine("No such cvar!");
     // Get cvar item data and copy it to input buffer
     const CVarItem &cviItem = cvmMapIt->second;
     SetInput(StrFormat("$ \"$\"", cviItem.GetVar(), cviItem.GetValue()));
@@ -408,8 +409,7 @@ struct Console :                       // Members initially private
     if(slriInputPosition == slHistory.crend())
       slriInputPosition = slHistory.crbegin();
     // Move back towards beginning of list if we can
-    else if(next(slriInputPosition) != slHistory.crend())
-      ++slriInputPosition;
+    else if(next(slriInputPosition) != slHistory.crend()) ++slriInputPosition;
     // Set new input
     SetInput(*slriInputPosition);
   }
@@ -448,21 +448,20 @@ struct Console :                       // Members initially private
     SetRedraw();
   }
   /* -- Input manipulation ------------------------------------------------- */
-  void AddInputChar(const unsigned int uiChar)
+  void AddInputChar(const Codepoint cChar)
   { // Make sure line is under max characters
-    if(strConsoleBegin.size() + strConsoleEnd.size() >= stMaxInputLine)
-      return;
+    if(strConsoleBegin.size() + strConsoleEnd.size() >= stMaxInputLine) return;
     // Encode character to utf-8
-    UtfAppend(uiChar, strConsoleBegin);
+    UtfAppend(cChar, strConsoleBegin);
     // Redraw the buffer, it changed
     SetRedraw();
   }
   /* -- Input manipulation ------------------------------------------------- */
-  void ReplaceInputChar(const unsigned int uiChar)
+  void ReplaceInputChar(const Codepoint cChar)
   { // Add character if we are at the end of the line input
-    if(strConsoleEnd.empty()) return AddInputChar(uiChar);
+    if(strConsoleEnd.empty()) return AddInputChar(cChar);
     // Encode character to utf-8
-    UtfAppend(uiChar, strConsoleBegin);
+    UtfAppend(cChar, strConsoleBegin);
     // Remove character from beginning of end of line input
     UtfPopFront(strConsoleEnd);
     // Redraw the buffer, it changed
@@ -478,14 +477,14 @@ struct Console :                       // Members initially private
   /* -- Returns if the console should be visible --------------------------- */
   bool IsVisible() { return FlagIsSet(CF_ENABLED); }
   bool IsNotVisible() { return !IsVisible(); }
-  /* -- Sets redraw flag so the console fbo or terminal buffer is redrawn -- */
+  /* -- Sets redraw flag so the buffer is redrawn -------------------------- */
   void SetRedraw()
     { GetRedrawFlags().FlagReset(GetDefaultRedrawFlags().FlagIsSet(RD_TEXT) ||
         IsVisible() ? GetDefaultRedrawFlags() : RD_NONE); }
   /* -- Returns if we should be hiding the graphical console --------------- */
   bool IsHidingGraphicalConsole()
-    { return cSystem->IsTextMode() &&
-             !cCVars->GetInternal<bool>(CON_GCWTERM); }
+    { return cSystem->SysIsTextMode() &&
+             !cCVars->CVarsGetInternal<bool>(CON_GCWTERM); }
   /* -- Do Set Console status ---------------------------------------------- */
   bool SetVisible(const bool bState)
   { // Can't change state?
@@ -613,7 +612,7 @@ struct Console :                       // Members initially private
           // Copy to clipboard
           if(FlagIsSet(CF_AUTOCOPYCVAR))
             cGlFW->WinSetClipboardString(StrFormat("$ \"$\"",
-              strVarOrCmd, cCVars->GetInitialVar(strVarOrCmd)));
+              strVarOrCmd, cCVars->CVarsGetInitialVar(strVarOrCmd)));
         } // Set the value and say if it worked
         else if(cCVars->SetExistingInitialVar(strVarOrCmd, aList[1]))
           osS << "was set to '" << aList[1] << "'!";
@@ -622,21 +621,21 @@ struct Console :                       // Members initially private
       } // Cvar doesn't exist
       else osS << "Bad command or cvar name!";
       // Write result
-      AddLine(osS.str());
+      ConsoleAddLine(osS.str());
     } // Command found?
     else
     { // Get data structure and check if enough parameters specified
       const ConLib &clData = cmciIt->second;
       if(clData.uiMinimum && aList.size() < clData.uiMinimum)
-        AddLine("Required parameter missing!");
+        ConsoleAddLine("Required parameter missing!");
       else if(clData.uiMaximum && aList.size() > clData.uiMaximum)
-        AddLine("Too many parameters!");
+        ConsoleAddLine("Too many parameters!");
       // Enough parameters so capture exceptions so we can't halt execution
-      else try { clData.ccbFunc(aList); }
+      else try { clData.ccfFunc(aList); }
       // exception did occur
       catch(const exception &eReason)
       { // Print the output in the console
-        AddLineA("Console CB failed! > ", eReason);
+        ConsoleAddLineA("Console CB failed! > ", eReason);
         // Force the console to be shown because the callback might have
         // hidden the console
         SetVisible(true);
@@ -661,7 +660,8 @@ struct Console :                       // Members initially private
     // and compensates for a growing queue. At minimum the number of elements
     // or the most of half of the number of elements or five.
     size_t stLines =
-      UtilMinimum(clqOutput.size(), UtilMaximum(5, clqOutput.size()/4));
+      UtilMinimum(clqOutput.size(), UtilMaximum(clqOutput.size() / 4,
+        static_cast<size_t>(5)));
     // Calculate total lines
     const size_t stTotal = size() + stLines;
     // If writing this many lines wouldn't fit in the log, then the log needs
@@ -719,7 +719,7 @@ struct Console :                       // Members initially private
   void SetStatusLeft(const string &strValue) { strStatusLeft = strValue; }
   void SetStatusRight(const string &strValue) { strStatusRight = strValue; }
   /* -- Clear both statuses ------------------------------------------------ */
-  void ClearStatus()
+  void ConsoleClearStatus()
   { // Clear left if empty
     if(!strStatusLeft.empty())
     { // Clear left and right side text
@@ -733,21 +733,92 @@ struct Console :                       // Members initially private
     SetRedraw();
   }
   /* -- Tick for stdout render --------------------------------------------- */
-  void FlushToTerminal()
-  { // If there are console lines in the queue?
-    while(!clqOutput.empty())
-    { // Get next item
-      const ConLine &clLine = clqOutput.front();
-      // Print line to output
-      fwprintf(stdout, L"\033[%um[%.6f]<!> %ls\033[0m\n",
-        clLine.cColour, clLine.dTime,
-          UtfDecoder{ clLine.strLine }.Wide().data());
-      // remove the old item
-      clqOutput.pop();
-    }
+  void ConsoleFlushToTerminal()
+  { // Return if no data
+    if(clqOutput.empty()) return;
+    // Setup output
+    wcout << fixed << setprecision(6) << setfill(static_cast<wchar_t>('0'))
+          << left << setw(0);
+    // Get next item
+    NextLine: const ConLine &clLine = clqOutput.front();
+    // Start writing initial part of output
+    wcout <<
+      // Add bold ANSI on anything but windows
+#if !defined(WINDOWS)
+      "\x1b[1m"
+#endif
+      // Write the time the console line was submitted
+      "[" << clLine.dTime << "]<O> ";
+    // Scan text as UTF-8
+    UtfDecoder udLine{ clLine.strLine };
+    // Get next character
+    NextChar: switch(const Codepoint cChar = udLine.UtfNext())
+    { // Carriage return or space char? Restore position and return no wrap
+      case '\n': wcout << endl; goto NextChar;
+      // Other control character?
+      case '\r':
+      { // Compare it
+        switch(udLine.UtfNext())
+        { // Colour change requested?
+          case 'c':
+          { // Scan for the hexadecimal value and ignore it
+            unsigned int uiCol;
+            // Write ANSI underline value in anything but Windows
+#if defined(WINDOWS)
+            udLine.UtfScanValue(uiCol);
+#else
+            if(udLine.UtfScanValue(uiCol) == 8) wcout << "\x1b[4m";
+#endif
+            // Next character
+            goto NextChar;
+          } // Outline colour change requested?
+          case 'o':
+          { // Scan for the hexadecimal value and ignore it
+            unsigned int uiCol;
+            // Write ANSI italic value in anything but Windows
+#if defined(WINDOWS)
+            udLine.UtfScanValue(uiCol);
+#else
+            if(udLine.UtfScanValue(uiCol) == 8) wcout << "\x1b[3m";
+#endif
+            // Next character
+            goto NextChar;
+          } // Texture change requested?
+          case 't':
+          { // Scan for the hexadecimal value and ignore it
+            unsigned int uiCol;
+            udLine.UtfScanValue(uiCol);
+            // Next character
+            goto NextChar;
+          } // Reset colour (ignore it)
+          case 'r':
+          { // Write ANSI reset value in anything but Windows
+#if !defined(WINDOWS)
+            wcout << "\x1b[0m\x1b[1m";
+#endif
+            // Next character
+            goto NextChar;
+          } // Invalid control character
+          default: goto NextChar;
+          // Finished
+          case '\0': break;
+        } // Finished
+        break;
+      } // Other character?
+      default: wcout << static_cast<wchar_t>(cChar); goto NextChar;
+      // Finished
+      case '\0': break;
+    } // Finished so remove attributes in terminal
+#if !defined(WINDOWS)
+    wcout << "\x1b[0m" << endl;
+#endif
+    // remove the old item
+    clqOutput.pop();
+    // Goto next line if there are no lines left
+    if(!clqOutput.empty()) goto NextLine;
   }
   /* -- Tick for bot render ------------------------------------------------ */
-  void FlushToLog()
+  void ConsoleFlushToLog()
   { // Process queued console log lines
     MoveQueuedLines();
     // If thread delay enabled and input polling interval ready to poll?
@@ -783,12 +854,12 @@ struct Console :                       // Members initially private
     if(ciOutputRefresh.CITriggerStrict())
     { // Update memory and cpu status
       cSystem->UpdateMemoryUsageData();
-      cSystem->UpdateCPUUsage();
+      cSystem->SysUpdateCPUUsage();
       // Redraw title
       cSystem->RedrawTitleBar(StrFormat("CPU:$$$%$  FPS:$  MEM:$  NET:$  UP:$",
         fixed, setprecision(1), cSystem->CPUUsage(), setprecision(0),
         cTimer->TimerGetFPS(), StrToBytes(cSystem->RAMProcUse(), 0),
-        cSockets->stConnected.load(),
+        cSockets->astConnected.load(),
         StrShortFromDuration(cLog->CCDeltaToDouble(), 0)),
         cmSys.FormatTime(strvTimeFormat.data()));
       // Not redrawing?
@@ -836,15 +907,15 @@ struct Console :                       // Members initially private
   /* -- Register console command ------------------------------------------- */
   const CmdMapIt RegisterCommand(const string &strName,
     const unsigned int uiMin, const unsigned int uiMax,
-    const ConCbFunc ccbFunc)
+    const ConCbFunc ccfFunc)
   { // Insert trusted command into commands list
     return cmMap.insert({ strName,
-      { strName, uiMin, uiMax, CFL_BASIC, ccbFunc } }).first;
+      { strName, uiMin, uiMax, CFL_BASIC, ccfFunc } }).first;
   }
   /* -- Unregister console command ----------------------------------------- */
   void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
   /* -- Add line as string with specified text colour ---------------------- */
-  void AddLine(const Colour cColour, const string &strText)
+  void ConsoleAddLine(const ConColour ccColour, const string &strText)
   { // Tokenise lines into a list limited by the maximum number of lines.
     if(const TokenList tlLines{
       strText, cCommon->CommonLf(), GetOutputMaximum() })
@@ -853,36 +924,37 @@ struct Console :                       // Members initially private
       for(const string &strLine : tlLines)
       { // Move the line across if it is long enough
         if(strLine.length() <= stMaxOutputLine)
-          clqOutput.push({ dTime, cColour, StdMove(strLine) });
+          clqOutput.push({ dTime, ccColour, StdMove(strLine) });
         // Push a truncated line
-        else clqOutput.push({ dTime, cColour,
+        else clqOutput.push({ dTime, ccColour,
           strLine.substr(0, stMaxOutputLineE) + cCommon->CommonEllipsis() });
       }
     }
   }
   /* -- Add line as string with default text colour ------------------- */
-  void AddLine(const string &strText) { AddLine(cTextColour, strText); }
+  void ConsoleAddLine(const string &strText)
+    { ConsoleAddLine(ccTextColour, strText); }
   /* -- Formatted console output ------------------------------------------- */
   template<typename ...VarArgs>
-    void AddLineF(const char*const cpFormat, VarArgs &&...vaArgs)
-      { AddLine(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
+    void ConsoleAddLineF(const char*const cpFormat, VarArgs &&...vaArgs)
+      { ConsoleAddLine(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output with colour ------------------------------- */
   template<typename ...VarArgs>
-    void AddLineF(const Colour cColour, const char*const cpFormat,
+    void ConsoleAddLineF(const ConColour ccColour, const char*const cpFormat,
       VarArgs &&...vaArgs)
-        { AddLine(cColour,
+        { ConsoleAddLine(ccColour,
             StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output using StrAppend() ------------------------- */
   template<typename ...VarArgs>
-    void AddLineAC(const Colour cColour, VarArgs &&...vaArgs)
-      { AddLine(cColour, StrAppend(StdForward<VarArgs>(vaArgs)...)); }
+    void ConsoleAddLineAC(const ConColour ccColour, VarArgs &&...vaArgs)
+      { ConsoleAddLine(ccColour, StrAppend(StdForward<VarArgs>(vaArgs)...)); }
   template<typename ...VarArgs>
-    void AddLineA(VarArgs &&...vaArgs)
-      { AddLineAC(cTextColour, StdForward<VarArgs>(vaArgs)...); }
+    void ConsoleAddLineA(VarArgs &&...vaArgs)
+      { ConsoleAddLineAC(ccTextColour, StdForward<VarArgs>(vaArgs)...); }
   /* -- Print version information ------------------------------------------ */
   void PrintVersion()
   { // Show engine version
-    AddLineF(
+    ConsoleAddLineF(
       "$ ($) version $.$.$ build $ for $.\n"
       "Compiled $ using $ version $.\n"
       "Copyright \xC2\xA9 $, 2006-$. All Rights Reserved.",
@@ -892,9 +964,9 @@ struct Console :                       // Members initially private
       cSystem->ENGCompVer(), cSystem->ENGAuthor(), cmSys.FormatTime("%Y"));
     // Add disclaimer that the author of the engine disclaims all liability for
     // guest software actions and user usage.
-    AddLine(COLOUR_RED, "Disclaimer: This scripting ENGINE is designed ONLY "
-      "for legitimate and lawful multimedia solutions and is provided AS IS "
-      "with ZERO warranty. It also contains very strong cryptographic "
+    ConsoleAddLine(COLOUR_RED, "Disclaimer: This scripting ENGINE is designed "
+      "ONLY for legitimate and lawful multimedia solutions and is provided AS "
+      "IS with ZERO warranty. It also contains very strong cryptographic "
       "technologies which might not be allowed to be imported in your "
       "country. By using this software, whether you are the GUEST author or "
       "the END user, you accept that the ENGINE author and ALL the authors of "
@@ -902,20 +974,20 @@ struct Console :                       // Members initially private
       "liability for how the GUEST author or the END user chooses to use this "
       "software.");
     // Write guest info in a different colour
-    AddLineF(COLOUR_GREEN, "Guest is $ ($) version $ by $.",
-      cSystem->GetGuestTitle(), cSystem->GetGuestShortTitle(),
-      cSystem->GetGuestVersion(), cSystem->GetGuestAuthor());
+    ConsoleAddLineF(COLOUR_GREEN, "Guest is $ ($) version $ by $.",
+      cSystem->SysGetGuestTitle(), cSystem->SysGetGuestShortTitle(),
+      cSystem->SysGetGuestVersion(), cSystem->SysGetGuestAuthor());
     // Get optional variables
-    if(!cSystem->GetGuestCopyright().empty())
-      AddLineAC(COLOUR_GREEN, cSystem->GetGuestCopyright(), '.');
-    if(!cSystem->GetGuestDescription().empty())
-      AddLineAC(COLOUR_GREEN, cSystem->GetGuestDescription(), '.');
-    if(!cSystem->GetGuestWebsite().empty())
-      AddLineF(COLOUR_GREEN, "Visit $ for more info, help and updates.",
-        cSystem->GetGuestWebsite());
+    if(!cSystem->SysGetGuestCopyright().empty())
+      ConsoleAddLineAC(COLOUR_GREEN, cSystem->SysGetGuestCopyright(), '.');
+    if(!cSystem->SysGetGuestDescription().empty())
+      ConsoleAddLineAC(COLOUR_GREEN, cSystem->SysGetGuestDescription(), '.');
+    if(!cSystem->SysGetGuestWebsite().empty())
+      ConsoleAddLineF(COLOUR_GREEN, "Visit $ for more info, help and updates.",
+        cSystem->SysGetGuestWebsite());
   }
   /* -- Print a string using textures -------------------------------------- */
-  void Init()
+  void ConsoleInit()
   { // Class intiialised
     IHInitialise();
     // Log progress
@@ -924,7 +996,7 @@ struct Console :                       // Members initially private
     // Reset cursor position
     clriPosition = rbegin();
     // Using text mode? Reset text flag
-    if(cSystem->IsTextMode()) GetDefaultRedrawFlags().FlagReset(RD_TEXT);
+    if(cSystem->SysIsTextMode()) GetDefaultRedrawFlags().FlagReset(RD_TEXT);
     // Redraw the console
     SetRedraw();
     // Initially shown and not closable
@@ -933,9 +1005,9 @@ struct Console :                       // Members initially private
     PrintVersion();
     // Iterate each item and register command if required core flags match
     for(const ConLibStatic &clCmd : ccslInt)
-      if(cSystem->IsCoreFlagsHave(clCmd.cfcRequired))
+      if(cSystem->SysIsCoreFlagsHave(clCmd.cfcRequired))
         RegisterCommand(string(clCmd.strvName), clCmd.uiMinimum,
-          clCmd.uiMaximum, clCmd.ccbFunc);
+          clCmd.uiMaximum, clCmd.ccfFunc);
       // Write in log to say we skipped registration of this command
       else cLog->LogDebugExSafe(
         "Console ignoring registration of command '$'.", clCmd.strvName);
@@ -944,7 +1016,7 @@ struct Console :                       // Members initially private
       cmMap.size(), ccslInt.size());
   }
   /* -- DeInit ------------------------------------------------------------- */
-  void DeInit()
+  void ConsoleDeInit()
   { // Ignore if already deinitialised
     if(IHNotDeInitialise()) return;
     // Log progress
@@ -990,7 +1062,7 @@ struct Console :                       // Members initially private
     sstPageLinesNeg(0),                // No neg page up/down lines setting
     rfDefault{ RD_NONE },              // Default redraw initially set by Init
     rfFlags{ RD_NONE },                // Redraw type
-    cTextColour(COLOUR_WHITE),         // Default white text colour
+    ccTextColour(COLOUR_WHITE),        // Default white text colour
     acFlags{ AC_NONE },                // No autocomplete flags
     acisciCurrent{ acisList.cend() },  // Autocomplete not initialised
     ccslInt{ ccslDef }                 // Set default commands list
@@ -1021,7 +1093,7 @@ struct Console :                       // Members initially private
   { // Deny if out of range
     if(stChars < 256 ||
        stChars > UtilMinimum(UtilMinimum(strConsoleBegin.max_size(),
-                                         strConsoleEnd.max_size()), 16384))
+         strConsoleEnd.max_size()), static_cast<size_t>(16384)))
       return DENY;
     // Reserve buffer sizes for console input
     strConsoleBegin.reserve(stChars);
@@ -1102,8 +1174,8 @@ struct Console :                       // Members initially private
       return ACCEPT; }
   /* -- Set console text colour -------------------------------------------- */
   CVarReturn TextForegroundColourModified(const unsigned int uiNewColour)
-    { return CVarSimpleSetIntNG(cTextColour, static_cast<Colour>(uiNewColour),
-        COLOUR_MAX); }
+    { return CVarSimpleSetIntNG(ccTextColour,
+        static_cast<ConColour>(uiNewColour), COLOUR_MAX); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

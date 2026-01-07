@@ -43,7 +43,7 @@ class CodecMP3 :                       // MP3 codec object
     if(const int iResult = mp3dec_load_buf(&mpdContext,
       fmData.MemPtr<uint8_t>(), iSize, &mfiData, nullptr, nullptr))
         XC("Failure decoding MPEG data!",
-            "Code", iResult, "Reason", Get(iResult));
+          "Code", iResult, "Reason", Get(iResult));
     // This decoder doesn't track the buffer it allocated so we'll just take it
     pdData.aPcmL =
       { static_cast<size_t>(mfiData.samples)*sizeof(mp3d_sample_t),
@@ -57,7 +57,7 @@ class CodecMP3 :                       // MP3 codec object
     // Check that format is supported in OpenAL
     if(!pdData.ParseOALFormat())
       XC("MPEG decoded PCM data not supported by AL!",
-         "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
+        "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
     // Successfully decoded
     return true;
   }

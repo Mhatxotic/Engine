@@ -137,7 +137,7 @@ class CodecDDS :                       // GIF codec object
     const unsigned int uiPFFlags = fmData.FileMapReadVar32LE();
     if(uiPFFlags & ~DDPF_MASK)
       XC("Unsupported pixel format flags!",
-         "Flags", uiPFFlags, "Mask", DDPF_MASK);
+        "Flags", uiPFFlags, "Mask", DDPF_MASK);
     // Carry on reading flags
     const unsigned int uiPFFourCC = fmData.FileMapReadVar32LE();
     // Read FOURCC data
@@ -156,7 +156,7 @@ class CodecDDS :                       // GIF codec object
         case FOURCC_DXT5: idData.SetPixelType(TT_DXT5); break;
         // Unknown compression
         default: XC("Only DXT1, DXT3 or DXT5 FourCC format supported!",
-                    "Type", uiPFFourCC);
+          "Type", uiPFFourCC);
       } // All formats are 32-bpp and compressed
       idData.SetBitsAndBytesPerPixel(BD_RGBA);
       idData.SetCompressed();
@@ -180,8 +180,8 @@ class CodecDDS :                       // GIF codec object
               idData.SetPixelType(TT_BGRA);
             // Unsupported RGBA order
             else XC("Unsupported RGBA pixel assignments!",
-                   "RedBitMask",   uiPFRBitMask, "GreenBitMask", uiPFGBitMask,
-                   "BlueBitMask",  uiPFBBitMask, "AlphaBitMask", uiPFABitMask);
+              "RedBitMask",   uiPFRBitMask, "GreenBitMask", uiPFGBitMask,
+              "BlueBitMask",  uiPFBBitMask, "AlphaBitMask", uiPFABitMask);
             // Done
             break;
           // GRAY+ALPHA Pixels?
@@ -190,8 +190,8 @@ class CodecDDS :                       // GIF codec object
             if(uiPFRBitMask != 0xff || uiPFGBitMask != 0xff ||
                uiPFBBitMask != 0xff || uiPFABitMask != 0xff00)
               XC("Unsupported LUMINANCE ALPHA pixel assignments!",
-                 "RedBitMask",   uiPFRBitMask, "GreenBitMask", uiPFGBitMask,
-                 "BlueBitMask",  uiPFBBitMask, "AlphaBitMask", uiPFABitMask);
+                "RedBitMask",   uiPFRBitMask, "GreenBitMask", uiPFGBitMask,
+                "BlueBitMask",  uiPFBBitMask, "AlphaBitMask", uiPFABitMask);
             // Set 32-bits per pixel and LUMINANCE ALPHA pixel type
             idData.SetBitsAndBytesPerPixel(BD_GRAYALPHA);
             idData.SetPixelType(TT_GRAYALPHA);
@@ -199,14 +199,14 @@ class CodecDDS :                       // GIF codec object
             break;
           // Unsupported?
           default: XC("Detected RGBA but bit-depth not supported!",
-                      "PixelFormatBitCount", uiPFRGBBitCount);
+            "PixelFormatBitCount", uiPFRGBBitCount);
         }
       } // No alpha pixels?
       else
       { // Bit count must be 24 (BD_GRAY doesn't use this).
         if(uiPFRGBBitCount != BD_RGB)
           XC("Detected RGB but bit-depth not supported!",
-             "PixelFormatBitCount", uiPFRGBBitCount);
+            "PixelFormatBitCount", uiPFRGBBitCount);
         // Set RGBA bit-depth and byte depth
         idData.SetBitsAndBytesPerPixel(BD_RGB);
         // Pixels are in RGB order?
@@ -219,21 +219,21 @@ class CodecDDS :                       // GIF codec object
           idData.SetPixelType(TT_BGR);
         // Unsupported RGB order
         else XC("Unsupported RGB pixel assignments!",
-                "RedBitMask",  uiPFRBitMask, "GreenBitMask", uiPFGBitMask,
-                "BlueBitMask", uiPFBBitMask, "AlphaBitMask", uiPFABitMask);
+          "RedBitMask",  uiPFRBitMask, "GreenBitMask", uiPFGBitMask,
+          "BlueBitMask", uiPFBBitMask, "AlphaBitMask", uiPFABitMask);
       }
     } // Is RGB format?
     else if(uiPFFlags & DDPF_LUMINANCE)
     { // Bit-depth should be 8
       if(uiPFRGBBitCount != BD_GRAY)
         XC("Detected LUMINANCE but invalid bit-count!",
-           "PixelFormatBitCount", uiPFRGBBitCount);
+          "PixelFormatBitCount", uiPFRGBBitCount);
       // Make sure pixel bits match
       if(uiPFRBitMask != 0xff || uiPFGBitMask != 0x00 ||
          uiPFBBitMask != 0x00 || uiPFABitMask != 0x00)
         XC("Unsupported LUMINANCE pixel assignments!",
-           "RedBitMask",   uiPFRBitMask, "GreenBitMask", uiPFGBitMask,
-           "BlueBitMask",  uiPFBBitMask, "AlphaBitMask", uiPFABitMask);
+          "RedBitMask",   uiPFRBitMask, "GreenBitMask", uiPFGBitMask,
+          "BlueBitMask",  uiPFBBitMask, "AlphaBitMask", uiPFABitMask);
       // Set gray pixels
       idData.SetBitsAndBytesPerPixel(BD_GRAY);
       idData.SetPixelType(TT_GRAY);
@@ -242,13 +242,13 @@ class CodecDDS :                       // GIF codec object
     // Check that bit-depth matches
     if(uiBPP && idData.GetBitsPerPixel() != uiBPP)
       XC("Detected bit-depth doesn't match the bit-depth in the header!"
-         "in the image.", "Detected", idData.GetBitsPerPixel(), "File", uiBPP);
+        "in the image.", "Detected", idData.GetBitsPerPixel(), "File", uiBPP);
     // Get primary capabilities and if set?
     if(const unsigned int uiCaps1 = fmData.FileMapReadVar32LE())
     { // Throw if not in range
       if(uiCaps1 & ~DDSCAPS_MASK)
         XC("Unsupported primary flags!",
-           "Flags", uiCaps1, "Mask", DDSCAPS_MASK);
+          "Flags", uiCaps1, "Mask", DDSCAPS_MASK);
     } // We should have some flags
     else XC("Primary flags not specified!");
     // Were secondary capabilities set?
@@ -256,7 +256,7 @@ class CodecDDS :                       // GIF codec object
     { // Show error if not in range
       if(uiCaps2 & ~DDSCAPS2_MASK)
         XC("Invalid secondary flags!",
-           "Flags", uiCaps2, "Mask", DDSCAPS2_MASK);
+          "Flags", uiCaps2, "Mask", DDSCAPS2_MASK);
       // None of them implemented regardless
       XC("Unimplemented secondary flags!", "Flags", uiCaps2);
     } // Read rest of values
@@ -273,9 +273,9 @@ class CodecDDS :                       // GIF codec object
         idData.DimGetWidth()*idData.GetBytesPerPixel();
       if(uiScanSize != uiPitchOrLinearSize)
         XC("Scan line size mismatch versus calculated!",
-           "Width",      idData.DimGetWidth(),
-           "ByDepth",    idData.GetBytesPerPixel(),
-           "Calculated", uiScanSize, "Expected", uiPitchOrLinearSize);
+          "Width",      idData.DimGetWidth(),
+          "ByDepth",    idData.GetBytesPerPixel(),
+          "Calculated", uiScanSize, "Expected", uiPitchOrLinearSize);
     } // Alocate slots as mipmaps
     idData.ReserveSlots(uiMipMapCount);
     // DDS's are reversed
@@ -296,7 +296,7 @@ class CodecDDS :                       // GIF codec object
     ++uiMipIndex,
       uiMipWidth  >>= 1,
       uiMipHeight >>= 1,
-      uiMipBPP      = UtilMaximum(uiMipBPP >> 1, 1),
+      uiMipBPP      = UtilMaximum(uiMipBPP >> 1, 1U),
       uiMipSize     = ((uiMipWidth+3)/4)*((uiMipHeight+3)/4)*uiBitDiv)
     { // Read compressed data from file and show error if not enough data
       Memory mPixels{ fmData.FileMapReadBlock(uiMipSize) };
