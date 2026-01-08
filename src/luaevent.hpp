@@ -15,7 +15,7 @@ using namespace IError::P;             using namespace IEvtCore::P;
 using namespace IEvtMain::P;           using namespace ILog::P;
 using namespace ILuaRef::P;            using namespace ILuaUtil::P;
 using namespace IMutex::P;             using namespace IRefCtr::P;
-using namespace IStd::P;
+using namespace IStd::P;               using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -58,8 +58,7 @@ class LuaEvts :
   template<typename ...VarArgs>void LuaEvtsDispatch(const EvtMainCmd emcCmd,
     const void*const vpClass, const VarArgs ...vaArgs)
   { // Reserve memory for current parameters list for event
-    EvtMainArgs emaArgs;
-    emaArgs.reserve(sizeof...(VarArgs));
+    Reserved<EvtMainArgs> emaArgs{ sizeof...(VarArgs) };
     // Lock access to the list
     mMutex.MutexCall([this, &emaArgs, &emcCmd, vpClass, &vaArgs...]{
       // Iterator to return

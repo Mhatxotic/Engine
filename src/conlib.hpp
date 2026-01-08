@@ -69,9 +69,8 @@ const LockGuard lgAssetsSync{ cAssets->MutexGet() };
 size_t stTotal = 0;
 // Number of bytes to show
 const size_t stCount = 16;
-// Preview of block and reserve memory for it
-string strHex; strHex.reserve(stCount * 3);
-string strAscii; strAscii.reserve(stCount);
+// Init preview of block in hex and ASCII and reserve memory for it
+Reserved<string> strHex{ stCount * 3 }, strAscii{ stCount };
 // Memory data
 Statistic sTable;
 sTable.Header("ID").Header("BYTES").Header("PREVIEW", false)

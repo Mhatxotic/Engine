@@ -170,7 +170,7 @@ class SysProcess :                     // Need this before of System init order
     const int iLine, const wchar_t*const wcpM, const wchar_t*const wcpFmt, ...)
   { // Buffer for formatted data. The maximum size is 1024 bytes. That is
     // 512 wide characters. std::string adds the nullptr for us automatically.
-    wstring wstrFmt; wstrFmt.reserve(511);
+    Reserved<wstring> wstrFmt{ 511 };
     // Use windows api function for this as we're not using the c-lib
     // formatting functions and theres no need to invoke extra exe space.
     va_list vlData;

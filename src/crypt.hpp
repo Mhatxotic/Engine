@@ -157,7 +157,7 @@ static const string CryptURLEncode(const string &strS)
   const char *cpPtr = strS.data();
   // Preallocate string to avoid multiple reallocations. Worst case: every char
   // needs encoding.
-  string strURL; strURL.reserve(strS.size() * 3);
+  Reserved<string> strURL{ strS.size() * 3 };
   // Perform these actions for each character...
   do
   { // Get character
@@ -535,7 +535,7 @@ static string CryptURLDecode(const string &strS)
 { // Bail if passed string is invalid
   if(strS.empty()) return {};
   // Preallocate string to avoid multiple reallocations
-  string strURL; strURL.reserve(strS.size());
+  Reserved<string> strURL{ strS.size() };
   // Movable pointer to input string and perform actions for each character...
   for(const char *cpPtr = strS.data(); *cpPtr;)
   { // Get the character and if it denotes a encoded value?
@@ -577,8 +577,7 @@ static Memory CryptRandomBlock(const size_t stSize)
 /* -- Sanitise a string removing excessive letters and words --------------- */
 static string CryptSanitise(const string &strMessage)
 { // Create output string and pre-allocate memory
-  string strPruned;
-  strPruned.reserve(strMessage.capacity());
+  Reserved<string> strPruned{ strMessage.capacity() };
   // Last character processed and count
   char cLastChar = '\0';
   size_t stCount = 0;
@@ -602,7 +601,7 @@ static string CryptSanitise(const string &strMessage)
   // Repeated words
   string strWord, strLastWord;
   // Output string
-  string strOutput; strOutput.reserve(strPruned.size());
+  Reserved<string> strOutput{ strPruned.size() };
   // Put pruned string into a string stream
   istringstream issS{ strPruned };
   // For each word

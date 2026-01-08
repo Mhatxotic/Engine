@@ -1863,8 +1863,8 @@ static void DoClean(StrVector &svDeleted, StrVector &svNotDeleted,
 { // Write initial scan
   if(dFiles.IsFilesEmpty()) return;
   // Allocate memory for filenames
-  svDeleted.reserve(svDeleted.size()+dFiles.GetFilesSize());
-  svNotDeleted.reserve(svNotDeleted.size()+dFiles.GetFilesSize());
+  svDeleted.reserve(svDeleted.size() + dFiles.GetFilesSize());
+  svNotDeleted.reserve(svNotDeleted.size() + dFiles.GetFilesSize());
   // Enumerate files
   for(const DirEntMapPair &dempPair : dFiles.GetFiles())
   { // Delete the file and if failed?
@@ -2853,7 +2853,7 @@ static const string GetFiles(const string &strExt, const string &strDir="")
   Dir dEntries{ strDir, strExt };
   if(dEntries.IsFilesEmpty()) return {};
   // String for output
-  string strOut; strOut.reserve(4096);
+  Reserved<string> strOut{ 4096 };
   // Make output directory
   const string strDirNew{ strDir.empty() ? strDir : StrAppend(strDir, "/") };
   const bool bHasSpace = strDirNew.find(' ') != StdNPos;

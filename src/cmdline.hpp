@@ -13,7 +13,8 @@ namespace ICmdLine {                   // Start of private module namespace
 using namespace ICommon::P;            using namespace IDir::P;
 using namespace IError::P;             using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IUtil::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -102,9 +103,9 @@ struct CmdLine                         // Members initially public
     if(!**lArgV) XC("Arguments array executable string is empty!");
     // Arguments list to return
     const size_t stArgCM1 = static_cast<size_t>(iArgC - 1);
-    StrVector svRet; svRet.reserve(stArgCM1);
+    Reserved<StrVector> svRet{ stArgCM1 };
     // For each argument format the argument and add it to list
-    StdForEach(seq, lArgV+1, lArgV+iArgC,
+    StdForEach(seq, lArgV + 1, lArgV + iArgC,
       [&svRet](const ArgType*const atStr)
         { svRet.emplace_back(S16toUTF(atStr)); });
     // One final sanity check

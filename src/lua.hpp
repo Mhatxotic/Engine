@@ -220,7 +220,7 @@ class Lua :                            // Actual class body
   /* -- Execute main function ---------------------------------------------- */
   void ExecuteMain() const { lrMainTick.LuaFuncPushAndCall(); }
   /* -- When lua enters the specified function ----------------------------- */
-  static void OnInstructionCount(lua_State*const lS, lua_Debug*const) noexcept
+  static void OnInstructionCount(lua_State*const lS, lua_Debug*const)
   { // Return if timer is not timed out
     if(!cTimer->TimerIsTimedOut()) return;
     // Push error message and throw error

@@ -11,7 +11,8 @@ namespace IEvtCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IIdent::P;
 using namespace ILog::P;               using namespace IMutex::P;
-using namespace IStd::P;               using namespace IUtil::P;
+using namespace IStd::P;               using namespace IUtf::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public public namespace
 /* ------------------------------------------------------------------------- */
@@ -272,20 +273,16 @@ class EvtCore :                        // Start of common event system class
   /* -- Execute specified event NOW (starter) ------------------------------ */
   template<typename ...VarArgs>
     void Execute(const Cmd cCmd, const VarArgs ...vaArgs)
-  { // Parameters list
-    EvtArgs eaArgs;
-    // Reserve memory for parameters
-    eaArgs.reserve(sizeof...(VarArgs));
+  { // Reserve memory for parameters
+    Reserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
     // Prepare parameters list and execute
     ExecuteParam(cCmd, eaArgs, vaArgs...);
   }
   /* -- Add with copy parameter semantics (starter) ------------------------ */
   template<typename ...VarArgs>
     void Add(const Cmd cCmd, const VarArgs ...vaArgs)
-  { // Parameters list
-    EvtArgs eaArgs;
-    // Reserve memory for parameters
-    eaArgs.reserve(sizeof...(VarArgs));
+  { // Reserve memory for parameters
+    Reserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
     // Prepare parameters list and add a new event
     AddParam(cCmd, eaArgs, vaArgs...);
   }
@@ -311,10 +308,8 @@ class EvtCore :                        // Start of common event system class
     const QueueConstIt AddEx(const Cmd cCmd, const VarArgs ...vaArgs)
   { // Iterator to return
     QueueConstIt qciItem;
-    // Parameters list
-    EvtArgs eaArgs;
-    // Reserve parameters
-    eaArgs.reserve(sizeof...(VarArgs));
+    // Reserve parameters list
+    Reserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
     // Prepare parameters list and execute
     AddExParam(cCmd, qciItem, eaArgs, vaArgs...);
     // Return iterator

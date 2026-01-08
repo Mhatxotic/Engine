@@ -275,8 +275,7 @@ class Statistic
     // Sorting list
     struct StrRef { StrVectorIt sviRowIt, sviColPri, sviColSec; };
     typedef vector<StrRef> StrRefVec;
-    StrRefVec srvList;
-    srvList.reserve(Rows());
+    Reserved<StrRefVec> srvList{ Rows() };
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
     // For each value. Add row start iterator and column iterator to list
@@ -310,8 +309,7 @@ class Statistic
                strRow1Sec < strRow2Sec);
       });
     // Now we have the sorted list we can rebuilding the new list
-    StrVector svValuesNew;
-    svValuesNew.reserve(Cells());
+    Reserved<StrVector> svValuesNew{ Cells() };
     for(const StrRef &srRow : srvList)
       for(StrVectorIt sviColIt{ srRow.sviRowIt },
                       sviColEnd{ next(sviColIt, sstHeaders) };
@@ -330,8 +328,7 @@ class Statistic
     // Sorting list
     struct StrRef { StrVectorIt sviRowIt, sviColIt; };
     typedef vector<StrRef> StrRefVec;
-    StrRefVec srvList;
-    srvList.reserve(Rows());
+    Reserved<StrRefVec> srvList{ Rows() };
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
     // For each value. Add row start iterator and column iterator to list
@@ -346,8 +343,7 @@ class Statistic
       [](const StrRef &srRow1, const StrRef &srRow2)
         { return *srRow1.sviColIt < *srRow2.sviColIt; });
     // Now we have the sorted list we can rebuilding the new list
-    StrVector svValuesNew;
-    svValuesNew.reserve(Cells());
+    Reserved<StrVector> svValuesNew{ Cells() };
     for(const StrRef &srRow : srvList)
       for(StrVectorIt sviColIt{ srRow.sviRowIt },
                       sviColEnd{ next(sviColIt, sstHeaders) };

@@ -24,7 +24,7 @@ class SysReg                           // Members initially private
     // Create key list
     StrVector klData;
     // Create memory to hold string
-    wstring wstrData; wstrData.reserve(MAX_PATH);
+    Reserved<wstring> wstrData{ MAX_PATH };
     // Until there are no more items
     for(unsigned int uiIndex = 0;; ++uiIndex)
     { // Set size

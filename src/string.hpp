@@ -322,7 +322,7 @@ static const string StrToUpCase[[maybe_unused]](const string &strSrc)
 { // String empty? Return a blank one
   if(strSrc.empty()) return {};
   // Create memory for destination string and copy the string over
-  string strDst; strDst.reserve(strSrc.size());
+  Reserved<string> strDst{ strSrc.size() };
   transform(strSrc.begin(), strSrc.end(), back_inserter(strDst),
     [](unsigned char ucChar) { return StdToUpper(ucChar); });
   // Return result
@@ -333,7 +333,7 @@ static const string StrToLowCase[[maybe_unused]](const string &strSrc)
 { // String empty? Return a blank one
   if(strSrc.empty()) return {};
   // Prepare destination string and run a transform to lowercase each char
-  string strDst; strDst.reserve(strSrc.size());
+  Reserved<string> strDst{ strSrc.size() };
   transform(strSrc.begin(), strSrc.end(), back_inserter(strDst),
     [](unsigned char ucChar) { return StdToLower(ucChar); });
   // Return result
@@ -616,7 +616,7 @@ static const string ImplodeMap[[maybe_unused]](const StrNCStrMap &ssmSrc,
   if(ssmSrc.empty()) return {};
   // Make string vector to implode and reserve memory for items.
   // Insert each value in the map with the appropriate seperators.
-  StrVector svRet; svRet.reserve(ssmSrc.size());
+  Reserved<StrVector> svRet{ ssmSrc.size() };
   transform(ssmSrc.cbegin(), ssmSrc.cend(), back_inserter(svRet),
     [&strKeyValSep, &strValEncaps](const StrNCStrMapPair &sncsmpPair)
       { return StrAppend(sncsmpPair.first, strKeyValSep,

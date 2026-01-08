@@ -13,7 +13,8 @@ using namespace ICommon::P;            using namespace IDir::P;
 using namespace IError::P;             using namespace ILuaIdent::P;
 using namespace IMemory::P;            using namespace IRefCtr::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace IToken::P;             using namespace IUtil::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Variables ------------------------------------------------------------ */
@@ -354,13 +355,9 @@ template<lua_CFunction cFunc>static int LuaUtilCallback(lua_State*const lS) try
   return cFunc(lS);
 } // Unknown exception occured?
 catch(const exception &eReason)
-{ // Throw error and return nothing
+{ // Throw error and return nothing (keep to a func to prevent duplicate code).
   return LuaUtilProcException(lS, eReason.what());
-} // Unknown exception occured?
-catch(...)
-{ // Throw error and return nothing
-  return LuaUtilProcException(lS, "Internal error!");
-}
+} // Don't catch all as it will catch LUA's longjmp() throw.
 /* -- Get and pop string on top -------------------------------------------- */
 static const string LuaUtilGetAndPopStr(lua_State*const lS)
 { // If there is nothing on the stack then return a generic error
@@ -534,9 +531,7 @@ catch(const exception &eReason)
 { // Push exception instead
   LuaUtilPushCStr(lS, eReason.what());
   return 1;
-}
-// Unknown exception occurred?
-catch(...) { LuaUtilPushCStr(lS, "Internal error!"); return 1; }
+} // Don't catch all as it will catch LUA's longjmp() throw.
 /* -- Push a function onto the stack --------------------------------------- */
 static void LuaUtilPushCFunc(lua_State*const lS, lua_CFunction cFunc,
   const int iNVals=0) { lua_pushcclosure(lS, cFunc, iNVals); }
@@ -1430,8 +1425,7 @@ static VecType LuaUtilToVector(lua_State*const lS, const int iArg,
   const size_t stMax = UtilIntOrMax<size_t>(LuaUtilGetSize(lS, iArg));
   const lua_Integer liMax = static_cast<lua_Integer>(stMax) + 1;
   // Preallocate the table
-  VecType vtArray;
-  vtArray.reserve(stMax);
+  Reserved<VecType> vtArray{ stMax };
   // Walk the array
   for(lua_Integer liI = 1; liI < liMax; ++liI)
   { // Get item from table

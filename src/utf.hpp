@@ -220,6 +220,9 @@ template<typename CharType>
   // Return string
   return strOut;
 }
+/* -- Template to reserve part of another object --------------------------- */
+template<class AnyObject>struct Reserved : public AnyObject
+  { explicit Reserved(const size_t stSize) { this->reserve(stSize); } };
 /* -- UTF8 decoder helper class -------------------------------------------- */
 class UtfDecoder                        // UTF8 string decoder helper
 { /* ----------------------------------------------------------------------- */
@@ -309,7 +312,7 @@ class UtfDecoder                        // UTF8 string decoder helper
   { // Ignore if at the end of the string or it is empty
     if(Finished()) return 0;
     // Capture up to eight characters
-    string strMatched; strMatched.reserve(stMaximum);
+    Reserved<string> strMatched{ stMaximum };
     // Add characters as long as they are valid hexadecimal characters and the
     // matched string has not reached eight characters. Anything that could be
     // unicode character should auto break anyway so this should be safe.

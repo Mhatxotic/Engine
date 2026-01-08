@@ -1041,8 +1041,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     AddStatus(SS_REPLYWAIT);
     // Content read and content-length
     size_t stContentRead = 0, stContentLength = 0;
-    // Reserve memory for response headers
-    string strHeaders; strHeaders.reserve(1024);
+    // Initialise memory for response headers
+    Reserved<string> strHeaders{ 1024 };
     // Allocate memory for read buffer
     Memory mDest{ cParent->stBufferSize };
     // Expecting reponse headers? and connection closed status
