@@ -43,11 +43,9 @@ class LuaEvts :
     });
   }
   /* -- Check if enough parameters ----------------------------------------- */
-  template<size_t stMinimum>
+  template<size_t stMinimum> requires (stMinimum >= 2)
     bool LuaEvtsCheckParams(const EvtMainArgs &emaArgs)
-  { // Minimum arguments must be two or more
-    static_assert(stMinimum >= 2, "Must specify two parameters or more!");
-    // If we have at least two parameters remove the iterator
+  { // If we have at least two parameters remove the iterator
     if(emaArgs.size() >= 2) LuaEvtsRemoveIterator(emaArgs[1].SizeT());
     // Return true if required args is 2 because we've already checked that
     if constexpr(stMinimum == 2) return true;

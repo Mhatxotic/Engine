@@ -17,26 +17,25 @@ template<typename DInt = unsigned int, // Dimensions integer type
          typename CInt = DInt,         // Coords class integer type
          class DClass  = Dimensions<DInt>,  // Dimensions class to use
          class CClass  = Coordinates<CInt>> // Coords class to use
+requires is_arithmetic_v<DInt> && is_arithmetic_v<CInt>
 struct DimCoords :                     // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public CClass,                       // Co-ordinates class
   public DClass                        // Dimensions class
 { /* -- Set co-ordinates and dimensions ------------------------------------ */
-  void DimCoSet(const CInt ciX, const CInt ciY, const DInt diW, const DInt diH)
+  void DimCoSet(const CInt ciX, const CInt ciY,
+                const DInt diW, const DInt diH) noexcept
     { this->CoordSet(ciX, ciY); this->DimSet(diW, diH); }
   /* -- Constructor to fill all parameters --------------------------------- */
-  DimCoords(const CClass &ciOther,     // Specified co-ordinates
-            const DClass &diOther) :   // Specified dimensions
+  DimCoords(const CClass &ciOther, const DClass &diOther) noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     CClass{ ciOther },                 // Initialise co-ordinates
     DClass{ diOther }                  // Initialise dimensions
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor to fill all parameters --------------------------------- */
-  DimCoords(const CInt ciX,            // Specified X co-ordinate
-            const CInt ciY,            // Specified Y co-ordinate
-            const DInt diW,            // Specified width dimension
-            const DInt diH) :          // Specified height dimension
+  DimCoords(const CInt ciX, const CInt ciY,
+            const DInt diW, const DInt diH) noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     CClass{ ciX, ciY },                // Initialise co-ordinates
     DClass{ diW, diH }                 // Initialise dimensions

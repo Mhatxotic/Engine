@@ -160,11 +160,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Pixel conversion process ------------------------------------------- */
   template<class PixelConversionFunction, size_t stSrcStep, size_t stDstStep,
     BitDepth bdNewBPP, TextureType ttType>
-      void ConvertPixels(const char*const cpFilter)
-  { // Some basic checks of parameters
-    static_assert(stSrcStep > 0 && stSrcStep <= 2, "Invalid source step!");
-    static_assert(stDstStep > 0 && stDstStep <= 32, "Invalid dest step!");
-    // Set new bits and bytes
+  requires (stSrcStep > 0) && (stSrcStep <= 2) &&
+           (stDstStep > 0) && (stDstStep <= 32)
+  void ConvertPixels(const char*const cpFilter)
+  { // Set new bits and bytes
     SetBitsAndBytesPerPixel(bdNewBPP);
     SetPixelType(ttType);
     // New allocation size

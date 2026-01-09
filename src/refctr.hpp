@@ -12,29 +12,32 @@ namespace IRefCtr {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename IntegerType=unsigned int>class RefCtrMaster
+template<typename IntType=unsigned int>
+requires is_integral_v<IntType>
+class RefCtrMaster
 { /* -- Private variables -------------------------------------------------- */
-  IntegerType      itMaster;           // Reference to protected variable
+  IntType          itMaster;           // Reference to protected variable
   /* --------------------------------------------------------------- */ public:
-  void RefCtrSetDisabled() { --itMaster; }
-  void RefCtrSetEnabled() { ++itMaster; }
-  bool RefCtrIsEnabled() const { return itMaster > 0; }
-  bool RefCtrIsDisabled() const { return !itMaster; }
+  void RefCtrSetDisabled() noexcept { --itMaster; }
+  void RefCtrSetEnabled() noexcept { ++itMaster; }
+  bool RefCtrIsEnabled() const noexcept { return itMaster > 0; }
+  bool RefCtrIsDisabled() const noexcept { return !itMaster; }
   /* -- Constructor --------------------------------------------- */ protected:
-  RefCtrMaster() : itMaster(0) {}
+  RefCtrMaster() noexcept : itMaster(0) {}
   /* ----------------------------------------------------------------------- */
 };                                     // End of class
 /* ------------------------------------------------------------------------- */
-template<typename IntegerType=unsigned int,
-         class RmcType=RefCtrMaster<IntegerType>>
+template<typename IntType=unsigned int,
+         class RmcType=RefCtrMaster<IntType>>
+requires is_integral_v<IntType>
 class RefCtrSlave
 { /* -- Private variables -------------------------------------------------- */
   RmcType         &rtMaster;           // Reference to protected variable
   /* -- Constructor that takes a master reference ------------------ */ public:
-  explicit RefCtrSlave(RmcType &rtRef) : rtMaster(rtRef)
+  explicit RefCtrSlave(RmcType &rtRef) noexcept : rtMaster(rtRef)
     { rtMaster.RefCtrSetEnabled(); }
   /* -- Constructor that takes a master pointer (converts to reference) ---- */
-  explicit RefCtrSlave(RmcType*const rtPtr) : RefCtrSlave(*rtPtr) {}
+  explicit RefCtrSlave(RmcType*const rtPtr) noexcept : RefCtrSlave(*rtPtr) {}
   /* -- Destructor --------------------------------------------------------- */
   ~RefCtrSlave() { rtMaster.RefCtrSetDisabled(); }
   /* ----------------------------------------------------------------------- */

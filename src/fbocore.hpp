@@ -44,9 +44,9 @@ class FboCore :                        // The main fbo operations manager
   /* -- Core fbos -------------------------------------------------- */ public:
   Fbo             &fboMain,            // Main fbo class (FboDouble[0])
                   &fboConsole;         // Console fbo class (FboDouble[1])
-  /* -- Render timings ----------------------------------------------------- */
-  ClockInterval<>  ciCurrent;          // One second interval to calculate fps
-  unsigned int     uiFPS, uiFPSCur;    // Frames per second (last / current)
+  /* -- FPS ---------------------------------------------------------------- */
+  double           dFPS;               // Frames per second
+  ClkTimePoint     ctpLast;            // Last measured second
   /* -- Draw flags --------------------------------------------------------- */
   bool CanDraw() const { return bDraw; }
   bool CannotDraw() const { return !CanDraw(); }
@@ -68,67 +68,54 @@ class FboCore :                        // The main fbo operations manager
   { // Finish and add the main fbo to the render list and render all fbos
     FinishMain();
     FboRender();
-    // Flush the pipeline to prevent memory leak and wait if not drawing
-    if(CannotDraw()) { cOgl->Flush(); return cTimer->TimerForceWait(); }
-    // Clear redraw flag
-    ClearDraw();
-    // Unbind current FBO so we select the back buffer to draw to
-    cOgl->BindFBO();
-    // Set the first active texture unit
-    cOgl->ActiveTexture();
-    // Bind the texture attached to the fbo
-    cOgl->BindTexture(fboMain.uiFBOtex);
-    // Select our basic 3D transform shader
-    cOgl->UseProgram(cShaderCore->sh3D.GetProgram());
-    // Set the viewport of the FBO size
-    cOgl->SetViewport(DimGetWidth(), DimGetHeight());
-    // Set the default alpha blending mode
-    cOgl->SetBlendIfChanged(*this);
-    // Clear back buffer if main fbo has alpha
-    if(fboMain.FboIsTransparencyEnabled()) cOgl->SetAndClear(*this);
-    // Set normal fill poly mode
-    cOgl->SetPolygonMode(GL_FILL);
-    // Buffer the interlaced triangle data
-    cOgl->BufferStaticData(fboMain.FboItemGetDataSize(),
-      fboMain.FboItemGetData());
-    // Specify format of the interlaced triangle data
-    cOgl->VertexAttribPointer(A_COORD, stCompsPerCoord, 0,
-      fboMain.FboItemGetTCPos());
-    cOgl->VertexAttribPointer(A_VERTEX, stCompsPerPos, 0,
-      fboMain.FboItemGetVPos());
-    cOgl->VertexAttribPointer(A_COLOUR, stCompsPerColour, 0,
-      fboMain.FboItemGetCPos());
- // Using MacOS?
-#if defined(MACOS)
-    // This locking code is required to fix a major crash bug in Ventura 13.3+.
-    // See https://github.com/glfw/glfw/issues/1997 for more information.
-    using namespace Lib::OS::GlFW::NSGL;
-    // Get the current NSGL context and lock it. Note there is nothing to throw
-    // in this routine so it is safe to use this as-is.
-    CGLContextObj cglcoLock = CGLGetCurrentContext();
-    CGLLockContext(cglcoLock);
-    // Blit the two triangles
-    cOgl->DrawArraysTriangles(stTwoTriangles);
-    // Context is unlocked when exiting this scope
-    CGLUnlockContext(cglcoLock);
-#else
-    // Blit the two triangles
-    cOgl->DrawArraysTriangles(stTwoTriangles);
-#endif
-    // Swap buffers
-    cGlFW->WinSwapGLBuffers();
-    // Update memory
+    // If logic ticks said we can draw?
+    if(CanDraw()) [[likely]]
+    { // Clear redraw flag
+      ClearDraw();
+      // Unbind current FBO so we select the back buffer to draw to
+      cOgl->BindFBO();
+      // Set the first active texture unit
+      cOgl->ActiveTexture();
+      // Bind the texture attached to the fbo
+      cOgl->BindTexture(fboMain.uiFBOtex);
+      // Select our basic 3D transform shader
+      cOgl->UseProgram(cShaderCore->sh3D.GetProgram());
+      // Set the viewport of the FBO size
+      cOgl->SetViewport(DimGetWidth(), DimGetHeight());
+      // Set the default alpha blending mode
+      cOgl->SetBlendIfChanged(*this);
+      // Clear back buffer if main fbo has alpha
+      if(fboMain.FboIsTransparencyEnabled()) cOgl->SetAndClear(*this);
+      // Set normal fill poly mode
+      cOgl->SetPolygonMode(GL_FILL);
+      // Buffer the interlaced triangle data
+      cOgl->BufferStaticData(fboMain.FboItemGetDataSize(),
+        fboMain.FboItemGetData());
+      // Specify format of the interlaced triangle data
+      cOgl->VertexAttribPointer(A_COORD, stCompsPerCoord, 0,
+        fboMain.FboItemGetTCPos());
+      cOgl->VertexAttribPointer(A_VERTEX, stCompsPerPos, 0,
+        fboMain.FboItemGetVPos());
+      cOgl->VertexAttribPointer(A_COLOUR, stCompsPerColour, 0,
+        fboMain.FboItemGetCPos());
+      // Render the arrays
+      cOgl->DrawArrays();
+      // Swap buffers
+      cGlFW->WinSwapGLBuffers();
+      // Calculate new frames per second
+      dFPS = cTimer->TimerPerSec(
+        ClockDurationToDouble(cTimer->TimerGetStartTime() - ctpLast));
+      ctpLast = cTimer->TimerGetStartTime();
+    } // Cannot draw?
+    else
+    { // Flush the pipeline to prevent memory leak
+      cOgl->Flush();
+      // Timer system can wait a little to not waste CPU cycles
+      cTimer->TimerForceWait();
+    } // Update memory available
     cOgl->UpdateVRAMAvailable();
     // Clear any existing errors
     cOgl->GetError();
-    // Frames rendered
-    ++uiFPSCur;
-    // Return if we've not reached one second yet
-    if(!ciCurrent.CITriggerStrict()) return;
-    // Set frames per second
-    uiFPS = uiFPSCur;
-    // Reset frames per second this frame
-    uiFPSCur = 0;
   }
   /* -- Blits the console fbo to main fbo ---------------------------------- */
   void BlitConsoleToMain() { fboMain.FboBlit(fboConsole); }
@@ -267,9 +254,7 @@ class FboCore :                        // The main fbo operations manager
     bClearBuffer(false),               // Clear buffer init by CVar
     fboMain(front()),                  // Init reference to main fbo
     fboConsole(back()),                // Init reference to console fbo
-    ciCurrent{ cd1S },                 // Init one second timer
-    uiFPS(0),                          // Init zero last frames per second
-    uiFPSCur(0)                        // Init zero current frames per second
+    dFPS(0.0)                          // Frames per second
     /* -- Set pointer to global class and main fbo ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }
   /* -- Set main fbo float reserve --------------------------------- */ public:

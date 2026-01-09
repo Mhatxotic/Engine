@@ -22,12 +22,11 @@ template<typename IntType=int,         // Unsigned type not allowed!
          typename Int=make_signed_t<IntType>,
          typename UInt=make_unsigned_t<IntType>,
          class DimClass=Dimensions<Int>>
+requires is_same_v<IntType, Int>
 class Pack :
   /* -- Initialisers ------------------------------------------------------- */
   public DimClass                      // Dimensions of bin in pixels
-{ /* -- Checks ------------------------------------------------------------- */
-  static_assert(is_same_v<IntType, Int>, "Invalid type!");
-  /* --------------------------------------------------------------- */ public:
+{ /* --------------------------------------------------------------- */ public:
   typedef DimCoords<Int> Rect;         // Rectangle of signed ints
   typedef vector<Rect> RectList;       // list of rectangles
   constexpr static double dIdle = -0.0;// Uninitialised value

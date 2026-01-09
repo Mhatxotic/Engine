@@ -23,12 +23,13 @@ class MemConst                         // Start of const MemBase Block Class
   char            *cpPtr;              // Pointer to data
   size_t           stSize;             // MemSize of data
   /* -- Read pointer -------------------------------------------- */ protected:
-  template<typename Type=char>Type *MemDoRead(const size_t stPos) const
-    { return reinterpret_cast<Type*>(cpPtr + stPos); }
+  template<typename Type=char>
+    Type *MemDoRead(const size_t stPos) const noexcept
+  { return reinterpret_cast<Type*>(cpPtr + stPos); }
   /* -- Clear parameters. Used by FileMap() -------------------------------- */
-  void MemReset() { MemSetPtr(); MemSetSize(); }
+  void MemReset() noexcept { MemSetPtr(); MemSetSize(); }
   /* -- Swap members with another block ------------------------------------ */
-  void MemConstSwap(MemConst &mcOther)
+  void MemConstSwap(MemConst &mcOther) noexcept
     { swap(stSize, mcOther.stSize); swap(cpPtr, mcOther.cpPtr); }
   /* -- Bit test error handler --------------------------------------------- */
   void MemCheckBit[[noreturn]](const char*const cpAddr,
@@ -45,9 +46,9 @@ class MemConst                         // Start of const MemBase Block Class
   /* -- Read pointer error handler------------------------------------------ */
   void MemErrorRead[[noreturn]](const char*const cpAddr, const size_t stPos,
     const size_t stBytes) const
-      { XC(cpAddr, "Position",  stPos,     "Amount",  stBytes,
-                   "Maximum",   stSize,    "AddrPos", MemDoRead<void*>(stPos),
-                   "AddrStart", MemPtr(),  "AddrMax", MemPtrEnd()); }
+  { XC(cpAddr, "Position",  stPos,     "Amount",  stBytes,
+               "Maximum",   stSize,    "AddrPos", MemDoRead<void*>(stPos),
+               "AddrStart", MemPtr(),  "AddrMax", MemPtrEnd()); }
   /* -- Find a NULL character in the memory -------------------------------- */
   size_t MemFindNull() const
   { // If memory is not empty, find a null character and resize up to it
@@ -58,40 +59,37 @@ class MemConst                         // Start of const MemBase Block Class
     return StdMaxSizeT;
   }
   /* -- Set size ----------------------------------------------------------- */
-  void MemSetPtr(char*const cpNPtr = nullptr) { cpPtr = cpNPtr; }
-  void MemSetSize(const size_t stBytes = 0) { stSize = stBytes; }
-  void MemSetPtrSize(char*const cpNPtr, const size_t stBytes)
+  void MemSetPtr(char*const cpNPtr = nullptr) noexcept { cpPtr = cpNPtr; }
+  void MemSetSize(const size_t stBytes = 0) noexcept { stSize = stBytes; }
+  void MemSetPtrSize(char*const cpNPtr, const size_t stBytes) noexcept
     { MemSetPtr(cpNPtr); MemSetSize(stBytes); }
   /* -- Free the pointer --------------------------------------------------- */
-  void MemFreePtr() { StdFree(MemPtr()); }
-  void MemFreePtrIfSet() { if(MemIsPtrSet()) MemFreePtr(); }
+  void MemFreePtr() noexcept { StdFree(MemPtr()); }
+  void MemFreePtrIfSet() noexcept { if(MemIsPtrSet()) MemFreePtr(); }
   /* -- Return memory at the allocated address --------------------- */ public:
   template<typename Type=void>
-    Type *MemPtr() const { return reinterpret_cast<Type*>(cpPtr); }
+    Type *MemPtr() const noexcept { return reinterpret_cast<Type*>(cpPtr); }
   /* -- Return size of allocated memory ------------------------------------ */
   template<typename Type=size_t>
-    Type MemSize() const { return static_cast<Type>(stSize); }
+    Type MemSize() const noexcept { return static_cast<Type>(stSize); }
   /* -- Return if memory is allocated -------------------------------------- */
-  bool MemIsEmpty() const { return MemSize() == 0; }
-  bool MemIsNotEmpty() const { return !MemIsEmpty(); }
+  bool MemIsEmpty() const noexcept { return MemSize() == 0; }
+  bool MemIsNotEmpty() const noexcept { return !MemIsEmpty(); }
   /* -- Returns if the pointer is valid ------------------------------------ */
-  bool MemIsPtrSet() const { return !!MemPtr(); }
-  bool MemIsPtrNotSet() const { return !MemPtr(); }
+  bool MemIsPtrSet() const noexcept { return !!MemPtr(); }
+  bool MemIsPtrNotSet() const noexcept { return !MemPtr(); }
   /* -- Return ending address ---------------------------------------------- */
   template<typename Type=void>
-    Type *MemPtrEnd() const { return MemDoRead<Type>(stSize); }
+    Type *MemPtrEnd() const noexcept { return MemDoRead<Type>(stSize); }
   /* -- Return if we can read this amount of data -------------------------- */
-  bool MemCheckParam(const size_t stPos, const size_t stBytes) const
+  bool MemCheckParam(const size_t stPos, const size_t stBytes) const noexcept
     { return stPos + stBytes <= MemSize(); }
-  /* -- Character access by position --------------------------------------- */
-  char &operator[](const size_t stPos) const
-    { MemCheckParam(stPos, 1); return cpPtr[stPos]; }
   /* -- Same as MemCheckParam() with ptr check ----------------------------- */
   bool MemCheckPtr(const size_t stPos, const size_t stBytes,
-    const void*const vpOther) const
+    const void*const vpOther) const noexcept
       { return MemCheckParam(stPos, stBytes) && vpOther != nullptr; }
   /* -- Test a bit position ------------------------------------------------ */
-  bool MemCheckPos(const size_t stPos) const
+  bool MemCheckPos(const size_t stPos) const noexcept
     { return UtilBitToByte(stPos) >= MemSize(); }
   /* -- Find specified string ---------------------------------------------- */
   size_t MemFind(const string &strWhat, size_t stPos=0) const
@@ -141,14 +139,14 @@ class MemConst                         // Start of const MemBase Block Class
     memcpy(&tDest, MemRead<void>(stPos, sizeof(Type)), sizeof(Type));
     return tDest;
   }
-  template<typename Type>Type ReadIntLE(const size_t stPos=0) const
-    { static_assert(is_integral_v<Type>, "Wrong type!");
-      static_assert(sizeof(Type) > 1, "Wrong size!");
-      return UtilToLittleEndian(MemReadInt<Type>(stPos)); }
-  template<typename Type>Type ReadIntBE(const size_t stPos=0) const
-    { static_assert(is_integral_v<Type>, "Wrong type!");
-      static_assert(sizeof(Type) > 1, "Wrong size!");
-      return UtilToBigEndian(MemReadInt<Type>(stPos)); }
+  /* ----------------------------------------------------------------------- */
+  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
+    Type ReadIntLE(const size_t stPos=0) const
+  { return UtilToLittleEndian(MemReadInt<Type>(stPos)); }
+  /* ----------------------------------------------------------------------- */
+  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
+    Type ReadIntBE(const size_t stPos=0) const
+  { return UtilToBigEndian(MemReadInt<Type>(stPos)); }
   /* -- Test a bit --------------------------------------------------------- */
   bool MemBitTest(const size_t stPos) const
   { // Throw error if invalid position
@@ -189,24 +187,24 @@ class MemConst                         // Start of const MemBase Block Class
     }
   }
   /* -- Return if current size would overflow specified type --------------- */
-  template<typename Type=size_t>bool MemIsSizeOverflow() const
+  template<typename Type=size_t>bool MemIsSizeOverflow() const noexcept
     { return UtilIntWillOverflow<Type>(MemSize()); }
   /* -- Init from string (does not copy) ----------------------------------- */
-  explicit MemConst(const string &strRef) :
+  explicit MemConst(const string &strRef) noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     MemConst{ strRef.length(),         // Copy string size and pointer over
       strRef.data() }                  // from specified string
     /* -- Copy pointer and size over from string --------------------------- */
     {}
   /* -- Assignment constructor (rvalue) ------------------------------------ */
-  explicit MemConst(MemConst &&mbOther) :
+  explicit MemConst(MemConst &&mbOther) noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     cpPtr(mbOther.MemPtr<char>()),        // Copy pointer
     stSize(mbOther.MemSize())             // Copy size
     /* -- Code to clear other MemConst ------------------------------------ */
     { mbOther.MemReset(); }
   /* -- Uninitialised constructor -- pointer ------------------------------- */
-  MemConst() :
+  MemConst() noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     cpPtr(nullptr),                    // Start with null pointer
     stSize(0)                          // No size allocated yet
@@ -296,52 +294,63 @@ class MemBase :
   /* -- Swap bits ---------------------------------------------------------- */
   void MemSwap8(const size_t stPos)
     { MemWriteInt<uint8_t>(stPos, UtilBitSwap4(MemReadInt<uint8_t>(stPos))); }
+  /* ----------------------------------------------------------------------- */
   void MemSwap16(const size_t stPos)
     { MemWriteInt<uint16_t>(stPos, SWAP_U16(MemReadInt<uint16_t>(stPos))); }
+  /* ----------------------------------------------------------------------- */
   void MemSwap32(const size_t stPos)
     { MemWriteInt<uint32_t>(stPos, SWAP_U32(MemReadInt<uint32_t>(stPos))); }
+  /* ----------------------------------------------------------------------- */
   void MemSwap64(const size_t stPos)
     { MemWriteInt<uint64_t>(stPos, SWAP_U64(MemReadInt<uint64_t>(stPos))); }
   /* -- Write specified variable as an integer ----------------------------- */
-  template<typename Type>void MemWriteInt(const size_t stPos,
-    const Type tVar)
-      { MemWrite(stPos, &tVar, sizeof(tVar)); }
-  template<typename Type>void MemWriteInt(const Type tVar)
+  template<typename Type> requires std::is_arithmetic_v<Type>
+  void MemWriteInt(const size_t stPos, const Type tVar)
+    { MemWrite(stPos, &tVar, sizeof(tVar)); }
+  /* ----------------------------------------------------------------------- */
+  template<typename Type> requires is_arithmetic_v<Type>
+  void MemWriteInt(const Type tVar)
     { MemWriteInt<Type>(0, tVar); }
-  template<typename Type>void MemWriteIntLE(const size_t stPos,
-    const Type tVar)
-      { static_assert(is_integral_v<Type>, "Wrong type!");
-        static_assert(sizeof(Type) > 1, "Wrong size!");
-        MemWriteInt<Type>(stPos, UtilToLittleEndian(tVar)); }
-  template<typename Type>void MemWriteIntLE(const Type tVar)
-    { static_assert(is_integral_v<Type>, "Wrong type!");
-      static_assert(sizeof(Type) > 1, "Wrong size!");
-      MemWriteInt<Type>(UtilToLittleEndian(tVar)); }
-  template<typename Type>
+  /* ----------------------------------------------------------------------- */
+  template<typename Type> requires is_arithmetic_v<Type>
+    void MemWriteIntLE(const size_t stPos, const Type tVar)
+  { MemWriteInt<Type>(stPos, UtilToLittleEndian(tVar)); }
+  /* ----------------------------------------------------------------------- */
+  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
+    void MemWriteIntLE(const Type tVar)
+  { MemWriteInt<Type>(UtilToLittleEndian(tVar)); }
+  /* ----------------------------------------------------------------------- */
+  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
     void MemWriteIntBE(const size_t stPos, const Type tVar)
-      { static_assert(is_integral_v<Type>, "Wrong type!");
-        static_assert(sizeof(Type) > 1, "Wrong size!");
-        MemWriteInt<Type>(stPos, UtilToBigEndian(tVar)); }
-  template<typename Type>void MemWriteIntBE(const Type tVar)
-    { static_assert(is_integral_v<Type>, "Wrong type!");
-      static_assert(sizeof(Type) > 1, "Wrong size!");
-      MemWriteInt<Type>(UtilToBigEndian(tVar)); }
+  { MemWriteInt<Type>(stPos, UtilToBigEndian(tVar)); }
+  /* ----------------------------------------------------------------------- */
+  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
+    void MemWriteIntBE(const Type tVar)
+  { MemWriteInt<Type>(UtilToBigEndian(tVar)); }
   /* -- Write specified variable as an floating point number --------------- */
   void MemWriteFloatLE(const float fVar) { MemWriteFloatLE(0, fVar); }
+  /* ----------------------------------------------------------------------- */
   void MemWriteFloatLE(const size_t stPos, const float fVar)
     { MemWriteInt<float>(stPos, UtilToF32LE(fVar)); }
+  /* ----------------------------------------------------------------------- */
   void MemWriteFloatBE(const float fVar) { MemWriteFloatBE(0, fVar); }
+  /* ----------------------------------------------------------------------- */
   void MemWriteFloatBE(const size_t stPos, const float fVar)
     { MemWriteInt<float>(stPos, UtilToF32BE(fVar)); }
+  /* ----------------------------------------------------------------------- */
   void MemWriteDoubleLE(const double dVar) { MemWriteDoubleLE(0, dVar); }
+  /* ----------------------------------------------------------------------- */
   void MemWriteDoubleLE(const size_t stPos, const double dVar)
     { MemWriteInt<double>(stPos, UtilToF64LE(dVar)); }
+  /* ----------------------------------------------------------------------- */
   void MemWriteDoubleBE(const double dVar) { MemWriteDoubleBE(0, dVar); }
+  /* ----------------------------------------------------------------------- */
   void MemWriteDoubleBE(const size_t stPos, const double dVar)
     { MemWriteInt<double>(stPos, UtilToF64BE(dVar)); }
   /* -- Write memory block at specified position --------------------------- */
   void MemWriteBlock(const size_t stPos, const MemConst &mcRef,
     const size_t stBytes) { MemWrite(stPos, mcRef.MemPtr<char>(), stBytes); }
+  /* ----------------------------------------------------------------------- */
   void MemWriteBlock(const size_t stPos, const MemConst &mcRef)
     { MemWriteBlock(stPos, mcRef, mcRef.MemSize()); }
   /* -- Set a bit ---------------------------------------------------------- */

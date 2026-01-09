@@ -188,13 +188,11 @@ class EvtCore :                        // Start of common event system class
   }
   /* -- Execute specified event NOW (parameters) --------------------------- */
   template<typename ...VarArgs,typename AnyType>
-    void ExecuteParam(const Cmd cCmd, EvtArgs &eaArgs, AnyType atArg,
-      const VarArgs ...vaArgs)
-  { // Check specified parameter is valid
-    static_assert(is_enum_v<AnyType> || is_integral_v<AnyType> ||
-      is_pointer_v<AnyType> || is_null_pointer_v<AnyType>,
-        "Must be enum, integer, pointer or nullptr!");
-    // Insert parameter into list and add more parameters. It only accepts
+  requires is_enum_v<AnyType> || is_integral_v<AnyType> ||
+    is_pointer_v<AnyType> || is_null_pointer_v<AnyType>
+  void ExecuteParam(const Cmd cCmd, EvtArgs &eaArgs, AnyType atArg,
+    const VarArgs ...vaArgs)
+  { // Insert parameter into list and add more parameters. It only accepts
     // simple integers and pointers, hence why the direct copy on ...vaArgs.
     eaArgs.push_back(EvtArgVar{ atArg });
     ExecuteParam(cCmd, eaArgs, vaArgs...);

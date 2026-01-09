@@ -15,57 +15,58 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 template<typename Int = unsigned int,  // Integer type to use
          class Base = IntPair<Int>>    // Base int pair class type to use
+requires is_arithmetic_v<Int>          // Must be be integer or float
 struct Coordinates :                   // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   private Base                         // Base double value class
 { /* -- Get ---------------------------------------------------------------- */
-  template<typename RInt=Int>RInt CoordGetX() const
+  template<typename RInt=Int>RInt CoordGetX() const noexcept
     { return this->template IPGetOne<RInt>(); }
-  template<typename RInt=Int>RInt CoordGetY() const
+  template<typename RInt=Int>RInt CoordGetY() const noexcept
     { return this->template IPGetTwo<RInt>(); }
-  template<typename RInt=Int>RInt CoordDefGet() const
+  template<typename RInt=Int>RInt CoordDefGet() const noexcept
     { return this->template IPDefGet<RInt>(); }
   /* -- Get reference ------------------------------------------------------ */
-  Int &CoordGetXRef() { return this->IPGetOneRef(); }
-  Int &CoordGetYRef() { return this->IPGetTwoRef(); }
+  Int &CoordGetXRef() noexcept { return this->IPGetOneRef(); }
+  Int &CoordGetYRef() noexcept { return this->IPGetTwoRef(); }
   /* -- Set ---------------------------------------------------------------- */
-  void CoordSetX(const Int iV) { this->IPSetOne(iV); }
-  void CoordSetY(const Int iV) { this->IPSetTwo(iV); }
-  void CoordSet(const Int itX, const Int itY) { this->IPSet(itX,itY); }
-  void CoordSet(const Int iV = Base::iD0) { this->IPSet(iV); }
-  void CoordSet(const Coordinates &cO) { this->IPSet(cO); }
-  void CoordSwap(Coordinates &cO) { this->IPSwap(cO); }
+  void CoordSetX(const Int iV) noexcept { this->IPSetOne(iV); }
+  void CoordSetY(const Int iV) noexcept { this->IPSetTwo(iV); }
+  void CoordSet(const Int itX, const Int itY) noexcept
+    { this->IPSet(itX,itY); }
+  void CoordSet(const Int iV = Base::iD0) noexcept { this->IPSet(iV); }
+  void CoordSet(const Coordinates &cO) noexcept { this->IPSet(cO); }
+  void CoordSwap(Coordinates &cO) noexcept { this->IPSwap(cO); }
   /* -- Increment ---------------------------------------------------------- */
-  void CoordIncX(const Int iV = Base::iD1) { this->IPIncOne(iV); }
-  void CoordIncY(const Int iV = Base::iD1) { this->IPIncTwo(iV); }
-  void CoordInc(const Int iX = Base::iD1, const Int iY = Base::iD1)
+  void CoordIncX(const Int iV = Base::iD1) noexcept { this->IPIncOne(iV); }
+  void CoordIncY(const Int iV = Base::iD1) noexcept { this->IPIncTwo(iV); }
+  void CoordInc(const Int iX = Base::iD1, const Int iY = Base::iD1) noexcept
     { this->IPIncOne(iX); this->IPIncTwo(iY);}
-  void CoordInc(const Coordinates &cOther) { this->IPInc(cOther); }
+  void CoordInc(const Coordinates &cOther) noexcept { this->IPInc(cOther); }
   /* -- Decrement ---------------------------------------------------------- */
-  void CoordDecX(const Int iV = Base::iD1) { this->IPDecOne(iV); }
-  void CoordDecY(const Int iV = Base::iD1) { this->IPDecTwo(iV); }
+  void CoordDecX(const Int iV = Base::iD1) noexcept { this->IPDecOne(iV); }
+  void CoordDecY(const Int iV = Base::iD1) noexcept { this->IPDecTwo(iV); }
   /* -- Test --------------------------------------------------------------- */
-  bool CoordIsXSet() const { return this->IPIsOneSet(); }
-  bool CoordIsNotXSet() const { return this->IPIsNotOneSet(); }
-  bool CoordIsYSet() const { return this->IPIsTwoSet(); }
-  bool CoordIsNotYSet() const { return this->IPIsNotTwoSet(); }
-  bool CoordIsSet() const { return this->IPIsSet(); }
-  bool CoordIsNotSet() const { return this->IPIsNotSet(); }
-  bool CoordIsEqual(const Coordinates &cOther) const
+  bool CoordIsXSet() const noexcept { return this->IPIsOneSet(); }
+  bool CoordIsNotXSet() const noexcept { return this->IPIsNotOneSet(); }
+  bool CoordIsYSet() const noexcept { return this->IPIsTwoSet(); }
+  bool CoordIsNotYSet() const noexcept { return this->IPIsNotTwoSet(); }
+  bool CoordIsSet() const noexcept { return this->IPIsSet(); }
+  bool CoordIsNotSet() const noexcept { return this->IPIsNotSet(); }
+  bool CoordIsEqual(const Coordinates &cOther) const noexcept
     { return this->IPIsEqual(cOther); }
-  bool CoordIsNotEqual(const Coordinates &cOther) const
+  bool CoordIsNotEqual(const Coordinates &cOther) const noexcept
     { return this->IPIsNotEqual(cOther); }
   /* -- Test operator ------------------------------------------------------ */
-  operator bool() const { return CoordIsSet(); }
+  operator bool() const noexcept { return CoordIsSet(); }
   /* -- Initialisation of one value constructor ---------------------------- */
-  explicit Coordinates(const Int itV) : // Specified value to initialise to
+  explicit Coordinates(const Int itV) noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     Base{ itV }                        // Initialise specified values
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Initialisation of both values constructor -------------------------- */
-  Coordinates(const Int itX,           // Specified X coord to initialise to
-              const Int itY) :         // Specified Y coord to initialise to
+  Coordinates(const Int itX, const Int itY) noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     Base{ itX, itY }                   // Initialise specified values
     /* -- No code ---------------------------------------------------------- */

@@ -343,20 +343,19 @@ cSystem->UpdateCPUUsage();
 // Write detected processor information
 cConsole->AddLineF(
   "$$x$MHz/$ (FMS:$;$;$); Load: $% ($%).\n"
-  "Start: $; Last: $; Limit: $; Accu: $.\n"
+  "Start: $; Limit: $; Last: $; Delay: $/s.\n"
   "Mode: $ ($); TimeOut: $ ($x$); Ticks: $.\n"
-  "FPS: $/s ($/s); Eff: $%; Delay: $/s.",
+  "FPS: $/s; Maximum: $/s; Efficiency: $%.",
     fixed, cSystem->CPUCount(), cSystem->CPUSpeed(), cSystem->CPUName(),
       cSystem->CPUFamily(), cSystem->CPUModel(), cSystem->CPUStepping(),
       cSystem->CPUUsage(), cSystem->CPUUsageSystem(),
-    cTimer->TimerGetStart(), cTimer->TimerGetDuration(),
-      cTimer->TimerGetLimit(), cTimer->TimerGetAccumulator(),
+    cTimer->TimerGetStart(), cTimer->TimerGetLimit(),
+      cTimer->TimerGetAccumulator(), cTimer->TimerGetDelay(),
     cSystem->GetCoreFlags(), cSystem->GetCoreFlagsString(),
       cTimer->TimerGetTimeOut(), cTimer->TimerGetTriggers(),
       cLua->GetOpsInterval(), cTimer->TimerGetTicks(),
     cTimer->TimerGetFPS(), cTimer->TimerGetFPSLimit(),
-      UtilMakePercentage(cTimer->TimerGetFPS(), cTimer->TimerGetFPSLimit()),
-      cTimer->TimerGetDelay());
+      UtilMakePercentage(cTimer->TimerGetFPS(), cTimer->TimerGetFPSLimit()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cpu' function
 /* ========================================================================= */
@@ -839,8 +838,8 @@ cConsole->AddLineF(
     cFboCore->fboMain.FboGetTrisReserved(),
     cFboCore->fboMain.FboGetCmds(),
     cFboCore->fboMain.FboGetCmdsReserved(),
-  fixed, cFboCore->uiFPS, cDisplay->GetRefreshRate(),
-  UtilMakePercentage(cFboCore->uiFPS, cDisplay->GetRefreshRate()),
+  fixed, cFboCore->dFPS, cDisplay->GetRefreshRate(),
+  UtilMakePercentage(cFboCore->dFPS, cDisplay->GetRefreshRate()),
   cOgl->GetLimit());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'gpu' function

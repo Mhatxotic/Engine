@@ -26,7 +26,8 @@ using ::std::locale;                   using ::std::make_index_sequence;
 using ::std::make_pair;                using ::std::make_signed_t;
 using ::std::make_unsigned_t;          using ::std::nothrow;
 using ::std::numeric_limits;           using ::std::remove_const_t;
-using ::std::remove_pointer_t;         using ::std::swap;
+using ::std::remove_cv_t;              using ::std::remove_pointer_t;
+using ::std::remove_reference_t;       using ::std::swap;
 using ::std::tuple_size_v;
 /* -- Iteratations --------------------------------------------------------- */
 using ::std::accumulate;               using ::std::advance;
@@ -44,11 +45,12 @@ using ::std::setfill;                  using ::std::setprecision;
 using ::std::setw;                     using ::std::showpos;
 using ::std::uppercase;
 /* -- Constexpr functions -------------------------------------------------- */
-using ::std::is_class_v;               using ::std::is_enum_v;
-using ::std::is_floating_point_v;      using ::std::is_integral_v;
-using ::std::is_null_pointer_v;        using ::std::is_pointer_v;
-using ::std::is_same_v;                using ::std::is_signed_v;
-using ::std::is_trivially_copyable_v;  using ::std::underlying_type_t;
+using ::std::is_arithmetic_v;          using ::std::is_class_v;
+using ::std::is_enum_v;                using ::std::is_floating_point_v;
+using ::std::is_integral_v;            using ::std::is_null_pointer_v;
+using ::std::is_pointer_v;             using ::std::is_same_v;
+using ::std::is_signed_v;              using ::std::is_trivially_copyable_v;
+using ::std::underlying_type_t;
 /* -- Bind class function argument namespaces ------------------------------ */
 using ::std::placeholders::_1;         using ::std::placeholders::_2;
 using ::std::placeholders::_3;
@@ -61,6 +63,11 @@ typedef atomic<long>       SafeLong;   // Thread safe long
 typedef atomic<size_t>     SafeSizeT;  // Thread safe size_t
 typedef atomic<uint64_t>   SafeUInt64; // Thread safe 64-bit integer
 typedef atomic<unsigned int> SafeUInt; // Thread safe unsigned integer
+/* -- Checks if a type is atomic ------------------------------------------- */
+template<typename T>struct is_std_atomic : std::false_type {};
+template<typename U>struct is_std_atomic<atomic<U>> : std::true_type {};
+template<typename T>
+  constexpr bool is_std_atomic_v = is_std_atomic<remove_cv_t<T>>::value;
 /* -- Indexed vector list types -------------------------------------------- */
 typedef string::const_iterator            StringConstIt;
 typedef vector<const char*>               CStrVector;
@@ -103,4 +110,8 @@ MAPPACK_BUILD(StrInt, const string, const int)
 MAPPACK_BUILD(StrStr, const string, const string)
 MAPPACK_BUILD(StrVStrV, const string_view, const string_view)
 MAPPACK_BUILD(StrNCStr, const string, string)
+/* -- Get array element type ----------------------------------------------- */
+template<typename ArrayType>
+  using ArrayElementType =
+    remove_cv_t<remove_pointer_t<remove_reference_t<ArrayType>>>;
 /* == EoF =========================================================== EoF == */

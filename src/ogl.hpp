@@ -368,26 +368,26 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   GLint UnpackRowLength() const { return iUnpackRowLength; }
   /* ----------------------------------------------------------------------- */
   void VertexAttribPointer(const GLuint uiAttrib, const GLint iSize,
-    const GLsizei siStride, const GLvoid*const vpBuffer) const
-      { sAPI.glVertexAttribPointer(uiAttrib, iSize, GL_FLOAT, GL_FALSE,
-          siStride, vpBuffer); }
+    const GLsizei siStride, const GLvoid*const vpBuffer) const noexcept
+  { sAPI.glVertexAttribPointer(uiAttrib, iSize, GL_FLOAT, GL_FALSE,
+      siStride, vpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void SetPixelStore(const GLenum eId, const GLint iValue) const
+  void SetPixelStore(const GLenum eId, const GLint iValue) const noexcept
     { sAPI.glPixelStorei(eId, iValue); }
   /* ----------------------------------------------------------------------- */
-  void SetPackAlignment(const GLint iValue) const
+  void SetPackAlignment(const GLint iValue) const noexcept
     { SetPixelStore(GL_PACK_ALIGNMENT, iValue); }
   /* ----------------------------------------------------------------------- */
-  void SetUnpackAlignment(const GLint iValue) const
+  void SetUnpackAlignment(const GLint iValue) const noexcept
     { SetPixelStore(GL_UNPACK_ALIGNMENT, iValue); }
   /* ----------------------------------------------------------------------- */
-  void SetUnpackRowLength(const GLint iValue) const
+  void SetUnpackRowLength(const GLint iValue) const noexcept
     { SetPixelStore(GL_UNPACK_ROW_LENGTH, iValue); }
   /* ----------------------------------------------------------------------- */
-  void ReadBuffer(const GLenum uiBuffer) const
+  void ReadBuffer(const GLenum uiBuffer) const noexcept
     { sAPI.glReadBuffer(uiBuffer); }
   /* -- Texture functions -------------------------------------------------- */
-  void ReadTexture(const GLenum eFormat, GLvoid*const vpBuffer) const
+  void ReadTexture(const GLenum eFormat, GLvoid*const vpBuffer) const noexcept
     { sAPI.glGetTexImage(GL_TEXTURE_2D, 0, eFormat, GL_UNSIGNED_BYTE,
         vpBuffer); }
   /* ----------------------------------------------------------------------- */
@@ -411,54 +411,55 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* ----------------------------------------------------------------------- */
   void UploadTexture(const GLint iLevel, const GLsizei siWidth,
     const GLsizei siHeight, const GLint iFormat, const GLenum eType,
-    const GLvoid*const vpBuffer) const
-      { sAPI.glTexImage2D(GL_TEXTURE_2D, iLevel, iFormat, siWidth, siHeight, 0,
-          eType, GL_UNSIGNED_BYTE, vpBuffer); }
+    const GLvoid*const vpBuffer) const noexcept
+  { sAPI.glTexImage2D(GL_TEXTURE_2D, iLevel, iFormat, siWidth, siHeight, 0,
+      eType, GL_UNSIGNED_BYTE, vpBuffer); }
   /* ----------------------------------------------------------------------- */
   void UploadTextureTT(const GLint iLevel, const GLsizei siWidth,
     const GLsizei siHeight, const TextureType ttFormat,
     const TextureType ttType, const GLvoid*const vpBuffer) const
-      { UploadTexture(iLevel, siWidth, siHeight,
-          TexTypeToNative<GLint>(ttFormat), TexTypeToNative<GLenum>(ttType),
-          vpBuffer); }
+  { UploadTexture(iLevel, siWidth, siHeight, TexTypeToNative<GLint>(ttFormat),
+      TexTypeToNative<GLenum>(ttType), vpBuffer); }
   /* ----------------------------------------------------------------------- */
   void UploadCompressedTexture(const GLint iLevel, const GLenum eFormat,
     const GLsizei siWidth, const GLsizei siHeight, const GLsizei siSize,
-    const GLvoid*const vpBuffer) const
-      { sAPI.glCompressedTexImage2D(GL_TEXTURE_2D, iLevel, eFormat, siWidth,
-          siHeight, 0, siSize, vpBuffer); }
+    const GLvoid*const vpBuffer) const noexcept
+  { sAPI.glCompressedTexImage2D(GL_TEXTURE_2D, iLevel, eFormat, siWidth,
+      siHeight, 0, siSize, vpBuffer); }
   /* ----------------------------------------------------------------------- */
   void UploadCompressedTextureTT(const GLint iLevel,
     const TextureType ttFormat, const GLsizei siWidth, const GLsizei siHeight,
     const GLsizei siSize, const GLvoid*const vpBuffer) const
-      { UploadCompressedTexture(iLevel, TexTypeToNative<GLenum>(ttFormat),
-        siWidth, siHeight, siSize, vpBuffer); }
+  { UploadCompressedTexture(iLevel, TexTypeToNative<GLenum>(ttFormat), siWidth,
+      siHeight, siSize, vpBuffer); }
   /* ----------------------------------------------------------------------- */
   void UploadTextureSub(const GLint iLeft, const GLint iTop,
     const GLsizei siWidth, const GLsizei siHeight, const GLenum ePixFormat,
-    const GLvoid*const vpBuffer) const
-      { sAPI.glTexSubImage2D(GL_TEXTURE_2D, 0, iLeft, iTop, siWidth, siHeight,
-          ePixFormat, GL_UNSIGNED_BYTE, vpBuffer); }
+    const GLvoid*const vpBuffer) const noexcept
+  { sAPI.glTexSubImage2D(GL_TEXTURE_2D, 0, iLeft, iTop, siWidth, siHeight,
+      ePixFormat, GL_UNSIGNED_BYTE, vpBuffer); }
   /* ----------------------------------------------------------------------- */
   void UploadTextureSubTT(const GLint iLeft, const GLint iTop,
     const GLsizei siWidth, const GLsizei siHeight,
     const TextureType ttPixFormat, const GLvoid*const vpBuffer) const
-      { UploadTextureSub(iLeft, iTop, siWidth, siHeight,
-          TexTypeToNative<GLenum>(ttPixFormat), vpBuffer); }
+  { UploadTextureSub(iLeft, iTop, siWidth, siHeight,
+      TexTypeToNative<GLenum>(ttPixFormat), vpBuffer); }
   /* ----------------------------------------------------------------------- */
   void UploadTextureSub(const GLsizei siWidth, const GLsizei siHeight,
-    const GLenum ePixFormat, const GLvoid*const vpBuffer) const
-      { UploadTextureSub(0, 0, siWidth, siHeight, ePixFormat, vpBuffer); }
+    const GLenum ePixFormat, const GLvoid*const vpBuffer) const noexcept
+  { UploadTextureSub(0, 0, siWidth, siHeight, ePixFormat, vpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void GenerateMipmaps() const { sAPI.glGenerateMipmap(GL_TEXTURE_2D); }
+  void GenerateMipmaps() const noexcept
+    { sAPI.glGenerateMipmap(GL_TEXTURE_2D); }
   /* ----------------------------------------------------------------------- */
-  void CreateTextures(const GLsizei siCount, GLuint*const uipTexture) const
-    { sAPI.glGenTextures(siCount, uipTexture); }
+  void CreateTextures(const GLsizei siCount,
+    GLuint*const uipTexture) const noexcept
+  { sAPI.glGenTextures(siCount, uipTexture); }
   /* ----------------------------------------------------------------------- */
   template<class ListType>void CreateTextures(ListType &lIds) const
     { CreateTextures(static_cast<GLsizei>(lIds.size()), lIds.data()); }
   /* ----------------------------------------------------------------------- */
-  void CreateTexture(GLuint*const uipTexture) const
+  void CreateTexture(GLuint*const uipTexture) const noexcept
     { CreateTextures(1, uipTexture); }
   /* ----------------------------------------------------------------------- */
   GLuint GetCurrentTexture() const
@@ -476,7 +477,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiActiveTUnit = uiTexUnit;
   }
   /* ----------------------------------------------------------------------- */
-  void DeleteTexture(const GLsizei siCount, const GLuint*const uipTexture)
+  void DeleteTexture(const GLsizei siCount,
+    const GLuint*const uipTexture) noexcept
   { // Check each texture that is about to be deleted
     for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
     { // Keep scanning until we find a bound texture
@@ -489,7 +491,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     sAPI.glDeleteTextures(siCount, uipTexture);
   }
   /* ----------------------------------------------------------------------- */
-  void BindTexture(const GLuint uiTexture=0)
+  void BindTexture(const GLuint uiTexture=0) noexcept
   { // Ignore if already bound
     if(uiTexture == uiActiveTexture) return;
     // Bind the texture
@@ -498,12 +500,12 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiActiveTexture = uiTexture;
   }
   /* -- Create multiple framebuffer objects -------------------------------- */
-  void CreateFBOs(const GLsizei siCount, GLuint*const uipFbo) const
+  void CreateFBOs(const GLsizei siCount, GLuint*const uipFbo) const noexcept
     { sAPI.glGenFramebuffers(siCount, uipFbo); }
   /* -- Create one framebuffer object -------------------------------------- */
-  void CreateFBO(GLuint*const uipFbo) const { CreateFBOs(1, uipFbo); }
+  void CreateFBO(GLuint*const uipFbo) const noexcept { CreateFBOs(1, uipFbo); }
   /* ----------------------------------------------------------------------- */
-  void BindFBO(const GLuint uiFbo=0)
+  void BindFBO(const GLuint uiFbo=0) noexcept
   { // If we're already the active FBO, ignore
     if(uiActiveFbo == uiFbo) return;
     // Bind the FBO
@@ -512,7 +514,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiActiveFbo = uiFbo;
   }
   /* ----------------------------------------------------------------------- */
-  void DeleteFBO(const GLsizei siCount, const GLuint*const uipFbo)
+  void DeleteFBO(const GLsizei siCount, const GLuint*const uipFbo) noexcept
   { // Check each fbo that is about to be deleted
     for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
     { // Keep scanning until we find a cached fbo
@@ -525,36 +527,39 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     sAPI.glDeleteFramebuffers(siCount, uipFbo);
   }
   /* ----------------------------------------------------------------------- */
-  void AttachTexFBO(const GLuint uiTId) const
+  void AttachTexFBO(const GLuint uiTId) const noexcept
     { sAPI.glFramebufferTexture2D(GL_FRAMEBUFFER,
       GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, uiTId, 0); }
   /* ----------------------------------------------------------------------- */
-  GLuint VerifyFBO() const
+  GLuint VerifyFBO() const noexcept
     { return sAPI.glCheckFramebufferStatus(GL_FRAMEBUFFER); }
   /* -- GLSL functions ----------------------------------------------------- */
-  GLuint CreateShader(const GLenum eType) const
+  GLuint CreateShader(const GLenum eType) const noexcept
     { return sAPI.glCreateShader(eType); }
   /* ----------------------------------------------------------------------- */
-  void DeleteShader(const GLuint uiShader) const
+  void DeleteShader(const GLuint uiShader) const noexcept
     { sAPI.glDeleteShader(uiShader); }
   /* ----------------------------------------------------------------------- */
-  void ShaderSource(const GLuint uiShader, const GLchar*const cpCode) const
-    { sAPI.glShaderSource(uiShader, 1, &cpCode, nullptr); }
+  void ShaderSource(const GLuint uiShader,
+    const GLchar*const cpCode) const noexcept
+  { sAPI.glShaderSource(uiShader, 1, &cpCode, nullptr); }
   /* ----------------------------------------------------------------------- */
-  void CompileShader(const GLuint uiShader) const
+  void CompileShader(const GLuint uiShader) const noexcept
     { sAPI.glCompileShader(uiShader); }
   /* ----------------------------------------------------------------------- */
-  void AttachShader(const GLenum uiProgram, const GLuint uiShader) const
-    { sAPI.glAttachShader(uiProgram, uiShader); }
+  void AttachShader(const GLenum uiProgram,
+    const GLuint uiShader) const noexcept
+  { sAPI.glAttachShader(uiProgram, uiShader); }
   /* ----------------------------------------------------------------------- */
-  void DetachShader(const GLenum uiProgram, const GLuint uiShader) const
-    { sAPI.glDetachShader(uiProgram, uiShader); }
+  void DetachShader(const GLenum uiProgram,
+    const GLuint uiShader) const noexcept
+  { sAPI.glDetachShader(uiProgram, uiShader); }
   /* -- Get compilation status --------------------------------------------- */
   GLenum GetCompileStatus(const GLuint uiProgram) const
     { return GetShaderInt<GLenum>(uiProgram, GL_COMPILE_STATUS); }
   /* ----------------------------------------------------------------------- */
   GLsizei GetShaderInfoLog(const GLuint uiPId, const GLsizei siMaxLength,
-    GLchar*const cpDest) const
+    GLchar*const cpDest) const noexcept
   { // Get shader log entry and return length
     GLsizei siLength;
     sAPI.glGetShaderInfoLog(uiPId, siMaxLength, &siLength, cpDest);
@@ -582,7 +587,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { return GetProgramInt<GLenum>(uiProgram, GL_LINK_STATUS); }
   /* ----------------------------------------------------------------------- */
   GLsizei GetProgramInfoLog(const GLuint uiProgram, const GLsizei siMaxLength,
-    GLchar*const cpDest) const
+    GLchar*const cpDest) const noexcept
   { // Get shader program log entry and return length
     GLsizei siLength;
     sAPI.glGetProgramInfoLog(uiProgram, siMaxLength, &siLength, cpDest);
@@ -618,7 +623,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     return tResult;
   }
   /* ----------------------------------------------------------------------- */
-  GLuint CreateProgram() const { return sAPI.glCreateProgram(); }
+  GLuint CreateProgram() const noexcept { return sAPI.glCreateProgram(); }
   /* ----------------------------------------------------------------------- */
   template<typename IntegerType>
     const IntegerType GetProgramInt(const GLuint uiProgram,
@@ -633,7 +638,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     return tResult;
   }
   /* ----------------------------------------------------------------------- */
-  void DeleteProgram(const GLuint uiProgram)
+  void DeleteProgram(const GLuint uiProgram) noexcept
   { // Delete the program
     sAPI.glDeleteProgram(uiProgram);
     // If it was the active program then reset the cache
@@ -641,13 +646,13 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       uiActiveProgram = numeric_limits<GLuint>::max();
   }
   /* ----------------------------------------------------------------------- */
-  void LinkProgram(const GLuint uiProgram) const
+  void LinkProgram(const GLuint uiProgram) const noexcept
     { sAPI.glLinkProgram(uiProgram); }
   /* ----------------------------------------------------------------------- */
   GLuint GetProgram() const
     { return GetInteger<GLuint>(GL_CURRENT_PROGRAM); }
   /* ----------------------------------------------------------------------- */
-  void UseProgram(const GLuint uiProgram=0)
+  void UseProgram(const GLuint uiProgram=0) noexcept
   { // Ignore if we already have the program selected
     if(uiProgram == uiActiveProgram) return;
     // Activate the shader program
@@ -657,31 +662,32 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   }
   /* ----------------------------------------------------------------------- */
   GLint GetUniformLocation(const GLuint uiProgram,
-    const GLchar*const cpValue) const
+    const GLchar*const cpValue) const noexcept
   { return sAPI.glGetUniformLocation(uiProgram, cpValue); }
   /* ----------------------------------------------------------------------- */
   void BindAttribLocation(const GLuint uiProgram, const GLuint uiAttrib,
-    const GLchar*const cpValue) const
+    const GLchar*const cpValue) const noexcept
   { sAPI.glBindAttribLocation(uiProgram, uiAttrib, cpValue); }
   /* -- Assign a new vec4 array -------------------------------------------- */
   void Uniform(const GLint iUniform, const GLsizei iCount,
-    const GLfloat*const fpValues) const
+    const GLfloat*const fpValues) const noexcept
   { sAPI.glUniform4fv(iUniform, iCount, fpValues); }
   /* -- Assign a integer value to a uniform -------------------------------- */
-  void Uniform(const GLint iUniform, const GLint iValue) const
+  void Uniform(const GLint iUniform, const GLint iValue) const noexcept
     { sAPI.glUniform1i(iUniform, iValue); }
   /* -- Assign four floats to a uniform ------------------------------------ */
   void Uniform(const GLint iUniform, const GLfloat fV1, const GLfloat fV2,
-    const GLfloat fV3, const GLfloat fV4) const
+    const GLfloat fV3, const GLfloat fV4) const noexcept
   { sAPI.glUniform4f(iUniform, fV1, fV2, fV3, fV4); }
   /* -- Create multiple vertex buffer objects ------------------------------ */
-  void GenVertexBuffers(const GLsizei siCount, GLuint*const uipVbo) const
-    { sAPI.glGenBuffers(siCount, uipVbo); }
+  void GenVertexBuffers(const GLsizei siCount,
+    GLuint*const uipVbo) const noexcept
+  { sAPI.glGenBuffers(siCount, uipVbo); }
   /* -- Create one vertex buffer object ------------------------------------ */
-  void GenVertexBuffer(GLuint*const uipVbo) const
+  void GenVertexBuffer(GLuint*const uipVbo) const noexcept
     { GenVertexBuffers(1, uipVbo); }
   /* -- Bind vertex buffer object ------------------------------------------ */
-  void BindVertexBuffer(const GLenum eTarget, const GLuint uiVbo)
+  void BindVertexBuffer(const GLenum eTarget, const GLuint uiVbo) noexcept
   { // Ignore if this vbo is already selected
     if(uiVbo == uiActiveVbo) return;
     // Bind the vbo
@@ -690,10 +696,11 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiActiveVbo = uiVbo;
   }
   /* -- Bind vertex buffer object ------------------------------------------ */
-  void BindStaticVertexBuffer(const GLuint uiVbo)
+  void BindStaticVertexBuffer(const GLuint uiVbo) noexcept
     { BindVertexBuffer(GL_ARRAY_BUFFER, uiVbo); }
   /* -- Delete multiple vertex buffer objects ------------------------------ */
-  void DeleteVertexBuffers(const GLsizei siCount, const GLuint*const uipVbo)
+  void DeleteVertexBuffers(const GLsizei siCount,
+    const GLuint*const uipVbo) noexcept
   { // Check each vbo deleted
     for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
     { // Keep scanning until we find a bound vbo
@@ -706,16 +713,17 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     sAPI.glDeleteBuffers(siCount, uipVbo);
   }
   /* -- Delete one vertex buffer object ------------------------------------ */
-  void DeleteVertexBuffer(const GLuint uipVbo)
+  void DeleteVertexBuffer(const GLuint uipVbo) noexcept
     { DeleteVertexBuffers(1, &uipVbo); }
   /* -- Generate vertex array objects -------------------------------------- */
-  void GenVertexArrays(const GLsizei siCount, GLuint*const uipVao) const
-    { sAPI.glGenVertexArrays(siCount, uipVao); }
+  void GenVertexArrays(const GLsizei siCount,
+    GLuint*const uipVao) const noexcept
+  { sAPI.glGenVertexArrays(siCount, uipVao); }
   /* -- Generate a single vertex array object ------------------------------ */
-  void GenVertexArray(GLuint*const uipVao) const
+  void GenVertexArray(GLuint*const uipVao) const noexcept
     { GenVertexArrays(1, uipVao); }
   /* -- Bind vertex array object ------------------------------------------- */
-  void BindVertexArray(const GLuint uiVao)
+  void BindVertexArray(const GLuint uiVao) noexcept
   { // Ignore if this vao is already selected
     if(uiVao == uiActiveVao) return;
     // Bind the vertex array
@@ -724,7 +732,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiActiveVao = uiVao;
   }
   /* -- Delete multiple vertex array objects ------------------------------- */
-  void DeleteVertexArrays(const GLsizei siCount, const GLuint*const uipVao)
+  void DeleteVertexArrays(const GLsizei siCount,
+    const GLuint*const uipVao) noexcept
   { // Check each vao deleted
     for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
     { // Keep scanning until we find a bound vao
@@ -737,32 +746,33 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     sAPI.glDeleteVertexArrays(siCount, uipVao);
   }
   /* -- Delete single vertex array object ---------------------------------- */
-  void DeleteVertexArray(const GLuint uipSrc)
+  void DeleteVertexArray(const GLuint uipSrc) noexcept
     { DeleteVertexArrays(1, &uipSrc); }
   /* -- Data buffering functions ------------------------------------------- */
   void BufferData(const GLenum eTarget, const GLsizei siSize,
-    const GLvoid*const vpBuffer, const GLenum eUsage) const
-      { sAPI.glBufferData(eTarget, siSize, vpBuffer, eUsage); }
+    const GLvoid*const vpBuffer, const GLenum eUsage) const noexcept
+  { sAPI.glBufferData(eTarget, siSize, vpBuffer, eUsage); }
   /* ----------------------------------------------------------------------- */
-  void BufferStaticData(const GLsizei siSize, const GLvoid*const vpBuffer)
-    { BufferData(GL_ARRAY_BUFFER, siSize, vpBuffer, GL_STREAM_DRAW); }
+  void BufferStaticData(const GLsizei siSize,
+    const GLvoid*const vpBuffer) noexcept
+  { BufferData(GL_ARRAY_BUFFER, siSize, vpBuffer, GL_STREAM_DRAW); }
   /* -- Clear bound fbo or back buffer ------------------------------------- */
-  void ClearBuffer() const { sAPI.glClear(GL_COLOR_BUFFER_BIT); }
+  void ClearBuffer() const noexcept { sAPI.glClear(GL_COLOR_BUFFER_BIT); }
   /* -- Set clear colour --------------------------------------------------- */
-  void CommitClearColour() const
-   { sAPI.glClearColor(GetColourRed(),  GetColourGreen(),
-                       GetColourBlue(), GetColourAlpha()); }
+  void CommitClearColour() const noexcept
+    { sAPI.glClearColor(GetColourRed(),  GetColourGreen(),
+                        GetColourBlue(), GetColourAlpha()); }
   /* ----------------------------------------------------------------------- */
-  void SetClearColourInt(const unsigned int uiColour)
+  void SetClearColourInt(const unsigned int uiColour) noexcept
     { SetColourInt(uiColour); CommitClearColour(); }
   /* -- Set clear colour (applies to all fbos) ----------------------------- */
-  void SetClearColourIfChanged(const FboColour &fcData)
+  void SetClearColourIfChanged(const FboColour &fcData) noexcept
     { if(SetColour(fcData)) CommitClearColour(); }
   /* ----------------------------------------------------------------------- */
-  void SetAndClear(const FboColour &cCol)
+  void SetAndClear(const FboColour &cCol) noexcept
     { SetClearColourIfChanged(cCol); ClearBuffer(); }
   /* -- Update polygon rendering mode -------------------------------------- */
-  void SetPolygonMode(const GLenum eMode)
+  void SetPolygonMode(const GLenum eMode) noexcept
   { // Return if we already set this mode
     if(ePolyMode == eMode) return;
     // Set it and update cached mode
@@ -770,24 +780,46 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     ePolyMode = eMode;
   }
   /* ----------------------------------------------------------------------- */
-  GLenum GetError() const { return sAPI.glGetError(); }
+  GLenum GetError() const noexcept{ return sAPI.glGetError(); }
   /* -- Restore VSync setting ---------------------------------------------- */
-  void RestoreVSync() const { GlFWSetVSync(vsSetting); }
+  void RestoreVSync() const noexcept { GlFWSetVSync(vsSetting); }
   /* ----------------------------------------------------------------------- */
   void DrawArrays(const GLenum eMode, const GLint iFirst,
-    const GLsizei siCount) const
-      { sAPI.glDrawArrays(eMode, iFirst, siCount); }
+    const GLsizei siCount) const noexcept
+  { sAPI.glDrawArrays(eMode, iFirst, siCount); }
   /* ----------------------------------------------------------------------- */
-  void DrawArraysTriangles(const GLsizei siCount) const
+  void DrawArraysTriangles(const GLsizei siCount) const noexcept
     { DrawArrays(GL_TRIANGLES, 0, siCount); }
+  /* -- Render arrays ------------------------------------------------------ */
+  void DrawArrays(void) noexcept
+  { // Using MacOS?
+#if defined(MACOS)
+      // This locking code is required to fix a major crash bug in Ventura
+      // 13.3+. See https://github.com/glfw/glfw/issues/1997 for more
+      // information.
+      using namespace Lib::OS::GlFW::NSGL;
+      // Get the current NSGL context and lock it. Note there is nothing to
+      // throw in this routine so it is safe to use this as-is.
+      CGLContextObj cglcoLock = CGLGetCurrentContext();
+      CGLLockContext(cglcoLock);
+      // Blit the two triangles
+      DrawArraysTriangles(stTwoTriangles);
+      // Context is unlocked when exiting this scope
+      CGLUnlockContext(cglcoLock);
+#else
+      // Blit the two triangles
+      DrawArraysTriangles(stTwoTriangles);
+#endif
+  }
   /* ----------------------------------------------------------------------- */
-  void SetViewport(const GLsizei siWidth, const GLsizei siHeight) const
-    { sAPI.glViewport(0, 0, siWidth, siHeight); }
+  void SetViewport(const GLsizei siWidth,
+    const GLsizei siHeight) const noexcept
+  { sAPI.glViewport(0, 0, siWidth, siHeight); }
   /* -- Get openGL float array --------------------------------------------- */
   template<size_t stCount>
     void GetFloatArray(const GLenum eId, GLfloat *const fpDest) const
-      { IGL(sAPI.glGetFloatv(eId, fpDest),
-          "Get float array failed!", "Index", eId, "Count", stCount); }
+  { IGL(sAPI.glGetFloatv(eId, fpDest),
+      "Get float array failed!", "Index", eId, "Count", stCount); }
   /* -- Get openGL float array --------------------------------------------- */
   template<size_t stCount, class ArrayType = array<GLfloat, stCount>>
     const ArrayType GetFloatArray(const GLenum eId) const
@@ -812,8 +844,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Get openGL int ----------------------------------------------------- */
   template<typename IntegerType = GLint>
     IntegerType GetInteger(const GLenum eId) const
-      { return static_cast<IntegerType>(
-          GetIntegerArray<sizeof(IntegerType) / sizeof(GLint)>(eId)[0]); }
+  { return static_cast<IntegerType>(
+      GetIntegerArray<sizeof(IntegerType) / sizeof(GLint)>(eId)[0]); }
   /* -- Get openGL string -------------------------------------------------- */
   template<typename PtrType = GLubyte>
     const PtrType* GetString(const GLenum eId) const
@@ -821,7 +853,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     const GLubyte*const ucpStr = sAPI.glGetString(eId);
     IGLC("Get string failed!", "Index", eId);
     // Sanity check actual string
-    if(!ucpStr || !*ucpStr)
+    if(!StrIsValid(ucpStr))
       XC("Invalid string returned!", "Index", eId, "String", ucpStr);
     // Return result
     return reinterpret_cast<const PtrType*>(ucpStr);
@@ -844,10 +876,10 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     vTextures.clear();
   }
   /* -- Enable vertex attribute array -------------------------------------- */
-  void EnableVertexAttribArray(const GLuint uiAId) const
+  void EnableVertexAttribArray(const GLuint uiAId) const noexcept
     { sAPI.glEnableVertexAttribArray(uiAId); }
   /* -- Disable vertex attribute array ------------------------------------- */
-  void DisableVertexAttribArray(const GLuint uiAId) const
+  void DisableVertexAttribArray(const GLuint uiAId) const noexcept
     { sAPI.glDisableVertexAttribArray(uiAId); }
   /* -- Enable an extension ------------------------------------------------ */
   void EnableExtension(const GLenum eExtension) const
@@ -870,19 +902,19 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       idExtensions.Get(eExtension), hex, eExtension);
   }
   /* -- Commit blending algorithms ----------------------------------------- */
-  void CommitBlend() const
+  void CommitBlend() const noexcept
     { sAPI.glBlendFuncSeparate(GetSrcRGB(), GetDstRGB(),
                                GetSrcAlpha(), GetDstAlpha()); }
   /* -- Set blending algorithms -------------------------------------------- */
-  void SetBlendIfChanged(const FboBlend &fbOther)
+  void SetBlendIfChanged(const FboBlend &fbOther) noexcept
     { if(SetBlend(fbOther)) CommitBlend(); }
   /* -- Set texture parameter (No error checking needed) ------------------- */
-  void SetTexParam(const GLenum eVar, const GLint iVal) const
+  void SetTexParam(const GLenum eVar, const GLint iVal) const noexcept
     { sAPI.glTexParameteri(GL_TEXTURE_2D, eVar, iVal); }
   /* -- Convert pixel mode to string --------------------------------------- */
   template<typename IntType> // Forcing any type to GLenum
     const string_view &GetPixelFormat(const IntType itMode) const
-       { return idFormatModes.Get(static_cast<GLenum>(itMode)); }
+  { return idFormatModes.Get(static_cast<GLenum>(itMode)); }
   /* -- Update hint -------------------------------------------------------- */
   void SetHint(const GLenum eTarget, const GLenum eMode) const
   { // Get opengl hint and throw if not failed else set hint
@@ -971,8 +1003,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   { // Filter table
     typedef array<const GLint, 2> TwoGLints;
     typedef array<const TwoGLints, OF_MAX> TexFilterList;
-    static const TexFilterList tfList{
-    { // Point/Bilinear filtering options
+    static const TexFilterList tfList{{
+      // Point/Bilinear filtering options
       { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR }, // 00-01
       { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR }, // 02-03
       // Point/Bilinear/Mipmap/Trilinear filtering options
@@ -994,7 +1026,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   GLuint GetExtensionCount() const
     { return GetInteger<GLuint>(GL_NUM_EXTENSIONS); }
   /* ----------------------------------------------------------------------- */
-  const char *GetExtension(const GLuint uiI) const
+  const char *GetExtension(const GLuint uiI) const noexcept
     { return reinterpret_cast<const char*>
         (sAPI.glGetStringi(GL_EXTENSIONS, uiI)); }
   /* -- Read OpenGL renderer data ------------------------------------------ */
@@ -1033,10 +1065,11 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     if(!vFbos.empty()) DeleteMarkedFboHandles();
   }
   /* -- Get available and total VRAM --------------------------------------- */
-  GLuint64 GetVRAMFree() const { return qwFreeVRAM; }
-  GLuint64 GetVRAMTotal() const { return qwTotalVRAM; }
-  GLuint64 GetVRAMUsed() const { return GetVRAMTotal() - GetVRAMFree(); }
-  double GetVRAMFreePC() const
+  GLuint64 GetVRAMFree() const noexcept { return qwFreeVRAM; }
+  GLuint64 GetVRAMTotal() const noexcept { return qwTotalVRAM; }
+  GLuint64 GetVRAMUsed() const noexcept
+    { return GetVRAMTotal() - GetVRAMFree(); }
+  double GetVRAMFreePC() const noexcept
     { return 100.0 - UtilMakePercentage(GetVRAMFree(), GetVRAMTotal()); }
   /* -- Get free memory on nvidia cards ------------------------------------ */
   void UpdateVRAMAvailableNV()
@@ -1114,18 +1147,18 @@ class Ogl :                            // OGL class for OpenGL use simplicity
          "Required",  qwMinVRAM,       "Needed", qwMinVRAM - qwFreeVRAM);
     // Report VRAM information to log
     cLog->LogInfoExSafe("- Total VRAM: $ bytes ($).\n"
-                "- Available VRAM: $ bytes ($).",
+                        "- Available VRAM: $ bytes ($).",
       qwTotalVRAM, StrToBytes(qwTotalVRAM), qwFreeVRAM,
       StrToBytes(qwFreeVRAM));
   }
   /* --------------------------------------------------------------- */ public:
   template<typename IntType>
     const string_view &GetGLErr(const IntType itCode) const
-      { return idOGLCodes.Get(static_cast<GLenum>(itCode)); }
+  { return idOGLCodes.Get(static_cast<GLenum>(itCode)); }
   /* -- Return limit ------------------------------------------------------- */
   double GetLimit() const { return ClockDurationToDouble(cdLimit); }
   /* -- Flush pipeline when not drawing to prevent memory leak ------------- */
-  void Flush(void) const { sAPI.glFlush(); }
+  void Flush(void) const noexcept { sAPI.glFlush(); }
   /* -- Update window size limits ------------------------------------------ */
   void UpdateWindowSizeLimits()
   { // Get app specified minimums and maximums

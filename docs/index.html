@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.1.1.1 -->
-<!-- Automatically built at Thu Jan 01 14:35:24 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.1.1.1 -->
+<!-- Reference for the Mhatxotic Engine API version 26.1.9.157 -->
+<!-- Automatically built at Fri Jan 09 21:50:31 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.1.9.157 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.1.1.1">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.1.9.157">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.1.1.1">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.1.9.157">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.1.1.1">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.1.9.157">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.1.1.1 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.1.9.157 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.1.1.1 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.1.9.157 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.1.1.1 API reference</H1>
+	<H1>Mhatxotic Engine 26.1.9.157 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 907 functions (415 members, 492 methods) and 30 consts in 31 namespaces with 87 commands and 214 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 906 functions (414 members, 492 methods) and 30 consts in 31 namespaces with 87 commands and 214 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -494,7 +494,7 @@
 						<OL>
 							<LI><P>The window class contains functions for manipulating the Window.</P></LI>
 							<LI>
-								<B>Members</B> <I>(36 members)</I>
+								<B>Members</B> <I>(35 members)</I>
 								<OL>
 									<LI><A href="#Display.Attention">Attention</A></LI>
 									<LI><A href="#Display.Centre">Centre</A></LI>
@@ -522,7 +522,6 @@
 									<LI><A href="#Display.Restore">Restore</A></LI>
 									<LI><A href="#Display.SetCursor">SetCursor</A></LI>
 									<LI><A href="#Display.SetFullScreen">SetFullScreen</A></LI>
-									<LI><A href="#Display.SetInterval">SetInterval</A></LI>
 									<LI><A href="#Display.SetPos">SetPos</A></LI>
 									<LI><A href="#Display.SetSize">SetSize</A></LI>
 									<LI><A href="#Display.Transparent">Transparent</A></LI>
@@ -4086,16 +4085,6 @@
 		<PRE><U>State</U> <I>(boolean)</I> = true for fullscreen, false for window.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Sets the full&#x2d;screen window state and resets the video subsystem&#x2e;<BR>This changes the cvar too&#x2e;<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Display.SetInterval" style="display:none">
-		<H3>Display.SetInterval</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Display.SetInterval(<I><U>Ticks</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Ticks</U> <I>(integer)</I> = Number of ticks per second (min:1,max:200).<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>This functions set the core timing frequency&#x2e; The default target is to perform at least 60 game loop iterations per second&#x2e; This is completely detatched from GPU rendering which will always render as fast as possible&#x2e;<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Display.SetPos" style="display:none">
@@ -13320,6 +13309,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Thu Jan 01 14:35:24 2026 +0000</ADDRESS>
+	This document was generated at Fri Jan 09 21:50:31 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

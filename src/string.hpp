@@ -39,11 +39,9 @@ namespace H                            // Private functions
       Param(osS, StdForward<VarArgs>(vaArgs)...);
     }
     /* -- Append main function --------------------------------------------- */
-    template<typename ...VarArgs>
+    template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
       static const string StrAppend(VarArgs &&...vaArgs)
-    { // Theres no need to call this if theres no parameters
-      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-      // Stream to write to
+    { // Stream to write to
       ostringstream osS;
       // Build string
       Param(osS, StdForward<VarArgs>(vaArgs)...);
@@ -51,11 +49,9 @@ namespace H                            // Private functions
       return osS.str();
     }
     /* -- Append with formatted numbers ------------------------------------ */
-    template<typename ...VarArgs>
+    template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
       static const string StrAppendImbue(VarArgs &&...vaArgs)
-    { // Theres no need to call this if theres no parameters
-      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-      // Stream to write to
+    { // Stream to write to
       ostringstream osS;
       // Imbue current locale
       osS.imbue(cCommon->CommonLocale());
@@ -97,12 +93,10 @@ namespace H                            // Private functions
       else Param(osS, cpPos);
     }
     /* -- Prepare message from c-string format ----------------------------- */
-    template<typename ...VarArgs>
+    template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
       static const string StrFormat(const char*const cpFmt,
         VarArgs &&...vaArgs)
-    { // Theres no need to call this if theres no parameters
-      static_assert(sizeof...(VarArgs) > 0, "Not enough parameters!");
-      // Return if string empty of invalid
+    { // Return if string empty of invalid
       if(UtfIsCStringNotValid(cpFmt)) return {};
       // Stream to write to
       ostringstream osS;
@@ -637,14 +631,13 @@ template<typename AnyType>
           atVal); }
 /* ------------------------------------------------------------------------- */
 template<typename OutType, typename InType, class SuffixClass>
-  static OutType StrToReadableSuffix(const InType itValue,
-    const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup,
-    const char*const cpDefault)
-{ // Check types
-  static_assert(is_floating_point_v<OutType>, "OutType not floating point!");
-  static_assert(is_integral_v<InType>, "InType not integral!");
-  static_assert(is_class_v<SuffixClass>, "Class invalid!");
-  // Value to return
+requires is_floating_point_v<OutType> &&
+         is_integral_v<InType> &&
+         is_class_v<SuffixClass>
+static OutType StrToReadableSuffix(const InType itValue,
+  const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup,
+  const char*const cpDefault)
+{ // Value to return
   OutType otReturn;
   // Discover the best measurement to show by testing each unit from the
   // lookup table to see if it is divisible and if it is not then try the next
@@ -1047,6 +1040,9 @@ static const string StrCompact(const char*cpStr)
   StrCompactRef(strOut);
   return strOut;
 }
+/* -- Returns if string is non-null and first character is valid ----------- */
+template<typename StrType=char*>bool StrIsValid(StrType stStr)
+  { return stStr && *stStr; }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

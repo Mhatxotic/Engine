@@ -102,145 +102,156 @@ class Oal :                            // Actual class body
   }
   /* -- Upload data to audio device ---------------------------------------- */
   void BufferData(const ALuint uiBuffer, const ALenum eFormat,
-    const ALvoid*const vpData, const ALsizei siSize, const ALsizei siFrequency)
-      { alBufferData(uiBuffer, eFormat, vpData, siSize, siFrequency); }
+    const ALvoid*const vpData, const ALsizei siSize,
+    const ALsizei siFrequency) noexcept
+  { alBufferData(uiBuffer, eFormat, vpData, siSize, siFrequency); }
   /* -- Upload data to audio device ---------------------------------------- */
   void BufferData(const ALuint uiBuffer, const ALenum eFormat,
-    const MemConst &mcSrc, const ALsizei siFrequency)
+    const MemConst &mcSrc, const ALsizei siFrequency) noexcept
       { BufferData(uiBuffer, eFormat, mcSrc.MemPtr<ALvoid>(),
           mcSrc.MemSize<ALsizei>(), siFrequency); }
   /* -- Queue specified buffer count into source --------------------------- */
   void QueueBuffers(const ALuint uiSource,
-    const ALsizei siCount, ALuint*const uipBuffer) const
+    const ALsizei siCount, ALuint*const uipBuffer) const noexcept
       { alSourceQueueBuffers(uiSource, siCount, uipBuffer); }
   /* -- Queue one buffer count into source --------------------------------- */
-  void QueueBuffer(const ALuint uiSource, ALuint uiBuffer) const
+  void QueueBuffer(const ALuint uiSource, ALuint uiBuffer) const noexcept
     { QueueBuffers(uiSource, 1, &uiBuffer); }
   /* -- Unqueue specified buffer count from source and place into buffers -- */
   void UnQueueBuffers(const ALuint uiSource,
-    const ALsizei siCount, ALuint*const uipBuffer) const
+    const ALsizei siCount, ALuint*const uipBuffer) const noexcept
       { alSourceUnqueueBuffers(uiSource, siCount, uipBuffer); }
   /* -- Unqueue one buffer from source and place into buffers -------------- */
-  void UnQueueBuffer(const ALuint uiSource, ALuint &uiBuffer) const
+  void UnQueueBuffer(const ALuint uiSource, ALuint &uiBuffer) const noexcept
     { UnQueueBuffers(uiSource, 1, &uiBuffer); }
   /* -- Unqueue one buffer from source and return it ----------------------- */
-  ALuint UnQueueBuffer(const ALuint uiSource) const
+  ALuint UnQueueBuffer(const ALuint uiSource) const noexcept
     { ALuint uiBuffer; UnQueueBuffer(uiSource, uiBuffer); return uiBuffer; }
   /* -- Set source value as float ------------------------------------------ */
   void SetSourceFloat(const ALuint uiSource, const ALenum eWhat,
-    const ALfloat fValue) const
+    const ALfloat fValue) const noexcept
       { alSourcef(uiSource, eWhat, fValue); }
   /* -- Get source value as float ------------------------------------------ */
   void GetSourceFloat(const ALuint uiSource, const ALenum eWhat,
-    ALfloat *fDestValue) const
+    ALfloat *fDestValue) const noexcept
       { alGetSourcef(uiSource, eWhat, fDestValue); }
   /* -- Set source value as int -------------------------------------------- */
   void SetSourceInt(const ALuint uiSource, const ALenum eWhat,
-    const ALint iValue) const
+    const ALint iValue) const noexcept
       { alSourcei(uiSource, eWhat, iValue); }
   /* -- Get source value as int -------------------------------------------- */
   void GetSourceInt(const ALuint uiSource, const ALenum eWhat,
-    ALint *iDestValue) const
+    ALint *iDestValue) const noexcept
       { alGetSourcei(uiSource, eWhat, iDestValue); }
   /* -- Get source value as a float vector --------------------------------- */
   void GetSourceVector(const ALuint uiSource, const ALenum eWhat,
-    ALfloat *fDX, ALfloat *fDY, ALfloat *fDZ) const
+    ALfloat *fDX, ALfloat *fDY, ALfloat *fDZ) const noexcept
       { alGetSource3f(uiSource, eWhat, fDX, fDY, fDZ); }
   /* -- Set source value as a float vector --------------------------------- */
   void SetSourceVector(const ALuint uiSource, const ALenum eWhat,
-    const ALfloat fDX, const ALfloat fDY, const ALfloat fDZ) const
+    const ALfloat fDX, const ALfloat fDY, const ALfloat fDZ) const noexcept
       { alSource3f(uiSource, eWhat, fDX, fDY, fDZ); }
   /* -- Stop a source from playing ----------------------------------------- */
-  void StopSource(const ALuint uiSource) const
+  void StopSource(const ALuint uiSource) const noexcept
     { alSourceStop(uiSource); }
   /* -- Play a source ------------------------------------------------------ */
-  void PlaySource(const ALuint uiSource) const
+  void PlaySource(const ALuint uiSource) const noexcept
     { alSourcePlay(uiSource); }
   /* -- Rewind a source ---------------------------------------------------- */
-  void RewindSource(const ALuint uiSource) const
+  void RewindSource(const ALuint uiSource) const noexcept
     { alSourceRewind(uiSource); }
   /* -- Pause a source ---------------------------------------------------- */
-  void PauseSource(const ALuint uiSource) const
+  void PauseSource(const ALuint uiSource) const noexcept
     { alSourcePause(uiSource); }
   /* -- Play more than one source simultaniously --------------------------- */
-  template<class ArrayType>void PlaySources(const ArrayType &atArray)
+  template<class ArrayType>void PlaySources(const ArrayType &atArray) noexcept
     { alSourcePlayv(static_cast<ALsizei>(atArray.size()), atArray.data()); }
   /* -- Create multiple sources -------------------------------------------- */
-  void CreateSources(const ALsizei siCount, ALuint*const uipSource) const
-    { alGenSources(siCount, uipSource); }
+  void CreateSources(const ALsizei siCount,
+    ALuint*const uipSource) const noexcept
+  { alGenSources(siCount, uipSource); }
   /* -- Create one source and place it in the specified buffer ------------- */
-  void CreateSource(ALuint &uiSourceRef) const
+  void CreateSource(ALuint &uiSourceRef) const noexcept
     { CreateSources(1, &uiSourceRef); }
   /* -- Create and return a source ----------------------------------------- */
-  ALuint CreateSource() const
+  ALuint CreateSource() const noexcept
     { ALuint uiSource; CreateSource(uiSource); return uiSource; }
   /* -- Delete multiple sources -------------------------------------------- */
-  void DeleteSources(const ALsizei siCount, const ALuint*const uipSource) const
-    { alDeleteSources(siCount, uipSource); }
+  void DeleteSources(const ALsizei siCount,
+    const ALuint*const uipSource) const noexcept
+  { alDeleteSources(siCount, uipSource); }
   /* -- Delete multiple sources -------------------------------------------- */
-  template<class List>void DeleteSources(const List &tList) const
+  template<class List>void DeleteSources(const List &tList) const noexcept
     { DeleteSources(static_cast<ALsizei>(tList.size()), tList.data()); }
   /* -- Delete one source -------------------------------------------------- */
-  void DeleteSource(const ALuint &uiSourceRef) const
+  void DeleteSource(const ALuint &uiSourceRef) const noexcept
     { DeleteSources(1, &uiSourceRef); }
   /* -- Create multiple buffers -------------------------------------------- */
-  void CreateBuffers(const ALsizei siCount, ALuint*const uipBuffer) const
-    { alGenBuffers(siCount, uipBuffer); }
+  void CreateBuffers(const ALsizei siCount,
+    ALuint*const uipBuffer) const noexcept
+  { alGenBuffers(siCount, uipBuffer); }
   /* -- Create multiple buffers -------------------------------------------- */
-  template<class List>void CreateBuffers(List &tList) const
+  template<class List>void CreateBuffers(List &tList) const noexcept
     { CreateBuffers(static_cast<ALsizei>(tList.size()), tList.data()); }
   /* -- Create one buffer and place it in the specified variable ----------- */
-  void CreateBuffer(ALuint &uiBuffer) const
+  void CreateBuffer(ALuint &uiBuffer) const noexcept
     { CreateBuffers(1, &uiBuffer); }
   /* -- Create and return a buffer ----------------------------------------- */
-  ALuint CreateBuffer() const
+  ALuint CreateBuffer() const noexcept
     { ALuint uiBuffer; CreateBuffer(uiBuffer); return uiBuffer; }
   /* -- Delete multiple buffers -------------------------------------------- */
-  void DeleteBuffers(const ALsizei siCount, const ALuint*const uipBuffer) const
-    { alDeleteBuffers(siCount, uipBuffer); }
+  void DeleteBuffers(const ALsizei siCount,
+    const ALuint*const uipBuffer) const noexcept
+  { alDeleteBuffers(siCount, uipBuffer); }
   /* -- Delete multiple sources -------------------------------------------- */
-  template<class List>void DeleteBuffers(const List &tList) const
+  template<class List>void DeleteBuffers(const List &tList) const noexcept
     { DeleteBuffers(static_cast<ALsizei>(tList.size()), tList.data()); }
   /* -- Delete one buffer -------------------------------------------------- */
-  void DeleteBuffer(const ALuint &uiBufferRef) const
+  void DeleteBuffer(const ALuint &uiBufferRef) const noexcept
     { DeleteBuffers(1, &uiBufferRef); }
   /* -- Get buffer parameter as integer ------------------------------------ */
-  void GetBufferInt(const ALuint uiBId, const ALenum eId, ALint *iDest) const
-    { alGetBufferi(uiBId, eId, iDest); }
+  void GetBufferInt(const ALuint uiBId,
+    const ALenum eId, ALint *iDest) const noexcept
+  { alGetBufferi(uiBId, eId, iDest); }
   /* -- Get buffer information --------------------------------------------- */
   template<typename IntType=ALint>
-    IntType GetBufferInt(const ALuint uiBId, const ALenum eId) const
+    IntType GetBufferInt(const ALuint uiBId, const ALenum eId) const noexcept
       { ALint iV; GetBufferInt(uiBId, eId, &iV);
         return static_cast<IntType>(iV); }
   /* -- Set distance model ------------------------------------------------- */
-  void SetDistanceModel(const ALenum eModel) const
+  void SetDistanceModel(const ALenum eModel) const noexcept
     { alDistanceModel(eModel); }
   /* -- Set listener vector ------------------------------------------------ */
   void SetListenerVector(const ALenum eParam, const ALfloat fX,
-    const ALfloat fY, const ALfloat fZ) const
+    const ALfloat fY, const ALfloat fZ) const noexcept
       { alListener3f(eParam, fX, fY, fZ); }
   /* -- Set listener position ---------------------------------------------- */
   void SetListenerPosition(const ALfloat fX, const ALfloat fY,
-    const ALfloat fZ) const
+    const ALfloat fZ) const noexcept
       { SetListenerVector(AL_POSITION, fX, fY, fZ); }
   /* -- Set listener velocity ---------------------------------------------- */
   void SetListenerVelocity(const ALfloat fX, const ALfloat fY,
-    const ALfloat fZ) const
+    const ALfloat fZ) const noexcept
       { SetListenerVector(AL_VELOCITY, fX, fY, fZ); }
   /* -- Set listener velocity ---------------------------------------------- */
-  void SetListenerVectors(const ALenum eParam, const ALfloat *fpVectors) const
-    { alListenerfv(eParam, fpVectors); }
+  void SetListenerVectors(const ALenum eParam,
+    const ALfloat *fpVectors) const noexcept
+  { alListenerfv(eParam, fpVectors); }
   /* -- Set listener orientation ------------------------------------------- */
-  void SetListenerOrientation(const ALfloat *fpVectors) const
+  void SetListenerOrientation(const ALfloat *fpVectors) const noexcept
     { SetListenerVectors(AL_ORIENTATION, fpVectors); }
   /* -- Is extension present ----------------------------------------------- */
-  bool HaveExtension(const char*const cpEnum) const
+  bool HaveExtension(const char*const cpEnum) const noexcept
     { return alIsExtensionPresent(cpEnum) != AL_FALSE; }
-  bool HaveCExtension(const char*const cpEnum, ALCdevice*const alcDev) const
-    { return alcIsExtensionPresent(alcDev, cpEnum) != AL_FALSE; }
-  bool HaveCExtension(const char*const cpEnum) const
+  /* ----------------------------------------------------------------------- */
+  bool HaveCExtension(const char*const cpEnum,
+    ALCdevice*const alcDev) const noexcept
+  { return alcIsExtensionPresent(alcDev, cpEnum) != AL_FALSE; }
+  /* ----------------------------------------------------------------------- */
+  bool HaveCExtension(const char*const cpEnum) const noexcept
     { return HaveCExtension(cpEnum, alcDevice); }
-  bool HaveNCExtension(const char*const cpEnum) const
+  /* ----------------------------------------------------------------------- */
+  bool HaveNCExtension(const char*const cpEnum) const noexcept
     { return HaveCExtension(cpEnum, nullptr); }
   /* -- Detect enumeration method ------------------------------------------ */
   void DetectEnumerationMethod()
@@ -255,7 +266,7 @@ class Oal :                            // Actual class body
   }
   /* == Convert bitrate and channels to an openal useful identifier ======== */
   static bool GetOALType(const ALuint uiChannels, const ALuint uiBits,
-    ALenum &eFormat, ALenum &eSFormat)
+    ALenum &eFormat, ALenum &eSFormat) noexcept
   { // Compare channels
     switch(uiChannels)
     { // MONO: 1 channel
@@ -303,29 +314,36 @@ class Oal :                            // Actual class body
     const ALchar*const ucpStr = alGetString(eId);
     IALC("Get string failed!", "Index", eId);
     // Sanity check actual string
-    if(!ucpStr || !*ucpStr)
+    if(!StrIsValid(ucpStr))
       XC("Invalid string returned!", "Index", eId, "String", ucpStr);
     // Return result
     return reinterpret_cast<const CStrType*>(ucpStr);
   }
   /* -- Get context openAL string ------------------------------------------ */
-  template<typename T=ALchar>const T*GetCString(ALCdevice*const alcDev,
-    const ALenum eId) const
+  template<typename StrType=const ALCchar*>
+    StrType ContextGetString(ALCdevice*const alcDevice,
+      const ALCenum alcEnum) const noexcept
+  { return reinterpret_cast<StrType>(alcGetString(alcDevice, alcEnum)); }
+  /* ----------------------------------------------------------------------- */
+  template<typename StrType=const ALCchar*>
+    StrType GetCString(ALCdevice*const alcDev, const ALenum eId) const
   { // Get the variable and throw error if occured
-    const ALchar*const ucpStr = alcGetString(alcDev, eId);
+    const ALCchar*const ucpStr = ContextGetString(alcDev, eId);
     IALC("Get context string failed!", "Context", !!alcDev, "Index", eId);
     // Sanity check actual string
-    if(!ucpStr || !*ucpStr)
+    if(!StrIsValid(ucpStr))
       XC("Invalid context string returned!", "Index", eId, "String", ucpStr);
     // Return result
-    return reinterpret_cast<const T*>(ucpStr);
+    return reinterpret_cast<StrType>(ucpStr);
   }
   /* -- Get context openAL string ------------------------------------------ */
-  template<typename T=ALchar>const T*GetCString(const ALenum eId) const
-    { return GetCString<T>(alcDevice, eId); }
+  template<typename StrType=const ALCchar*>
+    StrType GetCString(const ALenum eId) const
+  { return GetCString<StrType>(alcDevice, eId); }
   /* -- Get nullptr context openAL string ---------------------------------- */
-  template<typename T=ALchar>const T*GetNCString(const ALenum eId) const
-    { return reinterpret_cast<const T*>(alcGetString(nullptr, eId)); }
+  template<typename StrType=const ALCchar*>
+    StrType GetNCString(const ALenum eId) const noexcept
+  { return reinterpret_cast<StrType>(ContextGetString(nullptr, eId)); }
   /* -- Get openAL int array ----------------------------------------------- */
   template<size_t stCount, class A=array<ALCint,stCount>>
     const A GetIntegerArray(const ALenum eId) const
@@ -344,14 +362,15 @@ class Oal :                            // Actual class body
   const string_view &GetALFormat(const ALenum eFormat) const
     { return imFormatCodes.Get(eFormat); }
   /* -- Get source counts -------------------------------------------------- */
-  ALuint GetMaxMonoSources() const { return uiMaxMonoSources; }
-  ALuint GetMaxStereoSources() const { return uiMaxStereoSources; }
+  ALuint GetMaxMonoSources() const noexcept { return uiMaxMonoSources; }
+  ALuint GetMaxStereoSources() const noexcept { return uiMaxStereoSources; }
   /* -- Get current playback device ---------------------------------------- */
-  const string_view &GetPlaybackDevice() const { return strvPlayback; }
+  const string_view &GetPlaybackDevice() const noexcept
+    { return strvPlayback; }
   /* -- Return version information ----------------------------------------- */
-  const string &GetVersion() const { return strVersion; }
+  const string &GetVersion() const noexcept { return strVersion; }
   /* -- Set new HRTF setting ----------------------------------------------- */
-  bool DoSetHRTF(const ALCint alState)
+  bool DoSetHRTF(const ALCint alState) noexcept
   { // Reset with HRTF disabled
     const array<const ALCint,3> alciAttrs{ ALC_HRTF_SOFT, alState, 0 };
     return alcResetDeviceSOFT(alcDevice, alciAttrs.data()) != AL_FALSE;
@@ -386,7 +405,7 @@ class Oal :                            // Actual class body
     const string_view &GetALErr(const IntType itCode) const
       { return imOALCodes.Get(static_cast<ALenum>(itCode)); }
   /* -- AL is initialised? ------------------------------------------------- */
-  bool IsInitialised() const { return alcDevice && alcContext; }
+  bool IsInitialised() const noexcept { return alcDevice && alcContext; }
   /* -- ReInitialise device with HRTF disabled ----------------------------- */
   bool SetHRTF(const bool bState)
   { // Ignore if audio is already reset
@@ -398,7 +417,8 @@ class Oal :                            // Actual class body
     return true;
   }
   /* -- Update device ------------------------------------------------------ */
-  void UpdateDevice(ALCdevice*const alcNDevice) { alcDevice = alcNDevice; }
+  void UpdateDevice(ALCdevice*const alcNDevice) noexcept
+    { alcDevice = alcNDevice; }
   /* -- Update playback device name ---------------------------------------- */
   void UpdatePlaybackDeviceName()
     { strvPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?

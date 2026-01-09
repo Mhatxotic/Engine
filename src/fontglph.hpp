@@ -68,10 +68,10 @@ struct StrokerCheckFunc                // Members initially public
 /* ------------------------------------------------------------------------- */
 struct RoundFunc                       // Members initially public
 { /* -- Configurable rounding functor helper class ------------------------- */
-  template<typename T=double>class Straight // Default no-outline class
+  template<typename T=double>
+    requires is_floating_point_v<T>
+  class Straight                       // Default no-outline class
   { /* --------------------------------------------------------------------- */
-    static_assert(is_floating_point_v<T>, "Type not floating point!");
-    /* --------------------------------------------------------------------- */
     const T        tValue;             // Calculated advance value
     /* ------------------------------------------------------------- */ public:
     T Result() const { return tValue; }

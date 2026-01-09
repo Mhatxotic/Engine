@@ -563,21 +563,21 @@ LLFUNC(HexL, 1, LuaUtilPushVar(lS, StrHexFromInt(AgLuaInteger{lS, 1})))
 // < Result:integer=The resulting 8-bit ranged value
 // ? Extracts the highest 8-bits from a 16-bit ranged integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(HighByte, 1, LuaUtilPushVar(lS, UtilHighByte(AgUInt16{lS, 1})))
+LLFUNC(HighByte, 1, LuaUtilPushVar(lS, UtilHighByte(AgUInt16{lS, 1}())))
 /* ========================================================================= */
 // $ Util.HighDWord
 // > Value:integer=The 64-bit ranged value to extract the lowest 32-bit value
 // < Result:integer=The resulting 32-bit ranged value
 // ? Extracts the lowest 32-bits from a 64-bit ranged integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(HighDWord, 1, LuaUtilPushVar(lS, UtilHighDWord(AgUInt64{lS, 1})))
+LLFUNC(HighDWord, 1, LuaUtilPushVar(lS, UtilHighDWord(AgUInt64{lS, 1}())))
 /* ========================================================================= */
 // $ Util.HighWord
 // > Value:integer=The 32-bit ranged value to extract the highest 16-bit value
 // < Result:integer=The resulting 16-bit ranged value
 // ? Extracts the highest 16-bits from a 32-bit ranged integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(HighWord, 1, LuaUtilPushVar(lS, UtilHighWord(AgUInt32{lS, 1})))
+LLFUNC(HighWord, 1, LuaUtilPushVar(lS, UtilHighWord(AgUInt32{lS, 1}())))
 /* ========================================================================= */
 // $ Util.Implode
 // > Table:table=The table to convert to a string.
@@ -585,7 +585,7 @@ LLFUNC(HighWord, 1, LuaUtilPushVar(lS, UtilHighWord(AgUInt32{lS, 1})))
 // < String:string=The returned string.
 // ? Appends each entry in the specified table to a string separated by the
 // ? specified separator string.
-/* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------7------- */
 LLFUNC(Implode, 1, LuaUtilImplode(lS))
 /* ========================================================================= */
 // $ Util.ImplodeEx
@@ -699,21 +699,21 @@ LLFUNC(LDurationEx, 1,
 // < Result:integer=The resulting 8-bit ranged value
 // ? Extracts the lowest 8-bits from a 16-bit ranged integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(LowByte, 1, LuaUtilPushVar(lS, UtilLowByte(AgUInt16{lS, 1})))
+LLFUNC(LowByte, 1, LuaUtilPushVar(lS, UtilLowByte(AgUInt16{lS, 1}())))
 /* ========================================================================= */
 // $ Util.LowDWord
 // > Value:integer=The 64-bit ranged value to extract the lowest 32-bit value
 // < Result:integer=The resulting 32-bit ranged value
 // ? Extracts the lowest 32-bits from a 64-bit ranged integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(LowDWord, 1, LuaUtilPushVar(lS, UtilLowDWord(AgUInt64{lS, 1})))
+LLFUNC(LowDWord, 1, LuaUtilPushVar(lS, UtilLowDWord(AgUInt64{lS, 1}())))
 /* ========================================================================= */
 // $ Util.LowWord
 // > Value:integer=The 32-bit ranged value to extract the lowest 16-bit value
 // < Result:integer=The resulting 16-bit ranged value
 // ? Extracts the lowest 16-bits from a 32-bit ranged integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(LowWord, 1, LuaUtilPushVar(lS, UtilLowWord(AgUInt32{lS, 1})))
+LLFUNC(LowWord, 1, LuaUtilPushVar(lS, UtilLowWord(AgUInt32{lS, 1}())))
 /* ========================================================================= */
 // $ Util.MakeDWord
 // > High:integer=The high-order 16-bit range integer
@@ -725,7 +725,7 @@ LLFUNC(LowWord, 1, LuaUtilPushVar(lS, UtilLowWord(AgUInt32{lS, 1})))
 LLFUNC(MakeDWord, 1,
   const AgUInt16 aHigh{lS, 1};
   const AgUInt16 aLow{lS, 2};
-  LuaUtilPushVar(lS, UtilMakeDWord(aHigh, aLow)))
+  LuaUtilPushVar(lS, UtilMakeDWord(aHigh(), aLow())))
 /* ========================================================================= */
 // $ Util.MakeWord
 // > High:integer=The high-order 8-bit range integer
@@ -737,7 +737,7 @@ LLFUNC(MakeDWord, 1,
 LLFUNC(MakeWord, 1,
   const AgUInt8 aHigh{lS, 1};
   const AgUInt8 aLow{lS, 2};
-  LuaUtilPushVar(lS, UtilMakeWord(aHigh, aLow)))
+  LuaUtilPushVar(lS, UtilMakeWord(aHigh(), aLow())))
 /* ========================================================================= */
 // $ Util.MakeQWord
 // > High:integer=The high-order 32-bit range integer
@@ -749,7 +749,7 @@ LLFUNC(MakeWord, 1,
 LLFUNC(MakeQWord, 1,
   const AgUInt32 aHigh{lS, 1};
   const AgUInt32 aLow{lS, 2};
-  LuaUtilPushVar(lS, UtilMakeQWord(aHigh, aLow)))
+  LuaUtilPushVar(lS, UtilMakeQWord(aHigh(), aLow())))
 /* ========================================================================= */
 // $ Util.ParseArgs
 // > String:string=The arguments to parse.

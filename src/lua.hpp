@@ -448,10 +448,10 @@ class Lua :                            // Actual class body
       StrShortFromDuration(CCDeltaToDouble()));
     // Report progress
     cLog->LogDebugSafe("Lua sandbox de-initialising...");
-    // De-init instruction count hook?
-    LuaUtilSetHookCallback(GetState(), nullptr, 0);
     // Disable garbage collector
     StopGC();
+    // De-init instruction count hook?
+    LuaUtilSetHookCallback(GetState(), nullptr, 0);
     // DeInit references
     LuaFuncDeInitRef();
     // Close state and reset var

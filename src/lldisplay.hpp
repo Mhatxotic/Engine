@@ -115,7 +115,7 @@ LLFUNC(GPU, 3, LuaUtilPushVar(lS,
 // < FPS:number=Frames per second.
 // ? Get GPU frames rendered in the second. Should be 60 for most people.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GPUFPS, 1, LuaUtilPushVar(lS, cFboCore->uiFPS))
+LLFUNC(GPUFPS, 1, LuaUtilPushVar(lS, cFboCore->dFPS))
 /* ========================================================================= */
 // $ Display.Hovered
 // < State:boolean=Mouse is over the window?
@@ -208,15 +208,6 @@ LLFUNC(SetCursor, 0, cDisplay->RequestSetCursor(
 // ? This changes the cvar too.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetFullScreen, 0, cDisplay->RequestFSToggle(AgBoolean{lS, 1}))
-/* ========================================================================= */
-// $ Display.SetInterval
-// > Ticks:integer=Number of ticks per second (min:1,max:200).
-// ? This functions set the core timing frequency. The default target is to
-// ? perform at least 60 game loop iterations per second. This is completely
-// ? detatched from GPU rendering which will always render as fast as possible.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetInterval, 1, cTimer->TimerSetInterval(AgUInt64LG{lS, 1,
-  cTimer->TimerGetMinInterval(), cTimer->TimerGetMaxInterval()}))
 /* ========================================================================= */
 // $ Display.SetPos
 // > X:integer=New X position of the window.
@@ -313,11 +304,10 @@ LLRSBEGIN                              // Display.* namespace func
   LLRSFUNC(Maximised),   LLRSFUNC(Monitor),       LLRSFUNC(MonitorData),
   LLRSFUNC(Monitors),    LLRSFUNC(OnFocused),     LLRSFUNC(Reset),
   LLRSFUNC(ResetCursor), LLRSFUNC(Resizable),     LLRSFUNC(Restore),
-  LLRSFUNC(SetCursor),   LLRSFUNC(SetFullScreen), LLRSFUNC(SetInterval),
-  LLRSFUNC(SetPos),      LLRSFUNC(SetSize),       LLRSFUNC(Transparent),
-  LLRSFUNC(VidMode),     LLRSFUNC(VidModeData),   LLRSFUNC(VidModes),
-  LLRSFUNC(Visible),     LLRSFUNC(VRAM),          LLRSFUNC(VReset),
-LLRSEND                                // Display.* namespace functions end
+  LLRSFUNC(SetCursor),   LLRSFUNC(SetFullScreen), LLRSFUNC(SetPos),
+  LLRSFUNC(SetSize),     LLRSFUNC(Transparent),   LLRSFUNC(VidMode),
+  LLRSFUNC(VidModeData), LLRSFUNC(VidModes),      LLRSFUNC(Visible),
+  LLRSFUNC(VRAM),        LLRSFUNC(VReset),LLRSEND                                // Display.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Display.* namespace constants                                       ## **

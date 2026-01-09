@@ -117,16 +117,16 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   /* -- Convert stop reason to string -------------------------------------- */
   const string_view &StateReasonToString(const StreamPlayState psReason) const
     { return cParent->psStrings.Get(psReason); }
+  /* -- Stop and unload source --------------------------------------------- */
+  void StopAndUnloadSource(void) { sCptr->Stop(); UnloadSource(); }
   /* -- Stop (without locks) ----------------------------------------------- */
   void Stop(const StreamStopReason srReason)
   { // Don't have source class? There is nothing else to do!
     if(!sCptr) return;
     // Stop source from playing
-    sCptr->Stop();
+    StopAndUnloadSource();
     // Go back to unplayed position
     SetPosition(qLivePos);
-    // Unlock the source so it can be used by other samples and streams
-    UnloadSource();
     // Write debug reason for stoppage
     cLog->LogDebugExSafe("Stream stopped '$'! (R:$<$>;L:$<$>).", IdentGet(),
       StopReasonToString(srReason), srReason, StateReasonToString(psState),
@@ -244,13 +244,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   }
   /* -- Unload buffers ----------------------------------------------------- */
   void UnloadBuffers()
-  { // If buffers allocated
-    if(vBuffers.empty()) return;
-    // Unload the source, delete and free the buffers
-    UnloadSource();
-    // Check for error and log it
-    ALL(cOal->DeleteBuffers(vBuffers),
-      "Stream '$' failed to delete $ buffers!", IdentGet(), vBuffers.size());
+  { // Unload the buffers if we have them
+    if(!vBuffers.empty())
+      ALL(cOal->DeleteBuffers(vBuffers),
+        "Stream '$' failed to delete $ buffers!", IdentGet(), vBuffers.size());
   }
   /* -- Unload source ------------------------------------------------------ */
   void UnloadSource()
@@ -602,17 +599,16 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   ~Stream()
   { // Stop any pending async operations
     AsyncCancel();
-    // Remove the registration now so it is no longer polled
+    // Remove the collector registration to stop audio thread polling
     ICHelperStream::CollectorUnregister();
-    // Ignore if file data not initialised
+    // Nothing else to do if file data not initialised
     if(fmFile.FileMapClosed()) return;
-    // Synchronise from audio thread and sources management
-    MutexScopedCall([this](){
-      // Unload source and buffers
-      UnloadSourceAndBuffers();
-      // If stream opened? Clear ogg state
-      if(ovfContext.datasource) ov_clear(&ovfContext);
-    }, cParent->MutexGet());
+    // If there is a source stop it and unload the source
+    if(sCptr) StopAndUnloadSource();
+    // Unload the buffers
+    UnloadBuffers();
+    // If stream opened? Clear ogg state
+    if(ovfContext.datasource) ov_clear(&ovfContext);
     // Log that the stream was unloaded
     cLog->LogDebugExSafe("Stream unloaded '$'!", IdentGet());
   }
@@ -627,14 +623,14 @@ CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
     "SR_RWBUFFAIL",                    // [3] Rewind/Rebuffer failed
     "SR_GENBUFFAIL",                   // [4] Generate source and buffer failed
     "SR_STOPALL",                      // [5] Stopping all buffers (reset/quit)
-    "SR_LUA",                          // [6] Requested by Lua (guest).
-  }},                                  // Stop reason strings initialised
+    "SR_LUA"                           // [6] Requested by Lua (guest).
+  }, "SR_UNKNOWN" },                   // Stop reason strings initialised
   psStrings{{                          // Initialise play state strings
     "PS_STANDBY",                      // [0] Is not playing
     "PS_PLAYING",                      // [1] Is playing
     "PS_FINISHING",                    // [2] Was stopping (no more data)
     "PS_WASPLAYING",                   // [3] Was playing (audio reset)
-  }},                                  // Play state strings initialised
+  }, "PS_UNKNOWN" },                   // Play state strings initialised
   stBufCount(0),                       // No buffers count yet
   stBufSize(0)                         // No buffer size yet
 ) /* == Manage streams for audio thread ==================================== */

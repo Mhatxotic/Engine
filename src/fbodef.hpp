@@ -235,36 +235,36 @@ class FboBlend
 { /* -- Private variables ----------------------------------------- */ private:
   array<GLenum,4>  aBlend;             // Blend union
   /* --------------------------------------------------------------- */ public:
-  GLenum GetSrcRGB() const { return aBlend[0]; }
-  GLenum GetDstRGB() const { return aBlend[1]; }
-  GLenum GetSrcAlpha() const { return aBlend[2]; }
-  GLenum GetDstAlpha() const { return aBlend[3]; }
-  GLenum *GetMemory() { return aBlend.data(); }
+  GLenum GetSrcRGB() const noexcept { return aBlend[0]; }
+  GLenum GetDstRGB() const noexcept { return aBlend[1]; }
+  GLenum GetSrcAlpha() const noexcept { return aBlend[2]; }
+  GLenum GetDstAlpha() const noexcept { return aBlend[3]; }
+  GLenum *GetMemory() noexcept { return aBlend.data(); }
   /* ----------------------------------------------------------------------- */
-  void SetSrcRGB(const GLenum eSrcRGB) { aBlend[0] = eSrcRGB; }
-  void SetDstRGB(const GLenum eDstRGB) { aBlend[1] = eDstRGB; }
-  void SetSrcAlpha(const GLenum eSrcAlpha) { aBlend[2] = eSrcAlpha; }
-  void SetDstAlpha(const GLenum eDstAlpha) { aBlend[3] = eDstAlpha; }
+  void SetSrcRGB(const GLenum eSrcRGB) noexcept { aBlend[0] = eSrcRGB; }
+  void SetDstRGB(const GLenum eDstRGB) noexcept { aBlend[1] = eDstRGB; }
+  void SetSrcAlpha(const GLenum eSrcAlpha) noexcept { aBlend[2] = eSrcAlpha; }
+  void SetDstAlpha(const GLenum eDstAlpha) noexcept { aBlend[3] = eDstAlpha; }
   /* ----------------------------------------------------------------------- */
-  void SetSrcRGB(const FboBlend &fcValue)
+  void SetSrcRGB(const FboBlend &fcValue) noexcept
     { SetSrcRGB(fcValue.GetSrcRGB()); }
-  void SetDstRGB(const FboBlend &fcValue)
+  void SetDstRGB(const FboBlend &fcValue) noexcept
     { SetDstRGB(fcValue.GetDstRGB()); }
-  void SetSrcAlpha(const FboBlend &fcValue)
+  void SetSrcAlpha(const FboBlend &fcValue) noexcept
     { SetSrcAlpha(fcValue.GetSrcAlpha()); }
-  void SetDstAlpha(const FboBlend &fcValue)
+  void SetDstAlpha(const FboBlend &fcValue) noexcept
     { SetDstAlpha(fcValue.GetDstAlpha()); }
   /* ----------------------------------------------------------------------- */
-  bool IsSrcRGBNotEqual(const FboBlend &fcValue) const
+  bool IsSrcRGBNotEqual(const FboBlend &fcValue) const noexcept
     { return GetSrcRGB() != fcValue.GetSrcRGB(); }
-  bool IsDstRGBNotEqual(const FboBlend &fcValue) const
+  bool IsDstRGBNotEqual(const FboBlend &fcValue) const noexcept
     { return GetDstRGB() != fcValue.GetDstRGB(); }
-  bool IsSrcAlphaNotEqual(const FboBlend &fcValue) const
+  bool IsSrcAlphaNotEqual(const FboBlend &fcValue) const noexcept
     { return GetSrcAlpha() != fcValue.GetSrcAlpha(); }
-  bool IsDstAlphaNotEqual(const FboBlend &fcValue) const
+  bool IsDstAlphaNotEqual(const FboBlend &fcValue) const noexcept
     { return GetDstAlpha() != fcValue.GetDstAlpha(); }
   /* -- Set blending algorithms -------------------------------------------- */
-  bool SetBlend(const FboBlend &fcValue)
+  bool SetBlend(const FboBlend &fcValue) noexcept
   {  // Source RGB changed change?
     if(IsSrcRGBNotEqual(fcValue))
     { // Update source RGB blend value and other values if changed
@@ -292,7 +292,7 @@ class FboBlend
   }
   /* -- Init constructor --------------------------------------------------- */
   FboBlend(const GLenum eSrcRGB, const GLenum eDstRGB, const GLenum eSrcAlpha,
-    const GLenum eDstAlpha) :
+    const GLenum eDstAlpha) noexcept:
     /* -- Initialisers ----------------------------------------------------- */
     aBlend{ eSrcRGB,                   // Copy blend source RGB
             eDstRGB,                   // Copy blend destination RGB
@@ -301,7 +301,7 @@ class FboBlend
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor ------------------------------------------------ */
-  FboBlend() :
+  FboBlend() noexcept:
     /* -- Initialisers ----------------------------------------------------- */
     FboBlend{ GL_SRC_ALPHA,            // Init blend source RGB
               GL_ONE_MINUS_SRC_ALPHA,  // Init blend destination RGB
@@ -319,29 +319,29 @@ template<typename Type1 = GLfloat, typename Type2 = Type1>class FboCoords
   CoordType1       ctXY1;              // Top left co-ordinates
   CoordType2       ctXY2;              // Width and height
   /* --------------------------------------------------------------- */ public:
-  Type1 GetCoLeft() const { return ctXY1.CoordGetX(); }
-  Type1 GetCoTop() const { return ctXY1.CoordGetY(); }
-  Type2 GetCoRight() const { return ctXY2.CoordGetX(); }
-  Type2 GetCoBottom() const { return ctXY2.CoordGetY(); }
+  Type1 GetCoLeft() const noexcept { return ctXY1.CoordGetX(); }
+  Type1 GetCoTop() const noexcept { return ctXY1.CoordGetY(); }
+  Type2 GetCoRight() const noexcept { return ctXY2.CoordGetX(); }
+  Type2 GetCoBottom() const noexcept { return ctXY2.CoordGetY(); }
   /* ----------------------------------------------------------------------- */
-  void SetCoLeft(const Type1 tNLeft) { ctXY1.CoordSetX(tNLeft); }
-  void SetCoTop(const Type1 tNTop) { ctXY1.CoordSetY(tNTop); }
-  void SetCoRight(const Type2 tNRight) { ctXY2.CoordSetX(tNRight); }
-  void SetCoBottom(const Type2 tNBottom) { ctXY2.CoordSetY(tNBottom); }
+  void SetCoLeft(const Type1 tNLeft) noexcept { ctXY1.CoordSetX(tNLeft); }
+  void SetCoTop(const Type1 tNTop) noexcept { ctXY1.CoordSetY(tNTop); }
+  void SetCoRight(const Type2 tNRight) noexcept { ctXY2.CoordSetX(tNRight); }
+  void SetCoBottom(const Type2 tNBottom) noexcept { ctXY2.CoordSetY(tNBottom);}
   /* ----------------------------------------------------------------------- */
-  void SetCoLeft(const FboCoords &fcValue)
+  void SetCoLeft(const FboCoords &fcValue) noexcept
     { SetCoLeft(fcValue.GetCoLeft()); }
-  void SetCoTop(const FboCoords &fcValue)
+  void SetCoTop(const FboCoords &fcValue) noexcept
     { SetCoTop(fcValue.GetCoTop()); }
-  void SetCoRight(const FboCoords &fcValue)
+  void SetCoRight(const FboCoords &fcValue) noexcept
     { SetCoRight(fcValue.GetCoRight()); }
-  void SetCoBottom(const FboCoords &fcValue)
+  void SetCoBottom(const FboCoords &fcValue) noexcept
     { SetCoBottom(fcValue.GetCoBottom()); }
   /* ----------------------------------------------------------------------- */
-  void ResetCoords() { ctXY1.CoordSet(); ctXY2.CoordSet(); }
+  void ResetCoords() noexcept { ctXY1.CoordSet(); ctXY2.CoordSet(); }
   /* ----------------------------------------------------------------------- */
   void SetCoords(const Type1 tNLeft, const Type1 tNTop,
-                 const Type2 tNRight, const Type2 tNBottom)
+                 const Type2 tNRight, const Type2 tNBottom) noexcept
   { // Viewport X origin different from cached?
     if(GetCoLeft() != tNLeft)
     { // Update viewport X value and other values if changed
@@ -364,21 +364,19 @@ template<typename Type1 = GLfloat, typename Type2 = Type1>class FboCoords
     else if(GetCoBottom() != tNBottom) SetCoBottom(tNBottom);
   }
   /* ----------------------------------------------------------------------- */
-  void SetCoords(const FboCoords &fcValue)
+  void SetCoords(const FboCoords &fcValue) noexcept
     { SetCoords(fcValue.GetCoLeft(), fcValue.GetCoTop(),
                 fcValue.GetCoRight(), fcValue.GetCoBottom()); }
   /* -- Init constructor --------------------------------------------------- */
-  FboCoords(const Type1 tNLeft,        // Left (X1) co-ordinate
-            const Type1 tNTop,         // Top (Y1) co-ordinate
-            const Type2 tNRight,       // Right (X2) co-ordinate
-            const Type2 tNBottom) :    // Bottom (Y2) co-ordinate
+  FboCoords(const Type1 tNLeft, const Type1 tNTop, const Type2 tNRight,
+    const Type2 tNBottom) noexcept :   // X1, Y1, X2, Y2
     /* -- Initialisers ----------------------------------------------------- */
     ctXY1{ tNLeft, tNTop },            // X1 & Y1 co-ordinate
     ctXY2{ tNRight, tNBottom }         // X2 & Y2 co-ordinate
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor ------------------------------------------------ */
-  FboCoords() :
+  FboCoords() noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     FboCoords{ 0, 0, 0, 0 }            // Initialise co-ordinates
     /* -- No code ---------------------------------------------------------- */
@@ -396,7 +394,7 @@ struct FboRenderItem :                 // Rendering item data class
   GLuint           uiFBO;              // Fbo name
   bool             bClear;             // Clear the fbo?
   /* -- Default constructor ------------------------------------------------ */
-  FboRenderItem() :
+  FboRenderItem() noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     uiFBO(0),                          // No fbo id yet
     bClear(true)                       // Clear fbo set

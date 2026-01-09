@@ -171,9 +171,9 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     // Set blending mode
     cOgl->SetBlendIfChanged(foiRef);
     // Clear the fbo if requested
-    if(foiRef.bClear) cOgl->SetAndClear(foiRef);
+    if(foiRef.bClear) [[unlikely]] cOgl->SetAndClear(foiRef);
     // No point in continuing if there are no vertices
-    if(!foiRef.siVertices) return;
+    if(!foiRef.siVertices) [[unlikely]] return;
     // Set polygon fill mode
     cOgl->SetPolygonMode(ePolyMode);
     // Update matrix on each 2D shader...
@@ -238,7 +238,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     // this is so when the reference counter is reduced the zero, the triangles
     // and command lists are permitted to clear on FboRender(). Return if it
     // was added for the first time this frame.
-    if(++stFinishCounter == 1) return;
+    if(++stFinishCounter == 1) [[likely]] return;
     // Throw an error because it is not optimal to finish an fbo more than once
     // in the same frame. We still need to finish this fbo though as we've
     // probably already added data for it with Blit() functions so do not try

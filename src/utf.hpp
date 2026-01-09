@@ -29,12 +29,9 @@ namespace P {                          // Start of public module namespace
 /* -- Remove const from a pointer ------------------------------------------ */
 template<typename TypeTo, typename TypeFrom, typename TypeNonConst =
   remove_const_t<remove_pointer_t<TypeFrom>>*>
+requires is_pointer_v<TypeFrom>
 static TypeTo UtfToNonConstCast(TypeFrom tfV)
-{ // Check that type has a pointer
-  static_assert(is_pointer_v<TypeFrom>, "Input type must have pointer!");
-  // Do the const and reinterpret cast!
-  return reinterpret_cast<TypeTo>(const_cast<TypeNonConst>(tfV));
-}
+  { return reinterpret_cast<TypeTo>(const_cast<TypeNonConst>(tfV)); }
 /* -- Check if C-string is nullptr or blank -------------------------------- */
 template<typename PtrType>
   static bool UtfIsCStringValid(const PtrType*const ptpStr)
