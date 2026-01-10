@@ -759,7 +759,7 @@ class DirSaver
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~DirSaver() noexcept(false)
+  ~DirSaver()                          // Restore original working directory
     /* -- Restore current working directory -------------------------------- */
     { DirSetCWD(strCWD); }
 };/* ----------------------------------------------------------------------- */

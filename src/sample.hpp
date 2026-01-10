@@ -285,7 +285,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Sample() { UnloadBuffer(); }
+  DTORHELPER(~Sample, UnloadBuffer())
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_NOINITS(Samples, Sample, SAMPLE) // Finish collector class
 /* ========================================================================= */

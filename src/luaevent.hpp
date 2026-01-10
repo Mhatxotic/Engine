@@ -89,7 +89,7 @@ class LuaEvts :
   /* -- Constructor -------------------------------------------------------- */
   LuaEvts() = default;
   /* -- Destructor --------------------------------------------------------- */
-  ~LuaEvts() { LuaEvtsDeInit(); }
+  DTORHELPER(~LuaEvts, LuaEvtsDeInit())
 };/* ----------------------------------------------------------------------- */
 /* == Class type for master class (send parameters on event trigger) ======= */
 template<class MemberType>struct LuaEvtTypeParam
@@ -152,7 +152,7 @@ class LuaEvtMaster :
     /* -- Register the event ----------------------------------------------- */
     { cEvtMain->Register(emcCmd, this->OnEvent); }
   /* -- Unregister the event ----------------------------------------------- */
-  ~LuaEvtMaster() { cEvtMain->Unregister(emcCmd); }
+  DTORHELPER(~LuaEvtMaster, cEvtMain->Unregister(emcCmd))
 };/* == Routines for a collectors child class ============================== */
 template<class MemberType,             // Member object type
          size_t stRefs=1>              // Number of references to store
@@ -304,7 +304,7 @@ class LuaEvtSlave :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor to clean up any leftover events and references ---------- */
-  ~LuaEvtSlave() { LuaEvtDeInit(); }
+  DTORHELPER(~LuaEvtSlave, LuaEvtDeInit())
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

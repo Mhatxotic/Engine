@@ -199,7 +199,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     /* -- Code that does the swap ------------------------------------------ */
     { SwapFtf(ftfOther); }
   /* -- Destructor --------------------------------------------------------- */
-  ~Ftf() { AsyncCancel(); DoDeInit(); }
+  DTORHELPER(~Ftf, AsyncCancel(); DoDeInit();)
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Ftfs, Ftf, FTF, FONT) // Finish collector class
 /* ------------------------------------------------------------------------- */

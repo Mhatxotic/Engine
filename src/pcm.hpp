@@ -171,7 +171,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     /* -- Swap members with other class ------------------------------------ */
     { SwapPcm(pcmOther); }
   /* -- Destructor (override) ---------------------------------------------- */
-  ~Pcm() { AsyncCancel(); }
+  DTORHELPER(~Pcm, AsyncCancel())
 };/* -- End-of-collector --------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Pcms, Pcm, PCM, PCM) // Finish collector class
 /* ------------------------------------------------------------------------- */

@@ -18,12 +18,12 @@ class RefCtrMaster
 { /* -- Private variables -------------------------------------------------- */
   IntType          itMaster;           // Reference to protected variable
   /* --------------------------------------------------------------- */ public:
-  void RefCtrSetDisabled() noexcept { --itMaster; }
-  void RefCtrSetEnabled() noexcept { ++itMaster; }
-  bool RefCtrIsEnabled() const noexcept { return itMaster > 0; }
-  bool RefCtrIsDisabled() const noexcept { return !itMaster; }
+  void RefCtrSetDisabled() { --itMaster; }
+  void RefCtrSetEnabled() { ++itMaster; }
+  bool RefCtrIsEnabled() const { return itMaster > 0; }
+  bool RefCtrIsDisabled() const { return !itMaster; }
   /* -- Constructor --------------------------------------------- */ protected:
-  RefCtrMaster() noexcept : itMaster(0) {}
+  RefCtrMaster() : itMaster(0) {}
   /* ----------------------------------------------------------------------- */
 };                                     // End of class
 /* ------------------------------------------------------------------------- */
@@ -34,10 +34,10 @@ class RefCtrSlave
 { /* -- Private variables -------------------------------------------------- */
   RmcType         &rtMaster;           // Reference to protected variable
   /* -- Constructor that takes a master reference ------------------ */ public:
-  explicit RefCtrSlave(RmcType &rtRef) noexcept : rtMaster(rtRef)
+  explicit RefCtrSlave(RmcType &rtRef) : rtMaster(rtRef)
     { rtMaster.RefCtrSetEnabled(); }
   /* -- Constructor that takes a master pointer (converts to reference) ---- */
-  explicit RefCtrSlave(RmcType*const rtPtr) noexcept : RefCtrSlave(*rtPtr) {}
+  explicit RefCtrSlave(RmcType*const rtPtr) : RefCtrSlave(*rtPtr) {}
   /* -- Destructor --------------------------------------------------------- */
   ~RefCtrSlave() { rtMaster.RefCtrSetDisabled(); }
   /* ----------------------------------------------------------------------- */

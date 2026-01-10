@@ -307,7 +307,8 @@ LLRSBEGIN                              // Display.* namespace func
   LLRSFUNC(SetCursor),   LLRSFUNC(SetFullScreen), LLRSFUNC(SetPos),
   LLRSFUNC(SetSize),     LLRSFUNC(Transparent),   LLRSFUNC(VidMode),
   LLRSFUNC(VidModeData), LLRSFUNC(VidModes),      LLRSFUNC(Visible),
-  LLRSFUNC(VRAM),        LLRSFUNC(VReset),LLRSEND                                // Display.* namespace functions end
+  LLRSFUNC(VRAM),        LLRSFUNC(VReset),
+LLRSEND                                // Display.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Display.* namespace constants                                       ## **

@@ -269,7 +269,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Asset() { AsyncCancel(); }
+  DTORHELPER(~Asset, AsyncCancel())
 };/* ======================================================================= */
 CTOR_END_ASYNC_NOFUNCS(Assets, Asset, ASSET, ASSET, fsotOverride(FO_EXTONLY));
 /* -- Class to help enumerate files ---------------------------------------- */

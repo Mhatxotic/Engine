@@ -146,17 +146,6 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // Register the variable and set the iterator to the new cvar.
     lcvmiIt->second.second = cvmiIt;
   }
-  /* -- Destructor that unregisters the cvar ------------------------------- */
-  ~Variable()
-  { // Return if the iterator is invalid?
-    if(lcvmiIt == GetLuaVarListEnd()) return;
-    // Unregister the cvar if valid and registered by Lua
-    const CVarMapIt &cvmiIt = lcvmiIt->second.second;
-    if(cvmiIt != cCVars->GetVarListEnd() && cvmiIt->second.FlagIsSet(TLUA))
-      cCVars->UnregisterVar(cvmiIt);
-    // Remove the lua var
-    GetLuaVarList().erase(lcvmiIt);
-  }
   /* -- Basic constructor with no init ------------------------------------- */
   Variable() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -166,6 +155,17 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     lcvmiIt{ GetLuaVarListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
     {}
+  /* -- Destructor that unregisters the cvar ------------------------------- */
+  DTORHELPER(~Variable,
+    // Return if the iterator is invalid?
+    if(lcvmiIt == GetLuaVarListEnd()) return;
+    // Unregister the cvar if valid and registered by Lua
+    const CVarMapIt &cvmiIt = lcvmiIt->second.second;
+    if(cvmiIt != cCVars->GetVarListEnd() && cvmiIt->second.FlagIsSet(TLUA))
+      cCVars->UnregisterVar(cvmiIt);
+    // Remove the lua var
+    GetLuaVarList().erase(lcvmiIt);
+  )
 };/* ----------------------------------------------------------------------- */
 CTOR_END(Variables, Variable, VARIABLE,,,, // Finish off collector class
 /* ------------------------------------------------------------------------- */

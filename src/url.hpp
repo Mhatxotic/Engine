@@ -40,13 +40,15 @@ enum Result : unsigned int             // Result codes
   R_INVPORT,                           // [13] Invalid port number (1-65535)
   R_UNKSCHEME,                         // [14] Unknown scheme without port
   R_EMPARAMS,                          // [15] Bad parameters
-  R_MAX                                // [16] Maximum number of codes
+  R_STANDBY,                           // [16] Class not initialised
+  R_MAX                                // [17] Maximum number of codes
 };/* ----------------------------------------------------------------------- */
 /* == Class to break apart urls ============================================ */
 struct UrlBase : public ParamParser    // Members initially public
 { /* ----------------------------------------------------------------------- */
   enum Port : unsigned int             // Frequently used ports
   { /* --------------------------------------------------------------------- */
+    P_NONE                    =     0, // Not initialised
     P_MIN                     =     1, // Minimum port number
     P_HTTP                    =    80, // Insecure http port number
     P_HTTPS                   =   443, // Secure http port number
@@ -228,7 +230,7 @@ struct UrlBase : public ParamParser    // Members initially public
   explicit UrlBase(const string &strUrl, const unsigned int uiMode=0)
     { Parse(strUrl, uiMode); }
   /* -- Default constructor that does nothing ------------------------------ */
-  UrlBase() {}
+  UrlBase() : rResult(R_STANDBY), pPort(P_NONE), bSecure(false) { }
 };/* == Url collector and member class ===================================== */
 CTOR_BEGIN_DUO(Urls, Url, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */

@@ -109,7 +109,8 @@ class Certs                            // Certificates store
                   });
                 } // Failed to add certificate to CA store
                 else cLog->LogWarningExSafe(
-                  "Certs failed to add '$' to SSL context!", fmCert.IdentGet());
+                  "Certs failed to add '$' to SSL context!",
+                  fmCert.IdentGet());
                 break;
               // The cert was not created to perform the purpose represented
               case 0:
@@ -128,7 +129,7 @@ class Certs                            // Certificates store
           else cLog->LogWarningExSafe(
             "Certs rejected '$' as unable to get purpose!", fmCert.IdentGet());
         } // Release the certificate (caCert)
-      } // In the rare occurence that an exception occurs we should skip the cert
+      } // In the rare occurence that an exception occurs we skip the cert
       catch(const exception &eReason)
       { // Show the exception and try the next certificate
         cLog->LogErrorExSafe(
@@ -254,7 +255,7 @@ class Certs                            // Certificates store
   /* -- No code ------------------------------------------------------------ */
   {}
   /* -- Destructor that unloads all x509 certificates ---------------------- */
-  ~Certs() { CertsUnload(); }
+  DTORHELPER(~Certs, CertsUnload())
   /* --------------------------------------------------------------- */ public:
   CVarReturn CertsSetBypassFlags1(const uint64_t uiFlags)
     { return CVarSimpleSetInt(qCertBypass.front(), uiFlags); }

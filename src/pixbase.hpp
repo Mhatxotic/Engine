@@ -555,14 +555,6 @@ class SysBase :                        // Safe exception handler namespace
     StrReplace(strCode, '_', '-');
   }
   /* ----------------------------------------------------------------------- */
-  ~SysBase() noexcept(true)
-  { // Uninstall safe signals (signal() is not thread safe)
-    for(SignalPair &spPair : slSignals)
-      if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)
-        cLog->LogWarningExSafe("Failed to restore signal $ handler! $.",
-          spPair.first, StrFromErrNo());
-  }
-  /* ----------------------------------------------------------------------- */
   SysBase(SysModMap &&smmMap, const size_t stI) :
     /* -- Initialisers ----------------------------------------------------- */
     SysVersion{                        // Initialise version info class
@@ -625,6 +617,12 @@ class SysBase :                        // Safe exception handler namespace
         rlmpPair.first, hex, rlmpPair.first, dec, SysError());
     });
   }
+  /* -- Destructor to uninstall safe signals (signal() not thread safe) ---- */
+  DTORHELPER(~SysBase,
+    for(SignalPair &spPair : slSignals)
+      if(signal(spPair.first, spPair.second) == SIG_ERR && cLog)
+        cLog->LogWarningExSafe("Failed to restore signal $ handler! $.",
+          spPair.first, StrFromErrNo()))
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
   void SysBase::HandleSignalStatic(int iSignal) \

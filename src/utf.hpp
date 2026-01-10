@@ -36,11 +36,12 @@ static TypeTo UtfToNonConstCast(TypeFrom tfV)
 template<typename PtrType>
   static bool UtfIsCStringValid(const PtrType*const ptpStr)
     { return ptpStr && *ptpStr; }
+/* ------------------------------------------------------------------------- */
 template<typename PtrType>
   static bool UtfIsCStringNotValid(const PtrType*const ptpStr)
     { return !UtfIsCStringValid<PtrType>(ptpStr); }
 /* -- Structure for utf size and character code ---------------------------- */
-struct UtfEncoderEx { const size_t l;
+struct UtfEncoderEx final { const size_t l;
   const union { const uint8_t u8[5]; const char c[5]; } u; };
 /* -- Encode specified code and return string and size --------------------- */
 static const UtfEncoderEx UtfEncodeEx(const unsigned int uiUtfCode)
@@ -67,9 +68,8 @@ static const UtfEncoderEx UtfEncodeEx(const unsigned int uiUtfCode)
 }
 /* -- Encode specified code and append it to the specified string ---------- */
 static void UtfAppend(const unsigned int uiChar, string &strDest)
-{ // Encoded UTF8
+{ // Encoded UTF8 and append to string
   const UtfEncoderEx utfCode{ UtfEncodeEx(uiChar) };
-  // Append to string
   strDest.append(utfCode.u.c, utfCode.l);
 }
 /* ------------------------------------------------------------------------- */
@@ -221,7 +221,7 @@ template<typename CharType>
 template<class AnyObject>struct Reserved : public AnyObject
   { explicit Reserved(const size_t stSize) { this->reserve(stSize); } };
 /* -- UTF8 decoder helper class -------------------------------------------- */
-class UtfDecoder                        // UTF8 string decoder helper
+class UtfDecoder final                 // UTF8 string decoder helper
 { /* ----------------------------------------------------------------------- */
   const unsigned char *ucpStr, *ucpPtr; // String and pointer to that string
   /* -- Test a custom condition on each character -------------------------- */
@@ -355,33 +355,20 @@ class UtfDecoder                        // UTF8 string decoder helper
     // Return string
     return wstrOut;
   }
-  /* -- Constructors that copy the address of the allocated text ----------- */
-  explicit UtfDecoder(const char*const ucpSrc) :
+  /* -- Constructor that initialises a pointer ----------------------------- */
+  template<typename PtrType> requires is_pointer_v<PtrType>
+    explicit UtfDecoder(PtrType ptSrc) :
     /* -- Initialisers ----------------------------------------------------- */
-    ucpStr(reinterpret_cast            // Set start of string
-      <const unsigned char*>(ucpSrc)),
+    ucpStr(reinterpret_cast<const unsigned char*>(
+      const_cast<const PtrType>(ptSrc))),
     ucpPtr(ucpStr)                     // Copy for current position
     /* -- No code ---------------------------------------------------------- */
     {}
-  explicit UtfDecoder(const unsigned char*const ucpSrc) :
+  /* -- Constructor that initialises any string object --------------------- */
+  template<class StrType> requires is_class_v<StrType>
+    explicit UtfDecoder(const StrType &stStr) :
     /* -- Initialisers ----------------------------------------------------- */
-    ucpStr(ucpSrc),                    // Set start of string
-    ucpPtr(ucpStr)                     // Copy for current position
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  explicit UtfDecoder(const string_view &strvStr) :
-    /* -- Initialisers ----------------------------------------------------- */
-    ucpStr(reinterpret_cast            // Set start of string
-      <const unsigned char*>
-        (strvStr.data())),
-    ucpPtr(ucpStr)                     // Copy for current position
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  explicit UtfDecoder(const string &strStr) :
-    /* -- Initialisers ----------------------------------------------------- */
-    ucpStr(reinterpret_cast            // Set start of string
-      <const unsigned char*>
-        (strStr.data())),
+    ucpStr(reinterpret_cast<const unsigned char*>(stStr.data())),
     ucpPtr(ucpStr)                     // Copy for current position
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -405,10 +392,10 @@ static const StrVector UtfWordWrap(const string &strText, const size_t stWidth,
                       *ucpSpace = ucpStart;
   // Helper function copy part of a string into the the word buffer
   const auto Snip = [ucpString, &svLines, &strIndent, &strText]
-    (const unsigned char*const ucpStart, const unsigned char*const ucpEnd) {
+    (const unsigned char*const ucpS, const unsigned char*const ucpE) {
     svLines.emplace_back(strIndent + strText.substr(
-      static_cast<size_t>(ucpStart - ucpString),
-      static_cast<size_t>(ucpEnd - ucpStart)));
+      static_cast<size_t>(ucpS - ucpString),
+      static_cast<size_t>(ucpE - ucpS)));
   }; // Current column
   size_t stColumn = 0;
   // Until we're out of valid UTF8 characters

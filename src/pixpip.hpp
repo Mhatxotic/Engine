@@ -271,6 +271,6 @@ class SysPipe :
     /* -- Initialise pipe -------------------------------------------------- */
     { Init(strF); }
   /* -- Destructor to kill and wait for process to exit -------------------- */
-  ~SysPipe() { DeInit(); }
+  DTORHELPER(~SysPipe, DeInit())
 };/* -- End ---------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

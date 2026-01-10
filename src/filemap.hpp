@@ -233,8 +233,8 @@ class FileMap :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Free memory if we allocated it and it's not a map ------------------ */
-  ~FileMap() { if(MemIsPtrSet() && MemPtr() != SysMapGetMemory())
-                     MemFreePtr(); }
+  ~FileMap()
+    { if(MemIsPtrSet() && MemPtr() != SysMapGetMemory()) MemFreePtr(); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

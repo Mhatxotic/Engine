@@ -992,7 +992,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     /* -- Code ------------------------------------------------------------- */
     { SwapImage(imOtherRval); }        // Swap image over
   /* -- Destructor --------------------------------------------------------- */
-  ~Image() { AsyncCancel(); }          // Wait for loading thread to cancel
+  DTORHELPER(~Image, AsyncCancel())    // Wait for loading thread to cancel
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC(Images, Image, IMAGE, IMAGE,,,, idFormatModes{{ // Pixel formats
   /* ----------------------------------------------------------------------- */

@@ -65,13 +65,6 @@ class SysProcess :                     // Need this before of System init order
     } // Execution may continue
     return true;
   }
-  /* -- Destructor --------------------------------------------------------- */
-  ~SysProcess()
-  { // Unlink the mutex and show warning in log if failed
-    if(IdentIsSet() && shm_unlink(IdentGetData()))
-      cLog->LogWarningExSafe("SysMutex could not delete old mutex '$': $",
-        IdentGet(), SysError());
-  }
   /* -- Constructor -------------------------------------------------------- */
   SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -93,6 +86,13 @@ class SysProcess :                     // Need this before of System init order
     vpThreadId(pthread_self())         // Get native thread id
     /* -- No code ---------------------------------------------------------- */
     {}
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~SysProcess,
+    // Unlink the mutex and show warning in log if failed
+    if(IdentIsSet() && shm_unlink(IdentGetData()))
+      cLog->LogWarningExSafe("SysMutex could not delete old mutex '$': $",
+        IdentGet(), SysError());
+  )
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */

@@ -144,10 +144,10 @@ struct CmdLine                         // Members initially public
 #if !defined(WINDOWS)
     // Unset unallowed variables
     SysUnSetEnv(
-      // MacOS?
-# if defined(MACOS)
-      // Unset debugging variables
-      "DYLD_INSERT_LIBRARIES",         // Disable dylib override
+      // Operating system check
+# if defined(MACOS)                    // Targeting MacOS?
+      "DYLD_INSERT_LIBRARIES",         // Disable shared object overrides
+#  if !defined(ALPHA)                  // Not using debug version?
       "MallocCheckHeapAbort",          // Don't throw abort() on heap check
       "MallocCheckHeapEach",           // Don't check heap every 'n' mallocs
       "MallocCheckHeapStart",          // Don't check heap at 'n' mallocs
@@ -156,12 +156,14 @@ struct CmdLine                         // Members initially public
       "MallocScribble",                // Don't scribble memory
       "NSDeallocateZombies",           // Deallocate zombies
       "NSZombieEnabled",               // Enable dealloc in foundation
-# endif
-      // Unset OpenSSL environment
+#  endif                               // Using alpha version
+# else                                 // Using Linux?
+      "LD_PRELOAD",                    // Disable shared object overrides
+# endif                                // Using MacOS or Linux
       "SSL_CERT_FILE",                 // Ignore OpenSSL CA store files
       "SSL_CERT_DIR"                   // Ignore OpenSSL CA store directories
     );
-#endif
+#endif                                 // Not using windows
     // Return environment variables list
     return ssmRet;
   }

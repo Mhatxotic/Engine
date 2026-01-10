@@ -10,11 +10,11 @@
 namespace ILuaUtil {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IDir::P;
-using namespace IError::P;             using namespace ILuaIdent::P;
-using namespace IMemory::P;            using namespace IRefCtr::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace IError::P;             using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace IMemory::P;
+using namespace IRefCtr::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace IToken::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Variables ------------------------------------------------------------ */
@@ -135,7 +135,7 @@ class LuaStackSaver                    // Lua stack saver class
   explicit LuaStackSaver(lua_State*const lS) :
     iTop(LuaUtilStackSize(lS)), lState(lS) {}
   /* -- Destructor --------------------------------------------------------- */
-  ~LuaStackSaver() { Restore(); }
+  DTORHELPER(~LuaStackSaver, Restore())
 };/* ----------------------------------------------------------------------- */
 /* -- Remove item from stack ----------------------------------------------- */
 static void LuaUtilRmStack(lua_State*const lS, const int iParam=-1)
@@ -313,11 +313,11 @@ template<typename ...VarArgs, typename AnyType>
 /* -- Throw error ---------------------------------------------------------- */
 static void LuaUtilErrThrow(lua_State*const lS) { lua_error(lS); }
 /* ------------------------------------------------------------------------- */
-static int LuaUtilProcException(lua_State*const lS, const char*const cpWhat)
+static int LuaUtilProcException(lua_State*const lS, const exception &eReason)
 { // Push a string onto the stack that describes the current execution context
   luaL_where(lS, 1);
   // Push the exception reason
-  LuaUtilPushCStr(lS, cpWhat);
+  LuaUtilPushCStr(lS, eReason.what());
   // Concatenate both strings
   lua_concat(lS, 2);
   // Throw the error
@@ -332,7 +332,7 @@ template<lua_CFunction cFunc>static int LuaUtilCallback(lua_State*const lS) try
 } // Unknown exception occured?
 catch(const exception &eReason)
 { // Throw error and return nothing (keep to a func to prevent duplicate code).
-  return LuaUtilProcException(lS, eReason.what());
+  return LuaUtilProcException(lS, eReason);
 } // Don't catch all as it will catch LUA's longjmp() throw.
 /* -- Get and pop string on top -------------------------------------------- */
 static const string LuaUtilGetAndPopStr(lua_State*const lS)
@@ -1290,13 +1290,14 @@ static void LuaUtilClearObjects(lua_State*const lS, int iStart)
       LuaUtilClearObjectSafe(lS, iStart); }
 /* -- Clear a table of indicies -------------------------------------------- */
 static void LuaUtilClearArray(lua_State*const lS, const int iIndex)
-{ // If table array has size?
-  if(lua_Unsigned luSize = LuaUtilGetSize(lS, iIndex)) do
-  { // Push a nil and set it to the indice
+{ // If table array has size (clamp to lua_Integer to be future proof).
+  if(lua_Integer liSize =
+    UtilIntOrMax<lua_Integer>(LuaUtilGetSize(lS, iIndex))) do
+  { // Push a nil and set it to the table index
     LuaUtilPushNil(lS);
-    lua_rawseti(lS, iIndex, luSize);
+    lua_rawseti(lS, iIndex, liSize);
   } // Until all indicies removed
-  while(--luSize > 0);
+  while(--liSize > 0);
 }
 /* -- Clear a table of indices with check ---------------------------------- */
 static void LuaUtilClearArraySafe(lua_State*const lS, const int iIndex)

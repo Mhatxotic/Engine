@@ -306,10 +306,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
       Init();
     }
   /* -- Destructor --------------------------------------------------------- */
-  ~Source()
-  { // Delete the sourcess if id allocated
+  DTORHELPER(~Source,
+    // Delete the sourcess if id allocated
     if(uiId) ALL(cOal->DeleteSource(uiId), "Source failed to delete $!", uiId);
-  }
+  )
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END(Sources, Source, SOURCE,,,,
   fGVolume(0.0f), fMVolume(0.0f), fVVolume(0.0f), fSVolume(0.0f))

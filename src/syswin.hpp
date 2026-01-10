@@ -296,8 +296,8 @@ class SysProcess :                     // Need this before of System init order
       ReconfigureMemoryModel();
     }
   /* ----------------------------------------------------------------------- */
-  ~SysProcess()
-  { // Init file handle for storing CRT issues
+  DTORHELPER(~SysProcess,
+    // Init file handle for storing CRT issues
     InitReportMemoryLeaks();
     // Remove debug report hook (because exceptions will crash)
     _CrtSetReportHook2(_CRT_RPTHOOK_REMOVE, CRTException);
@@ -309,7 +309,7 @@ class SysProcess :                     // Need this before of System init order
     if(hMutex && !CloseHandle(hMutex))
       cLog->LogWarningExSafe("System failed to close mutex handle '$'! $.",
         IdentGet(), SysError());
-  }
+  )
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
@@ -1096,10 +1096,10 @@ class SysCore :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor (only derivable) ---------------------------------------- */
-  ~SysCore()
-  { // Destroy large and small icon if created
+  DTORHELPER(~SysCore,
+    // Destroy large and small icon if created
     if(hIconLarge) DestroyIcon(hIconLarge);
     if(hIconSmall) DestroyIcon(hIconSmall);
-  }
+  )
 }; /* ---------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */

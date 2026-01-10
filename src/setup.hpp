@@ -520,12 +520,12 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define RAPIDJSON_NAMESPACE            Lib::RapidJson
 #define RAPIDJSON_HAS_STDSTRING      1 // Have Std::String
-#define RAPIDJSON_NOEXCEPT             // We have noexcept
+#define RAPIDJSON_NOEXCEPT             // We have
 #define RAPIDJSON_NAMESPACE_BEGIN      // Keep blank or errors
 #define RAPIDJSON_NAMESPACE_END        // Keep blank or errors
 #define RAPIDJSON_ASSERT(x)          if(!(x)) throw ::std::runtime_error{(#x)};
 #define RAPIDJSON_HAS_CXX11_RVALUE_REFS 1 // So sorting works
-#define RAPIDJSON_HAS_CXX11_NOEXCEPT 1 // Force to use noexcept
+#define RAPIDJSON_HAS_CXX11_NOEXCEPT 1 // Force to use
 #include <rapidjson/document.h>        // Main header
 #include <rapidjson/prettywriter.h>    // Pretty formatting
 #include <rapidjson/error/en.h>        // Error handling

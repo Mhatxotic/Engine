@@ -9,8 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaRef {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ILuaUtil::P;           using namespace IStd::P;
-using namespace IUtil::P;
+using namespace ILog::P;               using namespace ILuaUtil::P;
+using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -112,13 +112,13 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor, delete the reference if set----------------------------- */
-  ~LuaRef()
-  { // Return if there isn't a state
+  DTORHELPER(~LuaRef,
+    // Return if there isn't a state
     if(LuaRefStateIsNotSet()) return;
     // Delete references back to front
     StdForEach(seq, aReferences.rbegin(), aReferences.rend(),
       [this](const int iRef) { LuaRefDoDeInit(iRef); });
-  }
+  )
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

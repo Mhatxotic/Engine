@@ -39,21 +39,20 @@ class Timer                            // Members initially private
                    uqTicks;            // Number of ticks processed this sec
   double           dFPS;               // Frames per second
   /* -- Update fps value --------------------------------------------------- */
-  void TimerSetFPS(const double dTime) noexcept { dFPS = TimerPerSec(dTime); }
+  void TimerSetFPS(const double dTime) { dFPS = TimerPerSec(dTime); }
   /* -- Update delay as double ----------- ------------------------- */ public:
-  void TimerUpdateDelay(const unsigned int uiNewDelay) noexcept
+  void TimerUpdateDelay(const unsigned int uiNewDelay)
     { cdDelay = milliseconds{ uiNewDelay }; }
   /* -- Requested by rendered to wait because nothing was drawn ------------ */
-  void TimerForceWait() noexcept { cdDelay = cd1MS; }
+  void TimerForceWait() { cdDelay = cd1MS; }
   /* -- Forces a delay internally if delay is disabled --------------------- */
-  void TimerSetDelayIfZero() noexcept
-    { if(cdDelay != cd0) TimerUpdateDelay(1); }
+  void TimerSetDelayIfZero() { if(cdDelay != cd0) TimerUpdateDelay(1); }
   /* -- Restore saved persistent delay timer ------------------------------- */
-  void TimerRestoreDelay() noexcept { cdDelay = cdDelayPst; }
+  void TimerRestoreDelay() { cdDelay = cdDelayPst; }
   /* -- Get start time ----------------------------------------------------- */
-  const ClkTimePoint TimerGetStartTime() const noexcept { return ctpStart; }
+  const ClkTimePoint TimerGetStartTime() const { return ctpStart; }
   /* -- Do time calculations ----------------------------------------------- */
-  void TimerCalculateTime() noexcept
+  void TimerCalculateTime()
   { // Set end time
     ctpEnd = cmHiRes.GetTime();
     // Get duration we had to wait since end of last game loop
@@ -64,7 +63,7 @@ class Timer                            // Members initially private
     ctpTimeOut = ctpEnd + cdTimeOut;
   }
   /* -- Calculate time elapsed since c++ ----------------------------------- */
-  void TimerUpdateBot() noexcept
+  void TimerUpdateBot()
   { // Sleep if theres a delay else just yield
     StdSuspend(cdDelay);
     // Set new fps
@@ -75,7 +74,7 @@ class Timer                            // Members initially private
     ++uqTicks;
   }
   /* -- Should not execute a game tick? ------------------------------------ */
-  bool TimerShouldNotTick() noexcept
+  bool TimerShouldNotTick()
   { // Calculate frame time
     TimerCalculateTime();
     // Increase accumulator by frame time
@@ -102,46 +101,40 @@ class Timer                            // Members initially private
     return false;
   }
   /* -- Reset counters and reinitialise start and end time ----------------- */
-  void TimerCatchup() noexcept
+  void TimerCatchup()
   { // Reset accumulator and duration
     cdAcc = cdFrame = cdTick = cd0;
     // Update new tick start and end time and start frame time
     ctpStart = ctpEnd = ctpFrame = cmHiRes.GetTime();
   }
   /* -- Return if script timer timed out ----------------------------------- */
-  bool TimerIsTimedOut() noexcept
+  bool TimerIsTimedOut()
     { ++uqTriggers; return cmHiRes.GetTime() >= ctpTimeOut; }
   /* -- Return how many times the script trigger was checked --------------- */
-  uint64_t TimerGetTriggers() const noexcept { return uqTriggers; }
+  uint64_t TimerGetTriggers() const { return uqTriggers; }
   /* -- Return the current script timeout ---------------------------------- */
-  double TimerGetTimeOut() const noexcept
-    { return ClockDurationToDouble(cdTimeOut); }
+  double TimerGetTimeOut() const { return ClockDurationToDouble(cdTimeOut); }
   /* -- Return the current engine target tick time ------------------------- */
-  double TimerGetLimit() const noexcept
-    { return ClockDurationToDouble(cdLimit); }
+  double TimerGetLimit() const { return ClockDurationToDouble(cdLimit); }
   /* -- Return the current accumulated frame time -------------------------- */
-  double TimerGetAccumulator() const noexcept
-    { return ClockDurationToDouble(cdFrame); }
+  double TimerGetAccumulator() const { return ClockDurationToDouble(cdFrame); }
   /* -- Return the frames per second based on the last frame --------------- */
-  double TimerGetFPS() const noexcept { return dFPS; }
+  double TimerGetFPS() const { return dFPS; }
   /* -- Calculate times per second based on an interval -------------------- */
-  static constexpr double TimerPerSec(const double dVal) noexcept
-    { return 1.0 / dVal; }
+  static constexpr double TimerPerSec(const double dVal) { return 1.0 / dVal; }
   /* -- Return the target frames per second -------------------------------- */
-  double TimerGetFPSLimit() const noexcept
-    { return TimerPerSec(TimerGetLimit()); }
+  double TimerGetFPSLimit() const { return TimerPerSec(TimerGetLimit()); }
   /* -- Get the number of engine ticks processed --------------------------- */
-  uint64_t TimerGetTicks() const noexcept { return uqTicks; }
+  uint64_t TimerGetTicks() const { return uqTicks; }
   /* -- Reset tick count --------------------------------------------------- */
-  void TimerResetTicks() noexcept { uqTicks = 0; }
+  void TimerResetTicks() { uqTicks = 0; }
   /* -- Get the current suspend time --------------------------------------- */
-  double TimerGetDelay() const noexcept
-    { return ClockDurationToDouble(cdDelay); }
+  double TimerGetDelay() const { return ClockDurationToDouble(cdDelay); }
   /* -- Get the current tick start time ------------------------------------ */
-  double TimerGetStart() const noexcept
+  double TimerGetStart() const
     { return ClockDurationToDouble(ctpStart.time_since_epoch()); }
   /* -- Reset the delay and timer ------------------------------------------ */
-  void TimerReset(const bool bIdle) noexcept
+  void TimerReset(const bool bIdle)
   { // Restore delay timer since we let Lua modify it
     TimerRestoreDelay();
     // Force a suspend when leaving sandbox if suspend is disabled
@@ -150,7 +143,7 @@ class Timer                            // Members initially private
     TimerCatchup();
   }
   /* -- Default constructor ------------------------------------- */ protected:
-  Timer() noexcept :
+  Timer() :
     /* --------------------------------------------------------------------- */
     uqTriggers(0),                     // Init number of frame timeout checks
     uqTicks(0),                        // Init no. of ticks processed this sec

@@ -529,7 +529,7 @@ class SysCon :                         // All members initially private
       // Reset at scrolled position
       utfString.Reset(strIL.data());
       // Skip characters to the point we're scrolled at
-      utfString.Skip(UtilMaximum(0, iLen - diSizeM2.DimGetWidth()));
+      utfString.Skip(UtilMaximum<size_t>(0, iLen - diSizeM2.DimGetWidth()));
       // Draw start of input text
       WriteLine(StdMove(utfString), diSizeM1.DimGetWidth(), false);
     } // Left size of text is zero long

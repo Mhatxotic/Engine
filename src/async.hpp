@@ -625,8 +625,8 @@ template<class MemberType, class ColType>class AsyncLoader :
   // derived classes because static objects created in the event callback while
   // waiting for it to be called will NOT be cleaned up properly and cause
   // memory leaks.
-  ~AsyncLoader()
-  { // Ignore if thread isn't running
+  DTORHELPER(~AsyncLoader,
+    // Ignore if thread isn't running
     if(tAsyncThread.ThreadIsNotJoinable()) return;
     // Print a warning to say that we should not be allowing this destructor
     // the clean up the thread
@@ -634,7 +634,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       "destructor. There could be memory leaks!", strAsyncError);
     // Wait for the thread to stop
     AsyncStop();
-  }
+  )
 };/* -- Function to wait for async of all members in a collector ----------- */
 template<class MemberType,
          class LockType,

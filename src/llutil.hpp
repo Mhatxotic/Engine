@@ -585,7 +585,7 @@ LLFUNC(HighWord, 1, LuaUtilPushVar(lS, UtilHighWord(AgUInt32{lS, 1}())))
 // < String:string=The returned string.
 // ? Appends each entry in the specified table to a string separated by the
 // ? specified separator string.
-/* ------------------------------------------------------------------7------- */
+/* ------------------------------------------------------------------------- */
 LLFUNC(Implode, 1, LuaUtilImplode(lS))
 /* ========================================================================= */
 // $ Util.ImplodeEx
@@ -614,7 +614,7 @@ LLFUNC(IfBlank, 1, LuaUtilIfBlank(lS))
 // ? UTF8 compatible.
 /* ------------------------------------------------------------------------- */
 LLFUNC(IsASCII, 1,
-  LuaUtilPushVar(lS, UtfDecoder{ AgCStringChar{lS, 1} }.IsASCII()))
+  LuaUtilPushVar(lS, UtfDecoder{ AgCStringChar{lS, 1}() }.IsASCII()))
 /* ========================================================================= */
 // $ Util.IsBoolean
 // > Var:*=Any parameter.
@@ -630,7 +630,7 @@ LLFUNC(IsBoolean, 1, LuaUtilPushVar(lS, LuaUtilIsBoolean(lS, 1)))
 // ? UTF8 compatible.
 /* ------------------------------------------------------------------------- */
 LLFUNC(IsExtASCII, 1,
-  LuaUtilPushVar(lS, UtfDecoder{ AgCStringChar{lS, 1} }.IsExtASCII()))
+  LuaUtilPushVar(lS, UtfDecoder{ AgCStringChar{lS, 1}() }.IsExtASCII()))
 /* ========================================================================= */
 // $ Util.IsFunction
 // > Var:*=Any parameter.

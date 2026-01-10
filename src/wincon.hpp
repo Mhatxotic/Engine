@@ -823,7 +823,7 @@ class SysCon :                         // Members initially private
     cLog->LogDebugSafe("SysCon initialised.");
   }
   /* -- Destructor ---------------------------------------------- */ protected:
-  ~SysCon() noexcept(false) { SysConDeInit(); }
+  DTORHELPER(~SysCon, SysConDeInit())
   /* -- Constructor -------------------------------------------------------- */
   explicit SysCon(const string &strW): // Wine version if applicable
     /* -- Initialisers ----------------------------------------------------- */

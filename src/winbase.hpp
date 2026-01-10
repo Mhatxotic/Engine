@@ -699,17 +699,6 @@ class SysBase :                        // Members initially private
   void SetWindowDestroyed() { SetWindowHandle(nullptr); }
   /* ------------------------------------------------------------ */ protected:
   void SetWindowHandle(HWND hwndNew) { hwndWindow = hwndNew; }
-  /* -- Destructor --------------------------------------------------------- */
-  ~SysBase()
-  { // Restore original signal handlers
-    if(fcbFloatingPointException) signal(SIGFPE, fcbFloatingPointException);
-    if(fcbIllegalStorageAccess) signal(SIGSEGV, fcbIllegalStorageAccess);
-    if(fcbAbortCallback) signal(SIGABRT, fcbAbortCallback);
-    // exception filter no longer valid
-    SetUnhandledExceptionFilter(nullptr);
-    // Restore old error mode
-    SetErrorMode(uiOldErrorMode);
-  }
   /* -- Constructor (install exception filter) ----------------------------- */
   SysBase() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -750,6 +739,17 @@ class SysBase :                        // Members initially private
     }}
   /* -- Install unhandled exception filter --------------------------------- */
   { SetUnhandledExceptionFilter(HandleExceptionStatic); }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~SysBase,
+    // Restore original signal handlers
+    if(fcbFloatingPointException) signal(SIGFPE, fcbFloatingPointException);
+    if(fcbIllegalStorageAccess) signal(SIGSEGV, fcbIllegalStorageAccess);
+    if(fcbAbortCallback) signal(SIGABRT, fcbAbortCallback);
+    // exception filter no longer valid
+    SetUnhandledExceptionFilter(nullptr);
+    // Restore old error mode
+    SetErrorMode(uiOldErrorMode);
+  )
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
   LONG WINAPI SysBase::HandleExceptionStatic(LPEXCEPTION_POINTERS \

@@ -24,10 +24,10 @@ struct DimCoords :                     // Members initially public
   public DClass                        // Dimensions class
 { /* -- Set co-ordinates and dimensions ------------------------------------ */
   void DimCoSet(const CInt ciX, const CInt ciY,
-                const DInt diW, const DInt diH) noexcept
+                const DInt diW, const DInt diH)
     { this->CoordSet(ciX, ciY); this->DimSet(diW, diH); }
   /* -- Constructor to fill all parameters --------------------------------- */
-  DimCoords(const CClass &ciOther, const DClass &diOther) noexcept :
+  DimCoords(const CClass &ciOther, const DClass &diOther) :
     /* -- Initialisers ----------------------------------------------------- */
     CClass{ ciOther },                 // Initialise co-ordinates
     DClass{ diOther }                  // Initialise dimensions
@@ -35,7 +35,7 @@ struct DimCoords :                     // Members initially public
     {}
   /* -- Constructor to fill all parameters --------------------------------- */
   DimCoords(const CInt ciX, const CInt ciY,
-            const DInt diW, const DInt diH) noexcept :
+            const DInt diW, const DInt diH) :
     /* -- Initialisers ----------------------------------------------------- */
     CClass{ ciX, ciY },                // Initialise co-ordinates
     DClass{ diW, diH }                 // Initialise dimensions

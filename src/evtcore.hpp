@@ -259,11 +259,11 @@ class EvtCore :                        // Start of common event system class
       // Return if no events to clear
       if(qlEvents.empty()) return 0;
       // Store number of events cleared
-      const size_t stCleared = qlEvents.size();
+      const size_t stCount = qlEvents.size();
       // Clear the events list
       qlEvents.clear();
       // Return events cleared
-      return stCleared;
+      return stCount;
     })) // Write number of events cleared
       cLog->LogDebugExSafe("$ cleared $ lingering events.",
         IdentGet(), stCleared);

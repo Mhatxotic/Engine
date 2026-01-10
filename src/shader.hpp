@@ -259,7 +259,7 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Shader() { DeInitShaders(); }
+  DTORHELPER(~Shader, DeInitShaders())
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Shaders, Shader, SHADER) // Finish shaders collector
 /* ------------------------------------------------------------------------- */

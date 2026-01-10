@@ -423,8 +423,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Unloads the archive ------------------------------------------------ */
-  ~Archive()
-  { // Done if a filename is not set
+  DTORHELPER(~Archive,
+    // Done if a filename is not set
     if(IdentIsNotSet()) return;
     // Wait for archive loading async operations to complete
     AsyncCancel();
@@ -450,7 +450,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         IdentGet(), SysError());
     // Log shutdown
     cLog->LogInfoExSafe("Archive unloaded '$' successfully.", IdentGet());
-  }
+  )
 };/* ----------------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Archives, Archive, ARCHIVE, ARCHIVE, // Finish collector
   /* -- Collector initialisers --------------------------------------------- */

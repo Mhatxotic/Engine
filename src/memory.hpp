@@ -24,12 +24,12 @@ class MemConst                         // Start of const MemBase Block Class
   size_t           stSize;             // MemSize of data
   /* -- Read pointer -------------------------------------------- */ protected:
   template<typename Type=char>
-    Type *MemDoRead(const size_t stPos) const noexcept
+    Type *MemDoRead(const size_t stPos) const
   { return reinterpret_cast<Type*>(cpPtr + stPos); }
   /* -- Clear parameters. Used by FileMap() -------------------------------- */
-  void MemReset() noexcept { MemSetPtr(); MemSetSize(); }
+  void MemReset() { MemSetPtr(); MemSetSize(); }
   /* -- Swap members with another block ------------------------------------ */
-  void MemConstSwap(MemConst &mcOther) noexcept
+  void MemConstSwap(MemConst &mcOther)
     { swap(stSize, mcOther.stSize); swap(cpPtr, mcOther.cpPtr); }
   /* -- Bit test error handler --------------------------------------------- */
   void MemCheckBit[[noreturn]](const char*const cpAddr,
@@ -59,37 +59,37 @@ class MemConst                         // Start of const MemBase Block Class
     return StdMaxSizeT;
   }
   /* -- Set size ----------------------------------------------------------- */
-  void MemSetPtr(char*const cpNPtr = nullptr) noexcept { cpPtr = cpNPtr; }
-  void MemSetSize(const size_t stBytes = 0) noexcept { stSize = stBytes; }
-  void MemSetPtrSize(char*const cpNPtr, const size_t stBytes) noexcept
+  void MemSetPtr(char*const cpNPtr = nullptr) { cpPtr = cpNPtr; }
+  void MemSetSize(const size_t stBytes = 0) { stSize = stBytes; }
+  void MemSetPtrSize(char*const cpNPtr, const size_t stBytes)
     { MemSetPtr(cpNPtr); MemSetSize(stBytes); }
   /* -- Free the pointer --------------------------------------------------- */
-  void MemFreePtr() noexcept { StdFree(MemPtr()); }
-  void MemFreePtrIfSet() noexcept { if(MemIsPtrSet()) MemFreePtr(); }
+  void MemFreePtr() { StdFree(MemPtr()); }
+  void MemFreePtrIfSet() { if(MemIsPtrSet()) MemFreePtr(); }
   /* -- Return memory at the allocated address --------------------- */ public:
   template<typename Type=void>
-    Type *MemPtr() const noexcept { return reinterpret_cast<Type*>(cpPtr); }
+    Type *MemPtr() const { return reinterpret_cast<Type*>(cpPtr); }
   /* -- Return size of allocated memory ------------------------------------ */
   template<typename Type=size_t>
-    Type MemSize() const noexcept { return static_cast<Type>(stSize); }
+    Type MemSize() const { return static_cast<Type>(stSize); }
   /* -- Return if memory is allocated -------------------------------------- */
-  bool MemIsEmpty() const noexcept { return MemSize() == 0; }
-  bool MemIsNotEmpty() const noexcept { return !MemIsEmpty(); }
+  bool MemIsEmpty() const { return MemSize() == 0; }
+  bool MemIsNotEmpty() const { return !MemIsEmpty(); }
   /* -- Returns if the pointer is valid ------------------------------------ */
-  bool MemIsPtrSet() const noexcept { return !!MemPtr(); }
-  bool MemIsPtrNotSet() const noexcept { return !MemPtr(); }
+  bool MemIsPtrSet() const { return !!MemPtr(); }
+  bool MemIsPtrNotSet() const { return !MemPtr(); }
   /* -- Return ending address ---------------------------------------------- */
   template<typename Type=void>
-    Type *MemPtrEnd() const noexcept { return MemDoRead<Type>(stSize); }
+    Type *MemPtrEnd() const { return MemDoRead<Type>(stSize); }
   /* -- Return if we can read this amount of data -------------------------- */
-  bool MemCheckParam(const size_t stPos, const size_t stBytes) const noexcept
+  bool MemCheckParam(const size_t stPos, const size_t stBytes) const
     { return stPos + stBytes <= MemSize(); }
   /* -- Same as MemCheckParam() with ptr check ----------------------------- */
   bool MemCheckPtr(const size_t stPos, const size_t stBytes,
-    const void*const vpOther) const noexcept
+    const void*const vpOther) const
       { return MemCheckParam(stPos, stBytes) && vpOther != nullptr; }
   /* -- Test a bit position ------------------------------------------------ */
-  bool MemCheckPos(const size_t stPos) const noexcept
+  bool MemCheckPos(const size_t stPos) const
     { return UtilBitToByte(stPos) >= MemSize(); }
   /* -- Find specified string ---------------------------------------------- */
   size_t MemFind(const string &strWhat, size_t stPos=0) const
@@ -187,24 +187,24 @@ class MemConst                         // Start of const MemBase Block Class
     }
   }
   /* -- Return if current size would overflow specified type --------------- */
-  template<typename Type=size_t>bool MemIsSizeOverflow() const noexcept
+  template<typename Type=size_t>bool MemIsSizeOverflow() const
     { return UtilIntWillOverflow<Type>(MemSize()); }
   /* -- Init from string (does not copy) ----------------------------------- */
-  explicit MemConst(const string &strRef) noexcept :
+  explicit MemConst(const string &strRef) :
     /* -- Initialisers ----------------------------------------------------- */
     MemConst{ strRef.length(),         // Copy string size and pointer over
       strRef.data() }                  // from specified string
     /* -- Copy pointer and size over from string --------------------------- */
     {}
   /* -- Assignment constructor (rvalue) ------------------------------------ */
-  explicit MemConst(MemConst &&mbOther) noexcept :
+  explicit MemConst(MemConst &&mbOther) :
     /* -- Initialisers ----------------------------------------------------- */
     cpPtr(mbOther.MemPtr<char>()),        // Copy pointer
     stSize(mbOther.MemSize())             // Copy size
     /* -- Code to clear other MemConst ------------------------------------ */
     { mbOther.MemReset(); }
   /* -- Uninitialised constructor -- pointer ------------------------------- */
-  MemConst() noexcept :
+  MemConst() :
     /* -- Initialisers ----------------------------------------------------- */
     cpPtr(nullptr),                    // Start with null pointer
     stSize(0)                          // No size allocated yet

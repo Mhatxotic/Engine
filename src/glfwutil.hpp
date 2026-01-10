@@ -126,7 +126,7 @@ class GlFWUtil                         // Members initially private
   SET(NoErrors, CONTEXT_NO_ERROR)      // Set context no errors
   SET(Resizable, RESIZABLE)            // Set window resizable state
   SET(RetinaMode, SCALE_FRAMEBUFFER)   // Set frame buffer scale
-  SET(ScaleMonitor, SCALE_TO_MONITOR); // Set scale window to monitor
+  SET(ScaleMonitor, SCALE_TO_MONITOR)  // Set scale window to monitor
   SET(SRGBCapable, SRGB_CAPABLE)       // Set SRGB colour space capable
   SET(Stereo, CENTER_CURSOR)           // Set window cursor centre state
   SET(Transparency, TRANSPARENT_FRAMEBUFFER) // Set transparent framebuffer

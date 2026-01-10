@@ -805,14 +805,14 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     // Shortcut to GLUIntVector const iterator
     typedef GLUIntVector::const_iterator GLUIntVectorItConst;
     // Inline function to enumerate the vector of coords and send to callback
-    auto fFunc = [&gluvTiles](auto &&fFunc){
+    auto fFunc = [&gluvTiles](auto &&fCb){
       for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
                               gluvicIt + stValuesM1 < gluvTiles.cend();
                               gluvicIt += stValues)
-        fFunc(static_cast<GLfloat>(*gluvicIt),
-              static_cast<GLfloat>(*(gluvicIt + 1)),
-              static_cast<GLfloat>(*(gluvicIt + 2)),
-              static_cast<GLfloat>(*(gluvicIt + 3)));
+        fCb(static_cast<GLfloat>(*gluvicIt),
+            static_cast<GLfloat>(*(gluvicIt + 1)),
+            static_cast<GLfloat>(*(gluvicIt + 2)),
+            static_cast<GLfloat>(*(gluvicIt + 3)));
     }; // Are image pixels reversed?
     if(IsReversed())
       fFunc([this](const GLfloat fLeft, const GLfloat fTop,
@@ -922,7 +922,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor (Unregistration then deinitialisation) ------------------ */
-  ~Texture() { DeInit(); }
+  DTORHELPER(~Texture, DeInit())
 };/* -- Finish the collector ----------------------------------------------- */
 CTOR_END_NOINITS(Textures, Texture, TEXTURE)
 /* -- DeInit Textures ------------------------------------------------------ */

@@ -76,16 +76,6 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
           cConsole->RegisterCommand(strName,
             uiMinimum, uiMaximum, LuaCallbackStatic)) });
   }
-  /* -- Destructor that unregisters the cvar ------------------------------- */
-  ~Command()
-  { // Return if iterator is not registered
-    if(lcmiIt == GetLuaCmdsListEnd()) return;
-    // Unregister the command if set
-    if(lcmiIt->second.second != cConsole->GetCmdsListEnd())
-      cConsole->UnregisterCommand(lcmiIt->second.second);
-    // Erase the item from the list
-    GetLuaCmdsList().erase(lcmiIt);
-  }
   /* -- Basic constructor with no init ----------------------------- */ public:
   Command() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -95,6 +85,16 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     lcmiIt{ GetLuaCmdsListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
     {}
+  /* -- Destructor that unregisters the cvar ------------------------------- */
+  DTORHELPER(~Command,
+    // Return if iterator is not registered
+    if(lcmiIt == GetLuaCmdsListEnd()) return;
+    // Unregister the command if set
+    if(lcmiIt->second.second != cConsole->GetCmdsListEnd())
+      cConsole->UnregisterCommand(lcmiIt->second.second);
+    // Erase the item from the list
+    GetLuaCmdsList().erase(lcmiIt);
+  )
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Commands, Command, COMMAND) // Finish global Files collector
 /* -- Build a command list (for conlib) ------------------------------------ */

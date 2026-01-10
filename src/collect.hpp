@@ -292,7 +292,7 @@ struct CLHelper :                      // Members initially public
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~CLHelper() { this->CLBaseCheckAndDestroyUnsafe(); }
+  DTORHELPER(~CLHelper, this->CLBaseCheckAndDestroyUnsafe())
   /* -- Set maximum objects ------------------------------------------------ */
   CVarReturn CollectorSetLimit(const size_t stLimit)
     { return this->CLSetLimit(stLimit); }
@@ -474,7 +474,7 @@ struct ICHelper :                      // Members initially public
   void CollectorRegister() { this->ICHelperPush(); }
   void CollectorUnregister() { this->ICHelperErase(); }
   /* -- Destructor (unregister if registered) ------------------- */ protected:
-  ~ICHelper() { CollectorUnregister(); }
+  DTORHELPER(~ICHelper, CollectorUnregister())
   /* -- Constructor (move) ------------------------------------------------- */
   explicit ICHelper(ICHelper &&icOther) :
     /* -- Initialisers ----------------------------------------------------- */

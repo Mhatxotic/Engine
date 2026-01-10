@@ -596,8 +596,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Stream()
-  { // Stop any pending async operations
+  DTORHELPER(~Stream,
+    // Stop any pending async operations
     AsyncCancel();
     // Remove the collector registration to stop audio thread polling
     ICHelperStream::CollectorUnregister();
@@ -611,7 +611,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     if(ovfContext.datasource) ov_clear(&ovfContext);
     // Log that the stream was unloaded
     cLog->LogDebugExSafe("Stream unloaded '$'!", IdentGet());
-  }
+  )
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
   /* -- Initialisers ------------------------------------------------------- */

@@ -222,7 +222,7 @@ LLRSKTBEGIN(Codes)                     // Beginning of parse result flags
   LLRSKTITEM(R_,EMPORT),             LLRSKTITEM(R_,NOSCHEME),
   LLRSKTITEM(R_,INVSCHEME),          LLRSKTITEM(R_,INVPORT),
   LLRSKTITEM(R_,UNKSCHEME),          LLRSKTITEM(R_,EMPARAMS),
-  LLRSKTITEM(R_,MAX),
+  LLRSKTITEM(R_,STANDBY),            LLRSKTITEM(R_,MAX),
 LLRSKTEND                              // End of parse result flags
 /* ========================================================================= **
 ** ######################################################################### **

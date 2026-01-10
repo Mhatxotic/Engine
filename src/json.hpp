@@ -339,8 +339,6 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   template<typename T>int ToFile(const string &strFile) const
     { return FStream{ strFile, FM_W_T }.
         FStreamWriteStringSafe(ToString<T>()) ? 0 : StdGetError(); }
-  /* ----------------------------------------------------------------------- */
-  ~Json() { AsyncCancel(); }
   /* -- Default constructor ------------------------------------------------ */
   Json() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -356,6 +354,8 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     Json{}                             // Use default initialisers
     /* -- Initialise from file --------------------------------------------- */
     { SyncInitFileSafe(strFile); }
+  /* -- Destructor that tries to recover on exception ---------------------- */
+  DTORHELPER(~Json, AsyncCancel())
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Jsons, Json, JSON, JSON) // Finish collector class
 /* ------------------------------------------------------------------------- */

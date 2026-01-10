@@ -1794,15 +1794,15 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     /* --------------------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~Socket()
-  { // Send disconnect to socket
+  DTORHELPER(~Socket,
+    // Send disconnect to socket
     SendDisconnect();
     // Have read thread running? Tell the thread to stop and wait for it. The
     // end of the thread should call FinishDisconnect() already.
     if(tReader.ThreadIsJoinable()) tReader.ThreadStopNoThrow();
     // Cleanup the disconnect
     FinishDisconnect();
-  }
+  )
 };/* ----------------------------------------------------------------------- */
 static void DestroyAllSockets()
 { // No sockets? Ignore

@@ -10,10 +10,10 @@
 /* ------------------------------------------------------------------------- */
 namespace ISysUtil {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICommon	::P;
-using namespace IDir::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace ICommon::P;            using namespace IDir::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -26,7 +26,8 @@ enum SysThread : size_t                // Thread priority types
   STP_LOW,                             // Aux thread low priority
   /* ----------------------------------------------------------------------- */
   STP_MAX                              // Maximum number of types
-};/* -- Includes ----------------------------------------------------------- */
+};/* ----------------------------------------------------------------------- */
+/* -- Includes ------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
 /* -- System error formatter with specified error code --------------------- */
 static const string SysError(const int iError)
@@ -205,7 +206,7 @@ static unsigned int SysMessage(void*const, const string &strTitle,
     const string_view strvElf, strvCompulsoryParam,
                       strvTitleParam, strvMessageParam; };
   // The dialog box elf binary database
-  const array<const DlgBoxApplication, 5> dbaaApps{ {
+  constexpr const array<const DlgBoxApplication, 5> dbaaApps{ {
     { "yad",                   cCommon->CommonBlank(),
       "--title=",              "--text=" },
     { "zenity",                "--info --no-markup",
@@ -238,10 +239,46 @@ static unsigned int SysMessage(void*const, const string &strTitle,
   } // Return status code
   return 0;
 }
-/* -- Set thread priority -------------------------------------------------- */
-static bool SysSetThreadPriority(const SysThread stLevel)
-{ // pthread_setschedparam() is pointless on Linux as root is required.
-  return true;
+/* -- Set thread priority (pthread_setschedparam() requires root) ---------- */
+static bool SysSetThreadPriority(const SysThread stPriority)
+{ // Return failure if specified priority is invalid
+  if(stPriority >= STP_MAX) return false;
+  // Typedef to do thread conversions
+  typedef array<int, STP_MAX> SysThreadToLinux;
+  // Successful operations
+  const int iOK = 0;
+  // Get pid and if we got it?
+  const pid_t ptPid = syscall(SYS_gettid);
+  if(ptPid != -1)
+  { // Nice value chosen
+    int iNice;
+    // If not running as root?
+    if(geteuid())
+    { // Non-root conversion values
+      static const SysThreadToLinux sttlNices{
+         1, /* STP_MAIN */  0, /* STP_ENGINE */ 10, /* STP_AUDIO */
+         5, /* STP_HIGH */ 19, /* STP_LOW    */
+      }; // Set new value
+      iNice = sttlNices[stPriority];
+    } // Running as root? All values are available to us
+    else
+    { // Root conversion values
+      static const SysThreadToLinux sttlNices{
+        -4, /* STP_MAIN */ -5, /* STP_ENGINE */ -2, /* STP_AUDIO */
+        -3, /* STP_HIGH */ -1, /* STP_LOW    */
+      }; // Set new value
+      iNice = sttlNices[stPriority];
+    } // Increment success if we got the pid and set the priority
+    if(setpriority(PRIO_PROCESS, ptPid, iNice) != -1) ++iOK;
+  } // Thread type conversion values
+  static const SysThreadToLinux sttlPriorities{
+    SCHED_OTHER, /* STP_MAIN  */ SCHED_OTHER, /* STP_ENGINE */
+    SCHED_IDLE,  /* STP_AUDIO */ SCHED_OTHER, /* STP_HIGH   */
+    SCHED_IDLE,  /* STP_LOW   */
+  }; // Increment success if we set the nice
+  if(set_sched_policy(pthread_self(), sttlPriorities[stPriority]) != -1) ++iOK;
+  // Success if both were set
+  return iOK == 2;
 }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Done checking OS
@@ -258,7 +295,7 @@ static unsigned int SysMessage(const string &strTitle,
 static void SysUnSetEnv() {}
 template<typename ...VarArgs>
   static void SysUnSetEnv(const char*const cpEnv, VarArgs &&...vaArgs)
-    { unsetenv(cpEnv); SysUnSetEnv(StdForward<VarArgs>(vaArgs)...); }
+{ unsetenv(cpEnv); SysUnSetEnv(StdForward<VarArgs>(vaArgs)...); }
 /* -- System error code ---------------------------------------------------- */
 template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(StdGetError()); }
@@ -272,13 +309,13 @@ static void SysSetThreadName(const char*const cpName)
   pthread_setname_np(
 #if defined(LINUX)                     // Linux?
     pthread_self(),                    // Requires handle
-#endif
+#endif                                 // Not on MacOS
     cpName);
 }
 /* -- System message without a handle -------------------------------------- */
 static unsigned int SysMessage(const string &strTitle,
   const string &strMessage, const unsigned int uiFlags)
-    { return SysMessage(nullptr, strTitle, strMessage, uiFlags); }
+{ return SysMessage(nullptr, strTitle, strMessage, uiFlags); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Not using Windows target
 /* ------------------------------------------------------------------------- */
@@ -291,9 +328,11 @@ struct SysErrorPlugin final
     const int iCode = SysErrorCode();
     osS << "\n+ Reason<" << iCode << "> = \"" << SysError(iCode) << "\".";
   }
-};/* ----------------------------------------------------------------------- */
+};
+/* ----------------------------------------------------------------------- */
 static bool SysIsErrorCode(const int iCode=0)
   { return SysErrorCode() == iCode; }
+/* ------------------------------------------------------------------------- */
 static bool SysIsNotErrorCode[[maybe_unused]](const int iCode=0)
   { return !SysIsErrorCode(iCode); }
 /* ------------------------------------------------------------------------- */

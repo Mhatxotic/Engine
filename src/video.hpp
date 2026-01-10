@@ -1204,40 +1204,6 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Update choice of shader to use
     UpdateShader();
   }
-  /* -- Destructor --------------------------------------------------------- */
-  ~Video()
-  { // Stop any pending async operations
-    AsyncCancel();
-    // Remove the registration now so it is no longer polled
-    ICHelperVideo::CollectorUnregister();
-    // Ignore if file data not initialised
-    if(fmFile.FileMapClosed()) return;
-    // Prevent more events being generated
-    LuaEvtDeInit();
-    // Set exit reason
-    ubReason = UB_FINISH;
-    // DeInit the thread, unblock the worker thread and stop and unload buffers
-    tThread.ThreadStopNoThrow();
-    // Stop and unload audio buffers
-    StopAudioAndUnloadBuffers();
-    // Deinit texture and reset parameters
-    if(FlagIsSet(FL_GLINIT)) { DeInitTexture(); FboDeInit(); }
-    // Free Theora decode and setup pointers
-    if(tdcPtr) th_decode_free(tdcPtr);
-    if(tsiPtr) th_setup_free(tsiPtr);
-    // Clear theora and vorbis data. These are safe to call on static structs
-    vorbis_comment_clear(&vcData);
-    th_comment_clear(&tcData);
-    ogg_stream_clear(&ostsTheora);
-    ogg_stream_clear(&ostsVorbis);
-    vorbis_block_clear(&vbData);
-    vorbis_dsp_clear(&vdsData);
-    ogg_sync_clear(&osysData);
-    vorbis_info_clear(&viData);
-    th_info_clear(&tiData);
-    // Log that the video was unloaded
-    cLog->LogDebugExSafe("Video unloaded '$'!", IdentGet());
-  }
   /* -- Default Constructor ------------------------------------------------ */
   Video() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -1291,6 +1257,40 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     eFormat(AL_NONE)                   // Initialise audio format type
     /* -- No code ---------------------------------------------------------- */
     {}
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~Video,
+    // Stop any pending async operations
+    AsyncCancel();
+    // Remove the registration now so it is no longer polled
+    ICHelperVideo::CollectorUnregister();
+    // Ignore if file data not initialised
+    if(fmFile.FileMapClosed()) return;
+    // Prevent more events being generated
+    LuaEvtDeInit();
+    // Set exit reason
+    ubReason = UB_FINISH;
+    // DeInit the thread, unblock the worker thread and stop and unload buffers
+    tThread.ThreadStopNoThrow();
+    // Stop and unload audio buffers
+    StopAudioAndUnloadBuffers();
+    // Deinit texture and reset parameters
+    if(FlagIsSet(FL_GLINIT)) { DeInitTexture(); FboDeInit(); }
+    // Free Theora decode and setup pointers
+    if(tdcPtr) th_decode_free(tdcPtr);
+    if(tsiPtr) th_setup_free(tsiPtr);
+    // Clear theora and vorbis data. These are safe to call on static structs
+    vorbis_comment_clear(&vcData);
+    th_comment_clear(&tcData);
+    ogg_stream_clear(&ostsTheora);
+    ogg_stream_clear(&ostsVorbis);
+    vorbis_block_clear(&vbData);
+    vorbis_dsp_clear(&vdsData);
+    ogg_sync_clear(&osysData);
+    vorbis_info_clear(&viData);
+    th_info_clear(&tiData);
+    // Log that the video was unloaded
+    cLog->LogDebugExSafe("Video unloaded '$'!", IdentGet());
+  )
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Videos, Video, VIDEO, VIDEO, // Finish collector class
   /* -- Initialisers ------------------------------------------------------- */

@@ -35,76 +35,76 @@ static constexpr ClkDuration
   cd1S{ seconds{ 1 } },                cd60S{ seconds{ 60 } };
 /* -- Get count from a duration -------------------------------------------- */
 template<typename DurType>
-  static auto ClockGetCount(const ClkDuration &cdDuration) noexcept
+  static auto ClockGetCount(const ClkDuration &cdDuration)
     { return duration_cast<DurType>(cdDuration).count(); }
 /* -- Convert duration to double ------------------------------------------- */
-static double ClockDurationToDouble(const ClkDuration &cdDuration) noexcept
+static double ClockDurationToDouble(const ClkDuration &cdDuration)
   { return ClockGetCount<duration<double>>(cdDuration); }
 /* -- Subtract one timepoint from the other and return as double ----------- */
 static double ClockTimePointRangeToDouble
-  (const ClkTimePoint &ctpEnd, const ClkTimePoint &ctpStart) noexcept
+  (const ClkTimePoint &ctpEnd, const ClkTimePoint &ctpStart)
     { return ClockDurationToDouble(ctpEnd - ctpStart); }
 /* -- Subtract one timepoint from the other and return as clamped double --- */
 static double ClockTimePointRangeToClampedDouble
-  (const ClkTimePoint &ctpEnd, const ClkTimePoint &ctpStart) noexcept
+  (const ClkTimePoint &ctpEnd, const ClkTimePoint &ctpStart)
     { return UtilMaximum(ClockTimePointRangeToDouble(ctpEnd, ctpStart), 0); }
 /* -- Clock manager -------------------------------------------------------- */
 template<class ClockType = CoreClock>struct ClockManager
 { /* -- Get current time --------------------------------------------------- */
-  static auto GetTime() noexcept { return ClockType::now(); }
+  static auto GetTime() { return ClockType::now(); }
   /* -- Get time since epoch ----------------------------------------------- */
-  static const ClkDuration GetEpochTime() noexcept
+  static const ClkDuration GetEpochTime()
     { return GetTime().time_since_epoch(); }
   /* -- Get current time since epoch casted and counted -------------------- */
   template<typename Type,typename ReturnType>
-    const ReturnType GetTimeEx() const noexcept
+    const ReturnType GetTimeEx() const
       { return static_cast<ReturnType>(ClockGetCount<Type>(GetEpochTime())); }
   /* -- Return time as double ---------------------------------------------- */
-  static double GetTimeDouble() noexcept
+  static double GetTimeDouble()
     { return ClockDurationToDouble(GetEpochTime()); }
   /* -- Return time since epoch count as integer --------------------------- */
-  template<typename Type=StdTimeT>const Type GetTimeS() const noexcept
+  template<typename Type=StdTimeT>const Type GetTimeS() const
     { return GetTimeEx<duration<Type>,Type>(); }
   /* -- Return time in microseconds ---------------------------------------- */
-  template<typename Type=uint64_t>const Type GetTimeUS() const noexcept
+  template<typename Type=uint64_t>const Type GetTimeUS() const
     { return GetTimeEx<microseconds,Type>(); }
   /* -- Return time in milliseconds ---------------------------------------- */
-  template<typename Type=uint64_t>const Type GetTimeMS() const noexcept
+  template<typename Type=uint64_t>const Type GetTimeMS() const
     { return GetTimeEx<milliseconds,Type>(); }
   /* -- Return time in nanoseconds ----------------------------------------- */
-  template<typename Type=uint64_t>const Type GetTimeNS() const noexcept
+  template<typename Type=uint64_t>const Type GetTimeNS() const
     { return GetTimeEx<nanoseconds,Type>(); }
   /* -- Get offset time ---------------------------------------------------- */
-  static const ClkDuration GetDuration(const ClkTimePoint &ctpCurrent) noexcept
+  static const ClkDuration GetDuration(const ClkTimePoint &ctpCurrent)
     { return GetTime() - ctpCurrent; }
   /* -- Get timepoint count ------------------------------------------------ */
   template<typename Type>
-    auto GetDurationCount(const ClkTimePoint &ctpCurrent) const noexcept
+    auto GetDurationCount(const ClkTimePoint &ctpCurrent) const
       { return ClockGetCount<Type>(GetDuration(ctpCurrent)); }
   /* -- Convert timepoint to double ---------------------------------------- */
-  static double TimePointToDouble(const ClkTimePoint &ctpTime) noexcept
+  static double TimePointToDouble(const ClkTimePoint &ctpTime)
     { return ClockDurationToDouble(GetDuration(ctpTime)); }
   /* -- Convert clamped timepoint to double -------------------------------- */
-  static double TimePointToClampedDouble(const ClkTimePoint &ctpTime) noexcept
+  static double TimePointToClampedDouble(const ClkTimePoint &ctpTime)
     { return UtilMaximum(TimePointToDouble(ctpTime), 0); }
   /* -- Convert local time to string --------------------------------------- */
   const string FormatTime(const char*const cpFormat =
-    cpTimeFormat) const noexcept
+    cpTimeFormat) const
       { return StrFromTimeTT(GetTimeS(), cpFormat); }
   /* -- Convert universal time to string ----------------------------------- */
   const string FormatTimeUTC(const char*const cpFormat =
-    cpTimeFormat) const noexcept
+    cpTimeFormat) const
       { return StrFromTimeTTUTC(GetTimeS(), cpFormat); }
   /* -- Convert time to short duration ------------------------------------- */
-  static const string ToDurationString(unsigned int uiPrecision = 6) noexcept
+  static const string ToDurationString(unsigned int uiPrecision = 6)
     { return StrShortFromDuration(GetTimeDouble(), uiPrecision); }
   /* -- Convert seconds to long duration relative to current time ---------- */
   const string ToDurationRel(const StdTimeT tDuration = 0,
-    unsigned int uiCompMax = StdMaxUInt) const noexcept
+    unsigned int uiCompMax = StdMaxUInt) const
       { return StrLongFromDuration(GetTimeS() - tDuration, uiCompMax); }
   /* -- Convert time to long duration -------------------------------------- */
   const string ToDurationLongString(unsigned int uiCompMax =
-    StdMaxUInt) const noexcept
+    StdMaxUInt) const
       { return ToDurationRel(0, uiCompMax); }
   /* -- Unused constructor ------------------------------------------------- */
   ClockManager() = default;
@@ -122,20 +122,20 @@ class ClockInterval :                  // Members initially private
   ClkDuration      cdLimit;            // Time delay before trigger
   ClkTimePoint     ctpNext;            // Next trigger
   /* -- Returns if time + this duration not elapsed yet ------------ */ public:
-  bool CIIsNotTriggered(const ClkDuration &cdT) const noexcept
+  bool CIIsNotTriggered(const ClkDuration &cdT) const
     { return this->GetTime() + cdT < ctpNext; }
   /* -- Returns if timepoint not elapsed yet ------------------------------- */
-  bool CIIsNotTriggered(const ClkTimePoint &ctpT) const noexcept
+  bool CIIsNotTriggered(const ClkTimePoint &ctpT) const
     { return ctpT < ctpNext; }
   /* -- Returns if current timepoint not elapsed yet ----------------------- */
-  bool CIIsNotTriggered() const noexcept
+  bool CIIsNotTriggered() const
     { return CIIsNotTriggered(this->GetTime()); }
   /* -- Returns if current timepoint elapsed ------------------------------- */
-  bool CIIsTriggered() const noexcept { return !CIIsNotTriggered(); }
+  bool CIIsTriggered() const { return !CIIsNotTriggered(); }
   /* -- Add time to next limit --------------------------------------------- */
-  void CIAccumulate() noexcept { ctpNext += cdLimit; }
+  void CIAccumulate() { ctpNext += cdLimit; }
   /* -- Time elapsed? ------------------------------------------------------ */
-  bool CITrigger() noexcept
+  bool CITrigger()
   { // Return false if time hasn't elapsed yet
     if(CIIsNotTriggered()) return false;
     // Set next time
@@ -144,7 +144,7 @@ class ClockInterval :                  // Members initially private
     return true;
   }
   /* -- Time elapsed? ------------------------------------------------------ */
-  bool CITriggerStrict() noexcept
+  bool CITriggerStrict()
   { // Get current high res time
     const ClkTimePoint ctpNow{ this->GetTime() };
     // Return false if time hasn't elapsed yet
@@ -155,25 +155,25 @@ class ClockInterval :                  // Members initially private
     return true;
   }
   /* -- Reset trigger ------------------------------------------------------ */
-  void CIReset() noexcept { ctpNext = this->GetTime() + cdLimit; }
+  void CIReset() { ctpNext = this->GetTime() + cdLimit; }
   /* -- Return time left --------------------------------------------------- */
-  const ClkDuration CIDelta() const noexcept
+  const ClkDuration CIDelta() const
     { return this->GetTime() - ctpNext; }
   /* -- Sync now ----------------------------------------------------------- */
-  void CISync() noexcept { ctpNext = this->GetTime(); }
+  void CISync() { ctpNext = this->GetTime(); }
   /* -- Update limit and time now do a duration object --------------------- */
-  void CISetLimit(const ClkDuration &duL) noexcept { cdLimit = duL; CISync(); }
+  void CISetLimit(const ClkDuration &duL) { cdLimit = duL; CISync(); }
   /* -- Update limit and time now to a double ------------------------------ */
-  void CISetLimit(const double dL) noexcept
+  void CISetLimit(const double dL)
     { CISetLimit(duration_cast<ClkDuration>(duration<double>(dL))); }
   /* -- Constructor -------------------------------------------------------- */
-  ClockInterval() noexcept :
+  ClockInterval() :
     /* -- Initialisers ----------------------------------------------------- */
     ctpNext{ this->GetTime() }         // Will trigger next check
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor (set limit by lvalue) ---------------------------------- */
-  explicit ClockInterval(const ClkDuration &duL) noexcept :
+  explicit ClockInterval(const ClkDuration &duL) :
     /* -- Initialisers ----------------------------------------------------- */
     cdLimit{ duL },                    // Copy limit from other class
     ctpNext{ this->GetTime() }         // Will trigger next check
@@ -189,30 +189,30 @@ class ClockChrono :                    // Members intially private
 { /* -- Private variables -------------------------------------------------- */
   ClkTimePoint ctpStart;               // Don't make this a base class
   /* -- Subtract specified time from the stored time and return as - */ public:
-  double CCDeltaRangeToDouble(const ClkTimePoint &ctpEnd) const noexcept
+  double CCDeltaRangeToDouble(const ClkTimePoint &ctpEnd) const
     { return ClockDurationToDouble(ctpEnd - ctpStart); }
   /* -- Same as above but clamps to zero so there is no negative time ------ */
-  double CCDeltaToClampedDouble(const ClkTimePoint &ctpEnd) const noexcept
+  double CCDeltaToClampedDouble(const ClkTimePoint &ctpEnd) const
     { return UtilMaximum(CCDeltaRangeToDouble(ctpEnd), 0); }
   /* -- Return uptime as milliseconds in a 64-bit uint --------------------- */
-  uint64_t CCDeltaMS() const noexcept
+  uint64_t CCDeltaMS() const
     { return static_cast<uint64_t>(
         this->template GetDurationCount<milliseconds>(ctpStart)); }
   /* -- Return uptime as nanoseconds in a 64-bit uint ---------------------- */
-  uint64_t CCDeltaNS() const noexcept
+  uint64_t CCDeltaNS() const
     { return static_cast<uint64_t>(
         this->template GetDurationCount<nanoseconds>(ctpStart)); }
   /* -- Return uptime as microseconds in a 64-bit uint --------------------- */
-  uint64_t CCDeltaUS() const noexcept
+  uint64_t CCDeltaUS() const
     { return static_cast<uint64_t>(
         this->template GetDurationCount<microseconds>(ctpStart)); }
   /* -- Return uptime as a double ------------------------------------------ */
-  double CCDeltaToDouble() const noexcept
+  double CCDeltaToDouble() const
     { return this->TimePointToDouble(ctpStart); }
   /* -- Reset the start time ----------------------------------------------- */
-  void CCReset() noexcept { ctpStart = this->GetTime(); }
+  void CCReset() { ctpStart = this->GetTime(); }
   /* -- Constructor. Just initialise current time -------------------------- */
-  ClockChrono() noexcept :
+  ClockChrono() :
     /* -- Initialisers ----------------------------------------------------- */
     ctpStart{ this->GetTime() }        // Set start time
     /* -- No code ---------------------------------------------------------- */

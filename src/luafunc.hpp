@@ -299,14 +299,14 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     /* -- Set if requested ------------------------------------------------- */
     { if(bSet) LuaFuncSet(); }
   /* -- Destructor --------------------------------------------------------- */
-  ~LuaFunc()
-  { // If we have the parent state? Delete both refs if not empty func/set
+  DTORHELPER(~LuaFunc,
+    // If we have the parent state? Delete both refs if not empty func/set
     if(LuaFuncGetState())
       for(int iReference : aReferences)
         if(LuaUtilIsRefValid(iReference) &&
            LuaFuncIsNotRefEmptyFunc(iReference))
           LuaUtilRmRef(LuaFuncGetState(), iReference);
-  }
+  )
 };/* ----------------------------------------------------------------------- */
 /* -- De-init state and all references ------------------------------------- */
 static void LuaFuncDeInitRef()
@@ -330,7 +330,7 @@ static void LuaFuncDeInitRef()
   cLog->LogDebugSafe("LuaFuncs de-initialised.");
 }
 /* -- Empty function ------------------------------------------------------- */
-static int LuaFuncEmptyCFunction(lua_State*const) noexcept { return 0; }
+static int LuaFuncEmptyCFunction(lua_State*const) { return 0; }
 /* -- Init with lua state -------------------------------------------------- */
 static void LuaFuncInitRef(lua_State*const lS)
 { // DeInit current lua refs

@@ -21,13 +21,14 @@ namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
 enum ThreadStatus : int                // Thread status codes
 { /* ----------------------------------------------------------------------- */
-  TS_EXCEPTION = -3,                   // [-3] Thread exited with an exception
-  TS_INIT,                             // [-2] Thread starting up
+  TS_EXCEPTION = -4,                   // [-4] Thread exited with an exception
+  TS_INIT,                             // [-3] Thread starting up
+  TS_FINISHED,                         // [-2] Thread waiting for join
   TS_ERROR,                            // [-1] Thread will terminate cleanly
   TS_STANDBY,                          // [+0] Thread is in stand-by mode
   TS_RUNNING,                          // [+1] Thread is running still
   TS_RETRY,                            // [+2] Thread will start again
-  TS_OK,                               // [+3] Thread will terminate cleanly
+  TS_OK,                               // [+4] Thread will terminate cleanly
 };/* == Thread collector class with global thread id counter =============== */
 CTOR_BEGIN(Threads, Thread, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
@@ -70,8 +71,6 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     thread tNewThread{ StdForward<VarArgs>(vaArgs)... };
     // Set to this thread
     this->swap(tNewThread);
-    // Thread can now resume
-    tsCode = TS_INIT;
   }
   /* -- Thread handler function -------------------------------------------- */
   void ThreadHandler() try
@@ -96,18 +95,18 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
       if(ThreadGetExitCode() != TS_RETRY) break;
     } // Set shutdown time
     scdEnd = cmHiRes.GetEpochTime();
+    // Reduce thread count
+    --cParent->stRunning;
     // Log if thread didn't signal to exit
     cLog->LogDebugExSafe("Thread $<$> finished in $ with $.",
       CtrGet(), IdentGet(),
       StrShortFromDuration(ClockTimePointRangeToClampedDouble(
         ThreadGetEndTime(), ThreadGetStartTime())), ThreadGetExitCodeString());
-    // Reduce thread count
-    --cParent->stRunning;
-  } // exception occured in thread so handle it
+    // Reset exit code to waiting for acknowledgement by engine thread
+    ThreadSetExitCode(TS_FINISHED);
+  } // exception occurred in thread so handle it
   catch(const exception &eReason)
-  { // Return error and set thread to exit
-    ThreadSetExitCode(TS_EXCEPTION);
-    // Reduce thread count
+  { // Reduce thread count
     --cParent->stRunning;
     // Set shutdown time
     scdEnd = cmHiRes.GetEpochTime();
@@ -116,6 +115,8 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
       CtrGet(), IdentGet(),
       StrShortFromDuration(ClockTimePointRangeToClampedDouble(
         ThreadGetEndTime(), ThreadGetStartTime())), eReason);
+    // Return error and set thread to exit
+    ThreadSetExitCode(TS_EXCEPTION);
   }
   /* ----------------------------------------------------------------------- */
   static void ThreadMain(void*const vpPtr)
@@ -174,7 +175,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // even though the thread explicitly said it's no longer executing
     // because join() HAS to be called in order for thread to be reused, and
     // join() will abort() if joinable() isn't checked as well.
-    if(ThreadIsJoinable()) ThreadJoin();
+    if(ThreadIsJoinable()) { ThreadJoin(); ThreadSetExitCode(TS_STANDBY); }
     // No longer executing
     ThreadCancelExit();
   }
@@ -234,7 +235,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Set new thread parameters
     ThreadCancelExit();
     ThreadSetParam(vpPtr);
-    ThreadSetExitCode(TS_STANDBY);
+    ThreadSetExitCode(TS_INIT);
     // Start the thread and move that thread class to this thread
     ThreadNew(ThreadMain, this);
   }
@@ -253,20 +254,6 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* -- Initialise with callback, parameter and start execute -------------- */
   void ThreadInit(const CbThFunc &cbfC, void*const vpPtr)
     { ThreadInit(cbfC); ThreadStart(vpPtr); }
-  /* -- Destructor --------------------------------------------------------- */
-  ~Thread()
-  { // Done if not running
-    if(ThreadIsNotJoinable()) return;
-    // Not signalled to exit?
-    if(ThreadShouldNotExit())
-    { // Set exit signal
-      ThreadDoSetExit();
-      // Log signalled to exit in destructor
-      cLog->LogWarningExSafe("Thread $<$> signalled to exit in destructor.",
-        CtrGet(), IdentGet());
-    } // Wait to synchronise
-    ThreadJoin();
-  }
   /* -- Full initialise and execute constructor ---------------------------- */
   Thread(const string &strN,           // Requested Thread name
          const SysThread sP,           // Thread needs high performance?
@@ -309,13 +296,27 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     ThreadBase{ sP, nullptr, nullptr } // Initialise only thread priority
     /* -- No code ---------------------------------------------------------- */
     {}
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~Thread,
+    // Done if not running
+    if(ThreadIsNotJoinable()) return;
+    // Not signalled to exit?
+    if(ThreadShouldNotExit())
+    { // Set exit signal
+      ThreadDoSetExit();
+      // Log signalled to exit in destructor
+      cLog->LogWarningExSafe("Thread $<$> signalled to exit in destructor.",
+        CtrGet(), IdentGet());
+    } // Wait to synchronise
+    ThreadJoin();
+  )
 };/* ======================================================================= */
 CTOR_END(Threads, Thread, THREAD,,,, stRunning{0}, imCodes{{
   /* ----------------------------------------------------------------------- */
   IDMAPSTR(TS_EXCEPTION),              IDMAPSTR(TS_INIT),
   IDMAPSTR(TS_ERROR),                  IDMAPSTR(TS_STANDBY),
   IDMAPSTR(TS_RUNNING),                IDMAPSTR(TS_RETRY),
-  IDMAPSTR(TS_OK),
+  IDMAPSTR(TS_FINISHED),               IDMAPSTR(TS_OK),
   /* ----------------------------------------------------------------------- */
 }});                                   // End of 'Threads' initialisation
 /* -- Thread sync helper --------------------------------------------------- */

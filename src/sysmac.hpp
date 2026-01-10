@@ -120,13 +120,13 @@ class SysProcess :                     // Need this before of System init order
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
         // Get process serial number from pid and show error if failed
         ProcessSerialNumber psnApp;
-        if(const OSStatus ossErr = GetProcessForPID(pPId, &psnApp))
+        if(const OSStatus ossErr1 = GetProcessForPID(pPId, &psnApp))
           cLog->LogErrorExSafe("System can't get serial for pid $ (code $)!",
-            pPId, ossErr);
+            pPId, ossErr1);
         // Try to activate the app with specified serial number
-        else if(const OSStatus ossErr = SetFrontProcess(&psnApp))
+        else if(const OSStatus ossErr2 = SetFrontProcess(&psnApp))
           cLog->LogErrorExSafe(
-            "System can't activate app with pid $ (code $)!", pPId, ossErr);
+            "System can't activate app with pid $ (code $)!", pPId, ossErr2);
         // Success
         else cLog->LogInfoExSafe("System activated application at pid $.",
           pPId);
@@ -159,17 +159,6 @@ class SysProcess :                     // Need this before of System init order
     // Execution can continue
     return true;
   }
-  /* -- Destructor --------------------------------------------------------- */
-  ~SysProcess()
-  { // Unmap the memory containing the pid and reset the pid memory address
-    if(pipProcessId && munmap(pipProcessId, stPidSize))
-      cLog->LogWarningExSafe("System failed to unmap shared memory of size "
-        "$ bytes! $", stPidSize, SysError());
-    // Unlink the shared memory object if data is set
-    if(IdentIsSet() && shm_unlink(IdentGetData()))
-      cLog->LogWarningExSafe("System failed to unlink shared memory object "
-        "'$'! $", IdentGet(), SysError());
-  }
   /* -- Apparently due to 'dynamic memory/resource management' (CppCheck) -- */
   SysProcess(SysProcess &) = delete;           // Even though we don't use
   SysProcess operator=(SysProcess &) = delete; // these at all
@@ -185,6 +174,17 @@ class SysProcess :                     // Need this before of System init order
     pipProcessId(nullptr)              // Process id memory not available
     /* -- No code ---------------------------------------------------------- */
     {}
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~SysProcess,
+    // Unmap the memory containing the pid and reset the pid memory address
+    if(pipProcessId && munmap(pipProcessId, stPidSize))
+      cLog->LogWarningExSafe("System failed to unmap shared memory of size "
+        "$ bytes! $", stPidSize, SysError());
+    // Unlink the shared memory object if data is set
+    if(IdentIsSet() && shm_unlink(IdentGetData()))
+      cLog->LogWarningExSafe("System failed to unlink shared memory object "
+        "'$'! $", IdentGet(), SysError());
+  )
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Dependency classes ------------------------------------------------- */
