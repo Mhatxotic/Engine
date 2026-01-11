@@ -407,11 +407,28 @@ static const string CryptEntEncode(const string &strS)
   // For each entity. Find it in the string
   // Until null character. Which control token?
   for(UtfDecoder utfSrc{ strS }; unsigned int uiChar = utfSrc.Next();)
-  { // Characters not these character ranges will be encoded
-    if(uiChar <  ' '                   || // Control characters
-      (uiChar >= '!' && uiChar <= '/') || // Symbols before numbers
-      (uiChar >= ':' && uiChar <= '@') || // Symbols before capitals
-       uiChar >= '{')                     // Extended characters
+  { // If characters with special meaning in HTML that must be escaped in text
+    // contexts? (ampersand, less-than, greater-than, quotation marks
+    // (depending on context))?
+    if(uiChar == static_cast<unsigned int>('&') || // (U+0026)
+       uiChar == static_cast<unsigned int>('<') || // (U+003C)
+       uiChar == static_cast<unsigned int>('>') || // (U+003E)
+       // Is control characters? (C0): U+0000..U+001F except allowed whitespace
+       // (TAB U+0009, LF U+000A, CR U+000D)
+       (uiChar <= 0x001f && uiChar != 0x0009 &&
+        uiChar != 0x000a && uiChar != 0x000d) ||
+       // Is DELETE control? (U+007F)
+       uiChar == 0x007f ||
+       // Is C1 control characters? (U+0080..U+009F)
+       (uiChar > 0x0080 && uiChar <= 0x009f) ||
+       // Is surrogate code points character? (never valid Unicode scalar
+       // values -> U+D800..U+DFFF)
+       (uiChar > 0xd800 && uiChar <= 0xdfff) ||
+       // Noncharacters? (U+FDD0..U+FDEF)
+       (uiChar > 0xfdd0 && uiChar <= 0xfdef) ||
+       // Any code point where low 16 bits are 0xFFFE or 0xFFFF?
+       (uiChar & 0xffff) >= 0xfffe)
+      // Write the hexedecimal notation for the character instead
       osS << cCommon->CommonEnt() << uiChar << ';';
     // Character is usable as is
     else osS << static_cast<char>(uiChar);

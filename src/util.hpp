@@ -193,13 +193,13 @@ static uint64_t UtilCastDoubleToInt64(const double dV)
 /* -- Helper functions to force float byte ordering ------------------------ */
 static float UtilToF32LE(const float fV)
   { return UtilCastInt32ToFloat(UtilToI32LE(UtilCastFloatToInt32(fV))); }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 static float UtilToF32BE(const float fV)
   { return UtilCastInt32ToFloat(UtilToI32BE(UtilCastFloatToInt32(fV))); }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 static double UtilToF64LE(const double dV)
   { return UtilCastInt64ToDouble(UtilToI64LE(UtilCastDoubleToInt64(dV))); }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 static double UtilToF64BE(const double dV)
   { return UtilCastInt64ToDouble(UtilToI64BE(UtilCastDoubleToInt64(dV))); }
 /* -- Convert to little endian integer ------------------------------------- */
@@ -420,7 +420,8 @@ namespace MakeFilledContainer
   constexpr ContainerType UtilMkFilledContainer(const ItemType &itValue)
     { return Select<ContainerType, ItemType, stNumItems>
         (itValue, make_index_sequence<stNumItems>{}); }
-};/* ----------------------------------------------------------------------- */
+};
+/* ------------------------------------------------------------------------- */
 using MakeFilledContainer::UtilMkFilledContainer;
 /* -- Initialise an array of the specified value --------------------------- */
 namespace MakeFilledClassContainer
@@ -444,37 +445,38 @@ namespace MakeFilledClassContainer
   constexpr ContainerType UtilMkFilledClassContainer(ArgType atValue=0)
     { return Select<ContainerType, ArgType>
         (atValue, make_index_sequence<stNumItems>{}); }
-};/* ----------------------------------------------------------------------- */
+};
+/* ------------------------------------------------------------------------- */
 using MakeFilledClassContainer::UtilMkFilledClassContainer;
 /* -- Bits handling functions ---------------------------------------------- */
 template<typename IntType> requires is_integral_v<IntType>
 static IntType UtilBitSwap4(const IntType itValue)
   { return (((itValue & 0xff) >> 4) | ((itValue & 0xff) << 4)) & 0xff; }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 template<typename IntType> requires is_integral_v<IntType>
 static IntType UtilBitToByte(const IntType itPos)
   { return itPos / CHAR_BIT; }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 template<typename IntType> requires is_integral_v<IntType>
 static IntType UtilBitFromByte(const IntType itPos)
   { return itPos * CHAR_BIT; }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 template<typename RetType,typename IntType>
 requires is_integral_v<RetType> && is_integral_v<IntType>
 static RetType UtilBitMask(const IntType itPos)
   { return static_cast<RetType>(1 << itPos % CHAR_BIT); }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 template<typename PtrType,typename IntType> requires is_integral_v<IntType>
 static void UtilBitSet(PtrType*const ptDst, const IntType itPos)
   { ptDst[UtilBitToByte(itPos)] |=
       UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos); }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 template<typename PtrType,typename IntType>
 requires is_integral_v<IntType>
 static bool UtilBitTest(PtrType*const ptDst, const IntType itPos)
   { return !!(ptDst[UtilBitToByte(itPos)] &
       UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos)); }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 template<typename PtrType,typename IntType> requires is_integral_v<IntType>
 static void UtilBitClear(PtrType*const ptDst, const IntType itPos)
   { ptDst[UtilBitToByte(itPos)] &=
@@ -495,7 +497,7 @@ static void UtilBitSet2R(PtrType*const ptDst, const IntType itDstPos,
   const PtrType*const ptSrc, const IntType itSrcPos)
 { ptDst[UtilBitToByte(itDstPos)] |=
     UtilReverseByte(ptSrc[UtilBitToByte(itSrcPos)]); }
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 // template<typename PtrType,typename IntType>
 //   static bool UtilBitTest2(PtrType*const ptDst, const IntType itDstPos,
 //     const PtrType*const ptSrc, const IntType itSrcPos)

@@ -179,7 +179,7 @@ struct CVars :                         // Start of vars class
     { return GetStrInternal(cveId).data(); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>const IntType GetInternal(const CVarEnums cveId)
-    { return StdMove(StrToNum<IntType>(GetStrInternal(cveId))); }
+    { return StrToNum<IntType>(GetStrInternal(cveId)); }
   /* ----------------------------------------------------------------------- */
   void SetInitialVar(CVarItem &cviRef, const string &strVal,
     const CVarFlagsConst cvfcFlags)

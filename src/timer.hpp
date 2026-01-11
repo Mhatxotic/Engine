@@ -19,10 +19,7 @@ namespace P {                          // Start of public module namespace
 class Timer;                           // Class prototype
 static Timer *cTimer = nullptr;        // Address of global class
 class Timer                            // Members initially private
-{ /* -- Limits ------------------------------------------------------------- */
-  static const uint64_t uqIntvMin =    2000000, // Minimum interval
-                        uqIntvMax = 1000000000; // Maximum interval
-  /* -- Variables ---------------------------------------------------------- */
+{ /* -- Variables ---------------------------------------------------------- */
   ClkTimePoint     ctpFrame,           // Frame start time
                    ctpStart,           // Start of frame time
                    ctpSecond,          // One second interval
@@ -157,7 +154,7 @@ class Timer                            // Members initially private
   CVarReturn TimerTickRateModified(const uint64_t uqInterval)
   { // Return if not valid
     if(CVarSimpleSetIntNLGE(cdLimit, nanoseconds{ uqInterval },
-         nanoseconds{ uqIntvMin }, nanoseconds{ uqIntvMax }) == DENY)
+         nanoseconds{ 2000000 }, nanoseconds{ 1000000000 }) == DENY)
       return DENY;
     // Set expected FPS
     TimerSetFPS(TimerGetLimit());

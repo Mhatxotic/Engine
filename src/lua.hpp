@@ -250,12 +250,12 @@ class Lua :                            // Actual class body
     // Log progress
     cLog->LogDebugSafe("Lua registering engine namespaces...");
     // Counters for logging stats
-    int iCount        = 0,           // Number of global namespaces used
+    int iGlobals      = 0,           // Number of global namespaces used
         iMembers      = 0,           // Number of static functions used
         iMethods      = 0,           // Number of class methods used
         iTables       = 0,           // Number of tables used
         iStatics      = 0,           // Number of static vars registered
-        iTotal        = 0,           // Number of global namespaces in total
+        iTotalGlobals = 0,           // Number of global namespaces in total
         iTotalMembers = 0,           // Number of static functions in total
         iTotalMethods = 0,           // Number of class methods in total
         iTotalTables  = 0,           // Number of tables in total
@@ -268,7 +268,7 @@ class Lua :                            // Actual class body
       iTotalMembers += llRef.iLLCount;
       iTotalMethods += llRef.iLLMFCount;
       iTotalTables += llRef.iLLKICount;
-      ++iTotal;
+      ++iTotalGlobals;
       // If this namespace is not allowed in the current operation mode?
       if(cSystem->IsCoreFlagsNotHave(llRef.cfcRequired))
       { // If we have consts list?
@@ -287,7 +287,7 @@ class Lua :                            // Actual class body
       iMembers += llRef.iLLCount;
       iMethods += llRef.iLLMFCount;
       iTables += llRef.iLLKICount;
-      ++iCount;
+      ++iGlobals;
       // Load class creation functions
       LuaUtilPushTable(GetState(), 0, llRef.iLLTotal);
       luaL_setfuncs(GetState(), llRef.libList, 0);
@@ -360,15 +360,15 @@ class Lua :                            // Actual class body
     } // Report summary of API usage
     cLog->LogDebugExSafe(
       "Lua registered $ of $ global namespaces...\n"
-      "- $ of $ member functions are registered.\n"
       "- $ of $ method functions are registered.\n"
+      "- $ of $ member functions are registered.\n"
       "- $ of $ static tables are registered.\n"
-      "- $ of $ static variables are registered.\n"
+      "- $ of $ static values are registered.\n"
       "- $ of $ functions are registered in total.\n"
       "- $ of $ variables are registered in total.",
-      iCount,             iTotal,
-      iMembers,           iTotalMembers,
+      iGlobals,           iTotalGlobals,
       iMethods,           iTotalMethods,
+      iMembers,           iTotalMembers,
       iTables,            iTotalTables,
       iStatics,           iTotalStatics,
       iMembers+iMethods,  iTotalMembers+iTotalMethods,

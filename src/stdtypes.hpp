@@ -48,9 +48,9 @@ using ::std::uppercase;
 using ::std::is_arithmetic_v;          using ::std::is_class_v;
 using ::std::is_enum_v;                using ::std::is_floating_point_v;
 using ::std::is_integral_v;            using ::std::is_null_pointer_v;
-using ::std::is_pointer_v;             using ::std::is_same_v;
-using ::std::is_signed_v;              using ::std::is_trivially_copyable_v;
-using ::std::underlying_type_t;
+using ::std::is_pointer_v;             using ::std::is_reference_v;
+using ::std::is_same_v;                using ::std::is_signed_v;
+using ::std::is_trivially_copyable_v;  using ::std::underlying_type_t;
 /* -- Bind class function argument namespaces ------------------------------ */
 using ::std::placeholders::_1;         using ::std::placeholders::_2;
 using ::std::placeholders::_3;

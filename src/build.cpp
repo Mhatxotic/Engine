@@ -2853,7 +2853,7 @@ static const string GetFiles(const string &strExt, const string &strDir="")
   Dir dEntries{ strDir, strExt };
   if(dEntries.IsFilesEmpty()) return {};
   // String for output
-  Reserved<string> strOut{ 4096 };
+  string strOut; strOut.reserve(4096);
   // Make output directory
   const string strDirNew{ strDir.empty() ? strDir : StrAppend(strDir, "/") };
   const bool bHasSpace = strDirNew.find(' ') != StdNPos;

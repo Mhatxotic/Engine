@@ -493,8 +493,7 @@ class CVarItem :                       // Members initially private
       StdMove(ciOther.GetValue()) },   // Move value
     strDefValue{                       // Default value
       StdMove(ciOther.GetDefValue()) },// Move default value
-    cfTrigger{                         // Trigger
-      StdMove(ciOther.GetTrigger()) }  // Move trigger
+    cfTrigger{ ciOther.GetTrigger() }  // Move trigger
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor -------------------------------------------------------- */

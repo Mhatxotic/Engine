@@ -443,12 +443,15 @@ template<typename FloatType> requires is_floating_point_v<FloatType>
 ** ## Because some compilers may not allow me to alias ::std::move        ## **
 ** ## anymore with an error referring to being an 'unqualified call', the ## **
 ** ## only workaround seems to be to use this constexpr function which    ## **
-** ## does not appear to cause an increase of machine code.               ## **
+** ## does not appear to cause an increase of machine code. We can also   ## **
+** ## make it only allow classes since we don't need it for integrals   . ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-template<class AnyType>
-  constexpr static remove_reference_t<AnyType> &&StdMove(AnyType &&atVar)
-{ return ::std::move(atVar); }
+template<class AnyType, typename AnyTypeRR = remove_reference_t<AnyType>>
+requires is_class_v<AnyTypeRR> &&
+        (is_reference_v<AnyType> || is_same_v<AnyType, AnyTypeRR>)
+  constexpr static AnyTypeRR &&StdMove(AnyType &&atVar) noexcept
+{ return static_cast<AnyTypeRR&&>(atVar); }
 /* == Static class try/catch helpers ======================================= **
 ** ######################################################################### **
 ** ## Don't put try/catch on func level. (C++ ISO/IEC JTC 1/SC 22 N 4411) ## **
