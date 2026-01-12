@@ -244,14 +244,16 @@ class CodecPNG :                       // PNG codec object
           idData.DimSet(png_get_image_width(psData, piData),
                      png_get_image_height(psData, piData));
           // Initialise memory
-          Memory mPixels{ UtilMaximum(1UL, idData.TotalPixels() / 8) };
+          Memory mPixels{ UtilMaximum(idData.TotalPixels() / 8,
+            static_cast<size_t>(1)) };
           // Create vector array to hold scanline pointers and size it
           PngPtrVec ppvList{ idData.DimGetHeight<size_t>() };
           // For each scanline
           for(size_t stHeight = idData.DimGetHeight<size_t>(),
                      stHeightM1 = stHeight - 1,
-                     stStride = UtilMaximum(1UL,
-                       idData.DimGetWidth<size_t>() / 8),
+                     stStride = UtilMaximum(
+                       idData.DimGetWidth<size_t>() / 8,
+                         static_cast<size_t>(1)),
                      stRow = 0;
                      stRow < stHeight;
                    ++stRow)

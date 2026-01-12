@@ -95,6 +95,7 @@ namespace E {                          // Start of engine namespace
 #include "pcm.hpp"                     // Pcm loader class header
 #include "fbodef.hpp"                  // Frambuffer object definitions header
 #include "texdef.hpp"                  // Texture data definitions header
+#include "shaderdef.hpp"               // Shader attribute definitions header
 #include "ogl.hpp"                     // OpenGL graphics management header
 #include "imagedef.hpp"                // Image data definitions header
 #include "imagelib.hpp"                // Image codecs handling header

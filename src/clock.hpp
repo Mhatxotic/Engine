@@ -47,7 +47,7 @@ static double ClockTimePointRangeToDouble
 /* -- Subtract one timepoint from the other and return as clamped double --- */
 static double ClockTimePointRangeToClampedDouble
   (const ClkTimePoint &ctpEnd, const ClkTimePoint &ctpStart)
-    { return UtilMaximum(ClockTimePointRangeToDouble(ctpEnd, ctpStart), 0); }
+    { return UtilMaximum(ClockTimePointRangeToDouble(ctpEnd, ctpStart), 0.0); }
 /* -- Clock manager -------------------------------------------------------- */
 template<class ClockType = CoreClock>struct ClockManager
 { /* -- Get current time --------------------------------------------------- */
@@ -86,7 +86,7 @@ template<class ClockType = CoreClock>struct ClockManager
     { return ClockDurationToDouble(GetDuration(ctpTime)); }
   /* -- Convert clamped timepoint to double -------------------------------- */
   static double TimePointToClampedDouble(const ClkTimePoint &ctpTime)
-    { return UtilMaximum(TimePointToDouble(ctpTime), 0); }
+    { return UtilMaximum(TimePointToDouble(ctpTime), 0.0); }
   /* -- Convert local time to string --------------------------------------- */
   const string FormatTime(const char*const cpFormat =
     cpTimeFormat) const
@@ -193,7 +193,7 @@ class ClockChrono :                    // Members intially private
     { return ClockDurationToDouble(ctpEnd - ctpStart); }
   /* -- Same as above but clamps to zero so there is no negative time ------ */
   double CCDeltaToClampedDouble(const ClkTimePoint &ctpEnd) const
-    { return UtilMaximum(CCDeltaRangeToDouble(ctpEnd), 0); }
+    { return UtilMaximum(CCDeltaRangeToDouble(ctpEnd), 0.0); }
   /* -- Return uptime as milliseconds in a 64-bit uint --------------------- */
   uint64_t CCDeltaMS() const
     { return static_cast<uint64_t>(

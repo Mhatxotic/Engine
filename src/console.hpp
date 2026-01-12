@@ -661,7 +661,8 @@ struct Console :                       // Members initially private
     // and compensates for a growing queue. At minimum the number of elements
     // or the most of half of the number of elements or five.
     size_t stLines =
-      UtilMinimum(clqOutput.size(), UtilMaximum(5, clqOutput.size()/4));
+      UtilMinimum(clqOutput.size(), UtilMaximum(clqOutput.size() / 4,
+        static_cast<size_t>(5)));
     // Calculate total lines
     const size_t stTotal = size() + stLines;
     // If writing this many lines wouldn't fit in the log, then the log needs
@@ -1021,7 +1022,7 @@ struct Console :                       // Members initially private
   { // Deny if out of range
     if(stChars < 256 ||
        stChars > UtilMinimum(UtilMinimum(strConsoleBegin.max_size(),
-                                         strConsoleEnd.max_size()), 16384))
+         strConsoleEnd.max_size()), static_cast<size_t>(16384)))
       return DENY;
     // Reserve buffer sizes for console input
     strConsoleBegin.reserve(stChars);

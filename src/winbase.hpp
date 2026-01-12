@@ -140,7 +140,7 @@ class SysBase :                        // Members initially private
     } // For each parameter. Clamping just incase
     for(DWORD dwParam = 0,
       dwMax = UtilMinimum(erData.NumberParameters,
-                EXCEPTION_MAXIMUM_PARAMETERS);
+                static_cast<DWORD>(EXCEPTION_MAXIMUM_PARAMETERS));
               dwParam < dwMax;
               dwParam += 2)
     { // Write where the access occured

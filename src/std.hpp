@@ -11,7 +11,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IStd {                       // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IUtf::P;
+using namespace ICommon::P;            using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Wrapper for std::forward<> as we can't do 'using std::forward' ------- */
@@ -114,6 +114,9 @@ const wstring UTFtoS16(const string &strStr)
 /* -- Convert UTF string view to STL widestring ---------------------------- */
 const wstring UTFtoS16(const string_view &strvStr)
   { return UtfDecoder{ strvStr }.Wide(); };
+/* -- Unset an environment variable ---------------------------------------- */
+static bool StdUnSetEnv(const char*const cpEnv)
+  { return !_putenv_s(cpEnv, cCommon->CommonCBlank()); }
 /* -- Wrapper for _waccess() ----------------------------------------------- */
 static int StdAccess(const wchar_t*const wcpPath, const int iMode)
   { return _waccess(wcpPath, iMode); }
@@ -244,6 +247,8 @@ typedef struct tm   StdTMStruct;       // Different on Windows
 typedef time_t      StdTimeT;          // Different on Windows
 /* -- Convert widestring to utf8 (n/a on posix systems) -------------------- */
 constexpr const char *S16toUTF(const char*const cpPtr) { return cpPtr; }
+/* -- Unset an environment variable ---------------------------------------- */
+static bool StdUnSetEnv(const char*const cpEnv) { return !unsetenv(cpEnv); }
 /* -- Wrapper for access() stdlib function --------------------------------- */
 static int StdAccess(const char*const cpPath, const int iMode)
   { return access(cpPath, iMode); }

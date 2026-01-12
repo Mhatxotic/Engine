@@ -66,7 +66,7 @@ size_t             stBufSize;,,        // Size of each buffer
 /* -- Derived classes ------------------------------------------------------ */
 private LuaEvtMaster<Stream,LuaEvtTypeParam<Stream>>); // Lua event handler
 /* ========================================================================= */
-CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
+CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   /* -- Base classes ------------------------------------------------------- */
   public Ident,                        // Stream file name
   public AsyncLoaderStream,            // Asynchronous loading of Streams
@@ -117,14 +117,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
   /* -- Convert stop reason to string -------------------------------------- */
   const string_view &StateReasonToString(const StreamPlayState psReason) const
     { return cParent->psStrings.Get(psReason); }
-  /* -- Stop and unload source --------------------------------------------- */
-  void StopAndUnloadSource(void) { sCptr->Stop(); UnloadSource(); }
   /* -- Stop (without locks) ----------------------------------------------- */
   void Stop(const StreamStopReason srReason)
   { // Don't have source class? There is nothing else to do!
     if(!sCptr) return;
-    // Stop source from playing
-    StopAndUnloadSource();
+    // Stop source from playing and unload it
+    sCptr->Stop();
+    UnloadSource();
     // Go back to unplayed position
     SetPosition(qLivePos);
     // Write debug reason for stoppage
@@ -603,9 +602,12 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperUnsafe),
     ICHelperStream::CollectorUnregister();
     // Nothing else to do if file data not initialised
     if(fmFile.FileMapClosed()) return;
-    // If there is a source stop it and unload the source
-    if(sCptr) StopAndUnloadSource();
-    // Unload the buffers
+    // If there is a source?
+    if(sCptr)
+    { // Stop the source, unqueue all buffers, unlock and
+      sCptr->StopAndUnQueueAllBuffers();
+      sCptr->Unlock();
+    } // Unload the buffers
     UnloadBuffers();
     // If stream opened? Clear ogg state
     if(ovfContext.datasource) ov_clear(&ovfContext);

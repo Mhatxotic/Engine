@@ -415,7 +415,7 @@ class Memory :
   void MemDoResize(const size_t stBytes)
   { // Realloc new amount of memory and if succeeded? Set new block and size
     if(char*const cpNew =
-      StdReAlloc(MemPtr<char>(), UtilMaximum(stBytes, 1)))
+      StdReAlloc(MemPtr<char>(), UtilMaximum(stBytes, static_cast<size_t>(1))))
         MemSetPtrSize(cpNew, stBytes);
     // Failed so throw error
     else XC("Re-alloc failed!", "OldSize", MemSize(), "NewSize", stBytes);
@@ -550,8 +550,9 @@ class Memory :
   { // If allocated memory already exists? Free it!
     MemFreePtrIfSet();
     // Allocate memory forcing zero bytes to 1 byte for compatibility.
-    if(char*const cpNew = StdAlloc<char>(UtilMaximum(stBytesRequested, 1)))
-      return MemSetPtrSize(cpNew, stBytesRequested);
+    if(char*const cpNew =
+      StdAlloc<char>(UtilMaximum(stBytesRequested, static_cast<size_t>(1))))
+        return MemSetPtrSize(cpNew, stBytesRequested);
     // The memory was freed so this memory is no longer available.
     MemSetSize();
     // Failed so throw an exception.
@@ -608,7 +609,8 @@ class Memory :
     /* -- Initialisers ----------------------------------------------------- */
     MemBase{ stBytes,                  // Initialise data base class
       StdAlloc<void>                   // Allocate memory (checked by CTOR)
-        (UtilMaximum(stBytes, 1)) }    // Allocate requested size
+        (UtilMaximum(stBytes,          // Allocate requested size
+           static_cast<size_t>(1))) }  // Allocate even if zero so we get addr
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Alloc with fill ---------------------------------------------------- */

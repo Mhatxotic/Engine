@@ -16,10 +16,11 @@ using namespace IEvtWin::P;            using namespace IFboDef::P;
 using namespace IFlags;                using namespace IGlFW::P;
 using namespace IGlFWUtil::P;          using namespace IHelper::P;
 using namespace IIdent::P;             using namespace ILog::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IShaderDef::P;         using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
@@ -114,6 +115,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     VSYNC_MAX                          // ( 3) Maximum Vertical Sync value
   } vsSetting;                         // Storage for setting
   /* -- Variables ---------------------------------------------------------- */
+  array<GLuint,2>  uiaVAO,             // Vertex Array Object list
+                   uiaVBO;             // Vertex Buffer Object list
   GLuint           uiActiveFbo,        // Currently selected FBO name cache
                    uiActiveProgram,    // Currently active shader program
                    uiActiveTexture,    // Currently bound texture
@@ -125,8 +128,10 @@ class Ogl :                            // OGL class for OpenGL use simplicity
                    uiUnpackAlign,      // Default Unpack alignment
                    uiMaxVertexAttribs, // Maximum vertex attributes per shader
                    uiTexUnits,         // Texture units count
-                   uiVAO,              // Vertex Array Object (only 1 needed)
-                   uiVBO;              // Vertex Buffer Object (only 1 needed)
+                  &uiVAO,              // uiaVAO[0]: VAO for global use
+                  &uiVBO,              // uiaVBO[0]: FBO for global use
+                  &uiVAOmain,          // uiaVAO[1]: VAO to draw back buffer
+                  &uiVBOmain;          // uiaVBO[1]: FBO to draw back buffer
   GLenum           ePolyMode;          // Current polygon mode
   GLint            iUnpackRowLength;   // Default unpack row length
   GLuint64         qwMinVRAM,          // Minimum VRAM required
@@ -648,8 +653,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void LinkProgram(const GLuint uiProgram) const
     { sAPI.glLinkProgram(uiProgram); }
   /* ----------------------------------------------------------------------- */
-  GLuint GetProgram() const
-    { return GetInteger<GLuint>(GL_CURRENT_PROGRAM); }
+  GLuint GetProgram() const { return GetInteger<GLuint>(GL_CURRENT_PROGRAM); }
   /* ----------------------------------------------------------------------- */
   void UseProgram(const GLuint uiProgram=0)
   { // Ignore if we already have the program selected
@@ -682,9 +686,6 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void GenVertexBuffers(const GLsizei siCount,
     GLuint*const uipVbo) const
   { sAPI.glGenBuffers(siCount, uipVbo); }
-  /* -- Create one vertex buffer object ------------------------------------ */
-  void GenVertexBuffer(GLuint*const uipVbo) const
-    { GenVertexBuffers(1, uipVbo); }
   /* -- Bind vertex buffer object ------------------------------------------ */
   void BindVertexBuffer(const GLenum eTarget, const GLuint uiVbo)
   { // Ignore if this vbo is already selected
@@ -711,16 +712,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     } // Delete the vbo's
     sAPI.glDeleteBuffers(siCount, uipVbo);
   }
-  /* -- Delete one vertex buffer object ------------------------------------ */
-  void DeleteVertexBuffer(const GLuint uipVbo)
-    { DeleteVertexBuffers(1, &uipVbo); }
   /* -- Generate vertex array objects -------------------------------------- */
-  void GenVertexArrays(const GLsizei siCount,
-    GLuint*const uipVao) const
-  { sAPI.glGenVertexArrays(siCount, uipVao); }
-  /* -- Generate a single vertex array object ------------------------------ */
-  void GenVertexArray(GLuint*const uipVao) const
-    { GenVertexArrays(1, uipVao); }
+  void GenVertexArrays(const GLsizei siCount, GLuint*const uipVao) const
+    { sAPI.glGenVertexArrays(siCount, uipVao); }
   /* -- Bind vertex array object ------------------------------------------- */
   void BindVertexArray(const GLuint uiVao)
   { // Ignore if this vao is already selected
@@ -731,8 +725,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiActiveVao = uiVao;
   }
   /* -- Delete multiple vertex array objects ------------------------------- */
-  void DeleteVertexArrays(const GLsizei siCount,
-    const GLuint*const uipVao)
+  void DeleteVertexArrays(const GLsizei siCount, const GLuint*const uipVao)
   { // Check each vao deleted
     for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
     { // Keep scanning until we find a bound vao
@@ -744,19 +737,66 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     } // Delete the vao's
     sAPI.glDeleteVertexArrays(siCount, uipVao);
   }
-  /* -- Delete single vertex array object ---------------------------------- */
-  void DeleteVertexArray(const GLuint uipSrc)
-    { DeleteVertexArrays(1, &uipSrc); }
   /* -- Data buffering functions ------------------------------------------- */
   void BufferData(const GLenum eTarget, const GLsizei siSize,
     const GLvoid*const vpBuffer, const GLenum eUsage) const
   { sAPI.glBufferData(eTarget, siSize, vpBuffer, eUsage); }
   /* ----------------------------------------------------------------------- */
-  void BufferStaticData(const GLsizei siSize,
-    const GLvoid*const vpBuffer)
-  { BufferData(GL_ARRAY_BUFFER, siSize, vpBuffer, GL_STREAM_DRAW); }
+  void BufferStaticData(const GLsizei siSize, const GLvoid*const vpBuffer)
+    { BufferData(GL_ARRAY_BUFFER, siSize, vpBuffer, GL_STREAM_DRAW); }
   /* -- Clear bound fbo or back buffer ------------------------------------- */
   void ClearBuffer() const { sAPI.glClear(GL_COLOR_BUFFER_BIT); }
+  /* -- Initialise main VBO/VAO data for main fbo -------------------------- */
+  void BindMainVAOandVBO(void)
+  { // Select main FBO default vertex array
+    BindVertexArray(uiVAOmain);
+    // Bind main FBO vertex buffer
+    BindStaticVertexBuffer(uiVBOmain);
+  }
+  /* -- Initialise default VBO/VAO data for main fbo ----------------------- */
+  void BindGlobalVAOandVBO(void)
+  { // Select main FBO default vertex array
+    BindVertexArray(uiVAO);
+    // Bind main FBO vertex buffer
+    BindStaticVertexBuffer(uiVBO);
+  }
+  /* -- Initialise main VBO/VAO data for main fbo -------------------------- */
+  void MainFBOInitDrawData(const GLsizei siSize, const GLvoid*const vpBuffer,
+    const GLvoid*const vpCoordBuffer, const GLvoid*const vpVertexBuffer,
+    const GLvoid*const vpColourBuffer)
+  { // Bind main FBO vertex buffer and array
+    IGL(BindMainVAOandVBO(), "Failed to bind main frame buffer VBO and VAO!",
+      "Main VAO", uiVAOmain, "Main VBO", uiVBOmain);
+    // Buffer the interlaced triangle data
+    IGL(BufferStaticData(siSize, vpBuffer), "Failed to buffer main FBO data!",
+      "Buffer", vpBuffer, "Size", siSize);
+    // Specify format of the interlaced triangle texture coord data
+    IGL(VertexAttribPointer(A_COORD, stCompsPerCoord, 0, vpCoordBuffer),
+      "Failed to set main FBO/VAO coord data!",
+      "Buffer", vpBuffer, "Size", siSize,
+      "Attrib", A_COORD,  "Data", vpCoordBuffer);
+    IGL(EnableVertexAttribArray(A_COORD),
+      "Failed to enable texture co-ordinates array for this VAO!",
+      "Attrib", A_COORD);
+    // Specify format of the interlaced triangle vertex coord data
+    IGL(VertexAttribPointer(A_VERTEX, stCompsPerPos, 0, vpVertexBuffer),
+      "Failed to set main FBO/VAO vertex data!",
+      "Buffer", vpBuffer, "Size", siSize,
+      "Attrib", A_VERTEX, "Data", vpVertexBuffer);
+    // Specify format of the interlaced triable texture intensity data
+    IGL(EnableVertexAttribArray(A_VERTEX),
+      "Failed to enable vertex array for this VAO!", "Attrib", A_VERTEX);
+    IGL(VertexAttribPointer(A_COLOUR, stCompsPerColour, 0, vpColourBuffer),
+      "Failed to set main FBO/VAO colour data!",
+      "Buffer", vpBuffer, "Size", siSize,
+      "Attrib", A_COLOUR, "Data", vpColourBuffer);
+    IGL(EnableVertexAttribArray(A_COLOUR),
+      "Failed to enable colour intensity array for this VAO!",
+      "Attrib", A_COLOUR);
+    // Select default vertex buffer and array
+    IGL(BindGlobalVAOandVBO(), "Failed to bind global VBO and VAO!",
+      "Global VAO", uiVAO, "Global VBO", uiVBO);
+  }
   /* -- Set clear colour --------------------------------------------------- */
   void CommitClearColour() const
     { sAPI.glClearColor(GetColourRed(),  GetColourGreen(),
@@ -791,24 +831,30 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { DrawArrays(GL_TRIANGLES, 0, siCount); }
   /* -- Render arrays ------------------------------------------------------ */
   void DrawArrays(void)
-  { // Using MacOS?
+  { // Set normal fill poly mode
+    SetPolygonMode(GL_FILL);
+    // Bind main VAO and VBO containing our pre-defined data (MainFBOInit())
+    BindMainVAOandVBO();
+    // Using MacOS?
 #if defined(MACOS)
-      // This locking code is required to fix a major crash bug in Ventura
-      // 13.3+. See https://github.com/glfw/glfw/issues/1997 for more
-      // information.
-      using namespace Lib::OS::GlFW::NSGL;
-      // Get the current NSGL context and lock it. Note there is nothing to
-      // throw in this routine so it is safe to use this as-is.
-      CGLContextObj cglcoLock = CGLGetCurrentContext();
-      CGLLockContext(cglcoLock);
-      // Blit the two triangles
-      DrawArraysTriangles(stTwoTriangles);
-      // Context is unlocked when exiting this scope
-      CGLUnlockContext(cglcoLock);
+    // This locking code is required to fix a major crash bug in Ventura
+    // 13.3+. See https://github.com/glfw/glfw/issues/1997 for more
+    // information.
+    using namespace Lib::OS::GlFW::NSGL;
+    // Get the current NSGL context and lock it. Note there is nothing to
+    // throw in this routine so it is safe to use this as-is.
+    CGLContextObj cglcoLock = CGLGetCurrentContext();
+    CGLLockContext(cglcoLock);
+    // Blit the two triangles
+    DrawArraysTriangles(stTwoTriangles);
+    // Context is unlocked when exiting this scope
+    CGLUnlockContext(cglcoLock);
 #else
-      // Blit the two triangles
-      DrawArraysTriangles(stTwoTriangles);
+    // Blit the two triangles
+    DrawArraysTriangles(stTwoTriangles);
 #endif
+    // Reset to global VAO and VBO
+    BindGlobalVAOandVBO();
   }
   /* ----------------------------------------------------------------------- */
   void SetViewport(const GLsizei siWidth,
@@ -1154,7 +1200,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   template<typename IntType>
     const string_view &GetGLErr(const IntType itCode) const
   { return idOGLCodes.Get(static_cast<GLenum>(itCode)); }
-  /* -- Return limit ------------------------------------------------------- */
+  /* -- Return potential fps limit ----------------------------------------- */
   double GetLimit() const { return ClockDurationToDouble(cdLimit); }
   /* -- Flush pipeline when not drawing to prevent memory leak ------------- */
   void Flush(void) const { sAPI.glFlush(); }
@@ -1225,11 +1271,13 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     IGL(SetPackAlignment(1), "Set byte pack alignment failed!");
     IGL(SetUnpackAlignment(1), "Set byte unpack alignment failed!");
     // Create and bind VAO
-    IGL(GenVertexArray(&uiVAO), "Generate default VAO failed!");
-    IGL(BindVertexArray(uiVAO), "Bind default VAO failed!", "Index", uiVAO);
+    IGL(GenVertexArrays(static_cast<GLsizei>(uiaVAO.size()), uiaVAO.data()),
+      "Generate default VAOs failed!", "Count", uiaVAO.size());
+    IGL(BindVertexArray(uiVAO), "Bind global VAO failed!", "Index", uiVAO);
     // Create and bind VBO
-    IGL(GenVertexBuffer(&uiVBO), "Generate default VBO failed!");
-    IGL(BindStaticVertexBuffer(uiVBO), "Bind default VBO failed!",
+    IGL(GenVertexBuffers(static_cast<GLsizei>(uiaVBO.size()), uiaVBO.data()),
+      "Generate default VBOs failed!");
+    IGL(BindStaticVertexBuffer(uiVBO), "Bind global VBO failed!",
       "Index", uiVBO);
     // Log class initialising
     cLog->LogInfoSafe("OGL subsystem initialised.");
@@ -1259,23 +1307,28 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       DeleteMarkedFboHandles();
       cLog->LogInfoSafe("OGL deleted marked fbo handles.");
     } // Vertex buffer object created?
-    if(uiVBO)
+    if(uiVBO && uiVBOmain)
     { // Delete vertex buffer object
-      cLog->LogDebugExSafe("OGL deleting vertex buffer object $...", uiVBO);
-      IGLL(DeleteVertexBuffer(uiVBO),
-        "Failed to delete vertex buffer object!", "Index", uiVBO);
-      cLog->LogInfoExSafe("OGL deleted vertex buffer object $.", uiVBO);
-      // Clear value
-      uiVBO = 0;
+      cLog->LogDebugExSafe("OGL deleting $ vertex buffer objects $ and $...",
+        uiaVBO.size(), uiVBO, uiVBOmain);
+      IGLL(DeleteVertexBuffers(
+        static_cast<GLsizei>(uiaVBO.size()), uiaVBO.data()),
+          "Failed to delete vertex buffer objects!",
+          "Global", uiVBO, "Main", uiVBOmain);
+      StdFill(seq, uiaVBO.begin(), uiaVBO.end(), 0);
+      cLog->LogInfoExSafe("OGL deleted $ vertex buffer objects.",
+        uiaVBO.size());
     } // Vertex array object created?
-    if(uiVAO)
+    if(uiVAO && uiVAOmain)
     { // Delete vertex array object
-      cLog->LogDebugExSafe("OGL deleting vertex array object $...", uiVAO);
-      IGLL(DeleteVertexArray(uiVAO),
-        "Failed to delete vertex array object!", "Index", uiVAO);
-      cLog->LogInfoExSafe("OGL deleted vertex array object $.", uiVAO);
-      // Clear value
-      uiVAO = 0;
+      cLog->LogDebugExSafe("OGL deleting $ vertex array objects $ and $...",
+        uiaVAO.size(), uiVAO, uiVAOmain);
+      IGLL(DeleteVertexArrays(
+        static_cast<GLsizei>(uiaVAO.size()), uiaVAO.data()),
+          "Failed to delete vertex array object!", "Index", uiVAO);
+      StdFill(seq, uiaVAO.begin(), uiaVAO.end(), 0);
+      cLog->LogInfoExSafe("OGL deleted $ vertex array objects.",
+        uiaVAO.size());
     } // Release opengl context from engine thread
     GlFWSetContext();
     // Init flags
@@ -1331,6 +1384,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     }, "GL_ERROR_UNKNOWN" },           // Unknown error value
     /* -- Initialisers ----------------------------------------------------- */
     vsSetting{ VSYNC_OFF },            // Set no VSync
+    uiaVAO{ 0, 0 },                    // Initialise vertex array objects
+    uiaVBO{ 0, 0 },                    // Initialise vertex buffer objects
     uiActiveFbo(                       // Select back buffer
       numeric_limits<GLuint>::max()),  // Maxed so values commit properly
     uiActiveProgram(uiActiveFbo),      // No active shader programme
@@ -1343,8 +1398,10 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiUnpackAlign(0),                  // No unpack align
     uiMaxVertexAttribs(0),             // No maximum vertex attributes
     uiTexUnits(0),                     // No maximum texture units
-    uiVAO(0),                          // No default vertex array object
-    uiVBO(0),                          // No default vertex buffer object
+    uiVAO(uiaVAO[0]),                  // Set reference to global VAO
+    uiVBO(uiaVBO[0]),                  // Set reference to global VBO
+    uiVAOmain(uiaVAO[1]),              // Set reference to bb draw VAO
+    uiVBOmain(uiaVBO[1]),              // Set reference to bb draw VBO
     ePolyMode(GL_NONE),                // No set polygon mode yet
     iUnpackRowLength(0),               // No unpack row length
     qwMinVRAM(0),                      // No minimum vram

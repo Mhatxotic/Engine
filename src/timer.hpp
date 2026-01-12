@@ -47,7 +47,7 @@ class Timer                            // Members initially private
   /* -- Restore saved persistent delay timer ------------------------------- */
   void TimerRestoreDelay() { cdDelay = cdDelayPst; }
   /* -- Get start time ----------------------------------------------------- */
-  const ClkTimePoint TimerGetStartTime() const { return ctpStart; }
+  const ClkTimePoint TimerGetStartTime() const { return ctpFrame; }
   /* -- Do time calculations ----------------------------------------------- */
   void TimerCalculateTime()
   { // Set end time
@@ -82,12 +82,11 @@ class Timer                            // Members initially private
       if(cdAcc + cdDelay < cdLimit) [[likely]] StdSuspend(cdDelay);
       // Suspend engine thread for the requested delay
       return true;
-    } // Set new fps
-    TimerSetFPS(ClockDurationToDouble(ctpEnd - ctpFrame));
-    // Set total time the frame took
+    } // Set total time the frame took
     cdFrame = cdAcc;
-    // Set new frame start time
-    ctpFrame = ctpEnd;
+    // Set new fps and set new frame start time
+    TimerSetFPS(ClockDurationToDouble(ctpEnd - TimerGetStartTime()));
+    ctpFrame = ctpStart;
     // Reduce accumulator
     cdAcc -= cdLimit;
     // Reset delay if it was changed (by idle GPU routine)

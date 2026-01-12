@@ -1263,14 +1263,14 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     AsyncCancel();
     // Remove the registration now so it is no longer polled
     ICHelperVideo::CollectorUnregister();
-    // Ignore if file data not initialised
-    if(fmFile.FileMapClosed()) return;
-    // Prevent more events being generated
-    LuaEvtDeInit();
     // Set exit reason
     ubReason = UB_FINISH;
     // DeInit the thread, unblock the worker thread and stop and unload buffers
     tThread.ThreadStopNoThrow();
+    // Ignore if file data not initialised
+    if(fmFile.FileMapClosed()) return;
+    // Prevent more events being generated
+    LuaEvtDeInit();
     // Stop and unload audio buffers
     StopAudioAndUnloadBuffers();
     // Deinit texture and reset parameters

@@ -33,10 +33,10 @@ struct CmdLine                         // Members initially public
 { /* -- Command-line and environment variables ---------------------*/ private:
   ExitOperation    eoExit;             // Actions to perform at exit
   int              iArgC;              // Arguments count
-  ArgType        **lArgV;              // Arguments list
-  ArgType        **lEnvP;              // Environment list
+  ArgType        **atArgV;             // Arguments list
+  ArgType        **atEnv;              // Environment list
   const StrVector  svArg;              // Arguments list
-  const StrStrMap  lEnv;               // Formatted environment variables
+  const StrStrMap  ssmEnv;             // Formatted environment variables
   const string     strCWD;             // Current startup working directory
   string           strHD;              // Persistant directory
   /* -- Set persistant directory ----------------------------------- */ public:
@@ -52,15 +52,15 @@ struct CmdLine                         // Members initially public
   const string &CmdLineGetEnv(const string &strEnv,
     const string &strO=cCommon->CommonBlank()) const
   { // Find item and return it else return the default item
-    const StrStrMapConstIt eiEnv{ lEnv.find(strEnv) };
-    return eiEnv == lEnv.cend() ? strO : eiEnv->second;
+    const StrStrMapConstIt eiEnv{ ssmEnv.find(strEnv) };
+    return eiEnv == ssmEnv.cend() ? strO : eiEnv->second;
   }
   /* -- Get environment variable and check that it is a valid pathname ----- */
   const string CmdLineMakeEnvPath(const string &strEnv,
     const string &strSuffix)
   { // Get home environment variable and throw error if not found
-    const StrStrMapConstIt eiEnv{ lEnv.find(strEnv) };
-    if(eiEnv == lEnv.cend())
+    const StrStrMapConstIt eiEnv{ ssmEnv.find(strEnv) };
+    if(eiEnv == ssmEnv.cend())
       XC("The specified environment variable is required and missing!",
          "Variable", strEnv, "Suffix", strSuffix);
     // Check validity of the specified environmen variable
@@ -69,18 +69,15 @@ struct CmdLine                         // Members initially public
     if(vRes == VR_OK) return StrAppend(strEnvVal, strSuffix);
     // Show error otherwise
     XC("The specified environment variable directory is invalid!",
-       "Variable",  strEnv,
-       "Suffix",    strSuffix,
-       "Directory", strEnvVal,
-       "Reason",    cDirBase->DirBaseVNRtoStr(vRes),
-       "Result",    vRes);
+       "Variable", strEnv, "Suffix", strSuffix, "Directory", strEnvVal,
+       "Result",   vRes,   "Reason", cDirBase->DirBaseVNRtoStr(vRes));
   }
   /* -- Get parameter total ------------------------------------------------ */
   size_t CmdLineGetTotalCArgs() const
     { return static_cast<size_t>(iArgC); }
-  ArgType*const*CmdLineGetCArgs() const { return lArgV; }
-  ArgType*const*CmdLineGetCEnv() const { return lEnvP; }
-  const StrStrMap &CmdLineGetEnvList() const { return lEnv; }
+  ArgType*const*CmdLineGetCArgs() const { return atArgV; }
+  ArgType*const*CmdLineGetCEnv() const { return atEnv; }
+  const StrStrMap &CmdLineGetEnvList() const { return ssmEnv; }
   const StrVector &CmdLineGetArgList() const { return svArg; }
   /* -- Set restart flag (0 = no restart, 1 = no params, 2 = params) ------- */
   void CmdLineSetRestart(const ExitOperation ecCmd) { eoExit = ecCmd; }
@@ -98,14 +95,14 @@ struct CmdLine                         // Members initially public
   { // Check that args are valid
     if(iArgC < 1) XC("Arguments array count corrupted!", "Count", iArgC);
     // Check that args are valid
-    if(!lArgV) XC("Arguments array corrupted!");
-    if(!*lArgV) XC("Arguments array executable string corrupted!");
-    if(!**lArgV) XC("Arguments array executable string is empty!");
+    if(!atArgV) XC("Arguments array corrupted!");
+    if(!*atArgV) XC("Arguments array executable string corrupted!");
+    if(!**atArgV) XC("Arguments array executable string is empty!");
     // Arguments list to return
     const size_t stArgCM1 = static_cast<size_t>(iArgC - 1);
     Reserved<StrVector> svRet{ stArgCM1 };
     // For each argument format the argument and add it to list
-    StdForEach(seq, lArgV + 1, lArgV + iArgC,
+    StdForEach(seq, atArgV + 1, atArgV + iArgC,
       [&svRet](const ArgType*const atStr)
         { svRet.emplace_back(S16toUTF(atStr)); });
     // One final sanity check
@@ -118,20 +115,20 @@ struct CmdLine                         // Members initially public
   /* -- Parse environment variables ---------------------------------------- */
   StrStrMap CmdLineParseEnvArray()
   { // Check that environment are valid
-    if(!lEnvP) XC("Evironment array corrupted!");
-    if(!*lEnvP) XC("First environment variable corrupted!");
-    if(!**lEnvP) XC("First environment varable is empty!");
+    if(!atEnv) XC("Evironment array corrupted!");
+    if(!*atEnv) XC("First environment variable corrupted!");
+    if(!**atEnv) XC("First environment varable is empty!");
     // Arguments list to return
     StrStrMap ssmRet;
     // Compile on MacOS and in debug mode?
 #if defined(MACOS) && defined(ALPHA)
     // Hacky method to avoid address sanitiser false-positive in XCode
-    for(ArgType *atPtr = *lEnvP, *atStr = atPtr; *atStr; atStr = ++atPtr)
+    for(ArgType *atPtr = *atEnv, *atStr = atPtr; *atStr; atStr = ++atPtr)
     { // Skip all non-null characters then we have the end of the c-string
       while(*atPtr) ++atPtr;
 #else
     // Process environment variables
-    for(ArgType **atPtr = lEnvP; ArgType*const atStr = *atPtr; ++atPtr)
+    for(ArgType **atPtr = atEnv; ArgType*const atStr = *atPtr; ++atPtr)
     { // Ignore if string is empty
       if(!*atStr) continue;
 #endif
@@ -139,15 +136,12 @@ struct CmdLine                         // Members initially public
       if(Token tokParam{ S16toUTF(atStr), cCommon->CommonEquals(), 2 })
         ssmRet.insert({ StdMove(tokParam.front()), tokParam.size() >= 2 ?
           StdMove(tokParam.back()) : cCommon->CommonBlank() });
-    }
-    // Not using Windows?
-#if !defined(WINDOWS)
-    // Unset unallowed variables
+    } // Unset unallowed variables
     SysUnSetEnv(
       // Operating system check
-# if defined(MACOS)                    // Targeting MacOS?
+# if !defined(ALPHA)                   // Not using debug version?
+#  if defined(MACOS)                   // Targeting MacOS?
       "DYLD_INSERT_LIBRARIES",         // Disable shared object overrides
-#  if !defined(ALPHA)                  // Not using debug version?
       "MallocCheckHeapAbort",          // Don't throw abort() on heap check
       "MallocCheckHeapEach",           // Don't check heap every 'n' mallocs
       "MallocCheckHeapStart",          // Don't check heap at 'n' mallocs
@@ -156,15 +150,13 @@ struct CmdLine                         // Members initially public
       "MallocScribble",                // Don't scribble memory
       "NSDeallocateZombies",           // Deallocate zombies
       "NSZombieEnabled",               // Enable dealloc in foundation
-#  endif                               // Using alpha version
-# else                                 // Using Linux?
+#  elif defined(LINUX)                 // Using Linux?
       "LD_PRELOAD",                    // Disable shared object overrides
+#  endif                               // Using alpha version
 # endif                                // Using MacOS or Linux
       "SSL_CERT_FILE",                 // Ignore OpenSSL CA store files
       "SSL_CERT_DIR"                   // Ignore OpenSSL CA store directories
-    );
-#endif                                 // Not using windows
-    // Return environment variables list
+    ); // Return environment variables list
     return ssmRet;
   }
   /* -- Assign arguments ---------------------------------------- */ protected:
@@ -172,11 +164,11 @@ struct CmdLine                         // Members initially public
     /* -- Initialisers ----------------------------------------------------- */
     eoExit(EO_QUIT),                   // Initialise exit code
     iArgC(iArgs),                      // Initialise stdlib args count
-    lArgV(atArgs),                     // Initialise stdlib args ptr
-    lEnvP(atEnv),                      // Initialise stdlib environment ptr
+    atArgV(atArgs),                    // Initialise stdlib args ptr
+    atEnv(atEnv),                      // Initialise stdlib environment ptr
     svArg{ StdMove(                    // Initialise command line arguments
       CmdLineParseArgArray()) },       // ...so we can keep them const
-    lEnv{ StdMove(                     // Initialise environment variables
+    ssmEnv{ StdMove(                   // Initialise environment variables
       CmdLineParseEnvArray()) },       // ...so we can keep them const
     strCWD{ StdMove(DirGetCWD()) }     // Initialise current working directory
     /* -- Set global pointer to static class ------------------------------- */
@@ -196,29 +188,29 @@ struct CmdLine                         // Members initially public
       // Reboot with no arguments?
       case EO_TERM_REBOOT_NOARG:
         // Remove first parameter and fall through to reboot
-        lArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
+        atArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
       // Restart while keeping parameters?
       case EO_TERM_REBOOT: CmdLineSetRestart(EO_QUIT);
         // Do the restart and replace the current process with the new one
-        switch(const int iCode = StdExecVE(lArgV, lEnvP))
+        switch(const int iCode = StdExecVE(atArgV, atEnv))
         { // Success? Shouldn't get here!
           case 0: break;
           // Error occured? Don't attempt execution again and show error
           default: XCL("Failed to restart process!",
-            "Process", *lArgV, "Code", iCode, "Parameters", iArgC);
+            "Process", *atArgV, "Code", iCode, "Parameters", iArgC);
         } // Done
         break;
       // Remove first parameter and fallthrough to next label
-      case EO_UI_REBOOT_NOARG: lArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
+      case EO_UI_REBOOT_NOARG: atArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
       // Restart while keeping parameters in ui mode?
       case EO_UI_REBOOT: CmdLineSetRestart(EO_QUIT);
         // Do the restart using spawn as MacOS is weird with ui apps otherwise.
-        switch(const int iCode = StdSpawnVE(lArgV, lEnvP))
+        switch(const int iCode = StdSpawnVE(atArgV, atEnv))
         { // Success? Proceed to quit
           case 0: break;
           // Error occurred? Don't attempt execution again and show error
           default: XCL("Failed to spawn new process!",
-            "Process", *lArgV, "Code", iCode, "Parameters", iArgC);
+            "Process", *atArgV, "Code", iCode, "Parameters", iArgC);
         } // Done
         break;
       // Anything else? (Impossible but needed to prevent compiler warning)

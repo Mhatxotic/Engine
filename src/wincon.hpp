@@ -552,8 +552,11 @@ class SysCon :                         // Members initially private
       stLen = utfString.Length();
       // Reset at scrolled position
       utfString.Reset(strIL.data());
-      // Skip characters to the point we're scrolled at
-      utfString.Skip(UtilMaximum(0, stLen - stWm2));
+      // Skip characters to the point we're scrolled at. Forcing the first
+      // argument to 'int' to make sure a negative value is clamped properly.
+      utfString.Skip(static_cast<size_t>
+        (UtilMaximum(static_cast<ssize_t>(stLen - stWm2),
+                     static_cast<ssize_t>(0))));
       // Draw start of input text
       WriteLine(StdMove(utfString), stWm2, false);
     } // Left size of text is zero long

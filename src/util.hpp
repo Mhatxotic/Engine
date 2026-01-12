@@ -350,13 +350,15 @@ template<typename IntType> requires is_integral_v<IntType>
 { return static_cast<uint32_t>((itVal & 0xffffffff00000000) >> 32); }
 /* -- Return lowest or highest number out of two --------------------------- */
 template<typename IntType1,typename IntType2>
-requires is_arithmetic_v<IntType1> && is_arithmetic_v<IntType2>
+requires is_arithmetic_v<IntType1> && is_arithmetic_v<IntType2> &&
+         is_same_v<IntType1, IntType2>
 static IntType1 UtilMinimum(const IntType1 itOne, const IntType2 itTwo)
   { return itOne < static_cast<IntType1>(itTwo) ?
       itOne : static_cast<IntType1>(itTwo); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType1,typename IntType2>
-requires is_arithmetic_v<IntType1> && is_arithmetic_v<IntType2>
+requires is_arithmetic_v<IntType1> && is_arithmetic_v<IntType2> &&
+         is_same_v<IntType1, IntType2>
 static IntType1 UtilMaximum(const IntType1 itOne, const IntType2 itTwo)
   { return itOne > static_cast<IntType1>(itTwo) ?
       itOne : static_cast<IntType1>(itTwo); }

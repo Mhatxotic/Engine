@@ -45,8 +45,8 @@ class FboCore :                        // The main fbo operations manager
   Fbo             &fboMain,            // Main fbo class (FboDouble[0])
                   &fboConsole;         // Console fbo class (FboDouble[1])
   /* -- FPS ---------------------------------------------------------------- */
-  double           dFPS;               // Frames per second
-  ClkTimePoint     ctpLast;            // Last measured second
+  ClkTimePoint     ctpFps;             // Fps checkpoint
+  double           dFps, dFpsSmoothed; // Caluclated FPS value + smoothed
   /* -- Draw flags --------------------------------------------------------- */
   bool CanDraw() const { return bDraw; }
   bool CannotDraw() const { return !CanDraw(); }
@@ -55,6 +55,8 @@ class FboCore :                        // The main fbo operations manager
   /* -- Get members -------------------------------------------------------- */
   GLfloat GetMatrixWidth() const { return dfMatrix.DimGetWidth(); }
   GLfloat GetMatrixHeight() const { return dfMatrix.DimGetHeight(); }
+  /* -- Get FPS (returns CPU value until decoupled from engine thread) ----- */
+  double GetFPS() const { return dFpsSmoothed; }
   /* -- Reset backbuffer clear colour to colour stored in cvar ------------- */
   void ResetClearColour()
   { // Reset core framebuffer object colour intensities
@@ -86,29 +88,19 @@ class FboCore :                        // The main fbo operations manager
       cOgl->SetBlendIfChanged(*this);
       // Clear back buffer if main fbo has alpha
       if(fboMain.FboIsTransparencyEnabled()) cOgl->SetAndClear(*this);
-      // Set normal fill poly mode
-      cOgl->SetPolygonMode(GL_FILL);
-      // Buffer the interlaced triangle data
-      cOgl->BufferStaticData(fboMain.FboItemGetDataSize(),
-        fboMain.FboItemGetData());
-      // Specify format of the interlaced triangle data
-      cOgl->VertexAttribPointer(A_COORD, stCompsPerCoord, 0,
-        fboMain.FboItemGetTCPos());
-      cOgl->VertexAttribPointer(A_VERTEX, stCompsPerPos, 0,
-        fboMain.FboItemGetVPos());
-      cOgl->VertexAttribPointer(A_COLOUR, stCompsPerColour, 0,
-        fboMain.FboItemGetCPos());
-      // Render the arrays
+      // Draw the main fbo to the back buffer
       cOgl->DrawArrays();
       // Swap buffers
       cGlFW->WinSwapGLBuffers();
-      // Calculate new frames per second
-      dFPS = cTimer->TimerPerSec(
-        ClockDurationToDouble(cTimer->TimerGetStartTime() - ctpLast));
-      ctpLast = cTimer->TimerGetStartTime();
+      // Calculate an average fps
+      const ClkTimePoint ctpNow{ cTimer->TimerGetStartTime() };
+      dFps = Timer::TimerPerSec(ClockDurationToDouble(ctpNow - ctpFps));
+      ctpFps = ctpNow;
+      constexpr const double dAlpha = 0.01;
+      dFpsSmoothed = dAlpha * dFps + (1.0 - dAlpha) * dFpsSmoothed;
     } // Cannot draw?
     else
-    { // Flush the pipeline to prevent memory leak
+    { // Flush the pipeline to prevent memory usage build-up
       cOgl->Flush();
       // Timer system can wait a little to not waste CPU cycles
       cTimer->TimerForceWait();
@@ -198,6 +190,13 @@ class FboCore :                        // The main fbo operations manager
         bForce) && cOgl->IsGLInitialised())
     { // Re-initialise the main framebuffer
       fboMain.FboInit("main", siFBOWidth, siFBOHeight);
+      // Store new data for drawing main fbo to the back buffer into VRAM
+      cOgl->MainFBOInitDrawData(fboMain.FboItemGetDataSize(),
+        fboMain.FboItemGetData(), fboMain.FboItemGetTCPos(),
+        fboMain.FboItemGetVPos(), fboMain.FboItemGetCPos());
+      // Reset fps based on highest possible frames per second
+      dFps = dFpsSmoothed = Timer::TimerPerSec(
+        UtilMaximum(cTimer->TimerGetLimit(), cOgl->GetLimit()));
       // Log computations
       cLog->LogDebugExSafe(
         "FboCore matrix reinit to $x$[$] (D=$x$,A=$<$-$>,AW=$,S=$:$:$:$).",
@@ -221,7 +220,7 @@ class FboCore :                        // The main fbo operations manager
   { // Return if the viewport size did not change
     if(DimGetWidth() == siWidth && DimGetHeight() == siHeight) return false;
     // Set the new viewport and log the result
-    DimSet(UtilMaximum(1, siWidth), UtilMaximum(1, siHeight));
+    DimSet(UtilMaximum(siWidth, 1), UtilMaximum(siHeight, 1));
     cLog->LogDebugExSafe("FboCore set new viewport of $x$.",
       DimGetWidth(), DimGetHeight());
     // Update matrix because the window's aspect ratio may have changed and
@@ -254,7 +253,8 @@ class FboCore :                        // The main fbo operations manager
     bClearBuffer(false),               // Clear buffer init by CVar
     fboMain(front()),                  // Init reference to main fbo
     fboConsole(back()),                // Init reference to console fbo
-    dFPS(0.0)                          // Frames per second
+    ctpFps{ cd0 },                     // Initialise FPS timepoint
+    dFps{ 0.0 }, dFpsSmoothed{ 0.0 }   // Initialise calculated FPS
     /* -- Set pointer to global class and main fbo ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }
   /* -- Set main fbo float reserve --------------------------------- */ public:

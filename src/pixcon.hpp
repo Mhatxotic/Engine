@@ -492,7 +492,7 @@ class SysCon :                         // All members initially private
     return iYp;
   }
   /* -- Write data --------------------------------------------------------- */
-  void WriteLine(UtfDecoder &&utfString, const int iMax, const bool bClrEOL)
+  void WriteLine(UtfDecoder &utfString, const int iMax, const bool bClrEOL)
   { // For each character index in the buffer
     while(const unsigned int uiChar = utfString.Next())
     { // Compare character
@@ -529,17 +529,20 @@ class SysCon :                         // All members initially private
       // Reset at scrolled position
       utfString.Reset(strIL.data());
       // Skip characters to the point we're scrolled at
-      utfString.Skip(UtilMaximum<size_t>(0, iLen - diSizeM2.DimGetWidth()));
+      utfString.Skip(static_cast<size_t>(
+        UtilMaximum(iLen - diSizeM2.DimGetWidth(), 0)));
       // Draw start of input text
-      WriteLine(StdMove(utfString), diSizeM1.DimGetWidth(), false);
+      WriteLine(utfString, diSizeM1.DimGetWidth(), false);
     } // Left size of text is zero long
     else iLen = 0;
     // Have right side of text and have characters left on screen to spare?
     if(!strIR.empty() && iLen < diSizeM2.DimGetWidth())
     { // Set cursor position
       SetCursor(1 + iLen, diSizeM1.DimGetHeight());
+      // Put right text in a UTF container
+      UtfDecoder udString{ strIR };
       // Reset again and write the string
-      WriteLine(UtfDecoder{ strIR }, diSizeM1.DimGetWidth(), false);
+      WriteLine(udString, diSizeM1.DimGetWidth(), false);
     } // Actually set cursor position
     ciCursor.CoordSet(UtilMinimum(diSizeM1.DimGetWidth(), 1 + iLen),
                                   diSizeM1.DimGetHeight());
@@ -576,7 +579,7 @@ class SysCon :                         // All members initially private
         // Reset left text position
         utfL.Reset();
         // Put string in a container and draw the string with left align
-        WriteLine(StdMove(utfL), CoordGetX()+iLC, false);
+        WriteLine(utfL, CoordGetX()+iLC, false);
         // If there is no right text we can just clear to the end of line
         if(!iRC) return ClearLine();
       } // No length of left text? Set initial position.
@@ -603,7 +606,7 @@ class SysCon :                         // All members initially private
     // Reset right string position
     utfR.Reset();
     // Write the line and clear the rest
-    WriteLine(StdMove(utfR), CoordGetX()+iRC, true);
+    WriteLine(utfR, CoordGetX()+iRC, true);
   }
   /* -- Redraw bottom status bar ------------------------------------------- */
   void RedrawStatusBar(const string &strSL, const string &strSR)
@@ -754,8 +757,8 @@ class SysCon :                         // All members initially private
         const size_t stPairsMaxSupported = static_cast<size_t>(COLOR_PAIRS);
         // Create number of pairs we need. We only need COLOUR_MAX squared so
         // we dont need to load the reset if there are any.
-        if(const size_t stPairsMax =
-          UtilMinimum<size_t>(stPairsMaxSupported, COLOUR_MAX*COLOUR_MAX))
+        if(const size_t stPairsMax = UtilMinimum(stPairsMaxSupported,
+          static_cast<size_t>(COLOUR_MAX * COLOUR_MAX)))
         { // Size palette array to save colours
           ptPairs.resize(stPairsMax);
           // For each background colour we support. Ignore the first entry.

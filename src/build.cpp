@@ -4489,8 +4489,8 @@ static void ReadProject()
   // Create the json object and parse it
   const Json jsManifest{ StrAppend(strFile, "." JSON_EXTENSION) };
   // Check version is correct
-  const unsigned int uiVersionRequired = 1;
-  const unsigned int uiVersion = jsManifest.GetInteger("Version");
+  const unsigned int uiVersionRequired = 1,
+                     uiVersion = jsManifest.GetInteger("Version");
   if(uiVersion != uiVersionRequired)
     XC("Invalid application manifest version!",
        "Manfiest", jsManifest.IdentGet(), "Required", uiVersionRequired,
@@ -4501,10 +4501,10 @@ static void ReadProject()
   if(!rjvConstants.IsObject())
     XC("Constants array not valid!", "Manfiest", jsManifest.IdentGet());
   // Get version and long name of app and update the version
-  strArch = StdMove(rjvConstants["app_shortname"].GetString());
-  strVer = StdMove(rjvConstants["app_version"].GetString());
-  strTitle = StdMove(rjvConstants["app_longname"].GetString());
-  strAuthor = StdMove(rjvConstants["app_author"].GetString());
+  strArch = rjvConstants["app_shortname"].GetString();
+  strVer = rjvConstants["app_version"].GetString();
+  strTitle = rjvConstants["app_longname"].GetString();
+  strAuthor = rjvConstants["app_author"].GetString();
 }
 /* ------------------------------------------------------------------------- */
 static int ShowVersion()

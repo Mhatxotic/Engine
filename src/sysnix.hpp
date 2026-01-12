@@ -446,7 +446,7 @@ class SysCore :
     uint64_t qwAffinity = 0;
     // Fill in the mask
     for(size_t stIndex = 0,
-               stMaximum = UtilMinimum(64, CPU_COUNT(&cstMask));
+               stMaximum = UtilMinimum(CPU_COUNT(&cstMask), 64);
                stIndex < stMaximum;
              ++stIndex)
       qwAffinity |= CPU_ISSET(stIndex, &cstMask) << stIndex;

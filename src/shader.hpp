@@ -15,26 +15,12 @@ using namespace IError::P;             using namespace IFboDef::P;
 using namespace IIdent::P;             using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace Lib::OS::GlFW::Types;
+using namespace IShaderDef::P;         using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Public typedefs ------------------------------------------------------ */
-enum ShaderUniformId : size_t          // Mandatory uniforms
-{ /* ----------------------------------------------------------------------- */
-  U_MATRIX,                            // Matrix uniform vec4
-  U_PALETTE,                           // Palette uniform vec4
-  /* ----------------------------------------------------------------------- */
-  U_MAX                                // Max no of mandatory uniforms
-};/* ----------------------------------------------------------------------- */
-enum ShaderAttributeId : GLuint        // Mandatory attributes
-{ /* ----------------------------------------------------------------------- */
-  A_COORD,                             // TexCoord attribute vec2 array
-  A_VERTEX,                            // Vertex attribute vec2 array
-  A_COLOUR,                            // Colour attribute vec4 array
-  /* ----------------------------------------------------------------------- */
-  A_MAX                                // Max no of mandatory attributes
-};/* -- Shader list class -------------------------------------------------- */
+/* -- Shader list class ---------------------------------------------------- */
 class ShaderCell :                     // Members initially private
   /* -- Initialisers ------------------------------------------------------- */
   public Ident                         // Name of string
@@ -83,14 +69,20 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   bool IsLinked() const { return bLinked; }
   /* -- Verify the specified attribute is at the specified location -------- */
   void VerifyAttribLocation(const char *cpAttr, const ShaderAttributeId saiId)
-  { // Get attribute location
+  { // Verify that the id is valid (impossible but just incase)
+    if(saiId >= cOgl->MaxVertexAttribs())
+      XC("Invalid shader attribute location index!",
+         "Attrib",  cpAttr, "Program", uiProgram, "Index", saiId,
+         "Maximum", cOgl->MaxVertexAttribs(),     "MaximumEngine", A_MAX);
+    // Get attribute location
     GL(cOgl->BindAttribLocation(uiProgram, saiId, cpAttr),
       "Failed to get attribute location from shader!",
       "Attrib", cpAttr, "Program", uiProgram, "Index", saiId);
     // Enable the vertex attrib array. Keep an eye on this if you have problems
     // with glVertexAttribPointer. You'll have to restore Enable/Disable vertex
     // attrib pointers before both glDrawArrays calls if you add more shaders
-    // and this call fails.
+    // and this call fails. Note that this is VAO depedent so whee this is
+    // called, we should already be in the global VAO.
     GL(cOgl->EnableVertexAttribArray(saiId),
       "Failed to enable vertex attrib array!",
       "Attrib", cpAttr, "Program", uiProgram, "Index", saiId);

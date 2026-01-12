@@ -951,11 +951,12 @@ class SysCore :
     memData.qMTotal = msD.ullTotalPhys;
     memData.qMFree = msD.ullAvailPhys;
     memData.qMUsed = msD.ullTotalPhys - msD.ullAvailPhys;
+    constexpr const uint64_t ullMax32 = 0x00000000FFFFFFFFULL;
 #if defined(X64)                       // 64-bit?
     memData.stMFree =
-      static_cast<size_t>(UtilMinimum(msD.ullAvailPhys, 0xFFFFFFFF));
+      static_cast<size_t>(UtilMinimum(msD.ullAvailPhys, ullMax32));
 #elif defined(X86)                     // 32-bit?
-    memData.stMFree = msD.ullAvailPhys <= 0xFFFFFFFF ?
+    memData.stMFree = msD.ullAvailPhys <= ullMax32 ?
       static_cast<size_t>(msD.ullAvailPhys) : 0 - pmcData.WorkingSetSize;
 #endif                                 // Bits check
     memData.dMLoad = UtilMakePercentage(memData.qMUsed, msD.ullTotalPhys);

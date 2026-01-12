@@ -73,6 +73,8 @@ class Oal :                            // Actual class body
   /* ----------------------------------------------------------------------- */
   ALCdevice       *alcDevice;          // OpenAL device
   ALCcontext      *alcContext;         // OpenAL context
+  /* ----------------------------------------------------------------------- */
+  bool             bHave32FPPB;        // Cached version of 32-bit float cap
   /* -- Public Variables ------------------------------------------- */ public:
   ALenum           eQuery;             // Device query extension
   /* -- Return error status ------------------------------------------------ */
@@ -295,7 +297,7 @@ class Oal :                            // Actual class body
     }
   }
   /* -- Report floating point playback to other classes -------------------- */
-  bool Have32FPPB() const { return FlagIsSet(AFL_HAVE32FPPB); }
+  bool Have32FPPB() const { return bHave32FPPB; } // Accessed in audio thread!!
   /* -- Get openAL string -------------------------------------------------- */
   template<typename CStrType=ALchar>
     const CStrType *GetString(const ALenum eId) const
@@ -479,6 +481,9 @@ class Oal :                            // Actual class body
          "Major", uiVersionMajor, "Minor", uiVersionMinor);
     // Set if we have 32-bit floating-point playback
     FlagSetOrClear(AFL_HAVE32FPPB, alIsExtensionPresent("AL_EXT_FLOAT32"));
+    // This is a thread safe version of this bool since the audio thread will
+    // need access to this processing Stream objects.
+    bHave32FPPB = FlagIsSet(AFL_HAVE32FPPB);
     // Get maximum number of sources (dynamic on Apple implementation).
     uiMaxMonoSources =
       GetInteger<decltype(uiMaxMonoSources)>(ALC_MONO_SOURCES);
@@ -624,6 +629,7 @@ class Oal :                            // Actual class body
       cCommon->CommonNull() },         // Initialise with "null" text
     alcDevice(nullptr),                // Device not initialised yet
     alcContext(nullptr),               // Context not initialised yet
+    bHave32FPPB(false),                // 32bit float cap not initialised yet
     eQuery(AL_NONE)                    // Query method not initialised yet
     /* -- Set global pointer to static class ------------------------------- */
     { cOal = this; }

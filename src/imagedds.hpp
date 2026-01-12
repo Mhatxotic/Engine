@@ -296,7 +296,7 @@ class CodecDDS :                       // GIF codec object
     ++uiMipIndex,
       uiMipWidth  >>= 1,
       uiMipHeight >>= 1,
-      uiMipBPP      = UtilMaximum(uiMipBPP >> 1, 1),
+      uiMipBPP      = UtilMaximum(uiMipBPP >> 1, 1U),
       uiMipSize     = ((uiMipWidth+3)/4)*((uiMipHeight+3)/4)*uiBitDiv)
     { // Read compressed data from file and show error if not enough data
       Memory mPixels{ fmData.FileMapReadBlock(uiMipSize) };
