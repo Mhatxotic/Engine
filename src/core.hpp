@@ -111,7 +111,7 @@ class Core final :                     // Members initially private
     if(cSystem->IsGraphicalMode())
     { // Reset input environment
       cInput->ResetEnvironment();
-      // Reset fbo clear colour, selected binds and 8-bit shader palette
+      // Reset FBO clear colour, selected binds and 8-bit shader palette
       cFboCore->ResetClearColour();
       cOgl->ResetBinds();
       cPalettes->palDefault.Commit();
@@ -132,12 +132,12 @@ class Core final :                     // Members initially private
         cConGraphics->EnterResetEnvironment();
         // Remove the 1ms FPS limit lock on the engine
         cTimer->TimerReset(false);
-      } // Make sure main fbo is cleared
+      } // Make sure main FBO is cleared
       cFboCore->SetDraw();
     } // Not graphical? Set or remove the 1ms FPS limit lock on the engine
     else cTimer->TimerReset(bLeaving);
     // Reset unique ids. Remember some classes aren't registered in the
-    // collector, such as the console and main fbo.
+    // collector, such as the console and main FBO.
 #define RSCEX(x,v) x->CounterReset(x->CollectorCount() + v)
 #define RSCX(x,v) RSCEX(c ## x, v)
 #define RSC(x) RSCX(x, 0)
@@ -167,45 +167,46 @@ class Core final :                     // Members initially private
   void CoreTickNoFrameLimiter()
   { // Update timer
     cTimer->TimerUpdateBot();
-    // Render the console fbo (if update requested)
+    // Render the console FBO (if update requested)
     cConGraphics->Render();
     // Render video textures (if any)
     VideoRender();
-    // Set main fbo by default on each frame
+    // Set main FBO by default on each frame
     cFboCore->ActivateMain();
     // Poll joysticks
     cInput->JoyPoll();
     // Execute a tick for each frame missed
     cLua->ExecuteMain();
-    // Add console fbo to render list
+    // Render the console FBO to the main FBO
     cConGraphics->RenderToMain();
-    // Render all fbos and copy the main fbo to screen
+    // Render all FBO's and copy the main FBO to screen
     cFboCore->Render();
   }
   /* -- Graphical core window thread tick with frame limiter --------------- */
   void CoreTickFrameLimiter()
   { // Return if it is not time to execute a game tick
     if(cTimer->TimerShouldNotTick()) return;
-    // Render the console fbo (if update requested)
+    // Render the console FBO (if update requested)
     cConGraphics->Render();
     // Render video textures (if any)
     VideoRender();
-    // Loop point incase we need to catchup game ticks
-    for(;;)
-    { // Set main fbo by default on each frame
-      cFboCore->ActivateMain();
-      // Poll joysticks
-      cInput->JoyPoll();
-      // Execute a tick for each frame missed
-      cLua->ExecuteMain();
-      // Break if we've caught up
-      if(cTimer->TimerShouldNotTick()) break;
-      // Flush the main fbo as we're not drawing it yet
-      cFboCore->RenderFbosAndFlushMain();
-      // Render again until we've caught up
-    } // Add console fbo to render list
+    // Set main FBO by default on each frame
+    Catchup: cFboCore->ActivateMain();
+    // Poll joysticks
+    cInput->JoyPoll();
+    // Execute a tick for each frame missed
+    cLua->ExecuteMain();
+    // If we have to catchup?
+    if(cTimer->TimerShouldTick())
+    { // Flush the main FBO and wait for the GPU
+      cOgl->Finish();
+      // Delete texture and FBO handles
+      cOgl->DeleteTexturesAndFboHandles();
+      // Render another tick
+      goto Catchup;
+    } // Render the console FBO to the main FBO
     cConGraphics->RenderToMain();
-    // Render all fbos and copy the main fbo to screen
+    // Render all FBO's and copy the main FBO to screen
     cFboCore->Render();
   }
   /* -- Fired when Lua enters the sandbox ---------------------------------- */
@@ -231,7 +232,7 @@ class Core final :                     // Members initially private
         // The thread and window was reinitialised? (e.g. vreset command)
         case EMC_QUIT_VREINIT: [[fallthrough]];
         case EMC_QUIT_THREAD:
-          // Tell guest scripts to redraw their fbo's
+          // Tell guest scripts to redraw their FBO's
           cEvtMain->Add(EMC_LUA_REDRAW);
           // Exceptions from here on are recoverable
           cEvtMain->SetExitReason(EMC_LUA_ERROR);
@@ -369,7 +370,7 @@ class Core final :                     // Members initially private
         if(cSystem->IsAudioMode()) cAudio->AudioDeInit();
         // Done
         break;
-    } // Unload all fbos (NOT destroy);
+    } // Unload all FBO's (NOT destroy);
     cFboCore->DeInit();
     // De-init core shaders
     cShaderCore->DeInitShaders();
@@ -390,7 +391,7 @@ class Core final :                     // Members initially private
     cOgl->ResetBinds();
     // Render the console and it has not already been drawn
     if(bAndConsole) cConGraphics->RenderNow();
-    // Render all fbos and copy the main fbo to screen
+    // Render all FBO's and copy the main FBO to screen
     cFboCore->Render();
   }
   /* -- De-initialise everything ------------------------------------------- */

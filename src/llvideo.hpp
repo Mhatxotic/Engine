@@ -50,18 +50,18 @@ LLFUNC(Advance, 0, AgVideo{lS, 1}().Advance())
 LLFUNC(Awaken, 0, AgVideo{lS, 1}().Awaken())
 /** ======================================================================== */
 // $ Video:Blit
-// ? Blits the specified video texture frame to the currently ACTIVE fbo. This
+// ? Blits the specified video texture frame to the currently ACTIVE FBO. This
 // ? just adds to the active FBO drawing arrays and doesn't actually render
-// ? until the active fbo is finished and rendered. The currently stored
+// ? until the active FBO is finished and rendered. The currently stored
 // ? vertex, texcoord, colour and matrix values are used.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Blit, 0, AgVideo{lS, 1}().Blit())
 /* ========================================================================= */
 // $ Video:BlitT
 // ? TriIndex:integer=The specified triangle id.
-// ? Blits the specified video texture frame to the currently ACTIVE fbo. This
+// ? Blits the specified video texture frame to the currently ACTIVE FBO. This
 // ? just adds to the active FBO drawing arrays and doesn't actually render
-// ? until the active fbo is finished and rendered. The currently stored
+// ? until the active FBO is finished and rendered. The currently stored
 // ? vertex, texcoord, colour and matrix values are used.
 /* ------------------------------------------------------------------------- */
 LLFUNC(BlitT, 0,
@@ -197,10 +197,10 @@ LLFUNC(Rewind, 0, AgVideo{lS, 1}().Rewind())
 LLFUNC(SetKeyed, 0, AgVideo{lS, 1}().SetKeyed(AgBoolean{lS, 2}))
 /* ========================================================================= */
 // $ Video:SetCRGBA
-// > Red:number=The entire fbo texture red colour intensity (0 to 1).
-// > Green:number=The entire fbo texture green colour intensity (0 to 1).
-// > Blue:number=The entire fbo texture blue colour intensity (0 to 1).
-// > Alpha:number=The entire fbo texture alpha colour intensity (0 to 1).
+// > Red:number=The entire FBO texture red colour intensity (0 to 1).
+// > Green:number=The entire FBO texture green colour intensity (0 to 1).
+// > Blue:number=The entire FBO texture blue colour intensity (0 to 1).
+// > Alpha:number=The entire FBO texture alpha colour intensity (0 to 1).
 // ? Sets the colour intensity of all the vertexes for the entire video frame
 // ? texture.
 /* ------------------------------------------------------------------------- */

@@ -551,9 +551,9 @@ CVarItemStaticList{{
 // ! APP_TICKRATE
 // ? Specifies the base tick rate of the guest application in nanoseconds.
 // ? The engine locks to this tick rate regardless of lag. It can also be
-// ? changed dynamically with Lua. The default is 0.016666667 seconds (60fps).
+// ? changed dynamically with Lua. The default is 0.016666666 seconds (60fps).
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "app_tickrate", "16666667",
+{ CFL_VIDEO, "app_tickrate", "16666666",
   CB(cTimer->TimerTickRateModified, uint64_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_DELAY
@@ -1250,14 +1250,6 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_api",  cCommon->CommonZero(),
   CB(cDisplay->ApiChanged, size_t), TUINTEGER|PCMDLINE|PAPPCFG },
-/* ------------------------------------------------------------------------- */
-// ! VID_AUXBUFFERS
-// ? Specified the number of auxiliary swap chain buffers to use. Specify 0
-// ? for double-buffering, 1 for triple-buffering or -1 to let the OpenGL
-// ? driver decide.
-/* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_auxbuffers", cCommon->CommonNegOne(),
-  CB(cDisplay->AuxBuffersChanged, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBALPHA
 // ? Override alpha component bit-depth. Default is -1 for GLFW_DONT_CARE.

@@ -676,7 +676,7 @@ sTable.Header("ID").Header("FI").Header("TI").Header("FL").Header("FT")
       .Reserve(2 + cFbos->size());
 // Total triangles and commands
 size_t stTriangles = 0, stCommands = 0;
-// Show primary fbos info
+// Show primary FBO's info
 ShowFboInfo(cFboCore->fboMain, sTable, stTriangles, stCommands);
 ShowFboInfo(cFboCore->fboConsole, sTable, stTriangles, stCommands);
 // Enumerate fbo and video classes and show their infos
@@ -807,7 +807,7 @@ cConsole->AddLineF(
   "- State: $$ ($); Max: $^2; Viewport: $x$ ($).\n"
   "- Matrix: $x$ ($); Total: $x$ ($).\n"
   "- Stage: $,$,$,$; Fbo: $x$; OFlags: 0x$$.\n"
-  "- Polygons: $$/$; Commands: $/$.\n"
+  "- Triangles: $$/$; Commands: $/$.\n"
   "FPS: $$/s ($/s); Eff: $%; Limit: $.",
   cOgl->GetRenderer(), cDisplay->GetMonitorName(),
   cOgl->GetVersion(), cOgl->GetVendor(),

@@ -32,7 +32,7 @@ enum EvtMainCmd : size_t               // Engine thread event commands
   EMC_LUA_CONFIRM_EXIT,                // 08: From LUA to confirm the exit
   EMC_LUA_END,                         // 09: End LUA execution
   EMC_LUA_PAUSE,                       // 10: Pause LUA execution
-  EMC_LUA_REDRAW,                      // 11: Ask LUA guest to redraw fbo's
+  EMC_LUA_REDRAW,                      // 11: Ask LUA guest to redraw FBO's
   EMC_LUA_REINIT,                      // 12: Reinit LUA execution
   EMC_LUA_RESUME,                      // 13: Resume LUA execution
   /* -- Window events ------------------------------------------------------ */

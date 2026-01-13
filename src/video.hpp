@@ -605,9 +605,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       // Commit the Y setup and configure the U and V setup
       FboFinishAndReset(uiaYCbCr[1], 1, shProgram->GetProgram());
       FboFinishAndReset(uiaYCbCr[2], 2, shProgram->GetProgram());
-      // Blit the YCbCr multi-texture into the fbo
+      // Blit the YCbCr multi-texture into the FBO
       FboBlit(fboYCbCr, uiaYCbCr[2], 2, shProgram);
-      // Commit the V texture and send everything to fbo list for rendering
+      // Commit the V texture and send everything to FBO list for rendering
       FboFinishAndRender();
       // No need to update again until decoder thread rendered another frame
       frFrame.bDraw = false;
@@ -1021,18 +1021,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(FlagIsClear(FL_GLINIT))
     { // OpenGL output initialised
       FlagSet(FL_GLINIT);
-      // Init fbo
+      // Init FBO with room for 2 triangles and 3 commands
       FboInit(IdentGet(), static_cast<GLsizei>(GetWidth()),
-                          static_cast<GLsizei>(GetHeight()));
+                          static_cast<GLsizei>(GetHeight()), 2, 3);
       FboSetMatrix(0.0f, 0.0f, 0.0f, 0.0f);
       FboSetTransparency(true);
       FboItemSetTexCoord(0.0f, 0.0f, 1.0f, 1.0f);
-      // Clear the fbo, initially transparent and blue
+      // Clear the FBO, initially transparent and blue
       FboSetClearColour(0.0f, 0.0f, 1.0f, 0.0f);
       FboSetClear(false);
-      // Only 2 triangles and 3 commands are needed so reserve the memory
-      if(!FboReserve(2, 3))
-        cLog->LogWarningSafe("Video failed to reserve memory for fbo lists.");
       // We must discard the extra garbage from the ogg video. We can do that
       // with the GPU very easily by altering texture coords!
       fboYCbCr.FboItemSetTexCoord(

@@ -899,7 +899,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   void DeInit()
   { // Texture not loaded? return
     if(IsNotInitialised() || FlagIsSet(TF_DELETE)) return;
-    // Mark texture for deletion (explanation in fbos class)
+    // Mark texture for deletion
     cOgl->SetDeleteTextures(uivTexture);
     // Texture has been marked for deleting
     FlagSet(TF_DELETE);

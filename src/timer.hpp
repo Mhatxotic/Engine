@@ -70,8 +70,8 @@ class Timer                            // Members initially private
     // Increment ticks
     ++uqTicks;
   }
-  /* -- Should not execute a game tick? ------------------------------------ */
-  bool TimerShouldNotTick()
+  /* -- Should execute a game tick? ---------------------------------------- */
+  bool TimerShouldTick()
   { // Calculate frame time
     TimerCalculateTime();
     // Increase accumulator by frame time
@@ -81,7 +81,7 @@ class Timer                            // Members initially private
     { // Wait for specified delay if we can or yield
       if(cdAcc + cdDelay < cdLimit) [[likely]] StdSuspend(cdDelay);
       // Suspend engine thread for the requested delay
-      return true;
+      return false;
     } // Set total time the frame took
     cdFrame = cdAcc;
     // Set new fps and set new frame start time
@@ -94,8 +94,10 @@ class Timer                            // Members initially private
     // Increase number of ticks rendered
     ++uqTicks;
     // Tick loop should render a frame
-    return false;
+    return true;
   }
+  /* -- Should not execute a game tick? ------------------------------------ */
+  bool TimerShouldNotTick() { return !TimerShouldTick(); }
   /* -- Reset counters and reinitialise start and end time ----------------- */
   void TimerCatchup()
   { // Reset accumulator and duration

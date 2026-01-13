@@ -72,10 +72,10 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     const size_t stBytesPerPixel = bdBPP / 8;
     Memory mBuffer{ fboRef.DimGetWidth<size_t>() *
       fboRef.DimGetHeight<size_t>() * stBytesPerPixel };
-    // Bind the fbo
+    // Bind the FBO
     GL(cOgl->BindFBO(fboRef.uiFBO), "Failed to bind FBO to dump!",
       "Identifier", fboRef.IdentGet(), "Id", fboRef.uiFBO);
-    // Bind the texture in the fbo
+    // Bind the texture in the FBO
     GL(cOgl->BindTexture(fboRef.uiFBOtex),
       "Failed to bind FBO texture to dump!",
       "Identifier", fboRef.IdentGet(), "Id", fboRef.uiFBOtex);
@@ -98,7 +98,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     // Success
     return true;
   }
-  /* -- Dump main fbo ------------------------------------------------------ */
+  /* -- Dump main FBO ------------------------------------------------------ */
   void DumpMain() { DumpFBO(cFboCore->fboMain); }
   /* -- Default constructor ------------------------------------------------ */
   SShot() :

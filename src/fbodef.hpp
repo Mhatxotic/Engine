@@ -246,10 +246,8 @@ class FboBlend
   void SetSrcAlpha(const GLenum eSrcAlpha) { aBlend[2] = eSrcAlpha; }
   void SetDstAlpha(const GLenum eDstAlpha) { aBlend[3] = eDstAlpha; }
   /* ----------------------------------------------------------------------- */
-  void SetSrcRGB(const FboBlend &fcValue)
-    { SetSrcRGB(fcValue.GetSrcRGB()); }
-  void SetDstRGB(const FboBlend &fcValue)
-    { SetDstRGB(fcValue.GetDstRGB()); }
+  void SetSrcRGB(const FboBlend &fcValue) { SetSrcRGB(fcValue.GetSrcRGB()); }
+  void SetDstRGB(const FboBlend &fcValue) { SetDstRGB(fcValue.GetDstRGB()); }
   void SetSrcAlpha(const FboBlend &fcValue)
     { SetSrcAlpha(fcValue.GetSrcAlpha()); }
   void SetDstAlpha(const FboBlend &fcValue)
@@ -301,7 +299,7 @@ class FboBlend
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor ------------------------------------------------ */
-  FboBlend():
+  FboBlend() :
     /* -- Initialisers ----------------------------------------------------- */
     FboBlend{ GL_SRC_ALPHA,            // Init blend source RGB
               GL_ONE_MINUS_SRC_ALPHA,  // Init blend destination RGB
@@ -329,10 +327,8 @@ template<typename Type1 = GLfloat, typename Type2 = Type1>class FboCoords
   void SetCoRight(const Type2 tNRight) { ctXY2.CoordSetX(tNRight); }
   void SetCoBottom(const Type2 tNBottom) { ctXY2.CoordSetY(tNBottom);}
   /* ----------------------------------------------------------------------- */
-  void SetCoLeft(const FboCoords &fcValue)
-    { SetCoLeft(fcValue.GetCoLeft()); }
-  void SetCoTop(const FboCoords &fcValue)
-    { SetCoTop(fcValue.GetCoTop()); }
+  void SetCoLeft(const FboCoords &fcValue) { SetCoLeft(fcValue.GetCoLeft()); }
+  void SetCoTop(const FboCoords &fcValue) { SetCoTop(fcValue.GetCoTop()); }
   void SetCoRight(const FboCoords &fcValue)
     { SetCoRight(fcValue.GetCoRight()); }
   void SetCoBottom(const FboCoords &fcValue)
@@ -340,36 +336,17 @@ template<typename Type1 = GLfloat, typename Type2 = Type1>class FboCoords
   /* ----------------------------------------------------------------------- */
   void ResetCoords() { ctXY1.CoordSet(); ctXY2.CoordSet(); }
   /* ----------------------------------------------------------------------- */
-  void SetCoords(const Type1 tNLeft, const Type1 tNTop,
-                 const Type2 tNRight, const Type2 tNBottom)
-  { // Viewport X origin different from cached?
-    if(GetCoLeft() != tNLeft)
-    { // Update viewport X value and other values if changed
-      SetCoLeft(tNLeft);
-      if(GetCoTop() != tNTop) SetCoTop(tNTop);
-      if(GetCoRight() != tNRight) SetCoRight(tNRight);
-      if(GetCoBottom() != tNBottom) SetCoBottom(tNBottom);
-    } // Viewport Y origin different from cached?
-    else if(GetCoTop() != tNTop)
-    { // Update viewport Y value and other values if changed
-      SetCoTop(tNTop);
-      if(GetCoRight() != tNRight) SetCoRight(tNRight);
-      if(GetCoBottom() != tNBottom) SetCoBottom(tNBottom);
-    } // Viewport width different from cached?
-    else if(GetCoRight() != tNRight)
-    { // Update viewport width and other values if changed
-      SetCoRight(tNRight);
-      if(GetCoBottom() != tNBottom) SetCoBottom(tNBottom);
-    } // Viewport height different from cached? Update it
-    else if(GetCoBottom() != tNBottom) SetCoBottom(tNBottom);
-  }
+  void SetCoords(const Type1 tNLeft, const Type1 tNTop, const Type2 tNRight,
+    const Type2 tNBottom)
+  { SetCoLeft(tNLeft); SetCoTop(tNTop); SetCoRight(tNRight);
+    SetCoBottom(tNBottom); }
   /* ----------------------------------------------------------------------- */
   void SetCoords(const FboCoords &fcValue)
     { SetCoords(fcValue.GetCoLeft(), fcValue.GetCoTop(),
                 fcValue.GetCoRight(), fcValue.GetCoBottom()); }
   /* -- Init constructor --------------------------------------------------- */
   FboCoords(const Type1 tNLeft, const Type1 tNTop, const Type2 tNRight,
-    const Type2 tNBottom) :   // X1, Y1, X2, Y2
+    const Type2 tNBottom) :            // X1, Y1, X2, Y2
     /* -- Initialisers ----------------------------------------------------- */
     ctXY1{ tNLeft, tNTop },            // X1 & Y1 co-ordinate
     ctXY2{ tNRight, tNBottom }         // X2 & Y2 co-ordinate
@@ -383,21 +360,21 @@ template<typename Type1 = GLfloat, typename Type2 = Type1>class FboCoords
     {}
 };/* ----------------------------------------------------------------------- */
 typedef FboCoords<GLfloat>       FboFloatCoords; // Coords made of floats
-/* == Data required to complete a render of an fbo ========================= */
+/* == Data required to complete a render of an FBO ========================= */
 struct FboRenderItem :                 // Rendering item data class
   /* -- Base classes ------------------------------------------------------- */
-  public FboColour,                    // Clear colour of the fbo
-  public FboBlend,                     // Blend mode of the fbo
-  public FboFloatCoords,               // Matrix co-ordinates of the fbo
-  public DimGLSizei                    // Fbo dimensions
+  public FboColour,                    // Clear colour of the FBO
+  public FboBlend,                     // Blend mode of the FBO
+  public FboFloatCoords,               // Matrix co-ordinates of the FBO
+  public DimGLSizei                    // FBO dimensions
 { /* ----------------------------------------------------------------------- */
-  GLuint           uiFBO;              // Fbo name
-  bool             bClear;             // Clear the fbo?
+  GLuint           uiFBO;              // FBO name
+  bool             bClear;             // Clear the FBO?
   /* -- Default constructor ------------------------------------------------ */
   FboRenderItem() :
     /* -- Initialisers ----------------------------------------------------- */
-    uiFBO(0),                          // No fbo id yet
-    bClear(true)                       // Clear fbo set
+    uiFBO(0),                          // No FBO id yet
+    bClear(true)                       // Clear FBO set
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

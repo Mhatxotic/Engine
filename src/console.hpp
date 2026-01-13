@@ -478,7 +478,7 @@ struct Console :                       // Members initially private
   /* -- Returns if the console should be visible --------------------------- */
   bool IsVisible() { return FlagIsSet(CF_ENABLED); }
   bool IsNotVisible() { return !IsVisible(); }
-  /* -- Sets redraw flag so the console fbo or terminal buffer is redrawn -- */
+  /* -- Sets redraw flag so the buffer is redrawn -------------------------- */
   void SetRedraw()
     { GetRedrawFlags().FlagReset(GetDefaultRedrawFlags().FlagIsSet(RD_TEXT) ||
         IsVisible() ? GetDefaultRedrawFlags() : RD_NONE); }

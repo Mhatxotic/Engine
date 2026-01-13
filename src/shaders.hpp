@@ -2,7 +2,7 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## Variables to help with fbos, rendering threading and context.       ## **
+** ## Sets up the built-in pre-defined shaders.                           ## **
 ** ######################################################################### */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */

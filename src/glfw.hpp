@@ -124,14 +124,14 @@ class GlFW :                           // Root engine class
     { WinSetCursorGraphic(at(gctCursorId).CursorGetContext()); }
   /* -- DeInitialise all standard cursors ---------------------------------- */
   void DeInitCursors()
-  { // Enumerate each created fbo and deinitialise it (NOT destroy it)
+  { // Enumerate each created cursor and deinitialise it (NOT destroy it)
     cLog->LogDebugExSafe("GlFW de-initialising $ standard cursors...", size());
     for(GlFWCursor &gcObj : *this) gcObj.CursorDeInit();
     cLog->LogInfoExSafe("GlFW de-initialised $ standard cursors.", size());
   }
   /* -- Initialise all standard cursors ------------------------------------ */
   void InitCursors()
-  { // Enumerate each created fbo and reinitialise it
+  { // Enumerate each created cursor and initialise it
     cLog->LogDebugExSafe("GlFW initialising $ standard cursors...", size());
     for(GlFWCursor &gcObj : *this) gcObj.CursorInit();
     cLog->LogInfoExSafe("GlFW initialised $ standard cursors.", size());

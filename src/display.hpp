@@ -103,7 +103,6 @@ class Display :                        // Actual class body
                    iFBDepthG,          // Selected green bit depth mode
                    iFBDepthB,          // Selected blue bit depth mode
                    iFBDepthA,          // Selected alpha bit depth mode
-                   iAuxBuffers,        // Auxilliary buffers to use
                    iSamples;           // FSAA setting to use
   /* -- Icons -------------------------------------------------------------- */
   GlFWIconVector   gfwivIcons;         // Contiguous memory for glfw image data
@@ -494,7 +493,7 @@ class Display :                        // Actual class body
       if(FlagIsClear(DF_INFULLSCREEN))
       { // Now a native borderless full-screen window
         fsType = FST_NATIVE;
-        // In native full-screen mode also reinit the console fbo as well.
+        // In native full-screen mode also reinit the console FBO as well.
         FlagSet(DF_INFULLSCREEN|DF_NATIVEFS);
         // Log non-standard full-screen switch
         cLog->LogDebugSafe("Display received external full-screen switch!");
@@ -505,7 +504,7 @@ class Display :                        // Actual class body
     else if(FlagIsSet(DF_INFULLSCREEN))
     { // Now a normal window again
       fsType = FST_WINDOW;
-      // Not in native full-screen mode and reinit console fbo
+      // Not in native full-screen mode and reinit console FBO
       FlagClear(DF_INFULLSCREEN|DF_NATIVEFS);
       // Log non-standard full-screen switch
       cLog->LogDebugSafe("Display received external desktop switch!");
@@ -522,7 +521,7 @@ class Display :                        // Actual class body
     cLog->LogDebugExSafe("Display received new framebuffer size of $x$.",
       iWidth, iHeight);
 #endif
-    // Resize main viewport and if it changed, reinitialise the console fbo
+    // Resize main viewport and if it changed, reinitialise the console FBO
     // and redraw the console
     if(cFboCore->AutoViewport(iWidth, iHeight)) cConGraphics->InitFBO();
     // Redraw the console if enabled
@@ -736,7 +735,7 @@ class Display :                        // Actual class body
 #if !defined(LINUX)
       cGlFW->GlFWSetPositionX(ciPosition.CoordGetX());
       cGlFW->GlFWSetPositionY(ciPosition.CoordGetY());
-#endif	
+#endif
       // Is a desktop mode window (Could change via OnFBReset())
       fsType = FST_WINDOW;
       // We need to adjust to the position of the currently selected monitor so
@@ -771,7 +770,7 @@ class Display :                        // Actual class body
 #if defined(MACOS)
     // Store scale of window
     dfWinScale.DimSet(cGlFW->WinGetScale());
-    // If hidpi not enabled? Update the main fbo viewport size without scale
+    // If hidpi not enabled? Update the main FBO viewport size without scale
     switch(hdpiSetting)
     { // Disabled?
       case HD_DISABLED: cFboCore->DimSet(cInput->DimGet<GLsizei>()); break;
@@ -824,7 +823,7 @@ class Display :                        // Actual class body
       RequestReposition();
     } // Windows and linux?
 #else
-    // Update the main fbo viewport size without scale
+    // Update the main FBO viewport size without scale
     cFboCore->DimSet(cInput->DimGet<GLsizei>());
 #endif
     // Window has been focued if auto-focus is enabled
@@ -929,7 +928,7 @@ class Display :                        // Actual class body
     } // If height changed? Update the height and fall through to reinit
     else if(StdIsFloatNotEqual(fNewHeight, dfMatrix.DimGetHeight()))
       dfMatrix.DimSetHeight(fNewHeight);
-    // Not modified so don't change the fbo
+    // Not modified so don't change the FBO
     else return false;
     // Force reinitialise the matrix
     CommitMatrix(false);
@@ -1060,11 +1059,11 @@ class Display :                        // Actual class body
     cLog->LogDebugSafe("Display class starting up...");
     // Enumerate monitors and video modes
     EnumerateMonitorsAndVideoModes();
-    // Inform main fbo class of our transparency setting
+    // Inform main FBO class of our transparency setting
     cFboCore->fboMain.FboSetTransparency(FlagIsSet(DF_TRANSPARENT));
     // Set context settings
     cGlFW->GlFWSetAlphaBits(iFBDepthA);
-    cGlFW->GlFWSetAuxBuffers(iAuxBuffers);
+    cGlFW->GlFWSetAuxBuffers(0);
     cGlFW->GlFWSetBlueBits(iFBDepthB);
     cGlFW->GlFWSetClientAPI(iApi);
     cGlFW->GlFWSetCoreProfile(iProfile);
@@ -1216,7 +1215,6 @@ class Display :                        // Actual class body
     iFBDepthG(GLFW_DONT_CARE),         // Bit depth not selected yet
     iFBDepthB(GLFW_DONT_CARE),         // Bit depth not selected yet
     iFBDepthA(GLFW_DONT_CARE),         // Bit depth not selected yet
-    iAuxBuffers(GLFW_DONT_CARE),       // No auxiliary buffers specified
     iSamples(GLFW_DONT_CARE),          // No anti-aliasing samples specified
     lrFocused{ "OnFocused" },          // Set name for OnFocused lua event
     fsType(FST_STANDBY),               // Full-screen type
@@ -1246,7 +1244,6 @@ class Display :                        // Actual class body
   CBCVARFLAG(SetMaximisedMode, DF_MAXIMISED)
   CBCVARFLAG(SetWindowTransparency, DF_TRANSPARENT)
   CBCVARFLAG(SizableChanged, DF_SIZABLE)
-  CBCVARRANGE(int, AuxBuffersChanged, iAuxBuffers, GLFW_DONT_CARE, 16)
   CBCVARRANGE(int, CtxMajorChanged, iCtxMajor, GLFW_DONT_CARE, 4)
   CBCVARRANGE(int, CtxMinorChanged, iCtxMinor, GLFW_DONT_CARE, 6)
   CBCVARRANGE(int, FsaaChanged, iSamples, GLFW_DONT_CARE, 8)

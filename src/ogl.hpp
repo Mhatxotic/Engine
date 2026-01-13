@@ -36,7 +36,10 @@ BUILD_FLAGS(Ogl,                       // OpenGL flags
   GFL_HAVEMEM               {Flag(2)}, // Either of the below commands?
   GFL_HAVENVMEM             {Flag(3)}, // Have nVidia memory information?
   GFL_HAVEATIMEM            {Flag(4)}, // Have ATI memory avail info?
-  GFL_SHARERAM              {Flag(5)}  // Devices shares memory with system
+  GFL_SHARERAM              {Flag(5)}, // Devices shares memory with system?
+  GFL_HAVEASYNC             {Flag(6)}, // Have adaptive sync? (negative vsync)
+  GFL_HAVEWASYNC            {Flag(7)}, // Have Windows adaptive sync?
+  GFL_HAVELASYNC            {Flag(8)}  // Have Linux adaptive sync?
 );/* ----------------------------------------------------------------------- */
 enum OglFilterEnum : size_t            // Available filter combinations
 { /* -- Non-mipmapped ------------------------------------------------------ */
@@ -86,6 +89,15 @@ enum OglUndefinedEnums : GLenum        // Some undefined OpenGL consts
 };/* ----------------------------------------------------------------------- */
 typedef vector<GLuint> GLUIntVector;   // Vector of GLuints
 typedef vector<GLfloat> GLFloatVector; // Vector of GLfloats
+/* ------------------------------------------------------------------------- */
+enum VSyncMode : int {               // VSync settings
+  VSYNC_MIN      = -1,               // (-1) Minimum Vertical Sync value
+  VSYNC_ON_ADAPT = VSYNC_MIN,        // (-1) Adaptive Vertical Sync enabled
+  VSYNC_OFF,                         // ( 0) Vertical Sync disable
+  VSYNC_ON,                          // ( 1) Vertical Sync enabled
+  VSYNC_ON_HALFRATE,                 // ( 2) Verfical sync enabled (half)
+  VSYNC_MAX                          // ( 3) Maximum Vertical Sync value
+};/* ----------------------------------------------------------------------- */
 /* -- OpenGL manager class ------------------------------------------------- */
 class Ogl;                             // Class prototype
 static Ogl *cOgl = nullptr;            // Pointer to global class
@@ -106,14 +118,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
 #define IGL(F,M,...)  GLEX(CheckExceptError, F, M, ## __VA_ARGS__)
 #define IGLC(M,...)   GLEX(CheckExceptError, , M, ## __VA_ARGS__)
   /* ----------------------------------------------------------------------- */
-  enum VSyncMode : int {               // VSync settings
-    VSYNC_MIN      = -1,               // (-1) Minimum Vertical Sync value
-    VSYNC_ON_ADAPT = VSYNC_MIN,        // (-1) Adaptive Vertical Sync enabled
-    VSYNC_OFF,                         // ( 0) Vertical Sync disable
-    VSYNC_ON,                          // ( 1) Vertical Sync enabled
-    VSYNC_ON_HALFRATE,                 // ( 2) Verfical sync enabled (half)
-    VSYNC_MAX                          // ( 3) Maximum Vertical Sync value
-  } vsSetting;                         // Storage for setting
+  VSyncMode        vsSetting;          // VSync setting
   /* -- Variables ---------------------------------------------------------- */
   array<GLuint,2>  uiaVAO,             // Vertex Array Object list
                    uiaVBO;             // Vertex Buffer Object list
@@ -142,7 +147,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
                    strvVersion,        // GL version string
                    strvVendor;         // GL vendor string
   /* -- Delayed destruction ------------------------------------------------ */
-  /* Because LUA garbage collection could zap a texture or fbo class at any  */
+  /* Because LUA garbage collection could zap a texture or FBO class at any  */
   /* time, we need to delay deletion of textures and FBO handles in OpenGL   */
   /* so that a framebuffer can select/draw without binding non-existant      */
   /* handles. Contents will be destroyed after all drawing is completed!     */
@@ -180,7 +185,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     PFNGLENABLEPROC                    glEnable;
     PFNGLENABLEVERTEXATTRIBARRAYPROC   glEnableVertexAttribArray;
     PFNGLFRAMEBUFFERTEXTURE2DPROC      glFramebufferTexture2D;
-    PFNGLFLUSHPROC                     glFlush;
+    PFNGLFINISHPROC                    glFinish;
     PFNGLGENBUFFERSPROC                glGenBuffers;
     PFNGLGENERATEMIPMAPPROC            glGenerateMipmap;
     PFNGLGENFRAMEBUFFERSPROC           glGenFramebuffers;
@@ -252,6 +257,12 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Set flag if have either
     FlagSet(FlagIsAnyOfSet(GFL_HAVENVMEM|GFL_HAVEATIMEM) ?
       GFL_HAVEMEM : GFL_SHARERAM|GFL_HAVEMEM);
+    // Get if adaptive sync is available
+    SetFlagExt("WGL_EXT_swap_control_tear", GFL_HAVEWASYNC);
+    SetFlagExt("GLX_EXT_swap_control_tear", GFL_HAVELASYNC);
+    // Set flag if have either
+    FlagSetOrClear(GFL_HAVEASYNC,
+      FlagIsAnyOfSet(GFL_HAVEWASYNC|GFL_HAVELASYNC));
     // Cache maximum texture size (Minimum hardware support for 3.2 is 1024^2)
     uiTexSize = GetInteger<GLuint>(GL_MAX_TEXTURE_SIZE);
     uiMaxVertexAttribs = GetInteger<GLuint>(GL_MAX_VERTEX_ATTRIBS);
@@ -293,7 +304,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     GETPTR(glDisable, PFNGLDISABLEPROC);
     GETPTR(glDrawArrays, PFNGLDRAWARRAYSPROC);
     GETPTR(glEnable, PFNGLENABLEPROC);
-    GETPTR(glFlush, PFNGLFLUSHPROC);
+    GETPTR(glFinish, PFNGLFINISHPROC);
     GETPTR(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
     GETPTR(glGenTextures, PFNGLGENTEXTURESPROC);
     GETPTR(glGetError, PFNGLGETERRORPROC);
@@ -514,20 +525,20 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     if(uiActiveFbo == uiFbo) return;
     // Bind the FBO
     sAPI.glBindFramebuffer(GL_FRAMEBUFFER, uiFbo);
-    // Cache the active fbo
+    // Cache the active FBO
     uiActiveFbo = uiFbo;
   }
   /* ----------------------------------------------------------------------- */
   void DeleteFBO(const GLsizei siCount, const GLuint*const uipFbo)
-  { // Check each fbo that is about to be deleted
+  { // Check each FBO that is about to be deleted
     for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
-    { // Keep scanning until we find a cached fbo
+    { // Keep scanning until we find a cached FBO
       if(uipFbo[siIndex] != uiActiveFbo) continue;
-      // Reset currently selected fbo
+      // Reset currently selected FBO
       uiActiveFbo = numeric_limits<GLuint>::max();
       // No need to check any others
       break;
-    } // Delete the fbo
+    } // Delete the FBO
     sAPI.glDeleteFramebuffers(siCount, uipFbo);
   }
   /* ----------------------------------------------------------------------- */
@@ -744,23 +755,16 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* ----------------------------------------------------------------------- */
   void BufferStaticData(const GLsizei siSize, const GLvoid*const vpBuffer)
     { BufferData(GL_ARRAY_BUFFER, siSize, vpBuffer, GL_STREAM_DRAW); }
-  /* -- Clear bound fbo or back buffer ------------------------------------- */
+  /* -- Clear bound FBO or back buffer ------------------------------------- */
   void ClearBuffer() const { sAPI.glClear(GL_COLOR_BUFFER_BIT); }
-  /* -- Initialise main VBO/VAO data for main fbo -------------------------- */
-  void BindMainVAOandVBO(void)
-  { // Select main FBO default vertex array
-    BindVertexArray(uiVAOmain);
-    // Bind main FBO vertex buffer
-    BindStaticVertexBuffer(uiVBOmain);
-  }
-  /* -- Initialise default VBO/VAO data for main fbo ----------------------- */
-  void BindGlobalVAOandVBO(void)
-  { // Select main FBO default vertex array
-    BindVertexArray(uiVAO);
-    // Bind main FBO vertex buffer
-    BindStaticVertexBuffer(uiVBO);
-  }
-  /* -- Initialise main VBO/VAO data for main fbo -------------------------- */
+  /* -- Set specified VBO and VAO ------------------------------------------ */
+  void BindVAOandVBO(const GLuint uiNVAO, const GLuint uiNVBO)
+    { BindVertexArray(uiNVAO); BindStaticVertexBuffer(uiNVBO); }
+  /* -- Set main VBO/VAO data for main FBO --------------------------------- */
+  void BindMainVAOandVBO(void) { BindVAOandVBO(uiVAOmain, uiVBOmain); }
+  /* -- Set default VBO/VAO data for main FBO ------------------------------ */
+  void BindGlobalVAOandVBO(void) { BindVAOandVBO(uiVAO, uiVBO); }
+  /* -- Initialise main VBO/VAO data for main FBO -------------------------- */
   void MainFBOInitDrawData(const GLsizei siSize, const GLvoid*const vpBuffer,
     const GLvoid*const vpCoordBuffer, const GLvoid*const vpVertexBuffer,
     const GLvoid*const vpColourBuffer)
@@ -804,7 +808,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* ----------------------------------------------------------------------- */
   void SetClearColourInt(const unsigned int uiColour)
     { SetColourInt(uiColour); CommitClearColour(); }
-  /* -- Set clear colour (applies to all fbos) ----------------------------- */
+  /* -- Set clear colour (applies to all FBO's) ---------------------------- */
   void SetClearColourIfChanged(const FboColour &fcData)
     { if(SetColour(fcData)) CommitClearColour(); }
   /* ----------------------------------------------------------------------- */
@@ -812,9 +816,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { SetClearColourIfChanged(cCol); ClearBuffer(); }
   /* -- Update polygon rendering mode -------------------------------------- */
   void SetPolygonMode(const GLenum eMode)
-  { // Return if we already set this mode
+  { // Return if we already set this mode else set it and update cached mode
     if(ePolyMode == eMode) return;
-    // Set it and update cached mode
     sAPI.glPolygonMode(GL_FRONT_AND_BACK, eMode);
     ePolyMode = eMode;
   }
@@ -822,6 +825,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   GLenum GetError() const{ return sAPI.glGetError(); }
   /* -- Restore VSync setting ---------------------------------------------- */
   void RestoreVSync() const { GlFWSetVSync(vsSetting); }
+  /* ----------------------------------------------------------------------- */
+  VSyncMode GetVSync() const { return vsSetting; }
   /* ----------------------------------------------------------------------- */
   void DrawArrays(const GLenum eMode, const GLint iFirst,
     const GLsizei siCount) const
@@ -855,6 +860,10 @@ class Ogl :                            // OGL class for OpenGL use simplicity
 #endif
     // Reset to global VAO and VBO
     BindGlobalVAOandVBO();
+    // Flush and wait for GPU to complete. We do this because we need to make
+    // sure OpenGL copies the triangle data from glBufferData() before we
+    // re-use it again
+    Finish();
   }
   /* ----------------------------------------------------------------------- */
   void SetViewport(const GLsizei siWidth,
@@ -903,11 +912,11 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Return result
     return reinterpret_cast<const PtrType*>(ucpStr);
   }
-  /* -- Do delete all the marked fbo handles ------------------------------- */
+  /* -- Do delete all the marked FBO handles ------------------------------- */
   void DeleteMarkedFboHandles()
-  { // Delete the fbos
+  { // Delete the FBO's
     IGLL(DeleteFBO(static_cast<GLsizei>(vFbos.size()), vFbos.data()),
-      "OGL failed to destroy $ fbo handles!", vFbos.size());
+      "OGL failed to destroy $ FBO handles!", vFbos.size());
     // Clear the list
     vFbos.clear();
   }
@@ -1086,7 +1095,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     UseProgram();
     // Unbind texture
     BindTexture();
-    // Unbind fbo and select main back buffer
+    // Unbind FBO and select main back buffer
     BindFBO();
     // Select default vertex buffer
     BindStaticVertexBuffer(uiVBO);
@@ -1099,14 +1108,14 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Mark a single texture for deletion --------------------------------- */
   void SetDeleteTexture(const GLuint uiI)
     { vTextures.emplace_back(uiI); }
-  /* -- Mark an fbo for deletion ------------------------------------------- */
+  /* -- Mark an FBO for deletion ------------------------------------------- */
   void SetDeleteFbo(const GLuint uiI)
     { vFbos.emplace_back(uiI); }
-  /* -- Do delete all the marked textures and fbos ------------------------- */
+  /* -- Do delete all the marked textures and FBO's ------------------------ */
   void DeleteTexturesAndFboHandles()
   { // Have textures to delete?
     if(!vTextures.empty()) DeleteMarkedTextureHandles();
-    // Have fbos to delete?
+    // Have FBO's to delete?
     if(!vFbos.empty()) DeleteMarkedFboHandles();
   }
   /* -- Get available and total VRAM --------------------------------------- */
@@ -1202,8 +1211,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   { return idOGLCodes.Get(static_cast<GLenum>(itCode)); }
   /* -- Return potential fps limit ----------------------------------------- */
   double GetLimit() const { return ClockDurationToDouble(cdLimit); }
-  /* -- Flush pipeline when not drawing to prevent memory leak ------------- */
-  void Flush(void) const { sAPI.glFlush(); }
+  /* -- Flush pipeline and wait for GPU to finish -------------------------- */
+  void Finish(void) const { sAPI.glFinish(); }
   /* -- Update window size limits ------------------------------------------ */
   void UpdateWindowSizeLimits()
   { // Get app specified minimums and maximums
@@ -1273,12 +1282,13 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Create and bind VAO
     IGL(GenVertexArrays(static_cast<GLsizei>(uiaVAO.size()), uiaVAO.data()),
       "Generate default VAOs failed!", "Count", uiaVAO.size());
-    IGL(BindVertexArray(uiVAO), "Bind global VAO failed!", "Index", uiVAO);
+    IGL(BindVertexArray(uiVAO),
+      "Bind global VAO failed!", "Index", uiVAO);
     // Create and bind VBO
     IGL(GenVertexBuffers(static_cast<GLsizei>(uiaVBO.size()), uiaVBO.data()),
-      "Generate default VBOs failed!");
-    IGL(BindStaticVertexBuffer(uiVBO), "Bind global VBO failed!",
-      "Index", uiVBO);
+      "Generate default VBOs failed!", "Count", uiaVBO.size());
+    IGL(BindStaticVertexBuffer(uiVBO),
+      "Bind global VBO failed!", "Index", uiVBO);
     // Log class initialising
     cLog->LogInfoSafe("OGL subsystem initialised.");
   }
@@ -1299,13 +1309,13 @@ class Ogl :                            // OGL class for OpenGL use simplicity
         vTextures.size());
       DeleteMarkedTextureHandles();
       cLog->LogInfoSafe("OGL deleted marked texture handles.");
-    } // Have fbos to delete?
+    } // Have FBO's to delete?
     if(!vFbos.empty())
-    { // Delete the fbo handles
-      cLog->LogDebugExSafe("OGL deleting $ marked fbo handles...",
+    { // Delete the FBO handles
+      cLog->LogDebugExSafe("OGL deleting $ marked FBO handles...",
         vFbos.size());
       DeleteMarkedFboHandles();
-      cLog->LogInfoSafe("OGL deleted marked fbo handles.");
+      cLog->LogInfoSafe("OGL deleted marked FBO handles.");
     } // Vertex buffer object created?
     if(uiVBO && uiVBOmain)
     { // Delete vertex buffer object
@@ -1429,7 +1439,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Update texture destroy list size ----------------------------------- */
   CVarReturn SetTexDListReserve(const size_t stCount)
     { return BoolToCVarReturn(UtilReserveList(vTextures, stCount)); }
-  /* -- Update fbo destroy list size --------------------------------------- */
+  /* -- Update FBO destroy list size --------------------------------------- */
   CVarReturn SetFboDListReserve(const size_t stCount)
     { return BoolToCVarReturn(UtilReserveList(vFbos, stCount)); }
   /* -- Update minimum VRAM ------------------------------------------------ */

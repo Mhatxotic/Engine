@@ -41,32 +41,15 @@ class ConGraphics :                    // Members initially private
   Texture          ctConsole;          // Console background texture
   Font             cfConsole;          // Console font
   char             cCursor;            // Cursor character to use
+  /* -- Return console FBO from FboCore class ------------------------------ */
+  Fbo &GetConsoleFBO() { return cFboCore->fboConsole; }
+  Fbo &GetMainFBO() { return cFboCore->fboMain; }
   /* -- Toggle insert and overwrite mode ----------------------------------- */
   void ToggleCursorMode()
   { // Toggle cursor mode, set new cursor to display and redraw the console
     cConsole->ToggleCursorMode();
     cCursor = cConsole->FlagIsSet(CF_INSERT) ? '|' : '_';
     cConsole->SetRedraw();
-  }
-  /* -- Calculate the number of triangles and commands for console fbo ----- */
-  void RecalculateFboListReserves()
-  { // Ignore if font not available (not in graphical mode).
-    if(GetFontRef().IsNotInitialised()) return;
-    // Get console fbo and font
-    Fbo &fboC = cFboCore->fboConsole;
-    // Set console text size so the scaled size is properly calculated
-    CommitScale();
-    // Estimate amount of triangles that would fit in the console and if
-    // we have a non-zero value?
-    if(const size_t stTriangles = static_cast<size_t>(2.0f +
-      (ceilf(fboC.DimGetWidth<GLfloat>() /
-       ceilf(GetFontRef().dfScale.DimGetWidth())) *
-       ceilf(fboC.DimGetHeight<GLfloat>() /
-       ceilf(GetFontRef().dfScale.DimGetHeight())))))
-      // Try to reserve the triangles and 2 commands and log if failed!
-      if(!fboC.FboReserve(stTriangles, 2))
-        cLog->LogWarningExSafe("Console fbo failed to reserve $ triangles!",
-          stTriangles);
   }
   /* -- Init console font -------------------------------------------------- */
   void InitConsoleFont()
@@ -133,7 +116,7 @@ class ConGraphics :                    // Members initially private
   Font *GetFont() { return &GetFontRef(); }
   /* -- Do set visibility -------------------------------------------------- */
   bool SetVisible(const bool bState)
-  { // Set the visibility state and redraw the main fbo if not visible
+  { // Set the visibility state and redraw the main FBO if not visible
     const bool bResult = cConsole->SetVisible(bState);
     if(!bResult) cFboCore->SetDraw();
     return bResult;
@@ -233,32 +216,31 @@ class ConGraphics :                    // Members initially private
     // We handled this key so do not dispatch it to scripts
     return true;
   }
-  /* -- Redraw the console fbo if the console contents changed ------------- */
+  /* -- Redraw the console FBO if the console contents changed ------------- */
   void Render()
   { // Shift queued console lines
     cConsole->MoveQueuedLines();
     // Return if theres nothing to redraw else clear redraw flag
     if(cConsole->GetRedrawFlags().FlagIsClear(RD_GRAPHICS)) return;
     cConsole->GetRedrawFlags().FlagClear(RD_GRAPHICS);
-    // Get reference to console fbo
-    Fbo &fboC = cFboCore->fboConsole;
-    // Set main fbo to draw to
-    fboC.FboSetActive();
-    // Get reference to main fbo
-    Fbo &fboM = cFboCore->fboMain;
-    // Update matrix same as the main fbo
-    fboC.FboSetMatrix(0.0f, 0.0f, fboM.GetCoRight(), fboM.GetCoBottom());
+    // Set main FBO to draw to
+    GetConsoleFBO().FboSetActive();
+    // Update matrix same as the main FBO
+    GetConsoleFBO().FboSetMatrix(0.0f, 0.0f,
+      GetMainFBO().GetCoRight(), GetMainFBO().GetCoBottom());
     // Set drawing position
     const GLfloat fYAdj =
-      fboM.ffcStage.GetCoBottom() * (1.0f - fConsoleHeight);
-    fboC.FboItemSetVertex(fboM.ffcStage.GetCoLeft(),
-      fboM.ffcStage.GetCoTop() - fYAdj, fboM.ffcStage.GetCoRight(),
-      fboM.ffcStage.GetCoBottom() - fYAdj);
+      GetMainFBO().ffcStage.GetCoBottom() * (1.0f - fConsoleHeight);
+    GetConsoleFBO().FboItemSetVertex(GetMainFBO().ffcStage.GetCoLeft(),
+      GetMainFBO().ffcStage.GetCoTop() - fYAdj,
+      GetMainFBO().ffcStage.GetCoRight(),
+      GetMainFBO().ffcStage.GetCoBottom() - fYAdj);
     // Set console texture colour and blit the console background
     GetTextureRef().FboItemSetQuadRGBAInt(ulBgColour);
-    GetTextureRef().BlitLTRB(0, 0, fboC.ffcStage.GetCoLeft(),
-      fboC.ffcStage.GetCoTop(), fboC.ffcStage.GetCoRight(),
-      fboC.ffcStage.GetCoBottom());
+    GetTextureRef().BlitLTRB(0, 0, GetConsoleFBO().ffcStage.GetCoLeft(),
+      GetConsoleFBO().ffcStage.GetCoTop(),
+      GetConsoleFBO().ffcStage.GetCoRight(),
+      GetConsoleFBO().ffcStage.GetCoBottom());
     // Set console input text colour
     GetFontRef().FboItemSetQuadRGBAInt(ulFgColour);
     // Restore spacing and scale as well
@@ -266,11 +248,13 @@ class ConGraphics :                    // Members initially private
     CommitLineSpacing();
     CommitScale();
     // Get below baseline height
-    const GLfloat fBL = (fboC.ffcStage.GetCoBottom() -
+    const GLfloat fBL = (GetConsoleFBO().ffcStage.GetCoBottom() -
       GetFontRef().GetBaselineBelow('g')) + GetFontRef().fLineSpacing;
     // Draw input text and subtract the height drawn from Y position
-    GLfloat fY = fBL - GetFontRef().PrintWU(fboC.ffcStage.GetCoLeft(), fBL,
-      fboC.ffcStage.GetCoRight(), GetFontRef().dfScale.DimGetWidth(),
+    GLfloat fY = fBL -
+      GetFontRef().PrintWU(GetConsoleFBO().ffcStage.GetCoLeft(), fBL,
+        GetConsoleFBO().ffcStage.GetCoRight(),
+        GetFontRef().dfScale.DimGetWidth(),
         reinterpret_cast<const GLubyte*>(StrFormat(">$\rc000000ff$\rr$",
         cConsole->GetConsoleBegin(), cCursor,
         cConsole->GetConsoleEnd()).data()));
@@ -283,25 +267,25 @@ class ConGraphics :                    // Members initially private
       // Set text foreground colour with opaqueness already set above
       GetFontRef().FboItemSetQuadRGBInt(uiNDXtoRGB[clD.cColour]);
       // Draw the text and move upwards of the height that was used
-      fY -= GetFontRef().PrintWU(fboC.ffcStage.GetCoLeft(), fY,
-        fboC.ffcStage.GetCoRight(),
+      fY -= GetFontRef().PrintWU(GetConsoleFBO().ffcStage.GetCoLeft(), fY,
+        GetConsoleFBO().ffcStage.GetCoRight(),
           GetFontRef().dfScale.DimGetWidth(), reinterpret_cast<const GLubyte*>
             (clD.strLine.data()));
     } // Finish and render
-    fboC.FboFinishAndRender();
-    // Make sure the main fbo is updated
+    GetConsoleFBO().FboFinishAndRender();
+    // Make sure the main FBO is updated
     cFboCore->SetDraw();
   }
-  /* -- Render the console to main fbo if visible -------------------------- */
+  /* -- Render the console to main FBO if visible -------------------------- */
   void RenderToMain()
     { if(cConsole->IsVisible()) cFboCore->BlitConsoleToMain(); }
-  /* -- Show the console and render it and render the fbo to main fbo ------ */
+  /* -- Show the console and render it and render the FBO to main FBO ------ */
   void RenderNow()
   { // Show the console, render it to main frame buffer and blit it
     SetVisible(true);
     // Redraw console if not redrawn
-    if(!cFboCore->fboConsole.FboGetFinishCount()) Render();
-    // Bit console fbo to main
+    Render();
+    // Bit console FBO to main
     cFboCore->BlitConsoleToMain();
   }
   /* -- DeInit console texture and font ------------------------------------ */
@@ -310,18 +294,24 @@ class ConGraphics :                    // Members initially private
   /* -- Reload console texture and font ------------------------------------ */
   void ReInitTextureAndFont()
     { GetTextureRef().ReloadTexture(); GetFontRef().ReloadTexture(); }
+  /* -- Estimate number of triangles needed to fill screen ----------------- */
+  size_t GetTrianglesEstimate()
+    { return static_cast<size_t>(2.0f +
+        (ceilf(GetMainFBO().DimGetWidth<GLfloat>() /
+         ceilf(GetFontRef().dfScale.DimGetWidth())) *
+         ceilf(GetMainFBO().DimGetHeight<GLfloat>() /
+         ceilf(GetFontRef().dfScale.DimGetHeight())))); }
   /* -- Init framebuffer object -------------------------------------------- */
   void InitFBO()
   { // Ignore if terminal mode
     if(GetFontRef().IsNotInitialised()) return;
     // Get reference to main FBO and initialise it
-    cFboCore->InitConsoleFBO();
+    cFboCore->InitConsoleFBO(GetTrianglesEstimate());
     // Redraw FBO
     cConsole->SetRedraw();
   }
   /* -- Init console font and texture -------------------------------------- */
-  void InitConsoleFontAndTexture()
-    { InitConsoleFont(); InitConsoleTexture(); }
+  void InitConsoleFontAndTexture() { InitConsoleFont(); InitConsoleTexture(); }
   /* -- Print a string using textures -------------------------------------- */
   void Init()
   { // Class intiialised
@@ -379,11 +369,13 @@ class ConGraphics :                    // Members initially private
   { // Failed if supplied scale is not in range
     if(!CVarToBoolReturn(CVarSimpleSetIntNLG(fTextScale,
       fNewScale, 0.01f, 16.0f))) return DENY;
-    // Set new font scale
-    CommitScale();
-    // Reallocate memory if neccesary for fbo lists
-    RecalculateFboListReserves();
-    // Succeeded reglardless of font availability
+    // If font initialised?
+    if(GetFontRef().IsInitialised())
+    { // Set console text size so the scaled size is properly calculated
+      CommitScale();
+      // Estimate amount of triangles that would fit in the console
+      GetConsoleFBO().FboReserve(GetTrianglesEstimate(), 2);
+    } // Succeeded reglardless of font availability
     return ACCEPT;
   }
   /* -- Set text letter spacing -------------------------------------------- */
