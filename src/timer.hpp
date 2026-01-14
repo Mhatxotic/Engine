@@ -12,7 +12,7 @@
 namespace ITimer {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICVarDef::P;
-using namespace IStd::P;
+using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -34,20 +34,10 @@ class Timer                            // Members initially private
                    cdTimeOut;          // Frame timeout duration
   uint64_t         uqTriggers,         // Number of frame timeout checks
                    uqTicks;            // Number of ticks processed this sec
-  double           dFPS;               // Frames per second
+  double           dFps, dFpsSmoothed; // Caluclated FPS value + smoothed
   /* -- Update fps value --------------------------------------------------- */
-  void TimerSetFPS(const double dTime) { dFPS = TimerPerSec(dTime); }
-  /* -- Update delay as double ----------- ------------------------- */ public:
-  void TimerUpdateDelay(const unsigned int uiNewDelay)
-    { cdDelay = milliseconds{ uiNewDelay }; }
-  /* -- Requested by rendered to wait because nothing was drawn ------------ */
-  void TimerForceWait() { cdDelay = cd1MS; }
-  /* -- Forces a delay internally if delay is disabled --------------------- */
-  void TimerSetDelayIfZero() { if(cdDelay != cd0) TimerUpdateDelay(1); }
-  /* -- Restore saved persistent delay timer ------------------------------- */
-  void TimerRestoreDelay() { cdDelay = cdDelayPst; }
-  /* -- Get start time ----------------------------------------------------- */
-  const ClkTimePoint TimerGetStartTime() const { return ctpFrame; }
+  void TimerSetFPS(const double dTime)
+    { dFps = UtilSmooth(TimerPerSec(dTime), dFpsSmoothed); }
   /* -- Do time calculations ----------------------------------------------- */
   void TimerCalculateTime()
   { // Set end time
@@ -59,16 +49,31 @@ class Timer                            // Members initially private
     // Set new LUA timeout time
     ctpTimeOut = ctpEnd + cdTimeOut;
   }
+  /* -- Calculate times per second based on an interval ------------ */ public:
+  static constexpr double TimerPerSec(const double dVal) { return 1.0 / dVal; }
+  /* -- Requested by rendered to wait because nothing was drawn ------------ */
+  void TimerForceWait() { cdDelay = cd1MS; }
+  /* -- Update delay as double --------------------------------------------- */
+  void TimerUpdateDelay(const unsigned int uiNewDelay)
+    { cdDelay = milliseconds{ uiNewDelay }; }
+  /* -- Forces a delay internally if delay is disabled --------------------- */
+  void TimerSetDelayIfZero() { if(cdDelay != cd0) TimerUpdateDelay(1); }
+  /* -- Restore saved persistent delay timer ------------------------------- */
+  void TimerRestoreDelay() { cdDelay = cdDelayPst; }
+  /* -- Get start time ----------------------------------------------------- */
+  const ClkTimePoint TimerGetStartTime() const { return ctpFrame; }
   /* -- Calculate time elapsed since c++ ----------------------------------- */
   void TimerUpdateBot()
   { // Sleep if theres a delay else just yield
     StdSuspend(cdDelay);
-    // Set new fps
-    TimerSetFPS(ClockDurationToDouble(cdTick));
     // Calculate current time
     TimerCalculateTime();
+    // Update new frame start time
+    ctpFrame = ctpStart;
     // Increment ticks
     ++uqTicks;
+    // Set new fps
+    TimerSetFPS(ClockDurationToDouble(cdTick));
   }
   /* -- Should execute a game tick? ---------------------------------------- */
   bool TimerShouldTick()
@@ -79,7 +84,8 @@ class Timer                            // Members initially private
     // Frame limit not reached?
     if(cdAcc < cdLimit) [[likely]]
     { // Wait for specified delay if we can or yield
-      if(cdAcc + cdDelay < cdLimit) [[likely]] StdSuspend(cdDelay);
+      if(cdDelay != cd0 && cdAcc + cdDelay < cdLimit) [[unlikely]]
+        StdSuspend(cdDelay);
       // Suspend engine thread for the requested delay
       return false;
     } // Set total time the frame took
@@ -100,10 +106,12 @@ class Timer                            // Members initially private
   bool TimerShouldNotTick() { return !TimerShouldTick(); }
   /* -- Reset counters and reinitialise start and end time ----------------- */
   void TimerCatchup()
-  { // Reset accumulator and duration
-    cdAcc = cdFrame = cdTick = cd0;
+  { // Reset accumulator to zero
+    cdAcc = cd0;
+    // Reset tick and frame duration to limit
+    cdFrame = cdTick = cdLimit;
     // Update new tick start and end time and start frame time
-    ctpStart = ctpEnd = ctpFrame = cmHiRes.GetTime();
+    ctpStart = ctpEnd = cmHiRes.GetTime();
   }
   /* -- Return if script timer timed out ----------------------------------- */
   bool TimerIsTimedOut()
@@ -117,9 +125,7 @@ class Timer                            // Members initially private
   /* -- Return the current accumulated frame time -------------------------- */
   double TimerGetAccumulator() const { return ClockDurationToDouble(cdFrame); }
   /* -- Return the frames per second based on the last frame --------------- */
-  double TimerGetFPS() const { return dFPS; }
-  /* -- Calculate times per second based on an interval -------------------- */
-  static constexpr double TimerPerSec(const double dVal) { return 1.0 / dVal; }
+  double TimerGetFPS() const { return dFpsSmoothed; }
   /* -- Return the target frames per second -------------------------------- */
   double TimerGetFPSLimit() const { return TimerPerSec(TimerGetLimit()); }
   /* -- Get the number of engine ticks processed --------------------------- */
@@ -145,7 +151,7 @@ class Timer                            // Members initially private
     /* --------------------------------------------------------------------- */
     uqTriggers(0),                     // Init number of frame timeout checks
     uqTicks(0),                        // Init no. of ticks processed this sec
-    dFPS(0.0)                          // Init frames per second
+    dFps(0.0), dFpsSmoothed(0.0)       // Init frames per second and smoothed
     /* -- Set global pointer to static class ------------------------------- */
     { cTimer = this; }
   /* -- Set time out ----------------------------------------------- */ public:
@@ -157,8 +163,8 @@ class Timer                            // Members initially private
     if(CVarSimpleSetIntNLGE(cdLimit, nanoseconds{ uqInterval },
          nanoseconds{ 2000000 }, nanoseconds{ 1000000000 }) == DENY)
       return DENY;
-    // Set expected FPS
-    TimerSetFPS(TimerGetLimit());
+    // Initialise expected FPS
+    dFps = dFpsSmoothed = TimerPerSec(TimerGetLimit());
     // Success
     return ACCEPT;
   }

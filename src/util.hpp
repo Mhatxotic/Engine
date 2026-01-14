@@ -514,6 +514,16 @@ static void UtilBitSet2R(PtrType*const ptDst, const IntType itDstPos,
 //     const PtrType*const ptSrc, const IntType itSrcPos)
 //       { ptDst[UtilBitToByte(itDstPos)] ^= ptSrc[UtilBitToByte(itSrcPos)]; }
 /* ------------------------------------------------------------------------- */
+template<typename IntType, IntType itAlpha=0.1>
+requires is_arithmetic_v<IntType>
+static IntType UtilSmooth(const IntType itValue, IntType &itSmoothed)
+{ // Calculate the new value and reset if it when invalid
+  itSmoothed = itAlpha * itValue +
+    (static_cast<IntType>(1) - itAlpha) * itSmoothed;
+  // Return actual value
+  return itValue;
+}
+/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

@@ -46,7 +46,7 @@ class FboCore :                        // The main FBO operations manager
   Fbo             &fboMain,            // Main FBO class (FboDouble[0])
                   &fboConsole;         // Console FBO class (FboDouble[1])
   /* -- FPS ---------------------------------------------------------------- */
-  ClkTimePoint     ctpFps;             // Fps checkpoint
+  ClkTimePoint     ctpStart;           // Fps checkpoint
   double           dFps, dFpsSmoothed; // Caluclated FPS value + smoothed
   /* -- Draw flags --------------------------------------------------------- */
   bool CanDraw() const { return bDraw; }
@@ -66,13 +66,24 @@ class FboCore :                        // The main FBO operations manager
     cOgl->SetClearColourInt(
       cCVars->GetInternal<unsigned int>(VID_CLEARCOLOUR));
   }
+  /* -- Skip rendering main FBO from the engine thread --------------------- */
+  bool SkipRender()
+  { // Return if we don't have to catchup
+    if(cTimer->TimerShouldNotTick()) return false;
+    // Clear redraw flag if set
+    if(CanDraw()) [[likely]] ClearDraw();
+    // Not copying to back buffer
+    cOgl->PostRender();
+    // We should catchup
+    return true;
+  }
   /* -- Render the main FBO from the engine thread ------------------------- */
   void Render()
-  { // Finish and add the main FBO to the render list and render all FBO's
-    FinishMain();
-    // If logic ticks said we can draw?
+  { // If logic ticks said we can draw?
     if(CanDraw()) [[likely]]
-    { // Clear redraw flag
+    { // Finish rendering the main FBO
+      fboMain.FboFinishAndRender();
+      // Clear redraw flag
       ClearDraw();
       // Unbind current FBO so we select the back buffer to draw to
       cOgl->BindFBO();
@@ -90,31 +101,28 @@ class FboCore :                        // The main FBO operations manager
       if(fboMain.FboIsTransparencyEnabled()) cOgl->SetAndClear(*this);
       // Draw the main FBO to the back buffer
       cOgl->DrawArrays();
+      // Delete lingering texture and FBO handles
+      cOgl->PostRender();
       // Swap buffers
       cGlFW->WinSwapGLBuffers();
       // Calculate an average fps
       const ClkTimePoint ctpNow{ cTimer->TimerGetStartTime() };
-      dFps = Timer::TimerPerSec(ClockDurationToDouble(ctpNow - ctpFps));
-      ctpFps = ctpNow;
-      constexpr const double dAlpha = 0.01;
-      dFpsSmoothed = dAlpha * dFps + (1.0 - dAlpha) * dFpsSmoothed;
+      // Smooth the value with a 0.01 alpha
+      dFps = UtilSmooth(
+        Timer::TimerPerSec(ClockDurationToDouble(ctpNow - ctpStart)),
+          dFpsSmoothed);
+      // Update to the current timepoint
+      ctpStart = ctpNow;
     } // Cannot draw?
     else
-    { // Flush and wait for GPU to complete
-      cOgl->Finish();
+    { // Delete texture and FBO handles and finish
+      cOgl->PostRender();
       // Timer system can wait a little to not waste CPU cycles
       cTimer->TimerForceWait();
-    } // Delete texture and FBO handles
-    cOgl->DeleteTexturesAndFboHandles();
-    // Update memory available
-    cOgl->UpdateVRAMAvailable();
-    // Clear any existing errors
-    cOgl->GetError();
+    }
   }
   /* -- Blits the console FBO to main FBO ---------------------------------- */
   void BlitConsoleToMain() { fboMain.FboBlit(fboConsole); }
-  /* -- Finish main FBO and add it to render list -------------------------- */
-  void FinishMain() { fboMain.FboFinishAndRender(); }
   /* -- Set main FBO as active FBO to draw too ----------------------------- */
   void ActivateMain() { fboMain.FboSetActive(); }
   /* -- Sent when the window is resized/main FBO needs autosized --- */ public:
@@ -195,6 +203,7 @@ class FboCore :                        // The main FBO operations manager
         fboMain.FboItemGetData(), fboMain.FboItemGetTCPos(),
         fboMain.FboItemGetVPos(), fboMain.FboItemGetCPos());
       // Reset fps based on highest possible frames per second
+      ctpStart = cTimer->TimerGetStartTime();
       dFps = dFpsSmoothed = Timer::TimerPerSec(
         UtilMaximum(cTimer->TimerGetLimit(), cOgl->GetLimit()));
       // Log computations
@@ -256,7 +265,7 @@ class FboCore :                        // The main FBO operations manager
     bClearBuffer(false),               // Clear buffer init by CVar
     fboMain(front()),                  // Init reference to main FBO
     fboConsole(back()),                // Init reference to console FBO
-    ctpFps{ cd0 },                     // Initialise FPS timepoint
+    ctpStart{ cd0 },                   // Initialise FPS timepoint
     dFps{ 0.0 }, dFpsSmoothed{ 0.0 }   // Initialise calculated FPS
     /* -- Set pointer to global class and main FBO ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }

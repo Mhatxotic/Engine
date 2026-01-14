@@ -196,17 +196,11 @@ class Core final :                     // Members initially private
     cInput->JoyPoll();
     // Execute a tick for each frame missed
     cLua->ExecuteMain();
-    // If we have to catchup?
-    if(cTimer->TimerShouldTick())
-    { // Flush the main FBO and wait for the GPU
-      cOgl->Finish();
-      // Delete texture and FBO handles
-      cOgl->DeleteTexturesAndFboHandles();
-      // Render another tick
-      goto Catchup;
-    } // Render the console FBO to the main FBO
+    // If we have to catchup? Skip rendering and immediately run again.
+    if(cFboCore->SkipRender()) goto Catchup;
+    // Render the console FBO to the main FBO
     cConGraphics->RenderToMain();
-    // Render all FBO's and copy the main FBO to screen
+    // Render all FBO's and copy the main FBO to back buffer
     cFboCore->Render();
   }
   /* -- Fired when Lua enters the sandbox ---------------------------------- */

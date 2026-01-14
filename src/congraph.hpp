@@ -296,11 +296,20 @@ class ConGraphics :                    // Members initially private
     { GetTextureRef().ReloadTexture(); GetFontRef().ReloadTexture(); }
   /* -- Estimate number of triangles needed to fill screen ----------------- */
   size_t GetTrianglesEstimate()
-    { return static_cast<size_t>(2.0f +
-        (ceilf(GetMainFBO().DimGetWidth<GLfloat>() /
-         ceilf(GetFontRef().dfScale.DimGetWidth())) *
-         ceilf(GetMainFBO().DimGetHeight<GLfloat>() /
-         ceilf(GetFontRef().dfScale.DimGetHeight())))); }
+  { // Calculate characters per row
+    const GLfloat fMainWidth     = GetMainFBO().DimGetWidth<GLfloat>(),
+                  fFontWidth     = fTextWidth * fTextScale,
+                  fSpacingWidth  = GetFontRef().fCharSpacingScale,
+                  fFoSpWidth     = fFontWidth + fSpacingWidth,
+                  fCharRow       = fMainWidth / fFoSpWidth * 2.0f,
+                  fMainHeight    = GetMainFBO().DimGetHeight<GLfloat>(),
+                  fFontHeight    = fTextHeight * fTextScale,
+                  fSpacingHeight = GetFontRef().fLineSpacing,
+                  fFoSpHeight    = fFontHeight + fSpacingHeight,
+                  fCharColumn    = fMainHeight / fFoSpHeight * 2.0f;
+    // Then return total number of triangles on screen
+    return static_cast<size_t>(fCharColumn * fCharRow);
+  }
   /* -- Init framebuffer object -------------------------------------------- */
   void InitFBO()
   { // Ignore if terminal mode

@@ -921,7 +921,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     TextureBase{ ifcPurpose }          // Purpose is specified by caller
     /* -- No code ---------------------------------------------------------- */
     {}
-  /* -- Destructor (Unregistration then deinitialisation) ------------------ */
+  /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Texture, DeInit())
 };/* -- Finish the collector ----------------------------------------------- */
 CTOR_END_NOINITS(Textures, Texture, TEXTURE)

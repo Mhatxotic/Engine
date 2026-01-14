@@ -9,9 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IFboDef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICoord::P;             using namespace IDim::P;
-using namespace IStd::P;               using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace ICoord::P;             using namespace IStd::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Defines -------------------------------------------------------------- */
@@ -59,7 +58,7 @@ constexpr static const size_t
   stOffsetColData   = (stCompsPerCoord + stCompsPerPos) * stSizeOfGLfloat;
 /* -- Render command item -------------------------------------------------- */
 struct FboCmd                          // Render command structure
-{ /* ----------------------------------------------------------------------- */
+{ /* -- Public variables --------------------------------------------------- */
   const GLuint       uiTUId,           // - Texture unit id
                      uiTexId,          // - Texture id
                      uiPrgId;          // - Shader program id
@@ -76,7 +75,7 @@ typedef array<GLfloat,stCompsPerPos>    TriVertex; // Position in triangle
 typedef array<GLfloat,stCompsPerColour> TriColour; // Colour in triangle
 /* -- One triangle data ---------------------------------------------------- */
 struct FboVert                         // Formatted data for OpenGL
-{ /* ----------------------------------------------------------------------- */
+{ /* -- Public variables --------------------------------------------------- */
   TriCoord       faCoord;              // TexCoord specific data send
   TriVertex      faVertex;             // Vertex specific data to send
   TriColour      faColour;             // Colour specific data to send
@@ -100,21 +99,21 @@ class FboColour                        // Members initially private
 { /* -- Private typedefs --------------------------------------------------- */
   typedef array<GLfloat,4> FboRGBA;    // Array of RGBA floats
   FboRGBA           fboRGBA;           // Red + Green + Blue + Alpha values
-  /* ----------------------------------------------------------------------- */
+  /* -- Get colour array --------------------------------------------------- */
   const FboRGBA &GetColourConst() const { return fboRGBA; }
   FboRGBA &GetColour() { return fboRGBA; }
-  /* --------------------------------------------------------------- */ public:
+  /* -- Get individual colour floats ------------------------------- */ public:
   GLfloat GetColourRed() const { return GetColourConst()[0]; }
   GLfloat GetColourGreen() const { return GetColourConst()[1]; }
   GLfloat GetColourBlue() const { return GetColourConst()[2]; }
   GLfloat GetColourAlpha() const { return GetColourConst()[3]; }
   GLfloat *GetColourMemory() { return GetColour().data(); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Set individual colour floats --------------------------------------- */
   void SetColourRed(const GLfloat fR) { GetColour()[0] = fR; }
   void SetColourGreen(const GLfloat fG) { GetColour()[1] = fG; }
   void SetColourBlue(const GLfloat fB) { GetColour()[2] = fB; }
   void SetColourAlpha(const GLfloat fA) { GetColour()[3] = fA; }
-  /* ----------------------------------------------------------------------- */
+  /* -- Set individual colours as integers (0-255) ------------------------- */
   void SetColourRedInt(const unsigned int uiR)
     { SetColourRed(UtilNormaliseEx<GLfloat>(uiR)); }
   void SetColourGreenInt(const unsigned int uiG)
@@ -123,15 +122,15 @@ class FboColour                        // Members initially private
     { SetColourBlue(UtilNormaliseEx<GLfloat>(uiB)); }
   void SetColourAlphaInt(const unsigned int uiA)
     { SetColourAlpha(UtilNormaliseEx<GLfloat>(uiA)); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Set colours by packed colours integer ------------------------------ */
   void SetColourInt(const unsigned int uiValue)
-  { // Strip bits and send to proper clear colour
-    SetColourRed(UtilNormaliseEx<GLfloat,16>(uiValue));
-    SetColourGreen(UtilNormaliseEx<GLfloat,8>(uiValue));
-    SetColourBlue(UtilNormaliseEx<GLfloat>(uiValue));
-    SetColourAlpha(UtilNormaliseEx<GLfloat,24>(uiValue));
+  { // Strip bits and normalise proper clear colour from 0.0 to 1.0
+    SetColourRed(UtilNormaliseEx<GLfloat,16>(uiValue));   // 8-bits 16 to 24
+    SetColourGreen(UtilNormaliseEx<GLfloat,8>(uiValue));  // 8-bits 08 to 16
+    SetColourBlue(UtilNormaliseEx<GLfloat>(uiValue));     // 8-bits 00 to 08
+    SetColourAlpha(UtilNormaliseEx<GLfloat,24>(uiValue)); // 8-bits 24 to 32
   }
-  /* ----------------------------------------------------------------------- */
+  /* -- Set colours from another colour structure -------------------------- */
   void SetColourRed(const FboColour &fcValue)
     { SetColourRed(fcValue.GetColourRed()); }
   void SetColourGreen(const FboColour &fcValue)
@@ -140,9 +139,9 @@ class FboColour                        // Members initially private
     { SetColourBlue(fcValue.GetColourBlue()); }
   void SetColourAlpha(const FboColour &fcValue)
     { SetColourAlpha(fcValue.GetColourAlpha()); }
-  /* ----------------------------------------------------------------------- */
+  /* -- De-initialise colours ---------------------------------------------- */
   void ResetColour() { GetColour().fill(-1.0f); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Test colour components --------------------------------------------- */
   bool RedColourNotEqual(const FboColour &fcValue) const
     { return StdIsFloatNotEqual(GetColourRed(), fcValue.GetColourRed()); }
   bool GreenColourNotEqual(const FboColour &fcValue) const
@@ -151,15 +150,19 @@ class FboColour                        // Members initially private
     { return StdIsFloatNotEqual(GetColourBlue(), fcValue.GetColourBlue()); }
   bool AlphaColourNotEqual(const FboColour &fcValue) const
     { return StdIsFloatNotEqual(GetColourAlpha(), fcValue.GetColourAlpha()); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Cast to colours of a different type -------------------------------- */
   template<typename IntType,
-    class ArrayType=array<IntType, sizeof(FboRGBA)/sizeof(GLfloat)>>
+    class ArrayType=array<IntType, sizeof(FboRGBA) / sizeof(GLfloat)>>
       const ArrayType Cast() const
   { return { UtilDenormalise<IntType>(GetColourRed()),
              UtilDenormalise<IntType>(GetColourGreen()),
              UtilDenormalise<IntType>(GetColourBlue()),
              UtilDenormalise<IntType>(GetColourAlpha()) }; }
-  /* ----------------------------------------------------------------------- */
+  /* -- Set colour from normalised values ---------------------------------- */
+  void SetColour(const GLfloat fR, const GLfloat fG, const GLfloat fB,
+    const GLfloat fA) { SetColourRed(fR); SetColourGreen(fG);
+                        SetColourBlue(fB); SetColourAlpha(fA); }
+  /* -- Set colour from another colour struct ------------------------------ */
   bool SetColour(const FboColour &fcValue)
   { // Red clear colour change?
     if(RedColourNotEqual(fcValue))
@@ -226,63 +229,64 @@ class FboColour                        // Members initially private
   /* -- Default constructor ------------------------------------------------ */
   FboColour() :
     /* -- Initialisers ----------------------------------------------------- */
-    fboRGBA{ 1.0f,1.0f,1.0f,1.0f }     // Set full Re/Gr/Bl/Alpha intensity
+    fboRGBA{ 1.0f, 1.0f, 1.0f, 1.0f }  // Set full Re/Gr/Bl/Alpha intensity
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
 /* == Fbo blend class ====================================================== */
 class FboBlend
-{ /* -- Private variables ----------------------------------------- */ private:
-  array<GLenum,4>  aBlend;             // Blend union
-  /* --------------------------------------------------------------- */ public:
-  GLenum GetSrcRGB() const { return aBlend[0]; }
-  GLenum GetDstRGB() const { return aBlend[1]; }
-  GLenum GetSrcAlpha() const { return aBlend[2]; }
-  GLenum GetDstAlpha() const { return aBlend[3]; }
-  GLenum *GetMemory() { return aBlend.data(); }
-  /* ----------------------------------------------------------------------- */
-  void SetSrcRGB(const GLenum eSrcRGB) { aBlend[0] = eSrcRGB; }
-  void SetDstRGB(const GLenum eDstRGB) { aBlend[1] = eDstRGB; }
-  void SetSrcAlpha(const GLenum eSrcAlpha) { aBlend[2] = eSrcAlpha; }
-  void SetDstAlpha(const GLenum eDstAlpha) { aBlend[3] = eDstAlpha; }
-  /* ----------------------------------------------------------------------- */
-  void SetSrcRGB(const FboBlend &fcValue) { SetSrcRGB(fcValue.GetSrcRGB()); }
-  void SetDstRGB(const FboBlend &fcValue) { SetDstRGB(fcValue.GetDstRGB()); }
-  void SetSrcAlpha(const FboBlend &fcValue)
-    { SetSrcAlpha(fcValue.GetSrcAlpha()); }
-  void SetDstAlpha(const FboBlend &fcValue)
-    { SetDstAlpha(fcValue.GetDstAlpha()); }
-  /* ----------------------------------------------------------------------- */
-  bool IsSrcRGBNotEqual(const FboBlend &fcValue) const
-    { return GetSrcRGB() != fcValue.GetSrcRGB(); }
-  bool IsDstRGBNotEqual(const FboBlend &fcValue) const
-    { return GetDstRGB() != fcValue.GetDstRGB(); }
-  bool IsSrcAlphaNotEqual(const FboBlend &fcValue) const
-    { return GetSrcAlpha() != fcValue.GetSrcAlpha(); }
-  bool IsDstAlphaNotEqual(const FboBlend &fcValue) const
-    { return GetDstAlpha() != fcValue.GetDstAlpha(); }
+{ /* -- Private variables -------------------------------------------------- */
+  typedef array<GLenum,4> FboBlendStruct; // Array of four GLenum's
+  FboBlendStruct   fbsBlend;             // Blend union
+  /* -- Get blend values ------------------------------------------- */ public:
+  GLenum GetSrcRGB() const { return fbsBlend[0]; }
+  GLenum GetDstRGB() const { return fbsBlend[1]; }
+  GLenum GetSrcAlpha() const { return fbsBlend[2]; }
+  GLenum GetDstAlpha() const { return fbsBlend[3]; }
+  GLenum *GetMemory() { return fbsBlend.data(); }
+  /* -- Set blend values by enum ------------------------------------------- */
+  void SetSrcRGB(const GLenum eSrcRGB) { fbsBlend[0] = eSrcRGB; }
+  void SetDstRGB(const GLenum eDstRGB) { fbsBlend[1] = eDstRGB; }
+  void SetSrcAlpha(const GLenum eSrcAlpha) { fbsBlend[2] = eSrcAlpha; }
+  void SetDstAlpha(const GLenum eDstAlpha) { fbsBlend[3] = eDstAlpha; }
+  /* -- Set blend values by another struct --------------------------------- */
+  void SetSrcRGB(const FboBlend &fbValue) { SetSrcRGB(fbValue.GetSrcRGB()); }
+  void SetDstRGB(const FboBlend &fbValue) { SetDstRGB(fbValue.GetDstRGB()); }
+  void SetSrcAlpha(const FboBlend &fbValue)
+    { SetSrcAlpha(fbValue.GetSrcAlpha()); }
+  void SetDstAlpha(const FboBlend &fbValue)
+    { SetDstAlpha(fbValue.GetDstAlpha()); }
+  /* -- Test blend values -------------------------------------------------- */
+  bool IsSrcRGBNotEqual(const FboBlend &fbValue) const
+    { return GetSrcRGB() != fbValue.GetSrcRGB(); }
+  bool IsDstRGBNotEqual(const FboBlend &fbValue) const
+    { return GetDstRGB() != fbValue.GetDstRGB(); }
+  bool IsSrcAlphaNotEqual(const FboBlend &fbValue) const
+    { return GetSrcAlpha() != fbValue.GetSrcAlpha(); }
+  bool IsDstAlphaNotEqual(const FboBlend &fbValue) const
+    { return GetDstAlpha() != fbValue.GetDstAlpha(); }
   /* -- Set blending algorithms -------------------------------------------- */
-  bool SetBlend(const FboBlend &fcValue)
+  bool SetBlend(const FboBlend &fbValue)
   {  // Source RGB changed change?
-    if(IsSrcRGBNotEqual(fcValue))
+    if(IsSrcRGBNotEqual(fbValue))
     { // Update source RGB blend value and other values if changed
-      SetSrcRGB(fcValue);
-      if(IsDstRGBNotEqual(fcValue)) SetDstRGB(fcValue);
-      if(IsSrcAlphaNotEqual(fcValue)) SetSrcAlpha(fcValue);
-      if(IsDstAlphaNotEqual(fcValue)) SetDstAlpha(fcValue);
+      SetSrcRGB(fbValue);
+      if(IsDstRGBNotEqual(fbValue)) SetDstRGB(fbValue);
+      if(IsSrcAlphaNotEqual(fbValue)) SetSrcAlpha(fbValue);
+      if(IsDstAlphaNotEqual(fbValue)) SetDstAlpha(fbValue);
     } // Destination RGB blend changed?
-    else if(IsDstRGBNotEqual(fcValue))
+    else if(IsDstRGBNotEqual(fbValue))
     { // Update destination RGB blend value and other values if changed
-      SetDstRGB(fcValue);
-      if(IsSrcAlphaNotEqual(fcValue)) SetSrcAlpha(fcValue);
-      if(IsDstAlphaNotEqual(fcValue)) SetDstAlpha(fcValue);
+      SetDstRGB(fbValue);
+      if(IsSrcAlphaNotEqual(fbValue)) SetSrcAlpha(fbValue);
+      if(IsDstAlphaNotEqual(fbValue)) SetDstAlpha(fbValue);
     } // Source alpha changed?
-    else if(IsSrcAlphaNotEqual(fcValue))
+    else if(IsSrcAlphaNotEqual(fbValue))
     { // Update source alpha blend value and other values if changed
-      SetSrcAlpha(fcValue);
-      if(IsDstAlphaNotEqual(fcValue)) SetDstAlpha(fcValue);
+      SetSrcAlpha(fbValue);
+      if(IsDstAlphaNotEqual(fbValue)) SetDstAlpha(fbValue);
     } // Destination alpha changed?
-    else if(IsDstAlphaNotEqual(fcValue)) SetDstAlpha(fcValue);
+    else if(IsDstAlphaNotEqual(fbValue)) SetDstAlpha(fbValue);
     // No value was changed so return
     else return false;
     // Commit the new viewport
@@ -292,10 +296,8 @@ class FboBlend
   FboBlend(const GLenum eSrcRGB, const GLenum eDstRGB, const GLenum eSrcAlpha,
     const GLenum eDstAlpha):
     /* -- Initialisers ----------------------------------------------------- */
-    aBlend{ eSrcRGB,                   // Copy blend source RGB
-            eDstRGB,                   // Copy blend destination RGB
-            eSrcAlpha,                 // Copy blend source Alpha
-            eDstAlpha }                // Copy blend destination Alpha
+    fbsBlend{ eSrcRGB, eDstRGB,        // Copy blend source and dest RGB
+              eSrcAlpha, eDstAlpha }   // Copy blend source and dest Alpha
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor ------------------------------------------------ */
@@ -310,37 +312,37 @@ class FboBlend
 };/* ----------------------------------------------------------------------- */
 /* == Fbo coords class ===================================================== */
 template<typename Type1 = GLfloat, typename Type2 = Type1>class FboCoords
-{ /* -- Private variables ----------------------------------------- */ private:
+{ /* -- Private typedefs --------------------------------------------------- */
   typedef Coordinates<Type1> CoordType1; // Co-ordinate type one
   typedef Coordinates<Type2> CoordType2; // Co-ordinate type two
-  /* ----------------------------------------------------------------------- */
+  /* -- Private variables -------------------------------------------------- */
   CoordType1       ctXY1;              // Top left co-ordinates
   CoordType2       ctXY2;              // Width and height
-  /* --------------------------------------------------------------- */ public:
+  /* -- Get co-ordinate -------------------------------------------- */ public:
   Type1 GetCoLeft() const { return ctXY1.CoordGetX(); }
   Type1 GetCoTop() const { return ctXY1.CoordGetY(); }
   Type2 GetCoRight() const { return ctXY2.CoordGetX(); }
   Type2 GetCoBottom() const { return ctXY2.CoordGetY(); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Set co-ordinate by integral values --------------------------------- */
   void SetCoLeft(const Type1 tNLeft) { ctXY1.CoordSetX(tNLeft); }
   void SetCoTop(const Type1 tNTop) { ctXY1.CoordSetY(tNTop); }
   void SetCoRight(const Type2 tNRight) { ctXY2.CoordSetX(tNRight); }
   void SetCoBottom(const Type2 tNBottom) { ctXY2.CoordSetY(tNBottom);}
-  /* ----------------------------------------------------------------------- */
+  /* -- Set co-ordinate by another struct ---------------------------------- */
   void SetCoLeft(const FboCoords &fcValue) { SetCoLeft(fcValue.GetCoLeft()); }
   void SetCoTop(const FboCoords &fcValue) { SetCoTop(fcValue.GetCoTop()); }
   void SetCoRight(const FboCoords &fcValue)
     { SetCoRight(fcValue.GetCoRight()); }
   void SetCoBottom(const FboCoords &fcValue)
     { SetCoBottom(fcValue.GetCoBottom()); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Reset co-ordinates ------------------------------------------------- */
   void ResetCoords() { ctXY1.CoordSet(); ctXY2.CoordSet(); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Set all co-ordinates by integral values ---------------------------- */
   void SetCoords(const Type1 tNLeft, const Type1 tNTop, const Type2 tNRight,
     const Type2 tNBottom)
   { SetCoLeft(tNLeft); SetCoTop(tNTop); SetCoRight(tNRight);
     SetCoBottom(tNBottom); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Set all co-ordinates by another struct ----------------------------- */
   void SetCoords(const FboCoords &fcValue)
     { SetCoords(fcValue.GetCoLeft(), fcValue.GetCoTop(),
                 fcValue.GetCoRight(), fcValue.GetCoBottom()); }
@@ -359,25 +361,8 @@ template<typename Type1 = GLfloat, typename Type2 = Type1>class FboCoords
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
-typedef FboCoords<GLfloat>       FboFloatCoords; // Coords made of floats
-/* == Data required to complete a render of an FBO ========================= */
-struct FboRenderItem :                 // Rendering item data class
-  /* -- Base classes ------------------------------------------------------- */
-  public FboColour,                    // Clear colour of the FBO
-  public FboBlend,                     // Blend mode of the FBO
-  public FboFloatCoords,               // Matrix co-ordinates of the FBO
-  public DimGLSizei                    // FBO dimensions
-{ /* ----------------------------------------------------------------------- */
-  GLuint           uiFBO;              // FBO name
-  bool             bClear;             // Clear the FBO?
-  /* -- Default constructor ------------------------------------------------ */
-  FboRenderItem() :
-    /* -- Initialisers ----------------------------------------------------- */
-    uiFBO(0),                          // No FBO id yet
-    bClear(true)                       // Clear FBO set
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};/* ----------------------------------------------------------------------- */
+typedef FboCoords<GLfloat> FboFloatCoords; // Coords made of floats
+/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

@@ -108,12 +108,12 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     cOgl->Uniform(GetUID(U_PALETTE), static_cast<GLsizei>(stSize), fpData);
   }
   /* -- Update shader matrix ----------------------------------------------- */
-  void UpdateMatrix(const FboRenderItem &friRef) const
+  void UpdateMatrix(const FboFloatCoords &ffcRef) const
   { // Activate shader (no error checking)
     cOgl->UseProgram(GetProgram());
     // Commit matrix bounds (no error checking)
-    cOgl->Uniform(GetUID(U_MATRIX), friRef.GetCoLeft(),
-      friRef.GetCoTop(), friRef.GetCoRight(), friRef.GetCoBottom());
+    cOgl->Uniform(GetUID(U_MATRIX), ffcRef.GetCoLeft(),
+      ffcRef.GetCoTop(), ffcRef.GetCoRight(), ffcRef.GetCoBottom());
   }
   /* -- Linkage ------------------------------------------------------------ */
   void Link()

@@ -91,37 +91,36 @@ typedef vector<GLuint> GLUIntVector;   // Vector of GLuints
 typedef vector<GLfloat> GLFloatVector; // Vector of GLfloats
 /* ------------------------------------------------------------------------- */
 enum VSyncMode : int {               // VSync settings
-  VSYNC_MIN      = -1,               // (-1) Minimum Vertical Sync value
-  VSYNC_ON_ADAPT = VSYNC_MIN,        // (-1) Adaptive Vertical Sync enabled
-  VSYNC_OFF,                         // ( 0) Vertical Sync disable
-  VSYNC_ON,                          // ( 1) Vertical Sync enabled
-  VSYNC_ON_HALFRATE,                 // ( 2) Verfical sync enabled (half)
-  VSYNC_MAX                          // ( 3) Maximum Vertical Sync value
+  VSYNC_MIN      = -1,               // [-1] Minimum Vertical Sync value
+  VSYNC_ON_ADAPT = VSYNC_MIN,        // [-1] Adaptive Vertical Sync enabled
+  VSYNC_OFF,                         // [ 0] Vertical Sync disable
+  VSYNC_ON,                          // [ 1] Vertical Sync enabled
+  VSYNC_ON_HALFRATE,                 // [ 2] Verfical sync enabled (half)
+  VSYNC_MAX                          // [ 3] Maximum Vertical Sync value
 };/* ----------------------------------------------------------------------- */
 /* -- OpenGL manager class ------------------------------------------------- */
 class Ogl;                             // Class prototype
 static Ogl *cOgl = nullptr;            // Pointer to global class
 class Ogl :                            // OGL class for OpenGL use simplicity
-  /* -- Sub-classes -------------------------------------------------------- */
+  /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper
-  public FboColour,                    // OpenGL colour
-  public FboBlend,                     // OpenGL blend
-  public OglFlags                      // OpenGL init flags
-{ /* -- String defines ----------------------------------------------------- */
+  public FboColour,                    // OGL global clear colour cache
+  public FboBlend,                     // OGL global blend cache
+  public OglFlags                      // OGL init flags
+{ /* -- Defines ------------------------------------------------------------ */
+#define IGLL(F,M,...) GLEX(CheckLogError, F, M, ## __VA_ARGS__)
+#define IGL(F,M,...)  GLEX(CheckExceptError, F, M, ## __VA_ARGS__)
+#define IGLC(M,...)   GLEX(CheckExceptError, , M, ## __VA_ARGS__)
+  /* -- Private typedefs --------------------------------------------------- */
+  typedef array<GLuint,2> OglVHandles; // Vertex Array/Buffer handles type
+  /* -- String defines ----------------------------------------------------- */
   const IdMap<GLenum> idExtensions,    // OpenGL extension names (log detail)
                       idHintTargets,   // Hint target names (log detail)
                       idHintModes,     // Hint mode values (log detail)
                       idFormatModes,   // Pixel format modes (log detail)
                       idOGLCodes;      // OpenGL codes
-  /* -- Defines ------------------------------------------------------------ */
-#define IGLL(F,M,...) GLEX(CheckLogError, F, M, ## __VA_ARGS__)
-#define IGL(F,M,...)  GLEX(CheckExceptError, F, M, ## __VA_ARGS__)
-#define IGLC(M,...)   GLEX(CheckExceptError, , M, ## __VA_ARGS__)
-  /* ----------------------------------------------------------------------- */
-  VSyncMode        vsSetting;          // VSync setting
   /* -- Variables ---------------------------------------------------------- */
-  array<GLuint,2>  uiaVAO,             // Vertex Array Object list
-                   uiaVBO;             // Vertex Buffer Object list
+  OglVHandles      ohVAO, ohVBO;       // Vertex Array/Buffer Object handles
   GLuint           uiActiveFbo,        // Currently selected FBO name cache
                    uiActiveProgram,    // Currently active shader program
                    uiActiveTexture,    // Currently bound texture
@@ -133,10 +132,10 @@ class Ogl :                            // OGL class for OpenGL use simplicity
                    uiUnpackAlign,      // Default Unpack alignment
                    uiMaxVertexAttribs, // Maximum vertex attributes per shader
                    uiTexUnits,         // Texture units count
-                  &uiVAO,              // uiaVAO[0]: VAO for global use
-                  &uiVBO,              // uiaVBO[0]: FBO for global use
-                  &uiVAOmain,          // uiaVAO[1]: VAO to draw back buffer
-                  &uiVBOmain;          // uiaVBO[1]: FBO to draw back buffer
+                  &uiVAO,              // ohVAO[0]: VAO for global use
+                  &uiVBO,              // ohVBO[0]: FBO for global use
+                  &uiVAOmain,          // ohVAO[1]: VAO to draw back buffer
+                  &uiVBOmain;          // ohVBO[1]: FBO to draw back buffer
   GLenum           ePolyMode;          // Current polygon mode
   GLint            iUnpackRowLength;   // Default unpack row length
   GLuint64         qwMinVRAM,          // Minimum VRAM required
@@ -146,6 +145,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   string_view      strvRenderer,       // GL renderer string
                    strvVersion,        // GL version string
                    strvVendor;         // GL vendor string
+  VSyncMode        vsSetting;          // VSync setting
   /* -- Delayed destruction ------------------------------------------------ */
   /* Because LUA garbage collection could zap a texture or FBO class at any  */
   /* time, we need to delay deletion of textures and FBO handles in OpenGL   */
@@ -834,6 +834,17 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* ----------------------------------------------------------------------- */
   void DrawArraysTriangles(const GLsizei siCount) const
     { DrawArrays(GL_TRIANGLES, 0, siCount); }
+  /* -- Delete lingering textures and finish ------------------------------- */
+  void PostRender()
+  { // Delete texture and FBO handles
+    DeleteTexturesAndFboHandles();
+    // Flush and wait for GPU to complete
+    Finish();
+    // Update memory available
+    UpdateVRAMAvailable();
+    // Clear any existing errors
+    GetError();
+  }
   /* -- Render arrays ------------------------------------------------------ */
   void DrawArrays(void)
   { // Set normal fill poly mode
@@ -860,10 +871,6 @@ class Ogl :                            // OGL class for OpenGL use simplicity
 #endif
     // Reset to global VAO and VBO
     BindGlobalVAOandVBO();
-    // Flush and wait for GPU to complete. We do this because we need to make
-    // sure OpenGL copies the triangle data from glBufferData() before we
-    // re-use it again
-    Finish();
   }
   /* ----------------------------------------------------------------------- */
   void SetViewport(const GLsizei siWidth,
@@ -1280,13 +1287,13 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     IGL(SetPackAlignment(1), "Set byte pack alignment failed!");
     IGL(SetUnpackAlignment(1), "Set byte unpack alignment failed!");
     // Create and bind VAO
-    IGL(GenVertexArrays(static_cast<GLsizei>(uiaVAO.size()), uiaVAO.data()),
-      "Generate default VAOs failed!", "Count", uiaVAO.size());
+    IGL(GenVertexArrays(static_cast<GLsizei>(ohVAO.size()), ohVAO.data()),
+      "Generate default VAOs failed!", "Count", ohVAO.size());
     IGL(BindVertexArray(uiVAO),
       "Bind global VAO failed!", "Index", uiVAO);
     // Create and bind VBO
-    IGL(GenVertexBuffers(static_cast<GLsizei>(uiaVBO.size()), uiaVBO.data()),
-      "Generate default VBOs failed!", "Count", uiaVBO.size());
+    IGL(GenVertexBuffers(static_cast<GLsizei>(ohVBO.size()), ohVBO.data()),
+      "Generate default VBOs failed!", "Count", ohVBO.size());
     IGL(BindStaticVertexBuffer(uiVBO),
       "Bind global VBO failed!", "Index", uiVBO);
     // Log class initialising
@@ -1320,25 +1327,25 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     if(uiVBO && uiVBOmain)
     { // Delete vertex buffer object
       cLog->LogDebugExSafe("OGL deleting $ vertex buffer objects $ and $...",
-        uiaVBO.size(), uiVBO, uiVBOmain);
+        ohVBO.size(), uiVBO, uiVBOmain);
       IGLL(DeleteVertexBuffers(
-        static_cast<GLsizei>(uiaVBO.size()), uiaVBO.data()),
+        static_cast<GLsizei>(ohVBO.size()), ohVBO.data()),
           "Failed to delete vertex buffer objects!",
           "Global", uiVBO, "Main", uiVBOmain);
-      StdFill(seq, uiaVBO.begin(), uiaVBO.end(), 0);
+      StdFill(seq, ohVBO.begin(), ohVBO.end(), 0);
       cLog->LogInfoExSafe("OGL deleted $ vertex buffer objects.",
-        uiaVBO.size());
+        ohVBO.size());
     } // Vertex array object created?
     if(uiVAO && uiVAOmain)
     { // Delete vertex array object
       cLog->LogDebugExSafe("OGL deleting $ vertex array objects $ and $...",
-        uiaVAO.size(), uiVAO, uiVAOmain);
+        ohVAO.size(), uiVAO, uiVAOmain);
       IGLL(DeleteVertexArrays(
-        static_cast<GLsizei>(uiaVAO.size()), uiaVAO.data()),
+        static_cast<GLsizei>(ohVAO.size()), ohVAO.data()),
           "Failed to delete vertex array object!", "Index", uiVAO);
-      StdFill(seq, uiaVAO.begin(), uiaVAO.end(), 0);
+      StdFill(seq, ohVAO.begin(), ohVAO.end(), 0);
       cLog->LogInfoExSafe("OGL deleted $ vertex array objects.",
-        uiaVAO.size());
+        ohVAO.size());
     } // Release opengl context from engine thread
     GlFWSetContext();
     // Init flags
@@ -1393,9 +1400,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       IDMAPSTR(GL_OUT_OF_MEMORY),
     }, "GL_ERROR_UNKNOWN" },           // Unknown error value
     /* -- Initialisers ----------------------------------------------------- */
-    vsSetting{ VSYNC_OFF },            // Set no VSync
-    uiaVAO{ 0, 0 },                    // Initialise vertex array objects
-    uiaVBO{ 0, 0 },                    // Initialise vertex buffer objects
+    ohVAO{ 0, 0 },                    // Initialise vertex array objects
+    ohVBO{ 0, 0 },                    // Initialise vertex buffer objects
     uiActiveFbo(                       // Select back buffer
       numeric_limits<GLuint>::max()),  // Maxed so values commit properly
     uiActiveProgram(uiActiveFbo),      // No active shader programme
@@ -1408,10 +1414,10 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiUnpackAlign(0),                  // No unpack align
     uiMaxVertexAttribs(0),             // No maximum vertex attributes
     uiTexUnits(0),                     // No maximum texture units
-    uiVAO(uiaVAO[0]),                  // Set reference to global VAO
-    uiVBO(uiaVBO[0]),                  // Set reference to global VBO
-    uiVAOmain(uiaVAO[1]),              // Set reference to bb draw VAO
-    uiVBOmain(uiaVBO[1]),              // Set reference to bb draw VBO
+    uiVAO(ohVAO[0]),                  // Set reference to global VAO
+    uiVBO(ohVBO[0]),                  // Set reference to global VBO
+    uiVAOmain(ohVAO[1]),              // Set reference to bb draw VAO
+    uiVBOmain(ohVBO[1]),              // Set reference to bb draw VBO
     ePolyMode(GL_NONE),                // No set polygon mode yet
     iUnpackRowLength(0),               // No unpack row length
     qwMinVRAM(0),                      // No minimum vram
@@ -1423,7 +1429,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     strvVersion{                       // Blank version
       cCommon->CommonNull() },         // Initialise with "<null>" text
     strvVendor{                        // Blank vendor
-      cCommon->CommonNull() }          // Initialise with "<null>" text
+      cCommon->CommonNull() },         // Initialise with "<null>" text
+    vsSetting{ VSYNC_OFF }             // Set no VSync by default
     /* -- Set global pointer to static class ------------------------------- */
     { cOgl = this; }
   /* -- Setup VSync ------------------------------------------------ */ public:
