@@ -183,7 +183,7 @@ template<class StrokerFuncType>
       gRef.DimSet(static_cast<GLfloat>(bData.width),
                   static_cast<GLfloat>(bData.rows));
       // Set glyph bounds
-      gRef.RectSet(static_cast<GLfloat>(bbData.xMin),
+      gRef.CoordsSet(static_cast<GLfloat>(bbData.xMin),
         -static_cast<GLfloat>(static_cast<int>(bData.rows) + bbData.yMin) +
            dfFont.DimGetHeight(),
          static_cast<GLfloat>(bbData.xMax),

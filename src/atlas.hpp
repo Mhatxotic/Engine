@@ -10,11 +10,11 @@
 namespace IAtlas {                     // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IBin::P;               using namespace ICollector::P;
-using namespace IError::P;             using namespace IFboDef::P;
-using namespace IImageDef::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IRectangle::P;         using namespace IStd::P;
+using namespace ICoords::P;            using namespace IError::P;
+using namespace IFboCmd::P;            using namespace IImageDef::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IStd::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace ITexture::P;           using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
@@ -39,7 +39,7 @@ class AtlasBase :                      // Members initially private
   IntPack          ipData;             // FT packed characters in image
   /* -- Reload texture parameters ------------------------------------------ */
   enum RTCmd { RT_NONE, RT_FULL, RT_PARTIAL } rtCmd; // Reload texture command
-  RectUint         rRedraw;            // Reload cordinates and dimensions
+  CoordsUint       cuRedraw;           // Reload cordinates and dimensions
   /* -- Default constructor ------------------------------------------------ */
   explicit AtlasBase(const ImageFlagsConst ifcPurpose = IP_ATLAS) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -47,7 +47,7 @@ class AtlasBase :                      // Members initially private
     ofeFilter(OF_N_N),                 // Initialise point texture filter
     uiPadding(0),                      // Initialise padding between tiles
     rtCmd(RT_NONE),                    // Initialise re-upload command
-    rRedraw{                           // Initialise redraw bounds
+    cuRedraw{                          // Initialise redraw bounds
       numeric_limits<GLuint>::max(),   // Highest possible
       numeric_limits<GLuint>::max(),   // Highest possible
       0, 0 }                           // Lowest possible
@@ -84,24 +84,26 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       { // Reset reload command incase of error
         rtCmd = RT_NONE;
         // Calculate position to read from in buffer
-        const size_t stRTPos = CoordsToAbsolute(rRedraw.RectGetX1(),
-          rRedraw.RectGetY1(), DimGetWidth(), 2);
+        const size_t stRTPos = CoordsToAbsolute(cuRedraw.CoordsGetLeft(),
+          cuRedraw.CoordsGetTop(), DimGetWidth(), 2);
         // Calculate position in buffer to read from
         const GLubyte*const ucpSrc =
           GetSlots().front().MemRead<GLubyte>(stRTPos, DimGetWidth());
         // Update partial texture
         UpdateEx(GetSubName(),
-          rRedraw.RectGetX1<GLint>(), rRedraw.RectGetY1<GLint>(),
-          static_cast<GLsizei>(rRedraw.RectGetX2() - rRedraw.RectGetX1()),
-          static_cast<GLsizei>(rRedraw.RectGetY2() - rRedraw.RectGetY1()),
+          cuRedraw.CoordsGetLeft<GLint>(), cuRedraw.CoordsGetTop<GLint>(),
+          static_cast<GLsizei>(cuRedraw.CoordsGetRight() -
+            cuRedraw.CoordsGetLeft()),
+          static_cast<GLsizei>(cuRedraw.CoordsGetBottom() -
+            cuRedraw.CoordsGetTop()),
           GetPixelType(), ucpSrc, DimGetWidth<GLsizei>());
         // Log that we partially reuploaded the texture
         cLog->LogDebugExSafe("Atlas '$' partial re-upload (B:$,$,$,$;P:$).",
-          IdentGet(), rRedraw.RectGetX1(), rRedraw.RectGetY1(),
-          rRedraw.RectGetX2(), rRedraw.RectGetY2(), stRTPos);
+          IdentGet(), cuRedraw.CoordsGetLeft(), cuRedraw.CoordsGetTop(),
+          cuRedraw.CoordsGetRight(), cuRedraw.CoordsGetBottom(), stRTPos);
         // Reset range parameters
-        rRedraw.RectSetTopLeft(numeric_limits<GLuint>::max());
-        rRedraw.RectSetBottomRight(0);
+        cuRedraw.CoordsSetTopLeft(numeric_limits<GLuint>::max());
+        cuRedraw.CoordsSetBottomRight(0);
         // Done
         return;
       } // Unknown reload command
@@ -234,19 +236,19 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       { // Set partial redraw
         rtCmd = RT_PARTIAL;
         // Set lowest most left bound
-        if(iprNew.CoordGetX<GLuint>() < rRedraw.RectGetX1())
-          rRedraw.RectSetX1(iprNew.CoordGetX<GLuint>());
+        if(iprNew.CoordGetX<GLuint>() < cuRedraw.CoordsGetLeft())
+          cuRedraw.CoordsSetLeft(iprNew.CoordGetX<GLuint>());
         // Set lowest most top bound
-        if(iprNew.CoordGetY<GLuint>() < rRedraw.RectGetY1())
-          rRedraw.RectSetY1(iprNew.CoordGetY<GLuint>());
+        if(iprNew.CoordGetY<GLuint>() < cuRedraw.CoordsGetTop())
+          cuRedraw.CoordsSetTop(iprNew.CoordGetY<GLuint>());
         // Set highest most right bound
         const GLuint uiX2 = static_cast<GLuint>(iprNew.CoordGetX() +
           iprNew.DimGetWidth());
-        if(uiX2 > rRedraw.RectGetX2()) rRedraw.RectSetX2(uiX2);
+        if(uiX2 > cuRedraw.CoordsGetRight()) cuRedraw.CoordsSetRight(uiX2);
         // Set highest most bottom bound
         const GLuint uiY2 = static_cast<GLuint>(iprNew.CoordGetY() +
           iprNew.DimGetHeight());
-        if(uiY2 > rRedraw.RectGetY2()) rRedraw.RectSetY2(uiY2);
+        if(uiY2 > cuRedraw.CoordsGetBottom()) cuRedraw.CoordsSetBottom(uiY2);
       } // Done
       return;
     } // Failed to resize so get next biggest size from bounds

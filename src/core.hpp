@@ -2,8 +2,10 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This module is the core class which is created by main/WinMain on   ## **
-** ## startup. It is pretty much the game-engine main routines.           ## **
+** ## This module defines the 'Core' class and is created by the 'Engine' ## **
+** ## class in the 'engine.cpp' module. It glues all the other engine     ## **
+** ## subsystems together in a single class with also containing core     ## **
+** ## logic to initialising and running the engine.                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed

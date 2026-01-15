@@ -227,20 +227,20 @@ class ConGraphics :                    // Members initially private
     GetConsoleFBO().FboSetActive();
     // Update matrix same as the main FBO
     GetConsoleFBO().FboSetMatrix(0.0f, 0.0f,
-      GetMainFBO().GetCoRight(), GetMainFBO().GetCoBottom());
+      GetMainFBO().CoordsGetRight(), GetMainFBO().CoordsGetBottom());
     // Set drawing position
     const GLfloat fYAdj =
-      GetMainFBO().ffcStage.GetCoBottom() * (1.0f - fConsoleHeight);
-    GetConsoleFBO().FboItemSetVertex(GetMainFBO().ffcStage.GetCoLeft(),
-      GetMainFBO().ffcStage.GetCoTop() - fYAdj,
-      GetMainFBO().ffcStage.GetCoRight(),
-      GetMainFBO().ffcStage.GetCoBottom() - fYAdj);
+      GetMainFBO().cfStage.CoordsGetBottom() * (1.0f - fConsoleHeight);
+    GetConsoleFBO().FboItemSetVertex(GetMainFBO().cfStage.CoordsGetLeft(),
+      GetMainFBO().cfStage.CoordsGetTop() - fYAdj,
+      GetMainFBO().cfStage.CoordsGetRight(),
+      GetMainFBO().cfStage.CoordsGetBottom() - fYAdj);
     // Set console texture colour and blit the console background
     GetTextureRef().FboItemSetQuadRGBAInt(ulBgColour);
-    GetTextureRef().BlitLTRB(0, 0, GetConsoleFBO().ffcStage.GetCoLeft(),
-      GetConsoleFBO().ffcStage.GetCoTop(),
-      GetConsoleFBO().ffcStage.GetCoRight(),
-      GetConsoleFBO().ffcStage.GetCoBottom());
+    GetTextureRef().BlitLTRB(0, 0, GetConsoleFBO().cfStage.CoordsGetLeft(),
+      GetConsoleFBO().cfStage.CoordsGetTop(),
+      GetConsoleFBO().cfStage.CoordsGetRight(),
+      GetConsoleFBO().cfStage.CoordsGetBottom());
     // Set console input text colour
     GetFontRef().FboItemSetQuadRGBAInt(ulFgColour);
     // Restore spacing and scale as well
@@ -248,12 +248,12 @@ class ConGraphics :                    // Members initially private
     CommitLineSpacing();
     CommitScale();
     // Get below baseline height
-    const GLfloat fBL = (GetConsoleFBO().ffcStage.GetCoBottom() -
+    const GLfloat fBL = (GetConsoleFBO().cfStage.CoordsGetBottom() -
       GetFontRef().GetBaselineBelow('g')) + GetFontRef().fLineSpacing;
     // Draw input text and subtract the height drawn from Y position
     GLfloat fY = fBL -
-      GetFontRef().PrintWU(GetConsoleFBO().ffcStage.GetCoLeft(), fBL,
-        GetConsoleFBO().ffcStage.GetCoRight(),
+      GetFontRef().PrintWU(GetConsoleFBO().cfStage.CoordsGetLeft(), fBL,
+        GetConsoleFBO().cfStage.CoordsGetRight(),
         GetFontRef().dfScale.DimGetWidth(),
         reinterpret_cast<const GLubyte*>(StrFormat(">$\rc000000ff$\rr$",
         cConsole->GetConsoleBegin(), cCursor,
@@ -265,10 +265,10 @@ class ConGraphics :                    // Members initially private
     { // Get reference to console line data structure
       const ConLine &clD = *clI;
       // Set text foreground colour with opaqueness already set above
-      GetFontRef().FboItemSetQuadRGBInt(uiNDXtoRGB[clD.cColour]);
+      GetFontRef().FboItemSetQuadRGBInt(uiNDXtoRGB[clD.ccColour]);
       // Draw the text and move upwards of the height that was used
-      fY -= GetFontRef().PrintWU(GetConsoleFBO().ffcStage.GetCoLeft(), fY,
-        GetConsoleFBO().ffcStage.GetCoRight(),
+      fY -= GetFontRef().PrintWU(GetConsoleFBO().cfStage.CoordsGetLeft(), fY,
+        GetConsoleFBO().cfStage.CoordsGetRight(),
           GetFontRef().dfScale.DimGetWidth(), reinterpret_cast<const GLubyte*>
             (clD.strLine.data()));
     } // Finish and render

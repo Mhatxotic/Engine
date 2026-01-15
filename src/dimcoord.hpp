@@ -15,8 +15,8 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 template<typename DInt = unsigned int, // Dimensions integer type
          typename CInt = DInt,         // Coords class integer type
-         class DClass  = Dimensions<DInt>,  // Dimensions class to use
-         class CClass  = Coordinates<CInt>> // Coords class to use
+         class DClass = Dimensions<DInt>, // Dimensions class to use
+         class CClass = Coord<CInt>>   // Coords class to use
 requires is_arithmetic_v<DInt> && is_arithmetic_v<CInt>
 struct DimCoords :                     // Members initially public
   /* -- Base classes ------------------------------------------------------- */

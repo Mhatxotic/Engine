@@ -13,7 +13,7 @@ namespace ITexture {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IDim::P;
 using namespace IError::P;             using namespace IFbo::P;
-using namespace IFboDef::P;            using namespace IFboItem::P;
+using namespace IFboCmd::P;            using namespace IFboItem::P;
 using namespace IImage::P;             using namespace IImageDef::P;
 using namespace IJson::P;              using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;

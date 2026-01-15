@@ -89,7 +89,7 @@ struct Console :                       // Members initially private
                    sstPageLinesNeg;    // As above but negative version
   RedrawFlags      rfDefault,          // Default redraw type
                    rfFlags;            // Redraw flags
-  Colour           cTextColour;        // Console text colour
+  ConColour        ccTextColour;       // Console text colour
   /* -- Text mode ---------------------------------------------------------- */
   ClockInterval<>  ciOutputRefresh,    // Next screen buffer update time
                    ciInputRefresh;     // Time to wait before next peek
@@ -741,7 +741,7 @@ struct Console :                       // Members initially private
       const ConLine &clLine = clqOutput.front();
       // Print line to output
       fwprintf(stdout, L"\033[%um[%.6f]<!> %ls\033[0m\n",
-        clLine.cColour, clLine.dTime,
+        clLine.ccColour, clLine.dTime,
           UtfDecoder{ clLine.strLine }.Wide().data());
       // remove the old item
       clqOutput.pop();
@@ -845,7 +845,7 @@ struct Console :                       // Members initially private
   /* -- Unregister console command ----------------------------------------- */
   void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
   /* -- Add line as string with specified text colour ---------------------- */
-  void AddLine(const Colour cColour, const string &strText)
+  void AddLine(const ConColour ccColour, const string &strText)
   { // Tokenise lines into a list limited by the maximum number of lines.
     if(const TokenList tlLines{
       strText, cCommon->CommonLf(), GetOutputMaximum() })
@@ -854,32 +854,32 @@ struct Console :                       // Members initially private
       for(const string &strLine : tlLines)
       { // Move the line across if it is long enough
         if(strLine.length() <= stMaxOutputLine)
-          clqOutput.push({ dTime, cColour, StdMove(strLine) });
+          clqOutput.push({ dTime, ccColour, StdMove(strLine) });
         // Push a truncated line
-        else clqOutput.push({ dTime, cColour,
+        else clqOutput.push({ dTime, ccColour,
           strLine.substr(0, stMaxOutputLineE) + cCommon->CommonEllipsis() });
       }
     }
   }
   /* -- Add line as string with default text colour ------------------- */
-  void AddLine(const string &strText) { AddLine(cTextColour, strText); }
+  void AddLine(const string &strText) { AddLine(ccTextColour, strText); }
   /* -- Formatted console output ------------------------------------------- */
   template<typename ...VarArgs>
     void AddLineF(const char*const cpFormat, VarArgs &&...vaArgs)
       { AddLine(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output with colour ------------------------------- */
   template<typename ...VarArgs>
-    void AddLineF(const Colour cColour, const char*const cpFormat,
+    void AddLineF(const ConColour ccColour, const char*const cpFormat,
       VarArgs &&...vaArgs)
-        { AddLine(cColour,
+        { AddLine(ccColour,
             StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output using StrAppend() ------------------------- */
   template<typename ...VarArgs>
-    void AddLineAC(const Colour cColour, VarArgs &&...vaArgs)
-      { AddLine(cColour, StrAppend(StdForward<VarArgs>(vaArgs)...)); }
+    void AddLineAC(const ConColour ccColour, VarArgs &&...vaArgs)
+      { AddLine(ccColour, StrAppend(StdForward<VarArgs>(vaArgs)...)); }
   template<typename ...VarArgs>
     void AddLineA(VarArgs &&...vaArgs)
-      { AddLineAC(cTextColour, StdForward<VarArgs>(vaArgs)...); }
+      { AddLineAC(ccTextColour, StdForward<VarArgs>(vaArgs)...); }
   /* -- Print version information ------------------------------------------ */
   void PrintVersion()
   { // Show engine version
@@ -991,7 +991,7 @@ struct Console :                       // Members initially private
     sstPageLinesNeg(0),                // No neg page up/down lines setting
     rfDefault{ RD_NONE },              // Default redraw initially set by Init
     rfFlags{ RD_NONE },                // Redraw type
-    cTextColour(COLOUR_WHITE),         // Default white text colour
+    ccTextColour(COLOUR_WHITE),        // Default white text colour
     acFlags{ AC_NONE },                // No autocomplete flags
     acisciCurrent{ acisList.cend() },  // Autocomplete not initialised
     ccslInt{ ccslDef }                 // Set default commands list
@@ -1103,8 +1103,8 @@ struct Console :                       // Members initially private
       return ACCEPT; }
   /* -- Set console text colour -------------------------------------------- */
   CVarReturn TextForegroundColourModified(const unsigned int uiNewColour)
-    { return CVarSimpleSetIntNG(cTextColour, static_cast<Colour>(uiNewColour),
-        COLOUR_MAX); }
+    { return CVarSimpleSetIntNG(ccTextColour,
+        static_cast<ConColour>(uiNewColour), COLOUR_MAX); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

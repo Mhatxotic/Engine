@@ -88,11 +88,11 @@ class Input :                          // Handles keyboard, mouse & controllers
     // co-ordinates to the lua callback handler
     lfOnMouseMove.LuaFuncDispatch(
       UtilScaleValue(dX, DimGetWidth(),
-        cFboCore->fboMain.ffcStage.GetCoLeft(),
-        cFboCore->fboMain.GetCoRight()),
+        cFboCore->fboMain.cfStage.CoordsGetLeft(),
+        cFboCore->fboMain.CoordsGetRight()),
       UtilScaleValue(dY, DimGetHeight(),
-        cFboCore->fboMain.ffcStage.GetCoTop(),
-        cFboCore->fboMain.GetCoBottom()));
+        cFboCore->fboMain.cfStage.CoordsGetTop(),
+        cFboCore->fboMain.CoordsGetBottom()));
   }
   /* -- Mouse went inside the window --------------------------------------- */
   void OnMouseFocus(const EvtMainEvent &emeEvent)
@@ -245,10 +245,10 @@ class Input :                          // Handles keyboard, mouse & controllers
   void SetCursorPos(const GLfloat fX, const GLfloat fY)
   { // Expand the stage co-ordinates to actual desktop window co-ordinates
     const GLfloat
-      fAdjX = (fX + -cFboCore->fboMain.ffcStage.GetCoLeft()) /
-        cFboCore->fboMain.GetCoRight() * DimGetWidth(),
-      fAdjY = (fY + -cFboCore->fboMain.ffcStage.GetCoTop()) /
-        cFboCore->fboMain.GetCoBottom() * DimGetHeight(),
+      fAdjX = (fX + -cFboCore->fboMain.cfStage.CoordsGetLeft()) /
+        cFboCore->fboMain.CoordsGetRight() * DimGetWidth(),
+      fAdjY = (fY + -cFboCore->fboMain.cfStage.CoordsGetTop()) /
+        cFboCore->fboMain.CoordsGetBottom() * DimGetHeight(),
       // Clamp the new position to the window bounds.
       fNewX = UtilClamp(fAdjX, 0.0f, DimGetWidth() - 1.0f),
       fNewY = UtilClamp(fAdjY, 0.0f, DimGetHeight() - 1.0f);

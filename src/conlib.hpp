@@ -661,9 +661,9 @@ const function ShowFboInfo{ [](const Fbo &fRef, Statistic &sTable,
           { fRef.FboIsClearEnabled(),        'C' },
        }))
        .DataN(fRef.FboGetFilter()).DataN(fRef.DimGetWidth())
-       .DataN(fRef.DimGetHeight()).DataN(fRef.ffcStage.GetCoLeft())
-       .DataN(fRef.ffcStage.GetCoTop()).DataN(fRef.ffcStage.GetCoRight())
-       .DataN(fRef.ffcStage.GetCoBottom()).DataN(fRef.FboGetTris())
+       .DataN(fRef.DimGetHeight()).DataN(fRef.cfStage.CoordsGetLeft())
+       .DataN(fRef.cfStage.CoordsGetTop()).DataN(fRef.cfStage.CoordsGetRight())
+       .DataN(fRef.cfStage.CoordsGetBottom()).DataN(fRef.FboGetTris())
        .DataN(fRef.FboGetCmds()).DataN(fRef.FboGetTrisReserved())
        .DataN(fRef.FboGetCmdsReserved()).Data(fRef.IdentGet());
 } };
@@ -825,13 +825,13 @@ cConsole->AddLineF(
     StrFromRatio(cFboCore->DimGetWidth(), cFboCore->DimGetHeight()),
     cFboCore->GetMatrixWidth(), cFboCore->GetMatrixHeight(),
     StrFromRatio(cFboCore->GetMatrixWidth(), cFboCore->GetMatrixHeight()),
-    cFboCore->fboMain.GetCoRight(), cFboCore->fboMain.GetCoBottom(),
-    StrFromRatio(cFboCore->fboMain.GetCoRight(),
-      cFboCore->fboMain.GetCoBottom()),
-  cFboCore->fboMain.ffcStage.GetCoLeft(),
-    cFboCore->fboMain.ffcStage.GetCoTop(),
-    cFboCore->fboMain.ffcStage.GetCoRight(),
-    cFboCore->fboMain.ffcStage.GetCoBottom(),
+    cFboCore->fboMain.CoordsGetRight(), cFboCore->fboMain.CoordsGetBottom(),
+    StrFromRatio(cFboCore->fboMain.CoordsGetRight(),
+      cFboCore->fboMain.CoordsGetBottom()),
+  cFboCore->fboMain.cfStage.CoordsGetLeft(),
+    cFboCore->fboMain.cfStage.CoordsGetTop(),
+    cFboCore->fboMain.cfStage.CoordsGetRight(),
+    cFboCore->fboMain.cfStage.CoordsGetBottom(),
     cFboCore->fboMain.DimGetWidth(), cFboCore->fboMain.DimGetHeight(),
     hex, cOgl->FlagGet(),
   dec, cFboCore->fboMain.FboGetTris(),
@@ -1216,7 +1216,7 @@ else cConsole->AddLine("No unreferenced memory!");
 { "log", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Colours for log levels
-typedef array<const Colour, LH_MAX> LogLevelColours;
+typedef array<const ConColour, LH_MAX> LogLevelColours;
 const LogLevelColours llcLookup{
   COLOUR_LBLUE  /* LH_CRITICAL */, COLOUR_LRED   /* LH_ERROR    */,
   COLOUR_YELLOW /* LH_WARNING  */, COLOUR_WHITE  /* LH_INFO     */,

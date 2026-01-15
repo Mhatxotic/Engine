@@ -65,14 +65,18 @@ void PrintDraw(GLfloat &fX, const GLfloat fY, const size_t stPos)
   { // Get outline character info and print the outline glyph
     const Glyph &gOData = gvData[stPos+1];
     BlitLTRBC(0, stPos+1,
-      fX+gOData.RectGetX1() * fScale, fY+gOData.RectGetY1() * fScale,
-      fX+gOData.RectGetX2() * fScale, fY+gOData.RectGetY2() * fScale,
+      fX + gOData.CoordsGetLeft() * fScale,
+      fY + gOData.CoordsGetTop() * fScale,
+      fX + gOData.CoordsGetRight() * fScale,
+      fY + gOData.CoordsGetBottom() * fScale,
       fiOutline.FboItemGetCData());
   } // Get character info and print the opaque glyph
   const Glyph &gData = gvData[stPos];
     BlitLTRB(0, stPos,
-      fX+gData.RectGetX1() * fScale, fY+gData.RectGetY1() * fScale,
-      fX+gData.RectGetX2() * fScale, fY+gData.RectGetY2() * fScale);
+      fX + gData.CoordsGetLeft() * fScale,
+      fY + gData.CoordsGetTop() * fScale,
+      fX + gData.CoordsGetRight() * fScale,
+      fY + gData.CoordsGetBottom() * fScale);
   // Increase position
   fX += (gData.GlyphGetAdvance() + fCharSpacing) * fScale;
 }
@@ -399,10 +403,10 @@ bool DrawPartialGlyph(const bool bMove, const size_t stPos,
   const Glyph &gData = gvData[stPos];
   // Make adjusted co-ordinates based on glyph data
   const GLfloat
-    fXMin = fX + gData.RectGetX1() * fScale,
-    fYMin = fY + gData.RectGetY1() * fScale,
-    fXMax = fX + gData.RectGetX2() * fScale,
-    fYMax = fY + gData.RectGetY2() * fScale,
+    fXMin = fX + gData.CoordsGetLeft() * fScale,
+    fYMin = fY + gData.CoordsGetTop() * fScale,
+    fXMax = fX + gData.CoordsGetRight() * fScale,
+    fYMax = fY + gData.CoordsGetBottom() * fScale,
     fW = gData.DimGetWidth() * fScale;
   // Glyph would clip left margin?
   if(fXMin - fXO < fL)

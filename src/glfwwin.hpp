@@ -320,10 +320,10 @@ class GlFWWindow :                     // GLFW window class
   /* -- Get window size ---------------------------------------------------- */
   CoordInt WinGetPos() const
   { // Put window position inside the coordinates class and return it
-    CoordInt ciCoordinates;
-    glfwGetWindowPos(WinGetHandle(), &ciCoordinates.CoordGetXRef(),
-                                     &ciCoordinates.CoordGetYRef());
-    return ciCoordinates;
+    CoordInt ciCoord;
+    glfwGetWindowPos(WinGetHandle(), &ciCoord.CoordGetXRef(),
+                                     &ciCoord.CoordGetYRef());
+    return ciCoord;
   }
   /* -- Swap GL buffers ---------------------------------------------------- */
   void WinSwapGLBuffers() const { glfwSwapBuffers(WinGetHandle()); }

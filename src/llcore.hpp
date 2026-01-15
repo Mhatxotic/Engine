@@ -535,7 +535,7 @@ LLFUNC(Write, 0, cConsole->AddLine(COLOUR_CYAN, AgString{lS, 1}))
 /* ------------------------------------------------------------------------- */
 LLFUNC(WriteEx, 0,
   const AgString aMessage{lS, 1};
-  const AgIntegerLGE<Colour> aColour{lS, 2, COLOUR_BLACK, COLOUR_MAX};
+  const AgIntegerLGE<ConColour> aColour{lS, 2, COLOUR_BLACK, COLOUR_MAX};
   cConsole->AddLine(aColour, aMessage))
 /* ========================================================================= **
 ** ######################################################################### **

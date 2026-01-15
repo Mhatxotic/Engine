@@ -61,8 +61,7 @@ class Statistic
     return hRef;
   }
   /* -- Check that we have headers ----------------------------------------- */
-  void CheckHeaderCount() const
-    { if(hdHeaders.empty()) XC("No headers!"); }
+  void CheckHeaderCount() const { if(hdHeaders.empty()) XC("No headers!"); }
   /* -- Check row not finished --------------------------------------------- */
   void CheckRowNotFinished() const
     { if(const size_t stRow = Cells() % Headers())

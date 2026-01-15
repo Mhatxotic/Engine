@@ -19,7 +19,7 @@
 namespace LLFbo {                      // Fbo namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IConGraph::P;          using namespace IConsole::P;
-using namespace IFboDef::P;            using namespace IFbo::P;
+using namespace IFbo::P;               using namespace ICoords::P;
 using namespace IFboCore::P;           using namespace ILua::P;
 using namespace IOgl::P;               using namespace ISShot::P;
 using namespace IString::P;            using namespace Common;
@@ -265,7 +265,7 @@ LLFUNC(SetClearColour, 0,
                   aGreen{lS, 3},
                   aBlue{lS, 4},
                   aAlpha{lS, 5};
-  aFbo().FboSetClearColour(aRed, aGreen, aBlue, aAlpha))
+  aFbo().ColourSet(aRed, aGreen, aBlue, aAlpha))
 /* ========================================================================= */
 // $ Fbo:SetCRGBA
 // > Red:number=The entire FBO texture red colour intensity (0 to 1).
@@ -348,10 +348,10 @@ LLFUNC(GetFloatCount, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().FboGetTrisNow()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetMatrix, 6,
   const Fbo &fboCref = AgFbo{lS, 1}();
-  const FboFloatCoords &ffcRef = fboCref.ffcStage;
+  const CoordsFloat &cfRef = fboCref.cfStage;
   LuaUtilPushVar(lS, fboCref.DimGetWidth(), fboCref.DimGetHeight(),
-    ffcRef.GetCoLeft(), ffcRef.GetCoTop(), ffcRef.GetCoRight(),
-    ffcRef.GetCoBottom()))
+    cfRef.CoordsGetLeft(), cfRef.CoordsGetTop(), cfRef.CoordsGetRight(),
+    cfRef.CoordsGetBottom()))
 /* ========================================================================= */
 // $ Fbo:GetId
 // < Id:integer=The id number of the Fbo object.

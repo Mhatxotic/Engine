@@ -11,7 +11,7 @@
 namespace IShader {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICollector::P;
-using namespace IError::P;             using namespace IFboDef::P;
+using namespace IError::P;             using namespace ICoords::P;
 using namespace IIdent::P;             using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IOgl::P;
@@ -108,12 +108,12 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     cOgl->Uniform(GetUID(U_PALETTE), static_cast<GLsizei>(stSize), fpData);
   }
   /* -- Update shader matrix ----------------------------------------------- */
-  void UpdateMatrix(const FboFloatCoords &ffcRef) const
+  void UpdateMatrix(const CoordsFloat &cfRef) const
   { // Activate shader (no error checking)
     cOgl->UseProgram(GetProgram());
     // Commit matrix bounds (no error checking)
-    cOgl->Uniform(GetUID(U_MATRIX), ffcRef.GetCoLeft(),
-      ffcRef.GetCoTop(), ffcRef.GetCoRight(), ffcRef.GetCoBottom());
+    cOgl->Uniform(GetUID(U_MATRIX), cfRef.CoordsGetLeft(),
+      cfRef.CoordsGetTop(), cfRef.CoordsGetRight(), cfRef.CoordsGetBottom());
   }
   /* -- Linkage ------------------------------------------------------------ */
   void Link()

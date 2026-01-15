@@ -11,7 +11,7 @@ namespace IConDef {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Colour palette ------------------------------------------------------- */
-enum Colour : unsigned int             // Try to match with SysCon colours
+enum ConColour : unsigned int          // Try to match with SysCon colours
 { /* ----------------------------------------------------------------------- */
   COLOUR_BLACK   /* 00 */, COLOUR_BLUE     /* 01 */, COLOUR_GREEN  /* 02 */,
   COLOUR_CYAN    /* 03 */, COLOUR_RED      /* 04 */, COLOUR_GRAY   /* 05 */,
@@ -36,7 +36,7 @@ const unsigned int uiNDXtoRGB[COLOUR_MAX] =
 struct ConLine                         // Console line data structure
 { /* ----------------------------------------------------------------------- */
   const double     dTime;              // Line time
-  const Colour     cColour;            // Line colour index
+  const ConColour  ccColour;           // Line colour index
   const string     strLine;            // Line data
 };/* ----------------------------------------------------------------------- */
 typedef list<ConLine>                    ConLines;           // Con lines data

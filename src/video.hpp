@@ -532,7 +532,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // Send playing event if we're not temporarily de-initialising
     if(ubReason != UB_REINIT) LuaEvtDispatch(VE_PLAY);
     // Loop until thread should exit
-    if(FlagIsSet(FL_THEORAVORBIS)) // Ogg has both audio and video streams?
+    if(FlagIsSet(FL_THEORAVORBIS))     // Ogg has both audio and video streams?
       while(tClass.ThreadShouldNotExit() && VideoHandleAudioVideo());
     else if(FlagIsSet(FL_VORBIS))      // Ogg has audio only stream?
       while(tClass.ThreadShouldNotExit() && VideoHandleAudioOnly());
@@ -876,8 +876,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       GetOriginX(), GetOriginY(),
       PixelFormatToString(GetPixelFormat()), GetPixelFormat(),
       ColourSpaceToString(GetColourSpace()), GetColourSpace(), GetFPS(),
-      viData.version,
-      GetChannels(),
+      viData.version, GetChannels(),
       GetSampleRate(), StrToGrouped(GetSampleRate()),
       tiData.target_bitrate, StrToBits(tiData.target_bitrate),
       viData.bitrate_upper, StrToBits(viData.bitrate_upper),
@@ -916,13 +915,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Set volume
     sSource->SetGain(fAudioVolume * cSources->fVVolume * cSources->fGVolume);
   }
-  /* -- Set volume --------------------------------------------------------- */
+  /* -- Set and update volume ---------------------------------------------- */
   void SetVolume(const ALfloat fVolume)
-  { // Set volume
-    fAudioVolume = fVolume;
-    // Update volume
-    CommitVolume();
-  }
+    { fAudioVolume = fVolume; CommitVolume(); }
   /* -- Blit specific triangle --------------------------------------------- */
   void BlitTri(const size_t stTId) { FboActive()->FboBlitTri(*this, stTId); }
   /* -- Blit quad ---------------------------------------------------------- */
@@ -1028,7 +1023,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       FboSetTransparency(true);
       FboItemSetTexCoord(0.0f, 0.0f, 1.0f, 1.0f);
       // Clear the FBO, initially transparent and blue
-      FboSetClearColour(0.0f, 0.0f, 1.0f, 0.0f);
+      ColourSet(0.0f, 0.0f, 1.0f, 0.0f);
       FboSetClear(false);
       // We must discard the extra garbage from the ogg video. We can do that
       // with the GPU very easily by altering texture coords!
@@ -1135,12 +1130,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Commit filter ------------------------------------------------------ */
   void CommitFilter()
     { FboSetFilterCommit(FlagIsSet(FL_FILTER) ? OF_L_L : OF_N_N); }
-  /* -- Set filtering on video textures ------------------------------------ */
+  /* -- Set and commit filtering on video textures ------------------------- */
   void SetFilter(const bool bState)
-  { // Update and commit filter
-    FlagSetOrClear(FL_FILTER, bState);
-    CommitFilter();
-  }
+    { FlagSetOrClear(FL_FILTER, bState); CommitFilter(); }
   /* -- Looping functions -------------------------------------------------- */
   size_t GetLoop() const { return stLoop; }
   void SetLoop(const size_t stCount) { stLoop = stCount; }
@@ -1195,7 +1187,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     ConfigTexture(0, siWidth, siHeight);
     // Configure the Cb/Cr components
     for(GLuint uiIndex = 1; uiIndex <= 2; ++uiIndex)
-      ConfigTexture(uiIndex, siWidth/siWDIV, siHeight/siHDIV);
+      ConfigTexture(uiIndex, siWidth / siWDIV, siHeight / siHDIV);
     // Commit the current filter setting
     SetFilter(FlagIsSet(FL_FILTER));
     // Update choice of shader to use
@@ -1382,8 +1374,7 @@ static CVarReturn VideoSetMaximumDrift(const double dMax)
   { return CVarSimpleSetIntNLG(cVideos->dMaxDrift, dMax, 0.01, 1.0); }
 /* == Set audio buffer length maximum ====================================== */
 static CVarReturn VideoSetAudioBufferSize(const double dMax)
-  { return CVarSimpleSetIntNLG(cVideos->dAudioBufferSize,
-      dMax, 0.01, 1.0); }
+  { return CVarSimpleSetIntNLG(cVideos->dAudioBufferSize, dMax, 0.01, 1.0); }
 /* == Set all streams base volume ========================================== */
 static CVarReturn VideoSetVolume(const ALfloat fVolume)
 { // Ignore if invalid value

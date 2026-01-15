@@ -2,20 +2,18 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## Allows storage and manipulation of a quad (two trangles).           ## **
+** ## Defines the 'FboItem' class which is used by the 'Fbo' class in     ## **
+** ## 'fbo.hpp' to store texture co-ordinates, triangle positions and     ## **
+** ## colour intensity modifiers. All this data can be manipulated and    ## **
+** ## retrieved with the available methods.                               ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IFboItem {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
+using namespace IFboCmd::P;            using IUtil::P::UtilNormaliseEx;
 using namespace Lib::OS::GlFW::Types;
-/* -- Outside functions used ----------------------------------------------- */
-using IUtil::P::UtilNormaliseEx;
-/* -- Outside variables used ----------------------------------------------- */
-using IFboDef::P::stFloatsPerColour;   using IFboDef::P::stFloatsPerCoord;
-using IFboDef::P::stFloatsPerPos;      using IFboDef::P::stFloatsPerQuad;
-using IFboDef::P::stTrisPerQuad;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo item class ======================================================= */
@@ -118,7 +116,7 @@ struct FboItem
   { // UtilDenormalise the angle to radians (M_PI)
     const GLfloat fAR = fA * 2.0f * 3.141592653589793238462643383279502884f,
     // Get the middle pixel of the quad.
-    fXP = (fX2-fX1)/2,                  fYP = (fY2-fY1)/2,
+    fXP = (fX2-fX1)/2.0f,               fYP = (fY2-fY1)/2.0f,
     // Rotate vertices around the centre of the quad
     fC1 = atan2f(-fYP,fXP)+fAR,         fC2 = atan2f(-fYP,-fXP)+fAR,
     fC3 = atan2f( fYP,fXP)+fAR,         fC4 = atan2f( fYP,-fXP)+fAR,

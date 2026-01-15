@@ -12,7 +12,8 @@ namespace IOgl {                       // Start of private module namespace
 using namespace IClock::P;             using namespace ICommon::P;
 using namespace ICVar::P;              using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IEvtWin::P;            using namespace IFboDef::P;
+using namespace IEvtWin::P;            using namespace IFboBlend::P;
+using namespace IFboCmd::P;            using namespace IColour::P;
 using namespace IFlags;                using namespace IGlFW::P;
 using namespace IGlFWUtil::P;          using namespace IHelper::P;
 using namespace IIdent::P;             using namespace ILog::P;
@@ -104,7 +105,7 @@ static Ogl *cOgl = nullptr;            // Pointer to global class
 class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper
-  public FboColour,                    // OGL global clear colour cache
+  public Colour,                    // OGL global clear colour cache
   public FboBlend,                     // OGL global blend cache
   public OglFlags                      // OGL init flags
 { /* -- Defines ------------------------------------------------------------ */
@@ -119,6 +120,15 @@ class Ogl :                            // OGL class for OpenGL use simplicity
                       idHintModes,     // Hint mode values (log detail)
                       idFormatModes,   // Pixel format modes (log detail)
                       idOGLCodes;      // OpenGL codes
+  /* -- Engine blending id to OpenGL blending id list ---------------------- */
+  typedef array<const GLenum, OB_MAX> BlendFunctions;
+  const BlendFunctions aBlends;        // Convert engine to opengl blend type
+  /* -- Texture filter lists ----------------------------------------------- */
+  typedef array<const GLint, 2> TwoGLints;
+  typedef array<const TwoGLints, OF_NM_MAX> TexFilterNMList;
+  const TexFilterNMList tfnmList;      // Texture filter (no-mipmap) list
+  typedef array<const TwoGLints, OF_MAX> TexFilterList;
+  const TexFilterList tfList;          // Texture filter list
   /* -- Variables ---------------------------------------------------------- */
   OglVHandles      ohVAO, ohVBO;       // Vertex Array/Buffer Object handles
   GLuint           uiActiveFbo,        // Currently selected FBO name cache
@@ -273,12 +283,12 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiUnpackAlign = GetInteger<GLuint>(GL_UNPACK_ALIGNMENT);
     iUnpackRowLength = GetInteger<GLint>(GL_UNPACK_ROW_LENGTH);
     // Load current clear colour
-    GetFloatArray<4>(GL_COLOR_CLEAR_VALUE, GetColourMemory());
+    GetFloatArray<4>(GL_COLOR_CLEAR_VALUE, ColourGetMemory());
     // Load current blending settings
-    SetSrcRGB(GetInteger<GLenum>(GL_BLEND_SRC_RGB));
-    SetDstRGB(GetInteger<GLenum>(GL_BLEND_DST_RGB));
-    SetSrcAlpha(GetInteger<GLenum>(GL_BLEND_SRC_ALPHA));
-    SetDstAlpha(GetInteger<GLenum>(GL_BLEND_DST_ALPHA));
+    FboBlendSetSrcRGB(GetInteger<GLenum>(GL_BLEND_SRC_RGB));
+    FboBlendSetDstRGB(GetInteger<GLenum>(GL_BLEND_DST_RGB));
+    FboBlendSetSrcAlpha(GetInteger<GLenum>(GL_BLEND_SRC_ALPHA));
+    FboBlendSetDstAlpha(GetInteger<GLenum>(GL_BLEND_DST_ALPHA));
   }
   /* -- Zero index to hint helper for cvars -------------------------------- */
   static GLenum SHIndexToEnum(const size_t stIndex)
@@ -803,16 +813,16 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   }
   /* -- Set clear colour --------------------------------------------------- */
   void CommitClearColour() const
-    { sAPI.glClearColor(GetColourRed(),  GetColourGreen(),
-                        GetColourBlue(), GetColourAlpha()); }
+    { sAPI.glClearColor(ColourGetRed(),  ColourGetGreen(),
+                        ColourGetBlue(), ColourGetAlpha()); }
   /* ----------------------------------------------------------------------- */
   void SetClearColourInt(const unsigned int uiColour)
-    { SetColourInt(uiColour); CommitClearColour(); }
+    { ColourSetInt(uiColour); CommitClearColour(); }
   /* -- Set clear colour (applies to all FBO's) ---------------------------- */
-  void SetClearColourIfChanged(const FboColour &fcData)
-    { if(SetColour(fcData)) CommitClearColour(); }
+  void SetClearColourIfChanged(const Colour &fcData)
+    { if(ColourSet(fcData)) CommitClearColour(); }
   /* ----------------------------------------------------------------------- */
-  void SetAndClear(const FboColour &cCol)
+  void SetAndClear(const Colour &cCol)
     { SetClearColourIfChanged(cCol); ClearBuffer(); }
   /* -- Update polygon rendering mode -------------------------------------- */
   void SetPolygonMode(const GLenum eMode)
@@ -964,11 +974,11 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   }
   /* -- Commit blending algorithms ----------------------------------------- */
   void CommitBlend() const
-    { sAPI.glBlendFuncSeparate(GetSrcRGB(), GetDstRGB(),
-                               GetSrcAlpha(), GetDstAlpha()); }
+    { sAPI.glBlendFuncSeparate(FboBlendGetSrcRGB(), FboBlendGetDstRGB(),
+                               FboBlendGetSrcAlpha(), FboBlendGetDstAlpha()); }
   /* -- Set blending algorithms -------------------------------------------- */
   void SetBlendIfChanged(const FboBlend &fbOther)
-    { if(SetBlend(fbOther)) CommitBlend(); }
+    { if(FboBlendSet(fbOther)) CommitBlend(); }
   /* -- Set texture parameter (No error checking needed) ------------------- */
   void SetTexParam(const GLenum eVar, const GLint iVal) const
     { sAPI.glTexParameteri(GL_TEXTURE_2D, eVar, iVal); }
@@ -1023,12 +1033,12 @@ class Ogl :                            // OGL class for OpenGL use simplicity
         "- Unpack alignment: $; "        "Unpack row length: $.\n"
         "- Vertex attributes: $; "       "Texture units: $.\n"
         "- Extensions count: $.",
-        GetColourRed(),     GetColourGreen(),   GetColourBlue(),
-        GetColourAlpha(),   GetSrcRGB(),        GetDstRGB(),
-        GetSrcAlpha(),      GetDstAlpha(),
-        dec,                MaxTexSize(),       PackAlign(),
-        UnpackAlign(),      UnpackRowLength(),  MaxVertexAttribs(),
-        uiTexUnits,         uiExts);
+        ColourGetRed(),        ColourGetGreen(),      ColourGetBlue(),
+        ColourGetAlpha(),      FboBlendGetSrcRGB(),   FboBlendGetDstRGB(),
+        FboBlendGetSrcAlpha(), FboBlendGetDstAlpha(), dec,
+        MaxTexSize(),          PackAlign(),           UnpackAlign(),
+        UnpackRowLength(),     MaxVertexAttribs(),    uiTexUnits,
+        uiExts);
       // Build sorted list of extensions and log them all
       StrUIntMap mExts;
       for(GLuint uiI = 0; uiI < uiExts; ++uiI)
@@ -1045,40 +1055,18 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   }
   /* -- Set texture mode by filter id -------------------------------------- */
   void SetFilterById(const OglFilterEnum ofeId, GLint &iMin, GLint &iMag) const
-  { // Filter table
-    typedef array<const GLint, 2> TwoGLints;
-    typedef array<const TwoGLints, OF_NM_MAX> TexFilterNMList;
-    static const TexFilterNMList tfList{{
-      // Point/Bilinear filtering options
-      { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR }, // 00-01
-      { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR }, // 02-03
-    }};
-    // Get filter lookup id and set values
-    const TwoGLints &tfItem = tfList[ofeId];
+  { // Get filter lookup id and set values
+    const TwoGLints &tfItem = tfnmList[ofeId];
     iMag = tfItem.front();
     iMin = tfItem.back();
   }
+  /* -- Convert engine blend id to blend OpenGL enum ----------------------- */
+  GLenum EngineBlendToOglBlend(const OglBlendEnum obeEnum) const
+    { return aBlends[obeEnum]; }
   /* -- Set texture mode by filter id -------------------------------------- */
   void SetMipMapFilterById(const OglFilterEnum ofeId, GLint &iMin,
     GLint &iMag) const
-  { // Filter table
-    typedef array<const GLint, 2> TwoGLints;
-    typedef array<const TwoGLints, OF_MAX> TexFilterList;
-    static const TexFilterList tfList{{
-      // Point/Bilinear filtering options
-      { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR }, // 00-01
-      { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR }, // 02-03
-      // Point/Bilinear/Mipmap/Trilinear filtering options
-      { GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST }, // 04
-      { GL_LINEAR,  GL_NEAREST_MIPMAP_NEAREST }, // 05
-      { GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR },  // 06
-      { GL_LINEAR,  GL_NEAREST_MIPMAP_LINEAR },  // 07
-      { GL_NEAREST, GL_LINEAR_MIPMAP_NEAREST },  // 08
-      { GL_LINEAR,  GL_LINEAR_MIPMAP_NEAREST },  // 09
-      { GL_NEAREST, GL_LINEAR_MIPMAP_LINEAR },   // 10
-      { GL_LINEAR,  GL_LINEAR_MIPMAP_LINEAR }    // 11
-    } };
-    // Get filter lookup id and set values
+  { // Get filter lookup id and set values
     const TwoGLints &iaPair = tfList[ofeId];
     iMag = iaPair.front();
     iMin = iaPair.back();
@@ -1399,9 +1387,40 @@ class Ogl :                            // OGL class for OpenGL use simplicity
 #endif                                 // End of Apple target check
       IDMAPSTR(GL_OUT_OF_MEMORY),
     }, "GL_ERROR_UNKNOWN" },           // Unknown error value
-    /* -- Initialisers ----------------------------------------------------- */
-    ohVAO{ 0, 0 },                    // Initialise vertex array objects
-    ohVBO{ 0, 0 },                    // Initialise vertex buffer objects
+    /* -- Engine blend ID to OpenGL blend id initialiser ------------------- */
+    aBlends{                           // ## RGB & Alpha Blend Factors StringId
+      GL_ZERO,                         // 00 (0,0,0)            0      Z
+      GL_ONE,                          // 01 (1,1,1)            1      O
+      GL_SRC_COLOR,                    // 02 (Rs,Gs,Bs)         As     S_C
+      GL_ONE_MINUS_SRC_COLOR,          // 03 (1,1,1)-(Rs,Gs,Bs) 1-As   O_M_S_C
+      GL_DST_COLOR,                    // 04 (Rd,Gd,Bd)         Ad     D_C
+      GL_ONE_MINUS_DST_COLOR,          // 05 (1,1,1)-(Rd,Gd,Bd) 1-Ad   O_M_D_C
+      GL_SRC_ALPHA,                    // 06 (As,As,As)         As     S_A
+      GL_ONE_MINUS_SRC_ALPHA,          // 07 (1,1,1)-(As,As,As) 1-As   O_M_S_A
+      GL_DST_ALPHA,                    // 08 (Ad,Ad,Ad)         Ad     D_A
+      GL_ONE_MINUS_DST_ALPHA,          // 09 (1,1,1)-(Ad,Ad,Ad) 1-Ad   O_M_D_A
+      GL_CONSTANT_COLOR,               // 10 (Rc,Gc,Bc)         Ac     C_C
+      GL_ONE_MINUS_CONSTANT_COLOR,     // 11 (1,1,1)-(Rc,Gc,Bc) 1-Ac   O_M_C_C
+      GL_CONSTANT_ALPHA,               // 12 (Ac,Ac,Ac)         Ac     C_A
+      GL_ONE_MINUS_CONSTANT_ALPHA,     // 13 (1,1,1)-(Ac,Ac,Ac) 1-Ac   O_M_C_A
+      GL_SRC_ALPHA_SATURATE },         // 14 (i,i,i)            1      S_A_S
+    /* -- Engine filter ID to OpenGL filter ID initialiser (no mipmap) ----- */
+    tfnmList{{ { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR },    // 0-1
+               { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR } }}, // 2-3
+    /* -- Engine filter ID to OpenGL filter ID initialiser ----------------- */
+    tfList{{ { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR }, // 00-01
+             { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR }, // 02-03
+             { GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST },    // 04
+             { GL_LINEAR,  GL_NEAREST_MIPMAP_NEAREST },    // 05
+             { GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR  },    // 06
+             { GL_LINEAR,  GL_NEAREST_MIPMAP_LINEAR  },    // 07
+             { GL_NEAREST, GL_LINEAR_MIPMAP_NEAREST  },    // 08
+             { GL_LINEAR,  GL_LINEAR_MIPMAP_NEAREST  },    // 09
+             { GL_NEAREST, GL_LINEAR_MIPMAP_LINEAR   },    // 10
+             { GL_LINEAR,  GL_LINEAR_MIPMAP_LINEAR   } }}, // 11
+    /* -- Other initialisers ----------------------------------------------- */
+    ohVAO{ 0, 0 },                     // Initialise vertex array objects
+    ohVBO{ 0, 0 },                     // Initialise vertex buffer objects
     uiActiveFbo(                       // Select back buffer
       numeric_limits<GLuint>::max()),  // Maxed so values commit properly
     uiActiveProgram(uiActiveFbo),      // No active shader programme
@@ -1414,10 +1433,10 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     uiUnpackAlign(0),                  // No unpack align
     uiMaxVertexAttribs(0),             // No maximum vertex attributes
     uiTexUnits(0),                     // No maximum texture units
-    uiVAO(ohVAO[0]),                  // Set reference to global VAO
-    uiVBO(ohVBO[0]),                  // Set reference to global VBO
-    uiVAOmain(ohVAO[1]),              // Set reference to bb draw VAO
-    uiVBOmain(ohVBO[1]),              // Set reference to bb draw VBO
+    uiVAO(ohVAO[0]),                   // Set reference to global VAO
+    uiVBO(ohVBO[0]),                   // Set reference to global VBO
+    uiVAOmain(ohVAO[1]),               // Set reference to bb draw VAO
+    uiVBOmain(ohVBO[1]),               // Set reference to bb draw VBO
     ePolyMode(GL_NONE),                // No set polygon mode yet
     iUnpackRowLength(0),               // No unpack row length
     qwMinVRAM(0),                      // No minimum vram

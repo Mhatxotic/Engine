@@ -47,15 +47,18 @@ static CVarReturn LuaCodeCheckVersion(const string &strVal, string &strNVal)
   const string_view &svVersion = cCredits->CreditGetItem(CL_LUA).GetVersion();
   // If version stored is not the same as expected?
   if(strVal != svVersion)
-  { // Log that the LUA version is different
-    cLog->LogWarningExSafe("LuaCode detected LUA version mismatch ($ != $) so "
-      "the code cache will be flushed.", strVal, svVersion);
+  { // If the LUA code table doesn't exist? Just initialise the version
+    if(!cSql->IsTableExist(cSql->strvLCTable)) goto Accepted;
+    // Log that the LUA version is different
+    cLog->LogWarningExSafe("LuaCode detected LUA version mismatch "
+      "(\"$\" != \"$\") so the code cache will be flushed.",
+      strVal, svVersion);
     // Clear the cache and if succeeded?
     if(cSql->FlushTable(cSql->strvLCTable) == SQLITE_OK)
     { // Write success in the console
       cLog->LogWarningSafe("LuaCode flushed the LUA code cache successfully!");
       // Update cvar to the current version
-      strNVal = svVersion;
+      Accepted: strNVal = svVersion;
       // Accepted and value modified
       return ACCEPT_HANDLED_FORCECOMMIT;
     } // Failed? Write reason to console

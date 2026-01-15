@@ -15,13 +15,13 @@ namespace IFboCore {                   // Start of private module namespace
 using namespace IClock::P;             using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IDim::P;               using namespace IEvtMain::P;
-using namespace IFboDef::P;            using namespace IFbo::P;
-using namespace IGlFW::P;              using namespace ILog::P;
-using namespace IOgl::P;               using namespace IShader::P;
-using namespace IShaders::P;           using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace ITimer::P;             using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace IFboBlend::P;          using namespace IColour::P;
+using namespace IFbo::P;               using namespace IGlFW::P;
+using namespace ILog::P;               using namespace IOgl::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace ITimer::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 typedef array<Fbo, 2> FboDouble;       // Main and console FBO typedef
 /* ------------------------------------------------------------------------- */
@@ -31,7 +31,7 @@ class FboCore;                         // Class prototype
 static FboCore *cFboCore = nullptr;    // Pointer to global class
 class FboCore :                        // The main FBO operations manager
   /* -- Base classes ------------------------------------------------------- */
-  public FboColour,                    // Backbuffer clear colour
+  public Colour,                       // Backbuffer clear colour
   public FboBlend,                     // Default blending mode
   public DimGLSizei,                   // Main frame buffer object dimensions
   private FboDouble                    // Core frame buffer objects
@@ -61,7 +61,7 @@ class FboCore :                        // The main FBO operations manager
   /* -- Reset backbuffer clear colour to colour stored in cvar ------------- */
   void ResetClearColour()
   { // Reset core framebuffer object colour intensities
-    for(Fbo &fboRef : *this) fboRef.FboResetClearColour();
+    for(Fbo &fboRef : *this) fboRef.ColourReset();
     // Commit the default back buffer clear colour
     cOgl->SetClearColourInt(
       cCVars->GetInternal<unsigned int>(VID_CLEARCOLOUR));
@@ -159,10 +159,10 @@ class FboCore :                        // The main FBO operations manager
       fBottom = fHeight;
     } // Test if the viewport didn't change?
     const bool bUnchanged =
-      StdIsFloatEqual(fLeft, fboMain.ffcStage.GetCoLeft()) &&
-      StdIsFloatEqual(fTop, fboMain.ffcStage.GetCoTop()) &&
-      StdIsFloatEqual(fRight, fboMain.ffcStage.GetCoRight()) &&
-      StdIsFloatEqual(fBottom, fboMain.ffcStage.GetCoBottom());
+      StdIsFloatEqual(fLeft, fboMain.cfStage.CoordsGetLeft()) &&
+      StdIsFloatEqual(fTop, fboMain.cfStage.CoordsGetTop()) &&
+      StdIsFloatEqual(fRight, fboMain.cfStage.CoordsGetRight()) &&
+      StdIsFloatEqual(fBottom, fboMain.cfStage.CoordsGetBottom());
     // Set stage bounds for drawing
     fboMain.FboSetMatrix(fLeft, fTop, fRight, fBottom);
     // Calculate matrix dimensions
@@ -193,8 +193,8 @@ class FboCore :                        // The main FBO operations manager
     // No point changing anything if the bounds are the same and if the FBO
     // needs updating? Also ignore if opengl isn't initialised as the GLfW FB
     // reset window event might be sent before we've initialised it!
-    if((siFBOWidth != static_cast<GLsizei>(fboMain.GetCoRight()) ||
-        siFBOHeight != static_cast<GLsizei>(fboMain.GetCoBottom()) ||
+    if((siFBOWidth != static_cast<GLsizei>(fboMain.CoordsGetRight()) ||
+        siFBOHeight != static_cast<GLsizei>(fboMain.CoordsGetBottom()) ||
         bForce) && cOgl->IsGLInitialised())
     { // Re-initialise the main framebuffer (the reservation is ignored)
       fboMain.FboInit("main", siFBOWidth, siFBOHeight, 0, 0);
@@ -209,7 +209,7 @@ class FboCore :                        // The main FBO operations manager
       // Log computations
       cLog->LogDebugExSafe(
         "FboCore matrix reinit to $x$[$] (D=$x$,A=$<$-$>,AW=$,S=$:$:$:$).",
-        fboMain.GetCoRight(), fboMain.GetCoBottom(),
+        fboMain.CoordsGetRight(), fboMain.CoordsGetBottom(),
         StrFromRatio(siFBOWidth, siFBOHeight),
           fWidth, fHeight, fAspect, fAspectMin, fAspectMax, fAddWidth,
           fLeft, fTop, fRight, fBottom);
@@ -295,7 +295,7 @@ class FboCore :                        // The main FBO operations manager
     { return CVarSimpleSetInt(bClearBuffer, bState); }
   /* -- Set back buffer clear colour --------------------------------------- */
   CVarReturn SetBackBufferClearColour(const unsigned int uiColour)
-    { SetColourInt(uiColour); return ACCEPT; }
+    { ColourSetInt(uiColour); return ACCEPT; }
   /* -- Set minimum orthagonal matrix ratio -------------------------------- */
   CVarReturn SetMinAspect(const GLfloat fMinimum)
     { return CVarSimpleSetIntNLG(fAspectMin, fMinimum, 1.0f, fAspectMax); }

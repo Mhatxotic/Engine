@@ -33,7 +33,7 @@ struct CmdLine                         // Members initially public
 { /* -- Command-line and environment variables ---------------------*/ private:
   ExitOperation    eoExit;             // Actions to perform at exit
   int              iArgC;              // Arguments count
-  ArgType        **atArgV;             // Arguments list
+  ArgType        **atArgs;             // Arguments list
   ArgType        **atEnv;              // Environment list
   const StrVector  svArg;              // Arguments list
   const StrStrMap  ssmEnv;             // Formatted environment variables
@@ -75,7 +75,7 @@ struct CmdLine                         // Members initially public
   /* -- Get parameter total ------------------------------------------------ */
   size_t CmdLineGetTotalCArgs() const
     { return static_cast<size_t>(iArgC); }
-  ArgType*const*CmdLineGetCArgs() const { return atArgV; }
+  ArgType*const*CmdLineGetCArgs() const { return atArgs; }
   ArgType*const*CmdLineGetCEnv() const { return atEnv; }
   const StrStrMap &CmdLineGetEnvList() const { return ssmEnv; }
   const StrVector &CmdLineGetArgList() const { return svArg; }
@@ -95,14 +95,14 @@ struct CmdLine                         // Members initially public
   { // Check that args are valid
     if(iArgC < 1) XC("Arguments array count corrupted!", "Count", iArgC);
     // Check that args are valid
-    if(!atArgV) XC("Arguments array corrupted!");
-    if(!*atArgV) XC("Arguments array executable string corrupted!");
-    if(!**atArgV) XC("Arguments array executable string is empty!");
+    if(!atArgs) XC("Arguments array corrupted!");
+    if(!*atArgs) XC("Arguments array executable string corrupted!");
+    if(!**atArgs) XC("Arguments array executable string is empty!");
     // Arguments list to return
     const size_t stArgCM1 = static_cast<size_t>(iArgC - 1);
     Reserved<StrVector> svRet{ stArgCM1 };
     // For each argument format the argument and add it to list
-    StdForEach(seq, atArgV + 1, atArgV + iArgC,
+    StdForEach(seq, atArgs + 1, atArgs + iArgC,
       [&svRet](const ArgType*const atStr)
         { svRet.emplace_back(S16toUTF(atStr)); });
     // One final sanity check
@@ -160,12 +160,12 @@ struct CmdLine                         // Members initially public
     return ssmRet;
   }
   /* -- Assign arguments ---------------------------------------- */ protected:
-  CmdLine(const int iArgs, ArgType**const atArgs, ArgType**const atEnv) :
+  CmdLine(const int iArgs, ArgType**const atNArgs, ArgType**const atNEnv) :
     /* -- Initialisers ----------------------------------------------------- */
     eoExit(EO_QUIT),                   // Initialise exit code
     iArgC(iArgs),                      // Initialise stdlib args count
-    atArgV(atArgs),                    // Initialise stdlib args ptr
-    atEnv(atEnv),                      // Initialise stdlib environment ptr
+    atArgs(atNArgs),                   // Initialise stdlib args ptr
+    atEnv(atNEnv),                     // Initialise stdlib environment ptr
     svArg{ StdMove(                    // Initialise command line arguments
       CmdLineParseArgArray()) },       // ...so we can keep them const
     ssmEnv{ StdMove(                   // Initialise environment variables
@@ -188,29 +188,29 @@ struct CmdLine                         // Members initially public
       // Reboot with no arguments?
       case EO_TERM_REBOOT_NOARG:
         // Remove first parameter and fall through to reboot
-        atArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
+        atArgs[1] = nullptr; iArgC = 1; [[fallthrough]];
       // Restart while keeping parameters?
       case EO_TERM_REBOOT: CmdLineSetRestart(EO_QUIT);
         // Do the restart and replace the current process with the new one
-        switch(const int iCode = StdExecVE(atArgV, atEnv))
+        switch(const int iCode = StdExecVE(atArgs, atEnv))
         { // Success? Shouldn't get here!
           case 0: break;
           // Error occured? Don't attempt execution again and show error
           default: XCL("Failed to restart process!",
-            "Process", *atArgV, "Code", iCode, "Parameters", iArgC);
+            "Process", *atArgs, "Code", iCode, "Parameters", iArgC);
         } // Done
         break;
       // Remove first parameter and fallthrough to next label
-      case EO_UI_REBOOT_NOARG: atArgV[1] = nullptr; iArgC = 1; [[fallthrough]];
+      case EO_UI_REBOOT_NOARG: atArgs[1] = nullptr; iArgC = 1; [[fallthrough]];
       // Restart while keeping parameters in ui mode?
       case EO_UI_REBOOT: CmdLineSetRestart(EO_QUIT);
         // Do the restart using spawn as MacOS is weird with ui apps otherwise.
-        switch(const int iCode = StdSpawnVE(atArgV, atEnv))
+        switch(const int iCode = StdSpawnVE(atArgs, atEnv))
         { // Success? Proceed to quit
           case 0: break;
           // Error occurred? Don't attempt execution again and show error
           default: XCL("Failed to spawn new process!",
-            "Process", *atArgV, "Code", iCode, "Parameters", iArgC);
+            "Process", *atArgs, "Code", iCode, "Parameters", iArgC);
         } // Done
         break;
       // Anything else? (Impossible but needed to prevent compiler warning)

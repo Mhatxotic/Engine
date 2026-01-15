@@ -202,7 +202,7 @@ struct AgJson : public ArClass<Json> {
 /* -- Read a valid triangle index ------------------------------------------ */
 struct AgTriangleId : public AgSizeTLGE {
   explicit AgTriangleId(lua_State*const lS, const int iArg) :
-    AgSizeTLGE{lS, iArg, 0, IFboDef::P::stTrisPerQuad}{} };
+    AgSizeTLGE{lS, iArg, 0, IFboCmd::P::stTrisPerQuad}{} };
 /* -- Read a texture id ---------------------------------------------------- */
 struct AgTextureId : public AgSizeTLGE {
   explicit AgTextureId(lua_State*const lS, const int iArg,

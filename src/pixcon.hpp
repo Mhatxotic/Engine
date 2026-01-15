@@ -634,7 +634,7 @@ class SysCon :                         // All members initially private
     { // Get structure
       const ConLine &clLine = *clcriIt;
       // Convert RGB colour to Win32 console id colour
-      SetColour(clLine.cColour);
+      SetColour(clLine.ccColour);
       // Put text in a utf container and write the data. Note: Although
       // CoordGetY() could go effectively negative and we're not using a signed
       // value we can make sure we don't access any OOB memory by just checking
