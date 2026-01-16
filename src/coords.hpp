@@ -18,8 +18,7 @@ namespace P {                          // Start of public module namespace
 template<typename IntType> requires is_arithmetic_v<IntType> class Coords
 { /* -- Private variables -------------------------------------------------- */
   typedef Coord<IntType> CoordType;    // Co-ordinates container type
-  CoordType        ctXY1,              // Top left co-ordinates
-                   ctXY2;              // Width and height
+  CoordType        ctXY1, ctXY2;       // Top-left/right-bottom co-ordinates
   /* -- Get co-ordinate -------------------------------------------- */ public:
   template<typename RIntType=IntType>RIntType CoordsGetLeft() const
     { return ctXY1.template CoordGetX<RIntType>(); }
@@ -71,15 +70,10 @@ template<typename IntType> requires is_arithmetic_v<IntType> class Coords
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor ------------------------------------------------ */
-  Coords() :
-    /* -- Initialisers ----------------------------------------------------- */
-    Coords{ static_cast<IntType>(0), static_cast<IntType>(0),
-            static_cast<IntType>(0), static_cast<IntType>(0) }
-    /* -- No code ---------------------------------------------------------- */
-    {}
+  Coords() = default;
 };/* ----------------------------------------------------------------------- */
-typedef Coords<GLfloat> CoordsFloat;   // Floating-point co-ordinates
-typedef Coords<GLuint>  CoordsUint;    // Reload glyph size
+typedef Coords<GLfloat> CoordsFloat;   // GLfloat co-ordinates
+typedef Coords<GLuint>  CoordsUint;    // GLuint co-ordinates
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

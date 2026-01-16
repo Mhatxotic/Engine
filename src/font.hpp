@@ -126,9 +126,9 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   /* -- Get bin occupancy -------------------------------------------------- */
   double GetTexOccupancy() const { return ipData.Occupancy(); }
   /* -- Get below baseline height of specified character ------------------- */
-  GLfloat GetBaselineBelow(const unsigned int uiChar)
+  GLfloat GetBaselineBelow(const Codepoint cChar)
   { // Now get character info and return data
-    const Glyph &gRef = gvData[CheckGlyph(uiChar)];
+    const Glyph &gRef = gvData[CheckGlyph(cChar)];
     return (gRef.CoordsGetBottom() - gRef.DimGetHeight()) * fScale;
   }
   /* -- Set line spacing of the font --------------------------------------- */
@@ -166,20 +166,20 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     UpdateHeightPlusLineSpacing();
   }
   /* -- Do initialise specified freetype character range ------------------- */
-  void InitFTCharRange(const size_t stStart, const size_t stEnd)
+  void InitFTCharRange(const Codepoint cStart, const Codepoint cEnd)
   { // Ignore if not a freetype font.
     if(!ftfData.IsLoaded()) return;
     // Log pre-cache progress
     cLog->LogDebugExSafe("Font '$' pre-caching character range $ to $...",
-      IdentGet(), stStart, stEnd);
+      IdentGet(), cStart, cEnd);
     // Load the specified character range
-    DoInitFTCharRangeApplyStroker<HandleGlyphFunc::FreeType>(stStart, stEnd);
+    DoInitFTCharRangeApplyStroker<HandleGlyphFunc::FreeType>(cStart, cEnd);
     // Check if any textures need reloading
     AtlasCheckReloadTexture();
     // Log success
     cLog->LogDebugExSafe(
       "Font '$' finished pre-caching character range $ to $.",
-      IdentGet(), stStart, stEnd);
+      IdentGet(), cStart, cEnd);
   }
   /* -- Do initialise all freetype characters in specified string ---------- */
   void InitFTCharString(const GLubyte*const ucpPtr)

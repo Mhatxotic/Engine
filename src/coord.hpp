@@ -13,8 +13,8 @@ using namespace IIntPair::P;           using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename IntType = unsigned int, // Integer type to use
-         class Base = IntPair<IntType>>   // Base int pair class type to use
+template<typename IntType,             // Integer type to use
+  class Base = IntPair<IntType>>       // Base int pair class type to use
 requires is_arithmetic_v<IntType>      // Must be be integer or float
 struct Coord :                         // Members initially public
   /* -- Base classes ------------------------------------------------------- */
@@ -33,18 +33,18 @@ struct Coord :                         // Members initially public
   void CoordSetX(const IntType itV) { this->IPSetOne(itV); }
   void CoordSetY(const IntType itV) { this->IPSetTwo(itV); }
   void CoordSet(const IntType itX, const IntType itY) { this->IPSet(itX,itY); }
-  void CoordSet(const IntType itV = Base::iD0) { this->IPSet(itV); }
+  void CoordSet(const IntType itV = Base::itD0) { this->IPSet(itV); }
   void CoordSet(const Coord &cRef) { this->IPSet(cRef); }
   void CoordSwap(Coord &cRef) { this->IPSwap(cRef); }
   /* -- Increment ---------------------------------------------------------- */
-  void CoordIncX(const IntType itV = Base::iD1) { this->IPIncOne(itV); }
-  void CoordIncY(const IntType itV = Base::iD1) { this->IPIncTwo(itV); }
-  void CoordInc(const IntType itX = Base::iD1, const IntType itY = Base::iD1)
+  void CoordIncX(const IntType itV = Base::itD1) { this->IPIncOne(itV); }
+  void CoordIncY(const IntType itV = Base::itD1) { this->IPIncTwo(itV); }
+  void CoordInc(const IntType itX = Base::itD1, const IntType itY = Base::itD1)
     { this->IPIncOne(itX); this->IPIncTwo(itY);}
   void CoordInc(const Coord &cOther) { this->IPInc(cOther); }
   /* -- Decrement ---------------------------------------------------------- */
-  void CoordDecX(const IntType itV = Base::iD1) { this->IPDecOne(itV); }
-  void CoordDecY(const IntType itV = Base::iD1) { this->IPDecTwo(itV); }
+  void CoordDecX(const IntType itV = Base::itD1) { this->IPDecOne(itV); }
+  void CoordDecY(const IntType itV = Base::itD1) { this->IPDecTwo(itV); }
   /* -- Test --------------------------------------------------------------- */
   bool CoordIsXSet() const { return this->IPIsOneSet(); }
   bool CoordIsNotXSet() const { return this->IPIsNotOneSet(); }
@@ -59,9 +59,9 @@ struct Coord :                         // Members initially public
   /* -- Test operator ------------------------------------------------------ */
   operator bool() const { return CoordIsSet(); }
   /* -- Initialisation of one value constructor ---------------------------- */
-  explicit Coord(const IntType itV) :
+  explicit Coord(const IntType itBoth) :
     /* -- Initialisers ----------------------------------------------------- */
-    Base{ itV }                        // Initialise specified values
+    Base{ itBoth }                     // Initialise specified values
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Initialisation of both values constructor -------------------------- */

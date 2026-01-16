@@ -222,6 +222,7 @@
 #include <exception>                   // Exception handling
 #include <functional>                  // Dynamic functions
 #include <iomanip>                     // String stream manipulation
+#include <iostream>                    // Output to terminal
 #include <iterator>                    // Container iterators
 #include <limits>                      // Hardware bounds limits
 #include <list>                        // Linked lists

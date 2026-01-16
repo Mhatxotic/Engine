@@ -59,7 +59,8 @@ class GlFWWindow :                     // GLFW window class
   }
   /* -- Event handler for 'glfwSetCharCallback' ---------------------------- */
   static void WinOnInputChar(GLFWwindow*const wC, unsigned int uiChar)
-    { cEvtMain->Add(EMC_INP_CHAR, reinterpret_cast<void*>(wC), uiChar); }
+    { cEvtMain->Add(EMC_INP_CHAR, reinterpret_cast<void*>(wC),
+        static_cast<Codepoint>(uiChar)); }
   /* -- Event handler for 'glfwSetCursorEnterCallback' --------------------- */
   static void WinOnMouseFocus(GLFWwindow*const wC, int iOnStage)
     { cEvtMain->Add(EMC_INP_MOUSE_FOCUS,

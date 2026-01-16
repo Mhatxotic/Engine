@@ -153,8 +153,8 @@ static unsigned int SysMessage(void*const, const string &strTitle,
         }
       }
   // Didn't work so put in stdout
-  fwprintf(stderr, L"%ls: %ls\n", UtfDecoder{ strTitle }.Wide().data(),
-                                  UtfDecoder{ strMessage }.Wide().data());
+  wcerr << UtfDecoder{ strTitle }.Wide() << ": "
+        << UtfDecoder{ strMessage }.Wide() << endl;
   // If exited successfully? Return success
   return 0;
 }

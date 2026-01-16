@@ -406,32 +406,32 @@ static const string CryptEntEncode(const string &strS)
   ostringstream osS; osS << hex;
   // For each entity. Find it in the string
   // Until null character. Which control token?
-  for(UtfDecoder utfSrc{ strS }; unsigned int uiChar = utfSrc.Next();)
+  for(UtfDecoder udSrc{ strS }; Codepoint cChar = udSrc.Next();)
   { // If characters with special meaning in HTML that must be escaped in text
     // contexts? (ampersand, less-than, greater-than, quotation marks
     // (depending on context))?
-    if(uiChar == static_cast<unsigned int>('&') || // (U+0026)
-       uiChar == static_cast<unsigned int>('<') || // (U+003C)
-       uiChar == static_cast<unsigned int>('>') || // (U+003E)
+    if(cChar == static_cast<Codepoint>('&') || // (U+0026)
+       cChar == static_cast<Codepoint>('<') || // (U+003C)
+       cChar == static_cast<Codepoint>('>') || // (U+003E)
        // Is control characters? (C0): U+0000..U+001F except allowed whitespace
        // (TAB U+0009, LF U+000A, CR U+000D)
-       (uiChar <= 0x001f && uiChar != 0x0009 &&
-        uiChar != 0x000a && uiChar != 0x000d) ||
+       (cChar <= 0x001f && cChar != 0x0009 &&
+        cChar != 0x000a && cChar != 0x000d) ||
        // Is DELETE control? (U+007F)
-       uiChar == 0x007f ||
+       cChar == 0x007f ||
        // Is C1 control characters? (U+0080..U+009F)
-       (uiChar > 0x0080 && uiChar <= 0x009f) ||
+       (cChar > 0x0080 && cChar <= 0x009f) ||
        // Is surrogate code points character? (never valid Unicode scalar
        // values -> U+D800..U+DFFF)
-       (uiChar > 0xd800 && uiChar <= 0xdfff) ||
+       (cChar > 0xd800 && cChar <= 0xdfff) ||
        // Noncharacters? (U+FDD0..U+FDEF)
-       (uiChar > 0xfdd0 && uiChar <= 0xfdef) ||
+       (cChar > 0xfdd0 && cChar <= 0xfdef) ||
        // Any code point where low 16 bits are 0xFFFE or 0xFFFF?
-       (uiChar & 0xffff) >= 0xfffe)
+       (cChar & 0xffff) >= 0xfffe)
       // Write the hexedecimal notation for the character instead
-      osS << cCommon->CommonEnt() << uiChar << ';';
+      osS << cCommon->CommonEnt() << cChar << ';';
     // Character is usable as is
-    else osS << static_cast<char>(uiChar);
+    else osS << static_cast<char>(cChar);
   } // Return string
   return osS.str();
 }
@@ -760,11 +760,11 @@ class Crypt :                          // Actual class body
         // Shouldn't be anything else. Ignore insertations, goto next entity
         else continue;
         // Encoder character
-        const UtfEncoderEx utfCode{ UtfEncodeEx(uiVal) };
+        const UtfEncoderEx ueeCode{ UtfEncodeEx(uiVal) };
         // Insert utf-8 string
-        strS.insert(stAPos, utfCode.u.c);
+        strS.insert(stAPos, ueeCode.u.c);
         // Go forward the number of unicode bytes written
-        stAPos += utfCode.l;
+        stAPos += ueeCode.l;
         // Find another entity
         continue;
       } // Find string to decode, ignore further insertation if no match

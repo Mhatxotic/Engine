@@ -33,8 +33,8 @@ struct CmdLine                         // Members initially public
 { /* -- Command-line and environment variables ---------------------*/ private:
   ExitOperation    eoExit;             // Actions to perform at exit
   int              iArgC;              // Arguments count
-  ArgType        **atArgs;             // Arguments list
-  ArgType        **atEnv;              // Environment list
+  ArgType        **atArgs,             // Arguments list
+                 **atEnv;              // Environment list
   const StrVector  svArg;              // Arguments list
   const StrStrMap  ssmEnv;             // Formatted environment variables
   const string     strCWD;             // Current startup working directory

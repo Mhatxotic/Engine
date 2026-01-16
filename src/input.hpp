@@ -55,12 +55,12 @@ class Input :                          // Handles keyboard, mouse & controllers
                    lfOnDragDrop;       // Drag and dropped files
   /* -- Filtered key pressed ----------------------------------------------- */
   void OnFilteredKey(const EvtMainEvent &emeEvent)
-  { // Get key pressed
-    const unsigned int uiKey = emeEvent.eaArgs[1].UInt();
+  { // Get key pressed (Codepoint defined in 'utf.hpp' is same as size_t)
+    const Codepoint cKey = emeEvent.eaArgs[1].SizeT();
     // If console is enabled, send it to console instead
-    if(cConsole->IsVisible()) return cConsole->OnCharPress(uiKey);
+    if(cConsole->IsVisible()) return cConsole->OnCharPress(cKey);
     // Else send the key to lua callbacks
-    lfOnChar.LuaFuncDispatch(uiKey);
+    lfOnChar.LuaFuncDispatch(cKey);
   }
   /* -- Mouse moved -------------------------------------------------------- */
   void OnMouseMove(const EvtMainEvent &emeEvent)
@@ -213,10 +213,10 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Window past event--------------------------------------------------- */
   void OnWindowPaste(const EvtMainEvent&)
   { // Get text in clipboard
-    UtfDecoder utfString{ cGlFW->WinGetClipboard() };
+    UtfDecoder udStr{ cGlFW->WinGetClipboard() };
     // For each character, ddd the character to queue if valid
-    while(const unsigned int uiChar = utfString.Next())
-      if(uiChar >= 32) cConsole->OnCharPress(uiChar);
+    while(const Codepoint cChar = udStr.Next())
+      if(cChar >= 32) cConsole->OnCharPress(cChar);
   }
   /* -- Commit cursor visibility ------------------------------------------- */
   void CommitCursor()

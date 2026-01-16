@@ -20,7 +20,8 @@ using namespace IImage::P;             using namespace IImageDef::P;
 using namespace ILog::P;               using namespace IOgl::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITexture::P;           using namespace Lib::OS::GlFW::Types;
+using namespace ITexture::P;           using namespace IUtf::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ========================================================================= */
@@ -64,14 +65,14 @@ class ConGraphics :                    // Members initially private
       cCVars->GetInternal<GLuint>(CON_FONTPADDING), OF_L_L_MM_L,
         GetFontRef());
     // Get minimum precache range and if valid?
-    if(const unsigned int uiCharMin =
+    if(const Codepoint cCharMin =
       cCVars->GetInternal<unsigned int>(CON_FONTPCMIN))
       // Get maximum precache range and return if valid?
-      if(const unsigned int uiCharMax =
+      if(const Codepoint cCharMax =
         cCVars->GetInternal<unsigned int>(CON_FONTPCMAX))
           // If maximum is above the minimum? Pre-cache the characters range
-          if(uiCharMax >= uiCharMin)
-            GetFontRef().InitFTCharRange(uiCharMin, uiCharMax);
+          if(cCharMax >= cCharMin)
+            GetFontRef().InitFTCharRange(cCharMin, cCharMax);
     // Set default font parameters
     RestoreDefaultProperties();
     // LUA not allowed to deallocate this font!
@@ -265,7 +266,7 @@ class ConGraphics :                    // Members initially private
     { // Get reference to console line data structure
       const ConLine &clD = *clI;
       // Set text foreground colour with opaqueness already set above
-      GetFontRef().FboItemSetQuadRGBInt(uiNDXtoRGB[clD.ccColour]);
+      GetFontRef().FboItemSetQuadRGBInt(ConColourToRGB(clD.ccColour));
       // Draw the text and move upwards of the height that was used
       fY -= GetFontRef().PrintWU(GetConsoleFBO().cfStage.CoordsGetLeft(), fY,
         GetConsoleFBO().cfStage.CoordsGetRight(),
@@ -356,7 +357,7 @@ class ConGraphics :                    // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Init helper function name
     ulFgColour(                        // Set input text colour
-      uiNDXtoRGB[COLOUR_YELLOW] |      // - Lookup RGB value for yellow
+      ConColourToRGB(COLOUR_YELLOW) |  // - Lookup RGB value for yellow
       0xFF000000),                     // - Force opaqueness
     ulBgColour(0x00000000),            // No background colour
     fTextScale(0.0f),                  // No font scale

@@ -16,10 +16,7 @@
 # pragma GCC diagnostic ignored "-Wunused-function"
 #endif                                 // Operating system check
 /* ------------------------------------------------------------------------- */
-#include <iostream>                    // Using cout to print to con
-/* ------------------------------------------------------------------------- */
 using std::cout;                       // Using this to print text
-using std::endl;                       // " End of line for std::cout
 /* ------------------------------------------------------------------------- */
 namespace E {                          // Put everything in engine namespace
 /* ------------------------------------------------------------------------- */

@@ -34,16 +34,17 @@ using ::std::accumulate;               using ::std::advance;
 using ::std::any_of;                   using ::std::back_inserter;
 using ::std::next;                     using ::std::prev;
 /* -- String streams ------------------------------------------------------- */
-using ::std::dec;                      using ::std::fixed;
-using ::std::fpclassify;               using ::std::get_time;
-using ::std::hex;                      using ::std::ios_base;
-using ::std::istringstream;            using ::std::left;
-using ::std::noskipws;                 using ::std::oct;
-using ::std::ostream_iterator;         using ::std::ostringstream;
-using ::std::put_time;                 using ::std::right;
-using ::std::setfill;                  using ::std::setprecision;
-using ::std::setw;                     using ::std::showpos;
-using ::std::uppercase;
+using ::std::dec;                      using ::std::endl;
+using ::std::fixed;                    using ::std::fpclassify;
+using ::std::get_time;                 using ::std::hex;
+using ::std::ios_base;                 using ::std::istringstream;
+using ::std::left;                     using ::std::noskipws;
+using ::std::oct;                      using ::std::ostream_iterator;
+using ::std::ostringstream;            using ::std::put_time;
+using ::std::right;                    using ::std::setfill;
+using ::std::setprecision;             using ::std::setw;
+using ::std::showpos;                  using ::std::uppercase;
+using ::std::wcerr;                    using ::std::wcout;
 /* -- Constexpr functions -------------------------------------------------- */
 using ::std::is_arithmetic_v;          using ::std::is_class_v;
 using ::std::is_enum_v;                using ::std::is_floating_point_v;

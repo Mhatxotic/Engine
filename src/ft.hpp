@@ -72,7 +72,7 @@ class FreeType :                       // Members initially private
   /* -- Error checker with custom error details ---------------------------- */
   template<typename ...VarArgs>
     static void CheckError(const FT_Error ftErr,
-      const char*cpMessage, VarArgs &&...vaArgs)
+      const char*const cpMessage, VarArgs &&...vaArgs)
   { if(ftErr) XC(cpMessage, "Code", ftErr, "Reason", FT_Error_String(ftErr),
                 StdForward<VarArgs>(vaArgs)...); }
   /* ----------------------------------------------------------------------- */
@@ -92,9 +92,7 @@ class FreeType :                       // Members initially private
   }
   /* ----------------------------------------------------------------------- */
   void DeInit() { if(DoDeInit()) ftlContext = nullptr; }
-  /* -- Destructor ---------------------------------------------- */ protected:
-  DTORHELPER(~FreeType, DoDeInit())
-  /* -- Default constructor ------------------------------------------------ */
+  /* -- Default constructor ------------------------------------- */ protected:
   FreeType() : ftlContext(nullptr), ftmrAlloc{ this,
     [](FT_Memory, long lBytes)->void*
       { return StdAlloc<void>(lBytes); },
@@ -105,6 +103,8 @@ class FreeType :                       // Members initially private
   }
   /* -- Set global pointer to static class --------------------------------- */
   { cFreeType = this; }
+  /* -- Destructor --------------------------------------------------------- */
+  DTORHELPER(~FreeType, DoDeInit())
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

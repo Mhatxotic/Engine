@@ -249,13 +249,13 @@ struct Console :                       // Members initially private
     if(const Args aList{ strCmd }) ExecuteArguments(strCmd, aList);
   }
   /* -- OnCharPress --------------------------- Console character pressed -- */
-  void OnCharPress(const unsigned int uiKey)
+  void OnCharPress(const Codepoint cKey)
   { // Ignore first key? Ignore it
     if(FlagIsSet(CF_IGNOREKEY)) return FlagClear(CF_IGNOREKEY);
     // Insert character if insert mode is on
-    if(FlagIsSet(CF_INSERT)) AddInputChar(uiKey);
+    if(FlagIsSet(CF_INSERT)) AddInputChar(cKey);
     // Repalce character in input buffer
-    else ReplaceInputChar(uiKey);
+    else ReplaceInputChar(cKey);
     // Reset autocomplete
     AutoCompleteReset();
   }
@@ -448,21 +448,21 @@ struct Console :                       // Members initially private
     SetRedraw();
   }
   /* -- Input manipulation ------------------------------------------------- */
-  void AddInputChar(const unsigned int uiChar)
+  void AddInputChar(const Codepoint cChar)
   { // Make sure line is under max characters
     if(strConsoleBegin.size() + strConsoleEnd.size() >= stMaxInputLine)
       return;
     // Encode character to utf-8
-    UtfAppend(uiChar, strConsoleBegin);
+    UtfAppend(cChar, strConsoleBegin);
     // Redraw the buffer, it changed
     SetRedraw();
   }
   /* -- Input manipulation ------------------------------------------------- */
-  void ReplaceInputChar(const unsigned int uiChar)
+  void ReplaceInputChar(const Codepoint cChar)
   { // Add character if we are at the end of the line input
-    if(strConsoleEnd.empty()) return AddInputChar(uiChar);
+    if(strConsoleEnd.empty()) return AddInputChar(cChar);
     // Encode character to utf-8
-    UtfAppend(uiChar, strConsoleBegin);
+    UtfAppend(cChar, strConsoleBegin);
     // Remove character from beginning of end of line input
     UtfPopFront(strConsoleEnd);
     // Redraw the buffer, it changed
@@ -632,7 +632,7 @@ struct Console :                       // Members initially private
       else if(clData.uiMaximum && aList.size() > clData.uiMaximum)
         AddLine("Too many parameters!");
       // Enough parameters so capture exceptions so we can't halt execution
-      else try { clData.ccbFunc(aList); }
+      else try { clData.ccfFunc(aList); }
       // exception did occur
       catch(const exception &eReason)
       { // Print the output in the console
@@ -735,17 +735,88 @@ struct Console :                       // Members initially private
   }
   /* -- Tick for stdout render --------------------------------------------- */
   void FlushToTerminal()
-  { // If there are console lines in the queue?
-    while(!clqOutput.empty())
-    { // Get next item
-      const ConLine &clLine = clqOutput.front();
-      // Print line to output
-      fwprintf(stdout, L"\033[%um[%.6f]<!> %ls\033[0m\n",
-        clLine.ccColour, clLine.dTime,
-          UtfDecoder{ clLine.strLine }.Wide().data());
-      // remove the old item
-      clqOutput.pop();
-    }
+  { // Return if no data
+    if(clqOutput.empty()) return;
+    // Setup output
+    wcout << fixed << setprecision(6) << setfill(static_cast<wchar_t>('0'))
+          << left << setw(0);
+    // Get next item
+    NextLine: const ConLine &clLine = clqOutput.front();
+    // Start writing initial part of output
+    wcout <<
+      // Add bold ANSI on anything but windows
+#if !defined(WINDOWS)
+      "\x1b[1m"
+#endif
+      // Write the time the console line was submitted
+      "[" << clLine.dTime << "]<O> ";
+    // Scan text as UTF-8
+    UtfDecoder udLine{ clLine.strLine };
+    // Get next character
+    NextChar: switch(const Codepoint cChar = udLine.Next())
+    { // Carriage return or space char? Restore position and return no wrap
+      case '\n': wcout << endl; goto NextChar;
+      // Other control character?
+      case '\r':
+      { // Compare it
+        switch(udLine.Next())
+        { // Colour change requested?
+          case 'c':
+          { // Scan for the hexadecimal value and ignore it
+            unsigned int uiCol;
+            // Write ANSI underline value in anything but Windows
+#if defined(WINDOWS)
+            udLine.ScanValue(uiCol);
+#else
+            if(udLine.ScanValue(uiCol) == 8) wcout << "\x1b[4m";
+#endif
+            // Next character
+            goto NextChar;
+          } // Outline colour change requested?
+          case 'o':
+          { // Scan for the hexadecimal value and ignore it
+            unsigned int uiCol;
+            // Write ANSI italic value in anything but Windows
+#if defined(WINDOWS)
+            udLine.ScanValue(uiCol);
+#else
+            if(udLine.ScanValue(uiCol) == 8) wcout << "\x1b[3m";
+#endif
+            // Next character
+            goto NextChar;
+          } // Texture change requested?
+          case 't':
+          { // Scan for the hexadecimal value and ignore it
+            unsigned int uiCol;
+            udLine.ScanValue(uiCol);
+            // Next character
+            goto NextChar;
+          } // Reset colour (ignore it)
+          case 'r':
+          { // Write ANSI reset value in anything but Windows
+#if !defined(WINDOWS)
+            wcout << "\x1b[0m\x1b[1m";
+#endif
+            // Next character
+            goto NextChar;
+          } // Invalid control character
+          default: goto NextChar;
+          // Finished
+          case '\0': break;
+        } // Finished
+        break;
+      } // Other character?
+      default: wcout << static_cast<wchar_t>(cChar); goto NextChar;
+      // Finished
+      case '\0': break;
+    } // Finished so remove attributes in terminal
+#if !defined(WINDOWS)
+    wcout << "\x1b[0m" << endl;
+#endif
+    // remove the old item
+    clqOutput.pop();
+    // Goto next line if there are no lines left
+    if(!clqOutput.empty()) goto NextLine;
   }
   /* -- Tick for bot render ------------------------------------------------ */
   void FlushToLog()
@@ -837,10 +908,10 @@ struct Console :                       // Members initially private
   /* -- Register console command ------------------------------------------- */
   const CmdMapIt RegisterCommand(const string &strName,
     const unsigned int uiMin, const unsigned int uiMax,
-    const ConCbFunc ccbFunc)
+    const ConCbFunc ccfFunc)
   { // Insert trusted command into commands list
     return cmMap.insert({ strName,
-      { strName, uiMin, uiMax, CFL_BASIC, ccbFunc } }).first;
+      { strName, uiMin, uiMax, CFL_BASIC, ccfFunc } }).first;
   }
   /* -- Unregister console command ----------------------------------------- */
   void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
@@ -936,7 +1007,7 @@ struct Console :                       // Members initially private
     for(const ConLibStatic &clCmd : ccslInt)
       if(cSystem->IsCoreFlagsHave(clCmd.cfcRequired))
         RegisterCommand(string(clCmd.strvName), clCmd.uiMinimum,
-          clCmd.uiMaximum, clCmd.ccbFunc);
+          clCmd.uiMaximum, clCmd.ccfFunc);
       // Write in log to say we skipped registration of this command
       else cLog->LogDebugExSafe(
         "Console ignoring registration of command '$'.", clCmd.strvName);

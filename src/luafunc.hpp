@@ -166,6 +166,9 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   MP(unsigned long long, "uint64", LuaUtilPushInt)
   MP(signed int,         "int",    LuaUtilPushInt)
   MP(unsigned int,       "uint",   LuaUtilPushInt)
+#if !defined(WINDOWS)
+  MP(size_t,             "size_t", LuaUtilPushInt)
+#endif
   MP(float,              "float",  LuaUtilPushNum)
   MP(double,             "double", LuaUtilPushNum)
   MP(bool,               "bool",   LuaUtilPushBool)
