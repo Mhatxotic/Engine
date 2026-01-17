@@ -27,7 +27,7 @@ class FlagsStorageUnsafe
   constexpr void FlagSwapStorage(FlagsStorageUnsafe &fcValue)
     { swap(itV, fcValue.itV); }
   /* -- Implicit init constructor (todo, make explicit but many errors!) --- */
-  explicit constexpr FlagsStorageUnsafe(const IntType itValue) :
+  constexpr explicit FlagsStorageUnsafe(const IntType itValue) :
     /* -- Initialisers ----------------------------------------------------- */
     itV{ itValue }
     /* -- No code ---------------------------------------------------------- */
@@ -50,15 +50,15 @@ class FlagsStorageSafe :
   /* -- Base classes (note that std::atomic will never throw) -------------- */
   private SafeType
 { /* -- Set values ---------------------------------------------- */ protected:
-  template<typename AnyType>void FlagSetInt(const AnyType atValue)
+  template<typename AnyType>constexpr void FlagSetInt(const AnyType atValue)
     { this->store(static_cast<IntType>(atValue)); }
   /* -- Swap values -------------------------------------------------------- */
-  void FlagSwapStorage(FlagsStorageSafe &fcValue) { swap(fcValue); }
+  constexpr void FlagSwapStorage(FlagsStorageSafe &fcValue) { swap(fcValue); }
   /* -- Implicit init constructor (todo, make explicit but many errors!) --- */
-  explicit FlagsStorageSafe(const IntType itValue) :
+  constexpr explicit FlagsStorageSafe(const IntType itValue) :
     SafeType{ itValue } {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>AnyType FlagGet() const
+  template<typename AnyType=IntType>constexpr AnyType FlagGet() const
     { return static_cast<AnyType>(this->load()); }
 };/* ----------------------------------------------------------------------- */
 /* == Read-only flags helper class ========================================= **
@@ -222,9 +222,9 @@ class SafeFlags :
   /* -- Base classes ------------------------------------------------------- */
   public FlagsType
 { /* -- Implicit init constructor (todo, make explicit!) ----------- */ public:
-  explicit SafeFlags(const ConstType &fcValue) :
+  constexpr explicit SafeFlags(const ConstType &fcValue) :
     FlagsType{ fcValue } {}
-  explicit SafeFlags(const UConstType &fcValue) :
+  constexpr explicit SafeFlags(const UConstType &fcValue) :
     FlagsType{ fcValue } {}
 };/* ----------------------------------------------------------------------- */
 /* == Flags helper macro =================================================== */
@@ -232,11 +232,11 @@ class SafeFlags :
   typedef uint64_t n ## FlagsType; \
   typedef s<n ## FlagsType> n ## Flags; \
   typedef FlagsConst<n ## FlagsType> n ## FlagsConst; \
-  static const n ## FlagsConst __VA_ARGS__;
+  constexpr static const n ## FlagsConst __VA_ARGS__;
 #define BUILD_FLAGS(n, ...) BUILD_FLAGS_EX(n, Flags, __VA_ARGS__)
 #define BUILD_SECURE_FLAGS(n, ...) BUILD_FLAGS_EX(n, SafeFlags, __VA_ARGS__)
 /* -- Helper for defining flags -------------------------------------------- */
-constexpr uint64_t Flag(const size_t stIndex)
+constexpr static uint64_t Flag(const size_t stIndex)
   { return stIndex ? 1ULL << (stIndex - 1) : 0; };
 /* ------------------------------------------------------------------------- */
 }                                      // End of module namespace

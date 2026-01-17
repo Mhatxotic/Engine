@@ -156,14 +156,9 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
       static_cast<GLsizei>(FboGetTrisCmd() * stVertexPerTriangle),// siVertices
     });
   }
-  /* -- Finish and render the graphics ------------------------------------- */
-  void FboFinishAndRender()
-  { // If we've already finished this FBO this frame?
-    if(cTimer->TimerGetTicks() == uqFinish) [[unlikely]]
-      XC("FBO already finished in this frame!",
-        "Identifier", IdentGet(), "Frame", uqFinish);
-    uqFinish = cTimer->TimerGetTicks();
-    // Finish writing to the arrays
+  /* -- Finish and render the graphics without tick check ------------------ */
+  void FboFinishAndRenderUnsafe()
+  { // Finish writing to the arrays
     FboFinishQueue();
     // Set current triangle and frame count
     stTrianglesFrame = FboGetTrisNow();
@@ -205,6 +200,16 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
       // Draw data arrays
       cOgl->DrawArraysTriangles(fcData.siVertices);
     });
+  }
+  /* -- Finish and render the graphics ------------------------------------- */
+  void FboFinishAndRender()
+  { // If we've already finished this FBO this frame?
+    if(cTimer->TimerGetTicks() == uqFinish) [[unlikely]]
+      XC("FBO already finished in this frame!",
+        "Identifier", IdentGet(), "Frame", uqFinish);
+    uqFinish = cTimer->TimerGetTicks();
+    // Do the actual finish and render
+    FboFinishAndRenderUnsafe();
   }
   /* -- Finish the queue without checking and reset cache ------------------ */
   void FboFinishAndReset(const GLuint uiT, const GLuint uiTU,

@@ -53,7 +53,7 @@ LLFUNC(GetVideoVolume, 1, LuaUtilPushVar(lS, cSources->fVVolume.load()))
 // > Func:function=The callback function to use
 // ? Fires when the audio device updates.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnUpdate, 0, cLua->SetLuaRef(lS, cAudio->lfOnUpdate))
+LLFUNC(OnUpdate, 0, cLua->LuaSetRef(lS, cAudio->lfOnUpdate))
 /* ========================================================================= */
 // $ Audio.SetGlobalVolume
 // > Volume:number=New master volume (0 to 1).

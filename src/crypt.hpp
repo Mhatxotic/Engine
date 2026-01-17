@@ -127,7 +127,7 @@ static void CryptAddEntropy()
   CryptAddEntropyInt(cmSys.GetTimeUS());
   CryptAddEntropyInt(cmHiRes.GetTimeUS());
   CryptAddEntropyInt(cLog->CCDeltaUS());
-  cSystem->UpdateCPUUsage();
+  cSystem->SysUpdateCPUUsage();
   CryptAddEntropyInt(cSystem->CPUUsage());
   CryptAddEntropyInt(cSystem->CPUUsageSystem());
   cSystem->UpdateMemoryUsageData();

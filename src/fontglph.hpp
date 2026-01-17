@@ -22,15 +22,15 @@ struct StrokerFunc                     // Using as a public namespace only
   };/* -- Full outline required -------------------------------------------- */
   struct Outline : public NoOutline {
     Outline(FT_Glyph &gD, FT_Stroker ftS) :
-      NoOutline{ FreeType::ApplyStrokerFull(gD, ftS) } {} };
+      NoOutline{ FreeType::FreeTypeApplyStrokerFull(gD, ftS) } {} };
   /* -- Outside outline required ------------------------------------------- */
   struct OutlineOutside : public NoOutline {
     OutlineOutside(FT_Glyph &gD, FT_Stroker ftS) :
-      NoOutline{ FreeType::ApplyStrokerOutside(gD, ftS) } {} };
+      NoOutline{ FreeType::FreeTypeApplyStrokerOutside(gD, ftS) } {} };
   /* -- Inside outline required -------------------------------------------- */
   struct OutlineInside : public NoOutline {
     OutlineInside(FT_Glyph &gD, FT_Stroker ftS) :
-      NoOutline{ FreeType::ApplyStrokerInside(gD, ftS) } {} };
+      NoOutline{ FreeType::FreeTypeApplyStrokerInside(gD, ftS) } {} };
   /* ----------------------------------------------------------------------- */
 };                                     // End of StrokerFunc
 /* ------------------------------------------------------------------------- */
@@ -150,19 +150,19 @@ template<class StrokerFuncType>
     const Codepoint cChar, const GLfloat fAdvance)
 { // Move The Face's Glyph Into A Glyph Object to get outline
   FT_Glyph gData;
-  cFreeType->CheckError(FT_Get_Glyph(ftgsRef, &gData),
+  cFreeType->FreeTypeCheckError(FT_Get_Glyph(ftgsRef, &gData),
     "Failed to get glyph!", "Identifier", IdentGet(), "Glyph", cChar);
   // Put in autorelease ptr to autorelease
   typedef unique_ptr<FT_GlyphRec_, function<decltype(FT_Done_Glyph)>> GlyphPtr;
   if(GlyphPtr gPtr{ gData, FT_Done_Glyph })
   { // Apply glyph border if requested
-    cFreeType->CheckError(
+    cFreeType->FreeTypeCheckError(
       StrokerFuncType{ gData, ftfData.GetStroker() }.Result(),
       "Failed to apply outline to glyph!",
       "Identifier", IdentGet(), "Glyph", cChar);
     // Convert The Glyph To A Image.
-    cFreeType->CheckError(FT_Glyph_To_Bitmap(&gData, FT_RENDER_MODE_NORMAL,
-      nullptr, true),
+    cFreeType->FreeTypeCheckError(FT_Glyph_To_Bitmap(&gData,
+      FT_RENDER_MODE_NORMAL, nullptr, true),
       "Failed to render glyph to image!",
       "Identifier", IdentGet(), "Glyph", cChar);
     // The above function will have modified the glyph address and freed the
@@ -238,7 +238,8 @@ template<class StrokerCheckFuncType, class RoundCheckFuncType>
   // Translate character to glyph and if succeeded?
   if(const FT_UInt uiGl = ftfData.CharToGlyph(static_cast<FT_ULong>(cChar)))
   { // Load glyph and return glyph on success else throw exception
-    cFreeType->CheckError(ftfData.LoadGlyph(uiGl), "Failed to load glyph!",
+    cFreeType->FreeTypeCheckError(ftfData.LoadGlyph(uiGl),
+      "Failed to load glyph!",
       "Identifier", IdentGet(), "Index", cChar);
     // Get glyph slot handle and get advance width.
     FT_GlyphSlot ftgsRef = ftfData.GetGlyphData();

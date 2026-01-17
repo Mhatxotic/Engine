@@ -98,7 +98,7 @@ LLFUNC(SetJoyAxisDeadZones, 0,
 LLFUNC(SetCursorPos, 0,
   const AgGLfloat aX{lS, 1},
                   aY{lS, 2};
-  cInput->SetCursorPos(aX, aY))
+  cInput->InputSetCursorPos(aX, aY))
 /* ========================================================================= */
 // $ Input.ClearStates
 // ? Clears the keyboard, mouse and joystick states which wipes the current
@@ -109,14 +109,14 @@ LLFUNC(ClearStates, 0, cInput->JoyClearStates())
 // $ Input.CursorCentre
 // ? Sets the mouse cursor in the centre of the window.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetCursorCentre, 0, cInput->SetCursorCentre())
+LLFUNC(SetCursorCentre, 0, cInput->InputSetCursorCentre())
 /* ========================================================================= */
 // $ Input.SetCursor
 // > State:boolean=True to show the cursor, false to hide it.
 // ? Shows or hides the OS cursor so you can effectively design your own
 // ? software based cursor.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetCursor, 0, cInput->SetCursor(AgBoolean{lS, 1}))
+LLFUNC(SetCursor, 0, cInput->InputSetCursor(AgBoolean{lS, 1}))
 /* ========================================================================= */
 // $ Input.JoyExists
 // > Id:integer=The joystick id.
@@ -193,14 +193,14 @@ LLFUNC(GetJoyAxisUB, 1,
 // ? this function will be called with a integer whether the mouse entered the
 // ? window or not.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnMouseFocus, 0, cLua->SetLuaRef(lS, cInput->lfOnMouseFocus))
+LLFUNC(OnMouseFocus, 0, cLua->LuaSetRef(lS, cInput->lfOnMouseFocus))
 /* ========================================================================= */
 // $ Input.OnMouseClick
 // > Func:function=The callback function to use
 // ? When the mouse is clicked, this function will be called with the
 // ? mouse button clicked, the state and the key modifiers
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnMouseClick, 0, cLua->SetLuaRef(lS, cInput->lfOnMouseClick))
+LLFUNC(OnMouseClick, 0, cLua->LuaSetRef(lS, cInput->lfOnMouseClick))
 /* ========================================================================= */
 // $ Input.OnMouseMove
 // > Func:function=The callback function to use
@@ -211,29 +211,29 @@ LLFUNC(OnMouseClick, 0, cLua->SetLuaRef(lS, cInput->lfOnMouseClick))
 // ? referenced function.
 /* ------------------------------------------------------------------------- */
 LLFUNC(OnMouseMove, 0,
-  if(cLua->SetLuaRef(lS, cInput->lfOnMouseMove))
-    cInput->RequestMousePosition())
+  if(cLua->LuaSetRef(lS, cInput->lfOnMouseMove))
+    cInput->InputRequestMousePosition())
 /* ========================================================================= */
 // $ Input.OnDragDrop
 // > Func:function=The callback function to use
 // ? When files are dragged into the window, this function will be called with
 // ? an array of files that were dragged into it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnDragDrop, 0, cLua->SetLuaRef(lS, cInput->lfOnDragDrop))
+LLFUNC(OnDragDrop, 0, cLua->LuaSetRef(lS, cInput->lfOnDragDrop))
 /* ========================================================================= */
 // $ Input.OnMouseScroll
 // > Func:function=The callback function to use
 // ? When a filtered key is pressed, this function will be called with the
 // ? 2 axis coordinates on which direction the mouse was scrolled
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnMouseScroll, 0, cLua->SetLuaRef(lS, cInput->lfOnMouseScroll))
+LLFUNC(OnMouseScroll, 0, cLua->LuaSetRef(lS, cInput->lfOnMouseScroll))
 /* ========================================================================= */
 // $ Input.OnChar
 // > Func:function=The callback function to use
 // ? When a filtered key is pressed, this function will be called with the
 // ? key that was pressed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnChar, 0, cLua->SetLuaRef(lS, cInput->lfOnChar))
+LLFUNC(OnChar, 0, cLua->LuaSetRef(lS, cInput->lfOnChar))
 /* ========================================================================= */
 // $ Input.OnJoyState
 // > Func:function=The callback function to use
@@ -245,14 +245,14 @@ LLFUNC(OnChar, 0, cLua->SetLuaRef(lS, cInput->lfOnChar))
 // ? (false).
 /* ------------------------------------------------------------------------- */
 LLFUNC(OnJoyState, 0,
-  if(cLua->SetLuaRef(lS, cInput->JoyGetLuaEvent())) cInput->JoyDetect())
+  if(cLua->LuaSetRef(lS, cInput->JoyGetLuaEvent())) cInput->JoyDetect())
 /* ========================================================================= */
 // $ Input.OnKey
 // > Func:function=The callback function to use
 // ? When an filtered key is pressed, this function will be called with the
 // ? key that was pressed
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnKey, 0, cLua->SetLuaRef(lS, cInput->lfOnKey))
+LLFUNC(OnKey, 0, cLua->LuaSetRef(lS, cInput->lfOnKey))
 /* ========================================================================= */
 // $ Input.GetKeyName
 // > Value:integer=The key id of the key

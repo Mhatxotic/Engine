@@ -172,7 +172,7 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
 // ? force committed to disk (true) or not (false). Note that variable values
 // ? that are equal to the default value are not committed to the database.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Register, 1, cLua->StateAssert(lS);AcVariable{lS}().Init(lS))
+LLFUNC(Register, 1, cLua->LuaStateAssert(lS);AcVariable{lS}().Init(lS))
 /* ========================================================================= */
 // $ Variable.Exists
 // > String:string=The console command name to lookup

@@ -465,18 +465,6 @@ requires is_class_v<AnyTypeRR> &&
 #define DTORHELPER(c,...) c() noexcept(false) { \
   try { __VA_ARGS__; } catch(const exception &eReason) \
     { cLog->LogWarningExSafe("(" STR(c) ") $", eReason); } }
-/* == Init helper ========================================================== **
-** ######################################################################### **
-** ## Very useful little helper to create a class in-scope to init and    ## **
-** ## a de-init function when leaving the scope.                          ## **
-** ######################################################################### **
-** ## n ## Name of the class. The variable is called this too prefix 'c'. ## **
-** ## i ## The function to execute straight away.                         ## **
-** ## d ## The function to execute when leaving the scope.                ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-#define INITHELPER(n,i,d) struct n final { n(){i;} DTORHELPER(~n,d) } c ## n
-#define DEINITHELPER(n,d) INITHELPER(n,,d)
 /* == Z-Lib requirements =================================================== */
 #if defined(ALPHA)                     // Z-Lib debug version requires this
 extern "C" { int z_verbose = 0, z_error = 0; }

@@ -50,7 +50,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   void DoDeInit()
   { // Clear freetype handles if created
     if(IsStrokerLoaded()) FT_Stroker_Done(ftsStroker);
-    if(IsLoaded()) cFreeType->DestroyFont(ftfFace);
+    if(IsLoaded()) cFreeType->FreeTypeDestroyFont(ftfFace);
   }
   /* -- Returns if face is loaded----------------------------------- */ public:
   bool IsLoaded() const { return !!ftfFace; }
@@ -69,7 +69,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   { // For some twisted reason, FreeType measures char size in terms f 1/64ths
     // of pixels. Thus, to make a char 'h' pixels high, we need to request a
     // size of 'h*64'.
-    cFreeType->CheckError(FT_Set_Char_Size(ftfFace,
+    cFreeType->FreeTypeCheckError(FT_Set_Char_Size(ftfFace,
       static_cast<FT_F26Dot6>(DimGetWidth() * 64.0f),
       static_cast<FT_F26Dot6>(DimGetHeight() * 64.0f),
       duDPI.DimGetWidth<FT_UInt>(), duDPI.DimGetHeight<FT_UInt>()),
@@ -90,11 +90,11 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   { // Take ownership of the file data
     FileMapSwap(fmData);
     // Load font
-    cFreeType->CheckError(
-      cFreeType->NewFont(static_cast<FileMap&>(*this), ftfFace),
+    cFreeType->FreeTypeCheckError(
+      cFreeType->FreeTypeNewFont(static_cast<FileMap&>(*this), ftfFace),
         "Failed to create font!",
         "Identifier", IdentGet(),
-        "Context",    cFreeType->IsLibraryAvailable(),
+        "Context",    cFreeType->FreeTypeIsLibraryAvailable(),
         "Buffer",     FileMap::MemIsPtrSet(),
         "Size",       FileMap::MemSize());
     // Update size
@@ -102,9 +102,10 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     // Outline requested?
     if(IsOutline())
     { // Create stroker handle
-      cFreeType->CheckError(cFreeType->NewStroker(ftsStroker),
+      cFreeType->FreeTypeCheckError(cFreeType->FreeTypeNewStroker(ftsStroker),
         "Failed to create stroker!",
-        "Identifier", IdentGet(), "Context", cFreeType->IsLibraryAvailable());
+        "Identifier", IdentGet(),
+        "Context",    cFreeType->FreeTypeIsLibraryAvailable());
       // Set properties of stroker handle
       FT_Stroker_Set(ftsStroker, static_cast<FT_Fixed>(GetOutline() * 64.0f),
        FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);

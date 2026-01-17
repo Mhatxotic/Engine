@@ -82,9 +82,16 @@ class Core final :                     // Members initially private
   private Display,        private Input,          private ShaderCore,
   private Fbos,           private FboCore,        private SShots,
   private Textures,       private Palettes,       private Atlases,
-  private Fonts,          private Videos,         private ConGraphics,
+  private Fonts,          private Videos,         private ConGfx,
   private Variables,      private Commands,       private Lua
-{ /* -- Private Variables ------------------------------------------------- */
+{ /* -- Private typedefs to run a function when scope exits ---------------- */
+  template<typename FuncType>struct ScopeGuard { FuncType ftFunc;
+    explicit ScopeGuard(FuncType &&ftNFunc) : ftFunc(StdMove(ftNFunc)) {}
+      DTORHELPER(~ScopeGuard, ftFunc()) }; // Use std::scoped_exit in C++23
+  template<class FuncType>ScopeGuard<FuncType>
+    MakeScopeGuard(FuncType &&ftFunc) {
+      return ScopeGuard<FuncType>(StdForward<FuncType>(ftFunc)); }
+  /* -- Private Variables -------------------------------------------------- */
   enum CoreErrorReason                 // Lua error mode behaviour options
   { CER_IGNORE,                        // [0] Ignore errors and try to continue
     CER_RESET,                         // [1] Automatically reset on error
@@ -101,54 +108,54 @@ class Core final :                     // Members initially private
     cLog->LogDebugExSafe("Core $ environment...",
       bLeaving ? "resetting" : "preparing");
     // End current SQL transaction, we need to report it if it succeeded.
-    if(bLeaving && cSql->End() != SQLITE_ERROR)
+    if(bLeaving && Sql::End() != SQLITE_ERROR)
       cLog->LogWarningSafe("Core ended an in-progress SQL transaction!");
     // Reset all SQL error codes and stored results and records.
-    cSql->Reset();
+    Sql::Reset();
     // Clear console status bars. Although this only applies if there is a
     // terminal window, we don't restrict use of the function in graphical only
     // mode so clear it regardless of what the gui mode is.
-    cConsole->ClearStatus();
+    Console::ClearStatus();
     // If using graphical inteactive mode?
-    if(cSystem->IsGraphicalMode())
+    if(SysIsGraphicalMode())
     { // Reset input environment
-      cInput->ResetEnvironment();
+      InputResetEnvironment();
       // Reset FBO clear colour, selected binds and 8-bit shader palette
-      cFboCore->ResetClearColour();
-      cOgl->ResetBinds();
-      cPalettes->palDefault.Commit();
+      FboCoreResetClearColour();
+      Ogl::ResetBinds();
+      Palettes::palDefault.Commit();
       // Set main framebuffer as default and reset to original settings
-      cFboCore->ActivateMain();
-      cDisplay->CommitDefaultMatrix();
+      FboCoreActivateMain();
+      DisplayCommitDefaultMatrix();
       // Reset the cursor
-      cDisplay->RequestResetCursor();
+      DisplayRequestResetCursor();
       // If leaving main execution?
       if(bLeaving)
       { // Enable and show console, and set full-screen
-        cConGraphics->LeaveResetEnvironment();
+        ConGfxLeaveResetEnvironment();
         // Force a 1ms suspend lock to not hog the cpu
-        cTimer->TimerReset(true);
+        TimerReset(true);
       } // If entering?
       else
       { // Disable and hide console, and restore size
-        cConGraphics->EnterResetEnvironment();
+        ConGfxEnterResetEnvironment();
         // Remove the 1ms FPS limit lock on the engine
-        cTimer->TimerReset(false);
+        TimerReset(false);
       } // Make sure main FBO is cleared
-      cFboCore->SetDraw();
+      FboCoreSetDraw();
     } // Not graphical? Set or remove the 1ms FPS limit lock on the engine
-    else cTimer->TimerReset(bLeaving);
+    else TimerReset(bLeaving);
     // Reset unique ids. Remember some classes aren't registered in the
     // collector, such as the console and main FBO.
-#define RSCEX(x,v) x->CounterReset(x->CollectorCount() + v)
-#define RSCX(x,v) RSCEX(c ## x, v)
+#define RSCEX(x,y,v) y::CLHelperBase::CounterReset(y::CollectorCount() + v)
+#define RSCX(x,v) RSCEX(ICHelper ## x, x ## s, v)
 #define RSC(x) RSCX(x, 0)
-    RSC(Archives); RSC(Assets);    RSC(Atlases); RSC(Bins);      RSC(Clips);
-    RSC(Commands); RSCX(Fbos,2);   RSC(Files);   RSC(Fonts);     RSC(Ftfs);
-    RSC(Images);   RSC(ImageLibs); RSC(Jsons);   RSC(LuaFuncs);  RSC(Masks);
-    RSC(Palettes); RSC(Pcms);      RSC(PcmLibs); RSC(Samples);   RSC(Shaders);
-    RSC(Sockets);  RSC(Sources);   RSC(SShots);  RSC(Stats);     RSC(Streams);
-    RSC(Textures); RSC(Threads);   RSC(Urls);    RSC(Variables); RSC(Videos);
+    RSC(Archive); RSC(Asset);    RSC(Atlase); RSC(Bin);      RSC(Clip);
+    RSC(Command); RSCX(Fbo, 2);  RSC(File);   RSC(Font);     RSC(Ftf);
+    RSC(Image);   RSC(ImageLib); RSC(Json);   RSC(LuaFunc);  RSC(Mask);
+    RSC(Palette); RSC(Pcm);      RSC(PcmLib); RSC(Sample);   RSC(Shader);
+    RSC(Socket);  RSC(Source);   RSC(SShot);  RSC(Stat);     RSC(Stream);
+    RSC(Texture); RSC(Thread);   RSC(Url);    RSC(Variable); RSC(Video);
 #undef RSC
 #undef RSCX
 #undef RSCEX
@@ -156,8 +163,8 @@ class Core final :                     // Members initially private
     SocketResetCounters();
     // Clear any lingering events which is very important because events from
     // the last sandbox may contain invalidated pointers and as long as they
-    // don't reach the 'cEvtMain->ManageSafe()' function we're fine.
-    cEvtMain->Flush();
+    // don't reach the 'EvtMain::ManageSafe()' function we're fine.
+    EvtMain::Flush();
     // Reset tick count and catchup
     TimerCatchup();
     TimerResetTicks();
@@ -168,77 +175,120 @@ class Core final :                     // Members initially private
   /* -- Graphical core window thread tick without frame limiter ------------ */
   void CoreTickNoFrameLimiter()
   { // Update timer
-    cTimer->TimerUpdateBot();
+    TimerUpdateBot();
     // Render the console FBO (if update requested)
-    cConGraphics->Render();
+    ConGfxRender();
     // Render video textures (if any)
     VideoRender();
     // Set main FBO by default on each frame
-    cFboCore->ActivateMain();
+    FboCoreActivateMain();
     // Poll joysticks
-    cInput->JoyPoll();
+    JoyPoll();
     // Execute a tick for each frame missed
-    cLua->ExecuteMain();
+    LuaExecuteMain();
     // Render the console FBO to the main FBO
-    cConGraphics->RenderToMain();
+    ConGfxRenderToMain();
+    // Finish rendering the main FBO
+    FboCoreGetMain().FboFinishAndRender();
     // Render all FBO's and copy the main FBO to screen
-    cFboCore->Render();
+    FboCoreRender();
   }
   /* -- Graphical core window thread tick with frame limiter --------------- */
   void CoreTickFrameLimiter()
   { // Return if it is not time to execute a game tick
-    if(cTimer->TimerShouldNotTick()) return;
+    if(TimerShouldNotTick()) return;
     // Render the console FBO (if update requested)
-    cConGraphics->Render();
+    ConGfxRender();
     // Render video textures (if any)
     VideoRender();
     // Set main FBO by default on each frame
-    Catchup: cFboCore->ActivateMain();
+    Catchup: FboCoreActivateMain();
     // Poll joysticks
-    cInput->JoyPoll();
+    JoyPoll();
     // Execute a tick for each frame missed
-    cLua->ExecuteMain();
-    // If we have to catchup? Skip rendering and immediately run again.
-    if(cFboCore->SkipRender()) goto Catchup;
-    // Render the console FBO to the main FBO
-    cConGraphics->RenderToMain();
-    // Render all FBO's and copy the main FBO to back buffer
-    cFboCore->Render();
+    LuaExecuteMain();
+    // What is the current draw condition?
+    switch(FboCoreGetDraw())
+    { // Must render everything?
+      case DS_FULL:
+        // We're behind? If true, we've already entered the next frame
+        if(TimerShouldTick())
+        { // Clear redraw flag but we still need to copy main to back buffer
+          FboCoreClearDrawPartial();
+          // Render the console FBO to the main FBO
+          ConGfxRenderToMain();
+          // Finish rendering the main FBO but don't update finish tickstamp
+          FboCoreGetMain().FboFinishAndRenderUnsafe();
+          // Try to catchup by ignoring video rendering and flipping buffers
+          goto Catchup;
+        } // Clear redraw flag
+        FboCoreClearDraw();
+        // Render the console FBO to the main FBO
+        ConGfxRenderToMain();
+        // Finish rendering the main FBO
+        FboCoreGetMain().FboFinishAndRender();
+        // Do the render
+        FboCoreRender();
+        // Done
+        break;
+      // No redrawing required this frame?
+      case DS_NONE:
+        // Try to catchup if we are behind
+        if(TimerShouldTick()) goto Catchup;
+        // Cannot draw so delete texture and FBO handles and finish
+        cOgl->PostRender();
+        // Timer system can wait a little to not waste CPU cycles
+        TimerForceWait();
+        // Done
+        break;
+      // Only copy main to back buffer? Caused by being behind and DS_FULL
+      case DS_PARTIAL:
+        // Try to catchup if we are behind
+        if(TimerShouldTick()) goto Catchup;
+        // Clear redraw flag
+        FboCoreClearDraw();
+        // Do the render
+        FboCoreRender();
+        // Done
+        break;
+      // Anything else ignore
+      default: break;
+    }
   }
   /* -- Fired when Lua enters the sandbox ---------------------------------- */
   int CoreThreadSandbox(lua_State*const lS)
   { // Capture exceptions...
     try
     { // Clear thread exit status
-      cEvtMain->ThreadCancelExit();
+      EvtMain::ThreadCancelExit();
       // Compare event code. Do we need to execute scripts?
-      switch(cEvtMain->GetExitReason())
+      switch(EvtMain::GetExitReason())
       { // Do not reinitialise anything if we processed a LUA error code
         case EMC_LUA_ERROR: break;
         // Lua execution was ended (e.g. use of the 'lend' command)
         case EMC_LUA_END:
           // Setup lua default environment (libraries, config, etc.)
-          cLua->SetupEnvironment();
+          LuaSetupEnvironment();
           // Force timer delay to 1ms to prevent 100% thread use on Main*
-          cTimer->TimerSetDelayIfZero();
+          TimerSetDelayIfZero();
           // Exceptions from here on are recoverable
-          cEvtMain->SetExitReason(EMC_LUA_ERROR);
+          EvtMain::SetExitReason(EMC_LUA_ERROR);
           // Done
           break;
         // The thread and window was reinitialised? (e.g. vreset command)
         case EMC_QUIT_VREINIT: [[fallthrough]];
         case EMC_QUIT_THREAD:
           // Tell guest scripts to redraw their FBO's
-          cEvtMain->Add(EMC_LUA_REDRAW);
+          EvtMain::Add(EMC_LUA_REDRAW);
           // Exceptions from here on are recoverable
-          cEvtMain->SetExitReason(EMC_LUA_ERROR);
+          EvtMain::SetExitReason(EMC_LUA_ERROR);
           // Done
           break;
         // Lua executing was reinitialised?
         case EMC_LUA_REINIT:
           // Commit modified cvars. We know if we get this far, all the
           // configurations are valid so let's make sure they're saved!
-          cCVars->Save();
+          CVars::Save();
           // Fall through to default
           [[fallthrough]];
         // For anything else
@@ -246,61 +296,61 @@ class Core final :                     // Members initially private
           // Reset environment (entering)
           CoreResetEnvironment(false);
           // Setup lua default environment (libraries, config, etc.)
-          cLua->SetupEnvironment();
+          LuaSetupEnvironment();
           // Default event code is error status. This is so if even c++
           // exceptions or C (LUA) exceptions occur, the underlying scope knows
           // to handle the error and try to recover. The actual loops will set
           // this to something different when they cleanly exit their loops.
-          cEvtMain->SetExitReason(EMC_LUA_ERROR);
+          EvtMain::SetExitReason(EMC_LUA_ERROR);
           // Execute startup script
-          LuaCodeExecuteFile(lS, cCVars->GetStrInternal(LUA_SCRIPT));
+          LuaCodeExecuteFile(lS, CVars::GetStrInternal(LUA_SCRIPT));
           // Done
           break;
       } // Terminal mode requested?
-      if(cSystem->IsTextMode())
+      if(SysIsTextMode())
       { // Graphical mode requested too?
-        if(cSystem->IsGraphicalMode())
+        if(SysIsGraphicalMode())
         { // Frame limiter enabled?
-          if(cSystem->IsTimerMode())
+          if(SysIsTimerMode())
           { // Loop until event manager emits break
-            while(cEvtMain->HandleSafe())
+            while(EvtMain::HandleSafe())
             { // Execute unthreaded tick
               CoreTickFrameLimiter();
               // Process bot console
-              cConsole->FlushToLog();
+              Console::FlushToLog();
             }
           } // Frame limiter disabled so loop until event manager emits break
-          else while(cEvtMain->HandleSafe())
+          else while(EvtMain::HandleSafe())
           { // Execute unthreaded tick
             CoreTickNoFrameLimiter();
             // Process bot console
-            cConsole->FlushToLog();
+            Console::FlushToLog();
           }
         } // Terminal mode only so loop until thread says we should break loop.
-        else while(cEvtMain->HandleSafe())
+        else while(EvtMain::HandleSafe())
         { // Calculate time elapsed in this tick
-          cTimer->TimerUpdateBot();
+          TimerUpdateBot();
           // Execute the main tick
-          cLua->ExecuteMain();
+          LuaExecuteMain();
           // Process bot console
-          cConsole->FlushToLog();
+          Console::FlushToLog();
         }
       } // Graphical mode requested?
-      else if(cSystem->IsGraphicalMode())
+      else if(SysIsGraphicalMode())
       { // Frame limiter enabled?
-        if(cSystem->IsTimerMode())
-        { // Loop until event manager says we should break
-          while(cEvtMain->HandleSafe()) CoreTickFrameLimiter();
-        } // Frame limiter disabled so loop without frame limiting
-        else while(cEvtMain->HandleSafe()) CoreTickNoFrameLimiter();
+        if(SysIsTimerMode())
+          // Loop until event manager says we should break
+          while(EvtMain::HandleSafe()) CoreTickFrameLimiter();
+          // Frame limiter disabled so loop without frame limiting
+        else while(EvtMain::HandleSafe()) CoreTickNoFrameLimiter();
       } // No mode set
-      else while(cEvtMain->HandleSafe())
+      else while(EvtMain::HandleSafe())
       { // Calculate time elapsed in this tick
-        cTimer->TimerUpdateBot();
+        TimerUpdateBot();
         // Execute the main tick
-        cLua->ExecuteMain();
+        LuaExecuteMain();
         // Process bot console
-        cConsole->FlushToTerminal();
+        Console::FlushToTerminal();
       }
     } // exception occured so throw LUA stackdump and leave the sandbox
     catch(const exception &eReason)
@@ -324,7 +374,7 @@ class Core final :                     // Members initially private
   /* -- Lua deinitialiser helper which updates all the classes that use it - */
   void CoreLuaDeInitHelper()
   { // De-init lua and update systems that use Lua
-    cLua->DeInit();
+    LuaDeInit();
     // Reset environment (leaving)
     CoreResetEnvironment(true);
   }
@@ -332,18 +382,18 @@ class Core final :                     // Members initially private
   void CoreDeInitComponents() try
   { // Log reason for deinit
     cLog->LogDebugExSafe("Engine de-initialising interfaces with code $.",
-      cEvtMain->GetExitReason());
+      EvtMain::GetExitReason());
     // Request to close window
-    cDisplay->RequestClose();
+    DisplayRequestClose();
     // Whats the exit reason code?
-    switch(cEvtMain->GetExitReason())
+    switch(EvtMain::GetExitReason())
     { // Quitting thread?
       case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD:
         // Not interactive mode? Nothing to de-initialise
-        if(cSystem->IsNotGraphicalMode()) return;
+        if(SysIsNotGraphicalMode()) return;
         // Unload console background and font textures
-        cConGraphics->DeInitTextureAndFont();
+        ConGfxDeInitTextureAndFont();
         // Unload font, texture, videos and curor textures
         VideoDeInitTextures();
         FontDeInitTextures();
@@ -354,20 +404,17 @@ class Core final :                     // Members initially private
       default:
         // De-initialise Lua
         CoreLuaDeInitHelper();
-        // If in graphical mode?
-        if(cSystem->IsGraphicalMode())
-        { // De-init console graphics and input
-          cConGraphics->DeInit();
-          cInput->DeInit();
-        } // DeInitialise console class and freetype
-        cConsole->DeInit();
-        cFreeType->DeInit();
+        // If in graphical mode? De-init console graphics and input
+        if(SysIsGraphicalMode()) { ConGfxDeInit(); InputDeInit(); }
+        // DeInitialise console class and freetype
+        Console::DeInit();
+        FreeTypeDeInit();
         // De-init audio
-        if(cSystem->IsAudioMode()) cAudio->AudioDeInit();
+        if(SysIsAudioMode()) cAudio->AudioDeInit();
         // Done
         break;
     } // Unload all FBO's (NOT destroy);
-    cFboCore->DeInit();
+    FboCoreDeInit();
     // De-init core shaders
     cShaderCore->DeInitShaders();
     // OpenGL de-initialised (do not throw error if de-initialised)
@@ -380,50 +427,52 @@ class Core final :                     // Members initially private
   /* -- Redraw the frame buffer when error occurs -------------------------- */
   void CoreForceRedrawFrameBuffer(const bool bAndConsole)
   { // Flush log if we have a text mode console
-    if(cSystem->IsTextMode()) cConsole->FlushToLog();
+    if(SysIsTextMode()) Console::FlushToLog();
     // Return if no graphical mode
-    if(cSystem->IsNotGraphicalMode()) return;
+    if(SysIsNotGraphicalMode()) return;
     // Reset opengl binds to defaults just incase any were selected
     cOgl->ResetBinds();
     // Render the console and it has not already been drawn
-    if(bAndConsole) cConGraphics->RenderNow();
+    if(bAndConsole) ConGfxRenderNow();
+    // Finish rendering the main FBO
+    FboCoreGetMain().FboFinishAndRender();
     // Render all FBO's and copy the main FBO to screen
-    cFboCore->Render();
+    FboCoreRender();
   }
   /* -- De-initialise everything ------------------------------------------- */
   void CoreDeInitEverything()
   { // De-initialise components
     CoreDeInitComponents();
     // If not in graphical mode, we're done
-    if(cSystem->IsNotGraphicalMode()) return;
+    if(SysIsNotGraphicalMode()) return;
     // Window should close as well
-    cGlFW->WinSetClose(GLFW_TRUE);
+    WinSetClose(GLFW_TRUE);
     // Unblock the window thread
     GlFWForceEventHack();
   }
   /* -- Initoialise graphics subsystems ------------------------------------ */
   void CoreInitGraphicalSubsystems()
   { // Set context current and pass selected refresh rate
-    cOgl->Init(cDisplay->GetRefreshRate());
+    cOgl->Init(DisplayGetRefreshRate());
     // Initialise core shaders
     cShaderCore->InitShaders();
     // If we're initialising for the first time?
-    if(cEvtMain->IsExitReason(EMC_NONE))
+    if(EvtMain::IsExitReason(EMC_NONE))
     { // Initialise freetype, console render, audio and input classes
-      cFreeType->Init();
-      cConsole->Init();
-      cConGraphics->Init();
-      cInput->Init();
+      FreeTypeInit();
+      Console::Init();
+      ConGfxInit();
+      InputInit();
     } // Not initialising for the first time?
     else
     { // Reconfigure matrix
-      cDisplay->CommitMatrix();
+      DisplayCommitMatrix();
       // Reset window icon
-      cDisplay->UpdateIcons();
+      DisplayUpdateIcons();
       // Reload guest frame buffer objects
       FboReInit();
       // Reload graphical console textures and font
-      cConGraphics->ReInitTextureAndFont();
+      ConGfxReInitTextureAndFont();
       // Reload guest fonts
       FontReInitTextures();
       // Reload guest textures
@@ -431,58 +480,59 @@ class Core final :                     // Members initially private
       // Reload guest videos
       VideoReInitTextures();
       // Update cursor visibility as GLFW does not restore it
-      cInput->CommitCursor();
+      InputCommitCursor();
+      // Force redraw the next frame
+      FboCoreSetDraw();
     } // Show the window
-    cDisplay->RequestOpen();
+    DisplayRequestOpen();
   }
   /* -- Engine thread (member function) ------------------------------------ */
   ThreadStatus CoreThreadMain(Thread&) try
   { // Log reason for init
     cLog->LogDebugExSafe("Core engine thread started (C:$;M:$<$>).",
-      cEvtMain->GetExitReason(), cSystem->GetCoreFlagsString(),
-      cSystem->GetCoreFlags());
+      EvtMain::GetExitReason(), SysGetCoreFlagsString(), SysGetCoreFlags());
     // Non-interactive mode?
-    if(cSystem->IsTextMode())
+    if(SysIsTextMode())
     { // And interactive mode?
-      if(cSystem->IsGraphicalMode()) CoreInitGraphicalSubsystems();
+      if(SysIsGraphicalMode()) CoreInitGraphicalSubsystems();
       // No interactive mode so if we're not initialising for the first time?
-      else if(cEvtMain->IsExitReason(EMC_NONE))
+      else if(EvtMain::IsExitReason(EMC_NONE))
       { // Initialise freetype and console
-        cFreeType->Init();
-        cConsole->Init();
+        FreeTypeInit();
+        Console::Init();
       } // Initialising for first time? Just update window icons
-      else cDisplay->UpdateIcons();
+      else DisplayUpdateIcons();
     } // Init interactive console?
-    else if(cSystem->IsGraphicalMode()) CoreInitGraphicalSubsystems();
+    else if(SysIsGraphicalMode()) CoreInitGraphicalSubsystems();
     // With audio mode enabled? Initialise audio class.
-    if(cSystem->IsAudioMode() && cEvtMain->IsExitReason(EMC_NONE))
+    if(SysIsAudioMode() && EvtMain::IsExitReason(EMC_NONE))
       cAudio->AudioInit();
     // Lua loop with initialisation. Compare event code
-    SandBoxInit: switch(cEvtMain->GetExitReason())
+    SandBoxInit: switch(EvtMain::GetExitReason())
     { // Ignore LUA initialisation if we're reinitialising other components
       case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD: break;
       // Any other code will initialise LUA
-      default: cLua->Init();
+      default: LuaInit();
     } // Lua loop without initialisation. Begin by capturing exceptions
     SandBox: try
     { // ...and enter sand box mode. Below function is when we're in sandbox
-      cLua->EnterSandbox<CoreThreadSandboxStatic>(this);
+      LuaEnterSandbox<CoreThreadSandboxStatic>(this);
     } // ...and if exception occured?
     catch(const exception &eReason)
     { // Show error in console
-      cConsole->AddLine(COLOUR_LRED, eReason.what());
+      Console::AddLine(COLOUR_LRED, eReason.what());
       // Disable garbage collector so no shenangians while we reset
       // environment.
-      cLua->StopGC();
+      LuaStopGC();
       // Reset glfw errorlevel
-      cGlFW->ResetErrorLevel();
+      GlFWResetErrorLevel();
       // Check event code that was set?
-      switch(cEvtMain->GetExitReason())
+      switch(EvtMain::GetExitReason())
       { // Run-time error?
         case EMC_LUA_ERROR:
           // If we are not in the exit script?
-          if(!cLua->Exiting())
+          if(!LuaExiting())
           { // Compare error mode behaviour
             switch(cerMode)
             { // Ignore errors and try to continue? Execute again
@@ -504,7 +554,7 @@ class Core final :                     // Members initially private
                   "Core sandbox reset #$/$ with run-time exception: $",
                   ++uiErrorCount, uiErrorLimit, eReason);
                 // Flush events and restart the guest
-                cLua->ReInit();
+                LuaReInit();
                 // Redraw the console but do not show it
                 CoreForceRedrawFrameBuffer(false);
                 // Go back into the sandbox
@@ -515,7 +565,7 @@ class Core final :                     // Members initially private
                 cLog->LogErrorExSafe("Core sandbox run-time exception: $",
                   eReason);
                 // Add event to pause
-                cLua->RequestPause(false);
+                LuaRequestPause(false);
                 // Redraw the console and show it.
                 CoreForceRedrawFrameBuffer(true);
                 // Break to pause
@@ -539,11 +589,11 @@ class Core final :                     // Members initially private
           // Grab the exit code from events if the error because it wasn't
           // able to be caught in the events queue and fall through so the
           // original request can be process.
-          cEvtMain->UpdateConfirmExit();
+          EvtMain::UpdateConfirmExit();
           // Check exit code. These are originally set in EvtMain::DoHandle()
           // so make sure all used exit values with ConfirmExit() are checked
           // for here.
-          switch(cEvtMain->GetExitReason())
+          switch(EvtMain::GetExitReason())
           { // Lua is ending execution? (i.e. via 'lend') fall through.
             case EMC_LUA_END: [[fallthrough]];
             // Lua executing is reinitialising? (i.e. lreset).
@@ -557,7 +607,7 @@ class Core final :                     // Members initially private
             default:
               // Report unknown exit reason to log
               cLog->LogDebugExSafe("Core has unknown exit reason of $!",
-                cEvtMain->GetExitReason());
+                EvtMain::GetExitReason());
               // Fall through to EMC_QUIT_RESTART
               [[fallthrough]];
             // Quitting and restarting?
@@ -572,7 +622,7 @@ class Core final :                     // Members initially private
         default:
           // Report it
           cLog->LogWarningExSafe("Core has unknown exit reason of $!",
-            cEvtMain->GetExitReason());
+            EvtMain::GetExitReason());
           // Fall through to EMC_LUA_END
           [[fallthrough]];
         // Lua is ending execution? Shouldn't happen.
@@ -587,11 +637,11 @@ class Core final :                     // Members initially private
         case EMC_QUIT: CoreDeInitComponents(); throw;
       } // We get here to process lua event as normal.
     } // Why did LUA break out of the sandbox?
-    switch(cEvtMain->GetExitReason())
+    switch(EvtMain::GetExitReason())
     { // Execution ended? (e.g. 'lend' command was used)
       case EMC_LUA_END:
         // Add message to say the execution ended
-        cConsole->AddLine("Execution ended! Use 'lreset' to restart.");
+        Console::AddLine("Execution ended! Type 'lreset' to restart.");
         // De-initialis lua
         CoreLuaDeInitHelper();
         // Reinitialise lua and go back into the sandbox
@@ -599,7 +649,7 @@ class Core final :                     // Members initially private
       // Execution reinitialising? (e.g. 'lreset' command was used)
       case EMC_LUA_REINIT:
         // Add message to say the execution is restarting
-        cConsole->AddLine("Execution restarting...");
+        Console::AddLine("Execution restarting...");
         // De-initialis lua
         CoreLuaDeInitHelper();
         // Reinitialise lua and go back into the sandbox
@@ -624,12 +674,11 @@ class Core final :                     // Members initially private
   } // exception occured out of loop. Fatal so we have to quit
   catch(const exception &eReason)
   { // We will quit since this is fatal
-    cEvtMain->SetExitReason(EMC_QUIT);
+    EvtMain::SetExitReason(EMC_QUIT);
     // Write exception to log
     cLog->LogErrorExSafe("(ENGINE THREAD FATAL EXCEPTION) $", eReason);
     // Show error
-    cSystem->SysMsgEx("Engine Thread Fatal Exception", eReason.what(),
-      MB_ICONSTOP);
+    SysMsgEx("Engine Thread Fatal Exception", eReason.what(), MB_ICONSTOP);
     // De-init everything
     CoreDeInitEverything();
     // Kill thread
@@ -638,7 +687,7 @@ class Core final :                     // Members initially private
   /* -- Engine should continue? -------------------------------------------- */
   bool CoreShouldEngineContinue()
   { // Compare exit value
-    switch(cEvtMain->GetExitReason())
+    switch(EvtMain::GetExitReason())
     { // Engine was requested to quit or restart? NO!
       case EMC_QUIT: [[fallthrough]];
       case EMC_QUIT_RESTART: [[fallthrough]];
@@ -649,28 +698,31 @@ class Core final :                     // Members initially private
   }
   /* -- Initialise graphical mode ------------------------------------------ */
   void CoreEnterGraphicalMode()
-  { // Initialise Glfw mode and de-init it when exiting
-    INITHELPER(GlFWIH, cGlFW->Init(), cGlFW->DeInit());
+  { // De-initialise GLFW when this scope exists
+    const auto sgGDeInit{ MakeScopeGuard([this]{ GlFWDeInit(); }) };
+    // Initialise GLFW
+    GlFWInit();
     // Until engine should terminate.
     while(CoreShouldEngineContinue()) try
-    { // Init window and de-init lua envifonment and window on scope exit
-      INITHELPER(DIH, cDisplay->Init(),
-        cEvtMain->ThreadDeInit();
-        cDisplay->DeInit());
+    { // De-initialise display and thread when this scope exists
+      const auto sgWDeInit{
+        MakeScopeGuard([this]{ EvtMain::ThreadDeInit(); DisplayDeInit(); }) };
+      // Initialise window
+      DisplayInit();
       // Setup main thread and start it
-      Restart: cEvtMain->ThreadInit(cbtMain, nullptr);
+      Restart: EvtMain::ThreadInit(cbtMain, nullptr);
       // Loop until window should close
-      while(cGlFW->WinShouldNotClose())
+      while(WinShouldNotClose())
       { // Process window event manager commands from other threads
-        cEvtWin->Manage();
+        EvtWin::Manage();
         // Wait for more window events
         GlFWWaitEvents();
       } // Restart to hard reinit the window if not doing a soft reinit
-      if(cEvtMain->GetExitReason() != EMC_QUIT_VREINIT) continue;
+      if(EvtMain::GetExitReason() != EMC_QUIT_VREINIT) continue;
       // De-initialise the thread
-      cEvtMain->ThreadDeInit();
+      EvtMain::ThreadDeInit();
       // Soft reinitialise the window
-      cDisplay->ReInit();
+      DisplayReInit();
       // Go back to the thread restart point
       goto Restart;
     } // Error occured
@@ -678,53 +730,55 @@ class Core final :                     // Members initially private
     { // Send to log and show error message to user
       cLog->LogErrorExSafe("(WINDOW LOOP EXCEPTION) $", eReason);
       // Exit loop so we don't infinite loop
-      cEvtMain->SetExitReason(EMC_QUIT);
+      EvtMain::SetExitReason(EMC_QUIT);
       // Show error and try to carry on and clean everything up
-      cSystem->SysMsgEx("Window Loop Fatal Exception", eReason.what(),
-        MB_ICONSTOP);
+      SysMsgEx("Window Loop Fatal Exception", eReason.what(), MB_ICONSTOP);
    } // Engine should terminate from here-on
   }
   /* -- Wait async on all systems ---------------------------------- */ public:
   void CoreWaitAllAsync()
-  { // Wait for all asynchronous operations to complete.
-    cArchives->MutexScopedCall([](){
-      // Log sychronisation result
+  { // Log sychronisation result from all subsystems that use threads
+    Archives::MutexScopedCall([this](){
       cLog->LogDebugExSafe("Core synchronised $ objects.", cArchives->size() +
-        cAssets->size() + cFtfs->size() + cImages->size() + cJsons->size() +
-        cPcms->size() + cSources->size() + cStreams->size() + cVideos->size());
-    }, cAssets->MutexGet(), cFtfs->MutexGet(), cImages->MutexGet(),
-    cJsons->MutexGet(), cPcms->MutexGet(), cSources->MutexGet(),
-    cStreams->MutexGet(), cVideos->MutexGet());
+        AssetsCtr::size() + FtfsCtr::size() + ImagesCtr::size() +
+        JsonsCtr::size() + PcmsCtr::size() + SourcesCtr::size() +
+        StreamsCtr::size() + VideosCtr::size());
+    }, Assets::MutexGet(), Ftfs::MutexGet(), Images::MutexGet(),
+       Jsons::MutexGet(), Pcms::MutexGet(), Sources::MutexGet(),
+       Streams::MutexGet(), Videos::MutexGet());
   }
   /* -- Main function ------------------------------------------------------ */
   int CoreMain()
   { // Register default cvars and pass over the current gui mode by ref. All
     // the core parts of the engine are initialised from cvar callbacks.
-    cCVars->Init();
+    CVars::Init();
     // Text mode requested?
-    if(cSystem->IsTextMode())
+    if(SysIsTextMode())
     { // Bail out if logging to standard output because this will prevent
       // the text mode from working properly
       if(cLog->IsRedirectedToDevice())
         XC("Text console cannot be used when logging to standard output!");
-      // Init lightweight text mode console for monitoring.
-      INITHELPER(SysConIH,
-        cSystem->SysConInit(cSystem->GetGuestTitle().data(),
-          cCVars->GetInternal<unsigned int>(CON_TMCCOLS),
-          cCVars->GetInternal<unsigned int>(CON_TMCROWS),
-          cCVars->GetInternal<bool>(CON_TMCNOCLOSE));
-        cSystem->WindowInitialised(nullptr),
-        cEvtMain->ThreadDeInit();
-        cSystem->SetWindowDestroyed();
-        cSystem->SysConDeInit());
+      // De-init text mode console when leaving scope
+      const auto sgTDeInit{ MakeScopeGuard([this]{
+        EvtMain::ThreadDeInit();
+        SetWindowDestroyed();
+        SysConDeInit();
+      }) };
+      // Initialise terminal
+      SysConInit(SysGetGuestTitle().data(),
+        CVars::GetInternal<unsigned int>(CON_TMCCOLS),
+        CVars::GetInternal<unsigned int>(CON_TMCROWS),
+        CVars::GetInternal<bool>(CON_TMCNOCLOSE));
+      // There is no GLFW window so maybe the system can get it instead?
+      WindowInitialised(nullptr);
       // Perform the initial draw of the console.
-      cConsole->FlushToLog();
+      Console::FlushToLog();
       // Graphical mode requested too?
-      if(cSystem->IsGraphicalMode()) CoreEnterGraphicalMode();
+      if(SysIsGraphicalMode()) CoreEnterGraphicalMode();
       // Only text mode requested?
       else
       { // Reset window icon
-        cDisplay->UpdateIcons();
+        DisplayUpdateIcons();
         // Execute main function until EMC_QUIT or EMC_QUIT_RESTART is passed.
         // We are using the system's main thread so we just need to name this
         // thread properly. We won't actually be spawning a new thread with
@@ -732,24 +786,26 @@ class Core final :                     // Members initially private
         // compatible with the GUI mode.
         while(CoreShouldEngineContinue()) CoreThreadMain(*cEvtMain);
       } // If system says we have to close as quickly as possible?
-      if(cSystem->SysConIsClosing())
+      if(SysConIsClosing())
       { // Quickly save cvars, database and log, this is the priority since
         // Windows has a hardcoded termination time for console apps.
-        cCVars->Save();
-        cSql->DeInit();
+        CVars::Save();
+        Sql::DeInit();
         cLog->DeInitSafe();
         // Now Windows can exit anytime it wants
-        cSystem->SysConCanCloseNow();
+        SysConCanCloseNow();
       }
     } // Else were in graphical interactive mode
-    else if(cSystem->IsGraphicalMode()) CoreEnterGraphicalMode();
+    else if(SysIsGraphicalMode()) CoreEnterGraphicalMode();
     // No front-end requested so we just use stdout
     else
-    { // Init lightweight text mode console for monitoring.
-      INITHELPER(NoConIH,
-        cSystem->WindowInitialised(nullptr),
-        cEvtMain->ThreadDeInit();
-        cSystem->SetWindowDestroyed());
+    { // De-init window when leaving scope
+      const auto sgWDeInit{ MakeScopeGuard([this]{
+        EvtMain::ThreadDeInit();
+        SetWindowDestroyed();
+      }) };
+      // Init lightweight text mode console for monitoring.
+      WindowInitialised(nullptr);
       // Execute main function until EMC_QUIT or EMC_QUIT_RESTART is passed.
       // We are using the system's main thread so we just need to name this
       // thread properly. We won't actually be spawning a new thread with
@@ -757,26 +813,25 @@ class Core final :                     // Members initially private
       // compatible with the GUI mode.
       while(CoreShouldEngineContinue()) CoreThreadMain(*cEvtMain);
       // If system says we have to close as quickly as possible?
-      if(cSystem->SysConIsClosing())
+      if(SysConIsClosing())
       { // Quickly save cvars, database and log, this is the priority since
         // Windows has a hardcoded termination time for console apps.
-        cCVars->Save();
-        cSql->DeInit();
+        CVars::Save();
+        Sql::DeInit();
         cLog->DeInitSafe();
         // Now Windows can exit anytime it wants
-        cSystem->SysConCanCloseNow();
+        SysConCanCloseNow();
       }
     }
     // Compare engine exit code...
-    switch(cEvtMain->GetExitReason())
+    switch(EvtMain::GetExitReason())
     { // If we're to restart process with parameters? Set to do so
       case EMC_QUIT_RESTART:
         // Message to send
-        cLog->LogWarningExSafe(
-          "Core signalled to restart with $ parameters!",
+        cLog->LogWarningExSafe("Core signalled to restart with $ parameters!",
           cCmdLine->CmdLineGetTotalCArgs());
         // Set exit procedure
-        cCmdLine->CmdLineSetRestart(cSystem->IsTextMode() ?
+        cCmdLine->CmdLineSetRestart(SysIsTextMode() ?
           EO_TERM_REBOOT : EO_UI_REBOOT);
         // Have debugging enabled?
         if(cLog->HasLevel(LH_DEBUG))
@@ -789,10 +844,9 @@ class Core final :                     // Members initially private
       // If we're to restart process without parameters? Set to do so.
       case EMC_QUIT_RESTART_NP:
         // Put event in log
-        cLog->LogWarningSafe(
-          "Core signalled to restart without parameters!");
+        cLog->LogWarningSafe("Core signalled to restart without parameters!");
         // Set exit procedure
-        cCmdLine->CmdLineSetRestart(cSystem->IsTextMode() ?
+        cCmdLine->CmdLineSetRestart(SysIsTextMode() ?
           EO_TERM_REBOOT_NOARG : EO_UI_REBOOT_NOARG);
         // Clean-up and restart
         return 4;
@@ -833,16 +887,14 @@ class Core final :                     // Members initially private
   { // Do not allow user to set this variable, only empty is allowed
     if(!strValue.empty()) return DENY;
     // Set the title
-    strRValue = StrAppend(cSystem->GetGuestTitle(), ' ',
-      cSystem->GetGuestVersion(), " (", cSystem->ENGTarget(), ")");
+    strRValue = StrFormat("$ ($)", SysGetGuestTitle(), ENGTarget());
     // We changed the value
     return ACCEPT_HANDLED;
   }
   /* -- Set once instance cvar changed ------------- Core::SetOneInstance -- */
   CVarReturn CoreSetOneInstance(const bool bEnabled)
   { // Ignore check if not needed or global mutex creation succeeded.
-    if(!bEnabled || cSystem->InitGlobalMutex(cSystem->GetGuestTitle()))
-      return ACCEPT;
+    if(!bEnabled || InitGlobalMutex(SysGetGuestTitle())) return ACCEPT;
     // De-initialise the log as we are about to exit.
     cLog->DeInitSafe();
     // Global mutex creation failed so exit program now.
@@ -852,11 +904,11 @@ class Core final :                     // Members initially private
   CVarReturn CoreSetHomeDir(const string &strP, string &strV)
   { // Build user volatile directory name if user didn't specify one
     if(strP.empty())
-      strV = StrFormat("$/$/$/", cSystem->GetRoamingDir(),
-        cSystem->GetGuestAuthor().empty() ?
-          cCommon->CommonUnspec() : cSystem->GetGuestAuthor(),
-        cSystem->GetGuestShortTitle().empty() ?
-          cCommon->CommonUnspec() : cSystem->GetGuestShortTitle());
+      strV = StrFormat("$/$/$/", SysGetRoamingDir(),
+        SysGetGuestAuthor().empty() ?
+          cCommon->CommonUnspec() : SysGetGuestAuthor(),
+        SysGetGuestShortTitle().empty() ?
+          cCommon->CommonUnspec() : SysGetGuestShortTitle());
     // Specified so use what the user specified
     else strV = StdMove(strP);
     // Try to make the users home directory as an alternative save place.
@@ -891,7 +943,7 @@ class Core final :                     // Members initially private
         { // Set the variable from command line with full permission because we
           // should allow any variable to be overridden from the command line.
           // Also show an error if the variable could not be set.
-          if(cCVars->SetVarOrInitial(tKeyVal.front(), tKeyVal.size() > 1 ?
+          if(CVars::SetVarOrInitial(tKeyVal.front(), tKeyVal.size() > 1 ?
             tKeyVal.back() : cCommon->CommonBlank(),
             SCMDLINE|PCMDLINE, CCF_NOTHING))
           { // Append argument to accepted command line and add a space

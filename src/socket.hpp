@@ -1901,7 +1901,7 @@ static CVarReturn SocketAgentModified(const string &strN, string &strV)
     strV = StrFormat("Mozilla/5.0 ($; $-bit; v$.$.$.$) $/$",
       cSystem->ENGName(), cSystem->ENGBits(), cSystem->ENGMajor(),
       cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
-      cSystem->GetGuestShortTitle(), cSystem->GetGuestVersion());
+      cSystem->SysGetGuestShortTitle(), cSystem->SysGetGuestVersion());
   // Not empty to use user value instead
   else strV = strN;
   // Set string view

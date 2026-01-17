@@ -116,17 +116,17 @@ class CodecPNG :                       // PNG codec object
     pwC{ fmData };
     // Set system data in metadata
     { using namespace ISystem::P;
-      pwC.Meta("Title", cSystem->GetGuestTitle());
-      pwC.Meta("Version", cSystem->GetGuestVersion());
-      pwC.Meta("Author", cSystem->GetGuestAuthor());
-      pwC.Meta("Copyright", cSystem->GetGuestCopyright());
+      pwC.Meta("Title", cSystem->SysGetGuestTitle());
+      pwC.Meta("Version", cSystem->SysGetGuestVersion());
+      pwC.Meta("Author", cSystem->SysGetGuestAuthor());
+      pwC.Meta("Copyright", cSystem->SysGetGuestCopyright());
       pwC.Meta("Creation Time", cmSys.FormatTime());
       pwC.Meta("Description", cSystem->ENGName() + " Exported Image");
       pwC.Meta("Software", StrFormat("$ ($) v$.$.$.$ ($-bit $) by $",
         cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
         cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
         cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor()));
-      pwC.Meta("Comment", cSystem->GetGuestWebsite());
+      pwC.Meta("Comment", cSystem->SysGetGuestWebsite());
     } // Set renderer in metadata
     { using namespace IOgl::P;
       pwC.Meta("Source", StrFormat("$ ($ by $)",

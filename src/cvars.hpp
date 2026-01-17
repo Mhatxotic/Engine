@@ -671,14 +671,14 @@ struct CVars :                         // Start of vars class
     { // Get ref to cvar info and register the variable if the guimode is valid
       const CVarItemStatic &cvisRef = cvislList[stIndex];
       avInternal[stIndex] =
-        cSystem->IsCoreFlagsHave(cvisRef.cfcRequired) ?
+        cSystem->SysIsCoreFlagsHave(cvisRef.cfcRequired) ?
           RegisterVar(string(cvisRef.strvVar), string(cvisRef.strvValue),
             cvisRef.cbTrigger, cvisRef.cFlags, CCF_NOTHING) : cvmActive.end();
     } // Finished
     cLog->LogInfoExSafe(
       "CVars registered $ of $ built-in variables for $<0x$$>.",
-      cvmActive.size(), cvislList.size(), cSystem->GetCoreFlagsString(),
-      hex, cSystem->GetCoreFlags());
+      cvmActive.size(), cvislList.size(), cSystem->SysGetCoreFlagsString(),
+      hex, cSystem->SysGetCoreFlags());
   }
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~CVars, DeInit())

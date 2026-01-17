@@ -142,7 +142,7 @@ class Credits                          // Members initially private
         true, ENGINE),
       LD(FT, "FreeType", STR(FREETYPE_MAJOR) "." STR(FREETYPE_MINOR) "."
         STR(FREETYPE_PATCH), "The FreeType Project", true, FREETYPE),
-      LD(GLFW, "GLFW", cGlFW->GetInternalVersion(),
+      LD(GLFW, "GLFW", cGlFW->GlFWGetInternalVersion(),
         "Marcus Geelnard & Camilla Löwy", true, GLFW),
       LD(JPEG, "JPEGTurbo", STR(LIBJPEG_TURBO_VERSION),
         "IJG/Contributing authors", true, LIBJPEGTURBO),

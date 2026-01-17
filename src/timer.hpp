@@ -84,7 +84,7 @@ class Timer                            // Members initially private
     // Frame limit not reached?
     if(cdAcc < cdLimit) [[likely]]
     { // Wait for specified delay if we can or yield
-      if(cdDelay != cd0 && cdAcc + cdDelay < cdLimit) [[unlikely]]
+      if(cdDelay >= cd0 && cdAcc + cdDelay < cdLimit) [[unlikely]]
         StdSuspend(cdDelay);
       // Suspend engine thread for the requested delay
       return false;
@@ -113,9 +113,9 @@ class Timer                            // Members initially private
     // Update new tick start and end time and start frame time
     ctpStart = ctpEnd = cmHiRes.GetTime();
   }
-  /* -- Return if script timer timed out ----------------------------------- */
-  bool TimerIsTimedOut()
-    { ++uqTriggers; return cmHiRes.GetTime() >= ctpTimeOut; }
+  /* -- Return if script timer has not timed out yet ----------------------- */
+  bool TimerIsNotTimedOut()
+    { ++uqTriggers; return cmHiRes.GetTime() < ctpTimeOut; }
   /* -- Return how many times the script trigger was checked --------------- */
   uint64_t TimerGetTriggers() const { return uqTriggers; }
   /* -- Return the current script timeout ---------------------------------- */
@@ -169,12 +169,12 @@ class Timer                            // Members initially private
     return ACCEPT;
   }
   /* -- TimerSetDelay ------------------------------------------------------ */
-  CVarReturn TimerSetDelay(const unsigned int uiNewDelay)
+  CVarReturn TimerSetDelay(const int iNewDelay)
   { // Ignore if set over one second, any sort of app would not be usable with
     // over one second delay, so might as well cap it
-    if(uiNewDelay > 1000) return DENY;
+    if(iNewDelay < -1 || iNewDelay > 1000) return DENY;
     // Set new delay
-    TimerUpdateDelay(uiNewDelay);
+    TimerUpdateDelay(iNewDelay);
     // Update persistent delay
     cdDelayPst = cdDelay;
     // Success

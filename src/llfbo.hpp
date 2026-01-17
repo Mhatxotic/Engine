@@ -403,7 +403,8 @@ LLRSEND                                // Fbo:* member functions end
 // ? the engine console shares the same FBO so you may want to create a
 // ? separatte FBO to draw to.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Main, 1, LuaUtilClassCreatePtr<Fbo>(lS, *cFbos, &cFboCore->fboMain))
+LLFUNC(Main, 1,
+  LuaUtilClassCreatePtr<Fbo>(lS, *cFbos, &cFboCore->FboCoreGetMain()))
 /* ========================================================================= */
 // $ Fbo.Create
 // > Identifier:string=Reference only user-defined identifier.
@@ -429,13 +430,13 @@ LLFUNC(Create, 1,
 // ? flushed and not finished and OpenGL will NOT swap buffers if you do not
 // ? call this function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Draw, 0, cFboCore->SetDraw())
+LLFUNC(Draw, 0, cFboCore->FboCoreSetDraw())
 /* ========================================================================= */
 // $ Fbo.IsDrawing
 // < State:boolean=Is the main FBO set to redraw?
 // ? Returns if the main FBO is set to redraw.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsDrawing, 1, LuaUtilPushVar(lS, cFboCore->CanDraw()))
+LLFUNC(IsDrawing, 1, LuaUtilPushVar(lS, cFboCore->FboCoreCanDraw()))
 /* ========================================================================= */
 // $ Fbo.OnRedraw
 // > Func:function=The main redraw function to change to
@@ -444,7 +445,7 @@ LLFUNC(IsDrawing, 1, LuaUtilPushVar(lS, cFboCore->CanDraw()))
 // ? texture and FBO data is already preserved so there is no need to
 // ? reinitialise any of that, you just need to redraw them.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnRedraw, 0, cLua->SetLuaRef(lS, cLua->lrMainRedraw))
+LLFUNC(OnRedraw, 0, cLua->LuaSetRedrawFunc(lS))
 /* ========================================================================= */
 // $ Fbo.ConSet
 // > State:boolean=The console state.
@@ -454,14 +455,14 @@ LLFUNC(OnRedraw, 0, cLua->SetLuaRef(lS, cLua->lrMainRedraw))
 // ? overrides the 'con_disabled' setting.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ConSet, 1,
-  LuaUtilPushVar(lS, cConGraphics->SetVisible(AgBoolean{lS, 1})))
+  LuaUtilPushVar(lS, cConGfx->ConGfxSetVisible(AgBoolean{lS, 1})))
 /* ========================================================================= */
 // $ Fbo.ConHeight
 // > State:number=The console height.
 // ? Sets the console height normal without modifying the cvar. This function
 // ? is in Fbo because it only applies to opengl mode.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ConHeight, 0, cConGraphics->SetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
+LLFUNC(ConHeight, 0, cConGfx->ConGfxSetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
 /* ========================================================================= */
 // $ Fbo.ConEnabled
 // < State:boolean=The console state.
@@ -475,7 +476,7 @@ LLFUNC(ConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
 // ? Lock the visibility of the console on or off. This function is in Fbo
 // ? because it only applies to opengl mode.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ConLock, 0, cConGraphics->SetLocked(AgBoolean{lS, 1}))
+LLFUNC(ConLock, 0, cConGfx->ConGfxSetLocked(AgBoolean{lS, 1}))
 /* ========================================================================= */
 // $ Fbo.Count
 // < Count:integer=Total number of FBO's created.
@@ -490,8 +491,8 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
 // ? set by cvars 'vid_orwidth', 'vid_orheight' and also modified with the
 // ? Fbo.Resize() function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Matrix, 2, LuaUtilPushVar(lS, cFboCore->GetMatrixWidth(),
-                                     cFboCore->GetMatrixHeight()))
+LLFUNC(Matrix, 2, LuaUtilPushVar(lS, cFboCore->FboCoreGetMatrixWidth(),
+                                     cFboCore->FboCoreGetMatrixHeight()))
 /* ========================================================================= */
 // $ Fbo.Resize
 // < Width:number=The new width of the main frame buffer
@@ -506,8 +507,8 @@ LLFUNC(Resize, 1,
   const AgUIntLG aWidth{lS, 1, 1, cOgl->MaxTexSize() },
                  aHeight{lS, 2, 1, cOgl->MaxTexSize() };
   LuaUtilPushVar(lS,
-    cDisplay->AlterDefaultMatrix(static_cast<GLfloat>(aWidth()),
-                                 static_cast<GLfloat>(aHeight()))))
+    cDisplay->DisplayAlterDefaultMatrix(static_cast<GLfloat>(aWidth()),
+      static_cast<GLfloat>(aHeight()))))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Fbo.* namespace functions structure                                 ## **

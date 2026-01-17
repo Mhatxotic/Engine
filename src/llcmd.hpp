@@ -102,7 +102,7 @@ LLFUNC(Register, 1,
   const AgUInt aMinimum{lS, 2},
                aMaximum{lS, 3};
   LuaUtilCheckFunc(lS, 4);
-  cLua->StateAssert(lS);
+  cLua->LuaStateAssert(lS);
   AcCommand{lS}().Init(lS, aIdentifier, aMinimum, aMaximum))
 /* ========================================================================= */
 // $ Command.Valid

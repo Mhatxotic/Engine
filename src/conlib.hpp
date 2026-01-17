@@ -339,7 +339,7 @@ cConsole->AddLineA(StrCPluraliseNum(cConsole->ToLog(), "line", "lines"),
 { "cpu", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Update cpu usage times
-cSystem->UpdateCPUUsage();
+cSystem->SysUpdateCPUUsage();
 // Write detected processor information
 cConsole->AddLineF(
   "$$x$MHz/$ (FMS:$;$;$); Load: $% ($%).\n"
@@ -351,9 +351,9 @@ cConsole->AddLineF(
       cSystem->CPUUsage(), cSystem->CPUUsageSystem(),
     cTimer->TimerGetStart(), cTimer->TimerGetLimit(),
       cTimer->TimerGetAccumulator(), cTimer->TimerGetDelay(),
-    cSystem->GetCoreFlags(), cSystem->GetCoreFlagsString(),
+    cSystem->SysGetCoreFlags(), cSystem->SysGetCoreFlagsString(),
       cTimer->TimerGetTimeOut(), cTimer->TimerGetTriggers(),
-      cLua->GetOpsInterval(), cTimer->TimerGetTicks(),
+      cLua->LuaGetOpsInterval(), cTimer->TimerGetTicks(),
     cTimer->TimerGetFPS(), cTimer->TimerGetFPSLimit(),
       UtilMakePercentage(cTimer->TimerGetFPS(), cTimer->TimerGetFPSLimit()));
 /* ------------------------------------------------------------------------- */
@@ -366,7 +366,7 @@ cConsole->AddLineF(
 /* ========================================================================= */
 { "crash", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-System::CriticalHandler("Requested operation");
+System::SysCriticalHandler("Requested operation");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'crash' function
 /* ========================================================================= */
@@ -677,8 +677,8 @@ sTable.Header("ID").Header("FI").Header("TI").Header("FL").Header("FT")
 // Total triangles and commands
 size_t stTriangles = 0, stCommands = 0;
 // Show primary FBO's info
-ShowFboInfo(cFboCore->fboMain, sTable, stTriangles, stCommands);
-ShowFboInfo(cFboCore->fboConsole, sTable, stTriangles, stCommands);
+ShowFboInfo(cFboCore->FboCoreGetMain(), sTable, stTriangles, stCommands);
+ShowFboInfo(cFboCore->FboCoreGetConsole(), sTable, stTriangles, stCommands);
 // Enumerate fbo and video classes and show their infos
 for(const Fbo*const fPtr : *cFbos)
   ShowFboInfo(*fPtr, sTable, stTriangles, stCommands);
@@ -756,7 +756,7 @@ Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("SCALE").Header("TEXOCPCY")
       .Header("CC").Header("NAME", false).Reserve(1 + cFonts->size());
 // Include console font
-ShowFontInfo(sTable, cConGraphics->GetFontRef());
+ShowFontInfo(sTable, cConGfx->ConGfxGetFontRef());
 // Walk through font classes
 for(const Font*const fPtr : *cFonts) ShowFontInfo(sTable, *fPtr);
 // Log counts including the static console font class
@@ -809,7 +809,7 @@ cConsole->AddLineF(
   "- Stage: $,$,$,$; Fbo: $x$; OFlags: 0x$$.\n"
   "- Triangles: $$/$; Commands: $/$.\n"
   "FPS: $$/s ($/s); Eff: $%; Limit: $.",
-  cOgl->GetRenderer(), cDisplay->GetMonitorName(),
+  cOgl->GetRenderer(), cDisplay->DisplayGetMonitorName(),
   cOgl->GetVersion(), cOgl->GetVendor(),
   cOgl->FlagIsSet(GFL_HAVEMEM) ?
     StrFormat("Memory: $ mBytes ($ mBytes available).\n",
@@ -817,29 +817,34 @@ cConsole->AddLineF(
     cCommon->CommonBlank(),
   cInput->DimGetWidth(), cInput->DimGetHeight(),
     StrFromRatio(cInput->DimGetWidth(), cInput->DimGetHeight()),
-    cDisplay->GetWindowPosX(), cDisplay->GetWindowPosY(),
-    cDisplay->GetWindowScaleWidth(), cDisplay->GetWindowScaleHeight(),
+    cDisplay->DisplayGetWindowPosX(), cDisplay->DisplayGetWindowPosY(),
+    cDisplay->DisplayGetWindowScaleWidth(),
+    cDisplay->DisplayGetWindowScaleHeight(),
     hex, cDisplay->FlagGet(),
-  dec, cDisplay->GetFSType(), cDisplay->GetFSTypeString(),
+  dec, cDisplay->DisplayGetFSType(), cDisplay->DisplayGetFSTypeString(),
   cOgl->MaxTexSize(), cFboCore->DimGetWidth(), cFboCore->DimGetHeight(),
     StrFromRatio(cFboCore->DimGetWidth(), cFboCore->DimGetHeight()),
-    cFboCore->GetMatrixWidth(), cFboCore->GetMatrixHeight(),
-    StrFromRatio(cFboCore->GetMatrixWidth(), cFboCore->GetMatrixHeight()),
-    cFboCore->fboMain.CoordsGetRight(), cFboCore->fboMain.CoordsGetBottom(),
-    StrFromRatio(cFboCore->fboMain.CoordsGetRight(),
-      cFboCore->fboMain.CoordsGetBottom()),
-  cFboCore->fboMain.cfStage.CoordsGetLeft(),
-    cFboCore->fboMain.cfStage.CoordsGetTop(),
-    cFboCore->fboMain.cfStage.CoordsGetRight(),
-    cFboCore->fboMain.cfStage.CoordsGetBottom(),
-    cFboCore->fboMain.DimGetWidth(), cFboCore->fboMain.DimGetHeight(),
+    cFboCore->FboCoreGetMatrixWidth(), cFboCore->FboCoreGetMatrixHeight(),
+    StrFromRatio(cFboCore->FboCoreGetMatrixWidth(),
+      cFboCore->FboCoreGetMatrixHeight()),
+    cFboCore->FboCoreGetMain().CoordsGetRight(),
+    cFboCore->FboCoreGetMain().CoordsGetBottom(),
+    StrFromRatio(cFboCore->FboCoreGetMain().CoordsGetRight(),
+      cFboCore->FboCoreGetMain().CoordsGetBottom()),
+  cFboCore->FboCoreGetMainStage().CoordsGetLeft(),
+    cFboCore->FboCoreGetMainStage().CoordsGetTop(),
+    cFboCore->FboCoreGetMainStage().CoordsGetRight(),
+    cFboCore->FboCoreGetMainStage().CoordsGetBottom(),
+    cFboCore->FboCoreGetMain().DimGetWidth(),
+    cFboCore->FboCoreGetMain().DimGetHeight(),
     hex, cOgl->FlagGet(),
-  dec, cFboCore->fboMain.FboGetTris(),
-    cFboCore->fboMain.FboGetTrisReserved(),
-    cFboCore->fboMain.FboGetCmds(),
-    cFboCore->fboMain.FboGetCmdsReserved(),
-  fixed, cFboCore->GetFPS(), cDisplay->GetRefreshRate(),
-  UtilMakePercentage(cFboCore->GetFPS(), cDisplay->GetRefreshRate()),
+  dec, cFboCore->FboCoreGetMain().FboGetTris(),
+    cFboCore->FboCoreGetMain().FboGetTrisReserved(),
+    cFboCore->FboCoreGetMain().FboGetCmds(),
+    cFboCore->FboCoreGetMain().FboGetCmdsReserved(),
+  fixed, cFboCore->FboCoreGetFPS(), cDisplay->DisplayGetRefreshRate(),
+  UtilMakePercentage(cFboCore->FboCoreGetFPS(),
+    cDisplay->DisplayGetRefreshRate()),
   cOgl->GetLimit());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'gpu' function
@@ -1035,7 +1040,7 @@ cConsole->AddLineA(StrCPluraliseNum(cJsons->size(), "json.", "jsons."));
 /* ========================================================================= */
 { "lcalc", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-cConsole->AddLine(cLua->CompileStringAndReturnResult(
+cConsole->AddLine(cLua->LuaCompileStringAndReturnResult(
   StrFormat("return $", StrImplode(aArgs, 1))));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lcalc' function
@@ -1067,7 +1072,7 @@ else cConsole->AddLineF("No match from $.",
 { "lend", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Reinit lua and inform user of the result
-cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_END) ?
+cConsole->AddLine(cLua->LuaTryEventOrForce(EMC_LUA_END) ?
   "Bypassing guest end routine and going stand-by!" :
   "Asking guest to end execution and going stand-by.");
 /* ------------------------------------------------------------------------- */
@@ -1080,7 +1085,7 @@ cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_END) ?
 /* ========================================================================= */
 { "lexec", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-cConsole->AddLine(cLua->CompileStringAndReturnResult(StrImplode(aArgs, 1)));
+cConsole->AddLine(cLua->LuaCompileStringAndReturnResult(StrImplode(aArgs, 1)));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lexec' function
 /* ========================================================================= */
@@ -1123,7 +1128,7 @@ cConsole->AddLineA(sTable.Finish(),
 { "lg", 1, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get lua state
-lua_State*const lS = cLua->GetState();
+lua_State*const lS = cLua->LuaGetState();
 // Save stack position and restore it when this function call completes. We
 // do this because we could write any number of values to the stack
 // depending on how many child variables the user specifies. This simple
@@ -1202,7 +1207,7 @@ cConsole->AddLineA(sTable.Finish(),
 { "lgc", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Free data and get bytes freed, if there are any? Report them
-if(const size_t stT = cLua->GarbageCollect())
+if(const size_t stT = cLua->LuaGarbageCollect())
   cConsole->AddLineF("$ bytes ($) freed.", stT, StrToBytes(stT));
 // No unreferenced objects were freed
 else cConsole->AddLine("No unreferenced memory!");
@@ -1259,7 +1264,7 @@ cLog->MutexCall([](){
 /* ========================================================================= */
 { "lpause", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cLua->RequestPause(true);
+cLua->LuaRequestPause(true);
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lpause' function
 /* ========================================================================= */
@@ -1270,7 +1275,7 @@ cLua->RequestPause(true);
 { "lreset", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Reinit lua and inform user of the result
-cConsole->AddLine(cLua->TryEventOrForce(EMC_LUA_REINIT) ?
+cConsole->AddLine(cLua->LuaTryEventOrForce(EMC_LUA_REINIT) ?
   "Bypassing guest end routine and restarting execution!" :
   "Asking guest to end execution and restarting execution.");
 /* ------------------------------------------------------------------------- */
@@ -1295,7 +1300,7 @@ cEvtMain->Add(EMC_LUA_RESUME);
 { "lstack", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Get lua state
-lua_State*const lS = cLua->GetState();
+lua_State*const lS = cLua->LuaGetState();
 // Get number of items in stack
 const int iCount = LuaUtilStackSize(lS);
 // Setup output spreadsheet
@@ -1356,7 +1361,7 @@ cConsole->AddLineA(sTable.Finish(),
 // Update counters
 cSystem->UpdateMemoryUsageData();
 // Precalculate lua and sql usage.
-const size_t stUsage = LuaUtilGetUsage(cLua->GetState()),
+const size_t stUsage = LuaUtilGetUsage(cLua->LuaGetState()),
              stSqlUse = cSql->HeapUsed();
 // Report lua and sql memory usage
 Statistic sTable;
@@ -1416,7 +1421,7 @@ StdForEach(seq, cDisplay->MonitorsBegin(), cDisplay->MonitorsEnd(),
 { // Get reference to class and write its data to the table
   const GlFWRes &gfwrRef = gfwmRef.Primary();
   sTable.DataN(gfwmRef.Index())
-        .Data(StrFromBoolYN(&gfwmRef == cDisplay->GetSelectedMonitor()))
+        .Data(StrFromBoolYN(&gfwmRef == cDisplay->DisplayGetSelectedMonitor()))
         .DataN(gfwmRef.CoordGetX()).DataN(gfwmRef.CoordGetY())
         .DataN(gfwrRef.Width()).DataN(gfwrRef.Height())
         .Data(StrFromRatio(gfwrRef.Width(), gfwrRef.Height()))
@@ -1605,7 +1610,7 @@ cConsole->AddLineA(sTable.Finish(),
 { "quit", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Quit the engine and inform user of the result
-cConsole->AddLine(cLua->TryEventOrForce(EMC_QUIT) ?
+cConsole->AddLine(cLua->LuaTryEventOrForce(EMC_QUIT) ?
   "Bypassing guest end routine and terminating engine!" :
   "Asking guest to end execution and terminating engine.");
 /* ------------------------------------------------------------------------- */
@@ -1621,10 +1626,10 @@ cConsole->AddLine(cLua->TryEventOrForce(EMC_QUIT) ?
 /* ------------------------------------------------------------------------- */
 // Restart the process and inform user of the result
 cConsole->AddLine(aArgs.size() == 2 ?
-  (cLua->TryEventOrForce(EMC_QUIT_RESTART_NP) ?
+  (cLua->LuaTryEventOrForce(EMC_QUIT_RESTART_NP) ?
     "Bypassing guest end routine and restarting engine with no args!" :
     "Asking guest to end execution and restarting engine with no args.") :
-  (cLua->TryEventOrForce(EMC_QUIT_RESTART) ?
+  (cLua->LuaTryEventOrForce(EMC_QUIT_RESTART) ?
     "Bypassing guest end routine and restarting engine!" :
     "Asking guest to end execution and restarting engine."));
 /* ------------------------------------------------------------------------- */
@@ -1692,10 +1697,10 @@ cConsole->AddLineF("$$ and $.", sTable.Finish(),
 /* ========================================================================= */
 { "shot", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
-LuaUtilClassCreate<SShot>(cLua->GetState(), *cSShots)->DumpMain();
+LuaUtilClassCreate<SShot>(cLua->LuaGetState(), *cSShots)->DumpMain();
 // Although SShot is asynchronous, theres no way to clean up the stack so
 // we'll just delete it straight away.
-LuaUtilRmStack(cLua->GetState(), 1);
+LuaUtilRmStack(cLua->LuaGetState(), 1);
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'shot' function
 /* ========================================================================= */
@@ -2132,8 +2137,8 @@ sTable.Header("ID").Header("FLAG").Header("SC").Header("MM").Header("TF")
       .Header("TSPY").Header("IDENTIFIER", false)
       .Reserve(2 + cFonts->size() + cTextures->size());
 // Include console texture and font
-ShowTextureInfo(sTable, cConGraphics->GetTextureRef());
-ShowTextureInfo(sTable, cConGraphics->GetFontRef());
+ShowTextureInfo(sTable, cConGfx->ConGfxGetTextureRef());
+ShowTextureInfo(sTable, cConGfx->ConGfxGetFontRef());
 // Walk through font textures and textures classes
 for(const Font*const fPtr : *cFonts) ShowTextureInfo(sTable, *fPtr);
 for(const Texture*const tPtr : *cTextures) ShowTextureInfo(sTable, *tPtr);
@@ -2318,7 +2323,7 @@ cEvtMain->RequestQuitThread();
 /* ========================================================================= */
 { "wreset", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cDisplay->RequestReposition();
+cDisplay->DisplayRequestReposition();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'wreset' function
 /* ------------------------------------------------------------------------- */

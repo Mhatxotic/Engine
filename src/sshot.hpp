@@ -84,7 +84,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       "Failed to read FBO pixel data!",
       "Identifier", fboRef.IdentGet(), "Mode", ImageGetPixelFormat(ttMode));
     // Get new filename or original filename
-    IdentSet(strFile.empty() ? StrAppend(cSystem->GetGuestShortTitle(),
+    IdentSet(strFile.empty() ? StrAppend(cSystem->SysGetGuestShortTitle(),
       cmSys.FormatTime("-%Y%m%d-%H%M%S")) : strFile);
     // Log status
     cLog->LogDebugExSafe("SShot '$' screen capture to '$' ($x$x$;$)...",
@@ -99,7 +99,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     return true;
   }
   /* -- Dump main FBO ------------------------------------------------------ */
-  void DumpMain() { DumpFBO(cFboCore->fboMain); }
+  void DumpMain() { DumpFBO(cFboCore->FboCoreGetMain()); }
   /* -- Default constructor ------------------------------------------------ */
   SShot() :
     /* -- Initialisers ----------------------------------------------------- */

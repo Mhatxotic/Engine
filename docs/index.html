@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.1.13.102 -->
-<!-- Automatically built at Tue Jan 13 23:27:28 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.1.13.102 -->
+<!-- Reference for the Mhatxotic Engine API version 26.1.17.306 -->
+<!-- Automatically built at Sat Jan 17 22:54:46 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.1.17.306 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.1.13.102">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.1.17.306">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.1.13.102">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.1.17.306">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.1.13.102">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.1.17.306">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.1.13.102 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.1.17.306 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.1.13.102 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.1.17.306 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.1.13.102 API reference</H1>
+	<H1>Mhatxotic Engine 26.1.17.306 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -12253,7 +12253,7 @@
 	</DIV>
 	<DIV id="cv.app_delay" style="display:none">
 		<H3>app_delay</H3>
-		<PRE>Specifies an artificial delay to force for terminal mode in milliseconds.<BR>This is ignored on interactive mode because a one millisecond delay is forced for every frame under the target rate.<BR></PRE>
+		<PRE>Specifies an artificial delay to force for terminal mode or graphical mode without the frame-limiter mode in milliseconds. In frame-limiter graphical mode, the delay is completely ignored if frames are running behind the accumulator. This function greatly lowers CPU usage and performance. The default is '0' which causes a thread yield every frame but no delay. A value of '-1' completely disables any suspend or yield which may cause or alleviate problems with other engine threads. The maximum value is '1000' which means delay the engine thread every one second.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.app_description" style="display:none">
@@ -13292,6 +13292,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Tue Jan 13 23:27:28 2026 +0000</ADDRESS>
+	This document was generated at Sat Jan 17 22:54:46 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

@@ -742,7 +742,7 @@ LLRSEND                                // Font:* member functions end
 // ? font in your application. Careful not to mess around with it's properties!
 /* ------------------------------------------------------------------------- */
 LLFUNC(Console, 1,
-  LuaUtilClassCreatePtr<Font>(lS, *cFonts, cConGraphics->GetFont()))
+  LuaUtilClassCreatePtr<Font>(lS, *cFonts, cConGfx->ConGfxGetFont()))
 /* ========================================================================= */
 // $ Font.Count
 // < Count:integer=Total number of fonts created.

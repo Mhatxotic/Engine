@@ -123,7 +123,7 @@ namespace E {                          // Start of engine namespace
 #include "font.hpp"                    // Font loading and printing header
 #include "file.hpp"                    // FStream+FileMap class header
 #include "clip.hpp"                    // Clipboard class header
-#include "congraph.hpp"                // Console rendering class header
+#include "congfx.hpp"                  // Console graphics class header
 #include "joyaxis.hpp"                 // Joystick axis class header
 #include "joybutton.hpp"               // Joystick button class header
 #include "joyinfo.hpp"                 // Joystick info class header

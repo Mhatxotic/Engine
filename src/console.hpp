@@ -408,8 +408,7 @@ struct Console :                       // Members initially private
     if(slriInputPosition == slHistory.crend())
       slriInputPosition = slHistory.crbegin();
     // Move back towards beginning of list if we can
-    else if(next(slriInputPosition) != slHistory.crend())
-      ++slriInputPosition;
+    else if(next(slriInputPosition) != slHistory.crend()) ++slriInputPosition;
     // Set new input
     SetInput(*slriInputPosition);
   }
@@ -450,8 +449,7 @@ struct Console :                       // Members initially private
   /* -- Input manipulation ------------------------------------------------- */
   void AddInputChar(const Codepoint cChar)
   { // Make sure line is under max characters
-    if(strConsoleBegin.size() + strConsoleEnd.size() >= stMaxInputLine)
-      return;
+    if(strConsoleBegin.size() + strConsoleEnd.size() >= stMaxInputLine) return;
     // Encode character to utf-8
     UtfAppend(cChar, strConsoleBegin);
     // Redraw the buffer, it changed
@@ -484,7 +482,7 @@ struct Console :                       // Members initially private
         IsVisible() ? GetDefaultRedrawFlags() : RD_NONE); }
   /* -- Returns if we should be hiding the graphical console --------------- */
   bool IsHidingGraphicalConsole()
-    { return cSystem->IsTextMode() &&
+    { return cSystem->SysIsTextMode() &&
              !cCVars->GetInternal<bool>(CON_GCWTERM); }
   /* -- Do Set Console status ---------------------------------------------- */
   bool SetVisible(const bool bState)
@@ -855,7 +853,7 @@ struct Console :                       // Members initially private
     if(ciOutputRefresh.CITriggerStrict())
     { // Update memory and cpu status
       cSystem->UpdateMemoryUsageData();
-      cSystem->UpdateCPUUsage();
+      cSystem->SysUpdateCPUUsage();
       // Redraw title
       cSystem->RedrawTitleBar(StrFormat("CPU:$$$%$  FPS:$  MEM:$  NET:$  UP:$",
         fixed, setprecision(1), cSystem->CPUUsage(), setprecision(0),
@@ -975,16 +973,16 @@ struct Console :                       // Members initially private
       "software.");
     // Write guest info in a different colour
     AddLineF(COLOUR_GREEN, "Guest is $ ($) version $ by $.",
-      cSystem->GetGuestTitle(), cSystem->GetGuestShortTitle(),
-      cSystem->GetGuestVersion(), cSystem->GetGuestAuthor());
+      cSystem->SysGetGuestTitle(), cSystem->SysGetGuestShortTitle(),
+      cSystem->SysGetGuestVersion(), cSystem->SysGetGuestAuthor());
     // Get optional variables
-    if(!cSystem->GetGuestCopyright().empty())
-      AddLineAC(COLOUR_GREEN, cSystem->GetGuestCopyright(), '.');
-    if(!cSystem->GetGuestDescription().empty())
-      AddLineAC(COLOUR_GREEN, cSystem->GetGuestDescription(), '.');
-    if(!cSystem->GetGuestWebsite().empty())
+    if(!cSystem->SysGetGuestCopyright().empty())
+      AddLineAC(COLOUR_GREEN, cSystem->SysGetGuestCopyright(), '.');
+    if(!cSystem->SysGetGuestDescription().empty())
+      AddLineAC(COLOUR_GREEN, cSystem->SysGetGuestDescription(), '.');
+    if(!cSystem->SysGetGuestWebsite().empty())
       AddLineF(COLOUR_GREEN, "Visit $ for more info, help and updates.",
-        cSystem->GetGuestWebsite());
+        cSystem->SysGetGuestWebsite());
   }
   /* -- Print a string using textures -------------------------------------- */
   void Init()
@@ -996,7 +994,7 @@ struct Console :                       // Members initially private
     // Reset cursor position
     clriPosition = rbegin();
     // Using text mode? Reset text flag
-    if(cSystem->IsTextMode()) GetDefaultRedrawFlags().FlagReset(RD_TEXT);
+    if(cSystem->SysIsTextMode()) GetDefaultRedrawFlags().FlagReset(RD_TEXT);
     // Redraw the console
     SetRedraw();
     // Initially shown and not closable
@@ -1005,7 +1003,7 @@ struct Console :                       // Members initially private
     PrintVersion();
     // Iterate each item and register command if required core flags match
     for(const ConLibStatic &clCmd : ccslInt)
-      if(cSystem->IsCoreFlagsHave(clCmd.cfcRequired))
+      if(cSystem->SysIsCoreFlagsHave(clCmd.cfcRequired))
         RegisterCommand(string(clCmd.strvName), clCmd.uiMinimum,
           clCmd.uiMaximum, clCmd.ccfFunc);
       // Write in log to say we skipped registration of this command
