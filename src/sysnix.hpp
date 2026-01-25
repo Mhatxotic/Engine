@@ -13,6 +13,7 @@
 #include "pixmod.hpp"                  // Module information class
 #include "pixmap.hpp"                  // File mapping class
 #include "pixpip.hpp"                  // Process output piping class
+#include "pixmutex.hpp"                // Mutex class
 /* == System intialisation helper ========================================== **
 ** ######################################################################### **
 ** ## Because we want to try and statically init const data as much as    ## **
@@ -40,115 +41,11 @@ class SysProcess                       // Need this before of System init order
   /* -------------------------------------------------------------- */ private:
   const pid_t      piProcessId;        // Process id
   const pthread_t  vpThreadId;         // Thread id
-  /* -- Shared memory ------------------------------------------------------ */
-  pid_t           *pipProcessId;       // Process id (OS level memory)
-  static constexpr size_t stPidSize = sizeof(piProcessId); // Size of a pid
-  /* -- Mutex name --------------------------------------------------------- */
-  Ident            idMutex;            // Mutex identifier
   /* -- Return process and thread id ---------------------------- */ protected:
   template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid() const
     { return static_cast<IntType>(vpThreadId); }
-  /* -- Initialise global mutex ------------------------------------ */ public:
-  bool InitGlobalMutex(const string_view &strvTitle)
-  { // Initialise mutex ident
-    idMutex.IdentSet(strvTitle);
-    // Shared memory file descriptor helper
-    class Shm
-    { /* -- Private variables ---------------------------------------------- */
-      const string_view &strvTitle; // Filename of shm object
-      int               iFd,        // The file descriptor of the shm object
-                        iMode;      // Requested mode for the shm object
-      /* -- Return mode -------------------------------------------- */ public:
-      int Mode() const { return iMode; }
-      /* -- Get file descriptor -------------------------------------------- */
-      int Get() const { return iFd; }
-      /* -- Resize file descriptor content --------------------------------- */
-      bool Truncate(const size_t stSize) const
-        { return !ftruncate(Get(), static_cast<off_t>(stSize)); }
-      /* -- Close the file descriptor -------------------------------------- */
-      bool Close()
-      { // Return success if already closed
-        if(Get() < 0) return true;
-        // Do the close and return failure if failed
-        if(close(Get())) return false;
-        // Reset the file descriptor
-        iFd = -1;
-        // Success
-        return true;
-      }
-      /* -- Open the file descriptor --------------------------------------- */
-      bool Open(const int iNMode)
-      { // Close previous file descriptor
-        Close();
-        // Set new mode
-        iMode = iNMode;
-        // Open and assign the new descriptor
-        iFd = shm_open(strvTitle.data(), iMode, 0600);
-        // Return if the open succeeded
-        return Get() >= 0;
-      }
-      /* -- Destructor that closes the file descriptor --------------------- */
-      ~Shm() { if(Get() >= 0) close(Get()); }
-      /* -- Constructor that initialises variables ------------------------- */
-      explicit Shm(const string_view &strvNTitle) :
-        /* -- Initialisers ------------------------------------------------- */
-        strvTitle(strvNTitle),         // Set reference to title
-        iFd(-1),                       // File descriptor uninitialised
-        iMode(0)                       // Mode uninitialised
-        /* -- No code ------------------------------------------------------ */
-        {}
-      /* -- Initialise a single object that automatically cleans up -------- */
-    } shmShm{ strvTitle };
-    // Create the semaphore and if an error occurs?
-    if(!shmShm.Open(O_CREAT | O_EXCL | O_RDWR))
-    { // Report error if it isn't because the semaphore already exists
-      if(StdIsNotError(EEXIST))
-        XCL("Failed to setup shared memory object for exclusive writing!",
-          "Name", strvTitle, "Mode", shmShm.Mode());
-      // Try opening it again for reading with exclusivity
-      if(!shmShm.Open(O_RDONLY | O_EXCL))
-        XCL("Failed to setup shared memory object for exclusive reading!",
-          "Name", strvTitle, "Mode", shmShm.Mode());
-      // Initialise memory
-      pipProcessId = StdMMap<pid_t>
-        (nullptr, stPidSize, PROT_READ, MAP_SHARED, shmShm.Get(), 0);
-      if(pipProcessId == MAP_FAILED)
-        XCL("Failed to setup shared memory for reading!",
-          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
-      // Test if the process exists
-      const pid_t pPId = *pipProcessId;
-      if(getpgid(pPId) >= 0)
-      { // Put in log that another instance of this application is running and
-        // return to caller that execution must cease.
-        XC("Another instance of this software is running!",
-          "MyPID", piProcessId, "OtherPID", pPId);
-      } // Put in log that another instance of this application is running.
-      cLog->LogWarningExSafe(
-        "Previous pid of $ not valid so assuming no previous instance.", pPId);
-      // Unmap previous shared memory
-      if(munmap(pipProcessId, stPidSize))
-        XCL("Failed to unmap shared memory from reading!", "Name", strvTitle);
-      // Try reopening for exclusive writing again
-      if(!shmShm.Open(O_RDWR | O_EXCL))
-        XCL("Failed to setup shared memory object for exclusive writing!",
-          "Name", strvTitle, "Mode", shmShm.Mode());
-    } // Make sure it is the correct size
-    if(!shmShm.Truncate(stPidSize) && StdIsNotError(EINVAL))
-      XCL("Failed to truncate shared memory object!",
-        "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
-    // Initialise memory
-    pipProcessId = StdMMap<pid_t>(nullptr, stPidSize,
-      PROT_READ | PROT_WRITE, MAP_SHARED, shmShm.Get(), 0);
-    if(pipProcessId == MAP_FAILED)
-      XCL("Failed to setup shared memory for writing!",
-        "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
-    // Write the current PID to shared memory
-    *pipProcessId = piProcessId;
-    // Execution can continue
-    return true;
-  }
   /* -- Constructor -------------------------------------------------------- */
   SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -168,24 +65,13 @@ class SysProcess                       // Need this before of System init order
     stPageSize(sysconf(_SC_PAGESIZE)), // Get memory page size
     piProcessId(getpid()),             // Get native process id
     vpThreadId(pthread_self()),        // Get native thread id
-    pipProcessId(nullptr)              // Process id memory not available
     /* -- No code ---------------------------------------------------------- */
     {}
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~SysProcess,
-    // Unmap the memory containing the pid and reset the pid memory address
-    if(pipProcessId && munmap(pipProcessId, stPidSize))
-      cLog->LogWarningExSafe("System failed to unmap shared memory of size "
-        "$ bytes! $", stPidSize, SysError());
-    // Unlink the mutex and show warning in log if failed
-    if(idMutex.IdentIsSet() && shm_unlink(idMutex.IdentGetData()))
-      cLog->LogWarningExSafe("System could not delete old mutex '$': $",
-        idMutex.IdentGet(), SysError());
-  )
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
   public SysProcess,                   // System process object
+  public SysMutex,                     // System mutex object
   public SysCon,                       // Defined in 'pixcon.hpp"
   public SysCommon                     // Common system object
 { /* -- Variables ---------------------------------------------------------- */
@@ -566,12 +452,24 @@ class SysCore :
   void SetWindowDestroyed() { bWindowInitialised = false; }
   /* ----------------------------------------------------------------------- */
   int LastSocketOrSysError() const { return StdGetError(); }
+  /* -- Initialise global mutex -------------------------------------------- */
+  bool InitGlobalMutex(const string_view &strvTitle)
+  { // Initialise the mutex and return the result
+    return SysDoInitGlobalMutex(strvTitle,
+      [](const pid_t pMPid, const pid_t pOPid)
+    { // Put in log that another instance of this application is running and
+      // return to caller that execution must cease.
+      XC("Another instance of this software is running!",
+        "MyPID", pMPid, "OtherPID", pOPid);
+    });
+  }
   /* -- Build user roaming directory ---------------------------- */ protected:
   const string BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("HOME", "/.local"); }
   /* -- Constructor -------------------------------------------------------- */
   SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
+    SysMutex{ piProcessId },           // Send pid to mutex vlass
     SysCon{ EnumModules(), 0 },
     SysCommon{ GetExecutableData(),
                GetOperatingSystememData(),

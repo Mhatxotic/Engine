@@ -219,6 +219,8 @@ class Core final :                     // Members initially private
           ConGfxRenderToMain();
           // Finish rendering the main FBO but don't update finish tickstamp
           FboCoreGetMain().FboFinishAndRenderUnsafe();
+          // Finish what we can behind the scenes for now
+          OglPostRender();
           // Try to catchup by ignoring video rendering and flipping buffers
           goto Catchup;
         } // Clear redraw flag
@@ -233,19 +235,23 @@ class Core final :                     // Members initially private
         break;
       // No redrawing required this frame?
       case DS_NONE:
+        // Finish what we can behind the scenes for now
+        OglPostRender();
         // Try to catchup if we are behind
         if(TimerShouldTick()) goto Catchup;
-        // Cannot draw so delete texture and FBO handles and finish
-        OglPostRender();
         // Timer system can wait a little to not waste CPU cycles
         TimerForceWait();
         // Done
         break;
       // Only copy main to back buffer? Caused by being behind and DS_FULL
       case DS_PARTIAL:
-        // Try to catchup if we are behind
-        if(TimerShouldTick()) goto Catchup;
-        // Clear redraw flag
+        // If we are behind?
+        if(TimerShouldTick())
+        { // Finish what we can behind the scenes for now
+          OglPostRender();
+          // Try to catchup
+          goto Catchup;
+        } // Clear redraw flag
         FboCoreClearDraw();
         // Do the render
         FboCoreRender();
