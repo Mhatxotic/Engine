@@ -135,7 +135,7 @@ constexpr static const luaL_Reg llrLast{ nullptr, nullptr };
   { LMT_ ## lmt, #ns, CFL_ ## cfl, sa, sc, ma, mc, mf, ca, cc, sc+mc+cc }
 /* -- Helper macros to use when actually defining the main API array ------- */
 #define LLFxx(n,f)                                   /* Function only       */\
-  LLITEM(CLASSES, n, f,                              /* Just a namespace    */\
+  LLITEM(TOTAL, n, f,                                /* Just a namespace    */\
     LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
     nullptr, 0, nullptr,                             /* No methods          */\
     nullptr, 0)                                      /* No statics           */
@@ -147,7 +147,7 @@ constexpr static const luaL_Reg llrLast{ nullptr, nullptr };
     nullptr, 0)                                      /* No statics           */
 /* ------------------------------------------------------------------------- */
 #define LLFxC(n,f)                                   /* Function + const    */\
-  LLITEM(CLASSES, n, f,                              /* Just a namespace    */\
+  LLITEM(TOTAL, n, f,                                /* Just a namespace    */\
     LLNS(n, lrFunctions), LLAL(n, lrFunctions),      /* Have functions      */\
     nullptr, 0, nullptr,                             /* No methods          */\
     LLNS(n, tConsts), LLAL(n, tConsts))              /* Have statics         */
@@ -161,7 +161,7 @@ constexpr static const luaL_Reg llrLast{ nullptr, nullptr };
 const LuaLibStaticArray llsaAPI{{
   /* -- Make sure to follow the order of 'LuaClassId' from 'luadef.hpp' ---- */
   LLFMx(Archive, BASIC, ARCHIVE),      LLFMC(Asset, BASIC, ASSET),
-  LLFxx(Atlas, VIDEO),                 LLFxx(Audio, AUDIO),
+  LLFMx(Atlas, VIDEO, ATLAS),          LLFxx(Audio, AUDIO),
   LLFMx(Bin, BASIC, BIN),              LLFMx(Clip, VIDEO, CLIP),
   LLFxC(Core, BASIC),                  LLFMx(Command, BASIC, COMMAND),
   LLFxC(Display, VIDEO),               LLFMC(Fbo, VIDEO, FBO),
@@ -170,9 +170,9 @@ const LuaLibStaticArray llsaAPI{{
   LLFxC(Input, VIDEO),                 LLFMx(Json, BASIC, JSON),
   LLFMx(Mask, BASIC, MASK),            LLFMx(Palette, VIDEO, PALETTE),
   LLFMC(Pcm, BASIC, PCM),              LLFMx(Sample, AUDIO, SAMPLE),
-  LLFMx(SShot, VIDEO, SSHOT),          LLFMx(Stat, BASIC, STAT),
   LLFMC(Socket, BASIC, SOCKET),        LLFMx(Source, AUDIO, SOURCE),
-  LLFxC(Sql, BASIC),                   LLFMC(Stream, AUDIO, STREAM),
+  LLFMC(Sql, BASIC, SQL),              LLFMx(SShot, VIDEO, SSHOT),
+  LLFMx(Stat, BASIC, STAT),            LLFMC(Stream, AUDIO, STREAM),
   LLFMx(Texture, VIDEO, TEXTURE),      LLFMC(Url, BASIC, URL),
   LLFxx(Util, BASIC),                  LLFMC(Variable, BASIC, VARIABLE),
   LLFMC(Video, AUDIOVIDEO, VIDEO),

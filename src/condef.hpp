@@ -82,10 +82,10 @@ enum ConCmdEnums : unsigned int
   CC_MODS,     CC_OBJS,      CC_OGLEXT,  CC_OGLFUNC,   CC_PALETTES,
   CC_PCMFMTS,  CC_PCMS,      CC_QUIT,    CC_RESTART,   CC_SAMPLES,
   CC_SHADERS,  CC_SHOT,      CC_SOCKETS, CC_SOCKRESET, CC_SOURCES,
-  CC_SQLCHECK, CC_SQLDEFRAG, CC_SQLEND,  CC_SQLEXEC,   CC_STATS,
-  CC_STOPALL,  CC_STREAMS,   CC_SYSTEM,  CC_TEXTURES,  CC_THREADS,
-  CC_TIME,     CC_URLS,      CC_VERSION, CC_VIDEOS,    CC_VMLIST,
-  CC_VRESET,   CC_WRESET,
+  CC_SQLCHECK, CC_SQLDEFRAG, CC_SQLEND,  CC_SQLEXEC,   CC_SQLS,
+  CC_STATS,    CC_STOPALL,   CC_STREAMS, CC_SYSTEM,    CC_TEXTURES,
+  CC_THREADS,  CC_TIME,      CC_URLS,    CC_VERSION,   CC_VIDEOS,
+  CC_VMLIST,   CC_VRESET,    CC_WRESET,
   /* ----------------------------------------------------------------------- */
   MAX_CONCMD                           // Maximum console commands
 };/* ======================================================================= */

@@ -8,122 +8,111 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IString {                    // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Private dependencies and functions ----------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
 using namespace IUtf::P;
-/* ------------------------------------------------------------------------- */
+/* -- Process string format/append value into output string stream --------- */
+template<typename AnyType>
+  static void StrFormatValue(ostringstream &osS, const AnyType &atVal)
+{ // If is an exception object? Push the string of it
+  if constexpr(is_same_v<AnyType, exception>) osS << atVal.what();
+  // Let ostringstream handle the value
+  else osS << atVal;
+}
+/* -- Append final parameter to output string stream ----------------------- */
+static void StrAppendParam(ostringstream&) {}
+/* -- Append a parameter to output string stream --------------------------- */
+template<typename AnyType, typename ...VarArgs>
+  static void StrAppendParam(ostringstream &osS, const AnyType &atVal,
+    VarArgs &&...vaArgs)
+{ // Push the specified value
+  StrFormatValue(osS, atVal);
+  // Process next argument
+  StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
+}
+/* -- Format final parameter to output string stream ----------------------- */
+static void StrFormatParam(ostringstream &osS, const char *cpPos)
+  { if(*cpPos) osS << cpPos; }
+/* -- Format any parameter to output string stream ------------------------- */
+template<typename AnyType, typename ...VarArgs>
+  static void StrFormatParam(ostringstream &osS, const char *cpPos,
+    const AnyType &atVal, VarArgs &&...vaArgs)
+{ // Find mark that will be replaced by this param and if we find the char?
+  if(const char*const cpNewPos = strchr(cpPos, '$'))
+  { // How far did we find the new position
+    switch(const size_t stNum = static_cast<size_t>(cpNewPos - cpPos))
+    { // One character? Just copy one character and move ahead two to skip over
+      // the '$' we just processed.
+      case 1: osS << *cpPos; cpPos += 2; break;
+      // More than one character? Copy characters and stride over the '$' we
+      // just processed. Better than storing single characters.
+      default: osS << string{ cpPos, stNum };
+               cpPos += stNum + 1;
+               break;
+      // Did not move? This can happen at the start of the string. Just move
+      // over the first '$'.
+      case 0: ++cpPos; break;
+    } // Push the value we are supposed to replace the matched '$' with.
+    StrFormatValue(osS, atVal);
+    // Process more parameters if we can.
+    StrFormatParam(osS, cpPos, StdForward<VarArgs>(vaArgs)...);
+  } // Return the rest of the string.
+  else StrFormatParam(osS, cpPos);
+}
+/* -- Types used for 'StrFromEvalTokens' function -------------------------- */
+typedef pair<const bool, const char> BoolCharPair;
+typedef vector<BoolCharPair> BoolCharPairVector;
+ /* -- Public functions ---------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Some helpful globals so not to repeat anything ----------------------- */
 static const char*const cpTimeFormat = "%a %b %d %H:%M:%S %Y %z";
-/* -- Functions for StrAppend, StrAppendImbue and StrFormat ---------------- */
-namespace H                            // Private functions
-{ /* -- Process any value -------------------------------------------------- */
-  template<typename AnyType>
-    static void Value(ostringstream &osS, const AnyType &atVal)
-  { // If is an exception object? Push the string of it
-    if constexpr(is_same_v<AnyType, exception>) osS << atVal.what();
-    // Let ostringstream handle the value
-    else osS << atVal;
-  }
-  /* -- Append functions --------------------------------------------------- */
-  namespace Append                     // Private functions
-  { /* -- Append final parameter ------------------------------------------- */
-    static void Param(ostringstream&) {}
-    /* -- Append a parameter ----------------------------------------------- */
-    template<typename AnyType, typename ...VarArgs>
-      static void Param(ostringstream &osS, const AnyType &atVal,
-        VarArgs &&...vaArgs)
-    { // Push the specified value
-      Value(osS, atVal);
-      // Process next argument
-      Param(osS, StdForward<VarArgs>(vaArgs)...);
-    }
-    /* -- Append main function --------------------------------------------- */
-    template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
-      static const string StrAppend(VarArgs &&...vaArgs)
-    { // Stream to write to
-      ostringstream osS;
-      // Build string
-      Param(osS, StdForward<VarArgs>(vaArgs)...);
-      // Return string
-      return osS.str();
-    }
-    /* -- Append with formatted numbers ------------------------------------ */
-    template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
-      static const string StrAppendImbue(VarArgs &&...vaArgs)
-    { // Stream to write to
-      ostringstream osS;
-      // Imbue current locale
-      osS.imbue(cCommon->CommonLocale());
-      // Build string
-      Param(osS, StdForward<VarArgs>(vaArgs)...);
-      // Return appended string
-      return osS.str();
-    }
-  } /* -- Format functions ------------------------------------------------- */
-  namespace Format                     // Private functions
-  { /* -- Append final parameter (uses copy elision) ----------------------- */
-    static void Param(ostringstream &osS, const char *cpPos)
-      { if(*cpPos) osS << cpPos; }
-    /* -- Process any value ------------------------------------------------ */
-    template<typename AnyType, typename ...VarArgs>
-      static void Param(ostringstream &osS, const char *cpPos,
-        const AnyType &atVal, VarArgs &&...vaArgs)
-    { // Find the mark that will be replaced by this parameter and if we
-      // find the character?
-      if(const char*const cpNewPos = strchr(cpPos, '$'))
-      { // How far did we find the new position
-        switch(const size_t stNum = static_cast<size_t>(cpNewPos - cpPos))
-        { // One character? Just copy one character and move ahead two to skip
-          // over the '$' we just processed.
-          case 1: osS << *cpPos; cpPos += 2; break;
-          // More than one character? Copy characters and stride over the '$'
-          // we just processed. Better than storing single characters.
-          default: osS << string{ cpPos, stNum };
-                   cpPos += stNum + 1;
-                   break;
-          // Did not move? This can happen at the start of the string. Just
-          // move over the first '$'.
-          case 0: ++cpPos; break;
-        } // Push the value we are supposed to replace the matched '$' with.
-        Value(osS, atVal);
-        // Process more parameters if we can.
-        Param(osS, cpPos, StdForward<VarArgs>(vaArgs)...);
-      } // Return the rest of the string.
-      else Param(osS, cpPos);
-    }
-    /* -- Prepare message from c-string format ----------------------------- */
-    template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
-      static const string StrFormat(const char*const cpFmt,
-        VarArgs &&...vaArgs)
-    { // Return if string empty of invalid
-      if(UtfIsCStringNotValid(cpFmt)) return {};
-      // Stream to write to
-      ostringstream osS;
-      // Format the text
-      Param(osS, cpFmt, StdForward<VarArgs>(vaArgs)...);
-      // Return formated text
-      return osS.str();
-    }
-    /* -- Prepare message from string format ------------------------------- */
-    template<typename ...VarArgs>
-      static const string StrFormat[[maybe_unused]](const string &strS,
-        VarArgs &&...vaArgs)
-    { // Return if string empty of invalid
-      if(strS.empty()) return {};
-      // Stream to write to
-      ostringstream osS;
-      // StrFormat the text
-      Param(osS, strS.data(), StdForward<VarArgs>(vaArgs)...);
-      // Return formated text
-      return osS.str();
-    }
-  }
-} /* ----------------------------------------------------------------------- */
-using H::Append::StrAppend;            // Alias 'StrAppend' here
-using H::Append::StrAppendImbue;       // Alias 'StrAppendImbue' here
-using H::Format::StrFormat;            // Alias 'StrFormat' here
-/* == Format a number ====================================================== */
+/* -- Append main function ------------------------------------------------- */
+template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
+  static const string StrAppend(VarArgs &&...vaArgs)
+{ // Stream to write to
+  ostringstream osS;
+  // Build string
+  StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
+  // Return string
+  return osS.str();
+}
+/* -- Append with formatted numbers ---------------------------------------- */
+template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
+  static const string StrAppendImbue(VarArgs &&...vaArgs)
+{ // Stream to write to
+  ostringstream osS;
+  // Imbue current locale
+  osS.imbue(cCommon->CommonLocale());
+  // Build string
+  StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
+  // Return appended string
+  return osS.str();
+}
+/* -- Prepare message from c-string format --------------------------------- */
+template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
+  static const string StrFormat(const char*const cpFmt, VarArgs &&...vaArgs)
+{ // Return if string empty of invalid
+  if(UtfIsCStringNotValid(cpFmt)) return {};
+  // Stream to write to
+  ostringstream osS;
+  // Format the text
+  StrFormatParam(osS, cpFmt, StdForward<VarArgs>(vaArgs)...);
+  // Return formated text
+  return osS.str();
+}
+/* -- Prepare message from string format ----------------------------------- */
+template<typename ...VarArgs>
+  static const string StrFormat(const string &strS, VarArgs &&...vaArgs)
+{ // Return if string empty of invalid
+  if(strS.empty()) return {};
+  // Stream to write to
+  ostringstream osS;
+  // StrFormat the text
+  StrFormatParam(osS, strS.data(), StdForward<VarArgs>(vaArgs)...);
+  // Return formated text
+  return osS.str();
+}
+/* -- Format a number ------------------------------------------------------ */
 template<typename IntType>
   static const string StrReadableFromNum(const IntType itVal,
     const int iPrec=0)
@@ -246,15 +235,6 @@ static const string StrFromErrNo(const int iErrNo=errno)
   // Have to do this because the string is still actually 94 bytes long
   return strErr;
 }
-/* -- Helper plugin for C runtime errno checking --------------------------- */
-struct ErrorPluginStandard final
-{ /* -- Exception class helper macro for C runtime errors ------------------ */
-#define XCL(r,...) throw Error<ErrorPluginStandard>(r, ## __VA_ARGS__)
-  /* -- Constructor to add C runtime error code ---------------------------- */
-  explicit ErrorPluginStandard(ostringstream &osS)
-    { osS << "\n+ Reason<" << StdGetError() << "> = \""
-          << StrFromErrNo() << "\"."; }
-};/* ----------------------------------------------------------------------- */
 /* -- Convert special formatted string to unix timestamp ------------------- */
 static StdTimeT StrParseTime2(const string &strS)
 { // Time structure
@@ -510,19 +490,12 @@ static const string StrCapitalise(const string &strStr)
   return strNew;
 }
 /* -- Evaluate a list of booleans and return a character value ------------- */
-namespace StrFromEvalTokensPrivateData
-{ // The private pair and vector types used in the function
-  typedef pair<const bool, const char> BoolCharPair;
-  typedef vector<BoolCharPair> BoolCharPairVector;
-  // The actual function
-  static const string StrFromEvalTokens(const BoolCharPairVector &bcpvList)
-    { return bcpvList.empty() ? cCommon->CommonBlank() :
-        accumulate(bcpvList.cbegin(), bcpvList.cend(), cCommon->CommonBlank(),
-          [](const string &strOut, const BoolCharPair &bcpPair)
-            { return bcpPair.first ? StrAppend(strOut,
-              bcpPair.second) : strOut; }); }
-} // Invoke the function in the IUtil namespace
-using StrFromEvalTokensPrivateData::StrFromEvalTokens;
+static const string StrFromEvalTokens(const BoolCharPairVector &bcpvList)
+  { return bcpvList.empty() ? cCommon->CommonBlank() :
+      accumulate(bcpvList.cbegin(), bcpvList.cend(), cCommon->CommonBlank(),
+        [](const string &strOut, const BoolCharPair &bcpPair)
+          { return bcpPair.first ? StrAppend(strOut,
+            bcpPair.second) : strOut; }); }
 /* -- Convert time to short duration --------------------------------------- */
 static const string StrShortFromDuration(const double dDuration,
   const int iPrecision=6)

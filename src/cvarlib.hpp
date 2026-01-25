@@ -152,6 +152,28 @@ CVarItemStaticList{{
 { CFL_BASIC, "ast_safetymode", cCommon->CommonTwo(),
   CB(cDirBase->SetDefaultSafetyMode, ValidType), TUINTEGER|PCMDLINE|PAPPCFG },
 /* ------------------------------------------------------------------------- */
+// ! SQL_RETRYSUSPEND
+// ? Specifies the number of milliseconds to suspend before retrying the
+// ? operation. The default value is 1 and the the maximum value is 1000 for
+// ? safety reasons. Setting to zero disables but yields the calling thread.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "sql_retrysuspend", cCommon->CommonOne(),
+  CB(SqlRetrySuspendModified, uint64_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
+// ! SQL_ERASEEMPTY
+// ? Specifies to automatically erase the database at exit if no cvars or
+// ? custom tables are written to it by the guest.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "sql_eraseempty", cCommon->CommonOne(),
+  CB(SqlDeleteEmptyDBModified, bool), TBOOLEAN|PAPPCFG },
+/* ------------------------------------------------------------------------- */
+// ! SQL_RETRYCOUNT
+// ? Specifies the number of times a Sql query can be retried before giving
+// ? up. Set to -1 for infinite. The default value is 1000.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "sql_retrycount", "1000",
+  CB(SqlRetryCountModified, unsigned int), TINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
 // ! SQL_DB
 // ? Specifies the Sql database filename to use. This filename is subject
 // ? to sandboxing and cannot leave the startup directory. The extension ".udb"
@@ -163,69 +185,54 @@ CVarItemStaticList{{
 // ? string uses the executables filename without the extension.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_db", cCommon->CommonBlank(),
-  CBSTR(cSql->SqlUdbFileModified),
-  CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
+  CBSTR(SqlUdbFileModified), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
-// ! SQL_RETRYCOUNT
-// ? Specifies the number of times a Sql query can be retried before giving
-// ? up. Set to -1 for infinite. The default value is 1000.
+// ! SQL_LOCKINGMODE
+// ? Performs 'pragma locking_mode' when the database is opened to this value.
+// ? If set to 'true' then locking mode is 'EXCLUSIVE', else locking mode is
+// ? 'NORMAL' when 'false' (default).
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_retrycount", "1000",
-  CB(cSql->SqlRetryCountModified, unsigned int), TINTEGER|PAPPCFG },
-/* ------------------------------------------------------------------------- */
-// ! SQL_RETRYSUSPEND
-// ? Specifies the number of milliseconds to suspend before retrying the
-// ? operation. The default value is 1 and the the maximum value is 1000 for
-// ? safety reasons. Setting to zero disables but yields the calling thread.
-/* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_retrysuspend", cCommon->CommonOne(),
-  CB(cSql->SqlRetrySuspendModified, uint64_t), TUINTEGER|PAPPCFG },
-/* ------------------------------------------------------------------------- */
-// ! SQL_ERASEEMPTY
-// ? Specifies to automatically erase the database at exit if no cvars or
-// ? custom tables are written to it by the guest.
-/* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_eraseempty", cCommon->CommonOne(),
-  CB(cSql->SqlDeleteEmptyDBModified, bool), TBOOLEAN|PAPPCFG },
+{ CFL_BASIC, "sql_lockingmode", cCommon->CommonZero(),
+  CB(SqlLockingModeModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_TEMPSTORE
 // ? Performs 'pragma temp_store' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_tempstore", "MEMORY",
-  CBSTR(cSql->SqlTempStoreModified), TSTRING|MTRIM|PAPPCFG },
+  CBSTR(SqlTempStoreModified), TSTRING|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_SYNCHRONOUS
 // ? Performs 'pragma synchronous x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_synchronous", cCommon->CommonZero(),
-  CB(cSql->SqlSynchronousModified, bool), TBOOLEAN|PAPPCFG },
+  CB(SqlSynchronousModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_JOURNALMODE
 // ? Performs 'pragma journal_mode x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_journalmode", cCommon->CommonZero(),
-  CB(cSql->SqlJournalModeModified, bool), TBOOLEAN|PAPPCFG },
+  CB(SqlJournalModeModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_AUTOVACUUM
 // ? Performs 'pragma auto_vacuum x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_autovacuum", cCommon->CommonOne(),
-  CB(cSql->SqlAutoVacuumModified, bool), TBOOLEAN|PAPPCFG },
+  CB(SqlAutoVacuumModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_FOREIGNKEYS
 // ? Performs 'pragma foreign_keys x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_foreignkeys", cCommon->CommonOne(),
-  CB(cSql->SqlForeignKeysModified, bool), TBOOLEAN|PAPPCFG },
+  CB(SqlForeignKeysModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_INCVACUUM
 // ? Performs 'pragma incremental_vacuum(x)' when the database is opened and
 // ? sets 'x' to this value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_incvacuum", cCommon->CommonZero(),
-  CB(cSql->SqlIncVacuumModified, uint64_t), TUINTEGER|PAPPCFG },
+  CB(SqlIncVacuumModified, uint64_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DEFAULTS
 // ? Performs a reset of the database depending on the following value...
@@ -258,6 +265,14 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "log_lines", "10000",
   CB(cLog->LogLinesModified, size_t), TUINTEGERSAVE|PANY },
+/* ------------------------------------------------------------------------- */
+// ! LOG_APPEND
+// ? If set to 0 (default). The specified log file at 'log_file' is created or
+// ? truncated when opened else if set to 1 then the specified log file is
+// ? created or appended.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "log_append", cCommon->CommonZero(),
+  CB(cLog->LogSetFileAppend, size_t), TBOOLEAN|PANY },
 /* ------------------------------------------------------------------------- */
 // ! LOG_FILE
 // ? Specifies a file to log internal engine messages to. It is used to help
@@ -454,6 +469,14 @@ CVarItemStaticList{{
 { CFL_AUDIO, "obj_sourcemax", "1000",
   CB(cSources->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
+// ! OBJ_SQLMAX
+// ? Specifies the maximum number of sql database objects allowed to be
+// ? registered by the engine. An exception is generated if more objects than
+// ? this are allocated.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "obj_sqlmax", "100",
+  CB(cSqls->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
 // ! OBJ_SSHOTMAX
 // ? Specifies the maximum number of sshot objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
@@ -589,7 +612,8 @@ CVarItemStaticList{{
 // ? The default value is 2.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "err_admin", cCommon->CommonTwo(),
-  CB(cSystem->SysCheckAdminModified, unsigned int), TUINTEGER|PAPPCFG },
+  CB(cSystem->SysCheckAdminModified, unsigned int),
+  TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_CHECKSUM
 // ? Throws an error if there is an executable checksum mismatch. This only
@@ -605,7 +629,7 @@ CVarItemStaticList{{
   cCommon->CommonZero(),
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cSystem->SysCheckChecksumModified, bool), TBOOLEAN|PAPPCFG },
+  CB(cSystem->SysCheckChecksumModified, bool), TBOOLEAN|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_DEBUGGER
 // ? Throws an error if a debugger is running at start-up. The default value
@@ -619,7 +643,7 @@ CVarItemStaticList{{
   cCommon->CommonZero(),
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cSystem->SysCheckDebuggerDetected, bool), TBOOLEAN|PAPPCFG },
+  CB(cSystem->SysCheckDebuggerDetected, bool), TBOOLEAN|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_LUAMODE
 // ? Sets how to handle a LUA script error to one of these values...
@@ -637,7 +661,8 @@ CVarItemStaticList{{
   cCommon->CommonTwo(),
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason), TUINTEGER|PAPPCFG },
+  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason),
+    TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_LMRESETLIMIT
 // ? When ERR_LUAMODE is set to 1, this specifies the number of LUA script
@@ -653,14 +678,14 @@ CVarItemStaticList{{
   "10",
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreSetResetLimit, unsigned int), TUINTEGER|PAPPCFG },
+  CB(cCore->CoreSetResetLimit, unsigned int), TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_MINVRAM
 // ? The engine fails to run if the system does not have this amount of VRAM
 // ? available.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "err_minvram", cCommon->CommonZero(),
-  CB(cOgl->SetMinVRAM, uint64_t), TUINTEGER|PAPPCFG },
+  CB(cOgl->SetMinVRAM, uint64_t), TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_MINRAM
 // ? The engine fails to run if the system does not have this amount of free
@@ -670,7 +695,7 @@ CVarItemStaticList{{
 // ? default value is zero.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "err_minram", cCommon->CommonZero(),
-  CB(cSystem->SysSetMinRAM, uint64_t), TUINTEGER|PAPPCFG },
+  CB(cSystem->SysSetMinRAM, uint64_t), TUINTEGER|PAPPCFG|PCMDLINE },
 /* == Lua cvars ============================================================ */
 // ! LUA_CACHE
 // ? Specifies to compile any Lua code and store it in the user database for
@@ -796,10 +821,9 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 // ! AUD_SAMVOL
 // ? Specifies the volume of Sample classes. 0.0 (mute) to
-// ? 1.0 (maximum volume). Setting a value too high may cause artifacts on
-// ? older OS audio API's.
+// ? 1.0 (maximum volume).
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_samvol", "0.75",
+{ CFL_AUDIO, "aud_samvol", cCommon->CommonOne(),
   CB(SampleSetVolume, ALfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AUD_STRBUFCOUNT
@@ -822,17 +846,15 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 // ! AUD_STRVOL
 // ? Specifies the volume of Stream classes. 0.0 (mute) to
-// ? 1.0 (maximum volume). Setting a value too high may cause artifacts on
-// ? older OS audio API's.
+// ? 1.0 (maximum volume).
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_strvol", "0.75",
+{ CFL_AUDIO, "aud_strvol", cCommon->CommonOne(),
   CB(StreamSetVolume, ALfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AUD_FMVVOL
 // ? Specifies the volume of Video classes. 0.0 (mute) to 1.0 (maximum volume).
-// ? Setting a value too high may cause artifacts on older OS audio API's.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_fmvvol", "0.75",
+{ CFL_AUDIO, "aud_fmvvol", cCommon->CommonOne(),
   CB(VideoSetVolume, ALfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AUD_HRTF

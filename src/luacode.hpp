@@ -48,13 +48,13 @@ static CVarReturn LuaCodeCheckVersion(const string &strVal, string &strNVal)
   // If version stored is not the same as expected?
   if(strVal != svVersion)
   { // If the LUA code table doesn't exist? Just initialise the version
-    if(!cSql->SqlIsTableExist(cSql->strvLCTable)) goto Accepted;
+    if(!cSql->SqlIsTableExist(cSqls->strvLCTable)) goto Accepted;
     // Log that the LUA version is different
     cLog->LogWarningExSafe("LuaCode detected LUA version mismatch "
       "(\"$\" != \"$\") so the code cache will be flushed.",
       strVal, svVersion);
     // Clear the cache and if succeeded?
-    if(cSql->SqlFlushTable(cSql->strvLCTable) == SQLITE_OK)
+    if(cSql->SqlFlushTable(cSqls->strvLCTable) == SQLITE_OK)
     { // Write success in the console
       cLog->LogWarningSafe("LuaCode flushed the LUA code cache successfully!");
       // Update cvar to the current version
@@ -168,7 +168,7 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
   // Check if we have cached this in the sql database and if we have?
   if(cSql->SqlExecuteAndSuccess(
     StrFormat("SELECT `$` from `$` WHERE R=? AND C=?",
-      cSql->strvLCCodeColumn, cSql->strvLCTable), strRef, uiCRC))
+      cSqls->strvLCCodeColumn, cSqls->strvLCTable), strRef, uiCRC))
   { // Get records and if we have results?
     const SqlResult &srData = cSql->SqlGetRecords();
     if(!srData.empty())
@@ -187,6 +187,8 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
           // Do compile the buffer
           LuaCodeDoCompileBuffer(lS,
             sdRef.MemPtr<char>(), sdRef.MemSize(), strRef);
+          // Clear SQL results
+          cSql->SqlReset();
           // Return that we used the cached version
           return LCR_CACHED;
         } // Invalid type
@@ -210,8 +212,8 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
   // Send to sql database and return if succeeded
   if(cSql->SqlExecuteAndSuccess(StrFormat(
          "INSERT or REPLACE into `$`(`$`,`$`,`$`,`$`) VALUES(?,?,?,?)",
-         cSql->strvLCTable, cSql->strvLCCRCColumn, cSql->strvLCTimeColumn,
-         cSql->strvLCRefColumn, cSql->strvLCCodeColumn),
+         cSqls->strvLCTable, cSqls->strvLCCRCColumn, cSqls->strvLCTimeColumn,
+         cSqls->strvLCRefColumn, cSqls->strvLCCodeColumn),
        uiCRC, cmSys.GetTimeNS<sqlite3_int64>(), strRef, mbData))
     return LCR_RECOMPILE;
   // Show error
@@ -220,6 +222,8 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
     strRef, cSql->SqlGetErrorStr(), cSql->SqlGetError());
   // Try to rebuild table
   cSql->SqlLuaCacheRebuildTable();
+  // Clear SQL results
+  cSql->SqlReset();
   // Return compiled but not stored
   return LCR_DBERR;
 }

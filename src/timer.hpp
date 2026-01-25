@@ -78,7 +78,7 @@ class Timer                            // Members initially private
     ++ullTicks;
   }
   /* -- Do calculation and return if we're still under the frame time? ----- */
-  bool TimerDoCalcAndShouldTick()
+  bool TimerDoCalcAndShouldNotTick()
   { // Calculate frame time
     TimerCalculateTime();
     // Increase accumulator by frame time
@@ -89,13 +89,13 @@ class Timer                            // Members initially private
   /* -- Should execute a game tick? ---------------------------------------- */
   bool TimerShouldTick()
   { // Frame limit not reached?
-    if(TimerDoCalcAndShouldTick()) [[likely]]
+    if(TimerDoCalcAndShouldNotTick()) [[likely]]
     { // If we can suspend or yield to save CPU cycles?
       if(cdDelay != cd0 && cdAcc + cdDelay < cdLimit) [[likely]]
       { // Wait for specified delay
         TimerDoSuspend();
         // Frame limit still not reached?
-        if(TimerDoCalcAndShouldTick()) [[unlikely]] return false;
+        if(TimerDoCalcAndShouldNotTick()) [[unlikely]] return false;
       } // Suspend engine thread for the requested delay
       else return false;
     } // Set total time the frame took

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.1.24.1 -->
-<!-- Automatically built at Sun Jan 25 00:02:49 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.1.24.1 -->
+<!-- Reference for the Mhatxotic Engine API version 26.3.27.2 -->
+<!-- Automatically built at Wed Apr 01 18:20:24 2026 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.3.27.2 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.1.24.1">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.3.27.2">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.1.24.1">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.3.27.2">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.1.24.1">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.3.27.2">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.1.24.1 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.3.27.2 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.1.24.1 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.3.27.2 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.1.24.1 API reference</H1>
+	<H1>Mhatxotic Engine 26.3.27.2 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 907 functions (414 members, 493 methods) and 30 consts in 31 namespaces with 87 commands and 213 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 914 functions (404 members, 510 methods) and 30 consts in 31 namespaces with 88 commands and 216 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -275,6 +275,15 @@
 								<B>Members</B> <I>(1 member)</I>
 								<OL>
 									<LI><A href="#Atlas.Count">Count</A></LI>
+								</OL>
+							</LI>
+							<LI>
+								<B>Methods</B> <I>(4 methods)</I>
+								<OL>
+									<LI><A href="#Atlas:Destroy">Destroy</A></LI>
+									<LI><A href="#Atlas:Destroyed">Destroyed</A></LI>
+									<LI><A href="#Atlas:Id">Id</A></LI>
+									<LI><A href="#Atlas:Name">Name</A></LI>
 								</OL>
 							</LI>
 							<LI><A href="#idx:Atlas">&#x25B2; Return to summary</A> / <A href="#idx.top">top</A></LI>
@@ -1268,20 +1277,28 @@
 						<OL>
 							<LI><P>The sql class allows manipulation of the engine database using the sqlite library.</P></LI>
 							<LI>
-								<B>Members</B> <I>(12 members)</I>
+								<B>Members</B> <I>(2 members)</I>
 								<OL>
-									<LI><A href="#Sql.Active">Active</A></LI>
-									<LI><A href="#Sql.Affected">Affected</A></LI>
-									<LI><A href="#Sql.Begin">Begin</A></LI>
-									<LI><A href="#Sql.Commit">Commit</A></LI>
-									<LI><A href="#Sql.Error">Error</A></LI>
-									<LI><A href="#Sql.ErrorStr">ErrorStr</A></LI>
-									<LI><A href="#Sql.Exec">Exec</A></LI>
-									<LI><A href="#Sql.Reason">Reason</A></LI>
-									<LI><A href="#Sql.Records">Records</A></LI>
-									<LI><A href="#Sql.Reset">Reset</A></LI>
-									<LI><A href="#Sql.Size">Size</A></LI>
-									<LI><A href="#Sql.Time">Time</A></LI>
+									<LI><A href="#Sql.Main">Main</A></LI>
+									<LI><A href="#Sql.Open">Open</A></LI>
+								</OL>
+							</LI>
+							<LI>
+								<B>Methods</B> <I>(13 methods)</I>
+								<OL>
+									<LI><A href="#Sql:Active">Active</A></LI>
+									<LI><A href="#Sql:Affected">Affected</A></LI>
+									<LI><A href="#Sql:Begin">Begin</A></LI>
+									<LI><A href="#Sql:Commit">Commit</A></LI>
+									<LI><A href="#Sql:Destroy">Destroy</A></LI>
+									<LI><A href="#Sql:Error">Error</A></LI>
+									<LI><A href="#Sql:ErrorStr">ErrorStr</A></LI>
+									<LI><A href="#Sql:Exec">Exec</A></LI>
+									<LI><A href="#Sql:Reason">Reason</A></LI>
+									<LI><A href="#Sql:Records">Records</A></LI>
+									<LI><A href="#Sql:Reset">Reset</A></LI>
+									<LI><A href="#Sql:Size">Size</A></LI>
+									<LI><A href="#Sql:Time">Time</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1786,7 +1803,7 @@
 			<LI id="idx.cc">
 				<DIV>
 					<DIV>
-						<A href="#cmds">Commands</A> <I>(87 commands)</I>
+						<A href="#cmds">Commands</A> <I>(88 commands)</I>
 						<OL>
 							<LI><P>Console commands that can see and manipulate all the data in the engine.</P></LI>
 							<LI>
@@ -1865,6 +1882,7 @@
 									<LI><A href="#cc.sqldefrag">sqldefrag</A></LI>
 									<LI><A href="#cc.sqlend">sqlend</A></LI>
 									<LI><A href="#cc.sqlexec">sqlexec</A></LI>
+									<LI><A href="#cc.sqls">sqls</A></LI>
 									<LI><A href="#cc.stats">stats</A></LI>
 									<LI><A href="#cc.stopall">stopall</A></LI>
 									<LI><A href="#cc.streams">streams</A></LI>
@@ -1888,7 +1906,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(213 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(216 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -1981,6 +1999,7 @@
 									<LI><A href="#cv.inp_rawmouse">inp_rawmouse</A></LI>
 									<LI><A href="#cv.inp_stickykey">inp_stickykey</A></LI>
 									<LI><A href="#cv.inp_stickymouse">inp_stickymouse</A></LI>
+									<LI><A href="#cv.log_append">log_append</A></LI>
 									<LI><A href="#cv.log_credits">log_credits</A></LI>
 									<LI><A href="#cv.log_dylibs">log_dylibs</A></LI>
 									<LI><A href="#cv.log_file">log_file</A></LI>
@@ -2027,6 +2046,7 @@
 									<LI><A href="#cv.obj_shadermax">obj_shadermax</A></LI>
 									<LI><A href="#cv.obj_socketmax">obj_socketmax</A></LI>
 									<LI><A href="#cv.obj_sourcemax">obj_sourcemax</A></LI>
+									<LI><A href="#cv.obj_sqlmax">obj_sqlmax</A></LI>
 									<LI><A href="#cv.obj_sshotmax">obj_sshotmax</A></LI>
 									<LI><A href="#cv.obj_statmax">obj_statmax</A></LI>
 									<LI><A href="#cv.obj_streammax">obj_streammax</A></LI>
@@ -2042,6 +2062,7 @@
 									<LI><A href="#cv.sql_incvacuum">sql_incvacuum</A></LI>
 									<LI><A href="#cv.sql_journalmode">sql_journalmode</A></LI>
 									<LI><A href="#cv.sql_loadconfig">sql_loadconfig</A></LI>
+									<LI><A href="#cv.sql_lockingmode">sql_lockingmode</A></LI>
 									<LI><A href="#cv.sql_retrycount">sql_retrycount</A></LI>
 									<LI><A href="#cv.sql_retrysuspend">sql_retrysuspend</A></LI>
 									<LI><A href="#cv.sql_synchronous">sql_synchronous</A></LI>
@@ -2789,6 +2810,44 @@
 		<PRE><U>Count</U> <I>(integer)</I> = Total number of atlases created.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the total number of atlas classes currently active.<BR></PRE>
+		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Atlas:Destroy" style="display:none">
+		<H3>Atlas:Destroy</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Atlas:Destroy()</PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Destroys the atlas and frees all the memory associated with it.<BR></PRE>
+		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Atlas:Destroyed" style="display:none">
+		<H3>Atlas:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Atlas:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Atlas class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Atlas class is destroyed.<BR></PRE>
+		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Atlas:Id" style="display:none">
+		<H3>Atlas:Id</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Id</U> = Atlas:Id()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Id</U> <I>(integer)</I> = The id number of the Atlas object.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the unique id of the Atlas object.<BR></PRE>
+		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Atlas:Name" style="display:none">
+		<H3>Atlas:Name</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Name</U> = Atlas:Name()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Name</U> <I>(string)</I> = The name of the Atlas object.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the name of the specified object when it was created.<BR></PRE>
 		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Audio.GetGlobalVolume" style="display:none">
@@ -5946,9 +6005,9 @@
 	<DIV id="Image.Raw" style="display:none">
 		<H3>Image.Raw</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Image.Raw(<I><U>Data</U>, <U>Width</U>, <U>Height</U>, <U>Bits</U></I>)</PRE>
+		<PRE><U>Handle</U> = Image.Raw(<I><U>Name</U>, <U>Data</U>, <U>Width</U>, <U>Height</U>, <U>Bits</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Data</U> <I>(Asset)</I> = The data of the image to load which is consumed.<BR><U>Width</U> <I>(integer)</I> = The width of the image being sent (1-65535)<BR><U>Height</U> <I>(integer)</I> = The height of the image being sent (1-65535)<BR><U>Bits</U> <I>(integer)</I> = Bits per pixel of the image being sent (1,8,16,24 or 32)<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Name of the image.<BR><U>Data</U> <I>(Asset)</I> = The data of the image to load which is consumed.<BR><U>Width</U> <I>(integer)</I> = The width of the image being sent (1-65535)<BR><U>Height</U> <I>(integer)</I> = The height of the image being sent (1-65535)<BR><U>Bits</U> <I>(integer)</I> = Bits per pixel of the image being sent (1,8,16,24 or 32)<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Image)</I> = The image object<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -8245,66 +8304,94 @@
 		<PRE>Stops the source.<BR></PRE>
 		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Active" style="display:none">
-		<H3>Sql.Active</H3>
+	<DIV id="Sql.Main" style="display:none">
+		<H3>Sql.Main</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Sql.Active()</PRE>
+		<PRE><U>Result</U> = Sql.Main()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(Sql)</I> = The handle of the main engine database.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the handle of the main engine database.<BR></PRE>
+		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Sql.Open" style="display:none">
+		<H3>Sql.Open</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Sql.Open()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(Sql)</I> = The handle of the database.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Creates or opens the specified database and returns a handle to it.<BR></PRE>
+		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Sql:Active" style="display:none">
+		<H3>Sql:Active</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Sql:Active()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns wether a transaction is in progress or not.<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Affected" style="display:none">
-		<H3>Sql.Affected</H3>
+	<DIV id="Sql:Affected" style="display:none">
+		<H3>Sql:Affected</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Sql.Affected()</PRE>
+		<PRE>Sql:Affected()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns number of affected rows in the last result </PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Begin" style="display:none">
-		<H3>Sql.Begin</H3>
+	<DIV id="Sql:Begin" style="display:none">
+		<H3>Sql:Begin</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Sql.Begin()</PRE>
+		<PRE><U>Result</U> = Sql:Begin()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Result</U> <I>(integer)</I> = The result of the operation<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Begins a new transaction. Returns non-zero if the call fails.<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Commit" style="display:none">
-		<H3>Sql.Commit</H3>
+	<DIV id="Sql:Commit" style="display:none">
+		<H3>Sql:Commit</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Sql.Commit()</PRE>
+		<PRE><U>Result</U> = Sql:Commit()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Result</U> <I>(integer)</I> = The result of the operation<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Ends an existing transaction and commits it. Returns non-zero if the call fails.<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Error" style="display:none">
-		<H3>Sql.Error</H3>
+	<DIV id="Sql:Destroy" style="display:none">
+		<H3>Sql:Destroy</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Code</U> = Sql.Error()</PRE>
+		<PRE>Sql:Destroy()</PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Destroys the database object, closing the database and freeing all the memory associated with it.<BR></PRE>
+		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Sql:Error" style="display:none">
+		<H3>Sql:Error</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Code</U> = Sql:Error()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Code</U> <I>(integer)</I> = Last error code.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the error code of the last SQLlite operation.<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.ErrorStr" style="display:none">
-		<H3>Sql.ErrorStr</H3>
+	<DIV id="Sql:ErrorStr" style="display:none">
+		<H3>Sql:ErrorStr</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Error</U> = Sql.ErrorStr()</PRE>
+		<PRE><U>Error</U> = Sql:ErrorStr()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Error</U> <I>(string)</I> = Last error reason string.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the string version of the error code.<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Exec" style="display:none">
-		<H3>Sql.Exec</H3>
+	<DIV id="Sql:Exec" style="display:none">
+		<H3>Sql:Exec</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Sql.Exec(<I><U>Code</U>, <U>Data</U></I>)</PRE>
+		<PRE><U>Result</U> = Sql:Exec(<I><U>Code</U>, <U>Data</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
 		<PRE><U>Code</U> <I>(string)</I> = The SQLlite code to execute.<BR><U>Data</U> <I>(Any)</I> = The arguments used in place of '?'<BR></PRE>
 		<H4>Return Parameters:-</H4>
@@ -8313,46 +8400,46 @@
 		<PRE>Execute the specified SQLlite statement. See https://www.sqlite.org/docs.html for more information on the SQLlite API.<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Reason" style="display:none">
-		<H3>Sql.Reason</H3>
+	<DIV id="Sql:Reason" style="display:none">
+		<H3>Sql:Reason</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Error</U> = Sql.Reason()</PRE>
+		<PRE><U>Error</U> = Sql:Reason()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Error</U> <I>(string)</I> = Last error reason string.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the error string of the last SQLlite operation.<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Records" style="display:none">
-		<H3>Sql.Records</H3>
+	<DIV id="Sql:Records" style="display:none">
+		<H3>Sql:Records</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Records</U> = Sql.Records()</PRE>
+		<PRE><U>Records</U> = Sql:Records()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Records</U> <I>(table)</I> = Resulting records.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the resulting records of the last SQLlite operation. The format is an indexed table of string key/value tables. e.g.<BR>table = {   { ["Index"]=1, ["Name"]="John Doe", ["Age"]=37 },   { ["Index"]=2, ["Name"]="Bill Gates", ["Age"]=33 },   etc...<BR>} </PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Reset" style="display:none">
-		<H3>Sql.Reset</H3>
+	<DIV id="Sql:Reset" style="display:none">
+		<H3>Sql:Reset</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Sql.Reset()</PRE>
+		<PRE>Sql:Reset()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Cleans up the last result, error and response.<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Size" style="display:none">
-		<H3>Sql.Size</H3>
+	<DIV id="Sql:Size" style="display:none">
+		<H3>Sql:Size</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Sql.Size()</PRE>
+		<PRE>Sql:Size()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns size of database.<BR></PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Sql.Time" style="display:none">
-		<H3>Sql.Time</H3>
+	<DIV id="Sql:Time" style="display:none">
+		<H3>Sql:Time</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Sql.Time()</PRE>
+		<PRE>Sql:Time()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns time taken with the last executed SQL statement </PRE>
 		<H4><A href="#idx:Sql">&#x25B2; Return to table of contents</A></H4>
@@ -12181,6 +12268,11 @@
 		<PRE>Performs the desired SQL query on the SQLite database. Theres is absolutely zero restriction to using this so use it at your own risk.<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cc.sqls" style="display:none">
+		<H3>sqls</H3>
+		<PRE>Lists all the databases created.<BR></PRE>
+		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cc.stats" style="display:none">
 		<H3>stats</H3>
 		<PRE>Lists currently loaded stat objects.<BR></PRE>
@@ -12373,7 +12465,7 @@
 	</DIV>
 	<DIV id="cv.aud_fmvvol" style="display:none">
 		<H3>aud_fmvvol</H3>
-		<PRE>Specifies the volume of Video classes. 0.0 (mute) to 1.0 (maximum volume).<BR>Setting a value too high may cause artifacts on older OS audio API's.<BR></PRE>
+		<PRE>Specifies the volume of Video classes. 0.0 (mute) to 1.0 (maximum volume).<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.aud_hrtf" style="display:none">
@@ -12393,7 +12485,7 @@
 	</DIV>
 	<DIV id="cv.aud_samvol" style="display:none">
 		<H3>aud_samvol</H3>
-		<PRE>Specifies the volume of Sample classes. 0.0 (mute) to 1.0 (maximum volume). Setting a value too high may cause artifacts on older OS audio API's.<BR></PRE>
+		<PRE>Specifies the volume of Sample classes. 0.0 (mute) to 1.0 (maximum volume).<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.aud_strbufcount" style="display:none">
@@ -12408,7 +12500,7 @@
 	</DIV>
 	<DIV id="cv.aud_strvol" style="display:none">
 		<H3>aud_strvol</H3>
-		<PRE>Specifies the volume of Stream classes. 0.0 (mute) to 1.0 (maximum volume). Setting a value too high may cause artifacts on older OS audio API's.<BR></PRE>
+		<PRE>Specifies the volume of Stream classes. 0.0 (mute) to 1.0 (maximum volume).<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.aud_vol" style="display:none">
@@ -12686,6 +12778,11 @@
 		<PRE>Enables sticky mouse buttons.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.log_append" style="display:none">
+		<H3>log_append</H3>
+		<PRE>If set to 0 (default). The specified log file at 'log_file' is created or truncated when opened else if set to 1 then the specified log file is created or appended.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.log_credits" style="display:none">
 		<H3>log_credits</H3>
 		<PRE>Specifies to include credits in the log at startup.<BR></PRE>
@@ -12916,6 +13013,11 @@
 		<PRE>Specifies the maximum number of source objects allowed to be registered by the engine. An exception is generated if more objects than this are allocated.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.obj_sqlmax" style="display:none">
+		<H3>obj_sqlmax</H3>
+		<PRE>Specifies the maximum number of sql database objects allowed to be registered by the engine. An exception is generated if more objects than this are allocated.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.obj_sshotmax" style="display:none">
 		<H3>obj_sshotmax</H3>
 		<PRE>Specifies the maximum number of sshot objects allowed to be registered by the engine. An exception is generated if more objects than this are allocated.<BR></PRE>
@@ -12989,6 +13091,11 @@
 	<DIV id="cv.sql_loadconfig" style="display:none">
 		<H3>sql_loadconfig</H3>
 		<PRE>Actually loads cvars from the configuration database.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.sql_lockingmode" style="display:none">
+		<H3>sql_lockingmode</H3>
+		<PRE>Performs 'pragma locking_mode' when the database is opened to this value.<BR>If set to 'true' then locking mode is 'EXCLUSIVE', else locking mode is 'NORMAL' when 'false' (default).<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.sql_retrycount" style="display:none">
@@ -13312,6 +13419,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sun Jan 25 00:02:49 2026 +0000</ADDRESS>
+	This document was generated at Wed Apr 01 18:20:24 2026 +0100</ADDRESS>
 </BODY>
 </HTML>

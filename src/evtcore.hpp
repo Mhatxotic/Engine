@@ -317,23 +317,9 @@ class EvtCore :                        // Start of common event system class
   void RemoveUnsafe(const QueueConstIt &qciIt) { qlEvents.erase(qciIt); }
   /* -- Register single event ---------------------------------------------- */
   void Register(const Cmd cCmd, const CbEcFunc &cbfFunc)
-  { // Bail if invalid command
-    if(cCmd >= fFuncs.size())
-      XC("Invalid registration command!",
-        "System",   IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd,
-        "Function", reinterpret_cast<const void*>(&cbfFunc));
-    // Assign callback function to event
-    fFuncs[cCmd] = cbfFunc;
-  }
+    { fFuncs[cCmd] = cbfFunc; }
   /* -- Unregister single  event ------------------------------------------- */
-  void Unregister(const Cmd cCmd)
-  { // Bail if invalid command
-    if(cCmd >= fFuncs.size())
-      XC("Invalid de-registration command!", "System",
-        IdentGet(), "Event", IdToString(cCmd), "EventID", cCmd);
-    // Unassign callback function
-    fFuncs[cCmd] = cefEmpty;
-  }
+  void Unregister(const Cmd cCmd) { fFuncs[cCmd] = cefEmpty; }
   /* -- Event data, all empty functions ------------------------- */ protected:
   EvtCore(const string &strCName, const ISList &islStrings) :
     /* -- Initialisers ----------------------------------------------------- */

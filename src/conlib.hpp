@@ -1376,7 +1376,7 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 cSystem->UpdateMemoryUsageData();
 // Precalculate lua and sql usage.
 const size_t stUsage = LuaUtilGetUsage(cLua->LuaGetState()),
-             stSqlUse = cSql->SqlHeapUsed();
+             stSqlUse = SqlHeapUsed();
 // Report lua and sql memory usage
 Statistic sTable;
 sTable.Header("BYTES", true).Header()
@@ -1492,13 +1492,13 @@ typedef list<MemoryUsageItem> MemoryUsageItems;
 #define MSS(x) MSSX(x, c ## x ## s)
 // Build memory usage items database
 const MemoryUsageItems muiList{ {
-  MSS(Archive),  MSS(Asset),    MSSX(Atlas, cAtlases),        MSS(Bin),
-  MSS(Clip),     MSS(Command),  MSS(Fbo),      MSS(File),     MSS(Font),
-  MSS(Ftf),      MSS(Image),    MSS(ImageLib), MSS(Json),     MSS(LuaFunc),
-  MSS(Mask),     MSS(Palette),  MSS(Pcm),      MSS(PcmLib),   MSS(Sample),
-  MSS(Shader),   MSS(Socket),   MSS(Source),   MSS(SShot),    MSS(Stat),
-  MSS(Stream),   MSS(Texture),  MSS(Thread),   MSS(Url),      MSS(Variable),
-  MSS(Video)
+  MSS(Archive),  MSS(Asset),   MSSX(Atlas, cAtlases),      MSS(Bin),
+  MSS(Clip),     MSS(Command), MSS(Fbo),      MSS(File),   MSS(Font),
+  MSS(Ftf),      MSS(Image),   MSS(ImageLib), MSS(Json),   MSS(LuaFunc),
+  MSS(Mask),     MSS(Palette), MSS(Pcm),      MSS(PcmLib), MSS(Sample),
+  MSS(Shader),   MSS(Socket),  MSS(Source),   MSS(Sql),    MSS(SShot),
+  MSS(Stat),     MSS(Stream),  MSS(Texture),  MSS(Thread), MSS(Url),
+  MSS(Variable), MSS(Video)
 } };
 // Done with these macros
 #undef MSS
@@ -2052,6 +2052,65 @@ cSql->SqlReset();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'sqlexec' function
 /* ========================================================================= */
+// ! sqls
+// ? Lists all the databases created.
+/* ========================================================================= */
+{ "sqls", 1, 1, CFL_BASIC, [](const Args &){
+/* ------------------------------------------------------------------------- */
+// Text table class to help us write neat output
+Statistic sTable;
+sTable.Header("ID", false).Header("FLAGS").Header("CH").Header("CM")
+      .Header("CS").Header("P").Header("CU").Header("CUS").Header("CW")
+      .Header("DF").Header("LH").Header("LMF").Header("LMS").Header("LU")
+      .Header("P").Header("ScU").Header("StU").Header("TBS").Header("AFF")
+      .Header("ERR").Header("ROW").Header("ID", false)
+      .Reserve(cSqls->size());
+// Walk through Sql classes
+for(const Sql*const sPtr : *cSqls)
+{ // Get reference to class and if the database is opened?
+  const Sql &sRef = *sPtr;
+  // Put initial data and flags in the output
+  sTable.DataN(sRef.CtrGet()).Data(StrFromEvalTokens({
+    { sPtr->SqlIsOpened() && sPtr->SqlActive(), 'A' },
+    { sPtr->FlagIsSet(SF_DELETEEMPTYDB),        'D' },
+    { sPtr->SqlIsError(),                       'E' },
+    { sPtr->LockIsSet(),                        'L' },
+    { sPtr->SqlIsOpened(),                      'O' },
+    { sPtr->FlagIsSet(SF_ISTEMPDB),             'T' },
+  }));
+  // If the database is opened?
+  if(sRef.SqlIsOpened())
+  { // Get usage information (db has to be open to call these)
+    const SqlIntPair sipLU{ cSql->SqlGetLookasideUsed() },
+      sipCU{ cSql->SqlGetCacheUsed() }, sipScU{ cSql->SqlGetSchemaUsed() },
+      sipStU{ cSql->SqlGetStmtUsed() }, sipLH{ cSql->SqlGetLookasideHit() },
+      sipLMS{ cSql->SqlGetLookasideMissSize() },
+      sipLMF{ cSql->SqlGetLookasideMissFull() },
+      sipCH{ cSql->SqlGetCacheHit() }, sipCM{ cSql->SqlGetCacheMiss() },
+      sipCW{ cSql->SqlGetCacheWrite() }, sipDF{ cSql->SqlGetDeferredFks() },
+      sipCUS{ cSql->SqlGetCacheUsedShared() },
+      sipCS{ cSql->SqlGetCacheSpill() }, sipTBS{ cSql->SqlGetTempBufSpill() };
+      // Put active data in output
+      sTable.DataN(sipCH.first).DataN(sipCM.first).DataN(sipCS.first)
+       .DataN(sipCS.second).DataN(sipCU.first).DataN(sipCUS.first)
+       .DataN(sipCW.first).DataN(sipDF.first).DataN(sipLH.second)
+       .DataN(sipLMF.second).DataN(sipLMS.second).DataN(sipLU.first)
+       .DataN(sipLU.second).DataN(sipScU.first).DataN(sipStU.first)
+       .DataN(sipTBS.first).DataN(sPtr->SqlAffected());
+  } // Put all opened data in a row
+  else sTable.Data().Data().Data().Data().Data().Data().Data().Data()
+             .Data().Data().Data().Data().Data().Data().Data().Data()
+             .Data();
+  // Put rest of data in table
+  sTable.DataN(sPtr->SqlGetError())
+        .DataN(sPtr->SqlGetRecords().size())
+        .Data(sPtr->IdentGet());
+} // Log counts
+cConsole->ConsoleAddLineA(sTable.Finish(),
+  StrCPluraliseNum(cSqls->size(), "database.", "databases."));
+/* ------------------------------------------------------------------------- */
+} },                                   // End of 'sqls' function
+/* ========================================================================= */
 // ! stats
 // ? Lists currently loaded stat objects.
 /* ------------------------------------------------------------------------- */
@@ -2060,7 +2119,7 @@ cSql->SqlReset();
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID", false).Header("HEADERS").Header("CELLS").Header("ROWS");
-// Walk through bin classes
+// Walk through Stat classes
 for(const Stat*const sPtr : *cStats)
 { // Get reference to class and write its data to the table
   const Stat &sRef = *sPtr;

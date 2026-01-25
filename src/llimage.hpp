@@ -222,6 +222,7 @@ LLFUNC(FileAsync, 0,
   AcImage{lS}().InitAsyncFile(lS, aFilename, aFlags))
 /* ========================================================================= */
 // $ Image.Raw
+// > Name:string=Name of the image.
 // > Data:Asset=The data of the image to load which is consumed.
 // > Width:integer=The width of the image being sent (1-65535)
 // > Height:integer=The height of the image being sent (1-65535)

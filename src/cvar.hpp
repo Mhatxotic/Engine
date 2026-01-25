@@ -184,10 +184,10 @@ class CVarItem :                       // Members initially private
       if(FlagIsClear(LOADED)) return CR_OK_NOTHING_TO_DO;
       // Purge the cvar from the database
       switch(cSql->SqlCVarPurge(GetVar()))
-      { case Sql::PR_OK    : return CR_OK_PURGE;
-        case Sql::PR_FAIL  : return CR_FAIL_PURGE;
-        case Sql::PR_OK_NC : return CR_FAIL_PURGE_NOT_CHANGED;
-        default            : return CR_FAIL_PURGE_UNKNOWN_ERROR;
+      { case PR_OK    : return CR_OK_PURGE;
+        case PR_FAIL  : return CR_FAIL_PURGE;
+        case PR_OK_NC : return CR_FAIL_PURGE_NOT_CHANGED;
+        default       : return CR_FAIL_PURGE_UNKNOWN_ERROR;
       }
     } // If we are to encrypt?
     if(FlagIsSet(CPROTECTED)) try

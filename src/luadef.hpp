@@ -31,18 +31,17 @@ namespace P {                          // Start of public module namespace
 /* -- Lua API class namespace ids ------------------------------------------ */
 enum LuaClassId : size_t {
   /* ----------------------------------------------------------------------- */
-  LMT_ARCHIVE,  LMT_ASSET,    LMT_ATLAS,  LMT_BIN,      LMT_CLIP,      // 00-04
-  LMT_COMMAND,  LMT_FBO,      LMT_FILE,   LMT_FONT,     LMT_FTF,       // 05-09
-  LMT_IMAGE,    LMT_IMAGELIB, LMT_JSON,   LMT_LUAFUNC,  LMT_MASK,      // 10-14
-  LMT_PALETTE,  LMT_PCM,      LMT_PCMLIB, LMT_SAMPLE,   LMT_SHADER,    // 15-19
-  LMT_SSHOT,    LMT_STAT,     LMT_SOCKET, LMT_SOURCE,   LMT_STREAM,    // 20-24
-  LMT_THREAD,   LMT_TEXTURE,  LMT_URL,    LMT_VARIABLE, LMT_VIDEO,     // 25-39
+  LMT_ARCHIVE, LMT_ASSET,    LMT_ATLAS,   LMT_BIN,     LMT_CLIP,       // 00-04
+  LMT_COMMAND, LMT_FBO,      LMT_FILE,    LMT_FONT,    LMT_FTF,        // 05-09
+  LMT_IMAGE,   LMT_IMAGELIB, LMT_JSON,    LMT_LUAFUNC, LMT_MASK,       // 10-14
+  LMT_PALETTE, LMT_PCM,      LMT_PCMLIB,  LMT_SAMPLE,  LMT_SHADER,     // 15-19
+  LMT_SOCKET,  LMT_SOURCE,   LMT_SQL,     LMT_SSHOT,   LMT_STAT,       // 20-24
+  LMT_STREAM,  LMT_THREAD,   LMT_TEXTURE, LMT_URL,     LMT_VARIABLE,   // 25-39
+  LMT_VIDEO,                                                           // 40
   /* ----------------------------------------------------------------------- */
-  LMT_CLASSES,                         // Maximum number of classes
-  /* ----------------------------------------------------------------------- */
-  LMT_TOTAL = LMT_CLASSES + 1,         // Absolute total namespaces [31]
+  LMT_TOTAL                            // Maximum number of classes
 };/* -- LUA class reference ids (ref'd in luaident.hpp, lua.hpp) ----------- */
-typedef array<int, LMT_CLASSES> LuaLibClassIdReferences;
+typedef array<int, LMT_TOTAL> LuaLibClassIdReferences;
 static LuaLibClassIdReferences llcirAPI
   { UtilMkFilledContainer<LuaLibClassIdReferences>(LUA_REFNIL) };
 /* -- Information about a LUA API namespace -------------------------------- */
