@@ -745,7 +745,8 @@ class SysCore :
         cLog->LogErrorExSafe(
           "System can't activate app with pid $ (code $)!", pPOId, ossErr2);
       // Success
-      else cLog->LogInfoExSafe("System activated application at pid $.", pPOId);
+      else cLog->LogInfoExSafe("System activated application at pid $.",
+        pPOId);
       // Restore deprecation warning
 #pragma clang diagnostic pop
       // Done

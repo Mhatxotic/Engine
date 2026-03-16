@@ -3,7 +3,7 @@
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
 ** ## This allows the engine to call POSIX functions to check for an      ## **
-** ## already running instance of the engine and runs a specified         ## **
+** ## already running instance of the engine and runs a specified         ## **
 ** ## callback so the caller can do more intimate operating system        ## **
 ** ## specific tasks which differ between Linux and MacOS.                ## **
 ** ######################################################################### **
@@ -119,7 +119,7 @@ class SysMutex                         // Need this before of System init order
     return true;
   }
   /* -- Constructor -------------------------------------------------------- */
-  SysMutex(const pid_t &piNPId) :
+  explicit SysMutex(const pid_t &piNPId) :
     /* -- Initialisers ----------------------------------------------------- */
     ptPId(piNPId),                     // Set my process id
     pipProcessId(nullptr)              // Process id memory not available yet
@@ -136,5 +136,8 @@ class SysMutex                         // Need this before of System init order
       cLog->LogWarningExSafe("System could not delete old mutex '$': $",
         idMutex.IdentGet(), SysError());
   )
+  /* -- Apparently due to 'dynamic memory/resource management' (CppCheck) -- */
+  SysMutex(SysMutex &) = delete;           // Even though we don't use
+  SysMutex operator=(SysMutex &) = delete; // these at all
 };/* ----------------------------------------------------------------------- */
 /* == EoF =========================================================== EoF == */
