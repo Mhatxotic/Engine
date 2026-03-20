@@ -259,6 +259,14 @@ CVarItemStaticList{{
 { CFL_BASIC, "log_lines", "10000",
   CB(cLog->LogLinesModified, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
+// ! LOG_APPEND
+// ? If set to 0 (default). The specified log file at 'log_file' is created or
+// ? truncated when opened else if set to 1 then the specified log file is
+// ? created or appended.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "log_append", cCommon->CommonZero(),
+  CB(cLog->LogSetFileAppend, size_t), TBOOLEAN|PANY },
+/* ------------------------------------------------------------------------- */
 // ! LOG_FILE
 // ? Specifies a file to log internal engine messages to. It is used to help
 // ? debugging. Leave as blank for no log file. It can be set from command-line

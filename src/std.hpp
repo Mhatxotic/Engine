@@ -345,6 +345,8 @@ static int StdGetError() { return errno; }
 static bool StdIsError(const int iValue) { return StdGetError() == iValue; }
 /* -- Is error number not equal to ----------------------------------------- */
 static bool StdIsNotError(const int iValue) { return !StdIsError(iValue); }
+/* -- Is error number out of disk space ------------------------------------ */
+static bool StdIsNoDiskSpace() { return StdIsError(ENOSPC); }
 /* -- Uppercases the specified character ----------------------------------- */
 template<typename IntType>static char StdToUpper(const IntType itC)
   { return static_cast<char>(toupper(static_cast<int>(itC))); }

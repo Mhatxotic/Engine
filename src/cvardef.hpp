@@ -152,7 +152,7 @@ enum CVarEnums : size_t                // CVars list (cvarlib.hpp for bodies)
   SQL_RETRYSUSPEND, SQL_ERASEEMPTY,    SQL_TEMPSTORE,       SQL_SYNCHRONOUS,
   SQL_JOURNALMODE,  SQL_AUTOVACUUM,    SQL_FOREIGNKEYS,     SQL_INCVACUUM,
   SQL_DEFAULTS,     SQL_LOADCONFIG,    APP_CFLAGS,          LOG_LINES,
-  LOG_FILE,         APP_LONGNAME,      ERR_INSTANCE,
+  LOG_APPEND,       LOG_FILE,          APP_LONGNAME,        ERR_INSTANCE,
   /* -- Object cvars ------------------------------------------------------- */
   OBJ_ARCHIVEMAX,   OBJ_ASSETMAX,      OBJ_ATLASMAX,        OBJ_BINMAX,
   OBJ_CLIPMAX,      OBJ_CMDMAX,        OBJ_CVARIMAX,        OBJ_CVARMAX,

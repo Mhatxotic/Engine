@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.1.24.1 -->
-<!-- Automatically built at Sun Jan 25 00:02:49 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.1.24.1 -->
+<!-- Reference for the Mhatxotic Engine API version 26.3.20.15 -->
+<!-- Automatically built at Fri Mar 20 21:55:27 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.3.20.15 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.1.24.1">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.3.20.15">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.1.24.1">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.3.20.15">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.1.24.1">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.3.20.15">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.1.24.1 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.3.20.15 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.1.24.1 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.3.20.15 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.1.24.1 API reference</H1>
+	<H1>Mhatxotic Engine 26.3.20.15 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 907 functions (414 members, 493 methods) and 30 consts in 31 namespaces with 87 commands and 213 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 907 functions (414 members, 493 methods) and 30 consts in 31 namespaces with 87 commands and 214 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1888,7 +1888,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(213 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(214 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -1984,6 +1984,7 @@
 									<LI><A href="#cv.log_credits">log_credits</A></LI>
 									<LI><A href="#cv.log_dylibs">log_dylibs</A></LI>
 									<LI><A href="#cv.log_file">log_file</A></LI>
+									<LI><A href="#cv.log_fileappend">log_fileappend</A></LI>
 									<LI><A href="#cv.log_level">log_level</A></LI>
 									<LI><A href="#cv.log_lines">log_lines</A></LI>
 									<LI><A href="#cv.lua_cache">lua_cache</A></LI>
@@ -12701,6 +12702,11 @@
 		<PRE>Specifies a file to log internal engine messages to. It is used to help debugging. Leave as blank for no log file. It can be set from command-line parameters, the app.cfg file and the user.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.log_fileappend" style="display:none">
+		<H3>log_fileappend</H3>
+		<PRE>If set to 0 (default). The specified log file at 'log_file' is created or truncated when opened else if set to 1 then the specified log file is created or appended.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.log_level" style="display:none">
 		<H3>log_level</H3>
 		<PRE>Specifies the logging level...<BR>[0] LH_CRITICAL = For reporting only critical messages.<BR>[1] LH_ERROR    = For reporting only errors (which halt execution).<BR>[2] LH_WARNING  = For reporting only warnings (recoverable errors).<BR>[3] LH_INFO     = For reporting useful important messages.<BR>[4] LH_DEBUG    = For reporitng other information (debugging).<BR></PRE>
@@ -13312,6 +13318,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sun Jan 25 00:02:49 2026 +0000</ADDRESS>
+	This document was generated at Fri Mar 20 21:55:27 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

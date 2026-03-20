@@ -55,6 +55,7 @@ class Log :                            // The actual class body
                    strStdErr;          // Label for 'stderr'
   SafeLHLevel      slhlLevel;          // Log helper level for this instance
   size_t           stMaximum;          // Maximum log lines
+  FStreamMode      fsmMode;            // Logging mode (append or truncate)
   /* -- Reserve a certain amount of log lines ------------------------------ */
   void LogReserveLines(const size_t stLines)
   { // Calculate total liens
@@ -69,39 +70,6 @@ class Log :                            // The actual class body
   }
   /* -- Return log level --------------------------------------------------- */
   LHLevel LogGetLevel() const { return slhlLevel; }
-  /* ----------------------------------------------------------------------- */
-  void LogFlushLog()
-  { // Ignore if file not opened or there is nothing to write
-    if(empty() || FStreamClosed()) return;
-    // Get start of log
-    LogLinesConstIt llciItem{ cbegin() };
-    // Repeat...
-    do
-    { // Get reference to line
-      const LogLine &llLine = *llciItem;
-      // Write stored line and if succeeded
-      if(FStreamWriteStringEx("[$$$]<$> $\n", fixed, setprecision(6),
-        llLine.dTime, LogLevelToString(llLine.lhlLevel).front(),
-        llLine.strLine))
-      { // Flush the line to file straight away and continue if succeeded
-        if(FStreamFlush()) continue;
-        // Flush failed so close file and write closure reason
-        FStreamClose();
-        LogErrorExSafe("Log file closed (flush error: $)!", StrFromErrNo());
-      } // Write string failed?
-      else
-      { // Close file and write closure reason
-        FStreamClose();
-        LogErrorExSafe("Log file closed (write error: $)!", StrFromErrNo());
-      } // Erase the lines we actually wrote. Never erase the first line.
-      erase(begin(), llciItem);
-      // Do not write anymore lines
-      return;
-    } // ... until all lines written
-    while(++llciItem != end());
-    // We wrote all the lines
-    clear();
-  }
   /* -- Write lines to log ------------------------------------------------- */
   void LogWriteLines(const LHLevel lhRequire, const TokenList &tLines)
   { // Ignore if no lines
@@ -114,23 +82,73 @@ class Log :                            // The actual class body
     // is required!
     for(const string &strLine : tLines)
       push_back({ CCDeltaToDouble(), lhRequire, StdMove(strLine) });
-    // Write lines to log
-    LogFlushLog();
+    // Ignore if file not opened
+    if(FStreamClosed()) return;
+    // Get start of log
+    LogLinesConstIt llciItem{ cbegin() };
+    // Repeat...
+    do
+    { // Get reference to line
+      const LogLine &llLine = *llciItem;
+      // Build string to write
+      const string strLine{ StrFormat("[$$$]<$> $\n", fixed, setprecision(6),
+        llLine.dTime, LogLevelToString(llLine.lhlLevel).front(),
+        llLine.strLine) };
+      // Write stored line and write number of bytes written, and if we did?
+      if(const size_t stWritten = FStreamWriteString(strLine)) [[likely]]
+      { // Correct number of bytes
+        if(stWritten == strLine.length()) [[likely]]
+        { // Flush success?
+          if(FStreamFlush()) [[likely]]
+          { // Remove the items we wrote and write the next line
+            erase(cbegin(), llciItem);
+            continue;
+          } // If no disk space then return to try again later
+          if(StdIsNoDiskSpace()) return;
+          LogWarningExSafe("Log file flush $ bytes failure: $!",
+            strLine.size(), StrFromErrNo());
+        } // Incorrect number of bytes? Log the error
+        else
+        { // If no disk space then return to try again later
+          if(StdIsNoDiskSpace()) return;
+          LogWarningExSafe("Log file wrote only $ of $ bytes: $!",
+            stWritten, strLine.size(), StrFromErrNo());
+        } // Proceed to try and reopen the file
+      } // Write failure?
+      else
+      { // If no disk space then return to try again later else reopen
+        if(StdIsNoDiskSpace()) return;
+        LogWarningExSafe("Log file write $ bytes error: $!",
+          strLine.size(), StrFromErrNo());
+      } // Reinitialise the log and if failed? Log complete and utter failure
+      if(!LogInit(IdentGet())) [[unlikely]] return;
+        LogErrorExSafe("Log file cannot be reopened: $!", StrFromErrNo());
+      // Return failure and don't remove stored message. Next time another
+      // log event occurs, fwrite will fail and retry again. Note that the
+      // output buffer will just continue fill up until we can write again and
+      // excess output lines will be purged as normal.
+      return;
+    } // ... until all lines written
+    while(++llciItem != cend());
+    // We wrote all the lines
+    clear();
   }
   /* -- Write string to log. Line feed creates multiple lines -------------- */
   void LogWriteString(const LHLevel lhL, const string &strLine)
     { LogWriteLines(lhL, { strLine, cCommon->CommonLf(), stMaximum }); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Unformatted critical levle logging --------------------------------- */
   void LogWriteString(const string &strLine)
     { LogWriteString(LH_CRITICAL, strLine); }
+  /* -- Formatted critical level logging ----------------------------------- */
+  template<typename ...VarArgs>
+    void LogWriteStringEx(const char*const cpFormat, VarArgs &&...vaArgs)
+      { LogWriteString(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
   /* ----------------------------------------------------------------------- */
   void LogDeInit()
   { // Bail if initialised
     if(FStreamClosed()) return;
     // Log file closure
-    LogWriteString("Log file closed.");
-    // Flush all remaining strings
-    LogFlushLog();
+    LogWriteString(StrFormat("Log file closed at $.", cmSys.FormatTime()));
     // Done so close the file
     FStreamClose();
   }
@@ -246,13 +264,13 @@ class Log :                            // The actual class body
   { // Set device, name and write confirmation of opening a device handle
     FStreamSetHandle(fpDevice);
     IdentSet(strLabel);
-    LogWriteString(StrFormat("Logging to standard output '$'.", IdentGet()));
+    LogWriteStringEx("Logging to standard output '$'.", IdentGet());
   }
   /* -- Initialise with specified file name -------------------------------- */
   bool LogInit(const string &strFN)
-  { // Return failure if already opened else write log file and return success
-    if(FStreamOpen(strFN, FM_W_T)) return false;
-    LogWriteString(StrFormat("Log file is '$'.", IdentGet()));
+  { // Try to create the file, or open append it and return if failure
+    if(FStreamOpen(strFN, fsmMode)) return false;
+    LogWriteStringEx("Log file is '$' at $.", IdentGet(), cmSys.FormatTime());
     return true;
   }
   /* -- Constructor --------------------------------------------- */ protected:
@@ -268,12 +286,16 @@ class Log :                            // The actual class body
     strStdOut{ "/dev/stdout" },        // Initialise display label for stdout
     strStdErr{ "/dev/stderr" },        // Initialise display label for stderr
     slhlLevel{ LH_DEBUG },             // Initialise default level
-    stMaximum(1000)                    // Initialise maximum output lines
+    stMaximum(1000),                   // Initialise maximum output lines
+    fsmMode(FM_MAX)                    // File mode initialised by cvar
     /* -- Set global pointer to static class ------------------------------- */
     { cLog = this; }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Log, LogDeInitSafe())
-  /* -- Safe access to members ------------------------------------- */ public:
+  /* -- Set file mode ---------------------------------------------- */ public:
+  CVarReturn LogSetFileAppend(const bool bAppend)
+    { return CVarSimpleSetInt(fsmMode, bAppend ? FM_A_P_T : FM_W_T); }
+  /* -- Safe access to members --------------------------------------------- */
   CVarReturn LogSetLevel(const LHLevel lhlNewLevel)
   { // Deny if invalid level
     if(lhlNewLevel >= LH_MAX) return DENY;
