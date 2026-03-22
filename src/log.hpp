@@ -88,9 +88,8 @@ class Log :                            // The actual class body
     LogLinesConstIt llciItem{ cbegin() };
     // Repeat...
     do
-    { // Get reference to line
+    { // Get reference to line and format the string to write to log
       const LogLine &llLine = *llciItem;
-      // Build string to write
       const string strLine{ StrFormat("[$$$]<$> $\n", fixed, setprecision(6),
         llLine.dTime, LogLevelToString(llLine.lhlLevel).front(),
         llLine.strLine) };

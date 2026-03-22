@@ -415,7 +415,7 @@ struct CVars :                         // Start of vars class
       cLog->LogWarningSafe("CVars commit skipped because no database!");
       return StdNPos;
     } // Return if there is no table
-    if(cSql->SqlCVarCreateTable() == Sql::CTR_FAIL) return StdNPos;
+    if(cSql->SqlCVarCreateTable() == CTR_FAIL) return StdNPos;
     // Begin transaction and if failed? Log error silently
     if(cSql->SqlBegin() == SQLITE_ERROR)
       cLog->LogWarningExSafe("CVars commit begin transaction failed ($)! $.",
@@ -478,14 +478,14 @@ struct CVars :                         // Start of vars class
     // For each record returned.
     for(const SqlRecordsMap &srmRef : srRef)
     { // Get key and goto next record if not found, else assign cvar name
-      const SqlRecordsMapConstIt srmciIt{ srmRef.find(cSql->strCVKeyColumn) };
+      const SqlRecordsMapConstIt srmciIt{ srmRef.find(cSqls->strCVKeyColumn) };
       if(srmciIt == srmRef.cend()) continue;
       const SqlData &sdRef = srmciIt->second;
       // If is not a string?
       if(sdRef.iType != SQLITE_TEXT)
       { // Delete it from database and add to counter if ok and goto next cvar
-        if(cSql->SqlCVarPurgeData(sdRef.MemPtr<char>(), sdRef.MemSize()) ==
-             Sql::PR_OK)
+        if(cSql->SqlCVarPurgeData(sdRef.MemPtr<char>(),
+             sdRef.MemSize()) == PR_OK)
           ++astCommit;
         continue;
       } // Get string and find cvar name in live cvar list, ignore if it exists
@@ -495,7 +495,7 @@ struct CVars :                         // Start of vars class
       const CVarMapConstIt cvmciIt{ cvmPending.find(strKey) };
       if(cvmciIt != cvmPending.end()) cvmPending.erase(cvmciIt);
       // Delete from database and proceed to the next record
-      if(cSql->SqlCVarPurge(strKey) != Sql::PR_OK) continue;
+      if(cSql->SqlCVarPurge(strKey) != PR_OK) continue;
       // Number of transactions send to sqlite
       ++astCommit;
     } // End bulk transaction commital
@@ -513,7 +513,7 @@ struct CVars :                         // Start of vars class
   { // Return if table is not already created or not available
     switch(cSql->SqlCVarCreateTable())
     { // Table already exists?
-      case Sql::CTR_OK_ALREADY:
+      case CTR_OK_ALREADY:
         // Read all the variables and break if true
         if(cSql->SqlCVarReadAll()) break;
         // Fall through to drop table and recreate it
@@ -521,17 +521,17 @@ struct CVars :                         // Start of vars class
       // Some problem occurred?
       default:
         // Drop the table and throw exception if failed
-        if(cSql->SqlCVarDropTable() != Sql::CTR_OK)
+        if(cSql->SqlCVarDropTable() != CTR_OK)
           XC("Failed to drop problematic CVars table!",
             "Reason", cSql->SqlGetErrorStr());
         // Create the table and throw exception if failed
-        if(cSql->SqlCVarCreateTable() != Sql::CTR_OK)
+        if(cSql->SqlCVarCreateTable() != CTR_OK)
           XC("Failed to re-create problematic CVars table!",
             "Reason", cSql->SqlGetErrorStr());
         // There are no variables to load so return no variables loaded
         [[fallthrough]];
       // Table was created? Nothing to load
-      case Sql::CTR_OK: return 0;
+      case CTR_OK: return 0;
     } // Number of variables loaded
     AtomicSizeT astLoaded{ 0 };
     // Get vars list and if not empty
@@ -549,7 +549,7 @@ struct CVars :                         // Start of vars class
         [this, &astLoaded, &maMutex](const SqlRecordsMap &srmRef)
       { // Get key and goto next record if not found, else set the key string
         const SqlRecordsMapConstIt
-          srmciKeyIt{ srmRef.find(cSql->strCVKeyColumn) };
+          srmciKeyIt{ srmRef.find(cSqls->strCVKeyColumn) };
         if(srmciKeyIt == srmRef.cend()) return;
         const SqlData &sdKeyRef = srmciKeyIt->second;
         if(sdKeyRef.iType != SQLITE_TEXT) return;
@@ -557,7 +557,7 @@ struct CVars :                         // Start of vars class
         const string strVar{ sdKeyRef.MemToStringSafe() };
         // Get flags and goto next record if not found, else set the key string
         const SqlRecordsMapConstIt
-          srmciFlagsIt{ srmRef.find(cSql->strCVFlagsColumn) };
+          srmciFlagsIt{ srmRef.find(cSqls->strCVFlagsColumn) };
         if(srmciFlagsIt == srmRef.cend()) return;
         const SqlData &sdFlagsRef = srmciFlagsIt->second;
         if(sdFlagsRef.iType != SQLITE_INTEGER) return;
@@ -565,7 +565,7 @@ struct CVars :                         // Start of vars class
           scfFlags{ sdFlagsRef.MemReadInt<sqlite_int64>() };
         // Get value and goto next record if not found, else set the value
         const SqlRecordsMapConstIt
-          srmciValueIt{ srmRef.find(cSql->strCVValueColumn) };
+          srmciValueIt{ srmRef.find(cSqls->strCVValueColumn) };
         if(srmciValueIt == srmRef.cend()) return;
         const SqlData &sdValueRef = srmciValueIt->second;
         // If the data pointed at 'V' is not encrypted?

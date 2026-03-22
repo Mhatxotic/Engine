@@ -64,26 +64,27 @@ class Core;                            // Core class prototype
 static Core *cCore = nullptr;          // Pointer to static class
 class Core final :                     // Members initially private
   /* -- Base classes (order is critical!) ---------------------------------- */
-  private Stats,          private Threads,        private EvtMain,
-  private System,         private LuaFuncs,       private Archives,
-  private Assets,         private Crypt,          private Urls,
-  private Timer,          private Sql,            private Jsons,
-  private CVarItemStaticList, private CVars,      private Sockets,
-  private ConCmdStaticList,   private Console,    private GlFW,
-  private Credits,        private FreeType,       private Ftfs,
-  private Files,          private Masks,          private Bins,
-  private Oal,            private PcmLibs,        private CodecWAV,
-  private CodecCAF,       private CodecOGG,       private CodecMP3,
-  private Pcms,           private Audio,          private Sources,
-  private Samples,        private Streams,        private EvtWin,
-  private Ogl,            private ImageLibs,      private CodecPNG,
-  private CodecJPG,       private CodecGIF,       private CodecDDS,
-  private Images,         private Shaders,        private Clips,
-  private Display,        private Input,          private ShaderCore,
-  private Fbos,           private FboCore,        private SShots,
-  private Textures,       private Palettes,       private Atlases,
-  private Fonts,          private Videos,         private ConGfx,
-  private Variables,      private Commands,       private Lua
+  private Stats,      private Threads,            private EvtMain,
+  private System,     private LuaFuncs,           private Archives,
+  private Assets,     private Crypt,              private Urls,
+  private Timer,      private Sqls,               private Sql,
+  private Jsons,      private CVarItemStaticList, private CVars,
+  private Sockets,    private ConCmdStaticList,   private Console,
+  private GlFW,       private Credits,            private FreeType,
+  private Ftfs,       private Files,              private Masks,
+  private Bins,       private Oal,                private PcmLibs,
+  private CodecWAV,   private CodecCAF,           private CodecOGG,
+  private CodecMP3,   private Pcms,               private Audio,
+  private Sources,    private Samples,            private Streams,
+  private EvtWin,     private Ogl,                private ImageLibs,
+  private CodecPNG,   private CodecJPG,           private CodecGIF,
+  private CodecDDS,   private Images,             private Shaders,
+  private Clips,      private Display,            private Input,
+  private ShaderCore, private Fbos,               private FboCore,
+  private SShots,     private Textures,           private Palettes,
+  private Atlases,    private Fonts,              private Videos,
+  private ConGfx,     private Variables,          private Commands,
+  private Lua
 { /* -- Private typedefs to run a function when scope exits ---------------- */
   template<typename FuncType>struct ScopeGuard { FuncType ftFunc;
     explicit ScopeGuard(FuncType &&ftNFunc) : ftFunc(StdMove(ftNFunc)) {}
@@ -150,12 +151,13 @@ class Core final :                     // Members initially private
 #define RSCEX(x,y,v) y::CLHelperBase::CtrReset(y::CollectorCount() + v)
 #define RSCX(x,v) RSCEX(ICHelper ## x, x ## s, v)
 #define RSC(x) RSCX(x, 0)
-    RSC(Archive); RSC(Asset);    RSC(Atlase); RSC(Bin);      RSC(Clip);
-    RSC(Command); RSCX(Fbo, 2);  RSC(File);   RSC(Font);     RSC(Ftf);
-    RSC(Image);   RSC(ImageLib); RSC(Json);   RSC(LuaFunc);  RSC(Mask);
-    RSC(Palette); RSC(Pcm);      RSC(PcmLib); RSC(Sample);   RSC(Shader);
-    RSC(Socket);  RSC(Source);   RSC(SShot);  RSC(Stat);     RSC(Stream);
-    RSC(Texture); RSC(Thread);   RSC(Url);    RSC(Variable); RSC(Video);
+    RSC(Archive); RSC(Asset);    RSC(Atlase); RSC(Bin);     RSC(Clip);
+    RSC(Command); RSCX(Fbo, 2);  RSC(File);   RSC(Font);    RSC(Ftf);
+    RSC(Image);   RSC(ImageLib); RSC(Json);   RSC(LuaFunc); RSC(Mask);
+    RSC(Palette); RSC(Pcm);      RSC(PcmLib); RSC(Sample);  RSC(Shader);
+    RSC(Socket);  RSC(Source);   RSC(Sql);    RSC(SShot);   RSC(Stat);
+    RSC(Stream);  RSC(Texture);  RSC(Thread); RSC(Url);     RSC(Variable);
+    RSC(Video);
 #undef RSC
 #undef RSCX
 #undef RSCEX
@@ -853,6 +855,7 @@ class Core final :                     // Members initially private
   /* -- Default constructor ------------------------------------------------ */
   Core() :
     /* -- Initialisers ----------------------------------------------------- */
+    Sql{ true },                       // Main database is locked
 #include "cvarlib.hpp"                 // Defines cvar list
     CVars{ static_cast<CVarItemStaticList&>(*this) },
 #include "conlib.hpp"                  // Defines console command list
@@ -861,8 +864,8 @@ class Core final :                     // Members initially private
     cbtMain{ bind(&Core::CoreThreadMain, this, _1) },
     uiErrorCount(0),                   // Init number of errors occured
     uiErrorLimit(0)                    // Init number of errors allowed
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCore = this; }
+    /* -- Set global pointer to static classes ----------------------------- */
+    { cSql = this; cCore = this; }
   /* -- Process compatibility flags ---------------------------------------- */
   CVarReturn CoreProcessCompatibilityFlags(const uint64_t ullFlags)
   { // Nothing yet

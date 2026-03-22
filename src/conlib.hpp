@@ -1492,13 +1492,13 @@ typedef list<MemoryUsageItem> MemoryUsageItems;
 #define MSS(x) MSSX(x, c ## x ## s)
 // Build memory usage items database
 const MemoryUsageItems muiList{ {
-  MSS(Archive),  MSS(Asset),    MSSX(Atlas, cAtlases),        MSS(Bin),
-  MSS(Clip),     MSS(Command),  MSS(Fbo),      MSS(File),     MSS(Font),
-  MSS(Ftf),      MSS(Image),    MSS(ImageLib), MSS(Json),     MSS(LuaFunc),
-  MSS(Mask),     MSS(Palette),  MSS(Pcm),      MSS(PcmLib),   MSS(Sample),
-  MSS(Shader),   MSS(Socket),   MSS(Source),   MSS(SShot),    MSS(Stat),
-  MSS(Stream),   MSS(Texture),  MSS(Thread),   MSS(Url),      MSS(Variable),
-  MSS(Video)
+  MSS(Archive),  MSS(Asset),   MSSX(Atlas, cAtlases),      MSS(Bin),
+  MSS(Clip),     MSS(Command), MSS(Fbo),      MSS(File),   MSS(Font),
+  MSS(Ftf),      MSS(Image),   MSS(ImageLib), MSS(Json),   MSS(LuaFunc),
+  MSS(Mask),     MSS(Palette), MSS(Pcm),      MSS(PcmLib), MSS(Sample),
+  MSS(Shader),   MSS(Socket),  MSS(Source),   MSS(Sql),    MSS(SShot),
+  MSS(Stat),     MSS(Stream),  MSS(Texture),  MSS(Thread), MSS(Url),
+  MSS(Variable), MSS(Video)
 } };
 // Done with these macros
 #undef MSS
@@ -2052,6 +2052,35 @@ cSql->SqlReset();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'sqlexec' function
 /* ========================================================================= */
+// ! sqls
+// ? Lists all the databases created.
+/* ========================================================================= */
+{ "sqls", 1, 1, CFL_BASIC, [](const Args &){
+/* ------------------------------------------------------------------------- */
+// Text table class to help us write neat output
+Statistic sTable;
+sTable.Header("ID", false).Header("FLAGS").Header("ERR").Header("ROWS")
+      .Header("AFF").Header("IDENTIFIER", false).Reserve(cSqls->size());
+// Walk through Sql classes
+for(const Sql*const sPtr : *cSqls)
+{ // Get reference to class and write its data to the table
+  const Sql &sRef = *sPtr;
+  sTable.DataN(sRef.CtrGet()).Data(StrFromEvalTokens({
+    { sPtr->SqlActive(),                 'A' },
+    { sPtr->FlagIsSet(SF_DELETEEMPTYDB), 'D' },
+    { sPtr->SqlIsError(),                'E' },
+    { sPtr->SqlIsOpened(),               'O' },
+    { sPtr->FlagIsSet(SF_ISTEMPDB),      'T' },
+  })).DataN(sPtr->SqlGetError())
+     .DataN(sPtr->SqlGetRecords().size())
+     .DataN(sPtr->SqlAffected())
+     .Data(sPtr->IdentGet());
+} // Log counts
+cConsole->ConsoleAddLineA(sTable.Finish(),
+  StrCPluraliseNum(cSqls->size(), "database.", "databases."));
+/* ------------------------------------------------------------------------- */
+} },                                   // End of 'sqls' function
+/* ========================================================================= */
 // ! stats
 // ? Lists currently loaded stat objects.
 /* ------------------------------------------------------------------------- */
@@ -2060,7 +2089,7 @@ cSql->SqlReset();
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID", false).Header("HEADERS").Header("CELLS").Header("ROWS");
-// Walk through bin classes
+// Walk through Stat classes
 for(const Stat*const sPtr : *cStats)
 { // Get reference to class and write its data to the table
   const Stat &sRef = *sPtr;

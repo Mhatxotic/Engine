@@ -12,10 +12,12 @@ namespace ISql {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IClock::P;
 using namespace ICmdLine::P;           using namespace ICommon::P;
-using namespace ICrypt::P;             using namespace ICVarDef::P;
-using namespace IDir::P;               using namespace IError::P;
-using namespace IFlags;                using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaUtil::P;
+using namespace ICollector::P;         using namespace ICrypt::P;
+using namespace ICVarDef::P;           using namespace IDir::P;
+using namespace IError::P;             using namespace IFlags;
+using namespace IIdent::P;             using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
 using namespace IPSplit::P;            using namespace IMemory::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
@@ -37,7 +39,55 @@ BUILD_FLAGS(Sql,                       // Sql flags classes
   SF_NONE                   {Flag(0)}, // No settings?
   SF_ISTEMPDB               {Flag(1)}, // Is temporary database?
   SF_DELETEEMPTYDB          {Flag(2)}  // Delete empty databases?
-);/* ----------------------------------------------------------------------- */
+) /* ----------------------------------------------------------------------- */
+enum ADResult                          // Results for CanDeleteDatabase()
+{ /* ----------------------------------------------------------------------- */
+  ADR_OK_NO_TABLES,                    // [0] No tables exist (delete ok)
+  ADR_OK_NO_RECORDS,                   // [1] No records exist (delete ok)
+  /* ----------------------------------------------------------------------- */
+  ADR_ERR,                             // [2] Min error value (delete denied)
+  /* ----------------------------------------------------------------------- */
+  ADR_ERR_TEMP_DB = ADR_ERR,           // [2] Is temporary database?
+  ADR_ERR_DENY_OPTION,                 // [3] Delete not allowed by guest?
+  ADR_ERR_LU_TABLE,                    // [4] Error looking up table?
+  ADR_ERR_TABLES_EXIST,                // [5] Tables exist?
+  ADR_ERR_LU_RECORD,                   // [6] Error looking up records?
+  ADR_ERR_RECORDS_EXIST,               // [7] Records exist?
+  /* ----------------------------------------------------------------------- */
+  ADR_MAX                              // [8] Maximum number of result types
+};/* ----------------------------------------------------------------------- */
+CTOR_BEGIN(Sqls, Sql, CLHelperUnsafe,  // Sql collector class
+  /* -- Const strings ------------------------------------------------------ */
+  typedef IdList<ADR_MAX> ADRList;     // AD result strings list
+  typedef IdList<SQLITE_NOTICE> ErrorList; // Sqlite errors strings list
+  /* ----------------------------------------------------------------------- */
+  SqlFlags         sFlags;             // Sql flags
+  const ErrorList  elStrings;          // Sqlite error strings list
+  const ADRList    adrlStrings;        // Can db be deleted strings list
+  const string     strMemoryDBName;    // Memory only database (no disk)
+  const string     strCVKeyColumn;     // Name of cvar 'key' column
+  const string     strCVFlagsColumn;   // Name of cvar 'flags' column
+  const string     strCVValueColumn;   // Name of cvar 'value' column
+  const string_view strvCVTable;       // Name of cvar table
+  const string_view strvLCTable;       // Name of lua cache table
+  const string_view strvLCCRCColumn;   // Name of lua cache 'crc' column
+  const string_view strvLCTimeColumn;  // Name of lua cache 'time' column
+  const string_view strvLCRefColumn;   // Name of lua cache 'ref' column
+  const string_view strvLCCodeColumn;  // Name of lua cache 'data' column
+  const string_view strvOn;            // "ON" strings
+  const string_view strvOff;           // "OFF" strings
+  const string_view strvPKeyTable;     // Name of pvt key table
+  const string_view strvPIndexColumn;  // Name of pvt key 'index' column
+  const string_view strvPValueColumn;  // Name of pvt key 'value' column
+  const string_view strvSKeyTable;     // Name of schema table
+  const string_view strvSIndexColumn;  // Name of schema 'index' column
+  const string_view strvSValueColumn;  // Name of schema 'value' column
+  const string_view strvSVersionKey;   // Name of schema version record name
+  unsigned int     uiQueryRetries;     // Times to retry query before failing
+  ClkDuration      cdRetry;            // Sleep for this time when retrying
+) /* ----------------------------------------------------------------------- */
+Sql               *cSql = nullptr;     // Pointer to main SQL database
+/* ------------------------------------------------------------------------- */
 struct SqlData :                       // Query response data item class
   /* -- Base classes ------------------------------------------------------- */
   public Memory                        // Memory block and type
@@ -63,80 +113,36 @@ struct SqlData :                       // Query response data item class
 };/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(SqlRecords, const string, SqlData);
 typedef list<SqlRecordsMap> SqlResult; // vector of key/raw data blocks
-/* -- Sql manager class ---------------------------------------------------- */
-struct Sql;                            // Class prototype
-static Sql *cSql = nullptr;            // Pointer to global class
-struct Sql :                           // Members initially public
+/* ------------------------------------------------------------------------- */
+enum PurgeResult                       // Result to a purge request
+{ /* ----------------------------------------------------------------------- */
+  PR_FAIL,                             // [0] Sql call failed with error
+  PR_OK,                               // [1] Sql call succeeded with changes
+  PR_OK_NC,                            // [2] Sql call succeeded but no changes
+};/* ----------------------------------------------------------------------- */
+enum CreateTableResult                 // Create table result
+{ /* ----------------------------------------------------------------------- */
+  CTR_FAIL,                            // [0] Sql create table failed
+  CTR_OK,                              // [1] Sql call commited the variable
+  CTR_OK_ALREADY,                      // [2] Sql table already exists
+};/* ----------------------------------------------------------------------- */
+CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Ident,                        // Sql database filename
-  private SqlFlags                     // Sql flags
-{ /* -- Typedefs ----------------------------------------------------------- */
-  enum ADResult                        // Results for CanDeleteDatabase()
-  { /* --------------------------------------------------------------------- */
-    ADR_OK_NO_TABLES,                  // [0] No tables exist (delete ok)
-    ADR_OK_NO_RECORDS,                 // [1] No records exist (delete ok)
-    /* --------------------------------------------------------------------- */
-    ADR_ERR,                           // [2] Min error value (delete denied)
-    /* --------------------------------------------------------------------- */
-    ADR_ERR_TEMP_DB = ADR_ERR,         // [2] Is temporary database?
-    ADR_ERR_DENY_OPTION,               // [3] Delete not allowed by guest?
-    ADR_ERR_LU_TABLE,                  // [4] Error looking up table?
-    ADR_ERR_TABLES_EXIST,              // [5] Tables exist?
-    ADR_ERR_LU_RECORD,                 // [6] Error looking up records?
-    ADR_ERR_RECORDS_EXIST,             // [7] Records exist?
-    /* --------------------------------------------------------------------- */
-    ADR_MAX                            // [8] Maximum number of result types
-  };/* --------------------------------------------------------------------- */
-  enum PurgeResult                     // Result to a purge request
-  { /* --------------------------------------------------------------------- */
-    PR_FAIL,                           // [0] Sql call failed with error
-    PR_OK,                             // [1] Sql call succeeded with changes
-    PR_OK_NC,                          // [2] Sql call succeeded but no changes
-  };/* --------------------------------------------------------------------- */
-  enum CreateTableResult               // Create table result
-  { /* --------------------------------------------------------------------- */
-    CTR_FAIL,                          // [0] Sql create table failed
-    CTR_OK,                            // [1] Sql call commited the variable
-    CTR_OK_ALREADY,                    // [2] Sql table already exists
-  };/* -- Private typedefs ---------------------------------------- */ private:
-  typedef IdList<SQLITE_NOTICE> ErrorList; // Sqlite errors strings list
-  typedef IdList<ADR_MAX> ADRList;         // AD result strings list
-  /* -- Schema version ----------------------------------------------------- */
+  public SqlFlags,                     // Flags for this database
+  public Lockable                      // Lua garbage collector instruction
+{ /* -- Schema version ----------------------------------------------------- */
   static constexpr const sqlite3_int64 llVersion = 1; // Expected schema ver
   /* -- Variables ---------------------------------------------------------- */
-  const ErrorList  elStrings;          // Sqlite error strings list
-  const ADRList    adrlStrings;        // Can db be deleted strings list
   sqlite3         *sqlDB;              // Pointer to SQL context
   int              iError;             // Last error code
   SqlResult        srKeys;             // Last execute data result
-  unsigned int     uiQueryRetries;     // Times to retry query before failing
-  ClkDuration      cdRetry,            // Sleep for this time when retrying
-                   cdQuery;            // Last query execution time
-  /* -- Tables ----------------------------------------------------- */ public:
-  const string     strMemoryDBName,    // Memory only database (no disk)
-                   strCVKeyColumn,     // Name of cvar 'key' column
-                   strCVFlagsColumn,   // Name of cvar 'flags' column
-                   strCVValueColumn;   // Name of cvar 'value' column
-  const string_view strvCVTable,       // Name of cvar table
-                   strvLCTable,        // Name of lua cache table
-                   strvLCCRCColumn,    // Name of lua cache 'crc' column
-                   strvLCTimeColumn,   // Name of lua cache 'time' column
-                   strvLCRefColumn,    // Name of lua cache 'ref' column
-                   strvLCCodeColumn,   // Name of lua cache 'data' column
-                   strvOn, strvOff,    // "ON" and "OFF" strings
-                   strvPKeyTable,      // Name of pvt key table
-                   strvPIndexColumn,   // Name of pvt key 'index' column
-                   strvPValueColumn,   // Name of pvt key 'value' column
-                   strvSKeyTable,      // Name of schema table
-                   strvSIndexColumn,   // Name of schema 'index' column
-                   strvSValueColumn,   // Name of schema 'value' column
-                   strvSVersionKey;    // Name of schema version record name
+  ClkDuration      cdQuery;            // Last query execution time
   /* -- Convert sql error id to string ---------------------------- */ private:
   const string_view &SqlResultToString(const int iCode) const
-    { return elStrings.Get(iCode); }
+    { return cParent->elStrings.Get(iCode); }
   /* -- Convert ADR id to string ------------------------------------------- */
   const string_view &SqlADResultToString(const ADResult adrResult) const
-    { return adrlStrings.Get(adrResult); }
+    { return cParent->adrlStrings.Get(adrResult); }
   /* -- Close the database ------------------------------------------------- */
   void SqlDoClose()
   { // Number of retries needed to close the database
@@ -185,8 +191,9 @@ struct Sql :                           // Members initially public
         // The database is busy?
         case SQLITE_BUSY:
           // Wait a little and try again if busy until we've retried enough
-          if(++uiRetries < uiQueryRetries || uiQueryRetries == StdMaxUInt)
-            { StdSuspend(cdRetry); continue; }
+          if(++uiRetries < cParent->uiQueryRetries ||
+             cParent->uiQueryRetries == StdMaxUInt)
+            { StdSuspend(cParent->cdRetry); continue; }
           // Return failure
           [[fallthrough]];
         // Complete and utter failure
@@ -261,7 +268,7 @@ struct Sql :                           // Members initially public
       // Only one or two tables (key and/or cvars table)?
       case 1: case 2:
         // Get number of records in the cvars table
-        switch(SqlGetRecordCount(strvCVTable))
+        switch(SqlGetRecordCount(cParent->strvCVTable))
         { // Error occured? Don't delete the database!
           case StdMaxSizeT: return ADR_ERR_LU_RECORD;
           // Zero records? Delete the database! There is always the
@@ -308,7 +315,7 @@ struct Sql :                           // Members initially public
       sqlite3_stmt*const stmtData, const sqlite_int64 llValue,
       VarArgs &&...vaArgs)
   { // Log the parameter
-    cLog->LogDebugExSafe("- Arg #$<Int64/Integer> = $ <$0x$>.",
+    cLog->LogDebugExSafe("- Arg #$<Int64/Int> = $ <$0x$>.",
       iCol, llValue, hex, llValue);
     // Process as integer then pass next arguments
     SqlSetError(sqlite3_bind_int64(stmtData, iCol, llValue));
@@ -517,7 +524,7 @@ struct Sql :                           // Members initially public
     } // Get end query time to get total execution duration
     cdQuery = ciStart.CIDelta();
   }
-  /* -- Set a pragma (used only with cvar callbacks) ----------------------- */
+  /* -- Set a pragma (used only with cvar callbacks) --------------- */ public:
   void SqlPragma(const string_view &strvVar)
   { // Execute without value
     if(SqlExecute(StrAppend("PRAGMA ", strvVar)))
@@ -551,8 +558,8 @@ struct Sql :                           // Members initially public
     else cLog->LogDebugExSafe("Sql set pragma '$' to '$' succeeded.",
       strvVar, strvVal);
   }
-  /* -- Is sqlite database opened? --------------------------------- */ public:
-  bool SqlIsOpened() { return !!sqlDB; }
+  /* -- Is sqlite database opened? ----------------------------------------- */
+  bool SqlIsOpened() const { return !!sqlDB; }
   /* -- Heap used ---------------------------------------------------------- */
   size_t SqlHeapUsed() const
     { return static_cast<size_t>(sqlite3_memory_used()); }
@@ -570,7 +577,7 @@ struct Sql :                           // Members initially public
     SqlSetError(sqlite3_prepare_v2(sqlDB, strQuery.data(),
       UtilIntOrMax<int>(strQuery.length()), &stmtData, nullptr));
     // Starting LUA parameter and current enumerated parameter
-    const int iStartParam = 2;
+    const int iStartParam = 3;
     int iParam = iStartParam;
     // If succeeded then start parsing the input and ouput
     if(SqlIsNoError())
@@ -665,7 +672,7 @@ struct Sql :                           // Members initially public
       iParam - iStartParam, SqlResultToString(SqlGetError()), SqlGetError(),
       SqlTimeStr());
     // Return error status
-    return iError;
+    return SqlGetError();
   }
   /* -- Convert records to lua table --------------------------------------- */
   void RecordsToLuaTable(lua_State*const lS)
@@ -747,7 +754,7 @@ struct Sql :                           // Members initially public
     cLog->LogDebugExSafe("- Total: $; Code: $<$>; RTT: $ sec.",
       stCount, SqlResultToString(SqlGetError()), SqlGetError(), SqlTimeStr());
     // Return error status
-    return iError;
+    return SqlGetError();
   }
   /* -- Dispatch stored transaction with logging but return success bool -- */
   template<typename ...VarArgs>
@@ -827,7 +834,7 @@ struct Sql :                           // Members initially public
   bool SqlIsNotBusyOrReadOnlyError() const
     { return !SqlIsBusyOrReadOnlyError(); }
   const string_view &SqlGetErrorAsIdString() const
-    { return SqlResultToString(iError); }
+    { return SqlResultToString(SqlGetError()); }
   /* -- Return duration of last query -------------------------------------- */
   double SqlTime() const { return ClockDurationToDouble(cdQuery); }
   /* -- Return formatted query time ---------------------------------------- */
@@ -836,7 +843,7 @@ struct Sql :                           // Members initially public
   bool SqlNotActive() const { return !!sqlite3_get_autocommit(sqlDB); }
   bool SqlActive() const { return !SqlNotActive(); }
   /* -- Return string map of records --------------------------------------- */
-  SqlResult &SqlGetRecords() { return srKeys; }
+  const SqlResult &SqlGetRecords() const { return srKeys; }
   /* -- Useful aliases ----------------------------------------------------- */
   int SqlBegin() { return SqlExecute("BEGIN TRANSACTION"); }
   int SqlEnd() { return SqlExecute("END TRANSACTION"); }
@@ -845,7 +852,7 @@ struct Sql :                           // Members initially public
   int SqlFlushTable(const string_view &strvTable)
     { return SqlExecute(StrFormat("DELETE from `$`", strvTable)); }
   int SqlOptimise() { return SqlExecute("VACUUM"); }
-  int SqlAffected() { return sqlite3_changes(sqlDB); }
+  int SqlAffected() const { return sqlite3_changes(sqlDB); }
   /* -- Process a count(*) requested --------------------------------------- */
   size_t SqlGetRecordCount(const string_view &strvTable,
     const string_view &strvCondition=cCommon->CommonCBlank())
@@ -887,8 +894,8 @@ struct Sql :                           // Members initially public
   /* ----------------------------------------------------------------------- */
   bool SqlCVarReadKeys()
   { // Read all variable names and if failed?
-    if(SqlExecute(
-      StrFormat("SELECT `$` from `$`", strCVKeyColumn, strvCVTable)))
+    if(SqlExecute(StrFormat("SELECT `$` from `$`",
+         cParent->strCVKeyColumn, cParent->strvCVTable)))
     { // Put in log and return nothing loaded
       cLog->LogWarningExSafe(
         "CVars failed to fetch cvar key names because $ ($)!",
@@ -903,7 +910,8 @@ struct Sql :                           // Members initially public
   bool SqlCVarReadAll()
   { // Read all variables and if failed?
     if(SqlExecute(StrFormat("SELECT `$`,`$`,`$` from `$`",
-      strCVKeyColumn, strCVFlagsColumn, strCVValueColumn, strvCVTable)))
+         cParent->strCVKeyColumn, cParent->strCVFlagsColumn,
+         cParent->strCVValueColumn, cParent->strvCVTable)))
     { // Put in log and return nothing loaded
       cLog->LogWarningExSafe("Sql failed to read CVars table because $ ($)!",
         SqlGetErrorStr(), SqlGetError());
@@ -916,9 +924,9 @@ struct Sql :                           // Members initially public
   /* ----------------------------------------------------------------------- */
   CreateTableResult SqlCVarDropTable()
   { // If table exists return that it already exists
-    if(SqlIsTableExist(strvCVTable)) return CTR_OK_ALREADY;
+    if(SqlIsTableExist(cParent->strvCVTable)) return CTR_OK_ALREADY;
     // Drop the SQL table and if failed?
-    if(SqlDropTable(strvCVTable))
+    if(SqlDropTable(cParent->strvCVTable))
     { // Write error in console and return failure
       cLog->LogWarningExSafe(
         "Sql failed to destroy CVars table because $ ($)!",
@@ -931,14 +939,15 @@ struct Sql :                           // Members initially public
   /* ----------------------------------------------------------------------- */
   CreateTableResult SqlCVarCreateTable()
   { // If table already exists then return success already
-    if(SqlIsTableExist(strvCVTable)) return CTR_OK_ALREADY;
+    if(SqlIsTableExist(cParent->strvCVTable)) return CTR_OK_ALREADY;
     // Create the SQL table for our settings if it does not exist
     if(SqlExecute(StrFormat(
-           "CREATE table `$`("         // Table name
-           "`$` TEXT UNIQUE NOT NULL," // Variable name
-           "`$` INTEGER DEFAULT 0,"    // Value flags (crypt,comp,etc.)
-           "`$` TEXT)",                // Value (any type allowed)
-         strvCVTable, strCVKeyColumn, strCVFlagsColumn, strCVValueColumn)))
+         "CREATE table `$`("           // Table name
+         "`$` TEXT UNIQUE NOT NULL,"   // Variable name
+         "`$` INTEGER DEFAULT 0,"      // Value flags (crypt,comp,etc.)
+         "`$` TEXT)",                  // Value (any type allowed)
+         cParent->strvCVTable, cParent->strCVKeyColumn,
+         cParent->strCVFlagsColumn, cParent->strCVValueColumn)))
     { // Write error in console and return failure
       cLog->LogWarningExSafe("Sql failed to create CVars table because $ ($)!",
         SqlGetErrorStr(), SqlGetError());
@@ -950,9 +959,10 @@ struct Sql :                           // Members initially public
   /* ----------------------------------------------------------------------- */
   CreateTableResult SqlLuaCacheDropTable()
   { // If table exists return that it already exists
-    if(SqlGetRecordCount(strvLCTable) == StdMaxSizeT) return CTR_OK_ALREADY;
+    if(SqlGetRecordCount(cParent->strvLCTable) == StdMaxSizeT)
+      return CTR_OK_ALREADY;
     // Drop the SQL table and if failed?
-    if(SqlDropTable(strvLCTable))
+    if(SqlDropTable(cParent->strvLCTable))
     { // Write error in console and return failure
       cLog->LogWarningExSafe(
         "Sql failed to destroy cache table because $ ($)!",
@@ -965,7 +975,7 @@ struct Sql :                           // Members initially public
   /* ----------------------------------------------------------------------- */
   CreateTableResult SqlLuaCacheCreateTable()
   { // If table already exists then return success already
-    if(SqlIsTableExist(strvLCTable)) return CTR_OK_ALREADY;
+    if(SqlIsTableExist(cParent->strvLCTable)) return CTR_OK_ALREADY;
     // Create the SQL table for our settings if it does not exist
     if(SqlExecute(StrFormat(
          "CREATE table `$`("              // Table name
@@ -973,8 +983,9 @@ struct Sql :                           // Members initially public
            "`$` INTEGER NOT NULL,"        // Code update timestamp
            "`$` TEXT UNIQUE NOT NULL,"    // Code eference
            "`$` TEXT NOT NULL)",          // Code binary
-         strvLCTable, strvLCCRCColumn, strvLCTimeColumn, strvLCRefColumn,
-         strvLCCodeColumn)))
+         cParent->strvLCTable, cParent->strvLCCRCColumn,
+         cParent->strvLCTimeColumn, cParent->strvLCRefColumn,
+         cParent->strvLCCodeColumn)))
     { // Write error in console and return failure
       cLog->LogWarningExSafe("Sql failed to create cache table because $ ($)!",
         SqlGetErrorStr(), SqlGetError());
@@ -992,8 +1003,9 @@ struct Sql :                           // Members initially public
     const char*const cpData, const size_t stLength)
   { // Try to write the specified cvar and if failed?
     if(SqlExecute(StrFormat(
-           "INSERT or REPLACE into `$`(`$`,`$`,`$`) VALUES(?,?,?)",
-           strvCVTable, strCVKeyColumn, strCVFlagsColumn, strCVValueColumn),
+         "INSERT or REPLACE into `$`(`$`,`$`,`$`) VALUES(?,?,?)",
+         cParent->strvCVTable, cParent->strCVKeyColumn,
+         cParent->strCVFlagsColumn, cParent->strCVValueColumn),
          strVar, scvdfcFlags.FlagGet<int>(), cpData, stLength, iType))
     { // Log the warning and return failure
       cLog->LogWarningExSafe(
@@ -1077,15 +1089,13 @@ struct Sql :                           // Members initially public
     IdentClear();
     // Temporary database boolean
     FlagClear(SF_ISTEMPDB);
-    // Clear private key
-    cCrypt->CryptSetDefaultPrivateKey();
   }
   /* -- Load schema version ------------------------------------------------ */
   void SqlLoadSchemaVersion()
   { // If table exists create a new table
-    if(!SqlIsTableExist(strvSKeyTable)) goto NewKeyNoDrop;
+    if(!SqlIsTableExist(cParent->strvSKeyTable)) goto NewKeyNoDrop;
     // Check record count
-    switch(SqlGetRecordCount(strvSKeyTable))
+    switch(SqlGetRecordCount(cParent->strvSKeyTable))
     { // Error reading table?
       case StdMaxSizeT:
       { // Log failure and create a new private key
@@ -1097,7 +1107,8 @@ struct Sql :                           // Members initially public
       default:
       { // Read schema version key and if failed?
         if(SqlExecute(StrFormat("SELECT `$` from `$` WHERE `$`=?",
-          strvSValueColumn, strvSKeyTable, strvSIndexColumn), strvSVersionKey))
+             cParent->strvSValueColumn, cParent->strvSKeyTable,
+             cParent->strvSIndexColumn), cParent->strvSVersionKey))
         { // Log failure and create a new private key
           cLog->LogWarningExSafe(
             "Sql failed to read schema version because $ ($<$>)!",
@@ -1144,17 +1155,18 @@ struct Sql :                           // Members initially public
     } // Could not read new private key so setup new private key
     NewKey:
     // Try to drop the original private key table
-    if(SqlDropTable(strvSKeyTable))
+    if(SqlDropTable(cParent->strvSKeyTable))
       cLog->LogWarningExSafe(
         "Sql failed to drop schema table because $ ($<$>)!",
         SqlGetErrorStr(), SqlGetErrorAsIdString(), SqlGetError());
     // Skipped dropping non-existant table
     NewKeyNoDrop:
     // Now try to create the table that holds the private key and if failed?
-    if(!SqlExecuteAndSuccess(
-         StrFormat("CREATE table `$`(`$` TEXT UNIQUE NOT NULL,"
-                                    "`$` INTEGER NOT NULL)",
-        strvSKeyTable, strvSIndexColumn, strvSValueColumn)))
+    if(!SqlExecuteAndSuccess(StrFormat(
+          "CREATE table `$`(`$` TEXT UNIQUE NOT NULL,"
+          "`$` INTEGER NOT NULL)",
+          cParent->strvSKeyTable, cParent->strvSIndexColumn,
+          cParent->strvSValueColumn)))
       cLog->LogWarningExSafe(
         "Sql failed to create schema table because $ ($<$>)!",
         SqlGetErrorStr(), SqlGetErrorAsIdString(), SqlGetError());
@@ -1162,9 +1174,9 @@ struct Sql :                           // Members initially public
     NewKeyNoDropInsert:
     // Now try to create the table that holds the private key and if failed?
     if(!SqlExecuteAndSuccess(StrFormat(
-        "INSERT or REPLACE into `$`(`$`,`$`) VALUES(?,?)",
-        strvSKeyTable, strvSIndexColumn, strvSValueColumn), strvSVersionKey,
-        llVersion))
+          "INSERT or REPLACE into `$`(`$`,`$`) VALUES(?,?)",
+          cParent->strvSKeyTable, cParent->strvSIndexColumn,
+          cParent->strvSValueColumn), cParent->strvSVersionKey, llVersion))
       cLog->LogWarningExSafe(
         "Sql failed to insert schema version record because $ ($<$>)!",
         SqlGetErrorStr(), SqlGetErrorAsIdString(), SqlGetError());
@@ -1174,9 +1186,11 @@ struct Sql :                           // Members initially public
   /* -- Create new private key --------------------------------------------- */
   bool SqlCreatePrivateKeyNoDrop()
   { // Try to create the table that holds the private key and if failed?
-    if(SqlExecute(StrFormat("CREATE table `$`(`$` INTEGER NOT NULL,"
-                                             "`$` INTEGER NOT NULL)",
-      strvPKeyTable, strvPIndexColumn, strvPValueColumn)))
+    if(SqlExecute(StrFormat(
+         "CREATE table `$`(`$` INTEGER NOT NULL,"
+         "`$` INTEGER NOT NULL)",
+      cParent->strvPKeyTable, cParent->strvPIndexColumn,
+      cParent->strvPValueColumn)))
     { // Log failure and return
       cLog->LogWarningExSafe(
         "Sql failed to create key table because $ ($<$>)!",
@@ -1184,7 +1198,8 @@ struct Sql :                           // Members initially public
       return false;
     } // Prepare statement to insert values into sql
     const string strInsert{ StrFormat("INSERT into `$`(`$`,`$`) VALUES(?,?)",
-      strvPKeyTable, strvPIndexColumn, strvPValueColumn) };
+      cParent->strvPKeyTable, cParent->strvPIndexColumn,
+      cParent->strvPValueColumn) };
     // For each key part to write
     for(size_t stIndex = 0; stIndex < cCrypt->pkKey.qkData.size(); ++stIndex)
     { // Get private key value and if failed?
@@ -1208,7 +1223,7 @@ struct Sql :                           // Members initially public
   { // Generate a new private key
     cCrypt->CryptResetPrivateKey();
     // Try to drop the original private key table
-    if(SqlDropTable(strvPKeyTable))
+    if(SqlDropTable(cParent->strvPKeyTable))
       cLog->LogWarningExSafe("Sql failed to drop key table because $ ($<$>)!",
         SqlGetErrorStr(), SqlGetErrorAsIdString(), SqlGetError());
     // Now create the private key table
@@ -1217,9 +1232,9 @@ struct Sql :                           // Members initially public
   /* -- Load private key --------------------------------------------------- */
   void SqlLoadPrivateKey()
   { // If table exists create a new table
-    if(!SqlIsTableExist(strvPKeyTable)) SqlCreatePrivateKeyNoDrop();
+    if(!SqlIsTableExist(cParent->strvPKeyTable)) SqlCreatePrivateKeyNoDrop();
     // Check record count
-    switch(const size_t stCount = SqlGetRecordCount(strvPKeyTable))
+    switch(const size_t stCount = SqlGetRecordCount(cParent->strvPKeyTable))
     { // Error reading table?
       case StdMaxSizeT:
       { // Log failure and create a new private key
@@ -1239,7 +1254,8 @@ struct Sql :                           // Members initially public
       case Crypt::stPkTotalCount:
       { // Read keys and if failed?
         if(SqlExecute(StrFormat("SELECT `$` from `$` ORDER BY `$` ASC",
-          strvPValueColumn, strvPKeyTable, strvPIndexColumn)))
+          cParent->strvPValueColumn, cParent->strvPKeyTable,
+          cParent->strvPIndexColumn)))
         { // Log failure and create a new private key
           cLog->LogWarningExSafe(
             "Sql failed to read key table because $ ($<$>)!",
@@ -1282,28 +1298,50 @@ struct Sql :                           // Members initially public
       }
     }
   }
-  /* -- Init --------------------------------------------------------------- */
-  bool SqlInit(const string &strPrefix)
+  /* -- Init database called from LuaLib ----------------------------------- */
+  void SqlInit(const string &strDb)
+  { // Set the name of the database with forced extension name
+    IdentSet(StrAppend(strDb, "." UDB_EXTENSION));
+    // Log initialisation
+    cLog->LogDebugExSafe("Sql initialising database '$'...", IdentGet());
+    // Open database and throw error on failure
+    SqlSetError(sqlite3_open_v2(IdentGetData(), &sqlDB,
+      SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX |
+      SQLITE_OPEN_SHAREDCACHE, reinterpret_cast<char*>(sqlDB)));
+    if(!sqlDB || SqlIsError())
+      XCS("Failed to open or create database!",
+        "Identifier", IdentGet(), "Error", SqlGetError(),
+        "Reason",     SqlGetErrorStr());
+    // Log successfull initialisation and return success
+    cLog->LogInfoExSafe("Sql database '$' initialised.", IdentGet());
+  }
+  /* -- Init core database called from cvar callback ----------------------- */
+  bool SqlInitCore(const string &strPrefix)
   { // If named database is already opened
     if(sqlDB && strPrefix == IdentGet())
     { // Put in console and return failure
       cLog->LogWarningExSafe("Sql skipped reinit of '$'.", strPrefix);
       return false;
     } // Log initialisation. Set filename using memory db name if empty
-    const string &strDb = strPrefix.empty() ? strMemoryDBName : strPrefix;
-    cLog->LogDebugExSafe("Sql initialising database '$'...", strDb);
+    const string &strDb =
+      strPrefix.empty() ? cParent->strMemoryDBName : strPrefix;
+    cLog->LogDebugExSafe("Sql initialising core database '$'...", strDb);
+    // Update flags from global if they changed
+    FlagReset(cParent->sFlags);
+    // Set temporary database boolean if is a memory database
+    if(strPrefix == cParent->strMemoryDBName) FlagSet(SF_ISTEMPDB);
     // Open database with a temporary sqlite handle so if the open fails,
     // the old one stays intact. The cast of the sqlDBtemp for the last
     // parameter (VFS) that resolves to 'nullptr' is just to shut CppCheck up
     // with a false positive.
     sqlite3 *sqlDBtemp = nullptr;
-    if(const int iCode = sqlite3_open_v2(strDb.data(), &sqlDBtemp,
+    SqlSetError(sqlite3_open_v2(strDb.data(), &sqlDBtemp,
          SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX |
-         SQLITE_OPEN_SHAREDCACHE, reinterpret_cast<char*>(sqlDBtemp)))
-    { // Log error result
+         SQLITE_OPEN_SHAREDCACHE, reinterpret_cast<char*>(sqlDBtemp)));
+    if(!sqlDBtemp || SqlIsError())
+    { // Log error result and return failure with 'sqlDB' being preserved.
       cLog->LogWarningExSafe("Sql could not open '$' because $ ($)!", strDb,
-        SqlGetErrorStr(), iCode);
-      // Sql open failed so 'sqlDBtemp' stays NULL.
+        SqlGetErrorStr(), SqlGetError());
       return false;
     } // Set to this database and set name
     sqlDB = sqlDBtemp;
@@ -1315,132 +1353,149 @@ struct Sql :                           // Members initially public
     cLog->LogInfoExSafe("Sql database '$' initialised.", IdentGet());
     return true;
   }
-  /* -- Constructor --------------------------------------------- */ protected:
-  Sql() :
+  /* -- Constructor without registration --------------------------- */ public:
+  explicit Sql(bool bLocked = false) : // Default unlocked
     /* -- Initialisers ----------------------------------------------------- */
-    SqlFlags(SF_NONE),                 // No sql flags (loaded externally)
-    elStrings{{                        // Init sqlite error strings list
-      "OK",       /*00-01*/ "ERROR",     "INTERNAL", /*02-03*/ "PERM",
-      "ABORT",    /*04-05*/ "BUSY",      "LOCKED",   /*06-07*/ "NOMEM",
-      "READONLY", /*08-09*/ "INTERRUPT", "IOERR",    /*10-11*/ "CORRUPT",
-      "NOTFOUND", /*12-13*/ "FULL",      "CANTOPEN", /*14-15*/ "PROTOCOL",
-      "EMPTY",    /*16-17*/ "SCHEMA",    "TOOBIG",   /*18-19*/ "CONSTRAINT",
-      "MISMATCH", /*20-21*/ "MISUSE",    "NOLFS",    /*22-23*/ "AUTH",
-      "FORMAT",   /*24-25*/ "RANGE",     "NOTADB"    /*26---*/
-    }, "UNKNOWN"},                     // Unknown sqlite error
-    adrlStrings{{                      // Init 'can db be deleted' strings list
-      "no tables",             /* 0-1 */ "no records",
-      "temporary database",    /* 2-3 */ "option denied",
-      "error reading tables",  /* 4-5 */ "tables exist",
-      "error reading records", /* 6-7 */ "records exist"
-    }},                                // Initialised 'can db be deleted' strs
+    ICHelperSql{ cSqls, this },        // Register the object in collector
+    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SqlFlags{ cParent->sFlags },       // Copy global sql flags
+    Lockable{ bLocked },               // Set locked by LUA flag
     sqlDB(nullptr),                    // No sql database handle yet
-    iError(sqlite3_initialize()),      // Initialise sqlite and store error
-    uiQueryRetries(3),                 // Initially 3 retries
-    cdRetry{ cd1S },                   // Initially wait 1 second per retry
-    strMemoryDBName{ ":memory:" },     // Create a memory database by default
-    strCVKeyColumn{ "K" },             // Init name of cvars 'key' column
-    strCVFlagsColumn{ "F" },           // Init name of cvars 'flags' column
-    strCVValueColumn{ "V" },           // Init name of cvars 'value' column
-    strvCVTable{ "C" },                // Init name of cvar table
-    strvLCTable{ "L" },                // Init name of lua cache table
-    strvLCCRCColumn{ "C" },            // Init name of lua cache 'crc' column
-    strvLCTimeColumn{ "T" },           // Init name of lua cache 'time' column
-    strvLCRefColumn{ "R" },            // Init name of lua cache 'ref' column
-    strvLCCodeColumn{ "D" },           // Init name of lua cache 'data' column
-    strvOn{ "ON" },                    // Init "ON" static string
-    strvOff{ "OFF" },                  // Init "OFF" static string
-    strvPKeyTable{ "K" },              // Init name of pvt key table
-    strvPIndexColumn{ "I" },           // Init name of pvt key 'index' column
-    strvPValueColumn{ "K" },           // Init name of pvt key 'value' column
-    strvSKeyTable{ "S" },              // Init name of schema table
-    strvSIndexColumn{ "K" },           // Init name of schema 'key' column
-    strvSValueColumn{ "V" },           // Init name of schema 'value' column
-    strvSVersionKey{ "V" }             // Init name of version # key in schema
-  /* -- Code --------------------------------------------------------------- */
-  { // Set global pointer to static class
-    cSql = this;
-    // Throw error if sqlite startup failed
-    if(SqlIsError())
-      XC("Failed to initialise SQLite!",
-        "Error", SqlGetError(), "Reason", SqlGetErrorAsIdString());
-  }
-  /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Sql, SqlDeInit(); sqlite3_shutdown())
-  /* -- Set a pragma on or off (used only with cvar callbacks) ----- */ public:
-  CVarReturn SqlPragmaOnOff(const string &strVar, const bool bState)
-    { SqlPragma(strVar, bState ? strvOn : strvOff); return ACCEPT; }
-  /* -- Set retry count ---------------------------------------------------- */
-  CVarReturn SqlRetryCountModified(const unsigned int uiCount)
-    { return CVarSimpleSetInt(uiQueryRetries, uiCount); }
-  /* -- Set retry suspend time --------------------------------------------- */
-  CVarReturn SqlRetrySuspendModified(const uint64_t ullMilliseconds)
-    { return CVarSimpleSetIntNLG(cdRetry,
-        milliseconds{ ullMilliseconds }, cd0, cd1S); }
-  /* -- Modify delete empty database permission ---------------------------- */
-  CVarReturn SqlDeleteEmptyDBModified(const bool bState)
-    { FlagSetOrClear(SF_DELETEEMPTYDB, bState); return ACCEPT; }
-  /* -- sql_temp_store cvar was modified ----------------------------------- */
-  CVarReturn SqlTempStoreModified(const string &strFile, string&)
-  { // Prevent manipulating the query
-    if(strFile.find(' ') != StdNPos || strFile.find(';') != StdNPos)
-      return DENY;
-    // Do the query
-    SqlPragma("temp_store", strFile);
-    // Success
-    return ACCEPT;
-  }
-  /* -- sql_synchronous cvar was modified ---------------------------------- */
-  CVarReturn SqlSynchronousModified(const bool bState)
-    { return SqlPragmaOnOff("synchronous", bState); }
-  /* -- sql_journal_mode cvar was modified --------------------------------- */
-  CVarReturn SqlJournalModeModified(const bool bState)
-    { return SqlPragmaOnOff("journal_mode", bState); }
-  /* -- sql_auto_vacuum cvar was modified ---------------------------------- */
-  CVarReturn SqlAutoVacuumModified(const bool bState)
-    { return SqlPragmaOnOff("auto_vacuum", bState); }
-  /* -- sql_auto_vacuum cvar was modified ---------------------------------- */
-  CVarReturn SqlForeignKeysModified(const bool bState)
-    { return SqlPragmaOnOff("foreign_keys", bState); }
-  /* -- sql_inc_vacuum cvar was modified ----------------------------------- */
-  CVarReturn SqlIncVacuumModified(const uint64_t ullVal)
-    { SqlPragma(StrFormat("incremental_vacuum($)", ullVal)); return ACCEPT; }
-  /* -- sql_db cvar was modified ------------------------------------------- */
-  CVarReturn SqlUdbFileModified(const string &strFile, string &strVar)
-  { // Save original working directory and restore it when leaving scope
-    const DirSaver dsSaver;
-    // If the user did not specify anything?
-    if(strFile.empty())
-    { // Switch to executable directory
-      if(!DirSetCWD(cSystem->ENGLoc())) return DENY;
-      // Set database file with executable
-      strVar = StrAppend(cSystem->ENGFile(), "." UDB_EXTENSION);
-    } // If a memory database was requested? We allow it!
-    else if(strFile == strMemoryDBName) strVar = strFile;
-    // If the user specified something?
-    else
-    { // Switch to original startup directory
-      if(!DirSetCWD(cCmdLine->CmdLineGetStartupCWD())) return DENY;
-      // Use theirs, but force UDB extension
-      strVar = StrAppend(strFile, "." UDB_EXTENSION);
-    } // Initialise the db and if succeeded?
-    if(SqlInit(strVar))
-    { // Set full path name of the database
-      SqlInitOK: strVar = StdMove(PathSplit{ strVar, true }.strFull);
-      // Success
-      return ACCEPT_HANDLED;
-    } // If we have a persistant directory?
-    if(cCmdLine->CmdLineIsHome())
-    { // Set a new filename in the users home directory
-      strVar = cCmdLine->CmdLineGetHome(PathSplit{ strVar }.strFileExt);
-      // Try opening that and if succeeded then return success
-      if(SqlInit(strVar)) goto SqlInitOK;
-    } // Use memory database instead
-    strVar = strMemoryDBName;
-    // Now open the memory database which should ALWAYS succeed.
-    return SqlInit(strVar) ? ACCEPT_HANDLED : DENY;
-  }
+    iError(SQLITE_OK)                  // Initialise sqlite and store error
+  /* -- No code ------------------------------------------------------------ */
+  { }
+  /* -- Destructor to de-initialise database if opened --------------------- */
+  DTORHELPER(~Sql, SqlDeInit())
 };/* ----------------------------------------------------------------------- */
+/* -- Set a pragma on or off (used only with cvar callbacks) --------------- */
+CVarReturn SqlPragmaOnOff(const string &strVar, const bool bState)
+  { cSql->SqlPragma(strVar, bState ? cSqls->strvOn : cSqls->strvOff);
+    return ACCEPT; }
+/* -- Set retry count ------------------------------------------------------ */
+CVarReturn SqlRetryCountModified(const unsigned int uiCount)
+  { return CVarSimpleSetInt(cSqls->uiQueryRetries, uiCount); }
+/* -- Set retry suspend time ----------------------------------------------- */
+CVarReturn SqlRetrySuspendModified(const uint64_t ullMilliseconds)
+  { return CVarSimpleSetIntNLG(cSqls->cdRetry,
+      milliseconds{ ullMilliseconds }, cd0, cd1S); }
+/* -- Modify delete empty database permission ------------------------------ */
+CVarReturn SqlDeleteEmptyDBModified(const bool bState)
+  { cSqls->sFlags.FlagSetOrClear(SF_DELETEEMPTYDB, bState);
+    return ACCEPT; }
+/* -- sql_temp_store cvar was modified ------------------------------------- */
+CVarReturn SqlTempStoreModified(const string &strFile, string&)
+{ // Prevent manipulating the query
+  if(strFile.find(' ') != StdNPos || strFile.find(';') != StdNPos) return DENY;
+  // Do the query
+  cSql->SqlPragma("temp_store", strFile);
+  // Success
+  return ACCEPT;
+}
+/* -- sql_synchronous cvar was modified ------------------------------------ */
+CVarReturn SqlSynchronousModified(const bool bState)
+  { return SqlPragmaOnOff("synchronous", bState); }
+/* -- sql_journal_mode cvar was modified ----------------------------------- */
+CVarReturn SqlJournalModeModified(const bool bState)
+  { return SqlPragmaOnOff("journal_mode", bState); }
+/* -- sql_auto_vacuum cvar was modified ------------------------------------ */
+CVarReturn SqlAutoVacuumModified(const bool bState)
+  { return SqlPragmaOnOff("auto_vacuum", bState); }
+/* -- sql_auto_vacuum cvar was modified ------------------------------------ */
+CVarReturn SqlForeignKeysModified(const bool bState)
+  { return SqlPragmaOnOff("foreign_keys", bState); }
+/* -- sql_inc_vacuum cvar was modified ------------------------------------- */
+CVarReturn SqlIncVacuumModified(const uint64_t ullVal)
+  { cSql->SqlPragma(StrFormat("incremental_vacuum($)", ullVal));
+    return ACCEPT; }
+/* -- sql_db cvar was modified --------------------------------------------- */
+CVarReturn SqlUdbFileModified(const string &strFile, string &strVar)
+{ // Save original working directory and restore it when leaving scope
+  const DirSaver dsSaver;
+  // If the user did not specify anything?
+  if(strFile.empty())
+  { // Switch to executable directory
+    if(!DirSetCWD(cSystem->ENGLoc())) return DENY;
+    // Set database file with executable
+    strVar = StrAppend(cSystem->ENGFile(), "." UDB_EXTENSION);
+  } // If a memory database was requested? We allow it!
+  else if(strFile == cSqls->strMemoryDBName) strVar = strFile;
+  // If the user specified something?
+  else
+  { // Switch to original startup directory
+    if(!DirSetCWD(cCmdLine->CmdLineGetStartupCWD())) return DENY;
+    // Use theirs, but force UDB extension
+    strVar = StrAppend(strFile, "." UDB_EXTENSION);
+  } // Initialise the db and if succeeded?
+  if(cSql->SqlInitCore(strVar))
+  { // Set full path name of the database
+    SqlInitOK: strVar = StdMove(PathSplit{ strVar, true }.strFull);
+    // Success
+    return ACCEPT_HANDLED;
+  } // If we have a persistant directory?
+  if(cCmdLine->CmdLineIsHome())
+  { // Set a new filename in the users home directory
+    strVar = cCmdLine->CmdLineGetHome(PathSplit{ strVar }.strFileExt);
+    // Try opening that and if succeeded then return success
+    if(cSql->SqlInitCore(strVar)) goto SqlInitOK;
+  } // Use memory database instead
+  strVar = cSqls->strMemoryDBName;
+  // Now open the memory database which should ALWAYS succeed.
+  return cSql->SqlInitCore(strVar) ? ACCEPT_HANDLED : DENY;
+}
+/* ------------------------------------------------------------------------- */
+void SqlInit(void)
+{ // Initialise SQLite and throw error if failed
+  const int iCode = sqlite3_initialize();
+  if(iCode != SQLITE_OK)
+    XC("Failed to initialise SQLite!",
+       "Error", iCode, "Reason", cSqls->elStrings.Get(iCode));
+}
+/* ------------------------------------------------------------------------- */
+void SqlDeInit(void)
+{ // Shutdown sqlite
+  sqlite3_shutdown();
+  // Clear private key
+  cCrypt->CryptSetDefaultPrivateKey();
+}
+/* ------------------------------------------------------------------------- */
+CTOR_END(Sqls, Sql, SQL, SqlInit(), SqlDeInit(),,
+  elStrings{{                        // Init sqlite error strings list
+    "OK",       /*00-01*/ "ERROR",     "INTERNAL", /*02-03*/ "PERM",
+    "ABORT",    /*04-05*/ "BUSY",      "LOCKED",   /*06-07*/ "NOMEM",
+    "READONLY", /*08-09*/ "INTERRUPT", "IOERR",    /*10-11*/ "CORRUPT",
+    "NOTFOUND", /*12-13*/ "FULL",      "CANTOPEN", /*14-15*/ "PROTOCOL",
+    "EMPTY",    /*16-17*/ "SCHEMA",    "TOOBIG",   /*18-19*/ "CONSTRAINT",
+    "MISMATCH", /*20-21*/ "MISUSE",    "NOLFS",    /*22-23*/ "AUTH",
+    "FORMAT",   /*24-25*/ "RANGE",     "NOTADB"    /*26---*/
+  }, "UNKNOWN"},                       // Unknown sqlite error
+  adrlStrings{{                        // Init 'can db be deleted' strings list
+    "no tables",             /* 0-1 */ "no records",
+    "temporary database",    /* 2-3 */ "option denied",
+    "error reading tables",  /* 4-5 */ "tables exist",
+    "error reading records", /* 6-7 */ "records exist"
+  }},
+  strMemoryDBName{ ":memory:" },       // Create a memory database by default
+  strCVKeyColumn{ "K" },               // Init name of cvars 'key' column
+  strCVFlagsColumn{ "F" },             // Init name of cvars 'flags' column
+  strCVValueColumn{ "V" },             // Init name of cvars 'value' column
+  strvCVTable{ "C" },                  // Init name of cvar table
+  strvLCTable{ "L" },                  // Init name of lua cache table
+  strvLCCRCColumn{ "C" },              // Init name of lua cache 'crc' column
+  strvLCTimeColumn{ "T" },             // Init name of lua cache 'time' column
+  strvLCRefColumn{ "R" },              // Init name of lua cache 'ref' column
+  strvLCCodeColumn{ "D" },             // Init name of lua cache 'data' column
+  strvOn{ "ON" },                      // Init "ON" static string
+  strvOff{ "OFF" },                    // Init "OFF" static string
+  strvPKeyTable{ "K" },                // Init name of pvt key table
+  strvPIndexColumn{ "I" },             // Init name of pvt key 'index' column
+  strvPValueColumn{ "K" },             // Init name of pvt key 'value' column
+  strvSKeyTable{ "S" },                // Init name of schema table
+  strvSIndexColumn{ "K" },             // Init name of schema 'key' column
+  strvSValueColumn{ "V" },             // Init name of schema 'value' column
+  strvSVersionKey{ "V" },              // Init name of version # key in schema
+  uiQueryRetries(3),                   // Initially 3 retries
+  cdRetry{ cd1S })                     // Initially wait 1 second per retry
+/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace
