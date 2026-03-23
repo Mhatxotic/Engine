@@ -1376,7 +1376,7 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 cSystem->UpdateMemoryUsageData();
 // Precalculate lua and sql usage.
 const size_t stUsage = LuaUtilGetUsage(cLua->LuaGetState()),
-             stSqlUse = cSql->SqlHeapUsed();
+             stSqlUse = SqlHeapUsed();
 // Report lua and sql memory usage
 Statistic sTable;
 sTable.Header("BYTES", true).Header()
@@ -2059,22 +2059,52 @@ cSql->SqlReset();
 /* ------------------------------------------------------------------------- */
 // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("ID", false).Header("FLAGS").Header("ERR").Header("ROWS")
-      .Header("AFF").Header("IDENTIFIER", false).Reserve(cSqls->size());
+sTable.Header("ID", false).Header("FLAGS").Header("CH").Header("CM")
+      .Header("CS").Header("P").Header("CU").Header("CUS").Header("CW")
+      .Header("DF").Header("LH").Header("LMF").Header("LMS").Header("LU")
+      .Header("P").Header("ScU").Header("StU").Header("TBS").Header("AFF")
+      .Header("ERR").Header("ROW").Header("ID", false)
+      .Reserve(cSqls->size());
 // Walk through Sql classes
 for(const Sql*const sPtr : *cSqls)
-{ // Get reference to class and write its data to the table
+{ // Get reference to class and if the database is opened?
   const Sql &sRef = *sPtr;
+  // Put initial data and flags in the output
   sTable.DataN(sRef.CtrGet()).Data(StrFromEvalTokens({
-    { sPtr->SqlActive(),                 'A' },
-    { sPtr->FlagIsSet(SF_DELETEEMPTYDB), 'D' },
-    { sPtr->SqlIsError(),                'E' },
-    { sPtr->SqlIsOpened(),               'O' },
-    { sPtr->FlagIsSet(SF_ISTEMPDB),      'T' },
-  })).DataN(sPtr->SqlGetError())
-     .DataN(sPtr->SqlGetRecords().size())
-     .DataN(sPtr->SqlAffected())
-     .Data(sPtr->IdentGet());
+    { sPtr->SqlIsOpened() && sPtr->SqlActive(), 'A' },
+    { sPtr->FlagIsSet(SF_DELETEEMPTYDB),        'D' },
+    { sPtr->SqlIsError(),                       'E' },
+    { sPtr->LockIsSet(),                        'L' },
+    { sPtr->SqlIsOpened(),                      'O' },
+    { sPtr->FlagIsSet(SF_ISTEMPDB),             'T' },
+  }));
+  // If the database is opened?
+  if(sRef.SqlIsOpened())
+  { // Get usage information (db has to be open to call these)
+    const SqlIntPair sipLU{ cSql->SqlGetLookasideUsed() },
+      sipCU{ cSql->SqlGetCacheUsed() }, sipScU{ cSql->SqlGetSchemaUsed() },
+      sipStU{ cSql->SqlGetStmtUsed() }, sipLH{ cSql->SqlGetLookasideHit() },
+      sipLMS{ cSql->SqlGetLookasideMissSize() },
+      sipLMF{ cSql->SqlGetLookasideMissFull() },
+      sipCH{ cSql->SqlGetCacheHit() }, sipCM{ cSql->SqlGetCacheMiss() },
+      sipCW{ cSql->SqlGetCacheWrite() }, sipDF{ cSql->SqlGetDeferredFks() },
+      sipCUS{ cSql->SqlGetCacheUsedShared() },
+      sipCS{ cSql->SqlGetCacheSpill() }, sipTBS{ cSql->SqlGetTempBufSpill() };
+      // Put active data in output
+      sTable.DataN(sipCH.first).DataN(sipCM.first).DataN(sipCS.first)
+       .DataN(sipCS.second).DataN(sipCU.first).DataN(sipCUS.first)
+       .DataN(sipCW.first).DataN(sipDF.first).DataN(sipLH.second)
+       .DataN(sipLMF.second).DataN(sipLMS.second).DataN(sipLU.first)
+       .DataN(sipLU.second).DataN(sipScU.first).DataN(sipStU.first)
+       .DataN(sipTBS.first).DataN(sPtr->SqlAffected());
+  } // Put all opened data in a row
+  else sTable.Data().Data().Data().Data().Data().Data().Data().Data()
+             .Data().Data().Data().Data().Data().Data().Data().Data()
+             .Data();
+  // Put rest of data in table
+  sTable.DataN(sPtr->SqlGetError())
+        .DataN(sPtr->SqlGetRecords().size())
+        .Data(sPtr->IdentGet());
 } // Log counts
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrCPluraliseNum(cSqls->size(), "database.", "databases."));

@@ -167,6 +167,13 @@ CVarItemStaticList{{
 { CFL_BASIC, "sql_eraseempty", cCommon->CommonOne(),
   CB(SqlDeleteEmptyDBModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
+// ! SQL_RETRYCOUNT
+// ? Specifies the number of times a Sql query can be retried before giving
+// ? up. Set to -1 for infinite. The default value is 1000.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "sql_retrycount", "1000",
+  CB(SqlRetryCountModified, unsigned int), TINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
 // ! SQL_DB
 // ? Specifies the Sql database filename to use. This filename is subject
 // ? to sandboxing and cannot leave the startup directory. The extension ".udb"
@@ -180,12 +187,13 @@ CVarItemStaticList{{
 { CFL_BASIC, "sql_db", cCommon->CommonBlank(),
   CBSTR(SqlUdbFileModified), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
-// ! SQL_RETRYCOUNT
-// ? Specifies the number of times a Sql query can be retried before giving
-// ? up. Set to -1 for infinite. The default value is 1000.
+// ! SQL_LOCKINGMODE
+// ? Performs 'pragma locking_mode' when the database is opened to this value.
+// ? If set to 'true' then locking mode is 'EXCLUSIVE', else locking mode is
+// ? 'NORMAL' when 'false' (default).
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_retrycount", "1000",
-  CB(SqlRetryCountModified, unsigned int), TINTEGER|PAPPCFG },
+{ CFL_BASIC, "sql_lockingmode", cCommon->CommonZero(),
+  CB(SqlLockingModeModified, bool), TBOOLEAN|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! SQL_TEMPSTORE
 // ? Performs 'pragma temp_store' when the database is opened to this value.
@@ -596,7 +604,8 @@ CVarItemStaticList{{
 // ? The default value is 2.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "err_admin", cCommon->CommonTwo(),
-  CB(cSystem->SysCheckAdminModified, unsigned int), TUINTEGER|PAPPCFG },
+  CB(cSystem->SysCheckAdminModified, unsigned int),
+  TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_CHECKSUM
 // ? Throws an error if there is an executable checksum mismatch. This only
@@ -612,7 +621,7 @@ CVarItemStaticList{{
   cCommon->CommonZero(),
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cSystem->SysCheckChecksumModified, bool), TBOOLEAN|PAPPCFG },
+  CB(cSystem->SysCheckChecksumModified, bool), TBOOLEAN|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_DEBUGGER
 // ? Throws an error if a debugger is running at start-up. The default value
@@ -626,7 +635,7 @@ CVarItemStaticList{{
   cCommon->CommonZero(),
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cSystem->SysCheckDebuggerDetected, bool), TBOOLEAN|PAPPCFG },
+  CB(cSystem->SysCheckDebuggerDetected, bool), TBOOLEAN|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_LUAMODE
 // ? Sets how to handle a LUA script error to one of these values...
@@ -644,7 +653,8 @@ CVarItemStaticList{{
   cCommon->CommonTwo(),
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason), TUINTEGER|PAPPCFG },
+  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason),
+    TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_LMRESETLIMIT
 // ? When ERR_LUAMODE is set to 1, this specifies the number of LUA script
@@ -660,14 +670,14 @@ CVarItemStaticList{{
   "10",
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreSetResetLimit, unsigned int), TUINTEGER|PAPPCFG },
+  CB(cCore->CoreSetResetLimit, unsigned int), TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_MINVRAM
 // ? The engine fails to run if the system does not have this amount of VRAM
 // ? available.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "err_minvram", cCommon->CommonZero(),
-  CB(cOgl->SetMinVRAM, uint64_t), TUINTEGER|PAPPCFG },
+  CB(cOgl->SetMinVRAM, uint64_t), TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! ERR_MINRAM
 // ? The engine fails to run if the system does not have this amount of free
@@ -677,7 +687,7 @@ CVarItemStaticList{{
 // ? default value is zero.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "err_minram", cCommon->CommonZero(),
-  CB(cSystem->SysSetMinRAM, uint64_t), TUINTEGER|PAPPCFG },
+  CB(cSystem->SysSetMinRAM, uint64_t), TUINTEGER|PAPPCFG|PCMDLINE },
 /* == Lua cvars ============================================================ */
 // ! LUA_CACHE
 // ? Specifies to compile any Lua code and store it in the user database for

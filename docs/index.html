@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.3.22.124 -->
-<!-- Automatically built at Sun Mar 22 22:51:37 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.3.22.124 -->
+<!-- Reference for the Mhatxotic Engine API version 26.3.23.30 -->
+<!-- Automatically built at Mon Mar 23 21:50:18 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.3.23.30 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.3.22.124">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.3.23.30">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.3.22.124">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.3.23.30">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.3.22.124">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.3.23.30">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.3.22.124 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.3.23.30 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.3.22.124 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.3.23.30 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.3.22.124 API reference</H1>
+	<H1>Mhatxotic Engine 26.3.23.30 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 910 functions (404 members, 506 methods) and 30 consts in 31 namespaces with 88 commands and 214 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 910 functions (404 members, 506 methods) and 30 consts in 31 namespaces with 88 commands and 215 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1897,7 +1897,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(214 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(215 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -2052,6 +2052,7 @@
 									<LI><A href="#cv.sql_incvacuum">sql_incvacuum</A></LI>
 									<LI><A href="#cv.sql_journalmode">sql_journalmode</A></LI>
 									<LI><A href="#cv.sql_loadconfig">sql_loadconfig</A></LI>
+									<LI><A href="#cv.sql_lockingmode">sql_lockingmode</A></LI>
 									<LI><A href="#cv.sql_retrycount">sql_retrycount</A></LI>
 									<LI><A href="#cv.sql_retrysuspend">sql_retrysuspend</A></LI>
 									<LI><A href="#cv.sql_synchronous">sql_synchronous</A></LI>
@@ -13039,6 +13040,11 @@
 		<PRE>Actually loads cvars from the configuration database.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.sql_lockingmode" style="display:none">
+		<H3>sql_lockingmode</H3>
+		<PRE>Performs 'pragma locking_mode' when the database is opened to this value.<BR>If set to 'true' then locking mode is 'EXCLUSIVE', else locking mode is 'NORMAL' when 'false' (default).<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.sql_retrycount" style="display:none">
 		<H3>sql_retrycount</H3>
 		<PRE>Specifies the number of times a Sql query can be retried before giving up. Set to -1 for infinite. The default value is 1000.<BR></PRE>
@@ -13360,6 +13366,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sun Mar 22 22:51:37 2026 +0000</ADDRESS>
+	This document was generated at Mon Mar 23 21:50:18 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

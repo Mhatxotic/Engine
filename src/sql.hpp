@@ -86,7 +86,7 @@ CTOR_BEGIN(Sqls, Sql, CLHelperUnsafe,  // Sql collector class
   unsigned int     uiQueryRetries;     // Times to retry query before failing
   ClkDuration      cdRetry;            // Sleep for this time when retrying
 ) /* ----------------------------------------------------------------------- */
-Sql               *cSql = nullptr;     // Pointer to main SQL database
+Sql               *cSql = nullptr;     // Pointer to main SQL db (Core::Sql)
 /* ------------------------------------------------------------------------- */
 struct SqlData :                       // Query response data item class
   /* -- Base classes ------------------------------------------------------- */
@@ -113,6 +113,7 @@ struct SqlData :                       // Query response data item class
 };/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(SqlRecords, const string, SqlData);
 typedef list<SqlRecordsMap> SqlResult; // vector of key/raw data blocks
+typedef pair<sqlite3_int64,sqlite3_int64> SqlIntPair; // Sqlite integer pair
 /* ------------------------------------------------------------------------- */
 enum PurgeResult                       // Result to a purge request
 { /* ----------------------------------------------------------------------- */
@@ -524,6 +525,25 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     } // Get end query time to get total execution duration
     cdQuery = ciStart.CIDelta();
   }
+  /* -- Get database usage information ------------------------------------- */
+  const SqlIntPair SqlGetUsage(const int iOp) const
+  { // Get the requested value and return the result
+    sqlite3_int64 llCurrent, llPeak;
+    const int iResult =
+      sqlite3_db_status64(sqlDB, iOp, &llCurrent, &llPeak, 0);
+    return iResult == SQLITE_OK ?
+      SqlIntPair{ llCurrent, llPeak } :
+      SqlIntPair{ -1LL, static_cast<sqlite3_int64>(iResult) };
+  }
+  /* -- Init database handle ----------------------------------------------- */
+  sqlite3 *SqlInitHandle(const string &strFilename)
+  { // Do the open and store the result code and return the handle
+    sqlite3 *sqlDBout = nullptr;
+    SqlSetError(sqlite3_open_v2(strFilename.data(), &sqlDBout,
+      SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX |
+      SQLITE_OPEN_SHAREDCACHE, reinterpret_cast<char*>(sqlDBout)));
+    return sqlDBout;
+  }
   /* -- Set a pragma (used only with cvar callbacks) --------------- */ public:
   void SqlPragma(const string_view &strvVar)
   { // Execute without value
@@ -559,10 +579,37 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       strvVar, strvVal);
   }
   /* -- Is sqlite database opened? ----------------------------------------- */
-  bool SqlIsOpened() const { return !!sqlDB; }
-  /* -- Heap used ---------------------------------------------------------- */
-  size_t SqlHeapUsed() const
-    { return static_cast<size_t>(sqlite3_memory_used()); }
+  bool SqlIsNotOpened() const { return sqlDB == nullptr; }
+  bool SqlIsOpened() const { return !SqlIsNotOpened(); }
+  /* -- Get specific database usage information ---------------------------- */
+  const SqlIntPair SqlGetLookasideUsed() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_LOOKASIDE_USED); }
+  const SqlIntPair SqlGetCacheUsed() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_CACHE_USED); }
+  const SqlIntPair SqlGetSchemaUsed() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_SCHEMA_USED); }
+  const SqlIntPair SqlGetStmtUsed() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_STMT_USED); }
+  const SqlIntPair SqlGetLookasideHit() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_LOOKASIDE_HIT); }
+  const SqlIntPair SqlGetLookasideMissSize() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_LOOKASIDE_MISS_SIZE); }
+  const SqlIntPair SqlGetLookasideMissFull() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_LOOKASIDE_MISS_FULL); }
+  const SqlIntPair SqlGetCacheHit() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_CACHE_HIT); }
+  const SqlIntPair SqlGetCacheMiss() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_CACHE_MISS); }
+  const SqlIntPair SqlGetCacheWrite() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_CACHE_WRITE); }
+  const SqlIntPair SqlGetDeferredFks() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_DEFERRED_FKS); }
+  const SqlIntPair SqlGetCacheUsedShared() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_CACHE_USED_SHARED); }
+  const SqlIntPair SqlGetCacheSpill() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_CACHE_SPILL); }
+  const SqlIntPair SqlGetTempBufSpill() const
+    { return SqlGetUsage(SQLITE_DBSTATUS_TEMPBUF_SPILL); }
   /* -- Execute a command from Lua ----------------------------------------- */
   int SqlExecuteFromLua(lua_State*const lS, const string &strQuery)
   { // Log progress
@@ -1046,7 +1093,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- DeInit ------------------------------------------------------------- */
   void SqlDeInit()
   { // Ignore if no handle to deinit
-    if(!sqlDB) return;
+    if(SqlIsNotOpened()) return;
     // Log deinitialisation
     cLog->LogDebugExSafe("Sql database '$' is closing...", IdentGet());
     // Finalise statements and if we found orphans
@@ -1302,25 +1349,33 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   void SqlInit(const string &strDb)
   { // Set the name of the database with forced extension name
     IdentSet(StrAppend(strDb, "." UDB_EXTENSION));
+    // Error if this file is same as the main database
+    if(IdentGet() == cSql->IdentGet())
+      XC("Reopen engine database denied!", "Identifier", IdentGet());
     // Log initialisation
     cLog->LogDebugExSafe("Sql initialising database '$'...", IdentGet());
     // Open database and throw error on failure
-    SqlSetError(sqlite3_open_v2(IdentGetData(), &sqlDB,
-      SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX |
-      SQLITE_OPEN_SHAREDCACHE, reinterpret_cast<char*>(sqlDB)));
-    if(!sqlDB || SqlIsError())
+    sqlDB = SqlInitHandle(IdentGet());
+    if(SqlIsNotOpened() || SqlIsError())
+    { // If we have a home directory
+      if(cCmdLine->CmdLineIsHome())
+      { // Try opened again from persist directory and return if succeeded
+        IdentSet(cCmdLine->CmdLineGetHome(IdentGet()));
+        sqlDB = SqlInitHandle(IdentGet());
+        if(SqlIsOpened() && SqlIsNoError()) goto Success;
+      } // Failed to open
       XCS("Failed to open or create database!",
         "Identifier", IdentGet(), "Error", SqlGetError(),
         "Reason",     SqlGetErrorStr());
-    // Log successfull initialisation and return success
-    cLog->LogInfoExSafe("Sql database '$' initialised.", IdentGet());
+    } // Log successful initialisation and return success
+    Success: cLog->LogInfoExSafe("Sql database '$' initialised.", IdentGet());
   }
   /* -- Init core database called from cvar callback ----------------------- */
   bool SqlInitCore(const string &strPrefix)
   { // If named database is already opened
-    if(sqlDB && strPrefix == IdentGet())
+    if(SqlIsOpened() && strPrefix == IdentGet())
     { // Put in console and return failure
-      cLog->LogWarningExSafe("Sql skipped reinit of '$'.", strPrefix);
+      cLog->LogWarningExSafe("Sql skipped reinit of core db '$'.", strPrefix);
       return false;
     } // Log initialisation. Set filename using memory db name if empty
     const string &strDb =
@@ -1334,14 +1389,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     // the old one stays intact. The cast of the sqlDBtemp for the last
     // parameter (VFS) that resolves to 'nullptr' is just to shut CppCheck up
     // with a false positive.
-    sqlite3 *sqlDBtemp = nullptr;
-    SqlSetError(sqlite3_open_v2(strDb.data(), &sqlDBtemp,
-         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX |
-         SQLITE_OPEN_SHAREDCACHE, reinterpret_cast<char*>(sqlDBtemp)));
+    sqlite3*const sqlDBtemp = SqlInitHandle(strDb);
     if(!sqlDBtemp || SqlIsError())
     { // Log error result and return failure with 'sqlDB' being preserved.
-      cLog->LogWarningExSafe("Sql could not open '$' because $ ($)!", strDb,
-        SqlGetErrorStr(), SqlGetError());
+      cLog->LogWarningExSafe("Sql could not open core '$' because $ ($)!",
+        strDb, SqlGetErrorStr(), SqlGetError());
       return false;
     } // Set to this database and set name
     sqlDB = sqlDBtemp;
@@ -1350,7 +1402,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     SqlLoadSchemaVersion();
     SqlLoadPrivateKey();
     // Log successfull initialisation and return success
-    cLog->LogInfoExSafe("Sql database '$' initialised.", IdentGet());
+    cLog->LogInfoExSafe("Sql core database '$' initialised.", IdentGet());
     return true;
   }
   /* -- Constructor without registration --------------------------- */ public:
@@ -1368,47 +1420,49 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   DTORHELPER(~Sql, SqlDeInit())
 };/* ----------------------------------------------------------------------- */
 /* -- Set a pragma on or off (used only with cvar callbacks) --------------- */
-CVarReturn SqlPragmaOnOff(const string &strVar, const bool bState)
+static CVarReturn SqlPragmaOnOff(const string &strVar, const bool bState)
   { cSql->SqlPragma(strVar, bState ? cSqls->strvOn : cSqls->strvOff);
     return ACCEPT; }
 /* -- Set retry count ------------------------------------------------------ */
-CVarReturn SqlRetryCountModified(const unsigned int uiCount)
+static CVarReturn SqlRetryCountModified(const unsigned int uiCount)
   { return CVarSimpleSetInt(cSqls->uiQueryRetries, uiCount); }
 /* -- Set retry suspend time ----------------------------------------------- */
-CVarReturn SqlRetrySuspendModified(const uint64_t ullMilliseconds)
+static CVarReturn SqlRetrySuspendModified(const uint64_t ullMilliseconds)
   { return CVarSimpleSetIntNLG(cSqls->cdRetry,
       milliseconds{ ullMilliseconds }, cd0, cd1S); }
 /* -- Modify delete empty database permission ------------------------------ */
-CVarReturn SqlDeleteEmptyDBModified(const bool bState)
+static CVarReturn SqlDeleteEmptyDBModified(const bool bState)
   { cSqls->sFlags.FlagSetOrClear(SF_DELETEEMPTYDB, bState);
     return ACCEPT; }
-/* -- sql_temp_store cvar was modified ------------------------------------- */
-CVarReturn SqlTempStoreModified(const string &strFile, string&)
-{ // Prevent manipulating the query
-  if(strFile.find(' ') != StdNPos || strFile.find(';') != StdNPos) return DENY;
-  // Do the query
+/* -- sql_tempstore cvar was modified -------------------------------------- */
+static CVarReturn SqlTempStoreModified(const string &strFile, string&)
+{ // Prevent manipulating the query, do the query, then return success
+  if(!StrIsAlpha(strFile)) return DENY;
   cSql->SqlPragma("temp_store", strFile);
-  // Success
   return ACCEPT;
 }
 /* -- sql_synchronous cvar was modified ------------------------------------ */
-CVarReturn SqlSynchronousModified(const bool bState)
+static CVarReturn SqlSynchronousModified(const bool bState)
   { return SqlPragmaOnOff("synchronous", bState); }
-/* -- sql_journal_mode cvar was modified ----------------------------------- */
-CVarReturn SqlJournalModeModified(const bool bState)
+/* -- sql_journalmode cvar was modified ------------------------------------ */
+static CVarReturn SqlJournalModeModified(const bool bState)
   { return SqlPragmaOnOff("journal_mode", bState); }
-/* -- sql_auto_vacuum cvar was modified ------------------------------------ */
-CVarReturn SqlAutoVacuumModified(const bool bState)
+/* -- sql_autovacuum cvar was modified ------------------------------------- */
+static CVarReturn SqlAutoVacuumModified(const bool bState)
   { return SqlPragmaOnOff("auto_vacuum", bState); }
-/* -- sql_auto_vacuum cvar was modified ------------------------------------ */
-CVarReturn SqlForeignKeysModified(const bool bState)
+/* -- sql_autovacuum cvar was modified ------------------------------------- */
+static CVarReturn SqlForeignKeysModified(const bool bState)
   { return SqlPragmaOnOff("foreign_keys", bState); }
-/* -- sql_inc_vacuum cvar was modified ------------------------------------- */
-CVarReturn SqlIncVacuumModified(const uint64_t ullVal)
+/* -- sql_lockingmode cvar was modified ------------------------------------ */
+static CVarReturn SqlLockingModeModified(const bool bState)
+  { cSql->SqlPragma("locking_mode", bState ? "EXCLUSIVE" : "NORMAL");
+    return ACCEPT; }
+/* -- sql_incvacuum cvar was modified -------------------------------------- */
+static CVarReturn SqlIncVacuumModified(const uint64_t ullVal)
   { cSql->SqlPragma(StrFormat("incremental_vacuum($)", ullVal));
     return ACCEPT; }
 /* -- sql_db cvar was modified --------------------------------------------- */
-CVarReturn SqlUdbFileModified(const string &strFile, string &strVar)
+static CVarReturn SqlUdbFileModified(const string &strFile, string &strVar)
 { // Save original working directory and restore it when leaving scope
   const DirSaver dsSaver;
   // If the user did not specify anything?
@@ -1427,9 +1481,8 @@ CVarReturn SqlUdbFileModified(const string &strFile, string &strVar)
     strVar = StrAppend(strFile, "." UDB_EXTENSION);
   } // Initialise the db and if succeeded?
   if(cSql->SqlInitCore(strVar))
-  { // Set full path name of the database
+  { // Set full path name of the database and return success
     SqlInitOK: strVar = StdMove(PathSplit{ strVar, true }.strFull);
-    // Success
     return ACCEPT_HANDLED;
   } // If we have a persistant directory?
   if(cCmdLine->CmdLineIsHome())
@@ -1443,15 +1496,18 @@ CVarReturn SqlUdbFileModified(const string &strFile, string &strVar)
   return cSql->SqlInitCore(strVar) ? ACCEPT_HANDLED : DENY;
 }
 /* ------------------------------------------------------------------------- */
-void SqlInit(void)
+static void SqlInit(void)
 { // Initialise SQLite and throw error if failed
   const int iCode = sqlite3_initialize();
   if(iCode != SQLITE_OK)
     XC("Failed to initialise SQLite!",
        "Error", iCode, "Reason", cSqls->elStrings.Get(iCode));
 }
+/* -- Heap used ------------------------------------------------------------ */
+static size_t SqlHeapUsed()
+  { return static_cast<size_t>(sqlite3_memory_used()); }
 /* ------------------------------------------------------------------------- */
-void SqlDeInit(void)
+static void SqlDeInit(void)
 { // Shutdown sqlite
   sqlite3_shutdown();
   // Clear private key

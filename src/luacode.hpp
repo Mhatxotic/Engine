@@ -187,6 +187,8 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
           // Do compile the buffer
           LuaCodeDoCompileBuffer(lS,
             sdRef.MemPtr<char>(), sdRef.MemSize(), strRef);
+          // Clear SQL results
+          cSql->SqlReset();
           // Return that we used the cached version
           return LCR_CACHED;
         } // Invalid type
@@ -220,6 +222,8 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
     strRef, cSql->SqlGetErrorStr(), cSql->SqlGetError());
   // Try to rebuild table
   cSql->SqlLuaCacheRebuildTable();
+  // Clear SQL results
+  cSql->SqlReset();
   // Return compiled but not stored
   return LCR_DBERR;
 }
