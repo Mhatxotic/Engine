@@ -209,6 +209,9 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   /* -- De-initialise saved function --------------------------------------- */
   void LuaFuncDeInit()
     { for(int &iReference : aReferences) LuaFuncRmSetRef(iReference); }
+  /* -- De-init current function and then swap ----------------------------- */
+  void LuaFuncUnrefSwap(LuaFunc &oCref)
+    { LuaFuncDeInit(); LuaFuncSwap(oCref); }
   /* -- Set empty callbacks ------------------------------------------------ */
   void LuaFuncClearRef()
     { LuaFuncRmSetRef(iLiveReference, LuaFuncGetEmptyFunc()); }

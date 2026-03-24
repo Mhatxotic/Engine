@@ -69,9 +69,8 @@ class Lua :                            // Actual class body
     if(bExiting) return;
     // Resume if paused
     LuaResumeExecution();
-    // Swap end function with main function
-    lrMainTick.LuaFuncDeInit();
-    lrMainTick.LuaFuncSwap(lrMainEnd);
+    // Unref main tick function and swap with end function
+    lrMainTick.LuaFuncUnrefSwap(lrMainEnd);
     // Now it's up to the guest to end execution with Core.Done();
     bExiting = true;
   }

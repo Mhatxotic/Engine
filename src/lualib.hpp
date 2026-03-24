@@ -161,7 +161,7 @@ constexpr static const luaL_Reg llrLast{ nullptr, nullptr };
 const LuaLibStaticArray llsaAPI{{
   /* -- Make sure to follow the order of 'LuaClassId' from 'luadef.hpp' ---- */
   LLFMx(Archive, BASIC, ARCHIVE),      LLFMC(Asset, BASIC, ASSET),
-  LLFxx(Atlas, VIDEO),                 LLFxx(Audio, AUDIO),
+  LLFMx(Atlas, VIDEO, ATLAS),          LLFxx(Audio, AUDIO),
   LLFMx(Bin, BASIC, BIN),              LLFMx(Clip, VIDEO, CLIP),
   LLFxC(Core, BASIC),                  LLFMx(Command, BASIC, COMMAND),
   LLFxC(Display, VIDEO),               LLFMC(Fbo, VIDEO, FBO),

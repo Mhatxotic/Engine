@@ -24,7 +24,15 @@ using namespace ICommon::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Helper plugin for C runtime errno checking --------------------------- */
+struct ErrorPluginStandard final
+{ /* -- Exception plugin to expand and report errno ------------------------ */
+#define XCL(r,...) throw Error<ErrorPluginStandard>(r, ## __VA_ARGS__)
+  /* -- Constructor to add C runtime error code ---------------------------- */
+  explicit ErrorPluginStandard(ostringstream &osS)
+    { osS << "\n+ Reason<" << StdGetError() << "> = \""
+          << StrFromErrNo() << "\"."; }
+};/* -- Standard exception plugin that does nothing ------------------------ */
 struct ErrorPluginGeneric final
   { explicit ErrorPluginGeneric(ostringstream&) {} };
 /* ------------------------------------------------------------------------- */

@@ -23,10 +23,43 @@ using namespace IImageDef::P;          using namespace IOgl::P;
 using namespace ITexture::P;           using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
+** ## Atlas common helper classes                                         ## **
+** ######################################################################### **
+** -- Get Atlas class argument --------------------------------------------- */
+struct AgAtlas : public ArClass<Atlas>
+  { explicit AgAtlas(lua_State*const lS, const int iArg) :
+    ArClass{*LuaUtilGetPtr<Atlas>(lS, iArg, *cAtlases)}{} };
+/* ========================================================================= */
+// $ Atlas:Destroy
+// ? Destroys the atlas and frees all the memory associated with it.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroy, 0, LuaUtilClassDestroy<Atlas>(lS, cAtlases))
+/* ========================================================================= */
+// $ Atlas:Destroyed
+// < Destroyed:boolean=If the Atlas class is destroyed
+// ? Returns if the Atlas class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Destroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cAtlases)))
+/* ========================================================================= */
+// $ Atlas:Id
+// < Id:integer=The id number of the Atlas object.
+// ? Returns the unique id of the Atlas object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().CtrGet()))
+/* ========================================================================= */
+// $ Atlas:Name
+// < Name:string=The name of the Atlas object.
+// ? Returns the name of the specified object when it was created.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().IdentGet()))
+/* ========================================================================= **
+** ######################################################################### **
 ** ## Atlas:* member functions structure                                  ## **
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Atlas:* member functions begin
+  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Id), LLRSFUNC(Name),
 LLRSEND                                // Atlas:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **
