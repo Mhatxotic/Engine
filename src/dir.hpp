@@ -426,39 +426,6 @@ class DirCore :                        // System specific implementation
   DirUPtr         dupHandle;           // Context for opendir()
   /* -- Return if directory was opened on POSIX system ------------- */ public:
   bool IsOpened() const { return !!dupHandle; }
-  /* ----------------------------------------------------------------------- */
-# if defined(MACOS)                    // Must use readdir_r on MacOS
-  /* -- Private variables ----------------------------------------- */ private:
-  struct dirent   dePtr, *dePtrNext;   // Directory entry struct + next ptr
-  /* -- Prepare next file for POSIX system ------------------------- */ public:
-  bool GetNextFile()
-  { // Read the filename and if failed
-    if(readdir_r(dupHandle.get(), &dePtr, &dePtrNext) || !dePtrNext)
-      return false;
-    // Set filename
-    strFile = dePtr.d_name;
-    // Set next handle
-    dePtrNext = &dePtr;
-    // Data for stat
-    struct stat sfssData;
-    // Get information about the filename
-    if(stat(StrAppend(strPrefix, strFile).data(), &sfssData))
-    { // Not a directory (unknown)
-      bIsDir = false;
-      // Set the file data as blank
-      Clear();
-    } // Stat was successful?
-    else
-    { // Set if is directory
-      bIsDir = S_ISDIR(sfssData.st_mode);
-      // Set data
-      Set(sfssData.st_ctime, sfssData.st_atime, sfssData.st_mtime,
-        static_cast<uint64_t>(sfssData.st_size), sfssData.st_mode);
-    } // Success
-    return true;
-  }
-  /* ----------------------------------------------------------------------- */
-# else                                 // POSIX implementation?
   /* -- Prepare next file for POSIX system --------------------------------- */
   bool GetNextFile()
   { // Read the filename and if failed
@@ -485,8 +452,6 @@ class DirCore :                        // System specific implementation
     } // Failed
     return false;
   }
-  /* ----------------------------------------------------------------------- */
-# endif                                // End of POSIX implementation check
   /* -- Constructor for POSIX system --------------------------------------- */
   explicit DirCore(const string &strDir) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -497,13 +462,6 @@ class DirCore :                        // System specific implementation
       cCommon->CommonFSlash()) },      // Add our own slash at the end
     dupHandle{                         // Initialise directory handle
       opendir(strPrefix.data()) }     // Open the directory and store handle
-    /* -- MacOS initialisers ----------------------------------------------- */
-# if defined(MACOS)                    // Initialise other vars on MacOS
-    /* --------------------------------------------------------------------- */
-    ,dePtr{},                          // Clear last directory entry
-    dePtrNext{ &dePtr }                // Set last directory entry
-    /* --------------------------------------------------------------------- */
-# endif                                // Initialised dirent vars on MacOS
     /* -- Unload and clear the dir handle if init and no first file -------- */
     { if(dupHandle && !GetNextFile()) dupHandle.reset(); }
   /* ----------------------------------------------------------------------- */

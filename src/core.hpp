@@ -438,6 +438,8 @@ class Core final :                     // Members initially private
     if(SysIsTextMode()) ConsoleFlushToLog();
     // Return if no graphical mode
     if(SysIsNotGraphicalMode()) return;
+    // Return if main already finished
+    if(FboCoreGetMain().FboIsFinished()) return;
     // Reset opengl binds to defaults just incase any were selected
     OglResetBinds();
     // Render the console and it has not already been drawn
