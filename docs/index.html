@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.3.23.30 -->
-<!-- Automatically built at Mon Mar 23 21:50:18 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.3.23.30 -->
+<!-- Reference for the Mhatxotic Engine API version 26.3.27.1 -->
+<!-- Automatically built at Fri Mar 27 13:19:20 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.3.27.1 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.3.23.30">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.3.27.1">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.3.23.30">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.3.27.1">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.3.23.30">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.3.27.1">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.3.23.30 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.3.27.1 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.3.23.30 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.3.27.1 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.3.23.30 API reference</H1>
+	<H1>Mhatxotic Engine 26.3.27.1 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 910 functions (404 members, 506 methods) and 30 consts in 31 namespaces with 88 commands and 215 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 914 functions (404 members, 510 methods) and 30 consts in 31 namespaces with 88 commands and 216 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -275,6 +275,15 @@
 								<B>Members</B> <I>(1 member)</I>
 								<OL>
 									<LI><A href="#Atlas.Count">Count</A></LI>
+								</OL>
+							</LI>
+							<LI>
+								<B>Methods</B> <I>(4 methods)</I>
+								<OL>
+									<LI><A href="#Atlas:Destroy">Destroy</A></LI>
+									<LI><A href="#Atlas:Destroyed">Destroyed</A></LI>
+									<LI><A href="#Atlas:Id">Id</A></LI>
+									<LI><A href="#Atlas:Name">Name</A></LI>
 								</OL>
 							</LI>
 							<LI><A href="#idx:Atlas">&#x25B2; Return to summary</A> / <A href="#idx.top">top</A></LI>
@@ -1897,7 +1906,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(215 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(216 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -2037,6 +2046,7 @@
 									<LI><A href="#cv.obj_shadermax">obj_shadermax</A></LI>
 									<LI><A href="#cv.obj_socketmax">obj_socketmax</A></LI>
 									<LI><A href="#cv.obj_sourcemax">obj_sourcemax</A></LI>
+									<LI><A href="#cv.obj_sqlmax">obj_sqlmax</A></LI>
 									<LI><A href="#cv.obj_sshotmax">obj_sshotmax</A></LI>
 									<LI><A href="#cv.obj_statmax">obj_statmax</A></LI>
 									<LI><A href="#cv.obj_streammax">obj_streammax</A></LI>
@@ -2800,6 +2810,44 @@
 		<PRE><U>Count</U> <I>(integer)</I> = Total number of atlases created.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the total number of atlas classes currently active.<BR></PRE>
+		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Atlas:Destroy" style="display:none">
+		<H3>Atlas:Destroy</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Atlas:Destroy()</PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Destroys the atlas and frees all the memory associated with it.<BR></PRE>
+		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Atlas:Destroyed" style="display:none">
+		<H3>Atlas:Destroyed</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Destroyed</U> = Atlas:Destroyed()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Destroyed</U> <I>(boolean)</I> = If the Atlas class is destroyed<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the Atlas class is destroyed.<BR></PRE>
+		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Atlas:Id" style="display:none">
+		<H3>Atlas:Id</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Id</U> = Atlas:Id()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Id</U> <I>(integer)</I> = The id number of the Atlas object.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the unique id of the Atlas object.<BR></PRE>
+		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Atlas:Name" style="display:none">
+		<H3>Atlas:Name</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Name</U> = Atlas:Name()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Name</U> <I>(string)</I> = The name of the Atlas object.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the name of the specified object when it was created.<BR></PRE>
 		<H4><A href="#idx:Atlas">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Audio.GetGlobalVolume" style="display:none">
@@ -12965,6 +13013,11 @@
 		<PRE>Specifies the maximum number of source objects allowed to be registered by the engine. An exception is generated if more objects than this are allocated.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.obj_sqlmax" style="display:none">
+		<H3>obj_sqlmax</H3>
+		<PRE>Specifies the maximum number of sql database objects allowed to be registered by the engine. An exception is generated if more objects than this are allocated.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.obj_sshotmax" style="display:none">
 		<H3>obj_sshotmax</H3>
 		<PRE>Specifies the maximum number of sshot objects allowed to be registered by the engine. An exception is generated if more objects than this are allocated.<BR></PRE>
@@ -13366,6 +13419,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Mon Mar 23 21:50:18 2026 +0000</ADDRESS>
+	This document was generated at Fri Mar 27 13:19:20 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

@@ -160,8 +160,9 @@ enum CVarEnums : size_t                // CVars list (cvarlib.hpp for bodies)
   OBJ_FBOMAX,       OBJ_FILEMAX,       OBJ_FONTMAX,         OBJ_FTFMAX,
   OBJ_FUNCMAX,      OBJ_IMGMAX,        OBJ_JSONMAX,         OBJ_MASKMAX,
   OBJ_PCMMAX,       OBJ_SAMPLEMAX,     OBJ_SHADERMAX,       OBJ_SOCKETMAX,
-  OBJ_SOURCEMAX,    OBJ_SSHOTMAX,      OBJ_STATMAX,         OBJ_STREAMMAX,
-  OBJ_TEXTUREMAX,   OBJ_THREADMAX,     OBJ_URLMAX,          OBJ_VIDEOMAX,
+  OBJ_SOURCEMAX,    OBJ_SQLMAX,        OBJ_SSHOTMAX,        OBJ_STATMAX,
+  OBJ_STREAMMAX,    OBJ_TEXTUREMAX,    OBJ_THREADMAX,       OBJ_URLMAX,
+  OBJ_VIDEOMAX,
   /* -- Base cvars --------------------------------------------------------- */
   APP_DESCRIPTION,  APP_VERSION,       APP_ICON,            APP_COPYRIGHT,
   APP_WEBSITE,      APP_TICKRATE,      APP_DELAY,           APP_TITLE,

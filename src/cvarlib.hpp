@@ -469,6 +469,14 @@ CVarItemStaticList{{
 { CFL_AUDIO, "obj_sourcemax", "1000",
   CB(cSources->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
 /* ------------------------------------------------------------------------- */
+// ! OBJ_SQLMAX
+// ? Specifies the maximum number of sql database objects allowed to be
+// ? registered by the engine. An exception is generated if more objects than
+// ? this are allocated.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "obj_sqlmax", "100",
+  CB(cSqls->CollectorSetLimit, size_t), TUINTEGER|PAPPCFG },
+/* ------------------------------------------------------------------------- */
 // ! OBJ_SSHOTMAX
 // ? Specifies the maximum number of sshot objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
