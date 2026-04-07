@@ -1374,13 +1374,14 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       { // Try opened again from persist directory and return if succeeded
         IdentSet(cCmdLine->CmdLineGetHome(IdentGet()));
         sqlDB = SqlInitHandle(IdentGet());
-        if(SqlIsOpened() && SqlIsNoError()) goto SqlOpenSuccess;
+        if(SqlIsOpened() && SqlIsNoError()) goto SqlOpened;
       } // Failed to open
       XCS("Failed to open or create database!",
         "Identifier", IdentGet(), "Error", SqlGetError(),
         "Reason",     SqlGetErrorStr());
     } // Log successful initialisation and return success
-    SqlOpenSuccess: cLog->LogInfoExSafe("Sql database '$' initialised.", IdentGet());
+    SqlOpened: cLog->LogInfoExSafe("Sql database '$' initialised.",
+      IdentGet());
   }
   /* -- Init core database called from cvar callback ----------------------- */
   bool SqlInitCore(const string &strPrefix)

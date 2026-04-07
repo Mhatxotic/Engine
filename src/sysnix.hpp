@@ -38,10 +38,10 @@ class SysProcess                       // Need this before of System init order
                    ctProcSys;          // Last process system cpu time
   /* -- Process ------------------------------------------------------------ */
   const size_t     stPageSize;         // Memory page size
-  /* ----------------------------------------------------------------------- */ 
+  /* ----------------------------------------------------------------------- */
   const pid_t      piProcessId;        // Process id
   const pthread_t  vpThreadId;         // Thread id
-  /* -- Return process and thread id --------------------------------------- */ 
+  /* -- Return process and thread id --------------------------------------- */
   template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid() const

@@ -91,13 +91,13 @@ enum OglUndefinedEnums : GLenum        // Some undefined OpenGL consts
 typedef vector<GLuint> GLUIntVector;   // Vector of GLuints
 typedef vector<GLfloat> GLFloatVector; // Vector of GLfloats
 /* ------------------------------------------------------------------------- */
-enum VSyncMode : int {               // VSync settings
-  VSYNC_MIN      = -1,               // [-1] Minimum Vertical Sync value
-  VSYNC_ON_ADAPT = VSYNC_MIN,        // [-1] Adaptive Vertical Sync enabled
-  VSYNC_OFF,                         // [ 0] Vertical Sync disable
-  VSYNC_ON,                          // [ 1] Vertical Sync enabled
-  VSYNC_ON_HALFRATE,                 // [ 2] Verfical sync enabled (half)
-  VSYNC_MAX                          // [ 3] Maximum Vertical Sync value
+enum VSyncMode : int {                 // VSync settings
+  VSYNC_MIN      = -1,                 // [-1] Minimum Vertical Sync value
+  VSYNC_ON_ADAPT = VSYNC_MIN,          // [-1] Adaptive Vertical Sync enabled
+  VSYNC_OFF,                           // [ 0] Vertical Sync disable
+  VSYNC_ON,                            // [ 1] Vertical Sync enabled
+  VSYNC_ON_HALFRATE,                   // [ 2] Verfical sync enabled (half)
+  VSYNC_MAX                            // [ 3] Maximum Vertical Sync value
 };/* ----------------------------------------------------------------------- */
 /* -- OpenGL manager class ------------------------------------------------- */
 class Ogl;                             // Class prototype
@@ -105,7 +105,7 @@ static Ogl *cOgl = nullptr;            // Pointer to global class
 class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper
-  public Colour,                    // OGL global clear colour cache
+  public Colour,                       // OGL global clear colour cache
   public FboBlend,                     // OGL global blend cache
   public OglFlags                      // OGL init flags
 { /* -- Defines ------------------------------------------------------------ */
@@ -1447,7 +1447,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       cCommon->CommonNull() },         // Initialise with "<null>" text
     strvVendor{                        // Blank vendor
       cCommon->CommonNull() },         // Initialise with "<null>" text
-    vsmSetting{ VSYNC_OFF }             // Set no VSync by default
+    vsmSetting{ VSYNC_OFF }            // Set no VSync by default
     /* -- Set global pointer to static class ------------------------------- */
     { cOgl = this; }
   /* -- Destructor --------------------------------------------------------- */

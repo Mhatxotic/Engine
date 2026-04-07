@@ -23,7 +23,7 @@ typedef ParamMap::const_iterator ParamIt;
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 enum Result : unsigned int             // Result codes
-{/* ------------------------------------------------------------------------ */
+{ /* ----------------------------------------------------------------------- */
   R_GOOD,                              // [00] Url is good
   R_TOOLONG,                           // [01] Url is too long
   R_EMURL,                             // [02] Empty URL specified

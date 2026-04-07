@@ -316,7 +316,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       { EMC_INP_MOUSESCROLL, bind(&Input::InputOnMouseWheel,  this, _1) },
       { EMC_INP_KEYPRESS,    bind(&Input::InputOnKeyPress,    this, _1) },
       { EMC_INP_DRAGDROP,    bind(&Input::InputOnDragDrop,    this, _1) },
-      { EMC_INP_DRAGDROP,    bind(&Joystick::JoyOnState,      this, _1) },
+      { EMC_INP_JOYSTATE,    bind(&Joystick::JoyOnState,      this, _1) },
     } },
     /* -- More initialisers ------------------------------------------------ */
     iConKey1(GLFW_KEY_UNKNOWN),        // Init primary console key
