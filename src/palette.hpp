@@ -18,7 +18,7 @@ using namespace IShaders::P;           using namespace IStd::P;
 using namespace ITexDef::P;            using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
-typedef array<Colour, 256> PalData;    // Palette data
+typedef StdArray<Colour, 256> PalData; // Palette data
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -144,12 +144,12 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   public Lockable,                     // Lua garbage collector instruction
   public Pal                           // Base Palette class
 { /* -- Init name only --------------------------------------------- */ public:
-  void Init(const string &strName) { IdentSet(strName); }
+  void Init(const StdString &strName) { IdentSet(strName); }
   /* -- Init name and data from another palette ---------------------------- */
-  void Init(const string &strName, const Pal &palOther)
+  void Init(const StdString &strName, const Pal &palOther)
     { Init(strName); Pal::operator=(palOther); }
   /* -- Load palette from image -------------------------------------------- */
-  void Init(const string &strName, const Image &imOther)
+  void Init(const StdString &strName, const Image &imOther)
   { // Set name from image
     IdentSet(strName);
     // Throw error if image doesn't have a palette

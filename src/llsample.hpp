@@ -26,11 +26,11 @@ using namespace Common;
 ** -- Read Sample class argument ------------------------------------------- */
 struct AgSample : public ArClass<Sample> {
   explicit AgSample(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Sample>(lS, iArg, *cSamples)}{} };
+    ArClass{LuaUtilGetClassRef<Sample>(lS, iArg, cSamples)}{} };
 /* -- Create Sample class argument ----------------------------------------- */
 struct AcSample : public ArClass<Sample> {
   explicit AcSample(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Sample>(lS, *cSamples)}{} };
+    ArClass{LuaUtilClassCreateRef<Sample>(lS, cSamples)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Sample:* member functions                                           ## **

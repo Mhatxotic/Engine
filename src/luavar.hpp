@@ -23,15 +23,15 @@ typedef IdMap<CVarFlagsType> IdMapCVarEnums;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Lua cvar list types -------------------------------------------------- */
-typedef pair<LuaFunc, CVarMapIt> LuaCVarPair;
-MAPPACK_BUILD(LuaCVar, const string, LuaCVarPair)
+typedef StdPair<LuaFunc, CVarMapIt> LuaCVarPair;
+MAPPACK_BUILD(LuaCVar, const StdString, LuaCVarPair)
 /* -- Variables ollector class for collector data and custom variables ----- */
 CTOR_BEGIN(Variables, Variable, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
   LuaCVarMap       lcvmMap;            // Lua cvar list
   /* -- Cvar flag type strings --------------------------------------------- */
   const IdMapCVarEnums imcveTypes;     // Types
-  const IdMapCVarEnums imcveConditions;  // Conditional flags
+  const IdMapCVarEnums imcveConditions; // Conditional flags
   const IdMapCVarEnums imcvePermissions; // Permission flags
   const IdMapCVarEnums imcveSources;   // Load reason flags
   const IdMapCVarEnums imcveOther;,    // Misc flags
@@ -46,7 +46,8 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   /* -- Returns the end of the lua console command list -------------------- */
   static LuaCVarMapIt GetLuaVarListEnd() { return GetLuaVarList().end(); }
   /* == Cvar updated callback for Lua ============================== */ public:
-  static CVarReturn LuaCallbackStatic(CVarItem &cviVar, const string &strVal)
+  static CVarReturn LuaCallbackStatic(CVarItem &cviVar,
+    const StdString &strVal)
   { // Find cvar and ignore if we don't have it yet! This can happen if the
     // variable is initialising for the first time. We haven't added the
     // variable to cvmActive yet and we don't want to until the CVARS system
@@ -70,12 +71,12 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     return bResult ? ACCEPT_HANDLED_FORCECOMMIT : ACCEPT_HANDLED;
   }
   /* -- Unregister the console command from lua -------------------- */ public:
-  const string &Name() const { return lcvmiIt->first; }
+  const StdString &Name() const { return lcvmiIt->first; }
   /* -- Get current value as string ---------------------------------------- */
-  const string Get() const
+  const StdString Get() const
     { return cCVars->GetStr(lcvmiIt->second.second); }
   /* -- Get default value as string ---------------------------------------- */
-  const string Default() const
+  const StdString Default() const
     { return cCVars->GetDefStr(lcvmiIt->second.second); }
   /* -- Reset default value ------------------------------------------------ */
   void Reset() const { cCVars->Reset(lcvmiIt->second.second); }
@@ -83,7 +84,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   bool Empty() const { return Get().empty(); }
   bool NotEmpty() const { return !Empty(); }
   /* -- Set value from different types ------------------------------------- */
-  CVarSetEnums SetString(const string &strValue) const
+  CVarSetEnums SetString(const StdString &strValue) const
     { return cCVars->Set(lcvmiIt->second.second, strValue); }
   CVarSetEnums Clear() const
     { return SetString(cCommon->CommonBlank()); }
@@ -99,17 +100,17 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   { // Must have 5 parameters (including this class ptr that was just created)
     LuaUtilCheckParams(lS, 5);
     // Get and check the variable name
-    const string strName{ LuaUtilGetCppStr(lS, 1) };
+    const StdString strName{ LuaUtilGetCppStr(lS, 1) };
     // Check that the variable name is valid
     if(!cCVars->IsValidVariableName(strName))
       XC("CVar name is not valid!",
-        "Variable", strName, "Minimum",  cCVars->stCVarMinLength,
+        "Variable", strName, "Minimum", cCVars->stCVarMinLength,
         "Maximum",  cCVars->stCVarMaxLength);
     // Make sure cvar doesn't already exist
     if(cCVars->VarExists(strName))
       XC("CVar already registered!", "Variable", strName);
     // Get the value name
-    const string strD{ LuaUtilGetCppStr(lS, 2) };
+    const StdString strD{ LuaUtilGetCppStr(lS, 2) };
     // Get the flags and check that the flags are in range
     const CVarFlagsConst cvfcFlags{ LuaUtilGetFlags(lS, 3, CVMASK) };
     // Check that the var has at least one type
@@ -139,7 +140,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   /* -- Register existing internal engine variable as a Lua variable ------- */
   void InitInternal(const CVarMapIt &cvmiIt)
   { // Get cvar name
-    const string &strName = cvmiIt->first;
+    const StdString &strName = cvmiIt->first;
     // Insert a new variable
     lcvmiIt = cVariables->lcvmMap.insert(GetLuaVarListEnd(), { strName,
       make_pair(LuaFunc{ strName, false }, cCVars->GetVarListEnd()) });
@@ -200,7 +201,7 @@ imcveOther{{                           // Misc flags
   IDMAPSTR(LOADED),
 }, "NONE" }
 );/* -- Return human readable string about CVar ---------------------------- */
-static const string VariablesMakeInformation(const CVarItem &cviVar)
+static StdString VariablesMakeInformation(const CVarItem &cviVar)
 { // Print data about the cvar
   return StrFormat("Status for '$'...\n"
     "- Callback: $.\n"               "- Flags: 0x$$$.\n"
@@ -210,7 +211,7 @@ static const string VariablesMakeInformation(const CVarItem &cviVar)
     "- Modified: $.\n"               "- Current: [$/$] \"$\".",
       cviVar.GetVar(),
       StrFromBoolTF(cviVar.IsTriggerSet()),
-      hex, cviVar, dec,
+      StdIOSHex, cviVar, StdIOSDec,
       StrImplode(cVariables->imcveTypes.Test(cviVar), 0, ", "),
       StrImplode(cVariables->imcveConditions.Test(cviVar), 0, ", "),
       StrImplode(cVariables->imcvePermissions.Test(cviVar), 0, ", "),
@@ -261,8 +262,8 @@ static void VariablesMakeInformationTokens(Statistic &sTable,
 }
 /* -- Enumerate a list ----------------------------------------------------- */
 template<class MapType>
-  static const string VariablesMakeList(const MapType &mtMap,
-    const string &strFilter)
+  static StdString VariablesMakeList(const MapType &mtMap,
+    const StdString &strFilter)
 { // Get pending cvars list and ignore if empty
   if(mtMap.empty()) return "No cvars exist in this category!";
   // Try to find the cvar outright first (only make work when not in release)
@@ -270,10 +271,10 @@ template<class MapType>
   const MapTypeConstIt mtciExactIt{ mtMap.find(strFilter) };
   if(mtciExactIt != mtMap.cend())
   { // Type could either be CVarMap?
-    if constexpr(is_same_v<MapType, CVarMap>)
+    if constexpr(StdIsSame<MapType, CVarMap>)
       return VariablesMakeInformation(mtciExactIt->second);
     // ..or the type could either be LuaCVarMap
-    else if constexpr(is_same_v<MapType, LuaCVarMap>)
+    else if constexpr(StdIsSame<MapType, LuaCVarMap>)
       return VariablesMakeInformation(mtciExactIt->second.second->second);
   } // Try as a lower bound (partial) check?
   MapTypeConstIt mtciIt{ mtMap.lower_bound(strFilter) };
@@ -287,15 +288,15 @@ template<class MapType>
     // Build output string
     do
     { // If no match found? return original string
-      const string &strKey = mtciIt->first;
+      const StdString &strKey = mtciIt->first;
       if(strKey.compare(0, strFilter.size(), strFilter)) continue;
       // Increment matched counter
       ++stMatched;
       // Type could either be CVarMap?
-      if constexpr(is_same_v<MapType, CVarMap>)
+      if constexpr(StdIsSame<MapType, CVarMap>)
         VariablesMakeInformationTokens(sTable, mtciIt->second);
       // ..or the type could either be LuaCVarMap
-      else if constexpr(is_same_v<MapType, LuaCVarMap>)
+      else if constexpr(StdIsSame<MapType, LuaCVarMap>)
         VariablesMakeInformationTokens(sTable, mtciIt->second.second->second);
     } // Until no more commands
     while(++mtciIt != mtMap.cend());

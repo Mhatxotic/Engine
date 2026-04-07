@@ -28,7 +28,7 @@ using namespace Common;
 ** -- Create Texture class argument ---------------------------------------- */
 struct AcTexture : public ArClass<Texture> {
   explicit AcTexture(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Texture>(lS, *cTextures)}{} };
+    ArClass{LuaUtilClassCreateRef<Texture>(lS, cTextures)}{} };
 /* -- Read a Tile id ------------------------------------------------------- */
 struct AgTileId : public AgIntegerLGE<size_t> {
   explicit AgTileId(lua_State*const lS, const int iArg, const Texture &tCref) :
@@ -36,7 +36,7 @@ struct AgTileId : public AgIntegerLGE<size_t> {
 /* -- Other types ---------------------------------------------------------- */
 typedef AgInteger<GLint> AgGLint;
 /* -- Read vector of the specified integer type ---------------------------- */
-template<class VectorValueType, class VectorType = vector<VectorValueType>>
+template<class VectorValueType, class VectorType = StdVector<VectorValueType>>
   struct AgIntegerVector : public VectorType
 { const VectorType &operator()() const { return *this; }
   operator const VectorType&() const { return operator()(); }
@@ -992,7 +992,8 @@ LLRSEND                                // Texture:* member functions end
 // ? properties!
 /* ------------------------------------------------------------------------- */
 LLFUNC(Console, 1,
-  LuaUtilClassCreatePtr<Texture>(lS, *cTextures, cConGfx->ConGfxGetTexture()))
+  LuaUtilClassCreateStaticPtr<Texture>
+    (lS, cTextures, cConGfx->ConGfxGetTexture()))
 /* ========================================================================= */
 // $ Texture.Create
 // > Source:image=The image class to load from.

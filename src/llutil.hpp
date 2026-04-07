@@ -172,9 +172,9 @@ LLFUNC(Chop, 1, LuaUtilPushVar(lS, StrChop(AgNcString{lS, 1})))
 // ? numbers specified.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Clamp, 1,
-  const AgLuaNumber aValue{lS, 1};
-  const AgLuaNumber aMin{lS, 2};
-  const AgLuaNumber aMax{lS, 3};
+  const AgLuaNumber aValue{lS, 1},
+                    aMin{lS, 2},
+                    aMax{lS, 3};
   LuaUtilPushVar(lS, UtilClamp(aValue(), aMin(), aMax())))
 /* ========================================================================= */
 // $ Util.ClampInt
@@ -186,9 +186,9 @@ LLFUNC(Clamp, 1,
 // ? numbers specified.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ClampInt, 1,
-  const AgLuaInteger aValue{lS, 1};
-  const AgLuaInteger aMin{lS, 2};
-  const AgLuaInteger aMax{lS, 3};
+  const AgLuaInteger aValue{lS, 1},
+                     aMin{lS, 2},
+                     aMax{lS, 3};
   LuaUtilPushVar(lS, UtilClamp(aValue(), aMin(), aMax())))
 /* ========================================================================= */
 // $ Util.Compact
@@ -206,8 +206,8 @@ LLFUNC(Compact, 1, LuaUtilPushVar(lS, StrCompact(AgCStringChar{lS, 1})))
 // ? A fast way of counting the number of occurences in a string.
 /* ------------------------------------------------------------------------- */
 LLFUNC(CountOf, 1,
-  const AgString aSource{lS, 1};
-  const AgString aWhat{lS, 2};
+  const AgString aSource{lS, 1},
+                 aWhat{lS, 2};
   LuaUtilPushVar(lS, StrCountOccurences(aSource, aWhat)))
 /* ========================================================================= */
 // $ Util.Duration
@@ -372,8 +372,8 @@ LLFUNC(FormatTimeUTC, 1,
 // ? format of "n:n".
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetRatio, 1,
-  const AgLuaIntegerL aWidth{lS, 1, 1};
-  const AgLuaIntegerL aHeight{lS, 2, 1};
+  const AgLuaIntegerL aWidth{lS, 1, 1},
+                      aHeight{lS, 2, 1};
   LuaUtilPushVar(lS, StrFromRatio(aWidth(), aHeight())))
 /* ========================================================================= */
 // $ Util.Grouped
@@ -724,8 +724,8 @@ LLFUNC(LowWord, 1, LuaUtilPushVar(lS, UtilLowWord(AgUInt32{lS, 1}())))
 // ? range.
 /* ------------------------------------------------------------------------- */
 LLFUNC(MakeDWord, 1,
-  const AgUInt16 aHigh{lS, 1};
-  const AgUInt16 aLow{lS, 2};
+  const AgUInt16 aHigh{lS, 1},
+                 aLow{lS, 2};
   LuaUtilPushVar(lS, UtilMakeDWord(aHigh(), aLow())))
 /* ========================================================================= */
 // $ Util.MakeWord
@@ -736,8 +736,8 @@ LLFUNC(MakeDWord, 1,
 // ? range.
 /* ------------------------------------------------------------------------- */
 LLFUNC(MakeWord, 1,
-  const AgUInt8 aHigh{lS, 1};
-  const AgUInt8 aLow{lS, 2};
+  const AgUInt8 aHigh{lS, 1},
+                aLow{lS, 2};
   LuaUtilPushVar(lS, UtilMakeWord(aHigh(), aLow())))
 /* ========================================================================= */
 // $ Util.MakeQWord
@@ -748,8 +748,8 @@ LLFUNC(MakeWord, 1,
 // ? range.
 /* ------------------------------------------------------------------------- */
 LLFUNC(MakeQWord, 1,
-  const AgUInt32 aHigh{lS, 1};
-  const AgUInt32 aLow{lS, 2};
+  const AgUInt32 aHigh{lS, 1},
+                 aLow{lS, 2};
   LuaUtilPushVar(lS, UtilMakeQWord(aHigh(), aLow())))
 /* ========================================================================= */
 // $ Util.ParseArgs
@@ -799,8 +799,9 @@ LLFUNC(ParseTimeEx, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Pluralise, 1,
   const AgUInt64 aValue{lS, 1};
-  const AgCStringChar aSingular{lS, 2}, aPlural{lS, 3};
-  LuaUtilPushVar(lS, StrCPluraliseNum(aValue, aSingular, aPlural)))
+  const AgCStringChar aSingular{lS, 2},
+                      aPlural{lS, 3};
+  LuaUtilPushVar(lS, StrCPluraliseNum(aValue(), aSingular, aPlural)))
 /* ========================================================================= */
 // $ Util.PluraliseEx
 // > Count:integer=The number to check
@@ -813,8 +814,9 @@ LLFUNC(Pluralise, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(PluraliseEx, 1,
   const AgUInt64 aValue{lS, 1};
-  const AgCStringChar aSingular{lS, 2}, aPlural{lS, 3};
-  LuaUtilPushVar(lS, StrCPluraliseNumEx(aValue, aSingular, aPlural)))
+  const AgCStringChar aSingular{lS, 2},
+                      aPlural{lS, 3};
+  LuaUtilPushVar(lS, StrCPluraliseNumEx(aValue(), aSingular, aPlural)))
 /* ========================================================================= */
 // $ Util.PlusOrMinus
 // > Count:number=The number to convert.
@@ -940,8 +942,8 @@ LLFUNC(RoundInt, 1,
 // ? multiplier.
 /* ------------------------------------------------------------------------- */
 LLFUNC(RoundMul, 1,
-  const AgLuaNumber aValue{lS, 1};
-  const AgLuaNumber aMultiplier{lS, 2};
+  const AgLuaNumber aValue{lS, 1},
+                    aMultiplier{lS, 2};
   LuaUtilPushVar(lS, UtilNearest(aValue(), aMultiplier())))
 /* ========================================================================= */
 // $ Util.RoundPow2
@@ -1046,7 +1048,9 @@ LLFUNC(UTF8Char, 1, LuaUtilPushVar(lS, UtfDecodeNum(AgUInt32{lS, 1})))
 // < Result:string=The decoded UUID.
 // ? Decodes the specified UUID integers to a string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UUIDDecode, 1, const AgUInt64 aHigh{lS, 1}, aLow{lS, 2};
+LLFUNC(UUIDDecode, 1,
+  const AgUInt64 aHigh{lS, 1},
+                 aLow{lS, 2};
   LuaUtilPushVar(lS, UuId{ aHigh, aLow }.UuIdToString()))
 /* ========================================================================= */
 // $ Util.UUIDEncode
@@ -1055,7 +1059,8 @@ LLFUNC(UUIDDecode, 1, const AgUInt64 aHigh{lS, 1}, aLow{lS, 2};
 // < Low64:integer=The low-order 128-bit integer
 // ? Encodes the specified UUID string to two 64-bit integers.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UUIDEncode, 2, const UuId uuidData{ AgString{lS, 1} };
+LLFUNC(UUIDEncode, 2,
+  const UuId uuidData{ AgString{lS, 1} };
   LuaUtilPushVar(lS, uuidData.d.ullRandom[0], uuidData.d.ullRandom[1]))
 /* ========================================================================= */
 // $ Util.UUIDRandom
@@ -1063,7 +1068,8 @@ LLFUNC(UUIDEncode, 2, const UuId uuidData{ AgString{lS, 1} };
 // < Low64:integer=The low-order 128-bit integer
 // ? Generates a random UUIDv4
 /* ------------------------------------------------------------------------- */
-LLFUNC(UUIDRandom, 2, const UuId uuidData;
+LLFUNC(UUIDRandom, 2,
+  const UuId uuidData;
   LuaUtilPushVar(lS, uuidData.d.ullRandom[0], uuidData.d.ullRandom[1]))
 /* ========================================================================= */
 // $ Util.UrlDecode

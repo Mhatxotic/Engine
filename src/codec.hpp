@@ -72,11 +72,11 @@ enum Header : unsigned long            // Buffer header integer location flags
   /* ----------------------------------------------------------------------- */
   ENCHDR_SIZE            =         24, // Size of compressed block header
 };/* ----------------------------------------------------------------------- */
-static const EncData CodecEncodeAES(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeAES(const MemConst &mcSrc, Memory &mDest,
   const size_t, const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV,
   const size_t stPos)
 { // Unique ptr type to free the cipher context
-  typedef unique_ptr<EVP_CIPHER_CTX,
+  typedef StdUniquePtr<EVP_CIPHER_CTX,
     function<decltype(EVP_CIPHER_CTX_free)>> EvpPtr;
   // Encryption context. Return failed if it coulnd't be created
   if(const EvpPtr ecCTX{ EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free })
@@ -125,7 +125,7 @@ static void CodecDecodeAES(const MemConst &mcSrc, Memory &mDest,
 { // Create output
   mDest.MemResize(stOut + CodecGetAES256CBCSize());
   // Unique ptr type to free the cipher context
-  typedef unique_ptr<EVP_CIPHER_CTX,
+  typedef StdUniquePtr<EVP_CIPHER_CTX,
     function<decltype(EVP_CIPHER_CTX_free)>> EvpPtr;
   // Init encryption context and if succeeded
   if(const EvpPtr ecCTX{ EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free })
@@ -201,7 +201,7 @@ static const char *CodecGetZLIBErrString(const int iCode)
 #undef ZERR
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeAESCompressed(const EncMode eOverrideMode,
+static EncData CodecEncodeAESCompressed(const EncMode eOverrideMode,
   const EncData &encCompressedData, Memory &mDest, const size_t stLevel,
   const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV, const size_t stPos)
 { // Resize to fit the amount of compressed and extra data
@@ -228,7 +228,7 @@ static const EncData CodecEncodeAESCompressed(const EncMode eOverrideMode,
            encCompressedData.GetExtra() };
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeZLIB(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeZLIB(const MemConst &mcSrc, Memory &mDest,
   const size_t stLevel, const size_t stPos)
 { // Input address and size, check the size
   const Bytef*const ucpSrc = mcSrc.MemPtr<Bytef>();
@@ -259,19 +259,19 @@ static const EncData CodecEncodeZLIB(const MemConst &mcSrc, Memory &mDest,
   return { ENCMODE_DEFLATE, mcSrc.MemSize(), ulDest, 0 };
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeAESZLIB(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeAESZLIB(const MemConst &mcSrc, Memory &mDest,
   const size_t stLevel, const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV,
   const size_t stPos)
 { // Create memory for compressed data
   mDest.MemResize(mcSrc.MemSize() + sizeof(uint32_t) +
-    static_cast<size_t>(ceil(mcSrc.MemSize() * 0.001)) + 12);
+    static_cast<size_t>(ceil(mcSrc.MemSize<double>() * 0.001)) + 12);
   // Compress then prepare and encode the compressed data
   return CodecEncodeAESCompressed(ENCMODE_ZLIBAES,
     CodecEncodeZLIB(mcSrc, mDest, stLevel, sizeof(uint32_t)),
       mDest, stLevel, qaKey, qaIV, stPos);
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeLZMA(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeLZMA(const MemConst &mcSrc, Memory &mDest,
   const size_t stLevel, const size_t stPos)
 { // For the next function
   size_t stOutLen = mcSrc.MemSize(), stPropLen = 5;
@@ -288,7 +288,7 @@ static const EncData CodecEncodeLZMA(const MemConst &mcSrc, Memory &mDest,
   return { ENCMODE_LZMA, mcSrc.MemSize(), stOutLen, stPropLen };
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeAESLZMA(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeAESLZMA(const MemConst &mcSrc, Memory &mDest,
   const size_t stLevel, const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV,
   const size_t stPos)
 { // Create memory for compressed data
@@ -299,7 +299,7 @@ static const EncData CodecEncodeAESLZMA(const MemConst &mcSrc, Memory &mDest,
       mDest, stLevel, qaKey, qaIV, stPos);
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeRAW(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeRAW(const MemConst &mcSrc, Memory &mDest,
   const size_t, const size_t stPos)
 { // Copy the block over into the new one
   mDest.MemWriteBlock(stPos, mcSrc);
@@ -538,7 +538,8 @@ CODEC_PLUGINEX(AESLZMA, 5, cCrypt->pkKey.p.qpkData, cCrypt->pkKey.p.qivData)
 CODEC_PLUGINEX(AES, CodecGetAES256CBCSize(), cCrypt->pkKey.p.qpkData,
   cCrypt->pkKey.p.qivData)
 /* -- The ZLIB encoder class (provides init size) -------------------------- */
-CODEC_PLUGINEX(ZLIB, static_cast<size_t>(ceil(dS.MemSize() * 0.001)) + 12)
+CODEC_PLUGINEX(ZLIB,
+  static_cast<size_t>(ceil(dS.MemSize<double>() * 0.001)) + 12)
 /* -- The LZMA encoder class (provides the extra data needed size) --------- */
 CODEC_PLUGINEX(LZMA, 5)
 /* -- The nullptr encoder (no extra size needed) --------------------------- */
@@ -555,7 +556,7 @@ template<class EncoderType>class Block final : public EncoderType
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Initialise by string ----------------------------------------------- */
-  explicit Block(const string &strIn, const size_t stUser=StdMaxSizeT) :
+  explicit Block(const StdString &strIn, const size_t stUser=StdMaxSizeT) :
     /* -- Initialisers ----------------------------------------------------- */
     EncoderType{ StdMove(MemConst{ strIn }), stUser }
     /* -- No code ---------------------------------------------------------- */

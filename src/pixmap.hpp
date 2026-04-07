@@ -26,7 +26,7 @@ class SysMap :
     // ~FStream() will close the file
   }
   /* -- Setup handle ------------------------------------------------------- */
-  static FStreamBase SysMapSetupFile(const string &strF)
+  static FStreamBase SysMapSetupFile(const StdString &strF)
   { // Open file and return it if opened else show error
     if(FStream fsFile{ strF, FM_R_B }) return fsFile;
     XCS("Open file for file mapping failed!", "File", strF);
@@ -73,7 +73,7 @@ class SysMap :
     { return reinterpret_cast<RT*>(cpMem); }
   bool SysMapIsEmpty() const { return cpMem == cCommon->CommonCBlank(); }
   bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
-  bool SysMapIsAvailable() const { return !!SysMapGetMemory(); }
+  bool SysMapIsAvailable() const { return SysMapGetMemory() != nullptr; }
   bool SysMapIsNotAvailable() const { return !SysMapIsAvailable(); }
   uint64_t SysMapGetSize() const
     { return static_cast<uint64_t>(sData.st_size); }
@@ -98,7 +98,7 @@ class SysMap :
     IdentClear();
   }
   /* -- Constructor with just id initialisation ---------------------------- */
-  SysMap(const string &strF, const StdTimeT tC, const StdTimeT tM) :
+  SysMap(const StdString &strF, const StdTimeT tC, const StdTimeT tM) :
     /* -- Initialisers------------------------------------------------------ */
     FStreamBase{ strF },               // Open specified file
 #if defined(LINUX)                     // Using Linux?
@@ -143,7 +143,7 @@ class SysMap :
     /* -- So other class doesn't destruct ---------------------------------- */
     { smOther.SysMapClearVarsInternal(); }
   /* -- Constructor -------------------------------------------------------- */
-  explicit SysMap(const string &strF) :
+  explicit SysMap(const StdString &strF) :
     /* -- Initialisers ----------------------------------------------------- */
     FStreamBase{ SysMapSetupFile(strF) }, // Iniitalise file handle
     sData{ SysMapSetupInfo() },        // Initialise file data

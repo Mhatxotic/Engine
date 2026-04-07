@@ -13,12 +13,12 @@
 /* ------------------------------------------------------------------------- */
 namespace ILua {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICollector::P;
+using namespace IChrono::P;            using namespace ICollector::P;
 using namespace ICommon::P;            using namespace IConGraph::P;
 using namespace IConsole::P;           using namespace ICrypt::P;
 using namespace ICVarDef::P;           using namespace ICVar::P;
 using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFlags;
+using namespace IEvtMain::P;           using namespace IFlags::P;
 using namespace ILog::P;               using namespace ILuaDef;
 using namespace ILuaCode::P;           using namespace ILuaFunc::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
@@ -33,10 +33,10 @@ class Lua;                             // Class prototype
 static Lua *cLua = nullptr;            // Pointer to global class
 class Lua :                            // Actual class body
   /* -- Base classes ------------------------------------------------------- */
-  public ClockChrono<CoreClock>,       // Runtime clock
+  public Chrono,                       // Runtime clock
   private EvtMainRegAuto               // Events list to register
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef unique_ptr<lua_State, function<decltype(lua_close)>> LuaPtr;
+  typedef StdUniquePtr<lua_State, function<decltype(lua_close)>> LuaPtr;
   /* -- Private variables -------------------------------------------------- */
   LuaPtr           lpState;            // Lua state pointer
   bool             bExiting;           // Ending execution?
@@ -73,6 +73,8 @@ class Lua :                            // Actual class body
     lrMainTick.LuaFuncUnrefSwap(lrMainEnd);
     // Now it's up to the guest to end execution with Core.Done();
     bExiting = true;
+    // Say that we've finished calling the function
+    cLog->LogDebugSafe("Lua swapped main tick function with end tick.");
   }
   /* -- Ask LUA to tell guest to redraw ------------------------------------ */
   void LuaOnSendRedraw(const EvtMainEvent&)
@@ -113,7 +115,7 @@ class Lua :                            // Actual class body
     if(!LuaResumeExecution())
       return cConsole->ConsoleAddLine("Execution already in progress.");
     // Refresh originally stored delay
-    cTimer->TimerSetDelay(cCVars->CVarsGetInternal<int>(APP_DELAY));
+    cTimer->TimerSetDelay(cCVars->CVarsGetInternal<unsigned int>(APP_DELAY));
     // Disable console
     cConGfx->ConGfxSetLocked(false);
     cConGfx->ConGfxSetVisible(false);
@@ -205,9 +207,9 @@ class Lua :                            // Actual class body
     XC("Call not allowed in temporary contexts!");
   }
   /* -- Compile a string and display it's result --------------------------- */
-  const string LuaCompileStringAndReturnResult(const string &strWhat)
+  const StdString LuaCompileStringAndReturnResult(const StdString &strWhat)
   { // Save time so we can measure performance
-    const ClockChrono ccExecute;
+    const Chrono chExecute;
     // Save stack position. This restores the position whatever the result and
     // also cleans up the return values.
     const LuaStackSaver lssSaved{ LuaGetState() };
@@ -224,9 +226,9 @@ class Lua :                            // Actual class body
     // Print result
     return slResults.empty() ?
       StrFormat("Request took $.",
-        StrShortFromDuration(ccExecute.CCDeltaToDouble())) :
+        StrShortFromDuration(chExecute.CCDeltaToDouble())) :
       StrFormat("Request took $ returning $: $.",
-        StrShortFromDuration(ccExecute.CCDeltaToDouble()),
+        StrShortFromDuration(chExecute.CCDeltaToDouble()),
         StrCPluraliseNum(slResults.size(), "result", "results"),
         StrImplode(slResults, 0, ", "));
   }
@@ -384,7 +386,7 @@ class Lua :                            // Actual class body
       LuaUtilInitRNGSeed(LuaGetState(), liSeed);
       // Warn developer/user that there is a pre-defined random seed
       cLog->LogWarningExSafe("Lua using pre-defined random seed $ (0x$$)!",
-        liSeed, hex, liSeed);
+        liSeed, StdIOSHex, liSeed);
     } // Use a random number instead
     else
     { // Get the new random number seed
@@ -393,7 +395,7 @@ class Lua :                            // Actual class body
       LuaUtilInitRNGSeed(LuaGetState(), liRandSeed);
       // Log it
       cLog->LogDebugExSafe("Lua generated random seed $ (0x$$)!",
-        liRandSeed, hex, liRandSeed);
+        liRandSeed, StdIOSHex, liRandSeed);
     } // Get variables namespace
     LuaUtilGetGlobal(LuaGetState(), "Variable");
     // Create a table of the specified number of variables
@@ -402,7 +404,7 @@ class Lua :                            // Actual class body
     for(const CVarMapIt &cvmiIt : cCVars->GetInternalListConst())
       if(cvmiIt != cCVars->GetVarListEnd())
       { // Push internal id value name
-        LuaUtilClassCreate<Variable>(LuaGetState(), *cVariables)->
+        LuaUtilClassCreate<Variable>(LuaGetState(), cVariables)->
           InitInternal(cvmiIt);
         // Assign the id to the cvar name
         LuaUtilSetField(LuaGetState(), -2, cvmiIt->first.data());

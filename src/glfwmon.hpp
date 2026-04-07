@@ -54,7 +54,7 @@ class GlFWRes                          // Members initially private
     /* -- Update unique identifier of monitor ------------------------------ */
     {}
 };/* ----------------------------------------------------------------------- */
-typedef vector<GlFWRes> GlFWResList;   // Vector of resolution classes
+typedef StdVector<GlFWRes> GlFWResList; // Vector of resolution classes
 typedef GlFWResList::const_iterator GlFWResListConstIt;
 /* ------------------------------------------------------------------------- */
 class GlFWMonitor :                    // Members initially private
@@ -68,7 +68,7 @@ class GlFWMonitor :                    // Members initially private
   const DimDouble ddInches;            // Monitor size in inches
   const double   dDiagonal,            // Diagonal millimetre length
                  dDiagonalInches;      // Diagonal inches length
-  const string   strName;              // Monitor name
+  const StdString strName;             // Monitor name
   /* -- Get monitor position ----------------------------------------------- */
   DimCoInt Dim(GLFWmonitor*const mC) const
   { // Get monitor position and physical dimensions and return them
@@ -77,7 +77,7 @@ class GlFWMonitor :                    // Members initially private
     return { iX, iY, iW, iH };
   }
   /* -- Get monitor name as string ----------------------------------------- */
-  string InitName(GLFWmonitor*const mC) const
+  StdString InitName(GLFWmonitor*const mC) const
   { // Get monitor name and if it's not null?
     if(const char*const cpName = GlFWGetMonitorName(mC))
     { // If monitor name is blank return blank name
@@ -92,7 +92,7 @@ class GlFWMonitor :                    // Members initially private
   /* -- Get glfw monitor id ------------------------------------------------ */
   int Index() const { return iIndex; }
   /* -- Get monitor name --------------------------------------------------- */
-  const string &Name() const { return strName; }
+  const StdString &Name() const { return strName; }
   /* -- Return diagonal size ----------------------------------------------- */
   double Diagonal() const { return dDiagonal; }
   double DiagonalInch() const { return dDiagonalInches; }
@@ -171,7 +171,7 @@ class GlFWMonitor :                    // Members initially private
     else XC("Could not detect primary video mode!", "Monitor", strName);
   }
 };/* ----------------------------------------------------------------------- */
-typedef vector<GlFWMonitor> GlFWMonitorList; // Vector of monitor classes
+typedef StdVector<GlFWMonitor> GlFWMonitorList; // Vector of monitor classes
 typedef GlFWMonitorList::const_iterator GlFWMonitorListConstIt;
 /* ------------------------------------------------------------------------- */
 class GlFWMonitors :

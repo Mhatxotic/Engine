@@ -25,7 +25,7 @@ using namespace ISql::P;               using namespace Common;
 ** -- Get Sql class argument ----------------------------------------------- */
 struct AgSql : public ArClass<Sql>
   { explicit AgSql(lua_State*const lS, const int iArg) :
-      ArClass{*LuaUtilGetPtr<Sql>(lS, iArg, *cSqls)}{} };
+      ArClass{LuaUtilGetClassRef<Sql>(lS, iArg, cSqls)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Sql.* member functions                                              ## **
@@ -135,7 +135,7 @@ LLRSEND                                // Sql:* member functions end
 // < Result:Sql=The handle of the main engine database.
 // ? Returns the handle of the main engine database.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Main, 1, LuaUtilClassCreatePtr<Sql>(lS, *cSqls, cSql))
+LLFUNC(Main, 1, LuaUtilClassCreateStaticPtr<Sql>(lS, cSqls, cSql))
 /* ========================================================================= */
 // $ Sql.Open
 // < Result:Sql=The handle of the database.
@@ -143,7 +143,7 @@ LLFUNC(Main, 1, LuaUtilClassCreatePtr<Sql>(lS, *cSqls, cSql))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Open, 1,
   const AgFilename aFilename{lS, 1};
-  LuaUtilClassCreate<Sql>(lS, *cSqls)->SqlInit(aFilename));
+  LuaUtilClassCreate<Sql>(lS, cSqls)->SqlInit(aFilename));
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Sql:* namespace functions structure                                 ## **

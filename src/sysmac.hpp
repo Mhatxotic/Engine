@@ -35,7 +35,7 @@ class SysProcess                       // Need this before of System init order
   template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid() const
-    { return static_cast<IntType>(UtilBruteCast<const size_t>(vpThreadId)); }
+    { return static_cast<IntType>(StdBruteCast<const size_t>(vpThreadId)); }
   /* -- Apparently due to 'dynamic memory/resource management' (CppCheck) -- */
   SysProcess(SysProcess &) = delete;           // Even though we don't use
   SysProcess operator=(SysProcess &) = delete; // these at all
@@ -60,20 +60,23 @@ class SysCore :
 { /* -- Variables ---------------------------------------------------------- */
   bool             bWindowInitialised; // Is window initialised?
   /* ----------------------------------------------------------------------- */
-  const string GetSysCTLInfoString(const char *cpS)
-  { // Get the size and return error if failed
+  static StdString GetSysCTLInfoString(const char *cpS)
+  { // Get the size and return blank string if empty
     size_t stSize = 0;
-    if(sysctlbyname(cpS, nullptr, &stSize, nullptr, 0) < 0) return "#ERR1#";
-    // Resize and fill string
-    string strOut; strOut.resize(stSize - 1);
-    if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.data()),
+    if(sysctlbyname(cpS, nullptr, &stSize, nullptr, 0) < 0)
+      return cCommon->CommonNull();
+    // Return blank string if empty
+    if(!stSize) return {};
+    // Resize and fill string returning generic string if failed
+    StdResized<StdString> strOut{ stSize - 1 };
+    if(sysctlbyname(cpS, StdToNonConstCast<char*>(strOut.data()),
       &stSize, nullptr, 0) < 0)
-        return cCommon->CommonBlank();
-    // Return the string
-    return strOut;
+        return cCommon->CommonNull();
+    // Move generated string
+    return StdMove(strOut);
   }
   /* ----------------------------------------------------------------------- */
-  template<typename T>const T GetSysCTLInfoNum(const char*const cpS)
+  template<typename T>static T GetSysCTLInfoNum(const char*const cpS)
   { // Resize
     T tOut;
     // Size
@@ -141,9 +144,9 @@ class SysCore :
     ullTotalTicksL = ullTotalTicks;
     ullIdleTicksL = ullIdleTicks;
     // Final calculation
-    cpuUData.dSystem = (1.0 - ((ullTotalTicksSinceLastTime > 0) ?
-      (static_cast<double>(ullIdleTicksSinceLastTime)) /
-      ullTotalTicksSinceLastTime : 0)) * 100;
+    cpuUData.dSystem = (1.0 - (ullTotalTicksSinceLastTime > 0 ?
+      static_cast<double>(ullIdleTicksSinceLastTime) /
+      static_cast<double>(ullTotalTicksSinceLastTime) : 0)) * 100;
   }
   /* ----------------------------------------------------------------------- */
   void UpdateProcessMemoryUsage()
@@ -187,10 +190,10 @@ class SysCore :
   static int SendSignal(const unsigned int uiPid, const int iSignal)
     { return kill(static_cast<pid_t>(uiPid), iSignal); }
   /* -- Terminate a process ------------------------------------------------ */
-  bool TerminatePid(const unsigned int uiPid) const
+  static bool TerminatePid(const unsigned int uiPid)
     { return !SendSignal(uiPid, SIGTERM); }
   /* -- Check if specified process id is running --------------------------- */
-  bool IsPidRunning(const unsigned int uiPid) const
+  static bool IsPidRunning(const unsigned int uiPid)
     { return !SendSignal(uiPid, 0); }
   /* -- GLFW handles the icons on this ------------------------------------- */
   static void UpdateIcons() {}
@@ -206,7 +209,7 @@ class SysCore :
   static void *LibLoad(const char*const cpName)
     { return dlopen(cpName, RTLD_LAZY | RTLD_LOCAL); }
   /* ----------------------------------------------------------------------- */
-  const string LibGetName(void*const vpModule, const char *cpAltName) const
+  const StdString LibGetName(void*const vpModule, const char *cpAltName) const
   { // Return nothing if no module
     if(!vpModule) return {};
     // Get information about the shared object
@@ -383,7 +386,7 @@ class SysCore :
       "File",      fExe.IdentGet());
   }
   /* -- Get executable size from header (N/A on MacOS) --------------------- */
-  static size_t GetExeSize(const string &strFile)
+  static size_t GetExeSize(const StdString &strFile)
   { // Open exe file and return on error
     if(FStream fExe{ strFile, FM_R_B })
     { // Possible MachO header magic values
@@ -444,9 +447,9 @@ class SysCore :
     XCL("Failed to open MACH-O executable!", "File", strFile);
   }
   /* -- Get executable file name ------------------------------------------- */
-  const string GetExeName()
+  const StdString GetExeName()
   { // Setup executable pathname
-    string strExe; strExe.resize(PROC_PIDPATHINFO_MAXSIZE);
+    StdResized<StdString> strExe{ PROC_PIDPATHINFO_MAXSIZE };
     // Get path to executable
     if(proc_pidpath(GetPid(),
       const_cast<char*>(strExe.data()), PROC_PIDPATHINFO_MAXSIZE) <= 0)
@@ -454,19 +457,18 @@ class SysCore :
           "Pid", GetPid(), "Buffer", strExe.capacity());
     // Set real size and trim the memory usage
     strExe.resize(strlen(strExe.data()));
-    strExe.shrink_to_fit();
     // Return executable name
     return strExe;
   }
   /* -- Enum modules ------------------------------------------------------- */
   SysModMap EnumModules()
   { // Make verison string
-    const string strVersion{ StrAppend(sizeof(void*)*8, "-bit version") };
+    const StdString strVersion{ StrAppend(sizeof(void*)*8, "-bit version") };
     // Mod list
     SysModMap smmMap;
     smmMap.emplace(make_pair(0UL, SysModule{ GetExeName(), VER_MAJOR,
-      VER_MINOR, VER_BUILD, VER_REV, VER_AUTHOR, VER_NAME, string(strVersion),
-      VER_STR }));
+      VER_MINOR, VER_BUILD, VER_REV, VER_AUTHOR, VER_NAME,
+      StdString{ strVersion }, VER_STR }));
     // Now walk through all the dylibs loaded. Skip the first entry which is
     // always the executable. We already added it!
     for(uint32_t ulIndex = 1, ulEnd = _dyld_image_count();
@@ -478,13 +480,13 @@ class SysCore :
       // nullptr but we will check just incase.
       const char*const cpFullPath = _dyld_get_image_name(ulIndex);
       if(UtfIsCStringNotValid(cpFullPath)) continue;
-      string strFullPath{ cpFullPath };
+      StdString strFullPath{ cpFullPath };
       // Get filename. Again, this should never be null but just incase
       const char*const cpBaseName = basename(const_cast<char*>(cpFullPath));
       if(UtfIsCStringNotValid(cpBaseName)) continue;
-      const string strBaseName{ cpBaseName };
+      const StdString strBaseName{ cpBaseName };
       // Id name to lookup and add to to the returned structure
-      string strPathName;
+      StdString strPathName;
       // Find dot and ignore if not found? It's a frame work so the full name
       // will be the id.
       const size_t stDot = strBaseName.find_last_of('.');
@@ -515,8 +517,8 @@ class SysCore :
       smmMap.emplace(make_pair(static_cast<size_t>(ulIndex),
         SysModule{ StdMove(strFullPath), uiMajor, uiMinor, uiBuild,
           0, strPathName.data(), strPathName.data(),
-          string(strVersion), string(StrFormat("$.$.$.0",
-            uiMajor, uiMinor, uiBuild)) }));
+            StdString{ strVersion}, StdString{ StrFormat("$.$.$.0",
+            uiMajor, uiMinor, uiBuild) } }));
     } // Module list which includes the executable module
     return smmMap;
   }
@@ -530,7 +532,7 @@ class SysCore :
       uiMinor = tVersion.size() < 2 ? 0 : StrToNum<unsigned int>(tVersion[1]),
       uiBuild = tVersion.size() < 3 ? 0 : StrToNum<unsigned int>(tVersion[2]);
     // Set operating system version string
-    ostringstream osS; osS << "MacOS ";
+    StdOStringStream osS; osS << "MacOS ";
     // Version information table
     struct OSListItem
     { // Label to append if verified
@@ -539,7 +541,7 @@ class SysCore :
       const unsigned int uiHi, uiLo;
     };
     // List of MacOS versions and when they expire
-    static const array<const OSListItem,22>osList{ {
+    static const StdArray<const OSListItem,22>osList{ {
       { "Tahoe",       26,  0 }, { "Sequoia",       15,  0 },
       { "Sonoma",      14,  0 }, { "Ventura",       13,  0 },
       { "Monterey",    12,  0 }, { "Big Sur",       11,  0 },
@@ -566,9 +568,9 @@ class SysCore :
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
     // Resize buffer for storage
-    string strCode; strCode.resize(32, '\0');
+    StdResized<StdString> strCode{ 32 };
     // Create autorelease storage for locale, ask OS for it and if success?
-    typedef unique_ptr<const void,
+    typedef StdUniquePtr<const void,
       function<decltype(CFRelease)>> CFAutoRelPtr;
     if(const CFAutoRelPtr cfLocale{ reinterpret_cast<const void*>
       (CFLocaleCopyCurrent()), CFRelease })
@@ -590,7 +592,7 @@ class SysCore :
     // Try to activate the locale
     ProcessAndActivateLocale(strCode);
     // Get operating system kernel name
-    string strExtra;
+    StdString strExtra;
     struct utsname utsnData;
     if(!uname(&utsnData))
       strExtra = StrAppend(utsnData.sysname, " v", utsnData.release);
@@ -610,9 +612,9 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   ExeData GetExecutableData()
   { // Suffix to test against
-    const string strMacSig{ ".app/Contents/MacOS/" };
+    const StdString strMacSig{ ".app/Contents/MacOS/" };
     // Get engine directory
-    const string &strLoc = ENGLoc();
+    const StdString &strLoc = ENGLoc();
     // Engine location length and Mac app signature length
     const size_t stEngLength = strLoc.length(),
                  stMacSigLength = strMacSig.length();
@@ -632,12 +634,13 @@ class SysCore :
       uiModel = GetSysCTLInfoNum<uint32_t>("hw.cpusubtype"),
       uiStepping = 0;
     // Get processor name
-    string strProcessorName{ GetSysCTLInfoString("machdep.cpu.brand_string") },
+    StdString
+      strProcessorName{ GetSysCTLInfoString("machdep.cpu.brand_string") },
       strVendorId{ "Apple" };
     // Remove unnecessary whitespaces
     StrCompactRef(strProcessorName);
     // Processor speeds common speeds (lowest vs highest speed).
-    typedef array<const unsigned int, 2> UIntPair;
+    typedef StdArray<const unsigned int, 2> UIntPair;
     const UIntPair uipM1{ { 2064, 3228 } }, // Apple M1
                    uipM2{ { 2420, 3480 } }, // Apple M2
                    uipM3{ { 2748, 4056 } }, // Apple M3
@@ -645,22 +648,17 @@ class SysCore :
                    uipM5{ { 2896, 4600 } }; // Apple M5 (Est.)
     // Processor table with speeds. This is because there is no API to get
     // the speed of Apple branded processors.
-    typedef pair<const string, const UIntPair &> MacCpuListMapPair;
-    typedef map<MacCpuListMapPair::first_type, MacCpuListMapPair::second_type>
-      MacCpuListMap;
+    typedef StdPair<const StdString, const UIntPair &> MacCpuListMapPair;
+    typedef StdMap<MacCpuListMapPair::first_type,
+      MacCpuListMapPair::second_type> MacCpuListMap;
     typedef MacCpuListMap::const_iterator MacCpuListMapConstIt;
     const MacCpuListMap mclmData{
-      { "Apple M1",       uipM1 }, { "Apple M1 Pro",   uipM1 },
-      { "Apple M1 Max",   uipM1 }, { "Apple M1 Ultra", uipM1 },
-      { "Apple M2",       uipM2 }, { "Apple M2 Pro",   uipM2 },
-      { "Apple M2 Max",   uipM2 }, { "Apple M2 Ultra", uipM2 },
-      { "Apple M3",       uipM3 }, { "Apple M3 Pro",   uipM3 },
-      { "Apple M3 Max",   uipM3 }, { "Apple M3 Ultra", uipM3 },
-      { "Apple M4",       uipM4 }, { "Apple M4 Pro",   uipM4 },
-      { "Apple M4 Max",   uipM4 }, { "Apple M4 Ultra", uipM4 },
-      { "Apple M5",       uipM5 }, { "Apple M5 Pro",   uipM5 },
-      { "Apple M5 Max",   uipM5 }, { "Apple M5 Ultra", uipM5 }
-    };
+#define CPUPACKEX(n,x) { "Apple M" STR(n) x, uipM ## n }
+#define CPUPACK(n) CPUPACKEX(n,), CPUPACKEX(n, " Pro"), \
+                   CPUPACKEX(n, " Max"), CPUPACKEX(n, " Ultra")
+      CPUPACK(1), CPUPACK(2), CPUPACK(3), CPUPACK(4), CPUPACK(5) };
+#undef CPUPACK
+#undef CPUPACKEX
     // Find processor name to speed table and if we found it? Then copy the
     // value from the table as the actual speed.
     const MacCpuListMapConstIt mclmciIt{ mclmData.find(strProcessorName) };
@@ -677,7 +675,8 @@ class SysCore :
       uiModel = GetSysCTLInfoNum<uint32_t>("machdep.cpu.model"),
       uiStepping = GetSysCTLInfoNum<uint32_t>("machdep.cpu.stepping");
     // Get processor id and vendor
-    string strProcessorName{ GetSysCTLInfoString("machdep.cpu.brand_string") },
+    StdString
+      strProcessorName{ GetSysCTLInfoString("machdep.cpu.brand_string") },
       strVendorId{ GetSysCTLInfoString("machdep.cpu.vendor") };
     // Remove unnecessary whitespaces
     StrCompactRef(strVendorId);
@@ -697,7 +696,7 @@ class SysCore :
     struct kinfo_proc kipInfo;
     kipInfo.kp_proc.p_flag = 0;
     // Setup request parameters
-    array<int,4> iaParams{ CTL_KERN, KERN_PROC, KERN_PROC_PID, GetPid() };
+    StdArray<int,4> iaParams{ CTL_KERN, KERN_PROC, KERN_PROC_PID, GetPid() };
     // Check see if we're running a debugger
     size_t stSize = sizeof(kipInfo);
     sysctl(iaParams.data(), iaParams.size(), &kipInfo, &stSize, nullptr, 0);
@@ -705,7 +704,7 @@ class SysCore :
     return (kipInfo.kp_proc.p_flag & P_TRACED) != 0;
   }
   /* -- Get process affinity masks ----------------------------------------- */
-  uint64_t GetAffinity(const bool) const { return Flag(StdThreadMax()); }
+  static uint64_t GetAffinity(const bool) { return Flag(StdThreadMax()); }
   /* -- Return process priority -------------------------------------------- */
   int GetPriority() const
   { // Get priority value and return if succeeded
@@ -726,9 +725,9 @@ class SysCore :
   /* -- Window was destroyed, nullify handles ------------------------------ */
   void SetWindowDestroyed() { bWindowInitialised = false; }
   /* ----------------------------------------------------------------------- */
-  int LastSocketOrSysError() const { return StdGetError(); }
+  static int LastSocketOrSysError() { return StdGetError(); }
   /* -- Initialise global mutex -------------------------------------------- */
-  bool InitGlobalMutex(const string_view &strvTitle)
+  bool InitGlobalMutex(const StdStringView &strvTitle)
   { // Initialise the mutex and return the result
     return this->SysDoInitGlobalMutex(strvTitle,
       [](const pid_t, const pid_t pPOId)->bool{
@@ -754,7 +753,7 @@ class SysCore :
     });
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const string BuildRoamingDir() const
+  const StdString BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("HOME",
         "/Library/Application Support"); }
   /* -- Default constructor ------------------------------------------------ */

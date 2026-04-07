@@ -41,11 +41,11 @@ using namespace IArchive::P;           using namespace Common;
 ** -- Read Archive class argument ------------------------------------------ */
 struct AgArchive : public ArClass<Archive> {
   explicit AgArchive(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Archive>(lS, iArg, *cArchives)}{} };
+    ArClass{LuaUtilGetClassRef<Archive>(lS, iArg, cArchives)}{} };
 /* -- Create Archive class argument ---------------------------------------- */
 struct AcArchive : public ArClass<Archive> {
   explicit AcArchive(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Archive>(lS, *cArchives)}{} };
+    ArClass{LuaUtilClassCreateRef<Archive>(lS, cArchives)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Archive:* member functions                                          ## **

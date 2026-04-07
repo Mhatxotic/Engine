@@ -36,14 +36,18 @@ namespace E {                          // Put everything in engine namespace
 #include "dir.hpp"                     // Directory handling utility header
 #include "util.hpp"                    // Miscellenious utilities header
 #include "sysutil.hpp"                 // System utilities header
-#include "clock.hpp"                   // Clock utilities header
+#include "clock.hpp"                   // Clock base header
+#include "chrono.hpp"                  // Clock chronometer header
+#include "interval.hpp"                // Clock interval header
 #include "ihelper.hpp"                 // Init helper utility header
 #include "args.hpp"                    // Arguments handling header
 #include "cmdline.hpp"                 // Command-line class header
+#include "bit.hpp"                     // Bit functions
 #include "memory.hpp"                  // Memory management utilities header
 #include "fstream.hpp"                 // File IO utility header
 #include "mutex.hpp"                   // Mutex helper class header
 #include "log.hpp"                     // Logging helper class header
+#include "ifillcon.hpp"                // Init filled contianers header
 #include "luadef.hpp"                  // Lua definitions header
 #include "collect.hpp"                 // Class collector utility header
 #include "lockable.hpp"                // Lockable collector utility header
@@ -74,23 +78,24 @@ namespace E {                          // Put everything in engine namespace
 #include "json.hpp"                    // Json handling class header
 #include "file.hpp"                    // FStream+FileMap class header
 /* -- Includes ------------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICmdLine::P;
-using namespace ICommon::P;            using namespace ICrypt::P;
-using namespace ICodec::P;             using namespace IDir::P;
-using namespace IError::P;             using namespace IFStream::P;
-using namespace IHelper::P;            using namespace IJson::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IParser::P;
-using namespace IPSplit::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace IUuId::P;
+using namespace IClock::P;             using namespace IChrono::P;
+using namespace ICmdLine::P;           using namespace ICommon::P;
+using namespace ICrypt::P;             using namespace ICodec::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace IFStream::P;           using namespace IHelper::P;
+using namespace IJson::P;              using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IParser::P;            using namespace IPSplit::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;              using namespace IUuId::P;
 /* ========================================================================= */
 #define STANDARD   "c++20"             // Current compilation standard used
 #define ENGINENAME "engine"            // Name of engine 'engine'
 #define SRCEXT     ".hpp"              // Extension of source files
+#define CERTEXT    ".cer"              // Extension of certificate files
 #define ARCDIR     "archive"           // Archives directory
 #define BINDIR     "bin"               // Binaries directory
 #define CRTDIR     "certs"             // CA certificates directory
@@ -213,11 +218,11 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* CCANAL     */ "-Weverything -Werror=all -Wno-c++98-compat "
                    "-Wno-c++98-compat-pedantic -Wno-c++20-compat "
                    "-Wno-documentation -Wno-documentation-unknown-command "
-                   "-Wno-gnu-zero-variadic-macro-arguments "
+                   "-Wno-gnu-zero-variadic-macro-arguments -Wno-weak-vtables "
                    "-Wno-covered-switch-default -Wno-switch-enum "
                    "-Wno-poison-system-directories -Wno-global-constructors "
                    "-Wno-padded -Wno-cast-function-type-strict "
-                   "-Wno-reserved-identifier",
+                   "-Wno-reserved-identifier -Wno-allocator-wrappers",
   /* CCAA       */ envWindowsMSVC.cpCCAA,
   /* CCAB       */ "-DBETA -MT -Z7 -O2 -GS- -Gw",
   /* CCAR       */ "-DRELEASE -MT -O2 -GS- -Gw",
@@ -561,17 +566,17 @@ static Environment envActive{envMacOSLLVM};   // Using LLVM environment
                    PF_ENVGCC;          // Using XCode environment
 static Environment envActive{envLinuxGCC};    // Using GCC environment
 #endif                                 // Setup environment
-static array<unsigned int,4> uiVer{    // Version of engine (y.m.d.b)
+static StdArray<unsigned int,4> uiVer{ // Version of engine (y.m.d.b)
   static_cast<unsigned int>(-1), static_cast<unsigned int>(-1),
   static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) };
-static string strName, strArch, strVer, strTitle, strAuthor;
-static const string strEName{ VER_NAME }, strEAuthor{ VER_AUTHOR };
-static const string strVerFile{ "build." JSON_EXTENSION };
+static StdString strName, strArch, strVer, strTitle, strAuthor;
+static const StdString strEName{ VER_NAME }, strEAuthor{ VER_AUTHOR };
+static const StdString strVerFile{ "build." JSON_EXTENSION };
 /* -- These directory names are reserved ----------------------------------- */
 static const StrVUSet svusIgnore{ ARCDIR, BINDIR, CRTDIR, DBGDIR, DOCDIR,
   DRDDIR, DISDIR, INCDIR, LIBDIR, LICDIR, SRCDIR, UTLDIR, WINDIR };
 /* -- Get return character format of text string --------------------------- */
-static const string StrGetReturnFormat(const string &strIn)
+static const StdString StrGetReturnFormat(const StdString &strIn)
 { // String is not empty?
   if(!strIn.empty())
   { // Enumerate each character...
@@ -606,15 +611,15 @@ static int CheckSources()
   { // Total number of files processed
     ++stTotal;
     // Build actual filename
-    const string strFile{ StrAppend(SRCDIR, '/', dempPair.first) };
+    const StdString strFile{ StrAppend(SRCDIR, '/', dempPair.first) };
     // Capture errors
     try
     { // Open file
       FStream fsFile{ strFile, FM_R_B };
-      if(!fsFile.FStreamOpened()) throw runtime_error("Open failed!");
+      if(!fsFile.FStreamOpened()) throw StdRunTimeError("Open failed!");
       // Read file and restart if empty
-      const string strData{ fsFile.FStreamReadStringSafe() };
-      if(strData.empty()) throw runtime_error("Empty file!");
+      const StdString strData{ fsFile.FStreamReadStringSafe() };
+      if(strData.empty()) throw StdRunTimeError("Empty file!");
       fsFile.FStreamClose();
       // Detect file format and split to lines
       const Token tLines{ strData, StrGetReturnFormat(strData) };
@@ -623,18 +628,18 @@ static int CheckSources()
       // Enumerate through all the parsed lines
       for(size_t stLine = 0; stLine < tLines.size(); ++stLine)
       { // Get line
-        const string &strLine = tLines[stLine];
+        const StdString &strLine = tLines[stLine];
         // Capture errors
         try
         { // Must not be an empty line
           if(strLine.empty() && stLine+1 < tLines.size())
-            throw runtime_error("Empty line!");
+            throw StdRunTimeError("Empty line!");
           // Must be at least 4 characters
           if(strLine.length() < 4) continue;
           // Beginning of a comment?
           if(strLine[0] == '/' && strLine[1] == '*')
           { // We already processed one on the last line
-            if(bCBlock) throw runtime_error("Potential comment block!");
+            if(bCBlock) throw StdRunTimeError("Potential comment block!");
             // We haven't processed one
             bCBlock = true;
             // Check for unfinished separator lines
@@ -644,11 +649,11 @@ static int CheckSources()
                strLine[strLine.length() - 1] == '/' &&
                strLine[strLine.length() - 2] == '*' &&
                strLine.length() < 79)
-              throw runtime_error("Unfinished separator!");
+              throw StdRunTimeError("Unfinished separator!");
           } // Not a comment
           else bCBlock = false;
           // Must be maximum of 79 characters
-          if(strLine.length() >= 80) throw runtime_error("Line too long!");
+          if(strLine.length() >= 80) throw StdRunTimeError("Line too long!");
           // Skip indentation
           size_t stPos = 0;
           const size_t stEnd = strLine.length();
@@ -657,7 +662,7 @@ static int CheckSources()
           // Check for macros
           if(stPos > 1 && stPos < stEnd && strLine[stPos] == '#' &&
             StdIsAlpha(strLine[stPos+1]))
-              throw runtime_error("Remove pre-processor indentation!");
+              throw StdRunTimeError("Remove pre-processor indentation!");
           // Scan rest of string
           bool bInQuote = false, bGotAlpha = false;
           for(; stPos < stEnd; ++stPos) try
@@ -670,67 +675,69 @@ static int CheckSources()
                  strLine[stPos] == '/' && strLine[stPos+1] == '/')
               { // Check if in centre
                 if(bGotAlpha && stPos < 39 && (strLine.length() - stPos) < 39)
-                  throw runtime_error("Comment not in centre!");
+                  throw StdRunTimeError{ "Comment not in centre!" };
                 // Next part must have a space
                 if(strLine[stPos+2] != ' ')
-                  throw runtime_error("Comment must begin with a whitespace!");
+                  throw StdRunTimeError{
+                    "Comment must begin with a whitespace!" };
                 // No need to check anything else
                 break;
               }
             } // Is alpha?
             else if(StdIsAlnum(strLine[stPos])) bGotAlpha = true;
           } // exception occured
-          catch(const exception &e)
+          catch(const StdException &eReason)
           { // Print row number, column and error
             ++stWarnings;
             cout << "W: " << strFile << ':' << stLine+1 << '/'
                  << tLines.size() << ':' << stPos+1 << '/'
-                 << strLine.length() << ": " << e.what() << endl;
+                 << strLine.length() << ": " << eReason.what()
+                 << StdIOSEndLine;
           }
         } // exception occured
-        catch(const exception &e)
+        catch(const StdException &eReason)
         { // Print row number and error
           ++stWarnings;
           cout << "W: " << strFile << ':' << stLine+1 << '/'
                << tLines.size() << ':' << strLine.length() << '/'
-               << strLine.length() << ": " << e.what() << endl;
+               << strLine.length() << ": " << eReason.what() << StdIOSEndLine;
         }
       }
     } // exception occured
-    catch(const exception &e)
+    catch(const StdException &eReason)
     { // Print file error
       ++stWarnings;
-      cout << "W: " << strFile << ": " << e.what() << endl;
+      cout << "W: " << strFile << ": " << eReason.what() << StdIOSEndLine;
     }
   } // Add return if a warning occured
   if(stWarnings) cout << '\n';
   // Finished
   cout << "Finished with " << stWarnings << " warnings in "
-       << stTotal << " modules." << endl;
+       << stTotal << " modules." << StdIOSEndLine;
   // Success
   return 0;
 }
 /* ------------------------------------------------------------------------- */
 static int GenDoc()
 { // Typedefs
-  struct StrStrStr { string strName, strType, strDesc; };
-  typedef list<StrStrStr> StrStrStrList;
+  struct StrStrStr { StdString strName, strType, strDesc; };
+  typedef StdList<StrStrStr> StrStrStrList;
   struct ApiFunc { StrStrStrList lParameters, lReturns;
                    StrList lDescription; };
-  typedef map<string, ApiFunc> FuncList;
-  typedef pair<string, ApiFunc> FuncListPair;
+  typedef StdMap<StdString, ApiFunc> FuncList;
+  typedef StdPair<StdString, ApiFunc> FuncListPair;
   struct ApiNameSpace { StrList slDesc;
     FuncList flMembers, flMethods, flConsts; };
-  typedef map<string, ApiNameSpace> ApiList;
-  typedef pair<string, ApiNameSpace> ApiListPair;
+  typedef StdMap<StdString, ApiNameSpace> ApiList;
+  typedef StdPair<StdString, ApiNameSpace> ApiListPair;
   // The api library
   ApiList alApi;
   // Data for the current namespace
   ApiNameSpace ansCurrent;
-  string strClass;
+  StdString strClass;
   // Data for the current function
   ApiFunc afCurrent;
-  string strFunc;
+  StdString strFunc;
   enum Type { TYP_NONE, TYP_METHOD, TYP_MEMBER, TYP_CONST } eType = TYP_NONE;
   // Classes members and methods
   size_t stTotalClasses = 0,
@@ -743,13 +750,13 @@ static int GenDoc()
   { // Ignore if file doesnt begin with ll
     if(dempPair.first.substr(0, 2) != "ll") continue;
     // Build actual filename
-    const string strFile{ StrAppend(SRCDIR, '/', dempPair.first) };
+    const StdString strFile{ StrAppend(SRCDIR, '/', dempPair.first) };
     // Loading this file
     cout << strFile << "... ";
     // Read file and memory block is empty?
-    const string strData{
+    const StdString strData{
       FStream{ strFile, FM_R_B }.FStreamReadStringSafe() };
-    if(strData.empty()) throw runtime_error{ "failed!\n" };
+    if(strData.empty()) throw StdRunTimeError{ "failed!\n" };
     // Report the number of that were read
     cout << strData.length() << "b... ";
     // Detect file format and split to lines
@@ -760,7 +767,7 @@ static int GenDoc()
     size_t stLine = 0, stClasses = 0, stMembers = 0,
            stMethods = 0, stConsts = 0;
     // Enumerate through all the parsed lines
-    for(const string &strLine : tLines) try
+    for(const StdString &strLine : tLines) try
     { // Increment line number
       ++stLine;
       // Must be at least 4 characters
@@ -778,7 +785,7 @@ static int GenDoc()
             { // Add it to api func list
               switch(eType)
               { // No type? (error)
-                case TYP_NONE: throw runtime_error{ "No type set" };
+                case TYP_NONE: throw StdRunTimeError{ "No type set" };
                 // Method?
                 case TYP_METHOD: ansCurrent.flMethods.
                   insert(FuncListPair(strFunc, afCurrent));
@@ -792,7 +799,7 @@ static int GenDoc()
                   insert(FuncListPair(strFunc, afCurrent));
                   break;
                 // Unknown
-                default: throw runtime_error{ "Unknown type" };
+                default: throw StdRunTimeError{ "Unknown type" };
               } // Clear data on current function
               afCurrent.lParameters.clear();
               afCurrent.lReturns.clear();
@@ -827,7 +834,7 @@ static int GenDoc()
           { // Add it to api func list
             switch(eType)
             { // No type? (error)
-              case TYP_NONE: throw runtime_error{ "No type set" };
+              case TYP_NONE: throw StdRunTimeError{ "No type set" };
               // Method?
               case TYP_METHOD: ansCurrent.flMethods.
                 insert(FuncListPair(strFunc, afCurrent));
@@ -841,13 +848,13 @@ static int GenDoc()
                 insert(FuncListPair(strFunc, afCurrent));
                 break;
               // Unknown
-              default: throw runtime_error{ "Unknown type" };
+              default: throw StdRunTimeError{ "Unknown type" };
             } // Clear data on current function
             afCurrent.lParameters.clear();
             afCurrent.lReturns.clear();
             afCurrent.lDescription.clear();
           } // Re-initialise struct members
-          const string strNewFunc{ strLine.substr(5) };
+          const StdString strNewFunc{ strLine.substr(5) };
           // Find colon and if we didn't find it?
           eType = TYP_CONST;
           size_t stPos = strNewFunc.find(':');
@@ -855,18 +862,18 @@ static int GenDoc()
           { // Find period and if we didn't find it? Parse error
             stPos = strNewFunc.find('.');
             if(stPos == StdNPos)
-              throw runtime_error{ "Period not found for new api func" };
+              throw StdRunTimeError{ "Period not found for new api func" };
           } // Is a member function
-          else throw runtime_error{ "Method not allowed in const" };
+          else throw StdRunTimeError{ "Method not allowed in const" };
           // Check the class didn't change
           if(strNewFunc.substr(0, stPos) != strClass)
-            throw runtime_error{ "Unexpected class change" };
+            throw StdRunTimeError{ "Unexpected class change" };
           // Set the new function name
           strFunc = strNewFunc.substr(stPos+1);
           for(char cChar : strFunc)
             if(StdIsNotAlnum(static_cast<int>(cChar)) &&
               cChar != ':' && cChar != '.')
-                throw runtime_error{ "Invalid class name" };
+                throw StdRunTimeError{ "Invalid class name" };
           // New function
           ++stConsts;
           // Done
@@ -878,7 +885,7 @@ static int GenDoc()
           { // Add it to api func list
             switch(eType)
             { // No type? (error)
-              case TYP_NONE: throw runtime_error{ "No type set" };
+              case TYP_NONE: throw StdRunTimeError{ "No type set" };
               // Method?
               case TYP_METHOD: ansCurrent.flMethods.
                 insert(FuncListPair(strFunc, afCurrent));
@@ -892,37 +899,37 @@ static int GenDoc()
                 insert(FuncListPair(strFunc, afCurrent));
                 break;
               // Unknown
-              default: throw runtime_error{ "Unknown type" };
+              default: throw StdRunTimeError{ "Unknown type" };
             } // Clear data on current function
             afCurrent.lParameters.clear();
             afCurrent.lReturns.clear();
             afCurrent.lDescription.clear();
           } // Re-initialise struct members
-          const string strNewFunc{ strLine.substr(5) };
+          const StdString strNewFunc{ strLine.substr(5) };
           // Find colon and if we didn't find it?
           size_t stPos = strNewFunc.find(':');
           if(stPos == StdNPos)
           { // Find period and if we didn't find it? Parse error
             stPos = strNewFunc.find('.');
             if(stPos == StdNPos)
-              throw runtime_error{ "Period not found for new api func" };
+              throw StdRunTimeError{ "Period not found for new api func" };
             // Is not a member function
             else eType = TYP_MEMBER;
           } // Is a member function
           else eType = TYP_METHOD;
           // Check the class didn't change
           if(strNewFunc.substr(0, stPos) != strClass)
-            throw runtime_error{ "Unexpected class change" };
+            throw StdRunTimeError{ "Unexpected class change" };
           // Set the new function name
           strFunc = strNewFunc.substr(stPos+1);
           for(char cChar : strFunc)
             if(StdIsNotAlnum(static_cast<int>(cChar)) &&
               cChar != ':' && cChar != '.')
-                throw runtime_error{ "Invalid function name" };
+                throw StdRunTimeError{ "Invalid function name" };
           // New function
           switch(eType)
           { // No type? (error)
-            case TYP_NONE: throw runtime_error{ "No type set" };
+            case TYP_NONE: throw StdRunTimeError{ "No type set" };
             // Method?
             case TYP_METHOD: ++stMethods; break;
             // Member?
@@ -930,7 +937,7 @@ static int GenDoc()
             // Const?
             case TYP_CONST: ++stConsts; break;
             // Unknown
-            default: throw runtime_error{ "Unknown type" };
+            default: throw StdRunTimeError{ "Unknown type" };
           } // Done
           break;
         } // Input or output pparameter description?
@@ -942,7 +949,7 @@ static int GenDoc()
           // Find colon and if not found? Parse error
           size_t stPos = sParams.strName.find(':');
           if(stPos == StdNPos)
-            throw runtime_error{ "Colon not found for in/out param" };
+            throw StdRunTimeError{ "Colon not found for in/out param" };
           // Set rest of string and name of parameter
           sParams.strType = sParams.strName.substr(stPos + 1);
           sParams.strName = sParams.strName.substr(0, stPos);
@@ -950,7 +957,7 @@ static int GenDoc()
           stPos = sParams.strType.find('=');
           // Not found? Parse error
           if(stPos == StdNPos)
-            throw runtime_error{ "Equals not found for in/out param" };
+            throw StdRunTimeError{ "Equals not found for in/out param" };
           // Set rest of string and name of parameter
           sParams.strDesc = sParams.strType.substr(stPos + 1);
           sParams.strType = sParams.strType.substr(0, stPos);
@@ -964,7 +971,7 @@ static int GenDoc()
         { // Have enough characters?
           if(strLine.length() > 5)
           { // Get line after the #, remove trailing spaces and return if empty
-            string strPart{ CryptEntEncode(strLine.substr(5)) };
+            StdString strPart{ CryptEntEncode(strLine.substr(5)) };
             while(!strPart.empty() && strPart.back() == ' ')
               strPart.pop_back();
             if(strPart.empty()) strPart = "<BR>";
@@ -984,10 +991,10 @@ static int GenDoc()
         default: break;
       }
     } // exception occured
-    catch(const exception &e)
+    catch(const StdException &eReason)
     { // Print line number and error
       cout << "\nException! (" << dempPair.first << ":L#" << stLine
-           << "): " << e.what() << "... ";
+           << "): " << eReason.what() << "... ";
     } // Working on class descriptor? Add it to list
     if(!strClass.empty())
     { // Working on a function?
@@ -995,7 +1002,7 @@ static int GenDoc()
       { // Add it to api func list
         switch(eType)
         { // No type? (error)
-          case TYP_NONE: throw runtime_error{ "No type set" };
+          case TYP_NONE: throw StdRunTimeError{ "No type set" };
           // Method?
           case TYP_METHOD: ansCurrent.flMethods.
             insert(FuncListPair(strFunc, afCurrent));
@@ -1009,7 +1016,7 @@ static int GenDoc()
             insert(FuncListPair(strFunc, afCurrent));
             break;
           // Unknown
-          default: throw runtime_error{ "Unknown type" };
+          default: throw StdRunTimeError{ "Unknown type" };
         }
         // Clear data on current function
         afCurrent.lParameters.clear();
@@ -1032,17 +1039,18 @@ static int GenDoc()
     stTotalMethods += stMethods;
     stTotalConsts += stConsts;
   } // exception occured
-  catch(const exception &e)
+  catch(const StdException &eReason)
   { // Print line number and error
-    cout << "\nException! (" << dempPair.first << ") " << e.what() << "... ";
+    cout << "\nException! (" << dempPair.first << ") " << eReason.what() <<
+      "... ";
   } // Console commands storage
   StrStrMap ssmConCmds;
   { // Build actual console commands list filename
-    const string strFile{ StrAppend(SRCDIR, "/conlib.hpp") };
+    const StdString strFile{ StrAppend(SRCDIR, "/conlib.hpp") };
     // Loading this file
     cout << strFile << "... ";
     // Read file and memory block is empty?
-    const string strData{
+    const StdString strData{
       FStream{ strFile, FM_R_B }.FStreamReadStringSafe() };
     if(strData.empty()) XCL("Can't open file!", "File", strFile);
     // Report the number of that were read
@@ -1054,9 +1062,9 @@ static int GenDoc()
     // Variables needed to read file
     size_t stLine = 0;
     // Current console command name
-    string strCName, strCDesc;
+    StdString strCName, strCDesc;
     // Enumerate through all the parsed lines
-    for(const string &strLine : tLines) try
+    for(const StdString &strLine : tLines) try
     { // Increment line number
       ++stLine;
       // Must be at least 4 characters
@@ -1081,7 +1089,7 @@ static int GenDoc()
         { // Add line to description
           if(strLine.length() > 5)
           { // Get line remove trailing spaces and just add a linefeed if empty
-            string strPart{ CryptEntEncode(strLine.substr(5)) };
+            StdString strPart{ CryptEntEncode(strLine.substr(5)) };
             while(!strPart.empty() && strPart.back() == ' ')
               strPart.pop_back();
             if(strPart.empty()) strCDesc += "<BR>";
@@ -1097,23 +1105,23 @@ static int GenDoc()
         default: break;
       }
     } // exception occured
-    catch(const exception &e)
+    catch(const StdException &eReason)
     { // Print line number and error
       cout << "\nException! (" << strFile << ":L#" << stLine
-           << "): " << e.what() << "... ";
+           << "): " << eReason.what() << "... ";
     } // CVar name not empty? Put into cvars list for writing
     if(!strCName.empty())
       ssmConCmds.insert({ StrToLowCase(strCName), strCDesc });
     // Report cvars
-    cout << ssmConCmds.size() << "CC!" << endl;
+    cout << ssmConCmds.size() << "CC!" << StdIOSEndLine;
   } // CVars storage
   StrStrMap ssmCVars;
   { // Build actual cvars list filename
-    const string strFile{ StrAppend(SRCDIR, "/cvarlib.hpp") };
+    const StdString strFile{ StrAppend(SRCDIR, "/cvarlib.hpp") };
     // Loading this file
     cout << strFile << "... ";
     // Read file and memory block is empty?
-    const string strData{
+    const StdString strData{
       FStream{ strFile, FM_R_B }.FStreamReadStringSafe() };
     if(strData.empty()) XCL("Can't open file!", "File", strFile);
     // Report the number of that were read
@@ -1125,9 +1133,9 @@ static int GenDoc()
     // Variables needed to read file
     size_t stLine = 0;
     // Current cvar name
-    string strCName, strCDesc;
+    StdString strCName, strCDesc;
     // Enumerate through all the parsed lines
-    for(const string &strLine : tLines) try
+    for(const StdString &strLine : tLines) try
     { // Increment line number
       ++stLine;
       // Must be at least 4 characters
@@ -1152,7 +1160,7 @@ static int GenDoc()
         { // Add line to description
           if(strLine.length() > 5)
           { // Get line remove trailing spaces and just add a linefeed if empty
-            string strPart{ CryptEntEncode(strLine.substr(5)) };
+            StdString strPart{ CryptEntEncode(strLine.substr(5)) };
             while(!strPart.empty() && strPart.back() == ' ')
               strPart.pop_back();
             if(strPart.empty()) strCDesc += "<BR>";
@@ -1168,17 +1176,17 @@ static int GenDoc()
         default: break;
       }
     } // exception occured
-    catch(const exception &e)
+    catch(const StdException &eReason)
     { // Print line number and error
       cout << "\nException! (" << strFile << ":L#" << stLine
-           << "): " << e.what() << "... ";
+           << "): " << eReason.what() << "... ";
     } // CVar name not empty? Put into cvars list for writing
     if(!strCName.empty())
       ssmCVars.insert({ StrToLowCase(strCName), strCDesc });
     // Report cvars
-    cout << ssmCVars.size() << "CV!" << endl;
+    cout << ssmCVars.size() << "CV!" << StdIOSEndLine;
   } // Set output file
-  const string strFile{ StrFormat("$/index.html", DOCDIR) };
+  const StdString strFile{ StrFormat("$/index.html", DOCDIR) };
   // Print result
   cout << "A total of "
        << StrCPluraliseNum(stTotalMembers, "member", "members")
@@ -1196,9 +1204,9 @@ static int GenDoc()
           "Creating documentation '" << strFile << "'... ";
   // Create file
   FStream fSrc{ strFile, FM_W_T };
-  if(!fSrc.FStreamOpened()) throw runtime_error{ "failed!" };
+  if(!fSrc.FStreamOpened()) throw StdRunTimeError{ "failed!" };
   // Get date
-  const string strDate{ cmSys.FormatTime() };
+  const StdString strDate{ cmSys.FormatTime() };
   // Write header
   fSrc.FStreamWriteStringEx(
     "<!DOCTYPE html>\n"
@@ -1541,9 +1549,9 @@ static int GenDoc()
     struct METHODMEMBERDATA {
       const FuncList &flList;
       const unsigned char ucSep;
-      const string strLeft, strRight;
+      const StdString strLeft, strRight;
     };
-    const array<const METHODMEMBERDATA,3>mmData{{
+    const StdArray<const METHODMEMBERDATA,3>mmData{{
       { aData.flMembers, '.', "(", ")" },
       { aData.flMethods, ':', "(", ")" },
       { aData.flConsts,  '.', "",  ""  }
@@ -1555,14 +1563,14 @@ static int GenDoc()
       { // Get reference to function data
         const ApiFunc &afData = flpItem.second;
         // Formatted parameter list
-        string strInParams;
+        StdString strInParams;
         if(!afData.lParameters.empty())
         { for(const StrStrStr &lInParam : afData.lParameters)
             strInParams += StrFormat("<U>$</U>, ", lInParam.strName);
           if(!strInParams.empty()) strInParams.pop_back();
           if(!strInParams.empty()) strInParams.pop_back();
         } // For building return parameters list
-        string strOutParams;
+        StdString strOutParams;
         if(!afData.lReturns.empty())
         { for(const StrStrStr &lOutParam : afData.lReturns)
             strOutParams += StrFormat("<U>$</U>, ", lOutParam.strName);
@@ -1570,7 +1578,7 @@ static int GenDoc()
           if(!strOutParams.empty()) strOutParams.pop_back();
           strOutParams += " = ";
         } // Start of function declaration
-        const string strCF{
+        const StdString strCF{
           StrAppend(lAPIp.first, mmItem.ucSep, flpItem.first) };
         fSrc.FStreamWriteStringEx(
           "\t<DIV id=\"$\" style=\"display:none\">\n"
@@ -1604,7 +1612,7 @@ static int GenDoc()
         {
           fSrc.FStreamWriteString("\t\t<H4>Synopsis:-</H4>\n"
                                   "\t\t<PRE>");
-          for(const string &strDesc : afData.lDescription)
+          for(const StdString &strDesc : afData.lDescription)
             fSrc.FStreamWriteString(strDesc);
           // Footer of descriptor
           fSrc.FStreamWriteString("</PRE>\n");
@@ -1670,18 +1678,18 @@ static int GenDoc()
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static void ConWrite(const string &strText)
+static void ConWrite(const StdString &strText)
 { // Pretty word wrap the text and write each line
 #if defined(WINDOWS)
   const StrVector svLines{ UtfWordWrap(strText, 79, 2) };
-  for(const string &strLine : svLines) cout << strLine << endl;
+  for(const StdString &strLine : svLines) cout << strLine << StdIOSEndLine;
 #else
-  cout << strText << endl;
+  cout << strText << StdIOSEndLine;
 #endif
 }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)
-static void PatchIcon(const string &strIco, const string &strOut)
+static void PatchIcon(const StdString &strIco, const StdString &strOut)
 { // Using Windows API
   using namespace Lib::OS;
   // Return if file does not exist
@@ -1803,7 +1811,7 @@ static void PatchIcon(const string &strIco, const string &strOut)
   // Write new icon group
   if(!UpdateResourceW(hExeFile, RT_GROUP_ICON, L"GLFW_ICON",
     MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_UK),
-      UtfToNonConstCast<LPVOID>(cpHdr), static_cast<DWORD>(stHdrSize)))
+      StdToNonConstCast<LPVOID>(cpHdr), static_cast<DWORD>(stHdrSize)))
         XCS("Update icon group resource error!", "File", strOut);
   // Close executable file
   if(!EndUpdateResource(hExeFile, FALSE))
@@ -1811,10 +1819,10 @@ static void PatchIcon(const string &strIco, const string &strOut)
 }
 #endif
 /* ------------------------------------------------------------------------- */
-static const string GetTempDir()
+static const StdString GetTempDir()
 { // Get temporary directory and remove trailing slash
 #if defined(WINDOWS)
-  string strTmp{ cCmdLine->CmdLineGetEnv("TMP") };
+  StdString strTmp{ cCmdLine->CmdLineGetEnv("TMP") };
   if(strTmp.length() <= 1)
     XCL("Could not read TMP environment variable!");
   // Replace backslashes with forwardslashes in directory
@@ -1832,7 +1840,7 @@ static const string GetTempDir()
 static void DoCleanCompilerTempFiles()
 { // Get files
 #if defined(WINDOWS)
-  const string strTmp{ StrAppend(GetTempDir(), '/') };
+  const StdString strTmp{ StrAppend(GetTempDir(), '/') };
   const Dir dFiles{ strTmp };
   // For each file
   for(const DirEntMapPair &dempPair : dFiles.GetFiles())
@@ -1848,7 +1856,7 @@ static void DoCleanCompilerTempFiles()
       // Unknown
       default: continue;
     } // Delete the file and if failed?
-    const string strFile{ StrAppend(strTmp, dempPair.first) };
+    const StdString strFile{ StrAppend(strTmp, dempPair.first) };
     if(!DirFileUnlink(strFile))
       cout << "Failed to delete '" << strFile << "'!\n";
   }
@@ -1877,7 +1885,7 @@ static void DoClean(const StrVector svExts)
 { // Files deleted
   StrVector svDeleted, svNotDeleted;
   // For each extension we don't want. Grab files and clean them
-  for(const string &strExt : svExts)
+  for(const StdString &strExt : svExts)
     DoClean(svDeleted, svNotDeleted,
       strExt.empty() ? Dir{} : Dir{ cCommon->CommonBlank(), strExt });
   // Report result
@@ -1889,20 +1897,20 @@ static void DoClean(const StrVector svExts)
       svNotDeleted.size(), DirGetCWD(), StrImplode(svNotDeleted, 0, ", ")));
 }
 /* ------------------------------------------------------------------------- */
-static void MakeDirectory(const string &strDir)
+static void MakeDirectory(const StdString &strDir)
   { if(!DirMkDirEx(strDir))
       XCL("Failed to make directory!", "Directory", strDir); }
 /* ------------------------------------------------------------------------- */
-static void SetDirectory(const string &strDir)
+static void SetDirectory(const StdString &strDir)
   { if(!DirSetCWD(strDir))
       XCL("Failed to set new directory!", "Directory", strDir); }
 /* ------------------------------------------------------------------------- */
-static void MakeAndSetDirectory(const string &strDir)
+static void MakeAndSetDirectory(const StdString &strDir)
   { MakeDirectory(strDir); SetDirectory(strDir); }
 /* ------------------------------------------------------------------------- */
-static void DoClean(const StrVector svExts, const string &strDir)
+static void DoClean(const StrVector svExts, const StdString &strDir)
 { // Save current directory
-  const string strOldDir{ DirGetCWD() };
+  const StdString strOldDir{ DirGetCWD() };
   // Chdir to the directory
   if(!strDir.empty()) SetDirectory(strDir);
   // Do the clean
@@ -1911,11 +1919,11 @@ static void DoClean(const StrVector svExts, const string &strDir)
   if(!strDir.empty()) SetDirectory(strOldDir);
 }
 /* -- Open a process output stream ----------------------------------------- */
-static FILE *POpen(const string &strCL) { return StdPOpen(strCL); }
+static FILE *POpen(const StdString &strCL) { return StdPOpen(strCL); }
 /* -- Close a process output stream ---------------------------------------- */
 static int PClose(FILE*const fHandle) { return StdPClose(fHandle); }
 /* ------------------------------------------------------------------------- */
-static int SpecialExecute(const string strCmd, const size_t stML,
+static int SpecialExecute(const StdString strCmd, const size_t stML,
   const bool bErrOverride = false)
 { // Clear error number
   StdSetError(0);
@@ -1923,7 +1931,7 @@ static int SpecialExecute(const string strCmd, const size_t stML,
   ConWrite(StrAppend("*** ", strCmd));
   // Record current time
   const ClkTimePoint tpBegin{ cmHiRes.GetTime() };
-  // Execute process and capture output. throw runtime_error if failed
+  // Execute process and capture output. throw StdRunTimeError if failed
   FILE*const fpPipe = POpen(StrAppend(strCmd,
     (uiFlags & PF_SYSNOERR) || bErrOverride ?
       " 2>&1" : cCommon->CommonCBlank()));
@@ -1956,7 +1964,7 @@ static int SpecialExecute(const string strCmd, const size_t stML,
       XCL("Could not read pipe to execute process!",
           "CmdLine", strCmd, "Directory", DirGetCWD());
   } // exception occured? Just ignore it and close handle
-  catch(const exception&) {}
+  catch(const StdException &) {}
   // Close pipe and return result
   const int iR = PClose(fpPipe);
   // Print result if not successful
@@ -1969,7 +1977,7 @@ static int SpecialExecute(const string strCmd, const size_t stML,
   return iR;
 }
 /* ------------------------------------------------------------------------- */
-static int SpecialExecute2(const string &strCmd, const bool bOverride=true)
+static int SpecialExecute2(const StdString &strCmd, const bool bOverride=true)
 { // Execute command line and throw error if it failed
   if(const int iR = SpecialExecute(strCmd,
     uiFlags & PF_SYSOUT ? StdNPos : 0, bOverride))
@@ -1986,13 +1994,14 @@ static int SpecialExecute2(const string &strCmd, const bool bOverride=true)
 #define SystemF(...) SpecialExecute2(StrFormat(__VA_ARGS__), true)
 #define SystemNF(...) SpecialExecute2(StrFormat(__VA_ARGS__), false)
 /* ------------------------------------------------------------------------- */
-static void RenameFileSafe(const string &strSrc, const string &strDst)
+static void RenameFileSafe(const StdString &strSrc, const StdString &strDst)
 { // Write progress
   cout << "*** Renaming '" << strSrc << "' to '" << strDst << "'...";
   // Rename the file and show error if failed
-  if(DirFileRename(strSrc, strDst)) { cout << " OK!" << endl; return; }
+  if(DirFileRename(strSrc, strDst))
+    { cout << " OK!" << StdIOSEndLine; return; }
   // File doesnt exist?
-  if(errno != EEXIST)
+  if(StdIsNotError(EEXIST))
     XCL("Rename failed!", "Source", strSrc, "Destination", strDst);
   // Try delete it and throw error if failed!
   if(!DirFileUnlink(strDst))
@@ -2003,22 +2012,22 @@ static void RenameFileSafe(const string &strSrc, const string &strDst)
     XCL("Rename failed after successful unlink!",
         "Source", strSrc, "Destination", strDst);
   // Done
-  cout << " OW OK!" << endl;
+  cout << " OW OK!" << StdIOSEndLine;
 }
 /* ------------------------------------------------------------------------- */
-static int CertFunc(const string strOut)
+static int CertFunc(const StdString strOut)
 { // Files that we care about
-  const string
+  const StdString
     strP12{ StrFormat("$/$.p12", WINDIR, ENGINENAME) },
     strCodePass{ StrAppend(strP12, ".txt") };
   // Destination file specified?
   if(!strOut.empty())
   { // Read password to string and return if failed
-    const string strPass{ FStream{
+    const StdString strPass{ FStream{
       strCodePass, FM_R_B }.FStreamReadBlockSafe().MemToStringSafe() };
     if(strPass.empty()) XCL("Empty password!", "File", strCodePass);
     // Move to temp file because osslsigncode wont work
-    const string strOutUnsigned{ StrAppend(strOut, ".unsigned") };
+    const StdString strOutUnsigned{ StrAppend(strOut, ".unsigned") };
     SystemF("mv -fv \"$\" \"$\"", strOut, strOutUnsigned);
     // Do sign
     SystemF("osslsigncode sign "
@@ -2029,7 +2038,7 @@ static int CertFunc(const string strOut)
     // Done
     return 0;
   } // Create a strong random password
-  const string
+  const StdString
     strInPass{ CryptMBtoB64(CryptRandomBlock(256)) }, // Must be <= 1023 bytes
     strCrypt{ "-algorithm RSA "
               "-pkeyopt rsa_keygen_bits:4096" },
@@ -2039,7 +2048,7 @@ static int CertFunc(const string strOut)
     strCodePrv{ StrFormat("$/$-c-pr.pem", DBGDIR, ENGINENAME) },
     strCodePub{ StrFormat("$/$-c-pu.pem", DBGDIR, ENGINENAME) },
     strCodePubConf{ StrFormat("$/$-c-pu.txt", DBGDIR, ENGINENAME) },
-    strCodeCer{ StrFormat("$/$-c-x509.cer", DBGDIR, ENGINENAME) };
+    strCodeCer{ StrFormat("$/$-c-x509" CERTEXT, DBGDIR, ENGINENAME) };
   // Generate CA private key
   SystemF("openssl genpkey "
           "$ "
@@ -2129,7 +2138,7 @@ static int CertFunc(const string strOut)
           "-out \"$\"",
     strCodePubConf, strCodePub, strInPass, strRootPub, strRootPrv, strCodeCer);
   // Write output password
-  const string strOutPass{ CryptMBtoB64(CryptRandomBlock(1024)) };
+  const StdString strOutPass{ CryptMBtoB64(CryptRandomBlock(1024)) };
   FStream{ strCodePass, FM_W_B }.FStreamWriteString(strOutPass);
   // Generate P12 certificate
   SystemF("openssl pkcs12 "
@@ -2150,7 +2159,7 @@ static int CertFunc(const string strOut)
 }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)
-static void PatchChecksum(const string &strOut)
+static void PatchChecksum(const StdString &strOut)
 { // Need Windows API
   using namespace Lib::OS;
   // Read executable file
@@ -2188,16 +2197,16 @@ static void PatchChecksum(const string &strOut)
 #endif
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS) || defined(LINUX)
-static void BuildExecutable(const string &strTmp, const string &strOS,
+static void BuildExecutable(const StdString &strTmp, const StdString &strOS,
   const unsigned int uiBits, const unsigned int uiArch)
 { // Build filename for project assets
-  const string strAdb{ StrFormat("$/$.adb", strName, strName) };
+  const StdString strAdb{ StrFormat("$/$.adb", strName, strName) };
   // Executable filenames
-  const string strIn{ StrFormat("$/$$$",
+  const StdString strIn{ StrFormat("$/$$$",
     BINDIR, ENGINENAME, uiBits, envActive.cpEXE) };
-  const string strOut{ StrFormat("$/$$",
+  const StdString strOut{ StrFormat("$/$$",
     strTmp, strName, envActive.cpEXE) };
-  const string strOutTmp{ StrAppend(strOut, ".tmp") };
+  const StdString strOutTmp{ StrAppend(strOut, ".tmp") };
   // Copy binary, make it executable (upx needs this) and compress it
   SystemF("cp -fv \"$\" \"$\"", strIn, strOutTmp);
   // Using windows?
@@ -2225,7 +2234,8 @@ static void BuildExecutable(const string &strTmp, const string &strOS,
 /* ------------------------------------------------------------------------- */
 static int BuildDistro()
 { // Get and make temporary directory and if it failed?
-  const string strTmp{ StrAppend(GetTempDir(), '/', UuId().UuIdToString()) };
+  const StdString strTmp{
+    StrAppend(GetTempDir(), '/', UuId().UuIdToString()) };
   MakeDirectory(strTmp);
   // exception occured?
   try
@@ -2234,7 +2244,6 @@ static int BuildDistro()
     // Windows specific instructions
 #if defined(WINDOWS)
     // Process 32-bit and 64-bit executable.
-    BuildExecutable(strTmp, "Windows", 32, 86);
     BuildExecutable(strTmp, "Windows", 64, 64);
     // Linux specific tasks? This is much easier because we have tools.
 #elif defined(LINUX)
@@ -2243,7 +2252,7 @@ static int BuildDistro()
     // Apple specific tasks
 #elif defined(MACOS)
     // Build filenames
-    const string
+    const StdString
       strDiskDir{ StrAppend(strTmp, "/Package") },
       strAppDir{ StrFormat("$/$.app", strDiskDir, strTitle) },
       strAppCDir{ StrAppend(strAppDir, "/Contents") },
@@ -2283,44 +2292,44 @@ static int BuildDistro()
       "<plist version=\"1.0\">\n"
       "\t<dict>\n"
       "\t\t<key>BuildMachineOSBuild</key>\n"
-      "\t\t<string>8J135</string>\n"
+      "\t\t<StdString>8J135</string>\n"
       "\t\t<key>CFBundleDevelopmentRegion</key>\n"
-      "\t\t<string>en</string>\n"
+      "\t\t<StdString>en</string>\n"
       "\t\t<key>CFBundleExecutable</key>\n"
-      "\t\t<string>$</string>\n"
+      "\t\t<StdString>$</string>\n"
       "\t\t<key>CFBundleIconFile</key>\n"
-      "\t\t<string>Icon</string>\n"
+      "\t\t<StdString>Icon</string>\n"
       "\t\t<key>CFBundleIdentifier</key>\n"
-      "\t\t<string>msd.$.$</string>\n"
+      "\t\t<StdString>msd.$.$</string>\n"
       "\t\t<key>CFBundleInfoDictionaryVersion</key>\n"
-      "\t\t<string>6.0</string>\n"
+      "\t\t<StdString>6.0</string>\n"
       "\t\t<key>CFBundleName</key>\n"
-      "\t\t<string>$</string>\n"
+      "\t\t<StdString>$</string>\n"
       "\t\t<key>CFBundlePackageType</key>\n"
-      "\t\t<string>APPL</string>\n"
+      "\t\t<StdString>APPL</string>\n"
       "\t\t<key>CFBundleShortVersionString</key>\n"
-      "\t\t<string>$</string>\n"
+      "\t\t<StdString>$</string>\n"
       "\t\t<key>CFBundleSignature</key>\n"
-      "\t\t<string>MSDN</string>\n"
+      "\t\t<StdString>MSDN</string>\n"
       "\t\t<key>CFBundleVersion</key>\n"
-      "\t\t<string>$</string>\n"
+      "\t\t<StdString>$</string>\n"
       "\t\t<key>LSMinimumSystemVersion</key>\n"
-      "\t\t<string>10.15</string>\n"
+      "\t\t<StdString>10.15</string>\n"
       "\t\t<key>LSApplicationCategoryType</key>\n"
-      "\t\t<string>public.app-category.games</string>\n"
+      "\t\t<StdString>public.app-category.games</string>\n"
       "\t\t<key>NSHighResolutionCapable</key>\n"
       "\t\t<true/>\n"
       "\t\t<key>LSUIPresentationMode</key>\n"
       "\t\t<true/>\n"
       "\t\t<key>NSPrincipalClass</key>\n"
-      "\t\t<string></string>\n"
+      "\t\t<StdString></string>\n"
       "\t\t<key>NSHumanReadableCopyright</key>\n"
-      "\t\t<string>Copyright \xC2\xA9 $, $. All Rights Reserved.</string>\n"
+      "\t\t<StdString>Copyright \xC2\xA9 $, $. All Rights Reserved.</string>\n"
       "\t</dict>\n"
       "</plist>\n",
       strName, ENGINENAME, strName, strTitle, strVer, uiVer[3],
       strAuthor, cmSys.FormatTime("%Y")))
-        throw runtime_error{ strPList.data() };
+        throw StdRunTimeError{ strPList.data() };
     // Convert icons
     const struct _iconlist { const int i; const char *s; } iconlist[] = {
       {  16,"icon_16x16.png"   }, {   32,"icon_16x16@2x.png"   },
@@ -2352,7 +2361,7 @@ static int BuildDistro()
     // Clean-up temporary directory
     SystemF("rm -rfv \"$\"", strTmp);
   } // exception occured?
-  catch(const exception&)
+  catch(const StdException &)
   { // Clean temporary directory
     SystemF("rm -rfv \"$\"", strTmp);
     // Rethrow error
@@ -2369,7 +2378,7 @@ static int CertGen()
   // Ready to download
   ConWrite("*** Parsing offical Mozilla Trusted Root CA list...");
   // Build command string to send to operating system
-  const string strCmd{
+  const StdString strCmd{
       "wget -q -t 3 --no-check-certificate -O - --retry-connrefused "
     "\"--referer=http://github.com\" -U \"Mozilla/5.0 (Windows NT 5.1; "
       "WOW64; rv:34.0) Gecko/20100101 Firefox/34.0\" "
@@ -2385,13 +2394,13 @@ static int CertGen()
   // Expecting certificate data
   bool bParseData = false;
   // Base 64 data string and certificate name
-  string strData, strFilename;
+  StdString strData, strFilename;
   // Files written
   size_t stWritten = 0;
   // List of files that were processed
   StrSet ssProcessed, ssObsolete;
   // Until all lines read?. 1KB - 1 size buffer should be enough.
-  for(string strLine(1023, '\0');
+  for(StdString strLine(1023, '\0');
     fgets(const_cast<char*>(strLine.data()),
           static_cast<int>(strLine.capacity()), fp);
     strLine.resize(strLine.capacity()))
@@ -2430,8 +2439,8 @@ static int CertGen()
         { // Get purpose id and check it, it must be a CA certificate
           if(X509_check_purpose(caCert, X509_PURPOSE_get_id(x509p), 1) == 1)
           { // Get filename for certificate using checksum
-            const string strFile{ StrAppend(hex, setw(8), setfill('0'), right,
-              CryptToCRC32(mOut), ".cer") };
+            const StdString strFile{ StrAppend(StdIOSHex, StdIOSSetWidth(8),
+              StdIOSSetFill('0'), StdIOSRight, CryptToCRC32(mOut), CERTEXT) };
             // Add to processed list
             ssProcessed.emplace(strFile);
             // If file exists?
@@ -2460,7 +2469,7 @@ static int CertGen()
         // Free the certificate
         X509_free(caCert);
       } // In the rare occurence that an exception occurs we should free cert
-      catch(const exception &)
+      catch(const StdException &)
       { // Free the certificate
         X509_free(caCert);
         // Throw to for loop exception catcher to log
@@ -2476,7 +2485,7 @@ static int CertGen()
     } // Add data if parsing
     else if(bParseData) strData += strLine;
   } // Get files in the directory and enumerate them
-  const Dir dCerts{ cCommon->CommonPeriod(), ".cer" };
+  const Dir dCerts{ cCommon->CommonPeriod(), CERTEXT };
   for(const DirEntMapPair &dempPair : dCerts.GetFiles())
   { // Find this file in written list
     const auto &aItem = ssProcessed.find(dempPair.first);
@@ -2505,7 +2514,7 @@ static int CertGen()
 /* ------------------------------------------------------------------------- */
 static int RebuildAssets(const bool bClear)
 { // Build filename of archive database and tempa rchive database
-  const string strADB{ StrAppend(strName, '.', ARCHIVE_EXTENSION) },
+  const StdString strADB{ StrAppend(strName, '.', ARCHIVE_EXTENSION) },
                strADBTmp{ StrAppend(strADB, ".tmp") };
   // Goto assets directory
   SetDirectory(strName);
@@ -2517,14 +2526,12 @@ static int RebuildAssets(const bool bClear)
     XCL("Failed to remove temporary archive!", "File", strADBTmp);
   // Start archiving and return if succeeded
   SystemF("$ -t7z -ms=off -mx9 -myx9 -m0=LZMA2:d64m:fb273 -mhe=on -mmt=8 -mqs "
-    "-slp -ssw -sse -r u \"$\" \"-x!$32.exe\" \"-x!$.exe\" \"-x!$32\" "
-    "\"-x!$\" \"-x!$32" UDB_EXTENSION "\" \"-x!$64" UDB_EXTENSION "\" "
-    "\"-x!docs\" \"-x!*.md\" \"-x!*.crt\" \"-x!*.ico\" \"-x!*.dbg\" "
-    "\"-x!.*\" \"-x!prv\" \"-x!*.psd\" \"-x!*." LOG_EXTENSION "\" "
+    "-slp -ssw -sse -r u \"$\" \"-x!*.exe\" \"-x!docs\" \"-x!*.md\" "
+    "\"-x!*.crt\" \"-x!*.ico\" \"-x!*." CRASH_EXTENSION "\" \"-x!.*\" "
+    "\"-x!prv\" \"-x!*.psd\" \"-x!*." LOG_EXTENSION "\" "
     "\"-x!*." ARCHIVE_EXTENSION "\" \"-x!*." UDB_EXTENSION "\" "
-    ".",
-      envActive.cp7z, strADB, strName, strName, strName, strName, strName,
-      strName, strName);
+    "\"-x!$\" \"-x!$32\" .",
+      envActive.cp7z, strADB, strName, strName);
   // Success
   return 0;
 }
@@ -2532,16 +2539,16 @@ static int RebuildAssets(const bool bClear)
 static void CheckFiles(const StrVector &svReadable,
   const StrVector &svWritable)
 { // Check files that need to be readable
-  for(const string &strFile : svReadable)
+  for(const StdString &strFile : svReadable)
     if(!DirCheckFileAccess(strFile, 4))
       XCL("File not found or readable!", "File", strFile);
   // Check files that need to be wrtiable
-  for(const string &strFile : svWritable)
+  for(const StdString &strFile : svWritable)
     if(!DirCheckFileAccess(strFile, 2) && StdIsNotError(ENOENT))
       XCL("File not writable!", "File", strFile);
 }
 /* ------------------------------------------------------------------------- */
-static void ReplaceTextMulti(const string &strFile,
+static void ReplaceTextMulti(const StdString &strFile,
   const StrPairList &ssplPairs)
 { // Ignore if nothing in list
   if(ssplPairs.empty())
@@ -2554,14 +2561,14 @@ static void ReplaceTextMulti(const string &strFile,
   // Number of changes
   size_t stChanges = 0;
   // String to write
-  string strNew{ fsFile.FStreamReadStringSafe() };
+  StdString strNew{ fsFile.FStreamReadStringSafe() };
   if(strNew.empty())
     XCL("Could not read file to replace text!", "File", strFile);
   fsFile.FStreamClose();
   // For each pair in the list
   for(const StrPair &sspPair : ssplPairs)
   { // Old item
-    string strOld;
+    StdString strOld;
     // Loop...
     do
     { // Update old string with new string
@@ -2578,7 +2585,7 @@ static void ReplaceTextMulti(const string &strFile,
        "File", strFile, "Entries", ssplPairs.size());
   // Write file with new changes and close it
   fsFile.FStreamOpen(strFile, FM_W_B);
-  if(!fsFile.FStreamOpened()) throw runtime_error{ strFile.data() };
+  if(!fsFile.FStreamOpened()) throw StdRunTimeError{ strFile.data() };
   fsFile.FStreamWriteString(strNew);
   fsFile.FStreamClose();
   // Write what we found
@@ -2586,32 +2593,33 @@ static void ReplaceTextMulti(const string &strFile,
     stChanges, ssplPairs.size(), strFile));
 }
 /* ------------------------------------------------------------------------- */
-static void ReplaceText(const string &strFile, const string &strFrom,
-  const string &strTo) { ReplaceTextMulti(strFile, {{ strFrom, strTo }}); }
+static void ReplaceText(const StdString &strFile, const StdString &strFrom,
+  const StdString &strTo) { ReplaceTextMulti(strFile, {{ strFrom, strTo }}); }
 /* ------------------------------------------------------------------------- */
-static const string BuildHPPHeader(const string &strFileName,
-  const string &strDesc)
+static const StdString BuildHPPHeader(const StdString &strFileName,
+  const StdString &strDesc)
 { // A double line
-  const string strHashLine(73, '#');
+  const StdString strHashLine(73, '#');
   // Beginning of text
-  string strLines{ StrFormat(
+  StdString strLines{ StrFormat(
     "/* == $ $ **\n"
     "** $ **\n"
     "** ## Mhatxotic Engine"
     "          (c) $, All Rights Reserved ## **\n"
     "** $ **\n", StrToUpCase(strFileName),
-    string(69 - strFileName.length(), '='),
+    StdString(69 - strFileName.length(), '='),
     strHashLine, strEAuthor, strHashLine) };
   // Word wrap the text and write lines
   const StrVector svLines{ UtfWordWrap(strDesc, 67, 0) };
-  for(const string &strLine : svLines)
-    strLines += StrFormat("** ## $$$ ## **\n", left, setw(67), strLine);
+  for(const StdString &strLine : svLines)
+    strLines += StrFormat("** ## $$$ ## **\n", StdIOSLeft, StdIOSSetWidth(67),
+      strLine);
   // Add rest of header
   strLines += StrFormat(
     "** $ **\n"
     "** $ */\n"
     "#pragma once                           // Only one incursion allowed",
-    strHashLine, string(73, '='));
+    strHashLine, StdString(73, '='));
   // String to return
   return strLines;
 }
@@ -2622,9 +2630,9 @@ static int BuildLicenses()
   if(dLicenses.IsFilesEmpty())
     XC("No license files found ending in .txt!", "Directory", LICDIR);
   // Prepare predefined styles
-  const string strDoubleLine{ StrFormat("/* $ */", string(73, '=')) };
-  const string strLineTop{ StrFormat("/* $ */", string(73, '-')) };
-  const string strLineBottom{ "ENDLICENSE" };
+  const StdString strDoubleLine{ StrFormat("/* $ */", StdString(73, '=')) };
+  const StdString strLineTop{ StrFormat("/* $ */", StdString(73, '-')) };
+  const StdString strLineBottom{ "ENDLICENSE" };
   // Start of file lines
   StrVector vFiles{
     BuildHPPHeader(LICHEADER, StrFormat(
@@ -2637,7 +2645,7 @@ static int BuildLicenses()
   // For each file
   for(const DirEntMapPair &dempPair : dLicenses.GetFiles())
   { // Show progress
-    const string strFile{ StrAppend(LICDIR, '/', dempPair.first) };
+    const StdString strFile{ StrAppend(LICDIR, '/', dempPair.first) };
     cout << "Reading '" << strFile << "'...";
     // Read the file
     const Memory mData{
@@ -2656,19 +2664,19 @@ static int BuildLicenses()
     const Token tParts{ PathSplit(dempPair.first).strFile, "-", 4 };
     if(tParts.size() != 4)
     { // Show message
-      cout << " invalid filename!" << endl;
+      cout << " invalid filename!" << StdIOSEndLine;
       continue;
     } // Check for correct first token
     if(tParts[0] != "Lic")
     { // Show message
-      cout << " invalid format!" << endl;
+      cout << " invalid format!" << StdIOSEndLine;
       continue;
     }
     // File and line data
     StrVector vLine, vFile{
       StrFormat("$\n$$$ // $",
         strLineTop,
-        setw(38), left,
+        StdIOSSetWidth(38), StdIOSLeft,
         StrFormat("BEGINLICENSE($, $)", StrToUpCase(tParts[2]),
           bCompressed.MemSize()),
         dempPair.first),
@@ -2682,7 +2690,7 @@ static int BuildLicenses()
       const int iVal =
         static_cast<int>(bCompressed.MemReadInt<uint8_t>(stIndex));
       // Get value of index as string literal
-      const string strVal{ StrFromNum(iVal) };
+      const StdString strVal{ StrFromNum(iVal) };
       // If the length of this string would go over the limit?
       if(stLine + strVal.length() + 1 > 78)
       { // Insert a new line
@@ -2703,16 +2711,17 @@ static int BuildLicenses()
     // Write footer
     vFile.push_back(strLineTop);
     vFile.push_back(StrFormat("$$$ // $ > $b > $",
-      setw(38), left, strLineBottom, tParts[3], mData.MemSize(), tParts[1]));
-    string strSourceFile{ StrImplode(vFile, 0, "\n") };
-    cout << ' ' << strSourceFile.length() << "b... done!" << endl;
+      StdIOSSetWidth(38), StdIOSLeft, strLineBottom, tParts[3],
+      mData.MemSize(), tParts[1]));
+    StdString strSourceFile{ StrImplode(vFile, 0, "\n") };
+    cout << ' ' << strSourceFile.length() << "b... done!" << StdIOSEndLine;
     vFiles.push_back(StdMove(strSourceFile));
   } // Write footer
   vFiles.push_back(strDoubleLine);
   // Write rest of string
-  const string strFile{ StrAppend(StrImplode(vFiles, 0, "\n"), '\n') };
+  const StdString strFile{ StrAppend(StrImplode(vFiles, 0, "\n"), '\n') };
   // Create the file
-  const string strOutFile{ SRCDIR "/" LICHEADER };
+  const StdString strOutFile{ SRCDIR "/" LICHEADER };
   cout << "Writing " << strFile.length() << " bytes to '"
        << strOutFile << "'...";
   const size_t stWritten =
@@ -2722,12 +2731,12 @@ static int BuildLicenses()
                         "Expected",  strFile.length(), "Actual", stWritten);
   // Write success to console
   cout << " done!\n\nBuilding of license header has completed successfully."
-       << endl;
+       << StdIOSEndLine;
   // Return success
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static int NewProject(const string &strProj)
+static int NewProject(const StdString &strProj)
 { // Ignore if directories we use
   if(strProj == SRCDIR)
     XC("Invalid project!", "Project", strProj);
@@ -2757,7 +2766,7 @@ static int NewProject(const string &strProj)
 #endif
   // Create a generic app file
   FStream fApp{ StrFormat("$." CFGEXT, DEFAULT_CONFIGURATION), FM_W_T };
-  if(!fApp.FStreamOpened()) throw runtime_error{ "app config file" };
+  if(!fApp.FStreamOpened()) throw StdRunTimeError{ "app config file" };
   fApp.FStreamWriteString("; Write application parameters here\n"
                 "app_guimode = 0");
   fApp.FStreamClose();
@@ -2765,8 +2774,8 @@ static int NewProject(const string &strProj)
   return 0;
 }
 /* ------------------------------------------------------------------------- */
-static void MakeIncludeFromBin(const string &strIn, const string &strPrefix,
-  const string &strOut)
+static void MakeIncludeFromBin(const StdString &strIn,
+  const StdString &strPrefix, const StdString &strOut)
 { // Open binary file
   cout << "*** Binary in: " << strIn << "... ";
   Memory mA{ FStream{ strIn, FM_R_B } .FStreamReadBlockSafe() };
@@ -2794,12 +2803,12 @@ static void MakeIncludeFromBin(const string &strIn, const string &strPrefix,
   cout << fOut.FStreamTell() << " bytes written!\n";
 }
 /* -- Build a file list ---------------------------------------------------- */
-static string BuildFileList(const string &strBase, const string &strDir,
-  const string &strExt)
+static StdString BuildFileList(const StdString &strBase,
+  const StdString &strDir, const StdString &strExt)
 { // String storage
-  string strOut;
+  StdString strOut;
   // Build base path
-  const string strPath{ StrAppend(strBase, '/', strDir) };
+  const StdString strPath{ StrAppend(strBase, '/', strDir) };
   // Search for files
   const Dir dFiles{ strPath, strExt };
   // Throw error if failed
@@ -2812,47 +2821,35 @@ static string BuildFileList(const string &strBase, const string &strDir,
   return strOut;
 }
 /* ------------------------------------------------------------------------- */
-static void GenericExtLibBuild(const string &strCmdLine, const string &strLib,
-  const string &strTempDir, const string &strPrefix, bool bSwap=false)
-{ // Do swap?
-  if(bSwap) System("swap");
-  // Execution compilation
+static void GenericExtLibBuild(const StdString &strCmdLine,
+  const StdString &strLib, const StdString &strTempDir,
+  const StdString &strPrefix)
+{ // Execution compilation
   System(strCmdLine);
   // Build the library
   SystemF("$ *$ -out:\"$/$$\"",
     strLib, envActive.cpOBJ, strTempDir, strPrefix, envActive.cpLIB);
   // Clean up the object files
   DoClean({ envActive.cpOBJ });
-  // Do swap?
-  if(bSwap) System("swap");
 }
 /* ------------------------------------------------------------------------- */
-static void GenericExtLibBuildBits(const string &strCLRel,
-  const string &strLib, const string &strTmp, const string &strPrefix,
+static void GenericExtLibBuildBits(const StdString &strCLRel,
+  const StdString &strLib, const StdString &strTmp, const StdString &strPrefix,
   const unsigned int uiBits)
-{ // Generate prefix with bits
-  const string strBits{ StrAppend(strPrefix, uiBits) };
-  // Compile release version
-  GenericExtLibBuild(strCLRel, strLib, strTmp, strBits, uiBits==32);
+{ // Compile release version
+  GenericExtLibBuild(strCLRel, strLib, strTmp, StrAppend(strPrefix, uiBits));
 }
 /* ------------------------------------------------------------------------- */
-static void GenericExtLibBuildAll(const string &strCLRel64,
-  const string &strCLRel32,  const string &strL64,
-  const string &strL32, const string &strTmp, const string &strPrefix)
-{ // Compile 64-bit version
-  GenericExtLibBuildBits(strCLRel64, strL64, strTmp, strPrefix, 64);
-  // Compile 32-bit release
-  GenericExtLibBuildBits(strCLRel32, strL32, strTmp, strPrefix, 32);
-}
-/* ------------------------------------------------------------------------- */
-static const string GetFiles(const string &strExt, const string &strDir="")
+static const StdString GetFiles(const StdString &strExt,
+  const StdString &strDir="")
 { // Get files and return if empty
   Dir dEntries{ strDir, strExt };
   if(dEntries.IsFilesEmpty()) return {};
   // String for output
-  string strOut; strOut.reserve(4096);
+  StdString strOut; strOut.reserve(4096);
   // Make output directory
-  const string strDirNew{ strDir.empty() ? strDir : StrAppend(strDir, "/") };
+  const StdString strDirNew{
+    strDir.empty() ? strDir : StrAppend(strDir, "/") };
   const bool bHasSpace = strDirNew.find(' ') != StdNPos;
   // Get first item
   DirEntMapConstIt demciIt{ dEntries.GetFilesBegin() };
@@ -2870,10 +2867,10 @@ static const string GetFiles(const string &strExt, const string &strDir="")
   return strOut;
 }
 /* ------------------------------------------------------------------------- */
-static void SetupZipRepo(const string &strLibPath, const string &strTmp,
-  const string &strPSFile, bool bNoDir=false)
+static void SetupZipRepo(const StdString &strLibPath, const StdString &strTmp,
+  const StdString &strPSFile, bool bNoDir=false)
 { // Set destination temp directory
-  const string strDir{ StrAppend(strTmp, '/', strPSFile) },
+  const StdString strDir{ StrAppend(strTmp, '/', strPSFile) },
                strDirNo{ StrAppend(strDir, bNoDir ? "" : "/..") };
   // Extract the .7z to the temporary directory
   SystemF("$ x -aoa \"$\" -o\"$\"", envActive.cp7z, strLibPath, strDirNo);
@@ -2881,14 +2878,14 @@ static void SetupZipRepo(const string &strLibPath, const string &strTmp,
   SetDirectory(strDir);
 }
 /* ------------------------------------------------------------------------- */
-static void SetupTarRepoNSD(const string &strLibPath, const string &strTmp,
-  const string &strPSFile)
+static void SetupTarRepoNSD(const StdString &strLibPath,
+  const StdString &strTmp, const StdString &strPSFile)
 { // Must have .tar. in filename
   if(strLibPath.find(".tar.") == StdNPos)
-    throw runtime_error{
+    throw StdRunTimeError{
       StrFormat("Archive '$' must contain '.tar.'!", strLibPath).data() };
   // Make .tar file name
-  const string strTar{ StrAppend(strTmp, '/', strPSFile) };
+  const StdString strTar{ StrAppend(strTmp, '/', strPSFile) };
   // Extract the .gz to the temporary directory
   if(!DirLocalFileExists(strTar))
     SystemNF("$ x -so \"$\" > \"$\"", envActive.cp7z, strLibPath, strTar);
@@ -2899,48 +2896,45 @@ static void SetupTarRepoNSD(const string &strLibPath, const string &strTmp,
     XCL("Failed to delete tar file!", "File", strTar);
 }
 /* ------------------------------------------------------------------------- */
-static void SetupTarRepo(const string &strLibPath, const string &strTmp,
-  const string &strPSFile, const string &strPSRFile)
+static void SetupTarRepo(const StdString &strLibPath, const StdString &strTmp,
+  const StdString &strPSFile, const StdString &strPSRFile)
 { // Do the operation
   SetupTarRepoNSD(strLibPath, strTmp, strPSFile);
   // Set destination directory
   SetDirectory({ StrAppend(strTmp, '/', strPSRFile) });
 }
 /* ------------------------------------------------------------------------- */
-static int ExtLibScript(const string &strOpt, const string &strOpt2)
+static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
 { // Lib name and base package name
   const PathSplit PSLib{ strOpt };
-  const string strLib{ PSLib.strFileExt };
+  const StdString strLib{ PSLib.strFileExt };
   // Lib name without extension
   const PathSplit PSLibR{ PSLib.strFile };
   // Make lib name. Bail if it doesn't exist
-  const string strLibPath{ StrAppend(ARCDIR, '/', strLib) };
+  const StdString strLibPath{ StrAppend(ARCDIR, '/', strLib) };
   if(!DirLocalFileExists(strLibPath))
     XCL("Specified archive not found!", "File", strLibPath);
   // Get temporary directory and remove trailing slash
-  const string strTmp{ GetTempDir() };
+  const StdString strTmp{ GetTempDir() };
   // Extra base package name
   const PathSplit PSLibX{ strOpt2 };
-  const string &strLibX = PSLibX.strFileExt;
+  const StdString &strLibX = PSLibX.strFileExt;
   // Extra lib name without extension
   const PathSplit PSLibXR{ PSLibX.strFile };
   // Make extra lib name. Bail if it doesn't exist (and was specified)
-  const string strLibPathX{ StrAppend(ARCDIR, '/', strLibX) };
+  const StdString strLibPathX{ StrAppend(ARCDIR, '/', strLibX) };
   // Store extra lib if specified?
   if(!strLibX.empty() &&
      strLibX != cCommon->CommonPeriod() &&
      !DirLocalFileExists(strLibPathX))
     XCL("Specified dependency archive not found!", "File", strLibPathX);
   // Mandatory compiler flags
-  const string
+  const StdString
     strA64{ StrAppend(envActive.cpAC8, ' ', envActive.cpACM) },
-    strA32{ StrAppend(envActive.cpAC4, ' ', envActive.cpACM) },
     strRelA64{ StrAppend(strA64, ' ', envActive.cpACB) },
-    strRelA32{ StrAppend(strA32, ' ', envActive.cpACB) },
     strC{ StrFormat("$ $ $ ",
       envActive.cpCCX, envActive.cpCCM, envActive.cpCCLIB) },
     strL{ "LIB.EXE -nologo -ltcg" },
-    strL32{ StrAppend(strL, " -machine:X86") },
     strL64{ StrAppend(strL, " -machine:X64") },
     strRelFlags{
       StrFormat("$ -DNDEBUG -D_NDEBUG $ -Zl", strC, envActive.cpCCAB) },
@@ -2957,10 +2951,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
         "-Wno-dev") },
     strCMake{ StrAppend(strCMakeBase, " .") },
     strNMake{ "NMAKE.EXE /nologo" },
-    strRel64Extra{ envActive.cpCC8 },
-    strRel32Extra{ envActive.cpCC4 };
-  string strRelFlags64{ StrFormat("$ $ ", strRelFlags, strRel64Extra) },
-         strRelFlags32{ StrFormat("$ $ ", strRelFlags, strRel32Extra) };
+    strRel64Extra{ envActive.cpCC8 };
+  StdString strRelFlags64{ StrFormat("$ $ ", strRelFlags, strRel64Extra) };
   // = OPENSSL SCRIPT (TOO BIG TO DO MANUALLY!) ===============================
   if(strLib.length() >= 8 && strLib.substr(0, 8) == "openssl-")
   { // Mandatory directory replacements
@@ -2988,20 +2980,6 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
         cCommon->CommonCBlank() },\
       { "\\Program Files\\OpenSSL\\lib\\engines-1_1",\
         cCommon->CommonCBlank() }
-    // 32-bit directory replacements
-#define STRBASE32 \
-      { "C:\\\\Program Files (x86)\\\\Common Files\\\\SSL",\
-        cCommon->CommonCBlank() },\
-      { "C:\\\\Program Files (x86)\\\\OpenSSL",\
-        cCommon->CommonCBlank() },\
-      { "C:\\\\Program Files (x86)\\\\SSL",\
-        cCommon->CommonCBlank() },\
-      { "\\Program Files (x86)\\OpenSSL",\
-        cCommon->CommonCBlank() },\
-      { "\\Program Files (x86)\\Common Files\\SSL",\
-        cCommon->CommonCBlank() },\
-      { "\\Program Files (x86)\\OpenSSL\\lib\\engines-1_1",\
-        cCommon->CommonCBlank() }
     // Release mode replacement flags
 #define STRRELEASE \
       { "/Zs",                    cCommon->CommonCBlank() },\
@@ -3013,13 +2991,10 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Actual merged flags
 #define STRREPRELEASE64 { STRMANDATORY, STRBASE64, STRRELEASE,\
       { "/MD /O2", StrFormat("/MT /O2 $", strRel64Extra) } }
-#define STRREPRELEASE32 { STRMANDATORY, STRBASE32, STRRELEASE,\
-      { "/MD /O2", StrFormat("/MT /O2 $", strRel32Extra) } }
 #define STRREPCLANG { "CC=\"cl\"",   "CC=CLANG-CL" }, \
                         { "LD=\"link\"", "LD=LLD-LINK" }
 #define STRREPCLANG64 { STRREPCLANG, { "/MT", "-m64 /MT" } }
-#define STRREPCLANG32 { STRREPCLANG, { "/MT", "-m32 /MT" } }
-    const string strInstallDataPm{
+    const StdString strInstallDataPm{
       "package OpenSSL::safe::installdata;\n"
       "\n"
       "use strict;\n"
@@ -3072,19 +3047,16 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Setup the repo
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Perl configure parameters
-    const string strPerlOpts{ "no-aria no-autoload-config no-bf no-camellia "
-      "no-cast no-cms no-comp no-deprecated no-dso no-dtls1 no-gost no-idea "
-      "no-makedepend no-md4 no-nextprotoneg no-ocb no-psk no-rc2 no-rc4 "
-      "no-rc5 no-seed no-shared no-sm4 no-srp no-srp no-srtp no-srtp no-ssl "
-      "no-ssl3 no-stdio no-tests no-tls1 no-tls1_1 no-ts no-ui-console "
-      "no-unit-test no-weak-ssl-ciphers no-whirlpool no-zlib "
+    const StdString strPerlOpts{ "no-aria no-autoload-config no-bf "
+      "no-camellia no-cast no-cms no-comp no-deprecated no-dso no-dtls1 "
+      "no-gost no-idea no-makedepend no-md4 no-nextprotoneg no-ocb no-psk "
+      "no-rc2 no-rc4 no-rc5 no-seed no-shared no-sm4 no-srp no-srp no-srtp "
+      "no-srtp no-ssl no-ssl3 no-stdio no-tests no-tls1 no-tls1_1 no-ts "
+      "no-ui-console no-unit-test no-weak-ssl-ciphers no-whirlpool no-zlib "
       "disable-capieng" },
     strPerl64{ StrAppend(envActive.cpPerl, // 64-bit XP minimum
       " configure VC-WIN64A -D_WIN32_WINNT=0x0502 ", strPerlOpts) },
-    strPerl64Rel{ StrAppend(strPerl64, " no-filenames") },
-    strPerl32{ StrAppend(envActive.cpPerl, // 32-bit XP minimum
-      " configure VC-WIN32 -D_WIN32_WINNT=0x0501 ", strPerlOpts) },
-    strPerl32Rel{ StrAppend(strPerl32, " no-filenames") };
+    strPerl64Rel{ StrAppend(strPerl64, " no-filenames") };
     // Compile 64-bit release version
     if(uiFlags & PF_X64)
     { // Do compile 64-bit release version
@@ -3101,44 +3073,21 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
                    "include/win64/configuration-w64.h");
       SystemF("$ clean", strNMake);
       System("rm -f makefile configdata.pm include/win64/*.in");
-    } // Compile 32-bit release version
-    if(uiFlags & PF_X86)
-    { // Do compile 32-bit release version
-      System(strPerl32Rel);
-      FStream{ "installdata.pm", FM_W_B }.FStreamWriteString(strInstallDataPm);
-      ReplaceTextMulti("makefile", STRREPRELEASE32);
-      if(envActive.cpCCX == envWindowsLLVMcompat.cpCCX)
-        ReplaceTextMulti("makefile", STRREPCLANG32);
-      System(strNMake);
-      SystemF("$ libcrypto.lib libssl.lib -out:\"$/ssl32.lib\"",
-        strL32, strTmp);
-      System("cp -rf include/openssl include/win32");
-      System("mv -f include/win32/configuration.h "
-                   "include/win32/configuration-w32.h");
-      SystemF("$ clean", strNMake);
-      System("rm -f makefile configdata.pm include/win32/*.in");
-      System("swap");
     } // Done with helper macros
 #undef STRREPRELEASE64
-#undef STRREPRELEASE32
 #undef STRRELEASE
 #undef STRBASE64
-#undef STRBASE32
 #undef STRMANDATORY
   } // = LIBJPEGTURBO SCRIPT ==================================================
   else if(strLib.length() >= 14 && strLib.substr(0, 14) == "libjpeg-turbo-")
   { // Setup repo
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Directories
-    const string strBase32{ "simd/i386" }, strBase64{ "simd/x86_64" },
+    const StdString strBase32{ "simd/i386" }, strBase64{ "simd/x86_64" },
     // NASM Assembler flags
-    strNASMRel32{
-      "nasm -fwin32 -Isimd/nasm/ -I$/ -Iwin/ -DWIN32" },
     strNASMRel64{
       "nasm -fwin64 -Isimd/nasm/ -I$/ -Iwin/ -DWIN64 -D__x86_64__" },
     // Compilations
-    strCompRel32{
-      StrAppend(StrFormat(strNASMRel32, strBase32), " simd/i386") },
     strCompRel64{
       StrAppend(StrFormat(strNASMRel64, strBase64), " simd/x86_64") },
     // Add jpegturbo specific flags
@@ -3205,24 +3154,6 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       { "jidctflt-sse2" }, { "jidctfst-sse2" }, { "jidctint-avx2" },
       { "jidctint-sse2" }, { "jidctred-sse2" }, { "jquantf-sse2"  },
       { "jquanti-avx2"  }, { "jquanti-sse2"  }, { "jsimdcpu"      }
-    },
-    // 32-bit SIMD assembler modules
-    straSIMD32[]{
-      { "jccolor-avx2"  }, { "jccolor-mmx"   }, { "jccolor-sse2"  },
-      { "jcgray-avx2"   }, { "jcgray-mmx"    }, { "jcgray-sse2"   },
-      { "jchuff-sse2"   }, { "jcphuff-sse2"  }, { "jcsample-avx2" },
-      { "jcsample-mmx"  }, { "jcsample-sse2" }, { "jdcolor-avx2"  },
-      { "jdcolor-mmx"   }, { "jdcolor-sse2"  }, { "jdmerge-avx2"  },
-      { "jdmerge-mmx"   }, { "jdmerge-sse2"  }, { "jdsample-avx2" },
-      { "jdsample-mmx"  }, { "jdsample-sse2" }, { "jfdctflt-3dn"  },
-      { "jfdctflt-sse"  }, { "jfdctfst-mmx"  }, { "jfdctfst-sse2" },
-      { "jfdctint-avx2" }, { "jfdctint-mmx"  }, { "jfdctint-sse2" },
-      { "jidctflt-3dn"  }, { "jidctflt-sse"  }, { "jidctflt-sse2" },
-      { "jidctfst-mmx"  }, { "jidctfst-sse2" }, { "jidctint-avx2" },
-      { "jidctint-mmx"  }, { "jidctint-sse2" }, { "jidctred-mmx"  },
-      { "jidctred-sse2" }, { "jquant-3dn"    }, { "jquant-mmx"    },
-      { "jquant-sse"    }, { "jquantf-sse2"  }, { "jquanti-avx2"  },
-      { "jquanti-sse2"  }, { "jsimdcpu"      }
     };
     // We need to activate cmake once to init jpegturbo config and other things
     SystemF("$ "
@@ -3241,100 +3172,53 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       StrAppend(strJPT12Name, '/', envActive.cpOBJ)
     });
     // Compile 64-bit release version
-    {
-      SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP12);
-      const Dir dJP12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP16);
-      const Dir dJP16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT12);
-      const Dir dJPT12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT16);
-      const Dir dJPT16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$-$", strJPT16Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-        RenameFileSafe(StrFormat("$/$-$",
-            strJP12Name, strJP12Name, dempPair.first),
-          StrFormat("$-$", strJP12Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first),
-          StrFormat("$-$", strJP16Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first),
-          StrFormat("$-$", strJPT12Name, dempPair.first));
-      for(const string &strFile : straSIMD64)
-        SystemF("$/$.asm -o $$",
-          strCompRel64, strFile, strFile, envActive.cpOBJ);
-      GenericExtLibBuild(StrFormat("$ $ $ $/jsimd.c", strRelFlags64,
-        strJPTSpecific, strJPT, strBase64), strL64, strTmp, "jpeg64", true);
-    }
+    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP12);
+    const Dir dJP12{ cCommon->CommonPeriod(), envActive.cpOBJ };
+    for(const DirEntMapPair &dempPair : dJP12.GetFiles())
+      RenameFileSafe(dempPair.first,
+        StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first));
+    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP16);
+    const Dir dJP16{ cCommon->CommonPeriod(), envActive.cpOBJ };
+    for(const DirEntMapPair &dempPair : dJP16.GetFiles())
+      RenameFileSafe(dempPair.first,
+        StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first));
+    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT12);
+    const Dir dJPT12{ cCommon->CommonPeriod(), envActive.cpOBJ };
+    for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
+      RenameFileSafe(dempPair.first,
+        StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first));
+    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT16);
+    const Dir dJPT16{ cCommon->CommonPeriod(), envActive.cpOBJ };
+    for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
+      RenameFileSafe(dempPair.first,
+        StrFormat("$-$", strJPT16Name, dempPair.first));
+    for(const DirEntMapPair &dempPair : dJP12.GetFiles())
+      RenameFileSafe(StrFormat("$/$-$",
+          strJP12Name, strJP12Name, dempPair.first),
+        StrFormat("$-$", strJP12Name, dempPair.first));
+    for(const DirEntMapPair &dempPair : dJP16.GetFiles())
+      RenameFileSafe(
+        StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first),
+        StrFormat("$-$", strJP16Name, dempPair.first));
+    for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
+      RenameFileSafe(
+        StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first),
+        StrFormat("$-$", strJPT12Name, dempPair.first));
+    for(const StdString &strFile : straSIMD64)
+      SystemF("$/$.asm -o $$",
+        strCompRel64, strFile, strFile, envActive.cpOBJ);
+    GenericExtLibBuild(StrFormat("$ $ $ $/jsimd.c", strRelFlags64,
+      strJPTSpecific, strJPT, strBase64), strL64, strTmp, "jpeg64");
     // We need to activate cmake once to init jpegturbo config and other things
     System("rm -rf CMakeFiles *.cmake CMakeCache.txt jconfig.h");
-    SystemF("$ "
-            "-DINLINE_WORKS=1 "
-            "-DHAVE_THREAD_LOCAL=1 "
-            "-DCMAKE_SIZEOF_VOID_P=4 " // CMake can't detect bits on Wine LOL
-            "-DSIZE_T=4", strCMake);   // CMake can't detect bits on Wine LOL
-    // Compile 32-bit release version
-    {
-      SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJP12);
-      const Dir dJP12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJP16);
-      const Dir dJP16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJPT12);
-      const Dir dJPT12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJPT16);
-      const Dir dJPT16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJPT16.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$-$", strJPT16Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first),
-          StrFormat("$-$", strJP12Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first),
-          StrFormat("$-$", strJP16Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first),
-          StrFormat("$-$", strJPT12Name, dempPair.first));
-      for(const string &strFile : straSIMD32)
-        SystemF("$/$.asm -o $$",
-          strCompRel32, strFile, strFile, envActive.cpOBJ);
-      GenericExtLibBuild(StrFormat("$ $ $ $/jsimd.c", strRelFlags32,
-        strJPTSpecific, strJPT, strBase32), strL32, strTmp, "jpeg32", true);
-    }
   } // = LIBPNG SCRIPT ========================================================
   else if(strLib.length() >= 7 && strLib.substr(0, 7) == "libpng-")
   { // Ignore if no vorbis supplemental argument
     if(strOpt2.empty())
-      throw runtime_error{ "Missing extra zlib package argument." };
+      throw StdRunTimeError{ "Missing extra zlib package argument." };
     // We have it, make sure it's valid
     if(strLibX.length() < 5 || strLibX.substr(0, 5) != "zlib-")
-      throw runtime_error{ "Extra argument must be a zlib package." };
+      throw StdRunTimeError{ "Extra argument must be a zlib package." };
     // Setup second archive first then the first archive
     SetupTarRepoNSD(strLibPathX, strTmp, PSLibX.strFile);
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
@@ -3343,20 +3227,18 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Copy config file over
     System("cp -f scripts/pnglibconf.h.prebuilt pnglibconf.h");
     // Add png specific flags
-    const string strPNGSpecific(StrFormat(
+    const StdString strPNGSpecific(StrFormat(
       "-I\"$/$\" -D_CRT_SECURE_NO_DEPRECATE "
       "-D_CRT_SECURE_NO_WARNINGS *.c", strTmp, PSLibXR.strFile));
-    strRelFlags64 += strPNGSpecific,
-    strRelFlags32 += strPNGSpecific;
+    strRelFlags64 += strPNGSpecific;
     // Compile sources
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "png");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "png", 64);
   } // = OPENALSOFT SCRIPT ====================================================
   else if(strLib.length() >= 12 && strLib.substr(0, 12) == "openal-soft-")
   { // Setup the repository
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Get fmt directory version
-    string strFmtDir;
+    StdString strFmtDir;
     { const Dir dFiles;
       for(const DirEntMapPair &dempPair : dFiles.GetDirs())
         if(dempPair.first.substr(0, 4) == "fmt-")
@@ -3428,7 +3310,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // MakeIncludeFromBin("hrtf/Default HRTF.mhr",
     //  "const uint8_t hrtf_default", "hrtf_default.h");
     // Add openal specific flags
-    const string strALSpecific{
+    const StdString strALSpecific{
       "-std:c++20 -D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS "
       "-D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS "
       "-D_LARGE_FILES -D_LARGEFILE_SOURCE -D_WIN32 -D_WINDOWS "
@@ -3456,31 +3338,21 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "core/mixer/*.cpp " +
       strFmtDir + "/src/*.cc" };
     strRelFlags64 += "-D_WIN32_WINNT=0x0502 " + strALSpecific;
-    strRelFlags32 += "-D_WIN32_WINNT=0x0501 " + strALSpecific;
     // Compile 64-bit version
     GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "al", 64);
-    // Compile 32-bit release version
-    ReplaceTextMulti("config.h", {
-      { "#define HAVE_BITSCANFORWARD64_INTRINSIC",
-        "#undef HAVE_BITSCANFORWARD64_INTRINSIC" },
-      { "/* #undef HAVE_BITSCANFORWARD_INTRINSIC */",
-        "#define HAVE_BITSCANFORWARD_INTRINSIC" }
-    });
-    // Compile 32-bit version
-    GenericExtLibBuildBits(strRelFlags32, strL32, strTmp, "al", 32);
   } // = THEORA SCRIPT ========================================================
   else if(strLib.length() >= 10 && strLib.substr(0, 10) == "libtheora-")
   { // Ignore if no vorbis supplemental argument
     if(strOpt2.empty())
-      throw runtime_error{ "Missing extra ogg package argument!" };
+      throw StdRunTimeError{ "Missing extra ogg package argument!" };
     // We have it, make sure it's valid
     if(strLibX.length() < 7 || strLibX.substr(0, 7) != "libogg-")
-      throw runtime_error{ "Extra argument must be a libogg package!" };
+      throw StdRunTimeError{ "Extra argument must be a libogg package!" };
     // Setup second archive first then the first archive
     SetupTarRepoNSD(strLibPathX, strTmp, PSLibX.strFile);
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Get destination directory
-    const string strDir{ StrAppend(strTmp, '/', PSLibR.strFile) };
+    const StdString strDir{ StrAppend(strTmp, '/', PSLibR.strFile) };
     // mv can fail if ogg directory already exists
     SystemF("rm -rf \"$/include/ogg\"", strDir);
     // Place ogg sources in lib vorbis
@@ -3493,12 +3365,11 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Remove unneeded sources
     System("rm -f lib/encapiwrapper.c lib/encode.c");
     // Add theora specific flags
-    const string strTheoraSpecific(
+    const StdString strTheoraSpecific(
       "-DWIN32 -D_MBCS -D_LIB -Iinclude -Iwin32 lib/*.c win32/*.c");
-    strRelFlags64 += strTheoraSpecific, strRelFlags32 += strTheoraSpecific;
+    strRelFlags64 += strTheoraSpecific;
     // Compile sources
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "theora");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "theora", 64);
   } // = FREETYPE SCRIPT ======================================================
   else if(strLib.length() >= 9 && strLib.substr(0, 9) == "freetype-")
   { // Setup repository
@@ -3511,7 +3382,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Go back to original base directory
     SetDirectory("..");
     // Add freetype specific flags
-    const string strFTSpecific{
+    const StdString strFTSpecific{
       "-Iinclude "                     "-Ibuild/include "
       "-Isrc/gzip "                    "-DFT2_BUILD_LIBRARY "
       "-DWIN32 "                       "-D_WINDOWS "
@@ -3538,14 +3409,13 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "src/smooth/smooth.c "           "src/truetype/truetype.c "
       "src/type1/type1.c "             "src/type42/type42.c "
       "src/winfonts/winfnt.c "         "src/base/ftdebug.c" };
-    strRelFlags64 += strFTSpecific, strRelFlags32 += strFTSpecific;
+    strRelFlags64 += strFTSpecific;
     // Hack to force use our zlib since cmake doesn't listen anymore ----------
     ReplaceText("include/freetype/config/ftoption.h",
       "/* #define FT_CONFIG_OPTION_SYSTEM_ZLIB */",
       "#define FT_CONFIG_OPTION_SYSTEM_ZLIB");
     // Compile sources
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "ft");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "ft", 64);
     // Perform modification of headers
     System("mv -f build/include/freetype/config/*.h include/freetype/config");
     System("mv -f include/*.h include/freetype");
@@ -3569,17 +3439,15 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
                   "src/posix* src/x* src/wl*");
     // Build list of files to compile
     const Dir dFiles{ "src", ".c" };
-    string strFiles;
+    StdString strFiles;
     for(const auto &dFile : dFiles.GetFiles())
       strFiles += StrAppend(" src/", dFile.first);
     // Add glfw specific flags
-    const string strGlfwSpecific{ StrAppend("-Iinclude "
+    const StdString strGlfwSpecific{ StrAppend("-Iinclude "
       "-D_CRT_SECURE_NO_WARNINGS -D_GLFW_WIN32 -DWIN32 -D_WINDOWS$",
       strFiles) };
     strRelFlags64 += StrAppend("-DWINVER=0x0502 -D_WIN32_WINNT=0x0502 ",
-      strGlfwSpecific),
-    strRelFlags32 += StrAppend("-DWINVER=0x0501 -D_WIN32_WINNT=0x0501 ",
-      strGlfwSpecific),
+      strGlfwSpecific);
     // Using non-XP functions in 3.4.0 for some reason when XP still supported
     ReplaceTextMulti("src/win32_thread.c", {
       { "GLFWbool _glfwPlatformCreateCondVar(_GLFWcondvar* condvar)", "/*" },
@@ -3626,16 +3494,15 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       { "_glfwPlatformLoadModule(\"", "_glfwPlatformLoadModule(L\"" },
     });
     // Compile sources
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "glfw");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "glfw", 64);
   } // = LIBOGG/VORBIS SCRIPT =================================================
   else if(strLib.length() >= 7 && strLib.substr(0, 7) == "libogg-")
   { // Ignore if no vorbis supplemental argument
     if(strOpt2.empty())
-      throw runtime_error{ "Missing extra vorbis package arg!" };
+      throw StdRunTimeError{ "Missing extra vorbis package arg!" };
     // We have it, make sure it's valid
     if(strLibX.length() < 10 || strLibX.substr(0, 10) != "libvorbis-")
-      throw runtime_error{ "Extra argument must be a libvorbis package." };
+      throw StdRunTimeError{ "Extra argument must be a libvorbis package." };
     // Extract second archive then first archive
     SetupTarRepoNSD(strLibPath, strTmp, PSLib.strFile);
     SetupTarRepo(strLibPathX, strTmp, PSLibX.strFile, PSLibXR.strFile);
@@ -3651,26 +3518,22 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Remove unneeded sources
     System("rm -f lib/barkmel.c lib/tone.c lib/psytune.c");
     // Add ogg/vorbis specific flags
-    const string strVorbisSpecific("-Iinclude lib/*.c");
+    const StdString strVorbisSpecific("-Iinclude lib/*.c");
     strRelFlags64 += strVorbisSpecific;
-    strRelFlags32 += strVorbisSpecific;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "ogg");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "ogg", 64);
   } // = LIBNSGIF SCRIPT ======================================================
   else if(strLib.length() >= 9 && strLib.substr(0, 9) == "libnsgif-")
   { // Make sure it doesnt suffix in -src
     if(strLib.find("-src.") != StdNPos)
-      throw runtime_error{ "Remove -src suffix from filename please!" };
+      throw StdRunTimeError{ "Remove -src suffix from filename please!" };
     // Setup second archive first then the first archive
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Add nsgif specific flags
-    const string strNSGSpecific("-Iinclude src/*.c");
+    const StdString strNSGSpecific("-Iinclude src/*.c");
     strRelFlags64 += strNSGSpecific;
-    strRelFlags32 += strNSGSpecific;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "nsgif");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "nsgif", 64);
   } // = SQLITE SCRIPT ========================================================
   else if(strLib.length() >= 20 &&
           strLib.substr(0, 20) == "sqlite-amalgamation-")
@@ -3679,22 +3542,20 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Remove unneeded code
     System("if exist \"shell.c\" rm -rf \"shell.c\"");
     // Add sqlite specific flags
-    const string strSQLiteSpecific(
+    const StdString strSQLiteSpecific(
       "-DSQLITE_DEFAULT_AUTOVACUUM=2 -DSQLITE_TEMP_STORE=2 "
       "-DSQLITE_ENABLE_NULL_TRIM -DSQLITE_OS_WINNT -DSQLITE_WIN32_NO_ANSI "
       "-DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_OMIT_DEPRECATED "
       "-DSQLITE_THREADSAFE -DSQLITE_ENABLE_MATH_FUNCTIONS *.c");
     strRelFlags64 += strSQLiteSpecific;
-    strRelFlags32 += strSQLiteSpecific;
     // Compile 64-bit release version -----------------------------------------
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "sqlite");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "sqlite", 64);
   } // = XMP SCRIPT ===========================================================
   else if(strLib.length() >= 12 && strLib.substr(0, 12) == "libxmp-lite-")
   { // Setup the archive
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Compiler flags
-    const string strXmpSpecific{ StrAppend(
+    const StdString strXmpSpecific{ StrAppend(
       "-Iinclude/libxmp-lite "
       "-Isrc "
       "-DWIN32 "
@@ -3711,49 +3572,20 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       GetFiles(".c", "src"), ' ',
       GetFiles(".c", "src/loaders")) };
     strRelFlags64 += strXmpSpecific;
-    strRelFlags32 += strXmpSpecific;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "xmp");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "xmp", 64);
   } // = ZLIB SCRIPT ==========================================================
   else if(strLib.length() >= 5 && strLib.substr(0, 5) == "zlib-")
   { // Setup the archive
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Compiler flags
-    const string strZLibSpecific{ StrAppend(
+    const StdString strZLibSpecific{ StrAppend(
       "-DWIN32 -D_CRT_SECURE_NO_DEPRECATE "
       "-D_CRT_NONSTDC_NO_DEPRECATE "
       "-I. ", GetFiles(".c")) };
     strRelFlags64 += strZLibSpecific;
-    strRelFlags32 += strZLibSpecific;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "zlib");
-  } // = MINIMP3 SCRIPT =======================================================
-  else if(strLib.length() >= 7 && strLib.substr(0, 7) == "minimp3")
-  { // Setup second archive first then the first archive
-    SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
-    // Remove un-needed source code
-    System("rm -rf player*.c");
-    // Perform a small compatibility fix to the code
-    ReplaceTextMulti("minimp3.c", { { "#ifndef _MSC_VER", "#ifdef _WIN64" },
-                                    { "mp3_decoder_t *", "mp3_decoder_t " } });
-    ReplaceTextMulti("minimp3.h", { { "mp3_decoder_t *", "mp3_decoder_t " },
-      { "#define __MINIMP3_H_INCLUDED__", "#define __MINIMP3_H_INCLUDED__\n"
-                                          "#ifdef __cplusplus\n"
-                                          "extern \"C\" { \n"
-                                          "#endif" },
-      { "#endif//__MINIMP3_H_INCLUDED__", "#endif//__MINIMP3_H_INCLUDED__\n"
-                                          "#ifdef __cplusplus\n"
-                                          "};\n"
-                                          "#endif" } });
-    // Set compiler flags
-    const string strMMSpecific("*.c");
-    strRelFlags64 += strMMSpecific;
-    strRelFlags32 += strMMSpecific;
-    // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "mpt");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "zlib", 64);
   } // = LZMA SCRIPT ==========================================================
   else if(strLib.length() >= 4 && strLib.substr(0, 4) == "lzma")
   { // Set destination temp directory
@@ -3761,18 +3593,16 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Remove read only flags on directory (sigh!)
     System("chmod -R a+w *");
     // Setup initial compiler flags and source files
-    const string strLZMASpecificMandatory{
+    const StdString strLZMASpecificMandatory{
       "-D_7ZIP_ST "                    "-D_REENTRANT "
       "-D_FILE_OFFSET_BITS=64 "        "-D_LARGEFILE_SOURCE "
       "C/*.c" };
     // Rest flags
     strRelFlags64 += strLZMASpecificMandatory,
-    strRelFlags32 += strLZMASpecificMandatory,
     // This disables use of AVX which isn't supported on wine
     ReplaceText("C/LzFind.c", "#define USE_SATUR_SUB_128", "");
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "lzma");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "lzma", 64);
   } // = BZIP2 SCRIPT =========================================================
   else if(strLib.length() >= 6 && strLib.substr(0, 6) == "bzip2-")
   { // Setup second archive first then the first archive
@@ -3780,12 +3610,10 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Delete some files we don't need to compile
     System("rm -rf dlltest.* bzip2.* spewg.* mk251.* unzcrash.*");
     // Add BZ2 specific flags to compiler command line
-    const string strBZ2Sources("*.c");
+    const StdString strBZ2Sources("*.c");
     strRelFlags64 += strBZ2Sources;
-    strRelFlags32 += strBZ2Sources;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "bzip");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "bzip", 64);
   } // = LUA SCRIPT ===========================================================
   else if(strLib.length() >= 4 && strLib.substr(0, 4) == "lua-")
   { // Extract the repository and switch to it --------------------------------
@@ -3824,16 +3652,14 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Perform increase of limits ---------------------------------------------
     ReplaceText("src/lparser.c", "MAXVARS\t\t200", "MAXVARS\t\t253");
     // Add lua specific flags to compiler command line ------------------------
-    const string strLuaSpecific{ "-TP -EHsc -std:" STANDARD }, // NO C!
+    const StdString strLuaSpecific{ "-TP -EHsc -std:" STANDARD }, // NO C!
                  strLuaDebug{ "-DLUA_USE_APICHECK" },
                  strLuaSources{ "src/*.c" };
-    strRelFlags64 += StrAppend(strLuaSpecific, ' ', strLuaSources),
-    strRelFlags32 += StrAppend(strLuaSpecific, ' ', strLuaSources);
+    strRelFlags64 += StrAppend(strLuaSpecific, ' ', strLuaSources);
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "lua");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "lua", 64);
   } // Unrecognised archive filename
-  else throw runtime_error{ "The archive is valid but unrecognised!" };
+  else throw StdRunTimeError{ "The archive is valid but unrecognised!" };
   // Done
   cout << "\nFinished without error!\n";
   // Done
@@ -3866,8 +3692,8 @@ static int CppCheck()
 }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)
-static void GotNewBuildExecutable(const string &strOldExe,
-  const string &strNewExe)
+static void GotNewBuildExecutable(const StdString &strOldExe,
+  const StdString &strNewExe)
 { // Wait for the compiled file to be readable and writable just incase
   while(!DirCheckFileAccess(strNewExe, 6)) StdSuspend(cd100MS);
   // Open the new executable and if succeeded?
@@ -3896,7 +3722,7 @@ static void GotNewBuildExecutable(const string &strOldExe,
       } // If we are calling from an .exe extension? Run it to move it
       if(cSystem->ENGExt() == envActive.cpEXE)
       { // Convert new exe to widestring
-        const wstring wstrNewExe{ UTFtoS16(strNewExe) };
+        const StdWideString wstrNewExe{ UTFtoS16(strNewExe) };
         // Get environment and modify first parameter
         const ArgType *const lArgs[] = { wstrNewExe.data(), L"!", nullptr };
         const ArgType *const *lEnv = cCmdLine->CmdLineGetCEnv();
@@ -3929,13 +3755,13 @@ static void CheckForNewBuildExecutable()
   // Make filename to new executable in current directory and if we have it?
   // This will be apparent if using a 'bin' directory and a linked exe from
   // 'bin/..' executed 'bin/build.x'...
-  const string strNewExe{ StrFormat("$$.x", cSystem->ENGLoc(),
+  const StdString strNewExe{ StrFormat("$$.x", cSystem->ENGLoc(),
     cSystem->ENGFile()) };
   if(DirLocalFileExists(strNewExe))
     return GotNewBuildExecutable(StrAppend(cSystem->ENGLoc(),
       cSystem->ENGFile(), envActive.cpEXE), strNewExe);
   // Make filename to new executable and return if it doesn't exist
-  const string strNewExeAlt{ StrFormat("$$/$.x", cSystem->ENGLoc(), BINDIR,
+  const StdString strNewExeAlt{ StrFormat("$$/$.x", cSystem->ENGLoc(), BINDIR,
     cSystem->ENGFile()) };
   if(DirLocalFileExists(strNewExeAlt))
     return GotNewBuildExecutable(StrFormat("$$/$$", cSystem->ENGLoc(),
@@ -4001,7 +3827,7 @@ static void ReadVersion()
   strName = StdMove(jsManifest.GetString("Project"));
 }
 /* ------------------------------------------------------------------------- */
-static int ChangeProject(const string &strProj)
+static int ChangeProject(const StdString &strProj)
 { // Make sure the directory specified is valid
   if(svusIgnore.contains(strProj) ||
      strProj.find('/') != StdNPos ||
@@ -4015,25 +3841,16 @@ static int ChangeProject(const string &strProj)
   // Write the new project
   WriteVersion();
   // Show success
-  cout << "Switch project to '" << strProj << "' succeeded!" << endl;
+  cout << "Switch project to '" << strProj << "' succeeded!" << StdIOSEndLine;
   // Done
   return 0;
 }
 /* ------------------------------------------------------------------------- */
 static int Compile(const bool bSelf)
 { // Storage for filenames and command lines
-  string strCpp,
-         strRc,
-         strRes,
-         strExe,
-         strPdb,
-         strObj,
-         strAsm,
-         strMap,
-         strCmdCC,
-         strCmdRC,
-         strCmdLD,
-         strDbgDir{ StrAppend(DBGDIR, envActive.cpDBGSUF) };
+  StdString strCpp, strRc, strRes, strExe, strPdb, strObj, strAsm, strMap,
+    strCmdCC, strCmdRC, strCmdLD,
+    strDbgDir{ StrAppend(DBGDIR, envActive.cpDBGSUF) };
   // Have compiler?
   if(*envActive.cpCCX)
   { // Set compiler command line
@@ -4153,7 +3970,7 @@ static int Compile(const bool bSelf)
     } // Update version information
     WriteVersion();
     // Write new version header
-    const string
+    const StdString
       strVersion{ StrFormat("$,$,$,$",
         uiVer[0], uiVer[1], uiVer[2], uiVer[3]) },
       strVersionStr{ StrFormat("\"$.$.$.$\"",
@@ -4176,13 +3993,13 @@ static int Compile(const bool bSelf)
         BuildHPPHeader(VERHEADER,
           "This file is automatically generated by build. Changes are lost "
           "when the engine is rebuilt."),
-        string(73, '-'),
-        left, setw(33), StrAppend('\"',strEName,'\"'),
-              setw(33), StrAppend('\"',strEAuthor,'\"'),
-              setw(33), uiVer[0],   setw(33), uiVer[1],
-              setw(33), uiVer[2],   setw(33), uiVer[3],
-              setw(33), strVersion, setw(33), strVersionStr,
-              setw(33), strDate) };
+        StdString(73, '-'),
+        StdIOSLeft, StdIOSSetWidth(33), StrAppend('\"',strEName,'\"'),
+        StdIOSSetWidth(33), StrAppend('\"',strEAuthor,'\"'),
+        StdIOSSetWidth(33), uiVer[0], StdIOSSetWidth(33), uiVer[1],
+        StdIOSSetWidth(33), uiVer[2], StdIOSSetWidth(33), uiVer[3],
+        StdIOSSetWidth(33), strVersion, StdIOSSetWidth(33), strVersionStr,
+        StdIOSSetWidth(33), strDate) };
     // Write new version header
     if(FStream{ strFile, FM_W_B }.FStreamWriteStringSafe(strText)
       != strText.length())
@@ -4237,7 +4054,7 @@ static int Compile(const bool bSelf)
                        demciIt != dLibs.GetFilesEnd();
                      ++demciIt)
   { // Only allow libs that contain this string
-    string strX;
+    StdString strX;
     // Build string
 #if defined(MACOS)
     strX += "64.";
@@ -4276,7 +4093,7 @@ static int Compile(const bool bSelf)
   // Show executable size
   const uint64_t ullNewSize = FStream{ strExe, FM_R_B }.FStreamSize();
   cout << "*** Executable size is " << ullNewSize << " bytes (" <<
-    StrToBytes(ullNewSize, 2) << ")." << endl;
+    StrToBytes(ullNewSize, 2) << ")." << StdIOSEndLine;
   // If the old executable had size?
   if(ullOldSize && ullOldSize != ullNewSize)
   { // Calculate and show changed size
@@ -4286,10 +4103,10 @@ static int Compile(const bool bSelf)
     { // Negate to positive
       const uint64_t ullAdjChange = -llChange;
       cout << "*** Executable size decreased " << ullAdjChange << " bytes (" <<
-        StrToBytes(ullAdjChange, 2) << ")." << endl;
+        StrToBytes(ullAdjChange, 2) << ")." << StdIOSEndLine;
     } // Increqased?
     else cout << "*** Executable size increased " << llChange << " bytes (" <<
-      StrToBytes(llChange, 2) << ")." << endl;
+      StrToBytes(llChange, 2) << ")." << StdIOSEndLine;
   } // Move new executable into position
   if(bSelf) CheckForNewBuildExecutable();
   // Done
@@ -4304,12 +4121,12 @@ static int DebugApp()
     return SystemF(envActive.cpDBG, strName, strName, 32, envActive.cpEXE);
   else if(uiFlags & PF_X64)
     return SystemF(envActive.cpDBG, strName, strName, "", envActive.cpEXE);
-  else throw runtime_error{ "unknown arch" };
+  else throw StdRunTimeError{ "unknown arch" };
 }
 /* ------------------------------------------------------------------------- */
-static bool CheckCommandLine(string &strX1, string &strX2)
+static bool CheckCommandLine(StdString &strX1, StdString &strX2)
 { // Get first argument
-  const string &strTokens = cCmdLine->CmdLineGetArgList().empty() ?
+  const StdString &strTokens = cCmdLine->CmdLineGetArgList().empty() ?
     cCommon->CommonBlank() : cCmdLine->CmdLineGetArgList()[0];
   // Function data structure
   struct FuncData {
@@ -4317,9 +4134,9 @@ static bool CheckCommandLine(string &strX1, string &strX2)
     const uint64_t     uiAdd, uiRemove; // Flags to add and remove
     const char*const   cpDesc;          // Description of flag
   }; // Wrap into a list
-  typedef pair<const string, const FuncData> FuncListMapPair;
-  typedef map<FuncListMapPair::first_type,
-              FuncListMapPair::second_type> FuncListMap;
+  typedef StdPair<const StdString, const FuncData> FuncListMapPair;
+  typedef StdMap<FuncListMapPair::first_type,
+                 FuncListMapPair::second_type> FuncListMap;
   typedef FuncListMap::const_iterator FuncListMapConstIt;
   // Command-line argument to flag and description list
   const FuncListMap flData{
@@ -4413,7 +4230,7 @@ static bool CheckCommandLine(string &strX1, string &strX2)
   // Iterate through the tokens we found in the string
   for(const char ucP : strTokens)
   { // Find the command and if we couldn't find it?
-    const FuncListMapConstIt flItem{ flData.find(string{ &ucP, 1 }) };
+    const FuncListMapConstIt flItem{ flData.find(StdString{ &ucP, 1 }) };
     if(flItem == flData.end())
     { // Report invalid token and goto next token
       cout << "Invalid token '" << ucP << "' ignored.\n";
@@ -4454,7 +4271,7 @@ static bool CheckCommandLine(string &strX1, string &strX2)
   // Show initial usage
   cout << "Usage: " << cSystem->ENGFile() << " <tokens> [x].\n\n"
        << "Tokens<" << flData.size() << ">:- (* = option assumed).\n"
-       << left;
+       << StdIOSLeft;
   // Buffer for left side option
   size_t stWidth = 32, stMax = stWidth;
   for(const FuncListMapPair &flI : flData)
@@ -4463,9 +4280,9 @@ static bool CheckCommandLine(string &strX1, string &strX2)
          << flI.first
          << (flI.second.uiArg ? " x" : cCommon->CommonDblSpace())
          << " = "
-         << setw(stWidth)
-         << string{ flI.second.cpDesc, 0, stMax }
-         << setw(0);
+         << StdIOSSetWidth(stWidth)
+         << StdString{ flI.second.cpDesc, 0, stMax }
+         << StdIOSSetWidth(0);
     // Switch width and add a carriage return if the right option
     if(stWidth) stWidth = 0; else stWidth = stMax, cout << '\n';
   } // Add a carriage return if on left side
@@ -4480,7 +4297,7 @@ static void ReadProject()
     XCL("Could not find project directory!",
         "Directory", strName, "Current", DirGetCWD());
   // Create filename
-  const string strFile{ StrFormat("$/" DEFAULT_CONFIGURATION, strName) };
+  const StdString strFile{ StrFormat("$/" DEFAULT_CONFIGURATION, strName) };
   // Create the json object and parse it
   const Json jsManifest{ StrAppend(strFile, "." JSON_EXTENSION) };
   // Check version is correct
@@ -4512,8 +4329,8 @@ static int ShowVersion()
     cSystem->ENGExt(), cSystem->ENGFileExt(), cSystem->ENGLoc());
   // For each log entry, write the line to the buffer
   for(const LogLine &llLine : *cLog)
-    cout << '[' << fixed << setprecision(6) << llLine.dTime << "] "
-         << llLine.strLine << endl;
+    cout << '[' << StdIOSFixed << StdIOSSetPrecision(6) << llLine.dTime << "] "
+         << llLine.strLine << StdIOSEndLine;
   // Success
   return 0;
 }
@@ -4562,7 +4379,7 @@ static int Build(const int iArgC, ArgType**const saArgV,
        << cmSys.FormatTime("%Y")
        << ". All Rights Reserved.\n\n";
   // Initialise default flags
-  string strExtra1, strExtra2;
+  StdString strExtra1, strExtra2;
   if(CheckCommandLine(strExtra1, strExtra2)) return 0;
   // Read version and current project information if needed
   if(uiFlags & PF_RVER)  ReadVersion();
@@ -4593,9 +4410,9 @@ static int Build(const int iArgC, ArgType**const saArgV,
   // Nthing to do
   XC("Nothing to do!", "Flags", uiFlags);
 } // exception occured?
-catch(const exception &e)
+catch(const StdException &eReason)
 { // Print exception message and return error status
-  cout << "exception > " << e.what() << "\n";
+  cout << "exception > " << eReason.what() << "\n";
   return -1;
 }
 /* ------------------------------------------------------------------------- */

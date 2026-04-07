@@ -25,11 +25,11 @@ using namespace Common;
 ** -- Read SShot class argument -------------------------------------------- */
 struct AgSShot : public ArClass<SShot> {
   explicit AgSShot(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<SShot>(lS, iArg, *cSShots)}{} };
+    ArClass{LuaUtilGetClassRef<SShot>(lS, iArg, cSShots)}{} };
 /* -- Create SShot class argument ------------------------------------------ */
 struct AcSShot : public ArClass<SShot> {
   explicit AcSShot(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<SShot>(lS, *cSShots)}{} };
+    ArClass{LuaUtilClassCreateRef<SShot>(lS, cSShots)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## SShot:* member functions                                            ## **

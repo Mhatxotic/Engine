@@ -28,11 +28,11 @@ using namespace IMemory::P;            using namespace Common;
 ** -- Read File class argument --------------------------------------------- */
 struct AgFile : public ArClass<File> {
   explicit AgFile(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<File>(lS, iArg, *cFiles)}{} };
+    ArClass{LuaUtilGetClassRef<File>(lS, iArg, cFiles)}{} };
 /* -- Create File class argument ------------------------------------------- */
 struct AcFile : public ArClass<File> {
   explicit AcFile(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<File>(lS, *cFiles)}{} };
+    ArClass{LuaUtilClassCreateRef<File>(lS, cFiles)}{} };
 /* -- Other types ---------------------------------------------------------- */
 typedef AgInteger<int64_t> AgInt64;
 /* ========================================================================= **
@@ -238,7 +238,8 @@ LLFUNC(Open, 1,
 // ? Creates the specified directory. Only allowed as a child of the working
 // ? executable directory.
 // * ----------------------------------------------------------------------- */
-LLFUNC(MkDir, 1, LuaUtilPushVar(lS, DirMkDir(AgFilename{lS, 1}) ? 0 : errno))
+LLFUNC(MkDir, 1,
+  LuaUtilPushVar(lS, DirMkDir(AgFilename{lS, 1}) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.MkDirEx
 // > Directory:string=Directory to create
@@ -248,7 +249,7 @@ LLFUNC(MkDir, 1, LuaUtilPushVar(lS, DirMkDir(AgFilename{lS, 1}) ? 0 : errno))
 // ? exist. If the directory already exists than the function returns success.
 // * ----------------------------------------------------------------------- */
 LLFUNC(MkDirEx, 1,
-  LuaUtilPushVar(lS, DirMkDirEx(AgFilename{lS, 1}) ? 0 : errno))
+  LuaUtilPushVar(lS, DirMkDirEx(AgFilename{lS, 1}) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.RmDir
 // > Directory:string=Directory to create
@@ -256,7 +257,8 @@ LLFUNC(MkDirEx, 1,
 // ? Creates the specified directory. Only allowed as a child of the working
 // ? executable directory.
 /* ------------------------------------------------------------------------- */
-LLFUNC(RmDir, 1, LuaUtilPushVar(lS, DirRmDir(AgFilename{lS, 1}) ? 0 : errno))
+LLFUNC(RmDir, 1,
+  LuaUtilPushVar(lS, DirRmDir(AgFilename{lS, 1}) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.RmDirEx
 // > Directory:string=Directories to remove
@@ -266,7 +268,7 @@ LLFUNC(RmDir, 1, LuaUtilPushVar(lS, DirRmDir(AgFilename{lS, 1}) ? 0 : errno))
 // ? directories that are empty.
 /* ------------------------------------------------------------------------- */
 LLFUNC(RmDirEx, 1,
-  LuaUtilPushVar(lS, DirRmDirEx(AgFilename{lS, 1}) ? 0 : errno))
+  LuaUtilPushVar(lS, DirRmDirEx(AgFilename{lS, 1}) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.Unlink
 // > File:string=File to delete
@@ -275,7 +277,7 @@ LLFUNC(RmDirEx, 1,
 // ? executable directory.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Unlink, 1,
-  LuaUtilPushVar(lS, DirFileUnlink(AgFilename{lS, 1}) ? 0 : errno))
+  LuaUtilPushVar(lS, DirFileUnlink(AgFilename{lS, 1}) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.Rename
 // > Source:string=Source filename
@@ -285,8 +287,8 @@ LLFUNC(Unlink, 1,
 // ? working executable directory for both parameters.
 // * ----------------------------------------------------------------------- */
 LLFUNC(Rename, 1,
-  const AgFilename aSource{lS, 1};
-  const AgFilename aDestination{lS,2};
+  const AgFilename aSource{lS, 1},
+                   aDestination{lS, 2};
   LuaUtilPushVar(lS, DirFileRename(aSource, aDestination)))
 /* ========================================================================= */
 // $ File.DirExists
@@ -403,8 +405,8 @@ LLFUNC(Enumerate, 2,
 // ? directory to two tables.
 /* ------------------------------------------------------------------------- */
 LLFUNC(EnumerateEx, 2,
-  const AgFilename aDirectory{lS, 1};
-  const AgFilename aExtension{lS,2};
+  const AgFilename aDirectory{lS, 1},
+                   aExtension{lS, 2};
   const Dir dData{ aDirectory, aExtension };
   LuaUtilToTable(lS, dData.GetFiles());
   LuaUtilToTable(lS, dData.GetDirs()))

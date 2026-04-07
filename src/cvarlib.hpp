@@ -17,10 +17,10 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* -- Use this when cvar is an integer ------------------------------------- */
-#define CB(f,t) [](CVarItem&, const string &strV)->CVarReturn \
+#define CB(f,t) [](CVarItem&, const StdString &strV)->CVarReturn \
   { return f(StrToNum<t>(strV)); }
 /* -- Use this when cvar is a string (NoOp for no callback needed) --------- */
-#define CBSTR(f) [](CVarItem &cviItem, const string &strV)->CVarReturn \
+#define CBSTR(f) [](CVarItem &cviItem, const StdString &strV)->CVarReturn \
   { return f(strV, cviItem.GetModifyableValue()); }
 /* -- Built-in CVar definition struct -------------------------------------- */
 CVarItemStaticList{{
@@ -59,7 +59,7 @@ CVarItemStaticList{{
 // ! AST_PIPEBUFFER
 // ? Specifies the size of the pipe buffer.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_pipebuffer", STR(MAX_PIPE_BUFFER),
+{ CFL_BASIC, "ast_pipebuffer", "4096",
   CB(AssetSetPipeBufferSize, size_t), TUINTEGER|CPOW2|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AST_FSOVERRIDE
@@ -645,41 +645,6 @@ CVarItemStaticList{{
   /* ----------------------------------------------------------------------- */
   CB(cSystem->SysCheckDebuggerDetected, bool), TBOOLEAN|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
-// ! ERR_LUAMODE
-// ? Sets how to handle a LUA script error to one of these values...
-// ? [0] LEM_IGNORE   = Ignore errors and try to continue.
-// ? [1] LEM_RESET    = Automatically reset on error.
-// ? [2] LEM_SHOW     = Open console and show error.
-// ? [3] LEM_CRITICAL = Terminate engine with error.
-// ? The default value is 3 for release executable and 2 for beta executable.
-/* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "err_luamode",
-  /* ----------------------------------------------------------------------- */
-#if defined(RELEASE)
-  "3",
-#else
-  cCommon->CommonTwo(),
-#endif
-  /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason),
-    TUINTEGER|PAPPCFG|PCMDLINE },
-/* ------------------------------------------------------------------------- */
-// ! ERR_LMRESETLIMIT
-// ? When ERR_LUAMODE is set to 1, this specifies the number of LUA script
-// ? errors that are allowed before an error after this is treated as a
-// ? critical error. The default value for release executable is 1000 and
-// ? 10 for beta executable.
-/* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "err_lmresetlimit",
-  /* ----------------------------------------------------------------------- */
-#if defined(RELEASE)
-  "1000",
-#else
-  "10",
-#endif
-  /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreSetResetLimit, unsigned int), TUINTEGER|PAPPCFG|PCMDLINE },
-/* ------------------------------------------------------------------------- */
 // ! ERR_MINVRAM
 // ? The engine fails to run if the system does not have this amount of VRAM
 // ? available.
@@ -714,6 +679,41 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "lua_debuglocals", cCommon->CommonOne(),
   CB(cLua->SetDebugLocals, bool), TBOOLEAN|PANY },
+/* ------------------------------------------------------------------------- */
+// ! LUA_ERRIGNORE
+// ? When LUA_ERRMODE is set to 1, this specifies the number of LUA script
+// ? errors that are allowed before an error after this is treated as a
+// ? critical error. The default value for release executable is 1000 and
+// ? 10 for beta executable.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "lua_errignore",
+  /* ----------------------------------------------------------------------- */
+#if defined(RELEASE)
+  "1000",
+#else
+  "10",
+#endif
+  /* ----------------------------------------------------------------------- */
+  CB(cCore->CoreSetResetLimit, unsigned int), TUINTEGER|PAPPCFG|PCMDLINE },
+/* ------------------------------------------------------------------------- */
+// ! LUA_ERRMODE
+// ? Sets how to handle a LUA script error to one of these values...
+// ? [0] LEM_IGNORE   = Ignore errors and try to continue.
+// ? [1] LEM_RESET    = Automatically reset on error.
+// ? [2] LEM_SHOW     = Open console and show error.
+// ? [3] LEM_CRITICAL = Terminate engine with error.
+// ? The default value is 3 for release executable and 2 for beta executable.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "lua_errmode",
+  /* ----------------------------------------------------------------------- */
+#if defined(RELEASE)
+  "3",
+#else
+  cCommon->CommonTwo(),
+#endif
+  /* ----------------------------------------------------------------------- */
+  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason),
+    TUINTEGER|PAPPCFG|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCPAUSE
 // ? Overrides Lua's internal LUA_GCPAUSE value with this.

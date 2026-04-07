@@ -22,7 +22,7 @@ namespace P {                          // Start of public module namespace
 // We need to collect the event ids of the events we dispatch so we can
 // remove these events when the class is destroyed, or events that reference
 // derived classes which have been destroyed will crash the engine.
-typedef deque<EvtMain::QueueConstIt> LuaEvtsList;
+typedef StdDeque<EvtMain::QueueConstIt> LuaEvtsList;
 /* == Class type for storing an event iterator and removing it ============= */
 class LuaEvts :
   /* -- Initialisers ------------------------------------------------------- */
@@ -56,7 +56,7 @@ class LuaEvts :
   template<typename ...VarArgs>void LuaEvtsDispatch(const EvtMainCmd emcCmd,
     const void*const vpClass, const VarArgs ...vaArgs)
   { // Reserve memory for current parameters list for event
-    Reserved<EvtMainArgs> emaArgs{ sizeof...(VarArgs) };
+    StdReserved<EvtMainArgs> emaArgs{ sizeof...(VarArgs) };
     // Lock access to the list
     mMutex.MutexCall([this, &emaArgs, &emcCmd, vpClass, &vaArgs...]{
       // Iterator to return
@@ -258,7 +258,7 @@ class LuaEvtSlave :
     LuaUtilCallFuncRefCtrEx(this->LuaRefGetState(), mtPtr,
       static_cast<int>(emaArgs.size() - stMandatory));
   } // Exception occured? Disable lua callback and rethrow
-  catch(const exception&) { this->LuaRefDeInit(); throw; }
+  catch(const StdException &) { this->LuaRefDeInit(); throw; }
   /* ----------------------------------------------------------------------- */
   void LuaEvtDeInit()
   { // De-initialise reference state

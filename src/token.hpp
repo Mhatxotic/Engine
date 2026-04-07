@@ -35,7 +35,7 @@ struct TokenListNC :
   /* -- Base classes ------------------------------------------------------- */
   public CStrVector                    // Vector of C-Strings
 { /* -- Constructor with maximum token count ------------------------------- */
-  TokenListNC(string &strStr, const string &strSep, const size_t stMax)
+  TokenListNC(StdString &strStr, const StdString &strSep, const size_t stMax)
   { // Ignore if either string is empty
     if(strStr.empty() || strSep.empty()) return;
     // What is the maximum number of tokens allowed?
@@ -84,7 +84,8 @@ struct TokenList :                     // Token class with line limit
   /* -- Base classes ------------------------------------------------------- */
   public StrList                       // List of strings
 { /* -- Simple constructor with no restriction on line count --------------- */
-  TokenList(const string &strStr, const string &strSep, const size_t stMax)
+  TokenList(const StdString &strStr, const StdString &strSep,
+    const size_t stMax)
   { // Ignore if either string is empty
     if(strStr.empty() || strSep.empty()) return;
     // What is the maximum number of tokens allowed?
@@ -122,7 +123,7 @@ struct TokenList :                     // Token class with line limit
   /* -- MOVE assignment constructor ---------------------------------------- */
   TokenList(TokenList &&tlOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    StrList{ StdMove(tlOther) }            // Move list of strings over
+    StrList{ StdMove(tlOther) }        // Move list of strings over
     /* -- No code ---------------------------------------------------------- */
     {}
 }; /* ---------------------------------------------------------------------- */
@@ -130,7 +131,7 @@ struct Token :                         // Tokeniser class
   /* -- Base classes ------------------------------------------------------- */
   public StrVector                     // Vector of strings
 { /* -- Constructor with maximum token count ------------------------------- */
-  Token(const string &strStr, const string &strSep, const size_t stMax)
+  Token(const StdString &strStr, const StdString &strSep, const size_t stMax)
   { // Return if string or separator is empty
     if(strStr.empty() || strSep.empty()) return;
     // What is the maximum number of tokens allowed?
@@ -163,9 +164,9 @@ struct Token :                         // Tokeniser class
     }
   }
   /* -- Simple constructor with no restriction on token count -------------- */
-  Token(const string &strStr, const string &strSep)
+  Token(const StdString &strStr, const StdString &strSep)
   { // Run the generic tokeniser function to split apart the stirng
-    Tokeniser(strStr, strSep, [this](string &&svStr)
+    Tokeniser(strStr, strSep, [this](StdString &&svStr)
       { emplace_back(StdMove(svStr)); });
   }
   /* -- Direct conditional access ------------------------------------------ */

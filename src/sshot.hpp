@@ -46,7 +46,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       // Success
       tsReturn = TS_OK;
     } // exception occured?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SCREENSHOT WRITER THREAD EXCEPTION) $", eReason);
       // Errored return code
@@ -57,7 +57,8 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     return tsReturn;
   }
   /* -- Capture screenshot from FBO -------------------------------- */ public:
-  bool DumpFBO(const Fbo &fboRef, const string &strFile=cCommon->CommonBlank())
+  bool DumpFBO(const Fbo &fboRef,
+    const StdString &strFile=cCommon->CommonBlank())
   { // Cancel if thread is still running
     if(tThread.ThreadIsJoinable()) return false;
     // DeInit old thread, we need to reuse it

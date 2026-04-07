@@ -27,11 +27,11 @@ using namespace Common;
 ** -- Read Variable class argument ----------------------------------------- */
 struct AgVariable : public ArClass<Variable> {
   explicit AgVariable(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Variable>(lS, iArg, *cVariables)}{} };
+    ArClass{LuaUtilGetClassRef<Variable>(lS, iArg, cVariables)}{} };
 /* -- Create Variable class argument --------------------------------------- */
 struct AcVariable : public ArClass<Variable> {
   explicit AcVariable(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Variable>(lS, *cVariables)}{} };
+    ArClass{LuaUtilClassCreateRef<Variable>(lS, cVariables)}{} };
 /* -- Get Variable flags --------------------------------------------------- */
 struct AgCVarId : public AgIntegerLGE<CVarEnums>
   { explicit AgCVarId(lua_State*const lS, const int iArg) :
@@ -43,8 +43,8 @@ struct AgCVarId : public AgIntegerLGE<CVarEnums>
 // ? Sets the new value based on the specified boolean. "0" if false or "1" if
 // ? true. See Variable.Result to see the possible results.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Boolean, 1, LuaUtilPushVar(lS,
-  AgVariable{lS, 1}().SetBoolean(AgBoolean{lS, 2})))
+LLFUNC(Boolean, 1,
+  LuaUtilPushVar(lS, AgVariable{lS, 1}().SetBoolean(AgBoolean{lS, 2})))
 /* ========================================================================= */
 // $ Variable:Clear
 // < Success:integer=The return code.
@@ -103,8 +103,8 @@ LLFUNC(Get, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Get()))
 // ? Sets the new value based on the specified integer. See Variable.Result to
 // ? see the possible results.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Integer, 1, LuaUtilPushVar(lS,
-  AgVariable{lS, 1}().SetInteger(AgLuaInteger{lS, 2})))
+LLFUNC(Integer, 1,
+  LuaUtilPushVar(lS, AgVariable{lS, 1}().SetInteger(AgLuaInteger{lS, 2})))
 /* ========================================================================= */
 // $ Variable:NotEmpty
 // < NotEmpty:boolean=Is the value not empty?
@@ -118,8 +118,8 @@ LLFUNC(NotEmpty, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().NotEmpty()))
 // ? Sets the new value based on the specified number. See Variable.Result to
 // ? see the possible results.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Number, 1, LuaUtilPushVar(lS,
-  AgVariable{lS, 1}().SetNumber(AgLuaNumber{lS, 2})))
+LLFUNC(Number, 1,
+  LuaUtilPushVar(lS, AgVariable{lS, 1}().SetNumber(AgLuaNumber{lS, 2})))
 /* ========================================================================= */
 // $ Variable:Reset
 // ? Resets the cvar to the default value as registered.
@@ -202,8 +202,8 @@ LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->CVarsSaveToDatabase()))
 // ? must begin with a letter but subsequent characters can be underscores and
 // ? numbers. The name must also be between 5 and 255 characters in length.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Valid, 1, LuaUtilPushVar(lS,
-  cCVars->IsValidVariableName(AgString{lS, 1})))
+LLFUNC(Valid, 1,
+  LuaUtilPushVar(lS, cCVars->IsValidVariableName(AgString{lS, 1})))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Variable.* namespace functions structure                            ## **

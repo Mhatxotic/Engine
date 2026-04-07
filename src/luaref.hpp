@@ -9,14 +9,15 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaRef {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ILog::P;               using namespace ILuaUtil::P;
-using namespace IStd::P;               using namespace IUtil::P;
+using namespace IFillCon::P;           using namespace ILog::P;
+using namespace ILuaUtil::P;           using namespace IStd::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 template<size_t Refs=1>class LuaRef    // Lua easy reference class
 { /* -- Private typedefs ---------------------------------------- */ protected:
-  typedef array<int, Refs> References; // Type for LUA references list
+  typedef StdArray<int, Refs> References; // Type for LUA references list
   typedef References::const_reverse_iterator ReferencesConstRevIt;
   typedef References::reverse_iterator       ReferencesRevIt;
   /* -- Protected variables ------------------------------------- */ protected:
@@ -108,7 +109,7 @@ template<size_t Refs=1>class LuaRef    // Lua easy reference class
   LuaRef() :
     /* -- Initialisers ----------------------------------------------------- */
     lsState(nullptr),                  // State not initialised yet
-    aReferences{ UtilMkFilledContainer<References>(LUA_REFNIL) }
+    aReferences{ FillConGeneric<References>(LUA_REFNIL) }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor, delete the reference if set----------------------------- */

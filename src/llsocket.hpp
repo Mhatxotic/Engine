@@ -28,25 +28,25 @@ using namespace ISocket::P;            using namespace Common;
 ** -- Read Socket class argument ------------------------------------------- */
 struct AgSocket : public ArClass<Socket> {
   explicit AgSocket(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Socket>(lS, iArg, *cSockets)}{} };
+    ArClass{LuaUtilGetClassRef<Socket>(lS, iArg, cSockets)}{} };
 /* -- Create Socket class argument ----------------------------------------- */
 struct AcSocket : public ArClass<Socket> {
   explicit AcSocket(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Socket>(lS, *cSockets)}{} };
+    ArClass{LuaUtilClassCreateRef<Socket>(lS, cSockets)}{} };
 /* -- Create socket port class argument ------------------------------------ */
 struct AgPort : public AgUIntLG {
   explicit AgPort(lua_State*const lS, const int iParam) :
     AgUIntLG{ lS, iParam, 1, 65535 }{} };
 /* -- Create http method class argument ------------------------------------ */
-struct AgAddress { string strString;
-  string &operator()() { return strString; }
-  operator string&() { return operator()(); }
+struct AgAddress { StdString strString;
+  StdString &operator()() { return strString; }
+  operator StdString&() { return operator()(); }
   explicit AgAddress(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppHostname(lS, iArg)}{} };
 /* -- Create http method class argument ------------------------------------ */
-struct AgMethod { string strString;
-  string &operator()() { return strString; }
-  operator string&() { return operator()(); }
+struct AgMethod { StdString strString;
+  StdString &operator()() { return strString; }
+  operator StdString&() { return operator()(); }
   explicit AgMethod(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppStrUpper(lS, iArg)}{} };
 /* ========================================================================= **

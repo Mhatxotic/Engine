@@ -23,11 +23,11 @@ using namespace IClipboard::P;         using namespace Common;
 ** -- Read Clip class argument --------------------------------------------- */
 struct AgClip : public ArClass<Clip> {
   explicit AgClip(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Clip>(lS, iArg, *cClips)}{} };
+    ArClass{LuaUtilGetClassRef<Clip>(lS, iArg, cClips)}{} };
 /* -- Create Clip class argument ------------------------------------------- */
 struct AcClip : public ArClass<Clip> {
   explicit AcClip(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Clip>(lS, *cClips)}{} };
+    ArClass{LuaUtilClassCreateRef<Clip>(lS, cClips)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Clip:* member functions                                             ## **

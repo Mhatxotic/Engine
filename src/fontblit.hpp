@@ -281,7 +281,7 @@ void DoPrintR(GLfloat fX, GLfloat fY, UtfDecoder &udRef)
     case '\n':
     { // Create and prepare spliced string. *DO NOT* merge these lines
       // as the string will be freed after udSliced() returns.
-      const string strSpliced{ udRef.UtfSlice(cpSaved) };
+      const StdString strSpliced{ udRef.UtfSlice(cpSaved) };
       UtfDecoder udSliced{ strSpliced };
       // Now print the string. We need to duplicate the string here, because
       // we shouldn't modify the original string, even though it would be
@@ -327,7 +327,7 @@ void DoPrintC(GLfloat fX, GLfloat fY, UtfDecoder &udRef)
     case '\n':
     { // Create and prepare spliced string. *DO NOT* merge these lines
       // as the string will be freed after udSliced() returns.
-      const string strSliced{ udRef.UtfSlice(cpSaved) };
+      const StdString strSliced{ udRef.UtfSlice(cpSaved) };
       UtfDecoder udSliced{ strSliced };
       // Now print the string. We need to duplicate the string here, because
       // we shouldn't modify the original string, even though it would be

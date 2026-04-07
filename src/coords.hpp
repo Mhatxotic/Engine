@@ -15,7 +15,7 @@ using Lib::OS::GlFW::GLuint;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo coords class ===================================================== */
-template<typename IntType> requires is_arithmetic_v<IntType> class Coords
+template<typename IntType> requires StdIsArithmatic<IntType> class Coords
 { /* -- Private variables -------------------------------------------------- */
   typedef Coord<IntType> CoordType;    // Co-ordinates container type
   CoordType        ctXY1, ctXY2;       // Top-left/right-bottom co-ordinates

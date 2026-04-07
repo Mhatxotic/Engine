@@ -10,17 +10,24 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IFlags {                     // Start of module namespace
+/* -- Private typedefs ----------------------------------------------------- */
+template<typename T>struct StdIsAtomic : ::std::false_type {};
+template<typename T>struct StdIsAtomic<StdAtomic<T>> : ::std::true_type {};
+template<typename T>
+  constexpr static bool StdIsAtomicV = StdIsAtomic<StdRemoveConst<T>>::value;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
 /* == Storage for flags ==================================================== **
 ** ######################################################################### **
 ** ## Simple unprotected integer based flags.                             ## **
 ** ######################################################################### */
 template<typename IntType>
-requires is_integral_v<IntType> || is_std_atomic_v<IntType>
+  requires StdIsInteger<IntType> || StdIsAtomicV<IntType>
 class FlagsStorageUnsafe
 { /* -- Values storage ------------------------------------------ */ protected:
   IntType          itV;                // The simple value
   /* -- Reset with specified value ----------------------------------------- */
-  template<typename AnyType> requires is_integral_v<IntType>
+  template<typename AnyType> requires StdIsInteger<IntType>
     constexpr void FlagSetInt(const AnyType atValue)
   { itV = static_cast<IntType>(atValue); }
   /* -- Swap values -------------------------------------------------------- */
@@ -33,7 +40,7 @@ class FlagsStorageUnsafe
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>requires is_integral_v<IntType>
+  template<typename AnyType=IntType>requires StdIsInteger<IntType>
     constexpr AnyType FlagGet() const
   { return static_cast<AnyType>(itV); }
 };/* ----------------------------------------------------------------------- */
@@ -42,12 +49,12 @@ class FlagsStorageUnsafe
 ** ## Thread safe integer based flags.                                    ## **
 ** ######################################################################### */
 template<typename IntType,
-         typename SafeType = atomic<IntType>>
-requires is_integral_v<IntType> &&
-         is_std_atomic_v<SafeType> &&
-         is_integral_v<typename SafeType::value_type>
+         typename SafeType = StdAtomic<IntType>>
+requires StdIsInteger<IntType> &&
+         StdIsAtomicV<SafeType> &&
+         StdIsInteger<typename SafeType::value_type>
 class FlagsStorageSafe :
-  /* -- Base classes (note that std::atomic will never throw) -------------- */
+  /* -- Base classes (note that StdAtomic will never throw) ---------------- */
   private SafeType
 { /* -- Set values ---------------------------------------------- */ protected:
   template<typename AnyType>constexpr void FlagSetInt(const AnyType atValue)
@@ -67,7 +74,7 @@ class FlagsStorageSafe :
 ** ######################################################################### */
 template<typename IntType,
          class StorageType = FlagsStorageUnsafe<IntType>>
-requires is_integral_v<IntType>
+requires StdIsInteger<IntType>
 class FlagsConst :
   /* -- Base classes ------------------------------------------------------- */
   public StorageType
@@ -157,7 +164,7 @@ class FlagsConst :
 template<typename IntType,
          class StorageType = FlagsStorageUnsafe<IntType>,
          class ConstType = FlagsConst<IntType, StorageType>>
-requires is_integral_v<IntType>
+requires StdIsInteger<IntType>
 struct Flags :
   /* -- Base classes ------------------------------------------------------- */
   public ConstType
@@ -217,7 +224,7 @@ template<typename IntType,
          class UConstType = FlagsConst<IntType, UStorageType>,
          class FlagsType = Flags<IntType, StorageType, UConstType>,
          class ConstType = FlagsConst<IntType, StorageType>>
-requires is_integral_v<IntType>
+requires StdIsInteger<IntType>
 class SafeFlags :
   /* -- Base classes ------------------------------------------------------- */
   public FlagsType
@@ -232,12 +239,14 @@ class SafeFlags :
   typedef uint64_t n ## FlagsType; \
   typedef s<n ## FlagsType> n ## Flags; \
   typedef FlagsConst<n ## FlagsType> n ## FlagsConst; \
-  constexpr static const n ## FlagsConst __VA_ARGS__;
+  constexpr static const n ## FlagsConst __VA_ARGS__
 #define BUILD_FLAGS(n, ...) BUILD_FLAGS_EX(n, Flags, __VA_ARGS__)
 #define BUILD_SECURE_FLAGS(n, ...) BUILD_FLAGS_EX(n, SafeFlags, __VA_ARGS__)
 /* -- Helper for defining flags -------------------------------------------- */
 constexpr static uint64_t Flag(const size_t stIndex)
   { return stIndex ? 1ULL << (stIndex - 1) : 0; };
+/* ------------------------------------------------------------------------- */
+}                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of module namespace
 /* == EoF =========================================================== EoF == */

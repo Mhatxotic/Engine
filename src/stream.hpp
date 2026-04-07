@@ -111,11 +111,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   /* -- Get total PCM samples ---------------------------------------------- */
   ogg_int64_t GetSamples() { return ov_pcm_total(&ovfContext, -1); }
   /* -- Convert stop reason to string -------------------------------------- */
-  const string_view &StopReasonToString(const StreamStopReason srReason) const
-    { return cParent->srStrings.Get(srReason); }
+  const StdStringView
+    &StopReasonToString(const StreamStopReason srReason) const
+  { return cParent->srStrings.Get(srReason); }
   /* -- Convert stop reason to string -------------------------------------- */
-  const string_view &StateReasonToString(const StreamPlayState psReason) const
-    { return cParent->psStrings.Get(psReason); }
+  const StdStringView
+    &StateReasonToString(const StreamPlayState psReason) const
+  { return cParent->psStrings.Get(psReason); }
   /* -- Stop (without locks) ----------------------------------------------- */
   void Stop(const StreamStopReason srReason)
   { // Don't have source class? There is nothing else to do!
@@ -134,8 +136,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     { // Anything else? Send playback event and set internal state to stopped
       default: LuaEvtDispatch(SE_STOP, psState, srReason);
                psState = PS_STANDBY;
+               [[fallthrough]];
       // Return if forced to stop or already in standby
-      case PS_WASPLAYING: case PS_STANDBY: break;
+      case PS_WASPLAYING: [[fallthrough]];
+      case PS_STANDBY: break;
     }
   }
   /* -- Play (without locks) ----------------------------------------------- */
@@ -349,7 +353,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   ogg_int64_t GetOggBytes() const { return fmFile.MemSize<ogg_int64_t>(); }
   /* -- GetFormat ---------------------------------------------------------- */
   ALenum GetFormat() const { return eFormat; }
-  const string_view GetFormatName() const
+  const StdStringView GetFormatName() const
     { return cOal->GetALFormat(eFormat); }
   /* -- Main (from audio thread) ------------------------------------------- */
   void Main()
@@ -434,9 +438,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
               if(llLoop != -1 && !--llLoop) SetLoopEnd(GetSamples());
             } // Requeue the buffers
             sCptr->QueueBuffers(vUnQBuffers.data(), stBuffersProcessed);
-            // Done
-            break;
-          }
+          } // Fall through to break
+          [[fallthrough]];
         } // Other state (ignore)
         default: break;
       }
@@ -531,8 +534,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     // then Rebuffer() will not fill all the buffers and subsequent OpenAL
     // calls will fail. We'll add a minimum value of 1 too just incase we get
     // a stream with no data.
-    vBuffers.resize(UtilClamp(static_cast<size_t>(ceil(static_cast<ALdouble>
-      (GetSamples()) / cParent->stBufSize)), 1, cParent->stBufCount));
+    vBuffers.resize(
+      UtilClamp(static_cast<size_t>(ceil(static_cast<ALdouble>
+      (GetSamples()) / static_cast<ALdouble>(cParent->stBufSize))), 1,
+      cParent->stBufCount));
     // Get info about ogg and copy it into our static buffer if succeeded,
     // else show an exception if failed. This removes dereferencing of the
     // vorbis info struct.
@@ -570,7 +575,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
       "Stream loaded '$' (C=$;R=$;BR=$:$:$:$;D$=$;B=$;BS=$;V=$$).",
       IdentGet(), GetChannels(), GetRate(), viData.bitrate_upper,
       viData.bitrate_nominal, viData.bitrate_lower, viData.bitrate_window,
-      fixed, GetDuration(), vBuffers.size(), MemSize(), hex, GetVersion());
+      StdIOSFixed, GetDuration(), vBuffers.size(), MemSize(), StdIOSHex,
+      GetVersion());
   }
   /* -- Return metadata as table ------------------------------------------- */
   const StrNCStrMap &GetMetaData() const { return ssMetaData; }

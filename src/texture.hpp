@@ -70,9 +70,9 @@ class TextureBase :                    // All members initially private
       /* -- No code -------------------------------------------------------- */
       {}                               // Note that our shader handles Z co-ord
   };/* --------------------------------------------------------------------- */
-  typedef vector<CoordData>   CoordList;   // Tile coordinates data list
+  typedef StdVector<CoordData> CoordList;  // Tile coordinates data list
   typedef CoordList::iterator CoordListIt; // Iterator to a CoordList
-  typedef vector<CoordList>   CoordsList;  // A list of tile coords per sub-tex
+  typedef StdVector<CoordList> CoordsList; // A list of tile coords per sub-tex
   /* ----------------------------------------------------------------------- */
   CoordsList       clTiles;            // Texture coordinates for tiles
   GLUIntVector     uivTexture;         // OpenGL texture handle list
@@ -156,6 +156,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       case GL_NEAREST_MIPMAP_LINEAR: case GL_NEAREST_MIPMAP_NEAREST:
         GL(cOgl->GenerateMipmaps(),
           "Failed to generate mipmaps!", "Identifier", IdentGet());
+        [[fallthrough]];
       // Nothing special
       default: break;
     }
@@ -578,14 +579,18 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     const GLfloat fTop, const GLfloat fRight, const GLfloat fBottom)
   { // Calculate perspective width
     const GLfloat
-      fNewWidth = (fRight - fLeft) / uiColumns,
-      fNewHeight = (fBottom - fTop) / (GetTileCount() / uiColumns);
+      fNewWidth = (fRight - fLeft) /
+        static_cast<GLfloat>(uiColumns),
+      fNewHeight = (fBottom - fTop) /
+        static_cast<GLfloat>(GetTileCount() / uiColumns);
     // For each image
     for(size_t stTile = 0; stTile < GetTileCount(); ++stTile)
     { // Calculate X, Y co-ordinate
       const GLfloat
-        fNewLeft = fLeft + (stTile % uiColumns) * fNewWidth,
-        fNewTop = fTop + (stTile / uiColumns) * fNewHeight;
+        fNewLeft = fLeft +
+          static_cast<GLfloat>(stTile % uiColumns) * fNewWidth,
+        fNewTop = fTop +
+          static_cast<GLfloat>(stTile / uiColumns) * fNewHeight;
       // Blit the texture
       BlitLTRB(0, stTile, fNewLeft, fNewTop,
         fNewLeft + fNewWidth, fNewTop + fNewHeight);
@@ -663,7 +668,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       bdDDepth };
   }
   /* -- Download texture and dump it to disk ------------------------------- */
-  void Dump(const size_t stSubTexId, const string &strFile) const
+  void Dump(const size_t stSubTexId, const StdString &strFile) const
     { Download(stSubTexId).SaveFile(strFile, stSubTexId, IFMT_PNG); }
   /* -- Reload texture array as normal texture ----------------------------- */
   void ReloadTexture()
@@ -777,7 +782,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       } // Log tiling data
       cLog->LogDebugExSafe("- Tiles: $ (SC=$;B=$x$;T=$x$;P=$$x$).",
         GetTileCount(), GetSubCount(), DimGetWidth(), DimGetHeight(),
-        GetTileWidth(), GetTileHeight(), fixed, GetPaddingWidth(),
+        GetTileWidth(), GetTileHeight(), StdIOSFixed, GetPaddingWidth(),
         GetPaddingHeight());
     }
     // Remove all image data because we can just load it from file again
@@ -790,7 +795,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   { // Generate the texture as normal but we'll be generating the tileset
     InitTextureImage(imgSrc, 0, 0, 0, 0, ofeFilter, false);
     // Check that the tile count is divisble by 4 (X,Y,W,H)
-    static constexpr size_t stValues = 4, stValuesM1 = stValues - 1;
+    constexpr static size_t stValues = 4, stValuesM1 = stValues - 1;
     if(const size_t stExcess = gluvTiles.size() % stValues)
       XC("Invalid count of tiles specified!",
         "Identifier", IdentGet(), "Count", stExcess);
@@ -876,7 +881,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
             "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
             "Index",      clFirst.size(),   "Count",    rjvValue.Size());
         // Enumerate the values and set them in our array
-        array<GLfloat, 4> aValues;
+        StdArray<GLfloat, 4> aValues;
         for(unsigned int uiIndex = 0; uiIndex < aValues.size(); ++uiIndex)
         { // Get and check that the value is unsigned integer
           const Value &rjvCoord = rjvValue[uiIndex];

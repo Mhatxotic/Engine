@@ -28,7 +28,7 @@ using namespace ITexture::P;           using namespace Common;
 ** -- Get Atlas class argument --------------------------------------------- */
 struct AgAtlas : public ArClass<Atlas>
   { explicit AgAtlas(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Atlas>(lS, iArg, *cAtlases)}{} };
+    ArClass{LuaUtilGetClassRef<Atlas>(lS, iArg, cAtlases)}{} };
 /* ========================================================================= */
 // $ Atlas:Destroy
 // ? Destroys the atlas and frees all the memory associated with it.

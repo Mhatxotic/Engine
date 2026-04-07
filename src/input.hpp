@@ -13,7 +13,7 @@ using namespace IConGraph::P;          using namespace IConsole::P;
 using namespace ICVar::P;              using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDim::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
-using namespace IFboCore::P;           using namespace IFlags;
+using namespace IFboCore::P;           using namespace IFlags::P;
 using namespace IGlFW::P;              using namespace IGlFWUtil::P;
 using namespace IHelper::P;            using namespace IJoystick::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
@@ -119,7 +119,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       default:
         // Log the bad mouse focus state and return
         cLog->LogWarningExSafe("Input ignored bad mouse focus state $<$$>!",
-          iState, hex, iState);
+          iState, StdIOSHex, iState);
         // Don't dispatch an event
         return;
     } // Dispatch event to lua scripts
@@ -193,7 +193,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       default:
         // Log the bad mouse focus state and return
         cLog->LogWarningExSafe("Input ignored bad key press state $<$$>!",
-          iState, hex, iState);
+          iState, StdIOSHex, iState);
         // Don't dispatch an event
         return;
     } // Send lua event with key, state, mod and scan code
@@ -246,12 +246,12 @@ class Input :                          // Handles keyboard, mouse & controllers
   { // Expand the stage co-ordinates to actual desktop window co-ordinates
     const GLfloat
       fAdjX = (fX + -cFboCore->FboCoreGetMainStage().CoordsGetLeft()) /
-        cFboCore->FboCoreGetMain().CoordsGetRight() * DimGetWidth(),
+        cFboCore->FboCoreGetMain().CoordsGetRight() * DimGetWidth<GLfloat>(),
       fAdjY = (fY + -cFboCore->FboCoreGetMainStage().CoordsGetTop()) /
-        cFboCore->FboCoreGetMain().CoordsGetBottom() * DimGetHeight(),
+        cFboCore->FboCoreGetMain().CoordsGetBottom() * DimGetHeight<GLfloat>(),
       // Clamp the new position to the window bounds.
-      fNewX = UtilClamp(fAdjX, 0.0f, DimGetWidth() - 1.0f),
-      fNewY = UtilClamp(fAdjY, 0.0f, DimGetHeight() - 1.0f);
+      fNewX = UtilClamp(fAdjX, 0.0f, DimGetWidth<GLfloat>() - 1.0f),
+      fNewY = UtilClamp(fAdjY, 0.0f, DimGetHeight<GLfloat>() - 1.0f);
     // Dispatch the request to set the cursor
     cEvtWin->AddUnblock(EWC_WIN_CURPOSSET,
       static_cast<double>(fNewX), static_cast<double>(fNewY));
@@ -316,7 +316,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       { EMC_INP_MOUSESCROLL, bind(&Input::InputOnMouseWheel,  this, _1) },
       { EMC_INP_KEYPRESS,    bind(&Input::InputOnKeyPress,    this, _1) },
       { EMC_INP_DRAGDROP,    bind(&Input::InputOnDragDrop,    this, _1) },
-      { EMC_INP_DRAGDROP,    bind(&Joystick::JoyOnState,      this, _1) },
+      { EMC_INP_JOYSTATE,    bind(&Joystick::JoyOnState,      this, _1) },
     } },
     /* -- More initialisers ------------------------------------------------ */
     iConKey1(GLFW_KEY_UNKNOWN),        // Init primary console key

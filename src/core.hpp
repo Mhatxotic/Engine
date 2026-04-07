@@ -21,21 +21,21 @@ using namespace IClipboard::P;         using namespace IClock::P;
 using namespace ICommon::P;            using namespace ICmdLine::P;
 using namespace ICmdLine::P;           using namespace ICodecCAF::P;
 using namespace ICodecDDS::P;          using namespace ICodecGIF::P;
-using namespace ICodecJPG::P;          using namespace ICodecMP3::P;
-using namespace ICodecOGG::P;          using namespace ICodecPNG::P;
-using namespace ICodecWAV::P;          using namespace IConDef::P;
-using namespace IConGraph::P;          using namespace IConLib::P;
-using namespace IConsole::P;           using namespace ICredit::P;
-using namespace ICrypt::P;             using namespace IDir::P;
-using namespace IDisplay::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IEvtWin::P;
-using namespace IFbo::P;               using namespace IFboCore::P;
-using namespace IFile::P;              using namespace IFont::P;
-using namespace IFreeType::P;          using namespace IFtf::P;
-using namespace IGlFW::P;              using namespace IGlFWMonitor::P;
-using namespace IGlFWUtil::P;          using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IImageLib::P;
-using namespace IInput::P;             using namespace IJson::P;
+using namespace ICodecJPG::P;          using namespace ICodecOGG::P;
+using namespace ICodecPNG::P;          using namespace ICodecWAV::P;
+using namespace IConDef::P;            using namespace IConGraph::P;
+using namespace IConLib::P;            using namespace IConsole::P;
+using namespace ICredit::P;            using namespace ICrypt::P;
+using namespace IDir::P;               using namespace IDisplay::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IEvtWin::P;            using namespace IFbo::P;
+using namespace IFboCore::P;           using namespace IFile::P;
+using namespace IFont::P;              using namespace IFreeType::P;
+using namespace IFtf::P;               using namespace IGlFW::P;
+using namespace IGlFWMonitor::P;       using namespace IGlFWUtil::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IImageLib::P;          using namespace IInput::P;
+using namespace IInterval::P;          using namespace IJson::P;
 using namespace ILog::P;               using namespace ILua::P;
 using namespace ILuaCode::P;           using namespace ILuaCommand::P;
 using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
@@ -74,17 +74,16 @@ class Core final :                     // Members initially private
   private Ftfs,       private Files,              private Masks,
   private Bins,       private Oal,                private PcmLibs,
   private CodecWAV,   private CodecCAF,           private CodecOGG,
-  private CodecMP3,   private Pcms,               private Audio,
-  private Sources,    private Samples,            private Streams,
-  private EvtWin,     private Ogl,                private ImageLibs,
-  private CodecPNG,   private CodecJPG,           private CodecGIF,
-  private CodecDDS,   private Images,             private Shaders,
-  private Clips,      private Display,            private Input,
-  private ShaderCore, private Fbos,               private FboCore,
-  private SShots,     private Textures,           private Palettes,
-  private Atlases,    private Fonts,              private Videos,
-  private ConGfx,     private Variables,          private Commands,
-  private Lua
+  private Pcms,       private Audio,              private Sources,
+  private Samples,    private Streams,            private EvtWin,
+  private Ogl,        private ImageLibs,          private CodecPNG,
+  private CodecJPG,   private CodecGIF,           private CodecDDS,
+  private Images,     private Shaders,            private Clips,
+  private Display,    private Input,              private ShaderCore,
+  private Fbos,       private FboCore,            private SShots,
+  private Textures,   private Palettes,           private Atlases,
+  private Fonts,      private Videos,             private ConGfx,
+  private Variables,  private Commands,           private Lua
 { /* -- Private typedefs to run a function when scope exits ---------------- */
   template<typename FuncType>struct ScopeGuard { FuncType ftFunc;
     explicit ScopeGuard(FuncType &&ftNFunc) : ftFunc(StdMove(ftNFunc)) {}
@@ -103,6 +102,7 @@ class Core final :                     // Members initially private
   const CbThFunc   cbtMain;            // Bound main thread function
   unsigned int     uiErrorCount,       // Number of errors occured
                    uiErrorLimit;       // Number of errors allowed
+  Interval         ivForceFrame;       // Force draw frame after this time
   /* -- Reset environment function ----------------------------------------- */
   void CoreResetEnvironment(const bool bLeaving)
   { // Log that we're resetting the environment
@@ -119,16 +119,13 @@ class Core final :                     // Members initially private
     ConsoleClearStatus();
     // If using graphical inteactive mode?
     if(SysIsGraphicalMode())
-    { // Reset input environment
+    { // Reset input, FBO's, OpenGL state and palette to default
       InputResetEnvironment();
-      // Reset FBO clear colour, selected binds and 8-bit shader palette
-      FboCoreResetClearColour();
+      FboCoreResetEnvironment();
       OglResetBinds();
       palDefault.Commit();
-      // Set main framebuffer as default and reset to original settings
-      FboCoreActivateMain();
+      // Reset matrix to original settings and reset the cursor
       DisplayCommitDefaultMatrix();
-      // Reset the cursor
       DisplayRequestResetCursor();
       // If leaving main execution?
       if(bLeaving)
@@ -142,8 +139,7 @@ class Core final :                     // Members initially private
         ConGfxEnterResetEnvironment();
         // Remove the 1ms FPS limit lock on the engine
         TimerReset(false);
-      } // Make sure main FBO is cleared
-      FboCoreSetDraw();
+      }
     } // Not graphical? Set or remove the 1ms FPS limit lock on the engine
     else TimerReset(bLeaving);
     // Reset unique ids. Remember some classes aren't registered in the
@@ -207,14 +203,14 @@ class Core final :                     // Members initially private
     Catchup: FboCoreActivateMain();
     // Poll joysticks
     JoyPoll();
-    // Execute a tick for each frame missed
+    // Execute a tick
     LuaExecuteMain();
     // What is the current draw condition?
     switch(FboCoreGetDraw())
     { // Must render everything?
       case DS_FULL:
-        // We're behind? If true, we've already entered the next frame
-        if(TimerShouldTick())
+        // We're behind and not running too slow?
+        if(TimerShouldTick() && ivForceFrame.CIIsNotTrigger())
         { // Clear redraw flag but we still need to copy main to back buffer
           FboCoreClearDrawPartial();
           // Render the console FBO to the main FBO
@@ -248,7 +244,7 @@ class Core final :                     // Members initially private
       // Only copy main to back buffer? Caused by being behind and DS_FULL
       case DS_PARTIAL:
         // If we are behind?
-        if(TimerShouldTick())
+        if(TimerShouldTick() && ivForceFrame.CIIsNotTrigger())
         { // Finish what we can behind the scenes for now
           OglPostRender();
           // Try to catchup
@@ -361,13 +357,13 @@ class Core final :                     // Members initially private
         ConsoleFlushToTerminal();
       }
     } // exception occured so throw LUA stackdump and leave the sandbox
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Allow Lue to process error. WARNING!! This prevents destructors on all
       // statically initialised classes to NEVER call so make sure we do not
       // statically create something above!
       LuaUtilPushCStr(lS, eReason.what());
       LuaUtilErrThrow(lS);
-    } // Returning nothing
+    } // Returning no values
     return 0;
   }
   /* -- Get core pointer and call the entry function ----------------------- */
@@ -389,8 +385,8 @@ class Core final :                     // Members initially private
   /* -- DeInitialise engine components ------------------------------------- */
   void CoreDeInitComponents() try
   { // Log reason for deinit
-    cLog->LogDebugExSafe("Engine de-initialising interfaces with code $.",
-      GetExitReason());
+    cLog->LogDebugExSafe("Engine de-initialising interfaces with code $<$>.",
+      GetExitReasonStr(), GetExitReason());
     // Request to close window
     DisplayRequestClose();
     // Whats the exit reason code?
@@ -428,26 +424,9 @@ class Core final :                     // Members initially private
     // OpenGL de-initialised (do not throw error if de-initialised)
     OglDeInit(true);
   } // exception occured?
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Make sure the exception is logged
     cLog->LogErrorExSafe("(ENGINE THREAD DE-INIT EXCEPTION) $", eReason);
-  }
-  /* -- Redraw the frame buffer when error occurs -------------------------- */
-  void CoreForceRedrawFrameBuffer(const bool bAndConsole)
-  { // Flush log if we have a text mode console
-    if(SysIsTextMode()) ConsoleFlushToLog();
-    // Return if no graphical mode
-    if(SysIsNotGraphicalMode()) return;
-    // Return if main already finished
-    if(FboCoreGetMain().FboIsFinished()) return;
-    // Reset opengl binds to defaults just incase any were selected
-    OglResetBinds();
-    // Render the console and it has not already been drawn
-    if(bAndConsole) ConGfxRenderNow();
-    // Finish rendering the main FBO
-    FboCoreGetMain().FboFinishAndRender();
-    // Render all FBO's and copy the main FBO to screen
-    FboCoreRender();
   }
   /* -- De-initialise everything ------------------------------------------- */
   void CoreDeInitEverything()
@@ -459,7 +438,7 @@ class Core final :                     // Members initially private
     WinSetClose(GLFW_TRUE);
     // Unblock the window thread
     GlFWForceEventHack();
-  }
+  } // At this point the main thread window event loop will break
   /* -- Initoialise graphics subsystems ------------------------------------ */
   void CoreInitGraphicalSubsystems()
   { // Set context current and pass selected refresh rate
@@ -516,7 +495,7 @@ class Core final :                     // Members initially private
     { // ...and enter sand box mode. Below function is when we're in sandbox
       LuaEnterSandbox<CoreThreadSandboxStatic>(this);
     } // ...and if exception occured?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Show error in console
       ConsoleAddLine(COLOUR_LRED, eReason.what());
       // Disable garbage collector so no shenangians while we reset.
@@ -538,8 +517,6 @@ class Core final :                     // Members initially private
                 cLog->LogErrorExSafe(
                   "Core sandbox ignored #$/$ run-time exception: $",
                   ++uiErrorCount, uiErrorLimit, eReason);
-                // Redraw the console but do not show it.
-                CoreForceRedrawFrameBuffer(false);
                 // Go back into the sandbox.
                 goto SandBox;
               // Automatically reset on error?
@@ -551,8 +528,6 @@ class Core final :                     // Members initially private
                   ++uiErrorCount, uiErrorLimit, eReason);
                 // Flush events and restart the guest
                 LuaReInit();
-                // Redraw the console but do not show it
-                CoreForceRedrawFrameBuffer(false);
                 // Go back into the sandbox
                 goto SandBox;
               // Open console and show error? Just break to other code.
@@ -562,8 +537,6 @@ class Core final :                     // Members initially private
                   eReason);
                 // Add event to pause
                 LuaRequestPause(false);
-                // Redraw the console and show it.
-                CoreForceRedrawFrameBuffer(true);
                 // Break to pause
                 goto SandBox;
               // Unknown value?
@@ -576,15 +549,10 @@ class Core final :                     // Members initially private
                 [[fallthrough]];
               // Terminate engine with error? Throw to critical error dialog.
               case CER_CRITICAL:
-                // Redraw the console.
-                CoreForceRedrawFrameBuffer(false);
                 // Throw to critical error dialog
                 throw;
             } // Should not get here
-          }
-          // Grab the exit code from events if the error because it wasn't
-          // able to be caught in the events queue and fall through so the
-          // original request can be process.
+          } // We have to update the exit code manually if pending.
           UpdateConfirmExit();
           // Check exit code. These are originally set in EvtMain::DoHandle()
           // so make sure all used exit values with ConfirmExit() are checked
@@ -668,13 +636,13 @@ class Core final :                     // Members initially private
     // Kill thread
     return TS_OK;
   } // exception occured out of loop. Fatal so we have to quit
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // We will quit since this is fatal
     SetExitReason(EMC_QUIT);
     // Write exception to log
     cLog->LogErrorExSafe("(ENGINE THREAD FATAL EXCEPTION) $", eReason);
     // Show error
-    SysMsgEx("Engine Thread Fatal Exception", eReason.what(), MB_ICONSTOP);
+    SysMsgEx("Engine Thread Fatal Exception!", eReason.what(), MB_ICONSTOP);
     // De-init everything
     CoreDeInitEverything();
     // Kill thread
@@ -716,22 +684,37 @@ class Core final :                     // Members initially private
         EvtWin::Manage();
         // Wait for more window events
         GlFWWaitEvents();
-      } // Restart to hard reinit the window if not doing a soft reinit
-      if(GetExitReason() != EMC_QUIT_VREINIT) continue;
-      // De-initialise the thread
-      GetEngThread().ThreadDeInit();
-      // Soft reinitialise the window
-      DisplayReInit();
-      // Go back to the thread restart point
-      goto Restart;
+      } // Compare exit reason
+      switch(GetExitReason())
+      { // If the window is being re-initialised?
+        case EMC_QUIT_VREINIT:
+          // De-initialise the engine thread and wait for it to complete
+          GetEngThread().ThreadDeInit();
+          // Soft reinitialise the window
+          DisplayReInit();
+          // Go back to the thread restart point
+          goto Restart;
+        // If the window closed on it's own (OS closed it?)
+        case EMC_LUA_ERROR:
+          // Write a warning because we can't run the exit request
+          cLog->LogWarningSafe("Core processing abrupt window close event...");
+          // Force quit reason because it wasn't set yet
+          SetExitReason(EMC_QUIT);
+          // De-initialise the engine thread and wait for it to complete
+          GetEngThread().ThreadDeInit();
+          // Fall through to quit
+          [[fallthrough]];
+        // Anything else just de-init the window and reload it
+        default: continue;
+      }
     } // Error occured
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Send to log and show error message to user
       cLog->LogErrorExSafe("(WINDOW LOOP EXCEPTION) $", eReason);
       // Exit loop so we don't infinite loop
       SetExitReason(EMC_QUIT);
       // Show error and try to carry on and clean everything up
-      SysMsgEx("Window Loop Fatal Exception", eReason.what(), MB_ICONSTOP);
+      SysMsgEx("Window Loop Fatal Exception!", eReason.what(), MB_ICONSTOP);
    } // Engine should terminate from here-on
   }
   /* -- Wait async on all systems ---------------------------------- */ public:
@@ -836,7 +819,7 @@ class Core final :                     // Members initially private
         if(cLog->LogHasLevel(LH_DEBUG))
         { // Log each argument that will be sent
           size_t stId = 0;
-          for(const string &strArg : cCmdLine->CmdLineGetArgList())
+          for(const StdString &strArg : cCmdLine->CmdLineGetArgList())
             cLog->LogNLCDebugExSafe("- Arg $: $.", stId++, strArg);
         } // Clean-up and restart
         return 3;
@@ -865,11 +848,12 @@ class Core final :                     // Members initially private
     cerMode{ CER_CRITICAL },           // Init lua error mode behaviour
     cbtMain{ bind(&Core::CoreThreadMain, this, _1) },
     uiErrorCount(0),                   // Init number of errors occured
-    uiErrorLimit(0)                    // Init number of errors allowed
+    uiErrorLimit(0),                   // Init number of errors allowed
+    ivForceFrame{ cd1S }               // Force render frame after 1 second
     /* -- Set global pointer to static classes ----------------------------- */
     { cSql = this; cCore = this; }
   /* -- Process compatibility flags ---------------------------------------- */
-  CVarReturn CoreProcessCompatibilityFlags(const uint64_t ullFlags)
+  static CVarReturn CoreProcessCompatibilityFlags(const uint64_t ullFlags)
   { // Nothing yet
     static_cast<void>(ullFlags);
     // Allow the cvar change
@@ -879,7 +863,7 @@ class Core final :                     // Members initially private
   CVarReturn CoreErrorBehaviourModified(const CoreErrorReason cefNMode)
     { return CVarSimpleSetIntNGE(cerMode, cefNMode, CER_MAX); }
   /* -- Title modified ----------------------------------------------------- */
-  CVarReturn CoreTitleModified(const string &strValue, string &strRValue)
+  CVarReturn CoreTitleModified(const StdString &strValue, StdString &strRValue)
   { // Do not allow user to set this variable, only empty is allowed
     if(!strValue.empty()) return DENY;
     // Set the title
@@ -897,7 +881,7 @@ class Core final :                     // Members initially private
     exit(5);
   }
   /* -- Set home directory where files are written if base dir dont work --- */
-  CVarReturn CoreSetHomeDir(const string &strP, string &strV)
+  CVarReturn CoreSetHomeDir(const StdString &strP, StdString &strV)
   { // Build user volatile directory name if user didn't specify one
     if(strP.empty())
       strV = StrFormat("$/$/$/", SysGetRoamingDir(),
@@ -918,7 +902,7 @@ class Core final :                     // Members initially private
   CVarReturn CoreSetResetLimit(const unsigned int uiLimit)
     { return CVarSimpleSetInt(uiErrorLimit, uiLimit); }
   /* -- Parses the command-line -------------------------------------------- */
-  CVarReturn CoreParseCmdLine(const string&, string &strV)
+  CVarReturn CoreParseCmdLine(const StdString&, StdString &strV)
   { // Get command line parameters and if we have parameters?
     const StrVector &svArgs = cCmdLine->CmdLineGetArgList();
     if(!svArgs.empty())
@@ -927,7 +911,7 @@ class Core final :                     // Members initially private
       // Valid commands parsed
       size_t stGood = 0, stArg = 1;
       // Parse command line arguments and iterate through them
-      for(const string &strArg : svArgs)
+      for(const StdString &strArg : svArgs)
       { // If empty argument? Log the failure and continue
         if(strArg.empty())
           cLog->LogWarningExSafe(

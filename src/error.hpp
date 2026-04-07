@@ -29,19 +29,19 @@ struct ErrorPluginStandard final
 { /* -- Exception plugin to expand and report errno ------------------------ */
 #define XCL(r,...) throw Error<ErrorPluginStandard>(r, ## __VA_ARGS__)
   /* -- Constructor to add C runtime error code ---------------------------- */
-  explicit ErrorPluginStandard(ostringstream &osS)
+  explicit ErrorPluginStandard(StdOStringStream &osS)
     { osS << "\n+ Reason<" << StdGetError() << "> = \""
           << StrFromErrNo() << "\"."; }
 };/* -- Standard exception plugin that does nothing ------------------------ */
 struct ErrorPluginGeneric final
-  { explicit ErrorPluginGeneric(ostringstream&) {} };
+  { explicit ErrorPluginGeneric(StdOStringStream&) {} };
 /* ------------------------------------------------------------------------- */
 template<class Plugin=ErrorPluginGeneric>class Error final :
   /* -- Derivced classes --------------------------------------------------- */
-  public exception,                    // So we can capture as exception
-  public string                        // String to store generated string
+  public StdException,                 // So we can capture as exception
+  public StdString                     // String to store generated string
 { /* -- Private variables -------------------------------------------------- */
-  ostringstream osS;                   // Error message builder
+  StdOStringStream osS;                // Error message builder
   /* -- Write left part of var --------------------------------------------- */
   void Init(const char*const cpName, const char*const cpType)
     { osS << "\n+ " << cpName << '<' << cpType << "> = "; }
@@ -60,7 +60,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   { // Write integer to stream
     Init(cpName, cpType);
     // Write value
-    osS << dec << tVal << " (0x" << hex
+    osS << StdIOSDec << tVal << " (0x" << StdIOSHex
         << static_cast<UnsignedType>(tVal) << ").";
   }
   /* ----------------------------------------------------------------------- */
@@ -164,7 +164,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   /* -- Show float --------------------------------------------------------- */
   template<typename FloatType>void Float(const char*const cpName,
     const char*const cpType, const FloatType tVal)
-  { Init(cpName, cpType); osS << fixed << tVal << '.'; }
+  { Init(cpName, cpType); osS << StdIOSFixed << tVal << '.'; }
   /* -- Process 64-bit double ---------------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const double dVal, VarArgs &&...vaArgs)
@@ -234,7 +234,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   }
   /* -- Process exception object ------------------------------------------- */
   template<typename ...VarArgs>void Param(const char*const cpName,
-    const exception &e, VarArgs &&...vaArgs)
+    const StdException &e, VarArgs &&...vaArgs)
   { // Initialise start of string
     Init(cpName, "Ex");
     // Valid? Display and translation if neccesary
@@ -252,26 +252,26 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     // String is not displayable?
     else if(tString.front() < 32) osS << cCommon->CommonInvalid() << '.';
     // Valid? Is a string view? (has no capacity())
-    else if constexpr(is_same_v<StringType, string_view>)
-      osS << '\"' << tString << '\"' << dec << " [" << tString.length()
+    else if constexpr(StdIsSame<StringType, StdStringView>)
+      osS << '\"' << tString << '\"' << StdIOSDec << " [" << tString.length()
           << "].";
     // Valid? Display string
-    else osS << '\"' << tString << '\"' << dec << " [" << tString.length()
-             << '/' << tString.capacity() << "].";
+    else osS << '\"' << tString << '\"' << StdIOSDec << " ["
+             << tString.length() << '/' << tString.capacity() << "].";
   }
   /* -- Process STL string lvalue ------------------------------------------ */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const string &strV,
+    void Param(const char*const cpName, const StdString &strV,
       VarArgs &&...vaArgs)
   { Str(cpName, "Str", strV); Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process STL wstring lvalue ----------------------------------------- */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const wstring &wstrV,
+    void Param(const char*const cpName, const StdWideString &wstrV,
       VarArgs &&...vaArgs)
   { Str(cpName, "WStr", wstrV); Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process STL string_view -------------------------------------------- */
+  /* -- Process STL string ------------------------------------------------- */
   template<typename ...VarArgs>
-    void Param(const char*const cpName, const string_view &strvV,
+    void Param(const char*const cpName, const StdStringView &strvV,
       VarArgs &&...vaArgs)
   { Str(cpName, "StrV", strvV); Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Get message ------------------------------------------------ */ public:
@@ -282,11 +282,11 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   { osS << cpErr; Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Prepare error message constructor with exception object ------------ */
   template<typename ...VarArgs>
-    Error(const exception &eReason, VarArgs &&...vaArgs) :
+    Error(const StdException &eReason, VarArgs &&...vaArgs) :
       Error(eReason.what(), StdForward<VarArgs>(vaArgs)...) {}
   /* -- Prepare error message constructor with STL string ------------------ */
   template<typename ...VarArgs>
-    Error(const string &strErr, VarArgs &&...vaArgs)
+    Error(const StdString &strErr, VarArgs &&...vaArgs)
   { osS << strErr; Param(StdForward<VarArgs>(vaArgs)...); }
 };/* -- Helper macro to trigger exceptions --------------------------------- */
 #define XC(r,...) throw Error<>(r, ## __VA_ARGS__)

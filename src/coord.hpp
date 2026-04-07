@@ -15,7 +15,7 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 template<typename IntType,             // Integer type to use
   class Base = IntPair<IntType>>       // Base int pair class type to use
-requires is_arithmetic_v<IntType>      // Must be be integer or float
+requires StdIsArithmatic<IntType>      // Must be be integer or float
 struct Coord :                         // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   private Base                         // Base double value class

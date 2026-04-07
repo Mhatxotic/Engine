@@ -50,8 +50,8 @@ class Timer                            // Members initially private
   /* -- Requested by rendered to wait because nothing was drawn ---- */ public:
   void TimerForceWait() { cdDelay = cd1MS; }
   /* -- Update delay as double --------------------------------------------- */
-  void TimerUpdateDelay(const int iNDelay)
-    { cdDelay = milliseconds{ iNDelay }; }
+  void TimerUpdateDelay(const unsigned int uiNDelay)
+    { cdDelay = milliseconds{ uiNDelay }; }
   /* -- Forces a delay internally if delay is disabled --------------------- */
   void TimerSetDelayIfZero() { if(cdDelay != cd0) TimerUpdateDelay(1); }
   /* -- Restore saved persistent delay timer ------------------------------- */

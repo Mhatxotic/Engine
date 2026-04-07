@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.3.27.2 -->
-<!-- Automatically built at Wed Apr 01 18:20:24 2026 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.3.27.2 -->
+<!-- Reference for the Mhatxotic Engine API version 26.4.29.1 -->
+<!-- Automatically built at Wed Apr 29 18:15:21 2026 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.4.29.1 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.3.27.2">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.4.29.1">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.3.27.2">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.4.29.1">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.3.27.2">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.4.29.1">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.3.27.2 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.4.29.1 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.3.27.2 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.4.29.1 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.3.27.2 API reference</H1>
+	<H1>Mhatxotic Engine 26.4.29.1 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -817,7 +817,7 @@
 					<DIV>
 						<A href="#idx:Image">Image namespace</A>
 						<OL>
-							<LI><P>This allows the programmer to manipulate images asynchronously and send the objects to the OpenGL if needed.  The list and order of supported formats can is subject to change without notice. Type 'imgfmts' in the console to see the most up to date list of formats supported.</P></LI>
+							<LI><P>This allows the programmer to manipulate images asynchronously and send the objects to a 'Mask' or an OpenGL 'Font' or 'Texture' object. You can use the console command 'imagefmts' to see what formats are usable.</P></LI>
 							<LI>
 								<B>Members</B> <I>(9 members)</I>
 								<OL>
@@ -1052,7 +1052,7 @@
 					<DIV>
 						<A href="#idx:Pcm">Pcm namespace</A>
 						<OL>
-							<LI><P>This allows the programmer to load pcm wave forms or decompress encoded pcm waveforms and send the objects to the OpenAL if needed. You can use the command 'pcmfmts' to see what formats are usable which are WAV (WaveForm Audio Format) PCM/INT/FLOAT/LE, CAF (CoreAudio Format), PCM/INT/FLOAT/LE/BE, OGG (OGG Vorbis) and MP3 (MPEG-Layer III).</P></LI>
+							<LI><P>This allows the programmer to load encoded waveforms which can be sent to OpenAL as a 'Sample' object if required. You can use the console command 'pcmfmts' to see what formats are usable.</P></LI>
 							<LI>
 								<B>Members</B> <I>(7 members)</I>
 								<OL>
@@ -1984,8 +1984,6 @@
 									<LI><A href="#cv.err_checksum">err_checksum</A></LI>
 									<LI><A href="#cv.err_debugger">err_debugger</A></LI>
 									<LI><A href="#cv.err_instance">err_instance</A></LI>
-									<LI><A href="#cv.err_lmresetlimit">err_lmresetlimit</A></LI>
-									<LI><A href="#cv.err_luamode">err_luamode</A></LI>
 									<LI><A href="#cv.err_minram">err_minram</A></LI>
 									<LI><A href="#cv.err_minvram">err_minvram</A></LI>
 									<LI><A href="#cv.fmv_abuffer">fmv_abuffer</A></LI>
@@ -2007,6 +2005,8 @@
 									<LI><A href="#cv.log_lines">log_lines</A></LI>
 									<LI><A href="#cv.lua_cache">lua_cache</A></LI>
 									<LI><A href="#cv.lua_debuglocals">lua_debuglocals</A></LI>
+									<LI><A href="#cv.lua_errignore">lua_errignore</A></LI>
+									<LI><A href="#cv.lua_errmode">lua_errmode</A></LI>
 									<LI><A href="#cv.lua_gcpause">lua_gcpause</A></LI>
 									<LI><A href="#cv.lua_gcstepmul">lua_gcstepmul</A></LI>
 									<LI><A href="#cv.lua_lastver">lua_lastver</A></LI>
@@ -12703,16 +12703,6 @@
 		<PRE>Tries to activate an existing window of the same name if another instance is running. On Windows, mutexes are always cleaned up properly even in a crash but not on Linux and MacOS. So just simply remove the app name from /dev/shm and the engine should run again.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="cv.err_lmresetlimit" style="display:none">
-		<H3>err_lmresetlimit</H3>
-		<PRE>When ERR_LUAMODE is set to 1, this specifies the number of LUA script errors that are allowed before an error after this is treated as a critical error. The default value for release executable is 1000 and 10 for beta executable.<BR></PRE>
-		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="cv.err_luamode" style="display:none">
-		<H3>err_luamode</H3>
-		<PRE>Sets how to handle a LUA script error to one of these values...<BR>[0] LEM_IGNORE   = Ignore errors and try to continue.<BR>[1] LEM_RESET    = Automatically reset on error.<BR>[2] LEM_SHOW     = Open console and show error.<BR>[3] LEM_CRITICAL = Terminate engine with error.<BR>The default value is 3 for release executable and 2 for beta executable.<BR></PRE>
-		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="cv.err_minram" style="display:none">
 		<H3>err_minram</H3>
 		<PRE>The engine fails to run if the system does not have this amount of free memory available. If this value is zero then the check does not take place else the amount specified is allocated at startup, cleared, the speed of the clear is reported in the log then the memory is freed. The default value is zero.<BR></PRE>
@@ -12816,6 +12806,16 @@
 	<DIV id="cv.lua_debuglocals" style="display:none">
 		<H3>lua_debuglocals</H3>
 		<PRE>Print locals when generating stack traces (default is true).<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.lua_errignore" style="display:none">
+		<H3>lua_errignore</H3>
+		<PRE>When LUA_ERRMODE is set to 1, this specifies the number of LUA script errors that are allowed before an error after this is treated as a critical error. The default value for release executable is 1000 and 10 for beta executable.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.lua_errmode" style="display:none">
+		<H3>lua_errmode</H3>
+		<PRE>Sets how to handle a LUA script error to one of these values...<BR>[0] LEM_IGNORE   = Ignore errors and try to continue.<BR>[1] LEM_RESET    = Automatically reset on error.<BR>[2] LEM_SHOW     = Open console and show error.<BR>[3] LEM_CRITICAL = Terminate engine with error.<BR>The default value is 3 for release executable and 2 for beta executable.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.lua_gcpause" style="display:none">
@@ -13419,6 +13419,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Wed Apr 01 18:20:24 2026 +0100</ADDRESS>
+	This document was generated at Wed Apr 29 18:15:21 2026 +0100</ADDRESS>
 </BODY>
 </HTML>

@@ -27,11 +27,11 @@ using namespace Common;
 ** -- Read Stat class argument --------------------------------------------- */
 struct AgStat : public ArClass<Stat> {
   explicit AgStat(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Stat>(lS, iArg, *cStats)}{} };
+    ArClass{LuaUtilGetClassRef<Stat>(lS, iArg, cStats)}{} };
 /* -- Create Stat class argument ------------------------------------------- */
 struct AcStat : public ArClass<Stat> {
   explicit AcStat(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Stat>(lS, *cStats)}{} };
+    ArClass{LuaUtilClassCreateRef<Stat>(lS, cStats)}{} };
 /* -- Read column argument (with maximum check) ---------------------------- */
 struct AgColumn : public AgSSizeTLGE {
   explicit AgColumn(lua_State*const lS, const int iArg, const Stat &stCref) :

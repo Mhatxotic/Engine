@@ -45,7 +45,7 @@ class FileMap :
   StdTimeT FileMapModifiedTime() { return SysMapGetModified(); }
   StdTimeT FileMapCreationTime() { return SysMapGetCreation(); }
   /* -- Return if file is opened ------------------------------------------- */
-  bool FileMapOpened() const { return !!MemPtr(); }
+  bool FileMapOpened() const { return MemIsPtrSet(); }
   bool FileMapClosed() const { return !FileMapOpened(); }
   /* -- Read with byte bound check ----------------------------------------- */
   template<typename PtrType=char>
@@ -196,7 +196,7 @@ class FileMap :
   /* -- Direct access using class variable name which returns opened ------- */
   operator bool() const { return FileMapOpened(); }
   /* -- Open a file on disk and map it to memory --------------------------- */
-  explicit FileMap(const string &strF) :
+  explicit FileMap(const StdString &strF) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strF },                     // Set identifier (virtual)
     SysMap{ strF },                    // Initialise file handle
@@ -205,7 +205,7 @@ class FileMap :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Take ownership of another memory block ----------------------------- */
-  FileMap(const string &strF, MemConst &&mcSrc, const StdTimeT ttC,
+  FileMap(const StdString &strF, MemConst &&mcSrc, const StdTimeT ttC,
     const StdTimeT ttM) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strF },                     // Set identifier (virtual)
@@ -215,7 +215,7 @@ class FileMap :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Take ownership of another memory block ----------------------------- */
-  FileMap(const string &strF, MemConst &&mcSrc, const StdTimeT ttC) :
+  FileMap(const StdString &strF, MemConst &&mcSrc, const StdTimeT ttC) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strF },                     // Set identifier (virtual)
     SysMap{ strF, ttC, ttC },          // Reuse system map variables

@@ -10,11 +10,11 @@
 namespace IJoystick {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICVarDef::P;           using namespace IEvtMain::P;
-using namespace IEvtWin::P;            using namespace IFlags;
-using namespace IGlFWUtil::P;          using namespace IJoyInfo::P;
-using namespace ILog::P;               using namespace ILuaFunc::P;
-using namespace IStd::P;               using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace IEvtWin::P;            using namespace IFillCon::P;
+using namespace IFlags::P;             using namespace IGlFWUtil::P;
+using namespace IJoyInfo::P;           using namespace ILog::P;
+using namespace ILuaFunc::P;           using namespace IStd::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -73,7 +73,7 @@ class Joystick :
       default:
         // Log the bad joystick state and return
         cLog->LogWarningExSafe("Joystick ignored bad state $$ for id $$!",
-          hex, iEvent, dec, iJId);
+          StdIOSHex, iEvent, StdIOSDec, iJId);
         // No need to dispatch any events
         return;
     }
@@ -164,12 +164,12 @@ class Joystick :
     JoyDisablePoll();
   }
   /* -- Init/DeInit joystick callback -------------------------------------- */
-  void JoyInit() const { GlFWSetJoystickCallback(JoyOnGamePad); }
-  void JoyDeInit() const { GlFWSetJoystickCallback(nullptr); }
+  static void JoyInit() { GlFWSetJoystickCallback(JoyOnGamePad); }
+  static void JoyDeInit() { GlFWSetJoystickCallback(nullptr); }
   /* -- Constructor --------------------------------------------- */ protected:
   Joystick() :
     /* -- Initialisers ----------------------------------------------------- */
-    JoyList{ UtilMkFilledClassContainer<JoyList,int>() },
+    JoyList{ FillConClass<JoyList,int>() },
     bPoll(false),                      // Init disabled polling
     lfOnJoyState{ "OnJoyState" },      // Init joy state lua event
     stConnected(0)                     // Init joystick count to zero

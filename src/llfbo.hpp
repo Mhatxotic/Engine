@@ -30,7 +30,7 @@ using namespace IString::P;            using namespace Common;
 ** -- Create Fbo class argument ------------------------------------------- */
 struct AcFbo : public ArClass<Fbo> {
   explicit AcFbo(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Fbo>(lS, *cFbos)}{} };
+    ArClass{LuaUtilClassCreateRef<Fbo>(lS, cFbos)}{} };
 /* -- Read a blending id --------------------------------------------------- */
 struct AgBlend : public AgIntegerLGE<OglBlendEnum>
   { explicit AgBlend(lua_State*const lS, const int iArg) :
@@ -418,7 +418,7 @@ LLRSEND                                // Fbo:* member functions end
 // ? separatte FBO to draw to.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Main, 1,
-  LuaUtilClassCreatePtr<Fbo>(lS, *cFbos, &cFboCore->FboCoreGetMain()))
+  LuaUtilClassCreateStaticPtr<Fbo>(lS, cFbos, &cFboCore->FboCoreGetMain()))
 /* ========================================================================= */
 // $ Fbo.Create
 // > Identifier:string=Reference only user-defined identifier.
@@ -505,8 +505,9 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
 // ? set by cvars 'vid_orwidth', 'vid_orheight' and also modified with the
 // ? Fbo.Resize() function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Matrix, 2, LuaUtilPushVar(lS, cFboCore->FboCoreGetMatrixWidth(),
-                                     cFboCore->FboCoreGetMatrixHeight()))
+LLFUNC(Matrix, 2,
+  LuaUtilPushVar(lS, cFboCore->FboCoreGetMatrixWidth(),
+                     cFboCore->FboCoreGetMatrixHeight()))
 /* ========================================================================= */
 // $ Fbo.Resize
 // < Width:number=The new width of the main frame buffer

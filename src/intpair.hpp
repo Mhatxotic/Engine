@@ -11,7 +11,7 @@ namespace IIntPair {                   // Start of module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename IntType> requires is_arithmetic_v<IntType> class IntPair
+template<typename IntType> requires StdIsArithmatic<IntType> class IntPair
 { /* -- Private variables --------------------------------------- */ protected:
   IntType              it1, it2;       // Two values of the specified type
   constexpr static const IntType itD0 = static_cast<IntType>(0),

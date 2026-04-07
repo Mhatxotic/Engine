@@ -48,8 +48,8 @@ class AtlasBase :                      // Members initially private
     uiPadding(0),                      // Initialise padding between tiles
     rtCmd(RT_NONE),                    // Initialise re-upload command
     cuRedraw{                          // Initialise redraw bounds
-      numeric_limits<GLuint>::max(),   // Highest possible
-      numeric_limits<GLuint>::max(),   // Highest possible
+      StdLimits<GLuint>::max(),        // Highest possible
+      StdLimits<GLuint>::max(),        // Highest possible
       0, 0 }                           // Lowest possible
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -102,7 +102,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
           IdentGet(), cuRedraw.CoordsGetLeft(), cuRedraw.CoordsGetTop(),
           cuRedraw.CoordsGetRight(), cuRedraw.CoordsGetBottom(), stRTPos);
         // Reset range parameters
-        cuRedraw.CoordsSetTopLeft(numeric_limits<GLuint>::max());
+        cuRedraw.CoordsSetTopLeft(StdLimits<GLuint>::max());
         cuRedraw.CoordsSetBottomRight(0);
         // Done
         return;
@@ -304,8 +304,8 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // Calculate how much the image increased. This should really be 2
     // every time but we'll just make a calculation like this just
     // incase.
-    const unsigned int uiDivisor =
-      ipData.DimGetWidth<unsigned int>() / DimGetWidth();
+    const GLfloat fDivisor =
+      ceilf(ipData.DimGetWidth<GLfloat>() / DimGetWidth<GLfloat>());
     // Update the image dimensions of the font texture
     DimSet(ipData.DimGetWidth<unsigned int>(),
            ipData.DimGetHeight<unsigned int>());
@@ -315,10 +315,10 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // by the enlargement factor. A very simple and effective solution.
     // Note that using transform is ~100% slower than this.
     StdForEach(par_unseq, clTiles[0].begin(), clTiles[0].end(),
-      [uiDivisor](CoordData &tcI)
+      [fDivisor](CoordData &tcI)
         { for(size_t stTriId = 0; stTriId < stTrisPerQuad; ++stTriId)
             for(size_t stFltId = 0; stFltId < stFloatsPerCoord; ++stFltId)
-              tcI[stTriId][stFltId] /= uiDivisor; });
+              tcI[stTriId][stFltId] /= fDivisor; });
     // Copy the glyph to texture atlast
     AtlasCopyBitmap<ImageType>(iprNew,
       static_cast<size_t>(uiTWidth), static_cast<size_t>(uiTHeight),
@@ -327,10 +327,10 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     rtCmd = RT_FULL;
     // Say that we resized the image
     cLog->LogDebugExSafe("Atlas enlarged '$' by a factor of $ to $x$.",
-      IdentGet(), uiDivisor, DimGetWidth(), DimGetHeight());
+      IdentGet(), fDivisor, DimGetWidth(), DimGetHeight());
   }
   /* -- Initialise the atlas --------------------------------------- */ public:
-  template<class ImageType>void AtlasInit(const string &strId,
+  template<class ImageType>void AtlasInit(const StdString &strId,
     const GLuint uiTWidth, const GLuint uiTHeight, const GLuint uiISize,
     const GLuint uiTPadding, const OglFilterEnum ofeTFilter)
   { // Make sure padding isn't negative. We use int because it is optimal for

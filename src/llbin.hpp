@@ -25,15 +25,15 @@ using namespace IBin::P;               using namespace Common;
 ** -- Read Bin class argument ---------------------------------------------- */
 struct AgBin : public ArClass<Bin> {
   explicit AgBin(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Bin>(lS, iArg, *cBins)}{} };
+    ArClass{LuaUtilGetClassRef<Bin>(lS, iArg, cBins)}{} };
 /* -- Create Bin class argument -------------------------------------------- */
 struct AcBin : public ArClass<Bin> {
   explicit AcBin(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Bin>(lS, *cBins)}{} };
+    ArClass{LuaUtilClassCreateRef<Bin>(lS, cBins)}{} };
 /* -- Read dimensions arguments -------------------------------------------- */
 struct AgDimension : public AgUIntLGE {
   explicit AgDimension(lua_State*const lS, const int iArg) :
-    AgUIntLGE{lS, iArg, 1, numeric_limits<int>::max()}{} };
+    AgUIntLGE{lS, iArg, 1, StdLimits<int>::max()}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Bin:* member functions                                              ## **
@@ -94,7 +94,7 @@ LLFUNC(Insert, 4,
                     aHeight{lS, 3};
   const Pack<int>::Rect &rAllotted = aBin().Insert(aWidth, aHeight);
   LuaUtilPushVar(lS, rAllotted.CoordGetX(), rAllotted.CoordGetY(),
-            rAllotted.DimGetWidth(), rAllotted.DimGetHeight()))
+    rAllotted.DimGetWidth(), rAllotted.DimGetHeight()))
 /* ========================================================================= */
 // $ Bin:Occupancy
 // < Height:integer=The height of the bin in units
@@ -118,7 +118,7 @@ LLFUNC(Test, 4,
                     aHeight{lS, 3};
   const Pack<int>::Rect &rAllotted = aBin().Test(aWidth, aHeight);
   LuaUtilPushVar(lS, rAllotted.CoordGetX(), rAllotted.CoordGetY(),
-            rAllotted.DimGetWidth(), rAllotted.DimGetHeight()))
+    rAllotted.DimGetWidth(), rAllotted.DimGetHeight()))
 /* ========================================================================= */
 // $ Bin:Width
 // < Width:integer=The width of the bin in units

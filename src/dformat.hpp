@@ -12,7 +12,7 @@
 namespace IDataFormat {                // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IFlags;                using namespace IFStream::P;
+using namespace IFlags::P;             using namespace IFStream::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -34,8 +34,8 @@ class DataFormat                       // Image libraries format object class
   typedef function<CbFuncDecoderT> CbFuncDecoder;
   typedef function<CbFuncEncoderT> CbFuncEncoder;
   /* -- Private variables ----------------------------------------- */ private:
-  const string_view strvName,          // Name of plugin
-                    strvExt;           // Default extension of plugin type
+  const StdStringView strvName,        // Name of plugin
+                      strvExt;         // Default extension of plugin type
   const DataFormatFlagsConst dffcCaps; // Capabilities
   const CbFuncDecoder cfdFunc;         // Loader function
   const CbFuncEncoder cfeFunc;         // Saver function
@@ -56,16 +56,16 @@ class DataFormat                       // Image libraries format object class
   /* -- Get members ------------------------------------------------ */ public:
   const CbFuncDecoder &GetDecoder() const { return cfdFunc; }
   const CbFuncEncoder &GetEncoder() const { return cfeFunc; }
-  const string_view &GetName() const { return strvName; }
-  const string_view &GetExt() const { return strvExt; }
+  const StdStringView &GetName() const { return strvName; }
+  const StdStringView &GetExt() const { return strvExt; }
   bool HaveDecoder() const { return dffcCaps.FlagIsSet(DF_DECODE); }
   bool HaveEncoder() const { return dffcCaps.FlagIsSet(DF_ENCODE); }
   /* -- Constructor with loader function only ------------------- */ protected:
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
     const FormatType ftNId,            // The IFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const size_t stSize                // Size of collector to id
     ): /* -- Initialisers -------------------------------------------------- */
@@ -81,8 +81,8 @@ class DataFormat                       // Image libraries format object class
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
     const FormatType ftNId,            // The IFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncEncoder &cfeNFunc,     // Function to call when saving
     const size_t stSize                // Size of collector to id
     ): /* -- Initialisers -------------------------------------------------- */
@@ -98,8 +98,8 @@ class DataFormat                       // Image libraries format object class
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
     const FormatType ftNId,            // The IFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const CbFuncEncoder &cfeNFunc,     // Function to call when saving
     const size_t stSize                // Size of collector to id

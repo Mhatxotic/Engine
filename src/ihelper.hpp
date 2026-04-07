@@ -51,7 +51,7 @@ class InitHelper :                     // The Init Helper class
   /* ----------------------------------------------------------------------- */
   bool IHNotDeInitialise() { return !IHDeInitialise(); }
   /* -- Constructors -------------------------------------------- */ protected:
-  explicit InitHelper(const string_view &strvName) :
+  explicit InitHelper(const StdStringView &strvName) :
     /* -- Initialisers ----------------------------------------------------- */
     IdentConst{ strvName },            // Initialise name
     ctInitialised{ cd0 },              // Clear initialised time

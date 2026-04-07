@@ -75,7 +75,7 @@ class FboBase :                        // Fbo base class
     stTrianglesFrame(0),               stTrianglesLast(0),
     uiFBO(0),                          uiFBOtex(0),
     uiTextureCache(0),                 uiTexUnitCache(0),
-    uiShaderCache(0),                  ullActive(static_cast<uint64_t>(-1)),
+    uiShaderCache(0),                  ullActive(StdMaxUInt64),
     ullFinish(ullActive)
     /* --------------------------------------------------------------------- */
     {}
@@ -107,6 +107,10 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     uiTextureCache = uiTexUnitCache = uiShaderCache = 0;
     stTrianglesLast = stGLArrayOff = 0;
   }
+  /* -- Reset finish time -------------------------------------------------- */
+  void FboResetFinish() { ullActive = ullFinish = StdMaxUInt64; }
+  /* -- Flush and reset finish times --------------------------------------- */
+  void FboResetFinishAndFlush() { FboResetFinish(); FboFlush(); }
   /* -- Return if FBO is already finished ---------------------------------- */
   bool FboIsFinished() const { return cTimer->TimerGetTicks() == ullFinish; }
   /* -- Throw exception if Finish() has already been called ---------------- */
@@ -121,7 +125,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   { // Reset FBO properties
     FboFlush();
     // Reset the last time this FBO was used
-    ullActive = ullFinish = static_cast<uint64_t>(-1);
+    FboResetFinish();
   }
   /* -- Force a finish and reset ------------------------------------------- */
   void FboResetCache(const GLuint uiT, const GLuint uiTU, const GLuint uiSC)
@@ -193,7 +197,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     cOgl->BufferStaticData(siVertices, ftvActive.data());
     // Enumerate each command in this order...
     StdForEach(seq, fcvActive.cbegin(),
-      next(fcvActive.cbegin(), UtilIntOrMax<ssize_t>(stCommandsFrame)),
+      StdNext(fcvActive.cbegin(), UtilIntOrMax<ssize_t>(stCommandsFrame)),
         [](const FboCmd &fcData)
     { // Set texture, texture unit and shader program
       cOgl->ActiveTexture(fcData.uiTUId);
@@ -269,7 +273,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     FboBindAndTexture();
     // Procedures to perform
     struct Procedure { const GLenum eWrap; const char cWrap; };
-    typedef array<const Procedure, 3> Procedures;
+    typedef StdArray<const Procedure, 3> Procedures;
     static const Procedures sProcedures{{
       { GL_TEXTURE_WRAP_S, 'S' },
       { GL_TEXTURE_WRAP_T, 'T' },
@@ -367,7 +371,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     }
   }
   /* -- Initialise --------------------------------------------------------- */
-  void FboInit(const string &strID, const GLsizei siW, const GLsizei siH,
+  void FboInit(const StdString &strID, const GLsizei siW, const GLsizei siH,
     const size_t stTri, const size_t stCmd)
   { // Say we're initialising the frame buffer.
     cLog->LogDebugExSafe("Fbo initialising a $x$ object '$'...",

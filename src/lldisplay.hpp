@@ -108,8 +108,9 @@ LLFUNC(GetSize, 2,
 // < Renderer:string=GL gpu string.
 // ? Returns info about OpenGL.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GPU, 3, LuaUtilPushVar(lS,
-  cOgl->GetVendor(), cOgl->GetVersion(), cOgl->GetRenderer()))
+LLFUNC(GPU, 3,
+  LuaUtilPushVar(lS, cOgl->GetVendor(), cOgl->GetVersion(),
+    cOgl->GetRenderer()))
 /* ========================================================================= */
 // $ Display.GPUFPS
 // < FPS:number=Frames per second.
@@ -201,8 +202,9 @@ LLFUNC(Restore, 0, cDisplay->DisplayRequestRestore())
 // ? This function sets a new standard cursor id. This operation is
 // ? asynchronous and won't take effect until the next frame.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetCursor, 0, cDisplay->DisplayRequestSetCursor(
-  AgIntegerLGE<GlFWCursorType>{lS, 1, CUR_ARROW, CUR_MAX}))
+LLFUNC(SetCursor, 0,
+  cDisplay->DisplayRequestSetCursor(
+    AgIntegerLGE<GlFWCursorType>{lS, 1, CUR_ARROW, CUR_MAX}))
 /* ========================================================================= */
 // $ Display.SetFullScreen
 // > State:boolean=true for fullscreen, false for window.
@@ -229,16 +231,16 @@ LLFUNC(SetPos, 0,
 // ? control the default window size.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetSize, 0,
-  const AgIntLGE aWidth{lS, 1, 0, numeric_limits<int>::max()},
-                 aHeight{lS, 2, 0, numeric_limits<int>::max()};
+  const AgIntLGE aWidth{lS, 1, 0, StdLimits<int>::max()},
+                 aHeight{lS, 2, 0, StdLimits<int>::max()};
   cDisplay->DisplayRequestResize(aWidth, aHeight))
 /* ========================================================================= */
 // $ Display.Transparent
 // < State:boolean=The window is using an alpha framebuffer?
 // ? Returns if the window is transparent and using a alpha framebuffer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Transparent, 1, LuaUtilPushVar(lS,
-  cGlFW->WinIsTransparencyAttribEnabled()))
+LLFUNC(Transparent, 1,
+  LuaUtilPushVar(lS, cGlFW->WinIsTransparencyAttribEnabled()))
 /* ========================================================================= */
 // $ Display.VidMode
 // < Id:number=Mode id.
@@ -284,9 +286,9 @@ LLFUNC(Visible, 1, LuaUtilPushVar(lS, cGlFW->WinIsVisibilityAttribEnabled()))
 // < Dedicated:boolean=Is video memory separate from main memory
 // ? Returns info about the GPU's video memory.
 /* ------------------------------------------------------------------------- */
-LLFUNC(VRAM, 5, LuaUtilPushVar(lS, cOgl->GetVRAMFreePC(),
-  cOgl->GetVRAMTotal(), cOgl->GetVRAMFree(), cOgl->GetVRAMUsed(),
-  cOgl->FlagIsSet(GFL_SHARERAM)))
+LLFUNC(VRAM, 5,
+  LuaUtilPushVar(lS, cOgl->GetVRAMFreePC(), cOgl->GetVRAMTotal(),
+    cOgl->GetVRAMFree(), cOgl->GetVRAMUsed(), cOgl->FlagIsSet(GFL_SHARERAM)))
 /* ========================================================================= */
 // $ Display.VReset
 // ? Resets the video subsystem.

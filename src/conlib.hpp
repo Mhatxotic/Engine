@@ -70,7 +70,7 @@ size_t stTotal = 0;
 // Number of bytes to show
 const size_t stCount = 16;
 // Init preview of block in hex and ASCII and reserve memory for it
-Reserved<string> strHex{ stCount * 3 }, strAscii{ stCount };
+StdReserved<StdString> strHex{ stCount * 3 }, strAscii{ stCount };
 // Memory data
 Statistic sTable;
 sTable.Header("ID").Header("BYTES").Header("PREVIEW", false)
@@ -124,7 +124,7 @@ sTable.Header("ID").Header("INPUT DEVICE", false)
       .Reserve(cAudio->AudioGetNumCapDevices());
 // list audio devices
 size_t stDeviceId = 0;
-for(const string &strName : cAudio->AudioGetCapDevices())
+for(const StdString &strName : cAudio->AudioGetCapDevices())
   sTable.DataN(stDeviceId++).Data(strName);
 // Output devices
 cConsole->ConsoleAddLineA(sTable.Finish(),
@@ -153,7 +153,7 @@ cConsole->ConsoleAddLineF(
     { cOal->FlagIsSet(AFL_HAVEENUMEXT),     'X' },
     { cOal->FlagIsSet(AFL_INITIALISED),     'I' },
   }),
-  hex, cOal->FlagGet(), dec,
+  StdIOSHex, cOal->FlagGet(), StdIOSDec,
   cOal->GetPlaybackDevice(),
   cSources->size(), cOal->GetMaxStereoSources(), cOal->GetMaxMonoSources());
 /* ------------------------------------------------------------------------- */
@@ -170,7 +170,7 @@ sTable.Header("ID").Header("OUTPUT DEVICE", false)
       .Reserve(cAudio->AudioGetNumPbkDevices());
 // list audio devices
 size_t stDeviceId = 0;
-for(const string &strName : cAudio->AudioGetPbkDevices())
+for(const StdString &strName : cAudio->AudioGetPbkDevices())
   sTable.DataN(stDeviceId++).Data(strName);
 // Output devices
 cConsole->ConsoleAddLineA(sTable.Finish(),
@@ -252,7 +252,7 @@ Statistic sTable;
 sTable.Header("ID").Header("ARGUMENT", false).Reserve(svArgs.size());
 // Walk through environment variables add them to the statistic object
 size_t stCount = 0;
-for(const string &strArg : svArgs) sTable.DataN(stCount++).Data(strArg);
+for(const StdString &strArg : svArgs) sTable.DataN(stCount++).Data(strArg);
 // Log counts
 cConsole->ConsoleAddLineA(sTable.Finish(), StrCPluraliseNum(stCount,
   "command line argument.",  "command line arguments."));
@@ -286,7 +286,7 @@ cConsole->Flush();
 { "cmds", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Build commands list and if commands were matched? Print them all
-string strMatched;
+StdString strMatched;
 if(const size_t stMatched = CommandsBuildList(cConsole->GetCmdsList(),
      aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
   cConsole->ConsoleAddLineF("$:$.", StrCPluraliseNum(stMatched,
@@ -307,7 +307,7 @@ cConsole->ConsoleAddLineF("Console flags are currently 0x$$$ ($).\n"
                     "- Output lines: $ (Maximum: $).\n"
                     "- Input commands: $ (Maximum: $).\n"
                     "- Engine commands: $.",
-  hex, cConsole->FlagGet(), dec, StrFromEvalTokens({
+  StdIOSHex, cConsole->FlagGet(), StdIOSDec, StrFromEvalTokens({
     { cConsole->FlagIsSet(CF_IGNOREKEY),   'K' },
     { cConsole->FlagIsSet(CF_AUTOSCROLL),  'A' },
     { cConsole->FlagIsSet(CF_AUTOCOPYCVAR),'C' },
@@ -345,7 +345,7 @@ cConsole->ConsoleAddLineF(
   "Start: $; Limit: $; Last: $; Delay: $/s.\n"
   "Mode: $ ($); TimeOut: $ ($x$); Ticks: $.\n"
   "FPS: $/s; Maximum: $/s; Efficiency: $%.",
-    fixed, cSystem->CPUCount(), cSystem->CPUSpeed(), cSystem->CPUName(),
+    StdIOSFixed, cSystem->CPUCount(), cSystem->CPUSpeed(), cSystem->CPUName(),
       cSystem->CPUFamily(), cSystem->CPUModel(), cSystem->CPUStepping(),
       cSystem->CPUUsage(), cSystem->CPUUsageSystem(),
     cTimer->TimerGetStart(), cTimer->TimerGetLimit(),
@@ -498,7 +498,8 @@ cConsole->ConsoleAddLineA(StrCPluraliseNum(
 { "dir", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Make and checkfilename
-const string &strVal = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
+const StdString &strVal =
+  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
 switch(const ValidResult vrResult = DirValidName(strVal))
 { // Continue if valid directory or current directory
   case VR_CURRENT: case VR_OK: break;
@@ -508,13 +509,14 @@ switch(const ValidResult vrResult = DirValidName(strVal))
 } // Enumerate local directories on disk
 const Dir dPath{ StdMove(strVal) };
 // Set directory and get directories and files
-const string &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank();
+const StdString &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank();
 // Directory data we are enumerating
-struct Item { const uint64_t ullSize;
-              const unsigned int uiId;
-              const string &strArc; };
-typedef pair<const string, const Item> StrItemPair;
-typedef map<StrItemPair::first_type, StrItemPair::second_type> StrItemList;
+struct Item { const size_t stId;
+              const uint64_t ullSize;
+              const unsigned int uiArchId;
+              const StdString &strArc; };
+typedef StdPair<const StdString, const Item> StrItemPair;
+typedef StdMap<StrItemPair::first_type, StrItemPair::second_type> StrItemList;
 StrItemList silDirs, silFiles;
 // Get reference to assets collector class and lock it so it's not changed
 const LockGuard lgArchivesSync{ cArchives->MutexGet() };
@@ -529,49 +531,50 @@ for(const Archive*const aPtr : *cArchives)
   { // Skip directory if start of directory does not match
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    string strName{ StrTrim(
+    StdString strName{ StrTrim(
       suimpPair.first.substr(strDir.length()), '/') };
     if(strName.find('/') != StdNPos) continue;
     // Add to directory list and increment directory count
     silDirs.insert({ StdMove(strName),
-      { StdMaxUInt64, suimpPair.second, aRef.IdentGet() } });
+      { silDirs.size(), StdMaxUInt64, suimpPair.second, aRef.IdentGet() } });
   } // Enumerate all files in archive
   const StrUIntMap &suimFiles = aRef.ArchiveGetFileList();
   for(const StrUIntMapPair &suimpPair : suimFiles)
   { // Skip file if start of directory does not match
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    string strName{ StrTrim(suimpPair.first.substr(strDir.length()), '/') };
+    StdString strName{ StrTrim(suimpPair.first.substr(strDir.length()), '/') };
     if(strName.find('/') != StdNPos) continue;
     // Add to file list and increment total bytes and file count
     const uint64_t ullSize = aRef.ArchiveGetSize(suimpPair.second);
     silFiles.insert({ StdMove(strName),
-      { ullSize, suimpPair.second, aRef.IdentGet() } });
+      { silFiles.size(), ullSize, suimpPair.second, aRef.IdentGet() } });
   }
 } // Enumerate local directories and add each entry to file list
 for(const DirEntMapPair &dempPair : dPath.GetDirs())
   silDirs.insert({ StdMove(dempPair.first),
-    { StdMaxUInt64, StdMaxUInt, {} } });
+    { silDirs.size(), StdMaxUInt64, StdMaxUInt, {} } });
 // Enumerate local files
 for(const DirEntMapPair &dempPair : dPath.GetFiles())
 { // Add to file list and increment byte and file count
   const DirItem &diFile = dempPair.second;
   silFiles.insert({ StdMove(dempPair.first),
-    { diFile.Size(), StdMaxUInt, {} } });
+    { silFiles.size(), diFile.Size(), StdMaxUInt, {} } });
 } // Prepare data table for archive display
 Statistic sTable;
-sTable.Header("SIZE").Header().Header("ID").Header("ARCHIVE", false)
-      .Header("FILENAME", false).Reserve(silDirs.size() + silFiles.size());
+sTable.Header("#").Header("SIZE").Header().Header("ID")
+      .Header("ARCHIVE", false).Header("FILENAME", false)
+      .Reserve(silDirs.size() + silFiles.size());
 // For each directory we found
 for(const StrItemPair &sipPair : silDirs)
 { // Get item data
   const Item &itData = sipPair.second;
   // Add directory tag and blank cell
-  sTable.Data(cCommon->CommonDir()).Data();
+  sTable.DataN(itData.stId).Data(cCommon->CommonDir()).Data();
   // If this is a file on disk?
-  if(itData.uiId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
+  if(itData.uiArchId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
   // Is from archive?
-  else sTable.DataN(itData.uiId).Data(itData.strArc);
+  else sTable.DataN(itData.uiArchId).Data(itData.strArc);
   // Add directory name
   sTable.Data(StdMove(sipPair.first));
 } // Files and directories and total bytes matched
@@ -581,11 +584,11 @@ for(const StrItemPair &sipPair : silFiles)
 { // Get item data
   const Item &itData = sipPair.second;
   // Add size and humann readable size
-  sTable.DataN(itData.ullSize).DataB(itData.ullSize);
+  sTable.DataN(itData.stId).DataN(itData.ullSize).DataB(itData.ullSize);
   // If this is a file on disk?
-  if(itData.uiId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
+  if(itData.uiArchId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
   // Is from archive?
-  else sTable.DataN(itData.uiId).Data(itData.strArc);
+  else sTable.DataN(itData.uiArchId).Data(itData.strArc);
   // Add file name
   sTable.Data(StdMove(sipPair.first));
   // Add to file size
@@ -819,8 +822,9 @@ cConsole->ConsoleAddLineF(
     cDisplay->DisplayGetWindowPosX(), cDisplay->DisplayGetWindowPosY(),
     cDisplay->DisplayGetWindowScaleWidth(),
     cDisplay->DisplayGetWindowScaleHeight(),
-    hex, cDisplay->FlagGet(),
-  dec, cDisplay->DisplayGetFSType(), cDisplay->DisplayGetFSTypeString(),
+    StdIOSHex, cDisplay->FlagGet(),
+  StdIOSDec, cDisplay->DisplayGetFSType(),
+    cDisplay->DisplayGetFSTypeString(),
   cOgl->MaxTexSize(), cFboCore->DimGetWidth(), cFboCore->DimGetHeight(),
     StrFromRatio(cFboCore->DimGetWidth(), cFboCore->DimGetHeight()),
     cFboCore->FboCoreGetMatrixWidth(), cFboCore->FboCoreGetMatrixHeight(),
@@ -836,12 +840,12 @@ cConsole->ConsoleAddLineF(
     cFboCore->FboCoreGetMainStage().CoordsGetBottom(),
     cFboCore->FboCoreGetMain().DimGetWidth(),
     cFboCore->FboCoreGetMain().DimGetHeight(),
-    hex, cOgl->FlagGet(),
-  dec, cFboCore->FboCoreGetMain().FboGetTris(),
+    StdIOSHex, cOgl->FlagGet(),
+  StdIOSDec, cFboCore->FboCoreGetMain().FboGetTris(),
     cFboCore->FboCoreGetMain().FboGetTrisReserved(),
     cFboCore->FboCoreGetMain().FboGetCmds(),
     cFboCore->FboCoreGetMain().FboGetCmdsReserved(),
-  fixed, cFboCore->FboCoreGetFPS(), cDisplay->DisplayGetRefreshRate(),
+  StdIOSFixed, cFboCore->FboCoreGetFPS(), cDisplay->DisplayGetRefreshRate(),
   UtilMakePercentage(cFboCore->FboCoreGetFPS(),
     cDisplay->DisplayGetRefreshRate()),
   cOgl->GetLimit());
@@ -871,7 +875,7 @@ if(aArgs.size() == 2)
   const size_t stId = StrToNum<size_t>(aArgs[1]);
   if(stId >= cImages->size())
     return cConsole->ConsoleAddLine("Invalid image id!");
-  const Image &iRef = **next(cImages->cbegin(), static_cast<ssize_t>(stId));
+  const Image &iRef = **StdNext(cImages->cbegin(), static_cast<ssize_t>(stId));
   // Text table class to help us write neat output
   Statistic sTable;
   sTable.Header("SIZX").Header("SIZY").Header("SIZE")
@@ -965,35 +969,37 @@ if(aArgs.size() > 1)
   Statistic sAxes;
   // Buffered headers
   StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
-    [&sAxes](const JoyAxisInfo &jaiRef) { sAxes.Header(StrFormat("BA$$$$",
-      setw(2), right, setfill('0'), jaiRef.AxisGetId()), true); });
+    [&sAxes](const JoyAxisInfo &jaiRef)
+  { sAxes.Header(StrFormat("BA$$$$", StdIOSSetWidth(2), StdIOSRight,
+      StdIOSSetFill('0'), jaiRef.AxisGetId()), true); });
   // Unbuffered headers
   StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
-    [&sAxes](const JoyAxisInfo &jaiRef) { sAxes.Header(StrFormat("UA$$$$",
-      setw(2), right, setfill('0'), jaiRef.AxisGetId()), true); });
+    [&sAxes](const JoyAxisInfo &jaiRef)
+  { sAxes.Header(StrFormat("UA$$$$", StdIOSSetWidth(2), StdIOSRight,
+      StdIOSSetFill('0'), jaiRef.AxisGetId()), true); });
   // Reserve memory for data entries
   sAxes.Reserve(jiRef.JoyAxisListCount() * 2);
   // Buffered state
   StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
     [&sAxes](const JoyAxisInfo &jaiRef)
-      { sAxes.DataN(jaiRef.AxisGetBufferedState()); });
+  { sAxes.DataN(jaiRef.AxisGetBufferedState()); });
   // Unbuffered state
   StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
     [&sAxes](const JoyAxisInfo &jaiRef)
-      { sAxes.DataN(jaiRef.AxisGetUnbufferedState(), 1); });
+  { sAxes.DataN(jaiRef.AxisGetUnbufferedState(), 1); });
   // Build button state data
   Statistic sButtons;
   // Buffered headers
   StdForEach(seq, jiRef.JoyButtonListBegin(), jiRef.JoyButtonListEnd(),
     [&sButtons](const JoyButtonInfo &jbiRef)
-      { sButtons.Header(StrFormat("B$$$$",
-          setw(2), right, setfill('0'), jbiRef.ButtonGetId()), true); });
+  { sButtons.Header(StrFormat("B$$$$", StdIOSSetWidth(2), StdIOSRight,
+      StdIOSSetFill('0'), jbiRef.ButtonGetId()), true); });
   // Reserve memory for data entries
   sButtons.Reserve(jiRef.JoyButtonListCount());
   // Buffered state
   StdForEach(seq, jiRef.JoyButtonListBegin(), jiRef.JoyButtonListEnd(),
     [&sButtons](const JoyButtonInfo &jbiRef)
-      { sButtons.DataN(jbiRef.ButtonGetState()); });
+  { sButtons.DataN(jbiRef.ButtonGetState()); });
   // Dump to console output and return
   return cConsole->ConsoleAddLineF("$$Data for $ '$' at index $.",
     sAxes.Finish(), sButtons.Finish(), jiRef.JoyGetGamepadOrJoystickString(),
@@ -1019,7 +1025,7 @@ cConsole->ConsoleAddLineF("$$ connected ($ supported).\n"
                    "Input flags are 0x$$.",
   sTable.Finish(),
     StrCPluraliseNum(cInput->JoyGetConnected(), "input", "inputs"),
-    jlList.size(), hex, cInput->FlagGet());
+    jlList.size(), StdIOSHex, cInput->FlagGet());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'input' function
 /* ========================================================================= */
@@ -1051,7 +1057,7 @@ cConsole->ConsoleAddLine(cLua->LuaCompileStringAndReturnResult(
 { "lcmds", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Build LUA commands list and if commands were matched? Print them all
-string strMatched;
+StdString strMatched;
 if(const size_t stMatched = CommandsBuildList(cCommands->lcmMap,
      aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
   cConsole->ConsoleAddLineF("$:$.", StrCPluraliseNum(stMatched,
@@ -1144,7 +1150,7 @@ if(!LuaUtilIsStackAvail(lS, aArgs.size()))
 StrVectorConstIt svciIt{ aArgs.cbegin() + 1 };
 if(svciIt != aArgs.cend())
 { // Get root table
-  const string &strRoot = *svciIt;
+  const StdString &strRoot = *svciIt;
   if(strRoot.empty()) return cConsole->ConsoleAddLine("Empty table name!");
   // Push variable specified on command line and if it's not a table?
   // Tell user the table is invalid and return
@@ -1156,7 +1162,7 @@ if(svciIt != aArgs.cend())
   // remaining argument is a table until we reach no more arguments.
   for(const int iIndex = LuaUtilStackSize(lS); ++svciIt != aArgs.cend();)
   { // Get name of parameter and if it's empty? Return empty sub-table
-    const string &strParam = *svciIt;
+    const StdString &strParam = *svciIt;
     if(strParam.empty())
       return cConsole->ConsoleAddLine("Empty sub-table name!");
     // ...and if its a valid number?
@@ -1176,9 +1182,9 @@ if(svciIt != aArgs.cend())
 } // Push global namspace and throw error if it is invalid
 else lua_pushglobaltable(lS);
 // Items for sorting (Name, Value, Tokens)
-typedef pair<const string,const StrStrMapPair> StrStrPairMapPair;
-typedef map<StrStrPairMapPair::first_type,
-            StrStrPairMapPair::second_type> StrStrPairMap;
+typedef StdPair<const StdString,const StrStrMapPair> StrStrPairMapPair;
+typedef StdMap<StrStrPairMapPair::first_type,
+               StrStrPairMapPair::second_type> StrStrPairMap;
 StrStrPairMap ssmpmMap;
 // Make sure theres two elements
 for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
@@ -1223,7 +1229,7 @@ else cConsole->ConsoleAddLine("No unreferenced memory!");
 { "log", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Colours for log levels
-typedef array<const ConColour, LH_MAX> LogLevelColours;
+typedef StdArray<const ConColour, LH_MAX> LogLevelColours;
 const LogLevelColours llcLookup{
   COLOUR_LBLUE  /* LH_CRITICAL */, COLOUR_LRED   /* LH_ERROR    */,
   COLOUR_YELLOW /* LH_WARNING  */, COLOUR_WHITE  /* LH_INFO     */,
@@ -1246,7 +1252,7 @@ cLog->MutexCall([&llcLookup](){
   } // For each log line. Add the line to console buffer
   for(const LogLine &llRef : *cLog)
     cConsole->ConsoleAddLineF(llcLookup[llRef.lhlLevel], "[$$$] $",
-      fixed, setprecision(6), llRef.dTime, llRef.strLine);
+      StdIOSFixed, StdIOSSetPrecision(6), llRef.dTime, llRef.strLine);
   // Number of items in buffer
   cConsole->ConsoleAddLineA(StrCPluraliseNum(cLog->size(), "line.", "lines."));
 });
@@ -1467,8 +1473,10 @@ cSystem->EnumModules();
 for(const SysModMapPair &smmpPair : *cSystem)
 { // Get reference to class and write its data to the table
   const SysModuleData &smdRef = smmpPair.second;
-  sTable.Data(smdRef.GetDesc()).Data(smdRef.GetVersion())
-        .Data(smdRef.GetVendor()).Data(smdRef.GetFull());
+  sTable.DataOR(smdRef.GetDesc(), cCommon->CommonUnspec())
+        .DataOR(smdRef.GetVersion(), cCommon->CommonUnspec())
+        .DataOR(smdRef.GetVendor(), cCommon->CommonUnspec())
+        .Data(smdRef.GetFull());
 } // Finished enumeration of modules
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrCPluraliseNum(cSystem->size(), "module.", "modules."));
@@ -1482,9 +1490,10 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 { "objs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Typedefs for building memory usage data
-struct MemoryUsageItem{ const string_view &strName; size_t stCount, stBytes; }
-  muiTotal{ cCommon->CommonBlank(), 0, 0 };
-typedef list<MemoryUsageItem> MemoryUsageItems;
+struct MemoryUsageItem{
+  const StdStringView &strName; size_t stCount, stBytes; }
+    muiTotal{ cCommon->CommonBlank(), 0, 0 };
+typedef StdList<MemoryUsageItem> MemoryUsageItems;
 // Helper macros so there is not as much spam
 #define MSSX(s,c) { c->IdentGet(), \
                     c->CollectorCount(), \
@@ -1530,7 +1539,7 @@ cConsole->ConsoleAddLineF("$$ totalling $ ($).", stData.Finish(),
 { "oglext", 2, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get extension name and output if the extension is supported
-const string &strExtName = aArgs[1];
+const StdString &strExtName = aArgs[1];
 cConsole->ConsoleAddLineF(
   "Extension '$' is$ supported by the selected graphics device.",
     strExtName, cOgl->HaveExtension(strExtName.data()) ?
@@ -1545,7 +1554,7 @@ cConsole->ConsoleAddLineF(
 { "oglfunc", 2, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get function name and output if the function is supported
-const string &strFunction = aArgs[1];
+const StdString &strFunction = aArgs[1];
 cConsole->ConsoleAddLineF(
   "Function '$' is$ supported by the selected graphics device.",
     strFunction, GlFWProcExists(strFunction.data()) ?
@@ -1607,7 +1616,7 @@ for(const Pcm*const pPtr : *cPcms)
   sTable.DataN(pRef.CtrGet()).Data(StrFromEvalTokens({
     { pRef.IsDynamic(),           'Y' }, { pRef.IsNotDynamic(),        'S' },
     { pRef.FlagIsSet(PL_FCE_WAV), 'W' }, { pRef.FlagIsSet(PL_FCE_CAF), 'C' },
-    { pRef.FlagIsSet(PL_FCE_OGG), 'O' }, { pRef.FlagIsSet(PL_FCE_MP3), 'M' }
+    { pRef.FlagIsSet(PL_FCE_OGG), 'O' },
   })).DataN(pRef.GetRate()).DataN(pRef.GetChannels()).DataN(pRef.GetBits())
      .DataN(pRef.GetBytes()).DataH(pRef.GetFormat(),4)
      .DataN(pRef.GetAlloc()).Data(pRef.IdentGet());
@@ -1711,7 +1720,7 @@ cConsole->ConsoleAddLineF("$$ and $.", sTable.Finish(),
 /* ========================================================================= */
 { "shot", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
-LuaUtilClassCreate<SShot>(cLua->LuaGetState(), *cSShots)->DumpMain();
+LuaUtilClassCreate<SShot>(cLua->LuaGetState(), cSShots)->DumpMain();
 // Although SShot is asynchronous, theres no way to clean up the stack so
 // we'll just delete it straight away.
 LuaUtilRmStack(cLua->LuaGetState(), 1);
@@ -1738,7 +1747,7 @@ if(aArgs.size() == 2)
   // Get socket flags
   const SocketFlagsConst sfcFlags{ sRef.FlagGet() };
   // Tokens for status
-  const string strStatus
+  const StdString strStatus
       ((sfcFlags.FlagIsSet(SS_CLOSEDBYCLIENT)) ? "ClientClosed"
     : ((sfcFlags.FlagIsSet(SS_CLOSEDBYSERVER)) ? "ServerClosed"
     : ((sfcFlags.FlagIsSet(SS_STANDBY))        ? "Disconnected"
@@ -1751,17 +1760,27 @@ if(aArgs.size() == 2)
     : ((sfcFlags.FlagIsSet(SS_CONNECTING))     ? "Connecting"
     : ((sfcFlags.FlagIsSet(SS_INITIALISING))   ? "Initialising"
     :                                            "Unknown")))))))))));
+  // Initial connection status
+  const StdString strOutput{
+    StrFormat("Status for socket $...\n"
+      "- Status: $; Flags: 0x$$; Error: $$; Descriptor: $ (0x$$).\n"
+      "- Address: $; Port: $$; IP: $."
+      "$"
+      "$",
+      uiId,
+      strStatus, StdIOSHex, sfcFlags.FlagGet(), StdIOSDec, sRef.GetError(),
+        sRef.GetFD(), StdIOSHex, sRef.GetFD(),
+      sRef.GetAddress(), StdIOSDec, sRef.GetPort(), sRef.GetIPAddress(),
+      sRef.FlagIsSet(SS_VHOST) ?
+        StrFormat("\n- Real host: $.", sRef.GetRealHost()) :
+        cCommon->CommonBlank(),
+      sRef.IsSecure() ?
+        StrFormat("\n- Encryption: $.",
+          StrIsBlank(sRef.GetCipher(), cCommon->CommonUnresolved())) :
+        cCommon->CommonBlank()) };
   // If the socket is not connected?
   if(sfcFlags.FlagIsClear(SS_CONNECTED))
-    return cConsole->ConsoleAddLineF("Status for socket $...\n"
-      "- Status: $; Flags: 0x$$; Error: $$; Descriptor: $ (0x$$).\n"
-      "- Address: $; Port: $$; IP: $.\n"
-      "- Encryption: $; Last: $.",
-        uiId,
-        strStatus, hex, sfcFlags.FlagGet(), dec, sRef.GetError(),
-          sRef.GetFD(), hex, sRef.GetFD(),
-        sRef.GetAddress(), dec, sRef.GetPort(), sRef.GetIPAddress(),
-        StrFromBoolTF(sRef.IsSecure()), StrIsBlank(sRef.GetCipher()));
+    return cConsole->ConsoleAddLine(strOutput);
    // Use disconnect time or connect time
   const double dConnect = sfcFlags.FlagIsSet(SS_STANDBY) ?
     ClockTimePointRangeToClampedDouble(sRef.GetTDisconnected(),
@@ -1771,19 +1790,11 @@ if(aArgs.size() == 2)
   dInitial = ClockTimePointRangeToClampedDouble(sRef.GetTConnected(),
     sRef.GetTConnect());
   // Write connected information
-  return cConsole->ConsoleAddLineF("Status for socket $...\n"
-    "- Status: $; Flags: 0x$$; Error: $$; Descriptor: $ (0x$$).\n"
-    "- Address: $; Port: $$; IP: $.\n"
-    "- Real host: $.\n"
+  return cConsole->ConsoleAddLineF("$\n"
     "- RX Queue: $; Packets: $; Bytes: $ ($); Last: $ ago.\n"
     "- TX Queue: $; Packets: $; Bytes: $ ($); Last: $ ago.\n"
-    "- Encryption: $; Last: $.\n"
     "- Total Time: $; Connected: $; Initial: $.",
-    uiId,
-    strStatus, hex, sfcFlags.FlagGet(), dec, sRef.GetError(),
-      sRef.GetFD(), hex, sRef.GetFD(),
-    sRef.GetAddress(), dec, sRef.GetPort(), sRef.GetIPAddress(),
-    StrIsBlank(sRef.GetRealHost(), "<Unresolved>"),
+    strOutput,
     sRef.GetRXQCount(), sRef.GetRXpkt(), sRef.GetRX(),
       StrToBytes(sRef.GetRX()),
       StrShortFromDuration(cmHiRes.TimePointToClampedDouble(sRef.GetTRead())),
@@ -1791,7 +1802,6 @@ if(aArgs.size() == 2)
       StrToBytes(sRef.GetTX()),
       StrShortFromDuration(
         cmHiRes.TimePointToClampedDouble(sRef.GetTWrite())),
-    StrFromBoolTF(sRef.IsSecure()), StrIsBlank(sRef.GetCipher()),
     StrShortFromDuration(dConnect + dInitial),
       StrShortFromDuration(dConnect), StrShortFromDuration(dInitial));
 } // Make neatly formatted table
@@ -1839,7 +1849,7 @@ cConsole->ConsoleAddLineF("$$ ($ connected).\n"
 /* ------------------------------------------------------------------------- */
 // Get parameter and if user requested to close all connections? Close all
 // the sockets and report how many we closed and return
-const string &strId = aArgs[1];
+const StdString &strId = aArgs[1];
 if(strId == "*")
   return cConsole->ConsoleAddLineA(StrCPluraliseNum(SocketReset(),
     "connection", "connections"), " closed.");
@@ -1940,8 +1950,8 @@ const double dPC = -100.0 + UtilMakePercentage(ullAfter, ullBefore);
 cConsole->ConsoleAddLine(llChange ?
   // If udb did change?
   StrFormat("UDB changed $B ($; $$$%) to $B ($) from $B ($) in $.",
-    llChange, StrToBytes(-llChange,0), setprecision(2), fixed, dPC, ullAfter,
-    StrToBytes(ullAfter, 0), ullBefore, StrToBytes(ullBefore,0),
+    llChange, StrToBytes(-llChange,0), StdIOSSetPrecision(2), StdIOSFixed, dPC,
+    ullAfter, StrToBytes(ullAfter, 0), ullBefore, StrToBytes(ullBefore, 0),
     StrShortFromDuration(dT)) :
   // Udb did not change so show the result
   StrFormat("UDB unchanged at $B ($) in $.",
@@ -1980,7 +1990,7 @@ if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, 1)))
   if(srRef.empty())
   { // If we should show the rows affected. This is sloppy but sqllite
     // doesn't support resetting sqlite3_changes result yet :(
-    const string &strFirst = StrToLowCaseRef(UtilToNonConst(aArgs[1]));
+    const StdString &strFirst = StrToLowCaseRef(UtilToNonConst(aArgs[1]));
     // Show rows affected if we have them
     if(strFirst == "insert" || strFirst == "update" || strFirst == "delete")
       cConsole->ConsoleAddLineF("$ affected in $.",
@@ -2016,7 +2026,7 @@ if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, 1)))
           { // Get integer
             const sqlite3_int64 llVal = sdRef.MemReadInt<sqlite3_int64>();
             // StrFormat and store in spreadsheet
-            sTable.Data("I").DataF("$ (0x$$)", llVal, hex, llVal);
+            sTable.Data("I").DataF("$ (0x$$)", llVal, StdIOSHex, llVal);
             // Done
             break;
           } // 64-bit IEEE float?
@@ -2034,8 +2044,8 @@ if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, 1)))
           // Unknown type (impossible)
           default:
             sTable.Data("?")
-                  .DataF("<Type $[0x$$]>", sdRef.iType, hex, sdRef.iType);
-                   break;
+              .DataF("<Type $[0x$$]>", sdRef.iType, StdIOSHex, sdRef.iType);
+              break;
         }
       } // Increase record number
       stRecordId++;
@@ -2316,7 +2326,7 @@ sTable.Header("ID").Header("FLAG").Header("PCMF").Header("P").Header("C")
       .Header("FRMW").Header("FRMH").Header("PICW").Header("PICH")
       .Header("OX").Header("OY").Header("FPS").Header("TIME").Header("FD")
       .Header("FR").Header("FL").Header("AVD").Header("LEN")
-      .Header("NAME", false).Reserve(cVideos->size());;
+      .Header("NAME", false).Reserve(cVideos->size());
 // Walk through textures classes
 for(const Video*const vPtr : *cVideos)
 { // Get reference to class and write its data to the table

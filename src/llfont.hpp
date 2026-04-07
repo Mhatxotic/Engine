@@ -29,11 +29,11 @@ using namespace ITexture::P;           using namespace Common;
 ** -- Read Font class argument --------------------------------------------- */
 struct AgFont : public ArClass<Font> {
   explicit AgFont(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Font>(lS, iArg, *cFonts)}{} };
+    ArClass{LuaUtilGetClassRef<Font>(lS, iArg, cFonts)}{} };
 /* -- Create Font class argument ------------------------------------------- */
 struct AcFont : public ArClass<Font> {
   explicit AcFont(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Font>(lS, *cFonts)}{} };
+    ArClass{LuaUtilClassCreateRef<Font>(lS, cFonts)}{} };
 /* -- Get a positive number value ------------------------------------------ */
 struct AgPositive : public AgNumberL<GLfloat> {
   explicit AgPositive(lua_State*const lS, const int iArg) :
@@ -43,7 +43,7 @@ struct AgFontFlags : public AgFlags<ImageFlagsConst> {
   explicit AgFontFlags(lua_State*const lS, const int iArg) :
     AgFlags{ lS, iArg, FF_MASK }{} };
 /* -- Read vector of the specified number type ----------------------------- */
-template<class VectorValueType, class VectorType = vector<VectorValueType>>
+template<class VectorValueType, class VectorType = StdVector<VectorValueType>>
   struct AgNumberVector : public VectorType
 { const VectorType &operator()() const { return *this; }
   operator const VectorType&() const { return operator()(); }
@@ -742,7 +742,7 @@ LLRSEND                                // Font:* member functions end
 // ? font in your application. Careful not to mess around with it's properties!
 /* ------------------------------------------------------------------------- */
 LLFUNC(Console, 1,
-  LuaUtilClassCreatePtr<Font>(lS, *cFonts, cConGfx->ConGfxGetFont()))
+  LuaUtilClassCreateStaticPtr<Font>(lS, cFonts, cConGfx->ConGfxGetFont()))
 /* ========================================================================= */
 // $ Font.Count
 // < Count:integer=Total number of fonts created.

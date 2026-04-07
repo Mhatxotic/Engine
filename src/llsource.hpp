@@ -26,7 +26,7 @@ using namespace ISource::P;            using namespace Common;
 ** -- Read Source class argument ------------------------------------------- */
 struct AgSource : public ArClass<Source> {
   explicit AgSource(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Source>(lS, iArg, *cSources)}{} };
+    ArClass{LuaUtilGetClassRef<Source>(lS, iArg, cSources)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Source:* member functions                                           ## **

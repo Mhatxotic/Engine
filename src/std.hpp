@@ -10,14 +10,41 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IStd {                       // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IUtf::P;
+/* -- Aliases -------------------------------------------------------------- */
+template<class T>
+  constexpr static bool StdIsTrCopyable = ::std::is_trivially_copyable_v<T>;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Wrapper for std::forward<> as we can't do 'using std::forward' ------- */
 template<typename AnyType>
   constexpr static auto &&StdForward(auto &&...aArgs)
 { return ::std::forward<AnyType>(aArgs...); }
+/* ------------------------------------------------------------------------- */
+template<class...Args>
+  constexpr static decltype(auto) StdAccumulate(auto &&...aArgs)
+{ return ::std::accumulate(StdForward<decltype(aArgs)>(aArgs)...); }
+/* ------------------------------------------------------------------------- */
+template<class...Args>
+  constexpr static decltype(auto) StdAdvance(auto &&...aArgs)
+{ return ::std::advance(StdForward<decltype(aArgs)>(aArgs)...); }
+/* ------------------------------------------------------------------------- */
+template<class...Args>
+  constexpr static decltype(auto) StdAnyOf(auto &&...aArgs)
+{ return ::std::any_of(StdForward<decltype(aArgs)>(aArgs)...); }
+/* ------------------------------------------------------------------------- */
+template<class...Args>
+  constexpr static decltype(auto) StdBackInserter(auto &&...aArgs)
+{ return ::std::back_inserter(StdForward<decltype(aArgs)>(aArgs)...); }
+/* ------------------------------------------------------------------------- */
+template<class...Args>
+  constexpr static decltype(auto) StdNext(auto &&...aArgs)
+{ return ::std::next(StdForward<decltype(aArgs)>(aArgs)...); }
+/* ------------------------------------------------------------------------- */
+template<class...Args>
+  constexpr static decltype(auto) StdPrev(auto &&...aArgs)
+{ return ::std::prev(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 #if defined(MACOS)                     // Using MacOS?
 /* ------------------------------------------------------------------------- **
@@ -27,32 +54,33 @@ template<typename AnyType>
 ** ## same parameter to pass through on other targets.                    ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-constexpr static bool par_unseq = false, // Parallel and vectorised disabled
-                      par       = false, // Parallel only disabled
-                      seq       = false; // Serialised disabled
+constexpr static bool
+  par_unseq = false,                   // Parallel and vectorised disabled
+  par       = false,                   // Parallel only disabled
+  seq       = false;                   // Serialised disabled
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdSort(auto&, auto &&...aArgs)
+constexpr static decltype(auto) StdSort(auto&, auto &&...aArgs)
   { return ::std::sort(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdFill(auto&, auto &&...aArgs)
+constexpr static decltype(auto) StdFill(auto&, auto &&...aArgs)
   { return ::std::fill(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdRotate(auto&, auto &&...aArgs)
+constexpr static decltype(auto) StdRotate(auto&, auto &&...aArgs)
   { return ::std::rotate(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdTransform(auto&, auto &&...aArgs)
+constexpr static decltype(auto) StdTransform(auto&, auto &&...aArgs)
   { return ::std::transform(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdForEach(auto&, auto &&...aArgs)
+constexpr static decltype(auto) StdForEach(auto&, auto &&...aArgs)
   { return ::std::for_each(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdFindIf(auto&, auto &&...aArgs)
+constexpr static decltype(auto) StdFindIf(auto&, auto &&...aArgs)
   { return ::std::find_if(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdCopy(auto&, auto &&...aArgs)
+constexpr static decltype(auto) StdCopy(auto&, auto &&...aArgs)
   { return ::std::copy(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdAllOf(auto&, auto &&...aArgs)
+constexpr static decltype(auto) StdAllOf(auto&, auto &&...aArgs)
   { return ::std::all_of(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 #else                                  // Windows or Posix target?
@@ -61,28 +89,28 @@ using ::std::execution::par_unseq;     // Parallel and vectorised
 using ::std::execution::par;           // Parallel only
 using ::std::execution::seq;           // Serialised
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdSort(auto &&...aArgs)
+constexpr static decltype(auto) StdSort(auto &&...aArgs)
   { return ::std::sort(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdFill(auto &&...aArgs)
+constexpr static decltype(auto) StdFill(auto &&...aArgs)
   { return ::std::fill(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdRotate(auto &&...aArgs)
+constexpr static decltype(auto) StdRotate(auto &&...aArgs)
   { return ::std::rotate(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdTransform(auto &&...aArgs)
+constexpr static decltype(auto) StdTransform(auto &&...aArgs)
   { return ::std::transform(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdForEach(auto &&...aArgs)
+constexpr static decltype(auto) StdForEach(auto &&...aArgs)
   { return ::std::for_each(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdFindIf(auto &&...aArgs)
+constexpr static decltype(auto) StdFindIf(auto &&...aArgs)
   { return ::std::find_if(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdCopy(auto &&...aArgs)
+constexpr static decltype(auto) StdCopy(auto &&...aArgs)
   { return ::std::copy(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
-constexpr static auto StdAllOf(auto &&...aArgs)
+constexpr static decltype(auto) StdAllOf(auto &&...aArgs)
   { return ::std::all_of(StdForward<decltype(aArgs)>(aArgs)...); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // MacOS check
@@ -100,19 +128,19 @@ typedef __time64_t      StdTimeT;      // Different on Windows
 /* -- Typedefs for types not in Windows ------------------------------------ */
 typedef make_signed_t<size_t> ssize_t;  // Not in MSVC
 /* -- Convert any widestring pointer type to utf8 class string ------------- */
-const string S16toUTF(const wchar_t*const wcpStr)
+const StdString S16toUTF(const wchar_t*const wcpStr)
   { return UtfFromWide(wcpStr); }
 /* -- Convert STL widestring to utf8 --------------------------------------- */
-const string WS16toUTF(const wstring &wstrStr)
+const StdString WS16toUTF(const StdWideString &wstrStr)
   { return S16toUTF(wstrStr.data()); }
 /* -- Convert UTF c-string to STL widestring ------------------------------- */
-const wstring UTFtoS16(const char*const cpPtr)
+const StdWideString UTFtoS16(const char*const cpPtr)
   { return UtfDecoder{ cpPtr }.UtfWide(); };
 /* -- Convert UTF string to STL widestring --------------------------------- */
-const wstring UTFtoS16(const string &strStr)
+const StdWideString UTFtoS16(const StdString &strStr)
   { return UtfDecoder{ strStr }.UtfWide(); };
 /* -- Convert UTF string view to STL widestring ---------------------------- */
-const wstring UTFtoS16(const string_view &strvStr)
+const StdWideString UTFtoS16(const StdStringView &strvStr)
   { return UtfDecoder{ strvStr }.UtfWide(); };
 /* -- Unset an environment variable ---------------------------------------- */
 static bool StdUnSetEnv(const char*const cpEnv)
@@ -121,52 +149,53 @@ static bool StdUnSetEnv(const char*const cpEnv)
 static int StdAccess(const wchar_t*const wcpPath, const int iMode)
   { return _waccess(wcpPath, iMode); }
 /* ------------------------------------------------------------------------- */
-static int StdAccess(const wstring &wstrPath, const int iMode)
+static int StdAccess(const StdWideString &wstrPath, const int iMode)
   { return StdAccess(wstrPath.data(), iMode); }
 /* ------------------------------------------------------------------------- */
-static int StdAccess(const string &strPath, const int iMode)
+static int StdAccess(const StdString &strPath, const int iMode)
   { return StdAccess(UTFtoS16(strPath), iMode); }
 /* -- Wrapper for mkdir() function ----------------------------------------- */
 static int StdMkDir(const wchar_t*const wcpPath) { return _wmkdir(wcpPath); }
 /* ------------------------------------------------------------------------- */
-static int StdMkDir(const wstring &wstrPath)
+static int StdMkDir(const StdWideString &wstrPath)
   { return StdMkDir(wstrPath.data()); }
 /* ------------------------------------------------------------------------- */
-static int StdMkDir(const string &strPath)
+static int StdMkDir(const StdString &strPath)
   { return StdMkDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wrename() function -------------------------------------- */
 static int StdRename(const wchar_t*const wcpSrcPath,
   const wchar_t*const wcpDstPath)
 { return _wrename(wcpSrcPath, wcpDstPath); }
 /* -- Wrapper for _wrename() function (wstring version) -------------------- */
-static int StdRename(const wstring &wstrSrcPath, const wstring &wstrDstPath)
-  { return StdRename(wstrSrcPath.data(), wstrDstPath.data()); }
+static int StdRename(const StdWideString &wstrSrcPath,
+  const StdWideString &wstrDstPath)
+{ return StdRename(wstrSrcPath.data(), wstrDstPath.data()); }
 /* -- Wrapper for _wrename() function (utf string version) ----------------- */
-static int StdRename(const string &strSrcPath, const string &strDstPath)
+static int StdRename(const StdString &strSrcPath, const StdString &strDstPath)
   { return StdRename(UTFtoS16(strSrcPath), UTFtoS16(strDstPath)); }
 /* -- Wrapper for _wrmdir() function --------------------------------------- */
 static int StdRmDir(const wchar_t*const wcpPath) { return _wrmdir(wcpPath); }
 /* ------------------------------------------------------------------------- */
-static int StdRmDir(const wstring &wstrPath)
+static int StdRmDir(const StdWideString &wstrPath)
   { return StdRmDir(wstrPath.data()); }
 /* ------------------------------------------------------------------------- */
-static int StdRmDir(const string &strPath)
+static int StdRmDir(const StdString &strPath)
   { return StdRmDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wchdir() function --------------------------------------- */
 static int StdChDir(const wchar_t*const wcpPath) { return _wchdir(wcpPath); }
 /* ------------------------------------------------------------------------- */
-static int StdChDir(const wstring &wstrPath)
+static int StdChDir(const StdWideString &wstrPath)
   { return StdChDir(wstrPath.data()); }
 /* ------------------------------------------------------------------------- */
-static int StdChDir(const string &strPath)
+static int StdChDir(const StdString &strPath)
   { return StdChDir(UTFtoS16(strPath)); }
 /* -- Wrapper for _wunlink() function -------------------------------------- */
 static int StdUnlink(const wchar_t*const wcpPath) { return _wunlink(wcpPath); }
 /* ------------------------------------------------------------------------- */
-static int StdUnlink(const wstring &wstrPath)
+static int StdUnlink(const StdWideString &wstrPath)
   { return StdUnlink(wstrPath.data()); }
 /* ------------------------------------------------------------------------- */
-static int StdUnlink(const string &strPath)
+static int StdUnlink(const StdString &strPath)
   { return StdUnlink(UTFtoS16(strPath)); }
 /* -- Wrapper for _wexecve() stdlib function ------------------------------- */
 static int StdExecVE(const wchar_t*const wcpaArg[],
@@ -184,11 +213,11 @@ static int StdFStat(const wchar_t*const wcpPath,
   StdFStatStruct*const sDestBuffer)
 { return _wstat64(wcpPath, sDestBuffer);  }
 /* ------------------------------------------------------------------------- */
-static int StdFStat(const wstring &wstrPath,
+static int StdFStat(const StdWideString &wstrPath,
   StdFStatStruct*const sDestBuffer)
 { return StdFStat(wstrPath.data(), sDestBuffer);  }
 /* ------------------------------------------------------------------------- */
-static int StdFStat(const string &strPath,
+static int StdFStat(const StdString &strPath,
   StdFStatStruct*const sDestBuffer)
 { return StdFStat(UTFtoS16(strPath), sDestBuffer);  }
 /* -- Wrapper for _fseeki64() function ------------------------------------- */
@@ -214,11 +243,11 @@ static StdTimeT StdMkTime(StdTMStruct*const tmpResult)
 static FILE *StdPOpen(const wchar_t*const wcpCommand,
   const wchar_t*const wcpType=L"rt") { return _wpopen(wcpCommand, wcpType); }
 /* ------------------------------------------------------------------------- */
-static FILE *StdPOpen[[maybe_unused]](const wstring &wstrCommand,
+static FILE *StdPOpen[[maybe_unused]](const StdWideString &wstrCommand,
   const wchar_t*const wcpType=L"rt")
 { return StdPOpen(wstrCommand.data(), wcpType); }
 /* ------------------------------------------------------------------------- */
-static FILE *StdPOpen[[maybe_unused]](const string &strCommand,
+static FILE *StdPOpen[[maybe_unused]](const StdString &strCommand,
   const wchar_t*const wcpType=L"rt")
 { return StdPOpen(UTFtoS16(strCommand), wcpType); }
 /* -- Wrapper for _pclose() function --------------------------------------- */
@@ -253,32 +282,35 @@ static bool StdUnSetEnv(const char*const cpEnv) { return !unsetenv(cpEnv); }
 static int StdAccess(const char*const cpPath, const int iMode)
   { return access(cpPath, iMode); }
 /* ------------------------------------------------------------------------- */
-static int StdAccess(const string &strPath, const int iMode)
+static int StdAccess(const StdString &strPath, const int iMode)
   { return StdAccess(strPath.data(), iMode); }
 /* -- Wrapper for mkdir() function ----------------------------------------- */
 static int StdMkDir(const char*const cpPath)
   { return mkdir(cpPath,
       S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH); }
 /* ------------------------------------------------------------------------- */
-static int StdMkDir(const string &strPath) { return StdMkDir(strPath.data()); }
+static int StdMkDir(const StdString &strPath)
+  { return StdMkDir(strPath.data()); }
 /* -- Wrapper for rename() function ---------------------------------------- */
 static int StdRename(const char*const cpSrcPath, const char*const cpDstPath)
   { return rename(cpSrcPath, cpDstPath); }
 /* ------------------------------------------------------------------------- */
-static int StdRename(const string &strSrcPath, const string &strDstPath)
+static int StdRename(const StdString &strSrcPath, const StdString &strDstPath)
   { return StdRename(strSrcPath.data(), strDstPath.data()); }
 /* -- Wrapper for rmdir() function ----------------------------------------- */
 static int StdRmDir(const char*const cpPath) { return rmdir(cpPath); }
 /* ------------------------------------------------------------------------- */
-static int StdRmDir(const string &strPath) { return StdRmDir(strPath.data()); }
+static int StdRmDir(const StdString &strPath)
+  { return StdRmDir(strPath.data()); }
 /* -- Wrapper for chdir() function ----------------------------------------- */
 static int StdChDir(const char*const cpPath) { return chdir(cpPath); }
 /* ------------------------------------------------------------------------- */
-static int StdChDir(const string &strPath) { return StdChDir(strPath.data()); }
+static int StdChDir(const StdString &strPath)
+  { return StdChDir(strPath.data()); }
 /* -- Wrapper for unlink() function ---------------------------------------- */
 static int StdUnlink(const char*const cpPath) { return unlink(cpPath); }
 /* ------------------------------------------------------------------------- */
-static int StdUnlink(const string &strPath)
+static int StdUnlink(const StdString &strPath)
   { return StdUnlink(strPath.data()); }
 /* -- Wrapper for execve() stdlib function --------------------------------- */
 static int StdExecVE(const char*const cpaArg[], const char*const cpaEnv[])
@@ -293,7 +325,7 @@ static int StdFileNo(FILE*const fStream) { return fileno(fStream); }
 /* -- Wrapper for stat() function ------------------------------------------ */
 static int StdFStat(const char*const cpPath, StdFStatStruct*const sDestBuffer)
   { return stat(cpPath, sDestBuffer);  }
-static int StdFStat(const string &strPath, StdFStatStruct*const sDestBuffer)
+static int StdFStat(const StdString &strPath, StdFStatStruct*const sDestBuffer)
   { return StdFStat(strPath.data(), sDestBuffer);  }
 /* -- Wrapper for fseek() function ----------------------------------------- */
 static int StdFSeek(FILE*const fStream, const off_t otOffset, int iWhence)
@@ -316,7 +348,7 @@ static StdTimeT StdMkTime(StdTMStruct*const tmpResult)
 /* -- Wrapper for popen() function ----------------------------------------- */
 static FILE *StdPOpen(const char*const cpCommand, const char*const cpType="r")
   { return popen(cpCommand, cpType); }
-static FILE *StdPOpen[[maybe_unused]](const string &strCommand,
+static FILE *StdPOpen[[maybe_unused]](const StdString &strCommand,
   const char*const cpType="r")
 { return StdPOpen(strCommand.data(), cpType); }
 /* -- Wrapper for pclose() function ---------------------------------------- */
@@ -325,18 +357,19 @@ static int StdPClose[[maybe_unused]](FILE*const fStream)
 /* -- Wrapper for srandom() function --------------------------------------- */
 static void StdSRand(const unsigned int uiSeed) { srandom(uiSeed); }
 /* -- Wrapper for mmap function -------------------------------------------- */
-template<typename PtrType>PtrType *StdMMap(void*vpAddr, const size_t stLen,
-  const int iProtection, const int iFlags, const int iDescriptor,
-  const off_t otOffset)
+template<typename PtrType>
+  static PtrType *StdMMap(void*vpAddr, const size_t stLen,
+    const int iProtection, const int iFlags, const int iDescriptor,
+    const off_t otOffset)
 { return reinterpret_cast<PtrType*>(Lib::OS::mmap(vpAddr, stLen,
     iProtection, iFlags, iDescriptor, otOffset)); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Operating system check
 /* -- Some frequently used maximums ---------------------------------------- */
-constexpr const unsigned int StdMaxUInt = numeric_limits<unsigned int>::max();
-constexpr const uint64_t StdMaxUInt64 = numeric_limits<uint64_t>::max();
-constexpr const size_t StdMaxSizeT = numeric_limits<size_t>::max();
-constexpr const size_t StdNPos = string::npos;
+constexpr const unsigned int StdMaxUInt = StdLimits<unsigned int>::max();
+constexpr const uint64_t StdMaxUInt64 = StdLimits<uint64_t>::max();
+constexpr const size_t StdMaxSizeT = StdLimits<size_t>::max();
+constexpr const size_t StdNPos = StdString::npos;
 /* -- Set error number ----------------------------------------------------- */
 static void StdSetError(const int iValue) { errno = iValue; }
 /* -- Get error number ----------------------------------------------------- */
@@ -345,6 +378,8 @@ static int StdGetError() { return errno; }
 static bool StdIsError(const int iValue) { return StdGetError() == iValue; }
 /* -- Is error number not equal to ----------------------------------------- */
 static bool StdIsNotError(const int iValue) { return !StdIsError(iValue); }
+/* -- Is error number non-zero? -------------------------------------------- */
+static bool StdIsErrorSet[[maybe_unused]]() { return StdIsNotError(0); }
 /* -- Is error number out of disk space ------------------------------------ */
 static bool StdIsNoDiskSpace() { return StdIsError(ENOSPC); }
 /* -- Uppercases the specified character ----------------------------------- */
@@ -390,7 +425,7 @@ template<typename IntType>
 template<typename IntType=int64_t>
   static IntType StdAbsolute(const IntType itVal)
 { // Check if supplied argument is signed and negate it if true
-  if constexpr(is_signed_v<IntType>) return (itVal < 0) ? -itVal : itVal;
+  if constexpr(StdIsSigned<IntType>) return (itVal < 0) ? -itVal : itVal;
   // Else just return the value without any processing
   else return itVal;
 }
@@ -403,15 +438,17 @@ template<typename IntType>
 { return ::std::hypot(itWidth, itHeight); }
 /* -- Allocate memory ------------------------------------------------------ */
 template<typename AnyType,typename IntType>
-  static AnyType *StdAlloc(const IntType itBytes)
-{ return reinterpret_cast<AnyType*>
-    (::std::malloc(static_cast<size_t>(itBytes))); }
-/* -- Re-allocate memory --------------------------------------------------- */
+  requires StdIsPointer<AnyType*> && StdIsInteger<IntType>
+static AnyType *StdAlloc(const IntType itBytes)
+  { return reinterpret_cast<AnyType*>
+      (::std::malloc(static_cast<size_t>(itBytes))); }
+/* -- Re-allocate memory ('inline' prevents -Wallocator-wrappers) ---------- */
 template<typename AnyType,typename IntType>
-  static AnyType *StdReAlloc(AnyType*const atPtr, const IntType itBytes)
-{ return reinterpret_cast<AnyType*>
-    (::std::realloc(reinterpret_cast<void*>(atPtr),
-      static_cast<size_t>(itBytes))); }
+  requires StdIsPointer<AnyType*> && StdIsInteger<IntType>
+static AnyType *StdReAlloc(AnyType*const atPtr, const IntType itBytes)
+  { return reinterpret_cast<AnyType*>
+      (::std::realloc(reinterpret_cast<void*>(atPtr),
+         static_cast<size_t>(itBytes))); }
 /* -- Release allocated memory --------------------------------------------- */
 template<typename AnyType>static void StdFree(AnyType*const atPtr)
   { ::std::free(reinterpret_cast<void*>(atPtr)); }
@@ -436,15 +473,25 @@ constexpr static void StdSuspend(const auto &aTime)
 constexpr static void StdSuspend()
   { StdSuspend(::std::chrono::milliseconds{ 1 }); }
 /* -- Returns true if two numbers are equal (Omit != and == warnings) ------ */
-template<typename FloatType> requires is_floating_point_v<FloatType>
+template<typename FloatType> requires StdIsFloat<FloatType>
   static bool StdIsFloatEqual(const FloatType ft1, const FloatType ft2,
     const FloatType ftEpsilon=static_cast<FloatType>(1e-6))
 { return ::std::fabs(ft1 - ft2) < ftEpsilon; }
+/* -- Wrapper for non-execution policy version of StdTransform ------------- */
+template<class InIt, class OutIt, class UnaryOp>
+  static OutIt StdTransformNXP(InIt iiFirst, InIt iiLast, OutIt oiFirst,
+    UnaryOp uoOp)
+{ return ::std::transform(iiFirst, iiLast, oiFirst, std::move(uoOp)); }
 /* ------------------------------------------------------------------------- */
-template<typename FloatType> requires is_floating_point_v<FloatType>
+template<typename FloatType> requires StdIsFloat<FloatType>
   static bool StdIsFloatNotEqual(const FloatType ft1, const FloatType ft2,
     const FloatType ftEpsilon=static_cast<FloatType>(1e-6f))
 { return !StdIsFloatEqual<FloatType>(ft1, ft2, ftEpsilon); }
+/* -- Brute cast one type to another --------------------------------------- */
+template<typename DT, typename ST>
+  requires (sizeof(DT) == sizeof(ST)) &&
+    StdIsTrCopyable<ST> && StdIsTrCopyable<DT>
+static DT StdBruteCast(const ST stV) { return ::std::bit_cast<DT>(stV); }
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## Because some compilers may not allow me to alias ::std::move        ## **
@@ -454,18 +501,21 @@ template<typename FloatType> requires is_floating_point_v<FloatType>
 ** ## make it only allow classes since we don't need it for integrals   . ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-template<class AnyType, typename AnyTypeRR = remove_reference_t<AnyType>>
-requires is_class_v<AnyTypeRR> &&
-        (is_reference_v<AnyType> || is_same_v<AnyType, AnyTypeRR>)
-  constexpr static AnyTypeRR &&StdMove(AnyType &&atVar) noexcept
-{ return static_cast<AnyTypeRR&&>(atVar); }
+template<class AnyType, typename AnyTypeRR = StdRemoveReference<AnyType>>
+requires StdIsClass<AnyTypeRR> &&
+  (StdIsReference<AnyType> || StdIsSame<AnyType, AnyTypeRR>)
+constexpr static AnyTypeRR &&StdMove(AnyType &&atVar) noexcept
+  { return static_cast<AnyTypeRR&&>(atVar); }
 /* == Static class try/catch helpers ======================================= **
 ** ######################################################################### **
 ** ## Don't put try/catch on func level. (C++ ISO/IEC JTC 1/SC 22 N 4411) ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 #define DTORHELPER(c,...) c() noexcept(false) { \
-  try { __VA_ARGS__; } catch(const exception &eReason) \
+  try { __VA_ARGS__; } catch(const StdException &eReason) \
+    { cLog->LogWarningExSafe("(" STR(c) ") $", eReason); } }
+#define DTORHELPEROR(c,...) c() override noexcept(false) { \
+  try { __VA_ARGS__; } catch(const StdException &eReason) \
     { cLog->LogWarningExSafe("(" STR(c) ") $", eReason); } }
 /* == Z-Lib requirements =================================================== */
 #if defined(ALPHA)                     // Z-Lib debug version requires this

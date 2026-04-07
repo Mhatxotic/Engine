@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IImageDef {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IDim::P;               using namespace IFlags;
+using namespace IDim::P;               using namespace IFlags::P;
 using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ITexDef::P;
 using namespace Lib::OS::GlFW::Types;
@@ -95,7 +95,7 @@ struct ImageSlot :                     // Members initially public
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
-typedef vector<ImageSlot> SlotList;    // list of bitmaps
+typedef StdVector<ImageSlot> SlotList; // list of bitmaps
 /* ------------------------------------------------------------------------- */
 enum BitDepth : unsigned int           // Human readable bit-depths
 { /* ----------------------------------------------------------------------- */

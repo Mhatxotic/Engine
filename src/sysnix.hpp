@@ -38,10 +38,10 @@ class SysProcess                       // Need this before of System init order
                    ctProcSys;          // Last process system cpu time
   /* -- Process ------------------------------------------------------------ */
   const size_t     stPageSize;         // Memory page size
-  /* ----------------------------------------------------------------------- */ 
+  /* ----------------------------------------------------------------------- */
   const pid_t      piProcessId;        // Process id
   const pthread_t  vpThreadId;         // Thread id
-  /* -- Return process and thread id --------------------------------------- */ 
+  /* -- Return process and thread id --------------------------------------- */
   template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid() const
@@ -81,7 +81,7 @@ class SysCore :
   { // If the stat file is opened
     if(fsProcStatM.FStreamIsReadyRead())
     { // Read string from stat
-      string strStat{ fsProcStatM.FStreamReadStringChunked() };
+      StdString strStat{ fsProcStatM.FStreamReadStringChunked() };
       if(!strStat.empty())
       { // Find line feed
         const size_t stLF = strStat.find('\n');
@@ -146,7 +146,7 @@ class SysCore :
   static void *LibLoad(const char*const cpName)
     { return dlopen(cpName, RTLD_LAZY | RTLD_LOCAL); }
   /* ----------------------------------------------------------------------- */
-  const string LibGetName(void*const vpModule, const char *cpAltName) const
+  const StdString LibGetName(void*const vpModule, const char *cpAltName) const
   { // Return nothing if no module
     if(!vpModule) return {};
     // Get information about the shared object
@@ -161,7 +161,7 @@ class SysCore :
   { // If the stat file is opened
     if(fsProcStatM.FStreamIsReadyRead())
     { // Read string from stat and if succeeded?
-      string strStat{ fsProcStat.FStreamReadStringChunked() };
+      StdString strStat{ fsProcStat.FStreamReadStringChunked() };
       if(!strStat.empty())
       { // Find line feed
         const size_t stLF = strStat.find('\n');
@@ -232,7 +232,7 @@ class SysCore :
       { return static_cast<IntType>
           (lseek64(iFp, static_cast<off64_t>(itP), SEEK_SET)); }
   /* -- Get executable size from header (N/A on Linux) --------------------- */
-  static size_t GetExeSize(const string &strFile)
+  static size_t GetExeSize(const StdString &strFile)
   { // Machine byte order magic
     constexpr const unsigned int uiELFDataNative =
 #if defined(LITTLEENDIAN)         // Intel, ARM, etc.
@@ -322,9 +322,9 @@ class SysCore :
     else XCL("Failed to open executable!", "File", strFile);
   }
   /* -- Get executable file name ------------------------------------------- */
-  const string GetExeName()
+  const StdString GetExeName()
   { // Storage for executable name
-    string strName; strName.resize(PATH_MAX);
+    StdResized<StdString> strName{ PATH_MAX };
     strName.resize(readlink("/proc/self/exe",
       const_cast<char*>(strName.data()), strName.size()));
     return strName;
@@ -332,7 +332,7 @@ class SysCore :
   /* -- Enum modules ------------------------------------------------------- */
   SysModMap EnumModules()
   { // Make verison string
-    string strVersion{ StrAppend(sizeof(void*)*8, "-bit version") };
+    StdString strVersion{ StrAppend(sizeof(void*)*8, "-bit version") };
     // Mod list
     SysModMap smmMap;
     smmMap.emplace(make_pair(0UL, SysModule{ GetExeName(), VER_MAJOR,
@@ -349,7 +349,7 @@ class SysCore :
     // Tokenize version numbers
     const Token tVersion{ utsnData.release, cCommon->CommonPeriod() };
     // Process and activate locale code
-    string strCode{ cCmdLine->CmdLineGetEnv("LANG") };
+    StdString strCode{ cCmdLine->CmdLineGetEnv("LANG") };
     ProcessAndActivateLocale(strCode);
     // Return operating system info
     return { utsnData.sysname, cCommon->CommonBlank(),
@@ -365,18 +365,18 @@ class SysCore :
   {  // Open cpu information file
     if(FStream fsCpuInfo{ "/proc/cpuinfo", FM_R_B })
     { // Read file and if we got data?
-      const string strFile{ fsCpuInfo.FStreamReadStringChunked() };
+      const StdString strFile{ fsCpuInfo.FStreamReadStringChunked() };
       if(!strFile.empty())
       { // Parse the variables and if we got some?
         ParserConst<> pcParser{ strFile, cCommon->CommonLf(), ':' };
         if(!pcParser.empty())
         { // Move stirngs from loaded variables
-          string strCpuId{ StdMove(pcParser.ParserGet("model name")) },
-                 strSpeed{ StdMove(pcParser.ParserGet("cpu MHz")) },
-                 strVendor{ StdMove(pcParser.ParserGet("vendor_id")) },
-                 strFamily{ StdMove(pcParser.ParserGet("cpu family")) },
-                 strModel{ StdMove(pcParser.ParserGet("model")) },
-                 strStepping{ StdMove(pcParser.ParserGet("stepping")) };
+          StdString strCpuId{ StdMove(pcParser.ParserGet("model name")) },
+                    strSpeed{ StdMove(pcParser.ParserGet("cpu MHz")) },
+                    strVendor{ StdMove(pcParser.ParserGet("vendor_id")) },
+                    strFamily{ StdMove(pcParser.ParserGet("cpu family")) },
+                    strModel{ StdMove(pcParser.ParserGet("model")) },
+                    strStepping{ StdMove(pcParser.ParserGet("stepping")) };
           // Remove excessive whitespaces from strings
           StrCompactRef(strCpuId);
           StrCompactRef(strSpeed);
@@ -432,9 +432,10 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   int GetPriority()
   { // Get priority value and throw if failed
-    errno = 0;
+    StdSetError(0);
     const int iNice = getpriority(PRIO_PROCESS, GetPid());
-    if(iNice == -1 && errno) XCS("Failed to acquire process priority!");
+    if(iNice == -1 && StdIsErrorSet())
+      XCS("Failed to acquire process priority!");
     // Return priority
     return iNice;
    }
@@ -453,7 +454,7 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   int LastSocketOrSysError() const { return StdGetError(); }
   /* -- Initialise global mutex -------------------------------------------- */
-  bool InitGlobalMutex(const string_view &strvTitle)
+  bool InitGlobalMutex(const StdStringView &strvTitle)
   { // Initialise the mutex and return the result
     return this->SysDoInitGlobalMutex(strvTitle,
       [](const pid_t pMPid, const pid_t pOPid)->bool
@@ -464,7 +465,7 @@ class SysCore :
     });
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const string BuildRoamingDir() const
+  const StdString BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("HOME", "/.local"); }
   /* -- Constructor -------------------------------------------------------- */
   SysCore() :

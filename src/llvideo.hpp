@@ -27,11 +27,11 @@ using namespace IVideo::P;             using namespace Common;
 ** -- Read Video class argument -------------------------------------------- */
 struct AgVideo : public ArClass<Video> {
   explicit AgVideo(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Video>(lS, iArg, *cVideos)}{} };
+    ArClass{LuaUtilGetClassRef<Video>(lS, iArg, cVideos)}{} };
 /* -- Create Video class argument ------------------------------------------ */
 struct AcVideo : public ArClass<Video> {
   explicit AcVideo(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Video>(lS, *cVideos)}{} };
+    ArClass{LuaUtilClassCreateRef<Video>(lS, cVideos)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Video:* member functions                                            ## **

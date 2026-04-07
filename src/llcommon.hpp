@@ -17,27 +17,27 @@ struct AgLCString { size_t stB; const char *cpD;
   explicit AgLCString(lua_State*const lS, const int iArg) :
     stB(0), cpD{LuaUtilGetLStr<char>(lS, iArg, stB)}{} };
 /* -- Get string (empty allowed) ------------------------------------------- */
-struct AgString { const string strString;
-  const string &operator()() const { return strString; }
-  operator const string&() const { return operator()(); }
+struct AgString { const StdString strString;
+  const StdString &operator()() const { return strString; }
+  operator const StdString&() const { return operator()(); }
   explicit AgString(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppStr(lS, iArg)}{} };
 /* -- Get modifyable string ------------------------------------------------ */
-struct AgNcString { string strString;
-  string &operator()() { return strString; }
-  operator string&() { return operator()(); }
+struct AgNcString { StdString strString;
+  StdString &operator()() { return strString; }
+  operator StdString&() { return operator()(); }
   explicit AgNcString(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppStr(lS, iArg)}{} };
 /* -- Get non-empty string ------------------------------------------------- */
-struct AgNeString { const string strNeString;
-  const string &operator()() const { return strNeString; }
-  operator const string&() const { return operator()(); }
+struct AgNeString { const StdString strNeString;
+  const StdString &operator()() const { return strNeString; }
+  operator const StdString&() const { return operator()(); }
   explicit AgNeString(lua_State*const lS, const int iArg) :
     strNeString{LuaUtilGetCppStrNE(lS, iArg)}{} };
 /* -- Get Valid filename --------------------------------------------------- */
-struct AgFilename { const string strFilename;
-  const string &operator()() const { return strFilename; }
-  operator const string&() const { return operator()(); }
+struct AgFilename { const StdString strFilename;
+  const StdString &operator()() const { return strFilename; }
+  operator const StdString&() const { return operator()(); }
   explicit AgFilename(lua_State*const lS, const int iArg) :
     strFilename{LuaUtilGetCppFile(lS, iArg)}{} };
 /* -- Create class template ------------------------------------------------ */
@@ -160,46 +160,46 @@ using IAsset::P::Asset;
 using IAsset::P::cAssets;
 struct AgAsset : public ArClass<Asset> {
   explicit AgAsset(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Asset>(lS, iArg, *cAssets)}{} };
+    ArClass{LuaUtilGetClassRef<Asset>(lS, iArg, cAssets)}{} };
 struct AcAsset : public ArClass<Asset> {
   explicit AcAsset(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Asset>(lS, *cAssets)}{} };
+    ArClass{LuaUtilClassCreateRef<Asset>(lS, cAssets)}{} };
 /* -- Get Ftf object ------------------------------------------------------- */
 using IFtf::P::Ftf;
 using IFtf::P::cFtfs;
 struct AgFtf : public ArClass<Ftf>
   { explicit AgFtf(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Ftf>(lS, iArg, *cFtfs)}{} };
+    ArClass{LuaUtilGetClassRef<Ftf>(lS, iArg, cFtfs)}{} };
 /* -- Get Texture object --------------------------------------------------- */
 using ITexture::P::Texture;
 using ITexture::P::cTextures;
 struct AgTexture : public ArClass<Texture>
   { explicit AgTexture(lua_State*const lS, const int iArg) :
-      ArClass{*LuaUtilGetPtr<Texture>(lS, iArg, *cTextures)}{} };
+      ArClass{LuaUtilGetClassRef<Texture>(lS, iArg, cTextures)}{} };
 /* -- Get Fbo object ------------------------------------------------------- */
 using IFbo::P::Fbo;
 using IFbo::P::cFbos;
 struct AgFbo : public ArClass<Fbo>
   { explicit AgFbo(lua_State*const lS, const int iArg) :
-      ArClass{*LuaUtilGetPtr<Fbo>(lS, iArg, *cFbos)}{} };
+      ArClass{LuaUtilGetClassRef<Fbo>(lS, iArg, cFbos)}{} };
 /* -- Get Pcm object ------------------------------------------------------- */
 using IPcm::P::Pcm;
 using IPcm::P::cPcms;
 struct AgPcm : public ArClass<Pcm>
   { explicit AgPcm(lua_State*const lS, const int iArg) :
-      ArClass{*LuaUtilGetPtr<Pcm>(lS, iArg, *cPcms)}{} };
+      ArClass{LuaUtilGetClassRef<Pcm>(lS, iArg, cPcms)}{} };
 /* -- Get Image object ----------------------------------------------------- */
 using IImage::P::Image;
 using IImage::P::cImages;
 struct AgImage : public ArClass<Image>
   { explicit AgImage(lua_State*const lS, const int iArg) :
-      ArClass{*LuaUtilGetPtr<Image>(lS, iArg, *cImages)}{} };
+      ArClass{LuaUtilGetClassRef<Image>(lS, iArg, cImages)}{} };
 /* -- Get Json object ------------------------------------------------------ */
 using IJson::P::Json;
 using IJson::P::cJsons;
 struct AgJson : public ArClass<Json> {
   explicit AgJson(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Json>(lS, iArg, *cJsons)}{} };
+    ArClass{LuaUtilGetClassRef<Json>(lS, iArg, cJsons)}{} };
 /* -- Read a valid triangle index ------------------------------------------ */
 struct AgTriangleId : public AgSizeTLGE {
   explicit AgTriangleId(lua_State*const lS, const int iArg) :

@@ -70,7 +70,7 @@ struct StrokerCheckFunc                // Members initially public
 struct RoundFunc                       // Members initially public
 { /* -- Configurable rounding functor helper class ------------------------- */
   template<typename T=double>
-    requires is_floating_point_v<T>
+    requires StdIsFloat<T>
   class Straight                       // Default no-outline class
   { /* --------------------------------------------------------------------- */
     const T        tValue;             // Calculated advance value
@@ -153,7 +153,8 @@ template<class StrokerFuncType>
   cFreeType->FreeTypeCheckError(FT_Get_Glyph(ftgsRef, &gData),
     "Failed to get glyph!", "Identifier", IdentGet(), "Glyph", cChar);
   // Put in autorelease ptr to autorelease
-  typedef unique_ptr<FT_GlyphRec_, function<decltype(FT_Done_Glyph)>> GlyphPtr;
+  typedef StdUniquePtr<FT_GlyphRec_,
+    function<decltype(FT_Done_Glyph)>> GlyphPtr;
   if(GlyphPtr gPtr{ gData, FT_Done_Glyph })
   { // Apply glyph border if requested
     cFreeType->FreeTypeCheckError(

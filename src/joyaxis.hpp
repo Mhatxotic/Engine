@@ -9,8 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IJoyAxis {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IGlFWUtil::P;          using namespace IStd::P;
-using namespace IUtil::P;
+using namespace IFillCon::P;           using namespace IGlFWUtil::P;
+using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -74,7 +74,7 @@ class JoyAxisInfo                      // Axis class
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
-template<class Container = array<JoyAxisInfo, 8>,
+template<class Container = StdArray<JoyAxisInfo, 8>,
          class Iterator = typename Container::const_iterator>
 class JoyAxisList :                    // Axis data list type
 /* ------------------------------------------------------------------------- */
@@ -138,7 +138,7 @@ class JoyAxisList :                    // Axis data list type
   /* -- Default constructor ------------------------------------- */ protected:
   JoyAxisList() :
     /* -- Initialisers ----------------------------------------------------- */
-    Container{ UtilMkFilledClassContainer<Container,int>() },
+    Container{ FillConClass<Container,int>() },
     iAxes(0)                           // Initialise axes count
     /* -- No code ---------------------------------------------------------- */
     {}

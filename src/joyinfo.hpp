@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IJoyInfo {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICommon::P;            using namespace IFlags;
+using namespace ICommon::P;            using namespace IFlags::P;
 using namespace IGlFWUtil::P;          using namespace IIdent::P;
 using namespace IJoyAxis::P;           using namespace IJoyButton::P;
 using namespace ILog::P;
@@ -31,14 +31,14 @@ class JoyInfo :                        // Joystick class
   public JoyButtonList<>               // Joystick button list
 { /* ----------------------------------------------------------------------- */
   const int      iId;                  // Unique identifier of this
-  string         strName,              // Name of controller
+  StdString      strName,              // Name of controller
                  strGuid;              // Guid of controller
   /* -- Return joystick id ----------------------------------------- */ public:
   int JoyGetId() const { return iId; }
   /* -- Return type of joystick -------------------------------------------- */
-  const string_view &JoyGetGamepadOrJoystickString() const
+  const StdStringView &JoyGetGamepadOrJoystickString() const
   { // Return if it is a gamepad or a joystick
-    static const string_view svGamepad{ "gamepad" },
+    static const StdStringView svGamepad{ "gamepad" },
                              svJoystick{ "joystick" };
     return FlagIsSet(JF_GAMEPAD) ? svGamepad : svJoystick;
   }
@@ -57,9 +57,9 @@ class JoyInfo :                        // Joystick class
   void JoyRefreshDataIfConnected()
     { if(JoyIsConnected()) JoyRefreshData(); }
   /* -- Return gamepad name ------------------------------------------------ */
-  const string &JoyGamePadName() const { return strName; }
+  const StdString &JoyGamePadName() const { return strName; }
   /* -- Return guid name --------------------------------------------------- */
-  const string &JoyGUID() const { return strGuid; }
+  const StdString &JoyGUID() const { return strGuid; }
   /* -- Return if joystick is a gamepad ------------------------------------ */
   bool JoyIsGamepad() const { return FlagIsSet(JF_GAMEPAD); }
   /* -- Get/Set gamepad status --------------------------------------------- */
@@ -122,7 +122,7 @@ class JoyInfo :                        // Joystick class
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- Joystick state typedefs -------------------------------------------- */
-typedef array<JoyInfo, GLFW_JOYSTICK_LAST+1> JoyList; // Actual joystick data
+typedef StdArray<JoyInfo, GLFW_JOYSTICK_LAST+1> JoyList; // Actual joy data
 typedef JoyList::const_iterator JoyListIt; // Iterator for vector of joys
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

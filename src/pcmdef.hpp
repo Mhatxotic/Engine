@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IPcmDef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IFlags;                using namespace IMemory::P;
+using namespace IFlags::P;             using namespace IMemory::P;
 using namespace IOal::P;               using namespace IStd::P;
 using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
@@ -20,9 +20,8 @@ enum PcmFormat : size_t                // Available PCM codecs
   PFMT_WAV,                            // [0] WAV (IPcmFormat::CodecWAV)
   PFMT_CAF,                            // [1] CAF (IPcmFormat::CodecCAF)
   PFMT_OGG,                            // [2] OGG (IPcmFormat::CodecOGG)
-  PFMT_MP3,                            // [3] MP3 (IPcmFormat::CodecMP3)
   /* ----------------------------------------------------------------------- */
-  PFMT_MAX                             // [4] Maximum supported PCM codecs
+  PFMT_MAX                             // [3] Maximum supported PCM codecs
 };/* ----------------------------------------------------------------------- */
 enum PcmBitType : unsigned int         // PCM bit-depth type
 { /* ----------------------------------------------------------------------- */
@@ -50,11 +49,10 @@ BUILD_FLAGS(Pcm,                       // PCM loading flags
   PL_FCE_WAV                {Flag(1)}, // Force load as WAV format?
   PL_FCE_CAF                {Flag(2)}, // Force load as CAF format?
   PL_FCE_OGG                {Flag(3)}, // Force load as OGG format?
-  PL_FCE_MP3                {Flag(4)}, // Force load as MP3 format?
   /* -- Private flags (Only used in 'PcmData' class) ----------------------- */
   PL_DYNAMIC                {Flag(5)}, // Bitmap is dynamically created?
   /* -- Mask bits ---------------------------------------------------------- */
-  PL_MASK{ PL_FCE_WAV|PL_FCE_CAF|PL_FCE_OGG|PL_FCE_MP3 }
+  PL_MASK{ PL_FCE_WAV|PL_FCE_CAF|PL_FCE_OGG }
 );/* -- Variables ---------------------------------------------------------- */
 class PcmData :                        // Audio data structure
   /* ----------------------------------------------------------------------- */
@@ -66,7 +64,7 @@ class PcmData :                        // Audio data structure
   PcmByteType      pbytBytes;          // Bytes per channel
   ALenum           eFormat,            // Format type for openal
                    eSFormat;           // Single channel format for openal
-  array<Memory,2>  aPcm;               // Pcm data (aPcmR used if stereo)
+  StdArray<Memory,2> aPcm;             // Pcm data (aPcmR used if stereo)
   size_t           stAlloc;            // Bytes allocated
   /* -- Public variables ------------------------------------------- */ public:
   Memory           &aPcmL,             // First Pcm channel (Mono or left)

@@ -128,14 +128,24 @@
 #  if defined(__x86_64__)              // 64-bit x86 architecture?
 #   define CISC                        // Using INTEL or AMD instruction set
 #   define X64                         // Using 64-bit architechture
-#   define BUILD_TARGET                "MacOS-X64"
+#   if defined(__AVX2__)               // AVX2 instructions enabled?
+#    define BUILD_TARGET               "MacOS-X64-AVX2"
+#   elif defined(__AVX__)              // AVX instructions enabled?
+#    define BUILD_TARGET               "MacOS-X64-AVX"
+#   elif defined(__SSE2__)             // SSE2 instructions enabled?
+#    define BUILD_TARGET               "MacOS-X64-SSE2"
+#   elif defined(__SSE__)              // SSE instructions enabled?
+#    define BUILD_TARGET               "MacOS-X64-SSE"
+#   else                               // No features? Probably impossible
+#    define BUILD_TARGET               "MacOS-X64"
+#   endif                              // 64-bit intel features check
 #  elif defined(__arm64__)             // 64-bit ARM architecture?
 #   define RISC                        // Using ARM instruction set
 #   define X64                         // Using 64-bit architechture
 #   if __ARM_NEON__ == 1               // Neon instructions enabled?
-#    define BUILD_TARGET               "MacOS-ARM64"
+#    define BUILD_TARGET               "MacOS-ARM64-NEON"
 #   else                               // Neon extensions not enabled?
-#    define BUILD_TARGET               "MacOS-ARM64-XNEON"
+#    define BUILD_TARGET               "MacOS-ARM64"
 #   endif                              // Neon extensions check
 #  else                                // Unknown target?
 #   error This MacOS architechture being compiled with is not supported!
@@ -151,8 +161,7 @@
 # define COMPILER_VERSION              STR(__GNUC__) "." \
                                        STR(__GNUC_MINOR__) "." \
                                        STR(__GNUC_PATCHLEVEL__)
-# define _DARWIN_USE_64_BIT_INODE      // For 64-bit size values
-# define _LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS // On in MSVC & GCC
+# define _DARWIN_USE_64_BIT_INODE      // For 64-bit size values (old API's)
 #elif defined(__linux__)               // Linux detected?
 # define LINUX                         // Using Linux
 # define COMPILER_NAME                 "GCC"
@@ -204,7 +213,7 @@
 #define UDB_EXTENSION            "udb" // Default database file extension
 #define JSON_EXTENSION          "json" // Default json file extension
 #define CER_EXTENSION            "cer" // Default certificate file extension
-#define MAX_PIPE_BUFFER           4096 // Maximum size of a pipe buffer
+#define CRASH_EXTENSION          "dbg" // Default crash log extension
 /* == Base STL includes ==================================================== */
 #include <algorithm>                   // Searching, sorting, counting, etc.
 #include <array>                       // Static arrays
@@ -496,18 +505,6 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #undef GLFW_EXPOSE_NATIVE_X11          // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_WAYLAND      // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_COCOA        // Done with this macro
-    /* --------------------------------------------------------------------- */
-    namespace MiniMP3                  // MINIMP3 API FUNCTIONS
-    { /* ------------------------------------------------------------------- */
-#define MINIMP3_IMPLEMENTATION         // Using MINIMP3 implementation
-#define MINIMP3_NO_STDIO               // No stdio routines
-#if defined(WINDOWS)                   // Using Windows
-#endif                                 // Using Windows
-#include <mp3/minimp3.h>               // Main decoder
-#include <mp3/minimp3_ex.h>            // Decoder utilities
-#if defined(WINDOWS)                   // Using Windows
-#endif                                 // Using Windows
-    }
   } /* --------------------------------------------------------------------- */
   namespace NSGif                      // LIBNSGIF API FUNCTIONS
   { /* --------------------------------------------------------------------- */

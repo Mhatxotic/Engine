@@ -26,7 +26,7 @@ using namespace IStd::P;               using namespace Common;
 ** -- Create Ftf class argument -------------------------------------------- */
 struct AcFtf : public ArClass<Ftf> {
   explicit AcFtf(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Ftf>(lS, *cFtfs)}{} };
+    ArClass{LuaUtilClassCreateRef<Ftf>(lS, cFtfs)}{} };
 /* -- Read a font dimension argument --------------------------------------- */
 struct AgDimension : public AgGLfloatLG
   { explicit AgDimension(lua_State*const lS, const int iArg) :

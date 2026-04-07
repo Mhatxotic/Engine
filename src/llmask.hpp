@@ -28,11 +28,11 @@ using namespace Common;
 ** -- Read Mask class argument --------------------------------------------- */
 struct AgMask : public ArClass<Mask> {
   explicit AgMask(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Mask>(lS, iArg, *cMasks)}{} };
+    ArClass{LuaUtilGetClassRef<Mask>(lS, iArg, cMasks)}{} };
 /* -- Create Mask class argument ------------------------------------------- */
 struct AcMask : public ArClass<Mask> {
   explicit AcMask(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Mask>(lS, *cMasks)}{} };
+    ArClass{LuaUtilClassCreateRef<Mask>(lS, cMasks)}{} };
 /* -- Read mask tile position ---------------------------------------------- */
 struct AgTileId : public AgSizeTLGE {
   explicit AgTileId(lua_State*const lS, const int iArg, const Mask &mCref) :

@@ -14,19 +14,20 @@ using namespace IClock::P;             using namespace ICodecOGG::P;
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFbo::P;               using namespace IFileMap::P;
-using namespace IFlags;                using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaEvt::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IMutex::P;             using namespace IOal::P;
-using namespace IOgl::P;               using namespace IPcmLib::P;
-using namespace IShader::P;            using namespace IShaders::P;
-using namespace ISource::P;            using namespace IStd::P;
-using namespace IStream::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace ITimer::P;             using namespace IUtil::P;
-using namespace Lib::Ogg;              using namespace Lib::Ogg::Theora;
-using namespace Lib::OpenAL::Types;    using namespace Lib::OS::GlFW::Types;
+using namespace IFlags::P;             using namespace IIdent::P;
+using namespace IInterval::P;          using namespace ILog::P;
+using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IMutex::P;
+using namespace IOal::P;               using namespace IOgl::P;
+using namespace IPcmLib::P;            using namespace IShader::P;
+using namespace IShaders::P;           using namespace ISource::P;
+using namespace IStd::P;               using namespace IStream::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IThread::P;            using namespace ITimer::P;
+using namespace IUtil::P;              using namespace Lib::Ogg;
+using namespace Lib::Ogg::Theora;      using namespace Lib::OpenAL::Types;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */
@@ -64,15 +65,16 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   public AsyncLoaderVideo,             // Asynchronous laoding of videos
   public LuaEvtSlave<Video>,           // Lua asynchronous events
   public VideoFlags,                   // Video settings flags
-  private ClockInterval<>,             // Frame playback timing helper
+  private Interval,                    // Frame playback timing helper
   private MutexLock                    // mutex for uploading data
 { /* -- Typedefs ----------------------------------------------------------- */
   struct YCbCr                         // Y/Cb/Cr plane data
-  { /* --------------------------------------------------------------------- */
+  { /* -- Public variables ------------------------------------------------- */
     const size_t   stI;                // Unique index
     th_img_plane   tipP;               // Plane data
-    /* --------------------------------------------------------------------- */
-    void Reset() {
+    /* -- Clear img plane struct ------------------------------------------- */
+    void Reset()
+    { // This is supposedly quicker than using memset().
       tipP.width = tipP.height = tipP.stride = 0;
       tipP.data = nullptr;
     }
@@ -84,14 +86,18 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       /* -- No code -------------------------------------------------------- */
       {}
   };/* --------------------------------------------------------------------- */
-  struct Frame                         // Frame data
-  { /* --------------------------------------------------------------------- */
+  struct Frame                         // Theora frame data
+  { /* -- Public variables ------------------------------------------------- */
     bool           bDraw;              // Draw this frame?
-    typedef array<YCbCr, 3> YCCArray;  // Room for three frames
+    typedef StdArray<YCbCr, 3> YCCArray; // Room for three frames
     YCCArray       yccaFrames;         // The planes (Y, Cb and Cr);
-    /* --------------------------------------------------------------------- */
-    void Reset() { bDraw = false;
-                   for(YCbCr &yccFrame : yccaFrames) yccFrame.Reset(); }
+    /* -- Clear everything ------------------------------------------------- */
+    void Reset()
+    { // Do not draw to OpenGL
+      bDraw = false;
+      // Clear frame data
+      for(YCbCr &yccFrame : yccaFrames) yccFrame.Reset();
+    }
     /* -- Constructor that initialises frame data -------------------------- */
     Frame() :
       /* -- Initialisers --------------------------------------------------- */
@@ -100,15 +106,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
                   YCbCr{2} }
       /* -- No code -------------------------------------------------------- */
       {}
-  };/* --------------------------------------------------------------------- */
-  typedef array<Frame, 2> FrameArray;
-  /* ----------------------------------------------------------------------- */
-  typedef array<GLuint,3> GLuintArray;
-  /* --------------------------------------------------------------- */ public:
+  };/* -- Theora frame data (double-buffered) ------------------------------ */
+  typedef StdArray<Frame,2> FrameArray;
+  /* -- Y, Cb and Cr texture ids ------------------------------------------- */
+  typedef StdArray<GLuint,3> GLuintArray;
+  /* -- Thread unblock reasons ------------------------------------- */ public:
   enum Unblock { UB_STANDBY, UB_BLOCK, UB_DATA, UB_REINIT, UB_PLAY, UB_STOP,
                  UB_PAUSE, UB_FINISH };
-  typedef atomic<Unblock> AtomicUnblock;
-  /* ----------------------------------------------------------------------- */
+  typedef StdAtomic<Unblock> AtomicUnblock;
+  /* -- Lua callback event ids --------------------------------------------- */
   enum Event { VE_PLAY, VE_LOOP, VE_STOP, VE_PAUSE, VE_FINISH };
   /* -- Concurrency -------------------------------------------------------- */
   Thread           tThread;            // Video Decoding Thread
@@ -144,15 +150,12 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   AtomicSizeT      astFFree;           // Frames free to be processed
   StrNCStrMap      sncsmThMetaData;    // Theora comments block
   /* -- Vorbis ------------------------------------------------------------- */
-  const double     dAudBufMax;         // Audio buffer size
   ogg_stream_state ostsVorbis;         // Ogg (Vorbis) stream states
   vorbis_info      viData;             // Vorbis decoder info
   vorbis_comment   vcData;             // Vorbis comment block
   vorbis_dsp_state vdsData;            // Vorbis DSP state
   vorbis_block     vbData;             // Vorbis decoder block
-  AtomicDouble       sdAudioTime;        // Audio time index
-  ALdouble         dAudioBuffer;       // Audio buffered
-  ALfloat          fAudioVolume;       // Audio volume
+  AtomicDouble     sdAudioTime;        // Audio time index
   StrNCStrMap      sncsmVoMetaData;    // Vorbis comments block
   /* -- OpenGL ------------------------------------------------------------- */
   FboItem          fboYCbCr;           // Blit data for actual YCbCr components
@@ -161,6 +164,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- OpenAL ------------------------------------------------------------- */
   Source          *sSource;            // Source class
   ALenum           eFormat;            // Internal format
+  ALfloat          fAudioVolume;       // Audio volume
+  const double     dAudBufMax;         // Audio buffer size
+  ALdouble         dAudioBuffer;       // Audio buffered
   /* == Buffer more data for OGG decoder ========================== */ private:
   bool DoIOBuffer()
   { // Get some memory from ogg which we have to do every time we need to read
@@ -210,7 +216,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       // Remove buffer time
       dAudioBuffer = UtilMaximum(dAudioBuffer -
         (cOal->GetBufferInt<ALdouble>(uiBuffer, AL_SIZE) /
-          GetSampleRate() / GetChannels()), 0.0);
+          static_cast<ALdouble>(GetSampleRate()) /
+          static_cast<ALdouble>(GetChannels())), 0.0);
       // Delete the buffer that was returned continue if successful
       ALL(cOal->DeleteBuffer(uiBuffer),
         "Video failed to delete unqueued buffer $ in '$'!",
@@ -272,7 +279,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           if(alErr != AL_NO_ERROR) throw "queuing";
           // We ate everything so set audio time and add to buffer
           dAudioBuffer += static_cast<ALdouble>(stFrameSize) /
-            GetSampleRate() / GetChannels();
+            static_cast<ALdouble>(GetSampleRate()) /
+            static_cast<ALdouble>(GetChannels());
           // Play the source if the audio timer has started
           sSource->Play();
           // Try to parse more data
@@ -286,15 +294,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           // Log the warning
           cLog->LogWarningExSafe("Video '$' $ audio failed "
             "(B:$;F:$<$$$>;A:$;S:$;R:$;AL:$<$$>)!",
-            IdentGet(), cpReason, uiBuffer, GetFormatAsIdentifier(), hex,
-            GetAudioFormat(), dec, MemPtr(), stFrameSize, GetSampleRate(),
-            cOal->GetALErr(alErr), hex, alErr);
+            IdentGet(), cpReason, uiBuffer, GetFormatAsIdentifier(), StdIOSHex,
+            GetAudioFormat(), StdIOSDec, MemPtr(), stFrameSize,
+            GetSampleRate(), cOal->GetALErr(alErr), StdIOSHex, alErr);
         } // Create buffers failed?
         else cLog->LogWarningExSafe("Video create buffers failed on '$' "
           "(F:$<$$$>;A:$;S:$;R:$;AL:$<$$>)!",
-          IdentGet(), uiBuffer, GetFormatAsIdentifier(), hex, GetAudioFormat(),
-          dec, MemPtr(), stFrameSize, GetSampleRate(), cOal->GetALErr(alErr),
-          hex, alErr);
+          IdentGet(), uiBuffer, GetFormatAsIdentifier(), StdIOSHex,
+          GetAudioFormat(), StdIOSDec, MemPtr(), stFrameSize, GetSampleRate(),
+          cOal->GetALErr(alErr), StdIOSHex, alErr);
       } // No audio left so try to feed another packet and break if failed
       else switch(const int iR1 = ogg_stream_packetout(&ostsVorbis, &opkData))
       { // If a packet was assembled normally?
@@ -467,7 +475,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // If it is not time to process a frame yet?
     if(CIIsNotTriggered())
     { // Wait a little bit if we can
-      if(CIIsNotTriggered(cd1MS)) StdSuspend();
+      if(CIIsNotTriggeredIn(cd1MS)) StdSuspend();
     } // Decode and render new Theora data and if we did? Set new video time
     else if(ParseAndRenderTheoraData())
       adVideoTime = th_granule_time(tdcPtr, llVideoGranulePos);
@@ -508,7 +516,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           dDrift = GetAudioTime() > 0.0 ?
             GetVideoTime() - GetAudioTime() : 0.0;
         // Wait a little bit if we can
-        else if(CIIsNotTriggered(cd1MS)) StdSuspend();
+        else if(CIIsNotTriggeredIn(cd1MS)) StdSuspend();
         // Done, keep thread alive
         return true;
       } // Time to check for new packets? Repeat...
@@ -570,17 +578,17 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     } // Exit thread cleanly with specified reason
     return TS_OK;
   } // exception occured?
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Report it to log
     cLog->LogErrorExSafe("(VIDEO THREAD EXCEPTION) $", eReason);
     // Failure exit code
     return TS_ERROR;
   }
   /* -- Convert colour space to name --------------------------------------- */
-  const string_view &ColourSpaceToString(const th_colorspace csId) const
+  const StdStringView &ColourSpaceToString(const th_colorspace csId) const
     { return cVideos->csStrings.Get(csId); }
   /* -- Convert pixel format to name --------------------------------------- */
-  const string_view &PixelFormatToString(const th_pixel_fmt pfId) const
+  const StdStringView &PixelFormatToString(const th_pixel_fmt pfId) const
     { return cVideos->pfStrings.Get(pfId); }
   /* -- Update textures without lock --------------------------------------- */
   void RenderUnsafe()
@@ -647,7 +655,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   bool IsSourceAvailable() const { return !!sSource; }
   bool IsSourceUnavailable() const { return !IsSourceAvailable(); }
   ALenum GetAudioFormat() const { return eFormat; }
-  const string_view &GetFormatAsIdentifier() const
+  const StdStringView &GetFormatAsIdentifier() const
     { return cOal->GetALFormat(GetAudioFormat()); }
   /* -- When data has asynchronously loaded -------------------------------- */
   void AsyncReady(FileMap &fmData)
@@ -716,6 +724,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
               { ostsVorbis = ossTest; iGotVorbisPage = 1; }
           // Whatever it is, we don't care about it
           else ogg_stream_clear(&ossTest);
+          // Fall through to break
+          [[fallthrough]];
         } // Returned if stream has not yet captured sync (bytes were skipped).
         case -1: break;
         // Done
@@ -873,10 +883,10 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       "- Target bit rate: $ ($).\n"  "- Upper bit rate: $ ($).\n"
       "- Nominal bit rate: $ ($).\n" "- Lower bit rate: $ ($).\n"
       "- Bit window: $ ($).",
-      fixed, static_cast<int>(tiData.version_major),
+      StdIOSFixed, static_cast<int>(tiData.version_major),
         static_cast<int>(tiData.version_minor),
         static_cast<int>(tiData.version_subminor),
-      ostsTheora.serialno, hex, ostsTheora.serialno, dec,
+      ostsTheora.serialno, StdIOSHex, ostsTheora.serialno, StdIOSDec,
       GetWidth(), GetHeight(), StrFromRatio(GetWidth(), GetHeight()),
       GetFrameWidth(), GetFrameHeight(),
         StrFromRatio(GetFrameWidth(), GetFrameHeight()),
@@ -894,9 +904,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Parse vorbis comments and if not empty? Enumerate and log each one
     if(cLog->LogHasLevel(LH_DEBUG))
     { // Prepare data for lists
-      typedef pair<const string_view&, StrNCStrMap&> ListPair;
-      typedef array<const ListPair, 2> Lists;
-      static const string_view svTheora{ "Theora" }, svVorbis{ "Vorbis" };
+      typedef StdPair<const StdStringView&, StrNCStrMap&> ListPair;
+      typedef StdArray<const ListPair, 2> Lists;
+      static const StdStringView svTheora{ "Theora" }, svVorbis{ "Vorbis" };
       const Lists lLists{ { { svTheora, sncsmThMetaData },
                             { svVorbis, sncsmVoMetaData } } };
       // Write Theora comments iv available
@@ -1036,10 +1046,14 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       // We must discard the extra garbage from the ogg video. We can do that
       // with the GPU very easily by altering texture coords!
       fboYCbCr.FboItemSetTexCoord(
-        static_cast<GLfloat>(GetOriginX()) / GetFrameWidth(),
-        static_cast<GLfloat>(GetOriginY() + GetHeight()) / GetFrameHeight(),
-        static_cast<GLfloat>(GetOriginX() + GetWidth()) / GetFrameWidth(),
-        static_cast<GLfloat>(GetOriginY()) / GetFrameHeight());
+        static_cast<GLfloat>(GetOriginX()) /
+          static_cast<GLfloat>(GetFrameWidth()),
+        static_cast<GLfloat>(GetOriginY() + GetHeight()) /
+          static_cast<GLfloat>(GetFrameHeight()),
+        static_cast<GLfloat>(GetOriginX() + GetWidth()) /
+          static_cast<GLfloat>(GetFrameWidth()),
+        static_cast<GLfloat>(GetOriginY()) /
+          static_cast<GLfloat>(GetFrameHeight()));
       // Init texture
       InitTexture();
     } // If theres a audio segment and AL portion is initialised?
@@ -1239,19 +1253,19 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     stFNext(0),                        // Initialise next frame id
     stFWaiting(0),                     // Initialise frames waiting
     astFFree{ faData.size() },         // Initialise free frames
-    dAudBufMax(                        // Initialise maximum audio buffer size
-      cVideos->dAudioBufferSize),      // ...with value set by user
     ostsVorbis{ /* Zeroed */ },        // Clear Vorbis stream status data
     viData{ /* Zeroed */ },            // Clear Vorbis decoder data
     vcData{ /* Zeroed */ },            // Clear Vorbis comment data
     vdsData{ /* Zeroed */ },           // Clear Vorbis DSP state data
     vbData{ /* Zeroed */ },            // Clear Vorbis decoder block data
     sdAudioTime(0.0),                  // Initialise audio position
-    dAudioBuffer(0.0),                 // Initialise audio buffer length
-    fAudioVolume(1.0f),                // Initialise audio volume
     shProgram(nullptr),                // Initialise pointer to Shader used
     sSource(nullptr),                  // Initialise pointer to Source used
-    eFormat(AL_NONE)                   // Initialise audio format type
+    eFormat(AL_NONE),                  // Initialise audio format type
+    fAudioVolume(1.0f),                // Initialise audio volume
+    dAudBufMax(                        // Initialise maximum audio buffer size
+      cVideos->dAudioBufferSize),      // ...with value set by user
+    dAudioBuffer(0.0)                  // Initialise audio buffer length
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */

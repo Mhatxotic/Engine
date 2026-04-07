@@ -54,7 +54,7 @@ namespace P {                          // Start of public module namespace
     s,x,## __VA_ARGS__)
 /* -- Collector header that assumes STL list for the container type -------- */
 #define CTOR_HDR_DEFCTR(p,m,h,s,x,...) \
-  CTOR_HDR_CUSTCTR(p,m,list,h,s,x,## __VA_ARGS__)
+  CTOR_HDR_CUSTCTR(p,m,StdList,h,s,x,## __VA_ARGS__)
 /* -- Collector footer that creates the global class pointer init in core -- */
 #define CTOR_HDR_END };
 /* -- Build a collector class with base classes and body ------------------- */
@@ -108,7 +108,7 @@ namespace P {                          // Start of public module namespace
                           ...)         /* Extra arguments                   */\
   typedef ICHelper<p,m,s<p,m,i>,i> n;  /* Make an alias for the locktype    */\
   class m : public n                   /* Begin the member class            */\
-    __VA_ARGS__                        /* Add extra arguments if needed     */
+    __VA_ARGS__                        /* Add extra arguments if needed      */
 /* -- Start building a member class for a collector ------------------------ */
 #define CTOR_MEM_BEGIN(p,m,s,...) \
   CTOR_MEM_BEGIN_EX(p,m,p ## It,s,ICHelper ## m,## __VA_ARGS__)
@@ -187,7 +187,7 @@ class CLHelperBase :
       IdentGet());
   }
   /* -- Constructor -------------------------------------------------------- */
-  explicit CLHelperBase(const string_view &strvName) :
+  explicit CLHelperBase(const StdStringView &strvName) :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ strvName },            // Set initialisation helper name
     stMaximum(StdMaxSizeT)             // Initialise maximum objects
@@ -308,6 +308,9 @@ template<class CollectorType, class MemberType, class IteratorType>
 struct ICHelperBase                    // Members initially public
 { /* -- Swap registration with another class ------------------------------- */
   CollectorType*const cParent;         // Parent class of this object
+  /* -- Gets a reference to the object contained in the iterator ----------- */
+  constexpr static auto &ICHelperItAddr(const IteratorType &cIt)
+    { return *::std::addressof(*cIt); }
   /* -- Protected variables ------------------------------------- */ protected:
   IteratorType     cIterator;          // Iterator to this object in parent
   /* -- Add from collector with set parent --------------------------------- */
@@ -344,7 +347,7 @@ struct ICHelperBase                    // Members initially public
       if(mtObjRef.cIterator != this->cParent->CollectorGetLastItemUnsafe())
       { // Just swap iterators and pointers to the members
         swap(cIterator, mtObjRef.cIterator);
-        swap(*addressof(*cIterator), *addressof(*mtObjRef.cIterator));
+        swap(ICHelperItAddr(cIterator), ICHelperItAddr(mtObjRef.cIterator));
         // Done
         return;
       } // Other not registered?
@@ -353,7 +356,7 @@ struct ICHelperBase                    // Members initially public
       mtObjRef.cIterator = cIterator;
       // ...and we just have to replace the pointer to the other class of which
       // is now registered, and not this.
-      *addressof(*mtObjRef.cIterator) = &mtObjRef;
+      ICHelperItAddr(mtObjRef.cIterator) = &mtObjRef;
       // We are now unregistered
       cIterator = this->cParent->CollectorGetLastItemUnsafe();
       // Done
@@ -366,7 +369,7 @@ struct ICHelperBase                    // Members initially public
     cIterator = mtObjRef.cIterator;
     // ...and we just have to replace the pointer to the other class with the
     // pointer to this class.
-    *addressof(*cIterator) = static_cast<MemberType*>(this);
+    ICHelperItAddr(cIterator) = static_cast<MemberType*>(this);
     // Other member no longer registered. Any use of the iterator in the other
     // class is now undefined behaviour.
     mtObjRef.cIterator = this->cParent->CollectorGetLastItemUnsafe();
@@ -392,26 +395,29 @@ template<class CollectorType, class MemberType, class IteratorType,
 class ICHelperSafe :                   // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public BaseType                      // ICHelper base class
-{ /* -- Initialise (un)registered entry with synchronisation --------------- */
+{ /* -- Initialise registered entry with synchronisation ------------------- */
   IteratorType ICHelperInit(CollectorType*const ctPtr,
     MemberType*const mtPtr) const
       { return ctPtr->MutexCall([this, ctPtr, mtPtr](){
           return this->ICHelperBaseInit(ctPtr, mtPtr);}); }
+  /* -- Initialise unregistered entry with synchronisation ----------------- */
   IteratorType ICHelperInit(CollectorType*const ctPtr) const
     { return ctPtr->MutexCall([this, ctPtr](){
         return this->ICHelperBaseInit(ctPtr);}); }
-  /* -- Insert/Remove from collector list with synchronisation -- */ protected:
+  /* -- Insert from collector list with synchronisation --------- */ protected:
   void ICHelperPush()
     { this->cParent->MutexCall([this](){ this->ICHelperBaseRegister(); }); }
+  /* -- Remove from collector list with synchronisation -------------------- */
   void ICHelperErase()
     { this->cParent->MutexCall([this](){ this->ICHelperBaseUnregister(); }); }
   /* -- Swap to objects ---------------------------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
     { this->cParent->MutexCall([this, &mtObj](){
         this->ICHelperBaseSwapRegistration(mtObj);}); }
-  /* -- Constructor with/without registration ------------------------------ */
+  /* -- Constructor with registration -------------------------------------- */
   explicit ICHelperSafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
     BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr)) } {}
+  /* -- Constructor without registration ----------------------------------- */
   explicit ICHelperSafe(CollectorType*const ctPtr) :
     BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr)) } {}
 };/* ----------------------------------------------------------------------- */
@@ -428,14 +434,18 @@ template<class CollectorType, class MemberType, class IteratorType,
 class ICHelperUnsafe :                 // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public BaseType                      // ICHelper base class
-{ /* -- Initialise (un)registered entry without synchronisation ------------ */
-  IteratorType ICHelperInit(CollectorType*const ctPtr,
+{ /* -- Initialise registered entry without synchronisation ---------------- */
+  IteratorType ICHelperInit(           // cppcheck-suppress functionStatic
+    CollectorType*const ctPtr,
     MemberType*const mtPtr) const
       { return this->ICHelperBaseInit(ctPtr, mtPtr); }
-  IteratorType ICHelperInit(CollectorType*const ctPtr) const
-    { return this->ICHelperBaseInit(ctPtr); }
-  /* -- Push/Remove object into collector list ------------------ */ protected:
+  /* -- Initialise unregistered entry without synchronisation -------------- */
+  IteratorType ICHelperInit(           // cppcheck-suppress functionStatic
+    CollectorType*const ctPtr) const
+      { return this->ICHelperBaseInit(ctPtr); }
+  /* -- Push object into collector list ------------------------- */ protected:
   void ICHelperPush() { this->ICHelperBaseRegister(); }
+  /* -- Remove object into collector list ---------------------------------- */
   void ICHelperErase() { this->ICHelperBaseUnregister(); }
   /* -- Remove object from collector list ---------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
@@ -468,7 +478,9 @@ struct ICHelper :                      // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public LockType,                     // ICHelperSafe or ICHelperUnSafe
   public virtual Ident                 // Name of object (possibly shared)
-{ /* -- Swap registration with another class ------------------------------- */
+{ /* -- Value type --------------------------------------------------------- */
+  using ParentType = CollectorType;    // For some LuaUtil* functions
+  /* -- Swap registration with another class ------------------------------- */
   void CollectorSwapRegistration(const MemberType &mtObj)
     { this->ICHelperSwap(mtObj); }
   /* -- Register to list --------------------------------------------------- */
@@ -484,7 +496,7 @@ struct ICHelper :                      // Members initially public
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor (manual registration) ---------------------------------- */
-  explicit ICHelper(const string &strN, CollectorType*const ctPtr) :
+  explicit ICHelper(const StdString &strN, CollectorType*const ctPtr) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strN },                     // Initialise identifier
     LockType{ ctPtr }                  // Initialise with other collector
@@ -499,7 +511,7 @@ struct ICHelper :                      // Members initially public
   /* -- Constructor with automatic registration ---------------------------- */
   explicit ICHelper(
     /* -- Parameters ------------------------------------------------------- */
-    const string &strN,                // Set object identifier
+    const StdString &strN,             // Set object identifier
     CollectorType*const ctPtr,         // Pointer to collector class
     MemberType*const mtPtr             // Pointer to member class
     ): /* -- Initialisers -------------------------------------------------- */

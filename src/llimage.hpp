@@ -13,11 +13,8 @@
 // % Image
 /* ------------------------------------------------------------------------- */
 // ! This allows the programmer to manipulate images asynchronously and send
-// ! the objects to the OpenGL if needed.
-// !
-// ! The list and order of supported formats can is subject to change without
-// ! notice. Type 'imgfmts' in the console to see the most up to date list of
-// ! formats supported.
+// ! the objects to a 'Mask' or an OpenGL 'Font' or 'Texture' object. You can
+// ! use the console command 'imagefmts' to see what formats are usable.
 /* ========================================================================= */
 namespace LLImage {                    // Image namespace
 /* -- Dependencies --------------------------------------------------------- */
@@ -31,7 +28,7 @@ using namespace ITexDef::P;            using namespace Common;
 ** -- Create Image class argument ------------------------------------------ */
 struct AcImage : public ArClass<Image> {
   explicit AcImage(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Image>(lS, *cImages)}{} };
+    ArClass{LuaUtilClassCreateRef<Image>(lS, cImages)}{} };
 /* -- Read Image flags argument -------------------------------------------- */
 struct AgImageFlags : public AgFlags<ImageFlagsConst> {
   explicit AgImageFlags(lua_State*const lS, const int iArg) :
@@ -39,7 +36,7 @@ struct AgImageFlags : public AgFlags<ImageFlagsConst> {
 /* -- Read a dimension ----------------------------------------------------- */
 struct AgDimension : public AgUIntLGE {
   explicit AgDimension(lua_State*const lS, const int iArg) :
-    AgUIntLGE{ lS, iArg, 1, numeric_limits<uint16_t>::max() }{} };
+    AgUIntLGE{ lS, iArg, 1, StdLimits<uint16_t>::max() }{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Image:* member functions                                            ## **

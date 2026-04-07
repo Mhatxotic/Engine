@@ -13,9 +13,28 @@ namespace IStd {                       // Start of module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Returns if character is hexadecimal (0-9A-Fa-f) ---------------------- */
-template<typename IntType>
+template<typename IntType> requires StdIsInteger<IntType>
   constexpr static bool StdIsXDigit(const IntType itChar)
-    { return ::std::isxdigit(static_cast<int>(itChar)); }
+{ return ::std::isxdigit(static_cast<int>(itChar)); }
+/* -- Template to construct and reserve part of another object ------------- */
+template<class ClassType>
+  concept StdHasReserve = requires(ClassType &c, size_t n) { c.reserve(n); };
+template<class ClassType> requires StdHasReserve<ClassType>
+  struct StdReserved : public ClassType
+{ operator ClassType() const { return this; }
+  explicit StdReserved(const size_t stSize) { this->reserve(stSize); } };
+/* -- Template to construct and resize part of another object -------------- */
+template<class ClassType>
+  concept StdHasResize = requires(ClassType &c, size_t n) { c.resize(n); };
+template<class ClassType> requires StdHasResize<ClassType>
+  struct StdResized : public ClassType
+{ operator ClassType() const { return this; }
+  explicit StdResized(const size_t stSize) { this->resize(stSize); } };
+/* -- Remove const from a pointer ------------------------------------------ */
+template<typename TypeTo, typename TypeFrom, typename TypeNonConst =
+  StdRemoveConst<StdRemovePointer<TypeFrom>>*> requires StdIsPointer<TypeFrom>
+static TypeTo StdToNonConstCast(TypeFrom tfV)
+  { return reinterpret_cast<TypeTo>(const_cast<TypeNonConst>(tfV)); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -28,25 +47,19 @@ using namespace IStd::P;
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 typedef size_t     Codepoint;          // Type of a UTF-8 character
-/* -- Remove const from a pointer ------------------------------------------ */
-template<typename TypeTo, typename TypeFrom, typename TypeNonConst =
-  remove_const_t<remove_pointer_t<TypeFrom>>*>
-requires is_pointer_v<TypeFrom>
-static TypeTo UtfToNonConstCast(TypeFrom tfV)
-  { return reinterpret_cast<TypeTo>(const_cast<TypeNonConst>(tfV)); }
 /* -- Check if C-string is nullptr or blank -------------------------------- */
 template<typename PtrType>
   static bool UtfIsCStringValid(const PtrType*const ptpStr)
-    { return ptpStr && *ptpStr; }
+{ return ptpStr && *ptpStr; }
 /* ------------------------------------------------------------------------- */
 template<typename PtrType>
   static bool UtfIsCStringNotValid(const PtrType*const ptpStr)
-    { return !UtfIsCStringValid<PtrType>(ptpStr); }
+{ return !UtfIsCStringValid<PtrType>(ptpStr); }
 /* -- Structure for utf size and character code ---------------------------- */
 struct UtfEncoderEx final { const size_t l;
   const union { const uint8_t u8[5]; const char c[5]; } u; };
 /* -- Encode specified code and return string and size --------------------- */
-static const UtfEncoderEx UtfEncodeEx(const Codepoint cCode)
+static UtfEncoderEx UtfEncodeEx(const Codepoint cCode)
 { // Macro to extract bits from a codepoint (shift, and, or)
 #define X(s,a,o) static_cast<uint8_t>(((cCode >> s) & a) | o)
   // Normal ASCII character?
@@ -68,13 +81,13 @@ static const UtfEncoderEx UtfEncodeEx(const Codepoint cCode)
   return { 0, {{ 0, 0, 0, 0, 0 }} };
 }
 /* -- Encode specified code and append it to the specified string ---------- */
-static void UtfAppend(const Codepoint cCode, string &strDest)
+static void UtfAppend(const Codepoint cCode, StdString &strDest)
 { // Encoded UTF8 and append to string
   const UtfEncoderEx ueeCode{ UtfEncodeEx(cCode) };
   strDest.append(ueeCode.u.c, ueeCode.l);
 }
 /* ------------------------------------------------------------------------- */
-static const string UtfDecodeNum(uint32_t ulVal)
+static StdString UtfDecodeNum(uint32_t ulVal)
 { // Unset the un-needed upper 8-bits. This will act as the nullptr character.
   ulVal &= 0x00FFFFFF;
   // If we have any of the lower 24-bits set? Keep shifting the bits until the
@@ -108,7 +121,7 @@ static void UtfDecode(Codepoint &cState, Codepoint &cCode,
   else cState = 12;
 }
 /* -- Pop UTF character from start of string-------------------------------- */
-static bool UtfPopFront(string &strStr)
+static bool UtfPopFront(StdString &strStr)
 { // String is not empty?
   if(!strStr.empty())
   { // Get start of buffer
@@ -130,7 +143,7 @@ static bool UtfPopFront(string &strStr)
   return false;
 }
 /* -- Pop UTF character from end of string --------------------------------- */
-static bool UtfPopBack(string &strStr)
+static bool UtfPopBack(StdString &strStr)
 { // String is not empty?
   if(!strStr.empty())
   { // Get start of buffer and end of buffer
@@ -148,7 +161,7 @@ static bool UtfPopBack(string &strStr)
   return false;
 }
 /* -- Move UTF character from back of one string to the front of another --- */
-static bool UtfMoveBackToFront(string &strSrc, string &strDst)
+static bool UtfMoveBackToFront(StdString &strSrc, StdString &strDst)
 { // If string is not empty?
   if(!strSrc.empty())
   { // Get start of buffer and end of buffer
@@ -170,7 +183,7 @@ static bool UtfMoveBackToFront(string &strSrc, string &strDst)
   return false;
 }
 /* -- Move UTF character from front of one string to the back of another --- */
-static bool UtfMoveFrontToBack(string &strSrc, string &strDst)
+static bool UtfMoveFrontToBack(StdString &strSrc, StdString &strDst)
 { // If the string is not empty?
   if(!strSrc.empty())
   { // Get start of buffer
@@ -199,12 +212,11 @@ static bool UtfMoveFrontToBack(string &strSrc, string &strDst)
   return false;
 }
 /* == Convert a unicode or ansi string to UTF8 ----------------------------- */
-template<typename CharType>
-  static const string UtfFromWide(const CharType *ctPtr)
+template<typename CharType>static StdString UtfFromWide(const CharType *ctPtr)
 { // Empty string if nullptr or string empty
   if(UtfIsCStringNotValid<CharType>(ctPtr)) return {};
   // Output string
-  string strOut;
+  StdString strOut;
   // For each character. Get character and convert to UTF8
   do
   { // Encode character
@@ -216,9 +228,6 @@ template<typename CharType>
   // Return string
   return strOut;
 }
-/* -- Template to reserve part of another object --------------------------- */
-template<class AnyObject>struct Reserved : public AnyObject
-  { explicit Reserved(const size_t stSize) { this->reserve(stSize); } };
 /* -- UTF8 decoder helper class -------------------------------------------- */
 class UtfDecoder final                 // UTF8 string decoder helper
 { /* ----------------------------------------------------------------------- */
@@ -307,7 +316,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
   { // Ignore if at the end of the string or it is empty
     if(UtfFinished()) return 0;
     // Capture up to eight characters
-    Reserved<string> strMatched{ stMaximum };
+    StdReserved<StdString> strMatched{ stMaximum };
     // Add characters as long as they are valid hexadecimal characters and the
     // matched string has not reached eight characters. Anything that could be
     // unicode character should auto break anyway so this should be safe.
@@ -316,14 +325,14 @@ class UtfDecoder final                 // UTF8 string decoder helper
     // Return failure if nothing added
     if(strMatched.empty()) return 0;
     // Put value into input string stream
-    istringstream isS{ strMatched };
+    StdIStringStream isS{ strMatched };
     // Push value into integer
-    isS >> hex >> itOut;
+    isS >> StdIOSHex >> itOut;
     // Return bytes read
     return strMatched.length();
   }
   /* -- Slice string from pushed position to current position -------------- */
-  const string UtfSlice(const unsigned char*const ucpPos) const
+  const StdString UtfSlice(const unsigned char*const ucpPos) const
     { return { reinterpret_cast<const char*>(ucpPos),
         static_cast<size_t>(ucpPtr - ucpPos) }; }
   /* -- Return if string is valid ------------------------------------------ */
@@ -344,9 +353,9 @@ class UtfDecoder final                 // UTF8 string decoder helper
   /* -- Pop position ------------------------------------------------------- */
   void UtfSetCPtr(const unsigned char*const ucpPos) { ucpPtr = ucpPos; }
   /* -- Convert to wide string --------------------------------------------- */
-  const wstring UtfWide()
+  const StdWideString UtfWide()
   { // Output string
-    wstring wstrOut;
+    StdWideString wstrOut;
     // Add character to string
     while(const Codepoint cCode = UtfNext())
       wstrOut += static_cast<wchar_t>(cCode);
@@ -354,7 +363,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
     return wstrOut;
   }
   /* -- Constructor that initialises a pointer ----------------------------- */
-  template<typename PtrType> requires is_pointer_v<PtrType>
+  template<typename PtrType> requires StdIsPointer<PtrType>
     explicit UtfDecoder(PtrType ptSrc) :
     /* -- Initialisers ----------------------------------------------------- */
     ucpStr(reinterpret_cast<const unsigned char*>(
@@ -363,7 +372,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor that initialises any string object --------------------- */
-  template<class StrType> requires is_class_v<StrType>
+  template<class StrType> requires StdIsClass<StrType>
     explicit UtfDecoder(const StrType &stStr) :
     /* -- Initialisers ----------------------------------------------------- */
     ucpStr(reinterpret_cast<const unsigned char*>(stStr.data())),
@@ -371,7 +380,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- Word wrap a utf string --------------------------------------------- */
-static const StrVector UtfWordWrap(const string &strText, const size_t stWidth,
+static StrVector UtfWordWrap(const StdString &strText, const size_t stWidth,
   const size_t stIndent)
 { // Return empty array if width is invalid.
   if(!stWidth || stWidth <= stIndent) return {};
@@ -381,7 +390,7 @@ static const StrVector UtfWordWrap(const string &strText, const size_t stWidth,
   // The line list
   StrVector svLines;
   // Premade indent
-  string strIndent;
+  StdString strIndent;
   // Make string into utf string
   UtfDecoder udStr{ strText };
   // Save position

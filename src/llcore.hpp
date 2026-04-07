@@ -95,8 +95,9 @@ LLFUNC(CPUSysUsage, 1,
 // ? both cpu usage functions which are hard-coded to only update once a
 // ? a second so constant calls won't stress the kernel.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CPUUsage, 2, LuaUtilPushVar(lS,
-  cSystem->SysUpdateAndGetCPUUsage(), cSystem->CPUUsageSystem()))
+LLFUNC(CPUUsage, 2,
+  LuaUtilPushVar(lS, cSystem->SysUpdateAndGetCPUUsage(),
+    cSystem->CPUUsageSystem()))
 /* ========================================================================= */
 // $ Core.Delay
 // < Time:number=Delay time in seconds.
@@ -204,8 +205,7 @@ LLFUNC(Locale, 1, LuaUtilPushVar(lS, cSystem->OSLocale()))
 // ? originally spawned by the engine. Specifying pid zero will cause an
 // ? exception.
 /* ------------------------------------------------------------------------- */
-LLFUNC(KillPid, 1, const AgPid aPid{lS, 1};
-  LuaUtilPushVar(lS, cSystem->TerminatePid(aPid)))
+LLFUNC(KillPid, 1, LuaUtilPushVar(lS, cSystem->TerminatePid(AgPid{lS, 1})))
 /* ========================================================================= */
 // $ Core.Log
 // > Text:string=The line of text to write to the log.
@@ -425,7 +425,7 @@ LLFUNC(ScrollUp, 0, cConsole->MoveLogUp())
 // ? This is the same as updating the cvar 'app_delay' apart from that the cvar
 // ? is not updated and not saved.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetDelay, 0, const AgIntLG aMilliseconds{lS, 1, -1, 1000};
+LLFUNC(SetDelay, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
   cTimer->TimerUpdateDelay(aMilliseconds))
 /* ========================================================================= */
 // $ Core.SetIcon
@@ -592,7 +592,7 @@ LLRSKTEND                              // End of console colours
 LLRSKTBEGIN(Libraries)                 // Beginning of supported library ids
   LLRSKTITEM(CL_,MSE),  LLRSKTITEM(CL_,FT),   LLRSKTITEM(CL_,GLFW),
   LLRSKTITEM(CL_,JPEG), LLRSKTITEM(CL_,GIF),  LLRSKTITEM(CL_,PNG),
-  LLRSKTITEM(CL_,LUA),  LLRSKTITEM(CL_,LZMA), LLRSKTITEM(CL_,MP3),
+  LLRSKTITEM(CL_,LUA),  LLRSKTITEM(CL_,LZMA),
 #if !defined(WINDOWS)                  // Not using Windows?
   LLRSKTITEM(CL_,NCURSES),             // Id for NCurses credit data
 #endif                                 // Not using windows

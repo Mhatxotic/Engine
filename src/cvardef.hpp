@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace ICVarDef {                   // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IFlags;
+using namespace IFlags::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -123,7 +123,7 @@ BUILD_FLAGS(CVar,                      // CVar flags
           CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM }
 );/* ----------------------------------------------------------------------- */
 class CVarItem;                        // (Prototype) Cvar callback data
-typedef CVarReturn (*CbFunc)(CVarItem&, const string&); // Callback return type
+typedef CVarReturn (*CbFunc)(CVarItem&, const StdString&); // Cb return type
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -167,12 +167,12 @@ enum CVarEnums : size_t                // CVars list (cvarlib.hpp for bodies)
   APP_DESCRIPTION,  APP_VERSION,       APP_ICON,            APP_COPYRIGHT,
   APP_WEBSITE,      APP_TICKRATE,      APP_DELAY,           APP_TITLE,
   /* -- Error cvars -------------------------------------------------------- */
-  ERR_ADMIN,        ERR_CHECKSUM,      ERR_DEBUGGER,        ERR_LUAMODE,
-  ERR_LMRESETLIMIT, ERR_MINVRAM,       ERR_MINRAM,
+  ERR_ADMIN,        ERR_CHECKSUM,      ERR_DEBUGGER,        ERR_MINVRAM,
+  ERR_MINRAM,
   /* -- Lua cvars ---------------------------------------------------------- */
-  LUA_CACHE,        LUA_DEBUGLOCALS,   LUA_GCPAUSE,         LUA_GCSTEPMUL,
-  LUA_LASTVER,      LUA_RANDOMSEED,    LUA_SCRIPT,          LUA_SIZESTACK,
-  LUA_TICKCHECK,    LUA_TICKTIMEOUT,
+  LUA_CACHE,        LUA_DEBUGLOCALS,   LUA_ERRIGNORE,       LUA_ERRMODE,
+  LUA_GCPAUSE,      LUA_GCSTEPMUL,     LUA_LASTVER,         LUA_RANDOMSEED,
+  LUA_SCRIPT,       LUA_SIZESTACK,     LUA_TICKCHECK,       LUA_TICKTIMEOUT,
   /* -- Audio cvars -------------------------------------------------------- */
   AUD_DELAY,        AUD_VOL,           AUD_INTERFACE,       AUD_CHECK,
   AUD_NUMSOURCES,   AUD_SAMVOL,        AUD_STRBUFCOUNT,     AUD_STRBUFFER,
@@ -225,12 +225,12 @@ enum CVarEnums : size_t                // CVars list (cvarlib.hpp for bodies)
 struct CVarItemStatic                  // Start of CVar static struct
 { /* ----------------------------------------------------------------------- */
   const CoreFlagsConst cfcRequired;    // Required core flags
-  const string_view    strvVar,        // Variable name from C-String
+  const StdStringView  strvVar,        // Variable name from C-String
                        strvValue;      // Variable default value from C-String
   const CbFunc         cbTrigger;      // Callback trigger event
   const CVarFlagsConst cFlags;         // Variable flags
 };/* ----------------------------------------------------------------------- */
-typedef array<const CVarItemStatic, CVAR_MAX> CVarItemStaticList;
+typedef StdArray<const CVarItemStatic, CVAR_MAX> CVarItemStaticList;
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

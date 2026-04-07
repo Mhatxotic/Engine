@@ -34,14 +34,18 @@ namespace E {                          // Start of engine namespace
 #include "dir.hpp"                     // Directory handling utility header
 #include "util.hpp"                    // Miscellenious utilities header
 #include "sysutil.hpp"                 // System utilities header
-#include "clock.hpp"                   // Clock utilities header
+#include "clock.hpp"                   // Clock manager header
+#include "interval.hpp"                // Clock interval header
+#include "chrono.hpp"                  // Clock chronometer header
 #include "timer.hpp"                   // Timing utilities header
 #include "args.hpp"                    // Arguments handling header
 #include "cmdline.hpp"                 // Command-line class header
+#include "bit.hpp"                     // Utility bit access functions
 #include "memory.hpp"                  // Memory management utilities header
 #include "fstream.hpp"                 // File IO utility header
 #include "mutex.hpp"                   // Mutex helper class
 #include "log.hpp"                     // Logging helper class header
+#include "ifillcon.hpp"                // Init filled container header
 #include "luadef.hpp"                  // Lua definitions header
 #include "luaident.hpp"                // Lua ident class header
 #include "ihelper.hpp"                 // Init helper class header
@@ -74,7 +78,7 @@ namespace E {                          // Start of engine namespace
 #include "url.hpp"                     // Url parsing library
 #include "uuid.hpp"                    // UuId parsing header
 #include "codec.hpp"                   // Codec classes header
-#include "credits.hpp"                 // Credits handling class header
+#include "credit.hpp"                  // Credits handling class header
 #include "archive.hpp"                 // Archive handling class header
 #include "asset.hpp"                   // Asset handling class header
 #include "sql.hpp"                     // SQL database management header
@@ -92,7 +96,6 @@ namespace E {                          // Start of engine namespace
 #include "pfmtwav.hpp"                 // PcmLib WAV file codec
 #include "pfmtcaf.hpp"                 // PcmLib CAF file codec
 #include "pfmtogg.hpp"                 // PcmLib OGG file codec
-#include "pfmtmp3.hpp"                 // PcmLib MP3 file codec
 #include "pcm.hpp"                     // Pcm loader class header
 #include "fbocmd.hpp"                  // FBO object definitions header
 #include "fboblend.hpp"                // FBO blending definition header
@@ -163,11 +166,11 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
     { // Main procedure into creating and running the engine in 'core.cpp'
       int EngineMain() const try { return Core{}.CoreMain(); }
       // Safe loggable exception occured?
-      catch(const exception &eReason)
+      catch(const StdException &eReason)
       { // Send to log and show error message to user. Show message box and
         // return error status
         cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", eReason);
-        SysMessage("Main Thread Exception", eReason.what(), MB_ICONSTOP);
+        SysMessage("Main Thread Exception!", eReason.what(), MB_ICONSTOP);
         return 2;
       } // Constructor which processes command-line arguments and environment
       Engine(const int iArgs,          // Arguments count
@@ -180,9 +183,9 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
     }; // Create the engine object, run the main function and return its result
     return Engine{ __argc, __wargv, _wenviron }.EngineMain();
   } // Unsafe exception occured?
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Show message box and return error status
-    SysMessage("Main Init Exception", eReason.what(), MB_ICONSTOP);
+    SysMessage("Main Init Exception!", eReason.what(), MB_ICONSTOP);
     return 1;
   }
 }

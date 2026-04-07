@@ -38,11 +38,11 @@ using namespace Lib::Ogg::Types;
 ** -- Read Stream class argument ------------------------------------------- */
 struct AgStream : public ArClass<Stream> {
   explicit AgStream(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Stream>(lS, iArg, *cStreams)}{} };
+    ArClass{LuaUtilGetClassRef<Stream>(lS, iArg, cStreams)}{} };
 /* -- Create Stream class argument ----------------------------------------- */
 struct AcStream : public ArClass<Stream> {
   explicit AcStream(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Stream>(lS, *cStreams)}{} };
+    ArClass{LuaUtilClassCreateRef<Stream>(lS, cStreams)}{} };
 /* -- Read duration value -------------------------------------------------- */
 struct AgDuration : public AgNumberLG<ALdouble> {
   explicit AgDuration(lua_State*const lS, const int iArg, Stream &sCref):
@@ -194,7 +194,7 @@ LLFUNC(GetLoopEnd, 1, LuaUtilPushVar(lS, AgStream{lS, 1}().GetLoopEndSafe()))
 // ? Sets the new playback loop count.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetLoop, 0, AgStream{lS, 1}().SetLoopSafe(
-  AgIntegerLGE<ogg_int64_t>{lS, 2, -1, numeric_limits<ogg_int64_t>::max() }))
+  AgIntegerLGE<ogg_int64_t>{lS, 2, -1, StdLimits<ogg_int64_t>::max() }))
 /* ========================================================================= */
 // $ Stream:SetLoopRange
 // > Begin:integer=New beginning sample playback position of loop.

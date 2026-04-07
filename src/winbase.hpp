@@ -10,7 +10,7 @@
 /* == We'll put all these calls in a namespace ============================= */
 class SysBase                          // Members initially private
 { /* -- Custom exceptions -------------------------------------------------- */
-  static constexpr const DWORD         // Custom exceptions
+  constexpr static const DWORD         // Custom exceptions
     EXCEPTION_ABORT      = 0xF0000001, // Abornmal program termination
     EXCEPTION_ISA        = 0xF0000002, // Illegal storage access
     EXCEPTION_FPOINT     = 0xF0000003; // Floating point exception
@@ -19,14 +19,13 @@ class SysBase                          // Members initially private
   const ExCoList   eclStrings;         // Exception strings strings
   /* -- Private variables -------------------------------------------------- */
   HWND             hwndWindow;         // Main window handle being used
-  ostringstream    osS;                // Output stringstream
   /* ----------------------------------------------------------------------- */
   const UINT       uiOldErrorMode;            // Old error mode
   const _crt_signal_t fcbAbortCallback,       // Saved abort callback
                    fcbIllegalStorageAccess,   // " illegal storage access cb
                    fcbFloatingPointException; // " float point exception cb
   /* == Get environment ==================================================== */
-  void SEHDumpEnvironment() try
+  void SEHDumpEnvironment(StdOStringStream &osS) try
   { // Prepare formatted data
     Statistic tD;
     tD.Header("Variable").Header("Value", false).Reserve(10);
@@ -51,9 +50,9 @@ class SysBase                          // Members initially private
     } // Return formatted data
     tD.Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Get memory information ============================================= */
-  void SEHDumpMemoryStatus() try
+  void SEHDumpMemoryStatus(StdOStringStream &osS) try
   { // Get process memory info
     PROCESS_MEMORY_COUNTERS pD;
     pD.cb = sizeof(pD);
@@ -95,11 +94,11 @@ class SysBase                          // Members initially private
       .DataB(mD.ullAvailExtendedVirtual, 2)
       .DataN(int(mD.dwMemoryLoad) + '%').Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Get executable filename ============================================ */
-  const wstring SEHGetExecutableFileNameWithoutExtension()
+  const StdWideString SEHGetExecutableFileNameWithoutExtension()
   { // Storage for executable and crash log file name
-    wstring wstrExe; wstrExe.resize(MAX_PATH);
+    StdResized<StdWideString> wstrExe{ MAX_PATH };
     // Get executable file name
     wstrExe.resize(GetModuleFileName(nullptr,
       const_cast<wchar_t*>(wstrExe.data()), MAX_PATH));
@@ -110,7 +109,8 @@ class SysBase                          // Members initially private
     return wstrExe;
   }
   /* == Dump exception memory addresses ==================================== */
-  void SEHDumpExceptionMemoryAddresses(const EXCEPTION_RECORD &erData) try
+  void SEHDumpExceptionMemoryAddresses(StdOStringStream &osS,
+    const EXCEPTION_RECORD &erData) try
   { // Bail if exception code does not support this
     switch(erData.ExceptionCode)
     { // The first element of the array contains a read-write flag that
@@ -142,7 +142,7 @@ class SysBase                          // Members initially private
               dwParam < dwMax;
               dwParam += 2)
     { // Write where the access occured
-      osS << "\r\nThe memory at 0x"
+      osS << cCommon->CommonCrLf() << "The memory at 0x"
           << reinterpret_cast<void*>(erData.ExceptionInformation[dwParam+1])
           << " could not be ";
       // Write the action attempted
@@ -158,40 +158,41 @@ class SysBase                          // Members initially private
         case 1: osS << "written."; break;
         case 8: osS << "executed."; break;
         // Unknown? (Shouldn't get here)
-        default: osS << "0x" << hex << dwAccess << '.'; break;
+        default: osS << "0x" << StdIOSHex << dwAccess << '.'; break;
       } // Was an in-page error? Move the parameter count onwards by one and
       // plus two to get the third element. The next iteration will push by
       // two.
       if(erData.ExceptionCode == EXCEPTION_IN_PAGE_ERROR)
-        osS << "\r\nAn in page error occured with code 0x"
+        osS << cCommon->CommonCrLf() << "An in page error occured with code 0x"
             << erData.ExceptionInformation[(dwParam++)+2]
             << '!';
     }
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Dump registers to string =========================================== */
-  void SEHDumpRegisters(const CONTEXT *pcData) try
+  void SEHDumpRegisters(StdOStringStream &osS, const CONTEXT*const pcData) try
   { // Invalid context?
     if(!pcData)
-      throw runtime_error{ "No registers when context is null pointer!" };
+      throw StdRunTimeError{ "No registers when context is null pointer!" };
     // Get context from exception record
     const CONTEXT &cData = *pcData;
     // Helper macros
-#define PUSHINT(id,c,x,e) id "=" << setw(c) << cData.x << e
+#define PUSHINT(id,c,x,e) id "=" << StdIOSSetWidth(c) << cData.x << e
 #define D64(id,x,e) PUSHINT(id,16,x,e)
 #define D32(id,x,e) PUSHINT(id,8,x,e)
 #define D16(id,x,e) PUSHINT(id,4,x,e)
 #define D32X(id,x,e) id "=" \
-      << setw(8) << *reinterpret_cast<const uint32_t*>(&cData.x) << e
+      << StdIOSSetWidth(8) << *reinterpret_cast<const uint32_t*>(&cData.x) << e
 #define D128X(id,x,e) id "=" \
-      << setw(16) << *reinterpret_cast<const uint64_t*>(&cData.x)\
-      << setw(16) << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
-    const string &strCrLf = cCommon->CommonCrLf(),
+      << StdIOSSetWidth(16) << *reinterpret_cast<const uint64_t*>(&cData.x) \
+      << StdIOSSetWidth(16) \
+      << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
+    const StdString &strCrLf = cCommon->CommonCrLf(),
                  &strSpc = cCommon->CommonDblSpace();
     // Return registers
 #if defined(X64)
     // Write basic registers
-    osS << hex << setfill('0')
+    osS << StdIOSHex << StdIOSSetFill('0')
       << D64("Rax", Rax, strSpc)  << D64("Rbx", Rbx, strSpc)
       << D64("Rcx", Rcx, strCrLf) << D64("Rdx", Rdx, strSpc)
       << D64("Rsp", Rsp, strSpc)  << D64("Rbp", Rbp, strCrLf)
@@ -220,19 +221,20 @@ class SysBase                          // Members initially private
       << D64("LEfR", LastExceptionFromRip, strCrLf) << strCrLf;
     // Write floating point header state
     for(size_t stQuad = 0; stQuad < 2; stQuad += 2)
-      osS << D128X("XmmH" << dec << stQuad << hex <<,
+      osS << D128X("XmmH" << StdIOSDec << stQuad << StdIOSHex <<,
         Header[stQuad], strSpc)
-          << D128X("XmmH" << dec << (stQuad+1) << hex <<,
+          << D128X("XmmH" << StdIOSDec << (stQuad+1) << StdIOSHex <<,
         Header[stQuad+1], strCrLf);
     // Write floating point legacy state
     for(size_t stQuad = 0; stQuad < 8; stQuad += 2)
-      osS << D128X("XmmL" << dec << stQuad << hex <<,
+      osS << D128X("XmmL" << StdIOSDec << stQuad << StdIOSHex <<,
         Legacy[stQuad], strSpc)
-          << D128X("XmmL" << dec << (stQuad+1) << hex <<,
+          << D128X("XmmL" << StdIOSDec << (stQuad+1) << StdIOSHex <<,
         Legacy[stQuad+1], strCrLf);
     // Write floating point state
 # define XMM(x,e) << \
-      D128X("Xmm" << setw(2) << dec << x << hex <<, Xmm ## x, e)
+      D128X("Xmm" << StdIOSSetWidth(2) << StdIOSDec << x << StdIOSHex <<, \
+        Xmm ## x, e)
     osS XMM( 0,strSpc)  XMM( 1,strCrLf) XMM( 2,strSpc)  XMM( 3,strCrLf)
         XMM( 4,strSpc)  XMM( 5,strCrLf) XMM( 6,strSpc)  XMM( 7,strCrLf)
         XMM( 8,strSpc)  XMM( 9,strCrLf) XMM(10,strSpc)  XMM(11,strCrLf)
@@ -241,14 +243,14 @@ class SysBase                          // Members initially private
 # undef XMM
     // Write vector state
     for(size_t stQuad = 0; stQuad < 26; stQuad += 2)
-      osS << D128X("Vec" << setw(2) << dec << stQuad
-          << hex <<, VectorRegister[stQuad], strSpc)
-          << D128X("Vec" << setw(2) << dec << (stQuad+1)
-          << hex <<, VectorRegister[stQuad+1], strCrLf);
+      osS << D128X("Vec" << StdIOSSetWidth(2) << StdIOSDec << stQuad
+          << StdIOSHex <<, VectorRegister[stQuad], strSpc)
+          << D128X("Vec" << StdIOSSetWidth(2) << StdIOSDec << (stQuad+1)
+          << StdIOSHex <<, VectorRegister[stQuad+1], strCrLf);
     // Using 32-bit compiler?
 #elif defined(X86)
     // Write basic registers
-    osS << hex << setfill('0')
+    osS << StdIOSHex << StdIOSSetFill('0')
       << D32("Eax", Eax, strSpc) << D32("Ebx", Ebx, strSpc)
       << D32("Ecx", Ecx, strSpc) << D32("Edx", Edx, strCrLf)
       << D32("Esp", Esp, strSpc) << D32("Ebp", Ebp, strSpc)
@@ -274,21 +276,21 @@ class SysBase                          // Members initially private
                stY < WOW64_SIZE_OF_80387_REGISTERS;
                stY += sizeof(DWORD)*5)
       for(size_t stX = 0; stX < stZ; ++stX, ++stI)
-        osS << D32X("FRA" << setw(2) << dec << stI << hex <<,
-          FloatSave.RegisterArea[stY+(stX*sizeof(DWORD))],
-            (stX == 4 ? strCrLf : strSpc));
+        osS << D32X("FRA" << StdIOSSetWidth(2) << StdIOSDec << stI
+            << StdIOSHex <<, FloatSave.RegisterArea[stY+(stX*sizeof(DWORD))],
+              (stX == 4 ? strCrLf : strSpc));
     osS << strCrLf;
     // Write extended registers state
     for(size_t stI = 0, stY = 0, stZ = 5 % WOW64_MAXIMUM_SUPPORTED_EXTENSION;
                stY < WOW64_MAXIMUM_SUPPORTED_EXTENSION;
                stY += sizeof(DWORD)*5)
       for(size_t stX = 0; stX < stZ; ++stX, ++stI)
-        osS << D32X("ER" << setw(3) << dec << stI << hex <<,
-          ExtendedRegisters[stY+(stX*sizeof(DWORD))],
-          (stX == 4 ? strCrLf : strSpc));
+        osS << D32X("ER" << StdIOSSetWidth(3) << StdIOSDec << stI << StdIOSHex
+            <<, ExtendedRegisters[stY+(stX*sizeof(DWORD))],
+                  (stX == 4 ? strCrLf : strSpc));
 #endif
     // Set fill back to space
-    osS << setfill(' ');
+    osS << StdIOSSetFill(' ');
     // Done with helper macros
 #undef D128
 #undef D16
@@ -296,9 +298,9 @@ class SysBase                          // Members initially private
 #undef D64
 #undef PUSHINT
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Perform process dump =============================================== */
-  void SEHProcessDump() try
+  void SEHProcessDump(StdOStringStream &osS) try
   { // Prepare formatted data
     Statistic tData;
     tData.Header("Name").Header("Pid").Header("PPid").Header("Thr")
@@ -306,7 +308,7 @@ class SysBase                          // Members initially private
          .Header("Description", false).Header("Vendor", false)
          .Header("Path", false).Reserve(10);
     // Storage for filename
-    wstring wstrFN; wstrFN.resize(MAX_PATH);
+    StdResized<StdWideString>{ MAX_PATH };
     // Show modules
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     // Capture exceptions so we can clean up the snapshot handle
@@ -344,10 +346,11 @@ class SysBase                          // Members initially private
           tData.DataH(GetProcessAffinityMask(hProcess,
             &dwMask, &dwSys) ? dwMask : 0);
           // Get module file name and if succeeded?
+          StdResized<StdWideString> wstrFN{ MAX_PATH };
           if(GetModuleFileNameEx(hProcess, nullptr,
             const_cast<LPWSTR>(wstrFN.data()), MAX_PATH))
           { // Get version information
-            const SysModuleData vD{ StdMove(SysModule(WS16toUTF(wstrFN))) };
+            const SysModuleData vD{ StdMove(SysModule{ WS16toUTF(wstrFN) }) };
             // Push version, description vendor and filename (use .data())
             tData.DataF("$.$.$.$", vD.GetMajor(), vD.GetMinor(),
                     vD.GetRevision(), vD.GetBuild())
@@ -362,7 +365,7 @@ class SysBase                          // Members initially private
           // Done with process handle
           CloseHandle(hProcess);
         } // exception occured?
-        catch(const exception&)
+        catch(const StdException &)
         { // Close the process handle
           CloseHandle(hProcess);
           // Rethrow the exception
@@ -373,7 +376,7 @@ class SysBase                          // Members initially private
       // Done with snapshot
       CloseHandle(hSnapshot);
     } // exception occured?
-    catch(const exception&)
+    catch(const StdException &)
     { // Close the snapshot handle
       CloseHandle(hSnapshot);
       // Rethrow the exception
@@ -381,9 +384,9 @@ class SysBase                          // Members initially private
     } // Build output into string stream
     tData.Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Perform module dump ================================================ */
-  void SEHModuleDump() try
+  void SEHModuleDump(StdOStringStream &osS) try
   { // Prepare formatted data
     Statistic tD;
     tD.Header("Description").Header("Version", false)
@@ -400,7 +403,7 @@ class SysBase                          // Members initially private
       if(Module32First(hSnapshot, &medData) == TRUE) do
       { // Get module information
         const SysModuleData vD{
-          StdMove(SysModule(S16toUTF(medData.szExePath))) };
+          StdMove(SysModule{ S16toUTF(medData.szExePath) }) };
         // Print data
         tD.Data(vD.GetDesc()).Data(vD.GetVersion())
           .Data(vD.GetVendor()).DataW(medData.szExePath);
@@ -409,7 +412,7 @@ class SysBase                          // Members initially private
       // Done with handle
       CloseHandle(hSnapshot);
     } // If exception occured?
-    catch(const exception&)
+    catch(const StdException &)
     { // Close handle
       CloseHandle(hSnapshot);
       // Rethrow
@@ -417,17 +420,17 @@ class SysBase                          // Members initially private
     } // Build output into string stream
     tD.Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Perform stack dump ================================================= */
-  void SEHStackDump(const HANDLE hProcess, const HANDLE hThread,
-    const CONTEXT*const pcData) try
+  void SEHStackDump(StdOStringStream &osS, const HANDLE hProcess,
+    const HANDLE hThread, const CONTEXT*const pcData) try
   { // Ignore if no context
     if(!pcData)
-      throw runtime_error{ "No stacktrace when context is a null pointer!" };
+      throw StdRunTimeError{ "No stacktrace when context is a null pointer!" };
     // Initialise symbol reader and if succeeded?
     if(SymInitialize(hProcess, nullptr, TRUE))
     { // Auto clean-up symbol table
-      const unique_ptr<void, function<decltype(SymCleanup)>>
+      const StdUniquePtr<void, function<decltype(SymCleanup)>>
         uProcess{ hProcess, SymCleanup };
       // Get context from exception record
       const CONTEXT &cData = *pcData;
@@ -453,14 +456,14 @@ class SysBase                          // Members initially private
       size_t stFunctions = 0;
       // Walk the stack
       while(StackWalk(IMAGE_FILE_MACHINE, hProcess, hThread, &sfData,
-        UtfToNonConstCast<PVOID>(&cData), nullptr, SymFunctionTableAccess,
+        StdToNonConstCast<PVOID>(&cData), nullptr, SymFunctionTableAccess,
         SymGetModuleBase, nullptr))
       { // Add function number
-        osS << dec << stFunctions++ << ": ";
+        osS << StdIOSDec << stFunctions++ << ": ";
         // Is a null address? Ignore it
         if(!sfData.AddrPC.Offset)
         { // Ignore it so goto next function
-          osS << "<Null Address Pointer>\r\n";
+          osS << "<Null Address Pointer>" << cCommon->CommonCrLf();
           continue;
         } // Get module name and if succeeded?
         IMAGEHLP_MODULE ihmMod;
@@ -473,7 +476,7 @@ class SysBase                          // Members initially private
         // (or version 6.3 of the DbgHelp library) so we're stuck with ANSI
         // string functions.
         // Buffer for symbol name
-        string strName; strName.resize(MAX_PATH);
+        StdString strName; strName.resize(MAX_PATH);
         DWORD_PTR dwOffsetFromSym = 0;
         // Holds the memory for the symbol structure
         Memory aStruct{ sizeof(IMAGEHLP_SYMBOL)+255, true };
@@ -485,7 +488,7 @@ class SysBase                          // Members initially private
           ihsData))
         { // Get function name
           strName.resize(UnDecorateSymbolName(ihsData->Name,
-            UtfToNonConstCast<PSTR>(strName.data()),
+            StdToNonConstCast<PSTR>(strName.data()),
             static_cast<DWORD>(strName.length()), UNDNAME_COMPLETE));
           // Put in output string
           osS << strName << '@';
@@ -495,7 +498,7 @@ class SysBase                          // Members initially private
           case ERROR_INVALID_ADDRESS:
           // File not found? (This happens on Wine for some reason)
           case ERROR_FILE_NOT_FOUND:
-            osS << "0x" << hex << sfData.AddrPC.Offset << '@';
+            osS << "0x" << StdIOSHex << sfData.AddrPC.Offset << '@';
             break;
           // Any other code
           default: osS << "<SGSFA:" << SysError(dwCode) << ">@"; break;
@@ -504,28 +507,33 @@ class SysBase                          // Members initially private
         ihlLine.SizeOfStruct = sizeof(ihlLine);
         if(SymGetLineFromAddr(hProcess, sfData.AddrPC.Offset,
           reinterpret_cast<PDWORD>(&dwOffsetFromSym), &ihlLine))
-            osS << ihlLine.FileName << ':' << ihlLine.LineNumber << "\r\n";
+            osS << ihlLine.FileName << ':' << ihlLine.LineNumber <<
+              cCommon->CommonCrLf();
         // Failed so record reason why that couldn't be obtained
         else switch(const DWORD dwCode = SysErrorCode<DWORD>())
         { // Invalid address
           case ERROR_INVALID_ADDRESS:
-            osS << "<No Source Information>\r\n"; break;
+            osS << "<No Source Information>" << cCommon->CommonCrLf(); break;
           // Success? (This happens on Wine for some reason)
-          case ERROR_SUCCESS: osS << "<Unavailable>\r\n"; break;
+          case ERROR_SUCCESS:
+            osS << "<Unavailable>" << cCommon->CommonCrLf(); break;
           // Any other code
-          default: osS << "<SGLFA:" << SysError(dwCode) << ">!\r\n"; break;
+          default:
+            osS << "<SGLFA:" << SysError(dwCode) << ">!" <<
+              cCommon->CommonCrLf(); break;
         }
       }
     } // Show error
-    else osS << "SymInitialise failed: " << SysError() << ".\r\n";
+    else osS << "SymInitialise failed: " << SysError() << '.' <<
+      cCommon->CommonCrLf();
     // Done with these defines
 #undef ADDR_PC
 #undef ADDR_FRAME
 #undef IMAGE_FILE_MACHINE
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Dump summary to file =============================================== */
-  DWORD SEHWrite(const HANDLE hH, const string &strS)
+  DWORD SEHWrite(const HANDLE hH, const StdString &strS)
   { // Bytes out
     DWORD dwW;
     // Write data. MS says dwOut is optional, but the app crashes if you set
@@ -536,114 +544,132 @@ class SysBase                          // Members initially private
     return dwW;
   }
   /* == Create a subtitle for the output =================================== */
-  void SEHSubTitle(const string &strS)
+  void SEHSubTitle(StdOStringStream &osS, const StdString &strS)
   { // Build title and underline
-    osS << strS << "\r\n" << string(strS.length(), '=') << "\r\n";
+    osS << strS << cCommon->CommonCrLf() << StdString(strS.length(), '=') <<
+      cCommon->CommonCrLf();
   }
   /* == Dump file information ============================================== */
-  void SEHDumpFileInfo(const wstring &wstrFile) try
+  void SEHDumpFileInfo(StdOStringStream &osS,
+    const StdWideString &wstrFile) try
   { // Get system time
     SYSTEMTIME stData;
     GetLocalTime(&stData);
     // Write data
-    osS << dec << "Date/Time: "
-        << right << setfill('0') << setw(2) << stData.wDay
-        << '/' << setw(2) << stData.wMonth
-        << '/' << setw(4) << stData.wYear
-        << ' ' << setw(2) << stData.wHour
-        << ':' << setw(2) << stData.wMinute
-        << ':' << setw(2) << stData.wSecond
-        << '.' << setw(3) << stData.wMilliseconds << ".\r\n"
-           "Filename: " << WS16toUTF(wstrFile) << ".\r\n"
-           "Arguments: " << S16toUTF(GetCommandLine()) << ".\r\n"
-           "\r\n";
+    osS << StdIOSDec << "Date/Time: "
+        << StdIOSRight << StdIOSSetFill('0') << StdIOSSetWidth(2)
+        << stData.wDay
+        << '/' << StdIOSSetWidth(2) << stData.wMonth
+        << '/' << StdIOSSetWidth(4) << stData.wYear
+        << ' ' << StdIOSSetWidth(2) << stData.wHour
+        << ':' << StdIOSSetWidth(2) << stData.wMinute
+        << ':' << StdIOSSetWidth(2) << stData.wSecond
+        << '.' << StdIOSSetWidth(3) << stData.wMilliseconds
+        << '.' << cCommon->CommonCrLf()
+        << "Filename: " << WS16toUTF(wstrFile) << '.' <<
+          cCommon->CommonCrLf()
+        << "Arguments: " << S16toUTF(GetCommandLine()) << '.' <<
+          cCommon->CommonCrLf2();
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Dump string to file ================================================ */
-  void SEHDumpLog(const CONTEXT *cData, const string &strDialog) try
+  void SEHDumpLog(StdOStringStream &osS, const CONTEXT*const cData,
+    const StdString &strDialog) try
   { // Get filename
-    const wstring wstrFile{ SEHGetExecutableFileNameWithoutExtension() +
-      L".dbg" };
+#define LIFY2(x) L ## x
+#define LIFY(x) LIFY2(x)
+    const StdWideString wstrFile{
+      SEHGetExecutableFileNameWithoutExtension() +
+        L"." LIFY(CRASH_EXTENSION) };
+#undef LIFY
+#undef LIFY2
     // Open dump file and return if failed
     const HANDLE hFile = CreateFile(wstrFile.data(), GENERIC_WRITE, 0, 0,
       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
     if(hFile == INVALID_HANDLE_VALUE) return;
     // Capture exceptions so we can close the file
     try
-    { // Write data
-      SEHSubTitle("Basic");       SEHDumpFileInfo(wstrFile);
-      SEHSubTitle("Summary");     osS << strDialog << "\r\n";
-      SEHSubTitle("Registers");   SEHDumpRegisters(cData);    osS << "\r\n";
-      SEHSubTitle("Memory");      SEHDumpMemoryStatus();      osS << "\r\n";
-      SEHSubTitle("Environment"); SEHDumpEnvironment();       osS << "\r\n";
-      SEHSubTitle("Modules");     SEHModuleDump();            osS << "\r\n";
-      SEHSubTitle("Processes");   SEHProcessDump();           osS << "\r\n";
-      SEHSubTitle("Log");
-      cLog->LogGetBufferLines(osS);                           osS << "\r\n";
-      SEHSubTitle("End-of-File");
-      // Write the log and throw if failed
+    { // Write basic information (executable, time, arguments)
+      SEHSubTitle(osS, "Basic");
+        SEHDumpFileInfo(osS, wstrFile);
+      // Write the crash summary
+      SEHSubTitle(osS, "Summary");
+        osS << strDialog << cCommon->CommonCrLf();
+      // Write the crash registers
+      SEHSubTitle(osS, "Registers");
+        SEHDumpRegisters(osS, cData);
+        osS << cCommon->CommonCrLf();
+      // Write memory information
+      SEHSubTitle(osS, "Memory");
+        SEHDumpMemoryStatus(osS);
+        osS << cCommon->CommonCrLf();
+      // Write environment variables
+      SEHSubTitle(osS, "Environment");
+        SEHDumpEnvironment(osS);
+        osS << cCommon->CommonCrLf();
+      // Write modules
+      SEHSubTitle(osS, "Modules");
+        SEHModuleDump(osS);
+        osS << cCommon->CommonCrLf();
+      // Write processes
+      SEHSubTitle(osS, "Processes");
+        SEHProcessDump(osS);
+        osS << cCommon->CommonCrLf();
+      // Write engine log
+      SEHSubTitle(osS, "Log");
+        cLog->LogGetBufferLines(osS);
+        osS << cCommon->CommonCrLf();
+      // Write the final end-of-file label
+      SEHSubTitle(osS, "End-of-File");
+      // Commit the log to crash file
       SEHWrite(hFile, osS.str());
       // Close handle
       CloseHandle(hFile);
-    } // If exception occured?
-    catch(const exception&)
-    { // Close handle
-      CloseHandle(hFile);
-      // Rethrow
-      throw;
-    }
+    } // If exception occured? Just close the file
+    catch(const StdException &) { CloseHandle(hFile); }
   } // Shouldn't happen but just incase
-  catch(const exception&) {}
+  catch(const StdException &) {}
   /* == Build summary ====================================================== */
-  const string SEHGetSummary(const EXCEPTION_POINTERS &epData) try
-  { // Get exception record
+  const StdString SEHGetSummary(const EXCEPTION_POINTERS &epData) try
+  { // String builder
+    StdOStringStream osS;
+    // Get exception record
     const EXCEPTION_RECORD &erData = *epData.ExceptionRecord;
     // Build message for dialog box
     osS << "The instruction at address 0x" << erData.ExceptionAddress
         << " of thread " << GetCurrentThreadId()
         << " in process " << GetCurrentProcessId()
-        << " caused exception 0x" << hex << erData.ExceptionCode
+        << " caused exception 0x" << StdIOSHex << erData.ExceptionCode
         << " (" << eclStrings.Get(erData.ExceptionCode)
-        << ") with flags 0x" << erData.ExceptionFlags << dec << '.';
-    SEHDumpExceptionMemoryAddresses(erData);
-    osS << "\r\n\r\n";
-    // Check for illegal instruction?
+        << ") with flags 0x" << erData.ExceptionFlags << StdIOSDec << '.';
+    SEHDumpExceptionMemoryAddresses(osS, erData);
+    osS << cCommon->CommonCrLf2();
+    // Check for illegal instruction? Add extra information
     if(erData.ExceptionCode == EXCEPTION_ILLEGAL_INSTRUCTION)
-    { // Add extra information
       osS << "This illegal instruction exception usually indicates that this "
              BUILD_TARGET " compiled binary is NOT compatible with your "
-             "operating system and/or central processing unit. "
-#if defined(X64)                       // Special message for 64-bit system?
-             "Since you are running the 64-bit version of this binary, please "
-             "consider trying the 32-bit version instead."
-#elif defined(X86)                     // Special message for 32-bit system?
-             "Since you are running the 32-bit version of this binary, you "
-             "may need to upgrade your operating system and/or central "
-             "processing unit. If you originally tried the 64-bit version and "
-             "you still got the same error then you may need to report this "
-             "issue as a bug."
-#endif
-             "\r\n\r\n";
-    } // Add stack dump[
-    SEHStackDump(GetCurrentProcess(), GetCurrentThread(),
+             "central processing unit."
+          << cCommon->CommonCrLf2();
+    // Add stack dump[
+    SEHStackDump(osS, GetCurrentProcess(), GetCurrentThread(),
       epData.ContextRecord);
     // Return string
     return osS.str();
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { return eReason.what(); }
+  catch(const StdException &eReason) { return eReason.what(); }
   /* == Method for exception handler ======================================= */
   static LONG WINAPI HandleExceptionStatic(LPEXCEPTION_POINTERS);
   LONG HandleException(const EXCEPTION_POINTERS &epData) try
   { // Check exception record
     if(!epData.ExceptionRecord)
-      throw runtime_error{ "The engine crash handler was called "
-                           "but with a null pointer exception record!" };
+      throw StdRunTimeError{ "The engine crash handler was called but with a "
+                             "null address exception record!" };
     // Prepare summary
-    const string strDialog{ SEHGetSummary(epData) };
-    // Clear string stream
-    osS.str(cCommon->CommonCBlank());
+    const StdString strDialog{ SEHGetSummary(epData) };
+    // Make a shared string stream
+    StdOStringStream osS;
     // Write the log file
-    SEHDumpLog(epData.ContextRecord, strDialog);
+    SEHDumpLog(osS, epData.ContextRecord, strDialog);
     // No need to show anything if we're in a debugger
     if(IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH;
     // Show message box
@@ -652,7 +678,7 @@ class SysBase                          // Members initially private
     // We handled the exception
     return EXCEPTION_EXECUTE_HANDLER;
   } // This shouldn't happen but just incase
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Show message box
     MessageBox(hwndWindow, UTFtoS16(eReason.what()).data(),
       L"exception in unhandled exception", MB_ICONSTOP);

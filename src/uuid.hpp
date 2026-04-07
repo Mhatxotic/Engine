@@ -31,7 +31,7 @@ struct UuId                            // Members initially public
     /* --------------------------------------------------------------------- */
   } d;                                 // Member to hold uuid data
   /* -- Initialise randomised UUID -------------------------------- */ private:
-  static const Struct UuIdRandom()
+  static Struct UuIdRandom()
   { // Initialise a random struct
     Struct uuidData;
     CryptRandomPtr(&uuidData.ucRandom, sizeof(uuidData.ucRandom));
@@ -44,8 +44,7 @@ struct UuId                            // Members initially public
     return uuidData;
   }
   /* -- Initialise UUID from two quads ------------------------------------- */
-  static const Struct UuIdReadTwoQuads(const uint64_t ull1,
-    const uint64_t ull2)
+  static Struct UuIdReadTwoQuads(const uint64_t ull1, const uint64_t ull2)
   { // Structure to return
     Struct uuidData;
     uuidData.ullRandom[0] = ull1;
@@ -53,7 +52,7 @@ struct UuId                            // Members initially public
     return uuidData;
   }
   /* -- Initialise UUID from C-string -------------------------------------- */
-  static const Struct UuIdReadString(const string &strUUID)
+  static Struct UuIdReadString(const StdString &strUUID)
   { // Check that the uuid is formatted properly
     if(strUUID.length() != 36  ||      // 00000000-0000-0000-000000000000 [36]
        strUUID[8]       != '-' ||      // 00000000{-}0000-0000-000000000000
@@ -86,23 +85,23 @@ struct UuId                            // Members initially public
     } };
   }
   /* -- Convert UUID to string ------------------------------------- */ public:
-  const string UuIdToString() const
+  const StdString UuIdToString() const
   { // Return result
-    return StrAppend(hex, setfill('0'), right,
-      setw(8), d.p.dwTimeLow,                                '-', // %08x-
-      setw(4), d.p.wTimeMid,                                 '-', // %04x-
-      setw(4), d.p.wTimeHiAndVer,                            '-', // %04x-
-      setw(2), static_cast<unsigned int>(d.p.ucClkSeqHiRes),      // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucClkSeqLow),   '-', // %02x-
-      setw(2), static_cast<unsigned int>(d.p.ucNode[0]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[1]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[2]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[3]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[4]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[5]));         // %02x
+    return StrAppend(StdIOSHex, StdIOSSetFill('0'), StdIOSRight,
+      StdIOSSetWidth(8), d.p.dwTimeLow,                           '-', // %08x-
+      StdIOSSetWidth(4), d.p.wTimeMid,                            '-', // %04x-
+      StdIOSSetWidth(4), d.p.wTimeHiAndVer,                       '-', // %04x-
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucClkSeqHiRes), // %02x
+     StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucClkSeqLow),'-',// %02x-
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[0]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[1]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[2]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[3]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[4]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[5]));    // %02x
   }
   /* -- Constructor to init from string ------------------------------------ */
-  explicit UuId(const string &strUUID) :
+  explicit UuId(const StdString &strUUID) :
     /* -- Initialisers ----------------------------------------------------- */
     d{ UuIdReadString(strUUID) }       // Read STL string and store result
     /* -- No code ---------------------------------------------------------- */

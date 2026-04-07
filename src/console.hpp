@@ -16,13 +16,17 @@ using namespace ICommon::P;            using namespace IConDef::P;
 using namespace IConLib::P;            using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags;                using namespace IGlFW::P;
-using namespace IHelper::P;            using namespace ILog::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISocket::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITimer::P;
-using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace IFlags::P;             using namespace IGlFW::P;
+using namespace IHelper::P;            using namespace IInterval::P;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISocket::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITimer::P;             using namespace IToken::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+/* -- Aliases -------------------------------------------------------------- */
+template<typename AnyType>using StdQueue = ::std::queue<AnyType>;
+using StdWOStream = ::std::wostream;
+constexpr static StdWOStream &(*StdIOSWEndLine)(StdWOStream&) = std::endl;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -55,7 +59,7 @@ BUILD_FLAGS(Redraw,                    // Redraw terminal or graphical console
   /* ----------------------------------------------------------------------- */
   RD_BOTH{ RD_TEXT|RD_GRAPHICS }       // All flags
 );/* ----------------------------------------------------------------------- */
-MAPPACK_BUILD(Cmd, const string, const ConLib) // Map of commands type
+MAPPACK_BUILD(Cmd, const StdString, const ConLib) // Map of commands type
 /* ========================================================================= */
 struct Console;                        // Class prototype
 static Console *cConsole = nullptr;    // Pointer to global class
@@ -72,7 +76,9 @@ struct Console :                       // Members initially private
     stConCmdMinLength = 1,             // Minimum length of a console command
     stConCmdMaxLength = 255;           // Maximum length of a console command
   /* -- Private typedefs ------------------------------------------ */ private:
-  typedef queue<ConLine> ConLineQueue; // Pending console lines
+  typedef StdQueue<ConLine> ConLineQueue; // Pending console lines
+  /* -- Aliases ------------------------------------------------------------ */
+  constexpr static auto StdIOSSetFillWc = ::std::setfill<wchar_t>;
   /* -- Input -------------------------------------------------------------- */
   ConLineQueue     clqOutput;          // Console lines pending
   ConLinesConstRevIt clriPosition;     // Console output position
@@ -83,7 +89,7 @@ struct Console :                       // Members initially private
                    stMaxInputLine,     // Maximum no. of chars in input
                    stMaxOutputLine,    // Maximum no. of chars per output line
                    stMaxOutputLineE;   // Maximum no. of chars with ellipsis
-  string           strConsoleBegin,    // Console input line (before cursor)
+  StdString        strConsoleBegin,    // Console input line (before cursor)
                    strConsoleEnd;      // Console input line (after cursor)
   ssize_t          sstPageLines,       // Lines to move when paging up or down
                    sstPageLinesNeg;    // As above but negative version
@@ -91,14 +97,14 @@ struct Console :                       // Members initially private
                    rfFlags;            // Redraw flags
   ConColour        ccTextColour;       // Console text colour
   /* -- Text mode ---------------------------------------------------------- */
-  ClockInterval<>  ciOutputRefresh,    // Next screen buffer update time
-                   ciInputRefresh;     // Time to wait before next peek
-  string           strStatusLeft,      // Text-mode console left status text
+  Interval         ivOutputRefresh,    // Next screen buffer update time
+                   ivInputRefresh;     // Time to wait before next peek
+  StdString        strStatusLeft,      // Text-mode console left status text
                    strStatusRight;     // Text-mode console right status text
-  string_view      strvTimeFormat;     // Default time format
+  StdStringView    strvTimeFormat;     // Default time format
   /* -- Autocomplete ------------------------------------------------------- */
   AutoCompleteFlags acFlags;           // Flags for autocomplete
-  typedef set<string>                  AuComItSet;
+  typedef StdSet<StdString>            AuComItSet;
   typedef AuComItSet::const_iterator   AuComItSetConstIt;
   AuComItSet        acisList;          // Autocompleted strings list
   AuComItSetConstIt acisciCurrent;     // Current position iterator
@@ -133,7 +139,7 @@ struct Console :                       // Members initially private
       if(slHistory.cbegin() != slciIt) { slHistory.pop_front(); continue; }
       // Now we know that this iterator is selected we can erase the rest
       slriInputPosition = StrListConstRevIt{
-        slHistory.erase(slHistory.cbegin(), next(slHistory.cbegin(),
+        slHistory.erase(slHistory.cbegin(), StdNext(slHistory.cbegin(),
           static_cast<ssize_t>((slHistory.size() - 1) - GetInputMaximum()))) };
       // Done
       break;
@@ -149,8 +155,8 @@ struct Console :                       // Members initially private
   RedrawFlags &GetRedrawFlags() { return rfFlags; }
   RedrawFlags &GetDefaultRedrawFlags() { return rfDefault; }
   /* -- Get input strings -------------------------------------------------- */
-  string &GetConsoleBegin() { return strConsoleBegin; }
-  string &GetConsoleEnd() { return strConsoleEnd; }
+  StdString &GetConsoleBegin() { return strConsoleBegin; }
+  StdString &GetConsoleEnd() { return strConsoleEnd; }
   /* -- Return maximum number of output history lines ---------------------- */
   size_t GetOutputMaximum() const { return stOutputMaximum; }
   /* -- Return maximum number of input history lines ----------------------- */
@@ -161,7 +167,7 @@ struct Console :                       // Members initially private
   /* -- Clear console and redraw ------------------------------------------- */
   void Flush() { DoFlush(); SetRedraw(); }
   /* -- Add specified command line to history ------------------------------ */
-  void AddHistory(const string &strCmdLine)
+  void AddHistory(const StdString &strCmdLine)
   { // Service room for one more input line
     ReserveHistoryLines(1);
     // Add input line to history
@@ -185,7 +191,7 @@ struct Console :                       // Members initially private
     // Grab the word where the cursor is in line to autocomplete
     const size_t stBPos = strConsoleBegin.find_last_of(' '),
                  stEPos = strConsoleEnd.find(' ');
-    const string strWord{ (stBPos == StdNPos
+    const StdString strWord{ (stBPos == StdNPos
       ? strConsoleBegin : strConsoleBegin.substr(stBPos + 1)) +
                           (stEPos == StdNPos
       ? strConsoleEnd : strConsoleEnd.substr(0, stEPos)) };
@@ -202,7 +208,7 @@ struct Console :                       // Members initially private
                         cmiIt != cmMap.cend();
                       ++cmiIt)
       { // Get string and break if prefix doesn't match this command
-        const string &strKey = cmiIt->first;
+        const StdString &strKey = cmiIt->first;
         if(strKey.compare(0, strWord.size(), strWord)) break;
         // Insert command into list. It HAS to copy the full string incase the
         // specified command is unregistered whilst enumerating.
@@ -212,7 +218,7 @@ struct Console :                       // Members initially private
                          cvmiIt != cCVars->GetVarListEnd();
                        ++cvmiIt)
       { // Get string and break if prefix doesn't match this command
-        const string &strKey = cvmiIt->first;
+        const StdString &strKey = cvmiIt->first;
         if(strKey.compare(0, strWord.size(), strWord)) break;
         // Insert cvar into list. It HAS to copy the full string incase the
         // specified cvar is unregistered whilst enumerating.
@@ -221,7 +227,7 @@ struct Console :                       // Members initially private
       acisciCurrent = acisList.cbegin();
       if(acisciCurrent == acisList.cend()) return false;
     } // Get reference name of item and return failed if comparison failed
-    const string &strKey = *acisciCurrent;
+    const StdString &strKey = *acisciCurrent;
     // We found the word so now we need to replace it with the actual command.
     strConsoleBegin = stBPos == StdNPos ?
       strKey : StrAppend(strConsoleBegin.substr(0, stBPos + 1), strKey);
@@ -235,14 +241,14 @@ struct Console :                       // Members initially private
   bool InputEmpty()
     { return strConsoleBegin.empty() && strConsoleEnd.empty(); }
   /* -- Return text input -------------------------------------------------- */
-  const string InputText()
+  const StdString InputText()
     { return StrAppend(strConsoleBegin, strConsoleEnd); }
   /* -- OnExecute event ------------------------ Execute inputted command -- */
   void Execute()
   { // Do not proceed further if no text is inputted
     if(InputEmpty()) return;
     // Build command by appending text before and after the cursor.
-    const string strCmd{ InputText() };
+    const StdString strCmd{ InputText() };
     // Clear current text input now we have it here
     DoClearInput();
     // Split command-line into arguments and process them if not empty
@@ -261,7 +267,7 @@ struct Console :                       // Members initially private
   }
   /* -- OnForceRedraw ------------------- Force a terminal display update -- */
   void OnForceRedraw(const EvtMainEvent&)
-    { SetRedraw(); ciOutputRefresh.CISync(); }
+    { SetRedraw(); ivOutputRefresh.CISync(); }
   /* -- OnKeyPress ---------------------------------- Console key pressed -- */
   void OnKeyPress(const int iKey, const int iAction, const int iMods)
   { // Key released? Ignore
@@ -336,12 +342,12 @@ struct Console :                       // Members initially private
     SetRedraw();
   }
   /* -- Scroll to the specified text in console backlog -------------------- */
-  bool FindText(const string &strWhat)
+  bool FindText(const StdString &strWhat)
   { // Return if we find the specified text where the viewer is viewing
     if(empty() || clriPosition == crend()) return false;
     // Find string in list and return if not found
     const ConLinesConstRevIt clcriIt{
-      StdFindIf(seq, next(clriPosition), crend(),
+      StdFindIf(seq, StdNext(clriPosition), crend(),
         [&strWhat](const ConLine &clLine)->bool
           { return clLine.strLine.find(strWhat) != StdNPos; }) };
     if(clcriIt == crend()) return false;
@@ -366,7 +372,7 @@ struct Console :                       // Members initially private
     // value since we're moving forwards
     if(distance(clriBegin, clriEnd) < sstAmount) clriPosition = clriReset;
     // Can safely advance forwards
-    else advance(clriPosition, sstMove);
+    else StdAdvance(clriPosition, sstMove);
   }
   /* -- Functions to move the active console line -------------------------- */
   void MoveLogHome()
@@ -384,7 +390,7 @@ struct Console :                       // Members initially private
     { MoveLogPage(crbegin(), clriPosition, crbegin(),
         sstPageLines, sstPageLinesNeg); }
   /* -- Set console input -------------------------------------------------- */
-  void SetInput(const string &strInput)
+  void SetInput(const StdString &strInput)
   { // Set requested line
     strConsoleBegin = strInput;
     strConsoleEnd.clear();
@@ -392,7 +398,7 @@ struct Console :                       // Members initially private
     SetRedraw();
   }
   /* -- Set input buffer of specified cvar --------------------------------- */
-  void SetVarInput(const string &strVar)
+  void SetVarInput(const StdString &strVar)
   { // Return if the cvar doesn't exist
     const CVarMapIt cvmMapIt{ cCVars->FindVariable(strVar) };
     if(cvmMapIt == cCVars->GetVarListEnd())
@@ -409,7 +415,8 @@ struct Console :                       // Members initially private
     if(slriInputPosition == slHistory.crend())
       slriInputPosition = slHistory.crbegin();
     // Move back towards beginning of list if we can
-    else if(next(slriInputPosition) != slHistory.crend()) ++slriInputPosition;
+    else if(StdNext(slriInputPosition) != slHistory.crend())
+      ++slriInputPosition;
     // Set new input
     SetInput(*slriInputPosition);
   }
@@ -485,6 +492,8 @@ struct Console :                       // Members initially private
   bool IsHidingGraphicalConsole()
     { return cSystem->SysIsTextMode() &&
              !cCVars->CVarsGetInternal<bool>(CON_GCWTERM); }
+  /* -- Force hide the console --------------------------------------------- */
+  void HideConsole() { FlagClear(CF_ENABLED); }
   /* -- Do Set Console status ---------------------------------------------- */
   bool SetVisible(const bool bState)
   { // Can't change state?
@@ -510,7 +519,7 @@ struct Console :                       // Members initially private
     } // Disabled and not disabled?
     else if(!bState && IsVisible())
     { // Set console disabled and clear redraw flag
-      FlagClear(CF_ENABLED);
+      HideConsole();
       // Log that the console has been disabled
       cLog->LogDebugSafe("Console visibility disabled.");
     } // Nothing changed? Log the request
@@ -520,9 +529,9 @@ struct Console :                       // Members initially private
     return false;
   }
   /* -- Execute arguments list --------------------------------------------- */
-  void ExecuteArguments(const string &strCmd, const Args &aList)
+  void ExecuteArguments(const StdString &strCmd, const Args &aList)
   { // Get var or command name
-    const string &strVarOrCmd = aList.front();
+    const StdString &strVarOrCmd = aList.front();
     if(strVarOrCmd.empty()) return;
     // Get if we're already at the bottom of the log
     const bool bAtBottom = clriPosition == rbegin();
@@ -541,7 +550,7 @@ struct Console :                       // Members initially private
     const CmdMapConstIt cmciIt{ cmMap.find(strVarOrCmd) };
     if(cmciIt == cmMap.cend())
     { // Output string
-      ostringstream osS;
+      StdOStringStream osS;
       // If the cvar exists?
       const CVarMapIt cvmMapIt{ cCVars->FindVariable(strVarOrCmd) };
       if(cvmMapIt != cCVars->GetVarListEnd())
@@ -633,7 +642,7 @@ struct Console :                       // Members initially private
       // Enough parameters so capture exceptions so we can't halt execution
       else try { clData.ccfFunc(aList); }
       // exception did occur
-      catch(const exception &eReason)
+      catch(const StdException &eReason)
       { // Print the output in the console
         ConsoleAddLineA("Console CB failed! > ", eReason);
         // Force the console to be shown because the callback might have
@@ -679,7 +688,7 @@ struct Console :                       // Members initially private
           if(cbegin() != clciIt) { pop_front(); continue; }
           // Get items remaining to remove
           clriPosition = ConLinesConstRevIt{ erase(cbegin(),
-            next(cbegin(), static_cast<ssize_t>(size() - stRemove))) };
+            StdNext(cbegin(), static_cast<ssize_t>(size() - stRemove))) };
           // Done
           break;
         } // ...Until we have cleared enough lines
@@ -716,8 +725,8 @@ struct Console :                       // Members initially private
   const ConLinesConstRevIt GetConBufPos() const { return clriPosition; }
   const ConLinesConstRevIt GetConBufPosEnd() { return rend(); }
   /* -- Set console input status bar (left and right) ---------------------- */
-  void SetStatusLeft(const string &strValue) { strStatusLeft = strValue; }
-  void SetStatusRight(const string &strValue) { strStatusRight = strValue; }
+  void SetStatusLeft(const StdString &strValue) { strStatusLeft = strValue; }
+  void SetStatusRight(const StdString &strValue) { strStatusRight = strValue; }
   /* -- Clear both statuses ------------------------------------------------ */
   void ConsoleClearStatus()
   { // Clear left if empty
@@ -734,15 +743,18 @@ struct Console :                       // Members initially private
   }
   /* -- Tick for stdout render --------------------------------------------- */
   void ConsoleFlushToTerminal()
-  { // Return if no data
+  { // Get handle to wide output in terminal
+    static auto &StdWcOut = ::std::wcout;
+    // Return if no data
     if(clqOutput.empty()) return;
     // Setup output
-    wcout << fixed << setprecision(6) << setfill(static_cast<wchar_t>('0'))
-          << left << setw(0);
+    StdWcOut << StdIOSFixed << StdIOSSetPrecision(6)
+             << StdIOSSetFillWc(static_cast<wchar_t>('0'))
+             << StdIOSLeft << StdIOSSetWidth(0);
     // Get next item
     NextLine: const ConLine &clLine = clqOutput.front();
     // Start writing initial part of output
-    wcout <<
+    StdWcOut <<
       // Add bold ANSI on anything but windows
 #if !defined(WINDOWS)
       "\x1b[1m"
@@ -754,7 +766,7 @@ struct Console :                       // Members initially private
     // Get next character
     NextChar: switch(const Codepoint cChar = udLine.UtfNext())
     { // Carriage return or space char? Restore position and return no wrap
-      case '\n': wcout << endl; goto NextChar;
+      case '\n': StdWcOut << StdIOSWEndLine; goto NextChar;
       // Other control character?
       case '\r':
       { // Compare it
@@ -767,7 +779,7 @@ struct Console :                       // Members initially private
 #if defined(WINDOWS)
             udLine.UtfScanValue(uiCol);
 #else
-            if(udLine.UtfScanValue(uiCol) == 8) wcout << "\x1b[4m";
+            if(udLine.UtfScanValue(uiCol) == 8) StdWcOut << "\x1b[4m";
 #endif
             // Next character
             goto NextChar;
@@ -779,7 +791,7 @@ struct Console :                       // Members initially private
 #if defined(WINDOWS)
             udLine.UtfScanValue(uiCol);
 #else
-            if(udLine.UtfScanValue(uiCol) == 8) wcout << "\x1b[3m";
+            if(udLine.UtfScanValue(uiCol) == 8) StdWcOut << "\x1b[3m";
 #endif
             // Next character
             goto NextChar;
@@ -794,7 +806,7 @@ struct Console :                       // Members initially private
           case 'r':
           { // Write ANSI reset value in anything but Windows
 #if !defined(WINDOWS)
-            wcout << "\x1b[0m\x1b[1m";
+            StdWcOut << "\x1b[0m\x1b[1m";
 #endif
             // Next character
             goto NextChar;
@@ -805,12 +817,12 @@ struct Console :                       // Members initially private
         } // Finished
         break;
       } // Other character?
-      default: wcout << static_cast<wchar_t>(cChar); goto NextChar;
+      default: StdWcOut << static_cast<wchar_t>(cChar); goto NextChar;
       // Finished
       case '\0': break;
     } // Finished so remove attributes in terminal
 #if !defined(WINDOWS)
-    wcout << "\x1b[0m" << endl;
+    StdWcOut << "\x1b[0m" << StdIOSEndLine;
 #endif
     // remove the old item
     clqOutput.pop();
@@ -822,7 +834,7 @@ struct Console :                       // Members initially private
   { // Process queued console log lines
     MoveQueuedLines();
     // If thread delay enabled and input polling interval ready to poll?
-    if(cTimer->TimerGetDelay() != 0.0 || ciInputRefresh.CITriggerStrict())
+    if(cTimer->TimerGetDelay() != 0.0 || ivInputRefresh.CIIsTrigger())
     {  // Loop forever until no more keys are pressed
       for(int iKey, iMods;;) switch(cSystem->GetKey(iKey, iMods))
       { // No key is pressed (ignore)
@@ -842,7 +854,7 @@ struct Console :                       // Members initially private
         // No key is pressed but a reset was requested?
         case SysCon::KT_RESET:
           // Set to redraw entire screen
-          ciOutputRefresh.CISync();
+          ivOutputRefresh.CISync();
           rfFlags.FlagSet(RD_TEXT);
           // Break the for loop
           goto Done;
@@ -851,15 +863,15 @@ struct Console :                       // Members initially private
       } // Only clean way to double-break without extra vars or functions
       Done:;
     } // Status update elapsed?
-    if(ciOutputRefresh.CITriggerStrict())
+    if(ivOutputRefresh.CIIsTrigger())
     { // Update memory and cpu status
       cSystem->UpdateMemoryUsageData();
       cSystem->SysUpdateCPUUsage();
       // Redraw title
       cSystem->RedrawTitleBar(StrFormat("CPU:$$$%$  FPS:$  MEM:$  NET:$  UP:$",
-        fixed, setprecision(1), cSystem->CPUUsage(), setprecision(0),
-        cTimer->TimerGetFPS(), StrToBytes(cSystem->RAMProcUse(), 0),
-        cSockets->astConnected.load(),
+        StdIOSFixed, StdIOSSetPrecision(1), cSystem->CPUUsage(),
+        StdIOSSetPrecision(0), cTimer->TimerGetFPS(),
+        StrToBytes(cSystem->RAMProcUse(), 0), cSockets->astConnected.load(),
         StrShortFromDuration(cLog->CCDeltaToDouble(), 0)),
         cmSys.FormatTime(strvTimeFormat.data()));
       // Not redrawing?
@@ -890,22 +902,22 @@ struct Console :                       // Members initially private
     return size();
   }
   /* -- Command exists? ---------------------------------------------------- */
-  bool CommandIsRegistered(const string &strName) const
+  bool CommandIsRegistered(const StdString &strName) const
     { return cmMap.contains(strName); }
   /* -- Check that the console variable name is valid ---------------------- */
-  bool IsValidConsoleCommandName(const string &strName) const
+  bool IsValidConsoleCommandName(const StdString &strName) const
   { // Return true if length is over or equal minimum allowed and length is
     // under or equal maximum allowed and first character is valid and the rest
     // of the characters are valid.
     return strName.length() >= stConCmdMinLength &&
       strName.length() <= stConCmdMaxLength &&
       StdIsAlpha(strName.front()) &&
-      StdFindIf(par_unseq, next(strName.cbegin()), strName.cend(),
+      StdFindIf(par_unseq, StdNext(strName.cbegin()), strName.cend(),
         [](const char cC) { return StdIsNotAlnum(cC) && cC != '_'; })
           == strName.cend();
   }
   /* -- Register console command ------------------------------------------- */
-  const CmdMapIt RegisterCommand(const string &strName,
+  const CmdMapIt RegisterCommand(const StdString &strName,
     const unsigned int uiMin, const unsigned int uiMax,
     const ConCbFunc ccfFunc)
   { // Insert trusted command into commands list
@@ -915,13 +927,13 @@ struct Console :                       // Members initially private
   /* -- Unregister console command ----------------------------------------- */
   void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
   /* -- Add line as string with specified text colour ---------------------- */
-  void ConsoleAddLine(const ConColour ccColour, const string &strText)
+  void ConsoleAddLine(const ConColour ccColour, const StdString &strText)
   { // Tokenise lines into a list limited by the maximum number of lines.
     if(const TokenList tlLines{
       strText, cCommon->CommonLf(), GetOutputMaximum() })
     { // Add all the lines to the output queue
       const double dTime = cLog->CCDeltaToDouble();
-      for(const string &strLine : tlLines)
+      for(const StdString &strLine : tlLines)
       { // Move the line across if it is long enough
         if(strLine.length() <= stMaxOutputLine)
           clqOutput.push({ dTime, ccColour, StdMove(strLine) });
@@ -932,7 +944,7 @@ struct Console :                       // Members initially private
     }
   }
   /* -- Add line as string with default text colour ------------------- */
-  void ConsoleAddLine(const string &strText)
+  void ConsoleAddLine(const StdString &strText)
     { ConsoleAddLine(ccTextColour, strText); }
   /* -- Formatted console output ------------------------------------------- */
   template<typename ...VarArgs>
@@ -1006,7 +1018,7 @@ struct Console :                       // Members initially private
     // Iterate each item and register command if required core flags match
     for(const ConLibStatic &clCmd : ccslInt)
       if(cSystem->SysIsCoreFlagsHave(clCmd.cfcRequired))
-        RegisterCommand(string(clCmd.strvName), clCmd.uiMinimum,
+        RegisterCommand(StdString{ clCmd.strvName }, clCmd.uiMinimum,
           clCmd.uiMaximum, clCmd.ccfFunc);
       // Write in log to say we skipped registration of this command
       else cLog->LogDebugExSafe(
@@ -1079,7 +1091,7 @@ struct Console :                       // Members initially private
     return ACCEPT;
   }
   /* -- Set time format ---------------------------------------------------- */
-  CVarReturn SetTimeFormat(const string &strFmt, const string &strV)
+  CVarReturn SetTimeFormat(const StdString &strFmt, const StdString &strV)
   { // Verify the new time format and log it
     cLog->LogInfoExSafe("Console time from format '$' is '$'.",
       strFmt, cmSys.FormatTime(strFmt.data()));
@@ -1122,7 +1134,7 @@ struct Console :                       // Members initially private
     if(stLines < 1 || stLines > 1000000 || stLines > max_size()) return DENY;
     // New value under previous amount? Remove excess lines
     if(stLines < size())
-      clriPosition = ConLinesConstRevIt{ erase(cbegin(), next(cbegin(),
+      clriPosition = ConLinesConstRevIt{ erase(cbegin(), StdNext(cbegin(),
         static_cast<ssize_t>(size() - stLines))) };
     // Set new position
     stOutputMaximum = stLines;
@@ -1140,7 +1152,7 @@ struct Console :                       // Members initially private
     if(stLines < slHistory.size())
       slriInputPosition =
         StrListConstRevIt{ slHistory.erase(slHistory.cbegin(),
-          next(slHistory.cbegin(),
+          StdNext(slHistory.cbegin(),
             static_cast<ssize_t>(slHistory.size() - stLines))) };
     // Set the new amount
     stInputMaximum = stLines;
@@ -1165,12 +1177,12 @@ struct Console :                       // Members initially private
   /* -- Set console input refresh rate ------------------------------------- */
   CVarReturn InputRefreshModified(const unsigned int uiMicroseconds)
     { if(uiMicroseconds < 1000 || uiMicroseconds > 1000000) return DENY;
-      ciInputRefresh.CISetLimit(microseconds{ uiMicroseconds });
+      ivInputRefresh.CISetLimit(microseconds{ uiMicroseconds });
       return ACCEPT; }
   /* -- Set text-mode console refresh rate --------------------------------- */
   CVarReturn OutputRefreshModified(const unsigned int uiMilliseconds)
     { if(uiMilliseconds < 100 || uiMilliseconds > 1000) return DENY;
-      ciOutputRefresh.CISetLimit(milliseconds{ uiMilliseconds });
+      ivOutputRefresh.CISetLimit(milliseconds{ uiMilliseconds });
       return ACCEPT; }
   /* -- Set console text colour -------------------------------------------- */
   CVarReturn TextForegroundColourModified(const unsigned int uiNewColour)

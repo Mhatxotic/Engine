@@ -25,7 +25,7 @@ using namespace Common;
 ** -- Create Json class argument ------------------------------------------- */
 struct AcJson : public ArClass<Json> {
   explicit AcJson(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Json>(lS, *cJsons)}{} };
+    ArClass{LuaUtilClassCreateRef<Json>(lS, cJsons)}{} };
 /* -- Get string from memory ----------------------------------------------- */
 struct AgMbString : public Memory {
   const MemConst &operator()() const { return *this; }

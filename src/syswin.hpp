@@ -34,27 +34,27 @@ class SysProcess                       // Need this before of System init order
   const HINSTANCE  hInstance;          // Process instance
   HANDLE           hMutex;             // Global mutex handle
   /* -- Return process and thread id ------------------------------ */ private:
-  const DWORD      ulProcessId;        // Process id
-  const DWORD      ulThreadId;         // Thread id (WinMain())
+  const DWORD      ulProcessId,        // Process id
+                   ulThreadId;         // Thread id (WinMain())
   /* -- Mutex name --------------------------------------------------------- */
   Ident            idMutex;            // Mutex identifier
   /* ----------------------------------------------------------------------- */
   static BOOL WINAPI EnumWindowsProc(HWND hH, LPARAM lP)
   { // Get title of window and cancel if empty
-    wstring wstrT(GetWindowTextLength(hH), 0);
+    StdWideString wstrT(GetWindowTextLength(hH), 0);
     if(!GetWindowText(hH, const_cast<LPWSTR>(wstrT.data()),
       static_cast<DWORD>(wstrT.capacity())))
         return TRUE;
     // If there is not enough characters in this windows title or the title
     // and requested window title's contents do not match? Ignore this window!
-    const wstring &wstrN = *reinterpret_cast<wstring*>(lP);
+    const StdWideString &wstrN = *reinterpret_cast<StdWideString*>(lP);
     if(wstrT.length() < wstrN.length() ||
       StdCompare(wstrN.data(), wstrT.data(), wstrN.length()*sizeof(wchar_t)))
         return TRUE;
     // We found the window
     cLog->LogDebugExSafe("- Found window handle at $$.\n"
                  "- Window name is '$'.",
-      hex, reinterpret_cast<void*>(hH), WS16toUTF(wstrT));
+      StdIOSHex, reinterpret_cast<void*>(hH), WS16toUTF(wstrT));
     // First try showing the window and if successful? Log the successful
     // command else if showing the window failed? Log the failure with reason
     if(ShowWindow(hH, SW_RESTORE|SW_SHOWNORMAL))
@@ -90,13 +90,12 @@ class SysProcess                       // Need this before of System init order
   { // Only needed if in debug mode
 #if defined(ALPHA)
     // Create storage for the filename and clear it
-    wstring wstrName; wstrName.resize(MAX_PATH);
+    StdResized<StdWideString> wstrName{ MAX_PATH };
     // Get path to executable. The base module filename info struct may not be
     // available so we'll keep it simple and use the full path name to
     // the executable.
     wstrName.resize(UtilMaximum(GetModuleFileName(nullptr,
-      const_cast<LPWSTR>(wstrName.data()),
-      static_cast<DWORD>(wstrName.capacity())) - 4, 0));
+      const_cast<LPWSTR>(wstrName.data()), 0, MAX_PATH - 4));
     wstrName.append(L".crt");
     // Create a file with the above name and just return if failed
     HANDLE hH = CreateFile(wstrName.data(), GENERIC_WRITE,
@@ -118,7 +117,7 @@ class SysProcess                       // Need this before of System init order
   /* -- Set heap information helper ---------------------------------------- */
   template<typename Type = ULONG>static void HeapSetInfo(const HANDLE hH,
     const HEAP_INFORMATION_CLASS hicData, const Type &tVal)
-      { HeapSetInformation(hH, hicData, UtfToNonConstCast<PVOID>(&tVal),
+      { HeapSetInformation(hH, hicData, StdToNonConstCast<PVOID>(&tVal),
           sizeof(tVal)); }
   /* ----------------------------------------------------------------------- */
   void ReconfigureMemoryModel() const
@@ -133,7 +132,7 @@ class SysProcess                       // Need this before of System init order
         SysError());
       return;
     } // Allocate memory for heaps handles, fill handles and
-    typedef vector<HANDLE> HandleVec;
+    typedef StdVector<HANDLE> HandleVec;
     HandleVec hvList{ dwHeaps, INVALID_HANDLE_VALUE };
     if(!GetProcessHeaps(dwHeaps, hvList.data()))
     { // Log the error and return
@@ -166,9 +165,8 @@ class SysProcess                       // Need this before of System init order
   /* -- Called when C std code runs into a problem ------------------------- */
   static int VisualCRTError(const int iType, const wchar_t*const wcpF,
     const int iLine, const wchar_t*const wcpM, const wchar_t*const wcpFmt, ...)
-  { // Buffer for formatted data. The maximum size is 1024 bytes. That is
-    // 512 wide characters. std::string adds the nullptr for us automatically.
-    Reserved<wstring> wstrFmt{ 511 };
+  { // Buffer for formatted data. The maximum size is 1KB (512 wchar_t's).
+    StdResized<StdWideString> wstrFmt{ 512 };
     // Use windows api function for this as we're not using the c-lib
     // formatting functions and theres no need to invoke extra exe space.
     va_list vlData;
@@ -239,11 +237,11 @@ class SysProcess                       // Need this before of System init order
   template<typename T>T Test(const T tParam, const char*const cpStr)
     { if(!tParam) XCS(cpStr); return tParam; }
   /* --------------------------------------------------------------- */ public:
-  bool InitGlobalMutex(const string_view &strvTitle)
+  bool InitGlobalMutex(const StdStringView &strvTitle)
   { // Set mutex name
     idMutex.IdentSet(strvTitle);
     // Convert UTF title to wide string
-    const wstring wstrTitle{ UTFtoS16(idMutex.IdentGet()) };
+    const StdWideString wstrTitle{ UTFtoS16(idMutex.IdentGet()) };
     // Create the global mutex handle with the specified name and check error
     hMutex = CreateMutex(nullptr, FALSE, wstrTitle.data());
     switch(const DWORD dwResult = SysErrorCode<DWORD>())
@@ -321,13 +319,13 @@ class SysCore :
   size_t GetLocaleData(const LCTYPE lcType, const void*const vpData,
     const size_t stSize, const LCID lcidLocale)
   { return GetLocaleInfo(lcidLocale, lcType,
-      UtfToNonConstCast<LPWSTR>(vpData), UtilIntOrMax<int>(stSize)); }
+      StdToNonConstCast<LPWSTR>(vpData), UtilIntOrMax<int>(stSize)); }
   /* ----------------------------------------------------------------------- */
-  const wstring GetLocaleString(const LCTYPE lcType,
+  const StdWideString GetLocaleString(const LCTYPE lcType,
     const LCID lcidLocale=LOCALE_USER_DEFAULT)
   { // Allocate string for requested data and return error if faield
-    wstring wstrData;
-    wstrData.resize(GetLocaleData(lcType, nullptr, 0, lcidLocale));
+    StdResized<StdWideString> wstrData{
+      GetLocaleData(lcType, nullptr, 0, lcidLocale) };
     if(wstrData.empty())
       XCS("No storage for locale data!",
           "Type", lcType, "Id", lcidLocale);
@@ -513,7 +511,7 @@ class SysCore :
     UpdateIcon(ICON_SMALL, hIconSmall);
   }
   /* ----------------------------------------------------------------------- */
-  void SetIcon(const string &strId, const char *cpType, const UINT uiT,
+  void SetIcon(const StdString &strId, const char *cpType, const UINT uiT,
     HICON &hI, const size_t stWidth, const size_t stHeight,
     const size_t stBits, const MemConst &mcSrc)
   { // Check parameters
@@ -551,11 +549,11 @@ class SysCore :
       cpType, uiT, stWidth, stHeight, stBits, strId);
   }
   /* -- Set small or large icon -------------------------------------------- */
-  void SetLargeIcon(const string &strId, const size_t stWidth,
+  void SetLargeIcon(const StdString &strId, const size_t stWidth,
     const size_t stHeight, const size_t stBits, const MemConst &mcSrc)
       { SetIcon(strId, "large", ICON_BIG, hIconLarge, stWidth, stHeight,
           stBits, mcSrc); }
-  void SetSmallIcon(const string &strId, const size_t stWidth,
+  void SetSmallIcon(const StdString &strId, const size_t stWidth,
     const size_t stHeight, const size_t stBits, const MemConst &mcSrc)
       { SetIcon(strId, "small", ICON_SMALL, hIconSmall, stWidth, stHeight,
           stBits, mcSrc); }
@@ -563,8 +561,8 @@ class SysCore :
   static bool LibFree(void*const vpModule)
     { return vpModule && !!FreeLibrary(reinterpret_cast<HMODULE>(vpModule)); }
   /* -- Get dll procedure address ------------------------------------------ */
-  template<typename T>static const T
-    GetSharedFunc(const HMODULE hModule, const char*const cpExport)
+  template<typename T>
+    static T GetSharedFunc(const HMODULE hModule, const char*const cpExport)
       { return reinterpret_cast<T>(GetProcAddress(hModule, cpExport)); }
   /* -- Get kernel procedure address --------------------------------------- */
   template<typename T>const T GetKernelFunc(const char*const cpExport)
@@ -579,7 +577,7 @@ class SysCore :
     reinterpret_cast<void*>(LoadLibraryEx(UTFtoS16(cpFileName).data(),
       nullptr, 0)); }
   /* -- Get full pathname to the library ----------------------------------- */
-  const string LibGetName(void*const vpModule,
+  const StdString LibGetName(void*const vpModule,
     const char*const cpAltName) const
   { // Return nothing if no module
     if(!vpModule) return {};
@@ -631,7 +629,7 @@ class SysCore :
   template<typename IntType>
     static IntType SeekFile(const HANDLE hH, const IntType itP)
   { // Bail if handle invalid
-    if(hH == INVALID_HANDLE_VALUE) return numeric_limits<IntType>::max();
+    if(hH == INVALID_HANDLE_VALUE) return StdLimits<IntType>::max();
     // Convert uint64_t to UINT64. They're normally the same but we'll have
     // this here just to be correct. The compiler will optimise this out
     // anyway.
@@ -645,10 +643,10 @@ class SysCore :
     const UINT64 ullNP = UtilMakeQWord(dwNH, dwNL);
     // Return zero if failed or new position
     return ullNP == ullP ?
-      static_cast<IntType>(ullNP) : numeric_limits<IntType>::max();
+      static_cast<IntType>(ullNP) : StdLimits<IntType>::max();
   }
   /* -- Get executable size from header ------------------------------------ */
-  size_t GetExeSize(const string &strFile) const
+  size_t GetExeSize(const StdString &strFile) const
   { // Open exe file and return on error
     if(FStream fExe{ strFile, FM_R_B })
     { // Create memblock for file header, must be at least 4K
@@ -727,7 +725,7 @@ class SysCore :
     if(!dwNeeded)
       XC("Windows gave zero size module handle list!", "Process", hProcess);
     // Allocate memory
-    typedef vector<HMODULE> ModuleHandleVec;
+    typedef StdVector<HMODULE> ModuleHandleVec;
     ModuleHandleVec mhvList{ dwNeeded / sizeof(HMODULE) };
     // Get modules
     if(!EnumProcessModules(hProcess, mhvList.data(), dwNeeded, &dwNeeded))
@@ -738,7 +736,7 @@ class SysCore :
     // For each module. Get filename then check the version info for it
     for(const HMODULE hH : mhvList)
     { // Prepare string to hold filename
-      wstring wstrP; wstrP.resize(MAX_PATH);
+      StdResized<StdWideString> wstrP{ MAX_PATH };
       // Put filename of file in string and resize string to amount returned
       wstrP.resize(GetModuleFileNameEx(hProcess, hH,
         const_cast<LPWSTR>(wstrP.data()),
@@ -747,14 +745,14 @@ class SysCore :
       if(wstrP.empty()) continue;
       // Insert into module list
       smmMap.emplace(make_pair(reinterpret_cast<size_t>(hH),
-        SysModule(WS16toUTF(wstrP))));
+        SysModule{ WS16toUTF(wstrP) }));
     } // Return modules
     return smmMap;
   }
   /* ----------------------------------------------------------------------- */
-  const wstring GetSystemFolder(const int iCSIDL) const
+  const StdWideString GetSystemFolder(const int iCSIDL) const
   { // To hold path name
-    wstring wstrP; wstrP.resize(MAX_PATH);
+    StdResized<StdWideString> wstrP{ MAX_PATH };
     // Get folder path name
     SHGetSpecialFolderPath(nullptr, const_cast<wchar_t*>(wstrP.data()),
       iCSIDL, true);
@@ -768,23 +766,34 @@ class SysCore :
   { // Grab appropriate kernel function. It only exists on 64-bit versions
     // of Windows XP, Vista, 7, 8, 8.1 and 10. If this succeeds?
     typedef void (WINAPI*const LPFN_GETNATIVESYSTEMINFO)(LPSYSTEM_INFO);
-    if(LPFN_GETNATIVESYSTEMINFO fnGetNativeSystemInfo =
+    if(const LPFN_GETNATIVESYSTEMINFO fnGetNativeSystemInfo =
       GetKernelFunc<LPFN_GETNATIVESYSTEMINFO>("GetNativeSystemInfo"))
     { // Get operating system HAL information (returns nothing).
       // https://docs.microsoft.com/en-us/windows/win32
       //   /api/sysinfoapi/nf-sysinfoapi-getnativesysteminfo
-      SYSTEM_INFO siD;
-      fnGetNativeSystemInfo(&siD);
-      // We now know if it's a 64-bit OS!
-      return siD.wProcessorArchitecture ==
-        PROCESSOR_ARCHITECTURE_AMD64 ? 64 : 32;
-    } // Failed so if the function was not found? Then it's a 32-bit OS.
+      SYSTEM_INFO siData;
+      fnGetNativeSystemInfo(&siData);
+      // Build architecture list
+      switch(static_cast<unsigned int>(siData.wProcessorArchitecture))
+      { // 64-bit architecture?
+        case PROCESSOR_ARCHITECTURE_AMD64:
+        case PROCESSOR_ARCHITECTURE_ARM64:
+        case PROCESSOR_ARCHITECTURE_IA64: return 64;
+        // 32-bit architecture?
+        case PROCESSOR_ARCHITECTURE_INTEL:
+        case PROCESSOR_ARCHITECTURE_ARM:
+        case PROCESSOR_ARCHITECTURE_UNKNOWN: return 32;
+        // Unknown. We should report it
+        default: break;
+      }; // Unsupported value so log it
+      XC("Architecture id not recognised!",
+        "Id", siData.wProcessorArchitecture);
+    } // We can safely assume an ancient 32-bit Windows version if not found
     if(SysIsErrorCode(ERROR_PROC_NOT_FOUND)) return 32;
-    // Show other error
     XCS("Failed to get native system info function address!");
   }
   /* ----------------------------------------------------------------------- */
-  const string GetLocale(const LCID lcidLocale)
+  const StdString GetLocale(const LCID lcidLocale)
   { // Build language and country code from system and return it
     return
       StrAppend(WS16toUTF(GetLocaleString(LOCALE_SISO639LANGNAME, lcidLocale)),
@@ -805,7 +814,7 @@ class SysCore :
     if(!fcbGVEW || !fcbGVEW(reinterpret_cast<LPOSVERSIONINFOW>(&osviData)))
       XCS("Failed to query operating system version!");
     // Set operating system version string
-    ostringstream osOS; osOS << "Windows ";
+    StdOStringStream osS; osS << "Windows ";
     // Version information table
     struct OSListItem
     { // Label to append if verified
@@ -814,8 +823,9 @@ class SysCore :
       const unsigned int uiHi, uiLo, uiBd, uiSp;
     };
     // List of recognised Windows versions
-    static const array<const OSListItem,40>osList{ {
-      { "11 25H2+", 10, 0, 26200, 0 }, { "11 24H2",  10, 0, 26100, 0 },
+    static const StdArray<const OSListItem,41>osList{ {
+      { "11 26H1+", 10, 0, 28000, 0 },
+      { "11 25H2",  10, 0, 26200, 0 }, { "11 24H2",  10, 0, 26100, 0 },
       { "11 23H2",  10, 0, 22631, 0 }, { "11 22H2",  10, 0, 22621, 0 },
       { "11 21H2",  10, 0, 22000, 0 }, { "10 22H2",  10, 0, 19045, 0 },
       { "10 21H2",  10, 0, 19044, 0 }, { "10 21H1",  10, 0, 19043, 0 },
@@ -845,17 +855,17 @@ class SysCore :
          osviData.dwBuildNumber < oslIt.uiBd ||
          osviData.wServicePackMajor < oslIt.uiSp) continue;
       // Set operating system version
-      osOS << oslIt.cpLabel;
+      osS << oslIt.cpLabel;
       // Skip adding version numbers
       goto SkipNumericalVersionNumber;
     } // Nothing was found so add version number detected
-    osOS << osviData.dwMajorVersion << '.' << osviData.dwMinorVersion;
+    osS << osviData.dwMajorVersion << '.' << osviData.dwMinorVersion;
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
     // Add server label if is a server based operating system
-    if(osviData.wProductType != VER_NT_WORKSTATION) osOS << " Server";
+    if(osviData.wProductType != VER_NT_WORKSTATION) osS << " Server";
     // Look for Wine and set extra info if available
-    string strExtra; bool bExtra;
+    StdString strExtra; bool bExtra;
     if(HMODULE hDLL = GetModuleHandle(L"ntdll"))
     { // Get wine version function and if succeeded?
       typedef const char *(WINAPI*const LPWINEGETVERSION)();
@@ -867,7 +877,7 @@ class SysCore :
     else bExtra = false;
     // Return data
     return {
-      osOS.str(),                            // Version string
+      osS.str(),                             // Version string
       StdMove(strExtra),                     // Extra version string
       osviData.dwMajorVersion,               // Major OS version
       osviData.dwMinorVersion,               // Minor OS version
@@ -893,17 +903,17 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   CPUData GetProcessorData()
   { // Try to open the specified below registry key and if successful?
-    const string strK{ "HARDWARE\\DESCRIPTION\\System\\CentralProcessor" };
+    const StdString strK{ "HARDWARE\\DESCRIPTION\\System\\CentralProcessor" };
     if(const SysReg srRoot{ HKEY_LOCAL_MACHINE, strK, KEY_ENUMERATE_SUB_KEYS })
     { // Enumerate subkeys
       const StrVector svKeys{ srRoot.QuerySubKeys() };
       // Open first subkey, usually "0" and if succeeded?
-      const string &strSK = *svKeys.cbegin();
+      const StdString &strSK = *svKeys.cbegin();
       if(const SysReg srSub{ srRoot.GetHandle(), strSK, KEY_QUERY_VALUE })
       { // Query required values
-        string strVendor{ srSub.QueryString("VendorIdentifier") },
-               strName{ srSub.QueryString("ProcessorNameString") },
-               strIdent{ srSub.QueryString("Identifier") };
+        StdString strVendor{ srSub.QueryString("VendorIdentifier") },
+                  strName{ srSub.QueryString("ProcessorNameString") },
+                  strIdent{ srSub.QueryString("Identifier") };
         // Remove unnecessary whitespaces from strings
         StrCompactRef(strVendor);
         StrCompactRef(strName);
@@ -1077,7 +1087,7 @@ class SysCore :
     return SysErrorCode<int>();
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const string BuildRoamingDir() const
+  const StdString BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("APPDATA", cCommon->CommonBlank()); }
   /* -- Constructor (only derivable) --------------------------------------- */
   SysCore() :

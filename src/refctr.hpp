@@ -13,7 +13,7 @@ namespace IRefCtr {                    // Start of private module namespace
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 template<typename IntType=unsigned int>
-requires is_integral_v<IntType>
+  requires StdIsInteger<IntType>
 class RefCtrMaster
 { /* -- Private variables -------------------------------------------------- */
   IntType          itMaster;           // Reference to protected variable
@@ -29,7 +29,7 @@ class RefCtrMaster
 /* ------------------------------------------------------------------------- */
 template<typename IntType=unsigned int,
          class RmcType=RefCtrMaster<IntType>>
-requires is_integral_v<IntType>
+  requires StdIsInteger<IntType>
 class RefCtrSlave
 { /* -- Private variables -------------------------------------------------- */
   RmcType         &rtMaster;           // Reference to protected variable

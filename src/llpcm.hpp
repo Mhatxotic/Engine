@@ -12,11 +12,9 @@
 ** ========================================================================= */
 // % Pcm
 /* ------------------------------------------------------------------------- */
-// ! This allows the programmer to load pcm wave forms or decompress encoded
-// ! pcm waveforms and send the objects to the OpenAL if needed. You can use
-// ! the command 'pcmfmts' to see what formats are usable which are WAV
-// ! (WaveForm Audio Format) PCM/INT/FLOAT/LE, CAF (CoreAudio Format),
-// ! PCM/INT/FLOAT/LE/BE, OGG (OGG Vorbis) and MP3 (MPEG-Layer III).
+// ! This allows the programmer to load encoded waveforms which can be sent
+// ! to OpenAL as a 'Sample' object if required. You can use the console
+// ! command 'pcmfmts' to see what formats are usable.
 /* ========================================================================= */
 namespace LLPcm {                      // Pcm namespace
 /* -- Dependencies --------------------------------------------------------- */
@@ -28,7 +26,7 @@ using namespace IPcmDef::P;            using namespace Common;
 ** -- Create Pcm class argument -------------------------------------------- */
 struct AcPcm : public ArClass<Pcm> {
   explicit AcPcm(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Pcm>(lS, *cPcms)}{} };
+    ArClass{LuaUtilClassCreateRef<Pcm>(lS, cPcms)}{} };
 /* -- Read Pcm loading flags ----------------------------------------------- */
 struct AgPcmFlags : public AgFlags<PcmFlagsConst> {
   explicit AgPcmFlags(lua_State*const lS, const int iArg) :
@@ -185,8 +183,7 @@ LLRSEND                                // Pcm.* namespace functions end
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(Flags)                     // Beginning of pcm loading flags
   LLRSKTITEM(PL_,NONE),                LLRSKTITEM(PL_,FCE_CAF),
-  LLRSKTITEM(PL_,FCE_MP3),             LLRSKTITEM(PL_,FCE_OGG),
-  LLRSKTITEM(PL_,FCE_WAV),
+  LLRSKTITEM(PL_,FCE_OGG),             LLRSKTITEM(PL_,FCE_WAV),
 LLRSKTEND                              // End of pcm loading flags
 /* ========================================================================= **
 ** ######################################################################### **

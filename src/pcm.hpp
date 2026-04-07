@@ -3,7 +3,7 @@
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
 ** ## This module defines a class that can load sound files and then      ## **
-** ## can optionally be sent to openal for playback.                      ## **
+** ## can optionally be sent to an OpenAL 'Sample' object for playback.   ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
@@ -66,7 +66,6 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     if     (FlagIsSet(PL_FCE_WAV)) PcmLoadFile(PFMT_WAV, fmData, *this);
     else if(FlagIsSet(PL_FCE_CAF)) PcmLoadFile(PFMT_CAF, fmData, *this);
     else if(FlagIsSet(PL_FCE_OGG)) PcmLoadFile(PFMT_OGG, fmData, *this);
-    else if(FlagIsSet(PL_FCE_MP3)) PcmLoadFile(PFMT_MP3, fmData, *this);
     // Auto detection of pcm audio
     else PcmLoadFile(fmData, *this);
     // Split into two channels if audio in stereo
@@ -82,7 +81,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     AsyncReady(fmData);
   }
   /* -- Init from array ---------------------------------------------------- */
-  void InitArray(const string &strName, Memory &mSrc,
+  void InitArray(const StdString &strName, Memory &mSrc,
     const PcmFlagsConst &pfcFlags)
   { // Is dynamic because it was not loaded from disk
     SetDynamic();
@@ -92,8 +91,8 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     SyncInitArray(strName, mSrc);
   }
   /* -- Load pcm from memory asynchronously -------------------------------- */
-  void InitAsyncArray(lua_State*const lS, const string &strFile, Asset &aCref,
-    const PcmFlagsConst &pfcFlags)
+  void InitAsyncArray(lua_State*const lS, const StdString &strFile,
+    Asset &aCref, const PcmFlagsConst &pfcFlags)
   { // Is dynamic because it was not loaded from disk
     SetDynamic();
     // Set user loading flags
@@ -102,7 +101,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     AsyncInitArray(lS, strFile, "pcmarray", aCref);
   }
   /* -- Load pcm from file asynchronously ---------------------------------- */
-  void InitAsyncFile(lua_State*const lS, const string &strFile,
+  void InitAsyncFile(lua_State*const lS, const StdString &strFile,
     const PcmFlagsConst &pfcFlags)
   { // Set user loading flags
     FlagSet(pfcFlags);
@@ -110,14 +109,14 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     AsyncInitFile(lS, strFile, "pcmfile");
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitFile(const string &strFile, const PcmFlagsConst &pfcFlags)
+  void InitFile(const StdString &strFile, const PcmFlagsConst &pfcFlags)
   { // Set the loading flags
     FlagSet(pfcFlags);
     // Load the file normally
     SyncInitFileSafe(strFile);
   }
   /* -- Load audio file from raw memory ------------------------------------ */
-  void InitRaw(const string &strName, Memory &mSrc,
+  void InitRaw(const StdString &strName, Memory &mSrc,
     const unsigned int uiNRate, const PcmChannelType pctNChannels,
     const PcmBitType pbtNBits)
   { // Calculate actual memory size required for raw data

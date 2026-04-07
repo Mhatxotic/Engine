@@ -17,8 +17,8 @@ template<typename DInt,                // Dimensions integer type
   typename CInt = DInt,                // Coords class integer type
   class DClass = Dimensions<DInt>,     // Dimensions class to use
   class CClass = Coord<CInt>>          // Coords class to use
-requires is_arithmetic_v<DInt> &&      // Dimension type must be int/float
-  is_arithmetic_v<CInt>                // Coords type must be int/float
+requires StdIsArithmatic<DInt> &&      // Dimension type must be int/float
+  StdIsArithmatic<CInt>                // Coords type must be int/float
 struct DimCoords :                     // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public CClass,                       // Co-ordinates class

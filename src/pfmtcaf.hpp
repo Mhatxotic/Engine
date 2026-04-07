@@ -10,7 +10,7 @@
 namespace ICodecCAF {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IFlags;                using namespace ILog::P;
+using namespace IFlags::P;             using namespace ILog::P;
 using namespace IMemory::P;            using namespace IPcmDef::P;
 using namespace IPcmLib::P;            using namespace IStd::P;
 using namespace IUtil::P;              using namespace Lib::OpenAL::Types;

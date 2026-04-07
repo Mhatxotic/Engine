@@ -26,11 +26,11 @@ using namespace ILuaCommand::P;        using namespace Common;
 ** -- Read Command class argument ------------------------------------------ */
 struct AgCommand : public ArClass<Command> {
   explicit AgCommand(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Command>(lS, iArg, *cCommands)}{} };
+    ArClass{LuaUtilGetClassRef<Command>(lS, iArg, cCommands)}{} };
 /* -- Create Command class argument ---------------------------------------- */
 struct AcCommand : public ArClass<Command> {
   explicit AcCommand(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Command>(lS, *cCommands)}{} };
+    ArClass{LuaUtilClassCreateRef<Command>(lS, cCommands)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Command:* member functions                                          ## **

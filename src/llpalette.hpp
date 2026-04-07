@@ -29,11 +29,11 @@ using namespace ITexture::P;           using namespace Common;
 ** -- Read Palette class argument ------------------------------------------ */
 struct AgPalette : public ArClass<Palette> {
   explicit AgPalette(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Palette>(lS, iArg, *cPalettes)}{} };
+    ArClass{LuaUtilGetClassRef<Palette>(lS, iArg, cPalettes)}{} };
 /* -- Create Palette class argument ---------------------------------------- */
 struct AcPalette : public ArClass<Palette> {
   explicit AcPalette(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Palette>(lS, *cPalettes)}{} };
+    ArClass{LuaUtilClassCreateRef<Palette>(lS, cPalettes)}{} };
 /* -- Read a valid Palette position index ---------------------------------- */
 struct AgPosition : public AgSizeTLGE {
   explicit AgPosition(lua_State*const lS, const int iArg) :

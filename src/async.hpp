@@ -24,9 +24,9 @@ using namespace IFileMap::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Prototypes ----------------------------------------------------------- */
-static FileMap AssetExtract(const string&);      // Extract files from archives
-static FileMap AssetLoadFromDisk(const string&); // Load file from disk
-static size_t AssetGetPipeBufferSize();          // Get pipe buffer size
+static FileMap AssetExtract(const StdString&); // Extract files from archives
+static FileMap AssetLoadFromDisk(const StdString&); // Load file from disk
+static size_t AssetGetPipeBufferSize(); // Get pipe buffer size
 /* ------------------------------------------------------------------------- */
 }                                      // End of public namespace
 /* ------------------------------------------------------------------------- */
@@ -35,14 +35,14 @@ static size_t AssetGetPipeBufferSize();          // Get pipe buffer size
 namespace IASync {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IClock::P;
-using namespace ICollector::P;         using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFileMap::P;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaEvt::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IRefCtr::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IThread::P;
+using namespace IChrono::P;            using namespace ICollector::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFileMap::P;           using namespace IIdent::P;
+using namespace ILog::P;               using namespace ILuaEvt::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IRefCtr::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -90,7 +90,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   /* -- Private variables -------------------------------------------------- */
   LuaEvtCallback   lecAsync;           // Async state and references
   Thread           tAsyncThread;       // Asynchronous loading
-  string           strAsyncError;      // The last error exception
+  StdString        strAsyncError;      // The last error exception
   ASyncCmdType     asctAsyncType;      // Async load init type
   AtomicUInt       auiAsyncPid;        // Pid of executing process
   /* -- Dispatch event without parameter ----------------------------------- */
@@ -164,26 +164,26 @@ template<class MemberType, class ColType>class AsyncLoader :
   /* -- Prepend message to the full stack message -------------------------- */
   void AsyncDoAddStackMessage(const char*const cpMsg)
     { strAsyncError.insert(0, cpMsg); }
-  void AsyncDoAddStackMessage(const string &strMsg)
+  void AsyncDoAddStackMessage(const StdString &strMsg)
     { strAsyncError.insert(0, strMsg); }
   /* -- Execute function (returns exit code) ----------------------- */ public:
   int64_t AsyncExecute()
   { // Duration of execution
-    const ClockChrono<> ccExecute;
+    const Chrono chExecute;
     // Open pipe to application
     SysPipe spProcess{ IdentGet() };
     // Record pid. This is so the destructor can kill it on exit
     auiAsyncPid = spProcess.GetPid();
     // Send progress event
     AsyncProgress(APC_EXECSTART, static_cast<uint64_t>(auiAsyncPid.load()));
+    // Get requested buffer size
+    const size_t stBuffer = AssetGetPipeBufferSize();
     // If we have data to send?
     if(MemIsNotEmpty())
     { // Current position
       size_t stPosition = 0;
-      // Buffer size to write (maybe configurable todo)
-      const size_t stBuffer = AssetGetPipeBufferSize(),
-        // Get amount of extra data to write
-        stExtra = MemSize() % stBuffer,
+      // Get amount of extra data to write
+      const size_t stExtra = MemSize() % stBuffer,
         // Clamp end position to number of pages
         stEnd = MemSize() < stBuffer ? MemSize() : MemSize() - stExtra;
       // If we are writing more than one page? Copy full pages of buffers
@@ -198,7 +198,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       // Report that we write data
       cLog->LogInfoExSafe("Async pipe wrote $ bytes to stdin of pid $ in $!",
         stPosition, spProcess.GetPid(),
-        StrShortFromDuration(ccExecute.CCDeltaToDouble()));
+        StrShortFromDuration(chExecute.CCDeltaToDouble()));
       // Clear the memory to re-use for output
       MemDeInit();
     } // List of output
@@ -207,7 +207,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Until the thread says we should exit
     while(tAsyncThread.ThreadShouldNotExit())
     { // Read process output and break out of loop if nothing read
-      Memory mBuffer{ spProcess.ReadBlock() };
+      Memory mBuffer{ spProcess.ReadBlock(stBuffer) };
       if(mBuffer.MemIsEmpty()) break;
       // Increase total bytes read
       stTotalRead += mBuffer.MemSize();
@@ -221,7 +221,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     cLog->LogInfoExSafe(
       "Async pipe returned $ bytes and exit code $ from pid $ in $!",
       stTotalRead, spProcess.SysPipeBaseGetStatus(), spProcess.GetPid(),
-      StrShortFromDuration(ccExecute.CCDeltaToDouble()));
+      StrShortFromDuration(chExecute.CCDeltaToDouble()));
     // If we have no memory stored? Return exit code
     if(!stTotalRead) return spProcess.SysPipeBaseGetStatus();
     // Initialise memory for program output data block
@@ -299,7 +299,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       } // Return success to thread manager
       return TS_OK;
     } // exception occured?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Prepend the reason incase there are nested exceptions
       AsyncDoAddStackMessage(eReason.what());
       // Signal completion
@@ -311,8 +311,8 @@ template<class MemberType, class ColType>class AsyncLoader :
     }
   }
   /* ----------------------------------------------------------------------- */
-  void AsyncInit(lua_State*const lsS, const string &strIdent,
-    const string &strLabel)
+  void AsyncInit(lua_State*const lsS, const StdString &strIdent,
+    const StdString &strLabel)
   { // Set the filename
     IdentSet(strIdent);
     // Parse the class, error and success functions.
@@ -400,24 +400,24 @@ template<class MemberType, class ColType>class AsyncLoader :
     lecAsync.LuaEvtDeInit();
   }
   /* -- The thread only calls LoadData() and thats it ---------------------- */
-  void AsyncInitNone(lua_State*const lsS, const string &strIdent,
-    const string &strLabel)
+  void AsyncInitNone(lua_State*const lsS, const StdString &strIdent,
+    const StdString &strLabel)
   { // Loading from memory
     asctAsyncType = BA_NONE;
     // Init rest of members
     AsyncInit(lsS, strIdent, strLabel);
   }
   /* -- The thread loads from a filemap and calls LoadData() --------------- */
-  void AsyncInitFile(lua_State*const lsS, const string &strFilename,
-    const string &strLabel)
+  void AsyncInitFile(lua_State*const lsS, const StdString &strFilename,
+    const StdString &strLabel)
   { // Loading from file
     asctAsyncType = BA_FILE;
     // Init rest of members
     AsyncInit(lsS, strFilename, strLabel);
   }
   /* -- The thread loads from the command-line ----------------------------- */
-  void AsyncInitCmdLine(lua_State*const lsS, const string &strCmdLine,
-    const string &strLabel, Memory &mbInput)
+  void AsyncInitCmdLine(lua_State*const lsS, const StdString &strCmdLine,
+    const StdString &strLabel, Memory &mbInput)
   { // Loading from command-line
     asctAsyncType = BA_EXECUTE;
     // Set memory sent to stdin
@@ -426,8 +426,8 @@ template<class MemberType, class ColType>class AsyncLoader :
     AsyncInit(lsS, strCmdLine, strLabel);
   }
   /* -- The thread loads from existing memory and calls LoadData() --------- */
-  void AsyncInitArray(lua_State*const lsS, const string &strIdent,
-    const string &strLabel, Memory &mData)
+  void AsyncInitArray(lua_State*const lsS, const StdString &strIdent,
+    const StdString &strLabel, Memory &mData)
   { // Set data to load from
     MemSwap(mData);
     // Loading from memory
@@ -443,7 +443,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
   }
   /* -- Init from file synchronously from disk only ------------------------ */
-  void SyncInitFileDisk(const string &strFilename)
+  void SyncInitFileDisk(const StdString &strFilename)
   { // Set filename
     IdentSet(strFilename);
     // Load from specified file
@@ -452,7 +452,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from file synchronously --------------------------------------- */
-  void SyncInitFile(const string &strFilename)
+  void SyncInitFile(const StdString &strFilename)
   { // Set filename
     IdentSet(strFilename);
     // Load from specified file
@@ -461,7 +461,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from array synchronously -------------------------------------- */
-  void SyncInitArray(const string &strIdent, Memory &mData)
+  void SyncInitArray(const StdString &strIdent, Memory &mData)
   { // Set identifier
     IdentSet(strIdent);
     // Put the memory block into a file map and load the block
@@ -470,7 +470,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from file synchronously with filename checking ---------------- */
-  void SyncInitFileSafe(const string &strFilename)
+  void SyncInitFileSafe(const StdString &strFilename)
   { // Set filename
     IdentSet(strFilename);
     // Load from specified file from archives or disk
@@ -592,13 +592,15 @@ template<class MemberType, class ColType>class AsyncLoader :
           cLog->LogErrorExSafe(
             "AsyncLoader got unknown result $ after loading '$'!",
             uiAsyncResult, IdentGet());
+          // Fall through to break
+          [[fallthrough]];
         } // If the thread was told to abort? Just break to clear references
         case AR_ABORT: break;
       }
     } // Tidy up the variables
     AsyncCleanup();
   } // Exception occured? Disable lua callback/refs and rethrow
-  catch(const exception&)
+  catch(const StdException &)
   { // Tidy up the variables
     AsyncCleanup();
     // Re-throw the exception to the sandbox exception handler in 'core.hpp'.

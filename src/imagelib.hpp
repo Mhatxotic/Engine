@@ -2,11 +2,33 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This file manages all the different image types we support in the   ## **
-** ## engine. The actual image class will query this manager to test      ## **
-** ## To use this, you build your class and derive your class with this   ## **
-** ## class to enable the plugin to be used by the Image class            ## **
+** ## This module manages all the different image codecs we support in    ## **
+** ## the engine.                                                         ## **
 ** ######################################################################### **
+** ## To add a new codec is straight forward. You need to modify the      ## **
+** ## following files in order to achieve this...                         ## **
+** ## IMAGEDEF.HPP  = Add a 'IFMT_ID' and 'IL_FCE_ID' enum to the         ## **
+** ##                 'ImageFormat' and the 'ImageFlags' table            ## **
+** ##                 respectively.                                       ## **
+** ## IMAGE.HPP     = Add a manual override condition to 'AsyncReady()'.  ## **
+** ## LLIMAGE.HPP   = Add your 'IL_FCE_ID' value at 'LLRSKTBEGIN(Flags)'  ## **
+** ##                 to expose the flag to LUA at sandbox startup.       ## **
+** ## CONLIB.HPP    = Add the 'IL_FCE_ID' token to the 'images' console   ## **
+** ##                 command output.                                     ## **
+** ## CREDIT.HPP    = (If using an external library) Add a new 'CL_ID'    ## **
+** ##                 enum to the 'CreditEnums' table and add the         ## **
+** ##                 appropriate information to credit the library.      ## **
+** ## SETUP.HPP     = (If using an external library) Add appropriate      ## **
+** ##                 includes into their own C++ namespace.              ## **
+** ## IFMT<EXT>.HPP = Add your 'Codec<EXT>' class into a new file using   ## **
+** ##                 using the same layout as the other 'IFMT<EXT>.HPP'  ## **
+** ##                 files deriving your class with 'ImageLib' and       ## **
+** ##                 sending the proper information to the 'ImageLib'    ## **
+** ##                 constructor.                                        ## **
+** ## ENGINE.CPP    = Add your 'IFMT<EXT>.HPP' include here with the      ## **
+** ##                 others.                                             ## **
+** ## CORE.CPP      = Derive your 'private Codec<EXT>' class into the     ## **
+** ##                 'Core' class to make sure it is created at startup. ## **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
@@ -22,7 +44,7 @@ using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Image libraries collector class as a vector for direct access -------- */
-CTOR_BEGIN_CUSTCTR(ImageLibs, ImageLib, vector, CLHelperUnsafe)
+CTOR_BEGIN_CUSTCTR(ImageLibs, ImageLib, StdVector, CLHelperUnsafe)
 /* -- Image libraries format object class ---------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
@@ -31,8 +53,8 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncDecoder &cfdNFunc      // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
@@ -45,8 +67,8 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
@@ -59,8 +81,8 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
@@ -75,12 +97,12 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
 CTOR_END(ImageLibs, ImageLib, IMAGELIB,
   reserve(IFMT_MAX); CollectorSetLimit(IFMT_MAX),)
 /* -- Save a image using a specific type ----------------------------------- */
-static void ImageSave(const ImageFormat ifId, const string &strFile,
+static void ImageSave(const ImageFormat ifId, const StdString &strFile,
   const ImageData &idData, const ImageSlot &isData)
 { // Get plugin class
   const ImageLib &ilRef = *cImageLibs->at(ifId);
   // Set filename with forced extension so we can delete it if it fails
-  const string strFileNX{ StrAppend(strFile, '.', ilRef.GetExt()) };
+  const StdString strFileNX{ StrAppend(strFile, '.', ilRef.GetExt()) };
   bool bCreated = false;
   // Capture exceptions
   try
@@ -98,11 +120,11 @@ static void ImageSave(const ImageFormat ifId, const string &strFile,
           isData.DimGetHeight(), idData.GetBitsPerPixel());
         return;
       } // Could not detect format so throw error
-      throw runtime_error{ "Failed to save image!" };
+      throw StdRunTimeError{ "Failed to save image!" };
     } // Failed to create file
     XCL("Failed to create file!", "File", strFileNX);
   } // Error occured. Error used as title
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Remove file if created
     if(bCreated) DirFileUnlink(strFileNX);
     // Throw an error with the specified reason
@@ -123,9 +145,9 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
         fmData.IdentGet(), ilRef.GetExt(), ifId, idData.DimGetWidth(),
         idData.DimGetHeight(), idData.GetBitsPerPixel());
     // Could not detect format so throw error
-    throw runtime_error{ "Unable to load image!" };
+    throw StdRunTimeError{ "Unable to load image!" };
   } // Error occured. Error used as title
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Throw an error with the specified reason
     XC(eReason,
       "Identifier", fmData.IdentGet(),    "Size",     fmData.MemSize(),
@@ -147,7 +169,7 @@ static void ImageLoad(FileMap &fmData, ImageData &idData)
           fmData.IdentGet(), idData.DimGetWidth(), idData.DimGetHeight(),
           idData.GetBitsPerPixel(), ilRef.GetExt());
     } // Error occured. Error used as title
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Throw an error with the specified reason
       XC(eReason,
         "Identifier", fmData.IdentGet(),    "Size",   fmData.MemSize(),

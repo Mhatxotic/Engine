@@ -25,11 +25,11 @@ using namespace IUrl::P;               using namespace Common;
 ** -- Read Url class argument ---------------------------------------------- */
 struct AgUrl : public ArClass<Url> {
   explicit AgUrl(lua_State*const lS, const int iArg) :
-    ArClass{*LuaUtilGetPtr<Url>(lS, iArg, *cUrls)}{} };
+    ArClass{LuaUtilGetClassRef<Url>(lS, iArg, cUrls)}{} };
 /* -- Create Url class argument -------------------------------------------- */
 struct AcUrl : public ArClass<Url> {
   explicit AcUrl(lua_State*const lS) :
-    ArClass{*LuaUtilClassCreate<Url>(lS, *cUrls)}{} };
+    ArClass{LuaUtilClassCreateRef<Url>(lS, cUrls)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Url:* member functions                                              ## **
