@@ -165,9 +165,8 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Set exit
     ThreadDoSetExit();
     // Log signal to exit if sent from the thread
-    if(ThreadIsCurrent())
-      cLog->LogDebugExSafe("Thread $<$> signalling to exit.",
-        CtrGet(), IdentGet());
+    cLog->LogDebugExSafe("Thread $<$> exit signalled by $.",
+      CtrGet(), IdentGet(), ThreadIsCurrent() ? "itself" : "another");
   }
   /* ----------------------------------------------------------------------- */
   void ThreadWait()

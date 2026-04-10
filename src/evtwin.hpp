@@ -95,7 +95,7 @@ class EvtWin :                         // Event list for window thread
       EWC(CB_SETNR),        EWC(WIN_CURPOSSET)
 #undef EWC                             // Done with this macro
     }},
-    EvtCore{ "EventWin", *this }       // Construct core
+    EvtCore{ "EvtWin", *this }         // Construct core
     /* -- Set global pointer to static class ------------------------------- */
     { cEvtWin = this; }
 };/* ----------------------------------------------------------------------- */

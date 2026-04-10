@@ -2234,7 +2234,6 @@ static int BuildDistro()
     // Windows specific instructions
 #if defined(WINDOWS)
     // Process 32-bit and 64-bit executable.
-    BuildExecutable(strTmp, "Windows", 32, 86);
     BuildExecutable(strTmp, "Windows", 64, 64);
     // Linux specific tasks? This is much easier because we have tools.
 #elif defined(LINUX)
@@ -2813,36 +2812,21 @@ static string BuildFileList(const string &strBase, const string &strDir,
 }
 /* ------------------------------------------------------------------------- */
 static void GenericExtLibBuild(const string &strCmdLine, const string &strLib,
-  const string &strTempDir, const string &strPrefix, bool bSwap=false)
-{ // Do swap?
-  if(bSwap) System("swap");
-  // Execution compilation
+  const string &strTempDir, const string &strPrefix)
+{ // Execution compilation
   System(strCmdLine);
   // Build the library
   SystemF("$ *$ -out:\"$/$$\"",
     strLib, envActive.cpOBJ, strTempDir, strPrefix, envActive.cpLIB);
   // Clean up the object files
   DoClean({ envActive.cpOBJ });
-  // Do swap?
-  if(bSwap) System("swap");
 }
 /* ------------------------------------------------------------------------- */
 static void GenericExtLibBuildBits(const string &strCLRel,
   const string &strLib, const string &strTmp, const string &strPrefix,
   const unsigned int uiBits)
-{ // Generate prefix with bits
-  const string strBits{ StrAppend(strPrefix, uiBits) };
-  // Compile release version
-  GenericExtLibBuild(strCLRel, strLib, strTmp, strBits, uiBits==32);
-}
-/* ------------------------------------------------------------------------- */
-static void GenericExtLibBuildAll(const string &strCLRel64,
-  const string &strCLRel32,  const string &strL64,
-  const string &strL32, const string &strTmp, const string &strPrefix)
-{ // Compile 64-bit version
-  GenericExtLibBuildBits(strCLRel64, strL64, strTmp, strPrefix, 64);
-  // Compile 32-bit release
-  GenericExtLibBuildBits(strCLRel32, strL32, strTmp, strPrefix, 32);
+{ // Compile release version
+  GenericExtLibBuild(strCLRel, strLib, strTmp, StrAppend(strPrefix, uiBits));
 }
 /* ------------------------------------------------------------------------- */
 static const string GetFiles(const string &strExt, const string &strDir="")
@@ -2934,13 +2918,10 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
   // Mandatory compiler flags
   const string
     strA64{ StrAppend(envActive.cpAC8, ' ', envActive.cpACM) },
-    strA32{ StrAppend(envActive.cpAC4, ' ', envActive.cpACM) },
     strRelA64{ StrAppend(strA64, ' ', envActive.cpACB) },
-    strRelA32{ StrAppend(strA32, ' ', envActive.cpACB) },
     strC{ StrFormat("$ $ $ ",
       envActive.cpCCX, envActive.cpCCM, envActive.cpCCLIB) },
     strL{ "LIB.EXE -nologo -ltcg" },
-    strL32{ StrAppend(strL, " -machine:X86") },
     strL64{ StrAppend(strL, " -machine:X64") },
     strRelFlags{
       StrFormat("$ -DNDEBUG -D_NDEBUG $ -Zl", strC, envActive.cpCCAB) },
@@ -2957,10 +2938,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
         "-Wno-dev") },
     strCMake{ StrAppend(strCMakeBase, " .") },
     strNMake{ "NMAKE.EXE /nologo" },
-    strRel64Extra{ envActive.cpCC8 },
-    strRel32Extra{ envActive.cpCC4 };
-  string strRelFlags64{ StrFormat("$ $ ", strRelFlags, strRel64Extra) },
-         strRelFlags32{ StrFormat("$ $ ", strRelFlags, strRel32Extra) };
+    strRel64Extra{ envActive.cpCC8 };
+  string strRelFlags64{ StrFormat("$ $ ", strRelFlags, strRel64Extra) };
   // = OPENSSL SCRIPT (TOO BIG TO DO MANUALLY!) ===============================
   if(strLib.length() >= 8 && strLib.substr(0, 8) == "openssl-")
   { // Mandatory directory replacements
@@ -2988,20 +2967,6 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
         cCommon->CommonCBlank() },\
       { "\\Program Files\\OpenSSL\\lib\\engines-1_1",\
         cCommon->CommonCBlank() }
-    // 32-bit directory replacements
-#define STRBASE32 \
-      { "C:\\\\Program Files (x86)\\\\Common Files\\\\SSL",\
-        cCommon->CommonCBlank() },\
-      { "C:\\\\Program Files (x86)\\\\OpenSSL",\
-        cCommon->CommonCBlank() },\
-      { "C:\\\\Program Files (x86)\\\\SSL",\
-        cCommon->CommonCBlank() },\
-      { "\\Program Files (x86)\\OpenSSL",\
-        cCommon->CommonCBlank() },\
-      { "\\Program Files (x86)\\Common Files\\SSL",\
-        cCommon->CommonCBlank() },\
-      { "\\Program Files (x86)\\OpenSSL\\lib\\engines-1_1",\
-        cCommon->CommonCBlank() }
     // Release mode replacement flags
 #define STRRELEASE \
       { "/Zs",                    cCommon->CommonCBlank() },\
@@ -3013,12 +2978,9 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Actual merged flags
 #define STRREPRELEASE64 { STRMANDATORY, STRBASE64, STRRELEASE,\
       { "/MD /O2", StrFormat("/MT /O2 $", strRel64Extra) } }
-#define STRREPRELEASE32 { STRMANDATORY, STRBASE32, STRRELEASE,\
-      { "/MD /O2", StrFormat("/MT /O2 $", strRel32Extra) } }
 #define STRREPCLANG { "CC=\"cl\"",   "CC=CLANG-CL" }, \
                         { "LD=\"link\"", "LD=LLD-LINK" }
 #define STRREPCLANG64 { STRREPCLANG, { "/MT", "-m64 /MT" } }
-#define STRREPCLANG32 { STRREPCLANG, { "/MT", "-m32 /MT" } }
     const string strInstallDataPm{
       "package OpenSSL::safe::installdata;\n"
       "\n"
@@ -3081,10 +3043,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "disable-capieng" },
     strPerl64{ StrAppend(envActive.cpPerl, // 64-bit XP minimum
       " configure VC-WIN64A -D_WIN32_WINNT=0x0502 ", strPerlOpts) },
-    strPerl64Rel{ StrAppend(strPerl64, " no-filenames") },
-    strPerl32{ StrAppend(envActive.cpPerl, // 32-bit XP minimum
-      " configure VC-WIN32 -D_WIN32_WINNT=0x0501 ", strPerlOpts) },
-    strPerl32Rel{ StrAppend(strPerl32, " no-filenames") };
+    strPerl64Rel{ StrAppend(strPerl64, " no-filenames") };
     // Compile 64-bit release version
     if(uiFlags & PF_X64)
     { // Do compile 64-bit release version
@@ -3101,29 +3060,10 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
                    "include/win64/configuration-w64.h");
       SystemF("$ clean", strNMake);
       System("rm -f makefile configdata.pm include/win64/*.in");
-    } // Compile 32-bit release version
-    if(uiFlags & PF_X86)
-    { // Do compile 32-bit release version
-      System(strPerl32Rel);
-      FStream{ "installdata.pm", FM_W_B }.FStreamWriteString(strInstallDataPm);
-      ReplaceTextMulti("makefile", STRREPRELEASE32);
-      if(envActive.cpCCX == envWindowsLLVMcompat.cpCCX)
-        ReplaceTextMulti("makefile", STRREPCLANG32);
-      System(strNMake);
-      SystemF("$ libcrypto.lib libssl.lib -out:\"$/ssl32.lib\"",
-        strL32, strTmp);
-      System("cp -rf include/openssl include/win32");
-      System("mv -f include/win32/configuration.h "
-                   "include/win32/configuration-w32.h");
-      SystemF("$ clean", strNMake);
-      System("rm -f makefile configdata.pm include/win32/*.in");
-      System("swap");
     } // Done with helper macros
 #undef STRREPRELEASE64
-#undef STRREPRELEASE32
 #undef STRRELEASE
 #undef STRBASE64
-#undef STRBASE32
 #undef STRMANDATORY
   } // = LIBJPEGTURBO SCRIPT ==================================================
   else if(strLib.length() >= 14 && strLib.substr(0, 14) == "libjpeg-turbo-")
@@ -3132,13 +3072,9 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Directories
     const string strBase32{ "simd/i386" }, strBase64{ "simd/x86_64" },
     // NASM Assembler flags
-    strNASMRel32{
-      "nasm -fwin32 -Isimd/nasm/ -I$/ -Iwin/ -DWIN32" },
     strNASMRel64{
       "nasm -fwin64 -Isimd/nasm/ -I$/ -Iwin/ -DWIN64 -D__x86_64__" },
     // Compilations
-    strCompRel32{
-      StrAppend(StrFormat(strNASMRel32, strBase32), " simd/i386") },
     strCompRel64{
       StrAppend(StrFormat(strNASMRel64, strBase64), " simd/x86_64") },
     // Add jpegturbo specific flags
@@ -3205,24 +3141,6 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       { "jidctflt-sse2" }, { "jidctfst-sse2" }, { "jidctint-avx2" },
       { "jidctint-sse2" }, { "jidctred-sse2" }, { "jquantf-sse2"  },
       { "jquanti-avx2"  }, { "jquanti-sse2"  }, { "jsimdcpu"      }
-    },
-    // 32-bit SIMD assembler modules
-    straSIMD32[]{
-      { "jccolor-avx2"  }, { "jccolor-mmx"   }, { "jccolor-sse2"  },
-      { "jcgray-avx2"   }, { "jcgray-mmx"    }, { "jcgray-sse2"   },
-      { "jchuff-sse2"   }, { "jcphuff-sse2"  }, { "jcsample-avx2" },
-      { "jcsample-mmx"  }, { "jcsample-sse2" }, { "jdcolor-avx2"  },
-      { "jdcolor-mmx"   }, { "jdcolor-sse2"  }, { "jdmerge-avx2"  },
-      { "jdmerge-mmx"   }, { "jdmerge-sse2"  }, { "jdsample-avx2" },
-      { "jdsample-mmx"  }, { "jdsample-sse2" }, { "jfdctflt-3dn"  },
-      { "jfdctflt-sse"  }, { "jfdctfst-mmx"  }, { "jfdctfst-sse2" },
-      { "jfdctint-avx2" }, { "jfdctint-mmx"  }, { "jfdctint-sse2" },
-      { "jidctflt-3dn"  }, { "jidctflt-sse"  }, { "jidctflt-sse2" },
-      { "jidctfst-mmx"  }, { "jidctfst-sse2" }, { "jidctint-avx2" },
-      { "jidctint-mmx"  }, { "jidctint-sse2" }, { "jidctred-mmx"  },
-      { "jidctred-sse2" }, { "jquant-3dn"    }, { "jquant-mmx"    },
-      { "jquant-sse"    }, { "jquantf-sse2"  }, { "jquanti-avx2"  },
-      { "jquanti-sse2"  }, { "jsimdcpu"      }
     };
     // We need to activate cmake once to init jpegturbo config and other things
     SystemF("$ "
@@ -3241,92 +3159,45 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       StrAppend(strJPT12Name, '/', envActive.cpOBJ)
     });
     // Compile 64-bit release version
-    {
-      SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP12);
-      const Dir dJP12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP16);
-      const Dir dJP16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT12);
-      const Dir dJPT12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT16);
-      const Dir dJPT16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$-$", strJPT16Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-        RenameFileSafe(StrFormat("$/$-$",
-            strJP12Name, strJP12Name, dempPair.first),
-          StrFormat("$-$", strJP12Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first),
-          StrFormat("$-$", strJP16Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first),
-          StrFormat("$-$", strJPT12Name, dempPair.first));
-      for(const string &strFile : straSIMD64)
-        SystemF("$/$.asm -o $$",
-          strCompRel64, strFile, strFile, envActive.cpOBJ);
-      GenericExtLibBuild(StrFormat("$ $ $ $/jsimd.c", strRelFlags64,
-        strJPTSpecific, strJPT, strBase64), strL64, strTmp, "jpeg64", true);
-    }
+    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP12);
+    const Dir dJP12{ cCommon->CommonPeriod(), envActive.cpOBJ };
+    for(const DirEntMapPair &dempPair : dJP12.GetFiles())
+      RenameFileSafe(dempPair.first,
+        StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first));
+    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP16);
+    const Dir dJP16{ cCommon->CommonPeriod(), envActive.cpOBJ };
+    for(const DirEntMapPair &dempPair : dJP16.GetFiles())
+      RenameFileSafe(dempPair.first,
+        StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first));
+    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT12);
+    const Dir dJPT12{ cCommon->CommonPeriod(), envActive.cpOBJ };
+    for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
+      RenameFileSafe(dempPair.first,
+        StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first));
+    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT16);
+    const Dir dJPT16{ cCommon->CommonPeriod(), envActive.cpOBJ };
+    for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
+      RenameFileSafe(dempPair.first,
+        StrFormat("$-$", strJPT16Name, dempPair.first));
+    for(const DirEntMapPair &dempPair : dJP12.GetFiles())
+      RenameFileSafe(StrFormat("$/$-$",
+          strJP12Name, strJP12Name, dempPair.first),
+        StrFormat("$-$", strJP12Name, dempPair.first));
+    for(const DirEntMapPair &dempPair : dJP16.GetFiles())
+      RenameFileSafe(
+        StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first),
+        StrFormat("$-$", strJP16Name, dempPair.first));
+    for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
+      RenameFileSafe(
+        StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first),
+        StrFormat("$-$", strJPT12Name, dempPair.first));
+    for(const string &strFile : straSIMD64)
+      SystemF("$/$.asm -o $$",
+        strCompRel64, strFile, strFile, envActive.cpOBJ);
+    GenericExtLibBuild(StrFormat("$ $ $ $/jsimd.c", strRelFlags64,
+      strJPTSpecific, strJPT, strBase64), strL64, strTmp, "jpeg64");
     // We need to activate cmake once to init jpegturbo config and other things
     System("rm -rf CMakeFiles *.cmake CMakeCache.txt jconfig.h");
-    SystemF("$ "
-            "-DINLINE_WORKS=1 "
-            "-DHAVE_THREAD_LOCAL=1 "
-            "-DCMAKE_SIZEOF_VOID_P=4 " // CMake can't detect bits on Wine LOL
-            "-DSIZE_T=4", strCMake);   // CMake can't detect bits on Wine LOL
-    // Compile 32-bit release version
-    {
-      SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJP12);
-      const Dir dJP12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJP16);
-      const Dir dJP16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJPT12);
-      const Dir dJPT12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first));
-      SystemF("$ $ $", strRelFlags32, strJPTSpecific, strJPT16);
-      const Dir dJPT16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-      for(const DirEntMapPair &dempPair : dJPT16.GetFiles())
-        RenameFileSafe(dempPair.first,
-          StrFormat("$-$", strJPT16Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first),
-          StrFormat("$-$", strJP12Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first),
-          StrFormat("$-$", strJP16Name, dempPair.first));
-      for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-        RenameFileSafe(
-          StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first),
-          StrFormat("$-$", strJPT12Name, dempPair.first));
-      for(const string &strFile : straSIMD32)
-        SystemF("$/$.asm -o $$",
-          strCompRel32, strFile, strFile, envActive.cpOBJ);
-      GenericExtLibBuild(StrFormat("$ $ $ $/jsimd.c", strRelFlags32,
-        strJPTSpecific, strJPT, strBase32), strL32, strTmp, "jpeg32", true);
-    }
   } // = LIBPNG SCRIPT ========================================================
   else if(strLib.length() >= 7 && strLib.substr(0, 7) == "libpng-")
   { // Ignore if no vorbis supplemental argument
@@ -3346,11 +3217,9 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     const string strPNGSpecific(StrFormat(
       "-I\"$/$\" -D_CRT_SECURE_NO_DEPRECATE "
       "-D_CRT_SECURE_NO_WARNINGS *.c", strTmp, PSLibXR.strFile));
-    strRelFlags64 += strPNGSpecific,
-    strRelFlags32 += strPNGSpecific;
+    strRelFlags64 += strPNGSpecific;
     // Compile sources
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "png");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "png", 64);
   } // = OPENALSOFT SCRIPT ====================================================
   else if(strLib.length() >= 12 && strLib.substr(0, 12) == "openal-soft-")
   { // Setup the repository
@@ -3456,18 +3325,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "core/mixer/*.cpp " +
       strFmtDir + "/src/*.cc" };
     strRelFlags64 += "-D_WIN32_WINNT=0x0502 " + strALSpecific;
-    strRelFlags32 += "-D_WIN32_WINNT=0x0501 " + strALSpecific;
     // Compile 64-bit version
     GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "al", 64);
-    // Compile 32-bit release version
-    ReplaceTextMulti("config.h", {
-      { "#define HAVE_BITSCANFORWARD64_INTRINSIC",
-        "#undef HAVE_BITSCANFORWARD64_INTRINSIC" },
-      { "/* #undef HAVE_BITSCANFORWARD_INTRINSIC */",
-        "#define HAVE_BITSCANFORWARD_INTRINSIC" }
-    });
-    // Compile 32-bit version
-    GenericExtLibBuildBits(strRelFlags32, strL32, strTmp, "al", 32);
   } // = THEORA SCRIPT ========================================================
   else if(strLib.length() >= 10 && strLib.substr(0, 10) == "libtheora-")
   { // Ignore if no vorbis supplemental argument
@@ -3495,10 +3354,9 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Add theora specific flags
     const string strTheoraSpecific(
       "-DWIN32 -D_MBCS -D_LIB -Iinclude -Iwin32 lib/*.c win32/*.c");
-    strRelFlags64 += strTheoraSpecific, strRelFlags32 += strTheoraSpecific;
+    strRelFlags64 += strTheoraSpecific;
     // Compile sources
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "theora");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "theora", 64);
   } // = FREETYPE SCRIPT ======================================================
   else if(strLib.length() >= 9 && strLib.substr(0, 9) == "freetype-")
   { // Setup repository
@@ -3538,14 +3396,13 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "src/smooth/smooth.c "           "src/truetype/truetype.c "
       "src/type1/type1.c "             "src/type42/type42.c "
       "src/winfonts/winfnt.c "         "src/base/ftdebug.c" };
-    strRelFlags64 += strFTSpecific, strRelFlags32 += strFTSpecific;
+    strRelFlags64 += strFTSpecific;
     // Hack to force use our zlib since cmake doesn't listen anymore ----------
     ReplaceText("include/freetype/config/ftoption.h",
       "/* #define FT_CONFIG_OPTION_SYSTEM_ZLIB */",
       "#define FT_CONFIG_OPTION_SYSTEM_ZLIB");
     // Compile sources
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "ft");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "ft", 64);
     // Perform modification of headers
     System("mv -f build/include/freetype/config/*.h include/freetype/config");
     System("mv -f include/*.h include/freetype");
@@ -3577,9 +3434,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "-D_CRT_SECURE_NO_WARNINGS -D_GLFW_WIN32 -DWIN32 -D_WINDOWS$",
       strFiles) };
     strRelFlags64 += StrAppend("-DWINVER=0x0502 -D_WIN32_WINNT=0x0502 ",
-      strGlfwSpecific),
-    strRelFlags32 += StrAppend("-DWINVER=0x0501 -D_WIN32_WINNT=0x0501 ",
-      strGlfwSpecific),
+      strGlfwSpecific);
     // Using non-XP functions in 3.4.0 for some reason when XP still supported
     ReplaceTextMulti("src/win32_thread.c", {
       { "GLFWbool _glfwPlatformCreateCondVar(_GLFWcondvar* condvar)", "/*" },
@@ -3626,8 +3481,7 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       { "_glfwPlatformLoadModule(\"", "_glfwPlatformLoadModule(L\"" },
     });
     // Compile sources
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "glfw");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "glfw", 64);
   } // = LIBOGG/VORBIS SCRIPT =================================================
   else if(strLib.length() >= 7 && strLib.substr(0, 7) == "libogg-")
   { // Ignore if no vorbis supplemental argument
@@ -3653,10 +3507,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Add ogg/vorbis specific flags
     const string strVorbisSpecific("-Iinclude lib/*.c");
     strRelFlags64 += strVorbisSpecific;
-    strRelFlags32 += strVorbisSpecific;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "ogg");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "ogg", 64);
   } // = LIBNSGIF SCRIPT ======================================================
   else if(strLib.length() >= 9 && strLib.substr(0, 9) == "libnsgif-")
   { // Make sure it doesnt suffix in -src
@@ -3667,10 +3519,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Add nsgif specific flags
     const string strNSGSpecific("-Iinclude src/*.c");
     strRelFlags64 += strNSGSpecific;
-    strRelFlags32 += strNSGSpecific;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "nsgif");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "nsgif", 64);
   } // = SQLITE SCRIPT ========================================================
   else if(strLib.length() >= 20 &&
           strLib.substr(0, 20) == "sqlite-amalgamation-")
@@ -3685,10 +3535,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "-DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_OMIT_DEPRECATED "
       "-DSQLITE_THREADSAFE -DSQLITE_ENABLE_MATH_FUNCTIONS *.c");
     strRelFlags64 += strSQLiteSpecific;
-    strRelFlags32 += strSQLiteSpecific;
     // Compile 64-bit release version -----------------------------------------
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "sqlite");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "sqlite", 64);
   } // = XMP SCRIPT ===========================================================
   else if(strLib.length() >= 12 && strLib.substr(0, 12) == "libxmp-lite-")
   { // Setup the archive
@@ -3711,10 +3559,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       GetFiles(".c", "src"), ' ',
       GetFiles(".c", "src/loaders")) };
     strRelFlags64 += strXmpSpecific;
-    strRelFlags32 += strXmpSpecific;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "xmp");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "xmp", 64);
   } // = ZLIB SCRIPT ==========================================================
   else if(strLib.length() >= 5 && strLib.substr(0, 5) == "zlib-")
   { // Setup the archive
@@ -3725,10 +3571,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "-D_CRT_NONSTDC_NO_DEPRECATE "
       "-I. ", GetFiles(".c")) };
     strRelFlags64 += strZLibSpecific;
-    strRelFlags32 += strZLibSpecific;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "zlib");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "zlib", 64);
   } // = MINIMP3 SCRIPT =======================================================
   else if(strLib.length() >= 7 && strLib.substr(0, 7) == "minimp3")
   { // Setup second archive first then the first archive
@@ -3750,10 +3594,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Set compiler flags
     const string strMMSpecific("*.c");
     strRelFlags64 += strMMSpecific;
-    strRelFlags32 += strMMSpecific;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "mpt");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "mpt", 64);
   } // = LZMA SCRIPT ==========================================================
   else if(strLib.length() >= 4 && strLib.substr(0, 4) == "lzma")
   { // Set destination temp directory
@@ -3767,12 +3609,10 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
       "C/*.c" };
     // Rest flags
     strRelFlags64 += strLZMASpecificMandatory,
-    strRelFlags32 += strLZMASpecificMandatory,
     // This disables use of AVX which isn't supported on wine
     ReplaceText("C/LzFind.c", "#define USE_SATUR_SUB_128", "");
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "lzma");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "lzma", 64);
   } // = BZIP2 SCRIPT =========================================================
   else if(strLib.length() >= 6 && strLib.substr(0, 6) == "bzip2-")
   { // Setup second archive first then the first archive
@@ -3782,10 +3622,8 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     // Add BZ2 specific flags to compiler command line
     const string strBZ2Sources("*.c");
     strRelFlags64 += strBZ2Sources;
-    strRelFlags32 += strBZ2Sources;
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "bzip");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "bzip", 64);
   } // = LUA SCRIPT ===========================================================
   else if(strLib.length() >= 4 && strLib.substr(0, 4) == "lua-")
   { // Extract the repository and switch to it --------------------------------
@@ -3827,11 +3665,9 @@ static int ExtLibScript(const string &strOpt, const string &strOpt2)
     const string strLuaSpecific{ "-TP -EHsc -std:" STANDARD }, // NO C!
                  strLuaDebug{ "-DLUA_USE_APICHECK" },
                  strLuaSources{ "src/*.c" };
-    strRelFlags64 += StrAppend(strLuaSpecific, ' ', strLuaSources),
-    strRelFlags32 += StrAppend(strLuaSpecific, ' ', strLuaSources);
+    strRelFlags64 += StrAppend(strLuaSpecific, ' ', strLuaSources);
     // Compile everything
-    GenericExtLibBuildAll(strRelFlags64, strRelFlags32,
-      strL64, strL32, strTmp, "lua");
+    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "lua", 64);
   } // Unrecognised archive filename
   else throw runtime_error{ "The archive is valid but unrecognised!" };
   // Done

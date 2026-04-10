@@ -232,10 +232,8 @@ class EvtCore :                        // Start of common event system class
       if(!ulLock.owns_lock()) return EvtNone;
       // Until event list is empty
       while(!qlEvents.empty())
-      { // Get event data. Move it and never reference it!
+      { // Copy latest event data and then erase it from list
         const Event epData{ StdMove(qlEvents.front()) };
-        // Erase element. We're done with it. This is needed here incase the
-        // callback throws an exception and causes an infinite loop.
         qlEvents.pop_front();
         // Log event if loggable
         if(epData.cCmd < EvtNoLog)

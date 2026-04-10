@@ -73,6 +73,8 @@ class Lua :                            // Actual class body
     lrMainTick.LuaFuncUnrefSwap(lrMainEnd);
     // Now it's up to the guest to end execution with Core.Done();
     bExiting = true;
+    // Say that we've finished calling the function
+    cLog->LogDebugSafe("Lua swapped main tick function with end tick.");
   }
   /* -- Ask LUA to tell guest to redraw ------------------------------------ */
   void LuaOnSendRedraw(const EvtMainEvent&)

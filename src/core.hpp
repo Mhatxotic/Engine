@@ -207,7 +207,7 @@ class Core final :                     // Members initially private
     Catchup: FboCoreActivateMain();
     // Poll joysticks
     JoyPoll();
-    // Execute a tick for each frame missed
+    // Execute a tick
     LuaExecuteMain();
     // What is the current draw condition?
     switch(FboCoreGetDraw())
@@ -367,7 +367,7 @@ class Core final :                     // Members initially private
       // statically create something above!
       LuaUtilPushCStr(lS, eReason.what());
       LuaUtilErrThrow(lS);
-    } // Returning nothing
+    } // Returning no values
     return 0;
   }
   /* -- Get core pointer and call the entry function ----------------------- */
@@ -459,7 +459,7 @@ class Core final :                     // Members initially private
     WinSetClose(GLFW_TRUE);
     // Unblock the window thread
     GlFWForceEventHack();
-  }
+  } // At this point the main thread window event loop will break
   /* -- Initoialise graphics subsystems ------------------------------------ */
   void CoreInitGraphicalSubsystems()
   { // Set context current and pass selected refresh rate
@@ -581,10 +581,7 @@ class Core final :                     // Members initially private
                 // Throw to critical error dialog
                 throw;
             } // Should not get here
-          }
-          // Grab the exit code from events if the error because it wasn't
-          // able to be caught in the events queue and fall through so the
-          // original request can be process.
+          } // We have to update the exit code manually if pending.
           UpdateConfirmExit();
           // Check exit code. These are originally set in EvtMain::DoHandle()
           // so make sure all used exit values with ConfirmExit() are checked
@@ -716,14 +713,29 @@ class Core final :                     // Members initially private
         EvtWin::Manage();
         // Wait for more window events
         GlFWWaitEvents();
-      } // Restart to hard reinit the window if not doing a soft reinit
-      if(GetExitReason() != EMC_QUIT_VREINIT) continue;
-      // De-initialise the thread
-      GetEngThread().ThreadDeInit();
-      // Soft reinitialise the window
-      DisplayReInit();
-      // Go back to the thread restart point
-      goto Restart;
+      } // Compare exit reason
+      switch(GetExitReason())
+      { // If the window is being re-initialised?
+        case EMC_QUIT_VREINIT:
+          // De-initialise the engine thread and wait for it to complete
+          GetEngThread().ThreadDeInit();
+          // Soft reinitialise the window
+          DisplayReInit();
+          // Go back to the thread restart point
+          goto Restart;
+        // If the window closed on it's own (OS closed it?)
+        case EMC_LUA_ERROR:
+          // Write a warning because we can't run the exit request
+          cLog->LogWarningSafe("Core processing abrupt window close event...");
+          // Force quit reason because it wasn't set yet
+          SetExitReason(EMC_QUIT);
+          // De-initialise the engine thread and wait for it to complete
+          GetEngThread().ThreadDeInit();
+          // Fall through to quit
+          [[fallthrough]];
+        // Anything else just de-init the window and reload it
+        default: continue;
+      }
     } // Error occured
     catch(const exception &eReason)
     { // Send to log and show error message to user
