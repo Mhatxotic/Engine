@@ -347,7 +347,7 @@ class SysBase                          // Members initially private
           if(GetModuleFileNameEx(hProcess, nullptr,
             const_cast<LPWSTR>(wstrFN.data()), MAX_PATH))
           { // Get version information
-            const SysModuleData vD{ StdMove(SysModule(WS16toUTF(wstrFN))) };
+            const SysModuleData vD{ StdMove(SysModule{ WS16toUTF(wstrFN) }) };
             // Push version, description vendor and filename (use .data())
             tData.DataF("$.$.$.$", vD.GetMajor(), vD.GetMinor(),
                     vD.GetRevision(), vD.GetBuild())
@@ -400,7 +400,7 @@ class SysBase                          // Members initially private
       if(Module32First(hSnapshot, &medData) == TRUE) do
       { // Get module information
         const SysModuleData vD{
-          StdMove(SysModule(S16toUTF(medData.szExePath))) };
+          StdMove(SysModule{ S16toUTF(medData.szExePath) }) };
         // Print data
         tD.Data(vD.GetDesc()).Data(vD.GetVersion())
           .Data(vD.GetVendor()).DataW(medData.szExePath);

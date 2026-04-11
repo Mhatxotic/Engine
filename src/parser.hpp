@@ -208,8 +208,7 @@ template<class ParserBaseType = ParserBase<StrNCStrMap>>struct Parser :
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- A Parser class thats values cannot be modified at all -------------- */
-template<class ParserBaseType = const ParserBase<const StrStrMap>>
-  struct ParserConst :
+template<class ParserBaseType = ParserBase<StrStrMap>>struct ParserConst :
   /* -- Base classes ------------------------------------------------------- */
   public ParserBaseType                // The base map type
 { /* -- Constructor -------------------------------------------------------- */

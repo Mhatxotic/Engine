@@ -425,7 +425,7 @@ LLFUNC(ScrollUp, 0, cConsole->MoveLogUp())
 // ? This is the same as updating the cvar 'app_delay' apart from that the cvar
 // ? is not updated and not saved.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetDelay, 0, const AgIntLG aMilliseconds{lS, 1, -1, 1000};
+LLFUNC(SetDelay, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
   cTimer->TimerUpdateDelay(aMilliseconds))
 /* ========================================================================= */
 // $ Core.SetIcon

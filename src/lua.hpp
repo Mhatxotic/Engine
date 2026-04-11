@@ -115,7 +115,7 @@ class Lua :                            // Actual class body
     if(!LuaResumeExecution())
       return cConsole->ConsoleAddLine("Execution already in progress.");
     // Refresh originally stored delay
-    cTimer->TimerSetDelay(cCVars->CVarsGetInternal<int>(APP_DELAY));
+    cTimer->TimerSetDelay(cCVars->CVarsGetInternal<unsigned int>(APP_DELAY));
     // Disable console
     cConGfx->ConGfxSetLocked(false);
     cConGfx->ConGfxSetVisible(false);

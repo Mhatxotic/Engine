@@ -204,7 +204,6 @@
 #define UDB_EXTENSION            "udb" // Default database file extension
 #define JSON_EXTENSION          "json" // Default json file extension
 #define CER_EXTENSION            "cer" // Default certificate file extension
-#define MAX_PIPE_BUFFER           4096 // Maximum size of a pipe buffer
 /* == Base STL includes ==================================================== */
 #include <algorithm>                   // Searching, sorting, counting, etc.
 #include <array>                       // Static arrays

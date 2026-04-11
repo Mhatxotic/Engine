@@ -18,17 +18,6 @@ using ::std::unordered_set;            using ::std::vector;
 using ::std::wstring;
 /* -- Exceptions ----------------------------------------------------------- */
 using ::std::exception;                using ::std::runtime_error;
-/* -- Other ---------------------------------------------------------------- */
-using ::std::addressof;                using ::std::bind;
-using ::std::bit_cast;                 using ::std::function;
-using ::std::gcd;                      using ::std::index_sequence;
-using ::std::locale;                   using ::std::make_index_sequence;
-using ::std::make_pair;                using ::std::make_signed_t;
-using ::std::make_unsigned_t;          using ::std::nothrow;
-using ::std::numeric_limits;           using ::std::remove_const_t;
-using ::std::remove_cv_t;              using ::std::remove_pointer_t;
-using ::std::remove_reference_t;       using ::std::swap;
-using ::std::tuple_size_v;
 /* -- Iteratations --------------------------------------------------------- */
 using ::std::accumulate;               using ::std::advance;
 using ::std::any_of;                   using ::std::back_inserter;
@@ -55,7 +44,18 @@ using ::std::is_trivially_copyable_v;  using ::std::underlying_type_t;
 /* -- Bind class function argument namespaces ------------------------------ */
 using ::std::placeholders::_1;         using ::std::placeholders::_2;
 using ::std::placeholders::_3;
-/* -- Asynchronisation ----------------------------------------------------- */
+/* -- Other ---------------------------------------------------------------- */
+using ::std::addressof;                using ::std::bind;
+using ::std::bit_cast;                 using ::std::function;
+using ::std::gcd;                      using ::std::index_sequence;
+using ::std::locale;                   using ::std::make_index_sequence;
+using ::std::make_pair;                using ::std::make_signed_t;
+using ::std::make_unsigned_t;          using ::std::nothrow;
+using ::std::numeric_limits;           using ::std::remove_const_t;
+using ::std::remove_cv_t;              using ::std::remove_pointer_t;
+using ::std::remove_reference_t;       using ::std::swap;
+using ::std::tuple_size_v;
+/* -- Synchronisation ------------------------------------------------------ */
 using ::std::atomic;
 typedef atomic<bool>         AtomicBool;   // Thread safe boolean
 typedef atomic<double>       AtomicDouble; // Thread safe double
@@ -64,8 +64,8 @@ typedef atomic<size_t>       AtomicSizeT;  // Thread safe size_t
 typedef atomic<uint64_t>     AtomicUInt64; // Thread safe 64-bit integer
 typedef atomic<unsigned int> AtomicUInt;   // Thread safe unsigned integer
 /* -- Checks if a type is atomic ------------------------------------------- */
-template<typename T>struct is_std_atomic : std::false_type {};
-template<typename U>struct is_std_atomic<atomic<U>> : std::true_type {};
+template<typename T>struct is_std_atomic : ::std::false_type {};
+template<typename U>struct is_std_atomic<atomic<U>> : ::std::true_type {};
 template<typename T>
   constexpr bool is_std_atomic_v = is_std_atomic<remove_cv_t<T>>::value;
 /* -- Indexed vector list types -------------------------------------------- */
@@ -93,8 +93,8 @@ typedef StrList::iterator               StrListIt;
 typedef pair<const string, const string> StrPair;
 typedef list<StrPair>                    StrPairList;
 /* -- Set of strings ------------------------------------------------------- */
-typedef set<string>            StrSet;
-typedef StrSet::const_iterator StrSetConstIt;
+typedef set<string>                StrSet;
+typedef StrSet::const_iterator     StrSetConstIt;
 typedef unordered_set<string_view> StrVUSet;
 /* -- Helper macro to build typedefs for a new map type -------------------- */
 #define MAPPACK_BUILD(n,t1,t2) \

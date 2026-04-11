@@ -304,8 +304,8 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // Calculate how much the image increased. This should really be 2
     // every time but we'll just make a calculation like this just
     // incase.
-    const unsigned int uiDivisor =
-      ipData.DimGetWidth<unsigned int>() / DimGetWidth();
+    const GLfloat fDivisor =
+      ceilf(ipData.DimGetWidth<GLfloat>() / DimGetWidth<GLfloat>());
     // Update the image dimensions of the font texture
     DimSet(ipData.DimGetWidth<unsigned int>(),
            ipData.DimGetHeight<unsigned int>());
@@ -315,10 +315,10 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // by the enlargement factor. A very simple and effective solution.
     // Note that using transform is ~100% slower than this.
     StdForEach(par_unseq, clTiles[0].begin(), clTiles[0].end(),
-      [uiDivisor](CoordData &tcI)
+      [fDivisor](CoordData &tcI)
         { for(size_t stTriId = 0; stTriId < stTrisPerQuad; ++stTriId)
             for(size_t stFltId = 0; stFltId < stFloatsPerCoord; ++stFltId)
-              tcI[stTriId][stFltId] /= uiDivisor; });
+              tcI[stTriId][stFltId] /= fDivisor; });
     // Copy the glyph to texture atlast
     AtlasCopyBitmap<ImageType>(iprNew,
       static_cast<size_t>(uiTWidth), static_cast<size_t>(uiTHeight),
@@ -327,7 +327,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     rtCmd = RT_FULL;
     // Say that we resized the image
     cLog->LogDebugExSafe("Atlas enlarged '$' by a factor of $ to $x$.",
-      IdentGet(), uiDivisor, DimGetWidth(), DimGetHeight());
+      IdentGet(), fDivisor, DimGetWidth(), DimGetHeight());
   }
   /* -- Initialise the atlas --------------------------------------- */ public:
   template<class ImageType>void AtlasInit(const string &strId,

@@ -156,6 +156,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       case GL_NEAREST_MIPMAP_LINEAR: case GL_NEAREST_MIPMAP_NEAREST:
         GL(cOgl->GenerateMipmaps(),
           "Failed to generate mipmaps!", "Identifier", IdentGet());
+        [[fallthrough]];
       // Nothing special
       default: break;
     }
@@ -578,14 +579,18 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
     const GLfloat fTop, const GLfloat fRight, const GLfloat fBottom)
   { // Calculate perspective width
     const GLfloat
-      fNewWidth = (fRight - fLeft) / uiColumns,
-      fNewHeight = (fBottom - fTop) / (GetTileCount() / uiColumns);
+      fNewWidth = (fRight - fLeft) /
+        static_cast<GLfloat>(uiColumns),
+      fNewHeight = (fBottom - fTop) /
+        static_cast<GLfloat>(GetTileCount() / uiColumns);
     // For each image
     for(size_t stTile = 0; stTile < GetTileCount(); ++stTile)
     { // Calculate X, Y co-ordinate
       const GLfloat
-        fNewLeft = fLeft + (stTile % uiColumns) * fNewWidth,
-        fNewTop = fTop + (stTile / uiColumns) * fNewHeight;
+        fNewLeft = fLeft +
+          static_cast<GLfloat>(stTile % uiColumns) * fNewWidth,
+        fNewTop = fTop +
+          static_cast<GLfloat>(stTile / uiColumns) * fNewHeight;
       // Blit the texture
       BlitLTRB(0, stTile, fNewLeft, fNewTop,
         fNewLeft + fNewWidth, fNewTop + fNewHeight);

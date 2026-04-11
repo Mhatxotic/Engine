@@ -232,7 +232,7 @@ class CodecPNG :                       // PNG codec object
         { // Strip alpha if it is there
           if(bAlpha) png_set_strip_alpha(psData);
           // Transfomrations complete so update
-          png_set_interlace_handling(psData);;
+          png_set_interlace_handling(psData);
           png_read_update_info(psData, piData);
           // Update the pixel type to zero. This means that this format only
           // works with our BitMask system.

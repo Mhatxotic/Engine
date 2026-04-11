@@ -134,8 +134,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     { // Anything else? Send playback event and set internal state to stopped
       default: LuaEvtDispatch(SE_STOP, psState, srReason);
                psState = PS_STANDBY;
+               [[fallthrough]];
       // Return if forced to stop or already in standby
-      case PS_WASPLAYING: case PS_STANDBY: break;
+      case PS_WASPLAYING: [[fallthrough]];
+      case PS_STANDBY: break;
     }
   }
   /* -- Play (without locks) ----------------------------------------------- */
@@ -434,9 +436,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
               if(llLoop != -1 && !--llLoop) SetLoopEnd(GetSamples());
             } // Requeue the buffers
             sCptr->QueueBuffers(vUnQBuffers.data(), stBuffersProcessed);
-            // Done
-            break;
-          }
+          } // Fall through to break
+          [[fallthrough]];
         } // Other state (ignore)
         default: break;
       }
@@ -531,8 +532,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     // then Rebuffer() will not fill all the buffers and subsequent OpenAL
     // calls will fail. We'll add a minimum value of 1 too just incase we get
     // a stream with no data.
-    vBuffers.resize(UtilClamp(static_cast<size_t>(ceil(static_cast<ALdouble>
-      (GetSamples()) / cParent->stBufSize)), 1, cParent->stBufCount));
+    vBuffers.resize(
+      UtilClamp(static_cast<size_t>(ceil(static_cast<ALdouble>
+      (GetSamples()) / static_cast<ALdouble>(cParent->stBufSize))), 1,
+      cParent->stBufCount));
     // Get info about ogg and copy it into our static buffer if succeeded,
     // else show an exception if failed. This removes dereferencing of the
     // vorbis info struct.

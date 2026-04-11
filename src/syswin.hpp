@@ -747,7 +747,7 @@ class SysCore :
       if(wstrP.empty()) continue;
       // Insert into module list
       smmMap.emplace(make_pair(reinterpret_cast<size_t>(hH),
-        SysModule(WS16toUTF(wstrP))));
+        SysModule{ WS16toUTF(wstrP) }));
     } // Return modules
     return smmMap;
   }
@@ -768,19 +768,30 @@ class SysCore :
   { // Grab appropriate kernel function. It only exists on 64-bit versions
     // of Windows XP, Vista, 7, 8, 8.1 and 10. If this succeeds?
     typedef void (WINAPI*const LPFN_GETNATIVESYSTEMINFO)(LPSYSTEM_INFO);
-    if(LPFN_GETNATIVESYSTEMINFO fnGetNativeSystemInfo =
+    if(const LPFN_GETNATIVESYSTEMINFO fnGetNativeSystemInfo =
       GetKernelFunc<LPFN_GETNATIVESYSTEMINFO>("GetNativeSystemInfo"))
     { // Get operating system HAL information (returns nothing).
       // https://docs.microsoft.com/en-us/windows/win32
       //   /api/sysinfoapi/nf-sysinfoapi-getnativesysteminfo
-      SYSTEM_INFO siD;
-      fnGetNativeSystemInfo(&siD);
-      // We now know if it's a 64-bit OS!
-      return siD.wProcessorArchitecture ==
-        PROCESSOR_ARCHITECTURE_AMD64 ? 64 : 32;
-    } // Failed so if the function was not found? Then it's a 32-bit OS.
+      SYSTEM_INFO siData;
+      fnGetNativeSystemInfo(&siData);
+      // Build architecture list
+      switch(static_cast<unsigned int>(siData.wProcessorArchitecture))
+      { // 64-bit architecture?
+        case PROCESSOR_ARCHITECTURE_AMD64:
+        case PROCESSOR_ARCHITECTURE_ARM64:
+        case PROCESSOR_ARCHITECTURE_IA64: return 64;
+        // 32-bit architecture?
+        case PROCESSOR_ARCHITECTURE_INTEL:
+        case PROCESSOR_ARCHITECTURE_ARM:
+        case PROCESSOR_ARCHITECTURE_UNKNOWN: return 32;
+        // Unknown. We should report it
+        default: break;
+      }; // Unsupported value so log it
+      XC("Architecture id not recognised!",
+        "Id", siData.wProcessorArchitecture);
+    } // We can safely assume an ancient 32-bit Windows version if not found
     if(SysIsErrorCode(ERROR_PROC_NOT_FOUND)) return 32;
-    // Show other error
     XCS("Failed to get native system info function address!");
   }
   /* ----------------------------------------------------------------------- */
@@ -814,8 +825,9 @@ class SysCore :
       const unsigned int uiHi, uiLo, uiBd, uiSp;
     };
     // List of recognised Windows versions
-    static const array<const OSListItem,40>osList{ {
-      { "11 25H2+", 10, 0, 26200, 0 }, { "11 24H2",  10, 0, 26100, 0 },
+    static const array<const OSListItem,41>osList{ {
+      { "11 26H1+", 10, 0, 28000, 0 },
+      { "11 25H2",  10, 0, 26200, 0 }, { "11 24H2",  10, 0, 26100, 0 },
       { "11 23H2",  10, 0, 22631, 0 }, { "11 22H2",  10, 0, 22621, 0 },
       { "11 21H2",  10, 0, 22000, 0 }, { "10 22H2",  10, 0, 19045, 0 },
       { "10 21H2",  10, 0, 19044, 0 }, { "10 21H1",  10, 0, 19043, 0 },

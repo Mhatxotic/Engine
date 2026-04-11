@@ -246,12 +246,12 @@ class Input :                          // Handles keyboard, mouse & controllers
   { // Expand the stage co-ordinates to actual desktop window co-ordinates
     const GLfloat
       fAdjX = (fX + -cFboCore->FboCoreGetMainStage().CoordsGetLeft()) /
-        cFboCore->FboCoreGetMain().CoordsGetRight() * DimGetWidth(),
+        cFboCore->FboCoreGetMain().CoordsGetRight() * DimGetWidth<GLfloat>(),
       fAdjY = (fY + -cFboCore->FboCoreGetMainStage().CoordsGetTop()) /
-        cFboCore->FboCoreGetMain().CoordsGetBottom() * DimGetHeight(),
+        cFboCore->FboCoreGetMain().CoordsGetBottom() * DimGetHeight<GLfloat>(),
       // Clamp the new position to the window bounds.
-      fNewX = UtilClamp(fAdjX, 0.0f, DimGetWidth() - 1.0f),
-      fNewY = UtilClamp(fAdjY, 0.0f, DimGetHeight() - 1.0f);
+      fNewX = UtilClamp(fAdjX, 0.0f, DimGetWidth<GLfloat>() - 1.0f),
+      fNewY = UtilClamp(fAdjY, 0.0f, DimGetHeight<GLfloat>() - 1.0f);
     // Dispatch the request to set the cursor
     cEvtWin->AddUnblock(EWC_WIN_CURPOSSET,
       static_cast<double>(fNewX), static_cast<double>(fNewY));

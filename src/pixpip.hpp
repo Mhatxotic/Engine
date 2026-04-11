@@ -212,12 +212,10 @@ class SysPipe :
     // Read some data and if we got some? Return how much we read
     switch(const size_t stRead = static_cast<size_t>
       (read(haChildToParent.GetReadFd(), vpDest, stToRead)))
-    { // Success?
+    { // Success? Report the read and return number of bytes read
       default:
-        // Report read
         cLog->LogDebugExSafe("System fork at pid $ read $ bytes.",
           pPid, stRead);
-        // Return bytes
         return stRead;
       // Error? Report it!
       case StdMaxSizeT:
@@ -226,7 +224,7 @@ class SysPipe :
     } // Don't get here
   }
   /* -- Read data into memory block ---------------------------------------- */
-  Memory ReadBlock(const size_t stBuffer=MAX_PIPE_BUFFER)
+  Memory ReadBlock(const size_t stBuffer)
   { // Buffer for process output
     Memory mBuffer{ stBuffer };
     // Read some data and resize the block to the amount read
@@ -241,12 +239,10 @@ class SysPipe :
     // Read some data and if we got some? Return how much we read
     switch(const size_t stWritten = static_cast<size_t>
       (write(haParentToChild.GetWriteFd(), vpDest, stToWrite)))
-    { // Success?
+    { // Success? Report write and return bytes written
       default:
-        // Report write
         cLog->LogDebugExSafe("System fork at pid $ wrote $ bytes.",
           pPid, stWritten);
-        // Return bytes written
         return stWritten;
       // Error? Report it!
       case StdMaxSizeT:

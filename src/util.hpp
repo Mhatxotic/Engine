@@ -375,7 +375,7 @@ template<typename T1, typename T2, typename R=double>
 requires is_arithmetic_v<T1> && is_arithmetic_v<T2> && is_floating_point_v<R>
 static R UtilMakePercentage(const T1 tCurrent, const T2 tMaximum,
   const R rMulti=100)
-{ return static_cast<R>(tCurrent) / tMaximum * rMulti; }
+{ return static_cast<R>(tCurrent) / static_cast<R>(tMaximum) * rMulti; }
 /* -- Calculate distance between two values -------------------------------- */
 template<typename AnyType> requires is_arithmetic_v<AnyType>
 static AnyType UtilDistance(const AnyType atX, const AnyType atY)

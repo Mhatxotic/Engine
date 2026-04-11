@@ -39,7 +39,7 @@ BUILD_FLAGS(Sql,                       // Sql flags classes
   SF_NONE                   {Flag(0)}, // No settings?
   SF_ISTEMPDB               {Flag(1)}, // Is temporary database?
   SF_DELETEEMPTYDB          {Flag(2)}  // Delete empty databases?
-) /* ----------------------------------------------------------------------- */
+);/* ----------------------------------------------------------------------- */
 enum ADResult                          // Results for CanDeleteDatabase()
 { /* ----------------------------------------------------------------------- */
   ADR_OK_NO_TABLES,                    // [0] No tables exist (delete ok)
@@ -85,8 +85,8 @@ CTOR_BEGIN(Sqls, Sql, CLHelperUnsafe,  // Sql collector class
   const string_view strvSVersionKey;   // Name of schema version record name
   unsigned int     uiQueryRetries;     // Times to retry query before failing
   ClkDuration      cdRetry;            // Sleep for this time when retrying
-) /* ----------------------------------------------------------------------- */
-Sql               *cSql = nullptr;     // Pointer to main SQL db (Core::Sql)
+);/* ----------------------------------------------------------------------- */
+static Sql        *cSql = nullptr;     // Pointer to main SQL db (Core::Sql)
 /* ------------------------------------------------------------------------- */
 struct SqlData :                       // Query response data item class
   /* -- Base classes ------------------------------------------------------- */

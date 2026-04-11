@@ -2316,7 +2316,7 @@ sTable.Header("ID").Header("FLAG").Header("PCMF").Header("P").Header("C")
       .Header("FRMW").Header("FRMH").Header("PICW").Header("PICH")
       .Header("OX").Header("OY").Header("FPS").Header("TIME").Header("FD")
       .Header("FR").Header("FL").Header("AVD").Header("LEN")
-      .Header("NAME", false).Reserve(cVideos->size());;
+      .Header("NAME", false).Reserve(cVideos->size());
 // Walk through textures classes
 for(const Video*const vPtr : *cVideos)
 { // Get reference to class and write its data to the table

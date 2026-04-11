@@ -264,7 +264,7 @@ static const EncData CodecEncodeAESZLIB(const MemConst &mcSrc, Memory &mDest,
   const size_t stPos)
 { // Create memory for compressed data
   mDest.MemResize(mcSrc.MemSize() + sizeof(uint32_t) +
-    static_cast<size_t>(ceil(mcSrc.MemSize() * 0.001)) + 12);
+    static_cast<size_t>(ceil(mcSrc.MemSize<double>() * 0.001)) + 12);
   // Compress then prepare and encode the compressed data
   return CodecEncodeAESCompressed(ENCMODE_ZLIBAES,
     CodecEncodeZLIB(mcSrc, mDest, stLevel, sizeof(uint32_t)),
@@ -538,7 +538,8 @@ CODEC_PLUGINEX(AESLZMA, 5, cCrypt->pkKey.p.qpkData, cCrypt->pkKey.p.qivData)
 CODEC_PLUGINEX(AES, CodecGetAES256CBCSize(), cCrypt->pkKey.p.qpkData,
   cCrypt->pkKey.p.qivData)
 /* -- The ZLIB encoder class (provides init size) -------------------------- */
-CODEC_PLUGINEX(ZLIB, static_cast<size_t>(ceil(dS.MemSize() * 0.001)) + 12)
+CODEC_PLUGINEX(ZLIB,
+  static_cast<size_t>(ceil(dS.MemSize<double>() * 0.001)) + 12)
 /* -- The LZMA encoder class (provides the extra data needed size) --------- */
 CODEC_PLUGINEX(LZMA, 5)
 /* -- The nullptr encoder (no extra size needed) --------------------------- */

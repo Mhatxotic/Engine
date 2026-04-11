@@ -112,9 +112,11 @@ class SysModule :                      // Members initially private
     // Ignore if module has no resource section. This can be triggered when
     // using Wine as their DLL's don't have resource data sections.
     if(GetLastError() == ERROR_RESOURCE_DATA_NOT_FOUND) return 0;
-    // All other errors must be thrown
-    XCS("Unable to query the length of the version string inside "
-        "the specified module!", "File", strModule);
+    // Write warning to log and return zero bytes size
+    cLog->LogWarningExSafe(
+      "System unable to query the length of the version string from '$': $",
+      strModule, SysError());
+    return 0;
   }
   /* -- Get version information--------------------------------------------- */
   const wstring ReadInfo(const string &strModule, const DWORD dwSize)
@@ -123,9 +125,11 @@ class SysModule :                      // Members initially private
     if(GetFileVersionInfoW(UTFtoS16(strModule).data(), 0, dwSize,
       UtfToNonConstCast<LPVOID>(wstrVI.data())))
         return wstrVI;
-    // Failed to throw error
-    XCS("Unable to query version information from the specified module!",
-        "File", strModule, "Size", static_cast<unsigned int>(dwSize));
+    // Write log and return empty string
+    cLog->LogWarningExSafe(
+      "System unable to query $ bytes of version information from '$': $",
+      dwSize, strModule, SysError());
+    return {};
   }
   /* -- Return version information ----------------------------------------- */
   SysModuleData Load(const string &strModule)

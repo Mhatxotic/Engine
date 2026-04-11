@@ -429,7 +429,7 @@ class DirCore :                        // System specific implementation
   /* -- Prepare next file for POSIX system --------------------------------- */
   bool GetNextFile()
   { // Read the filename and if failed
-    if(dirent*const dePtr = readdir(dupHandle.get()))
+    if(const dirent*const dePtr = readdir(dupHandle.get()))
     { // Data for stat
       struct stat sfssData;
       // Set filename

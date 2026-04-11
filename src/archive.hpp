@@ -173,7 +173,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     cltrRef.bufSize = cParent->stExtractBufSize;
     // Initialise look2read structs. On p7zip, the buffer allocation is already
     // done for us.
-    LookToRead2_INIT(&cltrRef);
+    LookToRead2_INIT(&cltrRef)
   }
   /* -- Get creation/modification time helper ------------------------------ */
   StdTimeT ArchiveSzTimeToStdTime(const size_t stId,

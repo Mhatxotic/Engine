@@ -100,9 +100,10 @@ template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
   // Return formated text
   return osS.str();
 }
-/* -- Prepare message from string format ----------------------------------- */
+/* -- Prepare message from string format (used by build.cpp) --------------- */
 template<typename ...VarArgs>
-  static const string StrFormat(const string &strS, VarArgs &&...vaArgs)
+  static const string StrFormat [[maybe_unused]](const string &strS,
+    VarArgs &&...vaArgs)
 { // Return if string empty of invalid
   if(strS.empty()) return {};
   // Stream to write to
@@ -621,7 +622,8 @@ static OutType StrToReadableSuffix(const InType itValue,
     if(itValue < aItem.vValue) return false;
     // Set suffix that was sent and return success
     *cpSuffix = aItem.cpSuf;
-    otReturn = static_cast<OutType>(itValue) / aItem.vValue;
+    otReturn = static_cast<OutType>(itValue) /
+      static_cast<OutType>(aItem.vValue);
     return true;
   }))
   { // Not found any matches so precision will now be zero

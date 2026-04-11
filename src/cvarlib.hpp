@@ -59,7 +59,7 @@ CVarItemStaticList{{
 // ! AST_PIPEBUFFER
 // ? Specifies the size of the pipe buffer.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_pipebuffer", STR(MAX_PIPE_BUFFER),
+{ CFL_BASIC, "ast_pipebuffer", "4096",
   CB(AssetSetPipeBufferSize, size_t), TUINTEGER|CPOW2|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AST_FSOVERRIDE

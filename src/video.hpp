@@ -68,11 +68,12 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   private MutexLock                    // mutex for uploading data
 { /* -- Typedefs ----------------------------------------------------------- */
   struct YCbCr                         // Y/Cb/Cr plane data
-  { /* --------------------------------------------------------------------- */
+  { /* -- Public variables ------------------------------------------------- */
     const size_t   stI;                // Unique index
     th_img_plane   tipP;               // Plane data
-    /* --------------------------------------------------------------------- */
-    void Reset() {
+    /* -- Clear img plane struct ------------------------------------------- */
+    void Reset()
+    { // This is supposedly quicker than using memset().
       tipP.width = tipP.height = tipP.stride = 0;
       tipP.data = nullptr;
     }
@@ -84,14 +85,18 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       /* -- No code -------------------------------------------------------- */
       {}
   };/* --------------------------------------------------------------------- */
-  struct Frame                         // Frame data
-  { /* --------------------------------------------------------------------- */
+  struct Frame                         // Theora frame data
+  { /* -- Public variables ------------------------------------------------- */
     bool           bDraw;              // Draw this frame?
     typedef array<YCbCr, 3> YCCArray;  // Room for three frames
     YCCArray       yccaFrames;         // The planes (Y, Cb and Cr);
-    /* --------------------------------------------------------------------- */
-    void Reset() { bDraw = false;
-                   for(YCbCr &yccFrame : yccaFrames) yccFrame.Reset(); }
+    /* -- Clear everything ------------------------------------------------- */
+    void Reset()
+    { // Do not draw to OpenGL
+      bDraw = false;
+      // Clear frame data
+      for(YCbCr &yccFrame : yccaFrames) yccFrame.Reset();
+    }
     /* -- Constructor that initialises frame data -------------------------- */
     Frame() :
       /* -- Initialisers --------------------------------------------------- */
@@ -100,15 +105,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
                   YCbCr{2} }
       /* -- No code -------------------------------------------------------- */
       {}
-  };/* --------------------------------------------------------------------- */
-  typedef array<Frame, 2> FrameArray;
-  /* ----------------------------------------------------------------------- */
+  };/* -- Theora frame data (double-buffered) ------------------------------ */
+  typedef array<Frame,2> FrameArray;
+  /* -- Y, Cb and Cr texture ids ------------------------------------------- */
   typedef array<GLuint,3> GLuintArray;
-  /* --------------------------------------------------------------- */ public:
+  /* -- Thread unblock reasons ------------------------------------- */ public:
   enum Unblock { UB_STANDBY, UB_BLOCK, UB_DATA, UB_REINIT, UB_PLAY, UB_STOP,
                  UB_PAUSE, UB_FINISH };
   typedef atomic<Unblock> AtomicUnblock;
-  /* ----------------------------------------------------------------------- */
+  /* -- Lua callback event ids --------------------------------------------- */
   enum Event { VE_PLAY, VE_LOOP, VE_STOP, VE_PAUSE, VE_FINISH };
   /* -- Concurrency -------------------------------------------------------- */
   Thread           tThread;            // Video Decoding Thread
@@ -144,15 +149,12 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   AtomicSizeT      astFFree;           // Frames free to be processed
   StrNCStrMap      sncsmThMetaData;    // Theora comments block
   /* -- Vorbis ------------------------------------------------------------- */
-  const double     dAudBufMax;         // Audio buffer size
   ogg_stream_state ostsVorbis;         // Ogg (Vorbis) stream states
   vorbis_info      viData;             // Vorbis decoder info
   vorbis_comment   vcData;             // Vorbis comment block
   vorbis_dsp_state vdsData;            // Vorbis DSP state
   vorbis_block     vbData;             // Vorbis decoder block
-  AtomicDouble       sdAudioTime;        // Audio time index
-  ALdouble         dAudioBuffer;       // Audio buffered
-  ALfloat          fAudioVolume;       // Audio volume
+  AtomicDouble     sdAudioTime;        // Audio time index
   StrNCStrMap      sncsmVoMetaData;    // Vorbis comments block
   /* -- OpenGL ------------------------------------------------------------- */
   FboItem          fboYCbCr;           // Blit data for actual YCbCr components
@@ -161,6 +163,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- OpenAL ------------------------------------------------------------- */
   Source          *sSource;            // Source class
   ALenum           eFormat;            // Internal format
+  ALfloat          fAudioVolume;       // Audio volume
+  const double     dAudBufMax;         // Audio buffer size
+  ALdouble         dAudioBuffer;       // Audio buffered
   /* == Buffer more data for OGG decoder ========================== */ private:
   bool DoIOBuffer()
   { // Get some memory from ogg which we have to do every time we need to read
@@ -210,7 +215,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       // Remove buffer time
       dAudioBuffer = UtilMaximum(dAudioBuffer -
         (cOal->GetBufferInt<ALdouble>(uiBuffer, AL_SIZE) /
-          GetSampleRate() / GetChannels()), 0.0);
+          static_cast<ALdouble>(GetSampleRate()) /
+          static_cast<ALdouble>(GetChannels())), 0.0);
       // Delete the buffer that was returned continue if successful
       ALL(cOal->DeleteBuffer(uiBuffer),
         "Video failed to delete unqueued buffer $ in '$'!",
@@ -272,7 +278,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           if(alErr != AL_NO_ERROR) throw "queuing";
           // We ate everything so set audio time and add to buffer
           dAudioBuffer += static_cast<ALdouble>(stFrameSize) /
-            GetSampleRate() / GetChannels();
+            static_cast<ALdouble>(GetSampleRate()) /
+            static_cast<ALdouble>(GetChannels());
           // Play the source if the audio timer has started
           sSource->Play();
           // Try to parse more data
@@ -716,6 +723,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
               { ostsVorbis = ossTest; iGotVorbisPage = 1; }
           // Whatever it is, we don't care about it
           else ogg_stream_clear(&ossTest);
+          // Fall through to break
+          [[fallthrough]];
         } // Returned if stream has not yet captured sync (bytes were skipped).
         case -1: break;
         // Done
@@ -1036,10 +1045,14 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       // We must discard the extra garbage from the ogg video. We can do that
       // with the GPU very easily by altering texture coords!
       fboYCbCr.FboItemSetTexCoord(
-        static_cast<GLfloat>(GetOriginX()) / GetFrameWidth(),
-        static_cast<GLfloat>(GetOriginY() + GetHeight()) / GetFrameHeight(),
-        static_cast<GLfloat>(GetOriginX() + GetWidth()) / GetFrameWidth(),
-        static_cast<GLfloat>(GetOriginY()) / GetFrameHeight());
+        static_cast<GLfloat>(GetOriginX()) /
+          static_cast<GLfloat>(GetFrameWidth()),
+        static_cast<GLfloat>(GetOriginY() + GetHeight()) /
+          static_cast<GLfloat>(GetFrameHeight()),
+        static_cast<GLfloat>(GetOriginX() + GetWidth()) /
+          static_cast<GLfloat>(GetFrameWidth()),
+        static_cast<GLfloat>(GetOriginY()) /
+          static_cast<GLfloat>(GetFrameHeight()));
       // Init texture
       InitTexture();
     } // If theres a audio segment and AL portion is initialised?
@@ -1239,19 +1252,19 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     stFNext(0),                        // Initialise next frame id
     stFWaiting(0),                     // Initialise frames waiting
     astFFree{ faData.size() },         // Initialise free frames
-    dAudBufMax(                        // Initialise maximum audio buffer size
-      cVideos->dAudioBufferSize),      // ...with value set by user
     ostsVorbis{ /* Zeroed */ },        // Clear Vorbis stream status data
     viData{ /* Zeroed */ },            // Clear Vorbis decoder data
     vcData{ /* Zeroed */ },            // Clear Vorbis comment data
     vdsData{ /* Zeroed */ },           // Clear Vorbis DSP state data
     vbData{ /* Zeroed */ },            // Clear Vorbis decoder block data
     sdAudioTime(0.0),                  // Initialise audio position
-    dAudioBuffer(0.0),                 // Initialise audio buffer length
-    fAudioVolume(1.0f),                // Initialise audio volume
     shProgram(nullptr),                // Initialise pointer to Shader used
     sSource(nullptr),                  // Initialise pointer to Source used
-    eFormat(AL_NONE)                   // Initialise audio format type
+    eFormat(AL_NONE),                  // Initialise audio format type
+    fAudioVolume(1.0f),                // Initialise audio volume
+    dAudBufMax(                        // Initialise maximum audio buffer size
+      cVideos->dAudioBufferSize),      // ...with value set by user
+    dAudioBuffer(0.0)                  // Initialise audio buffer length
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */

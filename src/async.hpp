@@ -176,14 +176,14 @@ template<class MemberType, class ColType>class AsyncLoader :
     auiAsyncPid = spProcess.GetPid();
     // Send progress event
     AsyncProgress(APC_EXECSTART, static_cast<uint64_t>(auiAsyncPid.load()));
+    // Get requested buffer size
+    const size_t stBuffer = AssetGetPipeBufferSize();
     // If we have data to send?
     if(MemIsNotEmpty())
     { // Current position
       size_t stPosition = 0;
-      // Buffer size to write (maybe configurable todo)
-      const size_t stBuffer = AssetGetPipeBufferSize(),
-        // Get amount of extra data to write
-        stExtra = MemSize() % stBuffer,
+      // Get amount of extra data to write
+      const size_t stExtra = MemSize() % stBuffer,
         // Clamp end position to number of pages
         stEnd = MemSize() < stBuffer ? MemSize() : MemSize() - stExtra;
       // If we are writing more than one page? Copy full pages of buffers
@@ -207,7 +207,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Until the thread says we should exit
     while(tAsyncThread.ThreadShouldNotExit())
     { // Read process output and break out of loop if nothing read
-      Memory mBuffer{ spProcess.ReadBlock() };
+      Memory mBuffer{ spProcess.ReadBlock(stBuffer) };
       if(mBuffer.MemIsEmpty()) break;
       // Increase total bytes read
       stTotalRead += mBuffer.MemSize();
@@ -592,6 +592,8 @@ template<class MemberType, class ColType>class AsyncLoader :
           cLog->LogErrorExSafe(
             "AsyncLoader got unknown result $ after loading '$'!",
             uiAsyncResult, IdentGet());
+          // Fall through to break
+          [[fallthrough]];
         } // If the thread was told to abort? Just break to clear references
         case AR_ABORT: break;
       }

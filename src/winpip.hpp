@@ -206,7 +206,7 @@ class SysPipe :                        // Members initially private
     return 0;
   }
   /* -- Read data into memory block ---------------------------------------- */
-  Memory ReadBlock(const size_t stBuffer=MAX_PIPE_BUFFER)
+  Memory ReadBlock(const size_t stBuffer)
   { // Buffer for process output
     Memory mBuffer{ stBuffer };
     // Read some data and resize the block to the amount read

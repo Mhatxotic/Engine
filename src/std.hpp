@@ -401,17 +401,26 @@ template<typename IntType=int64_t>static bool StdIntIsPOW2(const IntType itVal)
 template<typename IntType>
   static double StdHypot(const IntType itWidth, const IntType itHeight)
 { return ::std::hypot(itWidth, itHeight); }
+/* -- Prevent warnings about custom allocators but neatness is preferred --- */
+#if defined(__clang__)
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wallocator-wrappers"
+#endif
 /* -- Allocate memory ------------------------------------------------------ */
 template<typename AnyType,typename IntType>
   static AnyType *StdAlloc(const IntType itBytes)
 { return reinterpret_cast<AnyType*>
     (::std::malloc(static_cast<size_t>(itBytes))); }
-/* -- Re-allocate memory --------------------------------------------------- */
+/* -- Re-allocate memory ('inline' prevents -Wallocator-wrappers) ---------- */
 template<typename AnyType,typename IntType>
   static AnyType *StdReAlloc(AnyType*const atPtr, const IntType itBytes)
 { return reinterpret_cast<AnyType*>
     (::std::realloc(reinterpret_cast<void*>(atPtr),
       static_cast<size_t>(itBytes))); }
+/* -- Done with this warning ----------------------------------------------- */
+#if defined(__clang__)
+# pragma GCC diagnostic pop
+#endif
 /* -- Release allocated memory --------------------------------------------- */
 template<typename AnyType>static void StdFree(AnyType*const atPtr)
   { ::std::free(reinterpret_cast<void*>(atPtr)); }
@@ -465,6 +474,9 @@ requires is_class_v<AnyTypeRR> &&
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 #define DTORHELPER(c,...) c() noexcept(false) { \
+  try { __VA_ARGS__; } catch(const exception &eReason) \
+    { cLog->LogWarningExSafe("(" STR(c) ") $", eReason); } }
+#define DTORHELPEROR(c,...) c() override noexcept(false) { \
   try { __VA_ARGS__; } catch(const exception &eReason) \
     { cLog->LogWarningExSafe("(" STR(c) ") $", eReason); } }
 /* == Z-Lib requirements =================================================== */

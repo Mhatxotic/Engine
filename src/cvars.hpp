@@ -579,7 +579,7 @@ struct CVars :                         // Start of vars class
             return;
           }
           // Store value directly with synchronisation
-          maMutex.MutexCall([this, &strVar, &sdValueRef, &astLoaded](){;
+          maMutex.MutexCall([this, &strVar, &sdValueRef, &astLoaded](){
             if(CVarsSetVarOrInitial(strVar, sdValueRef.MemToStringSafe(),
               PUDB|SUDB, CCF_NOTDECRYPTED))
                 ++astLoaded;

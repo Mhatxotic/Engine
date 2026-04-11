@@ -342,7 +342,7 @@ static const string CertGetSubject(const Certs::X509Pair &caPair)
       return {};
   // Resize and return string
   strD.resize(strlen(strD.data()));
-  return strD;
+  return StdMove(strD);
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

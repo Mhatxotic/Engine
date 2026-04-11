@@ -25,7 +25,7 @@ using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
-#define GLEX(EF,F,M,...)  { F; EF(M, ## __VA_ARGS__); }
+#define GLEX(EF,F,M,...)  do{ F; EF(M, ## __VA_ARGS__); }while(false)
 #define GLL(F,M,...)      GLEX(cOgl->CheckLogError, F, M, ## __VA_ARGS__)
 #define GL(F,M,...)       GLEX(cOgl->CheckExceptError, F, M, ## __VA_ARGS__)
 #define GLC(M,...)        GLEX(cOgl->CheckExceptError, , M, ## __VA_ARGS__)
@@ -302,7 +302,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   const char *LoadFunctions()
   { // Helper macro
 #define GETPTR(v,t) sAPI.v = reinterpret_cast<t>(GlFWGetProcAddress(#v)); \
-    if(!sAPI.v) return #v;
+    if(!sAPI.v) return #v
     // Get basic ARB functions
     GETPTR(glActiveTexture, PFNGLACTIVETEXTUREPROC);
     GETPTR(glBindTexture, PFNGLBINDTEXTUREPROC);

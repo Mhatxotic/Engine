@@ -232,7 +232,7 @@ class SafeFlags :
   typedef uint64_t n ## FlagsType; \
   typedef s<n ## FlagsType> n ## Flags; \
   typedef FlagsConst<n ## FlagsType> n ## FlagsConst; \
-  constexpr static const n ## FlagsConst __VA_ARGS__;
+  constexpr static const n ## FlagsConst __VA_ARGS__
 #define BUILD_FLAGS(n, ...) BUILD_FLAGS_EX(n, Flags, __VA_ARGS__)
 #define BUILD_SECURE_FLAGS(n, ...) BUILD_FLAGS_EX(n, SafeFlags, __VA_ARGS__)
 /* -- Helper for defining flags -------------------------------------------- */

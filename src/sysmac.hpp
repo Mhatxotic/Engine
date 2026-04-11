@@ -69,8 +69,7 @@ class SysCore :
     if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.data()),
       &stSize, nullptr, 0) < 0)
         return cCommon->CommonBlank();
-    // Return the string
-    return strOut;
+    return {};
   }
   /* ----------------------------------------------------------------------- */
   template<typename T>const T GetSysCTLInfoNum(const char*const cpS)
@@ -141,9 +140,9 @@ class SysCore :
     ullTotalTicksL = ullTotalTicks;
     ullIdleTicksL = ullIdleTicks;
     // Final calculation
-    cpuUData.dSystem = (1.0 - ((ullTotalTicksSinceLastTime > 0) ?
-      (static_cast<double>(ullIdleTicksSinceLastTime)) /
-      ullTotalTicksSinceLastTime : 0)) * 100;
+    cpuUData.dSystem = (1.0 - (ullTotalTicksSinceLastTime > 0 ?
+      static_cast<double>(ullIdleTicksSinceLastTime) /
+      static_cast<double>(ullTotalTicksSinceLastTime) : 0)) * 100;
   }
   /* ----------------------------------------------------------------------- */
   void UpdateProcessMemoryUsage()

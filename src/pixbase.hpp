@@ -53,7 +53,7 @@ class SysBase :                        // Safe exception handler namespace
           case StdMaxSizeT:
           { // Ignore it if we're quitting
             if(ThreadShouldNotExit()) break;
-            // Else throw error
+            // Else throw error and terminate thread
             XCS("Error reading system output from pipe!",
               "Output", IdentGet(), "Bytes", MemSize());
           }
