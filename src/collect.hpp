@@ -392,26 +392,29 @@ template<class CollectorType, class MemberType, class IteratorType,
 class ICHelperSafe :                   // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public BaseType                      // ICHelper base class
-{ /* -- Initialise (un)registered entry with synchronisation --------------- */
+{ /* -- Initialise registered entry with synchronisation ------------------- */
   IteratorType ICHelperInit(CollectorType*const ctPtr,
     MemberType*const mtPtr) const
       { return ctPtr->MutexCall([this, ctPtr, mtPtr](){
           return this->ICHelperBaseInit(ctPtr, mtPtr);}); }
+  /* -- Initialise unregistered entry with synchronisation ----------------- */
   IteratorType ICHelperInit(CollectorType*const ctPtr) const
     { return ctPtr->MutexCall([this, ctPtr](){
         return this->ICHelperBaseInit(ctPtr);}); }
-  /* -- Insert/Remove from collector list with synchronisation -- */ protected:
+  /* -- Insert from collector list with synchronisation --------- */ protected:
   void ICHelperPush()
     { this->cParent->MutexCall([this](){ this->ICHelperBaseRegister(); }); }
+  /* -- Remove from collector list with synchronisation -------------------- */
   void ICHelperErase()
     { this->cParent->MutexCall([this](){ this->ICHelperBaseUnregister(); }); }
   /* -- Swap to objects ---------------------------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
     { this->cParent->MutexCall([this, &mtObj](){
         this->ICHelperBaseSwapRegistration(mtObj);}); }
-  /* -- Constructor with/without registration ------------------------------ */
+  /* -- Constructor with registration -------------------------------------- */
   explicit ICHelperSafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
     BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr)) } {}
+  /* -- Constructor without registration ----------------------------------- */
   explicit ICHelperSafe(CollectorType*const ctPtr) :
     BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr)) } {}
 };/* ----------------------------------------------------------------------- */
@@ -428,14 +431,18 @@ template<class CollectorType, class MemberType, class IteratorType,
 class ICHelperUnsafe :                 // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public BaseType                      // ICHelper base class
-{ /* -- Initialise (un)registered entry without synchronisation ------------ */
-  IteratorType ICHelperInit(CollectorType*const ctPtr,
+{ /* -- Initialise registered entry without synchronisation ---------------- */
+  IteratorType ICHelperInit(           // cppcheck-suppress functionStatic
+    CollectorType*const ctPtr,
     MemberType*const mtPtr) const
       { return this->ICHelperBaseInit(ctPtr, mtPtr); }
-  IteratorType ICHelperInit(CollectorType*const ctPtr) const
-    { return this->ICHelperBaseInit(ctPtr); }
-  /* -- Push/Remove object into collector list ------------------ */ protected:
+  /* -- Initialise unregistered entry without synchronisation -------------- */
+  IteratorType ICHelperInit(           // cppcheck-suppress functionStatic
+    CollectorType*const ctPtr) const
+      { return this->ICHelperBaseInit(ctPtr); }
+  /* -- Push object into collector list ------------------------- */ protected:
   void ICHelperPush() { this->ICHelperBaseRegister(); }
+  /* -- Remove object into collector list ---------------------------------- */
   void ICHelperErase() { this->ICHelperBaseUnregister(); }
   /* -- Remove object from collector list ---------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
