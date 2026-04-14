@@ -213,11 +213,11 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* CCANAL     */ "-Weverything -Werror=all -Wno-c++98-compat "
                    "-Wno-c++98-compat-pedantic -Wno-c++20-compat "
                    "-Wno-documentation -Wno-documentation-unknown-command "
-                   "-Wno-gnu-zero-variadic-macro-arguments "
+                   "-Wno-gnu-zero-variadic-macro-arguments -Wno-weak-vtables "
                    "-Wno-covered-switch-default -Wno-switch-enum "
                    "-Wno-poison-system-directories -Wno-global-constructors "
                    "-Wno-padded -Wno-cast-function-type-strict "
-                   "-Wno-reserved-identifier",
+                   "-Wno-reserved-identifier -Wno-allocator-wrappers",
   /* CCAA       */ envWindowsMSVC.cpCCAA,
   /* CCAB       */ "-DBETA -MT -Z7 -O2 -GS- -Gw",
   /* CCAR       */ "-DRELEASE -MT -O2 -GS- -Gw",

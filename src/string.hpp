@@ -388,13 +388,18 @@ static string StrReplace(const string &strIn, const string &strWhat,
 static const string StrUrlEncodeSpaces(const string &strText)
   { return StrReplace(strText, ' ', '+'); }
 /* ------------------------------------------------------------------------- */
-static const string &StrIsBlank(const string &strIn, const string &strAlt)
+template<class StrTypeIn, class StrTypeAlt=StrTypeIn>
+  requires (is_pointer_v<StrTypeIn> || is_class_v<StrTypeIn>) &&
+            is_same_v<StrTypeIn, StrTypeAlt>
+static auto &StrIsBlank(const StrTypeIn &strIn, const StrTypeAlt &strAlt)
   { return strIn.empty() ? strAlt : strIn; }
 /* ------------------------------------------------------------------------- */
-static const string &StrIsBlank(const string &strIn)
-  { return StrIsBlank(strIn, cCommon->CommonBlank()); }
+template<class StrTypeIn>
+  requires is_pointer_v<StrTypeIn> || is_class_v<StrTypeIn>
+static auto &StrIsBlank[[maybe_unused]](const StrTypeIn &strIn)
+  { return StrIsBlank<StrTypeIn>(strIn, cCommon->CommonBlank()); }
 /* ------------------------------------------------------------------------- */
-template<typename IntType>
+template<typename IntType> requires is_integral_v<IntType>
   static const char *StrCPluralise(const IntType itCount,
     const char*const cpSingular, const char*const cpPlural)
       { return itCount == 1 ? cpSingular : cpPlural; }

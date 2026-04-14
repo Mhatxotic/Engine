@@ -389,8 +389,8 @@ class Core final :                     // Members initially private
   /* -- DeInitialise engine components ------------------------------------- */
   void CoreDeInitComponents() try
   { // Log reason for deinit
-    cLog->LogDebugExSafe("Engine de-initialising interfaces with code $.",
-      GetExitReason());
+    cLog->LogDebugExSafe("Engine de-initialising interfaces with code $<$>.",
+      GetExitReasonStr(), GetExitReason());
     // Request to close window
     DisplayRequestClose();
     // Whats the exit reason code?

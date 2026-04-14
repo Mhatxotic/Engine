@@ -1751,17 +1751,27 @@ if(aArgs.size() == 2)
     : ((sfcFlags.FlagIsSet(SS_CONNECTING))     ? "Connecting"
     : ((sfcFlags.FlagIsSet(SS_INITIALISING))   ? "Initialising"
     :                                            "Unknown")))))))))));
+  // Initial connection status
+  const string strOutput{
+    StrFormat("Status for socket $...\n"
+      "- Status: $; Flags: 0x$$; Error: $$; Descriptor: $ (0x$$).\n"
+      "- Address: $; Port: $$; IP: $."
+      "$"
+      "$",
+      uiId,
+      strStatus, hex, sfcFlags.FlagGet(), dec, sRef.GetError(),
+        sRef.GetFD(), hex, sRef.GetFD(),
+      sRef.GetAddress(), dec, sRef.GetPort(), sRef.GetIPAddress(),
+      sRef.FlagIsSet(SS_VHOST) ?
+        StrFormat("\n- Real host: $.", sRef.GetRealHost()) :
+        cCommon->CommonBlank(),
+      sRef.IsSecure() ?
+        StrFormat("\n- Encryption: $.",
+          StrIsBlank(sRef.GetCipher(), cCommon->CommonUnresolved())) :
+        cCommon->CommonBlank()) };
   // If the socket is not connected?
   if(sfcFlags.FlagIsClear(SS_CONNECTED))
-    return cConsole->ConsoleAddLineF("Status for socket $...\n"
-      "- Status: $; Flags: 0x$$; Error: $$; Descriptor: $ (0x$$).\n"
-      "- Address: $; Port: $$; IP: $.\n"
-      "- Encryption: $; Last: $.",
-        uiId,
-        strStatus, hex, sfcFlags.FlagGet(), dec, sRef.GetError(),
-          sRef.GetFD(), hex, sRef.GetFD(),
-        sRef.GetAddress(), dec, sRef.GetPort(), sRef.GetIPAddress(),
-        StrFromBoolTF(sRef.IsSecure()), StrIsBlank(sRef.GetCipher()));
+    return cConsole->ConsoleAddLine(strOutput);
    // Use disconnect time or connect time
   const double dConnect = sfcFlags.FlagIsSet(SS_STANDBY) ?
     ClockTimePointRangeToClampedDouble(sRef.GetTDisconnected(),
@@ -1771,19 +1781,11 @@ if(aArgs.size() == 2)
   dInitial = ClockTimePointRangeToClampedDouble(sRef.GetTConnected(),
     sRef.GetTConnect());
   // Write connected information
-  return cConsole->ConsoleAddLineF("Status for socket $...\n"
-    "- Status: $; Flags: 0x$$; Error: $$; Descriptor: $ (0x$$).\n"
-    "- Address: $; Port: $$; IP: $.\n"
-    "- Real host: $.\n"
+  return cConsole->ConsoleAddLineF("$\n"
     "- RX Queue: $; Packets: $; Bytes: $ ($); Last: $ ago.\n"
     "- TX Queue: $; Packets: $; Bytes: $ ($); Last: $ ago.\n"
-    "- Encryption: $; Last: $.\n"
     "- Total Time: $; Connected: $; Initial: $.",
-    uiId,
-    strStatus, hex, sfcFlags.FlagGet(), dec, sRef.GetError(),
-      sRef.GetFD(), hex, sRef.GetFD(),
-    sRef.GetAddress(), dec, sRef.GetPort(), sRef.GetIPAddress(),
-    StrIsBlank(sRef.GetRealHost(), "<Unresolved>"),
+    strOutput,
     sRef.GetRXQCount(), sRef.GetRXpkt(), sRef.GetRX(),
       StrToBytes(sRef.GetRX()),
       StrShortFromDuration(cmHiRes.TimePointToClampedDouble(sRef.GetTRead())),
@@ -1791,7 +1793,6 @@ if(aArgs.size() == 2)
       StrToBytes(sRef.GetTX()),
       StrShortFromDuration(
         cmHiRes.TimePointToClampedDouble(sRef.GetTWrite())),
-    StrFromBoolTF(sRef.IsSecure()), StrIsBlank(sRef.GetCipher()),
     StrShortFromDuration(dConnect + dInitial),
       StrShortFromDuration(dConnect), StrShortFromDuration(dInitial));
 } // Make neatly formatted table

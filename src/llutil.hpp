@@ -800,7 +800,7 @@ LLFUNC(ParseTimeEx, 1,
 LLFUNC(Pluralise, 1,
   const AgUInt64 aValue{lS, 1};
   const AgCStringChar aSingular{lS, 2}, aPlural{lS, 3};
-  LuaUtilPushVar(lS, StrCPluraliseNum(aValue, aSingular, aPlural)))
+  LuaUtilPushVar(lS, StrCPluraliseNum(aValue(), aSingular, aPlural)))
 /* ========================================================================= */
 // $ Util.PluraliseEx
 // > Count:integer=The number to check
@@ -814,7 +814,7 @@ LLFUNC(Pluralise, 1,
 LLFUNC(PluraliseEx, 1,
   const AgUInt64 aValue{lS, 1};
   const AgCStringChar aSingular{lS, 2}, aPlural{lS, 3};
-  LuaUtilPushVar(lS, StrCPluraliseNumEx(aValue, aSingular, aPlural)))
+  LuaUtilPushVar(lS, StrCPluraliseNumEx(aValue(), aSingular, aPlural)))
 /* ========================================================================= */
 // $ Util.PlusOrMinus
 // > Count:number=The number to convert.

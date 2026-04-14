@@ -60,7 +60,7 @@ class SysCore :
 { /* -- Variables ---------------------------------------------------------- */
   bool             bWindowInitialised; // Is window initialised?
   /* ----------------------------------------------------------------------- */
-  const string GetSysCTLInfoString(const char *cpS)
+  static string GetSysCTLInfoString(const char *cpS)
   { // Get the size and return error if failed
     size_t stSize = 0;
     if(sysctlbyname(cpS, nullptr, &stSize, nullptr, 0) < 0) return "#ERR1#";
@@ -69,10 +69,10 @@ class SysCore :
     if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.data()),
       &stSize, nullptr, 0) < 0)
         return cCommon->CommonBlank();
-    return {};
+    return StdMove(strOut);
   }
   /* ----------------------------------------------------------------------- */
-  template<typename T>const T GetSysCTLInfoNum(const char*const cpS)
+  template<typename T>static T GetSysCTLInfoNum(const char*const cpS)
   { // Resize
     T tOut;
     // Size

@@ -19,7 +19,7 @@ class Common                           // Common variables class
     strOne, strTwo, strSpace, strDblSpace, strBlank, strCr, strLf, strCrLf,
     strCrLf2, strLfCr, strFSlash, strUnspec, strNull, strPeriod, str2Period,
     strEllipsis, strPrivate, strProtected, strEmpty, strInvalid, strAsterisk,
-    strEnt, strNil;
+    strEnt, strNil, strUnresolved;
   /* -- Common string views ------------------------------------------------ */
   const string_view svDir, svFs, svHttp, svHttps, svLuaName, svTimeout;
   /* -- Miscellaneous common variables ------------------------------------- */
@@ -51,6 +51,7 @@ class Common                           // Common variables class
   const string &CommonEllipsis() const { return strEllipsis; }
   const string &CommonFSlash() const { return strFSlash; }
   const string &CommonUnspec() const { return strUnspec; }
+  const string &CommonUnresolved() const { return strUnresolved; }
   const string &CommonNull() const { return strNull; }
   const string &CommonPeriod() const { return strPeriod; }
   const string &CommonTwoPeriod() const { return str2Period; }
@@ -85,11 +86,11 @@ class Common                           // Common variables class
     strPrivate{ "<Private>" },         strProtected{ "<Protected>" },
     strEmpty{ "<Empty>" },             strInvalid{ "<Invalid>" },
     strAsterisk{ "*" },                strEnt{ "&#x" },
-    strNil{ "nil" },                   svDir{ "<DIR>" },
-    svFs{ "<FS>" },                    svHttp{ "http" },
-    svHttps{ "https" },                svLuaName{ "__name" },
-    svTimeout{ "Script timed out!" },  cpBlank(strBlank.data()),
-    lLocaleCurrent{ strBlank }
+    strNil{ "nil" },                   strUnresolved{ "<Unresolved>" },
+    svDir{ "<DIR>" },                  svFs{ "<FS>" },
+    svHttp{ "http" },                  svHttps{ "https" },
+    svLuaName{ "__name" },             svTimeout{ "Script timed out!" },
+    cpBlank(strBlank.data()),          lLocaleCurrent{ strBlank }
     /* -- Set global pointer to static class ------------------------------- */
     { cCommon = this; }
 };/* ----------------------------------------------------------------------- */

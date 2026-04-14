@@ -35,14 +35,15 @@ BUILD_SECURE_FLAGS(Socket,
   SS_ENCRYPTION             {Flag(2)}, // Socket is set to use encryption?
   SS_CONNECTING             {Flag(3)}, // Socket is connecting?
   SS_CONNECTED              {Flag(4)}, // Socket is connected?
-  SS_SENDREQUEST            {Flag(5)}, // Socket is sending request (HTTP)?
-  SS_REPLYWAIT              {Flag(6)}, // Socket waiting for reply (HTTP)?
-  SS_DOWNLOADING            {Flag(7)}, // Socket is downloading (HTTP)?
-  SS_UPGRADED               {Flag(8)}, // Socket is upgraded (WEBSOCKET)?
-  SS_CLOSEDBYSERVER         {Flag(9)}, // Socket was closed by server?
-  SS_CLOSEDBYCLIENT        {Flag(10)}, // Socket was closed by server?
-  SS_DISCONNECTING         {Flag(11)}, // Socket is disconnecting?
-  SS_STANDBY               {Flag(12)}, // Socket on standby (disconnected)?
+  SS_VHOST                  {Flag(5)}, // Socket connected with virtual host
+  SS_SENDREQUEST            {Flag(6)}, // Socket is sending request (HTTP)?
+  SS_REPLYWAIT              {Flag(7)}, // Socket waiting for reply (HTTP)?
+  SS_DOWNLOADING            {Flag(8)}, // Socket is downloading (HTTP)?
+  SS_UPGRADED               {Flag(9)}, // Socket is upgraded (WEBSOCKET)?
+  SS_CLOSEDBYSERVER        {Flag(10)}, // Socket was closed by server?
+  SS_CLOSEDBYCLIENT        {Flag(11)}, // Socket was closed by server?
+  SS_DISCONNECTING         {Flag(12)}, // Socket is disconnecting?
+  SS_STANDBY               {Flag(13)}, // Socket on standby (disconnected)?
   /* ----------------------------------------------------------------------- */
   SS_EVENTERROR            {Flag(13)}, // Set if error with event callback?
   SS_READPACKET            {Flag(14)}, // Socket read a packet (not ever set)?
@@ -492,6 +493,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       }
     } // No IP address detected for some reason
     else return SetErrorSafe("No address found");
+    // Set a flag if address and host are not the same
+    if(strRealHost != strIP) FlagSet(SS_VHOST);
     // Show connected ip address
     SocketLogSafe(LH_DEBUG, "Connected to $", GetIPAddress());
     // Set socket read and send timeout

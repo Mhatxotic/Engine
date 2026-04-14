@@ -148,6 +148,7 @@ class EvtMain :                        // Event list for render thread
     });
   }
   /* -- Get exit reason code ----------------------------------------------- */
+  const string_view &GetExitReasonStr() const { return IdToString(emcExit); }
   EvtMainCmd GetExitReason() const { return emcExit; }
   /* -- Check exit reason -------------------------------------------------- */
   bool IsExitReason(const EvtMainCmd emcReason) const
@@ -161,7 +162,8 @@ class EvtMain :                        // Event list for render thread
     // Set the code
     DoSetExitReason(emcReason);
     // Log the change
-    cLog->LogDebugExSafe("EvtMain set exit reason to $!", emcReason);
+    cLog->LogDebugExSafe("EvtMain set exit reason to $<$>!",
+      IdToString(emcReason), emcReason);
   }
   /* -- Incase of error we need to update the exit code -------------------- */
   bool ExitRequested() const { return !!uiConfirm; }
@@ -195,8 +197,8 @@ class EvtMain :                        // Event list for render thread
     // Set the new exit code
     emcPending = emcWhat;
     // Log confirmation
-    cLog->LogDebugExSafe("EvtMain pending exit confirmation with code $.",
-      emcWhat);
+    cLog->LogDebugExSafe("EvtMain pending exit confirmation with $<$>.",
+      IdToString(emcWhat), emcWhat);
   }
   /* -- Handle events from parallel loop ----------------------------------- */
   bool HandleSafe()
@@ -223,8 +225,8 @@ class EvtMain :                        // Event list for render thread
         emcPending = EMC_NONE;
         uiConfirm = 0;
         // Log confirmation
-        cLog->LogDebugExSafe("EvtMain confirmed exit code $.",
-          GetExitReason());
+        cLog->LogDebugExSafe("EvtMain confirmed exit code $<$>.",
+          GetExitReasonStr(), GetExitReason());
         // Break main loop
         break;
       // Thread and main thread should quit so tell thread to break.
@@ -271,7 +273,7 @@ class EvtMain :                        // Event list for render thread
       EMC(MP_JSON),       EMC(MP_PCM),           EMC(MP_PROCESS),
       EMC(MP_SOCKET),     EMC(MP_STREAM),        EMC(MP_VIDEO)
 #undef EMC                             // Done with this macro
-    }},
+    }, "EMC_OTHER" },
     EvtCore{ "EvtMain", *this },       // Construct core
     tEngThread{ "engine", STP_ENGINE },// Set up high perf engine thread
     raEvents{ this, {                  // Initialise custom handled events
