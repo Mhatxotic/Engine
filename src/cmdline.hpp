@@ -100,7 +100,7 @@ struct CmdLine                         // Members initially public
     if(!**atArgs) XC("Arguments array executable string is empty!");
     // Arguments list to return
     const size_t stArgCM1 = static_cast<size_t>(iArgC - 1);
-    Reserved<StrVector> svRet{ stArgCM1 };
+    StdReserved<StrVector> svRet{ stArgCM1 };
     // For each argument format the argument and add it to list
     StdForEach(seq, atArgs + 1, atArgs + iArgC,
       [&svRet](const ArgType*const atStr)

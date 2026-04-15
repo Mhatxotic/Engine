@@ -53,8 +53,7 @@ template<class ClockType = CoreClock>struct ClockManager
 { /* -- Get current time --------------------------------------------------- */
   static auto GetTime() { return ClockType::now(); }
   /* -- Get time since epoch ----------------------------------------------- */
-  static const ClkDuration GetEpochTime()
-    { return GetTime().time_since_epoch(); }
+  static ClkDuration GetEpochTime() { return GetTime().time_since_epoch(); }
   /* -- Get current time since epoch casted and counted -------------------- */
   template<typename Type,typename ReturnType>
     const ReturnType GetTimeEx() const
@@ -75,7 +74,7 @@ template<class ClockType = CoreClock>struct ClockManager
   template<typename Type=uint64_t>const Type GetTimeNS() const
     { return GetTimeEx<nanoseconds,Type>(); }
   /* -- Get offset time ---------------------------------------------------- */
-  static const ClkDuration GetDuration(const ClkTimePoint &ctpCurrent)
+  static ClkDuration GetDuration(const ClkTimePoint &ctpCurrent)
     { return GetTime() - ctpCurrent; }
   /* -- Get timepoint count ------------------------------------------------ */
   template<typename Type>
@@ -96,7 +95,7 @@ template<class ClockType = CoreClock>struct ClockManager
     cpTimeFormat) const
       { return StrFromTimeTTUTC(GetTimeS(), cpFormat); }
   /* -- Convert time to short duration ------------------------------------- */
-  static const string ToDurationString(unsigned int uiPrecision = 6)
+  static string ToDurationString(unsigned int uiPrecision = 6)
     { return StrShortFromDuration(GetTimeDouble(), uiPrecision); }
   /* -- Convert seconds to long duration relative to current time ---------- */
   const string ToDurationRel(const StdTimeT tDuration = 0,

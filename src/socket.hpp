@@ -483,7 +483,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           AddrPtr(const BIO_ADDR*const baD, const int iId) :
             cpPtr(BIO_ADDR_hostname_string(baD, iId)) {}
           ~AddrPtr()
-            { if(cpPtr) OPENSSL_free(UtfToNonConstCast<void*>(cpPtr)); }
+            { if(cpPtr) OPENSSL_free(StdToNonConstCast<void*>(cpPtr)); }
           operator bool() const { return cpPtr != nullptr; }
         };
         // Get item of interest and if successful, move the result into the
@@ -1044,7 +1044,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Content read and content-length
     size_t stContentRead = 0, stContentLength = 0;
     // Initialise memory for response headers
-    Reserved<string> strHeaders{ 1024 };
+    StdReserved<string> strHeaders{ 1024 };
     // Allocate memory for read buffer
     Memory mDest{ cParent->astBufferSize };
     // Expecting reponse headers? and connection closed status
@@ -1912,7 +1912,7 @@ static CVarReturn SocketAgentModified(const string &strN, string &strV)
   return ACCEPT_HANDLED;
 }
 /* -- Find socket (Lock the mutex before using) ---------------------------- */
-static const SocketsItConst SocketFind(const unsigned int uiId)
+static SocketsItConst SocketFind(const unsigned int uiId)
   { return StdFindIf(par_unseq, cSockets->cbegin(), cSockets->cend(),
       [uiId](const Socket*const sCptr)
         { return sCptr->CtrGet() == uiId; }); }

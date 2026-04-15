@@ -90,13 +90,12 @@ class SysProcess                       // Need this before of System init order
   { // Only needed if in debug mode
 #if defined(ALPHA)
     // Create storage for the filename and clear it
-    wstring wstrName; wstrName.resize(MAX_PATH);
+    StdResized<wstring> wstrName{ MAX_PATH };
     // Get path to executable. The base module filename info struct may not be
     // available so we'll keep it simple and use the full path name to
     // the executable.
     wstrName.resize(UtilMaximum(GetModuleFileName(nullptr,
-      const_cast<LPWSTR>(wstrName.data()),
-      static_cast<DWORD>(wstrName.capacity())) - 4, 0));
+      const_cast<LPWSTR>(wstrName.data()), 0, MAX_PATH - 4));
     wstrName.append(L".crt");
     // Create a file with the above name and just return if failed
     HANDLE hH = CreateFile(wstrName.data(), GENERIC_WRITE,
@@ -118,7 +117,7 @@ class SysProcess                       // Need this before of System init order
   /* -- Set heap information helper ---------------------------------------- */
   template<typename Type = ULONG>static void HeapSetInfo(const HANDLE hH,
     const HEAP_INFORMATION_CLASS hicData, const Type &tVal)
-      { HeapSetInformation(hH, hicData, UtfToNonConstCast<PVOID>(&tVal),
+      { HeapSetInformation(hH, hicData, StdToNonConstCast<PVOID>(&tVal),
           sizeof(tVal)); }
   /* ----------------------------------------------------------------------- */
   void ReconfigureMemoryModel() const
@@ -166,9 +165,8 @@ class SysProcess                       // Need this before of System init order
   /* -- Called when C std code runs into a problem ------------------------- */
   static int VisualCRTError(const int iType, const wchar_t*const wcpF,
     const int iLine, const wchar_t*const wcpM, const wchar_t*const wcpFmt, ...)
-  { // Buffer for formatted data. The maximum size is 1024 bytes. That is
-    // 512 wide characters. std::string adds the nullptr for us automatically.
-    Reserved<wstring> wstrFmt{ 511 };
+  { // Buffer for formatted data. The maximum size is 1KB (512 wchar_t's).
+    StdResized<wstring> wstrFmt{ 512 };
     // Use windows api function for this as we're not using the c-lib
     // formatting functions and theres no need to invoke extra exe space.
     va_list vlData;
@@ -321,13 +319,13 @@ class SysCore :
   size_t GetLocaleData(const LCTYPE lcType, const void*const vpData,
     const size_t stSize, const LCID lcidLocale)
   { return GetLocaleInfo(lcidLocale, lcType,
-      UtfToNonConstCast<LPWSTR>(vpData), UtilIntOrMax<int>(stSize)); }
+      StdToNonConstCast<LPWSTR>(vpData), UtilIntOrMax<int>(stSize)); }
   /* ----------------------------------------------------------------------- */
   const wstring GetLocaleString(const LCTYPE lcType,
     const LCID lcidLocale=LOCALE_USER_DEFAULT)
   { // Allocate string for requested data and return error if faield
-    wstring wstrData;
-    wstrData.resize(GetLocaleData(lcType, nullptr, 0, lcidLocale));
+    StdResized<wstring> wstrData{
+      GetLocaleData(lcType, nullptr, 0, lcidLocale) };
     if(wstrData.empty())
       XCS("No storage for locale data!",
           "Type", lcType, "Id", lcidLocale);
@@ -563,8 +561,8 @@ class SysCore :
   static bool LibFree(void*const vpModule)
     { return vpModule && !!FreeLibrary(reinterpret_cast<HMODULE>(vpModule)); }
   /* -- Get dll procedure address ------------------------------------------ */
-  template<typename T>static const T
-    GetSharedFunc(const HMODULE hModule, const char*const cpExport)
+  template<typename T>
+    static T GetSharedFunc(const HMODULE hModule, const char*const cpExport)
       { return reinterpret_cast<T>(GetProcAddress(hModule, cpExport)); }
   /* -- Get kernel procedure address --------------------------------------- */
   template<typename T>const T GetKernelFunc(const char*const cpExport)
@@ -738,7 +736,7 @@ class SysCore :
     // For each module. Get filename then check the version info for it
     for(const HMODULE hH : mhvList)
     { // Prepare string to hold filename
-      wstring wstrP; wstrP.resize(MAX_PATH);
+      StdResized<wstring> wstrP{ MAX_PATH };
       // Put filename of file in string and resize string to amount returned
       wstrP.resize(GetModuleFileNameEx(hProcess, hH,
         const_cast<LPWSTR>(wstrP.data()),
@@ -754,7 +752,7 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   const wstring GetSystemFolder(const int iCSIDL) const
   { // To hold path name
-    wstring wstrP; wstrP.resize(MAX_PATH);
+    StdResized<wstring> wstrP{ MAX_PATH };
     // Get folder path name
     SHGetSpecialFolderPath(nullptr, const_cast<wchar_t*>(wstrP.data()),
       iCSIDL, true);

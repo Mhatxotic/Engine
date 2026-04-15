@@ -72,7 +72,7 @@ enum Header : unsigned long            // Buffer header integer location flags
   /* ----------------------------------------------------------------------- */
   ENCHDR_SIZE            =         24, // Size of compressed block header
 };/* ----------------------------------------------------------------------- */
-static const EncData CodecEncodeAES(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeAES(const MemConst &mcSrc, Memory &mDest,
   const size_t, const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV,
   const size_t stPos)
 { // Unique ptr type to free the cipher context
@@ -201,7 +201,7 @@ static const char *CodecGetZLIBErrString(const int iCode)
 #undef ZERR
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeAESCompressed(const EncMode eOverrideMode,
+static EncData CodecEncodeAESCompressed(const EncMode eOverrideMode,
   const EncData &encCompressedData, Memory &mDest, const size_t stLevel,
   const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV, const size_t stPos)
 { // Resize to fit the amount of compressed and extra data
@@ -228,7 +228,7 @@ static const EncData CodecEncodeAESCompressed(const EncMode eOverrideMode,
            encCompressedData.GetExtra() };
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeZLIB(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeZLIB(const MemConst &mcSrc, Memory &mDest,
   const size_t stLevel, const size_t stPos)
 { // Input address and size, check the size
   const Bytef*const ucpSrc = mcSrc.MemPtr<Bytef>();
@@ -259,7 +259,7 @@ static const EncData CodecEncodeZLIB(const MemConst &mcSrc, Memory &mDest,
   return { ENCMODE_DEFLATE, mcSrc.MemSize(), ulDest, 0 };
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeAESZLIB(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeAESZLIB(const MemConst &mcSrc, Memory &mDest,
   const size_t stLevel, const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV,
   const size_t stPos)
 { // Create memory for compressed data
@@ -271,7 +271,7 @@ static const EncData CodecEncodeAESZLIB(const MemConst &mcSrc, Memory &mDest,
       mDest, stLevel, qaKey, qaIV, stPos);
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeLZMA(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeLZMA(const MemConst &mcSrc, Memory &mDest,
   const size_t stLevel, const size_t stPos)
 { // For the next function
   size_t stOutLen = mcSrc.MemSize(), stPropLen = 5;
@@ -288,7 +288,7 @@ static const EncData CodecEncodeLZMA(const MemConst &mcSrc, Memory &mDest,
   return { ENCMODE_LZMA, mcSrc.MemSize(), stOutLen, stPropLen };
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeAESLZMA(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeAESLZMA(const MemConst &mcSrc, Memory &mDest,
   const size_t stLevel, const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV,
   const size_t stPos)
 { // Create memory for compressed data
@@ -299,7 +299,7 @@ static const EncData CodecEncodeAESLZMA(const MemConst &mcSrc, Memory &mDest,
       mDest, stLevel, qaKey, qaIV, stPos);
 }
 /* ------------------------------------------------------------------------- */
-static const EncData CodecEncodeRAW(const MemConst &mcSrc, Memory &mDest,
+static EncData CodecEncodeRAW(const MemConst &mcSrc, Memory &mDest,
   const size_t, const size_t stPos)
 { // Copy the block over into the new one
   mDest.MemWriteBlock(stPos, mcSrc);

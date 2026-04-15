@@ -31,7 +31,7 @@ struct UuId                            // Members initially public
     /* --------------------------------------------------------------------- */
   } d;                                 // Member to hold uuid data
   /* -- Initialise randomised UUID -------------------------------- */ private:
-  static const Struct UuIdRandom()
+  static Struct UuIdRandom()
   { // Initialise a random struct
     Struct uuidData;
     CryptRandomPtr(&uuidData.ucRandom, sizeof(uuidData.ucRandom));
@@ -44,8 +44,7 @@ struct UuId                            // Members initially public
     return uuidData;
   }
   /* -- Initialise UUID from two quads ------------------------------------- */
-  static const Struct UuIdReadTwoQuads(const uint64_t ull1,
-    const uint64_t ull2)
+  static Struct UuIdReadTwoQuads(const uint64_t ull1, const uint64_t ull2)
   { // Structure to return
     Struct uuidData;
     uuidData.ullRandom[0] = ull1;
@@ -53,7 +52,7 @@ struct UuId                            // Members initially public
     return uuidData;
   }
   /* -- Initialise UUID from C-string -------------------------------------- */
-  static const Struct UuIdReadString(const string &strUUID)
+  static Struct UuIdReadString(const string &strUUID)
   { // Check that the uuid is formatted properly
     if(strUUID.length() != 36  ||      // 00000000-0000-0000-000000000000 [36]
        strUUID[8]       != '-' ||      // 00000000{-}0000-0000-000000000000

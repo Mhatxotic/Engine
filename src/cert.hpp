@@ -332,9 +332,9 @@ static bool CertIsExpired(const X509*const x509)
          tTime > CertGetTime(*X509_get0_notAfter(x509));
 }
 /* ========================================================================= */
-static const string CertGetSubject(const Certs::X509Pair &caPair)
+static string CertGetSubject(const Certs::X509Pair &caPair)
 { // Storage for certificate field info
-  string strD; strD.resize(1024);
+  StdResized<string> strD{ 1024 };
   // Grab the subject line form ceritificate. We couldn't get the subject if
   // failed.
   if(!X509_NAME_oneline(X509_get_subject_name(caPair.second),

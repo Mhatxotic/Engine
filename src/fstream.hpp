@@ -169,8 +169,7 @@ class FStreamBase :                    // File stream base class
   /* -- Read specified number of bytes into a string object ---------------- */
   const string FStreamReadString(const size_t stBytes)
   { // Setup string for buffer and read into it
-    string strRead;
-    strRead.resize(stBytes);
+    StdResized<string> strRead{ stBytes };
     strRead.resize(
       FStreamRead(const_cast<char*>(strRead.data()), strRead.length()));
     // Return string

@@ -32,7 +32,7 @@ namespace P {                          // Start of public module namespace
 /* -- Convert back slashes to forward slashes ------------------------------ */
 static string &PSplitBackToForwardSlashes(string &strText)
   { return StrReplace(strText, '\\', '/'); }
-static const string PSplitBackToForwardSlashes(const string &strIn)
+static string PSplitBackToForwardSlashes(const string &strIn)
   { string strOut{ strIn }; return PSplitBackToForwardSlashes(strOut); }
 #if defined(WINDOWS)
 static string PSplitBackToForwardSlashes(const wstring &wstrName)
@@ -81,37 +81,45 @@ class PathSplit :
   FileParts Init(const string &strSrc, const bool bUseFullPath) const
   { // Windows?
 #if defined(WINDOWS)
-    // Wide strings for wide request functions
-    wstring wstrDrive; wstrDrive.resize(_MAX_DRIVE);
-    wstring wstrDir; wstrDir.resize(_MAX_DIR);
-    wstring wstrFile; wstrFile.resize(_MAX_FNAME);
-    wstring wstrExt; wstrExt.resize(_MAX_EXT);
-    wstring wstrFull; wstrFull.resize(_MAX_PATH);
+    // Convert UTF8 string to UNICODE string
     wstring wstrSrc{ UTFtoS16(strSrc) };
     // Build full path name and use requested pathname if not wanted or failed?
+    StdResized<wstring> wstrFull{ _MAX_PATH };
     if(!bUseFullPath || !_wfullpath(const_cast<wchar_t*>(wstrFull.data()),
-      wstrSrc.data(), wstrFull.length()))
-        wstrFull = StdMove(wstrSrc);
+         wstrSrc.data(), _MAX_PATH + 1))
+      wstrFull.assign(wstrSrc);
+    // Succeeded? Resize the string
+    else wstrFull.resize(wcslen(wstrFull.data()));
+    // This is the final full path string so compact it
+    wstrFull.shrink_to_fit();
+    // Buffers for the path parts
+    StdResized<wstring> wstrDrive{ _MAX_DRIVE }, wstrDir{ _MAX_DIR },
+      wstrFile{ _MAX_FNAME }, wstrExt{ _MAX_EXT };
     // Split the executable path name into bits and if failed?
     _wsplitpath_s(const_cast<wchar_t*>(wstrFull.data()),
-                  const_cast<wchar_t*>(wstrDrive.data()), wstrDrive.length(),
-                  const_cast<wchar_t*>(wstrDir.data()), wstrDir.length(),
-                  const_cast<wchar_t*>(wstrFile.data()), wstrFile.length(),
-                  const_cast<wchar_t*>(wstrExt.data()), wstrExt.length());
+                  const_cast<wchar_t*>(wstrDrive.data()), _MAX_DRIVE + 1,
+                  const_cast<wchar_t*>(wstrDir.data()), _MAX_DIR + 1,
+                  const_cast<wchar_t*>(wstrFile.data()), _MAX_FNAME + 1,
+                  const_cast<wchar_t*>(wstrExt.data()), _MAX_EXT + 1);
+    // Finalise the strings because they're still set to the maximum size
+    wstrDrive.resize(wcslen(wstrDrive.data()));
+    wstrDrive.shrink_to_fit();
+    wstrDir.resize(wcslen(wstrDir.data()));
+    wstrDir.shrink_to_fit();
+    wstrFile.resize(wcslen(wstrFile.data()));
+    wstrFile.shrink_to_fit();
+    wstrExt.resize(wcslen(wstrExt.data()));
+    wstrExt.shrink_to_fit();
     // Finalise strings and replace backslashes with forward slashes
-    return { PSplitBackToForwardSlashes(wstrDrive),
-             PSplitBackToForwardSlashes(wstrDir),
-             PSplitBackToForwardSlashes(wstrFile),
-             PSplitBackToForwardSlashes(wstrExt),
-             PSplitBackToForwardSlashes(wstrFull) };
+    return { StdMove(PSplitBackToForwardSlashes(wstrDrive)),
+             StdMove(PSplitBackToForwardSlashes(wstrDir)),
+             StdMove(PSplitBackToForwardSlashes(wstrFile)),
+             StdMove(PSplitBackToForwardSlashes(wstrExt)),
+             StdMove(PSplitBackToForwardSlashes(wstrFull)) };
     // Unix?
 #else
-    // Create buffers for filename parts
-    string strDir; strDir.resize(_MAX_DIR);
-    string strFull; strFull.resize(_MAX_PATH);
-    string strExt; strExt.resize(_MAX_EXT);
-    string strFile; strFile.resize(_MAX_FNAME);
-    // If a full path name build is requested? Set original string
+    // If a full path name build is re4quested? Set original string
+    StdResized<string> strFull{ _MAX_PATH };
     if(!bUseFullPath || !realpath(const_cast<char*>(strSrc.data()),
       const_cast<char*>(strFull.data())))
         strFull.assign(strSrc);
@@ -123,9 +131,8 @@ class PathSplit :
     // dirname() MODIFIES the original argument. We use memcpy because we
     // Don't want to resize the string. Also let us be careful of how many
     // bytes we should copy. Copy the lowest allocated string
-    strncpy(const_cast<char*>(strDir.data()), strFull.data(),
-      strDir.capacity() < strFull.capacity() ?
-        strDir.capacity() : strFull.capacity());
+    StdResized<string> strDir{ _MAX_DIR };
+    strlcpy(const_cast<char*>(strDir.data()), strFull.data(), _MAX_DIR);
     if(const char*const cpDir = dirname(const_cast<char*>(strDir.data())))
     { // If the directory is not just a dot (current dir)?
       if(cpDir[0] != '.' || cpDir[1] != '\0')
@@ -144,9 +151,8 @@ class PathSplit :
     // This is the final directory string so compact it
     strDir.shrink_to_fit();
     // Prepare filename. Again basename() can modify the argument on linux.
-    strncpy(const_cast<char*>(strFile.data()), strFull.data(),
-      strFile.capacity() < strFull.capacity() ?
-        strFile.capacity() : strFull.capacity());
+    StdResized<string> strFile{ _MAX_FNAME };
+    strlcpy(const_cast<char*>(strFile.data()), strFull.data(), _MAX_FNAME);
     if(const char*const cpFile = basename(const_cast<char*>(strFull.data())))
     { // If the pointer is not the same as our string? Copy it.
       if(cpFile != strFile.data()) strFile.assign(cpFile);
@@ -158,6 +164,7 @@ class PathSplit :
     const size_t stSlashPos = strFile.find_last_of('/'),
     stDotPos = StrFindCharBackwards(strFile, strFile.length() - 1,
       stSlashPos != StdNPos ? (stSlashPos + 1) : 0, '.');
+    StdResized<string> strExt{ _MAX_EXT };
     if(stDotPos != StdNPos)
     { // Update filename
       strExt.assign(strFile.substr(stDotPos));

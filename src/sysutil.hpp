@@ -30,7 +30,7 @@ enum SysThread : size_t                // Thread priority types
 /* -- Includes ------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
 /* -- System error formatter with specified error code --------------------- */
-static const string SysError(const int iError)
+static string SysError(const int iError)
 { // Convert int to DWORD as we use the same function type across platforms
   const DWORD dwError = static_cast<DWORD>(iError);
   // Pointer to string
@@ -63,7 +63,7 @@ static const string SysError(const int iError)
 template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(GetLastError()); }
 /* -- System error formatter with current error code ----------------------- */
-static const string SysError() { return SysError(SysErrorCode()); }
+static string SysError() { return SysError(SysErrorCode()); }
 /* -- Actual interface to MessageBoxExW ------------------------------------ */
 static unsigned int SysMessage(void*const vpHandle, const string &strTitle,
   const string &strMessage, const unsigned int uiFlags)
@@ -261,9 +261,9 @@ static unsigned int SysMessage(const string &strTitle,
 template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(StdGetError()); }
 /* -- System error formatter with specified error code --------------------- */
-static const string SysError(const int iError) { return StrFromErrNo(iError); }
+static string SysError(const int iError) { return StrFromErrNo(iError); }
 /* -- System error formatter with current error code ----------------------- */
-static const string SysError() { return StrFromErrNo(SysErrorCode()); }
+static string SysError() { return StrFromErrNo(SysErrorCode()); }
 /* ------------------------------------------------------------------------- */
 static void SysSetThreadName(const char*const cpName)
 { // Set thread name which helps a little with debugging

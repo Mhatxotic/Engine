@@ -599,7 +599,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Get the error message
     sErrMsg.resize(static_cast<size_t>(
       GetShaderInfoLog(uiId, static_cast<GLsizei>(sErrMsg.size()),
-        UtfToNonConstCast<GLchar*>(sErrMsg.data()))));
+        StdToNonConstCast<GLchar*>(sErrMsg.data()))));
     // Get error and if an error occured put it as a failure reason
     const GLenum eCode = GetError();
     if(eCode != GL_NO_ERROR || sErrMsg.empty())
@@ -627,7 +627,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Get the error message and resize string as a result
     sErrMsg.resize(static_cast<size_t>(GetProgramInfoLog(uiProgram,
       static_cast<GLsizei>(sErrMsg.size()),
-      UtfToNonConstCast<GLchar*>(sErrMsg.data()))));
+      StdToNonConstCast<GLchar*>(sErrMsg.data()))));
     // Get error and if an error occured put it as a failure reason
     const GLenum eCode = GetError();
     if(eCode != GL_NO_ERROR || sErrMsg.empty())

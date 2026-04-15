@@ -130,7 +130,7 @@ struct IdMap :                         // Members initially public
   /* -- Test all items as flags and return a list of strings set ----------- */
   const StrViewVector Test(const KeyType ktValue) const
   { // There will be at least this amount of strings in the list
-    Reserved<StrViewVector> svvOut{ this->size() };
+    StdReserved<StrViewVector> svvOut{ this->size() };
     // Enumerate through all the items and add the string if the bit is set
     for(const PairType &ptItem : *this)
       if(ktValue & ptItem.first) svvOut.push_back(ptItem.second);

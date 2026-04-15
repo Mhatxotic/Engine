@@ -87,7 +87,7 @@ struct Args :                          // Arguments list class
   /* -- Return if list is empty -------------------------------------------- */
   operator bool() const { return !empty(); }
 };/* -- Build an array of arguments from a string -------------------------- */
-static const Args ArgsBuildSafe(const string &strArgs)
+static Args ArgsBuildSafe(const string &strArgs)
   { return strArgs.empty() ? Args{} : Args{ strArgs }; }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

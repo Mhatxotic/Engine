@@ -23,18 +23,22 @@ class SysReg                           // Members initially private
     if(NotOpened()) return {};
     // Create key list
     StrVector klData;
-    // Create memory to hold string
-    Reserved<wstring> wstrData{ MAX_PATH };
     // Until there are no more items
     for(unsigned int uiIndex = 0;; ++uiIndex)
-    { // Set size
+    { // Create memory to hold string
+      StdResized<wstring> wstrData{ MAX_PATH };
+      // Set size
       DWORD dwSize = static_cast<DWORD>(wstrData.capacity() * sizeof(wchar_t));
       // Enumerate. Add to list if succeeded
       switch(RegEnumKeyEx(GetHandle(), uiIndex,
         const_cast<wchar_t*>(wstrData.data()),
           &dwSize, nullptr, nullptr, nullptr, nullptr))
-      { // Succeeded so add to list
-        case ERROR_SUCCESS: klData.emplace_back(WS16toUTF(wstrData)); break;
+      { // Succeeded?
+        case ERROR_SUCCESS:
+          // Clean up string and add to list
+          wstrData.resize(static_cast<size_t>(dwSize));
+          wstrData.shrink_to_fit();
+          klData.emplace_back(WS16toUTF(wstrData)); break;
         // No more items so return the list
         case ERROR_NO_MORE_ITEMS: return klData;
         // Other error, just ignore it.
@@ -54,7 +58,7 @@ class SysReg                           // Members initially private
       reinterpret_cast<LPBYTE>(&dwType), &dwSize) != ERROR_MORE_DATA ||
         dwType != REG_SZ || !dwSize) return {};
     // Create a pre-allocated stringAllocate buffer and query value again
-    wstring wstrBuffer; wstrBuffer.resize(dwSize / sizeof(wchar_t));
+    StdResized<wstring> wstrBuffer{ dwSize / sizeof(wchar_t) };
     if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
       reinterpret_cast<LPBYTE>(wstrBuffer.data()), &dwSize) != ERROR_SUCCESS)
         return {};

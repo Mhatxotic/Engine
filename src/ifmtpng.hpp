@@ -97,7 +97,7 @@ class CodecPNG :                       // PNG codec object
         // Initialisers
         psData(png_create_write_struct(  // Create a write struct
           PNG_LIBPNG_VER_STRING,         // Set version string
-          UtfToNonConstCast<png_voidp>(  // Send user parameter
+          StdToNonConstCast<png_voidp>(  // Send user parameter
             fsC.IdentGetData()),         // Set filename as user parameter
           PngError,                      // Set error callback function
           PngWarning)),                  // Set warning callback function
@@ -196,7 +196,7 @@ class CodecPNG :                       // PNG codec object
         // Initialisers
         psData(png_create_read_struct(   // Create a read struct
           PNG_LIBPNG_VER_STRING,         // Set version string
-          UtfToNonConstCast<png_voidp>(  // Send user parameter
+          StdToNonConstCast<png_voidp>(  // Send user parameter
             fmC.IdentGetData()),         // Set filename as user parameter
           PngError,                      // Set error callback function
           PngWarning)),                  // Set warning callback function

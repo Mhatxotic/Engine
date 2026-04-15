@@ -24,7 +24,7 @@ using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace ITimer::P;             using namespace IUtil::P;
 using namespace Lib::Sqlite;
 /* -- Replacement for SQLITE_TRANSIENT which cases warnings ---------------- */
-static const sqlite3_destructor_type fcbSqliteTransient =
+static sqlite3_destructor_type fcbSqliteTransient =
   reinterpret_cast<sqlite3_destructor_type>(-1);
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace

@@ -99,7 +99,7 @@ class SysBase                          // Members initially private
   /* == Get executable filename ============================================ */
   const wstring SEHGetExecutableFileNameWithoutExtension()
   { // Storage for executable and crash log file name
-    wstring wstrExe; wstrExe.resize(MAX_PATH);
+    StdResized<wstring> wstrExe{ MAX_PATH };
     // Get executable file name
     wstrExe.resize(GetModuleFileName(nullptr,
       const_cast<wchar_t*>(wstrExe.data()), MAX_PATH));
@@ -306,7 +306,7 @@ class SysBase                          // Members initially private
          .Header("Description", false).Header("Vendor", false)
          .Header("Path", false).Reserve(10);
     // Storage for filename
-    wstring wstrFN; wstrFN.resize(MAX_PATH);
+    StdResized<wstring>{ MAX_PATH };
     // Show modules
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     // Capture exceptions so we can clean up the snapshot handle
@@ -344,6 +344,7 @@ class SysBase                          // Members initially private
           tData.DataH(GetProcessAffinityMask(hProcess,
             &dwMask, &dwSys) ? dwMask : 0);
           // Get module file name and if succeeded?
+          StdResized<wstring> wstrFN{ MAX_PATH };
           if(GetModuleFileNameEx(hProcess, nullptr,
             const_cast<LPWSTR>(wstrFN.data()), MAX_PATH))
           { // Get version information
@@ -453,7 +454,7 @@ class SysBase                          // Members initially private
       size_t stFunctions = 0;
       // Walk the stack
       while(StackWalk(IMAGE_FILE_MACHINE, hProcess, hThread, &sfData,
-        UtfToNonConstCast<PVOID>(&cData), nullptr, SymFunctionTableAccess,
+        StdToNonConstCast<PVOID>(&cData), nullptr, SymFunctionTableAccess,
         SymGetModuleBase, nullptr))
       { // Add function number
         osS << dec << stFunctions++ << ": ";
@@ -485,7 +486,7 @@ class SysBase                          // Members initially private
           ihsData))
         { // Get function name
           strName.resize(UnDecorateSymbolName(ihsData->Name,
-            UtfToNonConstCast<PSTR>(strName.data()),
+            StdToNonConstCast<PSTR>(strName.data()),
             static_cast<DWORD>(strName.length()), UNDNAME_COMPLETE));
           // Put in output string
           osS << strName << '@';

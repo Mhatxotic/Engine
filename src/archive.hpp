@@ -577,8 +577,8 @@ static void ArchiveEnumFiles(const string &strDir, const StrUIntMap &suimList,
   });
 }
 /* -- Return files in directories and archives with empty check ------------ */
-static const StrSet &ArchiveEnumerate(const string &strDir,
-  const string &strExt, const bool bOnlyDirs, StrSet &ssFiles)
+static StrSet &ArchiveEnumerate(const string &strDir, const string &strExt,
+  const bool bOnlyDirs, StrSet &ssFiles)
 { // Lock archive list so it cannot be modified
   return cArchives->MutexCall(
     [&strDir, &strExt, bOnlyDirs, &ssFiles]()->StrSet&{
@@ -645,7 +645,7 @@ static FileMap ArchiveExtract(const string &strFile)
   });
 }
 /* -- ArchiveGetNames ------------------------------------------------------ */
-static const string ArchiveGetNames()
+static string ArchiveGetNames()
 { // Set default archive name if no archives
   if(cArchives->empty()) return {};
   // Get first archive

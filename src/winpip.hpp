@@ -117,8 +117,8 @@ class SysPipe :                        // Members initially private
       hStdoutWrite                     // HANDLE hStdError (Using ours/stdout)
     };
     // Create the child process and if succeeded?
-    if(CreateProcess(UtfToNonConstCast<LPCWSTR>(UTFtoS16(strApp).data()),
-      UtfToNonConstCast<LPWSTR>(UTFtoS16(strCmdLine).data()), nullptr,
+    if(CreateProcess(StdToNonConstCast<LPCWSTR>(UTFtoS16(strApp).data()),
+      StdToNonConstCast<LPWSTR>(UTFtoS16(strCmdLine).data()), nullptr,
       nullptr, TRUE, CREATE_SUSPENDED|CREATE_NO_WINDOW, nullptr, nullptr,
       &siStartInfo, &piProcInfo)) try
     { // Store name of executable

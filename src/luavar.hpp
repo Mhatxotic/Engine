@@ -200,7 +200,7 @@ imcveOther{{                           // Misc flags
   IDMAPSTR(LOADED),
 }, "NONE" }
 );/* -- Return human readable string about CVar ---------------------------- */
-static const string VariablesMakeInformation(const CVarItem &cviVar)
+static string VariablesMakeInformation(const CVarItem &cviVar)
 { // Print data about the cvar
   return StrFormat("Status for '$'...\n"
     "- Callback: $.\n"               "- Flags: 0x$$$.\n"
@@ -261,7 +261,7 @@ static void VariablesMakeInformationTokens(Statistic &sTable,
 }
 /* -- Enumerate a list ----------------------------------------------------- */
 template<class MapType>
-  static const string VariablesMakeList(const MapType &mtMap,
+  static string VariablesMakeList(const MapType &mtMap,
     const string &strFilter)
 { // Get pending cvars list and ignore if empty
   if(mtMap.empty()) return "No cvars exist in this category!";

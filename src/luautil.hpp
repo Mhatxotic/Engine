@@ -83,7 +83,7 @@ static PtrTypePtr LuaUtilGetSimplePtr(lua_State*const lS, const int iParam)
 static const char *LuaUtilToLString(lua_State*const lS, const int iParam,
   size_t &stSize) { return lua_tolstring(lS, iParam, &stSize); }
 /* -- Get and return a C++ string without checking it ---------------------- */
-static const string LuaUtilToCppString(lua_State*const lS, const int iParam=-1)
+static string LuaUtilToCppString(lua_State*const lS, const int iParam=-1)
 { // Storage for string length. Do not optimise this because I am not sure
   // what the standard direction is for evaluating expression. Left-to-right
   // or right-to-left, so I will just store the string point first to be safe.
@@ -167,7 +167,7 @@ template<class StrType>
 static int LuaUtilGetMetaTable(lua_State*const lS, const int iIndex)
   { return lua_getmetatable(lS, iIndex); }
 /* -- Return type of item in stack ----------------------------------------- */
-static const string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
+static string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
 { // What type of variable?
   switch(lua_type(lS, iIndex))
   { // Nil?
@@ -210,7 +210,7 @@ static const string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
   }
 }
 /* -- Return status of item in stack --------------------------------------- */
-static const string LuaUtilGetStackTokens(lua_State*const lS, const int iIndex)
+static string LuaUtilGetStackTokens(lua_State*const lS, const int iIndex)
 { // Fill token buffer depending on status
   return StrFromEvalTokens({
     { LuaUtilIsBoolean(lS, iIndex),       'B' },
@@ -228,7 +228,7 @@ static const string LuaUtilGetStackTokens(lua_State*const lS, const int iIndex)
   });
 }
 /* -- Log the stack -------------------------------------------------------- */
-static const string LuaUtilGetVarStack(lua_State*const lS)
+static string LuaUtilGetVarStack(lua_State*const lS)
 { // If there are variables in the stack?
   if(const int iCount = LuaUtilStackSize(lS))
   { // String to return
@@ -335,7 +335,7 @@ catch(const exception &eReason)
   return LuaUtilProcException(lS, eReason);
 } // Don't catch all as it will catch LUA's longjmp() throw.
 /* -- Get and pop string on top -------------------------------------------- */
-static const string LuaUtilGetAndPopStr(lua_State*const lS)
+static string LuaUtilGetAndPopStr(lua_State*const lS)
 { // If there is nothing on the stack then return a generic error
   if(LuaUtilIsNone(lS, -1)) return "Error signalled with no reason";
   // Not have a string on stack? Set embedded error!
@@ -403,7 +403,7 @@ static void LuaUtilRmRef(lua_State*const lS, const int iReference)
 static int LuaUtilRefInit(lua_State*const lS)
   { return luaL_ref(lS, LUA_REGISTRYINDEX); }
 /* ------------------------------------------------------------------------- */
-static const string LuaUtilStack(lua_State*const lST)
+static string LuaUtilStack(lua_State*const lST)
 { // We need the root state so we can iterate through all the threads and will
   // eventually arrive at *lS as the last stack. Most of the time GetState()
   // equals to *lS anyway, just depends if it triggered in a co-routine or not.
@@ -578,19 +578,19 @@ static Memory LuaUtilGetMBfromLStr(lua_State*const lS, const int iParam)
   return { stStrLen, cpStr };
 }
 /* -- Get and return a C++ string and throw exception if not a string ------ */
-static const string LuaUtilGetCppStr(lua_State*const lS, const int iParam)
+static string LuaUtilGetCppStr(lua_State*const lS, const int iParam)
 { // Throw if requested parameter isn't a string else return it
   LuaUtilCheckStr(lS, iParam);
   return LuaUtilToCppString(lS, iParam);
 }
 /* -- Get and return a C++ string and throw exception if not string/empty -- */
-static const string LuaUtilGetCppStrNE(lua_State*const lS, const int iParam)
+static string LuaUtilGetCppStrNE(lua_State*const lS, const int iParam)
 { // Throw if requested parameter isn't a string or empty else return it
   LuaUtilCheckStrNE(lS, iParam);
   return LuaUtilToCppString(lS, iParam);
 }
 /* -- Get and return a C++ string and throw exception if not string/empty -- */
-static const string LuaUtilGetCppFile(lua_State*const lS, const int iParam)
+static string LuaUtilGetCppFile(lua_State*const lS, const int iParam)
 { // Test to make sure if supplied parameter is a valid string
   LuaUtilCheckStr(lS, iParam);
   // Get the filename and verify that the filename is valid
@@ -603,7 +603,7 @@ static const string LuaUtilGetCppFile(lua_State*const lS, const int iParam)
   return strFile;
 }
 /* -- Get and return a C++ string and throw exception if not string/empty -- */
-static const string LuaUtilGetCppDir(lua_State*const lS, const int iParam)
+static string LuaUtilGetCppDir(lua_State*const lS, const int iParam)
 { // Test to make sure if supplied parameter is a valid string.
   LuaUtilCheckStr(lS, iParam);
   // Get the filename and verify that the filename is valid.
@@ -648,7 +648,7 @@ static bool LuaUtilValidHostname(lua_State*const lS, const int iParam)
   return true;
 }
 /* -- Get a valid hostname ------------------------------------------------- */
-static const string LuaUtilGetCppHostname(lua_State*const lS, const int iParam)
+static string LuaUtilGetCppHostname(lua_State*const lS, const int iParam)
 { // Return if parameter is a string and not empty else break execution
   LuaUtilCheckStr(lS, iParam);
   // Get size and verify it
@@ -687,7 +687,7 @@ static const string LuaUtilGetCppHostname(lua_State*const lS, const int iParam)
   return StrToLowCaseRef(strStr);
 }
 /* -- Get and return a C++ string and throw exception if not a string ------ */
-static const string LuaUtilGetCppStrUpper(lua_State*const lS, const int iParam)
+static string LuaUtilGetCppStrUpper(lua_State*const lS, const int iParam)
 { // Throw if requested parameter isn't a string else return it in uppercase
   string strStr{ LuaUtilGetCppStrNE(lS, iParam) };
   return StrToUpCaseRef(strStr);
@@ -1318,7 +1318,7 @@ static void LuaUtilClearTables(lua_State*const lS, int iStart)
   { for(const int iEnd = LuaUtilStackSize(lS); iStart <= iEnd; ++iStart)
       LuaUtilClearTableSafe(lS, iStart); }
 /* -- Replace text with values from specified LUA table -------------------- */
-static const string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
+static string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
 { // Return if source string is empty?
   if(strDest.empty()) return {};
   // Table for replacements
@@ -1389,7 +1389,7 @@ static VecType LuaUtilToVector(lua_State*const lS, const int iArg,
   const size_t stMax = UtilIntOrMax<size_t>(LuaUtilGetSize(lS, iArg));
   const lua_Integer liMax = static_cast<lua_Integer>(stMax) + 1;
   // Preallocate the table
-  Reserved<VecType> vtArray{ stMax };
+  StdReserved<VecType> vtArray{ stMax };
   // Walk the array
   for(lua_Integer liI = 1; liI < liMax; ++liI)
   { // Get item from table

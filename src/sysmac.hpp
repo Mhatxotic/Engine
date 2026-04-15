@@ -61,14 +61,18 @@ class SysCore :
   bool             bWindowInitialised; // Is window initialised?
   /* ----------------------------------------------------------------------- */
   static string GetSysCTLInfoString(const char *cpS)
-  { // Get the size and return error if failed
+  { // Get the size and return blank string if empty
     size_t stSize = 0;
-    if(sysctlbyname(cpS, nullptr, &stSize, nullptr, 0) < 0) return "#ERR1#";
-    // Resize and fill string
-    string strOut; strOut.resize(stSize - 1);
-    if(sysctlbyname(cpS, UtfToNonConstCast<char*>(strOut.data()),
+    if(sysctlbyname(cpS, nullptr, &stSize, nullptr, 0) < 0)
+      return cCommon->CommonNull();
+    // Return blank string if empty
+    if(!stSize) return {};
+    // Resize and fill string returning generic string if failed
+    StdResized<string> strOut{ stSize - 1 };
+    if(sysctlbyname(cpS, StdToNonConstCast<char*>(strOut.data()),
       &stSize, nullptr, 0) < 0)
-        return cCommon->CommonBlank();
+        return cCommon->CommonNull();
+    // Move generated string
     return StdMove(strOut);
   }
   /* ----------------------------------------------------------------------- */
@@ -445,7 +449,7 @@ class SysCore :
   /* -- Get executable file name ------------------------------------------- */
   const string GetExeName()
   { // Setup executable pathname
-    string strExe; strExe.resize(PROC_PIDPATHINFO_MAXSIZE);
+    StdResized<string> strExe{ PROC_PIDPATHINFO_MAXSIZE };
     // Get path to executable
     if(proc_pidpath(GetPid(),
       const_cast<char*>(strExe.data()), PROC_PIDPATHINFO_MAXSIZE) <= 0)
@@ -453,7 +457,6 @@ class SysCore :
           "Pid", GetPid(), "Buffer", strExe.capacity());
     // Set real size and trim the memory usage
     strExe.resize(strlen(strExe.data()));
-    strExe.shrink_to_fit();
     // Return executable name
     return strExe;
   }
@@ -565,7 +568,7 @@ class SysCore :
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
     // Resize buffer for storage
-    string strCode; strCode.resize(32, '\0');
+    StdResized<string> strCode{ 32 };
     // Create autorelease storage for locale, ask OS for it and if success?
     typedef unique_ptr<const void,
       function<decltype(CFRelease)>> CFAutoRelPtr;

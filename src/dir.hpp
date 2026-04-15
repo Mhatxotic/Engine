@@ -321,7 +321,7 @@ class DirFile                          // Files container class
 { /* -- Public variables --------------------------------------------------- */
   DirEntMap        demDirs, demFiles;  // Directories and files list
   /* -- Export ------------------------------------------------------------- */
-  static const StrSet Export(const DirEntMap &dSrc)
+  static StrSet Export(const DirEntMap &dSrc)
   { // Write entries into a single set list and return it
     StrSet ssFiles;
     for(const DirEntMapPair &dempFile : dSrc)
@@ -537,28 +537,26 @@ class Dir :                            // Directory information class
     DirFile{ ScanDirExt(strDir, strExt) } {}
 };/* ----------------------------------------------------------------------- */
 /* -- Get current directory ------------------------------------------------ */
-static const string DirGetCWD()
+static string DirGetCWD()
 { // On windows, we need to use unicode
 #if defined(WINDOWS)
   // Storage of filename and initialise it to maximum path length
-  wstring wstrDir; wstrDir.resize(_MAX_PATH);
+  StdResized<wstring> wstrDir{ _MAX_PATH };
   // Get current directory and store it in string, throw exception if error
-  if(!_wgetcwd(const_cast<wchar_t*>(wstrDir.data()),
-    static_cast<int>(wstrDir.capacity())))
-      throw runtime_error{ "getcwd() failed!" };
+  if(!_wgetcwd(const_cast<wchar_t*>(wstrDir.data()), _MAX_PATH))
+    throw runtime_error{ "getcwd() failed!" };
   // Resize and recover memory
   wstrDir.resize(wcslen(wstrDir.data()));
   // Return directory replacing backslashes for forward slashes
   return PSplitBackToForwardSlashes(WS16toUTF(wstrDir));
 #else
   // Storage of filename and initialise it to maximum path length
-  string strDir; strDir.resize(_MAX_PATH);
+  StdResized<string> strDir{ _MAX_PATH };
   // Get current directory and store it in string, throw exception if error
-  if(!getcwd(const_cast<char*>(strDir.data()), strDir.capacity()))
+  if(!getcwd(const_cast<char*>(strDir.data()), _MAX_PATH))
     throw runtime_error{ "getcwd() failed!" };
   // Resize and recover memory
   strDir.resize(strlen(strDir.data()));
-  strDir.shrink_to_fit();
   // Return directory
   return strDir;
 #endif

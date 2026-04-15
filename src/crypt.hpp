@@ -59,10 +59,10 @@ static string CryptHexDecodeStr(const string &strSrc)
 { // Must not be empty and a multiple of two to comply
   if(strSrc.empty() || strSrc.size() % 2) return {};
   // The memory to output. We know what size will be
-  string strDst; strDst.resize(strSrc.size() / 2);
+  StdResized<string> strDst{ strSrc.size() / 2 };
   // Build 8-bit value from two ASCII characters
   CryptHexDecodePtr(strSrc.data(), strSrc.length(),
-    UtfToNonConstCast<char*>(strDst.data()));
+    StdToNonConstCast<char*>(strDst.data()));
   // Return memory
   return strDst;
 }
@@ -75,11 +75,10 @@ static void CryptChar2HexU(const uint8_t ucChar, char*const cpPtr)
   cpPtr[1] = caHex[ucChar & 0x0F];        // Low nibble
 }
 /* -- Convert the specified 8-bit array to a hexadecmial string (upcase) --- */
-static const string CryptBin2Hex(const uint8_t*const ucStr,
-  const size_t stSize)
+static string CryptBin2Hex(const uint8_t*const ucStr, const size_t stSize)
 { // The output string and we know what the size of the output will be so
   // we do not need to use an ostringstream object.
-  string strOut; strOut.resize(stSize * 2, '\0');
+  StdResized<string> strOut{ stSize * 2 };
   // Cast to a char so theres no warnings and process the buffer
   char *cpBuffer = &strOut[0];
   for(size_t stPos = 0; stPos < stSize; ++stPos)
@@ -87,7 +86,7 @@ static const string CryptBin2Hex(const uint8_t*const ucStr,
   // We're done. return the string!
   return strOut;
 }
-static const string CryptBin2Hex(const MemConst &mcSrc)
+static string CryptBin2Hex(const MemConst &mcSrc)
   { return CryptBin2Hex(mcSrc.MemPtr<uint8_t>(), mcSrc.MemSize()); }
 /* -- Convert the specified 8-bit char to a lowercase hex string ----------- */
 static void CryptChar2HexL(const uint8_t ucChar, char*const cpPtr)
@@ -98,11 +97,10 @@ static void CryptChar2HexL(const uint8_t ucChar, char*const cpPtr)
   cpPtr[1] = caHex[ucChar & 0x0F];        // Low nibble
 }
 /* -- Convert the specified 8-bit array to a hexadecmial string (lwcase) --- */
-static const string CryptBin2HexL(const uint8_t*const ucStr,
-  const size_t stSize)
+static string CryptBin2HexL(const uint8_t*const ucStr, const size_t stSize)
 { // The output string and we know what the size of the output will be so
   // we do not need to use an ostringstream object.
-  string strOut; strOut.resize(stSize * 2, '\0');
+  StdResized<string> strOut{ stSize * 2 };
   // Cast to a char so theres no warnings and process the buffer
   char *cpBuffer = strOut.data();
   for(size_t stPos = 0; stPos < stSize; ++stPos)
@@ -110,7 +108,7 @@ static const string CryptBin2HexL(const uint8_t*const ucStr,
   // We're done. return the string!
   return strOut;
 }
-static const string CryptBin2HexL(const MemConst &mcSrc)
+static string CryptBin2HexL(const MemConst &mcSrc)
   { return CryptBin2HexL(mcSrc.MemPtr<uint8_t>(), mcSrc.MemSize()); }
 /* ------------------------------------------------------------------------- */
 static void CryptAddEntropyPtr(const void*const vpPtr, const size_t stSize)
@@ -143,21 +141,21 @@ static void CryptRandomPtr(void*const vpDst, const size_t stSize)
              static_cast<int>(stSize));
 }
 /* ------------------------------------------------------------------------- */
-template<typename AnyType>static const AnyType CryptRandom()
+template<typename AnyType>static AnyType CryptRandom()
 { // Do the randomisation into the requested type and return it
   AnyType atData;
   CryptRandomPtr(&atData, sizeof(atData));
   return atData;
 }
 /* -- URL encode the specified c-string ------------------------------------ */
-static const string CryptURLEncode(const string &strS)
+static string CryptURLEncode(const string &strS)
 { // Bail if passed string is empty
   if(strS.empty()) return {};
   // Movable pointer to input string
   const char *cpPtr = strS.data();
   // Preallocate string to avoid multiple reallocations. Worst case: every char
   // needs encoding.
-  Reserved<string> strURL{ strS.size() * 3 };
+  StdReserved<string> strURL{ strS.size() * 3 };
   // Perform these actions for each character...
   do
   { // Get character
@@ -181,7 +179,7 @@ static const string CryptURLEncode(const string &strS)
 }
 /* ------------------------------------------------------------------------- */
 template<class MapType>
-  static const string CryptImplodeMapAndEncode[[maybe_unused]]
+  static string CryptImplodeMapAndEncode[[maybe_unused]]
     (const MapType &mtRef, const string &strSep)
 { // The vector to return
   StrVector svRet;
@@ -198,7 +196,7 @@ template<class MapType>
 /* -- Get error reason ----------------------------------------------------- */
 static string CryptGetErrorReason(const unsigned long ulErr)
 { // Clear and resize error buffer to maximum
-  string strError; strError.resize(128);
+  StdResized<string> strError{ 128 };
   // Grab the error string from openssl and resize to correct size. Better to
   // use the non '_n' version so we can do all this in one line. Since
   // OpenSSL won't write more than 120 characters.
@@ -271,7 +269,7 @@ static int CryptBIOGetFd(BIO*const bBio)
 /* -- Replacement for BIO_set_conn_hostname which causes warnings ---------- */
 static int CryptBIOSetConnHostname(BIO*const bBio, const char*const cpName)
   { return static_cast<int>(BIO_ctrl(bBio, BIO_C_SET_CONNECT, 0,
-      UtfToNonConstCast<void*>(cpName))); }
+      StdToNonConstCast<void*>(cpName))); }
 /* -- Replacement for BIO_get_conn_addres which causes warnings ------------ */
 static const BIO_ADDR *CryptBIOGetConnAddress(BIO*const bBio)
   { return reinterpret_cast<const BIO_ADDR*>(
@@ -289,14 +287,14 @@ static int CryptSSLCtxSetTlsExtStatusCb(SSL_CTX*const sslCtx,
 /* -- Replacement for SSL_set_tlsext_host_name which causes warnings ------- */
 static int CryptSSLSetTlsExtHostName(SSL*const sSSL, const char*const cpName)
   { return static_cast<int>(SSL_ctrl(sSSL, SSL_CTRL_SET_TLSEXT_HOSTNAME,
-      TLSEXT_NAMETYPE_host_name, UtfToNonConstCast<void*>(cpName))); }
+      TLSEXT_NAMETYPE_host_name, StdToNonConstCast<void*>(cpName))); }
 /* -- Replacement for SSL_CTX_set1_verify_cert_store which causes warnings - */
 static int CryptSSLCtxSet1VerifyCertStore(SSL_CTX*const sslCtx,
   X509_STORE*const x509dest)
 { return static_cast<int>(SSL_CTX_ctrl(sslCtx, SSL_CTRL_SET_VERIFY_CERT_STORE,
     1, reinterpret_cast<void*>(x509dest))); }
 /* ------------------------------------------------------------------------- */
-static const string CryptPTRtoB64(const void*const vpIn, const size_t stIn)
+static string CryptPTRtoB64(const void*const vpIn, const size_t stIn)
 { // To clean up when leaving scope unexpectedliy
   typedef unique_ptr<BIO, function<decltype(BIO_free_all)>> BioPtr;
   // Create base 64 filter and if succeeded?
@@ -369,35 +367,35 @@ static size_t CryptB64toPTR(void*const vpIn, const size_t stIn,
     "InSize", stIn, "OutSize", stOut, "Reason", CryptGetError());
 }
 /* ------------------------------------------------------------------------- */
-static const string CryptMBtoB64(const MemConst &mcSrc)
+static string CryptMBtoB64(const MemConst &mcSrc)
   { return CryptPTRtoB64(mcSrc.MemPtr<void>(), mcSrc.MemSize()); }
 /* ------------------------------------------------------------------------- */
-static const string CryptStoB64(const string &strIn)
-  { return CryptPTRtoB64(UtfToNonConstCast<void*>(strIn.data()),
+static string CryptStoB64(const string &strIn)
+  { return CryptPTRtoB64(StdToNonConstCast<void*>(strIn.data()),
       strIn.length()); }
 /* ------------------------------------------------------------------------- */
 static Memory CryptB64toMB(const string &strIn)
 { // Output buffer
   Memory mData{ strIn.length() };
   // Do conversion and resize string after
-  mData.MemResize(CryptB64toPTR(UtfToNonConstCast<void*>(strIn.data()),
+  mData.MemResize(CryptB64toPTR(StdToNonConstCast<void*>(strIn.data()),
     strIn.length(), mData.MemPtr(), mData.MemSize()));
   // Return data
   return mData;
 }
 /* ------------------------------------------------------------------------- */
-static const string CryptB64toS(const string &strIn)
+static string CryptB64toS(const string &strIn)
 { // Create output buffer with enough size for output
-  string strOut; strOut.resize(strIn.length());
+  StdResized<string> strOut{ strIn.length() };
   // Do conversion and resize string after
-  strOut.resize(CryptB64toPTR(UtfToNonConstCast<void*>(strIn.data()),
-    strIn.length(), UtfToNonConstCast<void*>(strOut.data()),
+  strOut.resize(CryptB64toPTR(StdToNonConstCast<void*>(strIn.data()),
+    strIn.length(), StdToNonConstCast<void*>(strOut.data()),
     strOut.length()));
   // Return string
   return strOut;
 }
 /* -- Encode XML/HTML entities into string (crude but effective) ----------- */
-static const string CryptEntEncode(const string &strS)
+static string CryptEntEncode(const string &strS)
 { // Done if empty
   if(strS.empty()) return {};
   // Create sting to return and reserve memory. We will use a ostringstream
@@ -436,11 +434,11 @@ static const string CryptEntEncode(const string &strS)
   return osS.str();
 }
 /* ------------------------------------------------------------------------- */
-static const string CryptStoHEX(const string &strIn)
+static string CryptStoHEX(const string &strIn)
   { return CryptBin2Hex(reinterpret_cast<const uint8_t*>(strIn.data()),
       strIn.length()); }
 /* ------------------------------------------------------------------------- */
-static const string CryptStoHEXL(const string &strIn)
+static string CryptStoHEXL(const string &strIn)
   { return CryptBin2HexL(reinterpret_cast<const uint8_t*>(strIn.data()),
       strIn.length()); }
 /* -- Helper for mutliple hashing types from OpenSSL ----------------------- */
@@ -484,11 +482,11 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
     static Memory HMM(const MemConst &mcData) \
       { return HMR(mcData.MemPtr<unsigned char>(), mcData.MemSize()); } \
     /* -- Hash raw ptr/size and return string hash ------------------------ */\
-    static const string HSR(const unsigned char*const ucpIn, \
+    static string HSR(const unsigned char*const ucpIn, \
       const size_t stLen) \
         { return CryptBin2HexL(StdMove(HMR(ucpIn, stLen))); } \
     /* -- Hash string data and return string hash ------------------------- */\
-    static const string HSS(const string &strIn) \
+    static string HSS(const string &strIn) \
       { return HSR(reinterpret_cast<const unsigned char*>(strIn.data()), \
           strIn.length()); } \
     /* -- Hash string data and return raw hash ---------------------------- */\
@@ -496,7 +494,7 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
       { return HMR(reinterpret_cast<const unsigned char*>(strIn.data()), \
           strIn.length()); } \
     /* -- Hash raw data and return string hash ---------------------------- */\
-    static const string HSM(const MemConst &mcData) \
+    static string HSM(const MemConst &mcData) \
       { return HSR(mcData.MemPtr<unsigned char>(), mcData.MemSize()); } \
     /* -- Hash raw key ptr/size, raw data ptr/size and return raw hash ---- */\
     static Memory HMRR(const void*const vpSalt, const size_t stSaltSize,\
@@ -509,7 +507,7 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
                     reinterpret_cast<const unsigned char*>(strIn.data()), \
                     strIn.size()); } \
     /* -- Hash string key, string data and return string hash ------------- */\
-    static const string HSSS(const string &strSalt, const string &strIn) \
+    static string HSSS(const string &strSalt, const string &strIn) \
       { return CryptBin2HexL(StdMove(HMSS(strSalt, strIn))); } \
     /* -- Hash raw key, raw data and return raw hash ---------------------- */\
     static Memory HMMM(const MemConst &mcSalt, const MemConst &mcData) \
@@ -526,13 +524,13 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
       { return HMRR(reinterpret_cast<const void*>(strSalt.data()), \
           strSalt.size(), mcData.MemPtr<unsigned char>(), mcData.MemSize()); }\
     /* -- Hash string key, string data and return string hash ------------- */\
-    static const string HSMM(const MemConst &mcSalt, const MemConst &mcData) \
+    static string HSMM(const MemConst &mcSalt, const MemConst &mcData) \
       { return CryptBin2HexL(StdMove(HMMM(mcSalt, mcData))); } \
     /* -- Hash string key, raw data and return string hash ---------------- */\
-    static const string HSMS(const MemConst &mcSalt, const string &strData) \
+    static string HSMS(const MemConst &mcSalt, const string &strData) \
       { return CryptBin2HexL(StdMove(HMMS(mcSalt, strData))); } \
     /* -- Hash raw key, string data and return string hash ---------------- */\
-    static const string HSSM(const string &strSalt, const MemConst &mcData) \
+    static string HSSM(const string &strSalt, const MemConst &mcData) \
       { return CryptBin2HexL(StdMove(HMSM(strSalt, mcData))); } \
   };/* --------------------------------------------------------------------- */
 DEFINE_HASH_FUNCS(SHA1,   SHA_DIGEST_LENGTH,    EVP_sha1);   // Insecure
@@ -552,7 +550,7 @@ static string CryptURLDecode(const string &strS)
 { // Bail if passed string is invalid
   if(strS.empty()) return {};
   // Preallocate string to avoid multiple reallocations
-  Reserved<string> strURL{ strS.size() };
+  StdReserved<string> strURL{ strS.size() };
   // Movable pointer to input string and perform actions for each character...
   for(const char *cpPtr = strS.data(); *cpPtr;)
   { // Get the character and if it denotes a encoded value?
@@ -594,7 +592,7 @@ static Memory CryptRandomBlock(const size_t stSize)
 /* -- Sanitise a string removing excessive letters and words --------------- */
 static string CryptSanitise(const string &strMessage)
 { // Create output string and pre-allocate memory
-  Reserved<string> strPruned{ strMessage.capacity() };
+  StdReserved<string> strPruned{ strMessage.capacity() };
   // Last character processed and count
   char cLastChar = '\0';
   size_t stCount = 0;
@@ -618,7 +616,7 @@ static string CryptSanitise(const string &strMessage)
   // Repeated words
   string strWord, strLastWord;
   // Output string
-  Reserved<string> strOutput{ strPruned.size() };
+  StdReserved<string> strOutput{ strPruned.size() };
   // Put pruned string into a string stream
   istringstream issS{ strPruned };
   // For each word

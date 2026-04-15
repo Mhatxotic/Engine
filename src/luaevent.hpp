@@ -56,7 +56,7 @@ class LuaEvts :
   template<typename ...VarArgs>void LuaEvtsDispatch(const EvtMainCmd emcCmd,
     const void*const vpClass, const VarArgs ...vaArgs)
   { // Reserve memory for current parameters list for event
-    Reserved<EvtMainArgs> emaArgs{ sizeof...(VarArgs) };
+    StdReserved<EvtMainArgs> emaArgs{ sizeof...(VarArgs) };
     // Lock access to the list
     mMutex.MutexCall([this, &emaArgs, &emcCmd, vpClass, &vaArgs...]{
       // Iterator to return

@@ -270,7 +270,7 @@ class EvtCore :                        // Start of common event system class
   template<typename ...VarArgs>
     void Execute(const Cmd cCmd, const VarArgs ...vaArgs)
   { // Reserve memory for parameters
-    Reserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
+    StdReserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
     // Prepare parameters list and execute
     ExecuteParam(cCmd, eaArgs, vaArgs...);
   }
@@ -278,7 +278,7 @@ class EvtCore :                        // Start of common event system class
   template<typename ...VarArgs>
     void Add(const Cmd cCmd, const VarArgs ...vaArgs)
   { // Reserve memory for parameters
-    Reserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
+    StdReserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
     // Prepare parameters list and add a new event
     AddParam(cCmd, eaArgs, vaArgs...);
   }
@@ -305,7 +305,7 @@ class EvtCore :                        // Start of common event system class
   { // Iterator to return
     QueueConstIt qciItem;
     // Reserve parameters list
-    Reserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
+    StdReserved<EvtArgs> eaArgs{ sizeof...(VarArgs) };
     // Prepare parameters list and execute
     AddExParam(cCmd, qciItem, eaArgs, vaArgs...);
     // Return iterator

@@ -70,7 +70,7 @@ size_t stTotal = 0;
 // Number of bytes to show
 const size_t stCount = 16;
 // Init preview of block in hex and ASCII and reserve memory for it
-Reserved<string> strHex{ stCount * 3 }, strAscii{ stCount };
+StdReserved<string> strHex{ stCount * 3 }, strAscii{ stCount };
 // Memory data
 Statistic sTable;
 sTable.Header("ID").Header("BYTES").Header("PREVIEW", false)
@@ -1467,8 +1467,10 @@ cSystem->EnumModules();
 for(const SysModMapPair &smmpPair : *cSystem)
 { // Get reference to class and write its data to the table
   const SysModuleData &smdRef = smmpPair.second;
-  sTable.Data(smdRef.GetDesc()).Data(smdRef.GetVersion())
-        .Data(smdRef.GetVendor()).Data(smdRef.GetFull());
+  sTable.DataOR(smdRef.GetDesc(), cCommon->CommonUnspec())
+        .DataOR(smdRef.GetVersion(), cCommon->CommonUnspec())
+        .DataOR(smdRef.GetVendor(), cCommon->CommonUnspec())
+        .Data(smdRef.GetFull());
 } // Finished enumeration of modules
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrCPluraliseNum(cSystem->size(), "module.", "modules."));

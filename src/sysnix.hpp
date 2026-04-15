@@ -324,7 +324,7 @@ class SysCore :
   /* -- Get executable file name ------------------------------------------- */
   const string GetExeName()
   { // Storage for executable name
-    string strName; strName.resize(PATH_MAX);
+    StdResized<string>{ PATH_MAX };
     strName.resize(readlink("/proc/self/exe",
       const_cast<char*>(strName.data()), strName.size()));
     return strName;

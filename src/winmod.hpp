@@ -123,7 +123,7 @@ class SysModule :                      // Members initially private
   { // Allocate memory for string and read data. Return string if succeeded!
     wstring wstrVI(dwSize, 0);
     if(GetFileVersionInfoW(UTFtoS16(strModule).data(), 0, dwSize,
-      UtfToNonConstCast<LPVOID>(wstrVI.data())))
+      StdToNonConstCast<LPVOID>(wstrVI.data())))
         return wstrVI;
     // Write log and return empty string
     cLog->LogWarningExSafe(

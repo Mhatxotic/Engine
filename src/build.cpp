@@ -1803,7 +1803,7 @@ static void PatchIcon(const string &strIco, const string &strOut)
   // Write new icon group
   if(!UpdateResourceW(hExeFile, RT_GROUP_ICON, L"GLFW_ICON",
     MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_UK),
-      UtfToNonConstCast<LPVOID>(cpHdr), static_cast<DWORD>(stHdrSize)))
+      StdToNonConstCast<LPVOID>(cpHdr), static_cast<DWORD>(stHdrSize)))
         XCS("Update icon group resource error!", "File", strOut);
   // Close executable file
   if(!EndUpdateResource(hExeFile, FALSE))

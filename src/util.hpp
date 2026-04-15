@@ -239,7 +239,7 @@ template<typename IntTypeRet,
 requires is_integral_v<IntTypeRet> &&
          is_integral_v<IntTypeInternal> &&
          is_floating_point_v<IntTypeParam>
-static const IntTypeRet UtilDenormalise(const IntTypeParam itpVal)
+static IntTypeRet UtilDenormalise(const IntTypeParam itpVal)
 { // Do the conversion and return it
   return static_cast<IntTypeRet>(itpVal *
     numeric_limits<IntTypeInternal>::max());
@@ -388,7 +388,7 @@ static IntType UtilNearest(const IntType itValue,
 /* -- Returns the nearest power of two to specified number ----------------- */
 template<typename RetType, typename IntType>
 requires is_arithmetic_v<RetType> && is_arithmetic_v<IntType>
-static const RetType UtilNearestPow2(const IntType itValue)
+static RetType UtilNearestPow2(const IntType itValue)
   { return static_cast<RetType>(pow(2, ceil(log2(itValue)))); }
 /* -- If variable would overflow another type then return its maximum ------ */
 template<typename RetType, typename IntType>

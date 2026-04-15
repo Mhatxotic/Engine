@@ -158,6 +158,10 @@ class Statistic
   template<typename IntType>
     Statistic &DataH(const IntType tNum, const int iP=0)
       { return Data(StdMove(StrHexFromInt<IntType>(tNum, iP))); }
+  /* ----------------------------------------------------------------------- */
+  template<typename StrType>
+    Statistic &DataOR(const StrType &strValue, const StrType &strAlt)
+      { return Data(StrIsBlank<StrType>(strValue, strAlt)); }
   /* -- Data by character -------------------------------------------------- */
   Statistic &DataC(const char cCharacter = '?')
   { // Return if there are no headers
@@ -273,7 +277,7 @@ class Statistic
     // Sorting list
     struct StrRef { StrVectorIt sviRowIt, sviColPri, sviColSec; };
     typedef vector<StrRef> StrRefVec;
-    Reserved<StrRefVec> srvList{ Rows() };
+    StdReserved<StrRefVec> srvList{ Rows() };
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
     // For each value. Add row start iterator and column iterator to list
@@ -307,7 +311,7 @@ class Statistic
                strRow1Sec < strRow2Sec);
       });
     // Now we have the sorted list we can rebuilding the new list
-    Reserved<StrVector> svValuesNew{ Cells() };
+    StdReserved<StrVector> svValuesNew{ Cells() };
     for(const StrRef &srRow : srvList)
       for(StrVectorIt sviColIt{ srRow.sviRowIt },
                       sviColEnd{ next(sviColIt, sstHeaders) };
@@ -326,7 +330,7 @@ class Statistic
     // Sorting list
     struct StrRef { StrVectorIt sviRowIt, sviColIt; };
     typedef vector<StrRef> StrRefVec;
-    Reserved<StrRefVec> srvList{ Rows() };
+    StdReserved<StrRefVec> srvList{ Rows() };
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
     // For each value. Add row start iterator and column iterator to list
@@ -341,7 +345,7 @@ class Statistic
       [](const StrRef &srRow1, const StrRef &srRow2)
         { return *srRow1.sviColIt < *srRow2.sviColIt; });
     // Now we have the sorted list we can rebuilding the new list
-    Reserved<StrVector> svValuesNew{ Cells() };
+    StdReserved<StrVector> svValuesNew{ Cells() };
     for(const StrRef &srRow : srvList)
       for(StrVectorIt sviColIt{ srRow.sviRowIt },
                       sviColEnd{ next(sviColIt, sstHeaders) };
