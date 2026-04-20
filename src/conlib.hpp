@@ -70,7 +70,7 @@ size_t stTotal = 0;
 // Number of bytes to show
 const size_t stCount = 16;
 // Init preview of block in hex and ASCII and reserve memory for it
-StdReserved<string> strHex{ stCount * 3 }, strAscii{ stCount };
+StdReserved<StdString> strHex{ stCount * 3 }, strAscii{ stCount };
 // Memory data
 Statistic sTable;
 sTable.Header("ID").Header("BYTES").Header("PREVIEW", false)
@@ -124,7 +124,7 @@ sTable.Header("ID").Header("INPUT DEVICE", false)
       .Reserve(cAudio->AudioGetNumCapDevices());
 // list audio devices
 size_t stDeviceId = 0;
-for(const string &strName : cAudio->AudioGetCapDevices())
+for(const StdString &strName : cAudio->AudioGetCapDevices())
   sTable.DataN(stDeviceId++).Data(strName);
 // Output devices
 cConsole->ConsoleAddLineA(sTable.Finish(),
@@ -170,7 +170,7 @@ sTable.Header("ID").Header("OUTPUT DEVICE", false)
       .Reserve(cAudio->AudioGetNumPbkDevices());
 // list audio devices
 size_t stDeviceId = 0;
-for(const string &strName : cAudio->AudioGetPbkDevices())
+for(const StdString &strName : cAudio->AudioGetPbkDevices())
   sTable.DataN(stDeviceId++).Data(strName);
 // Output devices
 cConsole->ConsoleAddLineA(sTable.Finish(),
@@ -252,7 +252,7 @@ Statistic sTable;
 sTable.Header("ID").Header("ARGUMENT", false).Reserve(svArgs.size());
 // Walk through environment variables add them to the statistic object
 size_t stCount = 0;
-for(const string &strArg : svArgs) sTable.DataN(stCount++).Data(strArg);
+for(const StdString &strArg : svArgs) sTable.DataN(stCount++).Data(strArg);
 // Log counts
 cConsole->ConsoleAddLineA(sTable.Finish(), StrCPluraliseNum(stCount,
   "command line argument.",  "command line arguments."));
@@ -286,7 +286,7 @@ cConsole->Flush();
 { "cmds", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Build commands list and if commands were matched? Print them all
-string strMatched;
+StdString strMatched;
 if(const size_t stMatched = CommandsBuildList(cConsole->GetCmdsList(),
      aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
   cConsole->ConsoleAddLineF("$:$.", StrCPluraliseNum(stMatched,
@@ -498,7 +498,8 @@ cConsole->ConsoleAddLineA(StrCPluraliseNum(
 { "dir", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Make and checkfilename
-const string &strVal = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
+const StdString &strVal =
+  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
 switch(const ValidResult vrResult = DirValidName(strVal))
 { // Continue if valid directory or current directory
   case VR_CURRENT: case VR_OK: break;
@@ -508,13 +509,13 @@ switch(const ValidResult vrResult = DirValidName(strVal))
 } // Enumerate local directories on disk
 const Dir dPath{ StdMove(strVal) };
 // Set directory and get directories and files
-const string &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank();
+const StdString &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank();
 // Directory data we are enumerating
 struct Item { const uint64_t ullSize;
               const unsigned int uiId;
-              const string &strArc; };
-typedef pair<const string, const Item> StrItemPair;
-typedef map<StrItemPair::first_type, StrItemPair::second_type> StrItemList;
+              const StdString &strArc; };
+typedef StdPair<const StdString, const Item> StrItemPair;
+typedef StdMap<StrItemPair::first_type, StrItemPair::second_type> StrItemList;
 StrItemList silDirs, silFiles;
 // Get reference to assets collector class and lock it so it's not changed
 const LockGuard lgArchivesSync{ cArchives->MutexGet() };
@@ -529,7 +530,7 @@ for(const Archive*const aPtr : *cArchives)
   { // Skip directory if start of directory does not match
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    string strName{ StrTrim(
+    StdString strName{ StrTrim(
       suimpPair.first.substr(strDir.length()), '/') };
     if(strName.find('/') != StdNPos) continue;
     // Add to directory list and increment directory count
@@ -541,7 +542,7 @@ for(const Archive*const aPtr : *cArchives)
   { // Skip file if start of directory does not match
     if(strDir != suimpPair.first.substr(0, strDir.length())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    string strName{ StrTrim(suimpPair.first.substr(strDir.length()), '/') };
+    StdString strName{ StrTrim(suimpPair.first.substr(strDir.length()), '/') };
     if(strName.find('/') != StdNPos) continue;
     // Add to file list and increment total bytes and file count
     const uint64_t ullSize = aRef.ArchiveGetSize(suimpPair.second);
@@ -871,7 +872,7 @@ if(aArgs.size() == 2)
   const size_t stId = StrToNum<size_t>(aArgs[1]);
   if(stId >= cImages->size())
     return cConsole->ConsoleAddLine("Invalid image id!");
-  const Image &iRef = **next(cImages->cbegin(), static_cast<ssize_t>(stId));
+  const Image &iRef = **StdNext(cImages->cbegin(), static_cast<ssize_t>(stId));
   // Text table class to help us write neat output
   Statistic sTable;
   sTable.Header("SIZX").Header("SIZY").Header("SIZE")
@@ -1051,7 +1052,7 @@ cConsole->ConsoleAddLine(cLua->LuaCompileStringAndReturnResult(
 { "lcmds", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Build LUA commands list and if commands were matched? Print them all
-string strMatched;
+StdString strMatched;
 if(const size_t stMatched = CommandsBuildList(cCommands->lcmMap,
      aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
   cConsole->ConsoleAddLineF("$:$.", StrCPluraliseNum(stMatched,
@@ -1144,7 +1145,7 @@ if(!LuaUtilIsStackAvail(lS, aArgs.size()))
 StrVectorConstIt svciIt{ aArgs.cbegin() + 1 };
 if(svciIt != aArgs.cend())
 { // Get root table
-  const string &strRoot = *svciIt;
+  const StdString &strRoot = *svciIt;
   if(strRoot.empty()) return cConsole->ConsoleAddLine("Empty table name!");
   // Push variable specified on command line and if it's not a table?
   // Tell user the table is invalid and return
@@ -1156,7 +1157,7 @@ if(svciIt != aArgs.cend())
   // remaining argument is a table until we reach no more arguments.
   for(const int iIndex = LuaUtilStackSize(lS); ++svciIt != aArgs.cend();)
   { // Get name of parameter and if it's empty? Return empty sub-table
-    const string &strParam = *svciIt;
+    const StdString &strParam = *svciIt;
     if(strParam.empty())
       return cConsole->ConsoleAddLine("Empty sub-table name!");
     // ...and if its a valid number?
@@ -1176,9 +1177,9 @@ if(svciIt != aArgs.cend())
 } // Push global namspace and throw error if it is invalid
 else lua_pushglobaltable(lS);
 // Items for sorting (Name, Value, Tokens)
-typedef pair<const string,const StrStrMapPair> StrStrPairMapPair;
-typedef map<StrStrPairMapPair::first_type,
-            StrStrPairMapPair::second_type> StrStrPairMap;
+typedef StdPair<const StdString,const StrStrMapPair> StrStrPairMapPair;
+typedef StdMap<StrStrPairMapPair::first_type,
+               StrStrPairMapPair::second_type> StrStrPairMap;
 StrStrPairMap ssmpmMap;
 // Make sure theres two elements
 for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
@@ -1223,7 +1224,7 @@ else cConsole->ConsoleAddLine("No unreferenced memory!");
 { "log", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Colours for log levels
-typedef array<const ConColour, LH_MAX> LogLevelColours;
+typedef StdArray<const ConColour, LH_MAX> LogLevelColours;
 const LogLevelColours llcLookup{
   COLOUR_LBLUE  /* LH_CRITICAL */, COLOUR_LRED   /* LH_ERROR    */,
   COLOUR_YELLOW /* LH_WARNING  */, COLOUR_WHITE  /* LH_INFO     */,
@@ -1484,9 +1485,10 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 { "objs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
 // Typedefs for building memory usage data
-struct MemoryUsageItem{ const string_view &strName; size_t stCount, stBytes; }
-  muiTotal{ cCommon->CommonBlank(), 0, 0 };
-typedef list<MemoryUsageItem> MemoryUsageItems;
+struct MemoryUsageItem{
+  const StdStringView &strName; size_t stCount, stBytes; }
+    muiTotal{ cCommon->CommonBlank(), 0, 0 };
+typedef StdList<MemoryUsageItem> MemoryUsageItems;
 // Helper macros so there is not as much spam
 #define MSSX(s,c) { c->IdentGet(), \
                     c->CollectorCount(), \
@@ -1532,7 +1534,7 @@ cConsole->ConsoleAddLineF("$$ totalling $ ($).", stData.Finish(),
 { "oglext", 2, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get extension name and output if the extension is supported
-const string &strExtName = aArgs[1];
+const StdString &strExtName = aArgs[1];
 cConsole->ConsoleAddLineF(
   "Extension '$' is$ supported by the selected graphics device.",
     strExtName, cOgl->HaveExtension(strExtName.data()) ?
@@ -1547,7 +1549,7 @@ cConsole->ConsoleAddLineF(
 { "oglfunc", 2, 2, CFL_VIDEO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get function name and output if the function is supported
-const string &strFunction = aArgs[1];
+const StdString &strFunction = aArgs[1];
 cConsole->ConsoleAddLineF(
   "Function '$' is$ supported by the selected graphics device.",
     strFunction, GlFWProcExists(strFunction.data()) ?
@@ -1740,7 +1742,7 @@ if(aArgs.size() == 2)
   // Get socket flags
   const SocketFlagsConst sfcFlags{ sRef.FlagGet() };
   // Tokens for status
-  const string strStatus
+  const StdString strStatus
       ((sfcFlags.FlagIsSet(SS_CLOSEDBYCLIENT)) ? "ClientClosed"
     : ((sfcFlags.FlagIsSet(SS_CLOSEDBYSERVER)) ? "ServerClosed"
     : ((sfcFlags.FlagIsSet(SS_STANDBY))        ? "Disconnected"
@@ -1754,7 +1756,7 @@ if(aArgs.size() == 2)
     : ((sfcFlags.FlagIsSet(SS_INITIALISING))   ? "Initialising"
     :                                            "Unknown")))))))))));
   // Initial connection status
-  const string strOutput{
+  const StdString strOutput{
     StrFormat("Status for socket $...\n"
       "- Status: $; Flags: 0x$$; Error: $$; Descriptor: $ (0x$$).\n"
       "- Address: $; Port: $$; IP: $."
@@ -1842,7 +1844,7 @@ cConsole->ConsoleAddLineF("$$ ($ connected).\n"
 /* ------------------------------------------------------------------------- */
 // Get parameter and if user requested to close all connections? Close all
 // the sockets and report how many we closed and return
-const string &strId = aArgs[1];
+const StdString &strId = aArgs[1];
 if(strId == "*")
   return cConsole->ConsoleAddLineA(StrCPluraliseNum(SocketReset(),
     "connection", "connections"), " closed.");
@@ -1983,7 +1985,7 @@ if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, 1)))
   if(srRef.empty())
   { // If we should show the rows affected. This is sloppy but sqllite
     // doesn't support resetting sqlite3_changes result yet :(
-    const string &strFirst = StrToLowCaseRef(UtilToNonConst(aArgs[1]));
+    const StdString &strFirst = StrToLowCaseRef(UtilToNonConst(aArgs[1]));
     // Show rows affected if we have them
     if(strFirst == "insert" || strFirst == "update" || strFirst == "delete")
       cConsole->ConsoleAddLineF("$ affected in $.",

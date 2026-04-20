@@ -22,7 +22,7 @@ static bool UtilIsDivisible(const double dNumber)
 //    { return fpclassify(iitValue) == FP_NORMAL; }
 /* -- Return -1 or 1 depending wether the value is positive or negative ---- */
 template<typename IntType> requires is_signed_v<IntType>
-  IntType UtilSign(const IntType itValue)
+  static IntType UtilSign(const IntType itValue)
 { return static_cast<IntType>(itValue > 0) -
          static_cast<IntType>(itValue < 0); }
 /* ------------------------------------------------------------------------- */
@@ -173,9 +173,9 @@ template<typename Type>static Type &UtilToNonConst(const Type &tSrc)
   { return const_cast<Type&>(tSrc); }
 /* -- Brute cast one type to another --------------------------------------- */
 template<typename TypeDst, typename TypeSrc>
-requires (sizeof(TypeDst) == sizeof(TypeSrc)) &&
-         is_trivially_copyable_v<TypeSrc> &&
-         is_trivially_copyable_v<TypeDst>
+  requires (sizeof(TypeDst) == sizeof(TypeSrc)) &&
+           is_trivially_copyable_v<TypeSrc> &&
+           is_trivially_copyable_v<TypeDst>
 static TypeDst UtilBruteCast(const TypeSrc tsV)
   { return bit_cast<TypeDst>(tsV); }
 /* -- Brute cast a 32-bit float to 32-bit integer -------------------------- */
@@ -203,8 +203,9 @@ static double UtilToF64LE(const double dV)
 static double UtilToF64BE(const double dV)
   { return UtilCastInt64ToDouble(UtilToI64BE(UtilCastDoubleToInt64(dV))); }
 /* -- Convert to little endian integer ------------------------------------- */
-template<typename IntType> requires is_integral_v<IntType>
-  IntType UtilToLittleEndian(const IntType itValue)
+template<typename IntType>
+  requires is_integral_v<IntType>
+static IntType UtilToLittleEndian(const IntType itValue)
 { // Convert 16-bit big-endian integer to little-endian
   if constexpr(sizeof(IntType) == sizeof(uint16_t))
     return UtilToI16LE<IntType>(itValue);
@@ -219,7 +220,7 @@ template<typename IntType> requires is_integral_v<IntType>
 }
 /* -- Convert to big endian integer ---------------------------------------- */
 template<typename IntType> requires is_integral_v<IntType>
-  IntType UtilToBigEndian(const IntType itValue)
+  static IntType UtilToBigEndian(const IntType itValue)
 { // Convert 16-bit big-endian integer to big-endian
   if constexpr(sizeof(IntType) == sizeof(uint16_t))
     return UtilToI16BE<IntType>(itValue);
@@ -246,7 +247,7 @@ static IntTypeRet UtilDenormalise(const IntTypeParam itpVal)
 }
 /* -- Convert integer to float between 0 and 1 ----------------------------- */
 template<typename IntTypeRet, typename IntTypeParam>
-requires is_floating_point_v<IntTypeRet> || is_integral_v<IntTypeParam>
+  requires is_floating_point_v<IntTypeRet> || is_integral_v<IntTypeParam>
 static IntTypeRet UtilNormalise(const IntTypeParam itpVal)
   { return static_cast<IntTypeRet>(itpVal) /
       numeric_limits<IntTypeParam>::max(); }
@@ -272,17 +273,17 @@ static IntTypeRet UtilNormaliseEx(const IntTypeExternal iteV)
       stShift, IntTypeInternal>(iteV)); }
 /* -- Scale a value from (0-max) to a different min-max -------------------- */
 template<typename DestIntType, typename PhysIntType, typename VirtIntType>
-requires is_arithmetic_v<DestIntType> && is_arithmetic_v<PhysIntType> &&
-         is_arithmetic_v<VirtIntType>
-DestIntType UtilScaleValue(const DestIntType itV, const PhysIntType itPMax,
-  const VirtIntType itVMin, const VirtIntType itVMax)
+  requires is_arithmetic_v<DestIntType> && is_arithmetic_v<PhysIntType> &&
+           is_arithmetic_v<VirtIntType>
+static DestIntType UtilScaleValue(const DestIntType itV,
+  const PhysIntType itPMax, const VirtIntType itVMin, const VirtIntType itVMax)
 { return static_cast<DestIntType>(itVMin) + itV /
     itPMax * static_cast<DestIntType>(itVMax); }
 /* -- Returns if specified integer would overflow specified type ----------- */
 template<typename IntTypeTarget, typename IntTypeSource>
   requires (is_integral_v<IntTypeSource> || is_enum_v<IntTypeSource>) &&
            (is_integral_v<IntTypeTarget> || is_enum_v<IntTypeTarget>)
-constexpr bool UtilIntWillOverflow(const IntTypeSource itsValue)
+static constexpr bool UtilIntWillOverflow(const IntTypeSource itsValue)
 { // If both types are signed?
   if constexpr(is_signed_v<IntTypeSource> == is_signed_v<IntTypeTarget>)
   { // Both are signed so no overflow possible if source size less
@@ -319,15 +320,16 @@ static uint32_t UtilMakeDWord(const IntTypeHigh ithV,
         (static_cast<uint32_t>(itlV) & 0xffff)); }
 /* ------------------------------------------------------------------------- */
 template<typename IntTypeHigh,typename IntTypeLow>
-requires is_integral_v<IntTypeHigh> && is_integral_v<IntTypeLow>
+  requires is_integral_v<IntTypeHigh> && is_integral_v<IntTypeLow>
 static uint64_t UtilMakeQWord(const IntTypeHigh ithV,
   const IntTypeLow itlV)
 { return static_cast<uint64_t>((static_cast<uint64_t>(ithV) << 32) |
     (static_cast<uint64_t>(itlV) & 0xffffffff)); }
 /* -- Return lowest and highest 8-bits of integer -------------------------- */
-template<typename IntType> requires is_integral_v<IntType>
-  static uint8_t UtilLowByte(const IntType itVal)
-{ return static_cast<uint8_t>(itVal & 0x00ff); }
+template<typename IntType>
+  requires is_integral_v<IntType>
+static uint8_t UtilLowByte(const IntType itVal)
+  { return static_cast<uint8_t>(itVal & 0x00ff); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType> requires is_integral_v<IntType>
   static uint8_t UtilHighByte(const IntType itVal)
@@ -350,57 +352,59 @@ template<typename IntType> requires is_integral_v<IntType>
 { return static_cast<uint32_t>((itVal & 0xffffffff00000000) >> 32); }
 /* -- Return lowest or highest number out of two --------------------------- */
 template<typename IntType1,typename IntType2>
-requires is_arithmetic_v<IntType1> && is_arithmetic_v<IntType2> &&
-         is_same_v<IntType1, IntType2>
+  requires is_arithmetic_v<IntType1> && is_arithmetic_v<IntType2> &&
+           is_same_v<IntType1, IntType2>
 static IntType1 UtilMinimum(const IntType1 itOne, const IntType2 itTwo)
   { return itOne < static_cast<IntType1>(itTwo) ?
       itOne : static_cast<IntType1>(itTwo); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType1,typename IntType2>
-requires is_arithmetic_v<IntType1> && is_arithmetic_v<IntType2> &&
-         is_same_v<IntType1, IntType2>
+  requires is_arithmetic_v<IntType1> && is_arithmetic_v<IntType2> &&
+           is_same_v<IntType1, IntType2>
 static IntType1 UtilMaximum(const IntType1 itOne, const IntType2 itTwo)
   { return itOne > static_cast<IntType1>(itTwo) ?
       itOne : static_cast<IntType1>(itTwo); }
 /* -- Clamp a number between two values ------------------------------------ */
 template<typename TVAL, typename TMIN, typename TMAX>
-requires is_arithmetic_v<TVAL> && is_arithmetic_v<TMIN> &&
-         is_arithmetic_v<TMAX>
+  requires is_arithmetic_v<TVAL> && is_arithmetic_v<TMIN> &&
+           is_arithmetic_v<TMAX>
 static TVAL UtilClamp(const TVAL tVal, const TMIN tMin,
   const TMAX tMax)
 { return UtilMaximum(static_cast<TVAL>(tMin),
          UtilMinimum(static_cast<TVAL>(tMax), tVal)); }
 /* -- Make a percentage ---------------------------------------------------- */
 template<typename T1, typename T2, typename R=double>
-requires is_arithmetic_v<T1> && is_arithmetic_v<T2> && is_floating_point_v<R>
+  requires is_arithmetic_v<T1> && is_arithmetic_v<T2> && is_floating_point_v<R>
 static R UtilMakePercentage(const T1 tCurrent, const T2 tMaximum,
   const R rMulti=100)
 { return static_cast<R>(tCurrent) / static_cast<R>(tMaximum) * rMulti; }
 /* -- Calculate distance between two values -------------------------------- */
-template<typename AnyType> requires is_arithmetic_v<AnyType>
+template<typename AnyType>
+  requires is_arithmetic_v<AnyType>
 static AnyType UtilDistance(const AnyType atX, const AnyType atY)
   { return atX > atY ? atX - atY : atY - atX; }
 /* -- Round to nearest value ----------------------------------------------- */
-template<typename IntType> requires is_arithmetic_v<IntType>
+template<typename IntType>
+  requires is_arithmetic_v<IntType>
 static IntType UtilNearest(const IntType itValue,
   const IntType itMultiple)
 { return (itValue + itMultiple / 2) / itMultiple * itMultiple; }
 /* -- Returns the nearest power of two to specified number ----------------- */
 template<typename RetType, typename IntType>
-requires is_arithmetic_v<RetType> && is_arithmetic_v<IntType>
+  requires is_arithmetic_v<RetType> && is_arithmetic_v<IntType>
 static RetType UtilNearestPow2(const IntType itValue)
   { return static_cast<RetType>(pow(2, ceil(log2(itValue)))); }
 /* -- If variable would overflow another type then return its maximum ------ */
 template<typename RetType, typename IntType>
-requires is_arithmetic_v<RetType> &&
-        (is_arithmetic_v<IntType> || is_enum_v<IntType>)
+  requires is_arithmetic_v<RetType> &&
+          (is_arithmetic_v<IntType> || is_enum_v<IntType>)
 static RetType UtilIntOrMax(const IntType itValue)
   { return UtilIntWillOverflow<RetType, IntType>(itValue) ?
       numeric_limits<RetType>::max() : static_cast<RetType>(itValue); }
 /* -- Convert millimetres to inches ---------------------------------------- */
 template<typename IntType> requires is_arithmetic_v<IntType>
   static double UtilMillimetresToInches(const IntType itValue)
-    { return static_cast<double>(itValue) * 0.0393700787; }
+{ return static_cast<double>(itValue) * 0.0393700787; }
 /* -- Initialise an array of the specified value --------------------------- */
 namespace MakeFilledContainer
 { /* -- Fill with specified value ------------------------------------------ */
@@ -408,7 +412,7 @@ namespace MakeFilledContainer
   constexpr ItemType Value(const size_t, const ItemType &itValue)
     { return itValue; }
   /* -- Select indices ----------------------------------------------------- */
-  template<class ContainerType,        // Container type (i.e. array<>)
+  template<class ContainerType,        // Container type (i.e. StdArray<>)
            typename ItemType,          // Container element type
            size_t stNumItems,          // Container maximum elements
            size_t... Is>               // Parameter id
@@ -430,21 +434,22 @@ namespace MakeFilledClassContainer
 { /* -- Fill with specified value ------------------------------------------ */
   template<class ClassType,
            typename ArgType>
-  requires is_class_v<ClassType> && is_arithmetic_v<ArgType>
-  constexpr ClassType Value(const size_t, ArgType &atValue)
+    requires is_class_v<ClassType> && is_arithmetic_v<ArgType>
+  static constexpr ClassType Value(const size_t, ArgType &atValue)
     { return ClassType{ atValue++ }; }
   /* -- Select indices ----------------------------------------------------- */
   template<class ContainerType,
            typename ArgType,
            class ClassType = ContainerType::value_type,
            size_t... Is>
-  constexpr ContainerType Select(ArgType &atValue, index_sequence<Is...>)
-    { return { Value<ClassType, ArgType>(Is, atValue)... }; }
+  static constexpr ContainerType
+    Select(ArgType &atValue, index_sequence<Is...>)
+      { return { Value<ClassType, ArgType>(Is, atValue)... }; }
   /* -- Entry function ----------------------------------------------------- */
   template<class ContainerType,
            typename ArgType,
            size_t stNumItems = tuple_size_v<ContainerType>>
-  constexpr ContainerType UtilMkFilledClassContainer(ArgType atValue=0)
+  static constexpr ContainerType UtilMkFilledClassContainer(ArgType atValue=0)
     { return Select<ContainerType, ArgType>
         (atValue, make_index_sequence<stNumItems>{}); }
 };
@@ -453,50 +458,58 @@ static constexpr double UtilPerSec(const double dVal) { return 1.0 / dVal; }
 /* ------------------------------------------------------------------------- */
 using MakeFilledClassContainer::UtilMkFilledClassContainer;
 /* -- Bits handling functions ---------------------------------------------- */
-template<typename IntType> requires is_integral_v<IntType>
+template<typename IntType>
+  requires is_integral_v<IntType>
 static IntType UtilBitSwap4(const IntType itValue)
   { return (((itValue & 0xff) >> 4) | ((itValue & 0xff) << 4)) & 0xff; }
 /* ------------------------------------------------------------------------- */
-template<typename IntType> requires is_integral_v<IntType>
+template<typename IntType>
+  requires is_integral_v<IntType>
 static IntType UtilBitToByte(const IntType itPos)
   { return itPos / CHAR_BIT; }
 /* ------------------------------------------------------------------------- */
-template<typename IntType> requires is_integral_v<IntType>
+template<typename IntType>
+  requires is_integral_v<IntType>
 static IntType UtilBitFromByte(const IntType itPos)
   { return itPos * CHAR_BIT; }
 /* ------------------------------------------------------------------------- */
 template<typename RetType,typename IntType>
-requires is_integral_v<RetType> && is_integral_v<IntType>
+  requires is_integral_v<RetType> && is_integral_v<IntType>
 static RetType UtilBitMask(const IntType itPos)
   { return static_cast<RetType>(1 << itPos % CHAR_BIT); }
 /* ------------------------------------------------------------------------- */
-template<typename PtrType,typename IntType> requires is_integral_v<IntType>
+template<typename PtrType,typename IntType>
+  requires is_integral_v<IntType>
 static void UtilBitSet(PtrType*const ptDst, const IntType itPos)
   { ptDst[UtilBitToByte(itPos)] |=
       UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos); }
 /* ------------------------------------------------------------------------- */
 template<typename PtrType,typename IntType>
-requires is_integral_v<IntType>
+  requires is_integral_v<IntType>
 static bool UtilBitTest(PtrType*const ptDst, const IntType itPos)
   { return !!(ptDst[UtilBitToByte(itPos)] &
       UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos)); }
 /* ------------------------------------------------------------------------- */
-template<typename PtrType,typename IntType> requires is_integral_v<IntType>
+template<typename PtrType,typename IntType>
+  requires is_integral_v<IntType>
 static void UtilBitClear(PtrType*const ptDst, const IntType itPos)
   { ptDst[UtilBitToByte(itPos)] &=
       ~UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos); }
 /* ------------------------------------------------------------------------- */
-template<typename PtrType,typename IntType> requires is_integral_v<IntType>
+template<typename PtrType,typename IntType>
+  requires is_integral_v<IntType>
 static void UtilBitFlip(PtrType*const ptDst, const IntType itPos)
   { ptDst[UtilBitToByte(itPos)] ^=
       UtilBitMask<remove_pointer_t<PtrType>,IntType>(itPos); }
 /* -- Bits handling functions copying from another bit buffer -------------- */
-template<typename PtrType,typename IntType> requires is_integral_v<IntType>
+template<typename PtrType,typename IntType>
+  requires is_integral_v<IntType>
 static void UtilBitSet2(PtrType*const ptDst, const IntType itDstPos,
   const PtrType*const ptSrc, const IntType itSrcPos)
 { ptDst[UtilBitToByte(itDstPos)] |= ptSrc[UtilBitToByte(itSrcPos)]; }
 /* ------------------------------------------------------------------------- */
-template<typename PtrType,typename IntType> requires is_integral_v<IntType>
+template<typename PtrType,typename IntType>
+  requires is_integral_v<IntType>
 static void UtilBitSet2R(PtrType*const ptDst, const IntType itDstPos,
   const PtrType*const ptSrc, const IntType itSrcPos)
 { ptDst[UtilBitToByte(itDstPos)] |=
@@ -517,7 +530,7 @@ static void UtilBitSet2R(PtrType*const ptDst, const IntType itDstPos,
 //       { ptDst[UtilBitToByte(itDstPos)] ^= ptSrc[UtilBitToByte(itSrcPos)]; }
 /* ------------------------------------------------------------------------- */
 template<typename IntType, IntType itAlpha=0.1>
-requires is_arithmetic_v<IntType>
+  requires is_arithmetic_v<IntType>
 static IntType UtilSmooth(const IntType itValue, IntType &itSmoothed)
 { // Calculate the new value and reset if it when invalid
   itSmoothed = itAlpha * itValue +

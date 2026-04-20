@@ -19,16 +19,16 @@ namespace P {                          // Start of public module namespace
 /* == Fbo item class ======================================================= */
 struct FboItem
 { /* -- Public typedefs ---------------------------------------------------- */
-  typedef array<GLfloat, stFloatsPerCoord> TriCoordData; // Triangle TexCoords
-  typedef array<TriCoordData, stTrisPerQuad> QuadCoordData; // Quad tex-coord
-  typedef array<GLfloat, stFloatsPerPos> TriPosData; // Triangle positions
-  typedef array<TriPosData, stTrisPerQuad> QuadPosData; // Quad position data
-  typedef array<GLfloat, stFloatsPerColour> TriColData; // Triangle intensities
-  typedef array<TriColData, stTrisPerQuad> QuadColData; // Quad colour data
+  typedef StdArray<GLfloat, stFloatsPerCoord> TriCoordData; // Tri TexCoords
+  typedef StdArray<TriCoordData, stTrisPerQuad> QuadCoordData; // Quad texcoord
+  typedef StdArray<GLfloat, stFloatsPerPos> TriPosData; // Triangle positions
+  typedef StdArray<TriPosData, stTrisPerQuad> QuadPosData; // Quad pos data
+  typedef StdArray<GLfloat, stFloatsPerColour> TriColData; // Tri intensities
+  typedef StdArray<TriColData, stTrisPerQuad> QuadColData; // Quad colour data
   /* -- Stored colour data ------------------------------------------------- */
   QuadColData      faCSave;            // Saved colour data (Push/PopColour)
   /* -- Private typedefs ------------------------------------------ */ private:
-  typedef array<GLfloat, stFloatsPerQuad> AllData; // All data elements
+  typedef StdArray<GLfloat, stFloatsPerQuad> AllData; // All data elements
   /* -- Private variables -------------------------------------------------- */
   union Quad                           // Render to texture Vertex array data
   { /* --------------------------------------------------------------------- */

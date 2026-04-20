@@ -19,8 +19,8 @@ using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-typedef pair<LuaFunc, CmdMapIt> LuaCmdPair;      // Lua id/cvar list
-MAPPACK_BUILD(LuaCmd, const string, LuaCmdPair); // Map for lua vars
+typedef StdPair<LuaFunc, CmdMapIt> LuaCmdPair; // Lua id/cvar list
+MAPPACK_BUILD(LuaCmd, const StdString, LuaCmdPair); // Map for lua vars
 /* -- Variables ollector class for collector data and custom variables ----- */
 CTOR_BEGIN(Commands, Command, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
@@ -46,9 +46,9 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     else lcmiIt->second.first.LuaFuncProtectedDispatch(0, aArgs);
   }
   /* -- Unregister the console command from lua -------------------- */ public:
-  const string &Name() const { return lcmiIt->first; }
+  const StdString &Name() const { return lcmiIt->first; }
   /* -- Register user console command from lua ----------------------------- */
-  void Init(lua_State*const lS, const string &strName,
+  void Init(lua_State*const lS, const StdString &strName,
     const unsigned int uiMinimum, const unsigned int uiMaximum)
   { // Check that the console command is valid
     if(!cConsole->IsValidConsoleCommandName(strName))
@@ -100,7 +100,7 @@ CTOR_END_NOINITS(Commands, Command, COMMAND) // Finish global Files collector
 /* -- Build a command list (for conlib) ------------------------------------ */
 template<class ListType>
   static size_t CommandsBuildList(const ListType &ltList,
-    const string &strFilter, string &strDest)
+    const StdString &strFilter, StdString &strDest)
 { // Commands matched
   size_t stMatched = 0;
   // Set filter if specified and look for command and if we found one?
@@ -112,7 +112,7 @@ template<class ListType>
     // Build output string
     do
     { // If no match found? return original string
-      const string &strKey = ltIt->first;
+      const StdString &strKey = ltIt->first;
       if(strKey.compare(0, strFilter.size(), strFilter)) continue;
       // Increment matched counter
       ++stMatched;

@@ -263,7 +263,7 @@ class GlFWWindow :                     // GLFW window class
   void WinSetClipboard(const char*const cpT) const
     { glfwSetClipboardString(WinGetHandle(), cpT); }
   /* -- Set clipboard c++ string ------------------------------------------- */
-  void WinSetClipboardString(const string &strT) const
+  void WinSetClipboardString(const StdString &strT) const
     { WinSetClipboard(strT.data()); }
   /* -- Get clipboard c-string --------------------------------------------- */
   const char *WinGetClipboard() const
@@ -274,7 +274,7 @@ class GlFWWindow :                     // GLFW window class
     return cCommon->CommonCBlank();
   }
   /* -- Get clipboard C++ string ------------------------------------------- */
-  const string WinGetClipboardString() const
+  const StdString WinGetClipboardString() const
     { return WinGetClipboard(); }
   /* -- Get mouse/key button state ----------------------------------------- */
   int WinGetMouse(const int iB) const
@@ -301,7 +301,7 @@ class GlFWWindow :                     // GLFW window class
   void WinSetFreeAspectRatio() const
     { WinSetAspectRatio(GLFW_DONT_CARE, GLFW_DONT_CARE); }
   /* -- Set window aspect ratio with a float or double --------------------- */
-  void WinSetAspectRatio(const string &strVal) const
+  void WinSetAspectRatio(const StdString &strVal) const
   { // Seperate numeric and denominator
     const size_t stPos = strVal.find('.');
     if(stPos != StdNPos)

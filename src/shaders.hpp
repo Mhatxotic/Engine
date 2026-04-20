@@ -20,7 +20,7 @@ struct ShaderCore;                     // Class prototype
 static ShaderCore *cShaderCore = nullptr; // Pointer to global class
 struct ShaderCore                      // Actual body
 { /* -- 3D shader references ----------------------------------------------- */
-  array<Shader,9> sh3DBuiltIns;        // list of built-in 3D shaders
+  StdArray<Shader,9> sh3DBuiltIns;     // list of built-in 3D shaders
   Shader          &sh3D,               // Basic 3D transformation shader
                   &sh3DYCbCr601FR,     // 3D YCbCr Rec.601 full-range shader
                   &sh3DYCbCr601PR,     // 3D YCbCr Rec.601 partial-range shader
@@ -31,19 +31,19 @@ struct ShaderCore                      // Actual body
                   &sh3DYCbCrK709FR,    // Keyed Rec.709 full-range shader
                   &sh3DYCbCrK709PR;    // Keyed Rec.709 partial-range shader
   /* -- 2D shader references ----------------------------------------------- */
-  array<Shader,5> sh2DBuiltIns;        // list of built-in 2D shaders
+  StdArray<Shader,5> sh2DBuiltIns;     // list of built-in 2D shaders
   Shader          &sh2D,               // 2D-3D transformation shader
                   &sh2DBGR,            // 2D BGR-3D transformation shader
                   &sh2D8,              // 2D LUM-3D transformation shader
                   &sh2D8Pal,           // 2D LUMPAL-3D transformation shader
                   &sh2D16;             // 2D LUMAL-3D transformation shader
   /* -------------------------------------------------------------- */ private:
-  typedef array<const string,5> RoundList;
-  const RoundList rList;               // Rounding method list
-  string          strSPRMethod;        // Rounding method string
+  typedef StdArray<const StdString,5> RoundList;
+  const RoundList  rList;              // Rounding method list
+  StdString        strSPRMethod;       // Rounding method string
   /* -- Add vertex shader with template and extra code --------------------- */
-  static void AddVertexShaderWith3DTemplate(Shader &shS, const string &strName,
-    const char*const cpCode)
+  static void AddVertexShaderWith3DTemplate(Shader &shS,
+    const StdString &strName, const char*const cpCode)
   { // Add vertex shader program
     shS.AddShaderEx(strName, GL_VERTEX_SHADER,
       // > The vertex shader is for modifying vertice coord data
@@ -66,11 +66,12 @@ struct ShaderCore                      // Actual body
   }
   /* -- Add vertex shader with template ------------------------------------ */
   static void AddVertexShaderWith3DTemplate(Shader &shS,
-    const string &strName)
+    const StdString &strName)
   { AddVertexShaderWith3DTemplate(shS, strName, cCommon->CommonCBlank()); }
   /* -- Add fragment shader with template ---------------------------------- */
-  static void AddFragmentShaderWithTemplate(Shader &shS, const string &strName,
-    const char*const cpCode, const char*const cpHeader)
+  static void AddFragmentShaderWithTemplate(Shader &shS,
+    const StdString &strName, const char*const cpCode,
+    const char*const cpHeader)
   { // Add fragmnet shader program
     shS.AddShaderEx(strName, GL_FRAGMENT_SHADER,
       // > The fragment shader is for modifying actual pixel data
@@ -88,16 +89,17 @@ struct ShaderCore                      // Actual body
       "}", cpHeader, cpCode);          // Done
   }
   /* -- Add fragment shader with template ---------------------------------- */
-  static void AddFragmentShaderWithTemplate(Shader &shS, const string &strName)
-    { AddFragmentShaderWithTemplate(shS, strName, cCommon->CommonCBlank(),
-        cCommon->CommonCBlank()); }
+  static void AddFragmentShaderWithTemplate(Shader &shS,
+    const StdString &strName)
+  { AddFragmentShaderWithTemplate(shS, strName, cCommon->CommonCBlank(),
+      cCommon->CommonCBlank()); }
   /* -- Add fragment shader with template ---------------------------------- */
-  static void AddFragmentShaderWithTemplate(Shader &shS, const string &strName,
-      const char*const cpCode)
-    { AddFragmentShaderWithTemplate(shS,
-        strName, cpCode, cCommon->CommonCBlank()); }
+  static void AddFragmentShaderWithTemplate(Shader &shS,
+    const StdString &strName, const char*const cpCode)
+  { AddFragmentShaderWithTemplate(shS,
+      strName, cpCode, cCommon->CommonCBlank()); }
   /* -- Add vertex shader with template ------------------------------------ */
-  void AddVertexShaderWith2DTemplate(Shader &shS, const string &strName,
+  void AddVertexShaderWith2DTemplate(Shader &shS, const StdString &strName,
     const char*const cpCode)
   { // Add vertex shader program
     AddVertexShaderWith3DTemplate(shS, strName, StrFormat("$"
@@ -106,7 +108,7 @@ struct ShaderCore                      // Actual body
         cpCode, strSPRMethod, strSPRMethod).data());
   }
   /* -- Add vertex shader with template ------------------------------------ */
-  void AddVertexShaderWith2DTemplate(Shader &shS, const string &strName)
+  void AddVertexShaderWith2DTemplate(Shader &shS, const StdString &strName)
     { AddVertexShaderWith2DTemplate(shS, strName, cCommon->CommonCBlank()); }
   /* ----------------------------------------------------------------------- */
   void Init3DShader()
@@ -164,9 +166,9 @@ struct ShaderCore                      // Actual body
     sh2D16.Link();
   }
   /* ----------------------------------------------------------------------- */
-  static void Init3DYCbCrTemplate(Shader &shDest, const string &strName,
-    const string_view &svRangeCode, const string_view &svMatrixCode,
-    const string_view &svKeyCode)
+  static void Init3DYCbCrTemplate(Shader &shDest, const StdString &strName,
+    const StdStringView &svRangeCode, const StdStringView &svMatrixCode,
+    const StdStringView &svKeyCode)
   { // Add YCbCr to RGB shaders
     shDest.LockSet();
     AddVertexShaderWith3DTemplate(shDest, "VERT-3D");
@@ -186,7 +188,7 @@ struct ShaderCore                      // Actual body
     shDest.Link();
     shDest.Activate();
     // For each texture unit
-    static const array<const GLchar*const,3>
+    static const StdArray<const GLchar*const,3>
       acpCmp{ "texY", "texCb", "texCr" };
     for(size_t stIndex = 0; stIndex < acpCmp.size(); ++stIndex)
     { // Get location of specified variable in gpu shader and set to the
@@ -203,7 +205,7 @@ struct ShaderCore                      // Actual body
   /* ----------------------------------------------------------------------- */
   void Init3DYCbCrShaders()
   { // No colour keying (no transparency)
-    const string_view svNoKey = "texture(texCr,vec2(texcoordout)).a",
+    const StdStringView svNoKey = "texture(texCr,vec2(texcoordout)).a",
     // Colour keying code
     svKey = "abs(colourout.r-rgb.r)<=colourout.a&&"
             "abs(colourout.g-rgb.g)<=colourout.a&&"
@@ -230,11 +232,11 @@ struct ShaderCore                      // Actual body
       "ycbcr.z=texture(texCr,vec2(texcoordout)).r-0.5;";
     // 3D YCbCr shaders to comple
     const struct ShaderList {
-      Shader &shShader;                // Shader class destination
-      const string      &strName;      // Name of shader
-      const string_view &svRange,      // Shader dynamic range code
-                        &svMatrix,     // Shader colour range matrix code
-                        &svKey;        // RGB keying code
+      Shader              &shShader;   // Shader class destination
+      const StdString     &strName;    // Name of shader
+      const StdStringView &svRange,    // Shader dynamic range code
+                          &svMatrix,   // Shader colour range matrix code
+                          &svKey;      // RGB keying code
     } slShaders[] = {
       { sh3DYCbCr601FR, "FRAG-3D YCbCr>F601>RGB", svFull, sv601, svNoKey },
       { sh3DYCbCr601FR, "FRAG-3D YCbCr>F601>RGB", svFull, sv601, svNoKey },

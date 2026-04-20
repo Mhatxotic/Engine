@@ -26,7 +26,7 @@ class GlFWUtil                         // Members initially private
   typedef IdMap<const int> HintList;   // List of glfw hints
   const HintList   hsStrings;          // Hint strings
   /* -- Convert window hint id to string --------------------------- */ public:
-  const string_view &GlFWGetHintAttribStr(const int iTarget) const
+  const StdStringView &GlFWGetHintAttribStr(const int iTarget) const
     { return hsStrings.Get(iTarget); }
   /* -- Set window hint ---------------------------------------------------- */
   void GlFWSetHint(const int iVar, const int iVal)

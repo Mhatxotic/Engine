@@ -25,11 +25,11 @@ class ShaderCell :                     // Members initially private
   /* -- Initialisers ------------------------------------------------------- */
   public Ident                         // Name of string
 { /* -- Private variables -------------------------------------------------- */
-  const string     strCode;            // Shader name and code
+  const StdString  strCode;            // Shader name and code
   const GLenum     eType;              // Shader type
   const GLuint     uiShader;           // Created shader id
   /* -- Return code of shader -------------------------------------- */ public:
-  const string &GetCode() const { return strCode; }
+  const StdString &GetCode() const { return strCode; }
   /* -- Return length of shader code --------------------------------------- */
   size_t GetCodeLength() const { return GetCode().length(); }
   /* -- Return name of shader as C-String ---------------------------------- */
@@ -39,8 +39,8 @@ class ShaderCell :                     // Members initially private
   /* -- Return shader id --------------------------------------------------- */
   GLuint GetHandle() const { return uiShader; }
   /* -- Default constructor ------------------------------------------------ */
-  ShaderCell(const string &strNName,   // Specified new identifier
-             const string &strNCode,   // Specified code to copmile
+  ShaderCell(const StdString &strNName, // Specified new identifier
+             const StdString &strNCode, // Specified code to copmile
              const GLenum eNType,      // Specified GL type id of code
              const GLuint uiNShader) : // Specified GL shader id of code
     /* -- Initialisers ----------------------------------------------------- */
@@ -51,14 +51,14 @@ class ShaderCell :                     // Members initially private
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
-typedef list<ShaderCell> ShaderList;   // Shader cell list
+typedef StdList<ShaderCell> ShaderList; // Shader cell list
 /* ------------------------------------------------------------------------- */
 CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable,                     // Lua garbage collector instruction
   public ShaderList                    // List of shader data in this program
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef array<GLint, U_MAX> UniList; // Uniform array list
+  typedef StdArray<GLint, U_MAX> UniList; // Uniform array list
   /* -- Private variables -------------------------------------------------- */
   GLuint           uiProgram;          // Shader program id
   UniList          aUniforms;          // Ids of mandatory uniforms we need
@@ -156,7 +156,8 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   GLint GetUniformLocation(const char*const cpVar) const
     { return cOgl->GetUniformLocation(uiProgram, cpVar); }
   /* -- Shader initialiser ------------------------------------------------- */
-  void AddShader(const string &strName, const GLenum eT, const string &strC)
+  void AddShader(const StdString &strName, const GLenum eT,
+    const StdString &strC)
   { // We need to deinit if we already linked
     if(bLinked) DeInit();
     // Create shader item and add it to list. We'll push it now so the
@@ -202,7 +203,7 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   }
   /* -- Shader initialiser helper ------------------------------------------ */
   template<typename ...VarArgs>
-    void AddShaderEx(const string &strName, const GLenum eT,
+    void AddShaderEx(const StdString &strName, const GLenum eT,
       const char*const cpFormat, VarArgs &&...vaArgs)
   { AddShader(strName, eT,
       StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }

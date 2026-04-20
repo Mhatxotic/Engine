@@ -127,7 +127,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     fOutline = fNOutline;
   }
   /* -- Load pcm from memory asynchronously -------------------------------- */
-  void InitAsyncArray(lua_State*const lS, const string &strFile,
+  void InitAsyncArray(lua_State*const lS, const StdString &strFile,
     Asset &aRef, const float fWidth, const float fHeight,
     const unsigned int uiDpiWidth, const unsigned int uiDpiHeight,
     const GLfloat fNOutline)
@@ -137,7 +137,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     AsyncInitArray(lS, strFile, "ftfarray", aRef);
   }
   /* -- Load pcm from file asynchronously ---------------------------------- */
-  void InitAsyncFile(lua_State*const lS, const string &strFile,
+  void InitAsyncFile(lua_State*const lS, const StdString &strFile,
     const float fWidth, const float fHeight, const unsigned int uiDpiWidth,
     const unsigned int uiDpiHeight, const GLfloat fNOutline)
   { // Set other members
@@ -146,7 +146,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     AsyncInitFile(lS, strFile, "ftffile");
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitFile(const string &strFile, const GLfloat fWidth,
+  void InitFile(const StdString &strFile, const GLfloat fWidth,
     const GLfloat fHeight, const unsigned int uiDpiWidth,
     const unsigned int uiDpiHeight, const GLfloat fNOutline)
   { // Set other members
@@ -155,7 +155,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     SyncInitFileSafe(strFile);
   }
   /* -- Init from array ---------------------------------------------------- */
-  void InitArray(const string &strName, Memory &mData, const GLfloat fWidth,
+  void InitArray(const StdString &strName, Memory &mData, const GLfloat fWidth,
     const GLfloat fHeight, const unsigned int uiDpiWidth,
     const unsigned int uiDpiHeight, const GLfloat fNOutline)
   { // Set other members

@@ -19,7 +19,7 @@ using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Pcm formats collector class as a vector for direct access ------------ */
-CTOR_BEGIN_CUSTCTR(PcmLibs, PcmLib, vector, CLHelperUnsafe)
+CTOR_BEGIN_CUSTCTR(PcmLibs, PcmLib, StdVector, CLHelperUnsafe)
 /* -- Pcm format object class ---------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
@@ -28,8 +28,8 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
   explicit PcmLib(
     /* -- Required arguments ----------------------------------------------- */
     const PcmFormat pfNId,             // The PFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncDecoder &cfdNFunc      // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
@@ -41,8 +41,8 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
   explicit PcmLib(
     /* -- Required arguments ----------------------------------------------- */
     const PcmFormat pfNId,             // The PFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
@@ -54,8 +54,8 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
   explicit PcmLib(
     /* -- Required arguments ----------------------------------------------- */
     const PcmFormat pfNId,             // The PFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
@@ -83,9 +83,9 @@ static void PcmLoadFile(const PcmFormat pfId, FileMap &fmData, PcmData &pdData)
         pdData.GetSFormat(), StrFromBoolTF(pdData.IsDynamic()), hex,
         pdData.GetAlloc());
     // Could not detect format so throw error
-    throw runtime_error{ "Unable to load sound!" };
+    throw StdRunTimeError{ "Unable to load sound!" };
   } // Error occured. Error used as title
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Throw an error with the specified reason
     XC(eReason,
       "Identifier", fmData.IdentGet(),    "Size",     fmData.MemSize(),
@@ -109,7 +109,7 @@ static void PcmLoadFile(FileMap &fmData, PcmData &pdData)
           pdData.GetSFormat(), StrFromBoolTF(pdData.IsDynamic()), dec,
           pdData.GetAlloc());
     } // Error occured. Error used as title
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Throw an error with the specified reason
       XC(eReason,
         "Identifier", fmData.IdentGet(),    "Size",   fmData.MemSize(),

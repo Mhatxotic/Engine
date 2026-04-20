@@ -10,7 +10,7 @@
 namespace ICodecOGG {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
-using namespace IFileMap::P;           using namespace IFlags;
+using namespace IFileMap::P;           using namespace IFlags::P;
 using namespace IIdent::P;             using namespace ILog::P;
 using namespace IMemory::P;            using namespace IPcmDef::P;
 using namespace IPcmLib::P;            using namespace IStd::P;
@@ -45,7 +45,7 @@ class CodecOGG :                       // OGG codec object
   /* -- Return generic ogg callback functions ------------------------------ */
   const ov_callbacks &GetCallbacks() { return ovcCallbacks; }
   /* -- Convert vorbis encoded frames to 32-bit floating point PCM audio --- */
-  void F32FromVorbisFrames(const ALfloat*const*const fpFramesIn,
+  static void F32FromVorbisFrames(const ALfloat*const*const fpFramesIn,
     const size_t stFrames, const size_t stChannels, ALfloat *fpPCMOut)
   { // Convert ogg frames data to native PCM float 32-bit audio
     for(size_t stFrameIndex = 0; stFrameIndex < stFrames; ++stFrameIndex)
@@ -53,7 +53,7 @@ class CodecOGG :                       // OGG codec object
         *(fpPCMOut++) = fpFramesIn[stChanIndex][stFrameIndex];
   }
   /* -- Convert vorbis encoded frames to 16-bit integer PCM audio ---------- */
-  void I16FromVorbisFrames(const ALfloat*const*const fpFramesIn,
+  static void I16FromVorbisFrames(const ALfloat*const*const fpFramesIn,
     const size_t stFrames, const size_t stChannels, ALshort *wPCMOut)
   { // Convert ogg frames data to native PCM integer 16-bit audio
     for(size_t stFrameIndex = 0; stFrameIndex < stFrames; ++stFrameIndex)
@@ -63,7 +63,7 @@ class CodecOGG :                       // OGG codec object
           -32767, 32767);
   }
   /* -- Parse vorbis comments block ---------------------------------------- */
-  StrNCStrMap VorbisParseComments(char **const clpPtr, const int iCount)
+  static StrNCStrMap VorbisParseComments(char **const clpPtr, const int iCount)
   { // Metadata to return
     StrNCStrMap ssMetaData;
     // Enumerate all the strings...
@@ -80,7 +80,7 @@ class CodecOGG :                       // OGG codec object
     return ssMetaData;
   }
   template<typename IntType>
-    const string_view &GetOggErr(const IntType itCode) const
+    const StdStringView &GetOggErr(const IntType itCode) const
       { return Get(static_cast<unsigned int>(itCode)); }
   /* -- Loader for WAV files ----------------------------------------------- */
   bool Decode(FileMap &fmData, PcmData &pdData)
@@ -96,7 +96,7 @@ class CodecOGG :                       // OGG codec object
       ov_open_callbacks(&fmData, &vorbisFile, nullptr, 0, GetCallbacks()))
         XC("OGG init context failed!", "Code", iR, "Reason", GetOggErr(iR));
     // Put in a unique ptr
-    typedef unique_ptr<OggVorbis_File, function<decltype(ov_clear)>>
+    typedef StdUniquePtr<OggVorbis_File, function<decltype(ov_clear)>>
       OggFilePtr;
     const OggFilePtr ofpPtr{ &vorbisFile, ov_clear };
     // Get info from ogg

@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IPcmDef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IFlags;                using namespace IMemory::P;
+using namespace IFlags::P;             using namespace IMemory::P;
 using namespace IOal::P;               using namespace IStd::P;
 using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
@@ -66,7 +66,7 @@ class PcmData :                        // Audio data structure
   PcmByteType      pbytBytes;          // Bytes per channel
   ALenum           eFormat,            // Format type for openal
                    eSFormat;           // Single channel format for openal
-  array<Memory,2>  aPcm;               // Pcm data (aPcmR used if stereo)
+  StdArray<Memory,2> aPcm;             // Pcm data (aPcmR used if stereo)
   size_t           stAlloc;            // Bytes allocated
   /* -- Public variables ------------------------------------------- */ public:
   Memory           &aPcmL,             // First Pcm channel (Mono or left)

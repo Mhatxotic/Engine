@@ -22,7 +22,7 @@ using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Image libraries collector class as a vector for direct access -------- */
-CTOR_BEGIN_CUSTCTR(ImageLibs, ImageLib, vector, CLHelperUnsafe)
+CTOR_BEGIN_CUSTCTR(ImageLibs, ImageLib, StdVector, CLHelperUnsafe)
 /* -- Image libraries format object class ---------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
@@ -31,8 +31,8 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncDecoder &cfdNFunc      // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
@@ -45,8 +45,8 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
@@ -59,8 +59,8 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
-    const string_view &strvNName,      // The name of the codec
-    const string_view &strvNExt,       // The default extension for the codec
+    const StdStringView &strvNName,    // The name of the codec
+    const StdStringView &strvNExt,     // The default extension for the codec
     const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
@@ -75,12 +75,12 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
 CTOR_END(ImageLibs, ImageLib, IMAGELIB,
   reserve(IFMT_MAX); CollectorSetLimit(IFMT_MAX),)
 /* -- Save a image using a specific type ----------------------------------- */
-static void ImageSave(const ImageFormat ifId, const string &strFile,
+static void ImageSave(const ImageFormat ifId, const StdString &strFile,
   const ImageData &idData, const ImageSlot &isData)
 { // Get plugin class
   const ImageLib &ilRef = *cImageLibs->at(ifId);
   // Set filename with forced extension so we can delete it if it fails
-  const string strFileNX{ StrAppend(strFile, '.', ilRef.GetExt()) };
+  const StdString strFileNX{ StrAppend(strFile, '.', ilRef.GetExt()) };
   bool bCreated = false;
   // Capture exceptions
   try
@@ -98,11 +98,11 @@ static void ImageSave(const ImageFormat ifId, const string &strFile,
           isData.DimGetHeight(), idData.GetBitsPerPixel());
         return;
       } // Could not detect format so throw error
-      throw runtime_error{ "Failed to save image!" };
+      throw StdRunTimeError{ "Failed to save image!" };
     } // Failed to create file
     XCL("Failed to create file!", "File", strFileNX);
   } // Error occured. Error used as title
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Remove file if created
     if(bCreated) DirFileUnlink(strFileNX);
     // Throw an error with the specified reason
@@ -123,9 +123,9 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
         fmData.IdentGet(), ilRef.GetExt(), ifId, idData.DimGetWidth(),
         idData.DimGetHeight(), idData.GetBitsPerPixel());
     // Could not detect format so throw error
-    throw runtime_error{ "Unable to load image!" };
+    throw StdRunTimeError{ "Unable to load image!" };
   } // Error occured. Error used as title
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Throw an error with the specified reason
     XC(eReason,
       "Identifier", fmData.IdentGet(),    "Size",     fmData.MemSize(),
@@ -147,7 +147,7 @@ static void ImageLoad(FileMap &fmData, ImageData &idData)
           fmData.IdentGet(), idData.DimGetWidth(), idData.DimGetHeight(),
           idData.GetBitsPerPixel(), ilRef.GetExt());
     } // Error occured. Error used as title
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Throw an error with the specified reason
       XC(eReason,
         "Identifier", fmData.IdentGet(),    "Size",   fmData.MemSize(),

@@ -18,13 +18,14 @@ struct Args :                          // Arguments list class
   /* -- Base classes ------------------------------------------------------- */
   public StrVector                     // A vector of strings
 { /* -- Constructor with string argument ----------------------------------- */
-  explicit Args(const string &strArgs)
+  explicit Args(const StdString &strArgs)
   { // Get beginning position of usable character and return if not found
     const size_t stFirst = strArgs.find_first_not_of(' ');
     if(stFirst == StdNPos) return;
     // Get ending position of usable character and extract trimmed string
     const size_t stLast = strArgs.find_last_not_of(' ');
-    const string strTrimmed{ strArgs.substr(stFirst, stLast - stFirst + 1) };
+    const StdString strTrimmed{
+      strArgs.substr(stFirst, stLast - stFirst + 1) };
     // Return if empty else get length of string
     if(strTrimmed.empty()) return;
     const size_t stLength = strTrimmed.size();
@@ -87,7 +88,7 @@ struct Args :                          // Arguments list class
   /* -- Return if list is empty -------------------------------------------- */
   operator bool() const { return !empty(); }
 };/* -- Build an array of arguments from a string -------------------------- */
-static Args ArgsBuildSafe(const string &strArgs)
+static Args ArgsBuildSafe(const StdString &strArgs)
   { return strArgs.empty() ? Args{} : Args{ strArgs }; }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

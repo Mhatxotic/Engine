@@ -26,10 +26,10 @@ class CodecPNG :                       // PNG codec object
   /* -- Base classes ------------------------------------------------------- */
   protected ImageLib                   // Image format helper class
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef vector<png_bytep> PngPtrVec; // Png pointer vector
+  typedef StdVector<png_bytep> PngPtrVec; // Png pointer vector
   /* -- PNG callbacks ------------------------------------------------------ */
   static void PngError[[noreturn]](png_structp, png_const_charp pccString)
-    { throw runtime_error{ pccString }; }
+    { throw StdRunTimeError{ pccString }; }
   static void PngWarning(png_structp psData, png_const_charp pccString)
     { cLog->LogWarningExSafe("Image '$' warning: $.",
         reinterpret_cast<char*>(png_get_error_ptr(psData)), pccString); }
@@ -88,9 +88,9 @@ class CodecPNG :                       // PNG codec object
       }
       void Meta(const char*const cpK, const char*cpV)
         { Meta(cpK, cpV, strlen(cpV)); }
-      void Meta(const char*const cpK, const string &strV)
+      void Meta(const char*const cpK, const StdString &strV)
         { Meta(cpK, strV.data(), strV.length()); }
-      void Meta(const char*const cpK, const string_view &strvV)
+      void Meta(const char*const cpK, const StdStringView &strvV)
         { Meta(cpK, strvV.data(), strvV.length()); }
       // Constructor
       explicit PngWriter(const FStream &fsC) :

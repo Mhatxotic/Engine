@@ -148,7 +148,7 @@ class EvtMain :                        // Event list for render thread
     });
   }
   /* -- Get exit reason code ----------------------------------------------- */
-  const string_view &GetExitReasonStr() const { return IdToString(emcExit); }
+  const StdStringView &GetExitReasonStr() const { return IdToString(emcExit); }
   EvtMainCmd GetExitReason() const { return emcExit; }
   /* -- Check exit reason -------------------------------------------------- */
   bool IsExitReason(const EvtMainCmd emcReason) const

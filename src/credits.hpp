@@ -24,19 +24,19 @@ class CreditLib :                      // Members initially private
   public MemConst                      // License data memory
 { /* ----------------------------------------------------------------------- */
   const size_t     stId;               // Unique identification umber
-  const string_view strvName,          // Name of library
+  const StdStringView strvName,        // Name of library
                    strvVersion,        // String version
                    strvAuthor;         // Author of library
   const bool       bCopyright;         // Is copyrighted library
   /* --------------------------------------------------------------- */ public:
   const size_t &GetID() const { return stId; }
-  const string_view &GetName() const { return strvName; }
-  const string_view &GetVersion() const { return strvVersion; }
-  const string_view &GetAuthor() const { return strvAuthor; }
+  const StdStringView &GetName() const { return strvName; }
+  const StdStringView &GetVersion() const { return strvVersion; }
+  const StdStringView &GetAuthor() const { return strvAuthor; }
   bool IsCopyright() const { return bCopyright; }
   /* ----------------------------------------------------------------------- */
-  CreditLib(const size_t stCreditId, const string_view &strvNName,
-    const string_view &strvNVersion, const string_view &strvNAuthor,
+  CreditLib(const size_t stCreditId, const StdStringView &strvNName,
+    const StdStringView &strvNVersion, const StdStringView &strvNAuthor,
     const bool bNCopyright, const void*const vpData, const size_t stSize) :
     /* -- Initialisers ----------------------------------------------------- */
     MemConst{ stSize, vpData },        // Init credit license data
@@ -75,20 +75,21 @@ enum CreditEnums : size_t              // Credit ids
   /* ----------------------------------------------------------------------- */
   CL_MAX                               // Item count. Don't remove
 };/* ----------------------------------------------------------------------- */
-typedef array<const CreditLib,CL_MAX> CreditLibList; // Library list typedef
+typedef StdArray<const CreditLib,CL_MAX> CreditLibList; // Library list typedef
 typedef CreditLibList::const_iterator CreditLibListConstIt; // Iterator
 /* ------------------------------------------------------------------------- */
 class Credits;                         // Class prototype
 static Credits *cCredits = nullptr;    // Pointer to global class
 class Credits                          // Members initially private
 { /* -- License data ------------------------------------------------------- */
-#define BEGINLICENSE(n,s) static constexpr const array<const uint8_t,s> l ## n{
+#define BEGINLICENSE(n,s) \
+  static constexpr const StdArray<const uint8_t,s> l ## n{
 #define ENDLICENSE };                  // Helper functions for licenses header
 #include "license.hpp"                 // Load up compressed licenses
 #undef ENDLICENSE                      // Done with this macro
 #undef BEGINLICENSE                    // Done with this macro
   /* -- Variables ---------------------------------------------------------- */
-  const string strTheoraVersion;       // The only string that needs generating
+  const StdString strTheoraVersion;    // The only string that needs generating
   const CreditLibList cllCredits;      // Credits list
   /* -- Get credits class ------------------------------------------ */ public:
   const CreditLibList &CreditGetLibList() const { return cllCredits; }
@@ -98,19 +99,19 @@ class Credits                          // Members initially private
   const CreditLib &CreditGetItem(const CreditEnums ceIndex) const
     { return CreditGetLibList()[ceIndex]; }
   /* -- Decompress a credit item ------------------------------------------- */
-  static string CreditGetItemText(const CreditLib &libItem) try
+  static StdString CreditGetItemText(const CreditLib &libItem) try
   { // Using codec namespace
     using namespace ICodec;
     return Block<CoDecoder>{ libItem }.MemToStringSafe();
   } // exception occured?
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Log failure and try to reset the initial var so this does not
     XC("Failed to decode license text!",
       "Name",   libItem.GetName(), "Reason", eReason,
       "Length", libItem.MemSize());
   }
   /* -- Decompress a credit ------------------------------------------------ */
-  const string CreditGetItemText(const CreditEnums ceIndex) const
+  const StdString CreditGetItemText(const CreditEnums ceIndex) const
     { return CreditGetItemText(CreditGetItem(ceIndex)); }
   /* -- Dump credits to log ------------------------------------------------ */
   void CreditDumpList() const

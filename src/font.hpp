@@ -77,7 +77,7 @@ class FontBase :                       // Members initially private
       /* -- No code -------------------------------------------------------- */
       {}
   };/* -- Variables -------------------------------------------------------- */
-  typedef vector<Glyph>         GlyphVector;   // Vector of Glyphs
+  typedef StdVector<Glyph>      GlyphVector;   // Vector of Glyphs
   typedef GlyphVector::iterator GlyphVectorIt; // Iterator to GlyphVector
   /* --------------------------------------------------------------- */ public:
   GlyphVector      gvData;             // Glyph and outline data
@@ -266,8 +266,8 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
       // Add the starting unused characters
       gvData.resize(stCharBegin);
       // Set all the specified widths in the widths array
-      transform(fvWidths.cbegin(), fvWidths.cend(), back_inserter(gvData),
-        [fW, fH](const GLfloat fvWidth)->const Glyph{
+      StdTransformNXP(fvWidths.cbegin(), fvWidths.cend(),
+        StdBackInserter(gvData), [fW, fH](const GLfloat fvWidth)->const Glyph{
           return { fW, fH, true, fvWidth, 0.0f, 0.0f, fW, fH };
         });
     }
@@ -276,11 +276,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Initialise the left uninitialised widths with the default character
     const Glyph &gRef = gvData[stCharDefault];
     GlyphVectorIt gviLeftEnd{ gvData.begin() };
-    advance(gviLeftEnd, stCharBeginM1);
+    StdAdvance(gviLeftEnd, stCharBeginM1);
     StdFill(par_unseq, gvData.begin(), gviLeftEnd, gRef);
     // Initialise the right uninitialised widths with the default character
     GlyphVectorIt gviRightBegin{ gvData.begin() };
-    advance(gviRightBegin, stCharEnd);
+    StdAdvance(gviRightBegin, stCharEnd);
     StdFill(par_unseq, gviRightBegin, gvData.end(), gRef);
     // Initialise memory for texture tile co-ordinates
     clTiles.resize(1);
@@ -293,11 +293,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Initialise the left uninitialised texcoords with the default character
     const CoordData &cdRef = clFirst[stCharDefault];
     CoordListIt cliItLeftEnd{ clFirst.begin() };
-    advance(cliItLeftEnd, stCharBeginM1);
+    StdAdvance(cliItLeftEnd, stCharBeginM1);
     StdFill(par_unseq, clFirst.begin(), cliItLeftEnd, cdRef);
     // Initialise the right uninitialised texcoords with the default character
     CoordListIt cliItRightBegin{ clFirst.begin() };
-    advance(cliItRightBegin, stCharEnd);
+    StdAdvance(cliItRightBegin, stCharEnd);
     StdFill(par_unseq, cliItRightBegin, clFirst.end(), cdRef);
     // Initialise default font scale and line spacing to height
     SetSize(1.0f);
@@ -371,7 +371,8 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     const GLfloat fW = static_cast<GLfloat>(uiTW),
                   fH = static_cast<GLfloat>(uiTH);
     // Add the characters the manifest file cares about
-    transform(rjvWidths.Begin(), rjvWidths.End(), back_inserter(gvData),
+    StdTransformNXP(rjvWidths.Begin(), rjvWidths.End(),
+      StdBackInserter(gvData),
       [&imSrc, &jsDoc, fW, fH](const Value &rjvItem)->const Glyph{
         if(rjvItem.IsUint())
           return { fW, fH, true, static_cast<GLfloat>(rjvItem.GetUint()),
@@ -385,11 +386,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     const Glyph &gRef = gvData[ulDefaultChar];
     // Initialise the left uninitialised glyph widths
     GlyphVectorIt gviLeftEnd{ gvData.begin() };
-    advance(gviLeftEnd, stCharBeginM1);
+    StdAdvance(gviLeftEnd, stCharBeginM1);
     StdFill(par_unseq, gvData.begin(), gviLeftEnd, gRef);
     // Initialise the right uninitialised glyph widths
     GlyphVectorIt gviRightBegin{ gvData.begin() };
-    advance(gviRightBegin, stCharEnd);
+    StdAdvance(gviRightBegin, stCharEnd);
     StdFill(par_unseq, gviRightBegin, gvData.end(), gRef);
     // Initialise memory for texture tile co-ordinates
     clTiles.resize(1);
@@ -405,11 +406,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     const CoordData &cdRef = clFirst[ulDefaultChar];
     // Initialise the left uninitialised texcoords with the default character
     CoordListIt cliItLeftEnd{ clFirst.begin() };
-    advance(cliItLeftEnd, stCharBeginM1);
+    StdAdvance(cliItLeftEnd, stCharBeginM1);
     StdFill(par_unseq, clFirst.begin(), cliItLeftEnd, cdRef);
     // Initialise the right uninitialised texcoords with the default character
     CoordListIt cliItRightBegin{ clFirst.begin() };
-    advance(cliItRightBegin, stCharEnd);
+    StdAdvance(cliItRightBegin, stCharEnd);
     StdFill(par_unseq, cliItRightBegin, clFirst.end(), cdRef);
     // Initialise default font scale, line and letter spacing
     SetSize(static_cast<GLfloat>(jsDoc.GetNumber("InitialScale")));

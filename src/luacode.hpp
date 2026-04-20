@@ -42,9 +42,11 @@ enum LuaCompResult : unsigned int      // Cache and compilation results
 static CVarReturn LuaCodeSetCache(const LuaCache lcVal)
   { return CVarSimpleSetIntNGE(lcSetting, lcVal, LCC_MAX); }
 /* -- Check lua version ---------------------------------------------------- */
-static CVarReturn LuaCodeCheckVersion(const string &strVal, string &strNVal)
+static CVarReturn LuaCodeCheckVersion(const StdString &strVal,
+  StdString &strNVal)
 { // Get current LUA version
-  const string_view &svVersion = cCredits->CreditGetItem(CL_LUA).GetVersion();
+  const StdStringView &svVersion =
+    cCredits->CreditGetItem(CL_LUA).GetVersion();
   // If version stored is not the same as expected?
   if(strVal != svVersion)
   { // If the LUA code table doesn't exist? Just initialise the version
@@ -137,7 +139,7 @@ static void LuaCodeCompileFunction(lua_State*const lS)
 }
 /* -- Compile a buffer ----------------------------------------------------- */
 static void LuaCodeDoCompileBuffer(lua_State*const lS, const char *cpBuf,
-  size_t stSize, const string &strRef)
+  size_t stSize, const StdString &strRef)
 { // Compile the specified script and capture result
   switch(const int iR = luaL_loadbuffer(lS, cpBuf, stSize, strRef.data()))
   { // No error? Execute functions and log success. We should always be in
@@ -154,7 +156,7 @@ static void LuaCodeDoCompileBuffer(lua_State*const lS, const char *cpBuf,
 }
 /* -- Compile a buffer ----------------------------------------------------- */
 static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
-  const char*const cpBuf, const size_t stSize, const string &strRef)
+  const char*const cpBuf, const size_t stSize, const StdString &strRef)
 { // If lua caching is disabled or the buffer is binary or no reference given?
   if(lcSetting == LCC_OFF || (stSize >= sizeof(uint32_t) &&
     *reinterpret_cast<const uint32_t*>(cpBuf) == 0x61754C1B) ||
@@ -229,7 +231,7 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
 }
 /* -- Compile a string ----------------------------------------------------- */
 static LuaCompResult LuaCodeCompileString(lua_State*const lS,
-  const string &strBuf, const string &strRef)
+  const StdString &strBuf, const StdString &strRef)
     { return LuaCodeCompileBuffer(lS,
         strBuf.data(), strBuf.length(), strRef); }
 /* -- Executes the function and returns the compilation result ------------- */
@@ -238,17 +240,17 @@ static LuaCompResult LuaCodeExecCallRet(lua_State*const lS,
     { LuaUtilCallFunc(lS, iRet); return lcrRes; }
 /* -- Compile a memory block ----------------------------------------------- */
 static LuaCompResult LuaCodeCompileBlock(lua_State*const lS,
-  const MemConst &mcSrc, const string &strRef)
+  const MemConst &mcSrc, const StdString &strRef)
     { return LuaCodeCompileBuffer(lS,
         mcSrc.MemPtr<char>(), mcSrc.MemSize(), strRef); }
 /* -- Execute specified block ---------------------------------------------- */
 static LuaCompResult LuaCodeExecuteBlock(lua_State*const lS,
-  const MemConst &mcSrc, const int iRet, const string &strRef)
+  const MemConst &mcSrc, const int iRet, const StdString &strRef)
     { return LuaCodeExecCallRet(lS,
         LuaCodeCompileBlock(lS, mcSrc, strRef), iRet); }
 /* -- Execute specified string in unprotected ------------------------------ */
 static LuaCompResult LuaCodeExecuteString(lua_State*const lS,
-  const string &strCode, const int iRet, const string &strRef)
+  const StdString &strCode, const int iRet, const StdString &strRef)
     { return LuaCodeExecCallRet(lS,
         LuaCodeCompileString(lS, strCode, strRef), iRet); }
 /* -- Compile contents of a file (returns function on lua stack) ----------- */
@@ -258,11 +260,11 @@ static LuaCompResult LuaCodeCompileFile(lua_State*const lS,
         fScript.MemSize(), fScript.IdentGetData()); }
 /* -- Copmile file and execute script that may be binary ------------------- */
 static LuaCompResult LuaCodeCompileFile(lua_State*const lS,
-  const string &strFilename)
+  const StdString &strFilename)
     { return LuaCodeCompileFile(lS, AssetExtract(strFilename)); }
 /* -- Load file and execute script that may be binary ---------------------- */
 static LuaCompResult LuaCodeExecuteFile(lua_State*const lS,
-  const string &strFilename, const int iRet=0)
+  const StdString &strFilename, const int iRet=0)
     { return LuaCodeExecCallRet(lS, LuaCodeCompileFile(lS, strFilename),
         iRet); }
 /* ------------------------------------------------------------------------- */

@@ -76,7 +76,7 @@ static EncData CodecEncodeAES(const MemConst &mcSrc, Memory &mDest,
   const size_t, const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV,
   const size_t stPos)
 { // Unique ptr type to free the cipher context
-  typedef unique_ptr<EVP_CIPHER_CTX,
+  typedef StdUniquePtr<EVP_CIPHER_CTX,
     function<decltype(EVP_CIPHER_CTX_free)>> EvpPtr;
   // Encryption context. Return failed if it coulnd't be created
   if(const EvpPtr ecCTX{ EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free })
@@ -125,7 +125,7 @@ static void CodecDecodeAES(const MemConst &mcSrc, Memory &mDest,
 { // Create output
   mDest.MemResize(stOut + CodecGetAES256CBCSize());
   // Unique ptr type to free the cipher context
-  typedef unique_ptr<EVP_CIPHER_CTX,
+  typedef StdUniquePtr<EVP_CIPHER_CTX,
     function<decltype(EVP_CIPHER_CTX_free)>> EvpPtr;
   // Init encryption context and if succeeded
   if(const EvpPtr ecCTX{ EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free })
@@ -556,7 +556,7 @@ template<class EncoderType>class Block final : public EncoderType
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Initialise by string ----------------------------------------------- */
-  explicit Block(const string &strIn, const size_t stUser=StdMaxSizeT) :
+  explicit Block(const StdString &strIn, const size_t stUser=StdMaxSizeT) :
     /* -- Initialisers ----------------------------------------------------- */
     EncoderType{ StdMove(MemConst{ strIn }), stUser }
     /* -- No code ---------------------------------------------------------- */

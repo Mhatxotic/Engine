@@ -83,7 +83,7 @@ static PtrTypePtr LuaUtilGetSimplePtr(lua_State*const lS, const int iParam)
 static const char *LuaUtilToLString(lua_State*const lS, const int iParam,
   size_t &stSize) { return lua_tolstring(lS, iParam, &stSize); }
 /* -- Get and return a C++ string without checking it ---------------------- */
-static string LuaUtilToCppString(lua_State*const lS, const int iParam=-1)
+static StdString LuaUtilToCppString(lua_State*const lS, const int iParam=-1)
 { // Storage for string length. Do not optimise this because I am not sure
   // what the standard direction is for evaluating expression. Left-to-right
   // or right-to-left, so I will just store the string point first to be safe.
@@ -167,7 +167,7 @@ template<class StrType>
 static int LuaUtilGetMetaTable(lua_State*const lS, const int iIndex)
   { return lua_getmetatable(lS, iIndex); }
 /* -- Return type of item in stack ----------------------------------------- */
-static string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
+static StdString LuaUtilGetStackType(lua_State*const lS, const int iIndex)
 { // What type of variable?
   switch(lua_type(lS, iIndex))
   { // Nil?
@@ -185,7 +185,7 @@ static string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
     // A string?
     case LUA_TSTRING:
     { // Get value of string and return value with size
-      const string strVal{ LuaUtilToCppString(lS, iIndex) };
+      const StdString strVal{ LuaUtilToCppString(lS, iIndex) };
       return StrFormat("[$] \"$\"", strVal.length(), strVal);
     } // A table?
     case LUA_TTABLE: return StrFormat("<table:$>[$]",
@@ -210,7 +210,7 @@ static string LuaUtilGetStackType(lua_State*const lS, const int iIndex)
   }
 }
 /* -- Return status of item in stack --------------------------------------- */
-static string LuaUtilGetStackTokens(lua_State*const lS, const int iIndex)
+static StdString LuaUtilGetStackTokens(lua_State*const lS, const int iIndex)
 { // Fill token buffer depending on status
   return StrFromEvalTokens({
     { LuaUtilIsBoolean(lS, iIndex),       'B' },
@@ -228,7 +228,7 @@ static string LuaUtilGetStackTokens(lua_State*const lS, const int iIndex)
   });
 }
 /* -- Log the stack -------------------------------------------------------- */
-static string LuaUtilGetVarStack(lua_State*const lS)
+static StdString LuaUtilGetVarStack(lua_State*const lS)
 { // If there are variables in the stack?
   if(const int iCount = LuaUtilStackSize(lS))
   { // String to return
@@ -271,7 +271,7 @@ template<typename NumType> requires is_floating_point_v<NumType>
 { lua_pushnumber(lS, static_cast<lua_Number>(ntValue)); }
 /* -- Push an integer onto the stack --------------------------------------- */
 template<typename IntType>
-requires is_integral_v<IntType> || is_enum_v<IntType>
+  requires is_integral_v<IntType> || is_enum_v<IntType>
 static void LuaUtilPushInt(lua_State*const lS, const IntType itValue)
   { lua_pushinteger(lS, static_cast<lua_Integer>(itValue)); }
 /* -- Push a memory block onto the stack as a string ----------------------- */
@@ -286,8 +286,8 @@ template<typename ...VarArgs, typename AnyType>
   static void LuaUtilPushVar(lua_State*const lS, const AnyType &atVal,
     VarArgs &&...vaArgs)
 { // Type is STL string?
-  if constexpr(is_same_v<AnyType, string> ||
-               is_same_v<AnyType, string_view>) LuaUtilPushStr(lS, atVal);
+  if constexpr(is_same_v<AnyType, StdString> ||
+               is_same_v<AnyType, StdStringView>) LuaUtilPushStr(lS, atVal);
   // Type is boolean?
   else if constexpr(is_same_v<AnyType, bool>) LuaUtilPushBool(lS, atVal);
   // Type is any pointer type (assuming char*, don't send anything else)
@@ -313,7 +313,8 @@ template<typename ...VarArgs, typename AnyType>
 /* -- Throw error ---------------------------------------------------------- */
 static void LuaUtilErrThrow(lua_State*const lS) { lua_error(lS); }
 /* ------------------------------------------------------------------------- */
-static int LuaUtilProcException(lua_State*const lS, const exception &eReason)
+static int LuaUtilProcException(lua_State*const lS,
+  const StdException &eReason)
 { // Push a string onto the stack that describes the current execution context
   luaL_where(lS, 1);
   // Push the exception reason
@@ -330,12 +331,12 @@ template<lua_CFunction cFunc>static int LuaUtilCallback(lua_State*const lS) try
 { // Execute the callback
   return cFunc(lS);
 } // Unknown exception occured?
-catch(const exception &eReason)
+catch(const StdException &eReason)
 { // Throw error and return nothing (keep to a func to prevent duplicate code).
   return LuaUtilProcException(lS, eReason);
 } // Don't catch all as it will catch LUA's longjmp() throw.
 /* -- Get and pop string on top -------------------------------------------- */
-static string LuaUtilGetAndPopStr(lua_State*const lS)
+static StdString LuaUtilGetAndPopStr(lua_State*const lS)
 { // If there is nothing on the stack then return a generic error
   if(LuaUtilIsNone(lS, -1)) return "Error signalled with no reason";
   // Not have a string on stack? Set embedded error!
@@ -343,7 +344,7 @@ static string LuaUtilGetAndPopStr(lua_State*const lS)
     return StrFormat("Error signalled with invalid '$' reason",
       LuaUtilGetType(lS, -1));
   // Get error string
-  const string strError{ LuaUtilToCppString(lS) };
+  const StdString strError{ LuaUtilToCppString(lS) };
   // Remove the error string
   LuaUtilRmStack(lS);
   // return the error
@@ -403,7 +404,7 @@ static void LuaUtilRmRef(lua_State*const lS, const int iReference)
 static int LuaUtilRefInit(lua_State*const lS)
   { return luaL_ref(lS, LUA_REGISTRYINDEX); }
 /* ------------------------------------------------------------------------- */
-static string LuaUtilStack(lua_State*const lST)
+static StdString LuaUtilStack(lua_State*const lST)
 { // We need the root state so we can iterate through all the threads and will
   // eventually arrive at *lS as the last stack. Most of the time GetState()
   // equals to *lS anyway, just depends if it triggered in a co-routine or not.
@@ -417,7 +418,7 @@ static string LuaUtilStack(lua_State*const lST)
   // Also we (or even Lua) does know how many total calls there has been, we
   // can only enumerate them.
   struct Debug { lua_State*const lS; lua_Debug ldD; };
-  typedef list<Debug> LuaStack;
+  typedef StdList<Debug> LuaStack;
   typedef LuaStack::reverse_iterator LuaStackRevIt;
   LuaStack lsStack;
   // Co-routine id so user knows which coroutine sub-level they were at.
@@ -492,18 +493,18 @@ static string LuaUtilStack(lua_State*const lST)
 static int LuaUtilException(lua_State*const lS)
 { // Get error message and stack. Don't one line this because the order of
   // execution is important!
-  const string strError{ LuaUtilGetAndPopStr(lS) };
+  const StdString strError{ LuaUtilGetAndPopStr(lS) };
   XC(StrAppend(strError, LuaUtilStack(lS)));
 }
 /* -- Generic error handler ------------------------------------------------ */
 static int LuaUtilErrGeneric(lua_State*const lS) try
 { // Get error message and stack. Don't one line this because the order of
   // execution is important!
-  const string strError{ LuaUtilGetAndPopStr(lS) };
+  const StdString strError{ LuaUtilGetAndPopStr(lS) };
   LuaUtilPushStr(lS, StrAppend(strError, LuaUtilStack(lS)));
   return 1;
 } // Exception occured?
-catch(const exception &eReason)
+catch(const StdException &eReason)
 { // Push exception instead
   LuaUtilPushCStr(lS, eReason.what());
   return 1;
@@ -542,7 +543,7 @@ static void LuaUtilCheckStrNE(lua_State*const lS, const int iParam)
 }
 /* -- Get the specified string --------------------------------------------- */
 template<typename StrType, typename StrTypeConstPtr=const StrType*>
-requires (!is_pointer_v<StrType>) && (sizeof(StrType) == sizeof(uint8_t))
+  requires (!is_pointer_v<StrType>) && (sizeof(StrType) == sizeof(uint8_t))
 static StrTypeConstPtr LuaUtilToString(lua_State*const lS, const int iParam)
   { return reinterpret_cast<StrTypeConstPtr>(lua_tostring(lS, iParam)); }
 /* -- Get the specified string from the stack ------------------------------ */
@@ -578,23 +579,23 @@ static Memory LuaUtilGetMBfromLStr(lua_State*const lS, const int iParam)
   return { stStrLen, cpStr };
 }
 /* -- Get and return a C++ string and throw exception if not a string ------ */
-static string LuaUtilGetCppStr(lua_State*const lS, const int iParam)
+static StdString LuaUtilGetCppStr(lua_State*const lS, const int iParam)
 { // Throw if requested parameter isn't a string else return it
   LuaUtilCheckStr(lS, iParam);
   return LuaUtilToCppString(lS, iParam);
 }
 /* -- Get and return a C++ string and throw exception if not string/empty -- */
-static string LuaUtilGetCppStrNE(lua_State*const lS, const int iParam)
+static StdString LuaUtilGetCppStrNE(lua_State*const lS, const int iParam)
 { // Throw if requested parameter isn't a string or empty else return it
   LuaUtilCheckStrNE(lS, iParam);
   return LuaUtilToCppString(lS, iParam);
 }
 /* -- Get and return a C++ string and throw exception if not string/empty -- */
-static string LuaUtilGetCppFile(lua_State*const lS, const int iParam)
+static StdString LuaUtilGetCppFile(lua_State*const lS, const int iParam)
 { // Test to make sure if supplied parameter is a valid string
   LuaUtilCheckStr(lS, iParam);
   // Get the filename and verify that the filename is valid
-  const string strFile{ LuaUtilToCppString(lS, iParam) };
+  const StdString strFile{ LuaUtilToCppString(lS, iParam) };
   if(const ValidResult vrId = DirValidName(strFile))
     XC("Invalid parameter!",
       "Param",    iParam,                          "File",    strFile,
@@ -603,11 +604,11 @@ static string LuaUtilGetCppFile(lua_State*const lS, const int iParam)
   return strFile;
 }
 /* -- Get and return a C++ string and throw exception if not string/empty -- */
-static string LuaUtilGetCppDir(lua_State*const lS, const int iParam)
+static StdString LuaUtilGetCppDir(lua_State*const lS, const int iParam)
 { // Test to make sure if supplied parameter is a valid string.
   LuaUtilCheckStr(lS, iParam);
   // Get the filename and verify that the filename is valid.
-  const string strFile{ LuaUtilToCppString(lS, iParam) };
+  const StdString strFile{ LuaUtilToCppString(lS, iParam) };
   switch(const ValidResult vrId = DirValidName(strFile))
   { // Ok or current directory? Allow the name.
     case VR_OK: case VR_CURRENT: return strFile;
@@ -648,7 +649,7 @@ static bool LuaUtilValidHostname(lua_State*const lS, const int iParam)
   return true;
 }
 /* -- Get a valid hostname ------------------------------------------------- */
-static string LuaUtilGetCppHostname(lua_State*const lS, const int iParam)
+static StdString LuaUtilGetCppHostname(lua_State*const lS, const int iParam)
 { // Return if parameter is a string and not empty else break execution
   LuaUtilCheckStr(lS, iParam);
   // Get size and verify it
@@ -683,13 +684,13 @@ static string LuaUtilGetCppHostname(lua_State*const lS, const int iParam)
     else if(stPos > stLastDot)
       XC("Invalid domain length!", "Parameter", iParam, "At", stPos);
   } // Valid hostname. Now store the string and return it
-  string strStr{ LuaUtilToCppString(lS, iParam) };
+  StdString strStr{ LuaUtilToCppString(lS, iParam) };
   return StrToLowCaseRef(strStr);
 }
 /* -- Get and return a C++ string and throw exception if not a string ------ */
-static string LuaUtilGetCppStrUpper(lua_State*const lS, const int iParam)
+static StdString LuaUtilGetCppStrUpper(lua_State*const lS, const int iParam)
 { // Throw if requested parameter isn't a string else return it in uppercase
-  string strStr{ LuaUtilGetCppStrNE(lS, iParam) };
+  StdString strStr{ LuaUtilGetCppStrNE(lS, iParam) };
   return StrToUpCaseRef(strStr);
 }
 /* -- Check the specified number of parameters are set --------------------- */
@@ -761,7 +762,7 @@ template<typename NumType>
 }
 /* -- Try to get and check a valid integer --------------------------------- */
 template<typename IntType>
-requires is_integral_v<IntType> || is_enum_v<IntType>
+  requires is_integral_v<IntType> || is_enum_v<IntType>
 static IntType LuaUtilGetInt(lua_State*const lS, const int iIndex)
 { // Throw error if value isn't an integer else return a cast of it
   LuaUtilAssert(lS, LuaUtilIsInteger(lS, iIndex), iIndex, "integer");
@@ -868,7 +869,8 @@ template<typename ClassType> requires is_class_v<ClassType>
 }
 /* -- Do clear and free the object ----------------------------------------- */
 template<class ClassType>
-  void LuaUtilDoClassDestroy(LuaUtilClass*const lucPtr, ClassType*const ctPtr)
+  static void LuaUtilDoClassDestroy(LuaUtilClass*const lucPtr,
+    ClassType*const ctPtr)
 { // Clear the pointer to the class
   lucPtr->vpPtr = nullptr;
   // Free the class if not set to locked (engine managed class)
@@ -949,9 +951,10 @@ template<typename ClassType> requires is_class_v<ClassType>
     "Type", liParent.LuaIdentStr(), "Size", sizeof(ClassType));
 }
 /* -- Creates a pointer to a class that LUA CAN'T deallocate --------------- */
-template<typename ClassType> requires is_class_v<ClassType>
-  static ClassType *LuaUtilClassCreatePtr(lua_State*const lS,
-    const LuaIdent &liParent, ClassType*const ctPtr)
+template<typename ClassType>
+  requires is_class_v<ClassType>
+static ClassType *LuaUtilClassCreatePtr(lua_State*const lS,
+  const LuaIdent &liParent, ClassType*const ctPtr)
 { // Create userdata
   LuaUtilClass*const lucPtr =
     reinterpret_cast<LuaUtilClass*>(lua_newuserdata(lS, sizeof(LuaUtilClass)));
@@ -964,8 +967,10 @@ template<typename ClassType> requires is_class_v<ClassType>
   return ctPtr;
 }
 /* -- Check that a class isn't locked (i.e. a built-in class) -------------- */
-template<class ClassType> requires is_class_v<ClassType>
-  ClassType *LuaUtilGetUnlockedPtr(lua_State*const lS, const int iParam)
+template<class ClassType>
+  requires is_class_v<ClassType>
+static ClassType *LuaUtilGetUnlockedPtr[[maybe_unused]]
+  (lua_State*const lS, const int iParam)
 { // Get pointer to class and return if isn't locked (a built-in class)
   ClassType*const ctPtr = LuaUtilGetPtr<ClassType>(lS, iParam);
   if(ctPtr->LockIsNotSet()) return ctPtr;
@@ -1091,7 +1096,7 @@ template<class MapClassType>static void LuaUtilToTableEx(lua_State*const lS,
 }
 /* -- Push the specified string at the specified index --------------------- */
 static void LuaUtilSetTableIdxStr(lua_State*const lS,
-  const int iTableId, const lua_Integer liIndex, const string &strValue)
+  const int iTableId, const lua_Integer liIndex, const StdString &strValue)
 { // Push at the specified index, the specified string and set it to the table
   LuaUtilPushInt(lS, liIndex);
   LuaUtilPushStr(lS, strValue);
@@ -1099,7 +1104,7 @@ static void LuaUtilSetTableIdxStr(lua_State*const lS,
 }
 /* -- Push the specified integer at the specified index -------------------- */
 template<typename IntType>
-requires is_integral_v<IntType> || is_enum_v<IntType>
+  requires is_integral_v<IntType> || is_enum_v<IntType>
 static void LuaUtilSetTableIdxInt(lua_State*const lS,
   const int iTableId, const lua_Integer liIndex, const IntType itValue)
 { // Push at the specified index, the specified value and set it to the table
@@ -1139,7 +1144,7 @@ template<typename ListType>
   // Id number for array index
   lua_Integer iIndex = 0;
   // For each table item
-  for(const string &strItem : ltData)
+  for(const StdString &strItem : ltData)
     LuaUtilSetTableIdxStr(lS, -3, ++iIndex, strItem);
 }
 /* -- Explode LUA string into table ---------------------------------------- */
@@ -1191,7 +1196,7 @@ static lua_Integer LuaUtilImplodePrepare(lua_State*const lS,
 }
 /* -- Pushes an item from the specified table onto the stack --------------- */
 static void LuaUtilImplodeItem(lua_State*const lS, const int iParam,
-  const lua_Integer liIndex, string &strOutput, const char *cpStr,
+  const lua_Integer liIndex, StdString &strOutput, const char *cpStr,
   size_t stStr)
 { // Add separator to string
   strOutput.append(cpStr, stStr);
@@ -1213,7 +1218,7 @@ static void LuaUtilImplode(lua_State*const lS)
     const char*const cpSep = LuaUtilGetLStr<char>(lS, 2, stSep);
     // Write first item
     LuaUtilGetRefEx(lS);
-    string strOutput{ LuaUtilToCppString(lS) };
+    StdString strOutput{ LuaUtilToCppString(lS) };
     LuaUtilRmStack(lS);
     // Iterate through rest of table and implode the items
     for(lua_Integer liI = 2; liI <= liLen; ++liI)
@@ -1233,7 +1238,7 @@ static void LuaUtilImplodeEx(lua_State*const lS)
       *const cpSep2 = LuaUtilGetLStr<char>(lS, 3, stSep2);
     // Write first item
     LuaUtilGetRefEx(lS);
-    string strOutput{ LuaUtilToCppString(lS) };
+    StdString strOutput{ LuaUtilToCppString(lS) };
     LuaUtilRmStack(lS);
     // Iterator through rest of table except for last entry
     for(lua_Integer liI = 2; liI < liLen; ++liI)
@@ -1318,7 +1323,7 @@ static void LuaUtilClearTables(lua_State*const lS, int iStart)
   { for(const int iEnd = LuaUtilStackSize(lS); iStart <= iEnd; ++iStart)
       LuaUtilClearTableSafe(lS, iStart); }
 /* -- Replace text with values from specified LUA table -------------------- */
-static string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
+static StdString LuaUtilReplaceMulti(lua_State*const lS, StdString &strDest)
 { // Return if source string is empty?
   if(strDest.empty()) return {};
   // Table for replacements
@@ -1336,7 +1341,7 @@ static string LuaUtilReplaceMulti(lua_State*const lS, string &strDest)
                     liIndex += 2)
     { // Get key from table
       LuaUtilGetRefEx(lS, 2, liIndex);
-      const string strKey{ LuaUtilToCppString(lS) };
+      const StdString strKey{ LuaUtilToCppString(lS) };
       LuaUtilRmStack(lS);
       // Get value from table
       LuaUtilGetRefEx(lS, 2, liIndex + 1);
@@ -1376,7 +1381,7 @@ static void LuaUtilToTable(lua_State*const lS, const StrUIntMap &suimRef)
       { LuaUtilPushInt(lS, uiValue); }); }
 /* -- Convert string/string map to table ----------------------------------- */
 static void LuaUtilToTable(lua_State*const lS, const StrNCStrMap &sncsmMap)
-  { LuaUtilToTable(lS, sncsmMap, [lS](const string &strValue)
+  { LuaUtilToTable(lS, sncsmMap, [lS](const StdString &strValue)
       { LuaUtilPushStr(lS, strValue); }); }
 /* -- Convert varlist to lua table and put it on stack --------------------- */
 template<class VecType, typename VecValType = typename VecType::value_type,
@@ -1444,8 +1449,9 @@ static bool LuaUtilIsStackAvail(lua_State*const lS, const int iCount)
 /* -- Return true if lua stack can take specified more items (diff type) --- */
 template<typename IntType>
   static bool LuaUtilIsStackAvail(lua_State*const lS, const IntType itCount)
-    { return UtilIntWillOverflow<int>(itCount) ? false :
-        LuaUtilIsStackAvail(lS, static_cast<int>(itCount)); }
+{ return UtilIntWillOverflow<int>(itCount) ? false :
+    LuaUtilIsStackAvail(lS, static_cast<int>(itCount)); }
+/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

@@ -35,11 +35,10 @@ class MemConst                         // Start of const MemBase Block Class
   void MemCheckBit[[noreturn]](const char*const cpAddr,
     const size_t stPos) const
   { // Get absolute position and maximum bit position
-    const size_t stAbsPos = UtilBitToByte(stPos),
-                 stMax = UtilBitFromByte(stSize);
+    const size_t stAbsPos = UtilBitToByte(stPos);
     // Throw the error
     XC(cpAddr,
-      "BitPosition",  stPos,    "BitMaximum",  stMax,
+      "BitPosition",  stPos,    "BitMaximum",  UtilBitFromByte(stSize),
       "BytePosition", stAbsPos, "ByteMaximum", stSize,
       "AddrPosition", MemDoRead<void*>(stAbsPos),
       "AddrStart",    MemPtr(), "AddrMaximum", MemPtrEnd());
@@ -66,8 +65,8 @@ class MemConst                         // Start of const MemBase Block Class
   void MemSetPtrSize(char*const cpNPtr, const size_t stBytes)
     { MemSetPtr(cpNPtr); MemSetSize(stBytes); }
   /* -- Free the pointer --------------------------------------------------- */
-  void MemFreePtr() { StdFree(MemPtr()); }
-  void MemFreePtrIfSet() { if(MemIsPtrSet()) MemFreePtr(); }
+  void MemFreePtr() const { StdFree(MemPtr()); }
+  void MemFreePtrIfSet() const { if(MemIsPtrSet()) MemFreePtr(); }
   /* -- Return memory at the allocated address --------------------- */ public:
   template<typename Type=void>
     Type *MemPtr() const { return reinterpret_cast<Type*>(cpPtr); }
@@ -78,7 +77,7 @@ class MemConst                         // Start of const MemBase Block Class
   bool MemIsEmpty() const { return MemSize() == 0; }
   bool MemIsNotEmpty() const { return !MemIsEmpty(); }
   /* -- Returns if the pointer is valid ------------------------------------ */
-  bool MemIsPtrSet() const { return !!MemPtr(); }
+  bool MemIsPtrSet() const { return MemPtr() != nullptr; }
   bool MemIsPtrNotSet() const { return !MemPtr(); }
   /* -- Return ending address ---------------------------------------------- */
   template<typename Type=void>
@@ -94,7 +93,7 @@ class MemConst                         // Start of const MemBase Block Class
   bool MemCheckPos(const size_t stPos) const
     { return UtilBitToByte(stPos) >= MemSize(); }
   /* -- Find specified string ---------------------------------------------- */
-  size_t MemFind(const string &strWhat, size_t stPos=0) const
+  size_t MemFind(const StdString &strWhat, size_t stPos=0) const
   { // Bail if parameters are invalid
     if(strWhat.empty() || MemIsEmpty() || stPos > MemSize())
       return StdMaxSizeT;
@@ -157,7 +156,7 @@ class MemConst                         // Start of const MemBase Block Class
     return UtilBitTest(MemPtr<char>(), stPos);
   }
   /* -- Stringview'ify the memory ------------------------------------------ */
-  const string_view MemToStringViewSafe(const size_t stBytes) const
+  const StdStringView MemToStringViewSafe(const size_t stBytes) const
   { // Return empty string if no size
     if(MemIsEmpty()) return {};
     // Check position
@@ -168,16 +167,16 @@ class MemConst                         // Start of const MemBase Block Class
     return { MemPtr<char>(), stBytes };
   }
   /* -- Stringview'ify the memory with the current size -------------------- */
-  const string_view MemToStringViewSafe() const
+  const StdStringView MemToStringViewSafe() const
     { return MemToStringViewSafe(MemSize()); }
   /* -- Stringviewify the memory (already assumes last char is '\0') ------- */
-  const string_view MemToStringView() const
+  const StdStringView MemToStringView() const
     { return { MemPtr<char>(), MemSize() - 1 }; }
   /* -- Stringview'ify the memory ------------------------------------------ */
-  const string MemToString() const
+  const StdString MemToString() const
     { return { MemPtr<char>(), MemSize() }; }
   /* -- Stringify the memory ----------------------------------------------- */
-  const string MemToStringSafe() const
+  const StdString MemToStringSafe() const
   { // Return empty string if no memory
     if(MemIsEmpty()) return {};
     // Find the null character and if we find it?
@@ -192,7 +191,7 @@ class MemConst                         // Start of const MemBase Block Class
   template<typename Type=size_t>bool MemIsSizeOverflow() const
     { return UtilIntWillOverflow<Type>(MemSize()); }
   /* -- Init from string (does not copy) ----------------------------------- */
-  explicit MemConst(const string &strRef) :
+  explicit MemConst(const StdString &strRef) :
     /* -- Initialisers ----------------------------------------------------- */
     MemConst{ strRef.length(),         // Copy string size and pointer over
       strRef.data() }                  // from specified string
@@ -567,7 +566,7 @@ class Memory :
     { MemInitBlank(stBytes);
       if(stBytes && vpPtr) MemWrite(0, vpPtr, stBytes); }
   /* -- Allocate and copy from existing string ----------------------------- */
-  void MemInitString(const string &strRef)
+  void MemInitString(const StdString &strRef)
     { MemInitData(strRef.length(),
         reinterpret_cast<const void*>(strRef.data())); }
   /* -- Allocate and copy from existing memory block ----------------------- */
@@ -596,7 +595,7 @@ class Memory :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Init from string --------------------------------------------------- */
-  explicit Memory(const string &strRef) :
+  explicit Memory(const StdString &strRef) :
     /* -- Initialisers ----------------------------------------------------- */
     Memory{ strRef.length(),           // Allocate memory and copy the string
       strRef.data() }                  // over to our allocated memory
@@ -634,8 +633,8 @@ class Memory :
   /* -- Destructor (just a free() needed) ---------------------------------- */
   ~Memory() { MemFreePtrIfSet(); }
 };/* -- Useful types ------------------------------------------------------- */
-typedef list<Memory> MemoryList;       // List of memory blocks
-typedef vector<Memory> MemoryVector;   // A vector of memory classes
+typedef StdList<Memory> MemoryList;     // List of memory blocks
+typedef StdVector<Memory> MemoryVector; // A vector of memory classes
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

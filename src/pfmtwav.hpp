@@ -10,7 +10,7 @@
 namespace ICodecWAV {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IIdent::P;             using namespace IFlags;
+using namespace IIdent::P;             using namespace IFlags::P;
 using namespace ILog::P;               using namespace IMemory::P;
 using namespace IOal::P;               using namespace IPcmDef::P;
 using namespace IPcmLib::P;            using namespace IStd::P;

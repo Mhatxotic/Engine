@@ -70,9 +70,9 @@ class TextureBase :                    // All members initially private
       /* -- No code -------------------------------------------------------- */
       {}                               // Note that our shader handles Z co-ord
   };/* --------------------------------------------------------------------- */
-  typedef vector<CoordData>   CoordList;   // Tile coordinates data list
+  typedef StdVector<CoordData> CoordList;  // Tile coordinates data list
   typedef CoordList::iterator CoordListIt; // Iterator to a CoordList
-  typedef vector<CoordList>   CoordsList;  // A list of tile coords per sub-tex
+  typedef StdVector<CoordList> CoordsList; // A list of tile coords per sub-tex
   /* ----------------------------------------------------------------------- */
   CoordsList       clTiles;            // Texture coordinates for tiles
   GLUIntVector     uivTexture;         // OpenGL texture handle list
@@ -668,7 +668,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       bdDDepth };
   }
   /* -- Download texture and dump it to disk ------------------------------- */
-  void Dump(const size_t stSubTexId, const string &strFile) const
+  void Dump(const size_t stSubTexId, const StdString &strFile) const
     { Download(stSubTexId).SaveFile(strFile, stSubTexId, IFMT_PNG); }
   /* -- Reload texture array as normal texture ----------------------------- */
   void ReloadTexture()
@@ -881,7 +881,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
             "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
             "Index",      clFirst.size(),   "Count",    rjvValue.Size());
         // Enumerate the values and set them in our array
-        array<GLfloat, 4> aValues;
+        StdArray<GLfloat, 4> aValues;
         for(unsigned int uiIndex = 0; uiIndex < aValues.size(); ++uiIndex)
         { // Get and check that the value is unsigned integer
           const Value &rjvCoord = rjvValue[uiIndex];

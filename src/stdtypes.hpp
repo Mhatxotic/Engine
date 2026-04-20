@@ -3,25 +3,36 @@
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
 ** ## This module sets up all the types we use from the STL. All these    ## **
-** ## types should sit in the Engine namespace so only the engine has     ## **
-** ## access to them and not any other included API.                      ## **
+** ## types sit in the Engine namespace so only the engine has access to  ## **
+** ## them and not any other included external API's. We also alias them  ## **
+** ## to avoid having to make multiple changes if and when the STL ever   ## **
+** ## changes.                                                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* -- Storage spaces ------------------------------------------------------- */
-using ::std::array;                    using ::std::deque;
-using ::std::list;                     using ::std::map;
-using ::std::queue;                    using ::std::pair;
-using ::std::set;                      using ::std::string;
-using ::std::string_view;              using ::std::unique_ptr;
-using ::std::unordered_set;            using ::std::vector;
-using ::std::wstring;
+/* -- Common storage spaces ------------------------------------------------ */
+template<typename AnyType, size_t stSize>
+  using StdArray = ::std::array<AnyType, stSize>;
+template<typename AnyType>using StdAtomic = ::std::atomic<AnyType>;
+template<typename AnyType>using StdDeque = ::std::deque<AnyType>;
+template<typename AnyType>using StdList = ::std::list<AnyType>;
+template<typename KeyType, typename ValueType>
+  using StdMap = ::std::map<KeyType, ValueType>;
+template<typename AnyTypeA, typename AnyTypeB>
+  using StdPair = ::std::pair<AnyTypeA, AnyTypeB>;
+template<typename AnyType>using StdSet = ::std::set<AnyType>;
+template<typename AnyType, typename DelFunc = ::std::default_delete<AnyType>>
+  using StdUniquePtr = ::std::unique_ptr<AnyType, DelFunc>;
+template<typename AnyType>
+  using StdUnorderedSet = ::std::unordered_set<AnyType>;
+template<typename AnyType>using StdVector = ::std::vector<AnyType>;
+/* -- Strings -------------------------------------------------------------- */
+using StdString = ::std::string;
+using StdStringView = ::std::string_view;
+using StdWideString = ::std::wstring;
 /* -- Exceptions ----------------------------------------------------------- */
-using ::std::exception;                using ::std::runtime_error;
-/* -- Iteratations --------------------------------------------------------- */
-using ::std::accumulate;               using ::std::advance;
-using ::std::any_of;                   using ::std::back_inserter;
-using ::std::next;                     using ::std::prev;
+using StdException = ::std::exception;
+using StdRunTimeError = ::std::runtime_error;
 /* -- String streams ------------------------------------------------------- */
 using ::std::dec;                      using ::std::endl;
 using ::std::fixed;                    using ::std::fpclassify;
@@ -56,60 +67,55 @@ using ::std::remove_cv_t;              using ::std::remove_pointer_t;
 using ::std::remove_reference_t;       using ::std::swap;
 using ::std::tuple_size_v;
 /* -- Synchronisation ------------------------------------------------------ */
-using ::std::atomic;
-typedef atomic<bool>         AtomicBool;   // Thread safe boolean
-typedef atomic<double>       AtomicDouble; // Thread safe double
-typedef atomic<int>          AtomicInt;    // Thread safe integer
-typedef atomic<size_t>       AtomicSizeT;  // Thread safe size_t
-typedef atomic<uint64_t>     AtomicUInt64; // Thread safe 64-bit integer
-typedef atomic<unsigned int> AtomicUInt;   // Thread safe unsigned integer
-/* -- Checks if a type is atomic ------------------------------------------- */
-template<typename T>struct is_std_atomic : ::std::false_type {};
-template<typename U>struct is_std_atomic<atomic<U>> : ::std::true_type {};
-template<typename T>
-  constexpr bool is_std_atomic_v = is_std_atomic<remove_cv_t<T>>::value;
+typedef StdAtomic<bool>         AtomicBool;   // Thread safe boolean
+typedef StdAtomic<double>       AtomicDouble; // Thread safe double
+typedef StdAtomic<int>          AtomicInt;    // Thread safe integer
+typedef StdAtomic<size_t>       AtomicSizeT;  // Thread safe size_t
+typedef StdAtomic<uint64_t>     AtomicUInt64; // Thread safe 64-bit integer
+typedef StdAtomic<unsigned int> AtomicUInt;   // Thread safe unsigned integer
 /* -- Indexed vector list types -------------------------------------------- */
-typedef string::const_iterator            StringConstIt;
-typedef vector<const char*>               CStrVector;
+typedef StdString::const_iterator         StringConstIt;
+typedef StdVector<const char*>            CStrVector;
 typedef CStrVector::const_iterator        CStrVectorConstIt;
-typedef vector<float>                     FloatVector;
+typedef StdVector<float>                  FloatVector;
 typedef FloatVector::const_iterator       FloatVectorConstIt;
-typedef vector<int>                       IntVector;
+typedef StdVector<int>                    IntVector;
 typedef IntVector::const_iterator         IntVectorConstIt;
-typedef vector<string>                    StrVector;
+typedef StdVector<StdString>              StrVector;
 typedef StrVector::iterator               StrVectorIt;
 typedef StrVector::const_iterator         StrVectorConstIt;
 typedef StrVector::const_reverse_iterator StrVectorConstRevIt;
-typedef vector<unsigned int>              UIntVector;
+typedef StdVector<unsigned int>           UIntVector;
 typedef UIntVector::const_iterator        UIntVectorConstIt;
-typedef vector<string_view>               StrViewVector;
+typedef StdVector<StdStringView>          StrViewVector;
 typedef StrViewVector::const_iterator     StrViewVectorConstIt;
 /* -- Standard linked list types ------------------------------------------- */
-typedef list<string>                    StrList;
+typedef StdList<StdString>              StrList;
 typedef StrList::const_iterator         StrListConstIt;
 typedef StrList::const_reverse_iterator StrListConstRevIt;
 typedef StrList::iterator               StrListIt;
-/* -- List of string pairs ------------------------------------------------- */
-typedef pair<const string, const string> StrPair;
-typedef list<StrPair>                    StrPairList;
+/* -- List of StdString pairs ---------------------------------------------- */
+typedef StdPair<const StdString, const StdString> StrPair;
+typedef StdList<StrPair>               StrPairList;
 /* -- Set of strings ------------------------------------------------------- */
-typedef set<string>                StrSet;
-typedef StrSet::const_iterator     StrSetConstIt;
-typedef unordered_set<string_view> StrVUSet;
+typedef StdSet<StdString>              StrSet;
+typedef StrSet::const_iterator         StrSetConstIt;
+typedef StdUnorderedSet<StdStringView> StrVUSet;
 /* -- Helper macro to build typedefs for a new map type -------------------- */
 #define MAPPACK_BUILD(n,t1,t2) \
-  typedef pair<t1,t2> n ## MapPair; \
-  typedef map<n ## MapPair::first_type, n ## MapPair::second_type> n ## Map; \
+  typedef StdPair<t1,t2> n ## MapPair; \
+  typedef StdMap<n ## MapPair::first_type, n ## MapPair::second_type> \
+    n ## Map; \
   typedef n ## Map::iterator n ## MapIt; \
   typedef n ## Map::const_iterator n ## MapConstIt;
 /* -- Map of strings and unsigned ints ------------------------------------- */
-MAPPACK_BUILD(StrUInt, const string, const unsigned int)
-typedef vector<StrUIntMapConstIt> StrUIntMapConstItVector;
+MAPPACK_BUILD(StrUInt, const StdString, const unsigned int)
+typedef StdVector<StrUIntMapConstIt> StrUIntMapConstItVector;
 /* -- Other map types ------------------------------------------------------ */
-MAPPACK_BUILD(StrInt, const string, const int)
-MAPPACK_BUILD(StrStr, const string, const string)
-MAPPACK_BUILD(StrVStrV, const string_view, const string_view)
-MAPPACK_BUILD(StrNCStr, const string, string)
+MAPPACK_BUILD(StrInt, const StdString, const int)
+MAPPACK_BUILD(StrStr, const StdString, const StdString)
+MAPPACK_BUILD(StrVStrV, const StdStringView, const StdStringView)
+MAPPACK_BUILD(StrNCStr, const StdString, StdString)
 /* -- Get array element type ----------------------------------------------- */
 template<typename ArrayType>
   using ArrayElementType =

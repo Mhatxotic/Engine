@@ -20,8 +20,8 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 class Certs                            // Certificates store
 { /* -- Typedefs --------------------------------------------------- */ public:
-  typedef pair<const string, X509*> X509Pair; // Do not &ref string
-  typedef vector<X509Pair>          X509List; // A vector of pairs
+  typedef StdPair<const StdString, X509*> X509Pair; // Do not &ref string
+  typedef StdVector<X509Pair>          X509List;    // A vector of pairs
   /* -- X509 error database --------------------------------------- */ private:
   struct X509ErrInfo                   // Information about the X509 error
   { /* --------------------------------------------------------------------- */
@@ -29,14 +29,14 @@ class Certs                            // Certificates store
     const size_t     stBank;           // Override bank index (sdullCertBypass)
     const uint64_t   ullFlag;          // Flag required to ignore this error
   };/* --------------------------------------------------------------------- */
-  typedef map<const size_t, const X509ErrInfo> X509Err;
-  typedef array<AtomicUInt64, 2> AtomicDoubleUInt64;
+  typedef StdMap<const size_t, const X509ErrInfo> X509Err;
+  typedef StdArray<AtomicUInt64, 2> AtomicDoubleUInt64;
   /* -- Variables ---------------------------------------------------------- */
   SSL_CTX           *scStore;          // Context used for cerificate store
   X509_STORE        *xsCerts;          // Certificate store inside OpenSSL
   X509List           lCAStore;         // Certificate store
   AtomicDoubleUInt64 sdullCertBypass;  // Certificate bypass flags
-  const string       strExtension;     // Default extension
+  const StdString    strExtension;     // Default extension
   const X509Err      xErrDB;           // X509 error database
   /* -- Unload open ssl certificate store ---------------------------------- */
   void CertsUnload()
@@ -61,7 +61,7 @@ class Certs                            // Certificates store
     cLog->LogInfoSafe("Certs unloaded certificate store.");
   }
   /* -- Load certificates from a list of files ----------------------------- */
-  void CertsLoadList(const string &strD, const AssetList &aList)
+  void CertsLoadList(const StdString &strD, const AssetList &aList)
   { // Unload existing certificates
     CertsUnload();
     // Now initialising certificate store
@@ -82,7 +82,7 @@ class Certs                            // Certificates store
     MutexAuto maLock;
     // Now initialising certificate store ('seq' on MacOS)
     StdForEach(par_unseq, aList.cbegin(), aList.cend(),
-      [this, &strD, &maLock](const string &strF)
+      [this, &strD, &maLock](const StdString &strF)
     { // Capture exceptions
       try
       { // Load the certificate
@@ -90,7 +90,7 @@ class Certs                            // Certificates store
         // Get pointer
         const unsigned char*ucpPtr = fmCert.MemPtr<unsigned char>();
         // Load the raw certificate and ig it succeeded?
-        typedef unique_ptr<X509, function<decltype(X509_free)>> X509Ptr;
+        typedef StdUniquePtr<X509, function<decltype(X509_free)>> X509Ptr;
         if(X509Ptr caCert{
           d2i_X509(nullptr, &ucpPtr, fmCert.MemSize<long>()), X509_free })
         { // Get purpose struct of certificate
@@ -130,7 +130,7 @@ class Certs                            // Certificates store
             "Certs rejected '$' as unable to get purpose!", fmCert.IdentGet());
         } // Release the certificate (caCert)
       } // In the rare occurence that an exception occurs we skip the cert
-      catch(const exception &eReason)
+      catch(const StdException &eReason)
       { // Show the exception and try the next certificate
         cLog->LogErrorExSafe(
           "Certs rejected certificate '$/$' due to exception: $",
@@ -263,7 +263,7 @@ class Certs                            // Certificates store
   CVarReturn CertsSetBypassFlags2(const uint64_t uiFlags)
     { return CVarSimpleSetInt(sdullCertBypass.back(), uiFlags); }
   /* ----------------------------------------------------------------------- */
-  CVarReturn CertsFileModified(const string &strD, string&)
+  CVarReturn CertsFileModified(const StdString &strD, StdString&)
   { // Empty string is ok, treat as no CA store
     if(strD.empty())
     { // Log that we are not using a store and return success
@@ -332,9 +332,9 @@ static bool CertIsExpired(const X509*const x509)
          tTime > CertGetTime(*X509_get0_notAfter(x509));
 }
 /* ========================================================================= */
-static string CertGetSubject(const Certs::X509Pair &caPair)
+static StdString CertGetSubject(const Certs::X509Pair &caPair)
 { // Storage for certificate field info
-  StdResized<string> strD{ 1024 };
+  StdResized<StdString> strD{ 1024 };
   // Grab the subject line form ceritificate. We couldn't get the subject if
   // failed.
   if(!X509_NAME_oneline(X509_get_subject_name(caPair.second),

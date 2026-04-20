@@ -15,7 +15,7 @@
 namespace IOal {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICVarDef::P;
-using namespace IError::P;             using namespace IFlags;
+using namespace IError::P;             using namespace IFlags::P;
 using namespace IIdent::P;             using namespace ILog::P;
 using namespace IMemory::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
@@ -34,7 +34,7 @@ namespace P {                          // Start of public module namespace
 #define ALC(F,M,...)      ALEX(cOal->CheckALCError, F, M, ## __VA_ARGS__)
 #define ALCNF(M,...)      ALC(static_cast<void>(0), M, ## __VA_ARGS__)
 /* -- Typedefs ------------------------------------------------------------- */
-typedef vector<ALuint> ALUIntVector; // A vector of ALuint's
+typedef StdVector<ALuint> ALUIntVector; // A vector of ALuint's
 /* -- Public typedefs ------------------------------------------------------ */
 BUILD_FLAGS(Oal,                       // OpenAL flags
   /* -- OAL specific flags ------------------------------------------------- */
@@ -79,8 +79,8 @@ class Oal :                            // Actual class body
   size_t           stMaxStereoSources, // Maximum number of stereo sources
                    stMaxMonoSources;   // Maximum number of mono sources
   /* ----------------------------------------------------------------------- */
-  string           strVersion;         // String version of OpenAL
-  string_view      strvPlayback;       // String playback device
+  StdString        strVersion;         // String version of OpenAL
+  StdStringView    strvPlayback;       // String playback device
   /* ----------------------------------------------------------------------- */
   ALCdevice       *alcDevice;          // OpenAL device
   ALCcontext      *alcContext;         // OpenAL context
@@ -383,7 +383,7 @@ class Oal :                            // Actual class body
     static StrType GetNCString(const ALenum eId)
   { return reinterpret_cast<StrType>(ContextGetString(nullptr, eId)); }
   /* -- Get openAL int array ----------------------------------------------- */
-  template<size_t stCount, class A=array<ALCint,stCount>>
+  template<size_t stCount, class A=StdArray<ALCint,stCount>>
     const A GetIntegerArray(const ALenum eId) const
   { // Create array to return
     A aData;
@@ -397,15 +397,15 @@ class Oal :                            // Actual class body
   template<typename T=ALCint>T GetInteger(const ALenum eId) const
     { return static_cast<T>(GetIntegerArray<1>(eId)[0]); }
   /* -- Convert PCM format identifier to short identifier string ----------- */
-  const string_view &GetALFormat(const ALenum eFormat) const
+  const StdStringView &GetALFormat(const ALenum eFormat) const
     { return almFormatCodes.Get(eFormat); }
   /* -- Get source counts -------------------------------------------------- */
   size_t GetMaxMonoSources() const { return stMaxMonoSources; }
   size_t GetMaxStereoSources() const { return stMaxStereoSources; }
   /* -- Get current playback device ---------------------------------------- */
-  const string_view &GetPlaybackDevice() const { return strvPlayback; }
+  const StdStringView &GetPlaybackDevice() const { return strvPlayback; }
   /* -- Return version information ----------------------------------------- */
-  const string &GetVersion() const { return strVersion; }
+  const StdString &GetVersion() const { return strVersion; }
   /* -- Set system event callback ------------------------------------------ */
   void SetEventCallback(const ALCEVENTPROCTYPESOFT cbProc, void*const vpParam)
   { // Keeping Ubuntu 24.04 compatibility for now until supported
@@ -433,11 +433,11 @@ class Oal :                            // Actual class body
   }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
-    const string_view &GetALErr(const IntType itCode) const
+    const StdStringView &GetALErr(const IntType itCode) const
       { return almOALCodes.Get(static_cast<ALenum>(itCode)); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
-    const string_view &GetALCErr(const IntType itCode) const
+    const StdStringView &GetALCErr(const IntType itCode) const
       { return almOALCCodes.Get(static_cast<ALenum>(itCode)); }
   /* -- AL is initialised? ------------------------------------------------- */
   bool IsInitialised() const { return alcDevice && alcContext; }
@@ -451,7 +451,7 @@ class Oal :                            // Actual class body
   /* -- Initialise HRTF override ------------------------------------------- */
   void InitHRTFOverride()
   { // Set HRTF setting and return if failed
-    const array<const ALCint,3> alciAttrs{
+    const StdArray<const ALCint,3> alciAttrs{
       ALC_HRTF_SOFT, FlagIsSet(AFL_HRTFREQ) ? AL_TRUE : AL_FALSE, 0 };
     FlagSetOrClear(AFL_HRTFINIT,
       alcResetDeviceSOFT(alcDevice, alciAttrs.data()) == AL_FALSE);
@@ -554,7 +554,7 @@ class Oal :                            // Actual class body
     // Check playback system event capabilities
     struct EventCapItem { const ALenum eEventType, eDeviceType;
                           const OalFlagsConst &ofcFlag; };
-    for(const EventCapItem &eciItem : array<EventCapItem, 6>{{
+    for(const EventCapItem &eciItem : StdArray<EventCapItem, 6>{{
       { ALC_EVENT_TYPE_DEFAULT_DEVICE_CHANGED_SOFT, ALC_PLAYBACK_DEVICE_SOFT,
         AFL_HAVESEPBDDC },
       { ALC_EVENT_TYPE_DEVICE_ADDED_SOFT,           ALC_PLAYBACK_DEVICE_SOFT,
@@ -602,13 +602,13 @@ class Oal :                            // Actual class body
     // Return if debug logging not enabled
     if(cLog->LogNotHasLevel(LH_DEBUG)) return;
     // Build sorted list of extensions and log them all
-    typedef pair<const string_view, const size_t> Pair;
-    typedef map<Pair::first_type, Pair::second_type> Map;
+    typedef StdPair<const StdStringView, const size_t> Pair;
+    typedef StdMap<Pair::first_type, Pair::second_type> Map;
     Map mExts;
     // Build extensions list
     size_t stCount = 0;
-    Tokeniser<string_view>(GetString(AL_EXTENSIONS), cCommon->CommonSpace(),
-      [&mExts, &stCount](const string_view &strvExt){
+    Tokeniser<StdStringView>(GetString(AL_EXTENSIONS), cCommon->CommonSpace(),
+      [&mExts, &stCount](const StdStringView &strvExt){
         mExts.insert({ StdMove(strvExt), stCount++ });
       }
     );

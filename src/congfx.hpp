@@ -85,7 +85,7 @@ class ConGfx :                         // Members initially private
   /* -- Init console texture ----------------------------------------------- */
   void ConGfxInitTexture()
   { // Get console texture filename, use a solid if not specified
-    const string strCT{ cCVars->GetStrInternal(CON_BGTEXTURE) };
+    const StdString strCT{ cCVars->GetStrInternal(CON_BGTEXTURE) };
     if(strCT.empty())
     { // Create simple image for solid colour and load it into a texture
       Image imgData{ 0xFFFFFFFF };
@@ -184,7 +184,7 @@ class ConGfx :                         // Members initially private
       // Copy text from clipboard?
       case GLFW_KEY_C:
       { // Build command by appending text before and after the cursor
-        const string strCmd{ cConsole->InputText() };
+        const StdString strCmd{ cConsole->InputText() };
         // Copy to clipboard if not empty
         if(!strCmd.empty()) cGlFW->WinSetClipboardString(strCmd);
         // Break to pass to console class

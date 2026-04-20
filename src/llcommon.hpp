@@ -17,27 +17,27 @@ struct AgLCString { size_t stB; const char *cpD;
   explicit AgLCString(lua_State*const lS, const int iArg) :
     stB(0), cpD{LuaUtilGetLStr<char>(lS, iArg, stB)}{} };
 /* -- Get string (empty allowed) ------------------------------------------- */
-struct AgString { const string strString;
-  const string &operator()() const { return strString; }
-  operator const string&() const { return operator()(); }
+struct AgString { const StdString strString;
+  const StdString &operator()() const { return strString; }
+  operator const StdString&() const { return operator()(); }
   explicit AgString(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppStr(lS, iArg)}{} };
 /* -- Get modifyable string ------------------------------------------------ */
-struct AgNcString { string strString;
-  string &operator()() { return strString; }
-  operator string&() { return operator()(); }
+struct AgNcString { StdString strString;
+  StdString &operator()() { return strString; }
+  operator StdString&() { return operator()(); }
   explicit AgNcString(lua_State*const lS, const int iArg) :
     strString{LuaUtilGetCppStr(lS, iArg)}{} };
 /* -- Get non-empty string ------------------------------------------------- */
-struct AgNeString { const string strNeString;
-  const string &operator()() const { return strNeString; }
-  operator const string&() const { return operator()(); }
+struct AgNeString { const StdString strNeString;
+  const StdString &operator()() const { return strNeString; }
+  operator const StdString&() const { return operator()(); }
   explicit AgNeString(lua_State*const lS, const int iArg) :
     strNeString{LuaUtilGetCppStrNE(lS, iArg)}{} };
 /* -- Get Valid filename --------------------------------------------------- */
-struct AgFilename { const string strFilename;
-  const string &operator()() const { return strFilename; }
-  operator const string&() const { return operator()(); }
+struct AgFilename { const StdString strFilename;
+  const StdString &operator()() const { return strFilename; }
+  operator const StdString&() const { return operator()(); }
   explicit AgFilename(lua_State*const lS, const int iArg) :
     strFilename{LuaUtilGetCppFile(lS, iArg)}{} };
 /* -- Create class template ------------------------------------------------ */

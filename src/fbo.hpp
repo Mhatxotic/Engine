@@ -193,7 +193,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     cOgl->BufferStaticData(siVertices, ftvActive.data());
     // Enumerate each command in this order...
     StdForEach(seq, fcvActive.cbegin(),
-      next(fcvActive.cbegin(), UtilIntOrMax<ssize_t>(stCommandsFrame)),
+      StdNext(fcvActive.cbegin(), UtilIntOrMax<ssize_t>(stCommandsFrame)),
         [](const FboCmd &fcData)
     { // Set texture, texture unit and shader program
       cOgl->ActiveTexture(fcData.uiTUId);
@@ -269,7 +269,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     FboBindAndTexture();
     // Procedures to perform
     struct Procedure { const GLenum eWrap; const char cWrap; };
-    typedef array<const Procedure, 3> Procedures;
+    typedef StdArray<const Procedure, 3> Procedures;
     static const Procedures sProcedures{{
       { GL_TEXTURE_WRAP_S, 'S' },
       { GL_TEXTURE_WRAP_T, 'T' },
@@ -367,7 +367,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     }
   }
   /* -- Initialise --------------------------------------------------------- */
-  void FboInit(const string &strID, const GLsizei siW, const GLsizei siH,
+  void FboInit(const StdString &strID, const GLsizei siW, const GLsizei siH,
     const size_t stTri, const size_t stCmd)
   { // Say we're initialising the frame buffer.
     cLog->LogDebugExSafe("Fbo initialising a $x$ object '$'...",

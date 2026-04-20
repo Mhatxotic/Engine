@@ -15,7 +15,7 @@ using namespace ICodec::P;             using namespace ICommon::P;
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IIdent::P;
-using namespace IFlags;                using namespace ILockable::P;
+using namespace IFlags::P;             using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IMemory::P;
 using namespace IStd::P;               using namespace IString::P;
@@ -57,7 +57,7 @@ FSOverrideType     fsotOverride;       // Allow load of external files
 AtomicSizeT        astPipeBufSize;     // Pipe buffer size for execute
 ); /* ---------------------------------------------------------------------- */
 /* -- Function to load a file locally -------------------------------------- */
-static FileMap AssetLoadFromDisk(const string &strFile)
+static FileMap AssetLoadFromDisk(const StdString &strFile)
 { // Open it and sending full-load flag and if succeeded?
   if(FileMap fmFile{ strFile })
   { // Put in the log that we loaded the file successfully
@@ -69,7 +69,7 @@ static FileMap AssetLoadFromDisk(const string &strFile)
   XCL("Failed to open local resource!", "File",  strFile, "Path", DirGetCWD());
 }
 /* -- Function to search local directory then archives for a file ---------- */
-static FileMap AssetExtract(const string &strFile)
+static FileMap AssetExtract(const StdString &strFile)
 { // Check the order in which we load
   switch(cAssets->fsotOverride)
   { // Internal files from archives only?
@@ -170,7 +170,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     else MemSwap(fmData.FileMapDecouple());
   }
   /* -- Load asset from asset asynchronously ------------------------------- */
-  void AssetInitAsyncAsset(lua_State*const lS, const string &strName,
+  void AssetInitAsyncAsset(lua_State*const lS, const StdString &strName,
     const AssetFlagsConst &afcFlags, Asset &aCref)
   { // Prepare user flags
     FlagSet(afcFlags);
@@ -178,7 +178,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     AsyncInitArray(lS, strName, "assetdata", aCref);
   }
   /* -- Load asset from file asynchronously -------------------------------- */
-  void AssetInitAsyncFile(lua_State*const lS, const string &strFile,
+  void AssetInitAsyncFile(lua_State*const lS, const StdString &strFile,
     const AssetFlagsConst &afcFlags)
   { // Prepare user flags
     FlagSet(afcFlags);
@@ -186,7 +186,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     AsyncInitFile(lS, strFile, "assetfile");
   }
   /* -- Load asset from command-line --------------------------------------- */
-  void AssetInitAsyncCmdLine(lua_State*const lS, const string &strCmdLine,
+  void AssetInitAsyncCmdLine(lua_State*const lS, const StdString &strCmdLine,
     const AssetFlagsConst &afcFlags)
   { // Prepare user flags
     FlagSet(afcFlags);
@@ -196,7 +196,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     AsyncInitCmdLine(lS, strCmdLine, "assetexec", mbBlank);
   }
   /* -- Load asset from command-line --------------------------------------- */
-  void AssetInitAsyncCmdLineEx(lua_State*const lS, const string &strCmdLine,
+  void AssetInitAsyncCmdLineEx(lua_State*const lS, const StdString &strCmdLine,
     const AssetFlagsConst &afcFlags, Asset &aStdIn)
   { // Prepare user flags
     FlagSet(afcFlags);
@@ -204,14 +204,14 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     AsyncInitCmdLine(lS, strCmdLine, "assetexecex", aStdIn);
   }
   /* -- Init from file ----------------------------------------------------- */
-  void AssetInitFile(const string &strFile, const AssetFlagsConst &afcFlags)
+  void AssetInitFile(const StdString &strFile, const AssetFlagsConst &afcFlags)
   { // Set load flags
     FlagSet(afcFlags);
     // Load file normally
     SyncInitFileSafe(strFile);
   }
   /* -- Init from file ----------------------------------------------------- */
-  void AssetInitPtr(const string &strName, const AssetFlagsConst &afcFlags,
+  void AssetInitPtr(const StdString &strName, const AssetFlagsConst &afcFlags,
     size_t stNSize, const char*const cpNPtr)
   { // Prepare flags
     FlagSet(afcFlags);
@@ -221,8 +221,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     SyncInitArray(strName, mData);
   }
   /* -- Init from asset ---------------------------------------------------- */
-  void AssetInitAsset(const string &strName, const AssetFlagsConst &afcFlags,
-    const Asset &aData)
+  void AssetInitAsset(const StdString &strName,
+    const AssetFlagsConst &afcFlags, const Asset &aData)
   { AssetInitPtr(strName, afcFlags, aData.MemSize(), aData.MemPtr<char>()); }
   /* -- Init duplicate asset ----------------------------------------------- */
   void AssetInitDuplicate(const Asset &aCref)
@@ -236,7 +236,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     CollectorRegister();
   }
   /* -- Init blank asset --------------------------------------------------- */
-  void AssetInitBlank(const string &strName, const size_t stBytes)
+  void AssetInitBlank(const StdString &strName, const size_t stBytes)
   { // Set name of memory
     IdentSet(StdMove(strName));
     // Allocate the memory and fill it
@@ -245,7 +245,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     CollectorRegister();
   }
   /* -- Init from string --------------------------------------------------- */
-  void AssetInitArray(const string &strName, Asset &aRef,
+  void AssetInitArray(const StdString &strName, Asset &aRef,
     const AssetFlagsConst &afcFlags)
   { // Set load flags
     FlagSet(afcFlags);
@@ -279,14 +279,15 @@ struct AssetList :
   /* -- Cast down to StrSet ------------------------------------------------ */
   StrSet &ToStrSet() { return *this; }
   /* -- Return files in directories ---------------------------------------- */
-  AssetList(const string &strDir, const bool bOnlyDirs) :
+  AssetList(const StdString &strDir, const bool bOnlyDirs) :
     /* -- Initialisers ----------------------------------------------------- */
     StrSet{ bOnlyDirs ? StdMove(Dir{ strDir }.DirsToSet()) :
                         StdMove(Dir{ strDir }.FilesToSet()) }
     /* -- Add archive files to list ---------------------------------------- */
     { ArchiveEnumerate(strDir, cCommon->CommonBlank(), bOnlyDirs, *this); }
   /* -- Return files in directories with extension matching ---------------- */
-  AssetList(const string &strDir, const string &strExt, const bool bOnlyDirs) :
+  AssetList(const StdString &strDir, const StdString &strExt,
+    const bool bOnlyDirs) :
     /* -- Initialisers ----------------------------------------------------- */
     StrSet{ bOnlyDirs ? StdMove(Dir{ strDir, strExt }.DirsToSet()) :
                         StdMove(Dir{ strDir, strExt }.FilesToSet()) }
@@ -294,7 +295,7 @@ struct AssetList :
     { ArchiveEnumerate(strDir, strExt, bOnlyDirs, *this); }
 };/* ----------------------------------------------------------------------- */
 /* -- Look if a file exists ------------------------------------------------ */
-static bool AssetExists(const string &strFile)
+static bool AssetExists(const StdString &strFile)
   { return DirLocalFileExists(strFile) || ArchiveFileExists(strFile); }
 /* -- Allow external file access ------------------------------------------- */
 static CVarReturn AssetSetFSOverride(const FSOverrideType fsState)

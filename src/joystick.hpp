@@ -10,7 +10,7 @@
 namespace IJoystick {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICVarDef::P;           using namespace IEvtMain::P;
-using namespace IEvtWin::P;            using namespace IFlags;
+using namespace IEvtWin::P;            using namespace IFlags::P;
 using namespace IGlFWUtil::P;          using namespace IJoyInfo::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IUtil::P;
@@ -164,8 +164,8 @@ class Joystick :
     JoyDisablePoll();
   }
   /* -- Init/DeInit joystick callback -------------------------------------- */
-  void JoyInit() const { GlFWSetJoystickCallback(JoyOnGamePad); }
-  void JoyDeInit() const { GlFWSetJoystickCallback(nullptr); }
+  static void JoyInit() { GlFWSetJoystickCallback(JoyOnGamePad); }
+  static void JoyDeInit() { GlFWSetJoystickCallback(nullptr); }
   /* -- Constructor --------------------------------------------- */ protected:
   Joystick() :
     /* -- Initialisers ----------------------------------------------------- */

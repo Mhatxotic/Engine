@@ -8,7 +8,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 // -- Palette entry to WIN32 colour lookup --------------------------------- */
-typedef array<const WORD, COLOUR_MAX> ColourList;
+typedef StdArray<const WORD, COLOUR_MAX> ColourList;
 static const ColourList wNDXtoW32C{
   0,                             FOREGROUND_BLUE,
   FOREGROUND_GREEN,              FOREGROUND_GREEN|FOREGROUND_BLUE,
@@ -45,9 +45,9 @@ class SysCon :                         // Members initially private
   public SysConBase,                   // Defined in 'syscore.hpp'
   private MutexLock                    // Exit mutex
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef vector<CHAR_INFO> CharInfoVec;
+  typedef StdVector<CHAR_INFO> CharInfoVec;
   /* -- Private variables -------------------------------------------------- */
-  const string    &strWine;            // Wine version
+  const StdString &strWine;            // Wine version
   /* -- Console data ----------------------------------------------- */ public:
   HANDLE           hIn, hOut;          // Handle to stdin and stdout
   WORD             wColour,            // Current colour
@@ -533,7 +533,7 @@ class SysCon :                         // Members initially private
     if(bClrEOL) while(stPos < stPosEOL) SetCharPos(stPos++);
   }
   /* -- Redraw status input text ------------------------------------------- */
-  void RedrawInputBar(const string &strIL, const string &strIR)
+  void RedrawInputBar(const StdString &strIL, const StdString &strIR)
   { // Set cursor position
     stX = 0, stY = stHm1;
     // Set input bar colour
@@ -584,7 +584,8 @@ class SysCon :                         // Members initially private
     ++stX;
   }
   /* -- Redraw a status bar ------------------------------------------------ */
-  void RedrawStatus(const size_t stSY, const string &strL, const string &strR)
+  void RedrawStatus(const size_t stSY, const StdString &strL,
+    const StdString &strR)
   { // Reset drawing row
     stY = stSY;
     // Set colour
@@ -638,10 +639,10 @@ class SysCon :                         // Members initially private
     WriteLine(StdMove(udRight), stRC, true);
   }
   /* -- Redraw bottom status bar ------------------------------------------- */
-  void RedrawStatusBar(const string &strSL, const string &strSR)
+  void RedrawStatusBar(const StdString &strSL, const StdString &strSR)
     { RedrawStatus(stHm1, strSL, strSR); SetCursorVisibility(false); }
   /* -- Redraw title status bar -------------------------------------------- */
-  void RedrawTitleBar(const string &strTL, const string &strTR)
+  void RedrawTitleBar(const StdString &strTL, const StdString &strTR)
     { RedrawStatus(0, strTL, strTR); }
   /* -- Redraw console buffer ---------------------------------------------- */
   void RedrawBuffer(const ConLines &clLines,
@@ -829,7 +830,7 @@ class SysCon :                         // Members initially private
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~SysCon, SysConDeInit())
   /* -- Constructor -------------------------------------------------------- */
-  explicit SysCon(const string &strW): // Wine version if applicable
+  explicit SysCon(const StdString &strW): // Wine version if applicable
     /* -- Initialisers ----------------------------------------------------- */
     strWine{ strW },                   // Set reference to wine version
     hIn(nullptr), hOut(nullptr),       // Handles to input and output streams

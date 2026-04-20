@@ -24,14 +24,15 @@ class SysBase :                        // Safe exception handler namespace
     /* --------------------------------------------------------------------- */
     const int      iRequested;         // Requested handle
     /* -- Handles for pipe() function -------------------------------------- */
-    typedef array<int,2> PipeHandles;  // Handles struct (for pipe())
+    typedef StdArray<int,2> PipeHandles; // Handles struct (for pipe())
     PipeHandles    phHandles;          // Pipe handles (for pipe())
     /* -- Order is important ----------------------------------------------- */
     int            iSaved,             // Saved (ahHandles[0])
                   &iWrite,             // Write (ahHandles[1]/phHandles[1])
                   &iRead;              // Read (ahHandles[2]/phHandles[0])
     /* -- All handles so we can close them all together -------------------- */
-    typedef array<::std::reference_wrapper<int>,3> AllHandles; // array<int&,3>
+    typedef StdArray<::std::reference_wrapper<int>,3>
+      AllHandles;                      // StdArray<int&,3>
     AllHandles    ahHandles;           // All handles (iSaved, iWrite, iRead)
     /* -- Async off-main thread function ----------------------------------- */
     ThreadStatus ThreadMain(Thread&)
@@ -90,7 +91,7 @@ class SysBase :                        // Safe exception handler namespace
     /* -- Shut down stderr reader ---------------------------------- */ public:
     void ResetSafe() { Reset(); CloseAll(); }
     /* --------------------------------------------------------------------- */
-    Redirect(const int iHandle, const string &strNName) :
+    Redirect(const int iHandle, const StdString &strNName) :
       /* ------------------------------------------------------------------- */
       Ident{ strNName },               // Initialise identifier
       Thread{ STP_LOW },               // Initialise low priority thread
@@ -153,8 +154,8 @@ class SysBase :                        // Safe exception handler namespace
   enum ExitState { ES_SAFE, ES_UNSAFE, ES_CRITICAL }; // Signal exit types
   /* -- Signals to support ------------------------------------------------- */
 #if !defined(ALPHA)
-  typedef pair<const int, void(*)(int)> SignalPair;
-  typedef array<SignalPair, 14> SignalList;
+  typedef StdPair<const int, void(*)(int)> SignalPair;
+  typedef StdArray<SignalPair, 14> SignalList;
   SignalList       slSignals;          // Signal list
 #endif
   /* ----------------------------------------------------------------------- */
@@ -206,7 +207,7 @@ class SysBase :                        // Safe exception handler namespace
     // Demangle the name and check result and compare status. We need to
     // free the string after so we'll let unique_ptr do it for us. For some
     // reason, GCC on Linux doesn't like decltype(free) but void(void*) works.
-    if(unique_ptr<char, function<void(void*)>>
+    if(StdUniquePtr<char, function<void(void*)>>
       uPtr{ abi::__cxa_demangle(diData.dli_sname,
         nullptr, nullptr, &iStatus), free })
           staData.Data(uPtr.get());
@@ -225,7 +226,7 @@ class SysBase :                        // Safe exception handler namespace
   /* ----------------------------------------------------------------------- */
   void DumpStack(ostringstream &osS) const
   { // Create array to hold stack pointers
-    typedef array<void*, 256> StackArray;
+    typedef StdArray<void*, 256> StackArray;
     StackArray saArray;
     // Get the number of stack frames that can fit in the array and if can?
     void**const vplArPtr = saArray.data();
@@ -233,7 +234,7 @@ class SysBase :                        // Safe exception handler namespace
     if(const int iSize = backtrace(vplArPtr, stArLen))
     { // Get stack trace. For some reason, GCC on Linux doesn't like
       // decltype(free) but void(void*) works.
-      typedef unique_ptr<char*, function<void(void*)>> StrStack;
+      typedef StdUniquePtr<char*, function<void(void*)>> StrStack;
       if(const StrStack ssStack{ backtrace_symbols(vplArPtr, iSize), free })
       { // Convert entries to size_t
         const size_t stSize = static_cast<size_t>(iSize);
@@ -291,7 +292,7 @@ class SysBase :                        // Safe exception handler namespace
   /* ----------------------------------------------------------------------- */
   ExitState DebugMessage(const char*const cpSignal, const char*const cpExtra)
   { // Build filename
-    const string strFileName{ cCmdLine ?
+    const StdString strFileName{ cCmdLine ?
       StrAppend(cCmdLine->CmdLineGetCArgs()[0], ".dbg") :
       "/tmp/engine-crash.txt" };
     // Begin message
@@ -317,7 +318,7 @@ class SysBase :                        // Safe exception handler namespace
     // Now add the buffer lines
     cLog->LogGetBufferLines(osS);
     // Write the output and close the log
-    const string strMsg{ StrAppend(osS.str(), '\n') };
+    const StdString strMsg{ StrAppend(osS.str(), '\n') };
     // Message box string
     ostringstream osTS;
     osTS << "Received signal SIG" << cpSignal << " at " << cmSys.FormatTime()
@@ -346,7 +347,7 @@ class SysBase :                        // Safe exception handler namespace
   ExitState DebugMessage(const char*const cpSignal)
     { return DebugMessage(cpSignal, cCommon->CommonCBlank()); }
   /* ----------------------------------------------------------------------- */
-  ExitState ConditionalExit(const string &strName, unsigned int &uiAttempts)
+  ExitState ConditionalExit(const StdString &strName, unsigned int &uiAttempts)
   { // If events system is available?
     if(cEvtMain)
     { // Maximum number of attempts so repeated attempts eventually just
@@ -485,7 +486,7 @@ class SysBase :                        // Safe exception handler namespace
       default: _exit(-3);
     }
   } // Exception occured so just exit now
-  catch(const exception&) { _exit(-3); }
+  catch(const StdException &) { _exit(-3); }
   /* -- Set socket timeout ----------------------------------------- */ public:
   int SetSocketTimeout(const int iFd, const double dRTime,
     const double dWTime)
@@ -506,7 +507,7 @@ class SysBase :                        // Safe exception handler namespace
     return pTerminal != pParent;
   }
   /* ------------------------------------------------------------ */ protected:
-  static void ProcessAndActivateLocale(string &strCode)
+  static void ProcessAndActivateLocale(StdString &strCode)
   { // Return generic id if empty
     if(strCode.empty()) { Default: strCode = "en-GB"; return; }
     // Show a warning if length doesn't make sense
@@ -537,7 +538,7 @@ class SysBase :                        // Safe exception handler namespace
     const size_t stAt = strCode.find('@');
     if(stAt != StdNPos) strCode = strCode.substr(0, stAt);
     // Make a string with .UTF8 suffix
-    const string strCodeUTF8{ strCode + ".UTF-8" };
+    const StdString strCodeUTF8{ strCode + ".UTF-8" };
     // Try to set C locale and warn on fail
     if(!setlocale(LC_ALL, strCodeUTF8.data()))
     { // Show warning to say the function call failed
@@ -548,7 +549,7 @@ class SysBase :                        // Safe exception handler namespace
     } // Try to set the locale for the C++ object
     try { cCommon->CommonSetLocale(strCodeUTF8.data()); }
     // This very likely to fail on systems with odd locales
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Show warning to say there was an excaption
       cLog->LogWarningExSafe(
         "System could not build locale object '$'! $", strCodeUTF8, eReason);

@@ -26,7 +26,7 @@ class SysReg                           // Members initially private
     // Until there are no more items
     for(unsigned int uiIndex = 0;; ++uiIndex)
     { // Create memory to hold string
-      StdResized<wstring> wstrData{ MAX_PATH };
+      StdResized<StdWideString> wstrData{ MAX_PATH };
       // Set size
       DWORD dwSize = static_cast<DWORD>(wstrData.capacity() * sizeof(wchar_t));
       // Enumerate. Add to list if succeeded
@@ -47,18 +47,18 @@ class SysReg                           // Members initially private
     } // Never gets here
   }
   /* -- Query value as string----------------------------------------------- */
-  const string QueryString(const string &strV) const
+  const StdString QueryString(const StdString &strV) const
   { // Key opened? Return nothing
     if(NotOpened()) return {};
     // Initialise size and type
     DWORD dwSize = 0, dwType = 0;
     // Query value into string
-    const wstring wstrV{ UTFtoS16(strV) };
+    const StdWideString wstrV{ UTFtoS16(strV) };
     if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
       reinterpret_cast<LPBYTE>(&dwType), &dwSize) != ERROR_MORE_DATA ||
         dwType != REG_SZ || !dwSize) return {};
     // Create a pre-allocated stringAllocate buffer and query value again
-    StdResized<wstring> wstrBuffer{ dwSize / sizeof(wchar_t) };
+    StdResized<StdWideString> wstrBuffer{ dwSize / sizeof(wchar_t) };
     if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
       reinterpret_cast<LPBYTE>(wstrBuffer.data()), &dwSize) != ERROR_SUCCESS)
         return {};
@@ -66,7 +66,7 @@ class SysReg                           // Members initially private
     return WS16toUTF(wstrBuffer);
   }
   /* -- Query value -------------------------------------------------------- */
-  unsigned int Query(const string &strV, void **vpD, const DWORD dwS) const
+  unsigned int Query(const StdString &strV, void **vpD, const DWORD dwS) const
   { // Bail if key not opened
     if(NotOpened()) return ERROR_NO_TOKEN;
     // Set size
@@ -77,7 +77,7 @@ class SysReg                           // Members initially private
   }
   /* -- Query integer ------------------------------------------------------ */
   template<typename StorageType>
-    const StorageType Query(const string &strV) const
+    const StorageType Query(const StdString &strV) const
   { // Storage for value
     StorageType tValue{ 0 };
     // Query the key value and store it in the integer
@@ -88,10 +88,10 @@ class SysReg                           // Members initially private
   /* -- Direct access to return if handle is opened ------------------------ */
   operator bool() const { return Opened(); }
   /* -- Constructor with init ---------------------------------------------- */
-  SysReg(HKEY hkB, const string &strSK, const REGSAM rsA) :
+  SysReg(HKEY hkB, const StdString &strSK, const REGSAM rsA) :
     /* -- Initialisers ----------------------------------------------------- */
     hkKey(RegOpenKeyEx(hkB,            // Open registry key with specified root
-      UTFtoS16(strSK).data(),         // Specified subkey to open
+      UTFtoS16(strSK).data(),          // Specified subkey to open
       0,                               // No options
       rsA,                             // Specified security
       &hkB) == ERROR_SUCCESS ?         // Destination handle and if succeeded?

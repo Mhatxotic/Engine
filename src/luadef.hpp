@@ -41,14 +41,14 @@ enum LuaClassId : size_t {
   /* ----------------------------------------------------------------------- */
   LMT_TOTAL                            // Maximum number of classes
 };/* -- LUA class reference ids (ref'd in luaident.hpp, lua.hpp) ----------- */
-typedef array<int, LMT_TOTAL> LuaLibClassIdReferences;
+typedef StdArray<int, LMT_TOTAL> LuaLibClassIdReferences;
 static LuaLibClassIdReferences llcirAPI
   { UtilMkFilledContainer<LuaLibClassIdReferences>(LUA_REFNIL) };
 /* -- Information about a LUA API namespace -------------------------------- */
 struct LuaLibStatic
 { /* ----------------------------------------------------------------------- */
   const LuaClassId     lciId;          // Unique class id (see above)
-  const string_view   &strvName;       // Name of library
+  const StdStringView &strvName;       // Name of library
   const CoreFlagsConst cfcRequired;    // Required core flags to register
   const luaL_Reg*const libList;        // Library functions
   const int            iLLCount;       // Size of library functions
@@ -59,7 +59,7 @@ struct LuaLibStatic
   const int            iLLKICount;     // Size of key/values library functions
   const int            iLLTotal;       // Total number of entries
 };/* -- Lua API namespace descriptor list (ref'd in collect, lua, lualib) -- */
-typedef array<const LuaLibStatic, LMT_TOTAL> LuaLibStaticArray;
+typedef StdArray<const LuaLibStatic, LMT_TOTAL> LuaLibStaticArray;
 extern const LuaLibStaticArray llsaAPI;
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

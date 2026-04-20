@@ -163,7 +163,7 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
     { // Main procedure into creating and running the engine in 'core.cpp'
       int EngineMain() const try { return Core{}.CoreMain(); }
       // Safe loggable exception occured?
-      catch(const exception &eReason)
+      catch(const StdException &eReason)
       { // Send to log and show error message to user. Show message box and
         // return error status
         cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", eReason);
@@ -180,7 +180,7 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
     }; // Create the engine object, run the main function and return its result
     return Engine{ __argc, __wargv, _wenviron }.EngineMain();
   } // Unsafe exception occured?
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Show message box and return error status
     SysMessage("Main Init Exception", eReason.what(), MB_ICONSTOP);
     return 1;

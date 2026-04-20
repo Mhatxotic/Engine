@@ -38,7 +38,7 @@ enum ByteDepth : unsigned int          // Human readable byte-depths
 };/* ----------------------------------------------------------------------- */
 static TextureType ImageBYtoTexType(const ByteDepth byDepth)
 { // Lookup table to convert bytedepth value to GL texture format
-  typedef array<const TextureType, BY_MAX> ByteDepthToTexTypeLookup;
+  typedef StdArray<const TextureType, BY_MAX> ByteDepthToTexTypeLookup;
   static const ByteDepthToTexTypeLookup
     bdtttlLookup{ TT_NONE, TT_GRAY, TT_GRAYALPHA, TT_RGB, TT_RGBA };
   // Return clamped lookup value

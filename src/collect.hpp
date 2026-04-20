@@ -54,7 +54,7 @@ namespace P {                          // Start of public module namespace
     s,x,## __VA_ARGS__)
 /* -- Collector header that assumes STL list for the container type -------- */
 #define CTOR_HDR_DEFCTR(p,m,h,s,x,...) \
-  CTOR_HDR_CUSTCTR(p,m,list,h,s,x,## __VA_ARGS__)
+  CTOR_HDR_CUSTCTR(p,m,StdList,h,s,x,## __VA_ARGS__)
 /* -- Collector footer that creates the global class pointer init in core -- */
 #define CTOR_HDR_END };
 /* -- Build a collector class with base classes and body ------------------- */
@@ -187,7 +187,7 @@ class CLHelperBase :
       IdentGet());
   }
   /* -- Constructor -------------------------------------------------------- */
-  explicit CLHelperBase(const string_view &strvName) :
+  explicit CLHelperBase(const StdStringView &strvName) :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ strvName },            // Set initialisation helper name
     stMaximum(StdMaxSizeT)             // Initialise maximum objects
@@ -491,7 +491,7 @@ struct ICHelper :                      // Members initially public
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor (manual registration) ---------------------------------- */
-  explicit ICHelper(const string &strN, CollectorType*const ctPtr) :
+  explicit ICHelper(const StdString &strN, CollectorType*const ctPtr) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strN },                     // Initialise identifier
     LockType{ ctPtr }                  // Initialise with other collector
@@ -506,7 +506,7 @@ struct ICHelper :                      // Members initially public
   /* -- Constructor with automatic registration ---------------------------- */
   explicit ICHelper(
     /* -- Parameters ------------------------------------------------------- */
-    const string &strN,                // Set object identifier
+    const StdString &strN,             // Set object identifier
     CollectorType*const ctPtr,         // Pointer to collector class
     MemberType*const mtPtr             // Pointer to member class
     ): /* -- Initialisers -------------------------------------------------- */

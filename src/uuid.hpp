@@ -52,7 +52,7 @@ struct UuId                            // Members initially public
     return uuidData;
   }
   /* -- Initialise UUID from C-string -------------------------------------- */
-  static Struct UuIdReadString(const string &strUUID)
+  static Struct UuIdReadString(const StdString &strUUID)
   { // Check that the uuid is formatted properly
     if(strUUID.length() != 36  ||      // 00000000-0000-0000-000000000000 [36]
        strUUID[8]       != '-' ||      // 00000000{-}0000-0000-000000000000
@@ -85,7 +85,7 @@ struct UuId                            // Members initially public
     } };
   }
   /* -- Convert UUID to string ------------------------------------- */ public:
-  const string UuIdToString() const
+  const StdString UuIdToString() const
   { // Return result
     return StrAppend(hex, setfill('0'), right,
       setw(8), d.p.dwTimeLow,                                '-', // %08x-
@@ -101,7 +101,7 @@ struct UuId                            // Members initially public
       setw(2), static_cast<unsigned int>(d.p.ucNode[5]));         // %02x
   }
   /* -- Constructor to init from string ------------------------------------ */
-  explicit UuId(const string &strUUID) :
+  explicit UuId(const StdString &strUUID) :
     /* -- Initialisers ----------------------------------------------------- */
     d{ UuIdReadString(strUUID) }       // Read STL string and store result
     /* -- No code ---------------------------------------------------------- */

@@ -18,7 +18,7 @@ class SysPipe :
   /* -- Types -------------------------------------------------------------- */
   enum Handle : size_t { READ_HANDLE, WRITE_HANDLE, MAX_HANDLE };
   /* ----------------------------------------------------------------------- */
-  typedef array<int,MAX_HANDLE> HandlesArray; // Handles array type
+  typedef StdArray<int,MAX_HANDLE> HandlesArray; // Handles array type
   /* ----------------------------------------------------------------------- */
   class Handles :
     /* --------------------------------------------------------------------- */
@@ -102,10 +102,10 @@ class SysPipe :
     return iResult;
   }
   /* -- Initialise arguments list ------------------------------------------ */
-  void InitArgs(const string &strCmdLine, const Args &aList,
+  void InitArgs(const StdString &strCmdLine, const Args &aList,
     const ValidType vtId)
   { // Get the program filename and check it
-    const string &strApp = aList.front();
+    const StdString &strApp = aList.front();
     switch(const ValidResult vrResult = DirValidName(strApp, vtId))
     { // Good result? Skip to next task
       case VR_OK: break;
@@ -118,11 +118,11 @@ class SysPipe :
       XCS("Executable not valid!", "Program", strApp);
     // This is the arguments list, it will be allocated manually. We need the
     // extra one pointer for nullptr which is the last argument.
-    typedef vector<char*> CharVector;
+    typedef StdVector<char*> CharVector;
     CharVector cvArgs{ aList.size() + 1 };
     // Enumerate through strings
     char**const cpaArgV = cvArgs.data(), **cpaArgVPtr = cpaArgV;
-    for(const string &strArg : aList)
+    for(const StdString &strArg : aList)
     { // Set address of argument string
       *cpaArgVPtr = const_cast<char*>(strArg.data());
       // Goto next argument to write to
@@ -191,10 +191,10 @@ class SysPipe :
     haParentToChild.CloseHandles();
   }
   /* -- Constructor with init ---------------------------------------------- */
-  void Init(const string &strCmdLine, const ValidType vtId)
+  void Init(const StdString &strCmdLine, const ValidType vtId)
     { if(const Args aList{ strCmdLine }) InitArgs(strCmdLine, aList, vtId); }
   /* -- Constructor with init with default safety mode --------------------- */
-  void Init(const string &strCmdLine)
+  void Init(const StdString &strCmdLine)
     { Init(strCmdLine, cDirBase->DirBaseGetSafetyMode()); }
   /* -- Finished sending --------------------------------------------------- */
   void SendFinish()
@@ -260,7 +260,7 @@ class SysPipe :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with init ---------------------------------------------- */
-  explicit SysPipe(const string &strF) :
+  explicit SysPipe(const StdString &strF) :
     /* -- Initialisers ----------------------------------------------------- */
     SysPipe()                          // Use default constructor parameters
     /* -- Initialise pipe -------------------------------------------------- */

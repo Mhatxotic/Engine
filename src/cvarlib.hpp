@@ -17,10 +17,10 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* -- Use this when cvar is an integer ------------------------------------- */
-#define CB(f,t) [](CVarItem&, const string &strV)->CVarReturn \
+#define CB(f,t) [](CVarItem&, const StdString &strV)->CVarReturn \
   { return f(StrToNum<t>(strV)); }
 /* -- Use this when cvar is a string (NoOp for no callback needed) --------- */
-#define CBSTR(f) [](CVarItem &cviItem, const string &strV)->CVarReturn \
+#define CBSTR(f) [](CVarItem &cviItem, const StdString &strV)->CVarReturn \
   { return f(strV, cviItem.GetModifyableValue()); }
 /* -- Built-in CVar definition struct -------------------------------------- */
 CVarItemStaticList{{

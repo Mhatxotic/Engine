@@ -36,7 +36,7 @@ struct AgTileId : public AgIntegerLGE<size_t> {
 /* -- Other types ---------------------------------------------------------- */
 typedef AgInteger<GLint> AgGLint;
 /* -- Read vector of the specified integer type ---------------------------- */
-template<class VectorValueType, class VectorType = vector<VectorValueType>>
+template<class VectorValueType, class VectorType = StdVector<VectorValueType>>
   struct AgIntegerVector : public VectorType
 { const VectorType &operator()() const { return *this; }
   operator const VectorType&() const { return operator()(); }

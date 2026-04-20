@@ -13,7 +13,7 @@ using namespace IConGraph::P;          using namespace IConsole::P;
 using namespace ICVar::P;              using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDim::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
-using namespace IFboCore::P;           using namespace IFlags;
+using namespace IFboCore::P;           using namespace IFlags::P;
 using namespace IGlFW::P;              using namespace IGlFWUtil::P;
 using namespace IHelper::P;            using namespace IJoystick::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;

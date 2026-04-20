@@ -40,7 +40,7 @@ typedef function<CbThFuncT> CbThFunc;  // Wrapped inside a function class
 /* ------------------------------------------------------------------------- */
 class ThreadBase                       // Thread variables class
 { /* -- Private variables --------------------------------------- */ protected:
-  typedef atomic<ThreadStatus> AtomicThreadStatus;
+  typedef StdAtomic<ThreadStatus> AtomicThreadStatus;
   AtomicThreadStatus atsCode;          // Callback exit code
   void            *vpParam;            // User parameter
   CbThFunc         ctfFunc;            // Thread callback function
@@ -105,7 +105,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Reset exit code to waiting for acknowledgement by engine thread
     ThreadSetExitCode(TS_FINISHED);
   } // exception occurred in thread so handle it
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Reduce thread count
     --cParent->astRunning;
     // Set shutdown time
@@ -149,7 +149,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   ThreadStatus ThreadGetExitCode() const { return atsCode; }
   void ThreadSetExitCode(const ThreadStatus tsNew) { atsCode = tsNew; }
-  const string_view ThreadGetExitCodeString() const
+  const StdStringView ThreadGetExitCodeString() const
     { return cParent->imCodes.Get(ThreadGetExitCode()); }
   /* ----------------------------------------------------------------------- */
   const CbThFunc &ThreadGetCallback() const { return ctfFunc; }
@@ -245,16 +245,17 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   void ThreadInit(const CbThFunc &cbfC)
     { ctfFunc = cbfC; this->CollectorRegister(); }
   /* -- Initialise with name and callback ---------------------------------- */
-  void ThreadInit(const string &strN, const CbThFunc &cbfC)
+  void ThreadInit(const StdString &strN, const CbThFunc &cbfC)
     { IdentSet(strN); ThreadInit(cbfC); }
   /* -- Initialise with name, callback, parameter and start execute -------- */
-  void ThreadInit(const string &strN, const CbThFunc &cbfC, void*const vpPtr)
-    { ThreadInit(strN, cbfC); ThreadStart(vpPtr); }
+  void ThreadInit(const StdString &strN, const CbThFunc &cbfC,
+    void*const vpPtr)
+  { ThreadInit(strN, cbfC); ThreadStart(vpPtr); }
   /* -- Initialise with callback, parameter and start execute -------------- */
   void ThreadInit(const CbThFunc &cbfC, void*const vpPtr)
     { ThreadInit(cbfC); ThreadStart(vpPtr); }
   /* -- Full initialise and execute constructor ---------------------------- */
-  Thread(const string &strN,           // Requested Thread name
+  Thread(const StdString &strN,        // Requested Thread name
          const SysThread sP,           // Thread needs high performance?
          const CbThFunc &cbfC,         // Requested callback function
          void*const vpPtr) :           // User parameter to store
@@ -267,7 +268,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Standby constructor (set everything except user parameter) --------- */
-  Thread(const string &strN,           // Requested Thread name
+  Thread(const StdString &strN,        // Requested Thread name
          const SysThread sP,           // Thread needs high performance?
          const CbThFunc &cbfC) :       // Requested callback function
     /* -- Initialisers ----------------------------------------------------- */
@@ -278,7 +279,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Standby constructor ------------------------------------------------ */
-  Thread(const string &strN,           // Requested Thread name
+  Thread(const StdString &strN,        // Requested Thread name
          const SysThread sP) :         // Thread needs high performance?
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strN },                     // Set requested identifer

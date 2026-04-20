@@ -12,7 +12,7 @@ namespace IColour {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IStd::P;               using namespace IUtil::P;
 using Lib::OS::GlFW::GLfloat;
-typedef array<GLfloat,4> Components;   // Array of RGBA floats
+typedef StdArray<GLfloat,4> Components; // Array of RGBA floats
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Colour class ========================================================= */
@@ -71,7 +71,7 @@ class Colour                           // Members initially private
     { return StdIsFloatNotEqual(ColourGetAlpha(), cRef.ColourGetAlpha()); }
   /* -- Cast to colours of a different type -------------------------------- */
   template<typename IntType,
-    class ArrayType=array<IntType, sizeof(Components) / sizeof(GLfloat)>>
+    class ArrayType=StdArray<IntType, sizeof(Components) / sizeof(GLfloat)>>
       const ArrayType ColourCast() const
   { return { UtilDenormalise<IntType>(ColourGetRed()),
              UtilDenormalise<IntType>(ColourGetGreen()),

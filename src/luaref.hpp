@@ -16,7 +16,7 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 template<size_t Refs=1>class LuaRef    // Lua easy reference class
 { /* -- Private typedefs ---------------------------------------- */ protected:
-  typedef array<int, Refs> References; // Type for LUA references list
+  typedef StdArray<int, Refs> References; // Type for LUA references list
   typedef References::const_reverse_iterator ReferencesConstRevIt;
   typedef References::reverse_iterator       ReferencesRevIt;
   /* -- Protected variables ------------------------------------- */ protected:

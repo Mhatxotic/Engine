@@ -36,15 +36,15 @@ template<class StringType>struct IdentBase
 };/* -- Identifier class --------------------------------------------------- */
 struct Ident :                         // Members initially public
   /* -- Base classes ------------------------------------------------------- */
-  public IdentBase<string>             // The read-only class
+  public IdentBase<StdString>          // The read-only class
 { /* -- Set identifier by rvalue ------------------------------------------- */
-  void IdentSet(string &&strId) { strIdentifier = StdMove(strId); }
+  void IdentSet(StdString &&strId) { strIdentifier = StdMove(strId); }
   /* -- Set identifier by lvalue ------------------------------------------- */
   void IdentSet(const char*const cpId) { strIdentifier = cpId; }
   /* -- Set identifier by lvalue ------------------------------------------- */
-  void IdentSet(const string &strId) { strIdentifier = strId; }
+  void IdentSet(const StdString &strId) { strIdentifier = strId; }
   /* -- Set identifier by string view -------------------------------------- */
-  void IdentSet(const string_view &strvId) { strIdentifier = strvId; }
+  void IdentSet(const StdStringView &strvId) { strIdentifier = strvId; }
   /* -- Set identifier by class -------------------------------------------- */
   void IdentSet(const IdentBase &ibO) { strIdentifier = ibO.IdentGet(); }
   /* -- Formatted set using StrFormat() ------------------------------------ */
@@ -59,27 +59,28 @@ struct Ident :                         // Members initially public
   /* -- Swap identifier ---------------------------------------------------- */
   void IdentSwap(Ident &idOther) { strIdentifier.swap(idOther.strIdentifier); }
   /* -- Move constructor from another rvalue string ------------------------ */
-  explicit Ident(string &&strId) : IdentBase{ StdMove(strId) } {}
+  explicit Ident(StdString &&strId) : IdentBase{ StdMove(strId) } {}
   /* -- Move constructor from rvalue identifier ---------------------------- */
   explicit Ident(Ident &&idO) : IdentBase{ StdMove(idO.IdentGet()) } {}
   /* -- Copy constructor from another lvalue string ------------------------ */
-  explicit Ident(const string &strId) : IdentBase{ strId } {}
+  explicit Ident(const StdString &strId) : IdentBase{ strId } {}
   /* -- Standby constructor ------------------------------------------------ */
   Ident() = default;
 };/* ----------------------------------------------------------------------- */
-typedef IdentBase<const string_view> IdentConst; // Const type of Ident
+typedef IdentBase<const StdStringView> IdentConst; // Const type of Ident
 /* == Id to string list helper class ======================================= */
-template<size_t stMaximum,             // Maximum number of items
-         size_t stMinimum=0,           // Minimum allowed value
-         class List =                  // List array type alias
-           array<const string_view,    // Use const type string
-             stMaximum>>               // Maximum number of strings in array
+template<
+  size_t stMaximum,                    // Maximum number of items
+  size_t stMinimum=0,                  // Minimum allowed value
+  class List =                         // List array type alias
+    StdArray<const StdStringView,      // Use const type string
+      stMaximum>>                      // Maximum number of strings in array
 struct IdList :                        // Members initially public
   /* -- Dependents --------------------------------------------------------- */
   private IdentConst,                  // Alternative if id is unknown
   private List                         // Array of strings
 { /* -- Constructor with alternative string -------------------------------- */
-  public: IdList(const List &lNI, const string_view &strNU) :
+  public: IdList(const List &lNI, const StdStringView &strNU) :
     /* -- Initialisers ----------------------------------------------------- */
     IdentConst{ StdMove(strNU) },      // Unknown item string
     List{ StdMove(lNI) }               // Items
@@ -93,23 +94,24 @@ struct IdList :                        // Members initially public
     {}
   /* -- Get name from id --------------------------------------------------- */
   template<typename IntType=size_t>
-    const string_view &Get(const IntType itId) const
+    const StdStringView &Get(const IntType itId) const
   { // Allow any input integer type, we don't need to convert if the same
     const size_t stId = static_cast<size_t>(itId);
     return stId >= stMinimum && stId < stMaximum ? (*this)[stId] : IdentGet();
   }
 };/* ----------------------------------------------------------------------- */
 /* == Id to string list helper class ======================================= */
-template<class KeyType = unsigned int, // The user specified type of the key
-         class ValueType = string_view,// The user specified type of the value
-         class PairType =              // The pair type to hold key/value pairs
-           pair<const KeyType,         // The pair key type
-                const ValueType>,      // The pair value type
-         class MapType =               // The map type to hold key/value pairs
-           map<const KeyType,          // The key type
-               const ValueType>,       // The value type
-         class IteratorType =          // The iter type to hold key/value pairs
-           MapType::const_iterator>    // The iterator type
+template<
+  class KeyType = unsigned int,        // The user specified type of the key
+  class ValueType = StdStringView,     // The user specified type of the value
+  class PairType =                     // The pair type to hold key/value pairs
+    StdPair<const KeyType,             // The pair key type
+            const ValueType>,          // The pair value type
+  class MapType =                      // The map type to hold key/value pairs
+    StdMap<const KeyType,              // The key type
+           const ValueType>,           // The value type
+  class IteratorType =                 // The iter type to hold key/value pairs
+    MapType::const_iterator>           // The iterator type
 struct IdMap :                         // Members initially public
   /* -- Dependencies ------------------------------------------------------- */
   private IdentConst,                  // Alternative if id is unknown
@@ -120,7 +122,7 @@ struct IdMap :                         // Members initially public
   explicit IdMap(
     /* -- Parameters ------------------------------------------------------- */
     const MapType &mtList,             // Source map
-    const string_view &strvIdent =     // Unknown item string...
+    const StdStringView &strvIdent =   // Unknown item string...
       cCommon->CommonBlank()) :        // ...default blank string
     /* -- Initialisers ----------------------------------------------------- */
     IdentConst{ strvIdent },           // Unknown item string

@@ -18,7 +18,7 @@ using namespace ICommon::P;            using namespace IConGraph::P;
 using namespace IConsole::P;           using namespace ICrypt::P;
 using namespace ICVarDef::P;           using namespace ICVar::P;
 using namespace ICVarLib::P;           using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFlags;
+using namespace IEvtMain::P;           using namespace IFlags::P;
 using namespace ILog::P;               using namespace ILuaDef;
 using namespace ILuaCode::P;           using namespace ILuaFunc::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
@@ -36,7 +36,7 @@ class Lua :                            // Actual class body
   public ClockChrono<CoreClock>,       // Runtime clock
   private EvtMainRegAuto               // Events list to register
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef unique_ptr<lua_State, function<decltype(lua_close)>> LuaPtr;
+  typedef StdUniquePtr<lua_State, function<decltype(lua_close)>> LuaPtr;
   /* -- Private variables -------------------------------------------------- */
   LuaPtr           lpState;            // Lua state pointer
   bool             bExiting;           // Ending execution?
@@ -207,7 +207,7 @@ class Lua :                            // Actual class body
     XC("Call not allowed in temporary contexts!");
   }
   /* -- Compile a string and display it's result --------------------------- */
-  const string LuaCompileStringAndReturnResult(const string &strWhat)
+  const StdString LuaCompileStringAndReturnResult(const StdString &strWhat)
   { // Save time so we can measure performance
     const ClockChrono ccExecute;
     // Save stack position. This restores the position whatever the result and

@@ -111,11 +111,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   /* -- Get total PCM samples ---------------------------------------------- */
   ogg_int64_t GetSamples() { return ov_pcm_total(&ovfContext, -1); }
   /* -- Convert stop reason to string -------------------------------------- */
-  const string_view &StopReasonToString(const StreamStopReason srReason) const
-    { return cParent->srStrings.Get(srReason); }
+  const StdStringView
+    &StopReasonToString(const StreamStopReason srReason) const
+  { return cParent->srStrings.Get(srReason); }
   /* -- Convert stop reason to string -------------------------------------- */
-  const string_view &StateReasonToString(const StreamPlayState psReason) const
-    { return cParent->psStrings.Get(psReason); }
+  const StdStringView
+    &StateReasonToString(const StreamPlayState psReason) const
+  { return cParent->psStrings.Get(psReason); }
   /* -- Stop (without locks) ----------------------------------------------- */
   void Stop(const StreamStopReason srReason)
   { // Don't have source class? There is nothing else to do!
@@ -351,7 +353,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   ogg_int64_t GetOggBytes() const { return fmFile.MemSize<ogg_int64_t>(); }
   /* -- GetFormat ---------------------------------------------------------- */
   ALenum GetFormat() const { return eFormat; }
-  const string_view GetFormatName() const
+  const StdStringView GetFormatName() const
     { return cOal->GetALFormat(eFormat); }
   /* -- Main (from audio thread) ------------------------------------------- */
   void Main()

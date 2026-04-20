@@ -10,12 +10,19 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IFlags {                     // Start of module namespace
+/* -- Private typedefs ----------------------------------------------------- */
+template<typename T>struct StdIsAtomic : ::std::false_type {};
+template<typename T>struct StdIsAtomic<StdAtomic<T>> : ::std::true_type {};
+template<typename T>
+  constexpr bool StdIsAtomicV = StdIsAtomic<remove_cv_t<T>>::value;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
 /* == Storage for flags ==================================================== **
 ** ######################################################################### **
 ** ## Simple unprotected integer based flags.                             ## **
 ** ######################################################################### */
 template<typename IntType>
-requires is_integral_v<IntType> || is_std_atomic_v<IntType>
+  requires is_integral_v<IntType> || StdIsAtomicV<IntType>
 class FlagsStorageUnsafe
 { /* -- Values storage ------------------------------------------ */ protected:
   IntType          itV;                // The simple value
@@ -42,12 +49,12 @@ class FlagsStorageUnsafe
 ** ## Thread safe integer based flags.                                    ## **
 ** ######################################################################### */
 template<typename IntType,
-         typename SafeType = atomic<IntType>>
+         typename SafeType = StdAtomic<IntType>>
 requires is_integral_v<IntType> &&
-         is_std_atomic_v<SafeType> &&
+         StdIsAtomicV<SafeType> &&
          is_integral_v<typename SafeType::value_type>
 class FlagsStorageSafe :
-  /* -- Base classes (note that std::atomic will never throw) -------------- */
+  /* -- Base classes (note that StdAtomic will never throw) ---------------- */
   private SafeType
 { /* -- Set values ---------------------------------------------- */ protected:
   template<typename AnyType>constexpr void FlagSetInt(const AnyType atValue)
@@ -238,6 +245,8 @@ class SafeFlags :
 /* -- Helper for defining flags -------------------------------------------- */
 constexpr static uint64_t Flag(const size_t stIndex)
   { return stIndex ? 1ULL << (stIndex - 1) : 0; };
+/* ------------------------------------------------------------------------- */
+}                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of module namespace
 /* == EoF =========================================================== EoF == */

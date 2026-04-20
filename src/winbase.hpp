@@ -51,7 +51,7 @@ class SysBase                          // Members initially private
     } // Return formatted data
     tD.Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Get memory information ============================================= */
   void SEHDumpMemoryStatus() try
   { // Get process memory info
@@ -95,11 +95,11 @@ class SysBase                          // Members initially private
       .DataB(mD.ullAvailExtendedVirtual, 2)
       .DataN(int(mD.dwMemoryLoad) + '%').Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Get executable filename ============================================ */
-  const wstring SEHGetExecutableFileNameWithoutExtension()
+  const StdWideString SEHGetExecutableFileNameWithoutExtension()
   { // Storage for executable and crash log file name
-    StdResized<wstring> wstrExe{ MAX_PATH };
+    StdResized<StdWideString> wstrExe{ MAX_PATH };
     // Get executable file name
     wstrExe.resize(GetModuleFileName(nullptr,
       const_cast<wchar_t*>(wstrExe.data()), MAX_PATH));
@@ -168,12 +168,12 @@ class SysBase                          // Members initially private
             << '!';
     }
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Dump registers to string =========================================== */
   void SEHDumpRegisters(const CONTEXT *pcData) try
   { // Invalid context?
     if(!pcData)
-      throw runtime_error{ "No registers when context is null pointer!" };
+      throw StdRunTimeError{ "No registers when context is null pointer!" };
     // Get context from exception record
     const CONTEXT &cData = *pcData;
     // Helper macros
@@ -186,7 +186,7 @@ class SysBase                          // Members initially private
 #define D128X(id,x,e) id "=" \
       << setw(16) << *reinterpret_cast<const uint64_t*>(&cData.x)\
       << setw(16) << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
-    const string &strCrLf = cCommon->CommonCrLf(),
+    const StdString &strCrLf = cCommon->CommonCrLf(),
                  &strSpc = cCommon->CommonDblSpace();
     // Return registers
 #if defined(X64)
@@ -296,7 +296,7 @@ class SysBase                          // Members initially private
 #undef D64
 #undef PUSHINT
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Perform process dump =============================================== */
   void SEHProcessDump() try
   { // Prepare formatted data
@@ -306,7 +306,7 @@ class SysBase                          // Members initially private
          .Header("Description", false).Header("Vendor", false)
          .Header("Path", false).Reserve(10);
     // Storage for filename
-    StdResized<wstring>{ MAX_PATH };
+    StdResized<StdWideString>{ MAX_PATH };
     // Show modules
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     // Capture exceptions so we can clean up the snapshot handle
@@ -344,7 +344,7 @@ class SysBase                          // Members initially private
           tData.DataH(GetProcessAffinityMask(hProcess,
             &dwMask, &dwSys) ? dwMask : 0);
           // Get module file name and if succeeded?
-          StdResized<wstring> wstrFN{ MAX_PATH };
+          StdResized<StdWideString> wstrFN{ MAX_PATH };
           if(GetModuleFileNameEx(hProcess, nullptr,
             const_cast<LPWSTR>(wstrFN.data()), MAX_PATH))
           { // Get version information
@@ -363,7 +363,7 @@ class SysBase                          // Members initially private
           // Done with process handle
           CloseHandle(hProcess);
         } // exception occured?
-        catch(const exception&)
+        catch(const StdException &)
         { // Close the process handle
           CloseHandle(hProcess);
           // Rethrow the exception
@@ -374,7 +374,7 @@ class SysBase                          // Members initially private
       // Done with snapshot
       CloseHandle(hSnapshot);
     } // exception occured?
-    catch(const exception&)
+    catch(const StdException &)
     { // Close the snapshot handle
       CloseHandle(hSnapshot);
       // Rethrow the exception
@@ -382,7 +382,7 @@ class SysBase                          // Members initially private
     } // Build output into string stream
     tData.Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Perform module dump ================================================ */
   void SEHModuleDump() try
   { // Prepare formatted data
@@ -410,7 +410,7 @@ class SysBase                          // Members initially private
       // Done with handle
       CloseHandle(hSnapshot);
     } // If exception occured?
-    catch(const exception&)
+    catch(const StdException &)
     { // Close handle
       CloseHandle(hSnapshot);
       // Rethrow
@@ -418,17 +418,17 @@ class SysBase                          // Members initially private
     } // Build output into string stream
     tD.Finish(osS);
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Perform stack dump ================================================= */
   void SEHStackDump(const HANDLE hProcess, const HANDLE hThread,
     const CONTEXT*const pcData) try
   { // Ignore if no context
     if(!pcData)
-      throw runtime_error{ "No stacktrace when context is a null pointer!" };
+      throw StdRunTimeError{ "No stacktrace when context is a null pointer!" };
     // Initialise symbol reader and if succeeded?
     if(SymInitialize(hProcess, nullptr, TRUE))
     { // Auto clean-up symbol table
-      const unique_ptr<void, function<decltype(SymCleanup)>>
+      const StdUniquePtr<void, function<decltype(SymCleanup)>>
         uProcess{ hProcess, SymCleanup };
       // Get context from exception record
       const CONTEXT &cData = *pcData;
@@ -474,7 +474,7 @@ class SysBase                          // Members initially private
         // (or version 6.3 of the DbgHelp library) so we're stuck with ANSI
         // string functions.
         // Buffer for symbol name
-        string strName; strName.resize(MAX_PATH);
+        StdString strName; strName.resize(MAX_PATH);
         DWORD_PTR dwOffsetFromSym = 0;
         // Holds the memory for the symbol structure
         Memory aStruct{ sizeof(IMAGEHLP_SYMBOL)+255, true };
@@ -524,9 +524,9 @@ class SysBase                          // Members initially private
 #undef ADDR_FRAME
 #undef IMAGE_FILE_MACHINE
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Dump summary to file =============================================== */
-  DWORD SEHWrite(const HANDLE hH, const string &strS)
+  DWORD SEHWrite(const HANDLE hH, const StdString &strS)
   { // Bytes out
     DWORD dwW;
     // Write data. MS says dwOut is optional, but the app crashes if you set
@@ -537,12 +537,12 @@ class SysBase                          // Members initially private
     return dwW;
   }
   /* == Create a subtitle for the output =================================== */
-  void SEHSubTitle(const string &strS)
+  void SEHSubTitle(const StdString &strS)
   { // Build title and underline
-    osS << strS << "\r\n" << string(strS.length(), '=') << "\r\n";
+    osS << strS << "\r\n" << StdString(strS.length(), '=') << "\r\n";
   }
   /* == Dump file information ============================================== */
-  void SEHDumpFileInfo(const wstring &wstrFile) try
+  void SEHDumpFileInfo(const StdWideString &wstrFile) try
   { // Get system time
     SYSTEMTIME stData;
     GetLocalTime(&stData);
@@ -559,11 +559,11 @@ class SysBase                          // Members initially private
            "Arguments: " << S16toUTF(GetCommandLine()) << ".\r\n"
            "\r\n";
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { osS << eReason.what(); }
+  catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Dump string to file ================================================ */
-  void SEHDumpLog(const CONTEXT *cData, const string &strDialog) try
+  void SEHDumpLog(const CONTEXT *cData, const StdString &strDialog) try
   { // Get filename
-    const wstring wstrFile{ SEHGetExecutableFileNameWithoutExtension() +
+    const StdWideString wstrFile{ SEHGetExecutableFileNameWithoutExtension() +
       L".dbg" };
     // Open dump file and return if failed
     const HANDLE hFile = CreateFile(wstrFile.data(), GENERIC_WRITE, 0, 0,
@@ -587,16 +587,16 @@ class SysBase                          // Members initially private
       // Close handle
       CloseHandle(hFile);
     } // If exception occured?
-    catch(const exception&)
+    catch(const StdException &)
     { // Close handle
       CloseHandle(hFile);
       // Rethrow
       throw;
     }
   } // Shouldn't happen but just incase
-  catch(const exception&) {}
+  catch(const StdException &) {}
   /* == Build summary ====================================================== */
-  const string SEHGetSummary(const EXCEPTION_POINTERS &epData) try
+  const StdString SEHGetSummary(const EXCEPTION_POINTERS &epData) try
   { // Get exception record
     const EXCEPTION_RECORD &erData = *epData.ExceptionRecord;
     // Build message for dialog box
@@ -631,16 +631,16 @@ class SysBase                          // Members initially private
     // Return string
     return osS.str();
   } // Shouldn't happen but just incase
-  catch(const exception &eReason) { return eReason.what(); }
+  catch(const StdException &eReason) { return eReason.what(); }
   /* == Method for exception handler ======================================= */
   static LONG WINAPI HandleExceptionStatic(LPEXCEPTION_POINTERS);
   LONG HandleException(const EXCEPTION_POINTERS &epData) try
   { // Check exception record
     if(!epData.ExceptionRecord)
-      throw runtime_error{ "The engine crash handler was called "
+      throw StdRunTimeError{ "The engine crash handler was called "
                            "but with a null pointer exception record!" };
     // Prepare summary
-    const string strDialog{ SEHGetSummary(epData) };
+    const StdString strDialog{ SEHGetSummary(epData) };
     // Clear string stream
     osS.str(cCommon->CommonCBlank());
     // Write the log file
@@ -653,7 +653,7 @@ class SysBase                          // Members initially private
     // We handled the exception
     return EXCEPTION_EXECUTE_HANDLER;
   } // This shouldn't happen but just incase
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Show message box
     MessageBox(hwndWindow, UTFtoS16(eReason.what()).data(),
       L"exception in unhandled exception", MB_ICONSTOP);

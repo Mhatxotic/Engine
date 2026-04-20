@@ -15,60 +15,60 @@ class Common;                          // Prototype
 static Common *cCommon = nullptr;      // Global access to class
 class Common                           // Common variables class
 { /* -- Common strings ----------------------------------------------------- */
-  const string strTrue, strFalse, strY, strN, strEquals, strNOne, strZero,
+  const StdString strTrue, strFalse, strY, strN, strEquals, strNOne, strZero,
     strOne, strTwo, strSpace, strDblSpace, strBlank, strCr, strLf, strCrLf,
     strCrLf2, strLfCr, strFSlash, strUnspec, strNull, strPeriod, str2Period,
     strEllipsis, strPrivate, strProtected, strEmpty, strInvalid, strAsterisk,
     strEnt, strNil, strUnresolved;
   /* -- Common string views ------------------------------------------------ */
-  const string_view svDir, svFs, svHttp, svHttps, svLuaName, svTimeout;
+  const StdStringView svDir, svFs, svHttp, svHttps, svLuaName, svTimeout;
   /* -- Miscellaneous common variables ------------------------------------- */
   const char*const cpBlank;            // Blank C-String
   locale           lLocaleCurrent;     // Current locale
   /* --------------------------------------------------------------- */ public:
   const locale &CommonLocale() const { return lLocaleCurrent; }
-  void CommonSetLocale(const string &strLocale)
+  void CommonSetLocale(const StdString &strLocale)
     { lLocaleCurrent = locale{ strLocale }; }
   /* -- Return string functions -------------------------------------------- */
-  const string &CommonBlank() const { return strBlank; }
+  const StdString &CommonBlank() const { return strBlank; }
   const char *CommonCBlank() const { return cpBlank; }
-  const string &CommonTrue() const { return strTrue; }
-  const string &CommonFalse() const { return strFalse; }
-  const string &CommonYes() const { return strY; }
-  const string &CommonNo() const { return strN; }
-  const string &CommonEquals() const { return strEquals; }
-  const string &CommonNegOne() const { return strNOne; }
-  const string &CommonZero() const { return strZero; }
-  const string &CommonOne() const { return strOne; }
-  const string &CommonTwo() const { return strTwo; }
-  const string &CommonCr() const { return strCr; }
-  const string &CommonLf() const { return strLf; }
-  const string &CommonCrLf() const { return strCrLf; }
-  const string &CommonCrLf2() const { return strCrLf2; }
-  const string &CommonLfCr() const { return strLfCr; }
-  const string &CommonSpace() const { return strSpace; }
-  const string &CommonDblSpace() const { return strDblSpace; }
-  const string &CommonEllipsis() const { return strEllipsis; }
-  const string &CommonFSlash() const { return strFSlash; }
-  const string &CommonUnspec() const { return strUnspec; }
-  const string &CommonUnresolved() const { return strUnresolved; }
-  const string &CommonNull() const { return strNull; }
-  const string &CommonPeriod() const { return strPeriod; }
-  const string &CommonTwoPeriod() const { return str2Period; }
-  const string &CommonPrivate() const { return strPrivate; }
-  const string &CommonProtected() const { return strProtected; }
-  const string &CommonEmpty() const { return strEmpty; }
-  const string &CommonInvalid() const { return strInvalid; }
-  const string &CommonAsterisk() const { return strAsterisk; }
-  const string &CommonEnt() const { return strEnt; }
-  const string &CommonNil() const { return strNil; }
+  const StdString &CommonTrue() const { return strTrue; }
+  const StdString &CommonFalse() const { return strFalse; }
+  const StdString &CommonYes() const { return strY; }
+  const StdString &CommonNo() const { return strN; }
+  const StdString &CommonEquals() const { return strEquals; }
+  const StdString &CommonNegOne() const { return strNOne; }
+  const StdString &CommonZero() const { return strZero; }
+  const StdString &CommonOne() const { return strOne; }
+  const StdString &CommonTwo() const { return strTwo; }
+  const StdString &CommonCr() const { return strCr; }
+  const StdString &CommonLf() const { return strLf; }
+  const StdString &CommonCrLf() const { return strCrLf; }
+  const StdString &CommonCrLf2() const { return strCrLf2; }
+  const StdString &CommonLfCr() const { return strLfCr; }
+  const StdString &CommonSpace() const { return strSpace; }
+  const StdString &CommonDblSpace() const { return strDblSpace; }
+  const StdString &CommonEllipsis() const { return strEllipsis; }
+  const StdString &CommonFSlash() const { return strFSlash; }
+  const StdString &CommonUnspec() const { return strUnspec; }
+  const StdString &CommonUnresolved() const { return strUnresolved; }
+  const StdString &CommonNull() const { return strNull; }
+  const StdString &CommonPeriod() const { return strPeriod; }
+  const StdString &CommonTwoPeriod() const { return str2Period; }
+  const StdString &CommonPrivate() const { return strPrivate; }
+  const StdString &CommonProtected() const { return strProtected; }
+  const StdString &CommonEmpty() const { return strEmpty; }
+  const StdString &CommonInvalid() const { return strInvalid; }
+  const StdString &CommonAsterisk() const { return strAsterisk; }
+  const StdString &CommonEnt() const { return strEnt; }
+  const StdString &CommonNil() const { return strNil; }
   /* -- Return string view functions --------------------------------------- */
-  const string_view &CommonFs() const { return svFs; }
-  const string_view &CommonDir() const { return svDir; }
-  const string_view &CommonHttp() const { return svHttp; }
-  const string_view &CommonHttps() const { return svHttps; }
-  const string_view &CommonLuaName() const { return svLuaName; }
-  const string_view &CommonTimeout() const { return svTimeout; }
+  const StdStringView &CommonFs() const { return svFs; }
+  const StdStringView &CommonDir() const { return svDir; }
+  const StdStringView &CommonHttp() const { return svHttp; }
+  const StdStringView &CommonHttps() const { return svHttps; }
+  const StdStringView &CommonLuaName() const { return svLuaName; }
+  const StdStringView &CommonTimeout() const { return svTimeout; }
   /* -- Default constructor ------------------------------------- */ protected:
   Common() :
     /* -- Initialisers ----------------------------------------------------- */

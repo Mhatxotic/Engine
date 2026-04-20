@@ -34,7 +34,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   public RefCtrMaster<>,               // Ref counter to protect from destructs
   public Lockable                      // Lua garbage collector instruction
 { /* -- Private variables -------------------------------------------------- */
-  string           strClipboard;       // Clipboard string
+  StdString        strClipboard;       // Clipboard string
   /* -- Window set clipboard request --------------------------------------- */
   void ClipOnSetNRCbT() { cGlFW->WinSetClipboardString(strClipboard); }
   /* -- Window set clipboard request --------------------------------------- */
@@ -47,9 +47,9 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     LuaEvtDispatch();
   }
   /* -- Get string sent or retrieved ------------------------------- */ public:
-  const string &ClipGet() const { return strClipboard; }
+  const StdString &ClipGet() const { return strClipboard; }
   /* -- Get string sent or retrieved --------------------------------------- */
-  void ClipSet(const string &strText)
+  void ClipSet(const StdString &strText)
   { // Set clipboard string to set
     strClipboard = strText;
     // Dispatch the event
@@ -88,10 +88,10 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     } // Done with references. We won't be using them anymore.
     return LuaEvtDeInit();
   } // Exception occured? Cleanup and rethrow exception
-  catch(const exception&) { LuaEvtDeInit(); throw; }
+  catch(const StdException &) { LuaEvtDeInit(); throw; }
   /* -- Initialise and set string ------------------------------------------ */
-  void ClipSetAsync(lua_State*const lS, const string &strIdent,
-    const string &strContent)
+  void ClipSetAsync(lua_State*const lS, const StdString &strIdent,
+    const StdString &strContent)
   { // Get and check parameters
     IdentSet(StdMove(strIdent));
     strClipboard = StdMove(strContent);
@@ -101,7 +101,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     cEvtWin->Add(EWC_CB_SET, this);
   }
   /* -- Initialise and get string ------------------------------------------ */
-  void ClipGetAsync(lua_State*const lS, const string &strIdent)
+  void ClipGetAsync(lua_State*const lS, const StdString &strIdent)
   { // Get and check parameters
     IdentSet(StdMove(strIdent));
     // Init LUA references

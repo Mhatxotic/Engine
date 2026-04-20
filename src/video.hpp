@@ -14,7 +14,7 @@ using namespace IClock::P;             using namespace ICodecOGG::P;
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFbo::P;               using namespace IFileMap::P;
-using namespace IFlags;                using namespace IIdent::P;
+using namespace IFlags::P;             using namespace IIdent::P;
 using namespace ILog::P;               using namespace ILuaEvt::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IMemory::P;
@@ -88,7 +88,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   struct Frame                         // Theora frame data
   { /* -- Public variables ------------------------------------------------- */
     bool           bDraw;              // Draw this frame?
-    typedef array<YCbCr, 3> YCCArray;  // Room for three frames
+    typedef StdArray<YCbCr, 3> YCCArray; // Room for three frames
     YCCArray       yccaFrames;         // The planes (Y, Cb and Cr);
     /* -- Clear everything ------------------------------------------------- */
     void Reset()
@@ -106,13 +106,13 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       /* -- No code -------------------------------------------------------- */
       {}
   };/* -- Theora frame data (double-buffered) ------------------------------ */
-  typedef array<Frame,2> FrameArray;
+  typedef StdArray<Frame,2> FrameArray;
   /* -- Y, Cb and Cr texture ids ------------------------------------------- */
-  typedef array<GLuint,3> GLuintArray;
+  typedef StdArray<GLuint,3> GLuintArray;
   /* -- Thread unblock reasons ------------------------------------- */ public:
   enum Unblock { UB_STANDBY, UB_BLOCK, UB_DATA, UB_REINIT, UB_PLAY, UB_STOP,
                  UB_PAUSE, UB_FINISH };
-  typedef atomic<Unblock> AtomicUnblock;
+  typedef StdAtomic<Unblock> AtomicUnblock;
   /* -- Lua callback event ids --------------------------------------------- */
   enum Event { VE_PLAY, VE_LOOP, VE_STOP, VE_PAUSE, VE_FINISH };
   /* -- Concurrency -------------------------------------------------------- */
@@ -577,17 +577,17 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     } // Exit thread cleanly with specified reason
     return TS_OK;
   } // exception occured?
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Report it to log
     cLog->LogErrorExSafe("(VIDEO THREAD EXCEPTION) $", eReason);
     // Failure exit code
     return TS_ERROR;
   }
   /* -- Convert colour space to name --------------------------------------- */
-  const string_view &ColourSpaceToString(const th_colorspace csId) const
+  const StdStringView &ColourSpaceToString(const th_colorspace csId) const
     { return cVideos->csStrings.Get(csId); }
   /* -- Convert pixel format to name --------------------------------------- */
-  const string_view &PixelFormatToString(const th_pixel_fmt pfId) const
+  const StdStringView &PixelFormatToString(const th_pixel_fmt pfId) const
     { return cVideos->pfStrings.Get(pfId); }
   /* -- Update textures without lock --------------------------------------- */
   void RenderUnsafe()
@@ -654,7 +654,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   bool IsSourceAvailable() const { return !!sSource; }
   bool IsSourceUnavailable() const { return !IsSourceAvailable(); }
   ALenum GetAudioFormat() const { return eFormat; }
-  const string_view &GetFormatAsIdentifier() const
+  const StdStringView &GetFormatAsIdentifier() const
     { return cOal->GetALFormat(GetAudioFormat()); }
   /* -- When data has asynchronously loaded -------------------------------- */
   void AsyncReady(FileMap &fmData)
@@ -903,9 +903,9 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Parse vorbis comments and if not empty? Enumerate and log each one
     if(cLog->LogHasLevel(LH_DEBUG))
     { // Prepare data for lists
-      typedef pair<const string_view&, StrNCStrMap&> ListPair;
-      typedef array<const ListPair, 2> Lists;
-      static const string_view svTheora{ "Theora" }, svVorbis{ "Vorbis" };
+      typedef StdPair<const StdStringView&, StrNCStrMap&> ListPair;
+      typedef StdArray<const ListPair, 2> Lists;
+      static const StdStringView svTheora{ "Theora" }, svVorbis{ "Vorbis" };
       const Lists lLists{ { { svTheora, sncsmThMetaData },
                             { svVorbis, sncsmVoMetaData } } };
       // Write Theora comments iv available

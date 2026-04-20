@@ -16,7 +16,7 @@ using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IParser::P;            using namespace IStd::P;
 using namespace IString::P;
 /* -- Map type for class --------------------------------------------------- */
-typedef map<string, const string> ParamMap;
+typedef StdMap<StdString, const StdString> ParamMap;
 typedef ParserBase<ParamMap> ParamParser;
 typedef ParamMap::const_iterator ParamIt;
 /* ------------------------------------------------------------------------- */
@@ -56,7 +56,7 @@ struct UrlBase : public ParamParser    // Members initially public
   };/* --------------------------------------------------------------------- */
   /* -- Private variables ----------------------------------------- */ private:
   Result           rResult;            // Result
-  string           strBookmark,        // Bookmark
+  StdString        strBookmark,        // Bookmark
                    strCanonicalised,   // Canonicalised url
                    strHost,            // Hostname
                    strPassword,        // Password
@@ -69,17 +69,17 @@ struct UrlBase : public ParamParser    // Members initially public
   void UrlSetCode(const Result rNResult) { rResult = rNResult; }
   /* -- Return data ------------------------------------------------ */ public:
   Result UrlGetResult() const { return rResult; }
-  const string &UrlGetUrl() const { return strCanonicalised; }
-  const string &UrlGetScheme() const { return strScheme; }
-  const string &UrlGetUsername() const { return strUsername; }
-  const string &UrlGetPassword() const { return strPassword; }
-  const string &UrlGetHost() const { return strHost; }
-  const string &UrlGetResource() const { return strResource; }
-  const string &UrlGetBookmark() const { return strBookmark; }
+  const StdString &UrlGetUrl() const { return strCanonicalised; }
+  const StdString &UrlGetScheme() const { return strScheme; }
+  const StdString &UrlGetUsername() const { return strUsername; }
+  const StdString &UrlGetPassword() const { return strPassword; }
+  const StdString &UrlGetHost() const { return strHost; }
+  const StdString &UrlGetResource() const { return strResource; }
+  const StdString &UrlGetBookmark() const { return strBookmark; }
   Port UrlGetPort() const { return pPort; }
   bool UrlGetSecure() const { return bSecure; }
   /* -- Parse -------------------------------------------------------------- */
-  void UrlParse(const string &strUrl, const unsigned int uiMode=0)
+  void UrlParse(const StdString &strUrl, const unsigned int uiMode=0)
   { // Error if string is empty
     if(strUrl.empty()) { UrlSetCode(R_EMURL); return; }
     // Error if URL is too long
@@ -103,12 +103,12 @@ struct UrlBase : public ParamParser    // Members initially public
     } // We got the resource
     else strResource = strUrl.substr(stEnd);
     // Extract entire part of authority, hostname and port
-    string strAHP{ strUrl.substr(stStart, stEnd - stStart) };
+    StdString strAHP{ strUrl.substr(stStart, stEnd - stStart) };
     // Find authority delimiter and if we find it?
     size_t stAtPos = strAHP.find('@');
     if(stAtPos != StdNPos)
     { // Extract username and password
-      const string strUserInfo{ strAHP.substr(0, stAtPos) };
+      const StdString strUserInfo{ strAHP.substr(0, stAtPos) };
       // Find username and password delimiter and if we find it?
       size_t stColonPos = strUserInfo.find(':');
       if(stColonPos != StdNPos)
@@ -124,7 +124,7 @@ struct UrlBase : public ParamParser    // Members initially public
       // We have the authority
       strAHP = strAHP.substr(stAtPos + 1);
     } // String for port number
-    string strPort;
+    StdString strPort;
     // Non-standard port used?
     bool bNSPort;
     // Find port delimiter in hostname and if we have it?
@@ -227,7 +227,7 @@ struct UrlBase : public ParamParser    // Members initially public
     UrlSetCode(R_GOOD);
   }
   /* -- Constructor -------------------------------------------------------- */
-  explicit UrlBase(const string &strUrl, const unsigned int uiMode=0)
+  explicit UrlBase(const StdString &strUrl, const unsigned int uiMode=0)
     { UrlParse(strUrl, uiMode); }
   /* -- Default constructor that does nothing ------------------------------ */
   UrlBase() : rResult(R_STANDBY), pPort(P_NONE), bSecure(false) { }

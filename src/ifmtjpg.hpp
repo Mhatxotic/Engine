@@ -38,11 +38,11 @@ class CodecJPG :                       // JPEG codec object
   }
   static void JPegErrorExit[[noreturn]](j_common_ptr ciData)
   { // Buffer for error message
-    string strMsg(JMSG_LENGTH_MAX, 0);
+    StdString strMsg(JMSG_LENGTH_MAX, '\0');
     // Popular error message
     (*(ciData->err->format_message))(ciData,const_cast<char*>(strMsg.data()));
     // Throw back to intermediate handler so we can cleanup libjpeg
-    throw runtime_error{ strMsg.data() };
+    throw StdRunTimeError{ strMsg.data() };
   }
   /* --------------------------------------------------------------- */ public:
   bool Encode(const FStream &fmData, const ImageData &idData,
@@ -177,7 +177,7 @@ class CodecJPG :                       // JPEG codec object
     // Decompress scanlines
     while(ciData.output_scanline < ciData.output_height)
     { // For storing info
-      array<unsigned char*,1> caPtr{ mPixels.MemRead<unsigned char>(
+      StdArray<unsigned char*,1> caPtr{ mPixels.MemRead<unsigned char>(
         static_cast<size_t>(ciData.output_scanline) * stRowStride, stRowStride)
       }; // Decompress the data
       jpeg_read_scanlines(&ciData, reinterpret_cast<JSAMPARRAY>(caPtr.data()),

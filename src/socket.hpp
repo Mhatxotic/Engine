@@ -14,7 +14,7 @@ using namespace ICollector::P;         using namespace ICommon::P;
 using namespace ICrypt::P;             using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags;                using namespace IIdent::P;
+using namespace IFlags::P;             using namespace IIdent::P;
 using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
@@ -56,17 +56,17 @@ CTOR_BEGIN(Sockets, Socket, CLHelperUnsafe,
 ** binary text because it is impossible for the http server to return        **
 ** header key names in binary! C++ and LUA can still store keys in binary    **
 ** as well so this should be safe! ----------------------------------------- */
-const string       strRegVarREQ;       // Registry key name for req data
-const string       strRegVarBODY;      // " for http body data
-const string       strRegVarPROTO;     // " for http protocol data
-const string       strRegVarCODE;      // " for http status code data
-const string       strRegVarMETHOD;    // " for http method string
-const string       strRegVarRESPONSE;  // HTTP response string
-const string       strCipherDefault;   // Default cipher to use
+const StdString    strRegVarREQ;       // Registry key name for req data
+const StdString    strRegVarBODY;      // " for http body data
+const StdString    strRegVarPROTO;     // " for http protocol data
+const StdString    strRegVarCODE;      // " for http status code data
+const StdString    strRegVarMETHOD;    // " for http method string
+const StdString    strRegVarRESPONSE;  // HTTP response string
+const StdString    strCipherDefault;   // Default cipher to use
 /* -- Variables ------------------------------------------------------------ */
-string_view        strvCipher12;       // Ciphers for TLSv1.2 from CVar
-string_view        strvCipher13;       // Ciphers for TLSv1.3+ from CVar
-string_view        strvUserAgent;      // User agent string from CVar
+StdStringView      strvCipher12;       // Ciphers for TLSv1.2 from CVar
+StdStringView      strvCipher13;       // Ciphers for TLSv1.3+ from CVar
+StdStringView      strvUserAgent;      // User agent string from CVar
 AtomicInt          aiOCSP;             // Use OCSP (0=Off;1=On;2=Strict)
 AtomicSizeT        astBufferSize;      // Default recv/send buffer size
 AtomicDouble       adRecvTimeout;      // Receive packet timeout
@@ -93,7 +93,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     ClkTimePoint   ctpStart;           // Packet timestamp
     Memory         mData;              // Memory block
   };/* --------------------------------------------------------------------- */
-  typedef list<Packet> PacketList;     // list of blocks
+  typedef StdList<Packet> PacketList;  // list of blocks
   /* ----------------------------------------------------------------------- */
   enum OpCode : unsigned int           // Websocket packet op codes
   { /* --------------------------------------------------------------------- */
@@ -121,7 +121,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   unsigned int     uiPort;             // The port number to connect to
   AtomicInt        aiError,            // Socket error
                    aiFd;               // Socket descriptor
-  string           strAddr,            // The address in string format
+  StdString        strAddr,            // The address in string format
                    strAddrPort,        // The address and port in string format
                    strError,           // Last error string recorded
                    strCipherList,      // Requested cipher list (<=TLSv1.2)
@@ -170,7 +170,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     SocketLog(lhlSeverity, cpFormat, StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise static error (no openssl error) ------------------------- */
-  ThreadStatus SetErrorStatic(const string &strReason, const bool bSet)
+  ThreadStatus SetErrorStatic(const StdString &strReason, const bool bSet)
   { // Show reason in log
     SocketLogUnsafe(LH_WARNING, "$", strReason);
     // Forget any error if disconnecting or disconnected
@@ -196,7 +196,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return TS_ERROR;
   }
   /* -- Socket initial connect failed cleanup function --------------------- */
-  ThreadStatus SetError(const string &strReason)
+  ThreadStatus SetError(const StdString &strReason)
   { // If socket was not forcefully closed by us
     if(!IsDisconnectedByClient())
     { // If disconnecting or disconnected? Show reason in log
@@ -288,7 +288,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     }
   }
   /* -- Write string to socket --------------------------------------------- */
-  size_t SockWrite(const string &strStr)
+  size_t SockWrite(const StdString &strStr)
     { return SockWrite(strStr.data(), strStr.length()); }
   /* -- Write memory block class to socket --------------------------------- */
   size_t SockWrite(const MemConst &mcSrc)
@@ -308,13 +308,13 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return ClockGetCount<duration<double>>(ctpEnd.time_since_epoch());
   }
   /* -- Packet management -------------------------------------------------- */
-  void FlushPackets(PacketList &plList, size_t &stTotal)
+  static void FlushPackets(PacketList &plList, size_t &stTotal)
     { plList.clear(); stTotal = 0; }
   /* -- Flush all stored packets ------------------------------------------- */
   void FlushPackets()
   { // Setup lists we want to flush
     struct PacketListRef { PacketList &plList; size_t &stTotal; };
-    typedef array<const PacketListRef, 2> PacketListArray;
+    typedef StdArray<const PacketListRef, 2> PacketListArray;
     const PacketListArray plaData{ { { plRX, stRX }, { plTX, stTX } } };
     // Flush each list and total value
     for(const PacketListRef &plrItem : plaData)
@@ -341,11 +341,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Send data as other types ------------------------------------------- */
   void Send(const MemConst &mcPacket)
     { Send(mcPacket.MemPtr<char>(), mcPacket.MemSize()); }
-  void SendString(const string &strData)
+  void SendString(const StdString &strData)
     { Send(strData.data(), strData.length()); }
   /* ----------------------------------------------------------------------- */
-  void SetAddressAndCipher(string &strNAddress, const unsigned int &uiNPort,
-    const string &strNCipher)
+  void SetAddressAndCipher(StdString &strNAddress, const unsigned int &uiNPort,
+    const StdString &strNCipher)
   { // OK set address and port
     strAddr = StdMove(strNAddress);
     uiPort = uiNPort;
@@ -370,7 +370,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Only one token specified?
       case 1:
       { // Set TLSv1.3 cipher suite
-        const string &strSuite = tData.front();
+        const StdString &strSuite = tData.front();
         strCipherSuite = strSuite == cParent->strCipherDefault ?
           cSockets->strvCipher13 : strSuite;
         // Set <=TLSv1.2 cipher list
@@ -380,11 +380,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       } // Two tokens specified?
       case 2:
       { // Set TLSv1.3 cipher suite
-        const string &strSuite = tData.front();
+        const StdString &strSuite = tData.front();
         strCipherSuite = strSuite == cParent->strCipherDefault ?
           cSockets->strvCipher13 : strSuite;
         // Set <= TLSv1.2 cipher list
-        const string &strList = tData[1];
+        const StdString &strList = tData[1];
         strCipherList = strList == cParent->strCipherDefault ?
           cSockets->strvCipher12 : strList;
         // Done
@@ -471,12 +471,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Get and check pointer to address data
     if(const BIO_ADDR*const baData = CryptBIOGetConnAddress(bioPtr))
     { // Setup query commands for host and IP data
-      struct AddressData{ const int iId; string &strDest; };
-      typedef array<const AddressData, 2> AddressDataArray;
+      struct AddressData{ const int iId; StdString &strDest; };
+      typedef StdArray<const AddressData, 2> AddressDataArray;
       const AddressDataArray adaCmds{ { { 1, strIP }, { 0, strRealHost } } };
       // Enumerate and store the address data
       for(const AddressData &adCmd : adaCmds)
-      { // Thanks to OpenSSL not giving us a unique_ptr compatible deallocator,
+      { // Thanks to OpenSSL not giving us a unqiue_ptr compatible deallocator,
         // we need to do this ugly code to auto free the allocated the address.
         // I don't know how to make OPENSSL_free work with unique_ptr!
         struct AddrPtr{ const char*const cpPtr;
@@ -529,7 +529,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     const long lLength = SSL_get_tlsext_status_ocsp_resp(sslCbPtr, &cpResp);
     if(lLength != -1 && UtfIsCStringValid(cpResp))
     { // Got a response so make sure it is freed on leaving the scope
-      typedef unique_ptr<ocsp_response_st,
+      typedef StdUniquePtr<ocsp_response_st,
         function<decltype(OCSP_RESPONSE_free)>> OcspResponsePtr;
       if(OcspResponsePtr orpResp{ d2i_OCSP_RESPONSE(nullptr, &cpResp,
         lLength), OCSP_RESPONSE_free })
@@ -577,7 +577,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         !CryptSSLCtxSet1VerifyCertStore(sslctxPtr, cParent->CertsGetStore()))
           return SetErrorStaticSafe("Cert store failure");
       // Setup verification, make a new verification context and if succeded?
-      typedef unique_ptr<X509_VERIFY_PARAM,
+      typedef StdUniquePtr<X509_VERIFY_PARAM,
         function<decltype(X509_VERIFY_PARAM_free)>> X509VerifyParamPtr;
       if(X509VerifyParamPtr x509vp{ X509_VERIFY_PARAM_new(),
         X509_VERIFY_PARAM_free })
@@ -680,7 +680,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           { // Get reference to structure
             const auto &xErrInfo = xErrInfoIt->second;
             // Build error code
-            const string strErr{ StrAppend("X509_V_ERR_", xErrInfo.cpErr) };
+            const StdString strErr{ StrAppend("X509_V_ERR_", xErrInfo.cpErr) };
             // Return success if user wants to bypass it
             if(cParent->CertsIsNotX509BypassFlagSet(
                  xErrInfo.stBank, xErrInfo.ullFlag))
@@ -749,24 +749,25 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     });
   }
   /* -- Get registry iterator ---------------------------------------------- */
-  StrNCStrMapIt GetRegistryIterator(const string &strItem)
+  StrNCStrMapIt GetRegistryIterator(const StdString &strItem)
     { return pRegistry.find(strItem); }
   /* -- Get and delete registry item --------------------------------------- */
-  const string GetRegistry(const string &strItem)
+  const StdString GetRegistry(const StdString &strItem)
   { // Find item and if we didn't find it? Return default string
     const StrNCStrMapIt sncsmiIt{ GetRegistryIterator(strItem) };
     if(sncsmiIt == pRegistry.cend()) return {};
     // Get the value and delete it. We will move instead of copying
-    const string strReq{ StdMove(sncsmiIt->second) };
+    const StdString strReq{ StdMove(sncsmiIt->second) };
     pRegistry.erase(sncsmiIt);
     return strReq;
   }
   /* -- String is binary? Returns location of binary ----------------------- */
-  bool ValidHeaderPacket(const string_view &strStr)
+  bool ValidHeaderPacket(const StdStringView &strStr)
   { // For each character in response, if the character is valid printable
     // ASCII character then goto next
-    return !any_of(strStr.cbegin(), strStr.cend(), [](const unsigned char &ucC)
-      { return ucC < ' ' && ucC != '\r' && ucC != '\n'; });
+    return !StdAnyOf(strStr.cbegin(), strStr.cend(),
+      [](const unsigned char &ucC)
+        { return ucC < ' ' && ucC != '\r' && ucC != '\n'; });
   }
   /* -- Terminate writer thread -------------------------------------------- */
   void SocketTerminateWriteThread()
@@ -1027,7 +1028,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // map leaving only the list of headers that are to be sent. Careful when
       // trying to optimise/one-line this as MSVC compiler WILL evaluate
       // expressions in the opposite direction.
-      const string
+      const StdString
         strReq{
           StdMove(GetRegistry(cParent->strRegVarREQ)) },
         strBody{
@@ -1044,7 +1045,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Content read and content-length
     size_t stContentRead = 0, stContentLength = 0;
     // Initialise memory for response headers
-    StdReserved<string> strHeaders{ 1024 };
+    StdReserved<StdString> strHeaders{ 1024 };
     // Allocate memory for read buffer
     Memory mDest{ cParent->astBufferSize };
     // Expecting reponse headers? and connection closed status
@@ -1088,7 +1089,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         } // Wait for next packet, thread abort or server disconnect.
         continue;
       } // Make string view of response which could contain binary chars
-      string_view strvResp{ mDest.MemPtr<char>(), stRead };
+      StdStringView strvResp{ mDest.MemPtr<char>(), stRead };
       // Find end of headers marker and if we do not have it yet?
       const size_t stEnd = strvResp.find(cCommon->CommonCrLf2());
       if(stEnd == StdNPos)
@@ -1129,11 +1130,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       const Token tWords{ vlR->second, cCommon->CommonSpace() };
       if(tWords.size() < 3) return SetErrorStaticSafe("Unknown response");
       // Get protocol and if it is not valid?
-      const string &strProtoRecv = tWords.front();
+      const StdString &strProtoRecv = tWords.front();
       if(strProtoRecv != "HTTP/1.0" && strProtoRecv != "HTTP/1.1")
         return SetErrorStaticSafe(StrFormat("Bad protocol '$'", strProtoRecv));
       // Get http status code string and if not a valid number?
-      const string &strStatus = tWords[1];
+      const StdString &strStatus = tWords[1];
       if(!StrIsInt(strStatus))
         return SetErrorStaticSafe(StrFormat("Bad status '$'", strStatus));
       // Convert to integer and if valid?
@@ -1159,8 +1160,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Enumerate registry entries
         for(const StrNCStrMapPair &sncsmpPair : pRegistry)
         { // Get items and push into TX since we're not using it anymore. Make
-          // sure to include the null-terminator so we can use string_view for
-          // when LUA grabs the list.
+          // sure to include the null-terminator so we can use StdStringView
+          // for when LUA grabs the list.
           PushData(plTX, stTX,
             StrToLowCaseRef(UtilToNonConst(sncsmpPair.first)).data(),
             sncsmpPair.first.size()+1);
@@ -1178,7 +1179,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         GetRegistryIterator("content-length") };
       if(sncsmciLen != pRegistry.cend())
       { // Get reference to string and if it's not valid?
-        const string &strVal = sncsmciLen->second;
+        const StdString &strVal = sncsmciLen->second;
         if(!StrIsInt(strVal))
         { // Assume zero, safe to continue and log the warning
           stContentLength = 0;
@@ -1217,7 +1218,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Capture exceptions and switch to thiscall
     try { tsReturn = HTTPMain(); }
     // Exception occurred?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET HTTP THREAD EXCEPTION) $", eReason);
       // Set error message
@@ -1285,7 +1286,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           // Anything else?
           default: SmallPacket:
             // Typedef for mask data
-            typedef array<uint8_t,4> MaskData;
+            typedef StdArray<uint8_t,4> MaskData;
             // Small payload size?
             if(mcPacket.MemSize() < 125)
             { // Setup header
@@ -1357,7 +1358,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Capture exceptions and execute the manager
     try { tsReturn = SockWebWriteManager(); }
     // exception occured?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Report error
       cLog->LogErrorExSafe("(WEBSOCKET WRITE THREAD EXCEPTION) $", eReason);
       // Set error message
@@ -1394,7 +1395,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Capture exceptions and execute the manager
     try { tsReturn = SockWriteManager(); }
     // exception occured?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET WRITE THREAD EXCEPTION) $", eReason);
       // Set error message
@@ -1442,7 +1443,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Capture exceptions
     try { tsReturn = SockReadManager(); }
     // Exception occured?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET THREAD EXCEPTION) $", eReason);
       // Set error message
@@ -1474,10 +1475,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return aiFd != -1;
   }
   /* ----------------------------------------------------------------------- */
-  const string &GetAddressAndPort() const { return strAddrPort; }
-  const string GetIPAddressAndPort() const
+  const StdString &GetAddressAndPort() const { return strAddrPort; }
+  const StdString GetIPAddressAndPort() const
     { return StrAppend(GetIPAddress(), ':', GetPort()); }
-  const string &GetErrorStr() const { return strError; }
+  const StdString &GetErrorStr() const { return strError; }
   /* ----------------------------------------------------------------------- */
   double GetPacketXSafe(Memory &mbD, PacketList &plList, size_t &stX)
   { // Synchronise access to packet list
@@ -1507,26 +1508,26 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   int GetFD() const { return aiFd; }
   int GetError() const { return aiError; }
   /* -- Connection data ---------------------------------------------------- */
-  const string &GetAddress() const { return strAddr; }
-  const string GetAddressSafe()
+  const StdString &GetAddress() const { return strAddr; }
+  const StdString GetAddressSafe()
     { return MutexCall([this](){ return GetAddress(); }); }
   const unsigned int &GetPort() const { return uiPort; }
   unsigned int GetPortSafe()
     { return MutexCall([this](){ return GetPort(); }); }
-  const string &GetIPAddress() const { return strIP; }
-  const string GetIPAddressSafe()
+  const StdString &GetIPAddress() const { return strIP; }
+  const StdString GetIPAddressSafe()
     { return MutexCall([this](){ return GetIPAddress(); }); }
-  const string GetAddressAndPortSafe()
+  const StdString GetAddressAndPortSafe()
     { return MutexCall([this](){ return GetAddressAndPort(); }); }
-  const string GetIPAddressAndPortSafe()
+  const StdString GetIPAddressAndPortSafe()
     { return MutexCall([this](){ return GetIPAddressAndPort(); }); }
-  const string &GetRealHost() const { return strRealHost; }
-  const string GetRealHostSafe()
+  const StdString &GetRealHost() const { return strRealHost; }
+  const StdString GetRealHostSafe()
     { return MutexCall([this](){ return GetRealHost(); }); }
-  const string &GetCipher() const { return strCipher; }
-  const string GetCipherSafe()
+  const StdString &GetCipher() const { return strCipher; }
+  const StdString GetCipherSafe()
     { return MutexCall([this](){ return GetCipher(); }); }
-  const string GetErrorStrSafe()
+  const StdString GetErrorStrSafe()
     { return MutexCall([this](){ return GetErrorStr(); }); }
   /* -- RX packets --------------------------------------------------------- */
   uint64_t GetRX() const { return aullRX; }
@@ -1545,9 +1546,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     { return GetPacketXSafe(mbD, plTX, stTX); }
   void CompactTXSafe(Memory &mbD) { CompactXSafe(mbD, plTX, stTX); }
   /* ----------------------------------------------------------------------- */
-  ThreadStatus SetErrorSafe(const string &strS)
+  ThreadStatus SetErrorSafe(const StdString &strS)
     { return MutexCall([this, &strS](){ return SetError(strS); }); }
-  ThreadStatus SetErrorStaticSafe(const string &strS, const bool bS=true)
+  ThreadStatus SetErrorStaticSafe(const StdString &strS, const bool bS=true)
     { return MutexCall([this, &strS, bS]()
         { return SetErrorStatic(strS, bS); }); }
   void PushDataSafe(PacketList &blD, size_t &stX, const char *cpData,
@@ -1556,7 +1557,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           PushData(blD, stX, cpData, stS);}); }
   void SendSafe(const MemConst &mcPacket)
     { MutexCall([this, &mcPacket](){ Send(mcPacket); }); }
-  void SendStringSafe(const string &strData)
+  void SendStringSafe(const StdString &strData)
     { MutexCall([this, &strData](){ SendString(strData); }); }
   /* -- Get timers --------------------------------------------------------- */
   const ClkTimePoint GetTConnect() const { return ClkTimePoint{ acdConnect }; }
@@ -1612,7 +1613,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Done
     return EventError();
   } // Exception occured? Cleanup and rethrow exception
-  catch(const exception&) { EventError(); throw; }
+  catch(const StdException &) { EventError(); throw; }
   /* -- Send request to disconnect ----------------------------------------- */
   bool SendDisconnectAndWait()
   { // Send disconnect to socket
@@ -1640,8 +1641,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   }
   /* -- Get connection status and update a timestamp ----------------------- */
   void AddStatus(const SocketFlagsConst &ssNS, AtomicClkDuration &duDest)
-  { // Set the timestamp. We cannot have an atomic<ClkTimePoint> so we have to
-    // store the time point as a duration instead. :-(
+  { // Set the timestamp. We cannot have an StdAtomic<ClkTimePoint> so we have
+    // to store the time point as a duration instead. :-(
     duDest = cmHiRes.GetEpochTime();
     // Set the event
     AddStatus(ssNS);
@@ -1706,8 +1707,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     });
   }
   /* -- Init connection ---------------------------------------------------- */
-  void Connect(lua_State*const lS, string &strNAddress,
-    const unsigned int uiNPort, const string &strNCipher)
+  void Connect(lua_State*const lS, StdString &strNAddress,
+    const unsigned int uiNPort, const StdString &strNCipher)
   { // Set address and port and TLS cipher
     SetAddressAndCipher(strNAddress, uiNPort, strNCipher);
     // Init LUA references
@@ -1718,10 +1719,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       bind(&Socket::SockReadThreadMain, this, _1), this);
   }
   /* -- Init --------------------------------------------------------------- */
-  void HTTPRequest(lua_State*const lS, const string &strNCipher,
-    string &strNAddress, const unsigned int uiNPort,
-    const string &strRequest, string &strMethod, const string &strHeaders,
-    const string &strBody)
+  void HTTPRequest(lua_State*const lS, const StdString &strNCipher,
+    StdString &strNAddress, const unsigned int uiNPort,
+    const StdString &strRequest, StdString &strMethod,
+    const StdString &strHeaders, const StdString &strBody)
   { // Request must begin with a forward slash
     if(strRequest.front() != '/')
       XC("Resource is invalid!", "Resource", strRequest);
@@ -1889,13 +1890,13 @@ static CVarReturn SocketSetRXTimeout(const double dNew)
 static CVarReturn SocketSetTXTimeout(const double dNew)
   { return CVarSimpleSetIntNLG(cSockets->adSendTimeout, dNew, 0, 3600); }
 /* ------------------------------------------------------------------------- */
-static CVarReturn SocketSetCipher12(const string&, const string &strV)
+static CVarReturn SocketSetCipher12(const StdString&, const StdString &strV)
   { cSockets->strvCipher12 = strV; return ACCEPT; }
 /* ------------------------------------------------------------------------- */
-static CVarReturn SocketSetCipher13(const string&, const string &strV)
+static CVarReturn SocketSetCipher13(const StdString&, const StdString &strV)
   { cSockets->strvCipher13 = strV; return ACCEPT; }
 /* ------------------------------------------------------------------------- */
-static CVarReturn SocketAgentModified(const string &strN, string &strV)
+static CVarReturn SocketAgentModified(const StdString &strN, StdString &strV)
 { // Ignore if string too long
   if(strN.size() > 200) return DENY;
   // If empty? We'll set a default value

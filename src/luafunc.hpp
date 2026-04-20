@@ -22,7 +22,7 @@ CTOR_BEGIN(LuaFuncs, LuaFunc, CLHelperSafe,,,public LuaRef<1>)
 /* -- LuaFunc base class --------------------------------------------------- */
 class LuaFuncBase                      // Just for de-duplicating initialisers
 { /* -- Private variables -------------------------------------------------- */
-  typedef array<int, 2> References;    // Type for our pair of LUA references
+  typedef StdArray<int, 2> References; // Type for our pair of LUA references
   /* -- Protected variables ------------------------------------- */ protected:
   References       aReferences;        // LUA variable references
   int             &iLiveReference,     // Reference to the live ref
@@ -113,7 +113,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     { // Make sure the number of parameters would not overflow
       if(!LuaFuncCheckAddParams(svList.size(), "vector strings")) return;
       // Convert to table on stack
-      for(const string &strStr : svList)
+      for(const StdString &strStr : svList)
         LuaUtilPushStr(LuaFuncGetState(), strStr);
       // Increase number of parameters
       iParams += static_cast<int>(svList.size());
@@ -122,7 +122,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   }
   /* ----------------------------------------------------------------------- */
   template<typename ...VarArgs>
-    void LuaFuncParams(int &iParams, const string &strVal,
+    void LuaFuncParams(int &iParams, const StdString &strVal,
       VarArgs &&...vaArgs) const
   { // Make sure the number of parameters would not overflow
     if(!LuaFuncCheckAddParams(1, "string")) return;
@@ -196,7 +196,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       LuaFuncParams(iParams, vArgs...);
       LuaUtilPCallSafe(LuaFuncGetState(), iParams, iReturns, iErrorCallback);
     } // Exception occured?
-    catch(const exception&)
+    catch(const StdException &)
     { // Restore stack position because we don't know what might have added
       LuaUtilPruneStack(LuaFuncGetState(), iStack);
       // Rethrow the error
@@ -267,7 +267,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     /* -- Clear other references and unregister other from collector ------- */
     { lfOther.aReferences.fill(LUA_REFNIL); lfOther.CollectorUnregister(); }
   /* -- Name constructor --------------------------------------------------- */
-  explicit LuaFunc(const string &strN, const bool bSet=false) :
+  explicit LuaFunc(const StdString &strN, const bool bSet=false) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strN },                     // Move name of function over
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector class
@@ -275,7 +275,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     /* -- Set if requested ------------------------------------------------- */
     { if(bSet) LuaFuncSet(); }
   /* -- Name(move) constructor --------------------------------------------- */
-  explicit LuaFunc(string &&strN, const bool bSet=false) :
+  explicit LuaFunc(StdString &&strN, const bool bSet=false) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ StdMove(strN) },            // Move name of function over
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector

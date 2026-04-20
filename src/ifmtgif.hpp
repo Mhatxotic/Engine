@@ -26,25 +26,25 @@ class CodecGIF :                       // GIF codec object
     { return StdAlloc<void>(static_cast<unsigned int>(iW * iH) * BY_RGBA); }
   /* -- Free memory -------------------------------------------------------- */
   static void GIFDestroy(void*const vpBuffer)
-    { if(!vpBuffer) throw runtime_error{ "Free buffer null pointer" };
+    { if(!vpBuffer) throw StdRunTimeError{ "Free buffer null pointer" };
       StdFree(vpBuffer); }
   /* -- Return ptr to pixel data in image ---------------------------------- */
   static unsigned char *GIFRead(void*const vpBuffer)
-    { if(!vpBuffer) throw runtime_error{ "Get buffer null pointer" };
+    { if(!vpBuffer) throw StdRunTimeError{ "Get buffer null pointer" };
       return reinterpret_cast<unsigned char*>(vpBuffer); }
   /* -- Sets whether a image should opaque --------------------------------- */
   static void GIFOpaque(            // False positive / Upstream issue
     void*const vpBuffer, bool)      // cppcheck-suppress constParameterCallback
-      { if(!vpBuffer) throw runtime_error{ "Set opaque null pointer" }; }
+      { if(!vpBuffer) throw StdRunTimeError{ "Set opaque null pointer" }; }
   /* -- If image has an opaque alpha channel ------------------------------- */
   static bool GIFIsOpaque(          // False positive / Upstream issue
     void*const vpBuffer)            // cppcheck-suppress constParameterCallback
-      { if(!vpBuffer) throw runtime_error{ "Test opaque null pointer" };
+      { if(!vpBuffer) throw StdRunTimeError{ "Test opaque null pointer" };
         return true; }
   /* -- Image changed, flush cache ----------------------------------------- */
   static void GIFFlush(             // False positive / Upstream issue
     void*const vpBuffer)            // cppcheck-suppress constParameterCallback
-      { if(!vpBuffer) throw runtime_error{ "Modified data null pointer" }; }
+      { if(!vpBuffer) throw StdRunTimeError{ "Modified data null pointer" }; }
   /* --------------------------------------------------------------- */ public:
   bool Decode(FileMap &fmData, ImageData &idData)
   { // Must have at least 10 bytes for header 'GIF9' and ending footer.
@@ -134,7 +134,7 @@ class CodecGIF :                       // GIF codec object
       // Success parsing gif
       return true;
     } // Caught an exception (unlikely)
-    catch(const exception&)
+    catch(const StdException &)
     { // Clean up
       nsgif_destroy(nsgCtx);
       // Throw back to proper exception handler if message sent

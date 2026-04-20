@@ -18,7 +18,7 @@ using namespace IConDef::P;            using namespace ICoord::P;
 using namespace ICVarDef::P;           using namespace IDim::P;
 using namespace IDimCoord::P;          using namespace IDir::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags;                using namespace IFStream::P;
+using namespace IFlags::P;             using namespace IFStream::P;
 using namespace IHelper::P;            using namespace IIdent::P;
 using namespace ILog::P;               using namespace IMemory::P;
 using namespace IMutex::P;             using namespace IParser::P;
@@ -41,26 +41,26 @@ class SysModuleData :                  // Members initially private
 { /* -- Variables ---------------------------------------------------------- */
   const unsigned int uiMajor, uiMinor, // Major and minor version of module
                   uiBuild, uiRevision; // Build and revision version of module
-  const string     strVendor,          // Vendor of module
+  const StdString  strVendor,          // Vendor of module
                    strDesc,            // Description of module
                    strComments,        // Comments of module
                    strVersion;         // Version as string
   /* --------------------------------------------------------------- */ public:
-  const string &GetDrive() const { return strDrive; }
-  const string &GetDir() const { return strDir; }
-  const string &GetFile() const { return strFile; }
-  const string &GetExt() const { return strExt; }
-  const string &GetFileExt() const { return strFileExt; }
-  const string &GetFull() const { return strFull; }
-  const string &GetLoc() const { return strLoc; }
+  const StdString &GetDrive() const { return strDrive; }
+  const StdString &GetDir() const { return strDir; }
+  const StdString &GetFile() const { return strFile; }
+  const StdString &GetExt() const { return strExt; }
+  const StdString &GetFileExt() const { return strFileExt; }
+  const StdString &GetFull() const { return strFull; }
+  const StdString &GetLoc() const { return strLoc; }
   unsigned int GetMajor() const { return uiMajor; }
   unsigned int GetMinor() const { return uiMinor; }
   unsigned int GetBuild() const { return uiBuild; }
   unsigned int GetRevision() const { return uiRevision; }
-  const string &GetVendor() const { return strVendor; }
-  const string &GetDesc() const { return strDesc; }
-  const string &GetComments() const { return strComments; }
-  const string &GetVersion() const { return strVersion; }
+  const StdString &GetVendor() const { return strVendor; }
+  const StdString &GetDesc() const { return strDesc; }
+  const StdString &GetComments() const { return strComments; }
+  const StdString &GetVersion() const { return strVersion; }
   /* -- Move constructor --------------------------------------------------- */
   SysModuleData(SysModuleData &&smdO) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -76,9 +76,10 @@ class SysModuleData :                  // Members initially private
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Initialise all members contructor ---------------------------------- */
-  explicit SysModuleData(const string &strF, const unsigned int uiMa,
+  explicit SysModuleData(const StdString &strF, const unsigned int uiMa,
     const unsigned int uiMi, const unsigned int uiBu, const unsigned int uiRe,
-    string &&strVen, string &&strDe, string &&strCo, string &&strVer) :
+    StdString &&strVen, StdString &&strDe, StdString &&strCo,
+    StdString &&strVer) :
     /* -- Initialisers ----------------------------------------------------- */
     PathSplit{ strF },                 // Copy filename
     uiMajor(uiMa),                     // Copy major version
@@ -92,7 +93,7 @@ class SysModuleData :                  // Members initially private
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Initialise filename only constructor ------------------------------- */
-  explicit SysModuleData(const string &strF) :
+  explicit SysModuleData(const StdString &strF) :
     /* -- Initialisers ----------------------------------------------------- */
     PathSplit{ strF },                 // Initialise path parts
     uiMajor(0),                        // Major version not initialised yet
@@ -157,28 +158,28 @@ class SysVersion :
 { /* ----------------------------------------------------------------------- */
   const SysModuleData &smdEng;         // Engine executable information
   /* ----------------------------------------------------------------------- */
-  const string_view strvBuildType,     // Build type
-                    strvCompVer,       // Compiler version
-                    strvCompiled,      // Compilation date
-                    strvCompiler,      // Compiler name
-                    strvBuildTarget;   // Target architechture
+  const StdStringView strvBuildType,   // Build type
+                      strvCompVer,     // Compiler version
+                      strvCompiled,    // Compilation date
+                      strvCompiler,    // Compiler name
+                      strvBuildTarget; // Target architechture
   /* -- Access to engine version data ------------------------------ */ public:
-  const string_view &ENGBuildType() const { return strvBuildType; }
-  const string_view &ENGCompVer() const { return strvCompVer; }
-  const string_view &ENGCompiled() const { return strvCompiled; }
-  const string_view &ENGCompiler() const { return strvCompiler; }
-  const string_view &ENGTarget() const { return strvBuildTarget; }
-  const string &ENGAuthor() const { return smdEng.GetVendor(); }
-  const string &ENGComments() const { return smdEng.GetComments(); }
-  const string &ENGDir() const { return smdEng.GetDir(); }
-  const string &ENGDrive() const { return smdEng.GetDrive(); }
-  const string &ENGExt() const { return smdEng.GetExt(); }
-  const string &ENGFile() const { return smdEng.GetFile(); }
-  const string &ENGFileExt() const { return smdEng.GetFileExt(); }
-  const string &ENGFull() const { return smdEng.GetFull(); }
-  const string &ENGLoc() const { return smdEng.GetLoc(); }
-  const string &ENGName() const { return smdEng.GetDesc(); }
-  const string &ENGVersion() const { return smdEng.GetVersion(); }
+  const StdStringView &ENGBuildType() const { return strvBuildType; }
+  const StdStringView &ENGCompVer() const { return strvCompVer; }
+  const StdStringView &ENGCompiled() const { return strvCompiled; }
+  const StdStringView &ENGCompiler() const { return strvCompiler; }
+  const StdStringView &ENGTarget() const { return strvBuildTarget; }
+  const StdString &ENGAuthor() const { return smdEng.GetVendor(); }
+  const StdString &ENGComments() const { return smdEng.GetComments(); }
+  const StdString &ENGDir() const { return smdEng.GetDir(); }
+  const StdString &ENGDrive() const { return smdEng.GetDrive(); }
+  const StdString &ENGExt() const { return smdEng.GetExt(); }
+  const StdString &ENGFile() const { return smdEng.GetFile(); }
+  const StdString &ENGFileExt() const { return smdEng.GetFileExt(); }
+  const StdString &ENGFull() const { return smdEng.GetFull(); }
+  const StdString &ENGLoc() const { return smdEng.GetLoc(); }
+  const StdString &ENGName() const { return smdEng.GetDesc(); }
+  const StdString &ENGVersion() const { return smdEng.GetVersion(); }
   unsigned int ENGBits() const { return sizeof(void*)<<3; }
   unsigned int ENGBuild() const { return smdEng.GetBuild(); }
   unsigned int ENGMajor() const { return smdEng.GetMajor(); }
@@ -198,13 +199,13 @@ class SysVersion :
   /* -- Init from SysModMap ----------------------------------------------- */
   SysVersion(SysModMap &&smlOther, const size_t stI) :
     /* -- Initialisers ----------------------------------------------------- */
-    SysModules{ StdMove(smlOther) },            // Move system modules list
-    smdEng{ FindBaseModuleInfo(stI) },          // Move engine executable info
-    strvBuildType{ BUILD_TYPE_LABEL },          // Build type
-    strvCompVer{ COMPILER_VERSION },            // Compiler version
-    strvCompiled{ VER_DATE },                   // Compilation date
-    strvCompiler{ COMPILER_NAME },              // Compiler name
-    strvBuildTarget{ BUILD_TARGET }             // Target architechture
+    SysModules{ StdMove(smlOther) },   // Move system modules list
+    smdEng{ FindBaseModuleInfo(stI) }, // Move engine executable info
+    strvBuildType{ BUILD_TYPE_LABEL }, // Build type
+    strvCompVer{ COMPILER_VERSION },   // Compiler version
+    strvCompiled{ VER_DATE },          // Compilation date
+    strvCompiler{ COMPILER_NAME },     // Compiler name
+    strvBuildTarget{ BUILD_TARGET }    // Target architechture
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -227,13 +228,13 @@ class SysCommon                        // Common system structs and funcs
   /* ----------------------------------------------------------------------- */
   const struct OSData                  // Operating system data
   { /* --------------------------------------------------------------------- */
-    const string       strName,        // Os name (e.g. Windows)
+    const StdString    strName,        // Os name (e.g. Windows)
                        strNameEx;      // Os host (e.g. Wine)
     const unsigned int uiMajor,        // Os major version
                        uiMinor,        // Os minor version
                        uiBuild,        // Os build number
                        uiBits;         // Os bit version
-    const string       strLocale;      // Os locale
+    const StdString    strLocale;      // Os locale
     const bool         bIsAdmin,       // Os user has elevated privileges
                        bIsAdminDef;    // Os uses admin accounts by default
   } /* --------------------------------------------------------------------- */
@@ -246,7 +247,7 @@ class SysCommon                        // Common system structs and funcs
                        ulFamily,       // Family
                        ulModel,        // Model
                        ulStepping;     // Stepping
-    const string       sProcessorName; // CPU id or vendor
+    const StdString    sProcessorName; // CPU id or vendor
   } /* --------------------------------------------------------------------- */
   cpuData;                             // System processor data
   /* ----------------------------------------------------------------------- */
@@ -293,14 +294,14 @@ class SysCommon                        // Common system structs and funcs
   unsigned int EXECheckSum() const { return exeData.ulCheckSum; }
   bool EXEBundled() const { return exeData.bExeIsBundled; }
   /* ----------------------------------------------------------------------- */
-  const string &OSName() const { return osData.strName; }
-  const string &OSNameEx() const { return osData.strNameEx; }
+  const StdString &OSName() const { return osData.strName; }
+  const StdString &OSNameEx() const { return osData.strNameEx; }
   bool IsOSNameExSet() const { return !OSNameEx().empty(); }
   unsigned int OSMajor() const { return osData.uiMajor; }
   unsigned int OSMinor() const { return osData.uiMinor; }
   unsigned int OSBuild() const { return osData.uiBuild; }
   unsigned int OSBits() const { return osData.uiBits; }
-  const string &OSLocale() const { return osData.strLocale; }
+  const StdString &OSLocale() const { return osData.strLocale; }
   bool OSIsAdmin() const { return osData.bIsAdmin; }
   bool OSIsAdminDefault() const { return osData.bIsAdminDef; }
   /* ----------------------------------------------------------------------- */
@@ -309,7 +310,7 @@ class SysCommon                        // Common system structs and funcs
   unsigned int CPUFamily() const { return cpuData.ulFamily; }
   unsigned int CPUModel() const { return cpuData.ulModel; }
   unsigned int CPUStepping() const { return cpuData.ulStepping; }
-  const string &CPUName() const { return cpuData.sProcessorName; }
+  const StdString &CPUName() const { return cpuData.sProcessorName; }
   double CPUUsage() const { return cpuUData.dProcess; }
   double CPUUsageSystem() const { return cpuUData.dSystem; }
   /* ----------------------------------------------------------------------- */
@@ -420,7 +421,7 @@ class System :                         // The main system class
   ClockInterval<>  ciCpu;              // For getting cpu usage
   const size_t     stProcessId,        // Readable process id
                    stThreadId;         // Readable thread id
-  string_view      strvTitle,          // Guest title
+  StdStringView    strvTitle,          // Guest title
                    strvShortTitle,     // Guest short title
                    strvVersion,        // Guest version
                    strvAuthor,         // Guest author
@@ -430,7 +431,7 @@ class System :                         // The main system class
   /* ----------------------------------------------------------------------- */
   terminate_handler thHandler;         // Old C++ termination handler
   /* ----------------------------------------------------------------------- */
-  const string     strRoamingDir;      // Roaming directory
+  const StdString     strRoamingDir;      // Roaming directory
   /* -- Callback for set_terminate() defined later ------------------------- */
   static void SysOnTerminateHandler[[noreturn]]();
   /* -- Return readable process and thread id ---------------------- */ public:
@@ -446,18 +447,19 @@ class System :                         // The main system class
   double SysUpdateAndGetCPUUsageSystem()
     { SysUpdateCPUUsage(); return CPUUsageSystem(); }
   /* -- Show message box with window handle (thiscall) --------------------- */
-  unsigned int SysMsgEx(const string &strReason, const string &strMessage,
-    unsigned int uiFlags = MB_ICONSTOP) const
-      { return SysMessage(GetWindowHandle(),
-          StrAppend(ENGName(), ' ', strReason), strMessage, uiFlags); }
+  unsigned int SysMsgEx(const StdString &strReason,
+    const StdString &strMessage, unsigned int uiFlags = MB_ICONSTOP) const
+  { return SysMessage(GetWindowHandle(),
+      StrAppend(ENGName(), ' ', strReason), strMessage, uiFlags); }
   /* -- Get descriptor strings --------------------------------------------- */
-  const string_view &SysGetGuestTitle() const { return strvTitle; }
-  const string_view &SysGetGuestShortTitle() const { return strvShortTitle; }
-  const string_view &SysGetGuestVersion() const { return strvVersion; }
-  const string_view &SysGetGuestAuthor() const { return strvAuthor; }
-  const string_view &SysGetGuestCopyright() const { return strvCopyright; }
-  const string_view &SysGetGuestDescription() const {return strvDescription; }
-  const string_view &SysGetGuestWebsite() const { return strvWebsite; }
+  const StdStringView &SysGetGuestTitle() const { return strvTitle; }
+  const StdStringView &SysGetGuestShortTitle() const { return strvShortTitle; }
+  const StdStringView &SysGetGuestVersion() const { return strvVersion; }
+  const StdStringView &SysGetGuestAuthor() const { return strvAuthor; }
+  const StdStringView &SysGetGuestCopyright() const { return strvCopyright; }
+  const StdStringView &SysGetGuestDescription() const
+    { return strvDescription; }
+  const StdStringView &SysGetGuestWebsite() const { return strvWebsite; }
   /* ----------------------------------------------------------------------- */
   const CoreFlagsConst SysGetCoreFlags() const { return cfMode; }
   bool SysIsCoreFlagsHave(const CoreFlagsConst cfFlags) const
@@ -477,12 +479,13 @@ class System :                         // The main system class
     { return SysGetCoreFlags().FlagIsSet(CFL_TIMER); }
   bool SysIsNotTimerMode() const { return !SysIsTimerMode(); }
   /* -- Return users roaming directory ------------------------------------- */
-  const string &SysGetRoamingDir() const { return strRoamingDir; }
+  const StdString &SysGetRoamingDir() const { return strRoamingDir; }
   /* ----------------------------------------------------------------------- */
-  const string_view &SysGetCoreFlagsString(const CoreFlagsConst cfFlags) const
-    { return mList.Get(cfFlags); }
+  const StdStringView
+    &SysGetCoreFlagsString(const CoreFlagsConst cfFlags) const
+  { return mList.Get(cfFlags); }
   /* ----------------------------------------------------------------------- */
-  const string_view &SysGetCoreFlagsString() const
+  const StdStringView &SysGetCoreFlagsString() const
     { return SysGetCoreFlagsString(SysGetCoreFlags()); }
   /* -- Default error handler ---------------------------------------------- */
   static void SysCriticalHandler[[noreturn]](const char*const cpMessage)
@@ -577,19 +580,19 @@ class System :                         // The main system class
       StrFromBoolTF(OSIsAdmin()), StrFromBoolTF(EXEBundled()));
   }
   /* -- CVar callbacks to update guest descriptor strings ---------- */ public:
-  CVarReturn SysSetGuestTitle(const string&, const string &strV)
+  CVarReturn SysSetGuestTitle(const StdString&, const StdString &strV)
     { strvTitle = strV; return ACCEPT; }
-  CVarReturn SysSetGuestShortTitle(const string&, const string &strV)
+  CVarReturn SysSetGuestShortTitle(const StdString&, const StdString &strV)
     { strvShortTitle = strV; return ACCEPT; }
-  CVarReturn SysSetGuestVersion(const string&, const string &strV)
+  CVarReturn SysSetGuestVersion(const StdString&, const StdString &strV)
     { strvVersion = strV; return ACCEPT; }
-  CVarReturn SysSetGuestAuthor(const string&, const string &strV)
+  CVarReturn SysSetGuestAuthor(const StdString&, const StdString &strV)
     { strvAuthor = strV; return ACCEPT; }
-  CVarReturn SysSetGuestCopyright(const string&, const string &strV)
+  CVarReturn SysSetGuestCopyright(const StdString&, const StdString &strV)
     { strvCopyright = strV; return ACCEPT; }
-  CVarReturn SysSetGuestDescription(const string&, const string &strV)
+  CVarReturn SysSetGuestDescription(const StdString&, const StdString &strV)
     { strvDescription = strV; return ACCEPT; }
-  CVarReturn SysSetGuestWebsite(const string&, const string &strV)
+  CVarReturn SysSetGuestWebsite(const StdString&, const StdString &strV)
     { strvWebsite = strV; return ACCEPT; }
   /* -- Update minimum RAM ------------------------------------------------- */
   CVarReturn SysSetMinRAM(const uint64_t ullMinValue)
@@ -605,7 +608,7 @@ class System :                         // The main system class
         Memory{}.MemInitSafe(RAMProcUse() > stMemory ?
           stMemory : stMemory - RAMProcUse());
       } // Allocation failed?
-      catch(const exception &eReason)
+      catch(const StdException &eReason)
       { // Throw memory error
         XC("There is not enough system memory available. Close any "
           "running applications consuming it and try running again!",
@@ -647,14 +650,14 @@ class System :                         // The main system class
       "and try running the application again");
   }
   /* -- Set working directory ---------------------------------------------- */
-  CVarReturn SysSetWorkDir(const string &strP, string &strV)
+  CVarReturn SysSetWorkDir(const StdString &strP, StdString &strV)
   { // Set current directory to the startup directory as we want to honour the
     // users choice of relative directory.
     cCmdLine->CmdLineSetStartupCWD();
     // If targeting Apple systems?
 #if defined(MACOS)
     // Working directory
-    string strWorkDir;
+    StdString strWorkDir;
     // No directory specified?
     if(strP.empty())
     { // Build app bundle directory suffix and if we're calling from it from
@@ -668,7 +671,7 @@ class System :                         // The main system class
     else strWorkDir = StdMove(PathSplit{ strP, true }.strFull);
 #else
     // Build directory
-    string strWorkDir{ strP.empty() ? ENGLoc() :
+    StdString strWorkDir{ strP.empty() ? ENGLoc() :
       StdMove(PathSplit{ strP, true }.strFull) };
 #endif
     // Set the directory and if failed? Throw the error

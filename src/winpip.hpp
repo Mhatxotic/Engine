@@ -59,10 +59,10 @@ class SysPipe :                        // Members initially private
         "stdout send pipe: $!", IdentGet(), SysError());
   }
   /* -- Initialise arguments list ------------------------------------------ */
-  void InitArgs(const string &strCmdLine, const Args &aList,
+  void InitArgs(const StdString &strCmdLine, const Args &aList,
     const ValidType vtId)
   { // Get the program filename and check it
-    const string &strApp = aList.front();
+    const StdString &strApp = aList.front();
     switch(const ValidResult vrResult = DirValidName(strApp, vtId))
     { // Good result? Skip to next task
       case VR_OK: break;
@@ -153,7 +153,7 @@ class SysPipe :                        // Members initially private
       if(!ResumeThread(hThread))
         XCS("Failed to resume main thread!", "Executable", IdentGet());
     } // Error occured so terminate process and close handles
-    catch(const exception&)
+    catch(const StdException &)
     { // Forcibly close handles
       Finish();
       // Throw exception
@@ -234,15 +234,15 @@ class SysPipe :                        // Members initially private
     return 0;
   }
   /* -- Constructor with init ---------------------------------------------- */
-  void Init(const string &strCmdLine, const ValidType vtId)
+  void Init(const StdString &strCmdLine, const ValidType vtId)
     { if(const Args aList{ strCmdLine }) InitArgs(strCmdLine, aList, vtId); }
   /* -- Constructor with init with default safety mode --------------------- */
-  void Init(const string &strCmdLine)
+  void Init(const StdString &strCmdLine)
     { Init(strCmdLine, cDirBase->DirBaseGetSafetyMode()); }
   /* -- Return pid --------------------------------------------------------- */
   unsigned int GetPid() { return static_cast<unsigned int>(dwPid); }
   /* -- Constructor with init ---------------------------------------------- */
-  explicit SysPipe(const string &strF) :
+  explicit SysPipe(const StdString &strF) :
     /* -- Initialisers ----------------------------------------------------- */
     SysPipe()                          // Start uninitialised
     /* --------------------------------------------------------------------- */

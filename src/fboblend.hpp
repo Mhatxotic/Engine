@@ -15,8 +15,8 @@ namespace P {                          // Start of public module namespace
 /* == Fbo blend class ====================================================== */
 class FboBlend
 { /* -- Private variables -------------------------------------------------- */
-  typedef array<GLenum,4> FboBlendStruct; // Array of four GLenum's
-  FboBlendStruct   fbsBlend;             // Blend union
+  typedef StdArray<GLenum,4> FboBlendStruct; // Array of four GLenum's
+  FboBlendStruct   fbsBlend;           // Blend union
   /* -- Get blend values ------------------------------------------- */ public:
   GLenum FboBlendGetSrcRGB() const { return fbsBlend[0]; }
   GLenum FboBlendGetDstRGB() const { return fbsBlend[1]; }

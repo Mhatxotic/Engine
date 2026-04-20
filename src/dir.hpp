@@ -53,10 +53,10 @@ class DirBase                          // Members initially private
   const StrVUSet   svusReserved;       // Reserved names
   ValidType        vtMode;             // Default safety mode
   /* -- Convert a valid result from ValidName to string ------------ */ public:
-  const string_view &DirBaseVNRtoStr(const ValidResult vrId) const
+  const StdStringView &DirBaseVNRtoStr(const ValidResult vrId) const
     { return vrlStrings.Get(vrId); }
   /* -- Return if a name is reserved --------------------------------------- */
-  bool DirBaseIsReservedName(const string &strName) const
+  bool DirBaseIsReservedName(const StdString &strName) const
     { return svusReserved.contains(strName); }
   /* -- Return safety mode ------------------------------------------------- */
   ValidType DirBaseGetSafetyMode() const { return vtMode; }
@@ -127,25 +127,25 @@ static bool DirIsValidPathPartCharacter(const char cChar)
 /* -- Check that path part characters are valid ---------------------------- */
 static bool DirIsValidPathPartCharactersCallback(const char cChar)
   { return !DirIsValidPathPartCharacter(cChar); }
-static bool DirIsValidPathPartCharacters(const string &strPart,
+static bool DirIsValidPathPartCharacters(const StdString &strPart,
   const size_t stPos)
-    { return !any_of(next(strPart.cbegin(), static_cast<ssize_t>(stPos)),
+    { return !StdAnyOf(StdNext(strPart.cbegin(), static_cast<ssize_t>(stPos)),
         strPart.cend(), DirIsValidPathPartCharactersCallback); }
-static bool DirIsValidPathPartCharacters(const string &strPart)
-  { return !any_of(strPart.cbegin(), strPart.cend(),
+static bool DirIsValidPathPartCharacters(const StdString &strPart)
+  { return !StdAnyOf(strPart.cbegin(), strPart.cend(),
       DirIsValidPathPartCharactersCallback); }
 /* -- Valid Windows drive letter ------------------------------------------- */
 static bool DirIsValidDrive(const char cFirst)
   { return (cFirst >= 'A' && cFirst <= 'Z') ||
            (cFirst >= 'a' && cFirst <= 'z'); }
 /* -- Check that filename doesn't leave the exe directory ------------------ */
-static ValidResult DirValidName(const string &strName, const ValidType vtId)
+static ValidResult DirValidName(const StdString &strName, const ValidType vtId)
 { // Failed if empty string
   if(strName.empty()) return VR_EMPTY;
   // Failed if the length is longer than the maximum allowed path.
   if(strName.length() > _MAX_PATH) return VR_TOOLONG;
   // If using windows? Replace backslashes with forward slashes.
-  const string &strChosen =
+  const StdString &strChosen =
 #if defined(WINDOWS)
     PSplitBackToForwardSlashes(strName);
 #else
@@ -180,7 +180,7 @@ static ValidResult DirValidName(const string &strName, const ValidType vtId)
           // Enumerate parts from chosen end to start plus one.
           while(svciPart != tParts.cbegin())
           { // Get part string
-            const string &strPart = *svciPart;
+            const StdString &strPart = *svciPart;
             // Test the length of the first path part
             switch(strPart.length())
             { // No length? Return empty
@@ -200,7 +200,7 @@ static ValidResult DirValidName(const string &strName, const ValidType vtId)
         } // One part?
         case 1:
         { // Get first string
-          const string &strFirst = tParts.front();
+          const StdString &strFirst = tParts.front();
           // Test all the characters in the first string
           if(!DirIsValidPathPartCharacters(strFirst)) return VR_INVCHAR;
           // Check for reserved names. Only Windows has reserved names but
@@ -227,7 +227,7 @@ static ValidResult DirValidName(const string &strName, const ValidType vtId)
           // Enumerate parts from chosen end to start plus one.
           while(svciPart != tParts.cbegin())
           { // Get part string
-            const string &strPart = *svciPart;
+            const StdString &strPart = *svciPart;
             // Not allowed to be empty or parent directory
             if(strPart.empty()) return VR_EMPTY;
             // Failed first character is an invalid character.
@@ -239,7 +239,7 @@ static ValidResult DirValidName(const string &strName, const ValidType vtId)
         } // One part?
         case 1:
         { // Get first string
-          const string &strFirst = tParts.front();
+          const StdString &strFirst = tParts.front();
           // Check drive letter is valid
           if(strFirst.length() > 1 && strFirst[1] == ':')
           { // Get first character and make sure the drive letter is valid
@@ -258,7 +258,7 @@ static ValidResult DirValidName(const string &strName, const ValidType vtId)
   }
 }
 /* -- Check that filename doesn't leave the exe directory ------------------ */
-static ValidResult DirValidName(const string &strName)
+static ValidResult DirValidName(const StdString &strName)
   { return DirValidName(strName, cDirBase->DirBaseGetSafetyMode()); }
 /* -- Public typedefs ------------------------------------------------------ */
 class DirItem                          // File information structure
@@ -315,7 +315,7 @@ class DirItem                          // File information structure
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
-MAPPACK_BUILD(DirEnt, const string, const DirItem) // Build DirItem map types
+MAPPACK_BUILD(DirEnt, const StdString, const DirItem) // DirItem map types
 /* -- DirFile class -------------------------------------------------------- */
 class DirFile                          // Files container class
 { /* -- Public variables --------------------------------------------------- */
@@ -368,7 +368,7 @@ class DirCore :                        // System specific implementation
   /* -- Base classes ------------------------------------------------------- */
   public DirItem                       // Current item information
 { /* -- Variables -------------------------------------------------- */ public:
-  string           strFile;            // Name of next file
+  StdString        strFile;            // Name of next file
   bool             bIsDir;             // Current item is a directory
   /* -- Setup implementation for WIN32 ------------------------------------- */
 #if defined(WINDOWS)                   // WIN32 implementation
@@ -400,7 +400,7 @@ class DirCore :                        // System specific implementation
     return true;
   }
   /* -- Constructor for WIN32 system --------------------------------------- */
-  explicit DirCore(const string &strDir) :
+  explicit DirCore(const StdString &strDir) :
     /* -- Initialisers ----------------------------------------------------- */
     iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ?
       cCommon->CommonAsterisk() :
@@ -420,9 +420,9 @@ class DirCore :                        // System specific implementation
   // closedir() function has attributes so this is the workaround.
   struct CloseDirFtor
     { void operator()(DIR*const dPtr) const { closedir(dPtr); } };
-  typedef unique_ptr<DIR, CloseDirFtor> DirUPtr;
+  typedef StdUniquePtr<DIR, CloseDirFtor> DirUPtr;
   /* -- Private variables -------------------------------------------------- */
-  const string    strPrefix;           // Prefix for filenames with stat()
+  const StdString    strPrefix;           // Prefix for filenames with stat()
   DirUPtr         dupHandle;           // Context for opendir()
   /* -- Return if directory was opened on POSIX system ------------- */ public:
   bool IsOpened() const { return !!dupHandle; }
@@ -453,7 +453,7 @@ class DirCore :                        // System specific implementation
     return false;
   }
   /* -- Constructor for POSIX system --------------------------------------- */
-  explicit DirCore(const string &strDir) :
+  explicit DirCore(const StdString &strDir) :
     /* -- Initialisers ----------------------------------------------------- */
     strPrefix{ StrAppend(              // Initialise string prefix
       strDir.empty() ?                 // If requested directory is empty?
@@ -471,7 +471,7 @@ class Dir :                            // Directory information class
   /* -- Base classes ------------------------------------------------------- */
   public DirFile                       // Files container class
 { /* -- Do scan --------------------------------------------------- */ private:
-  static void RemoveEntry(DirEntMap &dfemMap, const string &strEntry)
+  static void RemoveEntry(DirEntMap &dfemMap, const StdString &strEntry)
   { // Remove specified entry
     const DirEntMapIt demiIt{ dfemMap.find(strEntry) };
     if(demiIt != dfemMap.cend()) dfemMap.erase(demiIt);
@@ -483,7 +483,7 @@ class Dir :                            // Directory information class
     RemoveEntry(dfemMap, cCommon->CommonTwoPeriod());
   }
   /* -- Scan with no match checking ---------------------------------------- */
-  static DirFile ScanDir(const string &strDir=cCommon->CommonBlank())
+  static DirFile ScanDir(const StdString &strDir=cCommon->CommonBlank())
   { // Directory and file list
     DirEntMap demNDirs, demNFiles;
     // Load up the specification and return if failed
@@ -504,7 +504,7 @@ class Dir :                            // Directory information class
     return { StdMove(demNDirs), StdMove(demNFiles) };
   }
   /* -- Scan with match checking ------------------------------------------- */
-  static DirFile ScanDirExt(const string &strDir, const string &strExt)
+  static DirFile ScanDirExt(const StdString &strDir, const StdString &strExt)
   { // Directory and file list
     DirEntMap demNDirs, demNFiles;
     // Load up the specification and return if failed
@@ -531,30 +531,30 @@ class Dir :                            // Directory information class
   /* -- Constructor of current directory --------------------------- */ public:
   Dir() : DirFile{ ScanDir() } {}
   /* -- Constructor of specified directory --------------------------------- */
-  explicit Dir(const string &strDir) : DirFile{ ScanDir(strDir) } {}
+  explicit Dir(const StdString &strDir) : DirFile{ ScanDir(strDir) } {}
   /* -- Scan specified directory for files with specified extension -------- */
-  Dir(const string &strDir, const string &strExt) :
+  Dir(const StdString &strDir, const StdString &strExt) :
     DirFile{ ScanDirExt(strDir, strExt) } {}
 };/* ----------------------------------------------------------------------- */
 /* -- Get current directory ------------------------------------------------ */
-static string DirGetCWD()
+static StdString DirGetCWD()
 { // On windows, we need to use unicode
 #if defined(WINDOWS)
   // Storage of filename and initialise it to maximum path length
-  StdResized<wstring> wstrDir{ _MAX_PATH };
+  StdResized<StdWideString> wstrDir{ _MAX_PATH };
   // Get current directory and store it in string, throw exception if error
   if(!_wgetcwd(const_cast<wchar_t*>(wstrDir.data()), _MAX_PATH))
-    throw runtime_error{ "getcwd() failed!" };
+    throw StdRunTimeError{ "getcwd() failed!" };
   // Resize and recover memory
   wstrDir.resize(wcslen(wstrDir.data()));
   // Return directory replacing backslashes for forward slashes
   return PSplitBackToForwardSlashes(WS16toUTF(wstrDir));
 #else
   // Storage of filename and initialise it to maximum path length
-  StdResized<string> strDir{ _MAX_PATH };
+  StdResized<StdString> strDir{ _MAX_PATH };
   // Get current directory and store it in string, throw exception if error
   if(!getcwd(const_cast<char*>(strDir.data()), _MAX_PATH))
-    throw runtime_error{ "getcwd() failed!" };
+    throw StdRunTimeError{ "getcwd() failed!" };
   // Resize and recover memory
   strDir.resize(strlen(strDir.data()));
   // Return directory
@@ -562,7 +562,7 @@ static string DirGetCWD()
 #endif
 }
 /* == Set current directory ================================================ */
-static bool DirSetCWD(const string &strDirectory)
+static bool DirSetCWD(const StdString &strDirectory)
 { // Ignore if empty
   if(strDirectory.empty()) return false;
   // Process is different on win32 with having drive letters
@@ -580,11 +580,11 @@ static bool DirSetCWD(const string &strDirectory)
   return !StdChDir(strDirectory);
 }
 /* -- Make a directory ----------------------------------------------------- */
-static bool DirMkDir(const string &strDir) { return !StdMkDir(strDir); }
+static bool DirMkDir(const StdString &strDir) { return !StdMkDir(strDir); }
 /* -- Remove a directory --------------------------------------------------- */
-static bool DirRmDir(const string &strDir) { return !StdRmDir(strDir); }
+static bool DirRmDir(const StdString &strDir) { return !StdRmDir(strDir); }
 /* -- Make a directory and all it's interim components --------------------- */
-static bool DirMkDirEx(const string &strDir)
+static bool DirMkDirEx(const StdString &strDir)
 { // Break apart directory parts
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
@@ -594,7 +594,7 @@ static bool DirMkDirEx(const string &strDir)
     // gradually.
     ostringstream osS; osS << psParts.strDrive;
     // Get the first item and if it is not empty?
-    const string &strFirst = tParts.front();
+    const StdString &strFirst = tParts.front();
     if(!strFirst.empty())
     { // Make the directory if isn't the drive and return failure if the
       // directory doesn't already exist
@@ -604,7 +604,7 @@ static bool DirMkDirEx(const string &strDir)
     } // If there are more directories?
     if(tParts.size() >= 2)
     { // Create all the other directories
-      for(StrVectorConstIt svI{ next(tParts.cbegin()) };
+      for(StrVectorConstIt svI{ StdNext(tParts.cbegin()) };
                            svI != tParts.cend();
                          ++svI)
       { // Append next directory
@@ -618,7 +618,7 @@ static bool DirMkDirEx(const string &strDir)
   return false;
 }
 /* -- Remove a directory and all it's interim components ------------------- */
-static bool DirRmDirEx(const string &strDir)
+static bool DirRmDirEx(const StdString &strDir)
 { // Break apart directory parts
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
@@ -631,12 +631,12 @@ static bool DirRmDirEx(const string &strDir)
     // it won't work and thats not how the constructor works it seems!
     ostringstream osS; osS << psParts.strDrive;
     // Get the first item and if it is not empty?
-    const string &strFirst = tParts.front();
+    const StdString &strFirst = tParts.front();
     if(!strFirst.empty()) osS << strFirst;
     // If there are more directories? Build directory structure
     if(tParts.size() >= 2)
-      StdForEach(seq, next(tParts.cbegin()), tParts.cend(),
-        [&osS](const string &strPart) { osS << '/' << strPart; });
+      StdForEach(seq, StdNext(tParts.cbegin()), tParts.cend(),
+        [&osS](const StdString &strPart) { osS << '/' << strPart; });
     // Make the directory and if failed and it doesn't exist return error
     if(!DirRmDir(osS.str()) && StdIsNotError(EEXIST)) return false;
     // Remove the last item
@@ -645,13 +645,13 @@ static bool DirRmDirEx(const string &strDir)
   return true;
 }
 /* -- Delete a file -------------------------------------------------------- */
-static bool DirFileUnlink(const string &strFile)
+static bool DirFileUnlink(const StdString &strFile)
   { return !StdUnlink(strFile); }
 /* -- Get file size - ------------------------------------------------------ */
-static int DirFileSize(const string &strFile, StdFStatStruct &sfssData)
+static int DirFileSize(const StdString &strFile, StdFStatStruct &sfssData)
   { return StdFStat(strFile, &sfssData) ? StdGetError() : 0; }
 /* -- True if specified file has the specified mode ------------------------ */
-static bool DirFileHasMode(const string &strFile, const int iMode,
+static bool DirFileHasMode(const StdString &strFile, const int iMode,
   const int iNegate)
 { // Get file information and and if succeeded?
   StdFStatStruct sfssData;
@@ -664,34 +664,34 @@ static bool DirFileHasMode(const string &strFile, const int iMode,
   return false;
 }
 /* -- True if specified file is actually a directory ----------------------- */
-static bool DirLocalDirExists(const string &strFile)
+static bool DirLocalDirExists(const StdString &strFile)
   { return DirFileHasMode(strFile, _S_IFDIR, 0); }
 /* -- True if specified file is actually a file ---------------------------- */
-static bool DirLocalFileExists(const string &strFile)
+static bool DirLocalFileExists(const StdString &strFile)
   { return DirFileHasMode(strFile, _S_IFDIR, -1); }
 /* -- Readable or writable? ------- Check if file is readable or writable -- */
-static bool DirCheckFileAccess(const string &strFile, const int iFlag)
+static bool DirCheckFileAccess(const StdString &strFile, const int iFlag)
   { return !StdAccess(strFile, iFlag); }
 /* -- True if specified file exists and is readable ------------------------ */
-static bool DirIsFileReadable(const string &strFile)
+static bool DirIsFileReadable(const StdString &strFile)
   { return DirCheckFileAccess(strFile, R_OK); }
 /* -- True if specified file exists and is readable and writable ----------- */
-static bool DirIsFileReadWriteable(const string &strFile)
+static bool DirIsFileReadWriteable(const StdString &strFile)
   { return DirCheckFileAccess(strFile, R_OK|W_OK); }
 /* -- True if specified file exists and is writable ------------------------ */
-static bool DirIsFileWritable(const string &strFile)
+static bool DirIsFileWritable(const StdString &strFile)
   { return DirCheckFileAccess(strFile, W_OK); }
 /* -- True if specified file exists and is executable ---------------------- */
-static bool DirIsFileExecutable(const string &strFile)
+static bool DirIsFileExecutable(const StdString &strFile)
   { return DirCheckFileAccess(strFile, X_OK); }
 /* -- True if specified file or directory exists --------------------------- */
-static bool DirLocalResourceExists(const string &strFile)
+static bool DirLocalResourceExists(const StdString &strFile)
    { return DirCheckFileAccess(strFile, F_OK); }
 /* -- Rename file ---------------------------------------------------------- */
-static bool DirFileRename(const string &strFrom, const string &strTo)
+static bool DirFileRename(const StdString &strFrom, const StdString &strTo)
   { return !StdRename(strFrom, strTo); }
 /* -- Check that filename is valid and throw on error ---------------------- */
-static void DirVerifyFileNameIsValid(const string &strFile)
+static void DirVerifyFileNameIsValid(const StdString &strFile)
 { // Throw error if invalid name
   if(const ValidResult vrId = DirValidName(strFile))
     XC("Filename is invalid!",
@@ -702,9 +702,9 @@ static void DirVerifyFileNameIsValid(const string &strFile)
 /* -- Directory saver/restorer class --------------------------------------- */
 class DirSaver
 { /* -- Private variables -------------------------------------------------- */
-  const string strCWD;                 // Saved current directory
+  const StdString strCWD;                 // Saved current directory
   /* -- Constructor to set directory ------------------------------- */ public:
-  explicit DirSaver(const string &strNWD) :
+  explicit DirSaver(const StdString &strNWD) :
     /* -- Initialisers ----------------------------------------------------- */
     strCWD{ DirGetCWD() }              // Save current working directory
     /* -- Set new directory ------------------------------------------------ */

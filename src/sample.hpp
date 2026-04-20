@@ -92,7 +92,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     // Half the pan
     fPan *= 0.5f;
     // Prepare sources
-    const array<const ALuint,2> aSourceIds{
+    const StdArray<const ALuint,2> aSourceIds{
       PrepareSource(sCLref,           // Left channel
         uivNames.front(), fGain, -0.5f + fPan, fPitch, bLoop, bLuaManaged),
       PrepareSource(sCRref,           // Right chanel

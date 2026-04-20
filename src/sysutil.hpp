@@ -30,7 +30,7 @@ enum SysThread : size_t                // Thread priority types
 /* -- Includes ------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
 /* -- System error formatter with specified error code --------------------- */
-static string SysError(const int iError)
+static StdString SysError(const int iError)
 { // Convert int to DWORD as we use the same function type across platforms
   const DWORD dwError = static_cast<DWORD>(iError);
   // Pointer to string
@@ -47,12 +47,12 @@ static string SysError(const int iError)
       // We can remove carriage return and free the string (fall through)
       default: lpszError[dwLen - 3] = '\0';
       // Just incase we don't have enough characters
-      case 1: case 2: const string strOut(S16toUTF(lpszError));
+      case 1: case 2: const StdString strOut(S16toUTF(lpszError));
                       LocalFree(lpszError);
                       return strOut;
     }
   } // exception occured
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Free the string if allocated
     if(lpszError) LocalFree(lpszError);
     // Assign the exception message as the error
@@ -63,10 +63,10 @@ static string SysError(const int iError)
 template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(GetLastError()); }
 /* -- System error formatter with current error code ----------------------- */
-static string SysError() { return SysError(SysErrorCode()); }
+static StdString SysError() { return SysError(SysErrorCode()); }
 /* -- Actual interface to MessageBoxExW ------------------------------------ */
-static unsigned int SysMessage(void*const vpHandle, const string &strTitle,
-  const string &strMessage, const unsigned int uiFlags)
+static unsigned int SysMessage(void*const vpHandle, const StdString &strTitle,
+  const StdString &strMessage, const unsigned int uiFlags)
     { return static_cast<unsigned int>(
         MessageBoxExW(reinterpret_cast<HWND>(vpHandle),
           UTFtoS16(strMessage).data(), UTFtoS16(strTitle).data(),
@@ -74,7 +74,7 @@ static unsigned int SysMessage(void*const vpHandle, const string &strTitle,
 /* -- Set thread priority -------------------------------------------------- */
 static bool SysSetThreadPriority(const SysThread stLevel)
 { // STP_* id to priority lookup table
-  static const array<const int, STP_MAX> aValues{
+  static const StdArray<const int, STP_MAX> aValues{
     THREAD_PRIORITY_ABOVE_NORMAL,      // STP_MAIN
     THREAD_PRIORITY_HIGHEST,           // STP_ENGINE
     THREAD_PRIORITY_BELOW_NORMAL,      // STP_AUDIO
@@ -103,11 +103,11 @@ static void SysSetThreadName(const char*const cpName)
 /* ------------------------------------------------------------------------- */
 #elif defined(MACOS)                   // Using mac?
 /* -- Actual interface to show a message box ------------------------------- */
-static unsigned int SysMessage(void*const, const string &strTitle,
-  const string &strMessage, const unsigned int uiFlags)
+static unsigned int SysMessage(void*const, const StdString &strTitle,
+  const StdString &strMessage, const unsigned int uiFlags)
 { // Make an autorelease ptr for Apple strings. Not sure if Apple provides a
   // non-pointer based CStringRef so we'll just remove it instead!
-  typedef unique_ptr<const void, function<decltype(CFRelease)>> CFAutoRelPtr;
+  typedef StdUniquePtr<const void, function<decltype(CFRelease)>> CFAutoRelPtr;
   // Setup dialogue title string with autorelease and if succeeded?
   if(const CFAutoRelPtr csrTitle{
     CFStringCreateWithCString(kCFAllocatorDefault, strTitle.data(),
@@ -121,7 +121,7 @@ static unsigned int SysMessage(void*const, const string &strTitle,
         CFStringCreateWithCString(kCFAllocatorDefault, "Quit Application",
           kCFStringEncodingUTF8), CFRelease })
       { // Setup keys for dictionary
-        array<const void*,3>
+        StdArray<const void*,3>
           vpKeys{ kCFUserNotificationAlertHeaderKey,
                   kCFUserNotificationAlertMessageKey,
                   kCFUserNotificationDefaultButtonTitleKey },
@@ -166,7 +166,7 @@ static bool SysSetThreadPriority(const SysThread stLevel)
   pthread_set_qos_class_self_np(stLevel <= STP_ENGINE ?
     QOS_CLASS_USER_INTERACTIVE : QOS_CLASS_BACKGROUND, 0);
   // Get requested thread policy level and priority fraction adjustment
-  static const array<const float, STP_MAX>
+  static const StdArray<const float, STP_MAX>
     aValues{ 0.75 /* STP_MAIN */, 1.00 /* STP_ENGINE */, 0.50 /* STP_AUDIO */,
              0.25 /* STP_HIGH */, 0.00 /* STP_LOW */ };
   const float fFraction = aValues[stLevel];
@@ -196,17 +196,17 @@ static unsigned int SysMessage(void*const, string strTitle,
 { // Print the error in console
   fprintf(stderr, "%s: %s\n", strTitle.data(), strMessage.data());
   // Eligable directories for dialog box elf binaries
-  const array<const string_view, 10> strvaDirPrefixes{
+  const StdArray<const StdStringView, 10> strvaDirPrefixes{
     "/bin/",             "/usr/bin/",        "/usr/sbin/",
     "/usr/local/bin/",   "/usr/local/sbin/", "/usr/games/",
     "/usr/local/games/", "/snap/bin/",       "/var/lib/flatpak/exports/bin/",
     "/run/current-system/sw/bin/" };
   // Dialog box applications we can use
   struct DlgBoxApplication {
-    const string_view strvElf, strvCompulsoryParam,
+    const StdStringView strvElf, strvCompulsoryParam,
                       strvTitleParam, strvMessageParam; };
   // The dialog box elf binary database
-  const array<const DlgBoxApplication, 5> dbaaApps{ {
+  const StdArray<const DlgBoxApplication, 5> dbaaApps{ {
     { "yad",                   cCommon->CommonBlank(),
       "--title=",              "--text=" },
     { "zenity",                "--info --no-markup",
@@ -225,12 +225,12 @@ static unsigned int SysMessage(void*const, string strTitle,
   // Search for one of these apps now
   for(const DlgBoxApplication &dbaApp : dbaaApps)
   { // In one of these directories
-    for(const string_view &strvDir : strvaDirPrefixes)
+    for(const StdStringView &strvDir : strvaDirPrefixes)
     { // Build filename and ignore if not exist, readable or executable
-      const string strPath{ StrAppend(strvDir, dbaApp.strvElf) };
+      const StdString strPath{ StrAppend(strvDir, dbaApp.strvElf) };
       if(!DirCheckFileAccess(strPath, F_OK|R_OK|X_OK)) continue;
       // Build command line
-      const string strCmdLine{ StrFormat("$ $ $ $",
+      const StdString strCmdLine{ StrFormat("$ $ $ $",
         strPath, dbaApp.strvCompulsoryParam,
        (dbaApp.strvTitleParam.empty() ?
           cCommon->CommonBlank() : StrFormat("$\"$\"",
@@ -251,8 +251,8 @@ static bool SysSetThreadPriority(const SysThread stPriority) { return true; }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Windows is defined?
 /* -- System message without a handle -------------------------------------- */
-static unsigned int SysMessage(const string &strTitle,
-  const string &strMessage, const unsigned int uiFlags)
+static unsigned int SysMessage(const StdString &strTitle,
+  const StdString &strMessage, const unsigned int uiFlags)
     { return SysMessage(nullptr, strTitle, strMessage,
         MB_SYSTEMMODAL|uiFlags); }
 /* ------------------------------------------------------------------------- */
@@ -261,9 +261,9 @@ static unsigned int SysMessage(const string &strTitle,
 template<typename IntType=int>static IntType SysErrorCode()
   { return static_cast<IntType>(StdGetError()); }
 /* -- System error formatter with specified error code --------------------- */
-static string SysError(const int iError) { return StrFromErrNo(iError); }
+static StdString SysError(const int iError) { return StrFromErrNo(iError); }
 /* -- System error formatter with current error code ----------------------- */
-static string SysError() { return StrFromErrNo(SysErrorCode()); }
+static StdString SysError() { return StrFromErrNo(SysErrorCode()); }
 /* ------------------------------------------------------------------------- */
 static void SysSetThreadName(const char*const cpName)
 { // Set thread name which helps a little with debugging
@@ -274,8 +274,8 @@ static void SysSetThreadName(const char*const cpName)
     cpName);
 }
 /* -- System message without a handle -------------------------------------- */
-static unsigned int SysMessage(const string &strTitle,
-  const string &strMessage, const unsigned int uiFlags)
+static unsigned int SysMessage(const StdString &strTitle,
+  const StdString &strMessage, const unsigned int uiFlags)
 { return SysMessage(nullptr, strTitle, strMessage, uiFlags); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Not using Windows target

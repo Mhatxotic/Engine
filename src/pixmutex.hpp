@@ -18,13 +18,13 @@ class SysMutex                         // Need this before of System init order
   static constexpr size_t stPidSize = sizeof(pid_t); // Size of a pid
   typedef bool (CbFunc)(const pid_t,const pid_t); // Callback return type
   /* -- Initialise global mutex ------------------------------------ */ public:
-  bool SysDoInitGlobalMutex(const string_view &strvTitle, CbFunc cbCb)
+  bool SysDoInitGlobalMutex(const StdStringView &strvTitle, CbFunc cbCb)
   { // Initialise mutex ident
     idMutex.IdentSet(strvTitle);
     // Shared memory file descriptor helper
     class Shm
     { /* -- Private variables ---------------------------------------------- */
-      const string_view &strvTitle; // Filename of shm object
+      const StdStringView &strvTitle; // Filename of shm object
       int               iFd,        // The file descriptor of the shm object
                         iMode;      // Requested mode for the shm object
       /* -- Return mode -------------------------------------------- */ public:
@@ -59,7 +59,7 @@ class SysMutex                         // Need this before of System init order
       /* -- Destructor that closes the file descriptor --------------------- */
       ~Shm() { if(Get() >= 0) close(Get()); }
       /* -- Constructor that initialises variables ------------------------- */
-      explicit Shm(const string_view &strvNTitle) :
+      explicit Shm(const StdStringView &strvNTitle) :
         /* -- Initialisers ------------------------------------------------- */
         strvTitle(strvNTitle),         // Set reference to title
         iFd(-1),                       // File descriptor uninitialised

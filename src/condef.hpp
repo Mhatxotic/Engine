@@ -26,7 +26,7 @@ static unsigned int ConColourToRGB(const ConColour ccIndex)
 { // The conversion of index to colour 0x[II][RR][GG][BB]. The 'II' means that
   // if it is zero (0) then the value is perceived as normal intensity, else if
   // the value is one (1) then bright intensity.
-  typedef array<unsigned int, COLOUR_MAX> ConPalette;
+  typedef StdArray<unsigned int, COLOUR_MAX> ConPalette;
   static const ConPalette cpaNDXtoRGB{
     0x00010101 /* 00=COLOUR_BLACK   */, 0x0000008b /* 01=COLOUR_BLUE     */,
     0x00008b00 /* 02=COLOUR_GREEN   */, 0x00a0b0b0 /* 03=COLOUR_CYAN     */,
@@ -44,9 +44,9 @@ struct ConLine                         // Console line data structure
 { /* ----------------------------------------------------------------------- */
   const double     dTime;              // Line time
   const ConColour  ccColour;           // Line colour index
-  const string     strLine;            // Line data
+  const StdString  strLine;            // Line data
 };/* ----------------------------------------------------------------------- */
-typedef list<ConLine>                    ConLines;           // Con lines data
+typedef StdList<ConLine>                 ConLines;           // Con lines data
 typedef ConLines::const_iterator         ConLinesConstIt;    // " fwd const it
 typedef ConLines::reverse_iterator       ConLinesRevIt;      // " reverse it
 typedef ConLines::const_reverse_iterator ConLinesConstRevIt; // " const
@@ -97,7 +97,7 @@ typedef void (*ConCbFunc)(const Args &); // Cmd callback
 /* ------------------------------------------------------------------------- */
 struct ConLib                          // Console library command structure
 { /* ----------------------------------------------------------------------- */
-  const string         strName;        // Function name
+  const StdString         strName;        // Function name
   const unsigned int   uiMinimum,      // Minimum parameters
                        uiMaximum;      // Maximum parameters
   const CoreFlagsConst cfcRequired;    // Required core flags
@@ -105,13 +105,13 @@ struct ConLib                          // Console library command structure
 };/* ----------------------------------------------------------------------- */
 struct ConLibStatic                    // For static engine commands list
 { /* ----------------------------------------------------------------------- */
-  const string_view    strvName;       // Function name
+  const StdStringView  strvName;       // Function name
   const unsigned int   uiMinimum,      // Minimum parameters
                        uiMaximum;      // Maximum parameters
   const CoreFlagsConst cfcRequired;    // Required core flags
   const ConCbFunc      ccfFunc;        // Callback function
 };/* ----------------------------------------------------------------------- */
-typedef array<const ConLibStatic, MAX_CONCMD> ConCmdStaticList;
+typedef StdArray<const ConLibStatic, MAX_CONCMD> ConCmdStaticList;
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

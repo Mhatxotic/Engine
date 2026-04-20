@@ -74,7 +74,7 @@ class JoyAxisInfo                      // Axis class
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
-template<class Container = array<JoyAxisInfo, 8>,
+template<class Container = StdArray<JoyAxisInfo, 8>,
          class Iterator = typename Container::const_iterator>
 class JoyAxisList :                    // Axis data list type
 /* ------------------------------------------------------------------------- */

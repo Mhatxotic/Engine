@@ -39,10 +39,10 @@ class SysCon :                         // All members initially private
   DimInt           diSizeM1, diSizeM2; // Console bounds minus 1 and 2
   int              iCursor;            // Current cursor setting
   /* -- Storing original palette ------------------------------------------- */
-  typedef array<short,3>             ShortTri;
-  typedef array<ShortTri,COLOUR_MAX> ColourTable;
-  typedef array<short,2>             ShortPair;
-  typedef vector<ShortPair>          PairTable;
+  typedef StdArray<short,3>             ShortTri;
+  typedef StdArray<ShortTri,COLOUR_MAX> ColourTable;
+  typedef StdArray<short,2>             ShortPair;
+  typedef StdVector<ShortPair>          PairTable;
   ColourTable      ctPalette;          // Saved colour palette
   PairTable        ptPairs;            // Saved colour pairs
   /* -- Do set a character at the current position ------------------------- */
@@ -290,7 +290,8 @@ class SysCon :                         // All members initially private
   void PushColour() { aColourSaved = aColour; }
   void PopColour() { aColour = aColourSaved; }
   /* -- Distance ----------------------------------------------------------- */
-  unsigned int Distance(const unsigned int uiD1, const unsigned int uiD2)
+  static unsigned int Distance(const unsigned int uiD1,
+    const unsigned int uiD2)
   { // Calculate deltas of components
     const unsigned int
       uiDeltaR = ((uiD1 & 0x00FF0000) >> 16) - ((uiD2 & 0x00FF0000) >> 16),
@@ -383,7 +384,7 @@ class SysCon :                         // All members initially private
     return false;
   }
   /* -- Handle return on print --------------------------------------------- */
-  void HandleReturnSimulated(UtfDecoder &udStr, int &iXp, int &iYp,
+  static void HandleReturnSimulated(UtfDecoder &udStr, int &iXp, int &iYp,
     const int iIn)
   { // Go down own line and set indentation
     iXp = iIn;
@@ -510,7 +511,7 @@ class SysCon :                         // All members initially private
     if(bClrEOL) ClearLine();
   }
   /* -- Redraw status input text ------------------------------------------- */
-  void RedrawInputBar(const string &strIL, const string &strIR)
+  void RedrawInputBar(const StdString &strIL, const StdString &strIR)
   { // Set cursor position
     SetCursor(0, diSizeM1.DimGetHeight());
     // Set input bar colour
@@ -560,7 +561,8 @@ class SysCon :                         // All members initially private
     CoordIncX();
   }
   /* -- Redraw a status bar ------------------------------------------------ */
-  void RedrawStatus(const int iSY, const string &strL, const string &strR)
+  void RedrawStatus(const int iSY, const StdString &strL,
+    const StdString &strR)
   { // Reset drawing row
     SetCursor(0, iSY);
     // Set colour
@@ -610,7 +612,7 @@ class SysCon :                         // All members initially private
     WriteLine(udRight, CoordGetX()+iRC, true);
   }
   /* -- Redraw bottom status bar ------------------------------------------- */
-  void RedrawStatusBar(const string &strSL, const string &strSR)
+  void RedrawStatusBar(const StdString &strSL, const StdString &strSR)
   { // Redraw the status bar
     RedrawStatus(diSizeM1.DimGetHeight(), strSL, strSR);
     // Set cursor position on commit
@@ -619,7 +621,7 @@ class SysCon :                         // All members initially private
     SetCursorVisibility(false);
   }
   /* -- Redraw title status bar -------------------------------------------- */
-  void RedrawTitleBar(const string &strTL, const string &strTR)
+  void RedrawTitleBar(const StdString &strTL, const StdString &strTR)
     { RedrawStatus(0, strTL, strTR); }
   /* -- Redraw console buffer ---------------------------------------------- */
   void RedrawBuffer(const ConLines &clLines,

@@ -28,13 +28,13 @@ class Pack :
   public DimClass                      // Dimensions of bin in pixels
 { /* --------------------------------------------------------------- */ public:
   typedef DimCoords<Int> Rect;         // Rectangle of signed ints
-  typedef vector<Rect> RectList;       // list of rectangles
+  typedef StdVector<Rect> RectList;       // list of rectangles
   constexpr static double dIdle = -0.0;// Uninitialised value
   /* -------------------------------------------------------------- */ private:
   RectList         rlUsed, rlFree;     // Used and free data
   /* -- Remove a rect (not that this can cause a realloc) ------------------ */
   void PruneFreeRect(const size_t stIndex)
-    { rlFree.erase(next(rlFree.cbegin(), static_cast<ssize_t>(stIndex))); }
+    { rlFree.erase(StdNext(rlFree.cbegin(), static_cast<ssize_t>(stIndex))); }
   /* -- Add a rect (note this can cause a realloc) ------------------------- */
   void AddFreeRect(const Int iX, const Int iY, const Int iW, const int iH)
     { rlFree.push_back({ iX, iY, iW, iH }); }
@@ -118,7 +118,7 @@ class Pack :
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  bool IsContainedIn(const Rect &rSrc, const Rect &rDest) const
+  static bool IsContainedIn(const Rect &rSrc, const Rect &rDest)
   { // Return if the src rect bounds are contained in dest bounds
     return rSrc.CoordGetX() >= rDest.CoordGetX()
         && rSrc.CoordGetY() >= rDest.CoordGetY()
@@ -246,7 +246,7 @@ class Pack :
   /* -- Returns the % total filled ----------------------------------------- */
   double Occupancy() const
   { // Return the ratio of used surface area to the total bin area.
-    return accumulate(rlUsed.cbegin(), rlUsed.cend(), 0.0,
+    return StdAccumulate(rlUsed.cbegin(), rlUsed.cend(), 0.0,
       [](double dUsed, const Rect &rNode)
         { return dUsed += rNode.template DimGetWidth<double>() *
                           rNode.DimGetHeight(); }) /

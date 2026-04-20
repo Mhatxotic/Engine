@@ -30,18 +30,18 @@ using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert back slashes to forward slashes ------------------------------ */
-static string &PSplitBackToForwardSlashes(string &strText)
+static StdString &PSplitBackToForwardSlashes(StdString &strText)
   { return StrReplace(strText, '\\', '/'); }
-static string PSplitBackToForwardSlashes(const string &strIn)
-  { string strOut{ strIn }; return PSplitBackToForwardSlashes(strOut); }
+static StdString PSplitBackToForwardSlashes(const StdString &strIn)
+  { StdString strOut{ strIn }; return PSplitBackToForwardSlashes(strOut); }
 #if defined(WINDOWS)
-static string PSplitBackToForwardSlashes(const wstring &wstrName)
+static StdString PSplitBackToForwardSlashes(const StdWideString &wstrName)
   { return PSplitBackToForwardSlashes(WS16toUTF(wstrName)); }
 #endif
 /* -- FileParts class ------------------------------------------------------ */
 class FileParts                        // Contains parts of a filename
 { /* -- Variables -------------------------------------------------- */ public:
-  const string     strDrive,           // Drive part of path
+  const StdString  strDrive,           // Drive part of path
                    strDir,             // Directory part of path
                    strFile,            // Filename part of path
                    strExt,             // Extension part of path
@@ -49,8 +49,8 @@ class FileParts                        // Contains parts of a filename
                    strFull,            // Full path name
                    strLoc;             // Drive+path name without file name
   /* -- Initialise constructor --------------------------------------------- */
-  FileParts(string &&strDriveNew, string &&strDirNew, string &&strFileNew,
-    string &&strExtNew, string &&strFullNew) :
+  FileParts(StdString &&strDriveNew, StdString &&strDirNew,
+    StdString &&strFileNew, StdString &&strExtNew, StdString &&strFullNew) :
     /* -- Initialisers ----------------------------------------------------- */
     strDrive{ StdMove(strDriveNew) },
     strDir{ StdMove(strDirNew) },
@@ -78,13 +78,13 @@ class PathSplit :
   /* -- Base classes ------------------------------------------------------- */
   public FileParts                     // File parts
 { /* -- Constructors ---------------------------------------------- */ private:
-  FileParts Init(const string &strSrc, const bool bUseFullPath) const
+  FileParts Init(const StdString &strSrc, const bool bUseFullPath) const
   { // Windows?
 #if defined(WINDOWS)
     // Convert UTF8 string to UNICODE string
-    wstring wstrSrc{ UTFtoS16(strSrc) };
+    StdWideString wstrSrc{ UTFtoS16(strSrc) };
     // Build full path name and use requested pathname if not wanted or failed?
-    StdResized<wstring> wstrFull{ _MAX_PATH };
+    StdResized<StdWideString> wstrFull{ _MAX_PATH };
     if(!bUseFullPath || !_wfullpath(const_cast<wchar_t*>(wstrFull.data()),
          wstrSrc.data(), _MAX_PATH + 1))
       wstrFull.assign(wstrSrc);
@@ -93,7 +93,7 @@ class PathSplit :
     // This is the final full path string so compact it
     wstrFull.shrink_to_fit();
     // Buffers for the path parts
-    StdResized<wstring> wstrDrive{ _MAX_DRIVE }, wstrDir{ _MAX_DIR },
+    StdResized<StdWideString> wstrDrive{ _MAX_DRIVE }, wstrDir{ _MAX_DIR },
       wstrFile{ _MAX_FNAME }, wstrExt{ _MAX_EXT };
     // Split the executable path name into bits and if failed?
     _wsplitpath_s(const_cast<wchar_t*>(wstrFull.data()),
@@ -119,7 +119,7 @@ class PathSplit :
     // Unix?
 #else
     // If a full path name build is re4quested? Set original string
-    StdResized<string> strFull{ _MAX_PATH };
+    StdResized<StdString> strFull{ _MAX_PATH };
     if(!bUseFullPath || !realpath(const_cast<char*>(strSrc.data()),
       const_cast<char*>(strFull.data())))
         strFull.assign(strSrc);
@@ -131,7 +131,7 @@ class PathSplit :
     // dirname() MODIFIES the original argument. We use memcpy because we
     // Don't want to resize the string. Also let us be careful of how many
     // bytes we should copy. Copy the lowest allocated string
-    StdResized<string> strDir{ _MAX_DIR };
+    StdResized<StdString> strDir{ _MAX_DIR };
     strlcpy(const_cast<char*>(strDir.data()), strFull.data(), _MAX_DIR);
     if(const char*const cpDir = dirname(const_cast<char*>(strDir.data())))
     { // If the directory is not just a dot (current dir)?
@@ -151,7 +151,7 @@ class PathSplit :
     // This is the final directory string so compact it
     strDir.shrink_to_fit();
     // Prepare filename. Again basename() can modify the argument on linux.
-    StdResized<string> strFile{ _MAX_FNAME };
+    StdResized<StdString> strFile{ _MAX_FNAME };
     strlcpy(const_cast<char*>(strFile.data()), strFull.data(), _MAX_FNAME);
     if(const char*const cpFile = basename(const_cast<char*>(strFull.data())))
     { // If the pointer is not the same as our string? Copy it.
@@ -164,7 +164,7 @@ class PathSplit :
     const size_t stSlashPos = strFile.find_last_of('/'),
     stDotPos = StrFindCharBackwards(strFile, strFile.length() - 1,
       stSlashPos != StdNPos ? (stSlashPos + 1) : 0, '.');
-    StdResized<string> strExt{ _MAX_EXT };
+    StdResized<StdString> strExt{ _MAX_EXT };
     if(stDotPos != StdNPos)
     { // Update filename
       strExt.assign(strFile.substr(stDotPos));
@@ -181,7 +181,7 @@ class PathSplit :
 #endif
   }
   /* -- Constructors with initialisation --------------------------- */ public:
-  explicit PathSplit(const string &strSrc, const bool bUseFullPath=false) :
+  explicit PathSplit(const StdString &strSrc, const bool bUseFullPath=false) :
     /* -- Initialisers ----------------------------------------------------- */
     FileParts{ Init(strSrc, bUseFullPath) }
     /* -- No code ---------------------------------------------------------- */

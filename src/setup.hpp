@@ -151,8 +151,7 @@
 # define COMPILER_VERSION              STR(__GNUC__) "." \
                                        STR(__GNUC_MINOR__) "." \
                                        STR(__GNUC_PATCHLEVEL__)
-# define _DARWIN_USE_64_BIT_INODE      // For 64-bit size values
-# define _LIBCPP_ENABLE_CXX17_REMOVED_UNEXPECTED_FUNCTIONS // On in MSVC & GCC
+# define _DARWIN_USE_64_BIT_INODE      // For 64-bit size values (old API's)
 #elif defined(__linux__)               // Linux detected?
 # define LINUX                         // Using Linux
 # define COMPILER_NAME                 "GCC"

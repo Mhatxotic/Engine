@@ -25,9 +25,9 @@ using ::std::chrono::nanoseconds;      using ::std::chrono::seconds;
 using ::std::chrono::system_clock;
 using CoreClock = ::std::chrono::high_resolution_clock; // Using HRC
 /* -- Typedefs ------------------------------------------------------------- */
-typedef CoreClock::time_point ClkTimePoint;      // Holds a time
-typedef CoreClock::duration   ClkDuration;       // Holds a duration
-typedef atomic<ClkDuration>   AtomicClkDuration; // Thread safe duration
+typedef CoreClock::time_point  ClkTimePoint;      // Holds a time
+typedef CoreClock::duration    ClkDuration;       // Holds a duration
+typedef StdAtomic<ClkDuration> AtomicClkDuration; // Thread safe duration
 /* -- Common duration values ----------------------------------------------- */
 static constexpr ClkDuration
   cd0{ nanoseconds{ 0 } },             cd1MS{ milliseconds{ 1 } },
@@ -87,22 +87,22 @@ template<class ClockType = CoreClock>struct ClockManager
   static double TimePointToClampedDouble(const ClkTimePoint &ctpTime)
     { return UtilMaximum(TimePointToDouble(ctpTime), 0.0); }
   /* -- Convert local time to string --------------------------------------- */
-  const string FormatTime(const char*const cpFormat =
+  const StdString FormatTime(const char*const cpFormat =
     cpTimeFormat) const
       { return StrFromTimeTT(GetTimeS(), cpFormat); }
   /* -- Convert universal time to string ----------------------------------- */
-  const string FormatTimeUTC(const char*const cpFormat =
+  const StdString FormatTimeUTC(const char*const cpFormat =
     cpTimeFormat) const
       { return StrFromTimeTTUTC(GetTimeS(), cpFormat); }
   /* -- Convert time to short duration ------------------------------------- */
-  static string ToDurationString(unsigned int uiPrecision = 6)
+  static StdString ToDurationString(unsigned int uiPrecision = 6)
     { return StrShortFromDuration(GetTimeDouble(), uiPrecision); }
   /* -- Convert seconds to long duration relative to current time ---------- */
-  const string ToDurationRel(const StdTimeT tDuration = 0,
+  const StdString ToDurationRel(const StdTimeT tDuration = 0,
     unsigned int uiCompMax = StdMaxUInt) const
       { return StrLongFromDuration(GetTimeS() - tDuration, uiCompMax); }
   /* -- Convert time to long duration -------------------------------------- */
-  const string ToDurationLongString(unsigned int uiCompMax =
+  const StdString ToDurationLongString(unsigned int uiCompMax =
     StdMaxUInt) const
       { return ToDurationRel(0, uiCompMax); }
   /* -- Unused constructor ------------------------------------------------- */

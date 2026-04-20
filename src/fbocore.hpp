@@ -24,7 +24,7 @@ using namespace IString::P;            using namespace ISysUtil::P;
 using namespace ITimer::P;             using namespace IUtil::P;
 using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
-typedef array<Fbo, 2> FboDouble;       // Main and console FBO typedef
+typedef StdArray<Fbo, 2> FboDouble;    // Main and console FBO typedef
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Typedefs ============================================================= */

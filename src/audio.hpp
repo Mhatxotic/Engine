@@ -114,7 +114,7 @@ class Audio :                          // Audio manager class
       // Log status
       cLog->LogInfoSafe("Audio class reinitialised successfully.");
     } // We don't want LUA to hard break really.
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Log the exception first
       cLog->LogErrorExSafe("Audio reinit exception: $", eReason);
       // Reset next thread check time
@@ -133,7 +133,7 @@ class Audio :                          // Audio manager class
     } // Terminate thread
     return TS_OK;
   } // exception occured in this thread
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Report error
     cLog->LogErrorExSafe("(AUDIO SE THREAD EXCEPTION) $", eReason);
     // Restart the thread
@@ -221,7 +221,7 @@ class Audio :                          // Audio manager class
     } // Terminate thread
     return TS_OK;
   } // exception occured in this thread
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Report error
     cLog->LogErrorExSafe("(AUDIO NSE THREAD EXCEPTION) $", eReason);
     // Restart the thread
@@ -232,7 +232,7 @@ class Audio :                          // Audio manager class
     ALCdevice*const alcNDevice, const ALCsizei stLength,
     const ALCchar*const cpMessage, void*const)
   { // Create string view of message and log the event
-    const string_view strvMsg{ cpMessage, static_cast<size_t>(stLength) };
+    const StdStringView strvMsg{ cpMessage, static_cast<size_t>(stLength) };
     // Log event text to say we processed the event successfully.
     cLog->LogDebugExSafe(
       "Audio received system event $<0x$$> with device type $$<0x$$>...\n"
@@ -262,7 +262,7 @@ class Audio :                          // Audio manager class
     AudioEnumPlaybackDevices();
     AudioEnumCaptureDevices();
     // Holding current device name
-    string strDevice;
+    StdString strDevice;
     // If -1 is not set (use specific device)
     if(stDevice != StdNPos)
     { // Invalid device? Use default device!
@@ -305,7 +305,7 @@ class Audio :                          // Audio manager class
   void AudioDeInitContext() { cOal->DeInit(); }
   /* -- Enumerate devices generic ------------------------------------------ */
   template<class ListType>
-    void AudioEnumDevices(const string_view &svType, const ALenum eQueryType,
+    void AudioEnumDevices(const StdStringView &svType, const ALenum eQueryType,
       ListType &ltDevices)
   { // Log enumerations
     cLog->LogDebugExSafe("Audio enumerating $ devices...", svType);
@@ -322,7 +322,8 @@ class Audio :                          // Audio manager class
         { // Save next identifier
           const size_t stSize = ltDevices.size();
           // Add device to list and get the ref to the constructed string
-          const string &strRef = *ltDevices.emplace(ltDevices.cend(), cpList);
+          const StdString &strRef =
+            *ltDevices.emplace(ltDevices.cend(), cpList);
           // Print the device and its identifier
           cLog->LogDebugExSafe("- $: $.", stSize, strRef);
           // Push to list and jump to next item
@@ -363,13 +364,13 @@ class Audio :                          // Audio manager class
     const ALfloat fZ1, const ALfloat fX2, const ALfloat fY2, const ALfloat fZ2)
       const
   { // Build orientation array and commit it
-    const array<const ALfloat, 6> aOr{ fX1, fY1, fZ1, fX2, fY2, fZ2 };
+    const StdArray<const ALfloat, 6> aOr{ fX1, fY1, fZ1, fX2, fY2, fZ2 };
     AL(cOal->SetListenerVectors(AL_ORIENTATION, aOr.data()),
       "Failed to set audio orientation!",
       "X1", fX1, "Y1", fY1, "Z1", fZ1, "X2", fX2, "Y2", fY2, "Z2", fZ2);
   }
   /* -- Get current playback device ---------------------------------------- */
-  const string AudioGetPbkDeviceById(const size_t stId) const
+  const StdString AudioGetPbkDeviceById(const size_t stId) const
   { // bail if value out of range
     if(stId >= AudioGetNumPbkDevices())
       XC("Specified audio playback device id out of range!",
@@ -383,7 +384,7 @@ class Audio :                          // Audio manager class
   /* -- Get device information --------------------------------------------- */
   size_t AudioGetNumPbkDevices() const { return svPBDevices.size(); }
   /* -- Get device information --------------------------------------------- */
-  const string AudioGetCapDevice(const size_t stId) const
+  const StdString AudioGetCapDevice(const size_t stId) const
   { // bail if value out of range
     if(stId >= AudioGetNumCapDevices())
       XC("Specified audio capture device id out of range!",
@@ -405,7 +406,7 @@ class Audio :                          // Audio manager class
     return true;
   }
   /* -- Stop all sounds ---------------------------------------------------- */
-  void AudioStopAll() { VideoStop(); StreamStop(); SampleStop(); }
+  static void AudioStopAll() { VideoStop(); StreamStop(); SampleStop(); }
   /* -- Init --------------------------------------------------------------- */
   void AudioDeInit()
   { // Ignore if class already de-initialised

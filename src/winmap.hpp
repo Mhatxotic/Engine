@@ -12,7 +12,7 @@ class SysMap :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public virtual Ident                 // File name to the map
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef array<StdTimeT,2> TwoTime;   // For holding two unix timestamps
+  typedef StdArray<StdTimeT,2> TwoTime; // For holding two unix timestamps
   /* -- Private variables (don't change order!) ---------------------------- */
   HANDLE           hFile;              // Handle to the file
   uint64_t         ullSize;            // Size of file
@@ -128,7 +128,7 @@ class SysMap :                         // Members initially private
     IdentClear();
   }
   /* -- Constructor with just id initialisation ---------------------------- */
-  SysMap(const string &strIn, const StdTimeT tC, const StdTimeT tM) :
+  SysMap(const StdString &strIn, const StdTimeT tC, const StdTimeT tM) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strIn },                    // Initialise file name
     hFile(INVALID_HANDLE_VALUE),       // No file handle
@@ -160,7 +160,7 @@ class SysMap :                         // Members initially private
     /* -- Clear other variables -------------------------------------------- */
     { smOther.SysMapClearVarsInternal(); }
   /* -- Constructor with actual initialisation ----------------------------- */
-  explicit SysMap(const string &strIn) :
+  explicit SysMap(const StdString &strIn) :
     /* -- Initialisers ----------------------------------------------------- */
     Ident{ strIn },                    // Set file name
     hFile(SysMapSetupFile()),          // Get file handle from file on disk

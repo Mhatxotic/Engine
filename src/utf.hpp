@@ -15,7 +15,7 @@ namespace P {                          // Start of public module namespace
 /* -- Returns if character is hexadecimal (0-9A-Fa-f) ---------------------- */
 template<typename IntType> requires is_integral_v<IntType>
   constexpr static bool StdIsXDigit(const IntType itChar)
-    { return ::std::isxdigit(static_cast<int>(itChar)); }
+{ return ::std::isxdigit(static_cast<int>(itChar)); }
 /* -- Template to construct and reserve part of another object ------------- */
 template<class ClassType>
   concept StdHasReserve = requires(ClassType &c, size_t n) { c.reserve(n); };
@@ -50,11 +50,11 @@ typedef size_t     Codepoint;          // Type of a UTF-8 character
 /* -- Check if C-string is nullptr or blank -------------------------------- */
 template<typename PtrType>
   static bool UtfIsCStringValid(const PtrType*const ptpStr)
-    { return ptpStr && *ptpStr; }
+{ return ptpStr && *ptpStr; }
 /* ------------------------------------------------------------------------- */
 template<typename PtrType>
   static bool UtfIsCStringNotValid(const PtrType*const ptpStr)
-    { return !UtfIsCStringValid<PtrType>(ptpStr); }
+{ return !UtfIsCStringValid<PtrType>(ptpStr); }
 /* -- Structure for utf size and character code ---------------------------- */
 struct UtfEncoderEx final { const size_t l;
   const union { const uint8_t u8[5]; const char c[5]; } u; };
@@ -81,13 +81,13 @@ static UtfEncoderEx UtfEncodeEx(const Codepoint cCode)
   return { 0, {{ 0, 0, 0, 0, 0 }} };
 }
 /* -- Encode specified code and append it to the specified string ---------- */
-static void UtfAppend(const Codepoint cCode, string &strDest)
+static void UtfAppend(const Codepoint cCode, StdString &strDest)
 { // Encoded UTF8 and append to string
   const UtfEncoderEx ueeCode{ UtfEncodeEx(cCode) };
   strDest.append(ueeCode.u.c, ueeCode.l);
 }
 /* ------------------------------------------------------------------------- */
-static string UtfDecodeNum(uint32_t ulVal)
+static StdString UtfDecodeNum(uint32_t ulVal)
 { // Unset the un-needed upper 8-bits. This will act as the nullptr character.
   ulVal &= 0x00FFFFFF;
   // If we have any of the lower 24-bits set? Keep shifting the bits until the
@@ -121,7 +121,7 @@ static void UtfDecode(Codepoint &cState, Codepoint &cCode,
   else cState = 12;
 }
 /* -- Pop UTF character from start of string-------------------------------- */
-static bool UtfPopFront(string &strStr)
+static bool UtfPopFront(StdString &strStr)
 { // String is not empty?
   if(!strStr.empty())
   { // Get start of buffer
@@ -143,7 +143,7 @@ static bool UtfPopFront(string &strStr)
   return false;
 }
 /* -- Pop UTF character from end of string --------------------------------- */
-static bool UtfPopBack(string &strStr)
+static bool UtfPopBack(StdString &strStr)
 { // String is not empty?
   if(!strStr.empty())
   { // Get start of buffer and end of buffer
@@ -161,7 +161,7 @@ static bool UtfPopBack(string &strStr)
   return false;
 }
 /* -- Move UTF character from back of one string to the front of another --- */
-static bool UtfMoveBackToFront(string &strSrc, string &strDst)
+static bool UtfMoveBackToFront(StdString &strSrc, StdString &strDst)
 { // If string is not empty?
   if(!strSrc.empty())
   { // Get start of buffer and end of buffer
@@ -183,7 +183,7 @@ static bool UtfMoveBackToFront(string &strSrc, string &strDst)
   return false;
 }
 /* -- Move UTF character from front of one string to the back of another --- */
-static bool UtfMoveFrontToBack(string &strSrc, string &strDst)
+static bool UtfMoveFrontToBack(StdString &strSrc, StdString &strDst)
 { // If the string is not empty?
   if(!strSrc.empty())
   { // Get start of buffer
@@ -212,11 +212,11 @@ static bool UtfMoveFrontToBack(string &strSrc, string &strDst)
   return false;
 }
 /* == Convert a unicode or ansi string to UTF8 ----------------------------- */
-template<typename CharType>static string UtfFromWide(const CharType *ctPtr)
+template<typename CharType>static StdString UtfFromWide(const CharType *ctPtr)
 { // Empty string if nullptr or string empty
   if(UtfIsCStringNotValid<CharType>(ctPtr)) return {};
   // Output string
-  string strOut;
+  StdString strOut;
   // For each character. Get character and convert to UTF8
   do
   { // Encode character
@@ -316,7 +316,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
   { // Ignore if at the end of the string or it is empty
     if(UtfFinished()) return 0;
     // Capture up to eight characters
-    StdReserved<string> strMatched{ stMaximum };
+    StdReserved<StdString> strMatched{ stMaximum };
     // Add characters as long as they are valid hexadecimal characters and the
     // matched string has not reached eight characters. Anything that could be
     // unicode character should auto break anyway so this should be safe.
@@ -332,7 +332,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
     return strMatched.length();
   }
   /* -- Slice string from pushed position to current position -------------- */
-  const string UtfSlice(const unsigned char*const ucpPos) const
+  const StdString UtfSlice(const unsigned char*const ucpPos) const
     { return { reinterpret_cast<const char*>(ucpPos),
         static_cast<size_t>(ucpPtr - ucpPos) }; }
   /* -- Return if string is valid ------------------------------------------ */
@@ -353,9 +353,9 @@ class UtfDecoder final                 // UTF8 string decoder helper
   /* -- Pop position ------------------------------------------------------- */
   void UtfSetCPtr(const unsigned char*const ucpPos) { ucpPtr = ucpPos; }
   /* -- Convert to wide string --------------------------------------------- */
-  const wstring UtfWide()
+  const StdWideString UtfWide()
   { // Output string
-    wstring wstrOut;
+    StdWideString wstrOut;
     // Add character to string
     while(const Codepoint cCode = UtfNext())
       wstrOut += static_cast<wchar_t>(cCode);
@@ -380,7 +380,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- Word wrap a utf string --------------------------------------------- */
-static StrVector UtfWordWrap(const string &strText, const size_t stWidth,
+static StrVector UtfWordWrap(const StdString &strText, const size_t stWidth,
   const size_t stIndent)
 { // Return empty array if width is invalid.
   if(!stWidth || stWidth <= stIndent) return {};
@@ -390,7 +390,7 @@ static StrVector UtfWordWrap(const string &strText, const size_t stWidth,
   // The line list
   StrVector svLines;
   // Premade indent
-  string strIndent;
+  StdString strIndent;
   // Make string into utf string
   UtfDecoder udStr{ strText };
   // Save position

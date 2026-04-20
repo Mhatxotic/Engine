@@ -110,7 +110,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     // and null-terminate it and place it into a RapidJson StringStream object
     // and then place that into a CSW object so we can track the source
     // information when a parse error occurs.
-    const string strJson{ fmData.MemToString() };
+    const StdString strJson{ fmData.MemToString() };
     StringStream ssStream{ strJson.data() };
     CursorStreamWrapper<StringStream> cswStream{ ssStream };
     // Parse the text and if there is a parse error? Break execution
@@ -296,7 +296,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     return rjvValue.GetDouble();
   }
   /* ----------------------------------------------------------------------- */
-  const string GetString(const char*const cpKey) const
+  const StdString GetString(const char*const cpKey) const
   { // Get and check the value
     const Value &rjvValue = GetValue(cpKey);
     if(!rjvValue.IsString())
@@ -326,7 +326,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   typedef Writer<StringBuffer, UTF8<>, UTF8<>> RJCompactWriter;
   typedef PrettyWriter<StringBuffer, UTF8<>, UTF8<>> RJPrettyWriter;
   /* ----------------------------------------------------------------------- */
-  template<typename WriterType>const string ToString() const
+  template<typename WriterType>const StdString ToString() const
   { // Output buffer
     StringBuffer rsbOut;
     WriterType rwWriter{ rsbOut };
@@ -334,7 +334,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     return { rsbOut.GetString(), rsbOut.GetSize() };
   }
   /* ----------------------------------------------------------------------- */
-  template<typename T>int ToFile(const string &strFile) const
+  template<typename T>int ToFile(const StdString &strFile) const
     { return FStream{ strFile, FM_W_T }.
         FStreamWriteStringSafe(ToString<T>()) ? 0 : StdGetError(); }
   /* -- Default constructor ------------------------------------------------ */
@@ -347,7 +347,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor from a filename ---------------------------------------- */
-  explicit Json(const string &strFile) :
+  explicit Json(const StdString &strFile) :
     /* -- Initialisers ----------------------------------------------------- */
     Json{}                             // Use default initialisers
     /* -- Initialise from file --------------------------------------------- */

@@ -43,7 +43,7 @@ struct AgFontFlags : public AgFlags<ImageFlagsConst> {
   explicit AgFontFlags(lua_State*const lS, const int iArg) :
     AgFlags{ lS, iArg, FF_MASK }{} };
 /* -- Read vector of the specified number type ----------------------------- */
-template<class VectorValueType, class VectorType = vector<VectorValueType>>
+template<class VectorValueType, class VectorType = StdVector<VectorValueType>>
   struct AgNumberVector : public VectorType
 { const VectorType &operator()() const { return *this; }
   operator const VectorType&() const { return operator()(); }

@@ -16,7 +16,7 @@ using namespace ICVar::P;              using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDim::P;
 using namespace IDimCoord::P;          using namespace IDir::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
-using namespace IFboCore::P;           using namespace IFlags;
+using namespace IFboCore::P;           using namespace IFlags::P;
 using namespace IFont::P;              using namespace IGlFW::P;
 using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
 using namespace IGlFWUtil::P;          using namespace IHelper::P;
@@ -905,7 +905,7 @@ class Display :                        // Actual class body
   /* -- Get selected video mode id ----------------------------------------- */
   int DisplayGetVideoModeId() const { return gfwrActive->Index(); }
   /* -- Init info ---------------------------------------------------------- */
-  const string &DisplayGetMonitorName() const { return gfwmActive->Name(); }
+  const StdString &DisplayGetMonitorName() const { return gfwmActive->Name(); }
   /* -- Commit current matrix size ----------------------------------------- */
   void DisplayCommitMatrix(const bool bForce=true) const
   { // Set the default matrix from the configuration and if it was changed
@@ -958,7 +958,7 @@ class Display :                        // Actual class body
       // Exception occured? GLFW can throw GLFW_PLATFORM_ERROR on Wayland which
       // is absolutely retarded as is not consistent with other platforms such
       // as MacOS which will silently succeed
-      catch(const exception &eReason)
+      catch(const StdException &eReason)
       { // Just log the error that occured
         cLog->LogWarningExSafe(
           "Display could not load $ icon files due to GlFW exception: $.",
@@ -981,7 +981,7 @@ class Display :                        // Actual class body
 #endif
   }
   /* -- Set window icons --------------------------------------------------- */
-  bool DisplaySetIcon(const string &strNames)
+  bool DisplaySetIcon(const StdString &strNames)
   { // Seperate icon names and if we got an icon name
     if(Token tIcons{ strNames, ":", 3 })
     { // If using interactive mode?
@@ -993,7 +993,7 @@ class Display :                        // Actual class body
         gfwivIcons.reserve(tIcons.size());
         ivIcons.reserve(tIcons.size());
         // Build icons
-        for(string &strName : tIcons)
+        for(StdString &strName : tIcons)
         { // Check filename and load icon and force to RGB 32BPP.
           DirVerifyFileNameIsValid(strName);
           const Image &imC = ivIcons.emplace_back(
@@ -1009,13 +1009,13 @@ class Display :                        // Actual class body
         // Have two icons at least?
         if(tIcons.size() >= 2)
         { // Get string and set small icon from the last icon specified
-          string &strFile = tIcons.back();
+          StdString &strFile = tIcons.back();
           const Image imC{ StdMove(strFile), IL_REVERSE|IL_TOBGR };
           const ImageSlot &imsD = imC.GetSlotsConst().front();
           cSystem->SetSmallIcon(imC.IdentGet(), imsD.DimGetWidth(),
             imsD.DimGetHeight(), imC.GetBitsPerPixel(), imsD);
         } // Set large icon from the first icon specified
-        string &strFile = tIcons.front();
+        StdString &strFile = tIcons.front();
         const Image imC{ StdMove(strFile), IL_REVERSE|IL_TOBGR };
         const ImageSlot &imsD = imC.GetSlotsConst().front();
         cSystem->SetLargeIcon(imC.IdentGet(), imsD.DimGetWidth(),
@@ -1032,13 +1032,13 @@ class Display :                        // Actual class body
     return false;
   }
   /* -- Update icons and refresh icon if succeeded ------------------------- */
-  void DisplaySetIconFromLua(const string &strNames)
+  void DisplaySetIconFromLua(const StdString &strNames)
     { if(DisplaySetIcon(strNames)) return cEvtWin->Add(EWC_WIN_SETICON); }
   /* -- Get window full-screen type ---------------------------------------- */
   FSType DisplayGetFSType() const { return fsType; }
-  const string_view &DisplayGetFSTypeString(const FSType fsT) const
+  const StdStringView &DisplayGetFSTypeString(const FSType fsT) const
     { return fstStrings.Get(fsT); }
-  const string_view &DisplayGetFSTypeString() const
+  const StdStringView &DisplayGetFSTypeString() const
     { return DisplayGetFSTypeString(fsType); }
   /* -- Get window position ------------------------------------------------ */
   int DisplayGetWindowPosX() const { return ciPosition.CoordGetX(); }
@@ -1301,7 +1301,7 @@ class Display :                        // Actual class body
     static_cast<void>(stIndex); iRobustness = GLFW_NO_ROBUSTNESS;
 #else
     // Possible values
-    static const array<const int,3> aValues{ GLFW_NO_RESET_NOTIFICATION,
+    static const StdArray<const int,3> aValues{ GLFW_NO_RESET_NOTIFICATION,
       GLFW_LOSE_CONTEXT_ON_RESET, GLFW_NO_ROBUSTNESS };
     // Fail if invalid
     if(stIndex >= aValues.size()) return DENY;
@@ -1318,7 +1318,7 @@ class Display :                        // Actual class body
     static_cast<void>(stIndex); iRelease = GLFW_RELEASE_BEHAVIOR_NONE;
 #else
     // Possible values
-    static const array<const int,3> aValues{ GLFW_ANY_RELEASE_BEHAVIOR,
+    static const StdArray<const int,3> aValues{ GLFW_ANY_RELEASE_BEHAVIOR,
       GLFW_RELEASE_BEHAVIOR_FLUSH, GLFW_RELEASE_BEHAVIOR_NONE };
     // Fail if invalid
     if(stIndex >= aValues.size()) return DENY;
@@ -1331,7 +1331,7 @@ class Display :                        // Actual class body
   /* -- Set api ------------------------------------------------------------ */
   CVarReturn DisplayApiChanged(const size_t stIndex)
   { // Possible values
-    static const array<const int,3> aValues
+    static const StdArray<const int,3> aValues
       { GLFW_OPENGL_API, GLFW_OPENGL_ES_API, GLFW_NO_API };
     // Fail if invalid
     if(stIndex >= aValues.size()) return DENY;
@@ -1347,7 +1347,7 @@ class Display :                        // Actual class body
     static_cast<void>(stIndex); iProfile = GLFW_OPENGL_CORE_PROFILE;
 #else
     // Possible values
-    static const array<const int,3> aValues{ GLFW_OPENGL_CORE_PROFILE,
+    static const StdArray<const int,3> aValues{ GLFW_OPENGL_CORE_PROFILE,
       GLFW_OPENGL_COMPAT_PROFILE, GLFW_OPENGL_ANY_PROFILE };
     // Fail if invalid
     if(stIndex >= aValues.size()) return DENY;
@@ -1405,7 +1405,7 @@ class Display :                        // Actual class body
     return ACCEPT;
   }
   /* -- Icon filenames changed (allow blank strings) ----------------------- */
-  CVarReturn DisplaySetIcon(const string &strF, string&)
+  CVarReturn DisplaySetIcon(const StdString &strF, StdString&)
     { return BoolToCVarReturn(strF.empty() || DisplaySetIcon(strF)); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

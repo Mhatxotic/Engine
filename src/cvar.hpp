@@ -11,7 +11,7 @@ namespace ICVarDef {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICodec::P;             using namespace ICommon::P;
 using namespace IDir::P;               using namespace IError::P;
-using namespace IFlags;                using namespace ILog::P;
+using namespace IFlags::P;             using namespace ILog::P;
 using namespace IMemory::P;            using namespace ISql::P;
 using namespace IStd::P;               using namespace IString::P;
 /* ------------------------------------------------------------------------- */
@@ -34,7 +34,7 @@ static CVarShowFlags csfShowFlags{CSF_NONE}; // Console cvar display flags
 ** ## and give us the ability to define the CVar library later on         ## **
 ** ######################################################################### **
 ** -- Default no-op for cvar lib callback functions ------------------------ */
-static CVarReturn NoOp(CVarItem&, const string&) { return ACCEPT; }
+static CVarReturn NoOp(CVarItem&, const StdString&) { return ACCEPT; }
 /* ------------------------------------------------------------------------- */
 enum CVarSetEnums : unsigned int       // Cvar set return codes
 { /* ----------------------------------------------------------------------- */
@@ -87,8 +87,8 @@ class CVarItem :                       // Members initially private
     CR_FAIL_ENCRYPT,                   // [09] Cvar could not be encrypted
     CR_FAIL_COMPRESS,                  // [10] Cvar could not be compress
   };/* -- Private variables ------------------------------------------------ */
-  const string   strVar;               // Variable name
-  string         strValue,             // Value name
+  const StdString strVar;              // Variable name
+  StdString      strValue,             // Value name
                  strDefValue;          // Default value name
   CbFunc         cfTrigger;            // Callback trigger event
   /* --------------------------------------------------------------- */ public:
@@ -98,20 +98,20 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   bool IsTriggerSet() const { return GetTrigger() == NoOp; }
   /* ----------------------------------------------------------------------- */
-  const string &GetVar() const { return strVar; }
+  const StdString &GetVar() const { return strVar; }
   /* ----------------------------------------------------------------------- */
-  const string &GetDefValue() const { return strDefValue; }
+  const StdString &GetDefValue() const { return strDefValue; }
   /* ----------------------------------------------------------------------- */
   size_t GetDefLength() const { return GetDefValue().length(); }
   /* ----------------------------------------------------------------------- */
   size_t GetDefCapacity() const { return GetDefValue().capacity(); }
   /* ----------------------------------------------------------------------- */
-  string &GetModifyableValue() { return strValue; }
+  StdString &GetModifyableValue() { return strValue; }
   /* ----------------------------------------------------------------------- */
   bool IsLowerPriority(const CVarFlagsConst cvfcFlags) const
     { return (FlagGet() & SANY) < (cvfcFlags & SANY); }
   /* ----------------------------------------------------------------------- */
-  const string &GetValue() const { return strValue; }
+  const StdString &GetValue() const { return strValue; }
   /* ----------------------------------------------------------------------- */
   size_t GetValueLength() const { return GetValue().length(); }
   /* ----------------------------------------------------------------------- */
@@ -129,15 +129,15 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   void SetDefault() { strValue = GetDefValue(); }
   /* ----------------------------------------------------------------------- */
-  void SetDefValue(const string &strN) { strDefValue = strN; }
+  void SetDefValue(const StdString &strN) { strDefValue = strN; }
   /* ----------------------------------------------------------------------- */
-  void SetDefValue(string &&strN) { strDefValue = StdMove(strN); }
+  void SetDefValue(StdString &&strN) { strDefValue = StdMove(strN); }
   /* ----------------------------------------------------------------------- */
-  void SetValue(const string &strV) { strValue = strV; }
+  void SetValue(const StdString &strV) { strValue = strV; }
   /* ----------------------------------------------------------------------- */
-  void SetValue(string &&strV) { strValue = StdMove(strV); }
+  void SetValue(StdString &&strV) { strValue = StdMove(strV); }
   /* ----------------------------------------------------------------------- */
-  const string GetValueSafe() const
+  const StdString GetValueSafe() const
   { // If confidential, return confidential
     if(FlagIsSet(CONFIDENTIAL) && csfShowFlags.FlagIsClear(CSF_CONFIDENTIAL))
       return cCommon->CommonPrivate();
@@ -195,13 +195,13 @@ class CVarItem :                       // Members initially private
       if(FlagIsSet(CDEFLATE)) Commit(Block<AESZLIBEncoder>(GetValue()));
       else Commit(Block<AESEncoder>(GetValue()));
     } // exception occured?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Log exception
       cLog->LogErrorExSafe("CVars encrypt exception: $", eReason);
       // Capture exceptions again, try raw encoder and return string
       try { Commit(Block<RAWEncoder>(GetValue())); }
       // exception occured again?
-      catch(const exception &eReason2)
+      catch(const StdException &eReason2)
       { // Log exception and return failure
         cLog->LogErrorExSafe("CVars store exception: $", eReason2);
         return CR_FAIL_ENCRYPT;
@@ -211,13 +211,13 @@ class CVarItem :                       // Members initially private
     { // Try compression and commit the result to the database
       Commit(Block<ZLIBEncoder>(GetValue()));
     } // exception occured?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Log exception
       cLog->LogErrorExSafe("CVars compress exception: $", eReason);
       // Capture exceptions again, try raw encoder and return string
       try { Commit(Block<RAWEncoder>(GetValue())); }
       // exception occured again?
-      catch(const exception &eReason2)
+      catch(const StdException &eReason2)
       { // Log exception and return failure
         cLog->LogErrorExSafe("CVars store exception: $", eReason2);
         return CR_FAIL_COMPRESS;
@@ -241,9 +241,9 @@ class CVarItem :                       // Members initially private
     }
   }
   /* ----------------------------------------------------------------------- */
-  CVarSetEnums HandleCallbackException(const exception &eReason,
-    const CVarConditionFlagsConst &ccfcFlags, const string &strNValue,
-    string &strCBError)
+  CVarSetEnums HandleCallbackException(const StdException &eReason,
+    const CVarConditionFlagsConst &ccfcFlags, const StdString &strNValue,
+    StdString &strCBError)
   { // Throw exception if requested
     if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
       XC(eReason, "Variable", GetVar(), "Value", strNValue);
@@ -253,8 +253,8 @@ class CVarItem :                       // Members initially private
     return CVS_TRIGGEREXCEPTION;
   }
   /* ----------------------------------------------------------------------- */
-  CVarSetEnums SetValue(const string &strNValue,
-    const CVarConditionFlagsConst &ccfcFlags, string &strCBError)
+  CVarSetEnums SetValue(const StdString &strNValue,
+    const CVarConditionFlagsConst &ccfcFlags, StdString &strCBError)
   { // If value is equal as current value then ignore it. We'll allow the
     // change when setting new vars because the triggers should trigger
     if(strNValue == GetValue() && ccfcFlags.FlagIsClear(CCF_NEWCVAR))
@@ -268,7 +268,7 @@ class CVarItem :                       // Members initially private
       // Call the trigger and capture the result of the callback
       try { cbrResult = GetTrigger()(*this, strNValue); }
       // exception occured?
-      catch(const exception &eReason)
+      catch(const StdException &eReason)
       { // Remove the lock on the cvar
         FlagClear(LOCKED);
         // Handle exception and return error if no exception
@@ -279,7 +279,7 @@ class CVarItem :                       // Members initially private
     } // Not a lua cvar? Call the trigger and capture the result of the cb
     else try { cbrResult = GetTrigger()(*this, strNValue); }
     // exception occured
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Handle exception and return error if no exception
       return HandleCallbackException(eReason, ccfcFlags, strNValue,
         strCBError);
@@ -325,9 +325,9 @@ class CVarItem :                       // Members initially private
     return CVS_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CVarSetEnums SetValue(const string &strNValue,
+  CVarSetEnums SetValue(const StdString &strNValue,
     const CVarFlagsConst &cvfcFlags, const CVarConditionFlagsConst &ccfcFlags,
-    string &strCBError)
+    StdString &strCBError)
   { // Failed if not writable
     if(FlagIsClear(cvfcFlags))
     { // If we should not abort? Just return error else throw exception
@@ -412,7 +412,7 @@ class CVarItem :                       // Members initially private
     } // Is a string?
     if(FlagIsSet(TSTRING))
     { // Trim string if setting requests it and get new result
-      const string &strNewValue =
+      const StdString &strNewValue =
         FlagIsSet(MTRIM) ? StrTrim(strNValue, ' ') : strNValue;
       // String cannot be empty and string is empty?
       if(FlagIsSet(CNOTEMPTY) && strNewValue.empty())
@@ -481,7 +481,7 @@ class CVarItem :                       // Members initially private
   }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums ResetValue(const CVarFlagsConst &cvfcFlags,
-    const CVarConditionFlagsConst &ccfcFlags, string &strCBError)
+    const CVarConditionFlagsConst &ccfcFlags, StdString &strCBError)
       { return SetValue(strDefValue, cvfcFlags, ccfcFlags, strCBError); }
   /* -- Move constructor --------------------------------------------------- */
   CVarItem(CVarItem &&ciOther) :       // Other item
@@ -499,8 +499,8 @@ class CVarItem :                       // Members initially private
   /* -- Constructor -------------------------------------------------------- */
   CVarItem(
     /* -- Required parameters ---------------------------------------------- */
-    const string &strKey,              // Variable name
-    const string &strVal,              // Value name
+    const StdString &strKey,           // Variable name
+    const StdString &strVal,           // Value name
     const CbFunc &cfCb,                // Trigger function
     const CVarFlagsConst &cvfcF) :     // CVar flags
     /* -- Initialisers ----------------------------------------------------- */

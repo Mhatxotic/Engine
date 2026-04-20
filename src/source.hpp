@@ -15,7 +15,7 @@
 namespace ISource {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace IFlags;                using namespace IIdent::P;
+using namespace IFlags::P;             using namespace IIdent::P;
 using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IOal::P;
@@ -32,7 +32,7 @@ BUILD_FLAGS(Source,                    // Source flags
 );/* -- Source collector class for collector data and custom variables ----- */
 CTOR_BEGIN(Sources, Source, CLHelperSafe,
 /* ------------------------------------------------------------------------- */
-typedef atomic<ALfloat> SafeALFloat;   // Multi-threaded AL float
+typedef StdAtomic<ALfloat> SafeALFloat; // Multi-threaded AL float
 /* ------------------------------------------------------------------------- */
 size_t             stSources;          // Number of preallocated sources
 SafeALFloat        fGVolume;           // Global volume multiplier

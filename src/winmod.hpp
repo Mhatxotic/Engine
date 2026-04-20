@@ -16,7 +16,7 @@ class SysModule :                      // Members initially private
   { /* -- Storage for version numbers -------------------------------------- */
     unsigned int uiMajor, uiMinor, uiBuild, uiRevision;
     /* -- Constructor ------------------------------------------------------ */
-    explicit VersionNumbers(const wstring &wstrValue)
+    explicit VersionNumbers(const StdWideString &wstrValue)
     { // Length of version info part
       UINT uiLength = 0;
       // Get version info. Return cleared information if failed.
@@ -42,10 +42,10 @@ class SysModule :                      // Members initially private
   /* -- Get and store string data ------------------------------------------ */
   struct VersionStrings                // Members initially public
   { /* -- Storage for version strings--------------------------------------- */
-    string strDescription, strVendor, strCopyright;
+    StdString strDescription, strVendor, strCopyright;
     /* -- Get string value ---------------------------------------- */ private:
-    const string GetStringValue(const wstring &wstrBlock,
-      const wstring &wstrValue)
+    const StdString GetStringValue(const StdWideString &wstrBlock,
+      const StdWideString &wstrValue)
     { // Bail if no data
       if(wstrValue.empty() || wstrBlock.empty()) return {};
       // Get size of string. The actual string size is also returned in this.
@@ -59,16 +59,16 @@ class SysModule :                      // Members initially private
         S16toUTF(wcpStr) : SysError();
     }
     /* -- Build path ------------------------------------------------------- */
-    const string GetStringValue(const LONG lLng, const wstring &wstrBlock,
-      const char*const cpValue)
+    const StdString GetStringValue(const LONG lLng,
+      const StdWideString &wstrBlock, const char*const cpValue)
     { // Build path name
-      const string strValue{ StrFormat("\\StringFileInfo\\$$$$$\\$",
+      const StdString strValue{ StrFormat("\\StringFileInfo\\$$$$$\\$",
         right, hex, setw(8), setfill('0'), lLng, cpValue) };
       // Query the value from the resource
       return GetStringValue(wstrBlock, UTFtoS16(strValue));
     }
     /* -- Constructor ---------------------------------------------- */ public:
-    explicit VersionStrings(const wstring &wstrBlock)
+    explicit VersionStrings(const StdWideString &wstrBlock)
     { // Create language struct
       struct LANGANDCODEPAGE { WORD wLanguage, wCodePage; } *lcpData;
       // Length of version info part
@@ -103,7 +103,7 @@ class SysModule :                      // Members initially private
     /* --------------------------------------------------------------------- */
   };                                   // End of VersionStrings class
   /* -- Get executable version information size ---------------------------- */
-  DWORD ReadSize(const string &strModule)
+  DWORD ReadSize(const StdString &strModule)
   { // Get size of version info structure. Done if succeeded
     DWORD dwDummy = 0;
     if(const DWORD dwSize =
@@ -119,9 +119,9 @@ class SysModule :                      // Members initially private
     return 0;
   }
   /* -- Get version information--------------------------------------------- */
-  const wstring ReadInfo(const string &strModule, const DWORD dwSize)
+  const StdWideString ReadInfo(const StdString &strModule, const DWORD dwSize)
   { // Allocate memory for string and read data. Return string if succeeded!
-    wstring wstrVI(dwSize, 0);
+    StdWideString wstrVI(dwSize, 0);
     if(GetFileVersionInfoW(UTFtoS16(strModule).data(), 0, dwSize,
       StdToNonConstCast<LPVOID>(wstrVI.data())))
         return wstrVI;
@@ -132,15 +132,15 @@ class SysModule :                      // Members initially private
     return {};
   }
   /* -- Return version information ----------------------------------------- */
-  SysModuleData Load(const string &strModule)
+  SysModuleData Load(const StdString &strModule)
   { // Read the size of the executable version info return nothing if empty
     if(const DWORD dwSize = ReadSize(strModule))
     { // Query version numbers and strings data
-      const wstring wstrVersionInfo{ ReadInfo(strModule, dwSize) };
+      const StdWideString wstrVersionInfo{ ReadInfo(strModule, dwSize) };
       VersionNumbers vnData{ wstrVersionInfo };
       VersionStrings vsData{ wstrVersionInfo };
       // Version numbers together has string
-      string strVersionNumbers{ StrFormat("$.$.$.$",
+      StdString strVersionNumbers{ StrFormat("$.$.$.$",
         vnData.uiMajor, vnData.uiMinor, vnData.uiBuild, vnData.uiRevision) };
       // Return data
       return SysModuleData{ strModule, vnData.uiMajor, vnData.uiMinor,
@@ -151,15 +151,15 @@ class SysModule :                      // Members initially private
     return SysModuleData{ strModule };
   }
   /* -- Return version information ----------------------------------------- */
-  SysModuleData Load(string &&strModule)
+  SysModuleData Load(StdString &&strModule)
   { // Read the size of the executable version info return nothing if empty
     if(const DWORD dwSize = ReadSize(strModule))
     { // Query version numbers and strings data
-      const wstring wstrVersionInfo{ ReadInfo(strModule, dwSize) };
+      const StdWideString wstrVersionInfo{ ReadInfo(strModule, dwSize) };
       VersionNumbers vnData{ wstrVersionInfo };
       VersionStrings vsData{ wstrVersionInfo };
       // Version numbers together has string
-      string strVersionNumbers{ StrFormat("$.$.$.$",
+      StdString strVersionNumbers{ StrFormat("$.$.$.$",
         vnData.uiMajor, vnData.uiMinor, vnData.uiBuild, vnData.uiRevision) };
       // Return data
       return SysModuleData{ StdMove(strModule), vnData.uiMajor,
@@ -170,13 +170,13 @@ class SysModule :                      // Members initially private
     return SysModuleData{ StdMove(strModule) };
   }
   /* -- Return data (copy filename) -------------------------------- */ public:
-  explicit SysModule(const string &strModule) :
+  explicit SysModule(const StdString &strModule) :
     /* -- Initialisers ----------------------------------------------------- */
     SysModuleData{ Load(strModule) }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Return data (move filename) ---------------------------------------- */
-  explicit SysModule(string &&strModule) :
+  explicit SysModule(StdString &&strModule) :
     /* -- Initialisers ----------------------------------------------------- */
     SysModuleData{ Load(StdMove(strModule)) }
     /* -- No code ---------------------------------------------------------- */

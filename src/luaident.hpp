@@ -19,16 +19,16 @@ namespace P {                          // Start of public module namespace
 /* -- Class for collector class name in LUA -------------------------------- */
 class LuaIdent
 { /* -- Private variables -------------------------------------------------- */
-  const string_view svName;            // Name of class
+  const StdStringView svName;          // Name of class
   const int        &iRef;              // Reference to namespace in Lua
   /* -- Get reference ---------------------------------------------- */ public:
   int LuaIdentGetRef() const { return iRef; }
   /* -- Get name of class -------------------------------------------------- */
   const char* LuaIdentCStr() const { return svName.data(); }
   /* -- Get string view name of class -------------------------------------- */
-  const string_view &LuaIdentStr() const { return svName; }
+  const StdStringView &LuaIdentStr() const { return svName; }
   /* -- Constructor --------------------------------------------- */ protected:
-  LuaIdent(const string_view svNName, const LuaClassId lciId) :
+  LuaIdent(const StdStringView svNName, const LuaClassId lciId) :
     /* --------------------------------------------------------------------- */
     svName{ svNName },                 // Set name of class
     iRef(llcirAPI[lciId])              // Alias Lua class reference storage

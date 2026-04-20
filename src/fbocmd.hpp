@@ -68,12 +68,12 @@ struct FboCmd                          // Render command structure
               *const vpCOffset;        // - Colour buffer offset
   const GLsizei      siVertices;       // Total vertices to draw
 };/* -- Commands ----------------------------------------------------------- */
-typedef vector<FboCmd>            FboCmdVec;         // Render command list
+typedef StdVector<FboCmd>         FboCmdVec;         // Render command list
 typedef FboCmdVec::const_iterator FboCmdVecConstInt; // " const iterator
 /* -- Single point data ---------------------------------------------------- */
-typedef array<GLfloat,stCompsPerCoord>  TriCoord;  // Coord data in triangle
-typedef array<GLfloat,stCompsPerPos>    TriVertex; // Position in triangle
-typedef array<GLfloat,stCompsPerColour> TriColour; // Colour in triangle
+typedef StdArray<GLfloat,stCompsPerCoord>  TriCoord;  // Coord data in triangle
+typedef StdArray<GLfloat,stCompsPerPos>    TriVertex; // Position in triangle
+typedef StdArray<GLfloat,stCompsPerColour> TriColour; // Colour in triangle
 /* -- One triangle data ---------------------------------------------------- */
 struct FboVert                         // Formatted data for OpenGL
 { /* -- Public variables --------------------------------------------------- */
@@ -93,8 +93,8 @@ struct FboVert                         // Formatted data for OpenGL
 ** +-- Single interlaced triangle --+- T(Vec2)=Texcoord(XY) -+-----+-----+-- **
 ** + TTVVCCCC | TTVVCCCC | TTVVCCCC |  V(Vec2)=Vertex(XY)    | ... | ... |   **
 ** +----------+----------+----------+- C(Vec4)=Colour(RGBA) -+-----+-----+-- */
-typedef array<FboVert,stVertexPerTriangle> FboTri; // All triangles data
-typedef vector<FboTri>                 FboTriVec;  // Render triangles list
+typedef StdArray<FboVert,stVertexPerTriangle> FboTri; // All triangles data
+typedef StdVector<FboTri>                 FboTriVec;  // Render triangles list
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

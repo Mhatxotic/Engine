@@ -37,34 +37,34 @@ struct CmdLine                         // Members initially public
                  **atEnv;              // Environment list
   const StrVector  svArg;              // Arguments list
   const StrStrMap  ssmEnv;             // Formatted environment variables
-  const string     strCWD;             // Current startup working directory
-  string           strHD;              // Persistant directory
+  const StdString  strCWD;             // Current startup working directory
+  StdString        strHD;              // Persistant directory
   /* -- Set persistant directory ----------------------------------- */ public:
-  void CmdLineSetHome(const string &strDir) { strHD = strDir; }
+  void CmdLineSetHome(const StdString &strDir) { strHD = strDir; }
   /* -- Get persistant directory ------------------------------------------- */
   bool CmdLineIsNoHome() const { return strHD.empty(); }
   bool CmdLineIsHome() const { return !CmdLineIsNoHome(); }
   /* -- Return and move string into output string -------------------------- */
-  const string &CmdLineGetHome() const { return strHD; }
-  const string CmdLineGetHome(const string &strSuf) const
+  const StdString &CmdLineGetHome() const { return strHD; }
+  const StdString CmdLineGetHome(const StdString &strSuf) const
     { return StrAppend(CmdLineGetHome(), strSuf); }
   /* -- Get environment variable ------------------------------------------- */
-  const string &CmdLineGetEnv(const string &strEnv,
-    const string &strO=cCommon->CommonBlank()) const
+  const StdString &CmdLineGetEnv(const StdString &strEnv,
+    const StdString &strO=cCommon->CommonBlank()) const
   { // Find item and return it else return the default item
     const StrStrMapConstIt eiEnv{ ssmEnv.find(strEnv) };
     return eiEnv == ssmEnv.cend() ? strO : eiEnv->second;
   }
   /* -- Get environment variable and check that it is a valid pathname ----- */
-  const string CmdLineMakeEnvPath(const string &strEnv,
-    const string &strSuffix)
+  const StdString CmdLineMakeEnvPath(const StdString &strEnv,
+    const StdString &strSuffix)
   { // Get home environment variable and throw error if not found
     const StrStrMapConstIt eiEnv{ ssmEnv.find(strEnv) };
     if(eiEnv == ssmEnv.cend())
       XC("The specified environment variable is required and missing!",
         "Variable", strEnv, "Suffix", strSuffix);
     // Check validity of the specified environmen variable
-    const string &strEnvVal = eiEnv->second;
+    const StdString &strEnvVal = eiEnv->second;
     const ValidResult vRes = DirValidName(strEnvVal, VT_TRUSTED);
     if(vRes == VR_OK) return StrAppend(strEnvVal, strSuffix);
     // Show error otherwise
@@ -82,7 +82,7 @@ struct CmdLine                         // Members initially public
   /* -- Set restart flag (0 = no restart, 1 = no params, 2 = params) ------- */
   void CmdLineSetRestart(const ExitOperation ecCmd) { eoExit = ecCmd; }
   /* -- Get startup current directory -------------------------------------- */
-  const string &CmdLineGetStartupCWD() const { return strCWD; }
+  const StdString &CmdLineGetStartupCWD() const { return strCWD; }
   /* -- Return to startup directory ---------------------------------------- */
   void CmdLineSetStartupCWD()
   { // Try to set the startup working direcotry and throw if failed.
@@ -217,7 +217,7 @@ struct CmdLine                         // Members initially public
       default: XC("Internal error: Invalid exit command!", "Command", eoExit);
     }
   } // Exception occured?
-  catch(const exception &eReason) \
+  catch(const StdException &eReason) \
   { // Show message box as the log is not available.
     SysMessage("CmdLine Shutdown Exception", eReason.what(), MB_ICONSTOP);
   }

@@ -29,7 +29,7 @@ CTOR_BEGIN_ASYNC(Images, Image, CLHelperUnsafe,
   IdMap<TextureType> idFormatModes;,   // Pixel format modes (log detail)
 );/* ----------------------------------------------------------------------- */
 template<typename IntType>             // Prototype
-  static const string_view &ImageGetPixelFormat(const IntType);
+  static const StdStringView &ImageGetPixelFormat(const IntType);
 /* ------------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
@@ -92,7 +92,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     if(!UtilIsDivisible(static_cast<double>(stDst)))
       XC("Image size not divisible by eight!", "Size", stDst);
     // Bits lookup table
-    static const array<const unsigned char, CHAR_BIT>
+    static const StdArray<const unsigned char, CHAR_BIT>
       ucaBits{0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
     // For each image slot
     for(ImageSlot &isRef : GetSlots())
@@ -777,12 +777,12 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     AsyncReady(fmData);
   }
   /* -- Save image using a type id ----------------------------------------- */
-  void SaveFile(const string &strFile, const size_t stSId,
+  void SaveFile(const StdString &strFile, const size_t stSId,
     const ImageFormat ifPId)
       const { ImageSave(ifPId, strFile, *this, GetSlotsConst()[stSId]); }
   /* -- Load image from memory asynchronously ------------------------------ */
-  void InitAsyncArray(lua_State*const lS, const string &strIdent, Asset &aData,
-    const ImageFlagsConst ifcFlags)
+  void InitAsyncArray(lua_State*const lS, const StdString &strIdent,
+    Asset &aData, const ImageFlagsConst ifcFlags)
   { // Set user flags
     FlagSet(ifcFlags);
     // The decoded image will be kept in memory
@@ -791,7 +791,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     AsyncInitArray(lS, strIdent, "bmparray", aData);
   }
   /* -- Load image from file asynchronously -------------------------------- */
-  void InitAsyncFile(lua_State*const lS, const string &strFile,
+  void InitAsyncFile(lua_State*const lS, const StdString &strFile,
     const ImageFlagsConst ifcFlags)
   { // Set user flags
     FlagSet(ifcFlags);
@@ -799,11 +799,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     AsyncInitFile(lS, strFile, "bmpfile");
   }
   /* -- Create a blank image for working on -------------------------------- */
-  void InitBlank(const string &strIdent, const unsigned int uiBWidth,
+  void InitBlank(const StdString &strIdent, const unsigned int uiBWidth,
     const unsigned int uiBHeight, const bool bAlpha, const bool bClear)
   { // Lookup table for alpha setting
-    typedef pair<const BitDepth, const TextureType> BitDepthTexTypePair;
-    typedef array<const BitDepthTexTypePair,2> BitDepthTexTypePairArray;
+    typedef StdPair<const BitDepth, const TextureType> BitDepthTexTypePair;
+    typedef StdArray<const BitDepthTexTypePair,2> BitDepthTexTypePairArray;
     static const BitDepthTexTypePairArray
       bdttpLookup{ { { BD_RGB, TT_RGB }, { BD_RGBA, TT_RGBA } } };
     const BitDepthTexTypePair &bdttpLookupRef =
@@ -836,7 +836,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     isFirst.MemSwap(mSrc);
   }
   /* -- Load image from a raw image data ----------------------------------- */
-  void InitRaw(const string &strName, Memory &mSrc,
+  void InitRaw(const StdString &strName, Memory &mSrc,
     const unsigned int uiBWidth, const unsigned int uiBHeight,
     const BitDepth bdBitsPP)
   { // Check that the range is valid
@@ -893,26 +893,26 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // Make sure the specified colour is in the correct order that the GPU can
     // read. It will be interpreted as TT_RGBA. The guest will specify the
     // input as 0xAARRGGBB like FboItem::SetRGBAInt().
-    const array<const uint8_t,4>ucaColour{  // Source ----- Bit - Dst Pixels
-      static_cast<uint8_t>(ulColour >> 16), // 0x00[RR]0000 16-24 [0] [R]gba
-      static_cast<uint8_t>(ulColour >>  8), // 0x0000[GG]00 08-16 [1] r[G]ba
-      static_cast<uint8_t>(ulColour      ), // 0x000000[BB] 00-08 [2] rg[B]a
-      static_cast<uint8_t>(ulColour >> 24)  // 0x[AA]000000 24-32 [3] rgb[A]
-    };                                      // ------------ ----- --- ------
+    const StdArray<const uint8_t,4>ucaColour{ // Source ----- Bit - Dst Pixels
+      static_cast<uint8_t>(ulColour >> 16),   // 0x00[RR]0000 16-24 [0] [R]gba
+      static_cast<uint8_t>(ulColour >>  8),   // 0x0000[GG]00 08-16 [1] r[G]ba
+      static_cast<uint8_t>(ulColour      ),   // 0x000000[BB] 00-08 [2] rg[B]a
+      static_cast<uint8_t>(ulColour >> 24)    // 0x[AA]000000 24-32 [3] rgb[A]
+    };                                        // ------------ ----- --- ------
     // Add the image
     AddSlot({ GetBytesPerPixel(), ucaColour.data() });
     // Load succeeded so register the block
     CollectorRegister();
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitFile(const string &strFileName, const ImageFlagsConst &ifcFlags)
+  void InitFile(const StdString &strFileName, const ImageFlagsConst &ifcFlags)
   { // Set the loading flags
     FlagSet(ifcFlags);
     // Load the file normally
     SyncInitFileSafe(strFileName);
   }
   /* -- Init from array ---------------------------------------------------- */
-  void InitArray(const string &strName, Memory &mRval,
+  void InitArray(const StdString &strName, Memory &mRval,
     const ImageFlagsConst &ifcFlags)
   { // Is dynamic because it was not loaded from disk
     SetDynamic();
@@ -956,7 +956,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Constructor -------------------------------------------------------- */
   explicit Image(                      // Initialise from RAW pixel data
     /* -- Parameters ------------------------------------------------------- */
-    const string &strName,             // Name of the object
+    const StdString &strName,          // Name of the object
     Memory &&mRval,                    // Source pixel data
     const unsigned int uiWidth,        // Number of pixels in each scanline
     const unsigned int uiHeight,       // Number of scan lines
@@ -972,7 +972,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Constructor -------------------------------------------------------- */
   explicit Image(                      // Initialise from known file formats
     /* -- Parameters ------------------------------------------------------- */
-    const string &strName,             // Name of object
+    const StdString &strName,          // Name of object
     Memory &&mRval,                    // Source memory block to read from
     const ImageFlagsConst &ifFlags     // Loading flags
     ): /* -- Initialisation of members ------------------------------------- */
@@ -986,7 +986,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Constructor -------------------------------------------------------- */
   explicit Image(                      // Initialise image from file
     /* -- Parameters ------------------------------------------------------- */
-    const string &strName,             // Name of image from assets to load
+    const StdString &strName,          // Name of image from assets to load
     const ImageFlagsConst &ifFlags     // Loading flags
     ): /* -- Initialisation of members ------------------------------------- */
     Ident{ strName },                  // Initialise identifier
@@ -1022,10 +1022,10 @@ CTOR_END_ASYNC(Images, Image, IMAGE, IMAGE,,,, idFormatModes{{ // Pixel formats
 }, "TT_UNKNOWN"})                      // Unknown pixel format mode
 /* ------------------------------------------------------------------------- */
 template<typename IntType> // Forcing any type to GLenum
-  static const string_view &ImageGetPixelFormat(const IntType itMode)
+  static const StdStringView &ImageGetPixelFormat(const IntType itMode)
      { return cImages->idFormatModes.Get(static_cast<TextureType>(itMode)); }
 /* ------------------------------------------------------------------------- */
-typedef vector<Image> ImageVector;     // Vector of images
+typedef StdVector<Image> ImageVector;  // Vector of images
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

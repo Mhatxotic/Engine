@@ -18,11 +18,11 @@ using namespace IString::P;            using namespace IToken::P;
 using namespace ISysUtil::P;           using namespace IUtil::P;
 using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
-typedef array<GlFWCursor, CUR_MAX> CursorStandard;
+typedef StdArray<GlFWCursor, CUR_MAX> CursorStandard;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-typedef vector<GLFWimage> GlFWIconVector; // Vector of GLFW image handles
+typedef StdVector<GLFWimage> GlFWIconVector; // Vector of GLFW image handles
 /* ========================================================================= */
 class GlFW;                            // Class prototype
 static GlFW *cGlFW = nullptr;          // Pointer to global class
@@ -33,8 +33,8 @@ class GlFW :                           // Root engine class
   private CursorStandard               // Standard cursors list
 { /* -- Private variables and functions ------------------------------------ */
   unsigned int     uiErrorLevel;       // Ignore further glfw errors
-  const string_view strvIntVersion;    // Internal (headers) version number
-  string           strExtVersion;      // External (library) version number
+  const StdStringView strvIntVersion;  // Internal (headers) version number
+  StdString        strExtVersion;      // External (library) version number
   StrSet           ssFeatures;         // Features included
   bool             bRawMouseSupported; // Is raw mouse motion supported
   /* -- Custom allocator --------------------------------------------------- */
@@ -65,7 +65,7 @@ class GlFW :                           // Root engine class
       cEvtMain->RequestQuitThread();
     }
   } // Exceptions we have to handle since func could be in a thread GlFW owns.
-  catch(const exception &e)
+  catch(const StdException &e)
   { // Write error
     cLog->LogWarningExSafe("GlFW monitor event exception: $", e.what());
     // Ask engine thread to quit and re-init window
@@ -95,7 +95,7 @@ class GlFW :                           // Root engine class
     }
   }
   /* --------------------------------------------------------------- */ public:
-  const string_view &GlFWGetInternalVersion() const
+  const StdStringView &GlFWGetInternalVersion() const
     { return strvIntVersion; }
   /* -- DeInitialiser ------------------------------------------------------ */
   void GlFWDeInit()
@@ -154,7 +154,7 @@ class GlFW :                           // Root engine class
             GlFWGetInternalVersion());
         // Parse features into a list
         StdForEach(seq, tIdentity.cbegin()+1, tIdentity.cend(),
-          [this](const string &strStr)
+          [this](const StdString &strStr)
             { ssFeatures.emplace(StdMove(strStr)); });
         // Write the features
         cLog->LogDebugExSafe("GlFW library $ features $ ($).",
@@ -197,7 +197,7 @@ class GlFW :                           // Root engine class
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~GlFW, GlFWDeInit())
   /* -- Constructor -------------------------------------------------------- */
-  GlFW() :                         // Default constructor (No arguments)
+  GlFW() :                             // Default constructor (No arguments)
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Set class function name
     /* --------------------------------------------------------------------- */

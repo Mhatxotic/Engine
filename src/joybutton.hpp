@@ -57,7 +57,7 @@ class JoyButtonInfo
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- Button data list --------------------------------------------------- */
-template<class Container = array<JoyButtonInfo, 128>,
+template<class Container = StdArray<JoyButtonInfo, 128>,
          class Iterator = typename Container::const_iterator>
 class JoyButtonList :
   /* -- Base classes ------------------------------------------------------- */

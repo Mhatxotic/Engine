@@ -361,7 +361,7 @@ class Core final :                     // Members initially private
         ConsoleFlushToTerminal();
       }
     } // exception occured so throw LUA stackdump and leave the sandbox
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Allow Lue to process error. WARNING!! This prevents destructors on all
       // statically initialised classes to NEVER call so make sure we do not
       // statically create something above!
@@ -428,7 +428,7 @@ class Core final :                     // Members initially private
     // OpenGL de-initialised (do not throw error if de-initialised)
     OglDeInit(true);
   } // exception occured?
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // Make sure the exception is logged
     cLog->LogErrorExSafe("(ENGINE THREAD DE-INIT EXCEPTION) $", eReason);
   }
@@ -516,7 +516,7 @@ class Core final :                     // Members initially private
     { // ...and enter sand box mode. Below function is when we're in sandbox
       LuaEnterSandbox<CoreThreadSandboxStatic>(this);
     } // ...and if exception occured?
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Show error in console
       ConsoleAddLine(COLOUR_LRED, eReason.what());
       // Disable garbage collector so no shenangians while we reset.
@@ -665,7 +665,7 @@ class Core final :                     // Members initially private
     // Kill thread
     return TS_OK;
   } // exception occured out of loop. Fatal so we have to quit
-  catch(const exception &eReason)
+  catch(const StdException &eReason)
   { // We will quit since this is fatal
     SetExitReason(EMC_QUIT);
     // Write exception to log
@@ -737,7 +737,7 @@ class Core final :                     // Members initially private
         default: continue;
       }
     } // Error occured
-    catch(const exception &eReason)
+    catch(const StdException &eReason)
     { // Send to log and show error message to user
       cLog->LogErrorExSafe("(WINDOW LOOP EXCEPTION) $", eReason);
       // Exit loop so we don't infinite loop
@@ -848,7 +848,7 @@ class Core final :                     // Members initially private
         if(cLog->LogHasLevel(LH_DEBUG))
         { // Log each argument that will be sent
           size_t stId = 0;
-          for(const string &strArg : cCmdLine->CmdLineGetArgList())
+          for(const StdString &strArg : cCmdLine->CmdLineGetArgList())
             cLog->LogNLCDebugExSafe("- Arg $: $.", stId++, strArg);
         } // Clean-up and restart
         return 3;
@@ -881,7 +881,7 @@ class Core final :                     // Members initially private
     /* -- Set global pointer to static classes ----------------------------- */
     { cSql = this; cCore = this; }
   /* -- Process compatibility flags ---------------------------------------- */
-  CVarReturn CoreProcessCompatibilityFlags(const uint64_t ullFlags)
+  static CVarReturn CoreProcessCompatibilityFlags(const uint64_t ullFlags)
   { // Nothing yet
     static_cast<void>(ullFlags);
     // Allow the cvar change
@@ -891,7 +891,7 @@ class Core final :                     // Members initially private
   CVarReturn CoreErrorBehaviourModified(const CoreErrorReason cefNMode)
     { return CVarSimpleSetIntNGE(cerMode, cefNMode, CER_MAX); }
   /* -- Title modified ----------------------------------------------------- */
-  CVarReturn CoreTitleModified(const string &strValue, string &strRValue)
+  CVarReturn CoreTitleModified(const StdString &strValue, StdString &strRValue)
   { // Do not allow user to set this variable, only empty is allowed
     if(!strValue.empty()) return DENY;
     // Set the title
@@ -909,7 +909,7 @@ class Core final :                     // Members initially private
     exit(5);
   }
   /* -- Set home directory where files are written if base dir dont work --- */
-  CVarReturn CoreSetHomeDir(const string &strP, string &strV)
+  CVarReturn CoreSetHomeDir(const StdString &strP, StdString &strV)
   { // Build user volatile directory name if user didn't specify one
     if(strP.empty())
       strV = StrFormat("$/$/$/", SysGetRoamingDir(),
@@ -930,7 +930,7 @@ class Core final :                     // Members initially private
   CVarReturn CoreSetResetLimit(const unsigned int uiLimit)
     { return CVarSimpleSetInt(uiErrorLimit, uiLimit); }
   /* -- Parses the command-line -------------------------------------------- */
-  CVarReturn CoreParseCmdLine(const string&, string &strV)
+  CVarReturn CoreParseCmdLine(const StdString&, StdString &strV)
   { // Get command line parameters and if we have parameters?
     const StrVector &svArgs = cCmdLine->CmdLineGetArgList();
     if(!svArgs.empty())
@@ -939,7 +939,7 @@ class Core final :                     // Members initially private
       // Valid commands parsed
       size_t stGood = 0, stArg = 1;
       // Parse command line arguments and iterate through them
-      for(const string &strArg : svArgs)
+      for(const StdString &strArg : svArgs)
       { // If empty argument? Log the failure and continue
         if(strArg.empty())
           cLog->LogWarningExSafe(

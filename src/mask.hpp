@@ -202,7 +202,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     }
   }
   /* -- Init --------------------------------------------------------------- */
-  void InitBlank(const string &strName, const unsigned int uiWidth,
+  void InitBlank(const StdString &strName, const unsigned int uiWidth,
     const unsigned int uiHeight)
   { // Check dimension parameters
     if(!uiWidth || !uiHeight ||
@@ -219,7 +219,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     DimSet(static_cast<int>(uiWidth), static_cast<int>(uiHeight));
   }
   /* -- Init filled mask --------------------------------------------------- */
-  void InitOne(const string &strName, const unsigned int uiWidth,
+  void InitOne(const StdString &strName, const unsigned int uiWidth,
     const unsigned int uiHeight)
   { // Initialise new mask memory
     InitBlank(strName, uiWidth, uiHeight);
@@ -227,7 +227,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     back().MemFill<uint64_t>(0xFFFFFFFFFFFFFFFF);
   }
   /* -- Init cleared mask -------------------------------------------------- */
-  void InitZero(const string &strName, const unsigned int uiWidth,
+  void InitZero(const StdString &strName, const unsigned int uiWidth,
     const unsigned int uiHeight)
   { // Initialise new mask memory
     InitBlank(strName, uiWidth, uiHeight);
@@ -235,7 +235,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     back().MemFill();
   }
   /* -- Dump a tile to disk ------------------------------------------------ */
-  void Dump(const size_t stId, const string &strFile) const
+  void Dump(const size_t stId, const StdString &strFile) const
   { // Get source slot
     const MemConst &mcSrc = (*this)[stId];
     // Copy the slot because the image init moves it
@@ -250,7 +250,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     { // Save bitmap to PNG
       imOut.SaveFile(imOut.IdentGet(), 0, IFMT_PNG);
     } // exception occured?
-    catch(const exception&)
+    catch(const StdException &)
     { // Close the file and delete it
       DirFileUnlink(imOut.IdentGet());
       // Throw original error

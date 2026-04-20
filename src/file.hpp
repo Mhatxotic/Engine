@@ -37,7 +37,7 @@ static void FileReadString(lua_State*const lS)
 { // Open file in read text mode
   if(FStream fFile{ LuaUtilGetCppFile(lS, 1), FM_R_T })
   { // Read file and store in string
-    const string strData{ fFile.FStreamReadStringSafe() };
+    const StdString strData{ fFile.FStreamReadStringSafe() };
     // If no error occured then return the data read
     if(!fFile.FStreamFError())
     { // Add the string that was read and return a nil for no error
@@ -54,7 +54,7 @@ static void FileReadString(lua_State*const lS)
   }
 }
 /* -- Write data a file in one go ------------------------------------------ */
-static void FileWriteData(lua_State*const lS, const string &strFile,
+static void FileWriteData(lua_State*const lS, const StdString &strFile,
   const FStreamMode fmMode, const void*const vpPtr, const size_t stBytes)
 { // Open file with the specified mode and if successful?
   if(FStream fFile{ strFile, fmMode })
@@ -77,28 +77,28 @@ static void FileWriteData(lua_State*const lS, const string &strFile,
 /* -- Append string to file in one go -------------------------------------- */
 static void FileAppendString(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
-  const string strFile{ LuaUtilGetCppFile(lS, 1) },
+  const StdString strFile{ LuaUtilGetCppFile(lS, 1) },
                strWhat{ LuaUtilGetCppStr(lS, 2) };
   FileWriteData(lS, strFile, FM_A_B, strWhat.data(), strWhat.length());
 }
 /* -- Write string to file in one go --------------------------------------- */
 static void FileWriteString(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
-  const string strFile{ LuaUtilGetCppFile(lS, 1) },
+  const StdString strFile{ LuaUtilGetCppFile(lS, 1) },
                strWhat{ LuaUtilGetCppStr(lS, 2) };
   FileWriteData(lS, strFile, FM_W_B, strWhat.data(), strWhat.length());
 }
 /* -- Append data to file in one go ---------------------------------------- */
 static void FileAppendBlock(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
-  const string strFile{ LuaUtilGetCppFile(lS, 1) };
+  const StdString strFile{ LuaUtilGetCppFile(lS, 1) };
   const MemConst &mcSrc = *LuaUtilGetPtr<Asset>(lS, 2, *cAssets);
   FileWriteData(lS, strFile, FM_A_B, mcSrc.MemPtr(), mcSrc.MemSize());
 }
 /* -- Write data to file in one go ----------------------------------------- */
 static void FileWriteBlock(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
-  const string strFile{ LuaUtilGetCppFile(lS, 1) };
+  const StdString strFile{ LuaUtilGetCppFile(lS, 1) };
   const MemConst &mcSrc = *LuaUtilGetPtr<Asset>(lS, 2, *cAssets);
   FileWriteData(lS, strFile, FM_W_B, mcSrc.MemPtr(), mcSrc.MemSize());
 }

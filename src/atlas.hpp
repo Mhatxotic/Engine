@@ -330,7 +330,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       IdentGet(), fDivisor, DimGetWidth(), DimGetHeight());
   }
   /* -- Initialise the atlas --------------------------------------- */ public:
-  template<class ImageType>void AtlasInit(const string &strId,
+  template<class ImageType>void AtlasInit(const StdString &strId,
     const GLuint uiTWidth, const GLuint uiTHeight, const GLuint uiISize,
     const GLuint uiTPadding, const OglFilterEnum ofeTFilter)
   { // Make sure padding isn't negative. We use int because it is optimal for
