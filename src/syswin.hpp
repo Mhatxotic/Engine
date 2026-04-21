@@ -814,7 +814,7 @@ class SysCore :
     if(!fcbGVEW || !fcbGVEW(reinterpret_cast<LPOSVERSIONINFOW>(&osviData)))
       XCS("Failed to query operating system version!");
     // Set operating system version string
-    ostringstream osOS; osOS << "Windows ";
+    StdOStringStream osS; osS << "Windows ";
     // Version information table
     struct OSListItem
     { // Label to append if verified
@@ -855,15 +855,15 @@ class SysCore :
          osviData.dwBuildNumber < oslIt.uiBd ||
          osviData.wServicePackMajor < oslIt.uiSp) continue;
       // Set operating system version
-      osOS << oslIt.cpLabel;
+      osS << oslIt.cpLabel;
       // Skip adding version numbers
       goto SkipNumericalVersionNumber;
     } // Nothing was found so add version number detected
-    osOS << osviData.dwMajorVersion << '.' << osviData.dwMinorVersion;
+    osS << osviData.dwMajorVersion << '.' << osviData.dwMinorVersion;
     // Label for when we found the a matching version
     SkipNumericalVersionNumber:
     // Add server label if is a server based operating system
-    if(osviData.wProductType != VER_NT_WORKSTATION) osOS << " Server";
+    if(osviData.wProductType != VER_NT_WORKSTATION) osS << " Server";
     // Look for Wine and set extra info if available
     StdString strExtra; bool bExtra;
     if(HMODULE hDLL = GetModuleHandle(L"ntdll"))
@@ -877,7 +877,7 @@ class SysCore :
     else bExtra = false;
     // Return data
     return {
-      osOS.str(),                            // Version string
+      osS.str(),                             // Version string
       StdMove(strExtra),                     // Extra version string
       osviData.dwMajorVersion,               // Major OS version
       osviData.dwMinorVersion,               // Minor OS version

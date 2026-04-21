@@ -592,7 +592,7 @@ static bool DirMkDirEx(const StdString &strDir)
     cCommon->CommonFSlash() })
   { // This will be the string that wile sent to mkdir multiple times
     // gradually.
-    ostringstream osS; osS << psParts.strDrive;
+    StdOStringStream osS; osS << psParts.strDrive;
     // Get the first item and if it is not empty?
     const StdString &strFirst = tParts.front();
     if(!strFirst.empty())
@@ -629,7 +629,7 @@ static bool DirRmDirEx(const StdString &strDir)
   { // This will be the string that wile sent to mkdir multiple times
     // gradually. Do not try to construct the oss with the drive string because
     // it won't work and thats not how the constructor works it seems!
-    ostringstream osS; osS << psParts.strDrive;
+    StdOStringStream osS; osS << psParts.strDrive;
     // Get the first item and if it is not empty?
     const StdString &strFirst = tParts.front();
     if(!strFirst.empty()) osS << strFirst;

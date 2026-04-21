@@ -29,19 +29,19 @@ struct ErrorPluginStandard final
 { /* -- Exception plugin to expand and report errno ------------------------ */
 #define XCL(r,...) throw Error<ErrorPluginStandard>(r, ## __VA_ARGS__)
   /* -- Constructor to add C runtime error code ---------------------------- */
-  explicit ErrorPluginStandard(ostringstream &osS)
+  explicit ErrorPluginStandard(StdOStringStream &osS)
     { osS << "\n+ Reason<" << StdGetError() << "> = \""
           << StrFromErrNo() << "\"."; }
 };/* -- Standard exception plugin that does nothing ------------------------ */
 struct ErrorPluginGeneric final
-  { explicit ErrorPluginGeneric(ostringstream&) {} };
+  { explicit ErrorPluginGeneric(StdOStringStream&) {} };
 /* ------------------------------------------------------------------------- */
 template<class Plugin=ErrorPluginGeneric>class Error final :
   /* -- Derivced classes --------------------------------------------------- */
   public StdException,                 // So we can capture as exception
   public StdString                     // String to store generated string
 { /* -- Private variables -------------------------------------------------- */
-  ostringstream osS;                   // Error message builder
+  StdOStringStream osS;                // Error message builder
   /* -- Write left part of var --------------------------------------------- */
   void Init(const char*const cpName, const char*const cpType)
     { osS << "\n+ " << cpName << '<' << cpType << "> = "; }

@@ -14,13 +14,13 @@ namespace ICVar {                      // Start of private module namespace
 using namespace IAsset::P;             using namespace ICodec::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDir::P;
-using namespace IError::P;             using namespace IHelper::P;
-using namespace IJson::P;              using namespace ILog::P;
-using namespace IMutex::P;             using namespace IPSplit::P;
-using namespace ISql::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::Sqlite;
+using namespace IError::P;             using namespace IFillCon::P;
+using namespace IHelper::P;            using namespace IJson::P;
+using namespace ILog::P;               using namespace IMutex::P;
+using namespace IPSplit::P;            using namespace ISql::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -689,7 +689,7 @@ struct CVars :                         // Start of vars class
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Set function name for init helper
     stMaxInactiveCount(CVAR_MAX),      // Initially set to max cvar count
-    avInternal{ UtilMkFilledContainer<ArrayVars>(cvmActive.end()) },
+    avInternal{ FillConGeneric<ArrayVars>(cvmActive.end()) },
     cvmnsaList{{                       // Set combined lists
       { cvmPending, "unregistered" },  // Inactive cvars list
       { cvmActive,  "registered" } }}, // Active cvars list

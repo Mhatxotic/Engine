@@ -652,7 +652,7 @@ static StdString ArchiveGetNames()
   // Get first archive
   ArchivesItConst aicIt{ cArchives->cbegin() };
   // Lets build a list of archives
-  ostringstream osS;
+  StdOStringStream osS;
   // Add first archive name to list
   osS << (*aicIt)->IdentGet();
   // Until end of archives add their names prefixed with a space

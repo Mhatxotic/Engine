@@ -12,9 +12,9 @@
 /* ------------------------------------------------------------------------- */
 namespace IMemory {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace IError::P;             using namespace IIdent::P;
-using namespace IStd::P;               using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace IBit::P;               using namespace IError::P;
+using namespace IIdent::P;             using namespace IStd::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Read only data class ================================================= */
@@ -35,10 +35,10 @@ class MemConst                         // Start of const MemBase Block Class
   void MemCheckBit[[noreturn]](const char*const cpAddr,
     const size_t stPos) const
   { // Get absolute position and maximum bit position
-    const size_t stAbsPos = UtilBitToByte(stPos);
+    const size_t stAbsPos = BitToByte(stPos);
     // Throw the error
     XC(cpAddr,
-      "BitPosition",  stPos,    "BitMaximum",  UtilBitFromByte(stSize),
+      "BitPosition",  stPos,    "BitMaximum",  BitFromByte(stSize),
       "BytePosition", stAbsPos, "ByteMaximum", stSize,
       "AddrPosition", MemDoRead<void*>(stAbsPos),
       "AddrStart",    MemPtr(), "AddrMaximum", MemPtrEnd());
@@ -91,7 +91,7 @@ class MemConst                         // Start of const MemBase Block Class
       { return MemCheckParam(stPos, stBytes) && vpOther != nullptr; }
   /* -- Test a bit position ------------------------------------------------ */
   bool MemCheckPos(const size_t stPos) const
-    { return UtilBitToByte(stPos) >= MemSize(); }
+    { return BitToByte(stPos) >= MemSize(); }
   /* -- Find specified string ---------------------------------------------- */
   size_t MemFind(const StdString &strWhat, size_t stPos=0) const
   { // Bail if parameters are invalid
@@ -153,7 +153,7 @@ class MemConst                         // Start of const MemBase Block Class
   { // Throw error if invalid position
     if(!MemCheckPos(stPos)) MemCheckBit("Test error!", stPos);
     // Return the tested bit
-    return UtilBitTest(MemPtr<char>(), stPos);
+    return BitTest(MemPtr<char>(), stPos);
   }
   /* -- Stringview'ify the memory ------------------------------------------ */
   const StdStringView MemToStringViewSafe(const size_t stBytes) const
@@ -296,7 +296,7 @@ class MemBase :
   }
   /* -- Swap bits ---------------------------------------------------------- */
   void MemSwap8(const size_t stPos)
-    { MemWriteInt<uint8_t>(stPos, UtilBitSwap4(MemReadInt<uint8_t>(stPos))); }
+    { MemWriteInt<uint8_t>(stPos, BitSwap4(MemReadInt<uint8_t>(stPos))); }
   /* ----------------------------------------------------------------------- */
   void MemSwap16(const size_t stPos)
     { MemWriteInt<uint16_t>(stPos, SWAP_U16(MemReadInt<uint16_t>(stPos))); }
@@ -361,21 +361,21 @@ class MemBase :
   { // Throw error if invalid position
     if(!MemCheckPos(stPos)) MemCheckBit("Set error!", stPos);
     // Set the bit
-    UtilBitSet(MemPtr<char>(), stPos);
+    BitSet(MemPtr<char>(), stPos);
   }
   /* -- Clear a bit -------------------------------------------------------- */
   void MemBitClear(const size_t stPos)
   { // Throw error if invalid position
     if(!MemCheckPos(stPos)) MemCheckBit("Clear error!", stPos);
     // Clear the bit
-    UtilBitClear(MemPtr<char>(), stPos);
+    BitClear(MemPtr<char>(), stPos);
   }
   /* -- Flip a bit --------------------------------------------------------- */
   void MemBitFlip(const size_t stPos)
   { // Throw error if invalid position
     if(!MemCheckPos(stPos)) MemCheckBit("Flip error!", stPos);
     // Flip the bit
-    UtilBitFlip(MemPtr<char>(), stPos);
+    BitFlip(MemPtr<char>(), stPos);
   }
   /* -- Invert specific flags ---------------------------------------------- */
   template<typename Type=uint8_t>void MemInvert(const size_t stPos,
@@ -480,7 +480,7 @@ class Memory :
                 *ubpEnd = ubpPtr + stBytes;
                  ubpPtr < ubpEnd;
                ++ubpPtr)
-      *ubpPtr = UtilReverseByte(*ubpPtr);
+      *ubpPtr = BitReverseByte<uint8_t>(*ubpPtr);
   }
   void MemByteSwap8(const size_t stBytes) { MemByteSwap8(0, stBytes); }
   void MemByteSwap8() { MemByteSwap8(MemSize()); }

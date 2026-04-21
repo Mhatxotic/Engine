@@ -12,30 +12,36 @@ namespace IString {                    // Start of private module namespace
 /* -- Private dependencies and functions ----------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
 using namespace IUtf::P;
+/* -- Format time alias ---------------------------------------------------- */
+template<typename T>static auto StrPutTime(const StdTMStruct*const stdData,
+  const T*const tFormat) { return ::std::put_time(stdData, tFormat); }
+/* -- Parse time alias ----------------------------------------------------- */
+template<typename T>static auto StrGetTime(StdTMStruct*const stdData,
+  const T*const tFormat) { return ::std::get_time(stdData, tFormat); }
 /* -- Process string format/append value into output string stream --------- */
 template<typename AnyType>
-  static void StrFormatValue(ostringstream &osS, const AnyType &atVal)
+  static void StrFormatValue(StdOStringStream &osS, const AnyType &atVal)
 { // If is an exception object? Push the string of it
   if constexpr(is_same_v<AnyType, StdException>) osS << atVal.what();
   // Let ostringstream handle the value
   else osS << atVal;
 }
 /* -- Append final parameter to output string stream ----------------------- */
-static void StrAppendParam(ostringstream&) {}
+static void StrAppendParam(StdOStringStream&) {}
 /* -- Append a parameter to output string stream --------------------------- */
 template<typename AnyType, typename ...VarArgs>
-  static void StrAppendParam(ostringstream &osS, const AnyType &atVal,
+  static void StrAppendParam(StdOStringStream &osS, const AnyType &atVal,
     VarArgs &&...vaArgs)
 { // Push the specified value and process the next argument
   StrFormatValue(osS, atVal);
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
 }
 /* -- Format final parameter to output string stream ----------------------- */
-static void StrFormatParam(ostringstream &osS, const char *cpPos)
+static void StrFormatParam(StdOStringStream &osS, const char *cpPos)
   { if(*cpPos) osS << cpPos; }
 /* -- Format any parameter to output string stream ------------------------- */
 template<typename AnyType, typename ...VarArgs>
-  static void StrFormatParam(ostringstream &osS, const char *cpPos,
+  static void StrFormatParam(StdOStringStream &osS, const char *cpPos,
     const AnyType &atVal, VarArgs &&...vaArgs)
 { // Find mark that will be replaced by this param and if we find the char?
   if(const char*const cpNewPos = strchr(cpPos, '$'))
@@ -70,7 +76,7 @@ static const char*const cpTimeFormat = "%a %b %d %H:%M:%S %Y %z";
 template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
   static StdString StrAppend(VarArgs &&...vaArgs)
 { // Stream to write to
-  ostringstream osS;
+  StdOStringStream osS;
   // Build string
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
   // Return string
@@ -80,7 +86,7 @@ template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
 template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
   static StdString StrAppendImbue(VarArgs &&...vaArgs)
 { // Stream to write to
-  ostringstream osS;
+  StdOStringStream osS;
   // Imbue current locale
   osS.imbue(cCommon->CommonLocale());
   // Build string
@@ -94,7 +100,7 @@ template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
 { // Return if string empty of invalid
   if(UtfIsCStringNotValid(cpFmt)) return {};
   // Stream to write to
-  ostringstream osS;
+  StdOStringStream osS;
   // Format the text
   StrFormatParam(osS, cpFmt, StdForward<VarArgs>(vaArgs)...);
   // Return formated text
@@ -107,7 +113,7 @@ template<typename ...VarArgs>
 { // Return if string empty of invalid
   if(strS.empty()) return {};
   // Stream to write to
-  ostringstream osS;
+  StdOStringStream osS;
   // StrFormat the text
   StrFormatParam(osS, strS.data(), StdForward<VarArgs>(vaArgs)...);
   // Return formated text
@@ -143,7 +149,7 @@ template<typename IntType>
 template<typename IntType=int64_t>
   static IntType StrToNum(const StdString &strValue)
 { // Put value into input string stream
-  istringstream isS{ strValue };
+  StdIStringStream isS{ strValue };
   // Push value into integer
   if constexpr(is_enum_v<IntType>)
   { // Underlying value of the enum type to store into
@@ -168,7 +174,7 @@ template<typename IntType=int64_t>
 { // Value to store into
   IntType itN;
   // Put value into input string stream
-  istringstream isS{ strValue };
+  StdIStringStream isS{ strValue };
   // Push value into integer
   isS >> hex >> itN;
   // Return result
@@ -194,7 +200,7 @@ static bool StrIsAlphaNum(const StdString &strValue)
 template<typename IntType=int64_t>
   static bool StrIsInt(const StdString &strValue)
 { // Get string stream
-  istringstream isS{ strValue };
+  StdIStringStream isS{ strValue };
   // Test with string stream
   IntType itV; isS >> noskipws >> itV;
   // Return if succeeded
@@ -246,11 +252,11 @@ static StdTimeT StrParseTime2(const StdString &strS)
   // Fmt: %3s %3s %02d %02d:%02d:%02d %05d %04d
   // Test example to just quickly copy and paste in the engine...
   // lexec 'Console.Write(Util.ParseTime2("Mon Mar 14 00:00:00 -0800 2017"));'
-  istringstream isS{ strS };
-  isS >> get_time(&tData, "%a %b %d %T");
+  StdIStringStream isS{ strS };
+  isS >> StrGetTime(&tData, "%a %b %d %T");
   if(isS.fail()) return 0;
   isS >> tData.tm_wday;
-  isS >> get_time(&tData, "%Y");
+  isS >> StrGetTime(&tData, "%Y");
   if(isS.fail()) return 0;
   // No daylight savings
   tData.tm_isdst = 0;
@@ -265,9 +271,9 @@ static StdTimeT StrParseTime(const StdString &strS,
 { // Time structure
   StdTMStruct tData;
   // Create static input stringstream (safe and fast in c++11)
-  istringstream isS{ strS };
+  StdIStringStream isS{ strS };
   // Scan timestamp into time structure
-  isS >> get_time(&tData, cpF);
+  isS >> StrGetTime(&tData, cpF);
   if(isS.fail()) return 0;
   // Fill in other useless junk in the struct
   tData.tm_isdst = 0;
@@ -425,7 +431,7 @@ static StdString StrLongFromDuration(const StdTimeT tDuration,
   // in terms of leap years, proper days in a month etc.
   StdGMTime(&tD, &tDuration);
   // Output string
-  ostringstream osS;
+  StdOStringStream osS;
   // If failed? Manually do it
   if(tD.tm_year == -1)
   { // Clear years and months since we can't realiably calculate that.
@@ -511,7 +517,7 @@ static StdString StrFromEvalTokens(const BoolCharPairVector &bcpvList)
 static StdString StrShortFromDuration(const double dDuration,
   const int iPrecision=6)
 { // Output string
-  ostringstream osS;
+  StdOStringStream osS;
   // Get duration ceiled and if negative?
   double dInt, dFrac = modf(dDuration, &dInt);
   if(dInt < 0)
@@ -573,7 +579,7 @@ template<class AnyArray, class CtrType = typename AnyArray::value_type>
   // Done if empty or begin position is invalid
   if(aArray.empty() || sstBegin >= sstSize) return {};
   // Create output only string stream which stays cached (safe in c++11)
-  ostringstream osS;
+  StdOStringStream osS;
   // Get first iterator (penultimate from the end in the array)
   typedef typename AnyArray::const_iterator AnyArrayConstIt;
   AnyArrayConstIt aaciStart{ StdNext(aArray.cbegin(), sstBegin) };
@@ -909,7 +915,7 @@ static size_t StrFindCharNotBackwards(const StdString &strS, size_t stStart,
 }
 /* -- Do convert the specified structure to string ------------------------= */
 static StdString StrFromTimeTM(const StdTMStruct &tmData, const char*const cpF)
-  { return StrAppend(put_time(&tmData, cpF)); }
+  { return StrAppend(StrPutTime(&tmData, cpF)); }
 /* -- Convert specified timestamp to string -------------------------------- */
 static StdString StrFromTimeTT(const StdTimeT ttTimestamp,
   const char*const cpFormat = cpTimeFormat)
@@ -962,7 +968,7 @@ template<class ListType>
   static StdString StrExplodeEx(const ListType &lType, const StdString &strSep,
     const StdString &strLast)
 { // String to return
-  ostringstream ossOut;
+  StdOStringStream osS;
   // What is the size of this string
   switch(lType.size())
   { // Empty list? Just break to return empty string
@@ -970,22 +976,22 @@ template<class ListType>
     // Only one? Just return the string directly
     case 1: return *lType.cbegin();
     // Two? Return a simple appendage.
-    case 2: ossOut << *lType.cbegin() << strLast << *lType.crbegin(); break;
+    case 2: osS << *lType.cbegin() << strLast << *lType.crbegin(); break;
     // More than two? Write the first item first
-    default: ossOut << *lType.cbegin();
+    default: osS << *lType.cbegin();
              // Container type
              typedef typename ListType::value_type ListTypeValue;
              // Write the rest but one prefixed with the separator
              StdForEach(seq,
                StdNext(lType.cbegin()), StdNext(lType.crbegin()).base(),
-                 [&ossOut, &strSep](const ListTypeValue &strStr)
-                   { ossOut << strSep << strStr; });
+                 [&osS, &strSep](const ListTypeValue &strStr)
+                   { osS << strSep << strStr; });
              // and now append the last separator and string from list
-             ossOut << strLast << *lType.crbegin();
+             osS << strLast << *lType.crbegin();
              // Done
              break;
   } // Return the compacted string
-  return ossOut.str();
+  return osS.str();
 }
 /* -- Compact a string removing leading, trailing and duplicate spaces ----- */
 static StdString &StrCompactRef(StdString &strStr)

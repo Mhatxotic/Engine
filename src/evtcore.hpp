@@ -9,10 +9,10 @@
 /* ------------------------------------------------------------------------- */
 namespace IEvtCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IError::P;             using namespace IIdent::P;
-using namespace ILog::P;               using namespace IMutex::P;
-using namespace IStd::P;               using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace IError::P;             using namespace IFillCon::P;
+using namespace IIdent::P;             using namespace ILog::P;
+using namespace IMutex::P;             using namespace IStd::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public public namespace
 /* ------------------------------------------------------------------------- */
@@ -324,7 +324,7 @@ class EvtCore :                        // Start of common event system class
     Ident{ strCName },                 // Initialise event system name
     islEventStrings{ islStrings },     // Initialise event id names
     cefEmpty{ bind(&EvtCore::WarningFunction, this, _1) },
-    fFuncs{ UtilMkFilledContainer<Funcs>(cefEmpty) }
+    fFuncs{ FillConGeneric<Funcs>(cefEmpty) }
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

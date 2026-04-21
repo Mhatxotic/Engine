@@ -83,7 +83,7 @@ static Credits *cCredits = nullptr;    // Pointer to global class
 class Credits                          // Members initially private
 { /* -- License data ------------------------------------------------------- */
 #define BEGINLICENSE(n,s) \
-  static constexpr const StdArray<const uint8_t,s> l ## n{
+  constexpr static const StdArray<const uint8_t,s> l ## n{
 #define ENDLICENSE };                  // Helper functions for licenses header
 #include "license.hpp"                 // Load up compressed licenses
 #undef ENDLICENSE                      // Done with this macro

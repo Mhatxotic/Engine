@@ -32,7 +32,7 @@ template<class ClassType> requires StdHasResize<ClassType>
   explicit StdResized(const size_t stSize) { this->resize(stSize); } };
 /* -- Remove const from a pointer ------------------------------------------ */
 template<typename TypeTo, typename TypeFrom, typename TypeNonConst =
-  remove_const_t<remove_pointer_t<TypeFrom>>*> requires is_pointer_v<TypeFrom>
+  StdRemoveConst<StdRemovePointer<TypeFrom>>*> requires is_pointer_v<TypeFrom>
 static TypeTo StdToNonConstCast(TypeFrom tfV)
   { return reinterpret_cast<TypeTo>(const_cast<TypeNonConst>(tfV)); }
 /* ------------------------------------------------------------------------- */
@@ -325,7 +325,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
     // Return failure if nothing added
     if(strMatched.empty()) return 0;
     // Put value into input string stream
-    istringstream isS{ strMatched };
+    StdIStringStream isS{ strMatched };
     // Push value into integer
     isS >> hex >> itOut;
     // Return bytes read

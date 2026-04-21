@@ -10,7 +10,7 @@
 /* == We'll put all these calls in a namespace ============================= */
 class SysBase                          // Members initially private
 { /* -- Custom exceptions -------------------------------------------------- */
-  static constexpr const DWORD         // Custom exceptions
+  constexpr static const DWORD         // Custom exceptions
     EXCEPTION_ABORT      = 0xF0000001, // Abornmal program termination
     EXCEPTION_ISA        = 0xF0000002, // Illegal storage access
     EXCEPTION_FPOINT     = 0xF0000003; // Floating point exception
@@ -19,14 +19,13 @@ class SysBase                          // Members initially private
   const ExCoList   eclStrings;         // Exception strings strings
   /* -- Private variables -------------------------------------------------- */
   HWND             hwndWindow;         // Main window handle being used
-  ostringstream    osS;                // Output stringstream
   /* ----------------------------------------------------------------------- */
   const UINT       uiOldErrorMode;            // Old error mode
   const _crt_signal_t fcbAbortCallback,       // Saved abort callback
                    fcbIllegalStorageAccess,   // " illegal storage access cb
                    fcbFloatingPointException; // " float point exception cb
   /* == Get environment ==================================================== */
-  void SEHDumpEnvironment() try
+  void SEHDumpEnvironment(StdOStringStream &osS) try
   { // Prepare formatted data
     Statistic tD;
     tD.Header("Variable").Header("Value", false).Reserve(10);
@@ -53,7 +52,7 @@ class SysBase                          // Members initially private
   } // Shouldn't happen but just incase
   catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Get memory information ============================================= */
-  void SEHDumpMemoryStatus() try
+  void SEHDumpMemoryStatus(StdOStringStream &osS) try
   { // Get process memory info
     PROCESS_MEMORY_COUNTERS pD;
     pD.cb = sizeof(pD);
@@ -110,7 +109,8 @@ class SysBase                          // Members initially private
     return wstrExe;
   }
   /* == Dump exception memory addresses ==================================== */
-  void SEHDumpExceptionMemoryAddresses(const EXCEPTION_RECORD &erData) try
+  void SEHDumpExceptionMemoryAddresses(StdOStringStream &osS,
+    const EXCEPTION_RECORD &erData) try
   { // Bail if exception code does not support this
     switch(erData.ExceptionCode)
     { // The first element of the array contains a read-write flag that
@@ -142,7 +142,7 @@ class SysBase                          // Members initially private
               dwParam < dwMax;
               dwParam += 2)
     { // Write where the access occured
-      osS << "\r\nThe memory at 0x"
+      osS << cCommon->CommonCrLf() << "The memory at 0x"
           << reinterpret_cast<void*>(erData.ExceptionInformation[dwParam+1])
           << " could not be ";
       // Write the action attempted
@@ -163,14 +163,14 @@ class SysBase                          // Members initially private
       // plus two to get the third element. The next iteration will push by
       // two.
       if(erData.ExceptionCode == EXCEPTION_IN_PAGE_ERROR)
-        osS << "\r\nAn in page error occured with code 0x"
+        osS << cCommon->CommonCrLf() << "An in page error occured with code 0x"
             << erData.ExceptionInformation[(dwParam++)+2]
             << '!';
     }
   } // Shouldn't happen but just incase
   catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Dump registers to string =========================================== */
-  void SEHDumpRegisters(const CONTEXT *pcData) try
+  void SEHDumpRegisters(StdOStringStream &osS, const CONTEXT*const pcData) try
   { // Invalid context?
     if(!pcData)
       throw StdRunTimeError{ "No registers when context is null pointer!" };
@@ -298,7 +298,7 @@ class SysBase                          // Members initially private
   } // Shouldn't happen but just incase
   catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Perform process dump =============================================== */
-  void SEHProcessDump() try
+  void SEHProcessDump(StdOStringStream &osS) try
   { // Prepare formatted data
     Statistic tData;
     tData.Header("Name").Header("Pid").Header("PPid").Header("Thr")
@@ -384,7 +384,7 @@ class SysBase                          // Members initially private
   } // Shouldn't happen but just incase
   catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Perform module dump ================================================ */
-  void SEHModuleDump() try
+  void SEHModuleDump(StdOStringStream &osS) try
   { // Prepare formatted data
     Statistic tD;
     tD.Header("Description").Header("Version", false)
@@ -420,8 +420,8 @@ class SysBase                          // Members initially private
   } // Shouldn't happen but just incase
   catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Perform stack dump ================================================= */
-  void SEHStackDump(const HANDLE hProcess, const HANDLE hThread,
-    const CONTEXT*const pcData) try
+  void SEHStackDump(StdOStringStream &osS, const HANDLE hProcess,
+    const HANDLE hThread, const CONTEXT*const pcData) try
   { // Ignore if no context
     if(!pcData)
       throw StdRunTimeError{ "No stacktrace when context is a null pointer!" };
@@ -461,7 +461,7 @@ class SysBase                          // Members initially private
         // Is a null address? Ignore it
         if(!sfData.AddrPC.Offset)
         { // Ignore it so goto next function
-          osS << "<Null Address Pointer>\r\n";
+          osS << "<Null Address Pointer>" << cCommon->CommonCrLf();
           continue;
         } // Get module name and if succeeded?
         IMAGEHLP_MODULE ihmMod;
@@ -505,20 +505,25 @@ class SysBase                          // Members initially private
         ihlLine.SizeOfStruct = sizeof(ihlLine);
         if(SymGetLineFromAddr(hProcess, sfData.AddrPC.Offset,
           reinterpret_cast<PDWORD>(&dwOffsetFromSym), &ihlLine))
-            osS << ihlLine.FileName << ':' << ihlLine.LineNumber << "\r\n";
+            osS << ihlLine.FileName << ':' << ihlLine.LineNumber <<
+              cCommon->CommonCrLf();
         // Failed so record reason why that couldn't be obtained
         else switch(const DWORD dwCode = SysErrorCode<DWORD>())
         { // Invalid address
           case ERROR_INVALID_ADDRESS:
-            osS << "<No Source Information>\r\n"; break;
+            osS << "<No Source Information>" << cCommon->CommonCrLf(); break;
           // Success? (This happens on Wine for some reason)
-          case ERROR_SUCCESS: osS << "<Unavailable>\r\n"; break;
+          case ERROR_SUCCESS:
+            osS << "<Unavailable>" << cCommon->CommonCrLf(); break;
           // Any other code
-          default: osS << "<SGLFA:" << SysError(dwCode) << ">!\r\n"; break;
+          default:
+            osS << "<SGLFA:" << SysError(dwCode) << ">!" <<
+              cCommon->CommonCrLf(); break;
         }
       }
     } // Show error
-    else osS << "SymInitialise failed: " << SysError() << ".\r\n";
+    else osS << "SymInitialise failed: " << SysError() << '.' <<
+      cCommon->CommonCrLf();
     // Done with these defines
 #undef ADDR_PC
 #undef ADDR_FRAME
@@ -537,12 +542,14 @@ class SysBase                          // Members initially private
     return dwW;
   }
   /* == Create a subtitle for the output =================================== */
-  void SEHSubTitle(const StdString &strS)
+  void SEHSubTitle(StdOStringStream &osS, const StdString &strS)
   { // Build title and underline
-    osS << strS << "\r\n" << StdString(strS.length(), '=') << "\r\n";
+    osS << strS << cCommon->CommonCrLf() << StdString(strS.length(), '=') <<
+      cCommon->CommonCrLf();
   }
   /* == Dump file information ============================================== */
-  void SEHDumpFileInfo(const StdWideString &wstrFile) try
+  void SEHDumpFileInfo(StdOStringStream &osS,
+    const StdWideString &wstrFile) try
   { // Get system time
     SYSTEMTIME stData;
     GetLocalTime(&stData);
@@ -554,50 +561,76 @@ class SysBase                          // Members initially private
         << ' ' << setw(2) << stData.wHour
         << ':' << setw(2) << stData.wMinute
         << ':' << setw(2) << stData.wSecond
-        << '.' << setw(3) << stData.wMilliseconds << ".\r\n"
-           "Filename: " << WS16toUTF(wstrFile) << ".\r\n"
-           "Arguments: " << S16toUTF(GetCommandLine()) << ".\r\n"
-           "\r\n";
+        << '.' << setw(3) << stData.wMilliseconds
+        << '.' << cCommon->CommonCrLf()
+        << "Filename: " << WS16toUTF(wstrFile) << '.' <<
+          cCommon->CommonCrLf()
+        << "Arguments: " << S16toUTF(GetCommandLine()) << '.' <<
+          cCommon->CommonCrLf2();
   } // Shouldn't happen but just incase
   catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Dump string to file ================================================ */
-  void SEHDumpLog(const CONTEXT *cData, const StdString &strDialog) try
+  void SEHDumpLog(StdOStringStream &osS, const CONTEXT*const cData,
+    const StdString &strDialog) try
   { // Get filename
-    const StdWideString wstrFile{ SEHGetExecutableFileNameWithoutExtension() +
-      L".dbg" };
+#define LIFY2(x) L ## x
+#define LIFY(x) LIFY2(x)
+    const StdWideString wstrFile{
+      SEHGetExecutableFileNameWithoutExtension() +
+        L"." LIFY(CRASH_EXTENSION) };
+#undef LIFY
+#undef LIFY2
     // Open dump file and return if failed
     const HANDLE hFile = CreateFile(wstrFile.data(), GENERIC_WRITE, 0, 0,
       CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
     if(hFile == INVALID_HANDLE_VALUE) return;
     // Capture exceptions so we can close the file
     try
-    { // Write data
-      SEHSubTitle("Basic");       SEHDumpFileInfo(wstrFile);
-      SEHSubTitle("Summary");     osS << strDialog << "\r\n";
-      SEHSubTitle("Registers");   SEHDumpRegisters(cData);    osS << "\r\n";
-      SEHSubTitle("Memory");      SEHDumpMemoryStatus();      osS << "\r\n";
-      SEHSubTitle("Environment"); SEHDumpEnvironment();       osS << "\r\n";
-      SEHSubTitle("Modules");     SEHModuleDump();            osS << "\r\n";
-      SEHSubTitle("Processes");   SEHProcessDump();           osS << "\r\n";
-      SEHSubTitle("Log");
-      cLog->LogGetBufferLines(osS);                           osS << "\r\n";
-      SEHSubTitle("End-of-File");
-      // Write the log and throw if failed
+    { // Write basic information (executable, time, arguments)
+      SEHSubTitle(osS, "Basic");
+        SEHDumpFileInfo(osS, wstrFile);
+      // Write the crash summary
+      SEHSubTitle(osS, "Summary");
+        osS << strDialog << cCommon->CommonCrLf();
+      // Write the crash registers
+      SEHSubTitle(osS, "Registers");
+        SEHDumpRegisters(osS, cData);
+        osS << cCommon->CommonCrLf();
+      // Write memory information
+      SEHSubTitle(osS, "Memory");
+        SEHDumpMemoryStatus(osS);
+        osS << cCommon->CommonCrLf();
+      // Write environment variables
+      SEHSubTitle(osS, "Environment");
+        SEHDumpEnvironment(osS);
+        osS << cCommon->CommonCrLf();
+      // Write modules
+      SEHSubTitle(osS, "Modules");
+        SEHModuleDump(osS);
+        osS << cCommon->CommonCrLf();
+      // Write processes
+      SEHSubTitle(osS, "Processes");
+        SEHProcessDump(osS);
+        osS << cCommon->CommonCrLf();
+      // Write engine log
+      SEHSubTitle(osS, "Log");
+        cLog->LogGetBufferLines(osS);
+        osS << cCommon->CommonCrLf();
+      // Write the final end-of-file label
+      SEHSubTitle(osS, "End-of-File");
+      // Commit the log to crash file
       SEHWrite(hFile, osS.str());
       // Close handle
       CloseHandle(hFile);
-    } // If exception occured?
-    catch(const StdException &)
-    { // Close handle
-      CloseHandle(hFile);
-      // Rethrow
-      throw;
-    }
+    } // If exception occured? Just close the file
+    catch(const StdException &) { CloseHandle(hFile); }
   } // Shouldn't happen but just incase
   catch(const StdException &) {}
   /* == Build summary ====================================================== */
   const StdString SEHGetSummary(const EXCEPTION_POINTERS &epData) try
-  { // Get exception record
+  { // String builder
+    StdOStringStream osS;
+    // Get exception record
     const EXCEPTION_RECORD &erData = *epData.ExceptionRecord;
     // Build message for dialog box
     osS << "The instruction at address 0x" << erData.ExceptionAddress
@@ -606,27 +639,16 @@ class SysBase                          // Members initially private
         << " caused exception 0x" << hex << erData.ExceptionCode
         << " (" << eclStrings.Get(erData.ExceptionCode)
         << ") with flags 0x" << erData.ExceptionFlags << dec << '.';
-    SEHDumpExceptionMemoryAddresses(erData);
-    osS << "\r\n\r\n";
-    // Check for illegal instruction?
+    SEHDumpExceptionMemoryAddresses(osS, erData);
+    osS << cCommon->CommonCrLf2();
+    // Check for illegal instruction? Add extra information
     if(erData.ExceptionCode == EXCEPTION_ILLEGAL_INSTRUCTION)
-    { // Add extra information
       osS << "This illegal instruction exception usually indicates that this "
              BUILD_TARGET " compiled binary is NOT compatible with your "
-             "operating system and/or central processing unit. "
-#if defined(X64)                       // Special message for 64-bit system?
-             "Since you are running the 64-bit version of this binary, please "
-             "consider trying the 32-bit version instead."
-#elif defined(X86)                     // Special message for 32-bit system?
-             "Since you are running the 32-bit version of this binary, you "
-             "may need to upgrade your operating system and/or central "
-             "processing unit. If you originally tried the 64-bit version and "
-             "you still got the same error then you may need to report this "
-             "issue as a bug."
-#endif
-             "\r\n\r\n";
-    } // Add stack dump[
-    SEHStackDump(GetCurrentProcess(), GetCurrentThread(),
+             "central processing unit."
+          << cCommon->CommonCrLf2();
+    // Add stack dump[
+    SEHStackDump(osS, GetCurrentProcess(), GetCurrentThread(),
       epData.ContextRecord);
     // Return string
     return osS.str();
@@ -637,14 +659,14 @@ class SysBase                          // Members initially private
   LONG HandleException(const EXCEPTION_POINTERS &epData) try
   { // Check exception record
     if(!epData.ExceptionRecord)
-      throw StdRunTimeError{ "The engine crash handler was called "
-                           "but with a null pointer exception record!" };
+      throw StdRunTimeError{ "The engine crash handler was called but with a "
+                             "null address exception record!" };
     // Prepare summary
     const StdString strDialog{ SEHGetSummary(epData) };
-    // Clear string stream
-    osS.str(cCommon->CommonCBlank());
+    // Make a shared string stream
+    StdOStringStream osS;
     // Write the log file
-    SEHDumpLog(epData.ContextRecord, strDialog);
+    SEHDumpLog(osS, epData.ContextRecord, strDialog);
     // No need to show anything if we're in a debugger
     if(IsDebuggerPresent()) return EXCEPTION_CONTINUE_SEARCH;
     // Show message box

@@ -2521,8 +2521,8 @@ static int RebuildAssets(const bool bClear)
   SystemF("$ -t7z -ms=off -mx9 -myx9 -m0=LZMA2:d64m:fb273 -mhe=on -mmt=8 -mqs "
     "-slp -ssw -sse -r u \"$\" \"-x!$32.exe\" \"-x!$.exe\" \"-x!$32\" "
     "\"-x!$\" \"-x!$32" UDB_EXTENSION "\" \"-x!$64" UDB_EXTENSION "\" "
-    "\"-x!docs\" \"-x!*.md\" \"-x!*.crt\" \"-x!*.ico\" \"-x!*.dbg\" "
-    "\"-x!.*\" \"-x!prv\" \"-x!*.psd\" \"-x!*." LOG_EXTENSION "\" "
+    "\"-x!docs\" \"-x!*.md\" \"-x!*.crt\" \"-x!*.ico\" \"-x!*." CRASH_EXTENSION
+    "\" \"-x!.*\" \"-x!prv\" \"-x!*.psd\" \"-x!*." LOG_EXTENSION "\" "
     "\"-x!*." ARCHIVE_EXTENSION "\" \"-x!*." UDB_EXTENSION "\" "
     ".",
       envActive.cp7z, strADB, strName, strName, strName, strName, strName,

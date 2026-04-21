@@ -35,19 +35,19 @@ class Statistic
   HeadDeque        hdHeaders;          // Headers dataz
   StrVector        svValues;           // Values list
   /* -- Format output iterator data without a suffix ----------------------- */
-  static void ProcValNoSuf(ostringstream &osS, const StrVectorConstIt &svciIt,
-    const Head &hRef)
+  static void ProcValNoSuf(StdOStringStream &osS,
+    const StrVectorConstIt &svciIt, const Head &hRef)
   { osS << hRef.jccFunc << setw(hRef.iMaxLen) << StdMove(*svciIt); }
   /* -- Format output iterator data with a suffix -------------------------- */
-  static void ProcValSuf(ostringstream &osS, const StrVectorConstIt &svciIt,
+  static void ProcValSuf(StdOStringStream &osS, const StrVectorConstIt &svciIt,
     const Head &hRef, const StdString &strSuffix)
   { osS << hRef.jccFunc << setw(hRef.iMaxLen)
         << StdMove(*svciIt) << strSuffix; }
   /* -- Format empty output data without a suffix -------------------------- */
-  static void ProcHdrNoSuf(ostringstream &osS, const Head &hRef)
+  static void ProcHdrNoSuf(StdOStringStream &osS, const Head &hRef)
     { osS << hRef.jccFunc << setw(hRef.iMaxLen) << StdMove(hRef.strName); }
   /* -- Format empty output data with a suffix ----------------------------- */
-  static void ProcHdrSuf(ostringstream &osS, const Head &hRef,
+  static void ProcHdrSuf(StdOStringStream &osS, const Head &hRef,
     const StdString &strSuffix)
   { osS << hRef.jccFunc << setw(hRef.iMaxLen)
         << StdMove(hRef.strName) << strSuffix; }
@@ -75,7 +75,8 @@ class Statistic
   size_t Headers() const { return hdHeaders.size(); }
   size_t Rows() const { return Cells() / Headers(); }
   /* -- Finish with existing string stream --------------------------------- */
-  void Finish(ostringstream &osS, const bool bAddLF=true, const size_t stGap=1)
+  void Finish(StdOStringStream &osS, const bool bAddLF=true,
+    const size_t stGap=1)
   { // Check that there are headers
     CheckHeaderCount();
     // Get headers size minus one
@@ -131,7 +132,7 @@ class Statistic
   /* -- Finish with new string stream -------------------------------------- */
   const StdString Finish(const bool bAddLF=true, const size_t stGap=1)
   { // Output stream
-    ostringstream osS;
+    StdOStringStream osS;
     // Do the format
     Finish(osS, bAddLF, stGap);
     // Return the string

@@ -14,7 +14,7 @@ namespace IFlags {                     // Start of module namespace
 template<typename T>struct StdIsAtomic : ::std::false_type {};
 template<typename T>struct StdIsAtomic<StdAtomic<T>> : ::std::true_type {};
 template<typename T>
-  constexpr bool StdIsAtomicV = StdIsAtomic<remove_cv_t<T>>::value;
+  constexpr static bool StdIsAtomicV = StdIsAtomic<StdRemoveConst<T>>::value;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Storage for flags ==================================================== **

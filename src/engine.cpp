@@ -38,10 +38,12 @@ namespace E {                          // Start of engine namespace
 #include "timer.hpp"                   // Timing utilities header
 #include "args.hpp"                    // Arguments handling header
 #include "cmdline.hpp"                 // Command-line class header
+#include "bit.hpp"                     // Utility bit access functions
 #include "memory.hpp"                  // Memory management utilities header
 #include "fstream.hpp"                 // File IO utility header
 #include "mutex.hpp"                   // Mutex helper class
 #include "log.hpp"                     // Logging helper class header
+#include "ifillcon.hpp"                // Init filled container header
 #include "luadef.hpp"                  // Lua definitions header
 #include "luaident.hpp"                // Lua ident class header
 #include "ihelper.hpp"                 // Init helper class header

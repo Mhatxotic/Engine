@@ -9,8 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IJoyButton {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IGlFWUtil::P;          using namespace IStd::P;
-using namespace IUtil::P;
+using namespace IFillCon::P;           using namespace IGlFWUtil::P;
+using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Button class --------------------------------------------------------- */
@@ -97,7 +97,7 @@ class JoyButtonList :
   /* -- Default constructor ------------------------------------- */ protected:
   JoyButtonList() :
     /* -- Initialisers ----------------------------------------------------- */
-    Container{ UtilMkFilledClassContainer<Container,int>() },
+    Container{ FillConClass<Container,int>() },
     iButtons(0)                        // Initialise button count
     /* -- No code ---------------------------------------------------------- */
     {}

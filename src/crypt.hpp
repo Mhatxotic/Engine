@@ -218,7 +218,7 @@ static int CryptGetError(StdString &strError)
   { // Set error number and string
     iError = static_cast<int>(ulErr);
     // Some statics
-    static constexpr const unsigned int
+    constexpr static const unsigned int
       // Replacement for ERR_SYSTEM_MASK which causes warnings
       uiSystemMask = numeric_limits<int>::max(),
       // Replacement for ERR_SYSTEM_FLAG which causes warnings
@@ -402,7 +402,7 @@ static StdString CryptEntEncode(const StdString &strS)
   // Create sting to return and reserve memory. We will use a ostringstream
   // because we do not know what the size is going to be and we can make
   // use of hex which will work with our utf8 decoder.
-  ostringstream osS; osS << hex;
+  StdOStringStream osS; osS << hex;
   // For each entity. Find it in the string
   // Until null character. Which control token?
   for(UtfDecoder udSrc{ strS }; Codepoint cChar = udSrc.UtfNext();)
@@ -619,9 +619,9 @@ static StdString CryptSanitise(const StdString &strMessage)
   // Output string
   StdReserved<StdString> strOutput{ strPruned.size() };
   // Put pruned string into a string stream
-  istringstream issS{ strPruned };
+  StdIStringStream isS{ strPruned };
   // For each word
-  while(issS >> strWord)
+  while(isS >> strWord)
   { // Character is different?
     if(strWord != strLastWord)
     { // Set last word
@@ -691,7 +691,7 @@ class Crypt :                          // Actual class body
   static void CryptFree(void*const vpPtr, const char*const, const int)
     { StdFree(vpPtr); }
   /* -- Private keys ----------------------------------------------- */ public:
-  static constexpr const size_t
+  constexpr static const size_t
     stPkKeyCount   = 4,                // Number of quads in key (256bits)
     stPkIvCount    = 2,                // Number of quads in iv key (128bits)
     stPkTotalCount = (stPkKeyCount + stPkIvCount);

@@ -9,14 +9,15 @@
 /* ------------------------------------------------------------------------- */
 namespace IMask {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICollector::P;         using namespace IDim::P;
-using namespace IDir::P;               using namespace IError::P;
-using namespace IIdent::P;             using namespace IImage::P;
-using namespace IImageDef::P;          using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
+using namespace IBit::P;               using namespace ICollector::P;
+using namespace IDim::P;               using namespace IDir::P;
+using namespace IError::P;             using namespace IIdent::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Mask collector and member class ====================================== */
@@ -54,8 +55,8 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
                 iDestYPos = (iY - iDestY) * mCdest.DimGetWidth();
       // Enumerate X-axis
       for(int iX = iXMin; iX < iXMax; ++iX)
-        if(UtilBitTest(cpS, iSrcYPos + (iX - iSrcX)) &&
-           UtilBitTest(cpD, iDestYPos + (iX - iDestX)))
+        if(BitTest(cpS, iSrcYPos + (iX - iSrcX)) &&
+           BitTest(cpD, iDestYPos + (iX - iDestX)))
           return true;
     }
     // No collision
@@ -113,8 +114,8 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
       { // Calculate destination position
         const int iDestPos = iDestYPos + iX;
         // Clear the bits first and copy the bits
-        UtilBitClear(cpD, iDestPos);
-        UtilBitSet2(cpD, iDestPos, cpS, iSrcYPos + (iX - iDestX));
+        BitClear(cpD, iDestPos);
+        BitSet2(cpD, iDestPos, cpS, iSrcYPos + (iX - iDestX));
       }
     }
   }
@@ -141,7 +142,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
                 iSrcYPos = (iY - iDestY) * mCsrc.DimGetWidth();
       // Enumerate X-axis and merge the specified bits
       for(int iX = iXMin; iX < iXMax; ++iX)
-        UtilBitSet2(cpD, iDestYPos + iX, cpS, iSrcYPos + (iX - iDestX));
+        BitSet2(cpD, iDestYPos + iX, cpS, iSrcYPos + (iX - iDestX));
     }
   }
   /* -- Erase specified mask into this one --------------------------------- */
@@ -156,7 +157,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
       const int iDestYPos = iY * DimGetWidth();
       // Enumerate X-axis positions and clear the bits
       for(int iX = 0; iX < DimGetWidth(); ++iX)
-        UtilBitClear(cpD, iDestYPos + iX);
+        BitClear(cpD, iDestYPos + iX);
     }
   }
   /* -- Fill specified mask ------------------------------------------------ */
@@ -177,7 +178,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
       const int iDestYPos = iY * DimGetWidth();
       // Enumerate X-axis positions and fill the bits
       for(int iX = iXMin; iX < iXMax; ++iX)
-        UtilBitSet(cpD, iDestYPos + iX);
+        BitSet(cpD, iDestYPos + iX);
     }
   }
   /* -- Clear specified mask ----------------------------------------------- */
@@ -198,7 +199,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
       const int iDestYPos = iY * DimGetWidth();
       // Enumerate X-axis positions and fill the bits
       for(int iX = iXMin; iX < iXMax; ++iX)
-        UtilBitClear(cpD, iDestYPos + iX);
+        BitClear(cpD, iDestYPos + iX);
     }
   }
   /* -- Init --------------------------------------------------------------- */
@@ -334,8 +335,8 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
         for(size_t stX = 0; stX < stTotalXWhole; stX += stTWidth)
         { // Create cleared mask buffer, insert it into list and get ptr to
           // the memory.
-          unsigned char*const ucpD = emplace(cend(),
-            Memory{ stBytes, true })->MemPtr<unsigned char>();
+          unsigned char*const ucpD =
+            emplace(cend(), Memory{ stBytes, true })->MemPtr<unsigned char>();
           // Copy source to buffer
           for(size_t stTY = stTHeightM1; stTY < stTHeight; --stTY)
           { // Pre-calculate Y position
@@ -343,7 +344,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
                          stSrcYPos = (stHeightM1 - (stY + stTY)) * stWidth;
             // Enumerate X-axis. Note that bits are reversed too.
             for(size_t stTX = 0; stTX < stTWidth; ++stTX)
-              UtilBitSet2R(ucpD, stDestYPos + stTX,
+              BitSet2R(ucpD, stDestYPos + stTX,
                 ucpS, stSrcYPos + (stX + stTX));
           }
         }
@@ -363,7 +364,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
                        stSrcYPos = (stHeightM1 - (stY + stTY)) * stWidth;
           // Enumerate X-axis. Note that bits are reversed too.
           for(size_t stTX = 0; stTX < stTWidth; ++stTX)
-            UtilBitSet2R(ucpD, stDestYPos + stTX,
+            BitSet2R(ucpD, stDestYPos + stTX,
               ucpS, stSrcYPos + (stX + stTX));
         }
       }

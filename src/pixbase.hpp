@@ -20,7 +20,7 @@ class SysBase :                        // Safe exception handler namespace
     private Thread,                    // Thread to monitor file descriptor
     private Memory                     // Storage for read text data
   { /* -- Private variables ------------------------------------------------ */
-    static constexpr int iInvalid=-1;  // Handle is invalid value
+    constexpr static int iInvalid=-1;  // Handle is invalid value
     /* --------------------------------------------------------------------- */
     const int      iRequested;         // Requested handle
     /* -- Handles for pipe() function -------------------------------------- */
@@ -224,7 +224,7 @@ class SysBase :                        // Safe exception handler namespace
     }
   }
   /* ----------------------------------------------------------------------- */
-  void DumpStack(ostringstream &osS) const
+  void DumpStack(StdOStringStream &osS) const
   { // Create array to hold stack pointers
     typedef StdArray<void*, 256> StackArray;
     StackArray saArray;
@@ -269,7 +269,7 @@ class SysBase :                        // Safe exception handler namespace
     osS << '.';
   }
   /* ----------------------------------------------------------------------- */
-  void DumpMods(ostringstream &osS)
+  void DumpMods(StdOStringStream &osS)
   { // Ignore if no mods
     if(empty()) return;
     // Add mods header
@@ -293,10 +293,10 @@ class SysBase :                        // Safe exception handler namespace
   ExitState DebugMessage(const char*const cpSignal, const char*const cpExtra)
   { // Build filename
     const StdString strFileName{ cCmdLine ?
-      StrAppend(cCmdLine->CmdLineGetCArgs()[0], ".dbg") :
+      StrAppend(cCmdLine->CmdLineGetCArgs()[0], "." CRASH_EXTENSION) :
       "/tmp/engine-crash.txt" };
     // Begin message
-    ostringstream osS;
+    StdOStringStream osS;
     osS << "Received signal 'SIG" << cpSignal << "' at "
         << cmSys.FormatTime();
     // Dump the stack
@@ -320,7 +320,7 @@ class SysBase :                        // Safe exception handler namespace
     // Write the output and close the log
     const StdString strMsg{ StrAppend(osS.str(), '\n') };
     // Message box string
-    ostringstream osTS;
+    StdOStringStream osTS;
     osTS << "Received signal SIG" << cpSignal << " at " << cmSys.FormatTime()
          << ". This means that the engine must now terminate and we apologise "
             "for the inconvenience with the loss of any unsaved progress. ";

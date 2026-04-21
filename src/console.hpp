@@ -544,7 +544,7 @@ struct Console :                       // Members initially private
     const CmdMapConstIt cmciIt{ cmMap.find(strVarOrCmd) };
     if(cmciIt == cmMap.cend())
     { // Output string
-      ostringstream osS;
+      StdOStringStream osS;
       // If the cvar exists?
       const CVarMapIt cvmMapIt{ cCVars->FindVariable(strVarOrCmd) };
       if(cvmMapIt != cCVars->GetVarListEnd())

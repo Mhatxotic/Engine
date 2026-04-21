@@ -492,7 +492,7 @@ template<typename FloatType> requires is_floating_point_v<FloatType>
 ** ## make it only allow classes since we don't need it for integrals   . ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-template<class AnyType, typename AnyTypeRR = remove_reference_t<AnyType>>
+template<class AnyType, typename AnyTypeRR = StdRemoveReference<AnyType>>
 requires is_class_v<AnyTypeRR> &&
         (is_reference_v<AnyType> || is_same_v<AnyType, AnyTypeRR>)
   constexpr static AnyTypeRR &&StdMove(AnyType &&atVar) noexcept

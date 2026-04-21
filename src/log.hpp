@@ -251,7 +251,7 @@ class Log :                            // The actual class body
   /* -- Unformatted logging with level check (debug level) ----------------- */
   void LogDebugSafe(const StdString& strLine) { LogSafe(LH_DEBUG, strLine); }
   /* -- Return buffer lines for debugger ----------------------------------- */
-  void LogGetBufferLines(ostringstream &osS)
+  void LogGetBufferLines(StdOStringStream &osS)
   { // Gain exclusive access to log lines
     MutexCall([this, &osS](){
       // For each log entry, write the line to the buffer

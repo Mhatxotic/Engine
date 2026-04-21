@@ -203,6 +203,7 @@
 #define UDB_EXTENSION            "udb" // Default database file extension
 #define JSON_EXTENSION          "json" // Default json file extension
 #define CER_EXTENSION            "cer" // Default certificate file extension
+#define CRASH_EXTENSION          "dbg" // Default crash log extension
 /* == Base STL includes ==================================================== */
 #include <algorithm>                   // Searching, sorting, counting, etc.
 #include <array>                       // Static arrays

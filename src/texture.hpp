@@ -795,7 +795,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
   { // Generate the texture as normal but we'll be generating the tileset
     InitTextureImage(imgSrc, 0, 0, 0, 0, ofeFilter, false);
     // Check that the tile count is divisble by 4 (X,Y,W,H)
-    static constexpr size_t stValues = 4, stValuesM1 = stValues - 1;
+    constexpr static size_t stValues = 4, stValuesM1 = stValues - 1;
     if(const size_t stExcess = gluvTiles.size() % stValues)
       XC("Invalid count of tiles specified!",
         "Identifier", IdentGet(), "Count", stExcess);

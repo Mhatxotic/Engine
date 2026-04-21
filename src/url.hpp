@@ -176,37 +176,37 @@ struct UrlBase : public ParamParser    // Members initially public
           // Encode parameters?
           case 1:
           { // Start rebuilding resource with first parameter
-            ostringstream ossStr;
+            StdOStringStream osS;
             // Get iterator for first item
             ParamIt piIt{ cbegin() };
             // Start off
-            ossStr << strResource.substr(0, stParamsPos) << '?' <<
+            osS << strResource.substr(0, stParamsPos) << '?' <<
               CryptURLEncode(piIt->first) << '=' <<
               CryptURLEncode(piIt->second);
             // Now the rest of the parameters
             while(++piIt != cend())
-              ossStr << '&' << CryptURLEncode(piIt->first) << '=' <<
+              osS << '&' << CryptURLEncode(piIt->first) << '=' <<
                 CryptURLEncode(piIt->second);
             // Replace original resource url
-            strResource = ossStr.str();
+            strResource = osS.str();
             // Done
             break;
           } // Decode parameters?
           case 2:
           { // Start rebuilding resource with first parameter
-            ostringstream ossStr;
+            StdOStringStream osS;
             // Get iterator for first item
             ParamIt piIt{ cbegin() };
             // Start off
-            ossStr << strResource.substr(0, stParamsPos) << '?' <<
+            osS << strResource.substr(0, stParamsPos) << '?' <<
               CryptURLDecode(piIt->first) << '=' <<
               CryptURLDecode(piIt->second);
             // Now the rest of the parameters
             while(++piIt != cend())
-              ossStr << '&' << CryptURLDecode(piIt->first) << '=' <<
+              osS << '&' << CryptURLDecode(piIt->first) << '=' <<
                 CryptURLDecode(piIt->second);
             // Replace original resource url
-            strResource = ossStr.str();
+            strResource = osS.str();
             // Done
             break;
           } // Unknown

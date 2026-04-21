@@ -89,7 +89,7 @@ template<class ParserMapType>class ParserBase :
   const StdString ParserImplodeEx(const StdString &strSep,
     const StdString &strSuf) const
   { // String to return
-    ostringstream osS;
+    StdOStringStream osS;
     // For each key/value pair, implode it into a string
     for(const ParserMapTypePair &pmtpPair : *this)
       osS << pmtpPair.first << strSep << pmtpPair.second << strSuf;

@@ -29,7 +29,7 @@ typedef CoreClock::time_point  ClkTimePoint;      // Holds a time
 typedef CoreClock::duration    ClkDuration;       // Holds a duration
 typedef StdAtomic<ClkDuration> AtomicClkDuration; // Thread safe duration
 /* -- Common duration values ----------------------------------------------- */
-static constexpr ClkDuration
+constexpr static ClkDuration
   cd0{ nanoseconds{ 0 } },             cd1MS{ milliseconds{ 1 } },
   cd10MS{ milliseconds{ 10 } },        cd100MS{ milliseconds{ 100 } },
   cd1S{ seconds{ 1 } },                cd60S{ seconds{ 60 } };

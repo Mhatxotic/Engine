@@ -367,7 +367,7 @@ class Display :                        // Actual class body
             " (Active)" : cCommon->CommonBlank());
       });
     }); // Custom monitor selected (-2) and valid monitor? Set it
-    static constexpr size_t stM2 = StdMaxSizeT - 1;
+    constexpr static size_t stM2 = StdMaxSizeT - 1;
     gfwmActive = (stMRequested < stM2 && stMRequested < MonitorsCount()) ?
       MonitorsGetPtr(stMRequested) : MonitorsPrimaryPtr();
     // Get selected screen resolution

@@ -132,7 +132,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   public SqlFlags,                     // Flags for this database
   public Lockable                      // Lua garbage collector instruction
 { /* -- Schema version ----------------------------------------------------- */
-  static constexpr const sqlite3_int64 llVersion = 1; // Expected schema ver
+  constexpr static const sqlite3_int64 llVersion = 1; // Expected schema ver
   /* -- Variables ---------------------------------------------------------- */
   sqlite3         *sqlDB;              // Pointer to SQL context
   int              iError;             // Last error code

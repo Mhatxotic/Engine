@@ -532,7 +532,7 @@ class SysCore :
       uiMinor = tVersion.size() < 2 ? 0 : StrToNum<unsigned int>(tVersion[1]),
       uiBuild = tVersion.size() < 3 ? 0 : StrToNum<unsigned int>(tVersion[2]);
     // Set operating system version string
-    ostringstream osS; osS << "MacOS ";
+    StdOStringStream osS; osS << "MacOS ";
     // Version information table
     struct OSListItem
     { // Label to append if verified

@@ -15,7 +15,7 @@ class SysMutex                         // Need this before of System init order
   Ident            idMutex;            // Mutex identifier
   const pid_t     &ptPId;              // Reference to process id
   pid_t           *pipProcessId;       // Process id (OS level memory)
-  static constexpr size_t stPidSize = sizeof(pid_t); // Size of a pid
+  constexpr static size_t stPidSize = sizeof(pid_t); // Size of a pid
   typedef bool (CbFunc)(const pid_t,const pid_t); // Callback return type
   /* -- Initialise global mutex ------------------------------------ */ public:
   bool SysDoInitGlobalMutex(const StdStringView &strvTitle, CbFunc cbCb)

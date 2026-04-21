@@ -108,7 +108,7 @@ template<class ListType>
   auto ltIt{ ltList.lower_bound(strFilter) };
   if(ltIt != ltList.cend())
   { // Output string
-    ostringstream osS;
+    StdOStringStream osS;
     // Build output string
     do
     { // If no match found? return original string

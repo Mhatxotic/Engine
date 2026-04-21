@@ -24,8 +24,8 @@ struct LuaTable                        // Lua table as C
 /* == LibLua interface namespace =========================================== */
 namespace ILuaLib {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
-using namespace ICVarDef::P;           using namespace ILuaDef;
-using namespace IUtil::P;
+using namespace ICVarDef::P;           using namespace IFillCon::P;
+using namespace ILuaDef;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Lua API class namespace ids ------------------------------------------ */
@@ -43,7 +43,7 @@ enum LuaClassId : size_t {
 };/* -- LUA class reference ids (ref'd in luaident.hpp, lua.hpp) ----------- */
 typedef StdArray<int, LMT_TOTAL> LuaLibClassIdReferences;
 static LuaLibClassIdReferences llcirAPI
-  { UtilMkFilledContainer<LuaLibClassIdReferences>(LUA_REFNIL) };
+  { FillConGeneric<LuaLibClassIdReferences>(LUA_REFNIL) };
 /* -- Information about a LUA API namespace -------------------------------- */
 struct LuaLibStatic
 { /* ----------------------------------------------------------------------- */

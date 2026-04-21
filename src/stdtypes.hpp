@@ -10,62 +10,54 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* -- Common storage spaces ------------------------------------------------ */
-template<typename AnyType, size_t stSize>
-  using StdArray = ::std::array<AnyType, stSize>;
-template<typename AnyType>using StdAtomic = ::std::atomic<AnyType>;
-template<typename AnyType>using StdDeque = ::std::deque<AnyType>;
-template<typename AnyType>using StdList = ::std::list<AnyType>;
-template<typename KeyType, typename ValueType>
-  using StdMap = ::std::map<KeyType, ValueType>;
-template<typename AnyTypeA, typename AnyTypeB>
-  using StdPair = ::std::pair<AnyTypeA, AnyTypeB>;
-template<typename AnyType>using StdSet = ::std::set<AnyType>;
-template<typename AnyType, typename DelFunc = ::std::default_delete<AnyType>>
-  using StdUniquePtr = ::std::unique_ptr<AnyType, DelFunc>;
-template<typename AnyType>
-  using StdUnorderedSet = ::std::unordered_set<AnyType>;
-template<typename AnyType>using StdVector = ::std::vector<AnyType>;
-/* -- Strings -------------------------------------------------------------- */
-using StdString = ::std::string;
-using StdStringView = ::std::string_view;
-using StdWideString = ::std::wstring;
-/* -- Exceptions ----------------------------------------------------------- */
-using StdException = ::std::exception;
+/* -- Common storage type aliases ------------------------------------------ */
+template<typename T, size_t S>using StdArray = ::std::array<T,S>;
+template<typename T>using StdAtomic = ::std::atomic<T>;
+template<typename T>using StdDeque = ::std::deque<T>;
+template<typename T>using StdList = ::std::list<T>;
+template<typename KT,typename VT>using StdMap = ::std::map<KT,VT>;
+template<typename AT,typename BT>using StdPair = ::std::pair<AT,BT>;
+template<typename T>using StdSet = ::std::set<T>;
+template<typename T,typename F = ::std::default_delete<T>>
+  using StdUniquePtr = ::std::unique_ptr<T,F>;
+template<typename T>using StdUnorderedSet = ::std::unordered_set<T>;
+template<typename T>using StdVector = ::std::vector<T>;
+/* -- Type manipulation aliases -------------------------------------------- */
+template<typename T>using StdRemoveConst = ::std::remove_const_t<T>;
+template<typename T>using StdRemovePointer = ::std::remove_pointer_t<T>;
+template<typename T>using StdRemoveReference = ::std::remove_reference_t<T>;
+/* -- String type aliases -------------------------------------------------- */
+using StdIStringStream = ::std::istringstream;
+using StdOStringStream = ::std::ostringstream;
+using StdString        = ::std::string;
+using StdStringView    = ::std::string_view;
+using StdWideString    = ::std::wstring;
+/* -- Exception aliases ---------------------------------------------------- */
+using StdException    = ::std::exception;
 using StdRunTimeError = ::std::runtime_error;
-/* -- String streams ------------------------------------------------------- */
-using ::std::dec;                      using ::std::endl;
-using ::std::fixed;                    using ::std::fpclassify;
-using ::std::get_time;                 using ::std::hex;
-using ::std::ios_base;                 using ::std::istringstream;
-using ::std::left;                     using ::std::noskipws;
-using ::std::oct;                      using ::std::ostream_iterator;
-using ::std::ostringstream;            using ::std::put_time;
-using ::std::right;                    using ::std::setfill;
-using ::std::setprecision;             using ::std::setw;
-using ::std::showpos;                  using ::std::uppercase;
-using ::std::wcerr;                    using ::std::wcout;
-/* -- Constexpr functions -------------------------------------------------- */
+/* -- Other inclusions ----------------------------------------------------- */
+using ::std::addressof;                using ::std::bind;
+using ::std::bit_cast;                 using ::std::dec;
+using ::std::endl;                     using ::std::fixed;
+using ::std::function;                 using ::std::gcd;
+using ::std::hex;                      using ::std::ios_base;
 using ::std::is_arithmetic_v;          using ::std::is_class_v;
 using ::std::is_enum_v;                using ::std::is_floating_point_v;
 using ::std::is_integral_v;            using ::std::is_null_pointer_v;
 using ::std::is_pointer_v;             using ::std::is_reference_v;
 using ::std::is_same_v;                using ::std::is_signed_v;
-using ::std::is_trivially_copyable_v;  using ::std::underlying_type_t;
-/* -- Bind class function argument namespaces ------------------------------ */
+using ::std::is_trivially_copyable_v;  using ::std::left;
+using ::std::locale;                   using ::std::make_pair;
+using ::std::make_signed_t;            using ::std::make_unsigned_t;
+using ::std::noskipws;                 using ::std::nothrow;
+using ::std::numeric_limits;           using ::std::oct;
 using ::std::placeholders::_1;         using ::std::placeholders::_2;
-using ::std::placeholders::_3;
-/* -- Other ---------------------------------------------------------------- */
-using ::std::addressof;                using ::std::bind;
-using ::std::bit_cast;                 using ::std::function;
-using ::std::gcd;                      using ::std::index_sequence;
-using ::std::locale;                   using ::std::make_index_sequence;
-using ::std::make_pair;                using ::std::make_signed_t;
-using ::std::make_unsigned_t;          using ::std::nothrow;
-using ::std::numeric_limits;           using ::std::remove_const_t;
-using ::std::remove_cv_t;              using ::std::remove_pointer_t;
-using ::std::remove_reference_t;       using ::std::swap;
-using ::std::tuple_size_v;
+using ::std::placeholders::_3;         using ::std::right;
+using ::std::setfill;                  using ::std::setprecision;
+using ::std::setw;                     using ::std::showpos;
+using ::std::swap;                     using ::std::underlying_type_t;
+using ::std::uppercase;                using ::std::wcerr;
+using ::std::wcout;
 /* -- Synchronisation ------------------------------------------------------ */
 typedef StdAtomic<bool>         AtomicBool;   // Thread safe boolean
 typedef StdAtomic<double>       AtomicDouble; // Thread safe double
@@ -119,5 +111,5 @@ MAPPACK_BUILD(StrNCStr, const StdString, StdString)
 /* -- Get array element type ----------------------------------------------- */
 template<typename ArrayType>
   using ArrayElementType =
-    remove_cv_t<remove_pointer_t<remove_reference_t<ArrayType>>>;
+    StdRemoveConst<StdRemovePointer<StdRemoveReference<ArrayType>>>;
 /* == EoF =========================================================== EoF == */
