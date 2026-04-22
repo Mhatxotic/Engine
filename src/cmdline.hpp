@@ -219,7 +219,7 @@ struct CmdLine                         // Members initially public
   } // Exception occured?
   catch(const StdException &eReason) \
   { // Show message box as the log is not available.
-    SysMessage("CmdLine Shutdown Exception", eReason.what(), MB_ICONSTOP);
+    SysMessage("CmdLine Shutdown Exception!", eReason.what(), MB_ICONSTOP);
   }
 };/* ----------------------------------------------------------------------- */
 };                                     // End of public module namespace

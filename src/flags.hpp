@@ -22,12 +22,12 @@ namespace P {                          // Start of public module namespace
 ** ## Simple unprotected integer based flags.                             ## **
 ** ######################################################################### */
 template<typename IntType>
-  requires is_integral_v<IntType> || StdIsAtomicV<IntType>
+  requires StdIsInteger<IntType> || StdIsAtomicV<IntType>
 class FlagsStorageUnsafe
 { /* -- Values storage ------------------------------------------ */ protected:
   IntType          itV;                // The simple value
   /* -- Reset with specified value ----------------------------------------- */
-  template<typename AnyType> requires is_integral_v<IntType>
+  template<typename AnyType> requires StdIsInteger<IntType>
     constexpr void FlagSetInt(const AnyType atValue)
   { itV = static_cast<IntType>(atValue); }
   /* -- Swap values -------------------------------------------------------- */
@@ -40,7 +40,7 @@ class FlagsStorageUnsafe
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>requires is_integral_v<IntType>
+  template<typename AnyType=IntType>requires StdIsInteger<IntType>
     constexpr AnyType FlagGet() const
   { return static_cast<AnyType>(itV); }
 };/* ----------------------------------------------------------------------- */
@@ -50,9 +50,9 @@ class FlagsStorageUnsafe
 ** ######################################################################### */
 template<typename IntType,
          typename SafeType = StdAtomic<IntType>>
-requires is_integral_v<IntType> &&
+requires StdIsInteger<IntType> &&
          StdIsAtomicV<SafeType> &&
-         is_integral_v<typename SafeType::value_type>
+         StdIsInteger<typename SafeType::value_type>
 class FlagsStorageSafe :
   /* -- Base classes (note that StdAtomic will never throw) ---------------- */
   private SafeType
@@ -74,7 +74,7 @@ class FlagsStorageSafe :
 ** ######################################################################### */
 template<typename IntType,
          class StorageType = FlagsStorageUnsafe<IntType>>
-requires is_integral_v<IntType>
+requires StdIsInteger<IntType>
 class FlagsConst :
   /* -- Base classes ------------------------------------------------------- */
   public StorageType
@@ -164,7 +164,7 @@ class FlagsConst :
 template<typename IntType,
          class StorageType = FlagsStorageUnsafe<IntType>,
          class ConstType = FlagsConst<IntType, StorageType>>
-requires is_integral_v<IntType>
+requires StdIsInteger<IntType>
 struct Flags :
   /* -- Base classes ------------------------------------------------------- */
   public ConstType
@@ -224,7 +224,7 @@ template<typename IntType,
          class UConstType = FlagsConst<IntType, UStorageType>,
          class FlagsType = Flags<IntType, StorageType, UConstType>,
          class ConstType = FlagsConst<IntType, StorageType>>
-requires is_integral_v<IntType>
+requires StdIsInteger<IntType>
 class SafeFlags :
   /* -- Base classes ------------------------------------------------------- */
   public FlagsType

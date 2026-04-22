@@ -22,13 +22,13 @@ template<typename IntType=int,         // Unsigned type not allowed!
          typename Int=make_signed_t<IntType>,
          typename UInt=make_unsigned_t<IntType>,
          class DimClass=Dimensions<Int>>
-requires is_same_v<IntType, Int>
+requires StdIsSame<IntType, Int>
 class Pack :
   /* -- Initialisers ------------------------------------------------------- */
   public DimClass                      // Dimensions of bin in pixels
 { /* --------------------------------------------------------------- */ public:
   typedef DimCoords<Int> Rect;         // Rectangle of signed ints
-  typedef StdVector<Rect> RectList;       // list of rectangles
+  typedef StdVector<Rect> RectList;    // list of rectangles
   constexpr static double dIdle = -0.0;// Uninitialised value
   /* -------------------------------------------------------------- */ private:
   RectList         rlUsed, rlFree;     // Used and free data
@@ -42,7 +42,7 @@ class Pack :
   const Rect FindPositionForNewNodeBestShortSideFit(const Int iW,
     const Int iH, Int &iBestShortSideFit, Int &iBestLongSideFit) const
   { // The best node that will be returned
-    iBestShortSideFit = iBestLongSideFit = numeric_limits<Int>::max();
+    iBestShortSideFit = iBestLongSideFit = StdLimits<Int>::max();
     Rect rFound;
     for(const Rect &rNode : rlFree)
     { // Try to place the rectangle in upright (non-flipped) orientation.
@@ -214,7 +214,7 @@ class Pack :
   /* -- Test insert a single rectangle into the bin ------------------------ */
   const Rect Test(const UInt iW, const UInt iH) const
   { // Initialise two score values and init to maximum supported int value
-    Int iScore1 = numeric_limits<Int>::max(), iScore2 = iScore1;
+    Int iScore1 = StdLimits<Int>::max(), iScore2 = iScore1;
     // Find position for new node and return if the size will fit
     return FindPositionForNewNodeBestShortSideFit(static_cast<Int>(iW),
       static_cast<Int>(iH), iScore1, iScore2);
@@ -222,7 +222,7 @@ class Pack :
   /* -- Inserts a single rectangle into the bin ---------------------------- */
   const Rect Insert(const UInt uiW, const UInt uiH)
   { // Initialise two score values and init to maximum supported int value
-    Int iScore1 = numeric_limits<Int>::max(), iScore2 = iScore1;
+    Int iScore1 = StdLimits<Int>::max(), iScore2 = iScore1;
     // Find position for new node and return zero (rNew={0,0}) if failed
     const Rect rNew{ FindPositionForNewNodeBestShortSideFit(
       static_cast<Int>(uiW), static_cast<Int>(uiH), iScore1, iScore2) };

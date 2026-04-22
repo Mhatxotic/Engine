@@ -72,7 +72,7 @@ static bool LuaUtilIsTable(lua_State*const lS, const int iParam)
   { return lua_istable(lS, iParam) != 0; }
 /* -- Get the light user data pointer -------------------------------------- */
 template<typename PtrType, typename PtrTypePtr=PtrType*>
-  requires (!is_pointer_v<PtrType>)
+  requires (!StdIsPointer<PtrType>)
 static PtrTypePtr LuaUtilGetSimplePtr(lua_State*const lS, const int iParam)
 { // Break execution if not userdata else return pointer as requested cast
   if(!LuaUtilIsUserData(lS, iParam)) XC("Not userdata!", "Param", iParam);
@@ -93,22 +93,22 @@ static StdString LuaUtilToCppString(lua_State*const lS, const int iParam=-1)
 }
 /* -- Get a number from the stack ------------------------------------------ */
 template<typename NumType=lua_Number>
-  requires is_floating_point_v<NumType>
+  requires StdIsFloat<NumType>
 static NumType LuaUtilToNum(lua_State*const lS, const int iIndex)
   { return static_cast<NumType>(lua_tonumber(lS, iIndex)); }
 /* -- Get an integer from the stack ---------------------------------------- */
 template<typename IntType=lua_Integer>
-  requires is_integral_v<IntType> || is_enum_v<IntType>
+  requires StdIsInteger<IntType> || StdIsEnum<IntType>
 static IntType LuaUtilToInt(lua_State*const lS, const int iIndex)
   { return static_cast<IntType>(lua_tointeger(lS, iIndex)); }
 /* -- Get an boolean from the stack ---------------------------------------- */
 template<typename IntType=bool>
-  requires is_integral_v<IntType> || is_enum_v<IntType>
+  requires StdIsInteger<IntType> || StdIsEnum<IntType>
 static IntType LuaUtilToBool(lua_State*const lS, const int iIndex)
   { return static_cast<IntType>(lua_toboolean(lS, iIndex)); }
 /* -- Get an pointer from the stack ---------------------------------------- */
 template<typename PtrType=void, typename PtrTypeConst=const PtrType*>
-  requires (!is_pointer_v<PtrType>)
+  requires (!StdIsPointer<PtrType>)
 static PtrTypeConst LuaUtilToPtr(lua_State*const lS, const int iIndex)
   { return reinterpret_cast<PtrTypeConst>(lua_topointer(lS, iIndex)); }
 /* -- Get human readable name of specified type id ------------------------- */
@@ -153,8 +153,8 @@ template<class StrType>
 { LuaUtilPushExtStr(lS, strStr.data(), strStr.size(), laFunc, vpUserData); }
 /* -- Push a literal string onto the stack --------------------------------- */
 template<typename PtrType, typename IntType>
-  requires is_pointer_v<PtrType> &&
-           (is_integral_v<IntType> || is_enum_v<IntType>)
+  requires StdIsPointer<PtrType> &&
+           (StdIsInteger<IntType> || StdIsEnum<IntType>)
 static void LuaUtilPushLStr(lua_State*const lS, const PtrType ptValue,
   const IntType itSize)
 { lua_pushlstring(lS, reinterpret_cast<const char*>(ptValue),
@@ -252,8 +252,8 @@ static void LuaUtilSetHookCallback(lua_State*const lS,
     { lua_sethook(lS, fcbCb, LUA_MASKCOUNT, iC); }
 /* -- Push a table onto the stack ------------------------------------------ */
 template<typename IdxIntType=int, typename KeyIntType=int>
-requires (is_integral_v<IdxIntType> || is_enum_v<IdxIntType>) &&
-         (is_integral_v<KeyIntType> || is_enum_v<KeyIntType>)
+requires (StdIsInteger<IdxIntType> || StdIsEnum<IdxIntType>) &&
+         (StdIsInteger<KeyIntType> || StdIsEnum<KeyIntType>)
 static void LuaUtilPushTable(lua_State*const lS,
   const IdxIntType iitIndexes=0, const KeyIntType kitKeys=0)
 { lua_createtable(lS, UtilIntOrMax<int>(iitIndexes),
@@ -262,16 +262,16 @@ static void LuaUtilPushTable(lua_State*const lS,
 static void LuaUtilPushNil(lua_State*const lS) { lua_pushnil(lS); }
 /* -- Push specified integral as boolean on to the stack ------------------- */
 template<typename IntType>
-  requires is_integral_v<IntType> || is_enum_v<IntType>
+  requires StdIsInteger<IntType> || StdIsEnum<IntType>
 static void LuaUtilPushBool(lua_State*const lS, const IntType itValue)
   { lua_pushboolean(lS, static_cast<bool>(itValue)); }
 /* -- Push a number onto the stack ----------------------------------------- */
-template<typename NumType> requires is_floating_point_v<NumType>
+template<typename NumType> requires StdIsFloat<NumType>
   static void LuaUtilPushNum(lua_State*const lS, const NumType ntValue)
 { lua_pushnumber(lS, static_cast<lua_Number>(ntValue)); }
 /* -- Push an integer onto the stack --------------------------------------- */
 template<typename IntType>
-  requires is_integral_v<IntType> || is_enum_v<IntType>
+  requires StdIsInteger<IntType> || StdIsEnum<IntType>
 static void LuaUtilPushInt(lua_State*const lS, const IntType itValue)
   { lua_pushinteger(lS, static_cast<lua_Integer>(itValue)); }
 /* -- Push a memory block onto the stack as a string ----------------------- */
@@ -286,17 +286,17 @@ template<typename ...VarArgs, typename AnyType>
   static void LuaUtilPushVar(lua_State*const lS, const AnyType &atVal,
     VarArgs &&...vaArgs)
 { // Type is STL string?
-  if constexpr(is_same_v<AnyType, StdString> ||
-               is_same_v<AnyType, StdStringView>) LuaUtilPushStr(lS, atVal);
+  if constexpr(StdIsSame<AnyType, StdString> ||
+               StdIsSame<AnyType, StdStringView>) LuaUtilPushStr(lS, atVal);
   // Type is boolean?
-  else if constexpr(is_same_v<AnyType, bool>) LuaUtilPushBool(lS, atVal);
+  else if constexpr(StdIsSame<AnyType, bool>) LuaUtilPushBool(lS, atVal);
   // Type is any pointer type (assuming char*, don't send anything else)
-  else if constexpr(is_pointer_v<AnyType>) LuaUtilPushCStr(lS, atVal);
+  else if constexpr(StdIsPointer<AnyType>) LuaUtilPushCStr(lS, atVal);
   // Type is enum, int, long, short or int64?
-  else if constexpr(is_integral_v<AnyType> || is_enum_v<AnyType>)
+  else if constexpr(StdIsInteger<AnyType> || StdIsEnum<AnyType>)
     LuaUtilPushInt(lS, atVal);
   // Type is float or double?
-  else if constexpr(is_floating_point_v<AnyType>) LuaUtilPushNum(lS, atVal);
+  else if constexpr(StdIsFloat<AnyType>) LuaUtilPushNum(lS, atVal);
   // Strange bug in MSVC which shows no compile time stack trace
 #if defined(MSVC_VANILLA)
   // Just push nil
@@ -543,7 +543,7 @@ static void LuaUtilCheckStrNE(lua_State*const lS, const int iParam)
 }
 /* -- Get the specified string --------------------------------------------- */
 template<typename StrType, typename StrTypeConstPtr=const StrType*>
-  requires (!is_pointer_v<StrType>) && (sizeof(StrType) == sizeof(uint8_t))
+  requires (!StdIsPointer<StrType>) && (sizeof(StrType) == sizeof(uint8_t))
 static StrTypeConstPtr LuaUtilToString(lua_State*const lS, const int iParam)
   { return reinterpret_cast<StrTypeConstPtr>(lua_tostring(lS, iParam)); }
 /* -- Get the specified string from the stack ------------------------------ */
@@ -563,7 +563,7 @@ template<typename StrType, typename StrTypeConstPtr=const StrType*>
 }
 /* -- Get and return a string and throw exception if not a string ---------- */
 template<typename StrType, typename StrTypeConstPtr=const StrType*>
-requires (!is_pointer_v<StrType>) && (sizeof(StrType) == sizeof(uint8_t))
+requires (!StdIsPointer<StrType>) && (sizeof(StrType) == sizeof(uint8_t))
   static StrTypeConstPtr LuaUtilGetLStr(lua_State*const lS,
     const int iParam, size_t &stLen)
 { // Throw if specified parameter isn't a string else return a cast of it
@@ -715,7 +715,7 @@ static bool LuaUtilGetBool(lua_State*const lS, const int iIndex)
   return LuaUtilToBool(lS, iIndex);
 }
 /* -- Try to get and check a valid number not < or >= ---------------------- */
-template<typename NumType> requires is_floating_point_v<NumType>
+template<typename NumType> requires StdIsFloat<NumType>
   static NumType LuaUtilGetNum(lua_State*const lS, const int iIndex)
 { // Throw if requested parameter isn't a number else return a cast of it
   LuaUtilAssert(lS, LuaUtilIsNumber(lS, iIndex), iIndex, "number");
@@ -762,7 +762,7 @@ template<typename NumType>
 }
 /* -- Try to get and check a valid integer --------------------------------- */
 template<typename IntType>
-  requires is_integral_v<IntType> || is_enum_v<IntType>
+  requires StdIsInteger<IntType> || StdIsEnum<IntType>
 static IntType LuaUtilGetInt(lua_State*const lS, const int iIndex)
 { // Throw error if value isn't an integer else return a cast of it
   LuaUtilAssert(lS, LuaUtilIsInteger(lS, iIndex), iIndex, "integer");
@@ -822,7 +822,7 @@ template<typename IntType>
     "NotLesserEqual", itMin,  "NotGreater", itMax);
 }
 /* -- Try to get and check a 'Flags' parameter ----------------------------- */
-template<class FlagsType> requires is_class_v<FlagsType>
+template<class FlagsType> requires StdIsClass<FlagsType>
   static const FlagsType LuaUtilGetFlags(lua_State*const lS, const int iIndex,
     const FlagsType &ftMask)
 { // Return flags if valid and in range else break execution
@@ -857,7 +857,7 @@ static bool LuaUtilIsClassDestroyed(lua_State*const lS,
   const LuaIdent*const liParent)
     { return LuaUtilIsClassDestroyed(lS, 1, *liParent); }
 /* -- Gets a pointer to any class ------------------------------------------ */
-template<typename ClassType> requires is_class_v<ClassType>
+template<typename ClassType> requires StdIsClass<ClassType>
   static ClassType *LuaUtilGetPtr(lua_State*const lS, const int iParam,
     const LuaIdent &liParent)
 { // Get reference to class and return pointer if valid
@@ -877,7 +877,7 @@ template<class ClassType>
   if(ctPtr->LockIsNotSet()) delete ctPtr;
 }
 /* -- Destroy an object ---------------------------------------------------- */
-template<class ClassType> requires is_class_v<ClassType>
+template<class ClassType> requires StdIsClass<ClassType>
   static void LuaUtilClassDestroy(lua_State*const lS,
     const LuaIdent*const liParent)
 { // Get userdata pointer from Lua and if the address is valid?
@@ -891,7 +891,7 @@ template<class ClassType> requires is_class_v<ClassType>
   // function and we don't want any problems when this happens.
 }
 /* -- Destroy an object with async protected callback check ---------------- */
-template<class ClassType> requires is_class_v<ClassType>
+template<class ClassType> requires StdIsClass<ClassType>
   static void LuaUtilClassDestroyChecked(lua_State*const lS,
     const LuaIdent*const liParent)
 { // Get reference to collector pointer
@@ -927,7 +927,7 @@ static LuaUtilClass *LuaUtilClassPrepNew(lua_State*const lS,
   return lucPtr;
 }
 /* -- Takes ownership of an object ----------------------------------------- */
-template<class ClassType> requires is_class_v<ClassType>
+template<class ClassType> requires StdIsClass<ClassType>
   static ClassType *LuaUtilClassReuse(lua_State*const lS,
     const LuaIdent &liParent, ClassType*const ctPtr)
 { // Prepare a new object
@@ -938,7 +938,7 @@ template<class ClassType> requires is_class_v<ClassType>
   return ctPtr;
 }
 /* -- Creates and allocates a pointer to a new class ----------------------- */
-template<typename ClassType> requires is_class_v<ClassType>
+template<typename ClassType> requires StdIsClass<ClassType>
   static ClassType *LuaUtilClassCreate(lua_State*const lS,
     const LuaIdent &liParent)
 { // Prepare a new object
@@ -952,7 +952,7 @@ template<typename ClassType> requires is_class_v<ClassType>
 }
 /* -- Creates a pointer to a class that LUA CAN'T deallocate --------------- */
 template<typename ClassType>
-  requires is_class_v<ClassType>
+  requires StdIsClass<ClassType>
 static ClassType *LuaUtilClassCreatePtr(lua_State*const lS,
   const LuaIdent &liParent, ClassType*const ctPtr)
 { // Create userdata
@@ -968,7 +968,7 @@ static ClassType *LuaUtilClassCreatePtr(lua_State*const lS,
 }
 /* -- Check that a class isn't locked (i.e. a built-in class) -------------- */
 template<class ClassType>
-  requires is_class_v<ClassType>
+  requires StdIsClass<ClassType>
 static ClassType *LuaUtilGetUnlockedPtr[[maybe_unused]]
   (lua_State*const lS, const int iParam)
 { // Get pointer to class and return if isn't locked (a built-in class)
@@ -1104,7 +1104,7 @@ static void LuaUtilSetTableIdxStr(lua_State*const lS,
 }
 /* -- Push the specified integer at the specified index -------------------- */
 template<typename IntType>
-  requires is_integral_v<IntType> || is_enum_v<IntType>
+  requires StdIsInteger<IntType> || StdIsEnum<IntType>
 static void LuaUtilSetTableIdxInt(lua_State*const lS,
   const int iTableId, const lua_Integer liIndex, const IntType itValue)
 { // Push at the specified index, the specified value and set it to the table
@@ -1336,7 +1336,7 @@ static StdString LuaUtilReplaceMulti(lua_State*const lS, StdString &strDest)
     for(lua_Integer liIndex = 1,
                     liMax = static_cast<lua_Integer>(
                       UtilIntWillOverflow<lua_Integer>(luiLen) ?
-                        numeric_limits<lua_Integer>::max() - 1 : luiLen);
+                        StdLimits<lua_Integer>::max() - 1 : luiLen);
                     liIndex <= liMax;
                     liIndex += 2)
     { // Get key from table

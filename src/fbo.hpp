@@ -75,7 +75,7 @@ class FboBase :                        // Fbo base class
     stTrianglesFrame(0),               stTrianglesLast(0),
     uiFBO(0),                          uiFBOtex(0),
     uiTextureCache(0),                 uiTexUnitCache(0),
-    uiShaderCache(0),                  ullActive(static_cast<uint64_t>(-1)),
+    uiShaderCache(0),                  ullActive(StdMaxUInt64),
     ullFinish(ullActive)
     /* --------------------------------------------------------------------- */
     {}
@@ -107,6 +107,10 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     uiTextureCache = uiTexUnitCache = uiShaderCache = 0;
     stTrianglesLast = stGLArrayOff = 0;
   }
+  /* -- Reset finish time -------------------------------------------------- */
+  void FboResetFinish() { ullActive = ullFinish = StdMaxUInt64; }
+  /* -- Flush and reset finish times --------------------------------------- */
+  void FboResetFinishAndFlush() { FboResetFinish(); FboFlush(); }
   /* -- Return if FBO is already finished ---------------------------------- */
   bool FboIsFinished() const { return cTimer->TimerGetTicks() == ullFinish; }
   /* -- Throw exception if Finish() has already been called ---------------- */
@@ -121,7 +125,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   { // Reset FBO properties
     FboFlush();
     // Reset the last time this FBO was used
-    ullActive = ullFinish = static_cast<uint64_t>(-1);
+    FboResetFinish();
   }
   /* -- Force a finish and reset ------------------------------------------- */
   void FboResetCache(const GLuint uiT, const GLuint uiTU, const GLuint uiSC)

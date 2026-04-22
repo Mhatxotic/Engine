@@ -13,7 +13,7 @@ namespace IStd {                       // Start of module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Returns if character is hexadecimal (0-9A-Fa-f) ---------------------- */
-template<typename IntType> requires is_integral_v<IntType>
+template<typename IntType> requires StdIsInteger<IntType>
   constexpr static bool StdIsXDigit(const IntType itChar)
 { return ::std::isxdigit(static_cast<int>(itChar)); }
 /* -- Template to construct and reserve part of another object ------------- */
@@ -32,7 +32,7 @@ template<class ClassType> requires StdHasResize<ClassType>
   explicit StdResized(const size_t stSize) { this->resize(stSize); } };
 /* -- Remove const from a pointer ------------------------------------------ */
 template<typename TypeTo, typename TypeFrom, typename TypeNonConst =
-  StdRemoveConst<StdRemovePointer<TypeFrom>>*> requires is_pointer_v<TypeFrom>
+  StdRemoveConst<StdRemovePointer<TypeFrom>>*> requires StdIsPointer<TypeFrom>
 static TypeTo StdToNonConstCast(TypeFrom tfV)
   { return reinterpret_cast<TypeTo>(const_cast<TypeNonConst>(tfV)); }
 /* ------------------------------------------------------------------------- */
@@ -363,7 +363,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
     return wstrOut;
   }
   /* -- Constructor that initialises a pointer ----------------------------- */
-  template<typename PtrType> requires is_pointer_v<PtrType>
+  template<typename PtrType> requires StdIsPointer<PtrType>
     explicit UtfDecoder(PtrType ptSrc) :
     /* -- Initialisers ----------------------------------------------------- */
     ucpStr(reinterpret_cast<const unsigned char*>(
@@ -372,7 +372,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor that initialises any string object --------------------- */
-  template<class StrType> requires is_class_v<StrType>
+  template<class StrType> requires StdIsClass<StrType>
     explicit UtfDecoder(const StrType &stStr) :
     /* -- Initialisers ----------------------------------------------------- */
     ucpStr(reinterpret_cast<const unsigned char*>(stStr.data())),

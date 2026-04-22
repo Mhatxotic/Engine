@@ -97,7 +97,7 @@ typedef void (*ConCbFunc)(const Args &); // Cmd callback
 /* ------------------------------------------------------------------------- */
 struct ConLib                          // Console library command structure
 { /* ----------------------------------------------------------------------- */
-  const StdString         strName;        // Function name
+  const StdString      strName;        // Function name
   const unsigned int   uiMinimum,      // Minimum parameters
                        uiMaximum;      // Maximum parameters
   const CoreFlagsConst cfcRequired;    // Required core flags

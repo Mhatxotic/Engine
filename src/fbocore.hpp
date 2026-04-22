@@ -56,37 +56,8 @@ class FboCore :                        // The main FBO operations manager
   /* -- FPS ---------------------------------------------------------------- */
   ClkTimePoint     ctpStart;           // Fps checkpoint
   double           dFps, dFpsSmoothed; // Caluclated FPS value + smoothed
-  /* -- Get FBO's -------------------------------------------------- */ public:
-  Fbo &FboCoreGetMain() { return fboMain; }
-  Fbo &FboCoreGetConsole() { return fboConsole; }
-  /* -- Shortcut to the main FBO stage bounds ------------------------------ */
-  const CoordsFloat &FboCoreGetMainStage() const { return fboMain.cfStage; }
-  const CoordsFloat &FboCoreGetConsoleStage() const
-    { return fboConsole.cfStage; }
-  /* -- Blits the console FBO to main FBO ---------------------------------- */
-  void FboCoreBlitConsoleToMain() { fboMain.FboBlit(fboConsole); }
-  /* -- Set main FBO as active FBO to draw too ----------------------------- */
+  /* -- Set main FBO as active FBO to draw too ------------------ */ protected:
   void FboCoreActivateMain() { fboMain.FboSetActive(); }
-  /* -- Draw flags --------------------------------------------------------- */
-  DrawState FboCoreGetDraw() const { return dsDraw; }
-  bool FboCoreCanDraw() const { return FboCoreGetDraw() == DS_FULL; }
-  bool FboCoreCannotDraw() const { return FboCoreGetDraw() == DS_NONE; }
-  void FboCoreSetDraw() { dsDraw = DS_FULL; }
-  void FboCoreClearDrawPartial() { dsDraw = DS_PARTIAL; }
-  void FboCoreClearDraw() { dsDraw = DS_NONE; }
-  /* -- Get matrix dimensions ---------------------------------------------- */
-  GLfloat FboCoreGetMatrixWidth() const { return dfMatrix.DimGetWidth(); }
-  GLfloat FboCoreGetMatrixHeight() const { return dfMatrix.DimGetHeight(); }
-  /* -- Get smoothed rendering frames per second --------------------------- */
-  double FboCoreGetFPS() const { return dFpsSmoothed; }
-  /* -- Reset backbuffer clear colour to colour stored in cvar ------------- */
-  void FboCoreResetClearColour()
-  { // Reset core framebuffer object colour intensities
-    for(Fbo &fboRef : *this) fboRef.ColourReset();
-    // Commit the default back buffer clear colour
-    cOgl->SetClearColourInt(
-      cCVars->CVarsGetInternal<unsigned int>(VID_CLEARCOLOUR));
-  }
   /* -- Render the main FBO from the engine thread ------------------------- */
   void FboCoreRender()
   { // Unbind current FBO so we select the back buffer to draw to
@@ -117,6 +88,42 @@ class FboCore :                        // The main FBO operations manager
     // Update to the current timepoint
     ctpStart = ctpNow;
   }
+  /* -- Reset core fbo settings from a reset ------------------------------- */
+  void FboCoreResetEnvironment()
+  { // Reset main fbo and console fbo timers
+    FboCoreGetConsole().FboResetFinishAndFlush();
+    FboCoreGetMain().FboResetFinishAndFlush();
+    // Reset core framebuffer object colour intensities
+    for(Fbo &fboRef : *this) fboRef.ColourReset();
+    // Commit the default back buffer clear colour
+    cOgl->SetClearColourInt(
+      cCVars->CVarsGetInternal<unsigned int>(VID_CLEARCOLOUR));
+    // Reactivate main framebuffer for drawing
+    FboCoreActivateMain();
+    // Make sure main FBO is cleared
+    FboCoreSetDraw();
+  }
+  /* -- Get FBO's -------------------------------------------------- */ public:
+  Fbo &FboCoreGetMain() { return fboMain; }
+  Fbo &FboCoreGetConsole() { return fboConsole; }
+  /* -- Shortcut to the main FBO stage bounds ------------------------------ */
+  const CoordsFloat &FboCoreGetMainStage() const { return fboMain.cfStage; }
+  const CoordsFloat &FboCoreGetConsoleStage() const
+    { return fboConsole.cfStage; }
+  /* -- Blits the console FBO to main FBO ---------------------------------- */
+  void FboCoreBlitConsoleToMain() { fboMain.FboBlit(fboConsole); }
+  /* -- Draw flags --------------------------------------------------------- */
+  DrawState FboCoreGetDraw() const { return dsDraw; }
+  bool FboCoreCanDraw() const { return FboCoreGetDraw() == DS_FULL; }
+  bool FboCoreCannotDraw() const { return FboCoreGetDraw() == DS_NONE; }
+  void FboCoreSetDraw() { dsDraw = DS_FULL; }
+  void FboCoreClearDrawPartial() { dsDraw = DS_PARTIAL; }
+  void FboCoreClearDraw() { dsDraw = DS_NONE; }
+  /* -- Get matrix dimensions ---------------------------------------------- */
+  GLfloat FboCoreGetMatrixWidth() const { return dfMatrix.DimGetWidth(); }
+  GLfloat FboCoreGetMatrixHeight() const { return dfMatrix.DimGetHeight(); }
+  /* -- Get smoothed rendering frames per second --------------------------- */
+  double FboCoreGetFPS() const { return dFpsSmoothed; }
   /* -- Sent when the window is resized/main FBO needs autosized --- */ public:
   bool FboCoreAutoMatrix(const GLfloat fWidth, const GLfloat fHeight,
     const bool bForce)

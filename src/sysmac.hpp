@@ -35,7 +35,7 @@ class SysProcess                       // Need this before of System init order
   template<typename IntType=decltype(piProcessId)>IntType GetPid() const
     { return static_cast<IntType>(piProcessId); }
   template<typename IntType=decltype(vpThreadId)>IntType GetTid() const
-    { return static_cast<IntType>(UtilBruteCast<const size_t>(vpThreadId)); }
+    { return static_cast<IntType>(StdBruteCast<const size_t>(vpThreadId)); }
   /* -- Apparently due to 'dynamic memory/resource management' (CppCheck) -- */
   SysProcess(SysProcess &) = delete;           // Even though we don't use
   SysProcess operator=(SysProcess &) = delete; // these at all

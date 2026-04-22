@@ -308,6 +308,9 @@ template<class CollectorType, class MemberType, class IteratorType>
 struct ICHelperBase                    // Members initially public
 { /* -- Swap registration with another class ------------------------------- */
   CollectorType*const cParent;         // Parent class of this object
+  /* -- Gets a reference to the object contained in the iterator ----------- */
+  constexpr auto &ICHelperItAddr(const IteratorType &cIt) const
+    { return *::std::addressof(*cIt); }
   /* -- Protected variables ------------------------------------- */ protected:
   IteratorType     cIterator;          // Iterator to this object in parent
   /* -- Add from collector with set parent --------------------------------- */
@@ -344,7 +347,7 @@ struct ICHelperBase                    // Members initially public
       if(mtObjRef.cIterator != this->cParent->CollectorGetLastItemUnsafe())
       { // Just swap iterators and pointers to the members
         swap(cIterator, mtObjRef.cIterator);
-        swap(*addressof(*cIterator), *addressof(*mtObjRef.cIterator));
+        swap(ICHelperItAddr(cIterator), ICHelperItAddr(mtObjRef.cIterator));
         // Done
         return;
       } // Other not registered?
@@ -353,7 +356,7 @@ struct ICHelperBase                    // Members initially public
       mtObjRef.cIterator = cIterator;
       // ...and we just have to replace the pointer to the other class of which
       // is now registered, and not this.
-      *addressof(*mtObjRef.cIterator) = &mtObjRef;
+      ICHelperItAddr(mtObjRef.cIterator) = &mtObjRef;
       // We are now unregistered
       cIterator = this->cParent->CollectorGetLastItemUnsafe();
       // Done
@@ -366,7 +369,7 @@ struct ICHelperBase                    // Members initially public
     cIterator = mtObjRef.cIterator;
     // ...and we just have to replace the pointer to the other class with the
     // pointer to this class.
-    *addressof(*cIterator) = static_cast<MemberType*>(this);
+    ICHelperItAddr(cIterator) = static_cast<MemberType*>(this);
     // Other member no longer registered. Any use of the iterator in the other
     // class is now undefined behaviour.
     mtObjRef.cIterator = this->cParent->CollectorGetLastItemUnsafe();

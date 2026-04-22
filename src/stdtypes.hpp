@@ -2,11 +2,13 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This module sets up all the types we use from the STL. All these    ## **
-** ## types sit in the Engine namespace so only the engine has access to  ## **
-** ## them and not any other included external API's. We also alias them  ## **
-** ## to avoid having to make multiple changes if and when the STL ever   ## **
-** ## changes.                                                            ## **
+** ## This module sets up all the common types we use from the STL. All   ## **
+** ## these types sit in the Engine namespace so only the engine has      ## **
+** ## access to them and not any other included external API's. We also   ## **
+** ## alias them to avoid having to make multiple changes if and when the ## **
+** ## STL ever changes which it actually does sometimes. Also we also     ## **
+** ## like all our type names and function names with capitalised first   ## **
+** ## letters of each syllable.                                           ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
@@ -26,38 +28,48 @@ template<typename T>using StdVector = ::std::vector<T>;
 template<typename T>using StdRemoveConst = ::std::remove_const_t<T>;
 template<typename T>using StdRemovePointer = ::std::remove_pointer_t<T>;
 template<typename T>using StdRemoveReference = ::std::remove_reference_t<T>;
+/* -- Template type checks ------------------------------------------------- */
+template<class T>
+  static constexpr bool StdIsArithmatic = ::std::is_arithmetic_v<T>;
+template<class T>static constexpr bool StdIsClass = ::std::is_class_v<T>;
+template<class T>static constexpr bool StdIsEnum = ::std::is_enum_v<T>;
+template<class T>
+  static constexpr bool StdIsFloat = ::std::is_floating_point_v<T>;
+template<class T>static constexpr bool StdIsInteger = ::std::is_integral_v<T>;
+template<class T>static constexpr bool StdIsNull = ::std::is_null_pointer_v<T>;
+template<class T>static constexpr bool StdIsPointer = ::std::is_pointer_v<T>;
+template<class T>
+  static constexpr bool StdIsReference = ::std::is_reference_v<T>;
+template<class AT,class BT>
+  static constexpr bool StdIsSame = ::std::is_same_v<AT,BT>;
+template<class T>static constexpr bool StdIsSigned = ::std::is_signed_v<T>;
+template<class T>
+  static constexpr bool StdIsTrCopyable = ::std::is_trivially_copyable_v<T>;
+/* ------------------------------------------------------------------------- */
+template<typename T>using StdLimits = ::std::numeric_limits<T>;
 /* -- String type aliases -------------------------------------------------- */
 using StdIStringStream = ::std::istringstream;
 using StdOStringStream = ::std::ostringstream;
-using StdString        = ::std::string;
-using StdStringView    = ::std::string_view;
-using StdWideString    = ::std::wstring;
+using StdString = ::std::string;
+using StdStringView = ::std::string_view;
+using StdWideString = ::std::wstring;
 /* -- Exception aliases ---------------------------------------------------- */
-using StdException    = ::std::exception;
+using StdException = ::std::exception;
 using StdRunTimeError = ::std::runtime_error;
 /* -- Other inclusions ----------------------------------------------------- */
-using ::std::addressof;                using ::std::bind;
-using ::std::bit_cast;                 using ::std::dec;
+using ::std::bind;                     using ::std::dec;
 using ::std::endl;                     using ::std::fixed;
-using ::std::function;                 using ::std::gcd;
-using ::std::hex;                      using ::std::ios_base;
-using ::std::is_arithmetic_v;          using ::std::is_class_v;
-using ::std::is_enum_v;                using ::std::is_floating_point_v;
-using ::std::is_integral_v;            using ::std::is_null_pointer_v;
-using ::std::is_pointer_v;             using ::std::is_reference_v;
-using ::std::is_same_v;                using ::std::is_signed_v;
-using ::std::is_trivially_copyable_v;  using ::std::left;
-using ::std::locale;                   using ::std::make_pair;
-using ::std::make_signed_t;            using ::std::make_unsigned_t;
-using ::std::noskipws;                 using ::std::nothrow;
-using ::std::numeric_limits;           using ::std::oct;
+using ::std::function;                 using ::std::hex;
+using ::std::ios_base;                 using ::std::left;
+using ::std::make_pair;                using ::std::make_signed_t;
+using ::std::make_unsigned_t;          using ::std::noskipws;
+using ::std::nothrow;                  using ::std::oct;
 using ::std::placeholders::_1;         using ::std::placeholders::_2;
 using ::std::placeholders::_3;         using ::std::right;
 using ::std::setfill;                  using ::std::setprecision;
 using ::std::setw;                     using ::std::showpos;
 using ::std::swap;                     using ::std::underlying_type_t;
-using ::std::uppercase;                using ::std::wcerr;
-using ::std::wcout;
+using ::std::uppercase;
 /* -- Synchronisation ------------------------------------------------------ */
 typedef StdAtomic<bool>         AtomicBool;   // Thread safe boolean
 typedef StdAtomic<double>       AtomicDouble; // Thread safe double
@@ -109,7 +121,6 @@ MAPPACK_BUILD(StrStr, const StdString, const StdString)
 MAPPACK_BUILD(StrVStrV, const StdStringView, const StdStringView)
 MAPPACK_BUILD(StrNCStr, const StdString, StdString)
 /* -- Get array element type ----------------------------------------------- */
-template<typename ArrayType>
-  using ArrayElementType =
-    StdRemoveConst<StdRemovePointer<StdRemoveReference<ArrayType>>>;
+template<typename ArrayType> using ArrayElementType =
+  StdRemoveConst<StdRemovePointer<StdRemoveReference<ArrayType>>>;
 /* == EoF =========================================================== EoF == */

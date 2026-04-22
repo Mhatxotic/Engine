@@ -450,7 +450,7 @@ class System :                         // The main system class
   unsigned int SysMsgEx(const StdString &strReason,
     const StdString &strMessage, unsigned int uiFlags = MB_ICONSTOP) const
   { return SysMessage(GetWindowHandle(),
-      StrAppend(ENGName(), ' ', strReason), strMessage, uiFlags); }
+      StrAppend(ENGName(), ": ", strReason), strMessage, uiFlags); }
   /* -- Get descriptor strings --------------------------------------------- */
   const StdStringView &SysGetGuestTitle() const { return strvTitle; }
   const StdStringView &SysGetGuestShortTitle() const { return strvShortTitle; }

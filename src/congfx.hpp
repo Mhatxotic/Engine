@@ -156,9 +156,9 @@ class ConGfx :                         // Members initially private
   }
   /* -- Reset entering defaults (for lreset) ------------------------------- */
   void ConGfxEnterResetEnvironment()
-  { // Disable and hide console, and restore size
+  { // Disable console (if set), hide the console (force), and restore size
     ConGfxSetLocked(cConsole->FlagIsSet(CF_LOCKEDGLOBAL));
-    ConGfxSetVisible(false);
+    cConsole->HideConsole();
     ConGfxSetHeight(cCVars->CVarsGetInternal<GLfloat>(CON_HEIGHT));
     // Restore console font properties
     ConGfxRestoreDefaultProperties();
@@ -288,15 +288,6 @@ class ConGfx :                         // Members initially private
   /* -- Render the console to main FBO if visible -------------------------- */
   void ConGfxRenderToMain()
     { if(cConsole->IsVisible()) cFboCore->FboCoreBlitConsoleToMain(); }
-  /* -- Show the console and render it and render the FBO to main FBO ------ */
-  void ConGfxRenderNow()
-  { // Show the console, render it to main frame buffer and blit it
-    ConGfxSetVisible(true);
-    // Redraw console if not redrawn
-    ConGfxRender();
-    // Bit console FBO to main
-    cFboCore->FboCoreBlitConsoleToMain();
-  }
   /* -- DeInit console texture and font ------------------------------------ */
   void ConGfxDeInitTextureAndFont()
     { ConGfxGetTextureRef().DeInit(); ConGfxGetFontRef().DeInit(); }

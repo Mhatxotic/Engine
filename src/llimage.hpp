@@ -39,7 +39,7 @@ struct AgImageFlags : public AgFlags<ImageFlagsConst> {
 /* -- Read a dimension ----------------------------------------------------- */
 struct AgDimension : public AgUIntLGE {
   explicit AgDimension(lua_State*const lS, const int iArg) :
-    AgUIntLGE{ lS, iArg, 1, numeric_limits<uint16_t>::max() }{} };
+    AgUIntLGE{ lS, iArg, 1, StdLimits<uint16_t>::max() }{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Image:* member functions                                            ## **

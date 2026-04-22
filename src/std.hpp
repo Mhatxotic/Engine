@@ -363,9 +363,9 @@ template<typename PtrType>
 /* ------------------------------------------------------------------------- */
 #endif                                 // Operating system check
 /* -- Some frequently used maximums ---------------------------------------- */
-constexpr const unsigned int StdMaxUInt = numeric_limits<unsigned int>::max();
-constexpr const uint64_t StdMaxUInt64 = numeric_limits<uint64_t>::max();
-constexpr const size_t StdMaxSizeT = numeric_limits<size_t>::max();
+constexpr const unsigned int StdMaxUInt = StdLimits<unsigned int>::max();
+constexpr const uint64_t StdMaxUInt64 = StdLimits<uint64_t>::max();
+constexpr const size_t StdMaxSizeT = StdLimits<size_t>::max();
 constexpr const size_t StdNPos = StdString::npos;
 /* -- Set error number ----------------------------------------------------- */
 static void StdSetError(const int iValue) { errno = iValue; }
@@ -420,7 +420,7 @@ template<typename IntType>
 template<typename IntType=int64_t>
   static IntType StdAbsolute(const IntType itVal)
 { // Check if supplied argument is signed and negate it if true
-  if constexpr(is_signed_v<IntType>) return (itVal < 0) ? -itVal : itVal;
+  if constexpr(StdIsSigned<IntType>) return (itVal < 0) ? -itVal : itVal;
   // Else just return the value without any processing
   else return itVal;
 }
@@ -433,13 +433,13 @@ template<typename IntType>
 { return ::std::hypot(itWidth, itHeight); }
 /* -- Allocate memory ------------------------------------------------------ */
 template<typename AnyType,typename IntType>
-  requires is_pointer_v<AnyType*> && is_integral_v<IntType>
+  requires StdIsPointer<AnyType*> && StdIsInteger<IntType>
 static AnyType *StdAlloc(const IntType itBytes)
   { return reinterpret_cast<AnyType*>
       (::std::malloc(static_cast<size_t>(itBytes))); }
 /* -- Re-allocate memory ('inline' prevents -Wallocator-wrappers) ---------- */
 template<typename AnyType,typename IntType>
-  requires is_pointer_v<AnyType*> && is_integral_v<IntType>
+  requires StdIsPointer<AnyType*> && StdIsInteger<IntType>
 static AnyType *StdReAlloc(AnyType*const atPtr, const IntType itBytes)
   { return reinterpret_cast<AnyType*>
       (::std::realloc(reinterpret_cast<void*>(atPtr),
@@ -468,10 +468,9 @@ constexpr static void StdSuspend(const auto &aTime)
 constexpr static void StdSuspend()
   { StdSuspend(::std::chrono::milliseconds{ 1 }); }
 /* -- Returns true if two numbers are equal (Omit != and == warnings) ------ */
-template<typename FloatType>
-  requires is_floating_point_v<FloatType>
-static bool StdIsFloatEqual(const FloatType ft1, const FloatType ft2,
-  const FloatType ftEpsilon=static_cast<FloatType>(1e-6))
+template<typename FloatType> requires StdIsFloat<FloatType>
+  static bool StdIsFloatEqual(const FloatType ft1, const FloatType ft2,
+    const FloatType ftEpsilon=static_cast<FloatType>(1e-6))
 { return ::std::fabs(ft1 - ft2) < ftEpsilon; }
 /* -- Wrapper for non-execution policy version of StdTransform ------------- */
 template<class InIt, class OutIt, class UnaryOp>
@@ -479,10 +478,15 @@ template<class InIt, class OutIt, class UnaryOp>
     UnaryOp uoOp)
 { return ::std::transform(iiFirst, iiLast, oiFirst, std::move(uoOp)); }
 /* ------------------------------------------------------------------------- */
-template<typename FloatType> requires is_floating_point_v<FloatType>
+template<typename FloatType> requires StdIsFloat<FloatType>
   static bool StdIsFloatNotEqual(const FloatType ft1, const FloatType ft2,
     const FloatType ftEpsilon=static_cast<FloatType>(1e-6f))
 { return !StdIsFloatEqual<FloatType>(ft1, ft2, ftEpsilon); }
+/* -- Brute cast one type to another --------------------------------------- */
+template<typename DT, typename ST>
+  requires (sizeof(DT) == sizeof(ST)) &&
+    StdIsTrCopyable<ST> && StdIsTrCopyable<DT>
+static DT StdBruteCast(const ST stV) { return ::std::bit_cast<DT>(stV); }
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## Because some compilers may not allow me to alias ::std::move        ## **
@@ -493,10 +497,10 @@ template<typename FloatType> requires is_floating_point_v<FloatType>
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 template<class AnyType, typename AnyTypeRR = StdRemoveReference<AnyType>>
-requires is_class_v<AnyTypeRR> &&
-        (is_reference_v<AnyType> || is_same_v<AnyType, AnyTypeRR>)
-  constexpr static AnyTypeRR &&StdMove(AnyType &&atVar) noexcept
-{ return static_cast<AnyTypeRR&&>(atVar); }
+requires StdIsClass<AnyTypeRR> &&
+  (StdIsReference<AnyType> || StdIsSame<AnyType, AnyTypeRR>)
+constexpr static AnyTypeRR &&StdMove(AnyType &&atVar) noexcept
+  { return static_cast<AnyTypeRR&&>(atVar); }
 /* == Static class try/catch helpers ======================================= **
 ** ######################################################################### **
 ** ## Don't put try/catch on func level. (C++ ISO/IEC JTC 1/SC 22 N 4411) ## **

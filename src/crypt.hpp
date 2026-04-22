@@ -220,7 +220,7 @@ static int CryptGetError(StdString &strError)
     // Some statics
     constexpr static const unsigned int
       // Replacement for ERR_SYSTEM_MASK which causes warnings
-      uiSystemMask = numeric_limits<int>::max(),
+      uiSystemMask = StdLimits<int>::max(),
       // Replacement for ERR_SYSTEM_FLAG which causes warnings
       uiSystemFlag = uiSystemMask + 1;
     // Is a system error?
@@ -449,10 +449,10 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
 { // Check sizes to make sure they can be converted to integer
   if(UtilIntWillOverflow<int>(stSaltSize))
     XC("Size of salt data too big!",
-      "Requested", stSaltSize, "Maximum", numeric_limits<int>::max());
+      "Requested", stSaltSize, "Maximum", StdLimits<int>::max());
   if(UtilIntWillOverflow<int>(stSrcSize))
     XC("Size of source data to hash too big!",
-      "Requested", stSrcSize, "Maximum", numeric_limits<int>::max());
+      "Requested", stSrcSize, "Maximum", StdLimits<int>::max());
   // Create output for HMAC-SHA hash
   Memory mData{ EVP_MAX_MD_SIZE };
   // For storage of size. We really need to know the output size.

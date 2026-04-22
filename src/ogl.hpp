@@ -509,7 +509,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { // Keep scanning until we find a bound texture
       if(uiActiveTexture != uipTexture[siIndex]) continue;
       // Reset currently bound texture
-      uiActiveTexture = numeric_limits<GLuint>::max();
+      uiActiveTexture = StdLimits<GLuint>::max();
       // No need to check any others
       break;
     } // Delete the textures
@@ -545,7 +545,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { // Keep scanning until we find a cached FBO
       if(uipFbo[siIndex] != uiActiveFbo) continue;
       // Reset currently selected FBO
-      uiActiveFbo = numeric_limits<GLuint>::max();
+      uiActiveFbo = StdLimits<GLuint>::max();
       // No need to check any others
       break;
     } // Delete the FBO
@@ -668,7 +668,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     sAPI.glDeleteProgram(uiProgram);
     // If it was the active program then reset the cache
     if(uiActiveProgram == uiProgram)
-      uiActiveProgram = numeric_limits<GLuint>::max();
+      uiActiveProgram = StdLimits<GLuint>::max();
   }
   /* ----------------------------------------------------------------------- */
   void LinkProgram(const GLuint uiProgram) const
@@ -727,7 +727,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { // Keep scanning until we find a bound vbo
       if(uipVbo[siIndex] != uiActiveVbo) continue;
       // Reset currently bound vbo
-      uiActiveVbo = numeric_limits<GLuint>::max();
+      uiActiveVbo = StdLimits<GLuint>::max();
       // No need to check any others
       break;
     } // Delete the vbo's
@@ -752,7 +752,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { // Keep scanning until we find a bound vao
       if(uipVao[siIndex] != uiActiveVao) continue;
       // Reset currently bound vao
-      uiActiveVao = numeric_limits<GLuint>::max();
+      uiActiveVao = StdLimits<GLuint>::max();
       // No need to check any others
       break;
     } // Delete the vao's
@@ -1182,7 +1182,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     } // Have no memory information command?
     else
     { // Set maximum total VRAM
-      ullTotalVRAM = ullFreeVRAM = numeric_limits<GLuint64>::max();
+      ullTotalVRAM = ullFreeVRAM = StdLimits<GLuint64>::max();
       // Report VRAM information to log
       cLog->LogWarningSafe("- Video memory data functions not available.");
       // No need to check anything
@@ -1340,7 +1340,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     FlagReset(GFL_NONE);
     // Pack alignment and texture size and caches
     uiActiveFbo = uiActiveProgram = uiActiveTexture = uiActiveTUnit =
-      uiActiveVao = uiActiveVbo = numeric_limits<GLuint>::max();
+      uiActiveVao = uiActiveVbo = StdLimits<GLuint>::max();
     uiPackAlign = uiTexUnits = uiMaxVertexAttribs = 0;
     ePolyMode = GL_NONE;
     // Set blank generic text for strings
@@ -1420,7 +1420,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     ovhVAO{ 0, 0 },                    // Initialise vertex array objects
     ovhVBO{ 0, 0 },                    // Initialise vertex buffer objects
     uiActiveFbo(                       // Select back buffer
-      numeric_limits<GLuint>::max()),  // Maxed so values commit properly
+      StdLimits<GLuint>::max()),       // Maxed so values commit properly
     uiActiveProgram(uiActiveFbo),      // No active shader programme
     uiActiveTexture(uiActiveFbo),      // No active texture
     uiActiveTUnit(uiActiveFbo),        // No active texture unit

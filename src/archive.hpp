@@ -22,7 +22,7 @@ using namespace IPSplit::P;            using namespace IMemory::P;
 using namespace IMutex::P;             using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS::SevenZip;
+using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -179,8 +179,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   StdTimeT ArchiveSzTimeToStdTime(const size_t stId,
     const CSzBitUi64s &csbuTime) const
       { return static_cast<StdTimeT>(SzBitWithVals_Check(&csbuTime, stId) ?
-          UtilBruteCast<uint64_t>(csbuTime.Vals[stId]) / 100000000 :
-          numeric_limits<StdTimeT>::max()); }
+          StdBruteCast<uint64_t>(csbuTime.Vals[stId]) / 100000000 :
+          StdLimits<StdTimeT>::max()); }
   /* -- Get archive file/dir count as human readable string ---------------- */
   static const StdString ArchiveGetFilesString(const auto iFiles)
     { return StrCPluraliseNum(iFiles, "file", "files"); }

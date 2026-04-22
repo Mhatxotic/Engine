@@ -9,6 +9,8 @@
 /* ------------------------------------------------------------------------- */
 namespace ICommon {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
+using StdLocale = ::std::locale;
+/* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Common class with common objects ------------------------------------- */
 class Common;                          // Prototype
@@ -24,11 +26,11 @@ class Common                           // Common variables class
   const StdStringView svDir, svFs, svHttp, svHttps, svLuaName, svTimeout;
   /* -- Miscellaneous common variables ------------------------------------- */
   const char*const cpBlank;            // Blank C-String
-  locale           lLocaleCurrent;     // Current locale
+  StdLocale        lLocaleCurrent;     // Current locale
   /* --------------------------------------------------------------- */ public:
-  const locale &CommonLocale() const { return lLocaleCurrent; }
+  const StdLocale &CommonLocale() const { return lLocaleCurrent; }
   void CommonSetLocale(const StdString &strLocale)
-    { lLocaleCurrent = locale{ strLocale }; }
+    { lLocaleCurrent = StdLocale{ strLocale }; }
   /* -- Return string functions -------------------------------------------- */
   const StdString &CommonBlank() const { return strBlank; }
   const char *CommonCBlank() const { return cpBlank; }

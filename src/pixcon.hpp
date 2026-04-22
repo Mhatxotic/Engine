@@ -265,7 +265,7 @@ class SysCon :                         // All members initially private
         // If size of unsigned int isn't equal to wchar_t? We will need to
         // check for overflow and print a '?' if so.
         if constexpr(sizeof(cChar) != sizeof(wchar_t))
-          DoSetChar(cChar > numeric_limits<wchar_t>::max() ? '?' : cChar);
+          DoSetChar(cChar > StdLimits<wchar_t>::max() ? '?' : cChar);
         // Size is equal to wchar_t?
         else DoSetChar(cChar);
         // Done

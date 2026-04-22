@@ -48,8 +48,8 @@ class AtlasBase :                      // Members initially private
     uiPadding(0),                      // Initialise padding between tiles
     rtCmd(RT_NONE),                    // Initialise re-upload command
     cuRedraw{                          // Initialise redraw bounds
-      numeric_limits<GLuint>::max(),   // Highest possible
-      numeric_limits<GLuint>::max(),   // Highest possible
+      StdLimits<GLuint>::max(),        // Highest possible
+      StdLimits<GLuint>::max(),        // Highest possible
       0, 0 }                           // Lowest possible
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -102,7 +102,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
           IdentGet(), cuRedraw.CoordsGetLeft(), cuRedraw.CoordsGetTop(),
           cuRedraw.CoordsGetRight(), cuRedraw.CoordsGetBottom(), stRTPos);
         // Reset range parameters
-        cuRedraw.CoordsSetTopLeft(numeric_limits<GLuint>::max());
+        cuRedraw.CoordsSetTopLeft(StdLimits<GLuint>::max());
         cuRedraw.CoordsSetBottomRight(0);
         // Done
         return;

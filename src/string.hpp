@@ -22,7 +22,7 @@ template<typename T>static auto StrGetTime(StdTMStruct*const stdData,
 template<typename AnyType>
   static void StrFormatValue(StdOStringStream &osS, const AnyType &atVal)
 { // If is an exception object? Push the string of it
-  if constexpr(is_same_v<AnyType, StdException>) osS << atVal.what();
+  if constexpr(StdIsSame<AnyType, StdException>) osS << atVal.what();
   // Let ostringstream handle the value
   else osS << atVal;
 }
@@ -65,6 +65,8 @@ template<typename AnyType, typename ...VarArgs>
   } // Return the rest of the string.
   else StrFormatParam(osS, cpPos);
 }
+/* -- Converting type aliases ---------------------------------------------- */
+template<typename T>using StdUnderlyingType = ::std::underlying_type_t<T>;
 /* -- Types used for 'StrFromEvalTokens' function -------------------------- */
 typedef StdPair<const bool, const char> BoolCharPair;
 typedef StdVector<BoolCharPair> BoolCharPairVector;
@@ -143,7 +145,7 @@ static StdString StrTrim(const StdString &strStr, const char cChar)
 /* -- Convert integer to string with padding and precision ----------------- */
 template<typename IntType>
   static StdString StrFromNum(const IntType itV, const int iW=0,
-    const int iPrecision=numeric_limits<IntType>::digits10)
+    const int iPrecision=StdLimits<IntType>::digits10)
 { return StrAppend(setw(iW), fixed, setprecision(iPrecision), itV); }
 /* -- Quickly convert numbered string to integer --------------------------- */
 template<typename IntType=int64_t>
@@ -151,9 +153,9 @@ template<typename IntType=int64_t>
 { // Put value into input string stream
   StdIStringStream isS{ strValue };
   // Push value into integer
-  if constexpr(is_enum_v<IntType>)
+  if constexpr(StdIsEnum<IntType>)
   { // Underlying value of the enum type to store into
-    underlying_type_t<IntType> utN;
+    StdUnderlyingType<IntType> utN;
     // Store the value
     isS >> utN;
     // Return converting it back to the original type (no performance loss)
@@ -396,32 +398,32 @@ static StdString StrUrlEncodeSpaces(const StdString &strText)
   { return StrReplace(strText, ' ', '+'); }
 /* ------------------------------------------------------------------------- */
 template<class StrTypeIn, class StrTypeAlt=StrTypeIn>
-  requires (is_pointer_v<StrTypeIn> || is_class_v<StrTypeIn>) &&
-            is_same_v<StrTypeIn, StrTypeAlt>
+  requires (StdIsPointer<StrTypeIn> || StdIsClass<StrTypeIn>) &&
+    StdIsSame<StrTypeIn, StrTypeAlt>
 static auto &StrIsBlank(const StrTypeIn &strIn, const StrTypeAlt &strAlt)
   { return strIn.empty() ? strAlt : strIn; }
 /* ------------------------------------------------------------------------- */
 template<class StrTypeIn>
-  requires is_pointer_v<StrTypeIn> || is_class_v<StrTypeIn>
+  requires StdIsPointer<StrTypeIn> || StdIsClass<StrTypeIn>
 static auto &StrIsBlank[[maybe_unused]](const StrTypeIn &strIn)
   { return StrIsBlank<StrTypeIn>(strIn, cCommon->CommonBlank()); }
 /* ------------------------------------------------------------------------- */
-template<typename IntType> requires is_integral_v<IntType>
+template<typename IntType> requires StdIsInteger<IntType>
   static const char *StrCPluralise(const IntType itCount,
     const char*const cpSingular, const char*const cpPlural)
-      { return itCount == 1 ? cpSingular : cpPlural; }
+{ return itCount == 1 ? cpSingular : cpPlural; }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
   static StdString StrCPluraliseNum(const IntType itCount,
     const char *cpSingular, const char *cpPlural)
-      { return StrAppend(itCount, ' ',
-          StrCPluralise<IntType>(itCount, cpSingular, cpPlural)); }
+{ return StrAppend(itCount, ' ',
+    StrCPluralise<IntType>(itCount, cpSingular, cpPlural)); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
   static StdString StrCPluraliseNumEx(const IntType itCount,
     const char *cpSingular, const char *cpPlural)
-      { return StrAppend(StrReadableFromNum(itCount), ' ',
-          StrCPluralise<IntType>(itCount, cpSingular, cpPlural)); }
+{ return StrAppend(StrReadableFromNum(itCount), ' ',
+    StrCPluralise<IntType>(itCount, cpSingular, cpPlural)); }
 /* -- Convert time to long duration ---------------------------------------- */
 static StdString StrLongFromDuration(const StdTimeT tDuration,
   unsigned int uiCompMax = StdMaxUInt)
@@ -624,9 +626,8 @@ template<typename AnyType>
 { return StrAppendImbue(showpos, fixed, setprecision(iPrecision), atVal); }
 /* ------------------------------------------------------------------------- */
 template<typename OutType, typename InType, class SuffixClass>
-requires is_floating_point_v<OutType> &&
-         is_integral_v<InType> &&
-         is_class_v<SuffixClass>
+  requires StdIsFloat<OutType> && StdIsInteger<InType> &&
+    StdIsClass<SuffixClass>
 static OutType StrToReadableSuffix(const InType itValue,
   const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup,
   const char*const cpDefault)
@@ -949,13 +950,13 @@ template<typename IntType>
 { // Return failure if parameters negative or zero
   if(itAntecedent <= 0 || itConsequent <= 0) return "0:0";
   // If we're a number, we need to convert it to an integer or gcd() fails
-  if constexpr(is_floating_point_v<IntType>)
+  if constexpr(StdIsFloat<IntType>)
     return StrFromRatio(static_cast<unsigned int>(itAntecedent),
                         static_cast<unsigned int>(itConsequent));
   // Integral?
   else
   { // Calculate the greatest common divisor
-    const IntType itGCD = gcd(itAntecedent, itConsequent),
+    const IntType itGCD = ::std::gcd(itAntecedent, itConsequent),
     // Calculate the simplified ratio
                   itNum = itAntecedent / itGCD,
                   itDen = itConsequent / itGCD;

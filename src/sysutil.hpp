@@ -152,9 +152,11 @@ static unsigned int SysMessage(void*const, const StdString &strTitle,
             return static_cast<unsigned int>(nRes);
         }
       }
+   // Get handle to wide error output in terminal
+  static auto &StdWcErr = ::std::wcerr;
   // Didn't work so put in stdout
-  wcerr << UtfDecoder{ strTitle }.UtfWide() << ": "
-        << UtfDecoder{ strMessage }.UtfWide() << endl;
+  StdWcErr << UtfDecoder{ strTitle }.UtfWide() << ": "
+           << UtfDecoder{ strMessage }.UtfWide() << endl;
   // If exited successfully? Return success
   return 0;
 }

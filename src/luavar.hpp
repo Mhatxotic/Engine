@@ -271,10 +271,10 @@ template<class MapType>
   const MapTypeConstIt mtciExactIt{ mtMap.find(strFilter) };
   if(mtciExactIt != mtMap.cend())
   { // Type could either be CVarMap?
-    if constexpr(is_same_v<MapType, CVarMap>)
+    if constexpr(StdIsSame<MapType, CVarMap>)
       return VariablesMakeInformation(mtciExactIt->second);
     // ..or the type could either be LuaCVarMap
-    else if constexpr(is_same_v<MapType, LuaCVarMap>)
+    else if constexpr(StdIsSame<MapType, LuaCVarMap>)
       return VariablesMakeInformation(mtciExactIt->second.second->second);
   } // Try as a lower bound (partial) check?
   MapTypeConstIt mtciIt{ mtMap.lower_bound(strFilter) };
@@ -293,10 +293,10 @@ template<class MapType>
       // Increment matched counter
       ++stMatched;
       // Type could either be CVarMap?
-      if constexpr(is_same_v<MapType, CVarMap>)
+      if constexpr(StdIsSame<MapType, CVarMap>)
         VariablesMakeInformationTokens(sTable, mtciIt->second);
       // ..or the type could either be LuaCVarMap
-      else if constexpr(is_same_v<MapType, LuaCVarMap>)
+      else if constexpr(StdIsSame<MapType, LuaCVarMap>)
         VariablesMakeInformationTokens(sTable, mtciIt->second.second->second);
     } // Until no more commands
     while(++mtciIt != mtMap.cend());

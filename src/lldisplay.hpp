@@ -229,8 +229,8 @@ LLFUNC(SetPos, 0,
 // ? control the default window size.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetSize, 0,
-  const AgIntLGE aWidth{lS, 1, 0, numeric_limits<int>::max()},
-                 aHeight{lS, 2, 0, numeric_limits<int>::max()};
+  const AgIntLGE aWidth{lS, 1, 0, StdLimits<int>::max()},
+                 aHeight{lS, 2, 0, StdLimits<int>::max()};
   cDisplay->DisplayRequestResize(aWidth, aHeight))
 /* ========================================================================= */
 // $ Display.Transparent

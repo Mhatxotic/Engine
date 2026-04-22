@@ -119,16 +119,13 @@ class Core final :                     // Members initially private
     ConsoleClearStatus();
     // If using graphical inteactive mode?
     if(SysIsGraphicalMode())
-    { // Reset input environment
+    { // Reset input, FBO's, OpenGL state and palette to default
       InputResetEnvironment();
-      // Reset FBO clear colour, selected binds and 8-bit shader palette
-      FboCoreResetClearColour();
+      FboCoreResetEnvironment();
       OglResetBinds();
       palDefault.Commit();
-      // Set main framebuffer as default and reset to original settings
-      FboCoreActivateMain();
+      // Reset matrix to original settings and reset the cursor
       DisplayCommitDefaultMatrix();
-      // Reset the cursor
       DisplayRequestResetCursor();
       // If leaving main execution?
       if(bLeaving)
@@ -142,8 +139,7 @@ class Core final :                     // Members initially private
         ConGfxEnterResetEnvironment();
         // Remove the 1ms FPS limit lock on the engine
         TimerReset(false);
-      } // Make sure main FBO is cleared
-      FboCoreSetDraw();
+      }
     } // Not graphical? Set or remove the 1ms FPS limit lock on the engine
     else TimerReset(bLeaving);
     // Reset unique ids. Remember some classes aren't registered in the
@@ -432,23 +428,6 @@ class Core final :                     // Members initially private
   { // Make sure the exception is logged
     cLog->LogErrorExSafe("(ENGINE THREAD DE-INIT EXCEPTION) $", eReason);
   }
-  /* -- Redraw the frame buffer when error occurs -------------------------- */
-  void CoreForceRedrawFrameBuffer(const bool bAndConsole)
-  { // Flush log if we have a text mode console
-    if(SysIsTextMode()) ConsoleFlushToLog();
-    // Return if no graphical mode
-    if(SysIsNotGraphicalMode()) return;
-    // Return if main already finished
-    if(FboCoreGetMain().FboIsFinished()) return;
-    // Reset opengl binds to defaults just incase any were selected
-    OglResetBinds();
-    // Render the console and it has not already been drawn
-    if(bAndConsole) ConGfxRenderNow();
-    // Finish rendering the main FBO
-    FboCoreGetMain().FboFinishAndRender();
-    // Render all FBO's and copy the main FBO to screen
-    FboCoreRender();
-  }
   /* -- De-initialise everything ------------------------------------------- */
   void CoreDeInitEverything()
   { // De-initialise components
@@ -538,8 +517,6 @@ class Core final :                     // Members initially private
                 cLog->LogErrorExSafe(
                   "Core sandbox ignored #$/$ run-time exception: $",
                   ++uiErrorCount, uiErrorLimit, eReason);
-                // Redraw the console but do not show it.
-                CoreForceRedrawFrameBuffer(false);
                 // Go back into the sandbox.
                 goto SandBox;
               // Automatically reset on error?
@@ -551,8 +528,6 @@ class Core final :                     // Members initially private
                   ++uiErrorCount, uiErrorLimit, eReason);
                 // Flush events and restart the guest
                 LuaReInit();
-                // Redraw the console but do not show it
-                CoreForceRedrawFrameBuffer(false);
                 // Go back into the sandbox
                 goto SandBox;
               // Open console and show error? Just break to other code.
@@ -562,8 +537,6 @@ class Core final :                     // Members initially private
                   eReason);
                 // Add event to pause
                 LuaRequestPause(false);
-                // Redraw the console and show it.
-                CoreForceRedrawFrameBuffer(true);
                 // Break to pause
                 goto SandBox;
               // Unknown value?
@@ -576,8 +549,6 @@ class Core final :                     // Members initially private
                 [[fallthrough]];
               // Terminate engine with error? Throw to critical error dialog.
               case CER_CRITICAL:
-                // Redraw the console.
-                CoreForceRedrawFrameBuffer(false);
                 // Throw to critical error dialog
                 throw;
             } // Should not get here
@@ -671,7 +642,7 @@ class Core final :                     // Members initially private
     // Write exception to log
     cLog->LogErrorExSafe("(ENGINE THREAD FATAL EXCEPTION) $", eReason);
     // Show error
-    SysMsgEx("Engine Thread Fatal Exception", eReason.what(), MB_ICONSTOP);
+    SysMsgEx("Engine Thread Fatal Exception!", eReason.what(), MB_ICONSTOP);
     // De-init everything
     CoreDeInitEverything();
     // Kill thread
@@ -743,7 +714,7 @@ class Core final :                     // Members initially private
       // Exit loop so we don't infinite loop
       SetExitReason(EMC_QUIT);
       // Show error and try to carry on and clean everything up
-      SysMsgEx("Window Loop Fatal Exception", eReason.what(), MB_ICONSTOP);
+      SysMsgEx("Window Loop Fatal Exception!", eReason.what(), MB_ICONSTOP);
    } // Engine should terminate from here-on
   }
   /* -- Wait async on all systems ---------------------------------- */ public:

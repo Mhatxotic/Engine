@@ -194,7 +194,7 @@ LLFUNC(GetLoopEnd, 1, LuaUtilPushVar(lS, AgStream{lS, 1}().GetLoopEndSafe()))
 // ? Sets the new playback loop count.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetLoop, 0, AgStream{lS, 1}().SetLoopSafe(
-  AgIntegerLGE<ogg_int64_t>{lS, 2, -1, numeric_limits<ogg_int64_t>::max() }))
+  AgIntegerLGE<ogg_int64_t>{lS, 2, -1, StdLimits<ogg_int64_t>::max() }))
 /* ========================================================================= */
 // $ Stream:SetLoopRange
 // > Begin:integer=New beginning sample playback position of loop.

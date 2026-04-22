@@ -488,6 +488,8 @@ struct Console :                       // Members initially private
   bool IsHidingGraphicalConsole()
     { return cSystem->SysIsTextMode() &&
              !cCVars->CVarsGetInternal<bool>(CON_GCWTERM); }
+  /* -- Force hide the console --------------------------------------------- */
+  void HideConsole() { FlagClear(CF_ENABLED); }
   /* -- Do Set Console status ---------------------------------------------- */
   bool SetVisible(const bool bState)
   { // Can't change state?
@@ -513,7 +515,7 @@ struct Console :                       // Members initially private
     } // Disabled and not disabled?
     else if(!bState && IsVisible())
     { // Set console disabled and clear redraw flag
-      FlagClear(CF_ENABLED);
+      HideConsole();
       // Log that the console has been disabled
       cLog->LogDebugSafe("Console visibility disabled.");
     } // Nothing changed? Log the request
@@ -737,15 +739,17 @@ struct Console :                       // Members initially private
   }
   /* -- Tick for stdout render --------------------------------------------- */
   void ConsoleFlushToTerminal()
-  { // Return if no data
+  { // Get handle to wide output in terminal
+    static auto &StdWcOut = ::std::wcout;
+    // Return if no data
     if(clqOutput.empty()) return;
     // Setup output
-    wcout << fixed << setprecision(6) << setfill(static_cast<wchar_t>('0'))
-          << left << setw(0);
+    StdWcOut << fixed << setprecision(6) << setfill(static_cast<wchar_t>('0'))
+             << left << setw(0);
     // Get next item
     NextLine: const ConLine &clLine = clqOutput.front();
     // Start writing initial part of output
-    wcout <<
+    StdWcOut <<
       // Add bold ANSI on anything but windows
 #if !defined(WINDOWS)
       "\x1b[1m"
@@ -757,7 +761,7 @@ struct Console :                       // Members initially private
     // Get next character
     NextChar: switch(const Codepoint cChar = udLine.UtfNext())
     { // Carriage return or space char? Restore position and return no wrap
-      case '\n': wcout << endl; goto NextChar;
+      case '\n': StdWcOut << endl; goto NextChar;
       // Other control character?
       case '\r':
       { // Compare it
@@ -770,7 +774,7 @@ struct Console :                       // Members initially private
 #if defined(WINDOWS)
             udLine.UtfScanValue(uiCol);
 #else
-            if(udLine.UtfScanValue(uiCol) == 8) wcout << "\x1b[4m";
+            if(udLine.UtfScanValue(uiCol) == 8) StdWcOut << "\x1b[4m";
 #endif
             // Next character
             goto NextChar;
@@ -782,7 +786,7 @@ struct Console :                       // Members initially private
 #if defined(WINDOWS)
             udLine.UtfScanValue(uiCol);
 #else
-            if(udLine.UtfScanValue(uiCol) == 8) wcout << "\x1b[3m";
+            if(udLine.UtfScanValue(uiCol) == 8) StdWcOut << "\x1b[3m";
 #endif
             // Next character
             goto NextChar;
@@ -797,7 +801,7 @@ struct Console :                       // Members initially private
           case 'r':
           { // Write ANSI reset value in anything but Windows
 #if !defined(WINDOWS)
-            wcout << "\x1b[0m\x1b[1m";
+            StdWcOut << "\x1b[0m\x1b[1m";
 #endif
             // Next character
             goto NextChar;
@@ -808,12 +812,12 @@ struct Console :                       // Members initially private
         } // Finished
         break;
       } // Other character?
-      default: wcout << static_cast<wchar_t>(cChar); goto NextChar;
+      default: StdWcOut << static_cast<wchar_t>(cChar); goto NextChar;
       // Finished
       case '\0': break;
     } // Finished so remove attributes in terminal
 #if !defined(WINDOWS)
-    wcout << "\x1b[0m" << endl;
+    StdWcOut << "\x1b[0m" << endl;
 #endif
     // remove the old item
     clqOutput.pop();

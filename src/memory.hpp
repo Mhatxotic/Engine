@@ -141,11 +141,11 @@ class MemConst                         // Start of const MemBase Block Class
     return tDest;
   }
   /* ----------------------------------------------------------------------- */
-  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
+  template<typename Type> requires StdIsInteger<Type> && (sizeof(Type) > 1)
     Type ReadIntLE(const size_t stPos=0) const
   { return UtilToLittleEndian(MemReadInt<Type>(stPos)); }
   /* ----------------------------------------------------------------------- */
-  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
+  template<typename Type> requires StdIsInteger<Type> && (sizeof(Type) > 1)
     Type ReadIntBE(const size_t stPos=0) const
   { return UtilToBigEndian(MemReadInt<Type>(stPos)); }
   /* -- Test a bit --------------------------------------------------------- */
@@ -307,29 +307,35 @@ class MemBase :
   void MemSwap64(const size_t stPos)
     { MemWriteInt<uint64_t>(stPos, SWAP_U64(MemReadInt<uint64_t>(stPos))); }
   /* -- Write specified variable as an integer ----------------------------- */
-  template<typename Type> requires std::is_arithmetic_v<Type>
+  template<typename Type>
+    requires StdIsArithmatic<Type>
   void MemWriteInt(const size_t stPos, const Type tVar)
     { MemWrite(stPos, &tVar, sizeof(tVar)); }
   /* ----------------------------------------------------------------------- */
-  template<typename Type> requires is_arithmetic_v<Type>
+  template<typename Type>
+    requires StdIsArithmatic<Type>
   void MemWriteInt(const Type tVar)
     { MemWriteInt<Type>(0, tVar); }
   /* ----------------------------------------------------------------------- */
-  template<typename Type> requires is_arithmetic_v<Type>
-    void MemWriteIntLE(const size_t stPos, const Type tVar)
-  { MemWriteInt<Type>(stPos, UtilToLittleEndian(tVar)); }
+  template<typename Type>
+    requires StdIsArithmatic<Type>
+  void MemWriteIntLE(const size_t stPos, const Type tVar)
+    { MemWriteInt<Type>(stPos, UtilToLittleEndian(tVar)); }
   /* ----------------------------------------------------------------------- */
-  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
-    void MemWriteIntLE(const Type tVar)
-  { MemWriteInt<Type>(UtilToLittleEndian(tVar)); }
+  template<typename Type>
+    requires StdIsInteger<Type> && (sizeof(Type) > 1)
+  void MemWriteIntLE(const Type tVar)
+    { MemWriteInt<Type>(UtilToLittleEndian(tVar)); }
   /* ----------------------------------------------------------------------- */
-  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
-    void MemWriteIntBE(const size_t stPos, const Type tVar)
-  { MemWriteInt<Type>(stPos, UtilToBigEndian(tVar)); }
+  template<typename Type>
+    requires StdIsInteger<Type> && (sizeof(Type) > 1)
+  void MemWriteIntBE(const size_t stPos, const Type tVar)
+    { MemWriteInt<Type>(stPos, UtilToBigEndian(tVar)); }
   /* ----------------------------------------------------------------------- */
-  template<typename Type> requires is_integral_v<Type> && (sizeof(Type) > 1)
-    void MemWriteIntBE(const Type tVar)
-  { MemWriteInt<Type>(UtilToBigEndian(tVar)); }
+  template<typename Type>
+    requires StdIsInteger<Type> && (sizeof(Type) > 1)
+  void MemWriteIntBE(const Type tVar)
+    { MemWriteInt<Type>(UtilToBigEndian(tVar)); }
   /* -- Write specified variable as an floating point number --------------- */
   void MemWriteFloatLE(const float fVar) { MemWriteFloatLE(0, fVar); }
   /* ----------------------------------------------------------------------- */
@@ -379,7 +385,7 @@ class MemBase :
   }
   /* -- Invert specific flags ---------------------------------------------- */
   template<typename Type=uint8_t>void MemInvert(const size_t stPos,
-    const Type tFlags=numeric_limits<Type>::max())
+    const Type tFlags=StdLimits<Type>::max())
   { // Bail if size bad
     if(!MemCheckParam(stPos, sizeof(Type)))
       MemErrorRead("Invert error!", stPos, sizeof(Type));

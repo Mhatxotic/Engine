@@ -70,7 +70,7 @@ struct StrokerCheckFunc                // Members initially public
 struct RoundFunc                       // Members initially public
 { /* -- Configurable rounding functor helper class ------------------------- */
   template<typename T=double>
-    requires is_floating_point_v<T>
+    requires StdIsFloat<T>
   class Straight                       // Default no-outline class
   { /* --------------------------------------------------------------------- */
     const T        tValue;             // Calculated advance value

@@ -252,7 +252,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     // String is not displayable?
     else if(tString.front() < 32) osS << cCommon->CommonInvalid() << '.';
     // Valid? Is a string view? (has no capacity())
-    else if constexpr(is_same_v<StringType, StdStringView>)
+    else if constexpr(StdIsSame<StringType, StdStringView>)
       osS << '\"' << tString << '\"' << dec << " [" << tString.length()
           << "].";
     // Valid? Display string

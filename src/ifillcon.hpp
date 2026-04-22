@@ -38,8 +38,8 @@ namespace MakeFilledClassContainer
 { /* -- Fill with specified value ------------------------------------------ */
   template<class CT,                   // Container type
     typename AT>                       // Argument type
-  requires is_class_v<CT> &&           // Container type must be a class
-    is_arithmetic_v<AT>                // Argument type must be computable
+  requires StdIsClass<CT> &&           // Container type must be a class
+    StdIsArithmatic<AT>                // Argument type must be computable
   constexpr static CT Value(const size_t, AT &atValue)
     { return CT{ atValue++ }; }
   /* -- Select indices ----------------------------------------------------- */

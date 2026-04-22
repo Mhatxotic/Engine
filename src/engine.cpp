@@ -169,7 +169,7 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
       { // Send to log and show error message to user. Show message box and
         // return error status
         cLog->LogErrorExSafe("(MAIN THREAD FATAL EXCEPTION) $", eReason);
-        SysMessage("Main Thread Exception", eReason.what(), MB_ICONSTOP);
+        SysMessage("Main Thread Exception!", eReason.what(), MB_ICONSTOP);
         return 2;
       } // Constructor which processes command-line arguments and environment
       Engine(const int iArgs,          // Arguments count
@@ -184,7 +184,7 @@ int ENTRYFUNC                          // Macro defined in 'setup.hpp'
   } // Unsafe exception occured?
   catch(const StdException &eReason)
   { // Show message box and return error status
-    SysMessage("Main Init Exception", eReason.what(), MB_ICONSTOP);
+    SysMessage("Main Init Exception!", eReason.what(), MB_ICONSTOP);
     return 1;
   }
 }

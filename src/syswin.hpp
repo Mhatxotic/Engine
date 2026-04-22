@@ -629,7 +629,7 @@ class SysCore :
   template<typename IntType>
     static IntType SeekFile(const HANDLE hH, const IntType itP)
   { // Bail if handle invalid
-    if(hH == INVALID_HANDLE_VALUE) return numeric_limits<IntType>::max();
+    if(hH == INVALID_HANDLE_VALUE) return StdLimits<IntType>::max();
     // Convert uint64_t to UINT64. They're normally the same but we'll have
     // this here just to be correct. The compiler will optimise this out
     // anyway.
@@ -643,7 +643,7 @@ class SysCore :
     const UINT64 ullNP = UtilMakeQWord(dwNH, dwNL);
     // Return zero if failed or new position
     return ullNP == ullP ?
-      static_cast<IntType>(ullNP) : numeric_limits<IntType>::max();
+      static_cast<IntType>(ullNP) : StdLimits<IntType>::max();
   }
   /* -- Get executable size from header ------------------------------------ */
   size_t GetExeSize(const StdString &strFile) const

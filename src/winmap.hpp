@@ -94,8 +94,8 @@ class SysMap :                         // Members initially private
   { // Get file times and return filetime if successful
     FILETIME ftC, ftM;
     if(GetFileTime(hFile, &ftC, nullptr, &ftM))
-      return { UtilBruteCast<StdTimeT>(ftC) / 100000000,
-               UtilBruteCast<StdTimeT>(ftM) / 100000000 };
+      return { StdBruteCast<StdTimeT>(ftC) / 100000000,
+               StdBruteCast<StdTimeT>(ftM) / 100000000 };
     XCS("Failed to query file creation time!",
       "File", IdentGet(), "Handle", hFile);
   }

@@ -19,57 +19,57 @@ template<typename RT>static RT BitReverseByte(unsigned int uiByte)
   return static_cast<RT>(uiByte & 0xFF);
 }
 /* -- Bits handling functions ---------------------------------------------- */
-template<typename T> requires is_integral_v<T>
+template<typename T> requires StdIsInteger<T>
   static T BitSwap4(const T tValue)
 { return (((tValue & 0xff) >> 4) | ((tValue & 0xff) << 4)) & 0xff; }
 /* -- Converts BIT position to BYTE position ------------------------------- */
-template<typename T> requires is_integral_v<T>
+template<typename T> requires StdIsInteger<T>
   static T BitToByte(const T tPos) { return tPos / CHAR_BIT; }
 /* -- Converts BYTE position to BIT position ------------------------------- */
-template<typename T> requires is_integral_v<T>
+template<typename T> requires StdIsInteger<T>
   static T BitFromByte(const T tPos) { return tPos * CHAR_BIT; }
 /* -- Returns specified BIT position modulo (0-7) -------------------------- */
 template<typename RT,                  // Return type
          typename IT>                  // Integral type
-  requires is_integral_v<RT> && is_integral_v<IT>
+  requires StdIsInteger<RT> && StdIsInteger<IT>
 static RT BitMask(const IT itPos)
   { return static_cast<RT>(1 << itPos % CHAR_BIT); }
 /* -- XOR at BIT position 'itPos' in 'ptDst' ------------------------------- */
 template<typename PT,                  // Pointer type (without the pointer)
          typename IT>                  // Integral type
-  requires is_integral_v<IT> && (!is_pointer_v<PT>)
+  requires StdIsInteger<IT> && (!StdIsPointer<PT>)
 static void BitSet(PT*const ptDst, const IT itPos)
   { ptDst[BitToByte(itPos)] |= BitMask<PT,IT>(itPos); }
 /* -- Return if specified BIT at BIT position 'itPos' in 'ptDst' is set ---- */
 template<typename PT,                  // Pointer type (without the pointer)
          typename IT>                  // Integral type
-  requires is_integral_v<IT> && (!is_pointer_v<PT>)
+  requires StdIsInteger<IT> && (!StdIsPointer<PT>)
 static bool BitTest(PT*const ptDst, const IT itPos)
   { return (ptDst[BitToByte(itPos)] & BitMask<PT,IT>(itPos)) != 0; }
 /* -- Clear the BIT at BIT position 'itPos' in 'ptDst' --------------------- */
 template<typename PT,                  // Pointer type (without the pointer)
          typename IT>                  // Integral type
-  requires is_integral_v<IT> && (!is_pointer_v<PT>)
+  requires StdIsInteger<IT> && (!StdIsPointer<PT>)
 static void BitClear(PT*const ptDst, const IT itPos)
   { ptDst[BitToByte(itPos)] &= ~BitMask<PT,IT>(itPos); }
 /* -- Toggle the BIT at BIT position 'itPos' in 'ptDst' -------------------- */
 template<typename PT,                  // Pointer type (without the pointer)
          typename IT>                  // Integral type
-  requires is_integral_v<IT> && (!is_pointer_v<PT>)
+  requires StdIsInteger<IT> && (!StdIsPointer<PT>)
 static void BitFlip(PT*const ptDst, const IT itPos)
   { ptDst[BitToByte(itPos)] ^= BitMask<PT,IT>(itPos); }
 /* -- Bits handling functions copying from another bit buffer -------------- */
 template<typename PT,                  // Pointer type (without the pointer)
          typename IT>                  // Integral type
-  requires is_integral_v<IT> && (!is_pointer_v<PT>)
+  requires StdIsInteger<IT> && (!StdIsPointer<PT>)
 static void BitSet2(PT*const ptDst, const IT itDstPos,
   const PT*const ptSrc, const IT itSrcPos)
 { ptDst[BitToByte(itDstPos)] |= ptSrc[BitToByte(itSrcPos)]; }
 /* -- XOR bits from source to destination ---------------------------------- */
 template<typename PT,                  // Pointer type (without the pointer)
          typename IT>                  // Integral type
-  requires is_integral_v<IT> &&        // 'IT' must be integral
-         (!is_pointer_v<PT>)           // 'PT' must not be a pointer
+  requires StdIsInteger<IT> &&         // 'IT' must be integral
+         (!StdIsPointer<PT>)           // 'PT' must not be a pointer
 static void BitSet2R(                  // Returns nothing
   PT*const ptDst,                      // Destination buffer
   const IT itDstPos,                   // Source BIT (not BYTE) position
