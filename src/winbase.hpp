@@ -158,7 +158,7 @@ class SysBase                          // Members initially private
         case 1: osS << "written."; break;
         case 8: osS << "executed."; break;
         // Unknown? (Shouldn't get here)
-        default: osS << "0x" << hex << dwAccess << '.'; break;
+        default: osS << "0x" << StdIOSHex << dwAccess << '.'; break;
       } // Was an in-page error? Move the parameter count onwards by one and
       // plus two to get the third element. The next iteration will push by
       // two.
@@ -177,21 +177,22 @@ class SysBase                          // Members initially private
     // Get context from exception record
     const CONTEXT &cData = *pcData;
     // Helper macros
-#define PUSHINT(id,c,x,e) id "=" << setw(c) << cData.x << e
+#define PUSHINT(id,c,x,e) id "=" << StdIOSSetWidth(c) << cData.x << e
 #define D64(id,x,e) PUSHINT(id,16,x,e)
 #define D32(id,x,e) PUSHINT(id,8,x,e)
 #define D16(id,x,e) PUSHINT(id,4,x,e)
 #define D32X(id,x,e) id "=" \
-      << setw(8) << *reinterpret_cast<const uint32_t*>(&cData.x) << e
+      << StdIOSSetWidth(8) << *reinterpret_cast<const uint32_t*>(&cData.x) << e
 #define D128X(id,x,e) id "=" \
-      << setw(16) << *reinterpret_cast<const uint64_t*>(&cData.x)\
-      << setw(16) << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
+      << StdIOSSetWidth(16) << *reinterpret_cast<const uint64_t*>(&cData.x) \
+      << StdIOSSetWidth(16) \
+      << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
     const StdString &strCrLf = cCommon->CommonCrLf(),
                  &strSpc = cCommon->CommonDblSpace();
     // Return registers
 #if defined(X64)
     // Write basic registers
-    osS << hex << setfill('0')
+    osS << StdIOSHex << StdIOSSetFill('0')
       << D64("Rax", Rax, strSpc)  << D64("Rbx", Rbx, strSpc)
       << D64("Rcx", Rcx, strCrLf) << D64("Rdx", Rdx, strSpc)
       << D64("Rsp", Rsp, strSpc)  << D64("Rbp", Rbp, strCrLf)
@@ -220,19 +221,20 @@ class SysBase                          // Members initially private
       << D64("LEfR", LastExceptionFromRip, strCrLf) << strCrLf;
     // Write floating point header state
     for(size_t stQuad = 0; stQuad < 2; stQuad += 2)
-      osS << D128X("XmmH" << dec << stQuad << hex <<,
+      osS << D128X("XmmH" << StdIOSDec << stQuad << StdIOSHex <<,
         Header[stQuad], strSpc)
-          << D128X("XmmH" << dec << (stQuad+1) << hex <<,
+          << D128X("XmmH" << StdIOSDec << (stQuad+1) << StdIOSHex <<,
         Header[stQuad+1], strCrLf);
     // Write floating point legacy state
     for(size_t stQuad = 0; stQuad < 8; stQuad += 2)
-      osS << D128X("XmmL" << dec << stQuad << hex <<,
+      osS << D128X("XmmL" << StdIOSDec << stQuad << StdIOSHex <<,
         Legacy[stQuad], strSpc)
-          << D128X("XmmL" << dec << (stQuad+1) << hex <<,
+          << D128X("XmmL" << StdIOSDec << (stQuad+1) << StdIOSHex <<,
         Legacy[stQuad+1], strCrLf);
     // Write floating point state
 # define XMM(x,e) << \
-      D128X("Xmm" << setw(2) << dec << x << hex <<, Xmm ## x, e)
+      D128X("Xmm" << StdIOSSetWidth(2) << StdIOSDec << x << StdIOSHex <<, \
+        Xmm ## x, e)
     osS XMM( 0,strSpc)  XMM( 1,strCrLf) XMM( 2,strSpc)  XMM( 3,strCrLf)
         XMM( 4,strSpc)  XMM( 5,strCrLf) XMM( 6,strSpc)  XMM( 7,strCrLf)
         XMM( 8,strSpc)  XMM( 9,strCrLf) XMM(10,strSpc)  XMM(11,strCrLf)
@@ -241,14 +243,14 @@ class SysBase                          // Members initially private
 # undef XMM
     // Write vector state
     for(size_t stQuad = 0; stQuad < 26; stQuad += 2)
-      osS << D128X("Vec" << setw(2) << dec << stQuad
-          << hex <<, VectorRegister[stQuad], strSpc)
-          << D128X("Vec" << setw(2) << dec << (stQuad+1)
-          << hex <<, VectorRegister[stQuad+1], strCrLf);
+      osS << D128X("Vec" << StdIOSSetWidth(2) << StdIOSDec << stQuad
+          << StdIOSHex <<, VectorRegister[stQuad], strSpc)
+          << D128X("Vec" << StdIOSSetWidth(2) << StdIOSDec << (stQuad+1)
+          << StdIOSHex <<, VectorRegister[stQuad+1], strCrLf);
     // Using 32-bit compiler?
 #elif defined(X86)
     // Write basic registers
-    osS << hex << setfill('0')
+    osS << StdIOSHex << StdIOSSetFill('0')
       << D32("Eax", Eax, strSpc) << D32("Ebx", Ebx, strSpc)
       << D32("Ecx", Ecx, strSpc) << D32("Edx", Edx, strCrLf)
       << D32("Esp", Esp, strSpc) << D32("Ebp", Ebp, strSpc)
@@ -274,21 +276,21 @@ class SysBase                          // Members initially private
                stY < WOW64_SIZE_OF_80387_REGISTERS;
                stY += sizeof(DWORD)*5)
       for(size_t stX = 0; stX < stZ; ++stX, ++stI)
-        osS << D32X("FRA" << setw(2) << dec << stI << hex <<,
-          FloatSave.RegisterArea[stY+(stX*sizeof(DWORD))],
-            (stX == 4 ? strCrLf : strSpc));
+        osS << D32X("FRA" << StdIOSSetWidth(2) << StdIOSDec << stI
+            << StdIOSHex <<, FloatSave.RegisterArea[stY+(stX*sizeof(DWORD))],
+              (stX == 4 ? strCrLf : strSpc));
     osS << strCrLf;
     // Write extended registers state
     for(size_t stI = 0, stY = 0, stZ = 5 % WOW64_MAXIMUM_SUPPORTED_EXTENSION;
                stY < WOW64_MAXIMUM_SUPPORTED_EXTENSION;
                stY += sizeof(DWORD)*5)
       for(size_t stX = 0; stX < stZ; ++stX, ++stI)
-        osS << D32X("ER" << setw(3) << dec << stI << hex <<,
-          ExtendedRegisters[stY+(stX*sizeof(DWORD))],
-          (stX == 4 ? strCrLf : strSpc));
+        osS << D32X("ER" << StdIOSSetWidth(3) << StdIOSDec << stI << StdIOSHex
+            <<, ExtendedRegisters[stY+(stX*sizeof(DWORD))],
+                  (stX == 4 ? strCrLf : strSpc));
 #endif
     // Set fill back to space
-    osS << setfill(' ');
+    osS << StdIOSSetFill(' ');
     // Done with helper macros
 #undef D128
 #undef D16
@@ -457,7 +459,7 @@ class SysBase                          // Members initially private
         StdToNonConstCast<PVOID>(&cData), nullptr, SymFunctionTableAccess,
         SymGetModuleBase, nullptr))
       { // Add function number
-        osS << dec << stFunctions++ << ": ";
+        osS << StdIOSDec << stFunctions++ << ": ";
         // Is a null address? Ignore it
         if(!sfData.AddrPC.Offset)
         { // Ignore it so goto next function
@@ -496,7 +498,7 @@ class SysBase                          // Members initially private
           case ERROR_INVALID_ADDRESS:
           // File not found? (This happens on Wine for some reason)
           case ERROR_FILE_NOT_FOUND:
-            osS << "0x" << hex << sfData.AddrPC.Offset << '@';
+            osS << "0x" << StdIOSHex << sfData.AddrPC.Offset << '@';
             break;
           // Any other code
           default: osS << "<SGSFA:" << SysError(dwCode) << ">@"; break;
@@ -554,14 +556,15 @@ class SysBase                          // Members initially private
     SYSTEMTIME stData;
     GetLocalTime(&stData);
     // Write data
-    osS << dec << "Date/Time: "
-        << right << setfill('0') << setw(2) << stData.wDay
-        << '/' << setw(2) << stData.wMonth
-        << '/' << setw(4) << stData.wYear
-        << ' ' << setw(2) << stData.wHour
-        << ':' << setw(2) << stData.wMinute
-        << ':' << setw(2) << stData.wSecond
-        << '.' << setw(3) << stData.wMilliseconds
+    osS << StdIOSDec << "Date/Time: "
+        << StdIOSRight << StdIOSSetFill('0') << StdIOSSetWidth(2)
+        << stData.wDay
+        << '/' << StdIOSSetWidth(2) << stData.wMonth
+        << '/' << StdIOSSetWidth(4) << stData.wYear
+        << ' ' << StdIOSSetWidth(2) << stData.wHour
+        << ':' << StdIOSSetWidth(2) << stData.wMinute
+        << ':' << StdIOSSetWidth(2) << stData.wSecond
+        << '.' << StdIOSSetWidth(3) << stData.wMilliseconds
         << '.' << cCommon->CommonCrLf()
         << "Filename: " << WS16toUTF(wstrFile) << '.' <<
           cCommon->CommonCrLf()
@@ -636,9 +639,9 @@ class SysBase                          // Members initially private
     osS << "The instruction at address 0x" << erData.ExceptionAddress
         << " of thread " << GetCurrentThreadId()
         << " in process " << GetCurrentProcessId()
-        << " caused exception 0x" << hex << erData.ExceptionCode
+        << " caused exception 0x" << StdIOSHex << erData.ExceptionCode
         << " (" << eclStrings.Get(erData.ExceptionCode)
-        << ") with flags 0x" << erData.ExceptionFlags << dec << '.';
+        << ") with flags 0x" << erData.ExceptionFlags << StdIOSDec << '.';
     SEHDumpExceptionMemoryAddresses(osS, erData);
     osS << cCommon->CommonCrLf2();
     // Check for illegal instruction? Add extra information

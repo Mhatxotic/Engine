@@ -156,7 +156,7 @@ static unsigned int SysMessage(void*const, const StdString &strTitle,
   static auto &StdWcErr = ::std::wcerr;
   // Didn't work so put in stdout
   StdWcErr << UtfDecoder{ strTitle }.UtfWide() << ": "
-           << UtfDecoder{ strMessage }.UtfWide() << endl;
+           << UtfDecoder{ strMessage }.UtfWide() << StdIOSEndLine;
   // If exited successfully? Return success
   return 0;
 }

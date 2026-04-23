@@ -63,7 +63,8 @@ class SysModule :                      // Members initially private
       const StdWideString &wstrBlock, const char*const cpValue)
     { // Build path name
       const StdString strValue{ StrFormat("\\StringFileInfo\\$$$$$\\$",
-        right, hex, setw(8), setfill('0'), lLng, cpValue) };
+        StdIOSRight, StdIOSHex, StdIOSSetWidth(8), StdIOSSetFill('0'), lLng,
+        cpValue) };
       // Query the value from the resource
       return GetStringValue(wstrBlock, UTFtoS16(strValue));
     }

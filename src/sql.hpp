@@ -242,8 +242,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
           default:
           { // Warn on invalid type
             cLog->LogWarningExSafe("Sql ignored unknown result type $[0x$$$] "
-              "for column '$' sized $ bytes.", iType, hex, iType, dec,
-              sqlite3_column_name(stmtData, iCol),
+              "for column '$' sized $ bytes.", iType, StdIOSHex, iType,
+              StdIOSDec, sqlite3_column_name(stmtData, iCol),
               sqlite3_column_bytes(stmtData, iCol));
             break;
           }
@@ -317,7 +317,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Int64/Int> = $ <$0x$>.",
-      iCol, llValue, hex, llValue);
+      iCol, llValue, StdIOSHex, llValue);
     // Process as integer then pass next arguments
     SqlSetError(sqlite3_bind_int64(stmtData, iCol, llValue));
     if(SqlDoExecuteParamCheckCommit(stmtData, iCol, iMax))
@@ -328,7 +328,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     void SqlDoExecuteParam(int &iCol, const int iMax,
       sqlite3_stmt*const stmtData, const double dValue, VarArgs &&...vaArgs)
   { // Log the parameter
-    cLog->LogDebugExSafe("- Arg #$<Double/Float> = $$.", iCol, fixed, dValue);
+    cLog->LogDebugExSafe("- Arg #$<Double/Float> = $$.",
+      iCol, StdIOSFixed, dValue);
     // Process as integer then pass next arguments
     SqlSetError(sqlite3_bind_double(stmtData, iCol, dValue));
     if(SqlDoExecuteParamCheckCommit(stmtData, iCol, iMax))
@@ -340,7 +341,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       sqlite3_stmt*const stmtData, int iValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Int/Int> = $ <$0x$>.",
-      iCol, iValue, hex, iValue);
+      iCol, iValue, StdIOSHex, iValue);
     // Process as integer then pass next arguments
     SqlSetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(iValue)));
@@ -354,7 +355,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<UInt/Int> = $ <$0x$>.",
-      iCol, uiValue, hex, uiValue);
+      iCol, uiValue, StdIOSHex, uiValue);
     // Process as integer then pass next arguments
     SqlSetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(uiValue)));
@@ -367,7 +368,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       sqlite3_stmt*const stmtData, const long lValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Long/Int> = $ <$0x$>.",
-      iCol, lValue, hex, lValue);
+      iCol, lValue, StdIOSHex, lValue);
     // Process as integer then pass next arguments
     SqlSetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(lValue)));
@@ -380,7 +381,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       sqlite3_stmt*const stmtData, const short sValue, VarArgs &&...vaArgs)
   { // Log the parameter
     cLog->LogDebugExSafe("- Arg #$<Short/Int> = $ <$0x$>.",
-      iCol, sValue, hex, sValue);
+      iCol, sValue, StdIOSHex, sValue);
     // Process as integer then pass next arguments
     SqlSetError(sqlite3_bind_int64(stmtData, iCol,
       static_cast<sqlite_int64>(sValue)));
@@ -664,7 +665,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
                 { // Get integer, log it and add it as integer
                   const lua_Integer liInt = LuaUtilToInt(lS, iParam);
                   cLog->LogDebugExSafe("- Arg #$<Integer/Int> = $ <$0x$>.",
-                    iCol, liInt, hex, liInt);
+                    iCol, liInt, StdIOSHex, liInt);
                   SqlSetError(sqlite3_bind_int64(stmtData, iCol,
                     static_cast<sqlite_int64>(liInt)));
                 } // Variable is actually a number
@@ -672,7 +673,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
                 { // Get double, log it and add it as number
                   const lua_Number lnFloat = LuaUtilToNum(lS, iParam);
                   cLog->LogDebugExSafe("- Arg #$<Number/Float> = $$.",
-                    iCol, fixed, lnFloat);
+                    iCol, StdIOSFixed, lnFloat);
                   SqlSetError(sqlite3_bind_double(stmtData, iCol,
                     static_cast<double>(lnFloat)));
                 } // Done

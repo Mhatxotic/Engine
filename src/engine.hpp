@@ -1,4 +1,4 @@
-/* ==  =========================================================== **
+/* == ENGINE.HPP =========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -12,9 +12,9 @@
 #define VER_AUTHOR  "Mhatxotic Design"                // Author of engine
 #define VER_MAJOR   26                                // Version major (year)
 #define VER_MINOR   4                                 // Version minor (month)
-#define VER_BUILD   22                                // Version build (day)
-#define VER_REV     60                                // Version rev (build#)
-#define VER_STR_NQ  26,4,22,60                        // Version as literal
-#define VER_STR     "26.4.22.60"                      // Version as string
-#define VER_DATE    "Wed Apr 22 21:45:20 2026 +0100"  // Compilation date
+#define VER_BUILD   23                                // Version build (day)
+#define VER_REV     87                                // Version rev (build#)
+#define VER_STR_NQ  26,4,23,87                        // Version as literal
+#define VER_STR     "26.4.23.87"                      // Version as string
+#define VER_DATE    "Thu Apr 23 23:52:43 2026 +0100"  // Compilation date
 /* == EoF =========================================================== EoF == */

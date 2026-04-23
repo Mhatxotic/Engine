@@ -111,7 +111,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
         FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
     } // Report loaded font
     cLog->LogInfoExSafe("Ftf loaded '$' (FF:$;FS:$;S:$$$x$;D:$x$;B:$).",
-      IdentGet(), GetFamily(), GetStyle(), setprecision(0), fixed,
+      IdentGet(), GetFamily(), GetStyle(), StdIOSSetPrecision(0), StdIOSFixed,
       DimGetWidth(), DimGetHeight(), GetDPIWidth(), GetDPIHeight(),
       GetOutline());
   }

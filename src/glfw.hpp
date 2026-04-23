@@ -60,7 +60,7 @@ class GlFW :                           // Root engine class
     else
     { // Log invalid event
       cLog->LogWarningExSafe("GlFW got invalid monitor change action of 0x$$!",
-        hex, iAction);
+        StdIOSHex, iAction);
       // Ask engine thread to quit and re-init window
       cEvtMain->RequestQuitThread();
     }

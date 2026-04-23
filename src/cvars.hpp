@@ -190,7 +190,7 @@ struct CVars :                         // Start of vars class
       if(cviRef.FlagIsSet(cvfcFlags))
       { // Log that we're not overriding
         cLog->LogWarningExSafe("CVars initial var '$' already set to '$'/$$!",
-          cviRef.GetVar(), strVal, hex, cvfcFlags.FlagGet());
+          cviRef.GetVar(), strVal, StdIOSHex, cvfcFlags.FlagGet());
       } // Flags need updating
       else
       { // Update flags
@@ -198,13 +198,14 @@ struct CVars :                         // Start of vars class
         // Log that we're overriding flags
         cLog->LogWarningExSafe(
           "CVars initial var '$' flags overridden to $$ from $!",
-            cviRef.GetVar(), hex, cvfcFlags.FlagGet(), cviRef.FlagGet());
+            cviRef.GetVar(), StdIOSHex, cvfcFlags.FlagGet(), cviRef.FlagGet());
       } // Done
       return;
     } // Log that we're overriding if priority
     cLog->LogWarningExSafe(
       "CVars initial var '$' overridden with '$'[$$] from '$'[$!]",
-        cviRef.GetVar(), strVal, hex, cvfcFlags.FlagGet(), cviRef.GetValue(),
+        cviRef.GetVar(), strVal, StdIOSHex, cvfcFlags.FlagGet(),
+        cviRef.GetValue(),
         cviRef.FlagGet());
     // Now override
     cviRef.SetValue(strVal);
@@ -682,7 +683,7 @@ struct CVars :                         // Start of vars class
     cLog->LogInfoExSafe(
       "CVars registered $ of $ built-in variables for $<0x$$>.",
       cvmActive.size(), cvislList.size(), cSystem->SysGetCoreFlagsString(),
-      hex, cSystem->SysGetCoreFlags());
+      StdIOSHex, cSystem->SysGetCoreFlags());
   }
   /* -- Default constructor ------------------------------------- */ protected:
   explicit CVars(const CVarItemStaticList &cvislDef) :

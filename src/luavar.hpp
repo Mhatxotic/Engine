@@ -211,7 +211,7 @@ static StdString VariablesMakeInformation(const CVarItem &cviVar)
     "- Modified: $.\n"               "- Current: [$/$] \"$\".",
       cviVar.GetVar(),
       StrFromBoolTF(cviVar.IsTriggerSet()),
-      hex, cviVar, dec,
+      StdIOSHex, cviVar, StdIOSDec,
       StrImplode(cVariables->imcveTypes.Test(cviVar), 0, ", "),
       StrImplode(cVariables->imcveConditions.Test(cviVar), 0, ", "),
       StrImplode(cVariables->imcvePermissions.Test(cviVar), 0, ", "),

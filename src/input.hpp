@@ -119,7 +119,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       default:
         // Log the bad mouse focus state and return
         cLog->LogWarningExSafe("Input ignored bad mouse focus state $<$$>!",
-          iState, hex, iState);
+          iState, StdIOSHex, iState);
         // Don't dispatch an event
         return;
     } // Dispatch event to lua scripts
@@ -193,7 +193,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       default:
         // Log the bad mouse focus state and return
         cLog->LogWarningExSafe("Input ignored bad key press state $<$$>!",
-          iState, hex, iState);
+          iState, StdIOSHex, iState);
         // Don't dispatch an event
         return;
     } // Send lua event with key, state, mod and scan code

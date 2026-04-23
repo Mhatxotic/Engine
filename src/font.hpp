@@ -195,7 +195,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     const OglFilterEnum ofeNFilter, const ImageFlagsConst &ifcFlags)
   { // Show that we're loading the file
     cLog->LogDebugExSafe("Font loading '$' (IS:$;P:$;F:$;FL:$$)...",
-      ftfSrc.IdentGet(), uiISize, _uiPadding, ofeNFilter, hex,
+      ftfSrc.IdentGet(), uiISize, _uiPadding, ofeNFilter, StdIOSHex,
       ifcFlags.FlagGet());
     // If source and destination ftf class are not the same?
     if(&ftfData != &ftfSrc)
@@ -226,7 +226,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     clTiles.resize(1);
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded FT font (IS:$;P:$;F:$;FL:$$)...",
-      IdentGet(), uiISize, uiPadding, ofeFilter, hex,
+      IdentGet(), uiISize, uiPadding, ofeFilter, StdIOSHex,
       ifcFlags.FlagGet());
   }
   /* -- Init a pre-rendered font directly ---------------------------------- */

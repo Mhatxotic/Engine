@@ -293,7 +293,8 @@ class GlFWWindow :                     // GLFW window class
     glfwSetWindowAttrib(WinGetHandle(), iAttrib, iValue);
     // Log the attribute change
     cLog->LogDebugExSafe("GlFW set attrib $<0x$$> to $$<0x$$>.",
-      GlFWGetHintAttribStr(iAttrib), hex, iAttrib, dec, iValue, hex, iValue);
+      GlFWGetHintAttribStr(iAttrib), StdIOSHex, iAttrib, StdIOSDec, iValue,
+      StdIOSHex, iValue);
   }
   /* -- Set window aspect ratio -------------------------------------------- */
   void WinSetAspectRatio(const int iNumeric, const int iDenominator) const

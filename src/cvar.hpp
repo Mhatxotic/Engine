@@ -156,7 +156,7 @@ class CVarItem :                       // Members initially private
     if(FlagIsSet(TINTEGER))
     { // Get value as 64-bit integer
       const ValueIntType vitV = StrToNum<ValueIntType>(GetValue());
-      return StrFormat("$ [0x$$]", vitV, hex, vitV);
+      return StrFormat("$ [0x$$]", vitV, StdIOSHex, vitV);
     } // Unknown value or string. Return as-is.
     return StrFormat("\"$\"", GetValue());
   }

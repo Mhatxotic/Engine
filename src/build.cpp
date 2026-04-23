@@ -40,10 +40,12 @@ namespace E {                          // Put everything in engine namespace
 #include "ihelper.hpp"                 // Init helper utility header
 #include "args.hpp"                    // Arguments handling header
 #include "cmdline.hpp"                 // Command-line class header
+#include "bit.hpp"                     // Bit functions
 #include "memory.hpp"                  // Memory management utilities header
 #include "fstream.hpp"                 // File IO utility header
 #include "mutex.hpp"                   // Mutex helper class header
 #include "log.hpp"                     // Logging helper class header
+#include "ifillcon.hpp"                // Init filled contianers header
 #include "luadef.hpp"                  // Lua definitions header
 #include "collect.hpp"                 // Class collector utility header
 #include "lockable.hpp"                // Lockable collector utility header
@@ -91,6 +93,7 @@ using namespace IUuId::P;
 #define STANDARD   "c++20"             // Current compilation standard used
 #define ENGINENAME "engine"            // Name of engine 'engine'
 #define SRCEXT     ".hpp"              // Extension of source files
+#define CERTEXT    ".cer"              // Extension of certificate files
 #define ARCDIR     "archive"           // Archives directory
 #define BINDIR     "bin"               // Binaries directory
 #define CRTDIR     "certs"             // CA certificates directory
@@ -686,7 +689,8 @@ static int CheckSources()
             ++stWarnings;
             cout << "W: " << strFile << ':' << stLine+1 << '/'
                  << tLines.size() << ':' << stPos+1 << '/'
-                 << strLine.length() << ": " << eReason.what() << endl;
+                 << strLine.length() << ": " << eReason.what()
+                 << StdIOSEndLine;
           }
         } // exception occured
         catch(const StdException &eReason)
@@ -694,20 +698,20 @@ static int CheckSources()
           ++stWarnings;
           cout << "W: " << strFile << ':' << stLine+1 << '/'
                << tLines.size() << ':' << strLine.length() << '/'
-               << strLine.length() << ": " << eReason.what() << endl;
+               << strLine.length() << ": " << eReason.what() << StdIOSEndLine;
         }
       }
     } // exception occured
     catch(const StdException &eReason)
     { // Print file error
       ++stWarnings;
-      cout << "W: " << strFile << ": " << eReason.what() << endl;
+      cout << "W: " << strFile << ": " << eReason.what() << StdIOSEndLine;
     }
   } // Add return if a warning occured
   if(stWarnings) cout << '\n';
   // Finished
   cout << "Finished with " << stWarnings << " warnings in "
-       << stTotal << " modules." << endl;
+       << stTotal << " modules." << StdIOSEndLine;
   // Success
   return 0;
 }
@@ -1107,7 +1111,7 @@ static int GenDoc()
     if(!strCName.empty())
       ssmConCmds.insert({ StrToLowCase(strCName), strCDesc });
     // Report cvars
-    cout << ssmConCmds.size() << "CC!" << endl;
+    cout << ssmConCmds.size() << "CC!" << StdIOSEndLine;
   } // CVars storage
   StrStrMap ssmCVars;
   { // Build actual cvars list filename
@@ -1178,7 +1182,7 @@ static int GenDoc()
     if(!strCName.empty())
       ssmCVars.insert({ StrToLowCase(strCName), strCDesc });
     // Report cvars
-    cout << ssmCVars.size() << "CV!" << endl;
+    cout << ssmCVars.size() << "CV!" << StdIOSEndLine;
   } // Set output file
   const StdString strFile{ StrFormat("$/index.html", DOCDIR) };
   // Print result
@@ -1676,9 +1680,9 @@ static void ConWrite(const StdString &strText)
 { // Pretty word wrap the text and write each line
 #if defined(WINDOWS)
   const StrVector svLines{ UtfWordWrap(strText, 79, 2) };
-  for(const StdString &strLine : svLines) cout << strLine << endl;
+  for(const StdString &strLine : svLines) cout << strLine << StdIOSEndLine;
 #else
-  cout << strText << endl;
+  cout << strText << StdIOSEndLine;
 #endif
 }
 /* ------------------------------------------------------------------------- */
@@ -1992,7 +1996,8 @@ static void RenameFileSafe(const StdString &strSrc, const StdString &strDst)
 { // Write progress
   cout << "*** Renaming '" << strSrc << "' to '" << strDst << "'...";
   // Rename the file and show error if failed
-  if(DirFileRename(strSrc, strDst)) { cout << " OK!" << endl; return; }
+  if(DirFileRename(strSrc, strDst))
+    { cout << " OK!" << StdIOSEndLine; return; }
   // File doesnt exist?
   if(errno != EEXIST)
     XCL("Rename failed!", "Source", strSrc, "Destination", strDst);
@@ -2005,7 +2010,7 @@ static void RenameFileSafe(const StdString &strSrc, const StdString &strDst)
     XCL("Rename failed after successful unlink!",
         "Source", strSrc, "Destination", strDst);
   // Done
-  cout << " OW OK!" << endl;
+  cout << " OW OK!" << StdIOSEndLine;
 }
 /* ------------------------------------------------------------------------- */
 static int CertFunc(const StdString strOut)
@@ -2041,7 +2046,7 @@ static int CertFunc(const StdString strOut)
     strCodePrv{ StrFormat("$/$-c-pr.pem", DBGDIR, ENGINENAME) },
     strCodePub{ StrFormat("$/$-c-pu.pem", DBGDIR, ENGINENAME) },
     strCodePubConf{ StrFormat("$/$-c-pu.txt", DBGDIR, ENGINENAME) },
-    strCodeCer{ StrFormat("$/$-c-x509.cer", DBGDIR, ENGINENAME) };
+    strCodeCer{ StrFormat("$/$-c-x509" CERTEXT, DBGDIR, ENGINENAME) };
   // Generate CA private key
   SystemF("openssl genpkey "
           "$ "
@@ -2432,8 +2437,8 @@ static int CertGen()
         { // Get purpose id and check it, it must be a CA certificate
           if(X509_check_purpose(caCert, X509_PURPOSE_get_id(x509p), 1) == 1)
           { // Get filename for certificate using checksum
-            const StdString strFile{ StrAppend(hex, setw(8),
-              setfill('0'), right, CryptToCRC32(mOut), ".cer") };
+            const StdString strFile{ StrAppend(StdIOSHex, StdIOSSetWidth(8),
+              StdIOSSetFill('0'), StdIOSRight, CryptToCRC32(mOut), CERTEXT) };
             // Add to processed list
             ssProcessed.emplace(strFile);
             // If file exists?
@@ -2478,7 +2483,7 @@ static int CertGen()
     } // Add data if parsing
     else if(bParseData) strData += strLine;
   } // Get files in the directory and enumerate them
-  const Dir dCerts{ cCommon->CommonPeriod(), ".cer" };
+  const Dir dCerts{ cCommon->CommonPeriod(), CERTEXT };
   for(const DirEntMapPair &dempPair : dCerts.GetFiles())
   { // Find this file in written list
     const auto &aItem = ssProcessed.find(dempPair.first);
@@ -2607,7 +2612,8 @@ static const StdString BuildHPPHeader(const StdString &strFileName,
   // Word wrap the text and write lines
   const StrVector svLines{ UtfWordWrap(strDesc, 67, 0) };
   for(const StdString &strLine : svLines)
-    strLines += StrFormat("** ## $$$ ## **\n", left, setw(67), strLine);
+    strLines += StrFormat("** ## $$$ ## **\n", StdIOSLeft, StdIOSSetWidth(67),
+      strLine);
   // Add rest of header
   strLines += StrFormat(
     "** $ **\n"
@@ -2658,19 +2664,19 @@ static int BuildLicenses()
     const Token tParts{ PathSplit(dempPair.first).strFile, "-", 4 };
     if(tParts.size() != 4)
     { // Show message
-      cout << " invalid filename!" << endl;
+      cout << " invalid filename!" << StdIOSEndLine;
       continue;
     } // Check for correct first token
     if(tParts[0] != "Lic")
     { // Show message
-      cout << " invalid format!" << endl;
+      cout << " invalid format!" << StdIOSEndLine;
       continue;
     }
     // File and line data
     StrVector vLine, vFile{
       StrFormat("$\n$$$ // $",
         strLineTop,
-        setw(38), left,
+        StdIOSSetWidth(38), StdIOSLeft,
         StrFormat("BEGINLICENSE($, $)", StrToUpCase(tParts[2]),
           bCompressed.MemSize()),
         dempPair.first),
@@ -2705,9 +2711,10 @@ static int BuildLicenses()
     // Write footer
     vFile.push_back(strLineTop);
     vFile.push_back(StrFormat("$$$ // $ > $b > $",
-      setw(38), left, strLineBottom, tParts[3], mData.MemSize(), tParts[1]));
+      StdIOSSetWidth(38), StdIOSLeft, strLineBottom, tParts[3],
+      mData.MemSize(), tParts[1]));
     StdString strSourceFile{ StrImplode(vFile, 0, "\n") };
-    cout << ' ' << strSourceFile.length() << "b... done!" << endl;
+    cout << ' ' << strSourceFile.length() << "b... done!" << StdIOSEndLine;
     vFiles.push_back(StdMove(strSourceFile));
   } // Write footer
   vFiles.push_back(strDoubleLine);
@@ -2724,7 +2731,7 @@ static int BuildLicenses()
                         "Expected",  strFile.length(), "Actual", stWritten);
   // Write success to console
   cout << " done!\n\nBuilding of license header has completed successfully."
-       << endl;
+       << StdIOSEndLine;
   // Return success
   return 0;
 }
@@ -3857,7 +3864,7 @@ static int ChangeProject(const StdString &strProj)
   // Write the new project
   WriteVersion();
   // Show success
-  cout << "Switch project to '" << strProj << "' succeeded!" << endl;
+  cout << "Switch project to '" << strProj << "' succeeded!" << StdIOSEndLine;
   // Done
   return 0;
 }
@@ -4010,12 +4017,12 @@ static int Compile(const bool bSelf)
           "This file is automatically generated by build. Changes are lost "
           "when the engine is rebuilt."),
         StdString(73, '-'),
-        left, setw(33), StrAppend('\"',strEName,'\"'),
-              setw(33), StrAppend('\"',strEAuthor,'\"'),
-              setw(33), uiVer[0],   setw(33), uiVer[1],
-              setw(33), uiVer[2],   setw(33), uiVer[3],
-              setw(33), strVersion, setw(33), strVersionStr,
-              setw(33), strDate) };
+        StdIOSLeft, StdIOSSetWidth(33), StrAppend('\"',strEName,'\"'),
+        StdIOSSetWidth(33), StrAppend('\"',strEAuthor,'\"'),
+        StdIOSSetWidth(33), uiVer[0], StdIOSSetWidth(33), uiVer[1],
+        StdIOSSetWidth(33), uiVer[2], StdIOSSetWidth(33), uiVer[3],
+        StdIOSSetWidth(33), strVersion, StdIOSSetWidth(33), strVersionStr,
+        StdIOSSetWidth(33), strDate) };
     // Write new version header
     if(FStream{ strFile, FM_W_B }.FStreamWriteStringSafe(strText)
       != strText.length())
@@ -4109,7 +4116,7 @@ static int Compile(const bool bSelf)
   // Show executable size
   const uint64_t ullNewSize = FStream{ strExe, FM_R_B }.FStreamSize();
   cout << "*** Executable size is " << ullNewSize << " bytes (" <<
-    StrToBytes(ullNewSize, 2) << ")." << endl;
+    StrToBytes(ullNewSize, 2) << ")." << StdIOSEndLine;
   // If the old executable had size?
   if(ullOldSize && ullOldSize != ullNewSize)
   { // Calculate and show changed size
@@ -4119,10 +4126,10 @@ static int Compile(const bool bSelf)
     { // Negate to positive
       const uint64_t ullAdjChange = -llChange;
       cout << "*** Executable size decreased " << ullAdjChange << " bytes (" <<
-        StrToBytes(ullAdjChange, 2) << ")." << endl;
+        StrToBytes(ullAdjChange, 2) << ")." << StdIOSEndLine;
     } // Increqased?
     else cout << "*** Executable size increased " << llChange << " bytes (" <<
-      StrToBytes(llChange, 2) << ")." << endl;
+      StrToBytes(llChange, 2) << ")." << StdIOSEndLine;
   } // Move new executable into position
   if(bSelf) CheckForNewBuildExecutable();
   // Done
@@ -4287,7 +4294,7 @@ static bool CheckCommandLine(StdString &strX1, StdString &strX2)
   // Show initial usage
   cout << "Usage: " << cSystem->ENGFile() << " <tokens> [x].\n\n"
        << "Tokens<" << flData.size() << ">:- (* = option assumed).\n"
-       << left;
+       << StdIOSLeft;
   // Buffer for left side option
   size_t stWidth = 32, stMax = stWidth;
   for(const FuncListMapPair &flI : flData)
@@ -4296,9 +4303,9 @@ static bool CheckCommandLine(StdString &strX1, StdString &strX2)
          << flI.first
          << (flI.second.uiArg ? " x" : cCommon->CommonDblSpace())
          << " = "
-         << setw(stWidth)
+         << StdIOSSetWidth(stWidth)
          << StdString{ flI.second.cpDesc, 0, stMax }
-         << setw(0);
+         << StdIOSSetWidth(0);
     // Switch width and add a carriage return if the right option
     if(stWidth) stWidth = 0; else stWidth = stMax, cout << '\n';
   } // Add a carriage return if on left side
@@ -4345,8 +4352,8 @@ static int ShowVersion()
     cSystem->ENGExt(), cSystem->ENGFileExt(), cSystem->ENGLoc());
   // For each log entry, write the line to the buffer
   for(const LogLine &llLine : *cLog)
-    cout << '[' << fixed << setprecision(6) << llLine.dTime << "] "
-         << llLine.strLine << endl;
+    cout << '[' << StdIOSFixed << StdIOSSetPrecision(6) << llLine.dTime << "] "
+         << llLine.strLine << StdIOSEndLine;
   // Success
   return 0;
 }

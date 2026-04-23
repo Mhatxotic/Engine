@@ -293,15 +293,15 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           // Log the warning
           cLog->LogWarningExSafe("Video '$' $ audio failed "
             "(B:$;F:$<$$$>;A:$;S:$;R:$;AL:$<$$>)!",
-            IdentGet(), cpReason, uiBuffer, GetFormatAsIdentifier(), hex,
-            GetAudioFormat(), dec, MemPtr(), stFrameSize, GetSampleRate(),
-            cOal->GetALErr(alErr), hex, alErr);
+            IdentGet(), cpReason, uiBuffer, GetFormatAsIdentifier(), StdIOSHex,
+            GetAudioFormat(), StdIOSDec, MemPtr(), stFrameSize,
+            GetSampleRate(), cOal->GetALErr(alErr), StdIOSHex, alErr);
         } // Create buffers failed?
         else cLog->LogWarningExSafe("Video create buffers failed on '$' "
           "(F:$<$$$>;A:$;S:$;R:$;AL:$<$$>)!",
-          IdentGet(), uiBuffer, GetFormatAsIdentifier(), hex, GetAudioFormat(),
-          dec, MemPtr(), stFrameSize, GetSampleRate(), cOal->GetALErr(alErr),
-          hex, alErr);
+          IdentGet(), uiBuffer, GetFormatAsIdentifier(), StdIOSHex,
+          GetAudioFormat(), StdIOSDec, MemPtr(), stFrameSize, GetSampleRate(),
+          cOal->GetALErr(alErr), StdIOSHex, alErr);
       } // No audio left so try to feed another packet and break if failed
       else switch(const int iR1 = ogg_stream_packetout(&ostsVorbis, &opkData))
       { // If a packet was assembled normally?
@@ -882,10 +882,10 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       "- Target bit rate: $ ($).\n"  "- Upper bit rate: $ ($).\n"
       "- Nominal bit rate: $ ($).\n" "- Lower bit rate: $ ($).\n"
       "- Bit window: $ ($).",
-      fixed, static_cast<int>(tiData.version_major),
+      StdIOSFixed, static_cast<int>(tiData.version_major),
         static_cast<int>(tiData.version_minor),
         static_cast<int>(tiData.version_subminor),
-      ostsTheora.serialno, hex, ostsTheora.serialno, dec,
+      ostsTheora.serialno, StdIOSHex, ostsTheora.serialno, StdIOSDec,
       GetWidth(), GetHeight(), StrFromRatio(GetWidth(), GetHeight()),
       GetFrameWidth(), GetFrameHeight(),
         StrFromRatio(GetFrameWidth(), GetFrameHeight()),

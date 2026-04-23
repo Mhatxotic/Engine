@@ -728,8 +728,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
             GetBitsPerPixel(), GetBytesPerPixel()) : cCommon->CommonBlank(),
         ttOld != GetPixelType() ?
           StrFormat("\n- Pixel type: $<$$> -> $<$$>.",
-            ImageGetPixelFormat(ttOld), hex, ttOld,
-            ImageGetPixelFormat(GetPixelType()), GetPixelType(), dec) :
+            ImageGetPixelFormat(ttOld), StdIOSHex, ttOld,
+            ImageGetPixelFormat(GetPixelType()), GetPixelType(), StdIOSDec) :
               cCommon->CommonBlank(),
         stOld != GetAlloc() ?
           StrFormat("\n- Memory usage: $ -> $ bytes.",
@@ -885,7 +885,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Load image from a single colour ------------------------------------ */
   void InitColour(const uint32_t ulColour)
   { // Set members
-    IdentSetA("solid/0x", hex, ulColour);
+    IdentSetA("solid/0x", StdIOSHex, ulColour);
     SetBitsAndBytesPerPixel(BD_RGBA);
     SetPixelType(TT_RGBA);
     SetDynamic();

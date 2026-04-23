@@ -79,8 +79,8 @@ static void PcmLoadFile(const PcmFormat pfId, FileMap &fmData, PcmData &pdData)
       return cLog->LogInfoExSafe(
         "Pcm loaded '$' directly as $<$>! ($;$;$;$$;$;$;$$)",
         fmData.IdentGet(), plRef.GetExt(), pfId, pdData.GetRate(),
-        pdData.GetChannels(), pdData.GetBits(), hex, pdData.GetFormat(),
-        pdData.GetSFormat(), StrFromBoolTF(pdData.IsDynamic()), hex,
+        pdData.GetChannels(), pdData.GetBits(), StdIOSHex, pdData.GetFormat(),
+        pdData.GetSFormat(), StrFromBoolTF(pdData.IsDynamic()), StdIOSHex,
         pdData.GetAlloc());
     // Could not detect format so throw error
     throw StdRunTimeError{ "Unable to load sound!" };
@@ -105,9 +105,9 @@ static void PcmLoadFile(FileMap &fmData, PcmData &pdData)
       if(plRef.GetDecoder()(fmData, pdData))
         return cLog->LogInfoExSafe("Pcm loaded '$' as $! ($;$;$;$$;$;$;$$)",
           fmData.IdentGet(), plRef.GetExt(), pdData.GetRate(),
-          pdData.GetChannels(), pdData.GetBits(), hex, pdData.GetFormat(),
-          pdData.GetSFormat(), StrFromBoolTF(pdData.IsDynamic()), dec,
-          pdData.GetAlloc());
+          pdData.GetChannels(), pdData.GetBits(), StdIOSHex,
+          pdData.GetFormat(), pdData.GetSFormat(),
+          StrFromBoolTF(pdData.IsDynamic()), StdIOSDec, pdData.GetAlloc());
     } // Error occured. Error used as title
     catch(const StdException &eReason)
     { // Throw an error with the specified reason

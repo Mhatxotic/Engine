@@ -156,7 +156,7 @@ class CodecWAV :                       // WAV codec object
         { // Report that we're ignoring it and goto next header
           cLog->LogDebugExSafe(
             "Pcm ignored unknown RIFF header 0x$$<$$> in '$'!",
-            hex, uiHeader, dec, uiHeader, fmData.IdentGet());
+            StdIOSHex, uiHeader, StdIOSDec, uiHeader, fmData.IdentGet());
           break;
         }
       }

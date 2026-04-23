@@ -60,7 +60,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   { // Write integer to stream
     Init(cpName, cpType);
     // Write value
-    osS << dec << tVal << " (0x" << hex
+    osS << StdIOSDec << tVal << " (0x" << StdIOSHex
         << static_cast<UnsignedType>(tVal) << ").";
   }
   /* ----------------------------------------------------------------------- */
@@ -164,7 +164,7 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
   /* -- Show float --------------------------------------------------------- */
   template<typename FloatType>void Float(const char*const cpName,
     const char*const cpType, const FloatType tVal)
-  { Init(cpName, cpType); osS << fixed << tVal << '.'; }
+  { Init(cpName, cpType); osS << StdIOSFixed << tVal << '.'; }
   /* -- Process 64-bit double ---------------------------------------------- */
   template<typename ...VarArgs>
     void Param(const char*const cpName, const double dVal, VarArgs &&...vaArgs)
@@ -253,11 +253,11 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     else if(tString.front() < 32) osS << cCommon->CommonInvalid() << '.';
     // Valid? Is a string view? (has no capacity())
     else if constexpr(StdIsSame<StringType, StdStringView>)
-      osS << '\"' << tString << '\"' << dec << " [" << tString.length()
+      osS << '\"' << tString << '\"' << StdIOSDec << " [" << tString.length()
           << "].";
     // Valid? Display string
-    else osS << '\"' << tString << '\"' << dec << " [" << tString.length()
-             << '/' << tString.capacity() << "].";
+    else osS << '\"' << tString << '\"' << StdIOSDec << " ["
+             << tString.length() << '/' << tString.capacity() << "].";
   }
   /* -- Process STL string lvalue ------------------------------------------ */
   template<typename ...VarArgs>

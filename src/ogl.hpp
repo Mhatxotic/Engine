@@ -239,7 +239,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
                eCode = sAPI.glGetError())
     cLog->LogWarningExSafe("GL call failed: $ ($/$$).",
       StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...),
-      GetGLErr(eCode), hex, eCode);
+      GetGLErr(eCode), StdIOSHex, eCode);
   }
   /* -- GL error handler --------------------------------------------------- */
   template<typename ...VarArgs>
@@ -603,7 +603,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Get error and if an error occured put it as a failure reason
     const GLenum eCode = GetError();
     if(eCode != GL_NO_ERROR || strErrMsg.empty())
-      return StrFormat("Problem getting reason (0x$$)", hex, eCode);
+      return StrFormat("Problem getting reason (0x$$)", StdIOSHex, eCode);
     // Return the string while chopping off return characters
     return StrChop(strErrMsg);
   }
@@ -631,7 +631,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Get error and if an error occured put it as a failure reason
     const GLenum eCode = GetError();
     if(eCode != GL_NO_ERROR || strErrMsg.empty())
-      return StrFormat("Problem getting reason ($$)", hex, eCode);
+      return StrFormat("Problem getting reason ($$)", StdIOSHex, eCode);
     // Return the string while chopping off return characters
     return StrChop(strErrMsg);
   }
@@ -960,7 +960,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     IGL(sAPI.glEnable(eExtension), "Enable extension failed!",
       "Extension", eExtension, "ExtensionId", idExtensions.Get(eExtension));
     cLog->LogDebugExSafe("OGL enabled extension $<0x$$>.",
-      idExtensions.Get(eExtension), hex, eExtension);
+      idExtensions.Get(eExtension), StdIOSHex, eExtension);
   }
   /* -- Disable an extension ----------------------------------------------- */
   void DisableExtension(const GLenum eExtension) const
@@ -970,7 +970,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     IGL(sAPI.glDisable(eExtension), "Disable extension failed!",
       "Key", eExtension, "KeyId", idExtensions.Get(eExtension));
     cLog->LogDebugExSafe("OGL disabled extension $<0x$$>.",
-      idExtensions.Get(eExtension), hex, eExtension);
+      idExtensions.Get(eExtension), StdIOSHex, eExtension);
   }
   /* -- Commit blending algorithms ----------------------------------------- */
   void CommitBlend() const
@@ -993,7 +993,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       "Target", idHintTargets.Get(eTarget), "TargetId", eTarget,
       "Mode",   idHintModes.Get(eMode),     "ModeId",   eMode);
     cLog->LogDebugExSafe("OGL set hint $<0x$$> to $<0x$>.",
-      idHintTargets.Get(eTarget), hex, eTarget, idHintModes.Get(eMode), eMode);
+      idHintTargets.Get(eTarget), StdIOSHex, eTarget, idHintModes.Get(eMode),
+      eMode);
   }
   /* -- GL is initialised? ------------------------------------------------- */
   bool IsGLInitialised() const { return FlagIsSet(GFL_INITIALISED); }
@@ -1021,7 +1022,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       "- Renderer: $.\n"
       "- Version: $.\n"
       "- Vendor: $.",
-      hex, FlagGet(), GetRenderer(), GetVersion(), GetVendor());
+      StdIOSHex, FlagGet(), GetRenderer(), GetVersion(), GetVendor());
     // If debug log level?
     if(cLog->LogHasLevel(LH_DEBUG))
     { // Get number of extensions and return if we're not interested in them?
@@ -1035,7 +1036,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
         "- Extensions count: $.",
         ColourGetRed(),        ColourGetGreen(),      ColourGetBlue(),
         ColourGetAlpha(),      FboBlendGetSrcRGB(),   FboBlendGetDstRGB(),
-        FboBlendGetSrcAlpha(), FboBlendGetDstAlpha(), dec,
+        FboBlendGetSrcAlpha(), FboBlendGetDstAlpha(), StdIOSDec,
         MaxTexSize(),          PackAlign(),           UnpackAlign(),
         UnpackRowLength(),     MaxVertexAttribs(),    uiTexUnits,
         uiExts);
@@ -1236,7 +1237,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Clear error that Wine or GLFW might have caused
     if(const GLenum eError = sAPI.glGetError())
       cLog->LogDebugExSafe("Ogl cleared host caused error code! ($/$$).",
-        GetGLErr(eError), hex, eError);
+        GetGLErr(eError), StdIOSHex, eError);
     // Set frame limit
     cdLimit = duration_cast<ClkDuration>(duration<double>(
       UtilPerSec(static_cast<double>(iRefresh))));

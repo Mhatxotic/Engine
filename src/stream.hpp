@@ -575,7 +575,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
       "Stream loaded '$' (C=$;R=$;BR=$:$:$:$;D$=$;B=$;BS=$;V=$$).",
       IdentGet(), GetChannels(), GetRate(), viData.bitrate_upper,
       viData.bitrate_nominal, viData.bitrate_lower, viData.bitrate_window,
-      fixed, GetDuration(), vBuffers.size(), MemSize(), hex, GetVersion());
+      StdIOSFixed, GetDuration(), vBuffers.size(), MemSize(), StdIOSHex,
+      GetVersion());
   }
   /* -- Return metadata as table ------------------------------------------- */
   const StrNCStrMap &GetMetaData() const { return ssMetaData; }

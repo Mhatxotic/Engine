@@ -327,7 +327,7 @@ class UtfDecoder final                 // UTF8 string decoder helper
     // Put value into input string stream
     StdIStringStream isS{ strMatched };
     // Push value into integer
-    isS >> hex >> itOut;
+    isS >> StdIOSHex >> itOut;
     // Return bytes read
     return strMatched.length();
   }

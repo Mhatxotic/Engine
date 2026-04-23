@@ -523,7 +523,7 @@ static CVarReturn ArchiveScan(const char*const cpType, const StdString &strDir,
   for(const DirEntMapPair &dempPair : dArchives.GetFiles())
   { // Log archive info
     cLog->LogDebugExSafe("- #$: '$' (S:$;A:0x$$;C:0x$;M:0x$).",
-      ++stFound, dempPair.first, StrToBytes(dempPair.second.Size()), hex,
+      ++stFound, dempPair.first, StrToBytes(dempPair.second.Size()), StdIOSHex,
       dempPair.second.Attributes(), dempPair.second.Created(),
       dempPair.second.Written());
     // Dynamically create the archive. The pointer is recorded in the parent

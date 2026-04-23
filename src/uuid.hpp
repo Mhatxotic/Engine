@@ -87,18 +87,18 @@ struct UuId                            // Members initially public
   /* -- Convert UUID to string ------------------------------------- */ public:
   const StdString UuIdToString() const
   { // Return result
-    return StrAppend(hex, setfill('0'), right,
-      setw(8), d.p.dwTimeLow,                                '-', // %08x-
-      setw(4), d.p.wTimeMid,                                 '-', // %04x-
-      setw(4), d.p.wTimeHiAndVer,                            '-', // %04x-
-      setw(2), static_cast<unsigned int>(d.p.ucClkSeqHiRes),      // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucClkSeqLow),   '-', // %02x-
-      setw(2), static_cast<unsigned int>(d.p.ucNode[0]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[1]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[2]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[3]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[4]),          // %02x
-      setw(2), static_cast<unsigned int>(d.p.ucNode[5]));         // %02x
+    return StrAppend(StdIOSHex, StdIOSSetFill('0'), StdIOSRight,
+      StdIOSSetWidth(8), d.p.dwTimeLow,                           '-', // %08x-
+      StdIOSSetWidth(4), d.p.wTimeMid,                            '-', // %04x-
+      StdIOSSetWidth(4), d.p.wTimeHiAndVer,                       '-', // %04x-
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucClkSeqHiRes), // %02x
+     StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucClkSeqLow),'-',// %02x-
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[0]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[1]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[2]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[3]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[4]),     // %02x
+      StdIOSSetWidth(2), static_cast<unsigned int>(d.p.ucNode[5]));    // %02x
   }
   /* -- Constructor to init from string ------------------------------------ */
   explicit UuId(const StdString &strUUID) :

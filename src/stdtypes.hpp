@@ -7,7 +7,7 @@
 ** ## access to them and not any other included external API's. We also   ## **
 ** ## alias them to avoid having to make multiple changes if and when the ## **
 ** ## STL ever changes which it actually does sometimes. Also we also     ## **
-** ## like all our type names and function names with capitalised first   ## **
+** ## like all our type names and function names with capitalised first   ## **
 ** ## letters of each syllable.                                           ## **
 ** ######################################################################### **
 ** ========================================================================= */
@@ -30,46 +30,47 @@ template<typename T>using StdRemovePointer = ::std::remove_pointer_t<T>;
 template<typename T>using StdRemoveReference = ::std::remove_reference_t<T>;
 /* -- Template type checks ------------------------------------------------- */
 template<class T>
-  static constexpr bool StdIsArithmatic = ::std::is_arithmetic_v<T>;
-template<class T>static constexpr bool StdIsClass = ::std::is_class_v<T>;
-template<class T>static constexpr bool StdIsEnum = ::std::is_enum_v<T>;
+  constexpr static bool StdIsArithmatic = ::std::is_arithmetic_v<T>;
+template<class T>constexpr static bool StdIsClass = ::std::is_class_v<T>;
+template<class T>constexpr static bool StdIsEnum = ::std::is_enum_v<T>;
 template<class T>
-  static constexpr bool StdIsFloat = ::std::is_floating_point_v<T>;
-template<class T>static constexpr bool StdIsInteger = ::std::is_integral_v<T>;
-template<class T>static constexpr bool StdIsNull = ::std::is_null_pointer_v<T>;
-template<class T>static constexpr bool StdIsPointer = ::std::is_pointer_v<T>;
+  constexpr static bool StdIsFloat = ::std::is_floating_point_v<T>;
+template<class T>constexpr static bool StdIsInteger = ::std::is_integral_v<T>;
+template<class T>constexpr static bool StdIsNull = ::std::is_null_pointer_v<T>;
+template<class T>constexpr static bool StdIsPointer = ::std::is_pointer_v<T>;
 template<class T>
-  static constexpr bool StdIsReference = ::std::is_reference_v<T>;
+  constexpr static bool StdIsReference = ::std::is_reference_v<T>;
 template<class AT,class BT>
-  static constexpr bool StdIsSame = ::std::is_same_v<AT,BT>;
-template<class T>static constexpr bool StdIsSigned = ::std::is_signed_v<T>;
-template<class T>
-  static constexpr bool StdIsTrCopyable = ::std::is_trivially_copyable_v<T>;
+  constexpr static bool StdIsSame = ::std::is_same_v<AT,BT>;
+template<class T>constexpr static bool StdIsSigned = ::std::is_signed_v<T>;
 /* ------------------------------------------------------------------------- */
 template<typename T>using StdLimits = ::std::numeric_limits<T>;
 /* -- String type aliases -------------------------------------------------- */
 using StdIStringStream = ::std::istringstream;
+using StdOStream       = ::std::ostream;
 using StdOStringStream = ::std::ostringstream;
-using StdString = ::std::string;
-using StdStringView = ::std::string_view;
-using StdWideString = ::std::wstring;
+using StdString        = ::std::string;
+using StdStringView    = ::std::string_view;
+using StdWideString    = ::std::wstring;
 /* -- Exception aliases ---------------------------------------------------- */
-using StdException = ::std::exception;
+using StdException    = ::std::exception;
 using StdRunTimeError = ::std::runtime_error;
+/* -- IOStream manipulation ------------------------------------------------ */
+constexpr static StdOStream &(*StdIOSEndLine)(StdOStream&) = std::endl;
+constexpr static auto &StdIOSDec     = ::std::dec;
+constexpr static auto &StdIOSFixed   = ::std::fixed;
+constexpr static auto &StdIOSHex     = ::std::hex;
+constexpr static auto &StdIOSLeft    = ::std::left;
+constexpr static auto &StdIOSRight   = ::std::right;
+constexpr static auto &StdIOSSetFill      = ::std::setfill<char>;
+constexpr static auto &StdIOSSetWidth     = ::std::setw;
+constexpr static auto &StdIOSSetPrecision = ::std::setprecision;
 /* -- Other inclusions ----------------------------------------------------- */
-using ::std::bind;                     using ::std::dec;
-using ::std::endl;                     using ::std::fixed;
-using ::std::function;                 using ::std::hex;
-using ::std::ios_base;                 using ::std::left;
+using ::std::bind;                     using ::std::function;
 using ::std::make_pair;                using ::std::make_signed_t;
-using ::std::make_unsigned_t;          using ::std::noskipws;
-using ::std::nothrow;                  using ::std::oct;
-using ::std::placeholders::_1;         using ::std::placeholders::_2;
-using ::std::placeholders::_3;         using ::std::right;
-using ::std::setfill;                  using ::std::setprecision;
-using ::std::setw;                     using ::std::showpos;
-using ::std::swap;                     using ::std::underlying_type_t;
-using ::std::uppercase;
+using ::std::make_unsigned_t;          using ::std::placeholders::_1;
+using ::std::placeholders::_2;         using ::std::placeholders::_3;
+using ::std::swap;
 /* -- Synchronisation ------------------------------------------------------ */
 typedef StdAtomic<bool>         AtomicBool;   // Thread safe boolean
 typedef StdAtomic<double>       AtomicDouble; // Thread safe double

@@ -65,9 +65,10 @@ template<typename AnyType, typename ...VarArgs>
   } // Return the rest of the string.
   else StrFormatParam(osS, cpPos);
 }
-/* -- Converting type aliases ---------------------------------------------- */
+/* -- Aliases -------------------------------------------------------------- */
 template<typename T>using StdUnderlyingType = ::std::underlying_type_t<T>;
-/* -- Types used for 'StrFromEvalTokens' function -------------------------- */
+constexpr static auto &NoSkipWhitespace = ::std::noskipws;
+constexpr static auto &StdIOSShowPos = ::std::showpos; // Show + indicator
 typedef StdPair<const bool, const char> BoolCharPair;
 typedef StdVector<BoolCharPair> BoolCharPairVector;
  /* -- Public functions ---------------------------------------------------- */
@@ -124,7 +125,7 @@ template<typename ...VarArgs>
 /* -- Format a number ------------------------------------------------------ */
 template<typename IntType>
   static StdString StrReadableFromNum(const IntType itVal, const int iPrec=0)
-    { return StrAppendImbue(fixed, setprecision(iPrec), itVal); }
+    { return StrAppendImbue(StdIOSFixed, StdIOSSetPrecision(iPrec), itVal); }
 /* -- Trim specified characters from end of string ------------------------- */
 static StdString StrTrimSuffix(const StdString &strStr, const char cChar)
 { // Return empty string if source string is empty or calculate ending
@@ -146,7 +147,8 @@ static StdString StrTrim(const StdString &strStr, const char cChar)
 template<typename IntType>
   static StdString StrFromNum(const IntType itV, const int iW=0,
     const int iPrecision=StdLimits<IntType>::digits10)
-{ return StrAppend(setw(iW), fixed, setprecision(iPrecision), itV); }
+{ return StrAppend(StdIOSSetWidth(iW), StdIOSFixed,
+    StdIOSSetPrecision(iPrecision), itV); }
 /* -- Quickly convert numbered string to integer --------------------------- */
 template<typename IntType=int64_t>
   static IntType StrToNum(const StdString &strValue)
@@ -178,17 +180,21 @@ template<typename IntType=int64_t>
   // Put value into input string stream
   StdIStringStream isS{ strValue };
   // Push value into integer
-  isS >> hex >> itN;
+  isS >> StdIOSHex >> itN;
   // Return result
   return itN;
 }
-/* -- Convert hex to string with zero padding ------------------------------ */
+/* -- Convert hex to string with zero padding (lowercase) ------------------ */
 template<typename IntType>
   static StdString StrHexFromInt(const IntType itVal, const int iPrec=0)
-    { return StrAppend(setfill('0'), hex, setw(iPrec), itVal); }
+{ return StrAppend(StdIOSSetFill('0'), StdIOSHex, StdIOSSetWidth(iPrec),
+    itVal); }
+/* -- Convert hex to string with zero padding (uppercase) ------------------ */
 template<typename IntType>
   static StdString StrHexUFromInt(const IntType itVal, const int iPrec=0)
-    { return StrAppend(setfill('0'), hex, setw(iPrec), uppercase, itVal); }
+{ constexpr static auto StdIOSUpCase = ::std::uppercase;
+  return StrAppend(StdIOSSetFill('0'), StdIOSHex, StdIOSSetWidth(iPrec),
+    StdIOSUpCase, itVal); }
 /* -- Return if specified string has numbers ------------------------------- */
 static bool StrIsAlpha(const StdString &strValue)
   { return StdAllOf(par_unseq, strValue.cbegin(), strValue.cend(),
@@ -204,7 +210,7 @@ template<typename IntType=int64_t>
 { // Get string stream
   StdIStringStream isS{ strValue };
   // Test with string stream
-  IntType itV; isS >> noskipws >> itV;
+  IntType itV; isS >> NoSkipWhitespace >> itV;
   // Return if succeeded
   return isS.eof() && !isS.fail();
 }
@@ -528,27 +534,29 @@ static StdString StrShortFromDuration(const double dDuration,
     dInt = -dInt;
     dFrac = -dFrac;
   } // Set floating point precision with zero fill
-  osS << fixed << setfill('0') << setprecision(0);
+  osS << StdIOSFixed << StdIOSSetFill('0') << StdIOSSetPrecision(0);
   // Have days?
   if(dInt >= 86400)
-    osS <<                 floor(dInt/86400)     << ':'
-        << setw(2) << fmod(floor(dInt/3600), 24) << ':'
-        << setw(2) << fmod(floor(dInt/60),   60) << ':' << setw(2);
+    osS <<                           floor(dInt/86400)     << ':'
+        << StdIOSSetWidth(2) << fmod(floor(dInt/3600), 24) << ':'
+        << StdIOSSetWidth(2) << fmod(floor(dInt/60),   60) << ':'
+        << StdIOSSetWidth(2);
   // No days, but hours?
   else if(dInt >= 3600)
-    osS <<            fmod(floor(dInt/3600), 24) << ':'
-        << setw(2) << fmod(floor(dInt/60),   60) << ':' << setw(2);
+    osS <<                      fmod(floor(dInt/3600), 24) << ':'
+        << StdIOSSetWidth(2) << fmod(floor(dInt/60),   60) << ':'
+        << StdIOSSetWidth(2);
   // No hours, but minutes?
   else if(dInt >= 60)
-    osS << fmod(floor(dInt/60), 60) << ':' << setw(2);
+    osS << fmod(floor(dInt/60), 60) << ':' << StdIOSSetWidth(2);
   // No minutes so no zero padding
-  else osS << setw(0);
+  else osS << StdIOSSetWidth(0);
   // On the seconds part, we have a problem where having a precision
   // of zero is causing stringstream to round so we'll just convert it to an
   // int instead to fix it.
   osS << fmod(dInt, 60);
   if(iPrecision > 0)
-    osS << '.' << setw(iPrecision) <<
+    osS << '.' << StdIOSSetWidth(iPrecision) <<
       static_cast<unsigned int>(fabs(dFrac) * pow(10.0, iPrecision));
   // Return string
   return osS.str();
@@ -618,12 +626,14 @@ static StdString ImplodeMap[[maybe_unused]](const StrNCStrMap &ssmSrc,
 /* ------------------------------------------------------------------------- */
 template<typename AnyType>
   static StdString StrPrefixPosNeg(const AnyType atVal, const int iPrecision)
-{ return StrAppend(showpos, fixed, setprecision(iPrecision), atVal); }
+{ return StrAppend(StdIOSShowPos, StdIOSFixed, StdIOSSetPrecision(iPrecision),
+    atVal); }
 /* ------------------------------------------------------------------------- */
 template<typename AnyType>
   static StdString StrPrefixPosNegReadable(const AnyType atVal,
     const int iPrecision)
-{ return StrAppendImbue(showpos, fixed, setprecision(iPrecision), atVal); }
+{ return StrAppendImbue(StdIOSShowPos, StdIOSFixed,
+    StdIOSSetPrecision(iPrecision), atVal); }
 /* ------------------------------------------------------------------------- */
 template<typename OutType, typename InType, class SuffixClass>
   requires StdIsFloat<OutType> && StdIsInteger<InType> &&
@@ -711,7 +721,8 @@ template<typename IntType>
   const double dVal =
     StrToBytesHelper<IntType>(itBytes, &cpSuffix, iPrecision);
   // Move the stringstreams output string into the return value.
-  return StrAppend(fixed, setprecision(iPrecision), dVal, cpSuffix);
+  return StrAppend(StdIOSFixed, StdIOSSetPrecision(iPrecision), dVal,
+    cpSuffix);
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
@@ -721,7 +732,8 @@ template<typename IntType>
   const double dVal =
     StrToBytesHelper<IntType>(itBytes, &cpSuffix, iPrecision);
   // Move the stringstreams output string into the return value.
-  return StrAppendImbue(fixed, setprecision(iPrecision), dVal, cpSuffix);
+  return StrAppendImbue(StdIOSFixed, StdIOSSetPrecision(iPrecision), dVal,
+    cpSuffix);
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
@@ -773,7 +785,8 @@ template<typename IntType>
   const double dVal =
     StrToReadableBitsHelper<IntType>(itBits, &cpSuffix, iPrecision);
   // Move the stringstreams output string into the return value.
-  return StrAppend(fixed, setprecision(iPrecision), dVal, cpSuffix);
+  return StrAppend(StdIOSFixed, StdIOSSetPrecision(iPrecision), dVal,
+    cpSuffix);
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
@@ -783,7 +796,8 @@ template<typename IntType>
   const double dVal =
     StrToReadableBitsHelper<IntType>(itBits, &cpSuffix, iPrecision);
   // Move the stringstreams output string into the return value.
-  return StrAppendImbue(fixed, setprecision(iPrecision), dVal, cpSuffix);
+  return StrAppendImbue(StdIOSFixed, StdIOSSetPrecision(iPrecision), dVal,
+    cpSuffix);
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
@@ -830,7 +844,8 @@ template<typename IntType>
   const double dVal =
     StrToReadableHelper<IntType>(itValue, &cpSuffix, iPrecision);
   // Move the stringstreams output string into the return value.
-  return StrAppend(fixed, setprecision(iPrecision), dVal, cpSuffix);
+  return StrAppend(StdIOSFixed, StdIOSSetPrecision(iPrecision), dVal,
+    cpSuffix);
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
@@ -840,7 +855,8 @@ template<typename IntType>
   const double dVal =
     StrToReadableHelper<IntType>(itValue, &cpSuffix, iPrecision);
   // Move the FORMATTED stringstreams output string into the return value.
-  return StrAppendImbue(fixed, setprecision(iPrecision), dVal, cpSuffix);
+  return StrAppendImbue(StdIOSFixed, StdIOSSetPrecision(iPrecision), dVal,
+    cpSuffix);
 }
 /* ------------------------------------------------------------------------- */
 static size_t StrFindCharForwards(const StdString &strS, size_t stStart,

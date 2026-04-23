@@ -27,8 +27,9 @@ class SysCon :                         // All members initially private
   public SysConBase,                   // Defined in 'syscore.hpp'
   private InitHelper,                  // Allow access to windows console
   private DimCoInt                     // Console drawing position & dimensions
-{  /* -- Typedefs ---------------------------------------------------------- */
+{  /* -- Aliases ----------------------------------------------------------- */
   typedef ICurses::attr_t attr_t;      // NCurses alias
+  constexpr static auto &StdIOSOct = ::std::oct; // Octal number rendering mode
   /* -- Console data ------------------------------------------------------- */
   attr_t           aColour;            // Current colour
   attr_t           aColourSaved;       // Saved colour
@@ -61,8 +62,8 @@ class SysCon :                         // All members initially private
            CoordGetY() != diSizeM1.DimGetHeight())
           cLog->LogWarningExSafe(
             "SysCon set character failed! (C:$<$$>;A:$$<$$>;P:$$x$;R:$)",
-            cChar, hex, cChar, dec, aColour, hex, aColour, dec, CoordGetX(),
-            CoordGetY(), iResult);
+            cChar, StdIOSHex, cChar, StdIOSDec, aColour, StdIOSHex, aColour,
+            StdIOSDec, CoordGetX(), CoordGetY(), iResult);
         // Fall through to break
         [[fallthrough]];
       // Succeeded?
@@ -191,7 +192,7 @@ class SysCon :                         // All members initially private
             cLog->LogDebugExSafe(
               "SysCon ignoring $ scan code $ (H:0x$$;O:$$).",
               wChar >= KEY_MAX ? "invalid" : "unsupported", wChar,
-              hex, wChar, oct, wChar);
+              StdIOSHex, wChar, StdIOSOct, wChar);
             // Done
             return KT_NONE;
         } // Treated as virtual key
@@ -273,8 +274,8 @@ class SysCon :                         // All members initially private
       // Failed so write error to log
       default: cLog->LogWarningExSafe(
         "SysCon move cursor failed! (C:$<$$>;A:$$<$$>;P:$$x$;R:$)",
-          cChar, hex, cChar, dec, aColour, hex, aColour, dec, CoordGetX(),
-          CoordGetY(), iResult);
+          cChar, StdIOSHex, cChar, StdIOSDec, aColour, StdIOSHex, aColour,
+          StdIOSDec, CoordGetX(), CoordGetY(), iResult);
         // Done
         break;
     }

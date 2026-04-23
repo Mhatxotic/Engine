@@ -309,7 +309,7 @@ struct ICHelperBase                    // Members initially public
 { /* -- Swap registration with another class ------------------------------- */
   CollectorType*const cParent;         // Parent class of this object
   /* -- Gets a reference to the object contained in the iterator ----------- */
-  constexpr auto &ICHelperItAddr(const IteratorType &cIt) const
+  constexpr static auto &ICHelperItAddr(const IteratorType &cIt)
     { return *::std::addressof(*cIt); }
   /* -- Protected variables ------------------------------------- */ protected:
   IteratorType     cIterator;          // Iterator to this object in parent

@@ -386,7 +386,7 @@ class Lua :                            // Actual class body
       LuaUtilInitRNGSeed(LuaGetState(), liSeed);
       // Warn developer/user that there is a pre-defined random seed
       cLog->LogWarningExSafe("Lua using pre-defined random seed $ (0x$$)!",
-        liSeed, hex, liSeed);
+        liSeed, StdIOSHex, liSeed);
     } // Use a random number instead
     else
     { // Get the new random number seed
@@ -395,7 +395,7 @@ class Lua :                            // Actual class body
       LuaUtilInitRNGSeed(LuaGetState(), liRandSeed);
       // Log it
       cLog->LogDebugExSafe("Lua generated random seed $ (0x$$)!",
-        liRandSeed, hex, liRandSeed);
+        liRandSeed, StdIOSHex, liRandSeed);
     } // Get variables namespace
     LuaUtilGetGlobal(LuaGetState(), "Variable");
     // Create a table of the specified number of variables

@@ -145,12 +145,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     const char*const cpFormat, VarArgs &&...vaArgs)
   { // If parameters are specified then cater to them
     if constexpr(sizeof...(VarArgs) > 0)
-      cLog->LogExSafe(lhlSeverity, "Socket $:$$$:$ $", CtrGet(), hex,
-        FlagGet(), dec, GetAddressAndPort(),
+      cLog->LogExSafe(lhlSeverity, "Socket $:$$$:$ $", CtrGet(), StdIOSHex,
+        FlagGet(), StdIOSDec, GetAddressAndPort(),
         StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...));
     // No parameters specified so don't need to format them
-    else cLog->LogExSafe(lhlSeverity, "Socket $:$$$:$ $", CtrGet(), hex,
-      FlagGet(), dec, GetAddressAndPort(), cpFormat);
+    else cLog->LogExSafe(lhlSeverity, "Socket $:$$$:$ $", CtrGet(), StdIOSHex,
+      FlagGet(), StdIOSDec, GetAddressAndPort(), cpFormat);
   }
   /* -- Internal log ------------------------------------------------------- */
   template<typename ...VarArgs>void SocketLogSafe(const LHLevel lhlSeverity,
@@ -875,7 +875,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
             // Unsupported opcode?
             default: plTemp.clear();
               return SetErrorStaticSafe(
-                StrAppend("Invalid opcode 0x", hex, uiOpCode));
+                StrAppend("Invalid opcode 0x", StdIOSHex, uiOpCode));
           } // Reset to header mode
           uiMode = RM_HEADER;
           // Reset op code function
@@ -975,7 +975,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           // Let's be sensible and deny above 4GB payloads for now
           if(ullPayload > 0xFFFFFFFF)
             return SetErrorStaticSafe(
-              StrAppend("Payload $ too big", hex, ullPayload));
+              StrAppend("Payload $ too big", StdIOSHex, ullPayload));
           // Now process payload
           break;
         } // Should never get here
@@ -1606,7 +1606,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           "Invalid callback\n$", LuaUtilGetVarStack(lsState));
       } // Lua is paused? Log this just to know this event was ignored
       else SocketLogSafe(LH_WARNING,
-        "Ignoring event $=$$!", emeEvent.cCmd, hex, uiStatus);
+        "Ignoring event $=$$!", emeEvent.cCmd, StdIOSHex, uiStatus);
     } // Not enough parameters so log error
     else SocketLogSafe(LH_ERROR,
       "Not enough event params ($)", emaArgs.size());

@@ -276,7 +276,7 @@ class Display :                        // Actual class body
       default:
         // Log the unknown state
         cLog->LogWarningExSafe("Display received unknown focus state $<0x$$>!",
-          iState, hex, iState);
+          iState, StdIOSHex, iState);
         // Done
         return;
     } // Dispatch event to lua
@@ -353,9 +353,9 @@ class Display :                        // Actual class body
         "- Position: $x$.\n"           "- Dimensions: $$$x$\" ($x$mm).\n"
         "- Size: $\" ($mm).",
         gfwmMon.Index(), gfwmMon.Name(), gfwmMon.Count(), gfwmMon.CoordGetX(),
-        gfwmMon.CoordGetY(), fixed, setprecision(1), gfwmMon.WidthInch(),
-        gfwmMon.HeightInch(), gfwmMon.DimGetWidth(), gfwmMon.DimGetHeight(),
-        gfwmMon.DiagonalInch(), gfwmMon.Diagonal());
+        gfwmMon.CoordGetY(), StdIOSFixed, StdIOSSetPrecision(1),
+        gfwmMon.WidthInch(), gfwmMon.HeightInch(), gfwmMon.DimGetWidth(),
+        gfwmMon.DimGetHeight(), gfwmMon.DiagonalInch(), gfwmMon.Diagonal());
       // Enumerate each resolution of the monitor
       StdForEach(seq, gfwmMon.Begin(), gfwmMon.End(),
         [&gfwmMon](const GlFWRes &gfwrRes)
@@ -384,7 +384,7 @@ class Display :                        // Actual class body
                         "- Selected mode $: $x$x$bpp(R$G$B$) @$hz.",
       MonitorsCount(),
       gfwmActive->Index(), gfwmActive->Name(), gfwmActive->CoordGetX(),
-        gfwmActive->CoordGetY(), fixed, setprecision(1),
+        gfwmActive->CoordGetY(), StdIOSFixed, StdIOSSetPrecision(1),
         gfwmActive->WidthInch(), gfwmActive->HeightInch(),
         gfwmActive->DiagonalInch(),
       gfwrActive->Index(), gfwrActive->Width(), gfwrActive->Height(),
@@ -393,8 +393,8 @@ class Display :                        // Actual class body
     cLog->LogDebugExSafe("- Primary monitor $: $ @$x$ ($$$\"x$\"=$\").\n"
                          "- Primary mode $: $x$x$bpp(R$G$B$) @$hz.",
       gfwmPrimaryRef.Index(), gfwmPrimaryRef.Name(),
-        gfwmPrimaryRef.CoordGetX(), gfwmPrimaryRef.CoordGetY(), fixed,
-        setprecision(1), gfwmPrimaryRef.WidthInch(),
+        gfwmPrimaryRef.CoordGetX(), gfwmPrimaryRef.CoordGetY(), StdIOSFixed,
+        StdIOSSetPrecision(1), gfwmPrimaryRef.WidthInch(),
         gfwmPrimaryRef.HeightInch(), gfwmPrimaryRef.DiagonalInch(),
       gfwrPrimaryRef.Index(), gfwrPrimaryRef.Width(), gfwrPrimaryRef.Height(),
         gfwrPrimaryRef.Depth(), gfwrPrimaryRef.Red(), gfwrPrimaryRef.Green(),
@@ -572,7 +572,7 @@ class Display :                        // Actual class body
   { // Set gamma
     GlFWSetGamma(gfwmActive->Context(), fGamma);
     // Report
-    cLog->LogDebugExSafe("Display set gamma to $$.", fixed, fGamma);
+    cLog->LogDebugExSafe("Display set gamma to $$.", StdIOSFixed, fGamma);
   }
   /* -- Translate user specified window dimensions ------------------------- */
   DimInt DisplayTranslateUserSize() const

@@ -98,7 +98,7 @@ class Oal :                            // Actual class body
     for(ALenum alError = fteFunc(); alError != alNoErr; alError = fteFunc())
       cLog->LogWarningExSafe("AL$ call failed: $ ($/0x$$).", cpPrefix,
         StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...), ftsFunc(alError),
-        hex, alError);
+        StdIOSHex, alError);
   }
   /* -- AL generic exception handler --------------------------------------- */
   template<ALenum alNoErr, typename FuncTypeErr, typename FuncTypeStr,
@@ -596,7 +596,7 @@ class Oal :                            // Actual class body
     cLog->LogInfoExSafe(
       "OAL version $ initialised with capabilities 0x$$...\n"
       "- Device: $.",
-      GetVersion(), hex, FlagGet(), GetPlaybackDevice());
+      GetVersion(), StdIOSHex, FlagGet(), GetPlaybackDevice());
     // Set the flag
     FlagSet(AFL_INITIALISED);
     // Return if debug logging not enabled

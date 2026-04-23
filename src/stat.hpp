@@ -17,12 +17,14 @@ using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace IUtf::P;               using namespace IUtil::P;
+/* -- Aliases -------------------------------------------------------------- */
+using StdIOSBase = ::std::ios_base;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Statistic class ------------------------------------------------------ */
 class Statistic
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef ios_base &(*JCCallback)(ios_base&);
+  typedef StdIOSBase &(*JCCallback)(StdIOSBase&);
   /* ----------------------------------------------------------------------- */
   struct Head                          // Column data
   { /* --------------------------------------------------------------------- */
@@ -37,26 +39,27 @@ class Statistic
   /* -- Format output iterator data without a suffix ----------------------- */
   static void ProcValNoSuf(StdOStringStream &osS,
     const StrVectorConstIt &svciIt, const Head &hRef)
-  { osS << hRef.jccFunc << setw(hRef.iMaxLen) << StdMove(*svciIt); }
+  { osS << hRef.jccFunc << StdIOSSetWidth(hRef.iMaxLen) << StdMove(*svciIt); }
   /* -- Format output iterator data with a suffix -------------------------- */
   static void ProcValSuf(StdOStringStream &osS, const StrVectorConstIt &svciIt,
     const Head &hRef, const StdString &strSuffix)
-  { osS << hRef.jccFunc << setw(hRef.iMaxLen)
+  { osS << hRef.jccFunc << StdIOSSetWidth(hRef.iMaxLen)
         << StdMove(*svciIt) << strSuffix; }
   /* -- Format empty output data without a suffix -------------------------- */
   static void ProcHdrNoSuf(StdOStringStream &osS, const Head &hRef)
-    { osS << hRef.jccFunc << setw(hRef.iMaxLen) << StdMove(hRef.strName); }
+    { osS << hRef.jccFunc << StdIOSSetWidth(hRef.iMaxLen)
+          << StdMove(hRef.strName); }
   /* -- Format empty output data with a suffix ----------------------------- */
   static void ProcHdrSuf(StdOStringStream &osS, const Head &hRef,
     const StdString &strSuffix)
-  { osS << hRef.jccFunc << setw(hRef.iMaxLen)
+  { osS << hRef.jccFunc << StdIOSSetWidth(hRef.iMaxLen)
         << StdMove(hRef.strName) << strSuffix; }
   /* -- Used by Finish() which returns the last adjusted header item ------- */
   Head &GetLastHdr(const size_t stHM1)
   { // Get the last header item
     Head &hRef = hdHeaders[stHM1];
     // Set the length to zero if left align is selected
-    if(hRef.jccFunc == left) hRef.iMaxLen = 0;
+    if(hRef.jccFunc == StdIOSLeft) hRef.iMaxLen = 0;
     // Return the iterator
     return hRef;
   }
@@ -361,7 +364,7 @@ class Statistic
   { // Push the header item if there are values as this will mess everything
     // up. Make sure the first column is always left justified.
     if(svValues.empty())
-      hdHeaders.push_back({ strH, bRJ ? right : left,
+      hdHeaders.push_back({ strH, bRJ ? StdIOSRight : StdIOSLeft,
         UtilIntOrMax<int>(UtilMaximum(stL, strH.length())) });
     // Return self so we can daisy chain
     return *this;

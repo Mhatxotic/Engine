@@ -34,7 +34,8 @@ class GlFWUtil                         // Members initially private
     glfwWindowHint(iVar, iVal);
     // Log the change
     cLog->LogDebugExSafe("GlFW set hint $<0x$$> to $$<0x$$>.",
-      GlFWGetHintAttribStr(iVar), hex, iVar, dec, iVal, hex, iVal);
+      GlFWGetHintAttribStr(iVar), StdIOSHex, iVar, StdIOSDec, iVal, StdIOSHex,
+      iVal);
   }
   /* -- Set window hint core functions ------------------------------------- */
   void GlFWSetHintBoolean(const int iVar, const bool bVal)
@@ -49,7 +50,7 @@ class GlFWUtil                         // Members initially private
     glfwWindowHintString(iHint, cpValue);
     // Log the change
     cLog->LogDebugExSafe("GlFW set hint $<0x$$> to '$'.",
-      GlFWGetHintAttribStr(iHint), hex, iHint, cpValue);
+      GlFWGetHintAttribStr(iHint), StdIOSHex, iHint, cpValue);
   }
   /* -- OS specific routines ----------------------------------------------- */
 #if defined(MACOS)                     // Targeting MacOS?

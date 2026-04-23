@@ -54,7 +54,7 @@ class SysProcess                       // Need this before of System init order
     // We found the window
     cLog->LogDebugExSafe("- Found window handle at $$.\n"
                  "- Window name is '$'.",
-      hex, reinterpret_cast<void*>(hH), WS16toUTF(wstrT));
+      StdIOSHex, reinterpret_cast<void*>(hH), WS16toUTF(wstrT));
     // First try showing the window and if successful? Log the successful
     // command else if showing the window failed? Log the failure with reason
     if(ShowWindow(hH, SW_RESTORE|SW_SHOWNORMAL))

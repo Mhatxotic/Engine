@@ -86,7 +86,7 @@ class SysPipe :
       // Kill succeeded? Write success to log
       else cLog->LogDebugExSafe(
         "System sent SIGTERM to pid $ with result $<$$>.",
-          pPid, SysPipeBaseGetStatus(), hex, SysPipeBaseGetStatus());
+          pPid, SysPipeBaseGetStatus(), StdIOSHex, SysPipeBaseGetStatus());
       // Wait for the pid to terminate
       do pPid = waitpid(pPid, &iResult, 0);
         while(pPid == -1 && StdIsError(EINTR));

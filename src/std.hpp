@@ -10,8 +10,11 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IStd {                       // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IUtf::P;
+/* -- Aliases -------------------------------------------------------------- */
+template<class T>
+  constexpr static bool StdIsTrCopyable = ::std::is_trivially_copyable_v<T>;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Wrapper for std::forward<> as we can't do 'using std::forward' ------- */

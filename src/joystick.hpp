@@ -73,7 +73,7 @@ class Joystick :
       default:
         // Log the bad joystick state and return
         cLog->LogWarningExSafe("Joystick ignored bad state $$ for id $$!",
-          hex, iEvent, dec, iJId);
+          StdIOSHex, iEvent, StdIOSDec, iJId);
         // No need to dispatch any events
         return;
     }

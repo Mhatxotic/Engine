@@ -557,17 +557,17 @@ class System :                         // The main system class
       ENGFull(), ENGCompiled(), ENGCompiler(), ENGCompVer(),
 #if defined(WINDOWS)
       EXEModified() ? "failed" : "verified",
-        exeData.ulHeaderSum, hex, exeData.ulHeaderSum, dec,
-        exeData.ulCheckSum, hex, exeData.ulCheckSum, dec,
+        exeData.ulHeaderSum, StdIOSHex, exeData.ulHeaderSum, StdIOSDec,
+        exeData.ulCheckSum, StdIOSHex, exeData.ulCheckSum, StdIOSDec,
 #endif
       cCmdLine->CmdLineGetStartupCWD(),
       SysGetRoamingDir(),
-      SysGetReadablePid(), hex, SysGetReadablePid(), dec,
-        SysGetReadableTid(), hex, SysGetReadableTid(), dec,
+      SysGetReadablePid(), StdIOSHex, SysGetReadablePid(), StdIOSDec,
+        SysGetReadableTid(), StdIOSHex, SysGetReadableTid(), StdIOSDec,
 #if !defined(MACOS)
-      GetPriority(), hex, GetPriority(), dec,
-        GetAffinity(false), hex, GetAffinity(false), dec,
-        GetAffinity(true), hex, GetAffinity(true), dec,
+      GetPriority(), StdIOSHex, GetPriority(), StdIOSDec,
+        GetAffinity(false), StdIOSHex, GetAffinity(false), StdIOSDec,
+        GetAffinity(true), StdIOSHex, GetAffinity(true), StdIOSDec,
 #endif
       CPUName(), CPUCount(), CPUSpeed(), CPUFamily(), CPUModel(),
         CPUStepping(),

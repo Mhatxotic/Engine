@@ -782,7 +782,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No IdentCSlave<> */),
       } // Log tiling data
       cLog->LogDebugExSafe("- Tiles: $ (SC=$;B=$x$;T=$x$;P=$$x$).",
         GetTileCount(), GetSubCount(), DimGetWidth(), DimGetHeight(),
-        GetTileWidth(), GetTileHeight(), fixed, GetPaddingWidth(),
+        GetTileWidth(), GetTileHeight(), StdIOSFixed, GetPaddingWidth(),
         GetPaddingHeight());
     }
     // Remove all image data because we can just load it from file again

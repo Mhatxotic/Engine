@@ -23,7 +23,7 @@ using namespace ISocket::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITimer::P;
 using namespace IToken::P;             using namespace IUtf::P;
 using namespace IUtil::P;
-/* -- Private typedefs ----------------------------------------------------- */
+/* -- Aliases -------------------------------------------------------------- */
 template<typename AnyType>using StdQueue = ::std::queue<AnyType>;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
@@ -75,6 +75,8 @@ struct Console :                       // Members initially private
     stConCmdMaxLength = 255;           // Maximum length of a console command
   /* -- Private typedefs ------------------------------------------ */ private:
   typedef StdQueue<ConLine> ConLineQueue; // Pending console lines
+  /* -- Aliases ------------------------------------------------------------ */
+  constexpr static auto StdIOSSetFillWc = ::std::setfill<wchar_t>;
   /* -- Input -------------------------------------------------------------- */
   ConLineQueue     clqOutput;          // Console lines pending
   ConLinesConstRevIt clriPosition;     // Console output position
@@ -744,8 +746,9 @@ struct Console :                       // Members initially private
     // Return if no data
     if(clqOutput.empty()) return;
     // Setup output
-    StdWcOut << fixed << setprecision(6) << setfill(static_cast<wchar_t>('0'))
-             << left << setw(0);
+    StdWcOut << StdIOSFixed << StdIOSSetPrecision(6)
+             << StdIOSSetFillWc(static_cast<wchar_t>('0'))
+             << StdIOSLeft << StdIOSSetWidth(0);
     // Get next item
     NextLine: const ConLine &clLine = clqOutput.front();
     // Start writing initial part of output
@@ -761,7 +764,7 @@ struct Console :                       // Members initially private
     // Get next character
     NextChar: switch(const Codepoint cChar = udLine.UtfNext())
     { // Carriage return or space char? Restore position and return no wrap
-      case '\n': StdWcOut << endl; goto NextChar;
+      case '\n': StdWcOut << StdIOSEndLine; goto NextChar;
       // Other control character?
       case '\r':
       { // Compare it
@@ -817,7 +820,7 @@ struct Console :                       // Members initially private
       case '\0': break;
     } // Finished so remove attributes in terminal
 #if !defined(WINDOWS)
-    StdWcOut << "\x1b[0m" << endl;
+    StdWcOut << "\x1b[0m" << StdIOSEndLine;
 #endif
     // remove the old item
     clqOutput.pop();
@@ -864,9 +867,9 @@ struct Console :                       // Members initially private
       cSystem->SysUpdateCPUUsage();
       // Redraw title
       cSystem->RedrawTitleBar(StrFormat("CPU:$$$%$  FPS:$  MEM:$  NET:$  UP:$",
-        fixed, setprecision(1), cSystem->CPUUsage(), setprecision(0),
-        cTimer->TimerGetFPS(), StrToBytes(cSystem->RAMProcUse(), 0),
-        cSockets->astConnected.load(),
+        StdIOSFixed, StdIOSSetPrecision(1), cSystem->CPUUsage(),
+        StdIOSSetPrecision(0), cTimer->TimerGetFPS(),
+        StrToBytes(cSystem->RAMProcUse(), 0), cSockets->astConnected.load(),
         StrShortFromDuration(cLog->CCDeltaToDouble(), 0)),
         cmSys.FormatTime(strvTimeFormat.data()));
       // Not redrawing?

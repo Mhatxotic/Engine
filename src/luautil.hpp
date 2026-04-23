@@ -16,6 +16,8 @@ using namespace IRefCtr::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace IToken::P;
 using namespace IUtf::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
+constexpr static auto &StdNoThrow = ::std::nothrow;
+/* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Variables ------------------------------------------------------------ */
 static unsigned int uiLuaPaused = 0;   // Times Lua paused before handling it
@@ -179,7 +181,7 @@ static StdString LuaUtilGetStackType(lua_State*const lS, const int iIndex)
         return StrFromNum(LuaUtilToNum(lS, iIndex));
       // Get actual integer value and return it and it's hex value
       const lua_Integer liValue = LuaUtilToInt(lS, iIndex);
-      return StrFormat("$ [0x$$]", liValue, hex, liValue);
+      return StrFormat("$ [0x$$]", liValue, StdIOSHex, liValue);
     } // A boolean?
     case LUA_TBOOLEAN: return StrFromBoolTF(LuaUtilToBool(lS, iIndex));
     // A string?
@@ -944,7 +946,7 @@ template<typename ClassType> requires StdIsClass<ClassType>
 { // Prepare a new object
   LuaUtilClass*const lucPtr = LuaUtilClassPrepNew(lS, liParent);
   // Allocate class and return it if succeeded return it
-  if(void*const vpPtr = lucPtr->vpPtr = new (nothrow)ClassType)
+  if(void*const vpPtr = lucPtr->vpPtr = new (StdNoThrow)ClassType)
     return reinterpret_cast<ClassType*>(vpPtr);
   // Error occured so just throw exception
   XC("Failed to allocate memory for class structure!",

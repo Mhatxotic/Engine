@@ -617,14 +617,14 @@ class SysBase :                        // Safe exception handler namespace
           cLog->LogWarningExSafe(
             "System failed to set resource limit $<0x$$$> from $<0x$$$> to "
             "$<0x$$$>: $!",
-            rlmpPair.first, hex, rlmpPair.first, dec, rtOld, hex, rtOld, dec,
-            rlmpPair.second.rlim_max, hex, rlmpPair.second.rlim_max, dec,
-            SysError());
+            rlmpPair.first, StdIOSHex, rlmpPair.first, StdIOSDec, rtOld,
+            StdIOSHex, rtOld, StdIOSDec, rlmpPair.second.rlim_max, StdIOSHex,
+            rlmpPair.second.rlim_max, StdIOSDec, SysError());
         }
       } // Failed to get limit so log the error and why
       else cLog->LogWarningExSafe(
         "System failed to get limit for resource $<0x$$$>: $!",
-        rlmpPair.first, hex, rlmpPair.first, dec, SysError());
+        rlmpPair.first, StdIOSHex, rlmpPair.first, StdIOSDec, SysError());
     });
   }
   /* -- Destructor to uninstall safe signals (signal() not thread safe) ---- */

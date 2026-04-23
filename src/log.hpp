@@ -91,8 +91,8 @@ class Log :                            // The actual class body
     do
     { // Get reference to line and format the string to write to log
       const LogLine &llLine = *llciItem;
-      const StdString strLine{ StrFormat("[$$$]<$> $\n", fixed,
-        setprecision(6), llLine.dTime,
+      const StdString strLine{ StrFormat("[$$$]<$> $\n", StdIOSFixed,
+        StdIOSSetPrecision(6), llLine.dTime,
         LogLevelToString(llLine.lhlLevel).front(), llLine.strLine) };
       // Write stored line and write number of bytes written, and if we did?
       if(const size_t stWritten = FStreamWriteString(strLine)) [[likely]]
@@ -256,7 +256,7 @@ class Log :                            // The actual class body
     MutexCall([this, &osS](){
       // For each log entry, write the line to the buffer
       for(const LogLine &llLine : *this) osS
-        << '[' << fixed << setprecision(6) << llLine.dTime << "] "
+        << '[' << StdIOSFixed << StdIOSSetPrecision(6) << llLine.dTime << "] "
         << llLine.strLine << '\n';
     });
   }

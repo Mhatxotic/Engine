@@ -153,7 +153,7 @@ cConsole->ConsoleAddLineF(
     { cOal->FlagIsSet(AFL_HAVEENUMEXT),     'X' },
     { cOal->FlagIsSet(AFL_INITIALISED),     'I' },
   }),
-  hex, cOal->FlagGet(), dec,
+  StdIOSHex, cOal->FlagGet(), StdIOSDec,
   cOal->GetPlaybackDevice(),
   cSources->size(), cOal->GetMaxStereoSources(), cOal->GetMaxMonoSources());
 /* ------------------------------------------------------------------------- */
@@ -307,7 +307,7 @@ cConsole->ConsoleAddLineF("Console flags are currently 0x$$$ ($).\n"
                     "- Output lines: $ (Maximum: $).\n"
                     "- Input commands: $ (Maximum: $).\n"
                     "- Engine commands: $.",
-  hex, cConsole->FlagGet(), dec, StrFromEvalTokens({
+  StdIOSHex, cConsole->FlagGet(), StdIOSDec, StrFromEvalTokens({
     { cConsole->FlagIsSet(CF_IGNOREKEY),   'K' },
     { cConsole->FlagIsSet(CF_AUTOSCROLL),  'A' },
     { cConsole->FlagIsSet(CF_AUTOCOPYCVAR),'C' },
@@ -345,7 +345,7 @@ cConsole->ConsoleAddLineF(
   "Start: $; Limit: $; Last: $; Delay: $/s.\n"
   "Mode: $ ($); TimeOut: $ ($x$); Ticks: $.\n"
   "FPS: $/s; Maximum: $/s; Efficiency: $%.",
-    fixed, cSystem->CPUCount(), cSystem->CPUSpeed(), cSystem->CPUName(),
+    StdIOSFixed, cSystem->CPUCount(), cSystem->CPUSpeed(), cSystem->CPUName(),
       cSystem->CPUFamily(), cSystem->CPUModel(), cSystem->CPUStepping(),
       cSystem->CPUUsage(), cSystem->CPUUsageSystem(),
     cTimer->TimerGetStart(), cTimer->TimerGetLimit(),
@@ -511,8 +511,9 @@ const Dir dPath{ StdMove(strVal) };
 // Set directory and get directories and files
 const StdString &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank();
 // Directory data we are enumerating
-struct Item { const uint64_t ullSize;
-              const unsigned int uiId;
+struct Item { const size_t stId;
+              const uint64_t ullSize;
+              const unsigned int uiArchId;
               const StdString &strArc; };
 typedef StdPair<const StdString, const Item> StrItemPair;
 typedef StdMap<StrItemPair::first_type, StrItemPair::second_type> StrItemList;
@@ -535,7 +536,7 @@ for(const Archive*const aPtr : *cArchives)
     if(strName.find('/') != StdNPos) continue;
     // Add to directory list and increment directory count
     silDirs.insert({ StdMove(strName),
-      { StdMaxUInt64, suimpPair.second, aRef.IdentGet() } });
+      { silDirs.size(), StdMaxUInt64, suimpPair.second, aRef.IdentGet() } });
   } // Enumerate all files in archive
   const StrUIntMap &suimFiles = aRef.ArchiveGetFileList();
   for(const StrUIntMapPair &suimpPair : suimFiles)
@@ -547,32 +548,33 @@ for(const Archive*const aPtr : *cArchives)
     // Add to file list and increment total bytes and file count
     const uint64_t ullSize = aRef.ArchiveGetSize(suimpPair.second);
     silFiles.insert({ StdMove(strName),
-      { ullSize, suimpPair.second, aRef.IdentGet() } });
+      { silFiles.size(), ullSize, suimpPair.second, aRef.IdentGet() } });
   }
 } // Enumerate local directories and add each entry to file list
 for(const DirEntMapPair &dempPair : dPath.GetDirs())
   silDirs.insert({ StdMove(dempPair.first),
-    { StdMaxUInt64, StdMaxUInt, {} } });
+    { silDirs.size(), StdMaxUInt64, StdMaxUInt, {} } });
 // Enumerate local files
 for(const DirEntMapPair &dempPair : dPath.GetFiles())
 { // Add to file list and increment byte and file count
   const DirItem &diFile = dempPair.second;
   silFiles.insert({ StdMove(dempPair.first),
-    { diFile.Size(), StdMaxUInt, {} } });
+    { silFiles.size(), diFile.Size(), StdMaxUInt, {} } });
 } // Prepare data table for archive display
 Statistic sTable;
-sTable.Header("SIZE").Header().Header("ID").Header("ARCHIVE", false)
-      .Header("FILENAME", false).Reserve(silDirs.size() + silFiles.size());
+sTable.Header("#").Header("SIZE").Header().Header("ID")
+      .Header("ARCHIVE", false).Header("FILENAME", false)
+      .Reserve(silDirs.size() + silFiles.size());
 // For each directory we found
 for(const StrItemPair &sipPair : silDirs)
 { // Get item data
   const Item &itData = sipPair.second;
   // Add directory tag and blank cell
-  sTable.Data(cCommon->CommonDir()).Data();
+  sTable.DataN(itData.stId).Data(cCommon->CommonDir()).Data();
   // If this is a file on disk?
-  if(itData.uiId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
+  if(itData.uiArchId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
   // Is from archive?
-  else sTable.DataN(itData.uiId).Data(itData.strArc);
+  else sTable.DataN(itData.uiArchId).Data(itData.strArc);
   // Add directory name
   sTable.Data(StdMove(sipPair.first));
 } // Files and directories and total bytes matched
@@ -582,11 +584,11 @@ for(const StrItemPair &sipPair : silFiles)
 { // Get item data
   const Item &itData = sipPair.second;
   // Add size and humann readable size
-  sTable.DataN(itData.ullSize).DataB(itData.ullSize);
+  sTable.DataN(itData.stId).DataN(itData.ullSize).DataB(itData.ullSize);
   // If this is a file on disk?
-  if(itData.uiId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
+  if(itData.uiArchId == StdMaxUInt) sTable.Data().Data(cCommon->CommonFs());
   // Is from archive?
-  else sTable.DataN(itData.uiId).Data(itData.strArc);
+  else sTable.DataN(itData.uiArchId).Data(itData.strArc);
   // Add file name
   sTable.Data(StdMove(sipPair.first));
   // Add to file size
@@ -820,8 +822,9 @@ cConsole->ConsoleAddLineF(
     cDisplay->DisplayGetWindowPosX(), cDisplay->DisplayGetWindowPosY(),
     cDisplay->DisplayGetWindowScaleWidth(),
     cDisplay->DisplayGetWindowScaleHeight(),
-    hex, cDisplay->FlagGet(),
-  dec, cDisplay->DisplayGetFSType(), cDisplay->DisplayGetFSTypeString(),
+    StdIOSHex, cDisplay->FlagGet(),
+  StdIOSDec, cDisplay->DisplayGetFSType(),
+    cDisplay->DisplayGetFSTypeString(),
   cOgl->MaxTexSize(), cFboCore->DimGetWidth(), cFboCore->DimGetHeight(),
     StrFromRatio(cFboCore->DimGetWidth(), cFboCore->DimGetHeight()),
     cFboCore->FboCoreGetMatrixWidth(), cFboCore->FboCoreGetMatrixHeight(),
@@ -837,12 +840,12 @@ cConsole->ConsoleAddLineF(
     cFboCore->FboCoreGetMainStage().CoordsGetBottom(),
     cFboCore->FboCoreGetMain().DimGetWidth(),
     cFboCore->FboCoreGetMain().DimGetHeight(),
-    hex, cOgl->FlagGet(),
-  dec, cFboCore->FboCoreGetMain().FboGetTris(),
+    StdIOSHex, cOgl->FlagGet(),
+  StdIOSDec, cFboCore->FboCoreGetMain().FboGetTris(),
     cFboCore->FboCoreGetMain().FboGetTrisReserved(),
     cFboCore->FboCoreGetMain().FboGetCmds(),
     cFboCore->FboCoreGetMain().FboGetCmdsReserved(),
-  fixed, cFboCore->FboCoreGetFPS(), cDisplay->DisplayGetRefreshRate(),
+  StdIOSFixed, cFboCore->FboCoreGetFPS(), cDisplay->DisplayGetRefreshRate(),
   UtilMakePercentage(cFboCore->FboCoreGetFPS(),
     cDisplay->DisplayGetRefreshRate()),
   cOgl->GetLimit());
@@ -966,35 +969,37 @@ if(aArgs.size() > 1)
   Statistic sAxes;
   // Buffered headers
   StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
-    [&sAxes](const JoyAxisInfo &jaiRef) { sAxes.Header(StrFormat("BA$$$$",
-      setw(2), right, setfill('0'), jaiRef.AxisGetId()), true); });
+    [&sAxes](const JoyAxisInfo &jaiRef)
+  { sAxes.Header(StrFormat("BA$$$$", StdIOSSetWidth(2), StdIOSRight,
+      StdIOSSetFill('0'), jaiRef.AxisGetId()), true); });
   // Unbuffered headers
   StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
-    [&sAxes](const JoyAxisInfo &jaiRef) { sAxes.Header(StrFormat("UA$$$$",
-      setw(2), right, setfill('0'), jaiRef.AxisGetId()), true); });
+    [&sAxes](const JoyAxisInfo &jaiRef)
+  { sAxes.Header(StrFormat("UA$$$$", StdIOSSetWidth(2), StdIOSRight,
+      StdIOSSetFill('0'), jaiRef.AxisGetId()), true); });
   // Reserve memory for data entries
   sAxes.Reserve(jiRef.JoyAxisListCount() * 2);
   // Buffered state
   StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
     [&sAxes](const JoyAxisInfo &jaiRef)
-      { sAxes.DataN(jaiRef.AxisGetBufferedState()); });
+  { sAxes.DataN(jaiRef.AxisGetBufferedState()); });
   // Unbuffered state
   StdForEach(seq, jiRef.JoyAxisListBegin(), jiRef.JoyAxisListEnd(),
     [&sAxes](const JoyAxisInfo &jaiRef)
-      { sAxes.DataN(jaiRef.AxisGetUnbufferedState(), 1); });
+  { sAxes.DataN(jaiRef.AxisGetUnbufferedState(), 1); });
   // Build button state data
   Statistic sButtons;
   // Buffered headers
   StdForEach(seq, jiRef.JoyButtonListBegin(), jiRef.JoyButtonListEnd(),
     [&sButtons](const JoyButtonInfo &jbiRef)
-      { sButtons.Header(StrFormat("B$$$$",
-          setw(2), right, setfill('0'), jbiRef.ButtonGetId()), true); });
+  { sButtons.Header(StrFormat("B$$$$", StdIOSSetWidth(2), StdIOSRight,
+      StdIOSSetFill('0'), jbiRef.ButtonGetId()), true); });
   // Reserve memory for data entries
   sButtons.Reserve(jiRef.JoyButtonListCount());
   // Buffered state
   StdForEach(seq, jiRef.JoyButtonListBegin(), jiRef.JoyButtonListEnd(),
     [&sButtons](const JoyButtonInfo &jbiRef)
-      { sButtons.DataN(jbiRef.ButtonGetState()); });
+  { sButtons.DataN(jbiRef.ButtonGetState()); });
   // Dump to console output and return
   return cConsole->ConsoleAddLineF("$$Data for $ '$' at index $.",
     sAxes.Finish(), sButtons.Finish(), jiRef.JoyGetGamepadOrJoystickString(),
@@ -1020,7 +1025,7 @@ cConsole->ConsoleAddLineF("$$ connected ($ supported).\n"
                    "Input flags are 0x$$.",
   sTable.Finish(),
     StrCPluraliseNum(cInput->JoyGetConnected(), "input", "inputs"),
-    jlList.size(), hex, cInput->FlagGet());
+    jlList.size(), StdIOSHex, cInput->FlagGet());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'input' function
 /* ========================================================================= */
@@ -1247,7 +1252,7 @@ cLog->MutexCall([&llcLookup](){
   } // For each log line. Add the line to console buffer
   for(const LogLine &llRef : *cLog)
     cConsole->ConsoleAddLineF(llcLookup[llRef.lhlLevel], "[$$$] $",
-      fixed, setprecision(6), llRef.dTime, llRef.strLine);
+      StdIOSFixed, StdIOSSetPrecision(6), llRef.dTime, llRef.strLine);
   // Number of items in buffer
   cConsole->ConsoleAddLineA(StrCPluraliseNum(cLog->size(), "line.", "lines."));
 });
@@ -1763,9 +1768,9 @@ if(aArgs.size() == 2)
       "$"
       "$",
       uiId,
-      strStatus, hex, sfcFlags.FlagGet(), dec, sRef.GetError(),
-        sRef.GetFD(), hex, sRef.GetFD(),
-      sRef.GetAddress(), dec, sRef.GetPort(), sRef.GetIPAddress(),
+      strStatus, StdIOSHex, sfcFlags.FlagGet(), StdIOSDec, sRef.GetError(),
+        sRef.GetFD(), StdIOSHex, sRef.GetFD(),
+      sRef.GetAddress(), StdIOSDec, sRef.GetPort(), sRef.GetIPAddress(),
       sRef.FlagIsSet(SS_VHOST) ?
         StrFormat("\n- Real host: $.", sRef.GetRealHost()) :
         cCommon->CommonBlank(),
@@ -1945,8 +1950,8 @@ const double dPC = -100.0 + UtilMakePercentage(ullAfter, ullBefore);
 cConsole->ConsoleAddLine(llChange ?
   // If udb did change?
   StrFormat("UDB changed $B ($; $$$%) to $B ($) from $B ($) in $.",
-    llChange, StrToBytes(-llChange,0), setprecision(2), fixed, dPC, ullAfter,
-    StrToBytes(ullAfter, 0), ullBefore, StrToBytes(ullBefore,0),
+    llChange, StrToBytes(-llChange,0), StdIOSSetPrecision(2), StdIOSFixed, dPC,
+    ullAfter, StrToBytes(ullAfter, 0), ullBefore, StrToBytes(ullBefore, 0),
     StrShortFromDuration(dT)) :
   // Udb did not change so show the result
   StrFormat("UDB unchanged at $B ($) in $.",
@@ -2021,7 +2026,7 @@ if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, 1)))
           { // Get integer
             const sqlite3_int64 llVal = sdRef.MemReadInt<sqlite3_int64>();
             // StrFormat and store in spreadsheet
-            sTable.Data("I").DataF("$ (0x$$)", llVal, hex, llVal);
+            sTable.Data("I").DataF("$ (0x$$)", llVal, StdIOSHex, llVal);
             // Done
             break;
           } // 64-bit IEEE float?
@@ -2039,8 +2044,8 @@ if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, 1)))
           // Unknown type (impossible)
           default:
             sTable.Data("?")
-                  .DataF("<Type $[0x$$]>", sdRef.iType, hex, sdRef.iType);
-                   break;
+              .DataF("<Type $[0x$$]>", sdRef.iType, StdIOSHex, sdRef.iType);
+              break;
         }
       } // Increase record number
       stRecordId++;

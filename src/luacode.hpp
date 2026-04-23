@@ -185,7 +185,7 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
         { // Cache is valid
           cLog->LogDebugExSafe(
             "LuaCode will use cached version of '$'[$]($$)!",
-              strRef, stSize, hex, uiCRC);
+              strRef, stSize, StdIOSHex, uiCRC);
           // Do compile the buffer
           LuaCodeDoCompileBuffer(lS,
             sdRef.MemPtr<char>(), sdRef.MemSize(), strRef);
@@ -196,15 +196,15 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
         } // Invalid type
         else cLog->LogWarningExSafe(
           "LuaCode will recompile '$'[$]($$$) as it has a bad type of $!",
-            strRef, stSize, hex, uiCRC, dec, sdRef.iType);
+            strRef, stSize, StdIOSHex, uiCRC, StdIOSDec, sdRef.iType);
       } // Invalid keyname?
       else cLog->LogWarningExSafe(
         "LuaCode will recompile '$'[$]($$) as it has a bad keyname!",
-        strRef, stSize, hex, uiCRC);
+        strRef, stSize, StdIOSHex, uiCRC);
     } // No results
     else cLog->LogDebugExSafe(
       "LuaCode will recompile '$'[$]($$) as the module was modified!",
-        strRef, stSize, hex, uiCRC);
+        strRef, stSize, StdIOSHex, uiCRC);
   } // Error reading database so try to rebuild table
   else cSql->SqlLuaCacheRebuildTable();
   // Do compile the buffer

@@ -236,8 +236,8 @@ class Audio :                          // Audio manager class
     // Log event text to say we processed the event successfully.
     cLog->LogDebugExSafe(
       "Audio received system event $<0x$$> with device type $$<0x$$>...\n"
-      "- $.", eEventType, hex, eEventType, dec,
-              eDeviceType, hex, eDeviceType, strvMsg);
+      "- $.", eEventType, StdIOSHex, eEventType, StdIOSDec,
+              eDeviceType, StdIOSHex, eDeviceType, strvMsg);
     // Send event to process the event
     switch(eDeviceType)
     { // It was a playback device?
